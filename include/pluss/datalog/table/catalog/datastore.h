@@ -1,0 +1,2 @@
+// This is equivalent to an Archive on the entry side. It is a table of tables(DataFrames), thus we say a Store of DataFrames!
+// The method that converts an Archive to a DataStore is storelize(). This is a 3D table.

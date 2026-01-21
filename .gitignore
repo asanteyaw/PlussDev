@@ -16,6 +16,7 @@
 
 # Debugger Files
 *.pdb
+*.dwo
 
 # Compiled Dynamic libraries
 *.so
@@ -37,5 +38,76 @@
 *.out
 *.app
 
-# debug information files
-*.dwo
+# ===================================
+# Build systems
+# ===================================
+build/
+cmake-build-*/
+out/
+bin/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+
+# ===================================
+# Research / calibration artifacts
+# ===================================
+data/
+datasets/
+*.csv
+*.parquet
+*.h5
+*.hdf5
+*.npz
+
+results/
+outputs/
+logs/
+*.log
+
+# ===================================
+# Plots & figures
+# ===================================
+figures/
+plots/
+
+# ===================================
+# LaTeX (papers / thesis)
+# ===================================
+*.aux
+*.bbl
+*.blg
+*.synctex.gz
+*.fdb_latexmk
+*.toc
+*.lof
+*.lot
+
+# ===================================
+# Python bindings (future-proofing)
+# ===================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+wheelhouse/
+.venv/
+
+# ===================================
+# IDEs
+# ===================================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ===================================
+# OS junk
+# ===================================
+.DS_Store
+Thumbs.db
