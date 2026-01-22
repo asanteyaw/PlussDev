@@ -1,0 +1,4 @@
+add_subdirectory(interpolation)
+add_subdirectory(linear_algebra)
+add_subdirectory(optimization)
+add_subdirectory(spectral_methods)

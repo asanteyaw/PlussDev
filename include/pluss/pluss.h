@@ -1,7 +1,7 @@
 #pragma once
 
 // Main header file for the pluss library
-#include <b10/utils/Macros.h>
+#include <internals/aux/utils/Macros.h>
 #include <pluss/Types.h>
 #include <pluss/SeriesBody.h>
 #include <pluss/series_factory.h>

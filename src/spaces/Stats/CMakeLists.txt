@@ -1,0 +1,6 @@
+add_subdirectory(bayesian)
+add_subdirectory(estimation)
+add_subdirectory(inference)
+add_subdirectory(nonparametric)
+add_subdirectory(regression)
+add_subdirectory(time_series)

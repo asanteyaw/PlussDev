@@ -1,12 +1,15 @@
-file(GLOB QUANTUM_TESTS CONFIGURE_DEPENDS
+file(GLOB PHYS_QUANTUM_TESTS CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/*_test.cpp
 )
 
-foreach(test_src ${QUANTUM_TESTS})
-    get_filename_component(test_name ${test_src} NAME_WE)
+foreach(test_src ${PHYS_QUANTUM_TESTS})
+    get_filename_component(test_file ${test_src} NAME_WE)
+
+    set(test_name "phys_quantum_${test_file}")
 
     add_executable(${test_name} ${test_src})
     target_link_libraries(${test_name} PRIVATE pluss)
+
     target_include_directories(${test_name} PRIVATE
         ${PROJECT_SOURCE_DIR}/include
     )

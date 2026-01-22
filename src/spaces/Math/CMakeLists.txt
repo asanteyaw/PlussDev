@@ -1,0 +1,6 @@
+add_subdirectory(Algebra)
+add_subdirectory(Analysis)
+add_subdirectory(Economics)
+add_subdirectory(Finance)
+add_subdirectory(Numerical)
+add_subdirectory(Probability)
