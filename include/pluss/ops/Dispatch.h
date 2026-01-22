@@ -2,7 +2,7 @@
 
 #include "pluss/Note.h"
 #include <vector>
-#include <b10/utils/Macros.h>
+#include <internals/aux/utils/Macros.h>
 
 namespace pluss {
 

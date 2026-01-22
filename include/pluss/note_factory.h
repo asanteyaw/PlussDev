@@ -1,8 +1,8 @@
 #pragma once
 
 #include <pluss/Note.h>
-#include <b10/let/text.h>
-#include <b10/utils/functors.h>
+#include <internals/aux/let/text.h>
+#include <internals/aux/utils/functors.h>
 #include <functional>
 #include <memory>
 

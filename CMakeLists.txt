@@ -61,10 +61,3 @@ add_subdirectory(test)
 target_compile_options(pluss PRIVATE
     -O3 -Wall -Wextra -Wno-sign-compare -Wno-unused-variable
 )
-
-# ==============================
-# Small tools
-# ==============================
-add_executable(jsonfmt src/json_formatter.cpp)
-target_link_libraries(jsonfmt PRIVATE pluss)
-target_include_directories(jsonfmt PRIVATE ${PROJECT_SOURCE_DIR}/include)

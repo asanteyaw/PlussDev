@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pluss/Chord.h"
-#include <b10/utils/Memory.h>
+#include <internals/aux/utils/Memory.h>
 #include <vector>
 #include <variant>
 #include <string>

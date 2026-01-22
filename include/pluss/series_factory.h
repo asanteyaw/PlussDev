@@ -435,7 +435,7 @@ inline Series pile(SeriesList series, int64_t dim=0) {
   at::TensorList tensors = map_to_vector<Series, torch::Tensor>(series, [](const Series& s) {
     return s.tensor();
   });
-  return at::_ops::stack::call(tensors, dim);
+  return Series(at::_ops::stack::call(tensors, dim));
 }
 
 inline Series unite(const SeriesList& inputs, int64_t dim = 0) {
