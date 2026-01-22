@@ -47,6 +47,7 @@ out/
 bin/
 
 # CMake
+cmake/LocalConfig.cmake
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
