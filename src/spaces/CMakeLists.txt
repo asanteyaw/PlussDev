@@ -1,0 +1,5 @@
+add_subdirectory(AI)
+add_subdirectory(Eng)
+add_subdirectory(Math)
+add_subdirectory(NatSci)
+add_subdirectory(Stats)
