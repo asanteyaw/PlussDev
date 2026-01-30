@@ -1,4 +1,3 @@
-#include "b10/let/text.h"
 #include <pluss/pluss.h>
 #include <iostream>
 #include <vector>

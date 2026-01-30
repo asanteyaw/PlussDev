@@ -9,7 +9,7 @@
 #include <pluss/Chord.h>
 #include <pluss/Note.h>
 
-namespace let {
+namespace detail {
 
 class lex {
   std::string payload_;
@@ -175,4 +175,4 @@ TextStructure(const T& value) {
   }
 };
 
-} // namespace let
+} // namespace detail

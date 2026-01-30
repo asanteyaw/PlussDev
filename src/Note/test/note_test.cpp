@@ -1,5 +1,3 @@
-#include "b10/let/text.h"
-#include "pluss/note_factory.h"
 #include <cstdlib>
 #include <iostream>
 #include <pluss/pluss.h> 

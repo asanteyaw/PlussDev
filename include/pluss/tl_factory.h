@@ -1,117 +1,54 @@
-// #include <pluss/Note.h>
-// #include <b10/let/text.h>
-// #include <b10/utils/functors.h>
+#pragma once
 
-// namespace pluss{
-//    // Helper functions to convert vectors to Text
-//    inline Text vector_to_text(const std::vector<Chord>& vec) {
-//      std::vector<Text> texts;
-//      texts.reserve(vec.size());
-//      for (const auto& chord : vec) {
-//        texts.emplace_back(Text(chord));
-//      }
-//      return Text(std::move(texts));
-//    }
-   
-//    inline Text matrix_to_text(const std::vector<std::vector<Chord>>& mat) {
-//      std::vector<Text> rows;
-//      rows.reserve(mat.size());
-//      for (const auto& row : mat) {
-//        rows.push_back(vector_to_text(row));
-//      }
-//      return Text(std::move(rows));
-//    }
+#include <pluss/Timeline.h>
+#include <pluss/note_factory.h>
+#include <string>
 
-//    // === Scalar forms ===
-//  inline Note make_timeline(const char* s) {
-//     return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(Text(Chord(s))));
-//  }
- 
-//  inline Note make_timeline(char c) {
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(Text(Chord(c))));
-//  }
- 
-//  inline Note make_timeline(const std::string& s) {
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(Text(Chord(s))));
-//  }
+namespace pluss {
 
-// inline Timeline point_in_time(const let::TextStructure& structure) {
-//   return structure.convert_to_note();
-// }
- 
-//  // === Vector forms ===
-//  inline Note make_timeline(std::initializer_list<char> list) {
-//    std::vector<Chord> vec;
-//    for (char c : list) vec.emplace_back(c);
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(vector_to_text(vec)));
-//  }
- 
-//  inline Note make_timeline(std::initializer_list<const char*> list) {
-//    std::vector<Chord> vec;
-//    vec.reserve(list.size());
-//    for (const auto* s : list)
-//      vec.emplace_back(s);
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(vector_to_text(vec)));
-//  }
- 
-//  inline Note make_timeline(std::initializer_list<Chord> list) {
-//    std::vector<Chord> vec(list);
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(vector_to_text(vec)));
-//  }
- 
-//  // === Matrix forms ===
-//  inline Note make_timeline(std::initializer_list<std::initializer_list<char>> mat) {
-//    std::vector<std::vector<Chord>> temp;
-//    for (const auto& row : mat) {
-//      std::vector<Chord> chord_row;
-//      for (char c : row)
-//        chord_row.emplace_back(c);
-//      temp.emplace_back(std::move(chord_row));
-//    }
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(matrix_to_text(temp)));
-//  }
- 
-//  inline Note make_timeline(std::initializer_list<std::initializer_list<const char*>> mat) {
-//    std::vector<std::vector<Chord>> temp;
-//    for (const auto& row : mat) {
-//      std::vector<Chord> chord_row;
-//      for (const auto* s : row)
-//        chord_row.emplace_back(s);
-//      temp.emplace_back(std::move(chord_row));
-//    }
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(matrix_to_text(temp)));
-//  }
- 
-//  inline Note make_timeline(std::initializer_list<std::initializer_list<Chord>> mat) {
-//    std::vector<std::vector<Chord>> temp;
-//    for (const auto& row : mat)
-//      temp.emplace_back(row);
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(matrix_to_text(temp)));
-//  }
- 
-//  // === Containers ===
-//  inline Note make_timeline(const std::vector<Chord>& vec) {
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(vector_to_text(vec)));
-//  }
- 
-//  inline Note make_timeline(std::vector<Chord>&& vec) {
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(vector_to_text(std::move(vec))));
-//  }
- 
-//  inline Note make_timeline(const std::vector<std::vector<Chord>>& mat) {
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(matrix_to_text(mat)));
-//  }
- 
-//  inline Note make_timeline(std::vector<std::vector<Chord>>&& mat) {
-//    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(matrix_to_text(std::move(mat))));
-//  }
- 
-//  // === Empty ===
-//  inline Note make_timeline() {
-//    return Note();
-//  }
- 
-//  inline Note make_timeline(std::initializer_list<int>) {
-//    return Note();
-//  }
-// }
+// Small friend factory that has access to Timeline's private constructors.
+struct TimelineFactory {
+    static Timeline make_default() { return Timeline(); }
+    static Timeline from_string(const std::string& s) { return Timeline(s); }
+    static Timeline from_date(int y, int m, int d) { return Timeline::createFromDateInts(y,m,d); }
+    static Timeline from_time(int h, int m, int s) { return Timeline::createFromTimeInts(h,m,s); }
+    static Timeline from_datetime(int y, int mo, int d, int h, int mi, int se) { return Timeline::createFromDateTimeInts(y,mo,d,h,mi,se); }
+    static Timeline from_series_pair(const Series& ds, const Series& ts) { return Timeline(ds, ts); }
+    static Timeline from_series(const Series& s) { return Timeline::fromSeries(s); }
+};
+
+// Public factories 1 preferred API for users.
+inline Timeline make_timeline() {
+    return TimelineFactory::make_default();
+}
+
+inline Timeline make_timeline(const std::string& s) {
+    return TimelineFactory::from_string(s);
+}
+
+inline Timeline make_timeline(const char* s) {
+    return TimelineFactory::from_string(std::string(s));
+}
+
+inline Timeline make_timeline(int year, int month, int day) {
+    return TimelineFactory::from_date(year, month, day);
+}
+
+inline Timeline make_timeline_time(int hour, int minute, int second) {
+    return TimelineFactory::from_time(hour, minute, second);
+}
+
+inline Timeline make_timeline(const Series& date_series, const Series& time_series) {
+    return TimelineFactory::from_series_pair(date_series, time_series);
+}
+
+inline Timeline make_timeline(const Series& series) {
+    return TimelineFactory::from_series(series);
+}
+
+// moment - parse/construct from a textual/rvalue-like representation.
+inline Timeline moment(const std::string& s) {
+    return TimelineFactory::from_string(s);
+}
+
+} // namespace pluss

@@ -11,12 +11,16 @@
 
 namespace pluss {
 
+// Forward declaration for factory that will construct Timeline objects.
+struct TimelineFactory;
+
 class Timeline {
 private:
     Series date_series_; // Stores date as YYYYMMDD
     Series time_series_; // Stores time as HHMMSS
     bool has_date_ = false;
     bool has_time_ = false;
+    std::string timezone_; // optional TZ label (naive handling)
 
     // Helper methods for parsing
     static std::pair<bool, int64_t> parseDate(const std::string& date_str);
@@ -35,9 +39,19 @@ private:
     static Timeline now();
     static Timeline fromTimestamp(int64_t timestamp);
     static Timeline fromSeries(const Series& series);
+    // Controlled creation helpers (used by TimelineFactory)
+    static Timeline createFromDateInts(int year, int month, int day);
+    static Timeline createFromTimeInts(int hour, int minute, int second);
+    static Timeline createFromDateTimeInts(int year, int month, int day, int hour, int minute, int second);
 
-public:
-    // Constructors
+    // Frequency utilities for pandas-like operations
+    enum class Frequency { YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, UNKNOWN };
+    static Frequency freqFromString(const std::string& freq_str);
+    static std::chrono::system_clock::duration durationForFreq(Frequency f, int step = 1);
+
+private:
+    // Constructors (private — use pluss::make_timeline() or pluss::moment())
+    friend struct TimelineFactory;
     Timeline() {
         auto now = std::chrono::system_clock::now();
         auto [date_int, time_int] = timePointToInternalFormat(now);
@@ -115,6 +129,8 @@ public:
         }
     }
 
+public:
+
     // Getters
     int year() const;
     int month() const;
@@ -173,6 +189,29 @@ public:
     bool operator<=(const Timeline& other) const;
     bool operator>(const Timeline& other) const;
     bool operator>=(const Timeline& other) const;
+
+    // Pandas-like utilities
+    Timeline floor(const std::string& freq) const;
+    Timeline ceil(const std::string& freq) const;
+    Timeline round(const std::string& freq) const;
+    Timeline shift(int periods, const std::string& freq) const;
+
+    // Timezone handling (naive; stores tz label but doesn't perform conversions)
+    Timeline tz_localize(const std::string& tz) const;
+    Timeline tz_convert(const std::string& tz) const;
+
+    // Range generator
+    static std::vector<Timeline> date_range(const Timeline& start, const Timeline& end, const std::string& freq = "D", int step = 1);
+
+    // Convenience checks
+    bool is_month_start() const;
+    bool is_month_end() const;
+    int quarter() const;
+    bool is_quarter_start() const;
+    bool is_quarter_end() const;
+    bool is_weekend() const;
+    int week_of_year() const;
+    Timeline to_period(const std::string& freq) const; // alias for floor to represent a period
 };
 
 } // namespace pluss
@@ -673,7 +712,36 @@ inline Timeline Timeline::now() {
     return Timeline();
 }
 
-Timeline Timeline::fromTimestamp(int64_t timestamp) {
+inline Timeline Timeline::createFromDateInts(int year, int month, int day) {
+    Timeline t;
+    int64_t date_int = static_cast<int64_t>(year) * 10000 + month * 100 + day;
+    t.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+    t.has_date_ = true;
+    t.has_time_ = false;
+    return t;
+}
+
+inline Timeline Timeline::createFromTimeInts(int hour, int minute, int second) {
+    Timeline t;
+    int64_t time_int = static_cast<int64_t>(hour) * 10000 + minute * 100 + second;
+    t.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+    t.has_time_ = true;
+    t.has_date_ = false;
+    return t;
+}
+
+inline Timeline Timeline::createFromDateTimeInts(int year, int month, int day, int hour, int minute, int second) {
+    Timeline t;
+    int64_t date_int = static_cast<int64_t>(year) * 10000 + month * 100 + day;
+    int64_t time_int = static_cast<int64_t>(hour) * 10000 + minute * 100 + second;
+    t.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+    t.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+    t.has_date_ = true;
+    t.has_time_ = true;
+    return t;
+}
+
+inline Timeline Timeline::fromTimestamp(int64_t timestamp) {
     auto tp = std::chrono::system_clock::from_time_t(timestamp);
     auto [date_int, time_int] = timePointToInternalFormat(tp);
     
@@ -1281,6 +1349,179 @@ inline bool Timeline::operator>(const Timeline& other) const {
 
 inline bool Timeline::operator>=(const Timeline& other) const {
     return !(*this < other);
+}
+
+// Frequency helpers
+inline Timeline::Frequency Timeline::freqFromString(const std::string& freq_str) {
+    std::string s = toLower(trim(freq_str));
+    if (s.empty()) return Frequency::UNKNOWN;
+    if (s == "y" || s == "year" || s == "years" || s == "annual") return Frequency::YEAR;
+    if (s == "m" || s == "month" || s == "months") return Frequency::MONTH;
+    if (s == "d" || s == "day" || s == "days") return Frequency::DAY;
+    if (s == "h" || s == "hour" || s == "hours") return Frequency::HOUR;
+    if (s == "t" || s == "min" || s == "minute" || s == "minutes") return Frequency::MINUTE;
+    if (s == "s" || s == "sec" || s == "second" || s == "seconds") return Frequency::SECOND;
+    return Frequency::UNKNOWN;
+}
+
+inline std::chrono::system_clock::duration Timeline::durationForFreq(Frequency f, int step) {
+    switch (f) {
+        case Frequency::DAY: return std::chrono::hours(24LL * step);
+        case Frequency::HOUR: return std::chrono::hours(1LL * step);
+        case Frequency::MINUTE: return std::chrono::minutes(1LL * step);
+        case Frequency::SECOND: return std::chrono::seconds(1LL * step);
+        default: return std::chrono::seconds(0);
+    }
+}
+
+// Pandas-like utilities
+inline Timeline Timeline::floor(const std::string& freq) const {
+    Frequency f = freqFromString(freq);
+    Timeline r = *this;
+    switch (f) {
+        case Frequency::YEAR:
+            r.set_month(1);
+            r.set_day(1);
+            r.set_hour(0);
+            r.set_minute(0);
+            r.set_second(0);
+            return r;
+        case Frequency::MONTH:
+            r.set_day(1);
+            r.set_hour(0);
+            r.set_minute(0);
+            r.set_second(0);
+            return r;
+        case Frequency::DAY:
+            r.set_hour(0);
+            r.set_minute(0);
+            r.set_second(0);
+            return r;
+        case Frequency::HOUR:
+            r.set_minute(0);
+            r.set_second(0);
+            return r;
+        case Frequency::MINUTE:
+            r.set_second(0);
+            return r;
+        case Frequency::SECOND:
+        default:
+            return *this;
+    }
+}
+
+inline Timeline Timeline::ceil(const std::string& freq) const {
+    Timeline f = floor(freq);
+    if (*this == f) return f;
+    return f.shift(1, freq);
+}
+
+inline Timeline Timeline::round(const std::string& freq) const {
+    Frequency fr = freqFromString(freq);
+    if (fr == Frequency::YEAR || fr == Frequency::MONTH) {
+        return floor(freq);
+    }
+
+    Timeline f = floor(freq);
+    auto tp = toTimePoint();
+    auto f_tp = f.toTimePoint();
+    auto d = tp - f_tp;
+    auto step = durationForFreq(fr, 1);
+    if (step == std::chrono::seconds(0)) return f;
+    if (d < (step / 2)) return f;
+    return f.shift(1, freq);
+}
+
+inline Timeline Timeline::shift(int periods, const std::string& freq) const {
+    Frequency f = freqFromString(freq);
+    switch (f) {
+        case Frequency::YEAR: return add_years(periods);
+        case Frequency::MONTH: return add_months(periods);
+        case Frequency::DAY: return add_days(periods);
+        case Frequency::HOUR: return add_hours(periods);
+        case Frequency::MINUTE: return add_minutes(periods);
+        case Frequency::SECOND: return add_seconds(periods);
+        default: return *this;
+    }
+}
+
+inline Timeline Timeline::tz_localize(const std::string& tz) const {
+    Timeline r = *this;
+    r.timezone_ = tz;
+    return r;
+}
+
+inline Timeline Timeline::tz_convert(const std::string& tz) const {
+    // Naive: only changes label; no offset math implemented
+    Timeline r = *this;
+    r.timezone_ = tz;
+    return r;
+}
+
+inline std::vector<Timeline> Timeline::date_range(const Timeline& start, const Timeline& end, const std::string& freq, int step) {
+    std::vector<Timeline> out;
+    if (end < start) return out;
+    Timeline cur = start.to_period(freq);
+    while (cur <= end) {
+        out.push_back(cur);
+        cur = cur.shift(step, freq);
+    }
+    return out;
+}
+
+inline bool Timeline::is_month_start() const {
+    if (!has_date_) return false;
+    return day() == 1;
+}
+
+inline bool Timeline::is_month_end() const {
+    if (!has_date_) return false;
+    int y = year();
+    int m = month();
+    const std::array<int, 12> days_in_month = {31,28,31,30,31,30,31,31,30,31,30,31};
+    int max_days = days_in_month[m - 1];
+    if (m == 2 && ((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0))) max_days = 29;
+    return day() == max_days;
+}
+
+inline int Timeline::quarter() const {
+    if (!has_date_) return 0;
+    return ((month() - 1) / 3) + 1;
+}
+
+inline bool Timeline::is_quarter_start() const {
+    if (!has_date_) return false;
+    int m = month();
+    return (m == 1 || m == 4 || m == 7 || m == 10) && day() == 1;
+}
+
+inline bool Timeline::is_quarter_end() const {
+    if (!has_date_) return false;
+    int m = month();
+    if (m == 3 || m == 6 || m == 9 || m == 12) {
+        return is_month_end();
+    }
+    return false;
+}
+
+inline bool Timeline::is_weekend() const {
+    if (!has_date_) return false;
+    int dow = day_of_week();
+    return dow == 0 || dow == 6;
+}
+
+inline int Timeline::week_of_year() const {
+    if (!has_date_) return 0;
+    auto tp = toTimePoint();
+    std::time_t tt = std::chrono::system_clock::to_time_t(tp);
+    std::tm* tm = std::localtime(&tt);
+    char buf[8] = {0};
+    if (std::strftime(buf, sizeof(buf), "%U", tm) == 0) return 0;
+    return std::stoi(std::string(buf));
+}
+
+inline Timeline Timeline::to_period(const std::string& freq) const {
+    return floor(freq);
 }
     
 } // namespace pluss

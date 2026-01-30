@@ -1,8 +1,8 @@
-file(GLOB PACKET_TEST_SOURCES CONFIGURE_DEPENDS
+file(GLOB FEED_TEST_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/*_test.cpp
 )
 
-foreach(test_src ${PACKET_TEST_SOURCES})
+foreach(test_src ${FEED_TEST_SOURCES})
     get_filename_component(test_name ${test_src} NAME_WE)
 
     add_executable(${test_name} ${test_src})
@@ -16,5 +16,5 @@ foreach(test_src ${PACKET_TEST_SOURCES})
     # Optional but recommended
     add_test(NAME ${test_name} COMMAND ${test_name})
 
-    message(STATUS "Added Packet test: ${test_name}")
+    message(STATUS "Added Feed test: ${test_name}")
 endforeach()
