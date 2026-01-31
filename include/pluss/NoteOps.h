@@ -1,7 +1,7 @@
 #pragma once
 
-#include "pluss/Chord.h"
-#include "pluss/ops/Dispatch.h"
+#include <pluss/Chord.h>
+#include <pluss/ops/Dispatch.h>
 
 namespace pluss::ops {
 

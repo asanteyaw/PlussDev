@@ -1,8 +1,6 @@
 #pragma once
 
 // Main header file for the pluss library
-#include <internals/aux/utils/Macros.h>
-#include <internals/aux/let/text.h>
 #include <pluss/Types.h>
 #include <pluss/SeriesBody.h>
 #include <pluss/series_factory.h>
@@ -16,10 +14,14 @@
 #include <pluss/abstractions.h>
 #include <pluss/datalog/datalog.h>
 
-// Define `let` for users after including all internal headers that use
-// the identifier `let` as a namespace or symbol. Placing this include
-// last prevents the `let` macro from colliding with earlier headers.
+// Provide `let` macro for users (enhanced auto). Include last to avoid
+// macro leaking into internal implementation headers.
+// Note: text helper types live under `lexicon::` and are intentionally
+// not included by this umbrella header to avoid bringing internal
+// implementation headers into user compilation units.
 #include <internals/core/include/j2/let.h>
+// always include public macros
+#include <internals/core/include/b10/utils/Macros.h>
 
 // Convenience namespace for users
 namespace pluss {

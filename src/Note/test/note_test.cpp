@@ -192,6 +192,14 @@ void run_note_tests() {
     });
     EXPECT_EQ(mapped.vector()[1], "There!");
 
+    // --- New NLP helpers: bag-of-words and similarity ---
+    auto bow = v.to_bow();
+    EXPECT_TRUE(bow["Hi"] >= 1);
+    Note t1 = content("hello world hello");
+    Note t2 = content("hello there");
+    double sim = t1.similarity(t2);
+    EXPECT_TRUE(sim > 0.0 && sim <= 1.0);
+
     // --- Repeat ---
     Note base = content({"A", "B"});
     Note rep = base.repeat({2});

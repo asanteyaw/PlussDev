@@ -1,30 +1,37 @@
 // Minimal JSON formatter (pretty-printer) CLI
 // Usage: jsonfmt [--indent N] [input-file]
 
-#include <bits/stdc++.h>
-using namespace std;
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <cctype>
+#include <vector>
+#include <stdexcept>
 
 static void print_usage(const char* prog) {
-    cerr << "Usage: " << prog << " [--indent N] [input-file]\n";
+    std::cerr << "Usage: " << prog << " [--indent N] [input-file]\n";
 }
 
 int main(int argc, char** argv) {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
 
     int indent = 2;
-    string filename;
+    std::string filename;
 
     for (int i = 1; i < argc; ++i) {
-        string a = argv[i];
+        std::string a = argv[i];
         if (a == "--indent" && i + 1 < argc) {
-            indent = stoi(argv[++i]);
+            try {
+                indent = std::stoi(argv[++i]);
+            } catch (const std::exception&) { indent = 2; }
             if (indent < 0) indent = 0;
         } else if (a == "-h" || a == "--help") {
             print_usage(argv[0]);
             return 0;
         } else if (a.rfind("--", 0) == 0) {
-            cerr << "Unknown option: " << a << "\n";
+            std::cerr << "Unknown option: " << a << "\n";
             print_usage(argv[0]);
             return 1;
         } else {
@@ -33,11 +40,11 @@ int main(int argc, char** argv) {
     }
 
     // Read input
-    string input;
+    std::string input;
     if (!filename.empty()) {
-        ifstream in(filename);
+        std::ifstream in(filename);
         if (!in) {
-            cerr << "Failed to open file: " << filename << "\n";
+            std::cerr << "Failed to open file: " << filename << "\n";
             return 2;
         }
         std::ostringstream ss;
@@ -45,11 +52,11 @@ int main(int argc, char** argv) {
         input = ss.str();
     } else {
         std::ostringstream ss;
-        ss << cin.rdbuf();
+        ss << std::cin.rdbuf();
         input = ss.str();
     }
 
-    string out;
+    std::string out;
     out.reserve(input.size() * 2 + 128);
 
     bool in_string = false;
@@ -85,7 +92,7 @@ int main(int argc, char** argv) {
             out.push_back(c);
             // look ahead for immediate closing to keep compact [] or {}
             size_t j = i + 1;
-            while (j < input.size() && isspace((unsigned char)input[j])) ++j;
+            while (j < input.size() && std::isspace((unsigned char)input[j])) ++j;
             if (j < input.size() && (input[j] == ']' || input[j] == '}')) {
                 // empty container, don't add newline
                 continue;
@@ -118,7 +125,7 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        if (isspace((unsigned char)c)) {
+        if (std::isspace((unsigned char)c)) {
             // collapse whitespace outside strings
             continue;
         }
@@ -129,6 +136,6 @@ int main(int argc, char** argv) {
     // Final newline
     if (out.empty() || out.back() != '\n') out.push_back('\n');
 
-    cout << out;
+    std::cout << out;
     return 0;
 }

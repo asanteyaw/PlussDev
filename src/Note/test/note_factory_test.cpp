@@ -49,7 +49,7 @@ void test_content_function() {
     // EXPECT_EQ(scalar.scalar().str(), "hello");
     
     // Test 1D content (vector)
-    pluss::Note vec = pluss::content(let::TextStructure({"a", "b", "c"}));
+    pluss::Note vec = pluss::content(lexicon::TextStructure({"a", "b", "c"}));
     EXPECT_EQ(vec.ndim(), 1);
     EXPECT_EQ(vec.shape()[0], 3);
     EXPECT_EQ(vec.vector()[0], "a");
@@ -57,7 +57,7 @@ void test_content_function() {
     EXPECT_EQ(vec.vector()[2], "c");
     
     // Test 2D content (matrix)
-    pluss::Note mat = pluss::content(let::TextStructure({{"1", "2"}, {"3", "4"}}));
+    pluss::Note mat = pluss::content(lexicon::TextStructure({{"1", "2"}, {"3", "4"}}));
     EXPECT_EQ(mat.ndim(), 2);
     EXPECT_EQ(mat.shape()[0], 2);
     EXPECT_EQ(mat.shape()[1], 2);
@@ -65,7 +65,7 @@ void test_content_function() {
     EXPECT_EQ(mat.matrix()[1][1], "4");
     
     // Test 3D content
-    pluss::Note tensor3d = pluss::content(let::TextStructure({
+    pluss::Note tensor3d = pluss::content(lexicon::TextStructure({
         {{"a", "b"}, {"c", "d"}},
         {{"e", "f"}, {"g", "h"}}
     }));
@@ -79,6 +79,15 @@ void test_content_function() {
     EXPECT_EQ(empty.ndim(), 1);
     EXPECT_EQ(empty.shape().size(), 1);
     EXPECT_EQ(empty.shape()[0], 0);
+
+    // --- Documentation: NLP helpers usage ---
+    std::cout << "\n--- NLP helpers demonstration ---\n";
+    pluss::Note doc = pluss::content({"The", "quick", "brown", "fox", "jumps"});
+    auto bow = doc.to_bow();
+    std::cout << "BOW size=" << bow.size() << " join='" << doc.join(" ") << "'\n";
+    pluss::Note a = pluss::content("hello world hello");
+    pluss::Note b = pluss::content("hello there");
+    std::cout << "similarity: " << a.similarity(b) << "\n";
 }
 
 void test_make_note_function() {

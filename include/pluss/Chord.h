@@ -13,9 +13,10 @@
 #include <cctype>
 #include <algorithm>
 #include <ostream>
+#include <iterator>
 
-#include <internals/aux/utils/Memory.h>  // for intrusive_ptr and intrusive_ptr_target 
-#include <internals/aux/utils/Macros.h>
+#include <internals/core/include/b10/utils/Memory.h>  // for intrusive_ptr and intrusive_ptr_target 
+#include <internals/core/include/b10/utils/Macros.h>
 
 
 namespace pluss::crypto {

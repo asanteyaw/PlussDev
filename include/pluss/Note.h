@@ -1,11 +1,16 @@
 #pragma once
 
-#include "pluss/Chord.h"
-#include <internals/aux/utils/Memory.h>
+#include <pluss/Chord.h>
+#include <internals/core/include/b10/utils/Memory.h>
+#include <internals/aux/lexicon/nlp.h>
+#include <regex>
 #include <vector>
 #include <variant>
 #include <string>
 #include <sstream>
+#include <unordered_map>
+#include <cmath>
+#include <algorithm>
 
 namespace pluss {
 
@@ -95,6 +100,8 @@ public:
   Note map(const std::function<Chord(const Chord&)>& fn) const;
   Note repeat(const std::vector<int64_t>& reps) const;
 
+  // --- NLP / text utilities ---
+
   // --- Accessors ---
   Chord scalar() const {
     PLUSS_VALIDATE(defined(), "Note is undefined");
@@ -158,6 +165,72 @@ public:
       result.push_back(std::move(row_result));
     }
     return result;
+  }
+
+  // --- NLP helpers implementation ---
+  inline std::unordered_map<std::string, int64_t> to_bow() const {
+    std::unordered_map<std::string, int64_t> counts;
+    auto flat = flatten();
+    for (const auto& s : flat) {
+      // tokenize and normalize using lexicon utilities
+      auto toks = lexicon::tokenize(s);
+      auto filtered = lexicon::filter_stopwords(toks);
+      for (auto& w : filtered) counts[w]++;
+    }
+    return counts;
+  }
+
+  inline double similarity(const Note& other) const {
+    // Cosine similarity on bag-of-words (lowercased, stopwords removed)
+    auto a = to_bow();
+    auto b = other.to_bow();
+    double dot = 0.0, na = 0.0, nb = 0.0;
+    for (const auto& kv : a) {
+      na += double(kv.second) * double(kv.second);
+      auto it = b.find(kv.first);
+      if (it != b.end()) dot += double(kv.second) * double(it->second);
+    }
+    for (const auto& kv : b) nb += double(kv.second) * double(kv.second);
+    if (na == 0.0 || nb == 0.0) return 0.0;
+    return dot / (std::sqrt(na) * std::sqrt(nb));
+  }
+
+  inline double similarity_jaccard(const Note& other) const {
+    auto a = to_bow();
+    auto b = other.to_bow();
+    std::unordered_set<std::string> sa, sb;
+    for (const auto& kv : a) sa.insert(kv.first);
+    for (const auto& kv : b) sb.insert(kv.first);
+    size_t inter = 0;
+    for (const auto& w : sa) if (sb.find(w) != sb.end()) ++inter;
+    size_t uni = sa.size() + sb.size() - inter;
+    if (uni == 0) return 0.0;
+    return double(inter) / double(uni);
+  }
+
+  inline std::vector<std::string> regex_search(const std::string& pattern) const {
+    std::vector<std::string> out;
+    auto flat = flatten();
+    std::regex re(pattern);
+    for (const auto& s : flat) {
+      try {
+        std::sregex_iterator it(s.begin(), s.end(), re), end;
+        for (; it != end; ++it) out.push_back(it->str());
+      } catch (...) {}
+    }
+    return out;
+  }
+
+  inline std::string join(const std::string& sep = " ") const {
+    auto flat = flatten();
+    std::ostringstream oss;
+    bool first = true;
+    for (const auto& s : flat) {
+      if (!first) oss << sep;
+      oss << s;
+      first = false;
+    }
+    return oss.str();
   }
 
   // --- Debug ---

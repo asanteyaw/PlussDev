@@ -1,7 +1,7 @@
 #pragma once
 
-#include "pluss/Note.h"
-#include "pluss/NoteOps.h"
+#include <pluss/Note.h>
+#include <pluss/NoteOps.h>
 
 // #include <iomanip>
 

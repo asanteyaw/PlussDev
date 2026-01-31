@@ -1,8 +1,8 @@
 #pragma once
 
 #include <pluss/Note.h>
-#include <internals/aux/let/text.h>
-#include <internals/aux/utils/functors.h>
+#include <internals/aux/lexicon/text.h>
+#include <internals/core/include/b10/utils/functors.h>
 #include <functional>
 #include <memory>
 
@@ -33,7 +33,7 @@ inline Text matrix_to_text(const std::vector<std::vector<Chord>>& mat) {
  * content - Create Notes on the fly (similar to PyTorch's tensor())
  * This is the primary way to create Notes from literal values
  */
-inline Note content(const let::TextStructure& structure) {
+inline Note content(const lexicon::TextStructure& structure) {
   return structure.convert_to_note();
 }
 

@@ -55,6 +55,7 @@ add_subdirectory(src/plotism)
 add_subdirectory(src/spaces)
 add_subdirectory(src/datalog)
 add_subdirectory(test)
+add_subdirectory(examples)
 
 # ==============================
 # Compiler flags
