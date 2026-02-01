@@ -432,10 +432,10 @@ inline Series randn_like(const Series& self, const SeriesOptions& options = {}, 
 
 inline Series pile(SeriesList series, int64_t dim=0) {
   // at::TensorList tensors;
-  at::TensorList tensors = map_to_vector<Series, torch::Tensor>(series, [](const Series& s) {
+  auto tensor_vec = map_to_vector<Series, torch::Tensor>(series, [](const Series& s) {
     return s.tensor();
   });
-  return Series(at::_ops::stack::call(tensors, dim));
+  return Series(at::_ops::stack::call(tensor_vec, dim));
 }
 
 inline Series unite(const SeriesList& inputs, int64_t dim = 0) {

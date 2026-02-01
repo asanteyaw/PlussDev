@@ -20,7 +20,9 @@ static inline std::string trim(const std::string& s) {
 
 // Parse a CSV line into fields. Supports quoted fields with double quotes
 // and commas inside quoted fields. Handles CRLF endings.
-static std::vector<std::string> parse_csv_line(const std::string& line) {
+// Parse a delimited line into fields. Supports quoted fields with double quotes
+// and delimiters (default comma). Handles CRLF endings.
+static std::vector<std::string> parse_csv_line(const std::string& line, char delimiter = ',') {
     std::vector<std::string> fields;
     std::string cur;
     bool in_quotes = false;
@@ -41,7 +43,7 @@ static std::vector<std::string> parse_csv_line(const std::string& line) {
         } else {
             if (c == '"') {
                 in_quotes = true;
-            } else if (c == ',') {
+            } else if (c == delimiter) {
                 fields.push_back(trim(cur));
                 cur.clear();
             } else if (c == '\r') {
@@ -64,10 +66,13 @@ RawTable load_csv_raw(const std::string& filename) {
     RawTable raw;
     std::string line;
 
-    // Read header (first non-empty line)
+    // Read header (first non-empty line). Attempt to detect delimiter (comma vs semicolon).
+    char detected_delim = ',';
     while (std::getline(file, line)) {
         if (!line.empty()) {
-            auto cols = parse_csv_line(line);
+            // quick heuristic: if the header contains semicolons but no commas, treat ';' as delimiter
+            if (line.find(';') != std::string::npos && line.find(',') == std::string::npos) detected_delim = ';';
+            auto cols = parse_csv_line(line, detected_delim);
             for (const auto& c : cols) {
                 raw.columns.push_back(c);
                 raw.data.emplace(c, std::vector<std::string>{});
@@ -84,7 +89,7 @@ RawTable load_csv_raw(const std::string& filename) {
 
     // Read remaining rows
     while (std::getline(file, line)) {
-        auto fields = parse_csv_line(line);
+        auto fields = parse_csv_line(line, detected_delim);
         // ensure we have num_cols fields; pad with empty strings if needed
         fields.resize(num_cols);
         for (size_t i = 0; i < num_cols; ++i) {

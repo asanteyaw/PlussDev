@@ -56,7 +56,12 @@ public:
     // Size/shape helpers
     int64_t size() const {
         if (is_series()) return as_series().numel();
-        if (is_timeline()) return as_timeline().to_Series().numel();
+        if (is_timeline()) {
+            const auto& tl = as_timeline();
+            if (tl.has_date()) return tl.date_to_Series().numel();
+            if (tl.has_time()) return tl.time_to_Series().numel();
+            return 0;
+        }
         // For Note, interpret the first shape dimension as size (vector-like)
         if (is_note()) {
             auto sh = as_note().shape();
@@ -67,7 +72,12 @@ public:
 
     int64_t dim() const {
         if (is_series()) return as_series().dim();
-        if (is_timeline()) return as_timeline().to_Series().dim();
+        if (is_timeline()) {
+            const auto& tl = as_timeline();
+            if (!tl.has_date() && !tl.has_time()) return 0;
+            // DataFrame columns are 1D, even if a Timeline stores date+time internally.
+            return 1;
+        }
         if (is_note()) return as_note().ndim();
         return 0;
     }
