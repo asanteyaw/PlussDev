@@ -1,5 +1,17 @@
+set(TABLE_IO_IMPL_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/csv.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/coordinator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/excel.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/loader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/parquet.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rdbms.cpp
+)
+
+target_sources(pluss PRIVATE ${TABLE_IO_IMPL_SOURCES})
+
+# If there are explicit tests under a `test/` subdirectory, build them as executables.
 file(GLOB TABLE_IO_TEST_SOURCES CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp
 )
 
 foreach(test_src ${TABLE_IO_TEST_SOURCES})
@@ -13,7 +25,6 @@ foreach(test_src ${TABLE_IO_TEST_SOURCES})
         ${PROJECT_SOURCE_DIR}/include
     )
 
-    # Optional but recommended
     add_test(NAME ${test_name} COMMAND ${test_name})
 
     message(STATUS "Added Table i/o test: ${test_name}")

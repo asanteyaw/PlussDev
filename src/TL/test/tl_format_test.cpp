@@ -60,6 +60,51 @@ int main() {
 	std::cout << " - Use `make_timeline(year,month,day)` or `make_timeline_time(h,m,s)` for programmatic construction.\n";
 	std::cout << " - Timeline objects are immutable-like; arithmetic returns new Timeline instances.\n";
 
+	// -------------------------
+	// 3D examples
+	// -------------------------
+
+	// 3D Note -> moment(Note)
+	{
+		// Build a 2x2x2 nested Text structure (leading shape [2,2], last-dim length=2 pairs)
+		pluss::Text root = pluss::Text::make_list();
+		for (int i = 0; i < 2; ++i) {
+			pluss::Text mat = pluss::Text::make_list();
+			for (int j = 0; j < 2; ++j) {
+				pluss::Text pair = pluss::Text::make_list();
+				if (i == 0 && j == 0) {
+					pair.append(pluss::Text(pluss::Chord("2020-01-01")));
+					pair.append(pluss::Text(pluss::Chord("00:00:00")));
+				} else if (i == 0 && j == 1) {
+					pair.append(pluss::Text(pluss::Chord("2020-01-02")));
+					pair.append(pluss::Text(pluss::Chord("01:00:00")));
+				} else if (i == 1 && j == 0) {
+					pair.append(pluss::Text(pluss::Chord("2020-02-01")));
+					pair.append(pluss::Text(pluss::Chord("02:00:00")));
+				} else {
+					pair.append(pluss::Text(pluss::Chord("2020-02-02")));
+					pair.append(pluss::Text(pluss::Chord("03:00:00")));
+				}
+				mat.append(pair);
+			}
+			root.append(mat);
+		}
+
+		auto nb = intrusive_ptr<pluss::detail::NoteBook>::make(root);
+		pluss::Note n3d = pluss::Note::wrap_note_impl(nb);
+		pluss::Timeline t3 = moment(n3d);
+		std::cout << "\n3D Note -> moment produced Timeline with date_series dim=" << t3.date_to_Series().dim() << " and time_series dim=" << t3.time_to_Series().dim() << "\n";
+		std::cout << "date_series (internal): " << t3.date_to_Series().toString() << "\n";
+	}
+
+	// 3D Series -> make_timeline
+	{
+		pluss::Series s3d = pluss::value({{{20200101LL, 0LL}, {20200102LL, 100LL}}, {{20200201LL, 200LL}, {20200202LL, 300LL}}});
+		pluss::Timeline ts3 = make_timeline(s3d);
+		std::cout << "\n3D Series -> make_timeline produced Timeline with date_series dim=" << ts3.date_to_Series().dim() << " and time_series dim=" << ts3.time_to_Series().dim() << "\n";
+		std::cout << "date_series (internal): " << ts3.date_to_Series().toString() << "\n";
+	}
+
 	return 0;
 }
 

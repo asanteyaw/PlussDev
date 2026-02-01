@@ -1,8 +1,7 @@
-#include "table/io/loader.h"
-#include "table/io/csv.h"
-#include "table/io/excel.h"
-#include "table/io/parquet.h"
-#include "table/io/rdbms.h"
+#include <pluss/pluss.h>
+/* loader.cpp uses the high-level `load()` API which relies on
+    format-specific loaders (csv/excel/parquet/rdbms) that are
+    exposed via the umbrella headers. */
 
 namespace pluss::table::io {
 

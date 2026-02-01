@@ -13,8 +13,8 @@ foreach(examples_src ${NOTE_EXAMPLES_SOURCES})
         ${PROJECT_SOURCE_DIR}/include
     )
 
-    # Optional but recommended
-    add_examples(NAME ${examples_name} COMMAND ${examples_name})
+    # Optional but recommended: register example as a ctest test
+    add_test(NAME ${examples_name} COMMAND ${examples_name})
 
     message(STATUS "Added Note examples: ${examples_name}")
 endforeach()

@@ -1,80 +1,104 @@
-#include "table/io/csv.h"
+#include <pluss/pluss.h>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <unordered_map>
-#include <ranges>
-#include <algorithm>
 #include <stdexcept>
-#include <torch/torch.h>
+#include <string>
+#include <cctype>
 
 namespace pluss::table::io {
 
-std::shared_ptr<DataFrame> load_csv(const std::string& filename) {
+// Trim whitespace from both ends (in-place view)
+static inline std::string trim(const std::string& s) {
+    size_t l = 0;
+    size_t r = s.size();
+    while (l < r && std::isspace(static_cast<unsigned char>(s[l]))) ++l;
+    while (r > l && std::isspace(static_cast<unsigned char>(s[r-1]))) --r;
+    return s.substr(l, r - l);
+}
+
+// Parse a CSV line into fields. Supports quoted fields with double quotes
+// and commas inside quoted fields. Handles CRLF endings.
+static std::vector<std::string> parse_csv_line(const std::string& line) {
+    std::vector<std::string> fields;
+    std::string cur;
+    bool in_quotes = false;
+    for (size_t i = 0; i < line.size(); ++i) {
+        char c = line[i];
+        if (in_quotes) {
+            if (c == '"') {
+                if (i + 1 < line.size() && line[i+1] == '"') {
+                    // escaped quote
+                    cur.push_back('"');
+                    ++i;
+                } else {
+                    in_quotes = false;
+                }
+            } else {
+                cur.push_back(c);
+            }
+        } else {
+            if (c == '"') {
+                in_quotes = true;
+            } else if (c == ',') {
+                fields.push_back(trim(cur));
+                cur.clear();
+            } else if (c == '\r') {
+                // ignore CR (handle CRLF)
+            } else {
+                cur.push_back(c);
+            }
+        }
+    }
+    fields.push_back(trim(cur));
+    return fields;
+}
+
+RawTable load_csv_raw(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
         throw std::runtime_error("Could not open file: " + filename);
     }
 
+    RawTable raw;
     std::string line;
-    std::vector<std::string> column_names;
 
-    // ✅ Read header
-    if (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::string col;
-        while (std::getline(ss, col, ',')) {
-            column_names.push_back(col);
-        }
-    }
-
-    const size_t num_cols = column_names.size();
-    std::unordered_map<std::string, std::vector<std::string>> raw_data;
-
-    // ✅ Read all rows
+    // Read header (first non-empty line)
     while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::string cell;
-        size_t col_index = 0;
-        while (std::getline(ss, cell, ',')) {
-            if (col_index < num_cols) {
-                raw_data[column_names[col_index++]].push_back(cell);
+        if (!line.empty()) {
+            auto cols = parse_csv_line(line);
+            for (const auto& c : cols) {
+                raw.columns.push_back(c);
+                raw.data.emplace(c, std::vector<std::string>{});
             }
+            break;
         }
     }
+
+    const size_t num_cols = raw.columns.size();
+    if (num_cols == 0) {
+        // empty file or no header
+        return raw;
+    }
+
+    // Read remaining rows
+    while (std::getline(file, line)) {
+        auto fields = parse_csv_line(line);
+        // ensure we have num_cols fields; pad with empty strings if needed
+        fields.resize(num_cols);
+        for (size_t i = 0; i < num_cols; ++i) {
+            raw.data[raw.columns[i]].push_back(fields[i]);
+        }
+    }
+
     file.close();
+    return raw;
+}
 
-    auto df = std::make_shared<DataFrame>();
-
-    for (const auto& [col, values] : raw_data) {
-        bool is_int = std::ranges::all_of(values, [](const std::string& val) {
-            return val.find('.') == std::string::npos && val.find('e') == std::string::npos;
-        });
-
-        if (is_int) {
-            std::vector<int32_t> int_vals;
-            for (const auto& val : values) {
-                try {
-                    int_vals.push_back(std::stoi(val));
-                } catch (...) {
-                    int_vals.push_back(0);
-                }
-            }
-            df = df->set_col(col, torch::tensor(int_vals, torch::kInt32));
-        } else {
-            std::vector<float> float_vals;
-            for (const auto& val : values) {
-                try {
-                    float_vals.push_back(std::stof(val));
-                } catch (...) {
-                    float_vals.push_back(NAN);
-                }
-            }
-            df = df->set_col(col, torch::tensor(float_vals, torch::kFloat32));
-        }
-    }
-
-    return df;
+std::shared_ptr<DataFrame> load_csv(const std::string& filename) {
+    RawTable raw = load_csv_raw(filename);
+    return convert_raw_to_dataframe(raw);
 }
 
 }  // namespace pluss::table::io

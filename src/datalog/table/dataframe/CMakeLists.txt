@@ -4,4 +4,5 @@ file(GLOB DATAFRAME_SOURCES CONFIGURE_DEPENDS
 
 target_sources(pluss PRIVATE ${DATAFRAME_SOURCES})
 
+add_subdirectory(examples)
 add_subdirectory(test)

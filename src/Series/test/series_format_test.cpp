@@ -78,22 +78,22 @@ int main() {
     
     // Test different data types
     {
-        Series s_int8 = pluss::ones({2, 2}, config({"dtype", "int8"}));
+        Series s_int8 = pluss::ones({2, 2}, config({{"dtype", "int8"}}));
         std::cout << "Int8 Series:\n" << s_int8 << "\n\n";
         
-        Series s_int16 = pluss::ones({2, 2}, config({"dtype", "int16"}));
+        Series s_int16 = pluss::ones({2, 2}, config({{"dtype", "int16"}}));
         std::cout << "Int16 Series:\n" << s_int16 << "\n\n";
         
-        Series s_int32 = pluss::ones({2, 2}, config({"dtype", "int32"}));
+        Series s_int32 = pluss::ones({2, 2}, config({{"dtype", "int32"}}));
         std::cout << "Int32 Series:\n" << s_int32 << "\n\n";
         
-        Series s_int64 = pluss::ones({2, 2}, config({"dtype", "int64"}));
+        Series s_int64 = pluss::ones({2, 2}, config({{"dtype", "int64"}}));
         std::cout << "Int64 Series:\n" << s_int64 << "\n\n";
         
-        Series s_float32 = pluss::ones({2, 2}, config({"dtype", "float32"}));
+        Series s_float32 = pluss::ones({2, 2}, config({{"dtype", "float32"}}));
         std::cout << "Float32 Series:\n" << s_float32 << "\n\n";
         
-        Series s_float64 = pluss::ones({2, 2}, config({"dtype", "float64"}));
+        Series s_float64 = pluss::ones({2, 2}, config({{"dtype", "float64"}}));
         std::cout << "Float64 Series:\n" << s_float64 << "\n\n";
     }
     

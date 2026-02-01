@@ -1557,6 +1557,11 @@ inline Scalar Series::item() const {
   PLUSS_INTERNAL_DISPATCH({ return at::_ops::item::call(*this); });
 }
 
+template <typename T>
+inline T Series::item() const {
+  PLUSS_INTERNAL_DISPATCH({ return at::Tensor(*this).template item<T>(); });
+}
+
 inline Series Series::logical_or(const Series & other) const {
   PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::logical_or::call(*this, other)); });
 }

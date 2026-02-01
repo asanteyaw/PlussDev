@@ -1,8 +1,8 @@
-file(GLOB SERIES_SOURCES CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/series_*.cpp
+file(GLOB NOTE_SOURCES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/note_*.cpp
 )
 
-target_sources(pluss PRIVATE ${SERIES_SOURCES})
+target_sources(pluss PRIVATE ${NOTE_SOURCES})
 
 add_subdirectory(examples)
 add_subdirectory(test)

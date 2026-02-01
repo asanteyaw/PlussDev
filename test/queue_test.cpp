@@ -49,7 +49,7 @@ void test_series_queue() {
     // Test 1: Simple scalar function on a 1D Series
     {
         torch::Tensor k = torch::tensor({1.0, 2.0, 3.0, 4.0, 5.0});
-        pluss::Series s = pluss::value({1.0, 2.0, 3.0, 4.0, 5.0}, pluss::config({"dtype", "float64"}));
+        pluss::Series s = pluss::value({1.0, 2.0, 3.0, 4.0, 5.0}, pluss::config({{"dtype", "float64"}}));
         auto square = [](double x) { return x * x; };
         std::cout << "Input dtype: " << s.dtype() << std::endl;
         pluss::Series result = pluss::queue(square, s);

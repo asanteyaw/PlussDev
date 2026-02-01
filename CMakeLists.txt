@@ -28,6 +28,12 @@ add_library(pluss STATIC)
 find_package(Torch REQUIRED)
 find_package(OpenSSL REQUIRED)
 
+# Show where OpenSSL was found and add include dir as a fallback
+message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
+if(DEFINED OPENSSL_INCLUDE_DIR)
+    target_include_directories(pluss PUBLIC ${OPENSSL_INCLUDE_DIR})
+endif()
+
 target_link_libraries(pluss
     PUBLIC  ${TORCH_LIBRARIES}
     PRIVATE OpenSSL::Crypto
@@ -55,7 +61,6 @@ add_subdirectory(src/plotism)
 add_subdirectory(src/spaces)
 add_subdirectory(src/datalog)
 add_subdirectory(test)
-add_subdirectory(examples)
 
 # ==============================
 # Compiler flags

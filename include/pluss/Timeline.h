@@ -219,12 +219,12 @@ public:
 namespace pluss {
 
 // Helper function to check if a string is a number
-static bool isNumber(const std::string& s) {
+[[maybe_unused]] static inline bool isNumber(const std::string& s) {
     return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit);
 }
 
 // Helper function to convert string to lowercase
-static std::string toLower(const std::string& s) {
+[[maybe_unused]] static inline std::string toLower(const std::string& s) {
     std::string result = s;
     std::transform(result.begin(), result.end(), result.begin(), 
                     [](unsigned char c){ return std::tolower(c); });
@@ -232,7 +232,7 @@ static std::string toLower(const std::string& s) {
 }
 
 // Helper function to trim whitespace from start and end of string
-static std::string trim(const std::string& s) {
+[[maybe_unused]] static inline std::string trim(const std::string& s) {
     auto start = s.begin();
     while (start != s.end() && std::isspace(*start)) {
         start++;
@@ -247,7 +247,7 @@ static std::string trim(const std::string& s) {
 }
 
 // Helper function to extract numbers from a string
-static std::vector<int> extractNumbers(const std::string& s) {
+[[maybe_unused]] static inline std::vector<int> extractNumbers(const std::string& s) {
     std::vector<int> numbers;
     std::string current_number;
     
@@ -755,16 +755,32 @@ inline Timeline Timeline::fromTimestamp(int64_t timestamp) {
 }
 
 inline Timeline Timeline::fromSeries(const Series& series) {
+    // Handle scalar
     if (series.dim() == 0) {
-        // Scalar Series, interpret as date
         return Timeline(series, Series());
-    } else if (series.dim() == 1 && series.shape(0) == 2) {
-        // 1D Series with 2 elements, interpret as [date, time]
-        return Timeline(series[0], series[1]);
-    } else {
-        // Default to current date and time
-        return Timeline();
     }
+
+    // If 1D with length==2 treat as [date, time] pair
+    if (series.dim() == 1 && series.shape(0) == 2) {
+        return Timeline(series[0], series[1]);
+    }
+
+    // If the last dimension is 2, treat it as a pair dimension and split into date/time series
+    // Works for 1D (already handled), 2D, 3D, etc.
+    // Use Series API to split last-dimension pairs (avoids needing tensor cast)
+    try {
+        int64_t last_dim = series.dim() - 1;
+        if (series.dim() >= 1 && series.shape(last_dim) == 2) {
+            Series ds = series.select(last_dim, 0);
+            Series ts = series.select(last_dim, 1);
+            return Timeline(ds, ts);
+        }
+    } catch (...) {
+        // Fallthrough to default
+    }
+
+    // Default: cannot interpret -> current date/time
+    return Timeline();
 }
 
 // Getters
