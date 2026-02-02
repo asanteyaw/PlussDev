@@ -20,16 +20,13 @@ namespace pluss {
 class Series;
 
 class Scalar : public at::Scalar {
-private:
-    at::Scalar scalar_;
 public:
-    Scalar() = default;
-    Scalar(int value) : scalar_(value) {}
-    Scalar(int64_t value) : scalar_(value) {}
-    Scalar(double value) : scalar_(value) {}
-    Scalar(bool value) : scalar_(value) {}
-    Scalar(const at::Scalar& scalar) : scalar_(scalar) {}
-    // operator at::Scalar() const { return scalar_; }
+    Scalar() : at::Scalar() {}
+    Scalar(int value) : at::Scalar(value) {}
+    Scalar(int64_t value) : at::Scalar(value) {}
+    Scalar(double value) : at::Scalar(value) {}
+    Scalar(bool value) : at::Scalar(value) {}
+    Scalar(const at::Scalar& scalar) : at::Scalar(scalar) {}
 };
 
 template <typename T>

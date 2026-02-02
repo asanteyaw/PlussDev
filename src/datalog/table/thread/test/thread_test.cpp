@@ -160,7 +160,7 @@ void test_cumulative_operations() {
 void test_missing_data_operations() {
     std::cout << "=== Testing Missing Data Operations ===\n";
     
-    auto data = pluss::from_torch(torch::tensor({1.0, NAN, 3.0, NAN, 5.0}));
+    auto data = pluss::from_torch(torch::tensor({1.0, std::nan(""), 3.0, std::nan(""), 5.0}));
     Thread t(data, "na_test");
     
     // Test isna/notna
@@ -180,8 +180,8 @@ void test_missing_data_operations() {
     std::cout << "✓ dropna() works\n";
     
     // Test fillna
-    auto zero_data = pluss::from_torch(torch::tensor({0.0}));
-    Thread fill_val(zero_data, "fill");
+    auto fill_data = pluss::from_torch(torch::tensor({0.0}));
+    Thread fill_val(fill_data, "fill");
     auto filled = t.fillna(fill_val);
     assert(!std::isnan(filled.as_series()[1].item<double>()));
     std::cout << "✓ fillna() works\n";

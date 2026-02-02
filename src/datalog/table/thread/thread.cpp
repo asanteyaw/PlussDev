@@ -140,12 +140,12 @@ Thread Thread::unique() const {
 
 Thread Thread::sort_values(bool ascending) const {
     if (is_series()) {
-        auto sorted_vals = std::get<0>(as_series().sort(0, ascending));
+        auto sorted_vals = std::get<0>(as_series().sort(0, !ascending));  // PyTorch sort uses descending parameter
         return Thread(sorted_vals, name_);
     }
     if (is_timeline()) {
         auto s = as_timeline().to_Series();
-        auto sorted_vals = std::get<0>(s.sort(0, ascending));
+        auto sorted_vals = std::get<0>(s.sort(0, !ascending));  // PyTorch sort uses descending parameter
         return Thread(sorted_vals, name_);
     }
     if (is_note()) {
@@ -233,7 +233,8 @@ Thread Thread::rank(const std::string& /*method*/) const {
 Thread Thread::diff(int64_t periods) const {
     if (is_series()) {
         if (periods <= 0 || size() <= periods) {
-            return Thread(pluss::full({size()}, NAN), name_);
+            auto opts = SeriesOptions().dtype(as_series().dtype().toScalarType());
+            return Thread(pluss::full({size()}, std::nan(""), opts), name_);
         }
         auto shifted = shift(periods);
         return Thread(as_series().sub(shifted.as_series()), name_);
@@ -246,16 +247,18 @@ Thread Thread::shift(int64_t periods) const {
         if (periods == 0) return *this;
         
         const auto sz = size();
+        auto opts = SeriesOptions().dtype(as_series().dtype().toScalarType());
         if (periods > 0) {
-            auto nans = pluss::full({periods}, NAN);
+            // Create NaN tensor matching the dtype of the series
+            auto nans = pluss::full({periods}, std::nan(""), opts);
             auto trimmed = as_series().narrow(0, 0, sz - periods);
-            auto combined = pluss::from_torch(torch::cat({nans.data(), trimmed.data()}, 0));
-            return Thread(combined, name_);
+            auto combined = torch::cat({nans.data(), trimmed.data()}, 0);
+            return Thread(pluss::from_torch(combined), name_);
         } else {
-            auto nans = pluss::full({-periods}, NAN);
+            auto nans = pluss::full({-periods}, std::nan(""), opts);
             auto trimmed = as_series().narrow(0, -periods, sz + periods);
-            auto combined = pluss::from_torch(torch::cat({trimmed.data(), nans.data()}, 0));
-            return Thread(combined, name_);
+            auto combined = torch::cat({trimmed.data(), nans.data()}, 0);
+            return Thread(pluss::from_torch(combined), name_);
         }
     }
     return *this;
@@ -353,11 +356,23 @@ Thread Thread::ffill() const {
         // Forward fill: propagate last valid value forward
         auto data = as_series();
         auto result = data.clone();
-        for (int64_t i = 1; i < size(); ++i) {
-            if (std::isnan(result[i].item<double>())) {
-                result[i] = result[i-1];
+        
+        if (result.dtype() == torch::kFloat32) {
+            auto accessor = result.accessor<float, 1>();
+            for (int64_t i = 1; i < size(); ++i) {
+                if (std::isnan(accessor[i])) {
+                    accessor[i] = accessor[i-1];
+                }
+            }
+        } else if (result.dtype() == torch::kFloat64) {
+            auto accessor = result.accessor<double, 1>();
+            for (int64_t i = 1; i < size(); ++i) {
+                if (std::isnan(accessor[i])) {
+                    accessor[i] = accessor[i-1];
+                }
             }
         }
+        
         return Thread(result, name_);
     }
     return *this;
@@ -368,11 +383,23 @@ Thread Thread::bfill() const {
         // Backward fill: propagate next valid value backward
         auto data = as_series();
         auto result = data.clone();
-        for (int64_t i = size() - 2; i >= 0; --i) {
-            if (std::isnan(result[i].item<double>())) {
-                result[i] = result[i+1];
+        
+        if (result.dtype() == torch::kFloat32) {
+            auto accessor = result.accessor<float, 1>();
+            for (int64_t i = size() - 2; i >= 0; --i) {
+                if (std::isnan(accessor[i])) {
+                    accessor[i] = accessor[i+1];
+                }
+            }
+        } else if (result.dtype() == torch::kFloat64) {
+            auto accessor = result.accessor<double, 1>();
+            for (int64_t i = size() - 2; i >= 0; --i) {
+                if (std::isnan(accessor[i])) {
+                    accessor[i] = accessor[i+1];
+                }
             }
         }
+        
         return Thread(result, name_);
     }
     return *this;
@@ -403,7 +430,7 @@ Thread Thread::interpolate(const std::string& method) const {
                     double weight = static_cast<double>(i - prev) / (next - prev);
                     result_vec.push_back(prev_val + weight * (next_val - prev_val));
                 } else {
-                    result_vec.push_back(NAN);
+                    result_vec.push_back(std::nan(""));
                 }
             }
         }

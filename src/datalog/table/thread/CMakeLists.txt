@@ -6,3 +6,4 @@ file(GLOB THREAD_SOURCES CONFIGURE_DEPENDS
 target_sources(pluss PRIVATE ${THREAD_SOURCES})
 
 add_subdirectory(test)
+add_subdirectory(examples)
