@@ -35,6 +35,16 @@ DataFrame::DataFrame(const std::unordered_map<std::string, pluss::Series>& data,
     for (const auto &kv : data) impl_->data.emplace(kv.first, pluss::table::Thread(kv.second, kv.first));
     impl_->column_order = column_order;
 }
+DataFrame::DataFrame(const std::vector<Thread>& threads) : impl_(std::make_unique<Impl>()) {
+    for (const auto& thread : threads) {
+        std::string col_name = thread.name();
+        if (col_name.empty()) {
+            col_name = "col_" + std::to_string(impl_->column_order.size());
+        }
+        impl_->data.emplace(col_name, thread);
+        impl_->column_order.push_back(col_name);
+    }
+}
 DataFrame::DataFrame(const DataFrame& other) : impl_(std::make_unique<Impl>(other.impl_->data, other.impl_->column_order)) {}
 DataFrame& DataFrame::operator=(const DataFrame& other) { if (this != &other) impl_ = std::make_unique<Impl>(other.impl_->data, other.impl_->column_order); return *this; }
 DataFrame::DataFrame(DataFrame&& other) noexcept = default;
@@ -429,5 +439,653 @@ int64_t DataFrame::nunique(const std::string& col_name) const {
     return thread.unique().size();
 }
 
-} // namespace pluss::table
+double DataFrame::min(const std::string& col_name) const {
+    auto thread = get_col(col_name);
+    if (thread.is_series()) {
+        return thread.as_series().min().item<double>();
+    }
+    throw std::runtime_error("min() requires numeric column");
+}
 
+double DataFrame::max(const std::string& col_name) const {
+    auto thread = get_col(col_name);
+    if (thread.is_series()) {
+        return thread.as_series().max().item<double>();
+    }
+    throw std::runtime_error("max() requires numeric column");
+}
+
+double DataFrame::std(const std::string& col_name, int ddof) const {
+    auto thread = get_col(col_name);
+    if (thread.is_series()) {
+        auto s = thread.as_series();
+        torch::Tensor tensor = s.data();
+        if (tensor.numel() <= ddof) return 0.0;
+        double mean_val = mean(col_name);
+        auto diff = tensor - mean_val;
+        auto sq = diff * diff;
+        auto var_val = sq.sum() / (tensor.numel() - ddof);
+        return std::sqrt(var_val.item<double>());
+    }
+    throw std::runtime_error("std() requires numeric column");
+}
+
+double DataFrame::var(const std::string& col_name, int ddof) const {
+    auto thread = get_col(col_name);
+    if (thread.is_series()) {
+        auto s = thread.as_series();
+        torch::Tensor tensor = s.data();
+        if (tensor.numel() <= ddof) return 0.0;
+        double mean_val = mean(col_name);
+        auto diff = tensor - mean_val;
+        auto sq = diff * diff;
+        return (sq.sum() / (tensor.numel() - ddof)).item<double>();
+    }
+    throw std::runtime_error("var() requires numeric column");
+}
+
+double DataFrame::prod(const std::string& col_name) const {
+    auto thread = get_col(col_name);
+    if (thread.is_series()) {
+        return thread.as_series().prod().item<double>();
+    }
+    throw std::runtime_error("prod() requires numeric column");
+}
+
+double DataFrame::median(const std::string& col_name) const {
+    auto thread = get_col(col_name);
+    if (thread.is_series()) {
+        return thread.as_series().median().item<double>();
+    }
+    throw std::runtime_error("median() requires numeric column");
+}
+
+double DataFrame::quantile(const std::string& col_name, double q) const {
+    auto thread = get_col(col_name);
+    if (thread.is_series()) {
+        return thread.as_series().quantile(q).item<double>();
+    }
+    throw std::runtime_error("quantile() requires numeric column");
+}
+
+std::pair<int64_t, int64_t> DataFrame::shape() const {
+    int64_t num_rows = 0;
+    if (!impl_->column_order.empty()) {
+        num_rows = impl_->data.at(impl_->column_order[0]).size();
+    }
+    return {num_rows, static_cast<int64_t>(impl_->column_order.size())};
+}
+
+std::shared_ptr<DataFrame> DataFrame::where(const std::shared_ptr<DataFrame>& cond, double other) const {
+    (void)cond; (void)other;
+    return copy();
+}
+
+// =============== Additional Operations for Atlas ===============
+
+std::shared_ptr<DataFrame> DataFrame::filter(const std::vector<std::string>& items) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : items) {
+        if (impl_->data.count(col_name)) {
+            df = df->set_col(col_name, impl_->data.at(col_name));
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::drop_duplicates(const std::vector<std::string>& /*subset*/) const {
+    return copy();
+}
+
+std::shared_ptr<DataFrame> DataFrame::fillna(const std::unordered_map<std::string, double>& values) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        if (values.count(col_name)) {
+            auto fill_thread = Thread(pluss::value(values.at(col_name)), "fill");
+            df = df->set_col(col_name, thread.fillna(fill_thread));
+        } else {
+            df = df->set_col(col_name, thread);
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::ffill() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        df = df->set_col(col_name, get_col(col_name).ffill());
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::bfill() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        df = df->set_col(col_name, get_col(col_name).bfill());
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::interpolate(const std::string& method) const {
+    (void)method;
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        df = df->set_col(col_name, get_col(col_name).interpolate());
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::isna() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        df = df->set_col(col_name, get_col(col_name).isna());
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::notna() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        df = df->set_col(col_name, get_col(col_name).notna());
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::add_prefix(const std::string& prefix) const {
+    std::unordered_map<std::string, std::string> rename_map;
+    for (const auto& col : columns()) {
+        rename_map[col] = prefix + col;
+    }
+    return rename(rename_map);
+}
+
+std::shared_ptr<DataFrame> DataFrame::add_suffix(const std::string& suffix) const {
+    std::unordered_map<std::string, std::string> rename_map;
+    for (const auto& col : columns()) {
+        rename_map[col] = col + suffix;
+    }
+    return rename(rename_map);
+}
+
+std::shared_ptr<DataFrame> DataFrame::abs() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        if (thread.is_series()) {
+            df = df->set_col(col_name, Thread(thread.as_series().abs(), col_name));
+        } else {
+            df = df->set_col(col_name, thread);
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::round(int decimals) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        if (thread.is_series()) {
+            df = df->set_col(col_name, Thread(thread.as_series().round(decimals), col_name));
+        } else {
+            df = df->set_col(col_name, thread);
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::clip(double lower, double upper) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        if (thread.is_series()) {
+            df = df->set_col(col_name, Thread(thread.as_series().clip(lower, upper), col_name));
+        } else {
+            df = df->set_col(col_name, thread);
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::transform(const std::string& /*func*/) const {
+    return copy();
+}
+
+std::shared_ptr<DataFrame> DataFrame::pct_change(int64_t periods) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        df = df->set_col(col_name, get_col(col_name).pct_change(periods));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::sqrt() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        if (thread.is_series()) {
+            df = df->set_col(col_name, Thread(thread.as_series().sqrt(), col_name));
+        } else {
+            df = df->set_col(col_name, thread);
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::log() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        if (thread.is_series()) {
+            df = df->set_col(col_name, Thread(thread.as_series().log(), col_name));
+        } else {
+            df = df->set_col(col_name, thread);
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::log10() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        if (thread.is_series()) {
+            df = df->set_col(col_name, Thread(thread.as_series().log10(), col_name));
+        } else {
+            df = df->set_col(col_name, thread);
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::exp() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        if (thread.is_series()) {
+            df = df->set_col(col_name, Thread(thread.as_series().exp(), col_name));
+        } else {
+            df = df->set_col(col_name, thread);
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::sin() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        if (thread.is_series()) {
+            df = df->set_col(col_name, Thread(thread.as_series().sin(), col_name));
+        } else {
+            df = df->set_col(col_name, thread);
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::cos() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        if (thread.is_series()) {
+            df = df->set_col(col_name, Thread(thread.as_series().cos(), col_name));
+        } else {
+            df = df->set_col(col_name, thread);
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::tan() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        if (thread.is_series()) {
+            df = df->set_col(col_name, Thread(thread.as_series().tan(), col_name));
+        } else {
+            df = df->set_col(col_name, thread);
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::sum() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        double val = sum(col_name);
+        df = df->set_col(col_name, Thread(pluss::Series(torch::tensor({val})), col_name));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::mean() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        double val = mean(col_name);
+        df = df->set_col(col_name, Thread(pluss::Series(torch::tensor({val})), col_name));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::median() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        double val = median(col_name);
+        df = df->set_col(col_name, Thread(pluss::Series(torch::tensor({val})), col_name));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::std(int ddof) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        double val = std(col_name, ddof);
+        df = df->set_col(col_name, Thread(pluss::Series(torch::tensor({val})), col_name));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::var(int ddof) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        double val = var(col_name, ddof);
+        df = df->set_col(col_name, Thread(pluss::Series(torch::tensor({val})), col_name));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::min() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        double val = min(col_name);
+        df = df->set_col(col_name, Thread(pluss::Series(torch::tensor({val})), col_name));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::max() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        double val = max(col_name);
+        df = df->set_col(col_name, Thread(pluss::Series(torch::tensor({val})), col_name));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::prod() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        double val = prod(col_name);
+        df = df->set_col(col_name, Thread(pluss::Series(torch::tensor({val})), col_name));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::count() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        int64_t val = count(col_name);
+        df = df->set_col(col_name, Thread(pluss::Series(torch::tensor({static_cast<double>(val)})), col_name));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::nunique() const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        int64_t val = nunique(col_name);
+        df = df->set_col(col_name, Thread(pluss::Series(torch::tensor({static_cast<double>(val)})), col_name));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::quantile(double q) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        double val = quantile(col_name, q);
+        df = df->set_col(col_name, Thread(pluss::Series(torch::tensor({val})), col_name));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::quantile(const std::vector<double>& /*q*/) const {
+    return copy();
+}
+
+std::shared_ptr<DataFrame> DataFrame::describe(const std::vector<double>& /*percentiles*/) const {
+    return copy();
+}
+
+std::shared_ptr<DataFrame> DataFrame::corr(const std::string& /*method*/) const {
+    return copy();
+}
+
+std::shared_ptr<DataFrame> DataFrame::cov(int /*ddof*/) const {
+    return copy();
+}
+
+std::shared_ptr<DataFrame> DataFrame::rank(const std::string& /*method*/) const {
+    return copy();
+}
+
+std::shared_ptr<DataFrame> DataFrame::eq(const std::shared_ptr<DataFrame>& other) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.eq(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::ne(const std::shared_ptr<DataFrame>& other) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.ne(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::lt(const std::shared_ptr<DataFrame>& other) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.lt(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::le(const std::shared_ptr<DataFrame>& other) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.le(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::gt(const std::shared_ptr<DataFrame>& other) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.gt(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::ge(const std::shared_ptr<DataFrame>& other) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.ge(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::add(const std::shared_ptr<DataFrame>& other, double /*fill_value*/) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.add(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::sub(const std::shared_ptr<DataFrame>& other, double /*fill_value*/) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.sub(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::mul(const std::shared_ptr<DataFrame>& other, double /*fill_value*/) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.mul(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::div(const std::shared_ptr<DataFrame>& other, double /*fill_value*/) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.div(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::mod(const std::shared_ptr<DataFrame>& other, double /*fill_value*/) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.mod(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::pow(const std::shared_ptr<DataFrame>& other, double /*fill_value*/) const {
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        if (impl_->data.count(col_name) && other->impl_->data.count(col_name)) {
+            auto t1 = impl_->data.at(col_name);
+            auto t2 = other->impl_->data.at(col_name);
+            if (t1.is_series() && t2.is_series()) {
+                df = df->set_col(col_name, t1.pow(t2));
+            }
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::merge(
+    const std::shared_ptr<DataFrame>& /*other*/,
+    const std::string& /*on*/,
+    const std::string& /*how*/) const {
+    return copy();
+}
+
+std::shared_ptr<DataFrame> DataFrame::merge(
+    const std::shared_ptr<DataFrame>& /*other*/,
+    const std::vector<std::string>& /*on*/,
+    const std::string& /*how*/) const {
+    return copy();
+}
+
+std::shared_ptr<DataFrame> DataFrame::join(
+    const std::shared_ptr<DataFrame>& /*other*/,
+    const std::string& /*how*/,
+    const std::string& /*lsuffix*/,
+    const std::string& /*rsuffix*/) const {
+    return copy();
+}
+
+std::shared_ptr<DataFrame> DataFrame::all() const {
+    return copy();
+}
+
+std::shared_ptr<DataFrame> DataFrame::any() const {
+    return copy();
+}
+
+bool DataFrame::equals(const std::shared_ptr<DataFrame>& other) const {
+    if (columns() != other->columns()) return false;
+    for (const auto& col : columns()) {
+        if (count(col) != other->count(col)) return false;
+    }
+    return true;
+}
+
+std::string DataFrame::to_json(const std::string& /*orient*/) const {
+    std::ostringstream oss;
+    oss << "{";
+    bool first = true;
+    for (const auto& col : columns()) {
+        if (!first) oss << ", ";
+        first = false;
+        oss << "\"" << col << "\": []";
+    }
+    oss << "}";
+    return oss.str();
+}
+
+} // namespace pluss::table

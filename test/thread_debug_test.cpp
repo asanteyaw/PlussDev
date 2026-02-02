@@ -21,9 +21,17 @@ int main() {
     auto s_add = s1.add(s2);
     std::cout << "s1.add(s2): " << s_add[0].item<double>() << ", " << s_add[1].item<double>() << ", " << s_add[2].item<double>() << "\n";
     
-    // Test with explicit alpha
+    // Test with explicit alpha = 1.0
     auto s_add_alpha = s1.add(s2, 1.0);
     std::cout << "s1.add(s2, 1.0): " << s_add_alpha[0].item<double>() << ", " << s_add_alpha[1].item<double>() << ", " << s_add_alpha[2].item<double>() << "\n";
+    
+    // Test calling tensor() method
+    auto t_add = s1.tensor().add(s2.tensor());
+    std::cout << "s1.tensor().add(s2.tensor()): " << t_add[0].item<double>() << ", " << t_add[1].item<double>() << ", " << t_add[2].item<double>() << "\n";
+    
+    // Test calling tensor().add with alpha
+    auto t_add_alpha = s1.tensor().add(s2.tensor(), 1.0);
+    std::cout << "s1.tensor().add(s2.tensor(), 1.0): " << t_add_alpha[0].item<double>() << ", " << t_add_alpha[1].item<double>() << ", " << t_add_alpha[2].item<double>() << "\n";
     
     std::cout << "Expected: 12, 23, 34\n\n";
     

@@ -21,6 +21,7 @@ public:
     DataFrame();
     explicit DataFrame(const std::unordered_map<std::string, pluss::Series>& data);
     DataFrame(const std::unordered_map<std::string, pluss::Series>& data, const std::vector<std::string>& column_order);
+    explicit DataFrame(const std::vector<Thread>& threads);  // From Thread vector
     DataFrame(const DataFrame& other);
     DataFrame& operator=(const DataFrame& other);
     DataFrame(DataFrame&& other) noexcept;
