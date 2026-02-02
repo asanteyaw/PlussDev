@@ -4,7 +4,7 @@
 
 #include <ATen/core/ATen_fwd.h>
 #include <c10/util/ArrayRef.h>
-#include <pluss/SeriesBody.h>
+#include <pluss/SeriesBody.h>    // Testing SeriesOps.h instead
 #include <pluss/Types.h>
 #include <torch/csrc/autograd/variable.h>
 #include <ATen/core/Tensor.h>
