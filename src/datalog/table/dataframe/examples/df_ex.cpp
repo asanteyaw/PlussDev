@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <pluss/datalog/table/dataframe/dataframe.h>
 #include <pluss/datalog/table/thread/thread.h>
+#include <pluss/datalog/table/io/display.h>
 
 using namespace pluss;
 using namespace pluss::table;
@@ -47,6 +48,26 @@ int main(int argc, char** argv) {
         std::cout << "First column is named: " << col0.name() << " size=" << col0.size() << "\n";
         if (col0.is_series()) std::cout << "-> underlying series dim=" << col0.as_series().dim() << "\n";
     }
+    
+    // Test 1: Display single column (Thread) - should be simple text with index
+    std::cout << "\n-- Single Column Display (age) --\n";
+    auto age_col = df->get_col("age");
+    std::cout << "Thread: " << age_col.name() << " [" << age_col.size() << " rows]\n";
+    // For now, show first 10 values
+    if (age_col.is_series()) {
+        auto s = age_col.as_series();
+        auto sz = s.data().size(0);
+        for (int64_t i = 0; i < std::min<int64_t>(10, sz); ++i) {
+            std::cout << i << "  " << age_col.cell_value(i) << "\n";
+        }
+        if (sz > 10) {
+            std::cout << "... (" << sz - 10 << " more rows)\n";
+        }
+    }
+    
+    // Test 2: Print whole DataFrame (like pandas print(df))
+    std::cout << "\n-- Whole DataFrame (print(df)) --\n";
+    pluss::table::io::print(std::cout, *df) << "\n";
 
     if (std::filesystem::exists(messy)) {
         std::cout << "\nLoading messy_data.csv to stress test CSV parser...\n";

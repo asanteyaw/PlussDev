@@ -10,9 +10,7 @@
 #include <pluss/pluss.h>
 
 #include <algorithm>
-#include <iomanip>
 #include <iostream>
-#include <sstream>
 
 namespace pluss::table {
 
@@ -53,9 +51,20 @@ int64_t non_null_count(const pluss::table::Thread& t) {
 void DataFrame::head(int64_t n, int format) const {
     pluss::table::io::DisplayOptions opt;
     opt.format = static_cast<pluss::table::io::OutputFormat>(format);
-    opt.max_rows = n;
-    opt.head_rows = n;
-    opt.tail_rows = 0;
+    
+    // For head(), show exactly n rows from the top
+    auto cols = this->columns();
+    int64_t total = cols.empty() ? 0 : this->get_col(cols[0]).size();
+    
+    if (total <= n) {
+        // Show all rows without truncation
+        opt.max_rows = 0;
+    } else {
+        // Show first n rows, with ellipsis if needed, no tail
+        opt.max_rows = n;
+        opt.head_rows = n;
+        opt.tail_rows = 0;  // No tail rows
+    }
     opt.show_summary = false;
     
     std::string result;
@@ -81,8 +90,8 @@ void DataFrame::tail(int64_t n, int format) const {
     
     pluss::table::io::DisplayOptions opt;
     opt.format = static_cast<pluss::table::io::OutputFormat>(format);
-    opt.max_rows = 0;
-    opt.show_summary = false;
+    opt.max_rows = 0;  // Show all rows in the tail slice
+    opt.show_summary = false;  // tail() is for peeking, no summary
     
     std::string result;
     if (opt.format == pluss::table::io::OutputFormat::HTML) {
@@ -96,72 +105,79 @@ void DataFrame::tail(int64_t n, int format) const {
 }
 
 void DataFrame::info(int format) const {
-    // TODO: Add HTML/LaTeX support for info() - for now just text
-    (void)format;  // Mark as used
-    
-    const auto col_names = this->columns();
-    const size_t num_cols = col_names.size();
-
-    size_t num_rows = 0;
-    if (!col_names.empty()) num_rows = static_cast<size_t>(this->get_col(col_names.front()).size());
-
-    std::cout << "<class 'pluss::table::DataFrame'>\n";
-    std::cout << "Index: 0 to " << (num_rows == 0 ? 0 : num_rows - 1) << "\n";
-    std::cout << "Data columns (total " << num_cols << "):\n";
-
-    // Calculate widths dynamically
-    int idx_width = 1;
-    if (!col_names.empty()) {
-        idx_width = std::max(1, static_cast<int>(std::to_string(col_names.size() - 1).size()));
-    }
-    
-    int name_width = 6; // "Column"
-    for (const auto& name : col_names) {
-        name_width = std::max(name_width, static_cast<int>(name.size()));
-    }
-    name_width = std::min(name_width, 32);
-
-    const int count_width = 14;
-    const int dtype_width = 8;
-
-    // Header
-    std::cout << std::left << std::setw(idx_width + 2) << "#" 
-              << std::setw(name_width + 2) << "Column" 
-              << std::setw(count_width + 2) << "Non-Null Count" 
-              << std::setw(dtype_width) << "Dtype" << "\n";
-    std::cout << std::string(static_cast<size_t>(idx_width + name_width + count_width + dtype_width + 6), '-') << "\n";
-
-    // Rows
-    for (size_t i = 0; i < col_names.size(); ++i) {
-        const auto t = this->get_col(col_names[i]);
-        const std::string dtype = t.is_series() ? "Series" : (t.is_timeline() ? "Timeline" : "Note");
-        
-        const int64_t nn_count = non_null_count(t);
-        std::ostringstream count_str;
-        count_str << nn_count << " non-null";
-
-        const std::string col_display = pluss::table::io::detail::ellipsize(col_names[i], name_width, pluss::table::io::DisplayOptions{});
-        
-        std::cout << std::left << std::setw(idx_width + 2) << static_cast<int>(i)
-                  << std::setw(name_width + 2) << col_display
-                  << std::setw(count_width + 2) << count_str.str()
-                  << std::setw(dtype_width) << dtype << "\n";
-    }
-}
-
-void DataFrame::describe(int format) const {
-    // TODO: Add HTML/LaTeX support for describe() - for now just text
-    (void)format;  // Mark as used
-    
     const auto col_names = this->columns();
     if (col_names.empty()) {
         std::cout << "Empty DataFrame\n";
         return;
     }
 
-    // Filter to only numeric (Series) columns and compute stats
+    size_t num_rows = 0;
+    if (!col_names.empty()) num_rows = static_cast<size_t>(this->get_col(col_names.front()).size());
+
+    std::cout << "<class 'pluss::table::DataFrame'>\n";
+    std::cout << "Index: 0 to " << (num_rows == 0 ? 0 : num_rows - 1) << "\n";
+    std::cout << "Data columns (total " << col_names.size() << "):\n";
+
+    // Build DataFrame with column info (Column, Non-Null Count, Dtype)
+    std::vector<std::string> col_data;
+    std::vector<int64_t> count_data;
+    std::vector<std::string> dtype_data;
+    
+    for (const auto& name : col_names) {
+        const auto t = this->get_col(name);
+        col_data.push_back(name);
+        count_data.push_back(non_null_count(t));
+        dtype_data.push_back(t.is_series() ? "Series" : (t.is_timeline() ? "Timeline" : "Note"));
+    }
+    
+    // Create DataFrame for info display
+    std::shared_ptr<DataFrame> info_df = std::make_shared<DataFrame>();
+    
+    // Convert column names to Note (strings)
+    std::vector<pluss::Chord> col_chords;
+    for (const auto& name : col_data) {
+        col_chords.push_back(pluss::Chord(name));
+    }
+    info_df = info_df->set_col("Column", pluss::make_note(col_chords));
+    
+    // Add non-null counts as Series
+    auto count_tensor = torch::tensor(count_data, torch::kInt64);
+    info_df = info_df->set_col("Non-Null Count", Series(count_tensor));
+    
+    // Add dtypes as Note
+    std::vector<pluss::Chord> dtype_chords;
+    for (const auto& dtype : dtype_data) {
+        dtype_chords.push_back(pluss::Chord(dtype));
+    }
+    info_df = info_df->set_col("Dtype", pluss::make_note(dtype_chords));
+    
+    // Use the same display engine as head/tail/describe
+    pluss::table::io::DisplayOptions opt;
+    opt.format = static_cast<pluss::table::io::OutputFormat>(format);
+    opt.max_rows = 0;  // Show all rows
+    opt.show_summary = false;  // info() is metadata, no summary
+    
+    std::string result;
+    if (opt.format == pluss::table::io::OutputFormat::HTML) {
+        result = pluss::table::io::to_html(*info_df, opt);
+    } else if (opt.format == pluss::table::io::OutputFormat::LATEX) {
+        result = pluss::table::io::to_latex(*info_df, opt);
+    } else {
+        result = pluss::table::io::to_string(*info_df, opt);
+    }
+    std::cout << result;
+}
+
+void DataFrame::describe(int format) const {
+    const auto col_names = this->columns();
+    if (col_names.empty()) {
+        std::cout << "Empty DataFrame\n";
+        return;
+    }
+
+    // Compute statistics for numeric columns
     std::vector<std::string> numeric_cols;
-    std::vector<std::vector<double>> stats; // count, mean, std, min, 25%, 50%, 75%, max
+    std::vector<std::vector<double>> stats;
     
     for (const auto& name : col_names) {
         const auto t = this->get_col(name);
@@ -169,11 +185,10 @@ void DataFrame::describe(int format) const {
         
         try {
             auto s = t.as_series();
-            // Filter out NaN values for statistics
             auto mask = ~torch::isnan(s.data());
             auto valid = torch::masked_select(s.data(), mask);
             
-            if (valid.numel() == 0) continue; // Skip if all NaN
+            if (valid.numel() == 0) continue;
             
             auto valid_float = valid.to(torch::kFloat64);
             
@@ -189,7 +204,6 @@ void DataFrame::describe(int format) const {
             numeric_cols.push_back(name);
             stats.push_back({count, mean, stddev, min_val, q25, median, q75, max_val});
         } catch (const std::exception& e) {
-            // Skip columns that can't be converted to numeric
             continue;
         }
     }
@@ -199,97 +213,27 @@ void DataFrame::describe(int format) const {
         return;
     }
 
-    const std::vector<std::string> stat_names = {"count", "mean", "std", "min", "25%", "50%", "75%", "max"};
+    // Create a DataFrame with stats and use to_string() - THE SAME ENGINE AS head()/tail()
+    std::shared_ptr<DataFrame> stats_df = std::make_shared<DataFrame>();
+    for (size_t i = 0; i < numeric_cols.size(); ++i) {
+        auto tensor = torch::tensor(stats[i], torch::kFloat64);
+        stats_df = stats_df->set_col(numeric_cols[i], Series(tensor));
+    }
     
-    // Use fixed column width like pandas - reduced for better terminal fit
-    const int col_width = 12;
-    const int stat_width = 6; // "count"
+    pluss::table::io::DisplayOptions opt;
+    opt.format = static_cast<pluss::table::io::OutputFormat>(format);
+    opt.max_rows = 0;  // Show all 8 stat rows
+    opt.show_summary = true;  // describe() shows statistical summary with dimensions
     
-    // Determine if we need to truncate columns (like pandas does)
-    const int max_display_cols = 6; // Limit for readability
-    bool needs_truncation = numeric_cols.size() > max_display_cols;
-    std::vector<std::string> display_cols;
-    
-    if (needs_truncation) {
-        // Show first 3 and last 3
-        for (size_t i = 0; i < 3 && i < numeric_cols.size(); ++i) {
-            display_cols.push_back(numeric_cols[i]);
-        }
-        display_cols.push_back("...");
-        for (size_t i = numeric_cols.size() - 3; i < numeric_cols.size(); ++i) {
-            display_cols.push_back(numeric_cols[i]);
-        }
+    std::string result;
+    if (opt.format == pluss::table::io::OutputFormat::HTML) {
+        result = pluss::table::io::to_html(*stats_df, opt);
+    } else if (opt.format == pluss::table::io::OutputFormat::LATEX) {
+        result = pluss::table::io::to_latex(*stats_df, opt);
     } else {
-        display_cols = numeric_cols;
+        result = pluss::table::io::to_string(*stats_df, opt);
     }
-    
-    // Header row with column names
-    std::cout << std::setw(stat_width) << std::left << " ";
-    for (const auto& col_name : display_cols) {
-        std::string col_display = col_name;
-        if (col_display.length() > col_width - 1) {
-            col_display = col_display.substr(0, col_width - 1);
-        }
-        std::cout << std::setw(col_width) << std::left << col_display;
-    }
-    std::cout << "\n";
-    
-    // Dashed line under column names
-    std::cout << std::string(stat_width, '-');
-    for (size_t i = 0; i < display_cols.size(); ++i) {
-        std::cout << std::string(col_width, '-');
-    }
-    std::cout << "\n";
-    
-    // Stats rows
-    for (size_t stat_idx = 0; stat_idx < stat_names.size(); ++stat_idx) {
-        std::cout << std::setw(stat_width) << std::left << stat_names[stat_idx];
-        
-        if (needs_truncation) {
-            // First 3 columns
-            for (size_t i = 0; i < 3 && i < numeric_cols.size(); ++i) {
-                double val = stats[i][stat_idx];
-                std::ostringstream tmp;
-                tmp << std::fixed << std::setprecision(6) << val;
-                std::string formatted = tmp.str();
-                if (formatted.length() > col_width - 1) {
-                    formatted = formatted.substr(0, col_width - 1);
-                }
-                std::cout << std::setw(col_width) << std::left << formatted;
-            }
-            // ... column
-            std::cout << std::setw(col_width) << std::left << "...";
-            // Last 3 columns
-            for (size_t i = numeric_cols.size() - 3; i < numeric_cols.size(); ++i) {
-                double val = stats[i][stat_idx];
-                std::ostringstream tmp;
-                tmp << std::fixed << std::setprecision(6) << val;
-                std::string formatted = tmp.str();
-                if (formatted.length() > col_width - 1) {
-                    formatted = formatted.substr(0, col_width - 1);
-                }
-                std::cout << std::setw(col_width) << std::left << formatted;
-            }
-        } else {
-            // Show all columns
-            for (size_t col_idx = 0; col_idx < numeric_cols.size(); ++col_idx) {
-                double val = stats[col_idx][stat_idx];
-                std::ostringstream tmp;
-                tmp << std::fixed << std::setprecision(6) << val;
-                std::string formatted = tmp.str();
-                if (formatted.length() > col_width - 1) {
-                    formatted = formatted.substr(0, col_width - 1);
-                }
-                std::cout << std::setw(col_width) << std::left << formatted;
-            }
-        }
-        std::cout << "\n";
-    }
-    
-    // Summary line like pandas
-    if (needs_truncation) {
-        std::cout << "\n[8 rows x " << numeric_cols.size() << " columns]\n";
-    }
+    std::cout << result;
 }
 
 std::string DataFrame::to_html() const {

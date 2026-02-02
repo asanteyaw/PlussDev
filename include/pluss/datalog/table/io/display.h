@@ -81,6 +81,11 @@ inline int terminal_width_fallback() {
 	return 120;
 }
 
+// Get current terminal width (adaptive)
+inline int get_terminal_width() {
+	return terminal_width_fallback();
+}
+
 inline std::string ellipsis(const DisplayOptions& opt) {
 	return opt.unicode_ellipsis ? std::string("…") : std::string("...");
 }
@@ -169,6 +174,11 @@ inline int digits10(int64_t v) {
 }
 
 inline DisplayOptions normalize_options(DisplayOptions opt) {
+	// Auto-detect terminal width if not specified
+	if (opt.max_width <= 0) {
+		opt.max_width = get_terminal_width();
+	}
+	
 	if (opt.max_col_width < 4) opt.max_col_width = 4;
 	if (opt.min_col_width < 1) opt.min_col_width = 1;
 	if (opt.min_col_width > opt.max_col_width) opt.min_col_width = opt.max_col_width;
@@ -209,6 +219,14 @@ inline std::vector<int64_t> selected_row_indices(int64_t total_rows, const Displ
 	rows_truncated = true;
 	const int64_t head_n = std::min<int64_t>(opt.head_rows, total_rows);
 	const int64_t tail_n = std::min<int64_t>(opt.tail_rows, std::max<int64_t>(0, total_rows - head_n));
+	
+	// Special case: if tail_rows=0, show ONLY head rows without ellipsis
+	// This is for head() function which wants to show exactly N rows
+	if (opt.tail_rows == 0) {
+		idx.reserve(static_cast<size_t>(head_n));
+		for (int64_t i = 0; i < head_n; ++i) idx.push_back(i);
+		return idx;
+	}
 	
 	// Only show ellipsis if we're actually hiding rows
 	if (head_n + tail_n >= total_rows) {
@@ -414,9 +432,9 @@ inline std::string to_string(const pluss::table::DataFrame& df, DisplayOptions o
 	}
 	oss << '\n';
 
-	// Separator
+	// Separator (index column has no name, so no underline for it)
 	if (opt.show_index) {
-		oss << std::string(static_cast<size_t>(index_width), '-') << ' ';
+		oss << std::string(static_cast<size_t>(index_width), ' ') << ' ';
 	}
 	for (const auto& c : view) {
 		oss << std::string(static_cast<size_t>(std::max(1, c.width)), '-') << ' ';
@@ -434,7 +452,7 @@ inline std::string to_string(const pluss::table::DataFrame& df, DisplayOptions o
 				oss << detail::pad(idx_s, index_width, detail::JustifyMode::LEFT) << ' ';
 			} else {
 				idx_s = std::to_string(r);
-				oss << detail::pad(detail::ellipsize(idx_s, index_width, opt), index_width, detail::JustifyMode::RIGHT) << ' ';
+				oss << detail::pad(detail::ellipsize(idx_s, index_width, opt), index_width, detail::JustifyMode::LEFT) << ' ';
 			}
 		}
 
@@ -464,7 +482,6 @@ inline std::string to_string(const pluss::table::DataFrame& df, DisplayOptions o
 	if (opt.show_summary) {
 		// pandas-like summary line
 		oss << "\n[" << total_rows << " rows x " << col_names.size() << " columns]";
-		if (rows_truncated || cols_truncated) oss << " (truncated)";
 		oss << "\n";
 	}
 

@@ -31,6 +31,10 @@ public:
     [[nodiscard]] const std::string& name() const noexcept { return name_; }
     void set_name(const std::string& n) { name_ = n; }
 
+    // Unified access to underlying content (Series, Note, or Timeline)
+    [[nodiscard]] const Value& values() const noexcept { return value_; }
+    [[nodiscard]] Value& values() noexcept { return value_; }
+
     [[nodiscard]] bool is_series() const noexcept { return std::holds_alternative<pluss::Series>(value_); }
     [[nodiscard]] bool is_note() const noexcept { return std::holds_alternative<pluss::Note>(value_); }
     [[nodiscard]] bool is_timeline() const noexcept { return std::holds_alternative<pluss::Timeline>(value_); }
