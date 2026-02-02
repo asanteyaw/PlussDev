@@ -54,7 +54,8 @@ int main(int argc, char** argv) {
         if (df2) {
             std::cout << "Loaded messy_data: columns=" << df2->columns().size() << " rows ~ " << (df2->values().empty() ? 0 : df2->values()[0].size()) << "\n";
             df2->info();
-            df2->head(3);
+            std::cout << "\n-- Displaying head of 10 --\n";
+            df2->head(10);
             std::cout << "\n-- Describe messy_data (best-effort) --\n";
             df2->describe();
         } else {

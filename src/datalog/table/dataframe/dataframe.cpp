@@ -50,16 +50,26 @@ int64_t non_null_count(const pluss::table::Thread& t) {
 
 } // namespace
 
-void DataFrame::head(int64_t n) const {
+void DataFrame::head(int64_t n, int format) const {
     pluss::table::io::DisplayOptions opt;
-    opt.max_rows = n;  // Limit to n rows
+    opt.format = static_cast<pluss::table::io::OutputFormat>(format);
+    opt.max_rows = n;
     opt.head_rows = n;
     opt.tail_rows = 0;
     opt.show_summary = false;
-    std::cout << pluss::table::io::to_string(*this, opt);
+    
+    std::string result;
+    if (opt.format == pluss::table::io::OutputFormat::HTML) {
+        result = pluss::table::io::to_html(*this, opt);
+    } else if (opt.format == pluss::table::io::OutputFormat::LATEX) {
+        result = pluss::table::io::to_latex(*this, opt);
+    } else {
+        result = pluss::table::io::to_string(*this, opt);
+    }
+    std::cout << result;
 }
 
-void DataFrame::tail(int64_t n) const {
+void DataFrame::tail(int64_t n, int format) const {
     auto col_names = this->columns();
     if (col_names.empty()) {
         std::cout << "Empty DataFrame\n";
@@ -70,12 +80,25 @@ void DataFrame::tail(int64_t n) const {
     auto df_tail = this->iloc(start, rows);
     
     pluss::table::io::DisplayOptions opt;
-    opt.max_rows = 0; // show all rows in the slice
+    opt.format = static_cast<pluss::table::io::OutputFormat>(format);
+    opt.max_rows = 0;
     opt.show_summary = false;
-    std::cout << pluss::table::io::to_string(*df_tail, opt);
+    
+    std::string result;
+    if (opt.format == pluss::table::io::OutputFormat::HTML) {
+        result = pluss::table::io::to_html(*df_tail, opt);
+    } else if (opt.format == pluss::table::io::OutputFormat::LATEX) {
+        result = pluss::table::io::to_latex(*df_tail, opt);
+    } else {
+        result = pluss::table::io::to_string(*df_tail, opt);
+    }
+    std::cout << result;
 }
 
-void DataFrame::info() const {
+void DataFrame::info(int format) const {
+    // TODO: Add HTML/LaTeX support for info() - for now just text
+    (void)format;  // Mark as used
+    
     const auto col_names = this->columns();
     const size_t num_cols = col_names.size();
 
@@ -126,7 +149,10 @@ void DataFrame::info() const {
     }
 }
 
-void DataFrame::describe() const {
+void DataFrame::describe(int format) const {
+    // TODO: Add HTML/LaTeX support for describe() - for now just text
+    (void)format;  // Mark as used
+    
     const auto col_names = this->columns();
     if (col_names.empty()) {
         std::cout << "Empty DataFrame\n";
@@ -176,8 +202,8 @@ void DataFrame::describe() const {
     const std::vector<std::string> stat_names = {"count", "mean", "std", "min", "25%", "50%", "75%", "max"};
     
     // Use fixed column width like pandas - reduced for better terminal fit
-    const int col_width = 20;
-    const int stat_width = 5; // "count"
+    const int col_width = 12;
+    const int stat_width = 6; // "count"
     
     // Determine if we need to truncate columns (like pandas does)
     const int max_display_cols = 6; // Limit for readability
@@ -198,13 +224,20 @@ void DataFrame::describe() const {
     }
     
     // Header row with column names
-    std::cout << std::setw(stat_width) << " ";
+    std::cout << std::setw(stat_width) << std::left << " ";
     for (const auto& col_name : display_cols) {
         std::string col_display = col_name;
         if (col_display.length() > col_width - 1) {
             col_display = col_display.substr(0, col_width - 1);
         }
-        std::cout << std::setw(col_width) << std::right << col_display;
+        std::cout << std::setw(col_width) << std::left << col_display;
+    }
+    std::cout << "\n";
+    
+    // Dashed line under column names
+    std::cout << std::string(stat_width, '-');
+    for (size_t i = 0; i < display_cols.size(); ++i) {
+        std::cout << std::string(col_width, '-');
     }
     std::cout << "\n";
     
@@ -222,10 +255,10 @@ void DataFrame::describe() const {
                 if (formatted.length() > col_width - 1) {
                     formatted = formatted.substr(0, col_width - 1);
                 }
-                std::cout << std::setw(col_width) << std::right << formatted;
+                std::cout << std::setw(col_width) << std::left << formatted;
             }
             // ... column
-            std::cout << std::setw(col_width) << std::right << "...";
+            std::cout << std::setw(col_width) << std::left << "...";
             // Last 3 columns
             for (size_t i = numeric_cols.size() - 3; i < numeric_cols.size(); ++i) {
                 double val = stats[i][stat_idx];
@@ -235,7 +268,7 @@ void DataFrame::describe() const {
                 if (formatted.length() > col_width - 1) {
                     formatted = formatted.substr(0, col_width - 1);
                 }
-                std::cout << std::setw(col_width) << std::right << formatted;
+                std::cout << std::setw(col_width) << std::left << formatted;
             }
         } else {
             // Show all columns
@@ -247,7 +280,7 @@ void DataFrame::describe() const {
                 if (formatted.length() > col_width - 1) {
                     formatted = formatted.substr(0, col_width - 1);
                 }
-                std::cout << std::setw(col_width) << std::right << formatted;
+                std::cout << std::setw(col_width) << std::left << formatted;
             }
         }
         std::cout << "\n";
@@ -257,6 +290,20 @@ void DataFrame::describe() const {
     if (needs_truncation) {
         std::cout << "\n[8 rows x " << numeric_cols.size() << " columns]\n";
     }
+}
+
+std::string DataFrame::to_html() const {
+    return pluss::table::io::to_html(*this);
+}
+
+std::string DataFrame::to_latex() const {
+    return pluss::table::io::to_latex(*this);
+}
+
+std::string DataFrame::to_string() const {
+    pluss::table::io::DisplayOptions opt;
+    opt.format = pluss::table::io::OutputFormat::TEXT;
+    return pluss::table::io::to_string(*this, opt);
 }
 
 } // namespace pluss::table

@@ -10,6 +10,10 @@
 #include <pluss/Series.h>
 #include <pluss/datalog/table/thread/thread.h>
 
+namespace pluss::table::io {
+    enum class OutputFormat;
+}
+
 namespace pluss::table {
 
 class DataFrame {
@@ -43,11 +47,17 @@ public:
 
     [[nodiscard]] std::shared_ptr<DataFrame> T() const;
 
-    // Display methods
-    void head(int64_t n = 5) const;
-    void tail(int64_t n = 5) const;
-    void info() const;
-    void describe() const;
+    // Display methods (support text/html/latex output)
+    // format: 0=TEXT, 1=HTML, 2=LATEX (defaults to TEXT for terminal)
+    void head(int64_t n = 5, int format = 0) const;
+    void tail(int64_t n = 5, int format = 0) const;
+    void info(int format = 0) const;
+    void describe(int format = 0) const;
+    
+    // Get formatted output as string (for Jupyter notebook rendering)
+    [[nodiscard]] std::string to_html() const;
+    [[nodiscard]] std::string to_latex() const;
+    [[nodiscard]] std::string to_string() const;
 
     // Single column selection (returns Series)
     [[nodiscard]] pluss::table::Thread get_col(const std::string& col_name) const;

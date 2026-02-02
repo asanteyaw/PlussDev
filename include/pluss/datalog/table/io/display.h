@@ -23,7 +23,16 @@
 
 namespace pluss::table::io {
 
+enum class OutputFormat {
+	TEXT,   // Plain text for terminal
+	HTML,   // HTML table
+	LATEX   // LaTeX table
+};
+
 struct DisplayOptions {
+	// Output format
+	OutputFormat format = OutputFormat::TEXT;
+	
 	// If 0: use terminal width (or fallback).
 	int max_width = 0;
 
@@ -47,7 +56,7 @@ struct DisplayOptions {
 
 	// Formatting
 	int float_precision = 4;
-	bool align_numbers_right = true;
+	bool align_numbers_right = false;  // Left-justify all content
 	bool unicode_ellipsis = false; // false => "...", true => "…" (best-effort)
 };
 
@@ -465,6 +474,139 @@ inline std::string to_string(const pluss::table::DataFrame& df, DisplayOptions o
 inline std::ostream& print(std::ostream& os, const pluss::table::DataFrame& df, DisplayOptions opt = {}) {
 	os << to_string(df, std::move(opt));
 	return os;
+}
+
+// HTML table formatter
+inline std::string to_html(const pluss::table::DataFrame& df, DisplayOptions opt = {}) {
+	opt = detail::normalize_options(std::move(opt));
+	
+	const auto col_names = df.columns();
+	if (col_names.empty()) return "<p>Empty DataFrame</p>\n";
+	
+	std::vector<pluss::table::Thread> cols;
+	cols.reserve(col_names.size());
+	for (const auto& name : col_names) cols.push_back(df.get_col(name));
+	
+	const int64_t total_rows = cols.front().size();
+	bool rows_truncated = false;
+	const auto row_idx = detail::selected_row_indices(total_rows, opt, rows_truncated);
+	
+	std::ostringstream oss;
+	oss << "<table border=\"1\" class=\"dataframe\">\n";
+	
+	// Header
+	oss << "  <thead>\n    <tr style=\"text-align: right;\">\n";
+	if (opt.show_index) {
+		oss << "      <th></th>\n";
+	}
+	for (const auto& name : col_names) {
+		oss << "      <th>" << name << "</th>\n";
+	}
+	oss << "    </tr>\n  </thead>\n";
+	
+	// Body
+	oss << "  <tbody>\n";
+	for (const auto r : row_idx) {
+		if (r < 0) {
+			oss << "    <tr>\n";
+			if (opt.show_index) oss << "      <th>...</th>\n";
+			for (size_t i = 0; i < col_names.size(); ++i) {
+				oss << "      <td>...</td>\n";
+			}
+			oss << "    </tr>\n";
+			continue;
+		}
+		
+		oss << "    <tr>\n";
+		if (opt.show_index) {
+			oss << "      <th>" << r << "</th>\n";
+		}
+		for (size_t ci = 0; ci < col_names.size(); ++ci) {
+			std::string cell = detail::normalize_cell(detail::thread_cell(cols[ci], r, opt));
+			oss << "      <td>" << cell << "</td>\n";
+		}
+		oss << "    </tr>\n";
+	}
+	oss << "  </tbody>\n</table>";
+	
+	if (opt.show_summary) {
+		oss << "\n<p>" << total_rows << " rows × " << col_names.size() << " columns</p>";
+	}
+	
+	return oss.str();
+}
+
+// LaTeX table formatter
+inline std::string to_latex(const pluss::table::DataFrame& df, DisplayOptions opt = {}) {
+	opt = detail::normalize_options(std::move(opt));
+	
+	const auto col_names = df.columns();
+	if (col_names.empty()) return "Empty DataFrame\n";
+	
+	std::vector<pluss::table::Thread> cols;
+	cols.reserve(col_names.size());
+	for (const auto& name : col_names) cols.push_back(df.get_col(name));
+	
+	const int64_t total_rows = cols.front().size();
+	bool rows_truncated = false;
+	const auto row_idx = detail::selected_row_indices(total_rows, opt, rows_truncated);
+	
+	std::ostringstream oss;
+	
+	// Table header
+	oss << "\\begin{tabular}{";
+	if (opt.show_index) oss << "l";
+	for (size_t i = 0; i < col_names.size(); ++i) {
+		oss << "r";  // right-align data columns
+	}
+	oss << "}\n\\toprule\n";
+	
+	// Column names
+	if (opt.show_index) oss << " & ";
+	for (size_t i = 0; i < col_names.size(); ++i) {
+		oss << col_names[i];
+		if (i < col_names.size() - 1) oss << " & ";
+	}
+	oss << " \\\\\\\\\n\\midrule\n";
+	
+	// Data rows
+	for (const auto r : row_idx) {
+		if (r < 0) {
+			if (opt.show_index) oss << "\\ldots & ";
+			for (size_t i = 0; i < col_names.size(); ++i) {
+				oss << "\\ldots";
+				if (i < col_names.size() - 1) oss << " & ";
+			}
+			oss << " \\\\\\\\\n";
+			continue;
+		}
+		
+		if (opt.show_index) {
+			oss << r << " & ";
+		}
+		for (size_t ci = 0; ci < col_names.size(); ++ci) {
+			std::string cell = detail::normalize_cell(detail::thread_cell(cols[ci], r, opt));
+			// Escape LaTeX special characters
+			std::string escaped;
+			for (char ch : cell) {
+				if (ch == '_' || ch == '%' || ch == '$' || ch == '#' || ch == '&') {
+					escaped += '\\';
+				}
+				escaped += ch;
+			}
+			oss << escaped;
+			if (ci < col_names.size() - 1) oss << " & ";
+		}
+		oss << " \\\\\\\\\n";
+	}
+	
+	oss << "\\bottomrule\n\\end{tabular}\n";
+	
+	if (opt.show_summary) {
+		oss << "% " << total_rows << " rows × " << col_names.size() << " columns\n";
+	}
+	
+	return oss.str();
 }
 
 } // namespace pluss::table::io
