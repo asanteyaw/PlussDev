@@ -157,7 +157,7 @@ int main() {
     // ========== Example 8: NA Handling ==========
     print_separator("Example 8: Handling Missing Values");
     
-    auto with_nan = pluss::from_torch(torch::tensor({1.0, NAN, 3.0, NAN, 5.0}));
+    auto with_nan = pluss::from_torch(torch::tensor({1.0, std::nan(""), 3.0, std::nan(""), 5.0}));
     Thread nan_thread(with_nan, "with_na");
     
     std::cout << "Original with NaN: 5 elements\n";
@@ -301,7 +301,7 @@ int main() {
     // ========== Example 13: NEW - Missing Data Operations ==========
     print_separator("Example 13: Advanced Missing Data - ffill(), bfill(), interpolate()");
     
-    auto na_data = pluss::from_torch(torch::tensor({1.0, NAN, NAN, 4.0, NAN, 6.0}));
+    auto na_data = pluss::from_torch(torch::tensor({1.0, std::nan(""), std::nan(""), 4.0, std::nan(""), 6.0}));
     Thread na_thread(na_data, "with_na");
     
     std::cout << "Original: [1, NaN, NaN, 4, NaN, 6]\n\n";

@@ -12,7 +12,7 @@ void print_separator(const std::string& title) {
 }
 
 int main() {
-    print_separator("Atlas 3D Data Structure Examples");
+    print_separator("Atlas 3D Data Structure - Basic Examples");
     
     std::cout << "Thread-first design hierarchy:\n";
     std::cout << "  Thread (1D) -> DataFrame (2D) -> Atlas (3D)\n\n";
@@ -43,10 +43,13 @@ int main() {
     Atlas sales_atlas({day1, day2, day3}, {"2024-01-01", "2024-01-02", "2024-01-03"});
     
     std::cout << "Created Atlas with 3 days of sales data\n";
-    std::cout << "Size: " << sales_atlas.size() << " DataFrames\n";
-    std::cout << "Labels: ";
-    for (const auto& label : sales_atlas.labels()) {
-        std::cout << label << " ";
+    std::cout << "Number of DataFrames (depth): " << sales_atlas.ndepth() << "\n";
+    std::cout << "Shape (depth, rows, cols): (" << std::get<0>(sales_atlas.shape()) 
+              << ", " << std::get<1>(sales_atlas.shape()) 
+              << ", " << std::get<2>(sales_atlas.shape()) << ")\n";
+    std::cout << "Depth names: ";
+    for (const auto& name : sales_atlas.depth_names()) {
+        std::cout << name << " ";
     }
     std::cout << "\n\n";
     
@@ -59,8 +62,8 @@ int main() {
     }
     std::cout << "\n\n";
     
-    // ========== Example 2: Multi-category data ==========
-    print_separator("Example 2: Regional Sales Data (Multi-Category)");
+    // ========== Example 2: Multi-region data ==========
+    print_separator("Example 2: Regional Sales Data");
     
     auto us_sales = std::make_shared<DataFrame>(std::unordered_map<std::string, Series>{
         {"store_id", from_torch(torch::tensor({1.0, 2.0, 3.0}))},
@@ -83,151 +86,80 @@ int main() {
         {"Asia", asia_sales}
     });
     
-    std::cout << regional_atlas.to_string();
-    
-    // ========== Example 3: Slicing and filtering ==========
-    print_separator("Example 3: Slicing and Filtering");
-    
-    // Slice first 2 days
-    auto first_two_days = sales_atlas.slice(0, 2);
-    std::cout << "Sliced first 2 days: " << first_two_days->size() << " DataFrames\n";
-    std::cout << "Labels: ";
-    for (const auto& label : first_two_days->labels()) {
-        std::cout << label << " ";
+    std::cout << "Regional Atlas:\n";
+    std::cout << "  Regions: " << regional_atlas.ndepth() << "\n";
+    std::cout << "  Depth names: ";
+    for (const auto& name : regional_atlas.depth_names()) {
+        std::cout << name << " ";
     }
     std::cout << "\n\n";
     
-    // Select specific regions
-    auto selected_regions = regional_atlas.select({"US", "Asia"});
-    std::cout << "Selected US and Asia regions:\n";
-    std::cout << selected_regions->to_string() << "\n";
+    // ========== Example 3: Indexing Operations ==========
+    print_separator("Example 3: Indexing and Slicing");
     
-    // Filter by condition
-    auto large_regions = regional_atlas.filter(
-        [](const std::string& label, const std::shared_ptr<DataFrame>& df) {
-            return label == "US" || label == "Asia";
-        }
-    );
-    std::cout << "Filtered large regions: " << large_regions->size() << " DataFrames\n\n";
+    // iloc - slice by position
+    auto first_two = sales_atlas.iloc(0, 2);
+    std::cout << "iloc(0,2) - first 2 days: " << first_two->ndepth() << " DataFrames\n";
     
-    // ========== Example 4: Transformation operations ==========
-    print_separator("Example 4: Applying Transformations");
+    // head/tail
+    auto first = sales_atlas.head(1);
+    std::cout << "head(1): " << first->ndepth() << " DataFrame\n";
     
-    // Apply function to all DataFrames
-    auto sorted_atlas = sales_atlas.apply([](std::shared_ptr<DataFrame> df) {
+    auto last = sales_atlas.tail(1);
+    std::cout << "tail(1): " << last->ndepth() << " DataFrame\n\n";
+    
+    // ========== Example 4: Column Selection ==========
+    print_separator("Example 4: Selecting Columns Across All Depths");
+    
+    // Select specific columns from all DataFrames
+    auto sales_only = sales_atlas.select_columns({"sales"});
+    std::cout << "Selected 'sales' column from all days\n";
+    std::cout << "  Result has " << sales_only->ncols() << " column(s)\n";
+    std::cout << "  Across " << sales_only->ndepth() << " depths\n\n";
+    
+    // ========== Example 5: Depth Selection ==========
+    print_separator("Example 5: Selecting Specific Depths");
+    
+    // Select by depth names
+    std::vector<std::string> regions = {"US", "Asia"};
+    auto selected = regional_atlas.loc(regions);
+    std::cout << "Selected US and Asia regions: " << selected->ndepth() << " DataFrames\n";
+    std::cout << "Depth names: ";
+    for (const auto& name : selected->depth_names()) {
+        std::cout << name << " ";
+    }
+    std::cout << "\n\n";
+    
+    // ========== Example 6: Apply Operations ==========
+    print_separator("Example 6: Applying Functions Across Depths");
+    
+    // Apply a function to all DataFrames
+    auto transformed = sales_atlas.apply([](std::shared_ptr<DataFrame> df) {
+        // Sort each DataFrame by sales
         return df->sort_values("sales");
     });
-    std::cout << "Applied sorting to all DataFrames in Atlas\n";
-    std::cout << "Sorted Atlas size: " << sorted_atlas->size() << "\n\n";
+    std::cout << "Applied sort_values('sales') to all DataFrames\n";
+    std::cout << "  Result has " << transformed->ndepth() << " DataFrames\n\n";
     
-    // Apply with label context
-    auto labeled_transform = regional_atlas.apply_with_label(
-        [](const std::string& label, std::shared_ptr<DataFrame> df) {
-            std::cout << "  Processing region: " << label << "\n";
-            return df->copy();
-        }
-    );
-    std::cout << "\n";
+    // ========== Example 7: Aggregation ==========
+    print_separator("Example 7: Aggregations Across Depths");
     
-    // ========== Example 5: Stacking DataFrames ==========
-    print_separator("Example 5: Stacking DataFrames Vertically");
+    // Mean across all depths
+    auto mean_atlas = sales_atlas.mean();
+    std::cout << "Computed mean across all 3 days\n";
+    std::cout << "  Result is an Atlas with averaged values\n";
+    std::cout << "  Depth: " << mean_atlas->ndepth() << "\n\n";
     
-    try {
-        auto stacked = sales_atlas.stack(true);
-        std::cout << "Stacked all daily sales into single DataFrame\n";
-        std::cout << "Columns: ";
-        for (const auto& col : stacked->columns()) {
-            std::cout << col << " ";
-        }
-        std::cout << "\n";
-        std::cout << "Total rows: 9 (3 days × 3 products)\n\n";
-    } catch (const std::exception& e) {
-        std::cout << "Stacking error: " << e.what() << "\n\n";
-    }
+    // Sum
+    auto sum_atlas = sales_atlas.sum();
+    std::cout << "Computed sum across all 3 days\n";
+    std::cout << "  Total aggregated values\n";
+    std::cout << "  Depth: " << sum_atlas->ndepth() << "\n\n";
     
-    // ========== Example 6: Query operations ==========
-    print_separator("Example 6: Query Operations");
-    
-    std::cout << "Sales Atlas properties:\n";
-    std::cout << "  Is uniform: " << (sales_atlas.is_uniform() ? "Yes" : "No") << "\n";
-    std::cout << "  Empty: " << (sales_atlas.empty() ? "Yes" : "No") << "\n";
-    
-    auto common_cols = sales_atlas.common_columns();
-    std::cout << "  Common columns: ";
-    for (const auto& col : common_cols) {
-        std::cout << col << " ";
-    }
-    std::cout << "\n\n";
-    
-    std::cout << "Regional Atlas properties:\n";
-    std::cout << "  All columns: ";
-    auto all_cols = regional_atlas.all_columns();
-    for (const auto& col : all_cols) {
-        std::cout << col << " ";
-    }
-    std::cout << "\n\n";
-    
-    // ========== Example 7: Concatenation ==========
-    print_separator("Example 7: Concatenating Atlases");
-    
-    auto q1_atlas = sales_atlas.slice(0, 2);  // Jan days
-    auto q2_atlas = sales_atlas.slice(2, 3);  // Feb days
-    
-    auto combined = q1_atlas->concat(q2_atlas, false);
-    std::cout << "Concatenated Q1 and Q2:\n";
-    std::cout << "  Total DataFrames: " << combined->size() << "\n";
-    std::cout << "  Labels: ";
-    for (const auto& label : combined->labels()) {
-        std::cout << label << " ";
-    }
-    std::cout << "\n\n";
-    
-    // ========== Example 8: Sorting and reversing ==========
-    print_separator("Example 8: Sorting and Reversing");
-    
-    auto sorted_labels = regional_atlas.sort_by_label(true);
-    std::cout << "Sorted by label (ascending): ";
-    for (const auto& label : sorted_labels->labels()) {
-        std::cout << label << " ";
-    }
-    std::cout << "\n";
-    
-    auto reversed = sales_atlas.reverse();
-    std::cout << "Reversed order: ";
-    for (const auto& label : reversed->labels()) {
-        std::cout << label << " ";
-    }
-    std::cout << "\n\n";
-    
-    // ========== Example 9: First/Last access ==========
-    print_separator("Example 9: First and Last DataFrames");
-    
-    auto first_day = sales_atlas.first();
-    auto last_day = sales_atlas.last();
-    
-    std::cout << "First DataFrame columns: ";
-    for (const auto& col : first_day->columns()) {
-        std::cout << col << " ";
-    }
-    std::cout << "\n";
-    
-    std::cout << "Last DataFrame columns: ";
-    for (const auto& col : last_day->columns()) {
-        std::cout << col << " ";
-    }
-    std::cout << "\n\n";
-    
-    // ========== Example 10: Deep copy ==========
-    print_separator("Example 10: Deep Copy");
-    
-    auto atlas_copy = sales_atlas.copy();
-    std::cout << "Created deep copy of Atlas\n";
-    std::cout << "Original size: " << sales_atlas.size() << "\n";
-    std::cout << "Copy size: " << atlas_copy->size() << "\n";
-    std::cout << "All DataFrames are independently copied\n\n";
-    
-    print_separator("Atlas Examples Complete");
-    std::cout << "\nAtlas enables powerful 3D data operations in the thread-first design!\n";
+    print_separator("Atlas Basic Examples Complete");
+    std::cout << "\nFor comprehensive Atlas examples demonstrating all 50+ methods,\n";
+    std::cout << "see: atlas_comprehensive_ex.cpp\n\n";
+    std::cout << "Atlas enables powerful 3D data operations!\n";
     std::cout << "Thread (1D) -> DataFrame (2D) -> Atlas (3D)\n";
     
     return 0;
