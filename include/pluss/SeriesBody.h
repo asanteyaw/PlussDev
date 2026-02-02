@@ -1276,11 +1276,11 @@ inline Series& Series::arccos_() const {
 }
 
 inline Series Series::add(const Series & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::add_Tensor::call(*this, other, alpha)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::add_Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, alpha)); });
 }
 
 inline Series Series::add(const Scalar & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::add_Scalar::call(*this, other, alpha)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::add_Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, alpha)); });
 }
 
 
@@ -1843,7 +1843,7 @@ inline Series Series::diff(int64_t n, int64_t dim, const optional<Series> & prep
 }
 
 inline Series Series::div(const Series& other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Tensor::call(*this, other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
 }
 
 inline Series& Series::div_(const Series& other) const {
@@ -1852,7 +1852,7 @@ inline Series& Series::div_(const Series& other) const {
 }
 
 inline Series Series::div(const Series & other, optional<string_view> rounding_mode) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Tensor_mode::call(*this, other, rounding_mode)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Tensor_mode::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, rounding_mode)); });
 }
 
 inline Series& Series::div_(const Series & other, optional<string_view> rounding_mode) const {
@@ -1861,7 +1861,7 @@ inline Series& Series::div_(const Series & other, optional<string_view> rounding
 }
 
 inline Series Series::div(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Scalar::call(*this, other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
 }
 
 inline Series& Series::div_(const Scalar & other) const {
@@ -1870,7 +1870,7 @@ inline Series& Series::div_(const Scalar & other) const {
 }
 
 inline Series Series::div(const Scalar & other, optional<string_view> rounding_mode) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Scalar_mode::call(*this, other, rounding_mode)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Scalar_mode::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, rounding_mode)); });
 }
 
 inline Series& Series::div_(const Scalar & other, optional<string_view> rounding_mode) const {
@@ -2557,7 +2557,7 @@ inline ::std::tuple<Series, Series> Series::mode(Dimname dim, bool keepdim) cons
 }
 
 inline Series Series::mul(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::mul_Tensor::call(*this, other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::mul_Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
 }
 
 inline Series& Series::mul_(const Series & other) const {
@@ -2566,7 +2566,7 @@ inline Series& Series::mul_(const Series & other) const {
 }
 
 inline Series Series::mul(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::mul_Scalar::call(*this, other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::mul_Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
 }
 
 inline Series& Series::mul_(const Scalar & other) const {
@@ -3422,7 +3422,7 @@ inline Series& Series::zero_() const {
 }
 
 inline Series Series::sub(const Series & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::sub_Tensor::call(*this, other, alpha)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::sub_Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, alpha)); });
 }
 
 inline Series& Series::sub_(const Series & other, const Scalar & alpha) const {
@@ -3431,7 +3431,7 @@ inline Series& Series::sub_(const Series & other, const Scalar & alpha) const {
 }
 
 inline Series Series::sub(const Scalar & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::sub_Scalar::call(*this, other, alpha)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::sub_Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, alpha)); });
 }
 
 inline Series& Series::sub_(const Scalar & other, const Scalar & alpha) const {

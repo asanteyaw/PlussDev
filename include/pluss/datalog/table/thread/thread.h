@@ -157,6 +157,77 @@ public:
         return std::string();
     }
 
+    // ========== THREADABLE OPERATIONS (Thread-First Design) ==========
+    // These operations work on individual threads and can be efficiently
+    // delegated by DataFrame for vectorized/parallel execution
+
+    // Indexing and selection
+    [[nodiscard]] Thread head(int64_t n) const;
+    [[nodiscard]] Thread tail(int64_t n) const;
+    [[nodiscard]] Thread iloc(int64_t start, int64_t end) const;
+    [[nodiscard]] Thread loc(const pluss::Series& condition) const;
+    [[nodiscard]] Thread take(const std::vector<int64_t>& indices) const;
+    [[nodiscard]] Thread where(const pluss::Series& condition, const Thread& other) const;
+    [[nodiscard]] Thread mask(const pluss::Series& condition, const Thread& other) const;
+    
+    // Basic transformations
+    [[nodiscard]] Thread to(const torch::Device& device) const;
+    [[nodiscard]] Thread unique() const;
+    [[nodiscard]] Thread sort_values(bool ascending = true) const;
+    [[nodiscard]] Thread clip(double lower, double upper) const;
+    [[nodiscard]] Thread abs() const;
+    [[nodiscard]] Thread round(int decimals = 0) const;
+    [[nodiscard]] Thread replace(double old_value, double new_value) const;
+    
+    // Missing data handling
+    [[nodiscard]] Thread fillna(const Thread& value) const;
+    [[nodiscard]] Thread dropna() const;
+    [[nodiscard]] Thread ffill() const;  // Forward fill
+    [[nodiscard]] Thread bfill() const;  // Backward fill
+    [[nodiscard]] Thread interpolate(const std::string& method = "linear") const;
+    [[nodiscard]] pluss::Series isna() const;
+    [[nodiscard]] pluss::Series notna() const;
+    
+    // Statistical and aggregation
+    [[nodiscard]] Thread value_counts() const;
+    [[nodiscard]] Thread rank(const std::string& method = "average") const;
+    [[nodiscard]] Thread pct_change(int64_t periods = 1) const;
+    [[nodiscard]] Thread nlargest(int64_t n) const;
+    [[nodiscard]] Thread nsmallest(int64_t n) const;
+    
+    // Cumulative operations
+    [[nodiscard]] Thread diff(int64_t periods = 1) const;
+    [[nodiscard]] Thread shift(int64_t periods = 1) const;
+    [[nodiscard]] Thread cumsum() const;
+    [[nodiscard]] Thread cumprod() const;
+    [[nodiscard]] Thread cummax() const;
+    [[nodiscard]] Thread cummin() const;
+    
+    // Comparison operations
+    [[nodiscard]] pluss::Series eq(const Thread& other) const;
+    [[nodiscard]] pluss::Series ne(const Thread& other) const;
+    [[nodiscard]] pluss::Series lt(const Thread& other) const;
+    [[nodiscard]] pluss::Series le(const Thread& other) const;
+    [[nodiscard]] pluss::Series gt(const Thread& other) const;
+    [[nodiscard]] pluss::Series ge(const Thread& other) const;
+    
+    // Arithmetic operations
+    [[nodiscard]] Thread add(const Thread& other) const;
+    [[nodiscard]] Thread sub(const Thread& other) const;
+    [[nodiscard]] Thread mul(const Thread& other) const;
+    [[nodiscard]] Thread div(const Thread& other) const;
+    [[nodiscard]] Thread mod(const Thread& other) const;
+    [[nodiscard]] Thread pow(const Thread& other) const;
+    
+    // Mathematical functions
+    [[nodiscard]] Thread sqrt() const;
+    [[nodiscard]] Thread log() const;
+    [[nodiscard]] Thread log10() const;
+    [[nodiscard]] Thread exp() const;
+    [[nodiscard]] Thread sin() const;
+    [[nodiscard]] Thread cos() const;
+    [[nodiscard]] Thread tan() const;
+
 private:
     Value value_;
     std::string name_;

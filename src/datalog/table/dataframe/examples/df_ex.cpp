@@ -31,10 +31,10 @@ int main(int argc, char** argv) {
     df->info();
 
     std::cout << "\n-- Describe (numeric summary) --\n";
-    df->describe();
+    df->describe(0);  // Explicit format parameter to use display version
 
     std::cout << "\n-- Head (5 rows) --\n";
-    df->head(5);
+    df->head(5, 0);  // Explicit format parameter to use display version
 
     // save a small sample of the top rows
     auto head_df = df->iloc(0, std::min<int64_t>(5, static_cast<int64_t>(df->values().empty() ? 0 : df->values()[0].size())));
@@ -76,9 +76,9 @@ int main(int argc, char** argv) {
             std::cout << "Loaded messy_data: columns=" << df2->columns().size() << " rows ~ " << (df2->values().empty() ? 0 : df2->values()[0].size()) << "\n";
             df2->info();
             std::cout << "\n-- Displaying head of 10 --\n";
-            df2->head(10);
+            df2->head(10, 0);  // Explicit format parameter to use display version
             std::cout << "\n-- Describe messy_data (best-effort) --\n";
-            df2->describe();
+            df2->describe(0);  // Explicit format parameter to use display version
         } else {
             std::cout << "Failed to load messy_data.csv\n";
         }

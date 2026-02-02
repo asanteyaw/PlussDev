@@ -7,7 +7,7 @@ int main() {
     auto df = DataFrame::load("csv", "../data/messy_data.csv");
     
     std::cout << "=== Default head() - TEXT format for terminal ===" << std::endl;
-    df->head(3);
+    df->head(3, 0);  // Explicit format parameter to use display version
     
     std::cout << "\n\n=== head() with TEXT format (0) ===" << std::endl;
     df->head(3, 0);

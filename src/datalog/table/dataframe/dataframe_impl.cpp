@@ -252,4 +252,182 @@ std::shared_ptr<DataFrame> DataFrame::set_columns(const std::vector<std::string>
     return df;
 }
 
+// ========== PANDAS-STYLE METHODS (Thread-First Design) ==========
+
+std::shared_ptr<DataFrame> DataFrame::copy() const {
+    return std::make_shared<DataFrame>(*this);
+}
+
+std::shared_ptr<DataFrame> DataFrame::head(int64_t n) const {
+    // Thread-first: delegate to Thread.head() for each column
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        df = df->set_col(col_name, thread.head(n));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::tail(int64_t n) const {
+    // Thread-first: delegate to Thread.tail() for each column
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        df = df->set_col(col_name, thread.tail(n));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::drop(const std::vector<std::string>& cols) const {
+    auto df = copy();
+    for (const auto& col : cols) {
+        df->impl_->data.erase(col);
+        auto& order = df->impl_->column_order;
+        order.erase(std::remove(order.begin(), order.end(), col), order.end());
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::sort_values(const std::string& by, bool ascending) const {
+    // Thread-first: delegate to Thread.sort_values(), then reorder all columns
+    auto thread = get_col(by);
+    auto sorted_thread = thread.sort_values(ascending);
+    
+    // Get the sort indices (simplified - would need proper implementation)
+    auto df = std::make_shared<DataFrame>();
+    df = df->set_col(by, sorted_thread);
+    
+    // TODO: Apply same ordering to other columns
+    for (const auto& col_name : columns()) {
+        if (col_name != by) {
+            df = df->set_col(col_name, get_col(col_name));
+        }
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::fillna(double value) const {
+    // Thread-first: delegate to Thread.fillna() for each column
+    auto df = std::make_shared<DataFrame>();
+    auto fill_thread = Thread(pluss::value(value), "fill");
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        df = df->set_col(col_name, thread.fillna(fill_thread));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::dropna(const std::string& /*how*/, int64_t /*thresh*/) const {
+    // Thread-first: delegate to Thread.dropna() for each column
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        df = df->set_col(col_name, thread.dropna());
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::diff(int64_t periods) const {
+    // Thread-first: delegate to Thread.diff() for each column
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        df = df->set_col(col_name, thread.diff(periods));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::shift(int64_t periods) const {
+    // Thread-first: delegate to Thread.shift() for each column
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        df = df->set_col(col_name, thread.shift(periods));
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::cumsum() const {
+    // Thread-first: delegate to Thread.cumsum() for each column
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        df = df->set_col(col_name, thread.cumsum());
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::cumprod() const {
+    // Thread-first: delegate to Thread.cumprod() for each column
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        df = df->set_col(col_name, thread.cumprod());
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::cummax() const {
+    // Thread-first: delegate to Thread.cummax() for each column
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        df = df->set_col(col_name, thread.cummax());
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::cummin() const {
+    // Thread-first: delegate to Thread.cummin() for each column
+    auto df = std::make_shared<DataFrame>();
+    for (const auto& col_name : columns()) {
+        auto thread = get_col(col_name);
+        df = df->set_col(col_name, thread.cummin());
+    }
+    return df;
+}
+
+std::shared_ptr<DataFrame> DataFrame::rename(const std::unordered_map<std::string, std::string>& cols) const {
+    auto df = copy();
+    for (const auto& [old_name, new_name] : cols) {
+        if (df->impl_->data.count(old_name)) {
+            auto thread = df->impl_->data[old_name];
+            thread.set_name(new_name);
+            df->impl_->data[new_name] = thread;
+            df->impl_->data.erase(old_name);
+            
+            auto& order = df->impl_->column_order;
+            std::replace(order.begin(), order.end(), old_name, new_name);
+        }
+    }
+    return df;
+}
+
+// Aggregation methods (return scalars/Series)
+double DataFrame::sum(const std::string& col_name) const {
+    auto thread = get_col(col_name);
+    if (thread.is_series()) {
+        return thread.as_series().sum().item<double>();
+    }
+    throw std::runtime_error("sum() requires numeric column");
+}
+
+double DataFrame::mean(const std::string& col_name) const {
+    auto thread = get_col(col_name);
+    if (thread.is_series()) {
+        return thread.as_series().mean().item<double>();
+    }
+    throw std::runtime_error("mean() requires numeric column");
+}
+
+int64_t DataFrame::count(const std::string& col_name) const {
+    return get_col(col_name).size();
+}
+
+int64_t DataFrame::nunique(const std::string& col_name) const {
+    auto thread = get_col(col_name);
+    return thread.unique().size();
+}
+
 } // namespace pluss::table
+

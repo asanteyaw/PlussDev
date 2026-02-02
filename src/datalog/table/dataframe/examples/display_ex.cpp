@@ -22,9 +22,9 @@ int main() {
         quantities.push_back(10 + (i % 50));
     }
 
-    df = df->set_col("ProductID", Thread(pluss::Series(torch::tensor(ids)), "ProductID"));
-    df = df->set_col("Price", Thread(pluss::Series(torch::tensor(prices)), "Price"));
-    df = df->set_col("Quantity", Thread(pluss::Series(torch::tensor(quantities)), "Quantity"));
+    df = df->set_col("ProductID", Thread(pluss::from_torch(torch::tensor(ids)), "ProductID"));
+    df = df->set_col("Price", Thread(pluss::from_torch(torch::tensor(prices)), "Price"));
+    df = df->set_col("Quantity", Thread(pluss::from_torch(torch::tensor(quantities)), "Quantity"));
 
     // Text column
     std::vector<pluss::Chord> products;
@@ -40,11 +40,11 @@ int main() {
     std::cout << *df << "\n\n";
 
     std::cout << "2. Head (first 5 rows only):\n";
-    df->head(5);
+    df->head(5, 0);  // Explicit format parameter to use display version
     std::cout << "\n";
 
     std::cout << "3. Tail (last 5 rows only):\n";
-    df->tail(5);
+    df->tail(5, 0);  // Explicit format parameter to use display version
     std::cout << "\n";
 
     std::cout << "4. Info (metadata):\n";
@@ -52,7 +52,7 @@ int main() {
     std::cout << "\n";
 
     std::cout << "5. Describe (statistical summary):\n";
-    df->describe();
+    df->describe(0);  // Explicit format parameter to use display version
     std::cout << "\n";
 
     std::cout << "6. Custom display options (narrow width, more rows):\n";

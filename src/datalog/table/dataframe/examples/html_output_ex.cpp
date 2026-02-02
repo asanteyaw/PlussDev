@@ -48,7 +48,7 @@ int main() {
     
     // Also demonstrate with describe data
     std::cout << "\n=== Terminal Output (for comparison) ===" << std::endl;
-    df->head(5);
+    df->head(5, 0);  // Explicit format parameter to use display version
     
     return 0;
 }
