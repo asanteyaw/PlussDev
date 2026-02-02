@@ -63,25 +63,23 @@ private:
     }
 
     Timeline(const std::string& Timeline_str) {
+        // Parse the full string into a time_point, but determine presence of date/time
+        // by searching within the string (date/time may appear alongside other tokens).
         auto [success, tp] = parseTimeline(Timeline_str);
-        
+
+        auto [date_success, date_int] = parseDate(Timeline_str);
+        auto [time_success, time_int] = parseTime(Timeline_str);
+        has_date_ = date_success;
+        has_time_ = time_success;
+
         if (success) {
-            auto [date_int, time_int] = timePointToInternalFormat(tp);
-            
-            // Check if the string contained a date part
-            auto [date_success, _] = parseDate(Timeline_str);
-            has_date_ = date_success;
-            
-            // Check if the string contained a time part
-            auto [time_success, __] = parseTime(Timeline_str);
-            has_time_ = time_success;
-            
+            // If parseTimeline succeeded, prefer its normalized fields.
+            auto [norm_date_int, norm_time_int] = timePointToInternalFormat(tp);
             if (has_date_) {
-                date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+                date_series_ = Series(torch::tensor(static_cast<int64_t>(norm_date_int)));
             }
-            
             if (has_time_) {
-                time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+                time_series_ = Series(torch::tensor(static_cast<int64_t>(norm_time_int)));
             }
         } else {
             // Default to current date and time
@@ -310,7 +308,36 @@ inline std::pair<bool, int64_t> Timeline::parseDate(const std::string& date_str)
     std::smatch match;
     int year = 0, month = 0, day = 0;
     
-    if (std::regex_match(date, match, date_regex1)) {
+    if (std::regex_search(date, match, date_regex3)) {
+        // YYYY/MM/DD or YYYY-MM-DD
+        year = std::stoi(match[1]);
+        month = std::stoi(match[2]);
+        day = std::stoi(match[3]);
+    } else if (std::regex_search(date, match, date_regex4)) {
+        // Month DD, YYYY
+        std::string month_str = match[1];
+        auto it = month_map.find(month_str);
+        if (it == month_map.end()) return {false, 0};
+        month = it->second;
+        day = std::stoi(match[2]);
+        year = std::stoi(match[3]);
+    } else if (std::regex_search(date, match, date_regex5)) {
+        // DD Month YYYY
+        day = std::stoi(match[1]);
+        std::string month_str = match[2];
+        auto it = month_map.find(month_str);
+        if (it == month_map.end()) return {false, 0};
+        month = it->second;
+        year = std::stoi(match[3]);
+    } else if (std::regex_search(date, match, date_regex6)) {
+        // YYYY Month DD
+        year = std::stoi(match[1]);
+        std::string month_str = match[2];
+        auto it = month_map.find(month_str);
+        if (it == month_map.end()) return {false, 0};
+        month = it->second;
+        day = std::stoi(match[3]);
+    } else if (std::regex_search(date, match, date_regex1)) {
         // MM/DD/YY or MM/DD/YYYY
         month = std::stoi(match[1]);
         day = std::stoi(match[2]);
@@ -320,64 +347,13 @@ inline std::pair<bool, int64_t> Timeline::parseDate(const std::string& date_str)
         if (year < 100) {
             year += (year < 50) ? 2000 : 1900;
         }
-    } else if (std::regex_match(date, match, date_regex2)) {
-        // DD/MM/YY or DD/MM/YYYY (European format)
-        day = std::stoi(match[1]);
-        month = std::stoi(match[2]);
-        year = std::stoi(match[3]);
-        
-        // Handle 2-digit years
-        if (year < 100) {
-            year += (year < 50) ? 2000 : 1900;
-        }
-    } else if (std::regex_match(date, match, date_regex3)) {
-        // YYYY/MM/DD
-        year = std::stoi(match[1]);
-        month = std::stoi(match[2]);
-        day = std::stoi(match[3]);
-    } else if (std::regex_match(date, match, date_regex4)) {
-        // Month DD, YYYY
-        std::string month_str = match[1];
-        day = std::stoi(match[2]);
-        year = std::stoi(match[3]);
-        
-        auto it = month_map.find(month_str);
-        if (it != month_map.end()) {
-            month = it->second;
-        } else {
-            return {false, 0};
-        }
-    } else if (std::regex_match(date, match, date_regex5)) {
-        // DD Month YYYY
-        day = std::stoi(match[1]);
-        std::string month_str = match[2];
-        year = std::stoi(match[3]);
-        
-        auto it = month_map.find(month_str);
-        if (it != month_map.end()) {
-            month = it->second;
-        } else {
-            return {false, 0};
-        }
-    } else if (std::regex_match(date, match, date_regex6)) {
-        // YYYY, Month DD
-        year = std::stoi(match[1]);
-        std::string month_str = match[2];
-        day = std::stoi(match[3]);
-        
-        auto it = month_map.find(month_str);
-        if (it != month_map.end()) {
-            month = it->second;
-        } else {
-            return {false, 0};
-        }
     } else {
         // Try to extract numbers and guess the format
         std::vector<int> numbers = extractNumbers(date);
         
         if (numbers.size() >= 3) {
             // Try to determine the format based on the values
-            if (numbers[0] > 31) {
+            if (numbers.size() >= 3) {
                 // First number is likely a year
                 year = numbers[0];
                 month = numbers[1];
@@ -458,28 +434,7 @@ inline std::pair<bool, int64_t> Timeline::parseTime(const std::string& time_str)
     int hour = 0, minute = 0, second = 0;
     bool is_pm = false;
     
-    if (std::regex_match(time, match, time_regex1)) {
-        // HH:MM:SS or HH:MM
-        hour = std::stoi(match[1]);
-        minute = std::stoi(match[2]);
-        if (match[3].matched) {
-            second = std::stoi(match[3]);
-        }
-    } else if (std::regex_match(time, match, time_regex2)) {
-        // HH.MM.SS or HH.MM
-        hour = std::stoi(match[1]);
-        minute = std::stoi(match[2]);
-        if (match[3].matched) {
-            second = std::stoi(match[3]);
-        }
-    } else if (std::regex_match(time, match, time_regex3)) {
-        // HHMMSS or HHMM
-        hour = std::stoi(match[1]);
-        minute = std::stoi(match[2]);
-        if (match[3].matched) {
-            second = std::stoi(match[3]);
-        }
-    } else if (std::regex_match(time, match, time_regex4)) {
+    if (std::regex_search(time, match, time_regex4)) {
         // HH AM/PM or HH:MM AM/PM or HH:MM:SS AM/PM
         hour = std::stoi(match[1]);
         if (match[2].matched) {
@@ -489,12 +444,33 @@ inline std::pair<bool, int64_t> Timeline::parseTime(const std::string& time_str)
             second = std::stoi(match[3]);
         }
         is_pm = (match[4] == "pm");
-        
+
         // Convert 12-hour format to 24-hour format
         if (is_pm && hour < 12) {
             hour += 12;
         } else if (!is_pm && hour == 12) {
             hour = 0;
+        }
+    } else if (std::regex_search(time, match, time_regex1)) {
+        // HH:MM:SS or HH:MM
+        hour = std::stoi(match[1]);
+        minute = std::stoi(match[2]);
+        if (match[3].matched) {
+            second = std::stoi(match[3]);
+        }
+    } else if (std::regex_search(time, match, time_regex2)) {
+        // HH.MM.SS or HH.MM
+        hour = std::stoi(match[1]);
+        minute = std::stoi(match[2]);
+        if (match[3].matched) {
+            second = std::stoi(match[3]);
+        }
+    } else if (std::regex_search(time, match, time_regex3)) {
+        // HHMMSS or HHMM
+        hour = std::stoi(match[1]);
+        minute = std::stoi(match[2]);
+        if (match[3].matched) {
+            second = std::stoi(match[3]);
         }
     } else {
         // Try to extract numbers and guess the format
@@ -580,6 +556,24 @@ inline std::pair<bool, std::chrono::system_clock::time_point> Timeline::parseTim
             now_tm->tm_sec = time_int % 100;
             
             std::time_t tt = std::mktime(now_tm);
+            return {true, std::chrono::system_clock::from_time_t(tt)};
+        }
+    }
+
+    // Try parsing as a combined date+time string (date/time may be embedded)
+    {
+        auto [date_success, date_int] = parseDate(timeline);
+        auto [time_success, time_int] = parseTime(timeline);
+        if (date_success && time_success) {
+            std::tm tm = {};
+            tm.tm_year = date_int / 10000 - 1900;
+            tm.tm_mon = (date_int % 10000) / 100 - 1;
+            tm.tm_mday = date_int % 100;
+            tm.tm_hour = time_int / 10000;
+            tm.tm_min = (time_int % 10000) / 100;
+            tm.tm_sec = time_int % 100;
+
+            std::time_t tt = std::mktime(&tm);
             return {true, std::chrono::system_clock::from_time_t(tt)};
         }
     }
@@ -1095,6 +1089,8 @@ inline Timeline Timeline::add_years(int years) const {
     
     Timeline result = *this;
     result.set_year(y);
+    result.set_month(m);
+    result.set_day(d);
     
     return result;
 }

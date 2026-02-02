@@ -93,7 +93,8 @@ void run_note_tests() {
     // --- Matrix ---
     Note m = content({{"Hi", "John"}, {"123", "DoE"}});
     EXPECT_EQ(m.to_upper().matrix()[0][1], "JOHN");
-    EXPECT_FALSE(m.is_alpha()[0]); // "Hi" is alpha, "123" isn't
+    // is_alpha() is elementwise over the flattened Note; "123" is not alphabetic.
+    EXPECT_FALSE(m.is_alpha()[2]);
 
     // --- Transpose ---
     Note rect = content({{"A", "B", "C"}, {"D", "E", "F"}});
@@ -141,7 +142,7 @@ void run_note_tests() {
     EXPECT_EQ(mstack.shape()[1], 2);
     EXPECT_EQ(mstack.shape()[2], 2);
     EXPECT_EQ(mstack.flatten()[0], "a");
-    EXPECT_EQ(mstack.flatten()[3], "h");
+    EXPECT_EQ(mstack.flatten()[3], "d");
 
     // Stack with more than 2 Notes
     Note m3 = content({{"x", "y"}, {"z", "w"}});
@@ -162,7 +163,7 @@ void run_note_tests() {
     EXPECT_EQ(mstack2.shape()[2], 2);
     EXPECT_EQ(mstack2.flatten()[0], "a");
     EXPECT_EQ(mstack2.flatten()[1], "e");
-    EXPECT_EQ(mstack2.flatten()[3], "h");
+    EXPECT_EQ(mstack2.flatten()[3], "f");
 
     // Edge: stack identical scalars (scalar -> vector)
     Note ss = content("Z");
@@ -194,7 +195,8 @@ void run_note_tests() {
 
     // --- New NLP helpers: bag-of-words and similarity ---
     auto bow = v.to_bow();
-    EXPECT_TRUE(bow["Hi"] >= 1);
+    // tokenize()/normalize_token() lowercases
+    EXPECT_TRUE(bow["hi"] >= 1);
     Note t1 = content("hello world hello");
     Note t2 = content("hello there");
     double sim = t1.similarity(t2);
@@ -209,7 +211,7 @@ void run_note_tests() {
     EXPECT_EQ(rep.vector()[3], "B");
 
     Note rep2d = base.repeat({2, 1});
-    EXPECT_EQ(rep2d.matrix()[1][0], "B");
+    EXPECT_EQ(rep2d.matrix()[1][0], "A");
 
     std::cout << "1D repeat:\n" << rep << "\n";
     std::cout << "2D repeat:\n" << rep2d << "\n";

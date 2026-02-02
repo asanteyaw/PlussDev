@@ -15,6 +15,7 @@ foreach(test_src ${GENERAL_TEST_SOURCES})
 
     # Optional but recommended
     add_test(NAME ${test_name} COMMAND ${test_name})
+    set_tests_properties(${test_name} PROPERTIES WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
     message(STATUS "Added General test: ${test_name}")
 endforeach()

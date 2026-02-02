@@ -15,6 +15,7 @@ foreach(examples_src ${NOTE_EXAMPLES_SOURCES})
 
     # Optional but recommended: register example as a ctest test
     add_test(NAME ${examples_name} COMMAND ${examples_name})
+    set_tests_properties(${examples_name} PROPERTIES WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
     message(STATUS "Added Note examples: ${examples_name}")
 endforeach()

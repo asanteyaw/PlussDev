@@ -82,6 +82,77 @@ public:
         return 0;
     }
 
+    // Get string representation of cell at given index
+    std::string cell_value(int64_t idx) const {
+        if (is_series()) {
+            try {
+                const auto& s = as_series();
+                if (idx < 0 || idx >= s.numel()) return std::string();
+                auto t = at::Tensor(s.data());
+                if (t.dim() > 1) t = t.view({-1});
+                const auto val = t[idx];
+                if (torch::isnan(val).item<bool>()) return "NaN";
+                if (torch::isinf(val).item<bool>()) {
+                    return val.item<double>() > 0 ? "inf" : "-inf";
+                }
+                if (t.is_floating_point()) {
+                    std::ostringstream oss;
+                    oss << std::fixed << std::setprecision(4) << val.item<double>();
+                    return oss.str();
+                }
+                std::ostringstream oss;
+                oss << val.item<int64_t>();
+                return oss.str();
+            } catch (...) {
+                return std::string();
+            }
+        }
+        if (is_timeline()) {
+            try {
+                const auto& tl = as_timeline();
+                auto ds_t = at::Tensor(static_cast<const at::TensorBase&>(tl.date_to_Series()));
+                auto ts_t = at::Tensor(static_cast<const at::TensorBase&>(tl.time_to_Series()));
+                const bool ds_scalar = (ds_t.numel() == 1);
+                const bool ts_scalar = (ts_t.numel() == 1);
+                if (ds_scalar && ts_scalar) return tl.to_string();
+
+                int64_t d = 0;
+                int64_t tm = 0;
+                if (ds_t.numel() > 0) d = ds_t.view({-1})[idx].item<int64_t>();
+                if (ts_t.numel() > 0) tm = ts_t.view({-1})[idx].item<int64_t>();
+                if (d == 0 && tm == 0) return std::string();
+
+                std::ostringstream oss;
+                if (d != 0) {
+                    int y = static_cast<int>(d / 10000);
+                    int mo = static_cast<int>((d / 100) % 100);
+                    int da = static_cast<int>(d % 100);
+                    oss << std::setw(4) << std::setfill('0') << y << "-" << std::setw(2) << mo << "-" << std::setw(2) << da;
+                }
+                if (tm != 0) {
+                    int h = static_cast<int>(tm / 10000);
+                    int mi = static_cast<int>((tm / 100) % 100);
+                    int se = static_cast<int>(tm % 100);
+                    if (d != 0) oss << " ";
+                    oss << std::setw(2) << std::setfill('0') << h << ":" << std::setw(2) << mi << ":" << std::setw(2) << se;
+                }
+                return oss.str();
+            } catch (...) {
+                return std::string();
+            }
+        }
+        if (is_note()) {
+            try {
+                auto v = as_note().vector();
+                if (idx >= 0 && static_cast<size_t>(idx) < v.size()) {
+                    return v[static_cast<size_t>(idx)].str();
+                }
+            } catch (...) {
+            }
+        }
+        return std::string();
+    }
+
 private:
     Value value_;
     std::string name_;

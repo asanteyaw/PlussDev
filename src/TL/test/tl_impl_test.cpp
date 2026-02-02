@@ -74,6 +74,9 @@ int main() {
 
     // Parsing various formats
     Timeline p1 = moment("March 5, 2022 4:05 pm");
+    if (!(p1.year() == 2022 && p1.month() == 3 && p1.day() == 5)) {
+        std::cerr << "DIAG p1: to_string='" << p1.to_string() << "' has_date=" << p1.has_date() << " has_time=" << p1.has_time() << "\n";
+    }
     check(p1.year() == 2022 && p1.month() == 3 && p1.day() == 5, "Parse 'March 5, 2022'");
 
     Timeline p2 = make_timeline(std::string("2022-03-05"));
@@ -97,8 +100,14 @@ int main() {
     Timeline pc = p.ceil("D");
     check(pc.hour() == 0 && pc.minute() == 0 && pc.second() == 0 && pc.day() == 16, "ceil to day moves to next day midnight");
     Timeline pr = moment("2021-03-15 13:29:00").round("H");
+    if (pr.hour() != 13) {
+        std::cerr << "DIAG pr: to_string='" << pr.to_string() << "' hour=" << pr.hour() << "\n";
+    }
     check(pr.hour() == 13, "round to hour stays at 13 for :29 minutes");
     Timeline pr2 = moment("2021-03-15 13:31:00").round("H");
+    if (pr2.hour() != 14) {
+        std::cerr << "DIAG pr2: to_string='" << pr2.to_string() << "' hour=" << pr2.hour() << "\n";
+    }
     check(pr2.hour() == 14, "round to hour moves to 14 for :31 minutes");
 
     // shift compared to add_* helpers
@@ -110,6 +119,11 @@ int main() {
     Timeline dr_start = make_timeline(2021,1,1);
     Timeline dr_end = make_timeline(2021,1,5);
     auto rng = Timeline::date_range(dr_start, dr_end, "D", 1);
+    if (static_cast<int>(rng.size()) != 5) {
+        std::cerr << "DIAG date_range size=" << rng.size();
+        if (!rng.empty()) std::cerr << " first='" << rng.front().to_string() << "' last='" << rng.back().to_string() << "'";
+        std::cerr << "\n";
+    }
     check(static_cast<int>(rng.size()) == 5, "date_range produces expected count");
     check(rng.front().to_string().find("2021-01-01") != std::string::npos, "date_range start matches");
 

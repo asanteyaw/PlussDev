@@ -8,6 +8,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(plussma LANGUAGES CXX)
 
+include(CTest)
+
 # ==============================
 # Global configuration
 # ==============================

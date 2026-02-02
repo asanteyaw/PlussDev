@@ -15,6 +15,7 @@ foreach(EXAMPLES_src ${DATAFRAME_EXAMPLES_SOURCES})
 
     # Optional but recommended
     add_test(NAME ${EXAMPLES_name} COMMAND ${EXAMPLES_name})
+    set_tests_properties(${EXAMPLES_name} PROPERTIES WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
     message(STATUS "Added Dataframe examples: ${EXAMPLES_name}")
 endforeach()

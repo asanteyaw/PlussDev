@@ -16,8 +16,19 @@ int main() {
     Series b = pluss::value({0.0, 0.0});
     std::cout << a << "\n";
     std::cout << b << "\n";
-    Series c = a.div(b); // or a.div_(b);
-    std::cout << c << "\n";
+    // This is intentionally invalid (shape mismatch) and should raise a PlussError.
+    bool caught = false;
+    try {
+        Series c = a.div(b); // or a.div_(b);
+        std::cout << c << "\n";
+    } catch (const std::exception& e) {
+        caught = true;
+        std::cout << "Caught expected exception: " << e.what() << "\n";
+    }
+    if (!caught) {
+        std::cerr << "Expected a shape-mismatch exception, but none was thrown.\n";
+        return 1;
+    }
     
     
     // Test some in-place operations

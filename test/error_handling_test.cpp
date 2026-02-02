@@ -28,12 +28,15 @@ int main() {
     Series a = pluss::value({1.0, 2.0, 3.0});
     Series b = pluss::value({{1.0, 2.0}, {3.0, 4.0}});
     
-    // This will cause a shape mismatch error
-    // The error will be automatically converted to a PlussError with traceback
-    Series result1 = t1.div(t2);
-    
-    // The following code won't be executed due to the error above
-    std::cout << "This line won't be reached\n\n";
+    // These examples intentionally throw. The "test" passes if the error is thrown
+    // and does NOT abort the process.
+    try {
+        (void)t1.div(t2);
+        std::cerr << "FAIL: expected shape mismatch error, but no exception was thrown\n";
+        return 1;
+    } catch (const std::exception& e) {
+        std::cout << "Caught expected exception (Example 1):\n" << e.what() << "\n\n";
+    }
     
     std::cout << "Example 2: Index out of bounds error\n";
     std::cout << "----------------------------------\n";
@@ -42,10 +45,13 @@ int main() {
     
     // This will cause an index out of bounds error
     // The error will be automatically converted to a PlussError with traceback
-    Series result2 = t3[10];
-    
-    // The following code won't be executed due to the error above
-    std::cout << "This line won't be reached\n\n";
+    try {
+        (void)t3[10];
+        std::cerr << "FAIL: expected index out of bounds error, but no exception was thrown\n";
+        return 1;
+    } catch (const std::exception& e) {
+        std::cout << "Caught expected exception (Example 2):\n" << e.what() << "\n\n";
+    }
     
     std::cout << "Example 3: Type error\n";
     std::cout << "-------------------\n";
@@ -54,10 +60,13 @@ int main() {
     
     // This will cause a type error (can't compute mean of boolean tensor)
     // The error will be automatically converted to a PlussError with traceback
-    Series result3 = t4.mean();
-    
-    // The following code won't be executed due to the error above
-    std::cout << "This line won't be reached\n\n";
+    try {
+        (void)t4.mean();
+        std::cerr << "FAIL: expected type error, but no exception was thrown\n";
+        return 1;
+    } catch (const std::exception& e) {
+        std::cout << "Caught expected exception (Example 3):\n" << e.what() << "\n\n";
+    }
     
     return 0;
 }
