@@ -11,7 +11,8 @@ namespace pluss::table {
 // =============== Constructors ===============
 
 Atlas::Atlas(const std::vector<std::shared_ptr<DataFrame>>& frames,
-             const std::vector<std::string>& depth_names)
+             const std::vector<std::string>& depth_names,
+             bool validate_consistency)
     : frames_(frames), depth_names_(depth_names) {
     
     if (!depth_names.empty() && depth_names.size() != frames.size()) {
@@ -27,9 +28,15 @@ Atlas::Atlas(const std::vector<std::shared_ptr<DataFrame>>& frames,
     }
     
     rebuild_depth_index();
+    
+    // Optional consistency validation for homogeneous Atlas
+    if (validate_consistency) {
+        validate_structure();
+    }
 }
 
-Atlas::Atlas(const std::unordered_map<std::string, std::shared_ptr<DataFrame>>& frames) {
+Atlas::Atlas(const std::unordered_map<std::string, std::shared_ptr<DataFrame>>& frames,
+             bool validate_consistency) {
     frames_.reserve(frames.size());
     depth_names_.reserve(frames.size());
     
@@ -39,6 +46,11 @@ Atlas::Atlas(const std::unordered_map<std::string, std::shared_ptr<DataFrame>>& 
     }
     
     rebuild_depth_index();
+    
+    // Optional consistency validation for homogeneous Atlas
+    if (validate_consistency) {
+        validate_structure();
+    }
 }
 
 Atlas::Atlas(const Atlas& other)
@@ -98,8 +110,83 @@ std::tuple<int64_t, int64_t, int64_t> Atlas::shape() const noexcept {
     return {ndepth(), nrows(), ncols()};
 }
 
+// Per-DataFrame shape queries
+int64_t Atlas::nrows(int64_t depth) const {
+    validate_depth_bounds(depth);
+    return frames_[static_cast<size_t>(depth)]->shape().first;
+}
+
+int64_t Atlas::ncols(int64_t depth) const {
+    validate_depth_bounds(depth);
+    return frames_[static_cast<size_t>(depth)]->shape().second;
+}
+
+std::pair<int64_t, int64_t> Atlas::shape(int64_t depth) const {
+    validate_depth_bounds(depth);
+    return frames_[static_cast<size_t>(depth)]->shape();
+}
+
+std::vector<std::pair<int64_t, int64_t>> Atlas::all_shapes() const {
+    std::vector<std::pair<int64_t, int64_t>> shapes;
+    shapes.reserve(frames_.size());
+    for (const auto& frame : frames_) {
+        shapes.push_back(frame->shape());
+    }
+    return shapes;
+}
+
+// Aggregate dimensions
+int64_t Atlas::max_rows() const noexcept {
+    if (frames_.empty()) return 0;
+    int64_t max_r = 0;
+    for (const auto& frame : frames_) {
+        max_r = std::max(max_r, frame->shape().first);
+    }
+    return max_r;
+}
+
+int64_t Atlas::min_rows() const noexcept {
+    if (frames_.empty()) return 0;
+    int64_t min_r = std::numeric_limits<int64_t>::max();
+    for (const auto& frame : frames_) {
+        min_r = std::min(min_r, frame->shape().first);
+    }
+    return min_r == std::numeric_limits<int64_t>::max() ? 0 : min_r;
+}
+
+int64_t Atlas::max_cols() const noexcept {
+    if (frames_.empty()) return 0;
+    int64_t max_c = 0;
+    for (const auto& frame : frames_) {
+        max_c = std::max(max_c, frame->shape().second);
+    }
+    return max_c;
+}
+
+int64_t Atlas::min_cols() const noexcept {
+    if (frames_.empty()) return 0;
+    int64_t min_c = std::numeric_limits<int64_t>::max();
+    for (const auto& frame : frames_) {
+        min_c = std::min(min_c, frame->shape().second);
+    }
+    return min_c == std::numeric_limits<int64_t>::max() ? 0 : min_c;
+}
+
+int64_t Atlas::total_elements() const noexcept {
+    int64_t total = 0;
+    for (const auto& frame : frames_) {
+        auto [rows, cols] = frame->shape();
+        total += rows * cols;
+    }
+    return total;
+}
+
 int64_t Atlas::size() const noexcept {
-    return ndepth() * nrows() * ncols();
+    return total_elements();
+}
+
+bool Atlas::is_homogeneous() const noexcept {
+    return has_consistent_structure();
 }
 
 bool Atlas::empty() const noexcept {
@@ -113,6 +200,55 @@ const std::vector<std::string>& Atlas::depth_names() const noexcept {
 std::vector<std::string> Atlas::column_names() const {
     if (frames_.empty()) return {};
     return frames_[0]->columns();
+}
+
+std::vector<std::string> Atlas::column_names(int64_t depth) const {
+    validate_depth_bounds(depth);
+    return frames_[static_cast<size_t>(depth)]->columns();
+}
+
+std::vector<std::string> Atlas::all_column_names() const {
+    if (frames_.empty()) return {};
+    
+    std::unordered_set<std::string> all_cols;
+    for (const auto& frame : frames_) {
+        auto cols = frame->columns();
+        all_cols.insert(cols.begin(), cols.end());
+    }
+    
+    return std::vector<std::string>(all_cols.begin(), all_cols.end());
+}
+
+std::vector<std::string> Atlas::common_column_names() const {
+    if (frames_.empty()) return {};
+    if (frames_.size() == 1) return frames_[0]->columns();
+    
+    // Start with first DataFrame's columns
+    std::unordered_set<std::string> common(
+        frames_[0]->columns().begin(),
+        frames_[0]->columns().end()
+    );
+    
+    // Intersect with all other DataFrames
+    for (size_t i = 1; i < frames_.size(); ++i) {
+        std::unordered_set<std::string> current(
+            frames_[i]->columns().begin(),
+            frames_[i]->columns().end()
+        );
+        
+        // Remove columns not in current DataFrame
+        for (auto it = common.begin(); it != common.end(); ) {
+            if (current.find(*it) == current.end()) {
+                it = common.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        
+        if (common.empty()) break;  // Early exit if no common columns
+    }
+    
+    return std::vector<std::string>(common.begin(), common.end());
 }
 
 // =============== Indexing and Selection ===============
@@ -179,10 +315,68 @@ std::shared_ptr<Atlas> Atlas::loc(const std::vector<std::string>& depth_names) c
     return select_depths(depth_names);
 }
 
-std::shared_ptr<Atlas> Atlas::select_columns(const std::vector<std::string>& columns) const {
-    return apply_to_all_frames([&columns](const std::shared_ptr<DataFrame>& df) {
-        return df->filter(columns);
-    });
+std::shared_ptr<Atlas> Atlas::select_columns(
+    const std::vector<std::string>& columns,
+    MissingColumnStrategy strategy) const {
+    
+    std::vector<std::shared_ptr<DataFrame>> result_frames;
+    std::vector<std::string> result_names;
+    
+    result_frames.reserve(frames_.size());
+    result_names.reserve(depth_names_.size());
+    
+    for (size_t i = 0; i < frames_.size(); ++i) {
+        const auto& df = frames_[i];
+        auto df_cols = df->columns();
+        std::unordered_set<std::string> df_col_set(df_cols.begin(), df_cols.end());
+        
+        // Check which columns are missing
+        std::vector<std::string> missing_cols;
+        std::vector<std::string> existing_cols;
+        
+        for (const auto& col : columns) {
+            if (df_col_set.find(col) != df_col_set.end()) {
+                existing_cols.push_back(col);
+            } else {
+                missing_cols.push_back(col);
+            }
+        }
+        
+        // Handle based on strategy
+        if (!missing_cols.empty()) {
+            switch (strategy) {
+                case MissingColumnStrategy::Error:
+                    throw std::runtime_error(
+                        "Atlas::select_columns: DataFrame at depth " + 
+                        std::to_string(i) + " missing columns: " +
+                        std::accumulate(missing_cols.begin(), missing_cols.end(), std::string(),
+                            [](const std::string& a, const std::string& b) {
+                                return a.empty() ? b : a + ", " + b;
+                            }));
+                    
+                case MissingColumnStrategy::Skip:
+                    // Skip this DataFrame
+                    continue;
+                    
+                case MissingColumnStrategy::FillNaN:
+                    // Select existing columns and add missing ones with NaN
+                    if (!existing_cols.empty()) {
+                        auto selected_df = df->filter(existing_cols);
+                        // TODO: Add NaN columns for missing ones
+                        // For now, just use existing columns
+                        result_frames.push_back(selected_df);
+                        result_names.push_back(depth_names_[i]);
+                    }
+                    break;
+            }
+        } else {
+            // All columns exist, select them
+            result_frames.push_back(df->filter(columns));
+            result_names.push_back(depth_names_[i]);
+        }
+    }
+    
+    return std::make_shared<Atlas>(result_frames, result_names);
 }
 
 std::shared_ptr<Atlas> Atlas::head(int64_t n) const {

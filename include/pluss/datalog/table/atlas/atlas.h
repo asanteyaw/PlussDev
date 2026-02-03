@@ -25,8 +25,10 @@ public:
     // =============== Constructors ===============
     Atlas() = default;
     explicit Atlas(const std::vector<std::shared_ptr<DataFrame>>& frames,
-                   const std::vector<std::string>& depth_names = {});
-    explicit Atlas(const std::unordered_map<std::string, std::shared_ptr<DataFrame>>& frames);
+                   const std::vector<std::string>& depth_names = {},
+                   bool validate_consistency = false);
+    explicit Atlas(const std::unordered_map<std::string, std::shared_ptr<DataFrame>>& frames,
+                   bool validate_consistency = false);
     
     // Copy and move semantics
     Atlas(const Atlas& other);
@@ -45,15 +47,37 @@ public:
     
     // Shape and size information
     [[nodiscard]] int64_t ndepth() const noexcept;  // Number of DataFrames (depth dimension)
-    [[nodiscard]] int64_t nrows() const noexcept;    // Rows (assumes all DataFrames have same rows)
-    [[nodiscard]] int64_t ncols() const noexcept;    // Columns (assumes all DataFrames have same columns)
-    [[nodiscard]] std::tuple<int64_t, int64_t, int64_t> shape() const noexcept;  // (depth, rows, cols)
-    [[nodiscard]] int64_t size() const noexcept;     // Total elements (depth * rows * cols)
+    
+    // Legacy shape methods - return first DataFrame's dimensions for backward compatibility
+    [[nodiscard]] int64_t nrows() const noexcept;    // Rows of first DataFrame (for homogeneous Atlas)
+    [[nodiscard]] int64_t ncols() const noexcept;    // Columns of first DataFrame (for homogeneous Atlas)
+    [[nodiscard]] std::tuple<int64_t, int64_t, int64_t> shape() const noexcept;  // (depth, rows[0], cols[0])
+    
+    // Per-DataFrame shape queries - for heterogeneous Atlas
+    [[nodiscard]] int64_t nrows(int64_t depth) const;  // Rows at specific depth
+    [[nodiscard]] int64_t ncols(int64_t depth) const;  // Columns at specific depth
+    [[nodiscard]] std::pair<int64_t, int64_t> shape(int64_t depth) const;  // (rows, cols) at depth
+    [[nodiscard]] std::vector<std::pair<int64_t, int64_t>> all_shapes() const;  // All DataFrame shapes
+    
+    // Aggregate dimensions - for heterogeneous Atlas
+    [[nodiscard]] int64_t max_rows() const noexcept;  // Maximum rows across all DataFrames
+    [[nodiscard]] int64_t min_rows() const noexcept;  // Minimum rows across all DataFrames
+    [[nodiscard]] int64_t max_cols() const noexcept;  // Maximum columns across all DataFrames
+    [[nodiscard]] int64_t min_cols() const noexcept;  // Minimum columns across all DataFrames
+    [[nodiscard]] int64_t total_elements() const noexcept;  // Sum of all elements across all DataFrames
+    
+    [[nodiscard]] int64_t size() const noexcept;     // Total elements (sum for heterogeneous)
     [[nodiscard]] bool empty() const noexcept;
+    [[nodiscard]] bool is_homogeneous() const noexcept;  // Check if all DataFrames have same shape
     
     // Get depth names
     [[nodiscard]] const std::vector<std::string>& depth_names() const noexcept;
+    
+    // Column name queries - for heterogeneous Atlas
     [[nodiscard]] std::vector<std::string> column_names() const;  // From first DataFrame
+    [[nodiscard]] std::vector<std::string> column_names(int64_t depth) const;  // At specific depth
+    [[nodiscard]] std::vector<std::string> all_column_names() const;  // Union of all columns across depths
+    [[nodiscard]] std::vector<std::string> common_column_names() const;  // Intersection of columns across depths
     
     // =============== Indexing and Selection ===============
     
@@ -64,7 +88,15 @@ public:
     [[nodiscard]] std::shared_ptr<Atlas> loc(const std::vector<std::string>& depth_names) const;
     
     // Select columns across all depths
-    [[nodiscard]] std::shared_ptr<Atlas> select_columns(const std::vector<std::string>& columns) const;
+    // For heterogeneous Atlas: missing columns are handled according to fill_strategy
+    enum class MissingColumnStrategy {
+        Skip,      // Skip DataFrames that don't have the column
+        FillNaN,   // Add missing columns filled with NaN
+        Error      // Throw error if any DataFrame is missing the column
+    };
+    [[nodiscard]] std::shared_ptr<Atlas> select_columns(
+        const std::vector<std::string>& columns,
+        MissingColumnStrategy strategy = MissingColumnStrategy::FillNaN) const;
     
     // Head/tail operations (along depth dimension)
     [[nodiscard]] std::shared_ptr<Atlas> head(int64_t n = 5) const;
