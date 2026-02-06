@@ -3,7 +3,7 @@
 #include <c10/core/DeviceType.h>
 #include <pluss/SeriesBody.h>
 #include <pluss/Types.h>
-#include <pluss/series_factory.h>
+#include <internals/core/include/b10/deets/operations.h>
 #include <pluss/Fusion.h>
 #include <pluss/Series.h>
 #include <pluss/rnn/rnn_cell.h>
@@ -106,16 +106,14 @@ PackedSequence pack_padded_sequence(const Series& input, const Series& lengths, 
     for (const auto& p : lengths_idx) {
         sorted_indices_vec.push_back(p.second);
     }
-    Series sorted_indices = pluss::value(sorted_indices_vec, 
-                                        pluss::config({{"dtype", "int64"}, {"requires_grad", "false"}}));
+    Series sorted_indices = b10::detail::series_gen(torch::tensor(sorted_indices_vec, torch::dtype(torch::kInt64)));
     
     // Create unsorted indices
     std::vector<int64_t> unsorted_indices_vec(batch_size);
     for (int64_t i = 0; i < batch_size; ++i) {
         unsorted_indices_vec[sorted_indices_vec[i]] = i;
     }
-    Series unsorted_indices = pluss::value(unsorted_indices_vec, 
-                                          pluss::config({{"dtype", "int64"}, {"requires_grad", "false"}}));
+    Series unsorted_indices = b10::detail::series_gen(torch::tensor(unsorted_indices_vec, torch::dtype(torch::kInt64)));
     
     // Sort sequences
     Series sorted_input;
@@ -137,8 +135,7 @@ PackedSequence pack_padded_sequence(const Series& input, const Series& lengths, 
         }
         batch_sizes_vec.push_back(current_batch_size);
     }
-    Series batch_sizes = pluss::value(batch_sizes_vec, 
-                                     pluss::config({{"dtype", "int64"}, {"requires_grad", "false"}}));
+    Series batch_sizes = b10::detail::series_gen(torch::tensor(batch_sizes_vec, torch::dtype(torch::kInt64)));
     
     // Pack sequences
     std::vector<Series> packed_chunks;
@@ -227,8 +224,7 @@ std::tuple<Series, Series> pad_packed_sequence(const PackedSequence& sequence, b
     }
     
     // Create lengths tensor
-    Series lengths = pluss::value(lengths_vec, 
-                                 pluss::config({{"dtype", "int64"}, {"requires_grad", "false"}}));
+    Series lengths = b10::detail::series_gen(torch::tensor(lengths_vec, torch::dtype(torch::kInt64)));
     
     return std::make_tuple(sorted_padded, lengths);
 }

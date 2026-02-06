@@ -2,6 +2,7 @@
 
 #include <pluss/SeriesBody.h>
 #include <pluss/Note.h>
+#include <pluss/series_factory.h>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -57,11 +58,11 @@ auto create_result_container(const std::vector<int64_t>& shape) {
                   std::is_same_v<ResultType, int> ||
                   std::is_same_v<ResultType, bool>) {
         // For numeric types, create a Series
-        return pluss::Series(at::empty(shape, at::dtype<ResultType>()));
+        return pluss::from_torch(at::empty(shape, at::dtype<ResultType>()));
     } else {
         // For other types, create an appropriate container
         // This would need to be specialized for different pluss types
-        return pluss::Series(at::empty(shape, at::dtype<float>()));
+        return pluss::from_torch(at::empty(shape, at::dtype<float>()));
     }
 }
 

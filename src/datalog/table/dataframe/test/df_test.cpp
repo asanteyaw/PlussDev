@@ -4,10 +4,11 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
-#include <pluss/pluss.h>
-#include <pluss/datalog/table/dataframe/dataframe.h>
-#include <pluss/datalog/table/thread/thread.h>
 #include <filesystem>
+
+#include <torch/torch.h>
+
+#include <pluss/pluss.h>
 
 using namespace pluss;
 using namespace pluss::table;
@@ -23,8 +24,7 @@ int main() {
     assert(cols.size() == 2 && "expected two columns");
 
     // set a column with Thread (Series)
-    at::Tensor t = at::tensor({1,2,3}, at::dtype(at::kInt));
-    pluss::Series s(t);
+    pluss::Series s = pluss::value({1, 2, 3});
     df = df->set_col("c", Thread(std::move(s), "c"));
     {
         auto cols_after = df->columns();
@@ -55,7 +55,7 @@ int main() {
 
     // Thread conversions
     at::Tensor tf = at::tensor({1.0f,2.0f,3.0f});
-    pluss::Series sf(tf);
+    auto sf = pluss::from_torch(tf);
     Thread th2(sf, "vals");
     assert(th2.is_series());
     assert(th2.size() == 3);

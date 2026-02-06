@@ -107,6 +107,9 @@ wheelhouse/
 *.swp
 *.swo
 
+# clangd / language-server caches
+.cache/
+
 # ===================================
 # OS junk
 # ===================================

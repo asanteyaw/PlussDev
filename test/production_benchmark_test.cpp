@@ -5,11 +5,10 @@
 #include <vector>
 #include <unordered_map>
 #include <chrono>
-#include <pluss/Series.h>
-#include <pluss/Timeline.h>
-#include <pluss/datalog/table/thread/thread.h>
-#include <pluss/datalog/table/dataframe/dataframe.h>
-#include <pluss/datalog/table/atlas/atlas.h>
+
+#include <torch/torch.h>
+
+#include <pluss/pluss.h>
 
 using namespace pluss;
 using namespace pluss::table;
@@ -180,7 +179,7 @@ int main() {
         Timer timer("Thread Creation from CSV columns");
         for (size_t i = 0; i < col_indices.size(); ++i) {
             auto tensor = column_to_tensor(sample_data.rows, col_indices[i]);
-            threads.emplace_back(Series(tensor), numeric_cols[i]);
+            threads.emplace_back(pluss::from_torch(tensor), numeric_cols[i]);
         }
     }
     std::cout << "  ✓ Created " << threads.size() << " Thread objects\n";
@@ -265,7 +264,7 @@ int main() {
             
             for (size_t j = 0; j < col_indices.size(); ++j) {
                 auto tensor = column_to_tensor(sample_data.rows, col_indices[j]).slice(0, 0, size);
-                region_threads.emplace_back(Series(tensor), numeric_cols[j]);
+                region_threads.emplace_back(pluss::from_torch(tensor), numeric_cols[j]);
             }
             
             region_dfs.push_back(std::make_shared<DataFrame>(region_threads));
@@ -364,7 +363,7 @@ int main() {
         std::vector<Thread> large_threads;
         for (size_t i = 0; i < col_indices.size(); ++i) {
             auto tensor = column_to_tensor(large_data.rows, col_indices[i]);
-            large_threads.emplace_back(Series(tensor), numeric_cols[i]);
+            large_threads.emplace_back(pluss::from_torch(tensor), numeric_cols[i]);
         }
         auto large_df = std::make_shared<DataFrame>(large_threads);
         

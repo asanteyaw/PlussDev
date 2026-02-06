@@ -1,10 +1,10 @@
-#include <pluss/pluss.h>
-
 #include <cassert>
 #include <iostream>
 #include <string>
 
-#include <pluss/datalog/table/io/display.h>
+#include <torch/torch.h>
+
+#include <pluss/pluss.h>
 
 static void test_width_truncation_and_column_ellipsis() {
     using pluss::table::DataFrame;
@@ -68,7 +68,7 @@ static void test_row_truncation_head_tail() {
     vals.reserve(50);
     for (int64_t i = 0; i < 50; ++i) vals.push_back(i);
 
-    df = df->set_col("x", Thread(pluss::Series(torch::tensor(vals)), "x"));
+    df = df->set_col("x", Thread(pluss::from_torch(torch::tensor(vals)), "x"));
 
     pluss::table::io::DisplayOptions opt;
     opt.max_width = 80;

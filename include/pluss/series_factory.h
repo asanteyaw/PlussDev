@@ -6,6 +6,7 @@
 #include <c10/util/ArrayRef.h>
 #include <pluss/SeriesBody.h>    // Testing SeriesOps.h instead
 #include <pluss/Types.h>
+#include <internals/core/include/b10/deets/operations.h>
 #include <torch/csrc/autograd/variable.h>
 #include <ATen/core/Tensor.h>
 #include <ATen/TracerMode.h>
@@ -23,8 +24,9 @@ namespace pluss {
 //   return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 // }
 inline Series value(SeriesDataContainer data_container, const SeriesOptions& options = {}) {
-  return Series(torch::autograd::make_variable(data_container.convert_to_tensor(at::TensorOptions(options).requires_grad(::std::nullopt)),
-  at::TensorOptions(options).requires_grad()));
+  return b10::detail::series_gen(torch::autograd::make_variable(
+      data_container.convert_to_tensor(at::TensorOptions(options).requires_grad(::std::nullopt)),
+      at::TensorOptions(options).requires_grad()));
 }
 
 // inline Series value(torch::detail::TensorDataContainer tensor_data_container, const at::TensorOptions& options = {}) {
@@ -40,7 +42,7 @@ inline Series value(SeriesDataContainer data_container, const SeriesOptions& opt
 /// Creates a Series from an existing at::Tensor
 /// This function allows easy conversion from torch tensors to Series objects
 inline Series from_torch(const at::Tensor& tensor, bool requires_grad = false) {
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(requires_grad));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(requires_grad));
 }
 
 // Helper function to process options configuration
@@ -181,7 +183,7 @@ inline Series from_blob(
     at::tracer::impl::NoTracerDispatchMode tracer_guard;
     return at::from_blob(data, sizes, strides, deleter, at::TensorOptions(options).requires_grad(::std::nullopt));
   })();
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 /// Exposes the given `data` as a `Series` without taking ownership of the
@@ -199,7 +201,7 @@ inline Series from_blob(
     at::tracer::impl::NoTracerDispatchMode tracer_guard;
     return at::from_blob(data, sizes, strides, at::TensorOptions(options).requires_grad(::std::nullopt));
   })();
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 /// Exposes the given `data` as a `Series` without taking ownership of the
@@ -218,7 +220,7 @@ inline Series from_blob(
     at::tracer::impl::NoTracerDispatchMode tracer_guard;
     return at::from_blob(data, sizes, deleter, at::TensorOptions(options).requires_grad(::std::nullopt));
   })();
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 /// Exposes the given `data` as a `Series` without taking ownership of the
@@ -234,81 +236,81 @@ inline Series from_blob(
     at::tracer::impl::NoTracerDispatchMode tracer_guard;
     return at::from_blob(data, sizes, at::TensorOptions(options).requires_grad(::std::nullopt));
   })();
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 // Factory functions for creating Series objects from various ATen functions
 inline Series zeros(const IntArrayRef& size, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::zeros(size, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series ones(const IntArrayRef& size, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::ones(size, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series rand(const IntArrayRef& size, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::rand(size, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series randn(const IntArrayRef& size, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::randn(size, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series arange(const Scalar& end, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::arange(end, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series arange(const Scalar& start, const Scalar& end, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::arange(start, end, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series arange(const Scalar& start, const Scalar& end, const Scalar& step, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::arange(start, end, step, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series linspace(const Scalar& start, const Scalar& end, int64_t steps, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::linspace(start, end, steps, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series eye(int64_t n, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::eye(n, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series eye(int64_t n, int64_t m, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::eye(n, m, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series empty(const IntArrayRef& size, const SeriesOptions& options = {}, const optional<MemoryFormat>& memory_format = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::empty(size, at::TensorOptions(options).requires_grad(::std::nullopt), 
                                memory_format.has_value() ? optional<at::MemoryFormat>(*memory_format) : optional<at::MemoryFormat>{});
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series full(const IntArrayRef& size, const Scalar& fill_value, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::full(size, fill_value, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 // Additional factory functions
@@ -317,37 +319,37 @@ inline Series _make_dep_token(const SeriesOptions& options = {}, const optional<
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::_make_dep_token(at::TensorOptions(options).requires_grad(::std::nullopt), 
                                          memory_format.has_value() ? optional<at::MemoryFormat>(*memory_format) : optional<at::MemoryFormat>{});
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series _cudnn_init_dropout_state(double dropout, bool train, int64_t dropout_seed, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::_cudnn_init_dropout_state(dropout, train, dropout_seed, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series bartlett_window(int64_t window_length, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::bartlett_window(window_length, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series bartlett_window(int64_t window_length, bool periodic, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::bartlett_window(window_length, periodic, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series blackman_window(int64_t window_length, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::blackman_window(window_length, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series blackman_window(int64_t window_length, bool periodic, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::blackman_window(window_length, periodic, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series empty(const IntArrayRef& size, const optional<DimnameList>& names, const SeriesOptions& options = {}, const optional<MemoryFormat>& memory_format = {}) {
@@ -355,26 +357,26 @@ inline Series empty(const IntArrayRef& size, const optional<DimnameList>& names,
   at::Tensor tensor = at::empty(size, names.has_value() ? optional<at::DimnameList>(*names) : optional<at::DimnameList>{}, 
                                at::TensorOptions(options).requires_grad(::std::nullopt), 
                                memory_format.has_value() ? optional<at::MemoryFormat>(*memory_format) : optional<at::MemoryFormat>{});
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series empty_symint(const SymIntArrayRef& size, const SeriesOptions& options = {}, const optional<MemoryFormat>& memory_format = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::empty_symint(size, at::TensorOptions(options).requires_grad(::std::nullopt), 
                                       memory_format.has_value() ? optional<at::MemoryFormat>(*memory_format) : optional<at::MemoryFormat>{});
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series empty_permuted(const IntArrayRef& size, const IntArrayRef& physical_layout, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::empty_permuted(size, physical_layout, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series empty_permuted_symint(const SymIntArrayRef& size, const IntArrayRef& physical_layout, const SeriesOptions& options = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::empty_permuted_symint(size, physical_layout, at::TensorOptions(options).requires_grad(::std::nullopt));
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series _empty_affine_quantized(const IntArrayRef& size, const SeriesOptions& options = {}, double scale = 1, int64_t zero_point = 0, 
@@ -382,7 +384,7 @@ inline Series _empty_affine_quantized(const IntArrayRef& size, const SeriesOptio
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::_empty_affine_quantized(size, at::TensorOptions(options).requires_grad(::std::nullopt), scale, zero_point, 
                                                  memory_format.has_value() ? optional<at::MemoryFormat>(*memory_format) : optional<at::MemoryFormat>{});
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 // Add more factory functions as needed...
@@ -392,42 +394,42 @@ inline Series zeros_like(const Series& self, const SeriesOptions& options = {}, 
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::zeros_like(self.tensor(), at::TensorOptions(options).requires_grad(::std::nullopt), 
                                     memory_format.has_value() ? optional<at::MemoryFormat>(*memory_format) : optional<at::MemoryFormat>{});
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series ones_like(const Series& self, const SeriesOptions& options = {}, const optional<MemoryFormat>& memory_format = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::ones_like(self.tensor(), at::TensorOptions(options).requires_grad(::std::nullopt), 
                                    memory_format.has_value() ? optional<at::MemoryFormat>(*memory_format) : optional<at::MemoryFormat>{});
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series empty_like(const Series& self, const SeriesOptions& options = {}, const optional<MemoryFormat>& memory_format = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::empty_like(self.tensor(), at::TensorOptions(options).requires_grad(::std::nullopt), 
                                     memory_format.has_value() ? optional<at::MemoryFormat>(*memory_format) : optional<at::MemoryFormat>{});
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series full_like(const Series& self, const Scalar& fill_value, const SeriesOptions& options = {}, const optional<MemoryFormat>& memory_format = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::full_like(self.tensor(), fill_value, at::TensorOptions(options).requires_grad(::std::nullopt), 
                                    memory_format.has_value() ? optional<at::MemoryFormat>(*memory_format) : optional<at::MemoryFormat>{});
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series rand_like(const Series& self, const SeriesOptions& options = {}, const optional<MemoryFormat>& memory_format = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::rand_like(self.tensor(), at::TensorOptions(options).requires_grad(::std::nullopt), 
                                    memory_format.has_value() ? optional<at::MemoryFormat>(*memory_format) : optional<at::MemoryFormat>{});
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series randn_like(const Series& self, const SeriesOptions& options = {}, const optional<MemoryFormat>& memory_format = {}) {
   at::AutoDispatchBelowADInplaceOrView guard;
   at::Tensor tensor = at::randn_like(self.tensor(), at::TensorOptions(options).requires_grad(::std::nullopt), 
                                     memory_format.has_value() ? optional<at::MemoryFormat>(*memory_format) : optional<at::MemoryFormat>{});
-  return Series(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
+  return b10::detail::series_gen(torch::autograd::Variable(tensor).set_requires_grad(options.requires_grad_opt().value_or(false)));
 }
 
 inline Series pile(SeriesList series, int64_t dim=0) {
@@ -435,7 +437,7 @@ inline Series pile(SeriesList series, int64_t dim=0) {
   auto tensor_vec = map_to_vector<Series, torch::Tensor>(series, [](const Series& s) {
     return s.tensor();
   });
-  return Series(at::_ops::stack::call(tensor_vec, dim));
+  return b10::detail::series_gen(at::_ops::stack::call(tensor_vec, dim));
 }
 
 inline Series unite(const SeriesList& inputs, int64_t dim = 0) {

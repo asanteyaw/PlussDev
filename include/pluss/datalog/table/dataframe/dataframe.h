@@ -253,9 +253,39 @@ public:
     [[nodiscard]] std::shared_ptr<DataFrame> squeeze() const;
     
     // GroupBy operations
-    class GroupBy;
+    class GroupBy {
+    public:
+        GroupBy(const DataFrame* parent, const std::vector<std::string>& by_cols);
+
+        // Aggregation operations
+        [[nodiscard]] std::shared_ptr<DataFrame> sum() const;
+        [[nodiscard]] std::shared_ptr<DataFrame> mean() const;
+        [[nodiscard]] std::shared_ptr<DataFrame> median() const;
+        [[nodiscard]] std::shared_ptr<DataFrame> min() const;
+        [[nodiscard]] std::shared_ptr<DataFrame> max() const;
+        [[nodiscard]] std::shared_ptr<DataFrame> std(int ddof = 1) const;
+        [[nodiscard]] std::shared_ptr<DataFrame> var(int ddof = 1) const;
+        [[nodiscard]] std::shared_ptr<DataFrame> count() const;
+        [[nodiscard]] std::shared_ptr<DataFrame> nunique() const;
+        [[nodiscard]] std::shared_ptr<DataFrame> first() const;
+        [[nodiscard]] std::shared_ptr<DataFrame> last() const;
+
+        // Apply custom aggregation
+        [[nodiscard]] std::shared_ptr<DataFrame> agg(const std::vector<std::string>& funcs) const;
+
+    private:
+        const DataFrame* parent_;
+        std::vector<std::string> by_cols_;
+        std::unordered_map<std::string, std::vector<int64_t>> groups_;
+
+        void compute_groups();
+        std::shared_ptr<DataFrame> aggregate(const std::function<double(const Thread&)>& agg_func, const std::string& func_name) const;
+        std::shared_ptr<DataFrame> aggregate_thread(const std::function<Thread(const Thread&)>& agg_func, const std::string& func_name) const;
+    };
+    
     [[nodiscard]] std::shared_ptr<GroupBy> groupby(const std::string& by) const;
     [[nodiscard]] std::shared_ptr<GroupBy> groupby(const std::vector<std::string>& by) const;
+    [[nodiscard]] std::shared_ptr<GroupBy> groupby(std::initializer_list<std::string> by) const;
     
     // Window operations
     class Rolling;

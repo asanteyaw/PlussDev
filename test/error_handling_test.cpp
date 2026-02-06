@@ -1,5 +1,5 @@
 #include <iostream>
-#include <pluss/pluss.h> 
+#include <pluss/pluss.h>
 
 using namespace pluss;
  // Include the full Series implementation

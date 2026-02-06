@@ -1,5 +1,4 @@
-#include <pluss/datalog/table/thread/thread.h>
-#include <pluss/series_factory.h>
+#include <pluss/pluss.h>
 #include <iostream>
 
 using namespace pluss::table;

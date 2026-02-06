@@ -1,9 +1,9 @@
 #include <iostream>
 #include <iomanip>
-#include <pluss/datalog/table/atlas/atlas.h>
-#include <pluss/datalog/table/dataframe/dataframe.h>
-#include <pluss/datalog/table/thread/thread.h>
-#include <pluss/Series.h>
+
+#include <torch/torch.h>
+
+#include <pluss/pluss.h>
 
 using namespace pluss::table;
 
@@ -12,7 +12,7 @@ std::shared_ptr<DataFrame> create_df(const std::vector<std::pair<std::string, at
     std::vector<Thread> threads;
     threads.reserve(columns.size());
     for (const auto& [name, tensor] : columns) {
-        threads.emplace_back(pluss::Series(tensor), name);
+        threads.emplace_back(pluss::from_torch(tensor), name);
     }
     return std::make_shared<DataFrame>(threads);
 }

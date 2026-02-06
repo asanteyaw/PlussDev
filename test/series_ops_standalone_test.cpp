@@ -23,7 +23,7 @@ int tests_failed = 0;
 
 // Helper function to create Series from tensor
 Series make_series(at::Tensor t) {
-    return Series(t);
+    return pluss::from_torch(std::move(t));
 }
 
 void test_basic_operations() {

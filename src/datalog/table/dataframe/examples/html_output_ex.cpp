@@ -1,4 +1,4 @@
-#include <pluss/datalog/table/dataframe/dataframe.h>
+#include <pluss/pluss.h>
 #include <iostream>
 #include <fstream>
 

@@ -6,13 +6,12 @@
 #include <regex>
 #include <iomanip>
 #include <sstream>
-#include <pluss/series_factory.h>
+#include <torch/torch.h>
 #include "SeriesBody.h"
 
-namespace pluss {
+#include <internals/core/include/b10/deets/operations.h>
 
-// Forward declaration for factory that will construct Timeline objects.
-struct TimelineFactory;
+namespace pluss {
 
 class Timeline {
 private:
@@ -49,15 +48,20 @@ private:
     static Frequency freqFromString(const std::string& freq_str);
     static std::chrono::system_clock::duration durationForFreq(Frequency f, int step = 1);
 
+    static Series int_series(int64_t v) {
+        return b10::detail::series_gen(torch::tensor(v, torch::dtype(torch::kInt64)));
+    }
+
 private:
     // Constructors (private — use pluss::make_timeline() or pluss::moment())
-    friend struct TimelineFactory;
+    friend ::pluss::Timeline b10::detail::tl_gen(const b10::detail::TimelineSpec& spec);
+
     Timeline() {
         auto now = std::chrono::system_clock::now();
         auto [date_int, time_int] = timePointToInternalFormat(now);
         
-        date_series_ = pluss::value(static_cast<int64_t>(date_int));
-        time_series_ = pluss::value(static_cast<int64_t>(time_int));
+        date_series_ = int_series(static_cast<int64_t>(date_int));
+        time_series_ = int_series(static_cast<int64_t>(time_int));
         has_date_ = true;
         has_time_ = true;
     }
@@ -76,18 +80,18 @@ private:
             // If parseTimeline succeeded, prefer its normalized fields.
             auto [norm_date_int, norm_time_int] = timePointToInternalFormat(tp);
             if (has_date_) {
-                date_series_ = Series(torch::tensor(static_cast<int64_t>(norm_date_int)));
+                date_series_ = int_series(static_cast<int64_t>(norm_date_int));
             }
             if (has_time_) {
-                time_series_ = Series(torch::tensor(static_cast<int64_t>(norm_time_int)));
+                time_series_ = int_series(static_cast<int64_t>(norm_time_int));
             }
         } else {
             // Default to current date and time
             auto now = std::chrono::system_clock::now();
             auto [date_int, time_int] = timePointToInternalFormat(now);
             
-            date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
-            time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+            date_series_ = int_series(static_cast<int64_t>(date_int));
+            time_series_ = int_series(static_cast<int64_t>(time_int));
             has_date_ = true;
             has_time_ = true;
         }
@@ -95,13 +99,13 @@ private:
 
     Timeline(int year, int month, int day) {
         int64_t date_int = year * 10000 + month * 100 + day;
-        date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        date_series_ = int_series(static_cast<int64_t>(date_int));
         has_date_ = true;
     }
 
     Timeline(const int& hour, const int& minute, const int& second) {
         int64_t time_int = hour * 10000 + minute * 100 + second;
-        time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+        time_series_ = int_series(static_cast<int64_t>(time_int));
         has_time_ = true;
     }
 
@@ -109,8 +113,8 @@ private:
         int64_t date_int = year * 10000 + month * 100 + day;
         int64_t time_int = hour * 10000 + minute * 100 + second;
         
-        date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
-        time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+        date_series_ = int_series(static_cast<int64_t>(date_int));
+        time_series_ = int_series(static_cast<int64_t>(time_int));
         has_date_ = true;
         has_time_ = true;
     }
@@ -180,6 +184,14 @@ public:
     int minutes_between(const Timeline& other) const;
     int seconds_between(const Timeline& other) const;
     
+    // Construction and combination helpers (operations on existing Timeline)
+    Timeline concat(const Timeline& other) const;
+    Timeline concat(const std::vector<Timeline>& others) const;
+    Timeline repeat(int64_t times) const;
+    Timeline empty_like() const;
+    Timeline fill_like(int year, int month, int day) const;
+    Timeline fill_like(const std::string& date_str) const;
+    
     // Comparison operators
     bool operator==(const Timeline& other) const;
     bool operator!=(const Timeline& other) const;
@@ -216,13 +228,15 @@ public:
 
 namespace pluss {
 
+namespace timeline_detail {
+
 // Helper function to check if a string is a number
-[[maybe_unused]] static inline bool isNumber(const std::string& s) {
+[[maybe_unused]] inline bool isNumber(const std::string& s) {
     return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit);
 }
 
 // Helper function to convert string to lowercase
-[[maybe_unused]] static inline std::string toLower(const std::string& s) {
+[[maybe_unused]] inline std::string toLower(const std::string& s) {
     std::string result = s;
     std::transform(result.begin(), result.end(), result.begin(), 
                     [](unsigned char c){ return std::tolower(c); });
@@ -230,7 +244,7 @@ namespace pluss {
 }
 
 // Helper function to trim whitespace from start and end of string
-[[maybe_unused]] static inline std::string trim(const std::string& s) {
+[[maybe_unused]] inline std::string trim(const std::string& s) {
     auto start = s.begin();
     while (start != s.end() && std::isspace(*start)) {
         start++;
@@ -245,7 +259,7 @@ namespace pluss {
 }
 
 // Helper function to extract numbers from a string
-[[maybe_unused]] static inline std::vector<int> extractNumbers(const std::string& s) {
+[[maybe_unused]] inline std::vector<int> extractNumbers(const std::string& s) {
     std::vector<int> numbers;
     std::string current_number;
     
@@ -266,7 +280,7 @@ namespace pluss {
 }
 
 // Month name to number mapping
-static const std::map<std::string, int> month_map = {
+inline const std::map<std::string, int> month_map = {
     {"january", 1}, {"jan", 1},
     {"february", 2}, {"feb", 2},
     {"march", 3}, {"mar", 3},
@@ -282,13 +296,15 @@ static const std::map<std::string, int> month_map = {
 };
 
 // Day suffix to number mapping
-static const std::map<std::string, int> day_suffix_map = {
+inline const std::map<std::string, int> day_suffix_map = {
     {"st", 1}, {"nd", 2}, {"rd", 3}, {"th", 4}
 };
 
+} // namespace timeline_detail
+
 // Parse date from string
 inline std::pair<bool, int64_t> Timeline::parseDate(const std::string& date_str) {
-    std::string date = toLower(trim(date_str));
+    std::string date = timeline_detail::toLower(timeline_detail::trim(date_str));
     
     // Try to match various date formats
     
@@ -316,8 +332,8 @@ inline std::pair<bool, int64_t> Timeline::parseDate(const std::string& date_str)
     } else if (std::regex_search(date, match, date_regex4)) {
         // Month DD, YYYY
         std::string month_str = match[1];
-        auto it = month_map.find(month_str);
-        if (it == month_map.end()) return {false, 0};
+        auto it = timeline_detail::month_map.find(month_str);
+        if (it == timeline_detail::month_map.end()) return {false, 0};
         month = it->second;
         day = std::stoi(match[2]);
         year = std::stoi(match[3]);
@@ -325,16 +341,16 @@ inline std::pair<bool, int64_t> Timeline::parseDate(const std::string& date_str)
         // DD Month YYYY
         day = std::stoi(match[1]);
         std::string month_str = match[2];
-        auto it = month_map.find(month_str);
-        if (it == month_map.end()) return {false, 0};
+        auto it = timeline_detail::month_map.find(month_str);
+        if (it == timeline_detail::month_map.end()) return {false, 0};
         month = it->second;
         year = std::stoi(match[3]);
     } else if (std::regex_search(date, match, date_regex6)) {
         // YYYY Month DD
         year = std::stoi(match[1]);
         std::string month_str = match[2];
-        auto it = month_map.find(month_str);
-        if (it == month_map.end()) return {false, 0};
+        auto it = timeline_detail::month_map.find(month_str);
+        if (it == timeline_detail::month_map.end()) return {false, 0};
         month = it->second;
         day = std::stoi(match[3]);
     } else if (std::regex_search(date, match, date_regex1)) {
@@ -349,7 +365,7 @@ inline std::pair<bool, int64_t> Timeline::parseDate(const std::string& date_str)
         }
     } else {
         // Try to extract numbers and guess the format
-        std::vector<int> numbers = extractNumbers(date);
+        std::vector<int> numbers = timeline_detail::extractNumbers(date);
         
         if (numbers.size() >= 3) {
             // Try to determine the format based on the values
@@ -417,7 +433,7 @@ inline std::pair<bool, int64_t> Timeline::parseDate(const std::string& date_str)
 
 // Parse time from string
 inline std::pair<bool, int64_t> Timeline::parseTime(const std::string& time_str) {
-    std::string time = toLower(trim(time_str));
+    std::string time = timeline_detail::toLower(timeline_detail::trim(time_str));
     
     // Try to match various time formats
     
@@ -474,7 +490,7 @@ inline std::pair<bool, int64_t> Timeline::parseTime(const std::string& time_str)
         }
     } else {
         // Try to extract numbers and guess the format
-        std::vector<int> numbers = extractNumbers(time);
+        std::vector<int> numbers = timeline_detail::extractNumbers(time);
         
         if (numbers.size() >= 2) {
             hour = numbers[0];
@@ -511,56 +527,10 @@ inline std::pair<bool, int64_t> Timeline::parseTime(const std::string& time_str)
 
 // Parse Timeline from string
 inline std::pair<bool, std::chrono::system_clock::time_point> Timeline::parseTimeline(const std::string& Timeline_str) {
-    std::string timeline = trim(Timeline_str);
-    
-    // Try to split into date and time parts
-    size_t space_pos = timeline.find_first_of(" \t");
-    
-    if (space_pos != std::string::npos) {
-        // String contains both date and time
-        std::string date_part = timeline.substr(0, space_pos);
-        std::string time_part = timeline.substr(space_pos + 1);
-        
-        auto [date_success, date_int] = parseDate(date_part);
-        auto [time_success, time_int] = parseTime(time_part);
-        
-        if (date_success && time_success) {
-            // Convert to time_point
-            std::tm tm = {};
-            tm.tm_year = date_int / 10000 - 1900;
-            tm.tm_mon = (date_int % 10000) / 100 - 1;
-            tm.tm_mday = date_int % 100;
-            tm.tm_hour = time_int / 10000;
-            tm.tm_min = (time_int % 10000) / 100;
-            tm.tm_sec = time_int % 100;
-            
-            std::time_t tt = std::mktime(&tm);
-            return {true, std::chrono::system_clock::from_time_t(tt)};
-        } else if (date_success) {
-            // Only date part was valid
-            std::tm tm = {};
-            tm.tm_year = date_int / 10000 - 1900;
-            tm.tm_mon = (date_int % 10000) / 100 - 1;
-            tm.tm_mday = date_int % 100;
-            
-            std::time_t tt = std::mktime(&tm);
-            return {true, std::chrono::system_clock::from_time_t(tt)};
-        } else if (time_success) {
-            // Only time part was valid
-            auto now = std::chrono::system_clock::now();
-            std::time_t now_tt = std::chrono::system_clock::to_time_t(now);
-            std::tm* now_tm = std::localtime(&now_tt);
-            
-            now_tm->tm_hour = time_int / 10000;
-            now_tm->tm_min = (time_int % 10000) / 100;
-            now_tm->tm_sec = time_int % 100;
-            
-            std::time_t tt = std::mktime(now_tm);
-            return {true, std::chrono::system_clock::from_time_t(tt)};
-        }
-    }
+    std::string timeline = timeline_detail::trim(Timeline_str);
 
-    // Try parsing as a combined date+time string (date/time may be embedded)
+    // Prefer parsing against the full string. parseDate/parseTime use regex_search,
+    // so they can match embedded date/time segments (e.g. "March 5, 2022 4:05 pm").
     {
         auto [date_success, date_int] = parseDate(timeline);
         auto [time_success, time_int] = parseTime(timeline);
@@ -572,6 +542,7 @@ inline std::pair<bool, std::chrono::system_clock::time_point> Timeline::parseTim
             tm.tm_hour = time_int / 10000;
             tm.tm_min = (time_int % 10000) / 100;
             tm.tm_sec = time_int % 100;
+            tm.tm_isdst = -1;
 
             std::time_t tt = std::mktime(&tm);
             return {true, std::chrono::system_clock::from_time_t(tt)};
@@ -585,6 +556,7 @@ inline std::pair<bool, std::chrono::system_clock::time_point> Timeline::parseTim
         tm.tm_year = date_int / 10000 - 1900;
         tm.tm_mon = (date_int % 10000) / 100 - 1;
         tm.tm_mday = date_int % 100;
+        tm.tm_isdst = -1;
         
         std::time_t tt = std::mktime(&tm);
         return {true, std::chrono::system_clock::from_time_t(tt)};
@@ -643,6 +615,7 @@ inline std::chrono::system_clock::time_point Timeline::toTimePoint() const {
         tm.tm_year = date_val / 10000 - 1900;
         tm.tm_mon = (date_val % 10000) / 100 - 1;
         tm.tm_mday = date_val % 100;
+        tm.tm_isdst = -1;
         
         std::time_t tt = std::mktime(&tm);
         return std::chrono::system_clock::from_time_t(tt);
@@ -658,6 +631,7 @@ inline std::chrono::system_clock::time_point Timeline::toTimePoint() const {
         tm.tm_hour = time_val / 10000;
         tm.tm_min = (time_val % 10000) / 100;
         tm.tm_sec = time_val % 100;
+        tm.tm_isdst = -1;
         
         std::time_t tt = std::mktime(&tm);
         return std::chrono::system_clock::from_time_t(tt);
@@ -669,7 +643,7 @@ inline Timeline Timeline::today() {
     auto [date_int, _] = timePointToInternalFormat(now);
     
     Timeline dt;
-    dt.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+    dt.date_series_ = int_series(static_cast<int64_t>(date_int));
     dt.has_date_ = true;
     dt.has_time_ = false;
     
@@ -682,7 +656,7 @@ inline Timeline Timeline::yesterday() {
     auto [date_int, _] = timePointToInternalFormat(yesterday);
     
     Timeline dt;
-    dt.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+    dt.date_series_ = int_series(static_cast<int64_t>(date_int));
     dt.has_date_ = true;
     dt.has_time_ = false;
     
@@ -695,7 +669,7 @@ inline Timeline Timeline::tomorrow() {
     auto [date_int, _] = timePointToInternalFormat(tomorrow);
     
     Timeline dt;
-    dt.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+    dt.date_series_ = int_series(static_cast<int64_t>(date_int));
     dt.has_date_ = true;
     dt.has_time_ = false;
     
@@ -709,7 +683,7 @@ inline Timeline Timeline::now() {
 inline Timeline Timeline::createFromDateInts(int year, int month, int day) {
     Timeline t;
     int64_t date_int = static_cast<int64_t>(year) * 10000 + month * 100 + day;
-    t.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+    t.date_series_ = int_series(static_cast<int64_t>(date_int));
     t.has_date_ = true;
     t.has_time_ = false;
     return t;
@@ -718,7 +692,7 @@ inline Timeline Timeline::createFromDateInts(int year, int month, int day) {
 inline Timeline Timeline::createFromTimeInts(int hour, int minute, int second) {
     Timeline t;
     int64_t time_int = static_cast<int64_t>(hour) * 10000 + minute * 100 + second;
-    t.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+    t.time_series_ = int_series(static_cast<int64_t>(time_int));
     t.has_time_ = true;
     t.has_date_ = false;
     return t;
@@ -728,8 +702,8 @@ inline Timeline Timeline::createFromDateTimeInts(int year, int month, int day, i
     Timeline t;
     int64_t date_int = static_cast<int64_t>(year) * 10000 + month * 100 + day;
     int64_t time_int = static_cast<int64_t>(hour) * 10000 + minute * 100 + second;
-    t.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
-    t.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+    t.date_series_ = int_series(static_cast<int64_t>(date_int));
+    t.time_series_ = int_series(static_cast<int64_t>(time_int));
     t.has_date_ = true;
     t.has_time_ = true;
     return t;
@@ -740,8 +714,8 @@ inline Timeline Timeline::fromTimestamp(int64_t timestamp) {
     auto [date_int, time_int] = timePointToInternalFormat(tp);
     
     Timeline dt;
-    dt.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
-    dt.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+    dt.date_series_ = int_series(static_cast<int64_t>(date_int));
+    dt.time_series_ = int_series(static_cast<int64_t>(time_int));
     dt.has_date_ = true;
     dt.has_time_ = true;
     
@@ -881,7 +855,7 @@ inline void Timeline::set_year(int year) {
         // If no date set, use current date
         auto now = std::chrono::system_clock::now();
         auto [date_int, _] = timePointToInternalFormat(now);
-        date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        date_series_ = int_series(static_cast<int64_t>(date_int));
         has_date_ = true;
     }
     
@@ -890,7 +864,7 @@ inline void Timeline::set_year(int year) {
     int day = date_val % 100;
     
     int64_t new_date = year * 10000 + month * 100 + day;
-    date_series_ = Series(torch::tensor(static_cast<int64_t>(new_date)));
+    date_series_ = int_series(static_cast<int64_t>(new_date));
 }
 
 inline void Timeline::set_month(int month) {
@@ -898,7 +872,7 @@ inline void Timeline::set_month(int month) {
         // If no date set, use current date
         auto now = std::chrono::system_clock::now();
         auto [date_int, _] = timePointToInternalFormat(now);
-        date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        date_series_ = int_series(static_cast<int64_t>(date_int));
         has_date_ = true;
     }
     
@@ -925,7 +899,7 @@ inline void Timeline::set_month(int month) {
     }
     
     int64_t new_date = year * 10000 + month * 100 + day;
-    date_series_ = Series(torch::tensor(static_cast<int64_t>(new_date)));
+    date_series_ = int_series(static_cast<int64_t>(new_date));
 }
 
 inline void Timeline::set_day(int day) {
@@ -933,7 +907,7 @@ inline void Timeline::set_day(int day) {
         // If no date set, use current date
         auto now = std::chrono::system_clock::now();
         auto [date_int, _] = timePointToInternalFormat(now);
-        date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        date_series_ = int_series(static_cast<int64_t>(date_int));
         has_date_ = true;
     }
     
@@ -956,13 +930,13 @@ inline void Timeline::set_day(int day) {
     }
     
     int64_t new_date = year * 10000 + month * 100 + day;
-    date_series_ = Series(torch::tensor(static_cast<int64_t>(new_date)));
+    date_series_ = int_series(static_cast<int64_t>(new_date));
 }
 
 inline void Timeline::set_hour(int hour) {
     if (!has_time_) {
         // If no time set, use midnight
-        time_series_ = Series(torch::tensor(static_cast<int64_t>(0)));
+        time_series_ = int_series(static_cast<int64_t>(0));
         has_time_ = true;
     }
     
@@ -976,13 +950,13 @@ inline void Timeline::set_hour(int hour) {
     }
     
     int64_t new_time = hour * 10000 + minute * 100 + second;
-    time_series_ = Series(torch::tensor(static_cast<int64_t>(new_time)));
+    time_series_ = int_series(static_cast<int64_t>(new_time));
 }
 
 inline void Timeline::set_minute(int minute) {
     if (!has_time_) {
         // If no time set, use midnight
-        time_series_ = Series(torch::tensor(static_cast<int64_t>(0)));
+        time_series_ = int_series(static_cast<int64_t>(0));
         has_time_ = true;
     }
     
@@ -996,13 +970,13 @@ inline void Timeline::set_minute(int minute) {
     }
     
     int64_t new_time = hour * 10000 + minute * 100 + second;
-    time_series_ = Series(torch::tensor(static_cast<int64_t>(new_time)));
+    time_series_ = int_series(static_cast<int64_t>(new_time));
 }
 
 inline void Timeline::set_second(int second) {
     if (!has_time_) {
         // If no time set, use midnight
-        time_series_ = Series(torch::tensor(static_cast<int64_t>(0)));
+        time_series_ = int_series(static_cast<int64_t>(0));
         has_time_ = true;
     }
     
@@ -1016,7 +990,7 @@ inline void Timeline::set_second(int second) {
     }
     
     int64_t new_time = hour * 10000 + minute * 100 + second;
-    time_series_ = Series(torch::tensor(static_cast<int64_t>(new_time)));
+    time_series_ = int_series(static_cast<int64_t>(new_time));
 }
 
 // Formatting
@@ -1058,7 +1032,10 @@ inline std::string Timeline::to_string() const {
 inline Series Timeline::to_Series() const {
     if (has_date_ && has_time_) {
         // Return a 1D Series with [date, time]
-        return pluss::pile({date_series_.to_cpu(), time_series_.to_cpu()});
+		auto date_tensor = date_series_.to_cpu().tensor();
+		auto time_tensor = time_series_.to_cpu().tensor();
+		auto stacked = at::stack({date_tensor, time_tensor});
+		return b10::detail::series_gen(std::move(stacked));
     } else if (has_date_) {
         return date_series_;
     } else if (has_time_) {
@@ -1142,7 +1119,7 @@ inline Timeline Timeline::add_days(int days) const {
     
     Timeline result(*this);
     if (has_date_) {
-        result.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        result.date_series_ = int_series(static_cast<int64_t>(date_int));
     }
     
     return result;
@@ -1156,10 +1133,10 @@ inline Timeline Timeline::add_hours(int hours) const {
     
     Timeline result(*this);
     if (has_date_) {
-        result.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        result.date_series_ = int_series(static_cast<int64_t>(date_int));
     }
     if (has_time_) {
-        result.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+        result.time_series_ = int_series(static_cast<int64_t>(time_int));
     }
     
     return result;
@@ -1173,10 +1150,10 @@ inline Timeline Timeline::add_minutes(int minutes) const {
     
     Timeline result(*this);
     if (has_date_) {
-        result.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        result.date_series_ = int_series(static_cast<int64_t>(date_int));
     }
     if (has_time_) {
-        result.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+        result.time_series_ = int_series(static_cast<int64_t>(time_int));
     }
     
     return result;
@@ -1190,10 +1167,10 @@ inline Timeline Timeline::add_seconds(int seconds) const {
     
     Timeline result(*this);
     if (has_date_) {
-        result.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        result.date_series_ = int_series(static_cast<int64_t>(date_int));
     }
     if (has_time_) {
-        result.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+        result.time_series_ = int_series(static_cast<int64_t>(time_int));
     }
     
     return result;
@@ -1365,7 +1342,7 @@ inline bool Timeline::operator>=(const Timeline& other) const {
 
 // Frequency helpers
 inline Timeline::Frequency Timeline::freqFromString(const std::string& freq_str) {
-    std::string s = toLower(trim(freq_str));
+    std::string s = timeline_detail::toLower(timeline_detail::trim(freq_str));
     if (s.empty()) return Frequency::UNKNOWN;
     if (s == "y" || s == "year" || s == "years" || s == "annual") return Frequency::YEAR;
     if (s == "m" || s == "month" || s == "months") return Frequency::MONTH;
@@ -1474,7 +1451,8 @@ inline std::vector<Timeline> Timeline::date_range(const Timeline& start, const T
     std::vector<Timeline> out;
     if (end < start) return out;
     Timeline cur = start.to_period(freq);
-    while (cur <= end) {
+    Timeline end_period = end.to_period(freq);
+    while (cur <= end_period) {
         out.push_back(cur);
         cur = cur.shift(step, freq);
     }
@@ -1534,6 +1512,108 @@ inline int Timeline::week_of_year() const {
 
 inline Timeline Timeline::to_period(const std::string& freq) const {
     return floor(freq);
+}
+
+// Construction and combination helpers (operations on existing Timeline)
+inline Timeline Timeline::concat(const Timeline& other) const {
+    // Concatenate two Timelines by combining their date and time Series
+    if (!has_date_ && !other.has_date_) {
+        // Both are time-only, concatenate times
+        if (has_time_ && other.has_time_) {
+            at::Tensor concat_time = torch::cat({time_series_.tensor(), other.time_series_.tensor()}, 0);
+            return Timeline(Series(), b10::detail::series_gen(concat_time));
+        }
+        return *this;
+    }
+    
+    if (!has_time_ && !other.has_time_) {
+        // Both are date-only, concatenate dates
+        if (has_date_ && other.has_date_) {
+            at::Tensor concat_date = torch::cat({date_series_.tensor(), other.date_series_.tensor()}, 0);
+            return Timeline(b10::detail::series_gen(concat_date), Series());
+        }
+        return *this;
+    }
+    
+    // Both have date and time, concatenate both
+    if (has_date_ && other.has_date_ && has_time_ && other.has_time_) {
+        at::Tensor concat_date = torch::cat({date_series_.tensor(), other.date_series_.tensor()}, 0);
+        at::Tensor concat_time = torch::cat({time_series_.tensor(), other.time_series_.tensor()}, 0);
+        return Timeline(b10::detail::series_gen(concat_date), b10::detail::series_gen(concat_time));
+    }
+    
+    // Mismatched types, return first one
+    return *this;
+}
+
+inline Timeline Timeline::concat(const std::vector<Timeline>& others) const {
+    Timeline result = *this;
+    for (const auto& other : others) {
+        result = result.concat(other);
+    }
+    return result;
+}
+
+inline Timeline Timeline::repeat(int64_t times) const {
+    if (times <= 0) return Timeline();
+    if (times == 1) return *this;
+    
+    std::vector<at::Tensor> date_tensors;
+    std::vector<at::Tensor> time_tensors;
+    
+    for (int64_t i = 0; i < times; ++i) {
+        if (has_date_) date_tensors.push_back(date_series_.tensor());
+        if (has_time_) time_tensors.push_back(time_series_.tensor());
+    }
+    
+    Series result_date = has_date_ ? b10::detail::series_gen(torch::cat(date_tensors, 0)) : Series();
+    Series result_time = has_time_ ? b10::detail::series_gen(torch::cat(time_tensors, 0)) : Series();
+    
+    return Timeline(result_date, result_time);
+}
+
+inline Timeline Timeline::empty_like() const {
+    // Create an empty Timeline with same structure (date/time presence) but no data
+    if (has_date_ && has_time_) {
+        return Timeline(
+            b10::detail::series_gen(torch::empty({0}, torch::dtype(torch::kInt64))),
+            b10::detail::series_gen(torch::empty({0}, torch::dtype(torch::kInt64)))
+        );
+    } else if (has_date_) {
+        return Timeline(
+            b10::detail::series_gen(torch::empty({0}, torch::dtype(torch::kInt64))),
+            Series()
+        );
+    } else if (has_time_) {
+        return Timeline(
+            Series(),
+            b10::detail::series_gen(torch::empty({0}, torch::dtype(torch::kInt64)))
+        );
+    }
+    return Timeline();
+}
+
+inline Timeline Timeline::fill_like(int year, int month, int day) const {
+    // Create a Timeline with same shape as this, filled with specified date
+    if (!has_date_) return *this;
+    
+    int64_t fill_date = year * 10000 + month * 100 + day;
+    int64_t size = date_series_.numel();
+    
+    Series fill_date_series = b10::detail::series_gen(
+        torch::full({size}, fill_date, torch::dtype(torch::kInt64))
+    );
+    
+    Series fill_time_series = has_time_ ? 
+        b10::detail::series_gen(torch::zeros({size}, torch::dtype(torch::kInt64))) : 
+        Series();
+    
+    return Timeline(fill_date_series, fill_time_series);
+}
+
+inline Timeline Timeline::fill_like(const std::string& date_str) const {
+    Timeline ref(date_str);
+    return fill_like(ref.year(), ref.month(), ref.day());
 }
     
 } // namespace pluss

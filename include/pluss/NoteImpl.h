@@ -3,6 +3,8 @@
 #include <pluss/Note.h>
 #include <pluss/NoteOps.h>
 
+#include <internals/core/include/b10/deets/operations.h>
+
 // #include <iomanip>
 
 namespace pluss::helpers {
@@ -29,6 +31,14 @@ inline Note Note::unsqueeze(int dim) { return ops::unsqueeze(*this, dim); }
 inline Note Note::map(const std::function<Chord(const Chord&)>& fn) const { return ops::map(*this, fn); }
 inline Note Note::repeat(const std::vector<int64_t>& reps) const { return ops::repeat(*this, reps); }
 
+// Construction and combination helpers
+inline Note Note::concat(const Note& other) const { return ops::concat(*this, other); }
+inline Note Note::concat(const std::vector<Note>& others) const { return ops::concat_multiple(*this, others); }
+inline Note Note::join_notes(const std::vector<Note>& others, const Chord& delimiter) const { return ops::join_notes(*this, others, delimiter); }
+inline Note Note::empty_like() const { return ops::empty_like(*this); }
+inline Note Note::fill_like(const Chord& chord) const { return ops::fill_like(*this, chord); }
+inline Note Note::repeat_like(const Chord& chord) const { return ops::fill_like(*this, chord); }  // Alias
+
 inline Note Note::slice(const std::vector<int>& indices, int dim) const {
   Note result = *this;
   for (int i : indices) {
@@ -44,7 +54,7 @@ inline Note Note::T() const {
   const auto& mat = t.children();
   if (mat.empty() || mat[0].children().empty()) {
     // Return empty 2D Note
-    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(Text(std::vector<Text>{})));
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(Text(std::vector<Text>{})));
   }
 
   const size_t rows = mat.size();
@@ -64,7 +74,7 @@ inline Note Note::T() const {
     for (size_t j = 0; j < cols; ++j)
       transposed[j].append(mat[i].children()[j]);
 
-  return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(Text(std::move(transposed))));
+  return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(Text(std::move(transposed))));
 }
 
 inline Note Note::transpose(int dim0, int dim1) const {
@@ -93,7 +103,7 @@ inline Note Note::transpose(int dim0, int dim1) const {
 
   std::vector<int> index(n, 0);
   Text transposed = transpose_recursive(tree(), index, 0);
-  return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(std::move(transposed)));
+  return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(std::move(transposed)));
 }
 
 inline std::vector<std::string> Note::flatten() const {

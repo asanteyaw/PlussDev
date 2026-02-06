@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/Note.h"
+#include <internals/core/include/b10/deets/operations.h>
 #include <vector>
 #include <internals/core/include/b10/utils/Macros.h>
 
@@ -87,7 +88,7 @@ namespace pluss {
       for (const auto& sub : t.children()) out.push_back(apply(sub));
       return out;
     };
-    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(apply(input.tree())));
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(apply(input.tree())));
   }
   
   // === Binary Dispatch ===
@@ -103,7 +104,7 @@ namespace pluss {
         out.push_back(apply(ca[i], cb[i]));
       return out;
     };
-    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb)));
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb)));
   }
   
   // === Ternary Dispatch ===
@@ -121,7 +122,7 @@ namespace pluss {
         out.push_back(apply(ca[i], cb[i], cc[i]));
       return out;
     };
-    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb, tc)));
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb, tc)));
   }
   
   // === Predicate Dispatch ===
@@ -175,7 +176,7 @@ namespace pluss {
         out.push_back(apply(cc[i], cx[i], cy[i]));
       return out;
     };
-    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(apply(tc, tx, ty)));
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(apply(tc, tx, ty)));
   }
   
   inline Note dispatch_comparator(const Note& a, const Note& b,
@@ -193,7 +194,7 @@ namespace pluss {
       return out;
     };
 
-    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb)));
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb)));
 }
 
 // === Stack ===
@@ -225,8 +226,8 @@ inline Note dispatch_stack(const std::vector<Note>& notes, int dim) {
   trees.reserve(notes.size());
   for (const auto& n : notes) trees.push_back(n.tree());
 
-  return Note::wrap_note_impl(
-    intrusive_ptr<detail::NoteBook>::make(insert_dim(std::move(trees), dim)));
+      return b10::detail::note_gen(
+        intrusive_ptr<detail::NoteBook>::make(insert_dim(std::move(trees), dim)));
 }
 
 // === Map ===
@@ -246,7 +247,7 @@ inline Note dispatch_squeeze(const Note& input, int dim = -1) {
       out.push_back(squeeze_at(c, target, curr_dim + 1));
     return out;
   };
-  return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(squeeze_at(input.tree(), dim, 0)));
+  return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(squeeze_at(input.tree(), dim, 0)));
 }
 
 // === Unsqueeze ===
@@ -259,7 +260,7 @@ inline Note dispatch_unsqueeze(const Note& input, int dim) {
       out.push_back(insert_at(c, target, curr_dim + 1));
     return out;
   };
-  return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(insert_at(input.tree(), dim, 0)));
+  return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(insert_at(input.tree(), dim, 0)));
 }
 
 // === Slice ===
@@ -282,8 +283,8 @@ inline Note dispatch_slice(const Note& input, int dim, int start, int end) {
     return Text(std::move(out));
   };
 
-  return Note::wrap_note_impl(
-      intrusive_ptr<detail::NoteBook>::make(slice(input.tree(), dim, 0)));
+      return b10::detail::note_gen(
+        intrusive_ptr<detail::NoteBook>::make(slice(input.tree(), dim, 0)));
 }
 
 // === Repeat ===
@@ -315,7 +316,7 @@ inline Note dispatch_repeat(const Note& input, const std::vector<int64_t>& repea
     return out;
   };
 
-  return Note::wrap_note_impl(
-      intrusive_ptr<detail::NoteBook>::make(apply(input.tree(), 0)));
+      return b10::detail::note_gen(
+        intrusive_ptr<detail::NoteBook>::make(apply(input.tree(), 0)));
 }
 } //namespace pluss

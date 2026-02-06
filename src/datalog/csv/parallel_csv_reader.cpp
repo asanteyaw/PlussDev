@@ -1,9 +1,8 @@
 #include "pluss/datalog/csv/parallel_csv_reader.h"
-#include "pluss/datalog/table/dataframe/dataframe.h"
-#include "pluss/Thread.h"
+#include <pluss/pluss.h>  // Get full definitions
 #include <fstream>
-#include <thread>
 #include <future>
+#include <thread>
 #include <cstring>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -11,6 +10,8 @@
 #include <unistd.h>
 
 namespace pluss {
+
+using namespace pluss::table;  // Simplify Thread/DataFrame usage
 
 // ============================================================================
 // ParallelCSVReader Implementation
@@ -302,13 +303,13 @@ ParallelCSVReader::read_mixed(
 // ParallelDataFrameBuilder Implementation
 // ============================================================================
 
-DataFrame ParallelDataFrameBuilder::build_from_csv(
+pluss::table::DataFrame ParallelDataFrameBuilder::build_from_csv(
     const std::vector<std::vector<std::string>>& csv_data,
     const std::vector<std::string>& column_names,
     size_t num_threads
 ) {
     if (csv_data.empty()) {
-        return DataFrame({}, column_names);
+        return pluss::table::DataFrame();
     }
     
     if (num_threads == 0) {
@@ -324,7 +325,7 @@ DataFrame ParallelDataFrameBuilder::build_from_csv(
     
     for (size_t col_idx = 0; col_idx < num_cols; ++col_idx) {
         futures.push_back(std::async(std::launch::async,
-            [&csv_data, col_idx]() {
+            [&csv_data, col_idx, &column_names]() {
                 std::vector<std::string> col_data;
                 col_data.reserve(csv_data.size());
                 
@@ -336,7 +337,10 @@ DataFrame ParallelDataFrameBuilder::build_from_csv(
                     }
                 }
                 
-                return Thread(col_data);
+                std::vector<pluss::Chord> chords;
+                chords.reserve(col_data.size());
+                for (const auto& s : col_data) chords.emplace_back(s);
+                return Thread(pluss::make_note(std::move(chords)), column_names[col_idx]);
             }
         ));
     }
@@ -346,17 +350,17 @@ DataFrame ParallelDataFrameBuilder::build_from_csv(
         columns[i] = futures[i].get();
     }
     
-    return DataFrame(columns, column_names);
+    return pluss::table::DataFrame(columns);
 }
 
-DataFrame ParallelDataFrameBuilder::build_from_csv_columns(
+pluss::table::DataFrame ParallelDataFrameBuilder::build_from_csv_columns(
     const std::vector<std::vector<std::string>>& csv_data,
     const std::vector<size_t>& column_indices,
     const std::vector<std::string>& column_names,
     size_t num_threads
 ) {
     if (csv_data.empty()) {
-        return DataFrame({}, column_names);
+        return pluss::table::DataFrame();
     }
     
     if (num_threads == 0) {
@@ -371,9 +375,10 @@ DataFrame ParallelDataFrameBuilder::build_from_csv_columns(
     
     for (size_t i = 0; i < column_indices.size(); ++i) {
         size_t col_idx = column_indices[i];
+        const std::string column_name = (i < column_names.size()) ? column_names[i] : std::string();
         
         futures.push_back(std::async(std::launch::async,
-            [&csv_data, col_idx]() {
+            [&csv_data, col_idx, column_name]() {
                 std::vector<std::string> col_data;
                 col_data.reserve(csv_data.size());
                 
@@ -385,7 +390,10 @@ DataFrame ParallelDataFrameBuilder::build_from_csv_columns(
                     }
                 }
                 
-                return Thread(col_data);
+                std::vector<pluss::Chord> chords;
+                chords.reserve(col_data.size());
+                for (const auto& s : col_data) chords.emplace_back(s);
+                return Thread(pluss::make_note(std::move(chords)), column_name);
             }
         ));
     }
@@ -395,10 +403,10 @@ DataFrame ParallelDataFrameBuilder::build_from_csv_columns(
         columns[i] = futures[i].get();
     }
     
-    return DataFrame(columns, column_names);
+    return pluss::table::DataFrame(columns);
 }
 
-Thread ParallelDataFrameBuilder::build_column_parallel(
+pluss::table::Thread ParallelDataFrameBuilder::build_column_parallel(
     const std::vector<std::vector<std::string>>& csv_data,
     size_t col_idx,
     size_t num_threads
@@ -414,7 +422,12 @@ Thread ParallelDataFrameBuilder::build_column_parallel(
         }
     }
     
-    return Thread(col_data);
+    (void)num_threads;
+
+    std::vector<pluss::Chord> chords;
+    chords.reserve(col_data.size());
+    for (const auto& s : col_data) chords.emplace_back(s);
+    return Thread(pluss::make_note(std::move(chords)));
 }
 
 } // namespace pluss

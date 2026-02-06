@@ -1,0 +1,202 @@
+#pragma once
+
+#include <variant>
+#include <string>
+#include <memory>
+#include <unordered_map>
+#include <vector>
+#include <pluss/Series.h>
+#include <pluss/Note.h>
+#include <pluss/Chord.h>
+
+namespace pluss::handle {
+
+/**
+ * @brief Feed - 1D document field (analogous to Thread in table module)
+ * 
+ * Feed-First Design Philosophy:
+ * - Feed (1D): Document field operations (flexible, schema-free)
+ * - Catalog (2D): Collection of documents (MongoDB-like)
+ * - Archive (3D): Database of collections
+ * 
+ * A Feed represents a flexible field in a document that can hold:
+ * - Scalar values (int, double, string, bool)
+ * - Arrays (vectors of values)
+ * - Nested documents (key-value pairs)
+ * - Series (for numerical arrays)
+ * - Note (for text arrays)
+ * 
+ * MongoDB-inspired operations: $set, $inc, $push, $pull, $addToSet, etc.
+ */
+class Feed {
+public:
+    // Forward declare for self-referential document type
+    using DocumentValue = std::unordered_map<std::string, std::shared_ptr<Feed>>;
+    
+    // Flat variant to avoid incomplete type issues (like Thread design)
+    using Value = std::variant<
+        std::monostate,                          // null
+        bool,                                     // boolean
+        int64_t,                                 // integer
+        double,                                  // floating point
+        std::string,                             // string
+        pluss::Chord,                            // Chord (rich text)
+        std::vector<int64_t>,                   // int array
+        std::vector<double>,                    // double array
+        std::vector<std::string>,               // string array
+        std::vector<bool>,                      // bool array
+        pluss::Series,                           // Numerical tensor array
+        pluss::Note,                             // Text tensor array
+        std::shared_ptr<DocumentValue>          // Document (nested, via shared_ptr)
+    >;
+    
+    // Helper type alias for MongoDB-style scalar values
+    using ScalarValue = std::variant<
+        std::monostate, bool, int64_t, double, std::string, pluss::Chord
+    >;
+
+    // Constructors
+    Feed() = default;
+    explicit Feed(std::string name) : name_(std::move(name)) {}
+    Feed(const Value& v, std::string name = "") : value_(v), name_(std::move(name)) {}
+    Feed(const DocumentValue& v, std::string name = "") : value_(std::make_shared<DocumentValue>(v)), name_(std::move(name)) {}
+    Feed(const std::shared_ptr<DocumentValue>& v, std::string name = "") : value_(v), name_(std::move(name)) {}
+    
+    // Type-specific constructors
+    Feed(int64_t v, std::string name = "") : value_(v), name_(std::move(name)) {}
+    Feed(double v, std::string name = "") : value_(v), name_(std::move(name)) {}
+    Feed(const char* v, std::string name = "") : value_(std::string(v)), name_(std::move(name)) {}
+    Feed(const std::string& v, std::string name = "") : value_(v), name_(std::move(name)) {}
+    Feed(bool v, std::string name = "") : value_(v), name_(std::move(name)) {}
+    Feed(const pluss::Chord& c, std::string name = "") : value_(c), name_(std::move(name)) {}
+    Feed(const pluss::Series& s, std::string name = "") : value_(s), name_(std::move(name)) {}
+    Feed(const pluss::Note& n, std::string name = "") : value_(n), name_(std::move(name)) {}
+    Feed(const std::vector<int64_t>& v, std::string name = "") : value_(v), name_(std::move(name)) {}
+    Feed(const std::vector<double>& v, std::string name = "") : value_(v), name_(std::move(name)) {}
+    Feed(const std::vector<std::string>& v, std::string name = "") : value_(v), name_(std::move(name)) {}
+    Feed(const std::vector<bool>& v, std::string name = "") : value_(v), name_(std::move(name)) {}
+
+    Feed(const Feed&) = default;
+    Feed(Feed&&) noexcept = default;
+    Feed& operator=(const Feed&) = default;
+    Feed& operator=(Feed&&) noexcept = default;
+
+    // Accessors
+    [[nodiscard]] const std::string& name() const noexcept { return name_; }
+    void set_name(const std::string& n) { name_ = n; }
+    
+    [[nodiscard]] const Value& value() const noexcept { return value_; }
+    [[nodiscard]] Value& value() noexcept { return value_; }
+
+    // Type checking
+    [[nodiscard]] bool is_scalar() const noexcept;
+    [[nodiscard]] bool is_array() const noexcept;
+    [[nodiscard]] bool is_document() const noexcept;
+    [[nodiscard]] bool is_null() const noexcept;
+    [[nodiscard]] bool is_bool() const noexcept;
+    [[nodiscard]] bool is_int() const noexcept;
+    [[nodiscard]] bool is_double() const noexcept;
+    [[nodiscard]] bool is_string() const noexcept;
+    [[nodiscard]] bool is_series() const noexcept;
+    [[nodiscard]] bool is_note() const noexcept;
+
+    // Type conversions (no as_scalar/as_array since flat variant)
+    [[nodiscard]] DocumentValue& as_document();
+    [[nodiscard]] const DocumentValue& as_document() const;
+    
+    // Specific type access
+    [[nodiscard]] int64_t as_int() const;
+    [[nodiscard]] double as_double() const;
+    [[nodiscard]] std::string as_string() const;
+    [[nodiscard]] bool as_bool() const;
+    [[nodiscard]] pluss::Series& as_series();
+    [[nodiscard]] const pluss::Series& as_series() const;
+    [[nodiscard]] pluss::Note& as_note();
+    [[nodiscard]] const pluss::Note& as_note() const;
+
+    // Size/shape
+    [[nodiscard]] int64_t size() const;
+    [[nodiscard]] bool empty() const;
+
+    // ========== FEEDABLE OPERATIONS (Feed-First Design) ==========
+    // MongoDB-inspired field operations
+    
+    // Value operations
+    [[nodiscard]] Feed set(const Value& new_value) const;
+    [[nodiscard]] Feed inc(double amount) const;        // $inc: increment numeric field
+    [[nodiscard]] Feed mul(double factor) const;        // $mul: multiply numeric field
+    [[nodiscard]] Feed min(const Value& value) const;   // $min: update if value is less
+    [[nodiscard]] Feed max(const Value& value) const;   // $max: update if value is greater
+    [[nodiscard]] Feed rename(const std::string& new_name) const;
+    
+    // Array operations (when Feed holds an array)
+    [[nodiscard]] Feed push(const ScalarValue& value) const;      // $push: append to array
+    [[nodiscard]] Feed push_each(const std::vector<ScalarValue>& values) const; // $push with $each
+    [[nodiscard]] Feed pop(int direction = 1) const;              // $pop: remove first(-1) or last(1)
+    [[nodiscard]] Feed pull(const ScalarValue& value) const;      // $pull: remove matching elements
+    [[nodiscard]] Feed add_to_set(const ScalarValue& value) const; // $addToSet: add if not exists
+    [[nodiscard]] Feed slice(int64_t start, int64_t end) const;   // Array slice
+    [[nodiscard]] Feed at(int64_t index) const;                   // Single element access
+    
+    // Document operations (when Feed holds nested document)
+    [[nodiscard]] Feed get_field(const std::string& field) const;
+    [[nodiscard]] Feed set_field(const std::string& field, const Feed& value) const;
+    [[nodiscard]] Feed unset_field(const std::string& field) const;
+    [[nodiscard]] bool has_field(const std::string& field) const;
+    [[nodiscard]] std::vector<std::string> fields() const;
+    
+    // Comparison operations (for queries)
+    [[nodiscard]] bool eq(const Feed& other) const;   // $eq
+    [[nodiscard]] bool ne(const Feed& other) const;   // $ne
+    [[nodiscard]] bool lt(const Feed& other) const;   // $lt
+    [[nodiscard]] bool le(const Feed& other) const;   // $lte
+    [[nodiscard]] bool gt(const Feed& other) const;   // $gt
+    [[nodiscard]] bool ge(const Feed& other) const;   // $gte
+    [[nodiscard]] bool in(const std::vector<ScalarValue>& values) const;  // $in
+    [[nodiscard]] bool nin(const std::vector<ScalarValue>& values) const; // $nin
+    
+    // Logical operations
+    [[nodiscard]] bool exists() const;                 // $exists
+    [[nodiscard]] std::string type() const;            // $type
+    
+   // String operations (when Feed holds string)
+    [[nodiscard]] Feed to_upper() const;
+    [[nodiscard]] Feed to_lower() const;
+    [[nodiscard]] Feed trim() const;
+    [[nodiscard]] Feed concat(const std::string& suffix) const;
+    [[nodiscard]] bool contains(const std::string& substring) const;
+    [[nodiscard]] bool starts_with(const std::string& prefix) const;
+    [[nodiscard]] bool ends_with(const std::string& suffix) const;
+    
+    // Numeric operations (when Feed holds number)
+    [[nodiscard]] Feed abs() const;
+    [[nodiscard]] Feed round(int decimals = 0) const;
+    [[nodiscard]] Feed floor() const;
+    [[nodiscard]] Feed ceil() const;
+    [[nodiscard]] Feed sqrt() const;
+    [[nodiscard]] Feed pow(double exponent) const;
+    
+    // Array aggregations (when Feed holds array)
+    [[nodiscard]] double sum() const;
+    [[nodiscard]] double mean() const;
+    [[nodiscard]] double min_value() const;
+    [[nodiscard]] double max_value() const;
+    [[nodiscard]] int64_t count() const;
+    
+    // Serialization
+    [[nodiscard]] std::string to_json() const;
+    [[nodiscard]] std::string to_bson() const;
+    [[nodiscard]] std::string to_string() const;
+    static Feed from_json(const std::string& json, const std::string& name = "");
+    static Feed from_bson(const std::string& bson, const std::string& name = "");
+
+private:
+    Value value_;
+    std::string name_;
+    
+    // Helper for numeric operations
+    double to_numeric() const;
+    bool is_numeric() const;
+};
+
+}  // namespace pluss::handle

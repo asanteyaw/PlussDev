@@ -5,6 +5,10 @@
 #include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
+#include <cmath>
+#include <limits>
+#include <random>
+#include <cstdlib>
 
 namespace pluss::table {
 
@@ -63,17 +67,31 @@ Thread Thread::loc(const pluss::Series& condition) const {
     }
     if (is_note()) {
         try {
+            // Vectorized approach: use boolean masking
             auto vec = as_note().vector();
-            std::vector<std::string> sel;
-            auto cond_numel = condition.numel();
-            for (int64_t i = 0; i < cond_numel && static_cast<size_t>(i) < vec.size(); ++i) {
-                if (condition[i].item<bool>()) {
-                    sel.push_back(vec[i].str());
+            const auto cond_numel = condition.numel();
+            const auto vec_size = static_cast<int64_t>(vec.size());
+            const auto min_size = std::min(cond_numel, vec_size);
+            
+            // Count true values for pre-allocation (vectorized counting)
+            auto cond_contig = condition.contiguous();
+            auto cond_accessor = cond_contig.accessor<bool, 1>();
+            int64_t true_count = 0;
+            for (int64_t i = 0; i < min_size; ++i) {
+                true_count += cond_accessor[i];
+            }
+            
+            // Pre-allocate for vectorized assignment
+            std::vector<pluss::Chord> chords;
+            chords.reserve(true_count);
+            
+            // Vectorized selection with minimal branching
+            for (int64_t i = 0; i < min_size; ++i) {
+                if (cond_accessor[i]) {
+                    chords.emplace_back(vec[i]);
                 }
             }
-            std::vector<pluss::Chord> chords;
-            chords.reserve(sel.size());
-            for (const auto &sstr : sel) chords.emplace_back(sstr);
+            
             return Thread(pluss::make_note(chords), name_);
         } catch (...) {
             return *this;
@@ -94,28 +112,22 @@ Thread Thread::to(const torch::Device& device) const {
 
 Thread Thread::unique() const {
     if (is_series()) {
-        // Efficient unique using sort + consecutive removal
+        // Efficient unique using sort + vectorized consecutive comparison
         auto sorted_vals = std::get<0>(as_series().sort(0));
         int64_t numel = sorted_vals.numel();
         if (numel == 0) return *this;
         if (numel == 1) return Thread(sorted_vals, name_);
         
-        // Build mask for non-consecutive duplicates
-        std::vector<bool> keep(numel, true);
-        for (int64_t i = 1; i < numel; ++i) {
-            if (sorted_vals[i].item<double>() == sorted_vals[i-1].item<double>()) {
-                keep[i] = false;
-            }
-        }
+        // Vectorized comparison: compare sorted[1:] != sorted[:-1]
+        auto shifted = sorted_vals.slice(0, 0, numel - 1);  // all but last
+        auto current = sorted_vals.slice(0, 1, numel);      // all but first
+        auto diff_mask = current.ne(shifted);  // vectorized comparison
         
-        // Build result
-        std::vector<double> result_vec;
-        result_vec.reserve(numel);
-        for (int64_t i = 0; i < numel; ++i) {
-            if (keep[i]) result_vec.push_back(sorted_vals[i].item<double>());
-        }
+        // Include first element (always unique in sorted array)
+        auto first_true = pluss::ones({1}, pluss::SeriesOptions().dtype(at::kBool));
+        auto keep_mask = pluss::from_torch(torch::cat({first_true.tensor(), diff_mask.tensor()}, 0));
         
-        return Thread(pluss::from_torch(torch::tensor(result_vec)), name_);
+        return Thread(sorted_vals.masked_select(keep_mask), name_);
     }
     if (is_timeline()) {
         return Thread(as_timeline().to_Series(), name_).unique();
@@ -214,7 +226,8 @@ Thread Thread::value_counts() const {
             std::vector<int64_t> count_vals;
             for (const auto& [_, count] : counts) count_vals.push_back(count);
             
-            return Thread(pluss::from_torch(torch::tensor(count_vals)), name_ + "_counts");
+            // Use from_blob to create Series directly from vector data
+            return Thread(pluss::from_blob(count_vals.data(), {static_cast<int64_t>(count_vals.size())}, pluss::SeriesOptions().dtype(at::kLong)), name_ + "_counts");
         } catch (...) {
             return *this;
         }
@@ -299,7 +312,7 @@ Thread Thread::cummin() const {
 // Indexing and selection operations
 Thread Thread::take(const std::vector<int64_t>& indices) const {
     if (is_series()) {
-        auto idx_tensor = pluss::from_torch(torch::tensor(indices, torch::kLong));
+        auto idx_tensor = pluss::value(indices);
         return Thread(as_series().index({idx_tensor}), name_);
     }
     return *this;
@@ -434,7 +447,8 @@ Thread Thread::interpolate(const std::string& method) const {
                 }
             }
         }
-        return Thread(pluss::from_torch(torch::tensor(result_vec)), name_);
+        // Use from_blob to create Series directly from vector data
+        return Thread(pluss::from_blob(result_vec.data(), {static_cast<int64_t>(result_vec.size())}), name_);
     }
     return *this;
 }
@@ -602,4 +616,498 @@ Thread Thread::tan() const {
     return *this;
 }
 
+// ========== AGGREGATION OPERATIONS ==========
+
+double Thread::sum() const {
+    if (is_series()) {
+        return as_series().sum().item<double>();
+    }
+    return 0.0;
+}
+
+double Thread::mean() const {
+    if (is_series()) {
+        return as_series().mean().item<double>();
+    }
+    return 0.0;
+}
+
+double Thread::median() const {
+    if (is_series()) {
+        return as_series().median().item<double>();
+    }
+    return 0.0;
+}
+
+double Thread::std(int ddof) const {
+    if (is_series()) {
+        return as_series().std(ddof != 0).item<double>();
+    }
+    return 0.0;
+}
+
+double Thread::var(int ddof) const {
+    if (is_series()) {
+        return as_series().var(ddof != 0).item<double>();
+    }
+    return 0.0;
+}
+
+double Thread::min() const {
+    if (is_series()) {
+        return as_series().min().item<double>();
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
+double Thread::max() const {
+    if (is_series()) {
+        return as_series().max().item<double>();
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
+double Thread::prod() const {
+    if (is_series()) {
+        return as_series().prod().item<double>();
+    }
+    return 1.0;
+}
+
+double Thread::sem() const {
+    if (is_series()) {
+        const auto s = as_series();
+        const int64_t n = s.numel();
+        if (n <= 1) return std::numeric_limits<double>::quiet_NaN();
+        return s.std(true).item<double>() / std::sqrt(static_cast<double>(n));
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
+double Thread::mad() const {
+    if (is_series()) {
+        const auto s = as_series();
+        const double m = s.mean().item<double>();
+        return (s - m).abs().mean().item<double>();
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
+double Thread::skew() const {
+    if (is_series()) {
+        const auto s = as_series();
+        const int64_t n = s.numel();
+        if (n < 3) return std::numeric_limits<double>::quiet_NaN();
+        
+        const double m = s.mean().item<double>();
+        const double sigma = s.std(true).item<double>();
+        if (sigma == 0.0) return 0.0;
+        
+        const auto centered = s - m;
+        const double m3 = centered.pow(3).mean().item<double>();
+        return m3 / std::pow(sigma, 3);
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
+double Thread::kurt() const {
+    if (is_series()) {
+        const auto s = as_series();
+        const int64_t n = s.numel();
+        if (n < 4) return std::numeric_limits<double>::quiet_NaN();
+        
+        const double m = s.mean().item<double>();
+        const double sigma = s.std(true).item<double>();
+        if (sigma == 0.0) return -3.0;  // Excess kurtosis for constant series
+        
+        const auto centered = s - m;
+        const double m4 = centered.pow(4).mean().item<double>();
+        return (m4 / std::pow(sigma, 4)) - 3.0;  // Excess kurtosis
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
+double Thread::quantile(double q) const {
+    if (is_series()) {
+        return as_series().quantile(q).item<double>();
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
+int64_t Thread::count() const {
+    if (is_series()) {
+        // Count non-NaN values
+        const auto s = as_series();
+        return (s.data() == s.data()).sum().item<int64_t>();  // NaN != NaN
+    }
+    if (is_note()) {
+        return as_note().shape()[0];
+    }
+    if (is_timeline()) {
+        return size();
+    }
+    return 0;
+}
+
+int64_t Thread::nunique() const {
+    if (is_series()) {
+        const auto s = as_series();
+        
+        // Remove NaN values using Series API
+        auto nan_mask = s.isnan();
+        auto clean_mask = nan_mask.logical_not();
+        auto clean = s.masked_select(clean_mask);
+        
+        if (clean.numel() == 0) return 0;
+        
+        // Use unordered_set for unique counting
+        std::unordered_set<double> unique_vals;
+        auto clean_contig = clean.contiguous();
+        auto accessor = clean_contig.accessor<double, 1>();
+        for (int64_t i = 0; i < clean.numel(); ++i) {
+            unique_vals.insert(accessor[i]);
+        }
+        return static_cast<int64_t>(unique_vals.size());
+    }
+    if (is_note()) {
+        const auto vec = as_note().vector();
+        std::unordered_set<std::string> unique_vals;
+        for (const auto& chord : vec) {
+            unique_vals.insert(chord.str());
+        }
+        return static_cast<int64_t>(unique_vals.size());
+    }
+    return count();
+}
+
+// ========== INDEX LOCATION METHODS ==========
+
+int64_t Thread::idxmax() const {
+    if (is_series()) {
+        return std::get<1>(as_series().max(0)).item<int64_t>();
+    }
+    return -1;
+}
+
+int64_t Thread::idxmin() const {
+    if (is_series()) {
+        return std::get<1>(as_series().min(0)).item<int64_t>();
+    }
+    return -1;
+}
+
+Thread Thread::mode() const {
+    if (is_series()) {
+        const auto s = as_series();
+        
+        // Remove NaN values using Series API
+        auto nan_mask = s.isnan();
+        auto clean_mask = nan_mask.logical_not();
+        auto clean = s.masked_select(clean_mask);
+        
+        if (clean.numel() == 0) {
+            return Thread(pluss::full({1}, std::numeric_limits<double>::quiet_NaN()), name_);
+        }
+        
+        // Count frequencies
+        std::unordered_map<double, int64_t> freq_map;
+        auto clean_contig = clean.contiguous();
+        auto accessor = clean_contig.accessor<double, 1>();
+        for (int64_t i = 0; i < clean.numel(); ++i) {
+            freq_map[accessor[i]]++;
+        }
+        
+        // Find max frequency
+        int64_t max_freq = 0;
+        for (const auto& [val, freq] : freq_map) {
+            max_freq = std::max(max_freq, freq);
+        }
+        
+        // Collect all values with max frequency
+        std::vector<double> modes;
+        for (const auto& [val, freq] : freq_map) {
+            if (freq == max_freq) {
+                modes.push_back(val);
+            }
+        }
+        
+        // Sort modes for deterministic output
+        std::sort(modes.begin(), modes.end());
+        
+        return Thread(pluss::from_blob(modes.data(), {static_cast<int64_t>(modes.size())}), name_);
+    }
+    
+    if (is_note()) {
+        const auto vec = as_note().vector();
+        if (vec.empty()) {
+            return Thread(pluss::make_note(), name_);
+        }
+        
+        std::unordered_map<std::string, int64_t> freq_map;
+        for (const auto& chord : vec) {
+            freq_map[chord.str()]++;
+        }
+        
+        int64_t max_freq = 0;
+        for (const auto& [val, freq] : freq_map) {
+            max_freq = std::max(max_freq, freq);
+        }
+        
+        std::vector<std::string> modes;
+        for (const auto& [val, freq] : freq_map) {
+            if (freq == max_freq) {
+                modes.push_back(val);
+            }
+        }
+        
+        std::sort(modes.begin(), modes.end());
+        
+        std::vector<pluss::Chord> mode_chords;
+        for (const auto& m : modes) {
+            mode_chords.emplace_back(m);
+        }
+        
+        return Thread(pluss::make_note(mode_chords), name_);
+    }
+    
+    return *this;
+}
+
+// ========== BOOLEAN REDUCTIONS ==========
+
+bool Thread::all() const {
+    if (is_series()) {
+        return as_series().all().item<bool>();
+    }
+    return false;
+}
+
+bool Thread::any() const {
+    if (is_series()) {
+        return as_series().any().item<bool>();
+    }
+    return false;
+}
+
+// ========== SELECTION AND FILTERING ==========
+
+Thread Thread::sample(int64_t n, bool replace) const {
+    if (n <= 0 || size() == 0) return Thread(pluss::zeros({0}), name_);
+    
+    const int64_t sz = size();
+    std::vector<int64_t> indices;
+    
+    if (replace) {
+        // Sample with replacement
+        indices.reserve(n);
+        for (int64_t i = 0; i < n; ++i) {
+            indices.push_back(std::rand() % sz);
+        }
+    } else {
+        // Sample without replacement
+        if (n > sz) n = sz;
+        indices.reserve(sz);
+        for (int64_t i = 0; i < sz; ++i) {
+            indices.push_back(i);
+        }
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::shuffle(indices.begin(), indices.end(), gen);
+        indices.resize(n);
+    }
+    
+    return take(indices);
+}
+
+Thread Thread::truncate(int64_t before, int64_t after) const {
+    const int64_t sz = size();
+    if (before < 0) before = 0;
+    if (after > sz) after = sz;
+    if (before >= after) return Thread(pluss::zeros({0}), name_);
+    
+    return iloc(before, after);
+}
+
+Thread Thread::drop_duplicates() const {
+    if (is_series()) {
+        const auto s = as_series();
+        auto t = s.data();
+        
+        std::unordered_set<double> seen;
+        std::vector<int64_t> keep_indices;
+        
+        auto accessor = t.accessor<double, 1>();
+        for (int64_t i = 0; i < t.numel(); ++i) {
+            double val = accessor[i];
+            // Handle NaN specially (each NaN is considered unique)
+            if (std::isnan(val) || seen.find(val) == seen.end()) {
+                seen.insert(val);
+                keep_indices.push_back(i);
+            }
+        }
+        
+        return take(keep_indices);
+    }
+    
+    if (is_note()) {
+        const auto vec = as_note().vector();
+        std::unordered_set<std::string> seen;
+        std::vector<pluss::Chord> unique_chords;
+        
+        for (const auto& chord : vec) {
+            const std::string s = chord.str();
+            if (seen.find(s) == seen.end()) {
+                seen.insert(s);
+                unique_chords.push_back(chord);
+            }
+        }
+        
+        return Thread(pluss::make_note(unique_chords), name_);
+    }
+    
+    return *this;
+}
+
+pluss::Series Thread::duplicated() const {
+    if (is_series()) {
+        const auto s = as_series();
+        auto t = s.data();
+        
+        std::unordered_set<double> seen;
+        std::vector<bool> is_dup;
+        is_dup.reserve(t.numel());
+        
+        auto accessor = t.accessor<double, 1>();
+        for (int64_t i = 0; i < t.numel(); ++i) {
+            double val = accessor[i];
+            if (std::isnan(val)) {
+                // Each NaN is considered unique (not a duplicate)
+                is_dup.push_back(false);
+            } else if (seen.find(val) != seen.end()) {
+                is_dup.push_back(true);
+            } else {
+                seen.insert(val);
+                is_dup.push_back(false);
+            }
+        }
+        
+        // Convert bool vector to Series using pluss types
+        // Use uint8 intermediate because bool accessor is deleted
+        std::vector<uint8_t> is_dup_u8(is_dup.begin(), is_dup.end());
+        auto result = pluss::from_blob(is_dup_u8.data(), {static_cast<int64_t>(is_dup_u8.size())}, pluss::SeriesOptions().dtype(at::kByte));
+        return result.to(at::kBool);
+    }
+    
+    // For non-Series, return all false
+    return pluss::zeros({size()}, pluss::SeriesOptions().dtype(at::kBool));
+}
+
+pluss::Series Thread::isin(const std::vector<double>& values) const {
+    if (is_series()) {
+        const auto s = as_series();
+        auto t = s.data();
+        
+        std::unordered_set<double> value_set(values.begin(), values.end());
+        
+        std::vector<bool> result_vec;
+        result_vec.reserve(t.numel());
+        auto accessor = t.accessor<double, 1>();
+        
+        for (int64_t i = 0; i < t.numel(); ++i) {
+            result_vec.push_back(value_set.find(accessor[i]) != value_set.end());
+        }
+        
+        // Use uint8 intermediate because bool accessor is deleted
+        std::vector<uint8_t> result_u8(result_vec.begin(), result_vec.end());
+        auto result = pluss::from_blob(result_u8.data(), {static_cast<int64_t>(result_u8.size())}, pluss::SeriesOptions().dtype(at::kByte));
+        return result.to(at::kBool);
+    }
+    
+    return pluss::zeros({size()}, pluss::SeriesOptions().dtype(at::kBool));
+}
+
+pluss::Series Thread::isin(const Thread& values) const {
+    if (is_series() && values.is_series()) {
+        const auto other_t = values.as_series().data();
+        
+        std::unordered_set<double> value_set;
+        auto other_accessor = other_t.accessor<double, 1>();
+        for (int64_t i = 0; i < other_t.numel(); ++i) {
+            value_set.insert(other_accessor[i]);
+        }
+        
+        const auto s = as_series();
+        auto t = s.data();
+        
+        std::vector<bool> result_vec;
+        result_vec.reserve(t.numel());
+        auto accessor = t.accessor<double, 1>();
+        
+        for (int64_t i = 0; i < t.numel(); ++i) {
+            result_vec.push_back(value_set.find(accessor[i]) != value_set.end());
+        }
+        
+        // Use uint8 intermediate because bool accessor is deleted
+        std::vector<uint8_t> result_u8(result_vec.begin(), result_vec.end());
+        auto result = pluss::from_blob(result_u8.data(), {static_cast<int64_t>(result_u8.size())}, pluss::SeriesOptions().dtype(at::kByte));
+        return result.to(at::kBool);
+    }
+    
+    return pluss::zeros({size()}, pluss::SeriesOptions().dtype(at::kBool));
+}
+
+// ========== TRANSFORMATIONS ==========
+
+Thread Thread::transform(const std::string& func) const {
+    if (is_series()) {
+        const auto s = as_series();
+        
+        if (func == "sqrt") return sqrt();
+        if (func == "log") return log();
+        if (func == "log10") return log10();
+        if (func == "exp") return exp();
+        if (func == "sin") return sin();
+        if (func == "cos") return cos();
+        if (func == "tan") return tan();
+        if (func == "abs") return abs();
+        if (func == "square") return Thread(s.pow(2), name_);
+        if (func == "cube") return Thread(s.pow(3), name_);
+        
+        // Normalization functions
+        if (func == "normalize" || func == "zscore") {
+            const double m = s.mean().item<double>();
+            const double sigma = s.std(true).item<double>();
+            if (sigma == 0.0) return Thread(pluss::zeros_like(s), name_);
+            return Thread((s - m) / sigma, name_);
+        }
+        
+        if (func == "minmax") {
+            const double min_val = s.min().item<double>();
+            const double max_val = s.max().item<double>();
+            if (max_val == min_val) return Thread(pluss::zeros_like(s), name_);
+            return Thread((s - min_val) / (max_val - min_val), name_);
+        }
+    }
+    
+    return *this;
+}
+
+Thread Thread::apply(std::function<double(double)> func) const {
+    if (is_series()) {
+        const auto s = as_series();
+        auto t = s.data();
+        
+        std::vector<double> result_vec;
+        result_vec.reserve(t.numel());
+        auto accessor = t.accessor<double, 1>();
+        
+        for (int64_t i = 0; i < t.numel(); ++i) {
+            result_vec.push_back(func(accessor[i]));
+        }
+        
+        return Thread(pluss::value(result_vec), name_);
+    }
+    
+    return *this;
+}
 } // namespace pluss::table

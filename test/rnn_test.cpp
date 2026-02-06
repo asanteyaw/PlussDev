@@ -9,8 +9,7 @@
 
 #if PLUSS_HAVE_GTEST
 #include <gtest/gtest.h>
-#include <pluss/rnn.h>
-#include <pluss/series_factory.h>
+#include <pluss/pluss.h>
 #include <random>
 #include <iostream>
 

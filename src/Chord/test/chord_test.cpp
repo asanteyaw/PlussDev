@@ -1,6 +1,5 @@
-#include "pluss/Chord.h"
 #include <iostream>
-#include <pluss/pluss.h> 
+#include <pluss/pluss.h>
 
 // ===== Test Helpers =====
 #define COLOR_RESET   "\033[0m"

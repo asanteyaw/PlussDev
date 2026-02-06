@@ -1,12 +1,27 @@
+#include <cstddef>
+#include <exception>
 #include <iostream>
+
+#include <torch/torch.h>
+
 #include <pluss/pluss.h>
 
 using namespace pluss;
 
+static void print_tensor_shape(const at::Tensor& tensor) {
+    auto sizes = tensor.sizes();
+    std::cout << "shape=[";
+    for (size_t i = 0; i < static_cast<size_t>(sizes.size()); ++i) {
+        if (i) std::cout << ", ";
+        std::cout << sizes[i];
+    }
+    std::cout << "]";
+}
+
 int main() {
     // Create a simple Series
     at::Tensor tensor = at::ones({2, 3});
-    Series series(tensor);
+    Series series = pluss::from_torch(tensor);
 
     Series s1 = pluss::from_torch(tensor);
     Series s2 = pluss::value(2.0);
@@ -33,27 +48,43 @@ int main() {
     
     // Test some in-place operations
     series.add_(1.0);
-    std::cout << "After add_(1.0): " << series.tensor() << std::endl;
+    std::cout << "After add_(1.0): ";
+    print_tensor_shape(series.tensor());
+    std::cout << std::endl;
     
     series.mul_(2.0);
-    std::cout << "After mul_(2.0): " << series.tensor() << std::endl;
+    std::cout << "After mul_(2.0): ";
+    print_tensor_shape(series.tensor());
+    std::cout << std::endl;
     
     // Test some out-of-place operations
     Series result = series.add(1.0);
-    std::cout << "Original after add(1.0): " << series.tensor() << std::endl;
-    std::cout << "Result of add(1.0): " << result.tensor() << std::endl;
+    std::cout << "Original after add(1.0): ";
+    print_tensor_shape(series.tensor());
+    std::cout << std::endl;
+    std::cout << "Result of add(1.0): ";
+    print_tensor_shape(result.tensor());
+    std::cout << std::endl;
     
     Series squared = series.pow(2.0);
-    std::cout << "Original after pow(2.0): " << series.tensor() << std::endl;
-    std::cout << "Result of pow(2.0): " << squared.tensor() << std::endl;
+    std::cout << "Original after pow(2.0): ";
+    print_tensor_shape(series.tensor());
+    std::cout << std::endl;
+    std::cout << "Result of pow(2.0): ";
+    print_tensor_shape(squared.tensor());
+    std::cout << std::endl;
     
     // Test operations with other Series
-    Series other = Series(at::ones({2, 3}));
+    Series other = pluss::from_torch(at::ones({2, 3}));
     Series sum = series.add(other);
-    std::cout << "Result of add(other): " << sum.tensor() << std::endl;
+    std::cout << "Result of add(other): ";
+    print_tensor_shape(sum.tensor());
+    std::cout << std::endl;
     
     series.add_(other);
-    std::cout << "After add_(other): " << series.tensor() << std::endl;
+    std::cout << "After add_(other): ";
+    print_tensor_shape(series.tensor());
+    std::cout << std::endl;
     
     return 0;
 }

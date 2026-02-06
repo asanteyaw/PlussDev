@@ -1,14 +1,18 @@
-#include <pluss/pluss.h>
 #include <iostream>
 #include <cassert>
+#include <cstddef>
+#include <algorithm>
 #include <cmath>
+#include <vector>
 // #include <functional>
+
+#include <pluss/pluss.h>
 
 // as you are traversing through lines and building your code, make sure performance is your topmost priority as we want pluss::queue to apply the user defined function to the pluss types with lightening speed!
 
 // Helper function to check if two Series are approximately equal
 bool series_approx_equal(const pluss::Series& a, const pluss::Series& b, double tolerance = 1e-5) {
-    if (a.sizes() != b.sizes()) return false;
+    if (a.sizes().vec() != b.sizes().vec()) return false;
 
     pluss::Series diff = a.sub(b).abs();
     pluss::Series flat = diff.view(-1);
@@ -48,10 +52,8 @@ void test_series_queue() {
     
     // Test 1: Simple scalar function on a 1D Series
     {
-        torch::Tensor k = torch::tensor({1.0, 2.0, 3.0, 4.0, 5.0});
         pluss::Series s = pluss::value({1.0, 2.0, 3.0, 4.0, 5.0}, pluss::config({{"dtype", "float64"}}));
         auto square = [](double x) { return x * x; };
-        std::cout << "Input dtype: " << s.dtype() << std::endl;
         pluss::Series result = pluss::queue(square, s);
         pluss::Series expected = pluss::value({1.0, 4.0, 9.0, 16.0, 25.0});
         // std::cout << result << "\n";
@@ -103,11 +105,13 @@ void test_series_queue() {
         auto complex_func = [](double x) { return std::sin(x) + std::cos(x); };
         
         pluss::Series result = pluss::queue(complex_func, a);
-        pluss::Series expected = pluss::empty({5});
+        std::vector<double> expected_values;
+        expected_values.reserve(5);
         for (int i = 0; i < 5; ++i) {
             double val = i + 1.0;
-            expected[i] = pluss::value(std::sin(val) + std::cos(val));
+            expected_values.push_back(std::sin(val) + std::cos(val));
         }
+        pluss::Series expected = pluss::value(expected_values);
         
         assert(series_approx_equal(result, expected));
         std::cout << "  Test 5 passed: Complex function" << std::endl;

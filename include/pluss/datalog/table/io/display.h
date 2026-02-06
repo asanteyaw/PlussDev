@@ -412,7 +412,7 @@ inline std::string to_string(const pluss::table::DataFrame& df, DisplayOptions o
 	// Final safety clamp for each column width (min/max already applied in desired widths).
 	for (auto& c : view) {
 		if (c.index < 0) {
-			c.width = 3;
+			c.width = std::max(3, static_cast<int>(c.name.size()));
 			continue;
 		}
 		c.width = std::clamp(c.width, opt.min_col_width, opt.max_col_width);

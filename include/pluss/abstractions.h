@@ -4,8 +4,26 @@
 #include <pluss/util_helpers.h>
 #include <pluss/series_factory.h>
 #include <pluss/note_factory.h>
+#include <ATen/Parallel.h>
 #include <type_traits>
+#include <tuple>
 #include <utility>
+
+namespace pluss {
+namespace detail {
+template <typename T>
+struct type_tag {
+    using type = T;
+};
+
+template <typename T, typename F, typename PtrTuple, typename ArgTuple>
+T apply_func_from_tuple(
+    F const& func,
+    const PtrTuple& data_ptrs,
+    const ArgTuple& args_tuple,
+    int64_t idx);
+} // namespace detail
+} // namespace pluss
 
 namespace pluss {
 
@@ -100,96 +118,124 @@ void dispatch(T&& obj, void (Class::*method_ptr)(MethodArgs...), CallArgs&&... a
 template <typename F, typename... Args,
  typename = std::enable_if_t<(std::is_same_v<std::decay_t<Args>, Series> || ...)>>
 Series queue(F&& func, Args&&... args) {
-    // Find the first Series argument to get its shape
+    // Capture all arguments exactly once to avoid forwarding/move pitfalls inside loops.
+    // Copying a Series is cheap (refcount bump) and keeps TensorImpl alive.
+    auto args_tuple = std::tuple<std::decay_t<Args>...>(std::forward<Args>(args)...);
+
+    // Find the first Series argument to get shape/options.
     Series first_series;
-    auto select_first_series = [&](auto&& arg) {
-    if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, Series>) {
-    first_series = std::forward<decltype(arg)>(arg);
-    return true;
+    bool found = false;
+    std::apply(
+        [&](auto const&... packed) {
+            (([&] {
+                 if (!found) {
+                     using P = std::decay_t<decltype(packed)>;
+                     if constexpr (std::is_same_v<P, Series>) {
+                         first_series = packed;
+                         found = true;
+                     }
+                 }
+             }()),
+             ...);
+        },
+        args_tuple);
+
+    // Defensive: should be guaranteed by SFINAE, but keep it safe.
+    if (!found || !first_series.defined()) {
+        return Series();
     }
-    return false;
-    };
 
-    (void)(bool{select_first_series(std::forward<Args>(args))} || ...);
-
-    // Get the shape of the Series
-    auto shape = first_series.sizes();
-    // Create a result Series with the same shape
+    const auto shape = first_series.sizes();
     Series result = pluss::empty(shape, first_series.options_config());
+    const auto scalar_type = first_series.scalar_type();
 
-    // Get the scalar type of the first Series
-    auto scalar_type = first_series.scalar_type();
-
-    // Use a template function to handle different data types
-    auto process_with_type = [&]<typename T>() {
-        // Get raw pointers to the data for each Series argument
-        auto get_data_ptr = [](auto&& arg) -> const T* {
-            if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, Series>) {
+    // Handle different data types
+    auto process_with_type = [&](auto tag) {
+        using T = typename decltype(tag)::type;
+        auto get_data_ptr = [](auto const& arg) -> const T* {
+            using A = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<A, Series>) {
                 return arg.template data_ptr<T>();
             } else {
                 return nullptr;
             }
         };
 
-        // Construct the tuple via pack expansion
-        auto data_ptrs = std::make_tuple(get_data_ptr(std::forward<Args>(args))...);
+        const auto data_ptrs = std::apply(
+            [&](auto const&... packed) {
+                return std::make_tuple(get_data_ptr(packed)...);
+            },
+            args_tuple);
 
-        // Get a raw pointer to the result data for writing
         T* result_ptr = result.data_ptr<T>();
-        
-        // Get the total number of elements
-        int64_t num_elements = first_series.numel();
-        
-        // Process elements in chunks for better cache utilization
-        constexpr int64_t CHUNK_SIZE = 1024;
-        
-        // Use OpenMP for parallelization
-        #pragma omp parallel for
-        for (int64_t i = 0; i < num_elements; i += CHUNK_SIZE) {
-            int64_t chunk_end = std::min(i + CHUNK_SIZE, num_elements);
-        
-            // Process each element in the chunk
-            #pragma omp simd
-            for (int64_t j = i; j < chunk_end; ++j) {
-                auto value = apply_func(func, std::index_sequence_for<Args...>{}, data_ptrs, j, std::forward<Args>(args)...);
-                result_ptr[j] = value;
+        const int64_t num_elements = first_series.numel();
+
+        auto apply_from_tuple = [&](int64_t idx) -> T {
+            return detail::apply_func_from_tuple<T>(func, data_ptrs, args_tuple, idx);
+        };
+
+        // Use PyTorch's parallel backend (no OpenMP dependency; works on macOS).
+        at::parallel_for(0, num_elements, 4096, [&](int64_t begin, int64_t end) {
+            for (int64_t j = begin; j < end; ++j) {
+                result_ptr[j] = apply_from_tuple(j);
             }
-        }
+        });
     };
 
     // Dispatch based on the scalar type
     if (scalar_type == at::kDouble) {
-        process_with_type.template operator()<double>();
+        process_with_type(detail::type_tag<double>{});
     } else if (scalar_type == at::kFloat) {
-        process_with_type.template operator()<float>();
+        process_with_type(detail::type_tag<float>{});
     } else if (scalar_type == at::kInt) {
-        process_with_type.template operator()<int>();
+        process_with_type(detail::type_tag<int>{});
     } else if (scalar_type == at::kLong) {
-        process_with_type.template operator()<int64_t>();
+        process_with_type(detail::type_tag<int64_t>{});
     } else {
-        // Default to double for other types
-        process_with_type.template operator()<double>();
+        process_with_type(detail::type_tag<double>{});
     }
 
     return result;
 }
 
-// Helper function to apply the function to the elements
-template <typename F, typename Tuple, typename... Args, size_t... Is>
-auto apply_func(F&& func, std::index_sequence<Is...>,
-       const Tuple& data_ptrs, int64_t idx, Args&&... args) {
+namespace detail {
 
-    auto get_element = [&](auto&& arg, auto index_constant) -> decltype(auto) {
-        constexpr size_t i = decltype(index_constant)::value;
-        if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, Series>) {
+template <typename T, typename F, typename PtrTuple, typename ArgTuple, size_t... Is>
+T apply_func_from_tuple_impl(
+    F const& func,
+    const PtrTuple& data_ptrs,
+    const ArgTuple& args_tuple,
+    int64_t idx,
+    std::index_sequence<Is...>) {
+
+    auto get_arg = [&](auto ic) -> decltype(auto) {
+        constexpr size_t i = decltype(ic)::value;
+        using A = std::decay_t<std::tuple_element_t<i, ArgTuple>>;
+        if constexpr (std::is_same_v<A, Series>) {
             return std::get<i>(data_ptrs)[idx];
         } else {
-            return arg;
+            return std::get<i>(args_tuple);
         }
     };
 
-    return func(get_element(std::forward<Args>(args), std::integral_constant<size_t, Is>{})...);
+    return static_cast<T>(func(get_arg(std::integral_constant<size_t, Is>{})...));
 }
+
+template <typename T, typename F, typename PtrTuple, typename ArgTuple>
+T apply_func_from_tuple(
+    F const& func,
+    const PtrTuple& data_ptrs,
+    const ArgTuple& args_tuple,
+    int64_t idx) {
+    return apply_func_from_tuple_impl<T>(
+        func,
+        data_ptrs,
+        args_tuple,
+        idx,
+        std::make_index_sequence<std::tuple_size_v<ArgTuple>>{});
+}
+
+} // namespace detail
 /*
  * @brief A high-performance vectorization function for Note
  * 

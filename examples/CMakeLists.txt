@@ -1,0 +1,8 @@
+add_executable(parallel_csv_example parallel_csv_example.cpp)
+target_link_libraries(parallel_csv_example PRIVATE pluss)
+
+add_executable(groupby_pivot_example groupby_pivot_example.cpp)
+target_link_libraries(groupby_pivot_example PRIVATE pluss)
+
+add_executable(converters_example converters_example.cpp)
+target_link_libraries(converters_example PRIVATE pluss)

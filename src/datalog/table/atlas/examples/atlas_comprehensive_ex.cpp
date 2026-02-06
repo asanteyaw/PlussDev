@@ -1,5 +1,4 @@
-#include <pluss/datalog/table/atlas/atlas.h>
-#include <pluss/datalog/table/dataframe/dataframe.h>
+#include <pluss/pluss.h>
 #include <iostream>
 
 using namespace pluss::table;
@@ -110,7 +109,7 @@ int main() {
         
         // TRANSFORMATIONS
         print_header("7. Mathematical Transformations");
-        auto s1 = pluss::Series(torch::tensor({-10.0, 5.0, 3.14}));
+        auto s1 = pluss::from_torch(torch::tensor({-10.0, 5.0, 3.14}));
         auto df_math = std::make_shared<DataFrame>(std::vector<Thread>{Thread(s1, "data")});
         auto math_atlas = std::make_shared<Atlas>(std::vector<std::shared_ptr<DataFrame>>{df_math, df_math});
         
@@ -118,7 +117,7 @@ int main() {
         (void)math_atlas->abs();
         
         std::cout << "sqrt(), log(), log10(), exp() - Applied\n";
-        auto positive = pluss::Series(torch::tensor({4.0, 9.0, 16.0}));
+        auto positive = pluss::from_torch(torch::tensor({4.0, 9.0, 16.0}));
         auto df_pos = std::make_shared<DataFrame>(std::vector<Thread>{Thread(positive, "vals")});
         auto pos_atlas = std::make_shared<Atlas>(std::vector<std::shared_ptr<DataFrame>>{df_pos});
         (void)pos_atlas->sqrt();
@@ -138,7 +137,7 @@ int main() {
         
         // CUMULATIVE
         print_header("8. Cumulative Operations");
-        auto s_cum = pluss::Series(torch::tensor({1.0, 2.0, 3.0, 4.0}));
+        auto s_cum = pluss::from_torch(torch::tensor({1.0, 2.0, 3.0, 4.0}));
         auto df_cum = std::make_shared<DataFrame>(std::vector<Thread>{Thread(s_cum, "data")});
         auto cum_atlas = std::make_shared<Atlas>(std::vector<std::shared_ptr<DataFrame>>{df_cum, df_cum});
         
@@ -164,7 +163,7 @@ int main() {
         
         // AGGREGATIONS
         print_header("9. Aggregation Operations");
-        auto s_agg = pluss::Series(torch::tensor({10.0, 20.0, 30.0}));
+        auto s_agg = pluss::from_torch(torch::tensor({10.0, 20.0, 30.0}));
         auto df_agg = std::make_shared<DataFrame>(std::vector<Thread>{Thread(s_agg, "values")});
         auto agg_atlas = std::make_shared<Atlas>(
             std::vector<std::shared_ptr<DataFrame>>{df_agg, df_agg, df_agg},
@@ -201,8 +200,8 @@ int main() {
         
         // ARITHMETIC
         print_header("10. Arithmetic Operations");
-        auto s1_ar = pluss::Series(torch::tensor({10.0, 20.0}));
-        auto s2_ar = pluss::Series(torch::tensor({5.0, 10.0}));
+        auto s1_ar = pluss::from_torch(torch::tensor({10.0, 20.0}));
+        auto s2_ar = pluss::from_torch(torch::tensor({5.0, 10.0}));
         auto df_a = std::make_shared<DataFrame>(std::vector<Thread>{Thread(s1_ar, "A")});
         auto df_b = std::make_shared<DataFrame>(std::vector<Thread>{Thread(s2_ar, "A")});
         auto atlas_a = std::make_shared<Atlas>(std::vector<std::shared_ptr<DataFrame>>{df_a, df_a});

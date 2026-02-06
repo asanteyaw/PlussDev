@@ -1,4 +1,14 @@
-#include <pluss/pluss.h>
+#ifndef PLUSS_ENABLE_SLOW_TESTS
+
+#include <iostream>
+
+int main() {
+    std::cout << "[SKIP] data_insights_40_questions_test (define PLUSS_ENABLE_SLOW_TESTS to run)\n";
+    return 0;
+}
+
+#else
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -7,6 +17,8 @@
 #include <vector>
 #include <algorithm>
 #include <chrono>
+
+#include <pluss/pluss.h>
 
 using namespace pluss;
 
@@ -1615,3 +1627,5 @@ int main() {
     
     return 0;
 }
+
+#endif

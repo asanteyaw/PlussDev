@@ -220,7 +220,7 @@ struct ScalarType {
     public:
         ScalarType() = default;
         ScalarType(at::ScalarType type) : scalar_type_(type) {}
-        ScalarType(int type) : scalar_type_(static_cast<at::ScalarType>(type)) {}
+        explicit ScalarType(int type) : scalar_type_(static_cast<at::ScalarType>(type)) {}
     
         // Implicit conversion to at::ScalarType
         operator at::ScalarType() const { return scalar_type_; }

@@ -1,11 +1,11 @@
-#include "pluss/SeriesBody.h"
-#include <ATen/core/TensorBody.h>
-#include <ATen/ops/stack.h>
-#include <torch/torch.h>
-#include <pluss/pluss.h>
+#include <internals/core/include/b10/utils/Macros.h>
 #include <iostream>
 #include <string>
 #include <vector>
+
+#include <torch/torch.h>
+
+#include <pluss/pluss.h>
 
 // Define a custom type for testing
 class CustomType {

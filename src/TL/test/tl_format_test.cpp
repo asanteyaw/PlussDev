@@ -4,6 +4,7 @@
  */
 
 #include <iostream>
+
 #include <pluss/pluss.h>
 
 using namespace pluss;
@@ -91,7 +92,7 @@ int main() {
 		}
 
 		auto nb = intrusive_ptr<pluss::detail::NoteBook>::make(root);
-		pluss::Note n3d = pluss::Note::wrap_note_impl(nb);
+		pluss::Note n3d = b10::detail::note_gen(std::move(nb));
 		pluss::Timeline t3 = moment(n3d);
 		std::cout << "\n3D Note -> moment produced Timeline with date_series dim=" << t3.date_to_Series().dim() << " and time_series dim=" << t3.time_to_Series().dim() << "\n";
 		std::cout << "date_series (internal): " << t3.date_to_Series().toString() << "\n";

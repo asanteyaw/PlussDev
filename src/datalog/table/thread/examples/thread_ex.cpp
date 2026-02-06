@@ -1,7 +1,8 @@
 #include <iostream>
-#include <pluss/pluss.h>
 #include <torch/torch.h>
 #include <variant>
+
+#include <pluss/pluss.h>
 
 using namespace pluss;
 using namespace pluss::table;

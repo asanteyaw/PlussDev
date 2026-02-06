@@ -1,7 +1,6 @@
-#include <pluss/datalog/table/atlas/atlas.h>
-#include <pluss/datalog/table/dataframe/dataframe.h>
-#include <pluss/datalog/table/thread/thread.h>
-#include <pluss/Series.h>
+#include <torch/torch.h>
+
+#include <pluss/pluss.h>
 #include <iostream>
 #include <iomanip>
 #include <cassert>
@@ -20,8 +19,8 @@ void test_atlas_construction() {
     print_separator("TEST 1: Atlas Construction");
     
     // Create some Series for testing
-    auto s1 = pluss::Series(torch::tensor({10.0, 20.0, 30.0}));
-    auto s2 = pluss::Series(torch::tensor({40.0, 50.0, 60.0}));
+    auto s1 = pluss::from_torch(torch::tensor({10.0, 20.0, 30.0}));
+    auto s2 = pluss::from_torch(torch::tensor({40.0, 50.0, 60.0}));
     
     // Create Threads (1D)
     auto t1 = Thread(s1, "col_A");
@@ -32,14 +31,14 @@ void test_atlas_construction() {
     auto df1 = std::make_shared<DataFrame>(threads1);
     
     std::vector<Thread> threads2 = {
-        Thread(pluss::Series(torch::tensor({15.0, 25.0, 35.0})), "col_A"),
-        Thread(pluss::Series(torch::tensor({45.0, 55.0, 65.0})), "col_B")
+        Thread(pluss::from_torch(torch::tensor({15.0, 25.0, 35.0})), "col_A"),
+        Thread(pluss::from_torch(torch::tensor({45.0, 55.0, 65.0})), "col_B")
     };
     auto df2 = std::make_shared<DataFrame>(threads2);
     
     std::vector<Thread> threads3 = {
-        Thread(pluss::Series(torch::tensor({11.0, 21.0, 31.0})), "col_A"),
-        Thread(pluss::Series(torch::tensor({41.0, 51.0, 61.0})), "col_B")
+        Thread(pluss::from_torch(torch::tensor({11.0, 21.0, 31.0})), "col_A"),
+        Thread(pluss::from_torch(torch::tensor({41.0, 51.0, 61.0})), "col_B")
     };
     auto df3 = std::make_shared<DataFrame>(threads3);
     
@@ -83,20 +82,20 @@ void test_atlas_access() {
     
     // Create Atlas with named depths
     std::vector<Thread> threads1 = {
-        Thread(pluss::Series(torch::tensor({1.0, 2.0, 3.0})), "A"),
-        Thread(pluss::Series(torch::tensor({4.0, 5.0, 6.0})), "B")
+        Thread(pluss::from_torch(torch::tensor({1.0, 2.0, 3.0})), "A"),
+        Thread(pluss::from_torch(torch::tensor({4.0, 5.0, 6.0})), "B")
     };
     auto df1 = std::make_shared<DataFrame>(threads1);
     
     std::vector<Thread> threads2 = {
-        Thread(pluss::Series(torch::tensor({7.0, 8.0, 9.0})), "A"),
-        Thread(pluss::Series(torch::tensor({10.0, 11.0, 12.0})), "B")
+        Thread(pluss::from_torch(torch::tensor({7.0, 8.0, 9.0})), "A"),
+        Thread(pluss::from_torch(torch::tensor({10.0, 11.0, 12.0})), "B")
     };
     auto df2 = std::make_shared<DataFrame>(threads2);
     
     std::vector<Thread> threads3 = {
-        Thread(pluss::Series(torch::tensor({13.0, 14.0, 15.0})), "A"),
-        Thread(pluss::Series(torch::tensor({16.0, 17.0, 18.0})), "B")
+        Thread(pluss::from_torch(torch::tensor({13.0, 14.0, 15.0})), "A"),
+        Thread(pluss::from_torch(torch::tensor({16.0, 17.0, 18.0})), "B")
     };
     auto df3 = std::make_shared<DataFrame>(threads3);
     
@@ -137,8 +136,8 @@ void test_atlas_slicing() {
     std::vector<std::string> names;
     for (int i = 0; i < 5; ++i) {
         std::vector<Thread> threads = {
-            Thread(pluss::Series(torch::tensor({1.0*i, 2.0*i, 3.0*i})), "X"),
-            Thread(pluss::Series(torch::tensor({4.0*i, 5.0*i, 6.0*i})), "Y")
+            Thread(pluss::from_torch(torch::tensor({1.0*i, 2.0*i, 3.0*i})), "X"),
+            Thread(pluss::from_torch(torch::tensor({4.0*i, 5.0*i, 6.0*i})), "Y")
         };
         auto df = std::make_shared<DataFrame>(threads);
         frames.push_back(df);
@@ -200,7 +199,7 @@ void test_atlas_sorting() {
     
     for (int i = 0; i < 4; ++i) {
         std::vector<Thread> threads = {
-            Thread(pluss::Series(torch::tensor({10.0 * (4-i), 20.0, 30.0})), "value")
+            Thread(pluss::from_torch(torch::tensor({10.0 * (4-i), 20.0, 30.0})), "value")
         };
         auto df = std::make_shared<DataFrame>(threads);
         frames.push_back(df);
@@ -240,8 +239,8 @@ void test_atlas_combining() {
     print_separator("TEST 5: Atlas Combining and Merging");
     
     // Create first Atlas
-    std::vector<Thread> t1 = {Thread(pluss::Series(torch::tensor({1.0, 2.0, 3.0})), "A")};
-    std::vector<Thread> t2 = {Thread(pluss::Series(torch::tensor({4.0, 5.0, 6.0})), "A")};
+    std::vector<Thread> t1 = {Thread(pluss::from_torch(torch::tensor({1.0, 2.0, 3.0})), "A")};
+    std::vector<Thread> t2 = {Thread(pluss::from_torch(torch::tensor({4.0, 5.0, 6.0})), "A")};
     auto df1a = std::make_shared<DataFrame>(t1);
     auto df1b = std::make_shared<DataFrame>(t2);
     std::vector<std::shared_ptr<DataFrame>> frames1 = {df1a, df1b};
@@ -249,8 +248,8 @@ void test_atlas_combining() {
     auto atlas1 = std::make_shared<Atlas>(frames1, names1);
     
     // Create second Atlas
-    std::vector<Thread> t3 = {Thread(pluss::Series(torch::tensor({7.0, 8.0, 9.0})), "A")};
-    std::vector<Thread> t4 = {Thread(pluss::Series(torch::tensor({10.0, 11.0, 12.0})), "A")};
+    std::vector<Thread> t3 = {Thread(pluss::from_torch(torch::tensor({7.0, 8.0, 9.0})), "A")};
+    std::vector<Thread> t4 = {Thread(pluss::from_torch(torch::tensor({10.0, 11.0, 12.0})), "A")};
     auto df2a = std::make_shared<DataFrame>(t3);
     auto df2b = std::make_shared<DataFrame>(t4);
     std::vector<std::shared_ptr<DataFrame>> frames2 = {df2a, df2b};
@@ -271,7 +270,7 @@ void test_atlas_combining() {
     assert(concatenated->ndepth() == 4);
     
     // Append single DataFrame as new depth
-    std::vector<Thread> t_new = {Thread(pluss::Series(torch::tensor({13.0, 14.0, 15.0})), "A")};
+    std::vector<Thread> t_new = {Thread(pluss::from_torch(torch::tensor({13.0, 14.0, 15.0})), "A")};
     auto new_df = std::make_shared<DataFrame>(t_new);
     auto with_new = atlas1->append_depth(new_df, "new_depth");
     std::cout << "✓ append_depth(): " << with_new->ndepth() << " depths\n";
@@ -284,12 +283,12 @@ void test_atlas_utilities() {
     print_separator("TEST 6: Atlas Utility Methods");
     
     std::vector<Thread> t1 = {
-        Thread(pluss::Series(torch::tensor({1.0, 2.0, 3.0})), "X"),
-        Thread(pluss::Series(torch::tensor({4.0, 5.0, 6.0})), "Y")
+        Thread(pluss::from_torch(torch::tensor({1.0, 2.0, 3.0})), "X"),
+        Thread(pluss::from_torch(torch::tensor({4.0, 5.0, 6.0})), "Y")
     };
     std::vector<Thread> t2 = {
-        Thread(pluss::Series(torch::tensor({7.0, 8.0, 9.0})), "X"),
-        Thread(pluss::Series(torch::tensor({10.0, 11.0, 12.0})), "Y")
+        Thread(pluss::from_torch(torch::tensor({7.0, 8.0, 9.0})), "X"),
+        Thread(pluss::from_torch(torch::tensor({10.0, 11.0, 12.0})), "Y")
     };
     auto df1 = std::make_shared<DataFrame>(t1);
     auto df2 = std::make_shared<DataFrame>(t2);
@@ -353,7 +352,7 @@ void test_atlas_thread_first_design() {
     std::cout << "Thread-First Architecture Demonstration:\n\n";
     
     // 1D: Thread - single column
-    auto thread = Thread(pluss::Series(torch::tensor({10.0, 20.0, 30.0})), "values");
+    auto thread = Thread(pluss::from_torch(torch::tensor({10.0, 20.0, 30.0})), "values");
     std::cout << "1D: Thread (single column)\n";
     std::cout << "    Name: " << thread.name() << "\n";
     std::cout << "    Size: " << thread.size() << "\n";
@@ -361,9 +360,9 @@ void test_atlas_thread_first_design() {
     
     // 2D: DataFrame - multiple columns (collection of Threads)
     std::vector<Thread> threads = {
-        Thread(pluss::Series(torch::tensor({10.0, 20.0, 30.0})), "col_A"),
-        Thread(pluss::Series(torch::tensor({40.0, 50.0, 60.0})), "col_B"),
-        Thread(pluss::Series(torch::tensor({70.0, 80.0, 90.0})), "col_C")
+        Thread(pluss::from_torch(torch::tensor({10.0, 20.0, 30.0})), "col_A"),
+        Thread(pluss::from_torch(torch::tensor({40.0, 50.0, 60.0})), "col_B"),
+        Thread(pluss::from_torch(torch::tensor({70.0, 80.0, 90.0})), "col_C")
     };
     auto df = std::make_shared<DataFrame>(threads);
     std::cout << "\n2D: DataFrame (collection of Threads)\n";
@@ -376,9 +375,9 @@ void test_atlas_thread_first_design() {
     std::vector<std::string> time_periods = {"Jan", "Feb", "Mar", "Apr"};
     for (int i = 0; i < 4; ++i) {
         std::vector<Thread> frame_threads = {
-            Thread(pluss::Series(torch::tensor({10.0 + i, 20.0 + i, 30.0 + i})), "col_A"),
-            Thread(pluss::Series(torch::tensor({40.0 + i, 50.0 + i, 60.0 + i})), "col_B"),
-            Thread(pluss::Series(torch::tensor({70.0 + i, 80.0 + i, 90.0 + i})), "col_C")
+            Thread(pluss::from_torch(torch::tensor({10.0 + i, 20.0 + i, 30.0 + i})), "col_A"),
+            Thread(pluss::from_torch(torch::tensor({40.0 + i, 50.0 + i, 60.0 + i})), "col_B"),
+            Thread(pluss::from_torch(torch::tensor({70.0 + i, 80.0 + i, 90.0 + i})), "col_C")
         };
         auto frame = std::make_shared<DataFrame>(frame_threads);
         frames.push_back(frame);
@@ -422,9 +421,9 @@ void test_atlas_drop_operations() {
     
     for (int i = 0; i < 4; ++i) {
         std::vector<Thread> threads = {
-            Thread(pluss::Series(torch::tensor({1.0, 2.0, 3.0})), "sales"),
-            Thread(pluss::Series(torch::tensor({4.0, 5.0, 6.0})), "revenue"),
-            Thread(pluss::Series(torch::tensor({7.0, 8.0, 9.0})), "profit")
+            Thread(pluss::from_torch(torch::tensor({1.0, 2.0, 3.0})), "sales"),
+            Thread(pluss::from_torch(torch::tensor({4.0, 5.0, 6.0})), "revenue"),
+            Thread(pluss::from_torch(torch::tensor({7.0, 8.0, 9.0})), "profit")
         };
         auto df = std::make_shared<DataFrame>(threads);
         frames.push_back(df);

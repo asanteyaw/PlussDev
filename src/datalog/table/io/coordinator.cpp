@@ -283,7 +283,7 @@ std::shared_ptr<pluss::table::DataFrame> convert_raw_to_dataframe(const RawTable
                 }
                 SeriesDataContainer container_int(int_vals);
                 at::Tensor t_int = container_int.convert_to_tensor(at::TensorOptions().dtype(at::kInt));
-                pluss::Series s_int(t_int);
+                pluss::Series s_int = b10::detail::series_gen(std::move(t_int));
                 df = df->set_col(col, pluss::table::Thread(std::move(s_int), col));
             } else {
                 std::vector<float> float_vals;
@@ -299,7 +299,7 @@ std::shared_ptr<pluss::table::DataFrame> convert_raw_to_dataframe(const RawTable
                 }
                 SeriesDataContainer container_flt(float_vals);
                 at::Tensor t_flt = container_flt.convert_to_tensor(at::TensorOptions().dtype(at::kFloat));
-                pluss::Series s_flt(t_flt);
+                pluss::Series s_flt = b10::detail::series_gen(std::move(t_flt));
                 df = df->set_col(col, pluss::table::Thread(std::move(s_flt), col));
             }
         } else if (is_datetime_col && (any_date_component || any_time_component)) {
@@ -325,14 +325,14 @@ std::shared_ptr<pluss::table::DataFrame> convert_raw_to_dataframe(const RawTable
                 }
             }
             at::Tensor date_t = torch::tensor(date_vals, torch::dtype(torch::kInt64));
-            pluss::Series ds(date_t);
+            pluss::Series ds = b10::detail::series_gen(std::move(date_t));
 
             pluss::Series ts;
             if (any_time_component) {
                 at::Tensor time_t = torch::tensor(time_vals, torch::dtype(torch::kInt64));
-                ts = pluss::Series(time_t);
+                ts = b10::detail::series_gen(std::move(time_t));
             }
-            pluss::Timeline tl = pluss::TimelineFactory::from_series_pair(ds, ts);
+            pluss::Timeline tl = b10::detail::tl_gen(ds, ts);
             df = df->set_col(col, pluss::table::Thread(std::move(tl), col));
         } else {
             // Text column -> Note vector

@@ -11,7 +11,7 @@ using namespace pluss;
 
 // Helper function to create Series from tensor
 Series make_series(at::Tensor t) {
-    return Series(t);
+    return pluss::from_torch(std::move(t));
 }
 
 // Test counter
@@ -422,7 +422,7 @@ void test_to_methods() {
     
     // Test to with device (CPU to CPU should work)
     // Test to device - use tensor options
-    Series s_cpu = Series(s.tensor().to(torch::kCPU));
+    Series s_cpu = pluss::from_torch(s.tensor().to(torch::kCPU));
     TEST_ASSERT(s_cpu.device().is_cpu(), "to(device) works");
 }
 
@@ -444,7 +444,7 @@ void test_clone_contiguous() {
     Series transposed = matrix.t();
     TEST_ASSERT(!transposed.is_contiguous(), "transposed tensor is not contiguous");
     
-    Series made_contiguous = Series(transposed.contiguous());
+    Series made_contiguous = pluss::from_torch(transposed.contiguous());
     TEST_ASSERT(made_contiguous.is_contiguous(), "contiguous() makes tensor contiguous");
     TEST_ASSERT(series_approx_equal(transposed, made_contiguous), "contiguous() preserves values");
 }

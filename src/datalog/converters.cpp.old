@@ -1,0 +1,315 @@
+#include <pluss/datalog/converters.h>
+#include <pluss/note_factory.h>
+#include <unordered_set>
+#include <stdexcept>
+
+namespace pluss::converters {
+
+// ========== TABLIZE: Handle → Table ==========
+
+table::Thread tablize(const handle::Feed& feed) {
+    return table::Thread(feed.values(), feed.name());
+}
+
+table::DataFrame tablize(const handle::Catalog& catalog, const std::string& key_col_name) {
+    if (catalog.empty()) {
+        throw std::runtime_error("Cannot tablize empty Catalog");
+    }
+    
+    if (!can_tablize(catalog)) {
+        throw std::runtime_error("Cannot tablize Catalog: Feeds have different lengths");
+    }
+    
+    // Collect keys
+    auto keys = catalog.keys();
+    std::vector<pluss::Chord> key_chords;
+    key_chords.reserve(keys.size());
+    for (const auto& key : keys) {
+        key_chords.emplace_back(key);
+    }
+    
+    table::DataFrame df(catalog.name());
+    
+    // Add key column first
+    df[key_col_name] = table::Thread(pluss::make_note(key_chords), key_col_name);
+    
+    // Get field names from first entry (all should have same structure)
+    if (!keys.empty()) {
+        const auto& first_key = keys[0];
+        const auto& first_entry = catalog.at(first_key);
+        
+        // For each field, collect values from all entries
+        // This assumes catalog entries are scalar Feeds (size 1)
+        std::unordered_map<std::string, std::vector<handle::Feed>> field_values;
+        
+        for (const auto& key : keys) {
+            const auto& entry = catalog.at(key);
+            std::string field_name = entry.name();
+            field_values[field_name].push_back(entry);
+        }
+        
+        // Convert each field to a Thread
+        for (const auto& [field_name, feeds] : field_values) {
+            if (feeds.empty()) continue;
+            
+            // Determine type from first feed
+            const auto& first_feed = feeds[0];
+            
+            if (first_feed.is_series()) {
+                std::vector<double> values;
+                values.reserve(feeds.size());
+                for (const auto& feed : feeds) {
+                    if (feed.is_series()) {
+                        auto s = feed.as_series();
+                        if (s.numel() > 0) {
+                            values.push_back(s[0].item<double>());
+                        } else {
+                            values.push_back(std::nan(""));
+                        }
+                    }
+                }
+                auto series = pluss::from_blob(values.data(), {static_cast<int64_t>(values.size())}, 
+                                              pluss::SeriesOptions().dtype(at::kDouble));
+                df[field_name] = table::Thread(series, field_name);
+                
+            } else if (first_feed.is_note()) {
+                std::vector<pluss::Chord> chords;
+                chords.reserve(feeds.size());
+                for (const auto& feed : feeds) {
+                    if (feed.is_note()) {
+                        auto vec = feed.as_note().vector();
+                        if (!vec.empty()) {
+                            chords.push_back(vec[0]);
+                        } else {
+                            chords.emplace_back("");
+                        }
+                    }
+                }
+                df[field_name] = table::Thread(pluss::make_note(chords), field_name);
+                
+            } else if (first_feed.is_timeline()) {
+                // Timeline conversion (simplified)
+                std::vector<double> values;
+                values.reserve(feeds.size());
+                for (const auto& feed : feeds) {
+                    if (feed.is_timeline()) {
+                        auto tl = feed.as_timeline();
+                        if (tl.has_date()) {
+                            auto ds = tl.date_to_Series();
+                            if (ds.numel() > 0) {
+                                values.push_back(ds[0].item<double>());
+                            }
+                        }
+                    }
+                }
+                auto series = pluss::from_blob(values.data(), {static_cast<int64_t>(values.size())}, 
+                                              pluss::SeriesOptions().dtype(at::kDouble));
+                df[field_name] = table::Thread(series, field_name);
+            }
+        }
+    }
+    
+    return df;
+}
+
+table::Atlas tablize(const handle::Archive& archive, const std::string& key_col_name) {
+    if (!can_tablize(archive, key_col_name)) {
+        throw std::runtime_error("Cannot tablize Archive: some Catalogs have inconsistent Feed lengths");
+    }
+    
+    table::Atlas atlas(archive.name());
+    
+    for (const auto& [catalog_name, catalog] : archive) {
+        try {
+            atlas[catalog_name] = tablize(catalog, key_col_name);
+        } catch (const std::exception& e) {
+            // Skip catalogs that can't be converted
+            continue;
+        }
+    }
+    
+    return atlas;
+}
+
+// ========== HANDELIZE: Table → Handle ==========
+
+handle::Feed handelize(const table::Thread& thread) {
+    return handle::Feed(thread.values(), thread.name());
+}
+
+handle::Catalog handelize(const table::DataFrame& df, const std::string& key_col) {
+    if (!can_handelize(df, key_col)) {
+        throw std::runtime_error("Cannot handelize DataFrame: key column missing, not Note type, or has duplicate values");
+    }
+    
+    handle::Catalog catalog(df.name());
+    
+    // Get keys from key column
+    auto keys_thread = df[key_col];
+    auto keys = keys_thread.as_note().vector();
+    int64_t n_rows = df.nrow();
+    
+    // Get all column names except key column
+    auto all_cols = df.columns();
+    std::vector<std::string> value_cols;
+    for (const auto& col : all_cols) {
+        if (col != key_col) {
+            value_cols.push_back(col);
+        }
+    }
+    
+    // For each row, create a catalog entry
+    for (int64_t i = 0; i < n_rows; ++i) {
+        std::string key = keys[i].str();
+        
+        for (const auto& col_name : value_cols) {
+            auto thread = df[col_name];
+            
+            // Extract single value at row i
+            if (thread.is_series()) {
+                auto s = thread.as_series();
+                if (i < s.numel()) {
+                    auto value = s.narrow(0, i, 1);
+                    catalog[key] = handle::Feed(value, col_name);
+                }
+            } else if (thread.is_note()) {
+                auto vec = thread.as_note().vector();
+                if (i < static_cast<int64_t>(vec.size())) {
+                    std::vector<pluss::Chord> single_chord = {vec[i]};
+                    catalog[key] = handle::Feed(pluss::make_note(single_chord), col_name);
+                }
+            } else if (thread.is_timeline()) {
+                // Timeline handling
+                auto tl = thread.as_timeline();
+                if (tl.has_date()) {
+                    auto ds = tl.date_to_Series();
+                    if (i < ds.numel()) {
+                        auto value = ds.narrow(0, i, 1);
+                        catalog[key] = handle::Feed(value, col_name);
+                    }
+                }
+            }
+        }
+    }
+    
+    return catalog;
+}
+
+handle::Archive handelize(const table::Atlas& atlas, const std::string& key_col) {
+    if (!can_handelize(atlas, key_col)) {
+        throw std::runtime_error("Cannot handelize Atlas: some DataFrames cannot be converted");
+    }
+    
+    handle::Archive archive(atlas.name());
+    
+    for (const auto& [df_name, df] : atlas) {
+        try {
+            archive[df_name] = handelize(df, key_col);
+        } catch (const std::exception& e) {
+            // Skip DataFrames that can't be converted
+            continue;
+        }
+    }
+    
+    return archive;
+}
+
+// ========== VALIDATION ==========
+
+bool can_handelize(const table::DataFrame& df, const std::string& key_col) {
+    // Check if key column exists
+    if (!df.has(key_col)) {
+        return false;
+    }
+    
+    // Check if key column is Note type
+    auto keys_thread = df[key_col];
+    if (!keys_thread.is_note()) {
+        return false;
+    }
+    
+    // Check for unique keys
+    try {
+        auto keys = keys_thread.as_note().vector();
+        std::unordered_set<std::string> unique_keys;
+        for (const auto& chord : keys) {
+            if (!unique_keys.insert(chord.str()).second) {
+                return false;  // Duplicate found
+            }
+        }
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+bool can_tablize(const handle::Catalog& catalog) {
+    if (catalog.empty()) {
+        return false;
+    }
+    
+    // Check all feeds have same length
+    int64_t expected_size = -1;
+    auto keys = catalog.keys();
+    
+    for (const auto& key : keys) {
+        try {
+            const auto& feed = catalog.at(key);
+            int64_t feed_size = feed.size();
+            
+            if (expected_size == -1) {
+                expected_size = feed_size;
+            } else if (feed_size != expected_size) {
+                return false;
+            }
+        } catch (...) {
+            return false;
+        }
+    }
+    
+    return expected_size > 0;
+}
+
+bool can_tablize(const handle::Archive& archive, const std::string& /*key_col_name*/) {
+    if (archive.empty()) {
+        return false;
+    }
+    
+    // Check all catalogs can be converted
+    auto keys = archive.keys();
+    for (const auto& key : keys) {
+        try {
+            const auto& catalog = archive.at(key);
+            if (!can_tablize(catalog)) {
+                return false;
+            }
+        } catch (...) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool can_handelize(const table::Atlas& atlas, const std::string& key_col) {
+    if (atlas.empty()) {
+        return false;
+    }
+    
+    // Check all DataFrames can be converted
+    auto names = atlas.names();
+    for (const auto& name : names) {
+        try {
+            const auto& df = atlas[name];
+            if (!can_handelize(df, key_col)) {
+                return false;
+            }
+        } catch (...) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+}  // namespace pluss::converters

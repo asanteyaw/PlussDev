@@ -1,4 +1,5 @@
 #include <pluss/Note.h>
+#include <internals/core/include/b10/deets/operations.h>
 #include <internals/aux/lexicon/text.h>
 #include <iostream>
 
@@ -18,7 +19,7 @@ static pluss::Text node_to_pluss_text(const TextStructure::TextNode& node) {
 pluss::Note TextStructure::convert_to_note() const {
   try {
     pluss::Text root_text = node_to_pluss_text(root_node());
-    return pluss::Note::wrap_note_impl(pluss::intrusive_ptr<pluss::detail::NoteBook>::make(std::move(root_text)));
+    return b10::detail::note_gen(pluss::intrusive_ptr<pluss::detail::NoteBook>::make(std::move(root_text)));
   } catch (const std::exception& e) {
     std::cerr << "lexicon::TextStructure::convert_to_note error: " << e.what() << std::endl;
     return pluss::Note();

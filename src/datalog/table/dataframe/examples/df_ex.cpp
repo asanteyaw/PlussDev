@@ -1,9 +1,7 @@
 #include <iostream>
-#include <pluss/pluss.h>
 #include <filesystem>
-#include <pluss/datalog/table/dataframe/dataframe.h>
-#include <pluss/datalog/table/thread/thread.h>
-#include <pluss/datalog/table/io/display.h>
+
+#include <pluss/pluss.h>
 
 using namespace pluss;
 using namespace pluss::table;

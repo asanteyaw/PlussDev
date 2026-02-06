@@ -12,6 +12,8 @@
 #include <cmath>
 #include <algorithm>
 
+#include <internals/core/include/b10/deets/operations_fwd.h>
+
 namespace pluss {
 
 class Note; // Forward declaration
@@ -69,7 +71,12 @@ public:
   Note& operator=(const Note&) = default;
   Note& operator=(Note&&) noexcept = default;
 
+private:
+  friend ::pluss::Note b10::detail::note_gen(::pluss::intrusive_ptr<::pluss::detail::NoteBook> handle);
+
   static Note wrap_note_impl(intrusive_ptr<detail::NoteBook> handle) { return Note(std::move(handle)); }
+
+public:
 
   bool defined() const noexcept { return static_cast<bool>(handle_); }
   const Text& tree() const { PLUSS_VALIDATE(defined(), "Note is undefined"); return handle_->content; }
@@ -99,6 +106,14 @@ public:
   Note unsqueeze(int dim);
   Note map(const std::function<Chord(const Chord&)>& fn) const;
   Note repeat(const std::vector<int64_t>& reps) const;
+  
+  // --- Construction and combination helpers ---
+  Note concat(const Note& other) const;
+  Note concat(const std::vector<Note>& others) const;
+  Note join_notes(const std::vector<Note>& others, const Chord& delimiter) const;
+  Note empty_like() const;
+  Note fill_like(const Chord& chord) const;
+  Note repeat_like(const Chord& chord) const;  // Alias for fill_like
 
   // --- NLP / text utilities ---
 

@@ -11,6 +11,7 @@
 #include <datalog/table/io/rdbms.h>
 #include <datalog/table/io/coordinator.h>
 #include <datalog/table/io/raw_table.h>
+#include <datalog/table/io/display.h>
 #include <datalog/register/record/record.h>
 #include <datalog/register/stream/stream.h>
 #include <datalog/register/bundle/bundle.h>

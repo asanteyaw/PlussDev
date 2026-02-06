@@ -1,0 +1,325 @@
+/**
+ * @file feed_ex.cpp
+ * @brief Feed (1D) - Document Field Operations Examples
+ * 
+ * Demonstrates Feed-First design philosophy at the 1D level.
+ * Feed is analogous to Thread in the Table module.
+ */
+
+#include <iostream>
+#include <pluss/pluss.h>
+#include <pluss/datalog/handle/feed/feed.h>
+
+using namespace pluss;
+using namespace pluss::handle;
+
+void print_separator(const std::string& title) {
+    std::cout << "\n" << std::string(70, '=') << "\n";
+    std::cout << "  " << title << "\n";
+    std::cout << std::string(70, '=') << "\n\n";
+}
+
+int main() {
+    print_separator("Feed (1D) - Document Field Operations");
+    
+    std::cout << "Feed is the foundation of the Feed-First design philosophy:\n";
+    std::cout << "  Feed (1D)      → Document field operations\n";
+    std::cout << "  Catalog (2D)   → Collection of documents\n";
+    std::cout << "  Archive (3D)   → Database of collections\n\n";
+    
+    // ============================================================
+    // Example 1: Scalar Value Feeds
+    // ============================================================
+    print_separator("1. Scalar Value Feeds");
+    
+    std::cout << "Creating scalar Feeds:\n\n";
+    
+    auto name = Feed("Alice Johnson", "name");
+    auto age = Feed(29, "age");
+    auto salary = Feed(75000.50, "salary");
+    auto is_active = Feed(true, "is_active");
+    auto description = Feed(pluss::Chord("Senior Engineer"), "description");
+    
+    std::cout << "  name:        " << name.to_string() << "\n";
+    std::cout << "  age:         " << age.to_string() << "\n";
+    std::cout << "  salary:      " << salary.to_string() << "\n";
+    std::cout << "  is_active:   " << is_active.to_string() << "\n";
+    std::cout << "  description: " << description.to_string() << "\n\n";
+    
+    // Type checking
+    std::cout << "Type checking:\n";
+    std::cout << "  name.is_string(): " << (name.is_string() ? "yes" : "no") << "\n";
+    std::cout << "  age.is_int():     " << (age.is_int() ? "yes" : "no") << "\n";
+    std::cout << "  salary.is_double(): " << (salary.is_double() ? "yes" : "no") << "\n";
+    std::cout << "  is_active.is_bool(): " << (is_active.is_bool() ? "yes" : "no") << "\n\n";
+    
+    // ============================================================
+    // Example 2: MongoDB $inc and $mul (Numeric Operations)
+    // ============================================================
+    print_separator("2. MongoDB-Style Numeric Operations");
+    
+    std::cout << "Original values:\n";
+    std::cout << "  age:    " << age.to_string() << "\n";
+    std::cout << "  salary: " << salary.to_string() << "\n\n";
+    
+    // $inc: Increment
+    auto new_age = age.inc(1);
+    std::cout << "$inc operation:\n";
+    std::cout << "  age.inc(1):     " << new_age.to_string() << " (birthday!)\n\n";
+    
+    // $mul: Multiply
+    auto raise_salary = salary.mul(1.10);  // 10% raise
+    std::cout << "$mul operation:\n";
+    std::cout << "  salary.mul(1.10): " << raise_salary.to_string() << " (10% raise)\n\n";
+    
+    // $min and $max
+    auto capped_age = age.max(Feed::ScalarValue(25));  // At least 25
+    auto limited_salary = salary.min(Feed::ScalarValue(100000.0));  // At most 100k
+    std::cout << "$min/$max operations:\n";
+    std::cout << "  age.max(25):         " << capped_age.to_string() << " (minimum age)\n";
+    std::cout << "  salary.min(100000):  " << limited_salary.to_string() << " (salary cap)\n\n";
+    
+    // ============================================================
+    // Example 3: Array Feeds
+    // ============================================================
+    print_separator("3. Array Feeds");
+    
+    std::cout << "Creating array Feeds:\n\n";
+    
+    std::vector<std::string> skills = {"C++", "Python", "MongoDB"};
+    auto skills_feed = Feed(skills, "skills");
+    
+    std::vector<int64_t> scores = {95, 87, 92, 88};
+    auto scores_feed = Feed(scores, "scores");
+    
+    std::cout << "  skills: " << skills_feed.to_string() << "\n";
+    std::cout << "  scores: " << scores_feed.to_string() << "\n\n";
+    
+    // Array size
+    std::cout << "Array sizes:\n";
+    std::cout << "  skills.size(): " << skills_feed.size() << "\n";
+    std::cout << "  scores.size(): " << scores_feed.size() << "\n\n";
+    
+    // ============================================================
+    // Example 4: MongoDB Array Operations
+    // ============================================================
+    print_separator("4. MongoDB-Style Array Operations");
+    
+    std::cout << "Original skills: " << skills_feed.to_string() << "\n\n";
+    
+    // $push: Append element
+    auto with_rust = skills_feed.push(Feed::ScalarValue(std::string("Rust")));
+    std::cout << "$push operation:\n";
+    std::cout << "  skills.push('Rust'): " << with_rust.to_string() << "\n\n";
+    
+    // $addToSet: Add unique element
+    auto unique_skills = with_rust.add_to_set(Feed::ScalarValue(std::string("Python")));
+    std::cout << "$addToSet operation:\n";
+    std::cout << "  skills.add_to_set('Python'): " << unique_skills.to_string() 
+              << " (no duplicate)\n\n";
+    
+    unique_skills = unique_skills.add_to_set(Feed::ScalarValue(std::string("Go")));
+    std::cout << "  skills.add_to_set('Go'):     " << unique_skills.to_string() 
+              << " (added)\n\n";
+    
+    // $pull: Remove element
+    auto removed_python = unique_skills.pull(Feed::ScalarValue(std::string("Python")));
+    std::cout << "$pull operation:\n";
+    std::cout << "  skills.pull('Python'): " << removed_python.to_string() << "\n\n";
+    
+    // $pop: Remove first/last
+    auto pop_last = removed_python.pop(1);   // Remove last
+    auto pop_first = removed_python.pop(-1);  // Remove first
+    std::cout << "$pop operation:\n";
+    std::cout << "  skills.pop(1):  " << pop_last.to_string() << " (removed last)\n";
+    std::cout << "  skills.pop(-1): " << pop_first.to_string() << " (removed first)\n\n";
+    
+    // ============================================================
+    // Example 5: String Operations
+    // ============================================================
+    print_separator("5. String Operations");
+    
+    auto text = Feed("  hello world  ", "text");
+    std::cout << "Original text: '" << text.to_string() << "'\n\n";
+    
+    auto upper = text.to_upper();
+    auto lower = text.to_lower();
+    auto trimmed = text.trim();
+    auto concat_text = text.concat("!!!");
+    
+    std::cout << "String transformations:\n";
+    std::cout << "  to_upper():  '" << upper.to_string() << "'\n";
+    std::cout << "  to_lower():  '" << lower.to_string() << "'\n";
+    std::cout << "  trim():      '" << trimmed.to_string() << "'\n";
+    std::cout << "  concat('!!!'): '" << concat_text.to_string() << "'\n\n";
+    
+    // String checks
+    auto email = Feed("alice@example.com", "email");
+    std::cout << "String pattern matching:\n";
+    std::cout << "  email: " << email.to_string() << "\n";
+    std::cout << "  contains('@'):      " << (email.contains("@") ? "yes" : "no") << "\n";
+    std::cout << "  starts_with('alice'): " << (email.starts_with("alice") ? "yes" : "no") << "\n";
+    std::cout << "  ends_with('.com'):  " << (email.ends_with(".com") ? "yes" : "no") << "\n\n";
+    
+    // ============================================================
+    // Example 6: Numeric Mathematical Operations
+    // ============================================================
+    print_separator("6. Numeric Mathematical Operations");
+    
+    auto value = Feed(-42.7, "value");
+    std::cout << "Original value: " << value.to_string() << "\n\n";
+    
+    auto abs_val = value.abs();
+    auto rounded = value.round(1);
+    auto floored = value.floor();
+    auto ceiled = value.ceil();
+    auto sqrt_val = Feed(16.0, "sqrt_test").sqrt();
+    auto powered = Feed(2.0, "power_test").pow(3.0);
+    
+    std::cout << "Mathematical operations:\n";
+    std::cout << "  abs():       " << abs_val.to_string() << "\n";
+    std::cout << "  round(1):    " << rounded.to_string() << "\n";
+    std::cout << "  floor():     " << floored.to_string() << "\n";
+    std::cout << "  ceil():      " << ceiled.to_string() << "\n";
+    std::cout << "  sqrt(16):    " << sqrt_val.to_string() << "\n";
+    std::cout << "  pow(2, 3):   " << powered.to_string() << " (2^3)\n\n";
+    
+    // ============================================================
+    // Example 7: Comparison Operations (for Queries)
+    // ============================================================
+    print_separator("7. Comparison Operations");
+    
+    auto price1 = Feed(99.99, "price");
+    auto price2 = Feed(149.99, "price");
+    auto price3 = Feed(99.99, "price");
+    
+    std::cout << "Comparing prices:\n";
+    std::cout << "  price1: " << price1.to_string() << "\n";
+    std::cout << "  price2: " << price2.to_string() << "\n";
+    std::cout << "  price3: " << price3.to_string() << "\n\n";
+    
+    std::cout << "Comparison results:\n";
+    std::cout << "  price1.eq(price3):  " << (price1.eq(price3) ? "true" : "false") << " ($eq)\n";
+    std::cout << "  price1.ne(price2):  " << (price1.ne(price2) ? "true" : "false") << " ($ne)\n";
+    std::cout << "  price1.lt(price2):  " << (price1.lt(price2) ? "true" : "false") << " ($lt)\n";
+    std::cout << "  price2.gt(price1):  " << (price2.gt(price1) ? "true" : "false") << " ($gt)\n";
+    std::cout << "  price1.le(price3):  " << (price1.le(price3) ? "true" : "false") << " ($lte)\n";
+    std::cout << "  price2.ge(price1):  " << (price2.ge(price1) ? "true" : "false") << " ($gte)\n\n";
+    
+    // $in operator
+    std::vector<Feed::ScalarValue> valid_prices = {
+        Feed::ScalarValue(49.99),
+        Feed::ScalarValue(99.99),
+        Feed::ScalarValue(149.99)
+    };
+    std::cout << "  price1.in({49.99, 99.99, 149.99}): " 
+              << (price1.in(valid_prices) ? "true" : "false") << " ($in)\n\n";
+    
+    // ============================================================
+    // Example 8: Nested Documents
+    // ============================================================
+    print_separator("8. Nested Documents");
+    
+    Feed::DocumentValue address_doc;
+    address_doc["street"] = std::make_shared<Feed>("123 Main St", "street");
+    address_doc["city"] = std::make_shared<Feed>("Seattle", "city");
+    address_doc["state"] = std::make_shared<Feed>("WA", "state");
+    address_doc["zip"] = std::make_shared<Feed>(98101, "zip");
+    
+    auto address = Feed(address_doc, "address");
+    
+    std::cout << "Nested document (address):\n";
+    std::cout << "  Full: " << address.to_string() << "\n\n";
+    
+    // Access nested fields
+    auto city = address.get_field("city");
+    auto zip = address.get_field("zip");
+    std::cout << "Accessing nested fields:\n";
+    std::cout << "  address.get_field('city'): " << city.to_string() << "\n";
+    std::cout << "  address.get_field('zip'):  " << zip.to_string() << "\n\n";
+    
+    // Modify nested document
+    std::cout << "Modifying nested document:\n";
+    auto with_country = address.set_field("country", Feed("USA", "country"));
+    std::cout << "  After set_field('country', 'USA'):\n";
+    std::cout << "    " << with_country.to_string() << "\n\n";
+    
+    auto without_zip = with_country.unset_field("zip");
+    std::cout << "  After unset_field('zip'):\n";
+    std::cout << "    " << without_zip.to_string() << "\n\n";
+    
+    // Check field existence
+    std::cout << "Field existence checks:\n";
+    std::cout << "  has_field('city'):    " << (without_zip.has_field("city") ? "yes" : "no") << "\n";
+    std::cout << "  has_field('zip'):     " << (without_zip.has_field("zip") ? "yes" : "no") << "\n";
+    std::cout << "  has_field('country'): " << (without_zip.has_field("country") ? "yes" : "no") << "\n\n";
+    
+    // List all fields
+    auto fields = without_zip.fields();
+    std::cout << "All fields: ";
+    for (const auto& field : fields) {
+        std::cout << field << " ";
+    }
+    std::cout << "\n\n";
+    
+    // ============================================================
+    // Example 9: Array Aggregations
+    // ============================================================
+    print_separator("9. Array Aggregations");
+    
+    std::vector<double> prices = {29.99, 49.99, 39.99, 59.99, 19.99};
+    auto prices_array = Feed(prices, "prices");
+    
+    std::cout << "Price array: " << prices_array.to_string() << "\n\n";
+    
+    std::cout << "Aggregation operations:\n";
+    std::cout << "  sum():       $" << prices_array.sum() << "\n";
+    std::cout << "  mean():      $" << prices_array.mean() << "\n";
+    std::cout << "  min_value(): $" << prices_array.min_value() << "\n";
+    std::cout << "  max_value(): $" << prices_array.max_value() << "\n";
+    std::cout << "  count():     " << prices_array.count() << " items\n\n";
+    
+    // ============================================================
+    // Example 10: Feed Type Information
+    // ============================================================
+    print_separator("10. Feed Type Information");
+    
+    std::cout << "Type identification:\n\n";
+    
+    auto feeds = std::vector<Feed>{
+        Feed(42, "int_val"),
+        Feed(3.14, "double_val"),
+        Feed("hello", "string_val"),
+        Feed(true, "bool_val"),
+        Feed(std::vector<int64_t>{1, 2, 3}, "array_val"),
+        address
+    };
+    
+    for (const auto& f : feeds) {
+        std::cout << "  " << f.name() << ":\n";
+        std::cout << "    type():       " << f.type() << "\n";
+        std::cout << "    is_scalar():  " << (f.is_scalar() ? "yes" : "no") << "\n";
+        std::cout << "    is_array():   " << (f.is_array() ? "yes" : "no") << "\n";
+        std::cout << "    is_document(): " << (f.is_document() ? "yes" : "no") << "\n";
+        std::cout << "    exists():     " << (f.exists() ? "yes" : "no") << "\n";
+        std::cout << "\n";
+    }
+    
+    print_separator("Summary");
+    
+    std::cout << "Feed (1D) provides MongoDB-inspired field operations:\n\n";
+    std::cout << "  ✅ Scalar values (int, double, string, bool, Chord)\n";
+    std::cout << "  ✅ Arrays (vectors, Series, Note)\n";
+    std::cout << "  ✅ Nested documents (key-value pairs)\n";
+    std::cout << "  ✅ MongoDB operators: $inc, $mul, $push, $pull, $pop, $addToSet\n";
+    std::cout << "  ✅ String operations: to_upper, to_lower, trim, concat, contains\n";
+    std::cout << "  ✅ Numeric operations: abs, round, floor, ceil, sqrt, pow\n";
+    std::cout << "  ✅ Comparison operators: $eq, $ne, $lt, $gt, $lte, $gte, $in\n";
+    std::cout << "  ✅ Array aggregations: sum, mean, min, max, count\n";
+    std::cout << "  ✅ Type checking and introspection\n\n";
+    
+    std::cout << "Feed is the foundation of the Feed-First design!\n";
+    std::cout << "Next: See catalog_ex.cpp for Catalog (2D) examples.\n\n";
+    
+    return 0;
+}

@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <iostream>
-#include <pluss/pluss.h> 
+#include <cstddef>
+#include <pluss/pluss.h>
 
 #define COLOR_RESET   "\033[0m"
 #define COLOR_GREEN   "\033[1;32m"
@@ -11,6 +12,19 @@ int total_tests = 0, passed_tests = 0;
 #define EXPECT_TRUE(expr) test_assert((expr), #expr, __FILE__, __LINE__)
 #define EXPECT_FALSE(expr) test_assert(!(expr), "!(" #expr ")", __FILE__, __LINE__)
 #define EXPECT_EQ(actual, expected) test_equal((actual), (expected), #actual, #expected, __FILE__, __LINE__)
+
+template <size_t N>
+void test_equal(const pluss::Chord& actual, const char (&expected)[N], const char* act_str, const char* exp_str, const char* file, int line) {
+    total_tests++;
+    if (actual.str() == expected) {
+        passed_tests++;
+        std::cout << COLOR_GREEN << "[PASS] " << COLOR_RESET << act_str << " == " << exp_str << "\n";
+    } else {
+        std::cout << COLOR_RED << "[FAIL] " << COLOR_RESET << act_str << " != " << exp_str << " at " << file << ":" << line << "\n";
+        std::cout << "  Actual:   " << actual << "\n";
+        std::cout << "  Expected: " << expected << "\n";
+    }
+}
 
 template <typename T1, typename T2>
 void test_equal(const T1& actual, const T2& expected, const char* act_str, const char* exp_str, const char* file, int line) {
@@ -39,7 +53,7 @@ void run_note_tests() {
     using namespace pluss;
 
     // --- Content construction ---
-    Note n0 = content({});  // Empty Note
+    Note n0 = content();  // Empty Note
     Note n1 = content("Hello People");
     Note n2 = content({"Hello", 'A', std::string("World")});  // 1D
     Note n3 = content({{"Row1", "Row2"}, {"Row3", "Row4"}});  // 2D
@@ -220,7 +234,10 @@ void run_note_tests() {
     Note deep = content({{"A", "B"}, {"C", "D"}});
     auto flat = deep.flatten();
     EXPECT_EQ(flat[2], "C");
-    std::cout << "Flattened Note:\n" << flat << "\n";
+    std::cout << "Flattened Note:\n";
+    for (const auto& item : flat) {
+        std::cout << "  " << item << "\n";
+    }
 
     // --- Debug/Shape ---
     EXPECT_EQ(content("ok").debug(), "ok");

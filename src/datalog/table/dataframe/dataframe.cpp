@@ -17,33 +17,9 @@ namespace pluss::table {
 namespace {
 
 // Helper to calculate non-null count for a Thread
+// Thread-First: Use Thread.count() which handles all types properly
 int64_t non_null_count(const pluss::table::Thread& t) {
-    try {
-        if (t.is_series()) {
-            auto tt = at::Tensor(static_cast<const at::TensorBase&>(t.as_series())).view({-1});
-            if (tt.numel() == 0) return 0;
-            if (tt.is_floating_point()) return (tt == tt).sum().item<int64_t>(); // NaN != NaN
-            return tt.numel();
-        }
-        if (t.is_timeline()) {
-            const auto& tl = t.as_timeline();
-            auto ds = at::Tensor(static_cast<const at::TensorBase&>(tl.date_to_Series())).view({-1});
-            auto ts = at::Tensor(static_cast<const at::TensorBase&>(tl.time_to_Series())).view({-1});
-            const int64_t n = std::max<int64_t>(ds.numel(), ts.numel());
-            if (n == 0) return 0;
-            if (ds.numel() == 0) return (ts != 0).sum().item<int64_t>();
-            if (ts.numel() == 0) return (ds != 0).sum().item<int64_t>();
-            return ((ds != 0) | (ts != 0)).sum().item<int64_t>();
-        }
-        if (t.is_note()) {
-            auto v = t.as_note().vector();
-            int64_t c = 0;
-            for (const auto& chord : v) if (!chord.str().empty()) ++c;
-            return c;
-        }
-    } catch (...) {
-    }
-    return t.size();
+    return t.count();
 }
 
 } // namespace
@@ -141,8 +117,7 @@ void DataFrame::info(int format) const {
     info_df = info_df->set_col("Column", pluss::make_note(col_chords));
     
     // Add non-null counts as Series
-    auto count_tensor = torch::tensor(count_data, torch::kInt64);
-    info_df = info_df->set_col("Non-Null Count", Series(count_tensor));
+    info_df = info_df->set_col("Non-Null Count", pluss::value(count_data));
     
     // Add dtypes as Note
     std::vector<pluss::Chord> dtype_chords;
@@ -169,40 +144,36 @@ void DataFrame::info(int format) const {
 }
 
 void DataFrame::describe(int format) const {
+    // Thread-First: Use Thread aggregation methods instead of raw tensor operations
     const auto col_names = this->columns();
     if (col_names.empty()) {
         std::cout << "Empty DataFrame\n";
         return;
     }
 
-    // Compute statistics for numeric columns
+    // Compute statistics for numeric columns using Thread API
     std::vector<std::string> numeric_cols;
     std::vector<std::vector<double>> stats;
     
     for (const auto& name : col_names) {
-        const auto t = this->get_col(name);
-        if (!t.is_series()) continue;
+        const auto thread = this->get_col(name);
+        if (!thread.is_series()) continue;
         
         try {
-            auto s = t.as_series();
-            auto mask = ~torch::isnan(s.data());
-            auto valid = torch::masked_select(s.data(), mask);
+            // Use Thread aggregation methods
+            const double count = static_cast<double>(thread.count());
+            if (count == 0) continue;
             
-            if (valid.numel() == 0) continue;
-            
-            auto valid_float = valid.to(torch::kFloat64);
-            
-            double count = static_cast<double>(valid.numel());
-            double mean = valid_float.mean().item<double>();
-            double stddev = valid_float.std().item<double>();
-            double min_val = valid_float.min().item<double>();
-            double q25 = valid_float.quantile(0.25).item<double>();
-            double median = valid_float.median().item<double>();
-            double q75 = valid_float.quantile(0.75).item<double>();
-            double max_val = valid_float.max().item<double>();
+            const double mean_val = thread.mean();
+            const double std_val = thread.std(1);  // ddof=1
+            const double min_val = thread.min();
+            const double q25 = thread.quantile(0.25);
+            const double median_val = thread.median();
+            const double q75 = thread.quantile(0.75);
+            const double max_val = thread.max();
             
             numeric_cols.push_back(name);
-            stats.push_back({count, mean, stddev, min_val, q25, median, q75, max_val});
+            stats.push_back({count, mean_val, std_val, min_val, q25, median_val, q75, max_val});
         } catch (const std::exception& e) {
             continue;
         }
@@ -216,8 +187,7 @@ void DataFrame::describe(int format) const {
     // Create a DataFrame with stats and use to_string() - THE SAME ENGINE AS head()/tail()
     std::shared_ptr<DataFrame> stats_df = std::make_shared<DataFrame>();
     for (size_t i = 0; i < numeric_cols.size(); ++i) {
-        auto tensor = torch::tensor(stats[i], torch::kFloat64);
-        stats_df = stats_df->set_col(numeric_cols[i], Series(tensor));
+        stats_df = stats_df->set_col(numeric_cols[i], pluss::value(stats[i]));
     }
     
     pluss::table::io::DisplayOptions opt;

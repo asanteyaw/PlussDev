@@ -20,6 +20,3 @@ inline char as_char(const T& t) {
 }
 
 }  // namespace functors
-
-// use b10 for short
-namespace b10 = functors;

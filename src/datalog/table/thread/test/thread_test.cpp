@@ -1,6 +1,6 @@
-#include <pluss/datalog/table/thread/thread.h>
-#include <pluss/series_factory.h>
-#include <pluss/note_factory.h>
+#include <torch/torch.h>
+
+#include <pluss/pluss.h>
 #include <iostream>
 #include <cassert>
 #include <cmath>

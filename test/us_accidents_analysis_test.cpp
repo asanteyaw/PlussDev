@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <map>
 #include <algorithm>
+#include <torch/torch.h>
+
 #include <pluss/pluss.h>
 
 using namespace pluss;
@@ -249,7 +251,7 @@ int main() {
         for (const auto& col : numeric_cols) {
             if (col_idx.find(col) != col_idx.end()) {
                 auto tensor = column_to_tensor(data.rows, col_idx[col]);
-                threads.emplace_back(Series(tensor), col);
+                threads.emplace_back(pluss::from_torch(tensor), col);
             }
         }
         
@@ -722,8 +724,8 @@ int main() {
                 }
             }
             
-            region_threads.emplace_back(Series(torch::tensor(region_severity)), "Severity");
-            region_threads.emplace_back(Series(torch::tensor(region_distance)), "Distance(mi)");
+            region_threads.emplace_back(pluss::from_torch(torch::tensor(region_severity)), "Severity");
+            region_threads.emplace_back(pluss::from_torch(torch::tensor(region_distance)), "Distance(mi)");
             
             region_dfs.push_back(std::make_shared<DataFrame>(region_threads));
             region_names.push_back(region.name);

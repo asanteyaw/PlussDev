@@ -227,6 +227,44 @@ public:
     [[nodiscard]] Thread sin() const;
     [[nodiscard]] Thread cos() const;
     [[nodiscard]] Thread tan() const;
+    
+    // Aggregation operations (return scalar or single-element Thread)
+    [[nodiscard]] double sum() const;
+    [[nodiscard]] double mean() const;
+    [[nodiscard]] double median() const;
+    [[nodiscard]] double std(int ddof = 1) const;
+    [[nodiscard]] double var(int ddof = 1) const;
+    [[nodiscard]] double min() const;
+    [[nodiscard]] double max() const;
+    [[nodiscard]] double prod() const;
+    [[nodiscard]] double sem() const;  // Standard error of mean
+    [[nodiscard]] double mad() const;  // Mean absolute deviation
+    [[nodiscard]] double skew() const;
+    [[nodiscard]] double kurt() const;  // Kurtosis
+    [[nodiscard]] double quantile(double q) const;
+    [[nodiscard]] int64_t count() const;
+    [[nodiscard]] int64_t nunique() const;
+    
+    // Index location methods
+    [[nodiscard]] int64_t idxmax() const;
+    [[nodiscard]] int64_t idxmin() const;
+    [[nodiscard]] Thread mode() const;
+    
+    // Boolean reductions
+    [[nodiscard]] bool all() const;
+    [[nodiscard]] bool any() const;
+    
+    // Selection and filtering
+    [[nodiscard]] Thread sample(int64_t n, bool replace = false) const;
+    [[nodiscard]] Thread truncate(int64_t before, int64_t after) const;
+    [[nodiscard]] Thread drop_duplicates() const;
+    [[nodiscard]] pluss::Series duplicated() const;
+    [[nodiscard]] pluss::Series isin(const std::vector<double>& values) const;
+    [[nodiscard]] pluss::Series isin(const Thread& values) const;
+    
+    // Transformations
+    [[nodiscard]] Thread transform(const std::string& func) const;
+    [[nodiscard]] Thread apply(std::function<double(double)> func) const;
 
 private:
     Value value_;

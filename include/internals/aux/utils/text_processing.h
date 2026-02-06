@@ -9,6 +9,8 @@
 #include <pluss/Chord.h>
 #include <pluss/Note.h>
 
+#include <internals/core/include/b10/deets/operations.h>
+
 namespace detail {
 
 class lex {
@@ -165,7 +167,7 @@ TextStructure(const T& value) {
       pluss::Text root_copy = root_;
       
       // Use the copy to create the Note
-      return pluss::Note::wrap_note_impl(
+        return b10::detail::note_gen(
           pluss::intrusive_ptr<pluss::detail::NoteBook>::make(root_copy));
     } catch (const std::exception& e) {
       std::cerr << "Error in convert_to_note: " << e.what() << std::endl;

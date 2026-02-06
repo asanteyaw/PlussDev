@@ -1,15 +1,16 @@
 #pragma once
 
 #include "pluss/Note.h"
+#include <internals/core/include/b10/deets/operations.h>
 #include <vector>
 #include <internals/core/include/b10/utils/Macros.h>
 
 namespace pluss {
 
   // --- Broadcasting Utility ---
-  namespace {
+  namespace dispatch_detail {
   
-  Text broadcast_to(const Text& src, const std::vector<size_t>& target_shape, size_t dim = 0) {
+  inline Text broadcast_to(const Text& src, const std::vector<size_t>& target_shape, size_t dim = 0) {
     if (dim == target_shape.size()) return src;
     if (src.is_leaf()) {
       Text out = src;
@@ -33,7 +34,7 @@ namespace pluss {
     return out;
   }
   
-  std::vector<size_t> shape_of(const Text& t) {
+  inline std::vector<size_t> shape_of(const Text& t) {
     std::vector<size_t> shape;
     const Text* curr = &t;
     while (!curr->is_leaf()) {
@@ -43,7 +44,7 @@ namespace pluss {
     return shape;
   }
   
-  std::vector<size_t> promote_shape(const std::vector<size_t>& a, const std::vector<size_t>& b) {
+  inline std::vector<size_t> promote_shape(const std::vector<size_t>& a, const std::vector<size_t>& b) {
     size_t n = std::max(a.size(), b.size());
     std::vector<size_t> out(n);
     for (size_t i = 0; i < n; ++i) {
@@ -56,14 +57,14 @@ namespace pluss {
     return out;
   }
   
-  std::pair<Text, Text> broadcast_pair(const Text& a, const Text& b) {
+  inline std::pair<Text, Text> broadcast_pair(const Text& a, const Text& b) {
     auto sa = shape_of(a);
     auto sb = shape_of(b);
     auto out_shape = promote_shape(sa, sb);
     return {broadcast_to(a, out_shape), broadcast_to(b, out_shape)};
   }
   
-  std::tuple<Text, Text, Text> broadcast_triple(const Text& a, const Text& b, const Text& c) {
+  inline std::tuple<Text, Text, Text> broadcast_triple(const Text& a, const Text& b, const Text& c) {
     auto sa = shape_of(a);
     auto sb = shape_of(b);
     auto sc = shape_of(c);
@@ -76,7 +77,7 @@ namespace pluss {
     };
   }
   
-  } // anonymous namespace
+  } // namespace dispatch_detail
   
   // === Unary Dispatch ===
   inline Note dispatch_unary(const Note& input, const std::function<Chord(const Chord&)>& fn) {
@@ -87,12 +88,32 @@ namespace pluss {
       for (const auto& sub : t.children()) out.push_back(apply(sub));
       return out;
     };
-    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(apply(input.tree())));
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(apply(input.tree())));
+  }
+  
+  // === Parallel Unary Dispatch ===
+  // Use parallel execution for processing large Note structures
+  inline Note dispatch_unary_parallel(const Note& input, const std::function<Chord(const Chord&)>& fn) {
+    std::function<Text(const Text&)> apply = [&](const Text& t) -> Text {
+      if (t.is_leaf()) return fn(t.leaf());
+      
+      const auto& children = t.children();
+      std::vector<Text> out(children.size());
+      
+      // Use parallel execution for large collections (>32 elements)
+      size_t n = children.size();
+      #pragma omp parallel for if(n > 32)
+      for (size_t i = 0; i < n; ++i) {
+        out[i] = apply(children[i]);
+      }
+      return out;
+    };
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(apply(input.tree())));
   }
   
   // === Binary Dispatch ===
   inline Note dispatch_binary(const Note& a, const Note& b, const std::function<Chord(const Chord&, const Chord&)>& fn) {
-    auto [ta, tb] = broadcast_pair(a.tree(), b.tree());
+    auto [ta, tb] = dispatch_detail::broadcast_pair(a.tree(), b.tree());
     std::function<Text(const Text&, const Text&)> apply = [&](const Text& ta, const Text& tb) -> Text {
       if (ta.is_leaf()) return fn(ta.leaf(), tb.leaf());
       const auto& ca = ta.children();
@@ -103,13 +124,13 @@ namespace pluss {
         out.push_back(apply(ca[i], cb[i]));
       return out;
     };
-    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb)));
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb)));
   }
   
   // === Ternary Dispatch ===
   inline Note dispatch_ternary(const Note& a, const Note& b, const Note& c,
                                const std::function<Chord(const Chord&, const Chord&, const Chord&)>& fn) {
-    auto [ta, tb, tc] = broadcast_triple(a.tree(), b.tree(), c.tree());
+    auto [ta, tb, tc] = dispatch_detail::broadcast_triple(a.tree(), b.tree(), c.tree());
     std::function<Text(const Text&, const Text&, const Text&)> apply = [&](const Text& ta, const Text& tb, const Text& tc) -> Text {
       if (ta.is_leaf()) return fn(ta.leaf(), tb.leaf(), tc.leaf());
       const auto& ca = ta.children();
@@ -121,7 +142,7 @@ namespace pluss {
         out.push_back(apply(ca[i], cb[i], cc[i]));
       return out;
     };
-    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb, tc)));
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb, tc)));
   }
   
   // === Predicate Dispatch ===
@@ -139,9 +160,36 @@ namespace pluss {
     return out;
   }
   
+  // === Parallel Predicate Dispatch ===
+  // Use parallel execution for processing large Note structures
+  inline std::vector<bool> dispatch_predicate_parallel(const Note& input, const std::function<bool(const Chord&)>& fn) {
+    // First, flatten to get all leaf nodes
+    std::vector<const Text*> leaves;
+    std::function<void(const Text&)> gather = [&](const Text& t) {
+      if (t.is_leaf()) {
+        leaves.push_back(&t);
+      } else {
+        for (const auto& child : t.children())
+          gather(child);
+      }
+    };
+    gather(input.tree());
+    
+    std::vector<bool> out(leaves.size());
+    
+    // Use parallel execution for large collections (>64 elements)
+    size_t n = leaves.size();
+    #pragma omp parallel for if(n > 64)
+    for (size_t i = 0; i < n; ++i) {
+      out[i] = fn(leaves[i]->leaf());
+    }
+    
+    return out;
+  }
+  
   // === Binary Predicate ===
   inline std::vector<bool> dispatch_predicate_binary(const Note& a, const Note& b, const std::function<bool(const Chord&, const Chord&)>& fn) {
-    auto [ta, tb] = broadcast_pair(a.tree(), b.tree());
+    auto [ta, tb] = dispatch_detail::broadcast_pair(a.tree(), b.tree());
     std::vector<bool> out;
     std::function<void(const Text&, const Text&)> collect = [&](const Text& ta, const Text& tb) {
       if (ta.is_leaf()) {
@@ -159,7 +207,7 @@ namespace pluss {
   
   // === Where Dispatch ===
   inline Note dispatch_where(const Note& cond, const Note& x, const Note& y) {
-    auto [tc, tx, ty] = broadcast_triple(cond.tree(), x.tree(), y.tree());
+    auto [tc, tx, ty] = dispatch_detail::broadcast_triple(cond.tree(), x.tree(), y.tree());
     std::function<Text(const Text&, const Text&, const Text&)> apply = [&](const Text& c, const Text& x, const Text& y) -> Text {
       if (c.is_leaf()) {
         // Check for "1" or "true" as true conditions
@@ -175,12 +223,12 @@ namespace pluss {
         out.push_back(apply(cc[i], cx[i], cy[i]));
       return out;
     };
-    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(apply(tc, tx, ty)));
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(apply(tc, tx, ty)));
   }
   
   inline Note dispatch_comparator(const Note& a, const Note& b,
     const std::function<bool(const Chord&, const Chord&)>& fn) {
-    auto [ta, tb] = broadcast_pair(a.tree(), b.tree());
+    auto [ta, tb] = dispatch_detail::broadcast_pair(a.tree(), b.tree());
 
     std::function<Text(const Text&, const Text&)> apply = [&](const Text& ta, const Text& tb) -> Text {
       if (ta.is_leaf()) return fn(ta.leaf(), tb.leaf()) ? Chord("true") : Chord("false");
@@ -193,7 +241,7 @@ namespace pluss {
       return out;
     };
 
-    return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb)));
+    return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(apply(ta, tb)));
 }
 
 // === Stack ===
@@ -225,7 +273,7 @@ inline Note dispatch_stack(const std::vector<Note>& notes, int dim) {
   trees.reserve(notes.size());
   for (const auto& n : notes) trees.push_back(n.tree());
 
-  return Note::wrap_note_impl(
+  return b10::detail::note_gen(
     intrusive_ptr<detail::NoteBook>::make(insert_dim(std::move(trees), dim)));
 }
 
@@ -246,7 +294,7 @@ inline Note dispatch_squeeze(const Note& input, int dim = -1) {
       out.push_back(squeeze_at(c, target, curr_dim + 1));
     return out;
   };
-  return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(squeeze_at(input.tree(), dim, 0)));
+  return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(squeeze_at(input.tree(), dim, 0)));
 }
 
 // === Unsqueeze ===
@@ -259,7 +307,7 @@ inline Note dispatch_unsqueeze(const Note& input, int dim) {
       out.push_back(insert_at(c, target, curr_dim + 1));
     return out;
   };
-  return Note::wrap_note_impl(intrusive_ptr<detail::NoteBook>::make(insert_at(input.tree(), dim, 0)));
+  return b10::detail::note_gen(intrusive_ptr<detail::NoteBook>::make(insert_at(input.tree(), dim, 0)));
 }
 
 // === Slice ===
@@ -282,7 +330,7 @@ inline Note dispatch_slice(const Note& input, int dim, int start, int end) {
     return Text(std::move(out));
   };
 
-  return Note::wrap_note_impl(
+    return b10::detail::note_gen(
       intrusive_ptr<detail::NoteBook>::make(slice(input.tree(), dim, 0)));
 }
 
@@ -315,7 +363,7 @@ inline Note dispatch_repeat(const Note& input, const std::vector<int64_t>& repea
     return out;
   };
 
-  return Note::wrap_note_impl(
+    return b10::detail::note_gen(
       intrusive_ptr<detail::NoteBook>::make(apply(input.tree(), 0)));
 }
 } //namespace pluss

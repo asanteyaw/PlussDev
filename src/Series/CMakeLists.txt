@@ -1,3 +1,4 @@
+# Traditional implementation files
 file(GLOB SERIES_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/series_*.cpp
 )

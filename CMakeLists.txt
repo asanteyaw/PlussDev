@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.28)
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/LocalConfig.cmake")
     include("${CMAKE_SOURCE_DIR}/cmake/LocalConfig.cmake")
@@ -15,6 +15,7 @@ include(CTest)
 # ==============================
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
 
 add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
@@ -63,6 +64,7 @@ add_subdirectory(src/plotism)
 add_subdirectory(src/spaces)
 add_subdirectory(src/datalog)
 add_subdirectory(test)
+add_subdirectory(examples)
 
 # ==============================
 # Compiler flags

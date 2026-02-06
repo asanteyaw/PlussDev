@@ -1,9 +1,21 @@
 #include <iostream>
+#include <torch/torch.h>
+
 #include <pluss/pluss.h>
 // #include <pluss/SeriesFormatter.h>
 // #include <pluss/value_factories.h>
 
 using namespace pluss;
+
+static void print_sizes(const at::Tensor& tensor) {
+    auto sizes = tensor.sizes();
+    std::cout << "[";
+    for (size_t i = 0; i < static_cast<size_t>(sizes.size()); ++i) {
+        if (i) std::cout << ", ";
+        std::cout << sizes[i];
+    }
+    std::cout << "]";
+}
 
 int main() {
     // Test 0D (scalar) Series
@@ -55,7 +67,9 @@ int main() {
         }
         Series s2d_custom = pluss::from_torch(custom_tensor);
         std::cout << "2D Custom Matrix Series:\n" << s2d_custom << "\n\n";
-        std::cout << custom_tensor.sizes() << "\n";
+        std::cout << "custom_tensor.sizes()=";
+        print_sizes(custom_tensor);
+        std::cout << "\n";
         std::cout << s2d_custom.sizes()[0] << "\n";
         
         // Large 2D matrix

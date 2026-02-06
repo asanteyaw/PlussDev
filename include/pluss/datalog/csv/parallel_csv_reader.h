@@ -1,14 +1,17 @@
 #pragma once
 
+#include <pluss/datalog/table/thread/thread.h>  // Full Thread definition
+#include <memory>
 #include <string>
 #include <vector>
 #include <functional>
 
-namespace pluss {
-
-// Forward declarations
-class Thread;
+namespace pluss::table {
 class DataFrame;
+class Thread;
+} // namespace pluss::table
+
+namespace pluss {
 
 /**
  * @brief Configuration for parallel CSV reading
@@ -126,7 +129,7 @@ public:
      * @param num_threads Number of threads (0 = auto)
      * @return DataFrame object
      */
-    static DataFrame build_from_csv(
+    static pluss::table::DataFrame build_from_csv(
         const std::vector<std::vector<std::string>>& csv_data,
         const std::vector<std::string>& column_names,
         size_t num_threads = 0
@@ -140,7 +143,7 @@ public:
      * @param num_threads Number of threads (0 = auto)
      * @return DataFrame object
      */
-    static DataFrame build_from_csv_columns(
+    static pluss::table::DataFrame build_from_csv_columns(
         const std::vector<std::vector<std::string>>& csv_data,
         const std::vector<size_t>& column_indices,
         const std::vector<std::string>& column_names,
@@ -148,7 +151,7 @@ public:
     );
 
 private:
-    static Thread build_column_parallel(
+    static pluss::table::Thread build_column_parallel(
         const std::vector<std::vector<std::string>>& csv_data,
         size_t col_idx,
         size_t num_threads

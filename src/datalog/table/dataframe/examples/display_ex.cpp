@@ -1,6 +1,8 @@
-#include <pluss/pluss.h>
-#include <pluss/datalog/table/io/display.h>
 #include <iostream>
+
+#include <torch/torch.h>
+
+#include <pluss/pluss.h>
 
 int main() {
     using pluss::table::DataFrame;
