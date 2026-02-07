@@ -110,6 +110,7 @@ public:
     Feed slice(int64_t start, int64_t end) const;
     Feed at(int64_t index) const;
     Feed masked_select(const pluss::Series& mask) const;
+    Feed take(const pluss::Series& indices) const;
     
     // Filtering
     Feed filter(const pluss::Series& condition) const;
@@ -135,6 +136,31 @@ public:
     Feed str_endswith(const std::string& suffix) const;
     Feed str_length() const;
     Feed str_split(const std::string& delimiter) const;
+    
+    // NLP/Text Processing (Note only)
+    Feed tokenize(const std::string& method = "whitespace") const;
+    Feed remove_punctuation() const;
+    Feed remove_stopwords(const std::vector<std::string>& stopwords = {}) const;
+    Feed remove_digits() const;
+    Feed stem(const std::string& algorithm = "porter") const;
+    Feed lemmatize() const;
+    Feed ngrams(int n = 2) const;
+    Feed bag_of_words() const;
+    Feed extract_keywords(int top_n = 10) const;
+    Feed extract_entities(const std::string& entity_type = "all") const;
+    
+    // Text similarity and distance
+    double cosine_similarity(const Feed& other) const;
+    double jaccard_similarity(const Feed& other) const;
+    double levenshtein_distance(const Feed& other) const;
+    Feed pairwise_similarity(const Feed& other, const std::string& method = "cosine") const;
+    
+    // Text statistics
+    Feed word_count() const;
+    Feed unique_word_count() const;
+    Feed char_count() const;
+    Feed sentence_count() const;
+    Feed avg_word_length() const;
     
     // Numeric operations (Series only)
     Feed abs() const;

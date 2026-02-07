@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <iomanip>
+#include <cctype>
 
 namespace pluss::handle {
 
@@ -123,6 +124,28 @@ Feed Feed::masked_select(const pluss::Series& mask) const {
         } catch (...) {
             return *this;
         }
+    }
+    return *this;
+}
+
+Feed Feed::take(const pluss::Series& indices) const {
+    if (is_series()) {
+        return Feed(as_series().take(indices), name_);
+    }
+    if (is_timeline()) {
+        return Feed(to_series().take(indices), name_);
+    }
+    if (is_note()) {
+        auto vec = as_note().vector();
+        std::vector<pluss::Chord> result;
+        result.reserve(indices.numel());
+        for (int64_t i = 0; i < indices.numel(); ++i) {
+            int64_t idx = indices[i].item<int64_t>();
+            if (idx >= 0 && idx < static_cast<int64_t>(vec.size())) {
+                result.push_back(vec[idx]);
+            }
+        }
+        return Feed(pluss::make_note(result), name_);
     }
     return *this;
 }
@@ -414,6 +437,424 @@ Feed Feed::str_split(const std::string& delimiter) const {
                 split_results.emplace_back(s.substr(start));
             }
             return Feed(pluss::make_note(split_results), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+// ===== NLP/Text Processing (Note only) =====
+
+Feed Feed::tokenize(const std::string& method) const {
+    if (is_note()) {
+        try {
+            auto vec = as_note().vector();
+            std::vector<pluss::Chord> tokens;
+            
+            for (const auto& chord : vec) {
+                std::string s = chord.str();
+                if (method == "whitespace") {
+                    // Simple whitespace tokenization
+                    std::istringstream iss(s);
+                    std::string token;
+                    while (iss >> token) {
+                        tokens.emplace_back(token);
+                    }
+                } else if (method == "word") {
+                    // Word-based tokenization (split on non-alphanumeric)
+                    std::string current_token;
+                    for (char c : s) {
+                        if (std::isalnum(c)) {
+                            current_token += c;
+                        } else if (!current_token.empty()) {
+                            tokens.emplace_back(current_token);
+                            current_token.clear();
+                        }
+                    }
+                    if (!current_token.empty()) {
+                        tokens.emplace_back(current_token);
+                    }
+                }
+            }
+            return Feed(pluss::make_note(tokens), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+Feed Feed::remove_punctuation() const {
+    if (is_note()) {
+        try {
+            auto vec = as_note().vector();
+            std::vector<pluss::Chord> cleaned;
+            
+            for (const auto& chord : vec) {
+                std::string s = chord.str();
+                std::string result;
+                for (char c : s) {
+                    if (!std::ispunct(c)) {
+                        result += c;
+                    }
+                }
+                cleaned.emplace_back(result);
+            }
+            return Feed(pluss::make_note(cleaned), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+Feed Feed::remove_stopwords(const std::vector<std::string>& stopwords) const {
+    if (is_note()) {
+        try {
+            // Default English stopwords if none provided
+            std::unordered_set<std::string> stop_set;
+            if (stopwords.empty()) {
+                // Common English stopwords
+                stop_set = {"a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
+                           "has", "he", "in", "is", "it", "its", "of", "on", "that", "the",
+                           "to", "was", "will", "with", "this", "but", "they", "have", "had",
+                           "what", "when", "where", "who", "which", "why", "how"};
+            } else {
+                stop_set.insert(stopwords.begin(), stopwords.end());
+            }
+            
+            auto vec = as_note().vector();
+            std::vector<pluss::Chord> filtered;
+            
+            for (const auto& chord : vec) {
+                std::string s = chord.str();
+                // Convert to lowercase for comparison
+                std::string lower_s = s;
+                std::transform(lower_s.begin(), lower_s.end(), lower_s.begin(), ::tolower);
+                
+                if (stop_set.find(lower_s) == stop_set.end()) {
+                    filtered.emplace_back(s);
+                }
+            }
+            return Feed(pluss::make_note(filtered), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+Feed Feed::remove_digits() const {
+    if (is_note()) {
+        try {
+            auto vec = as_note().vector();
+            std::vector<pluss::Chord> cleaned;
+            
+            for (const auto& chord : vec) {
+                std::string s = chord.str();
+                std::string result;
+                for (char c : s) {
+                    if (!std::isdigit(c)) {
+                        result += c;
+                    }
+                }
+                cleaned.emplace_back(result);
+            }
+            return Feed(pluss::make_note(cleaned), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+Feed Feed::stem(const std::string& /*algorithm*/) const {
+    if (is_note()) {
+        try {
+            auto vec = as_note().vector();
+            std::vector<pluss::Chord> stemmed;
+            
+            // Simplified Porter stemmer rules (basic suffix removal)
+            for (const auto& chord : vec) {
+                std::string s = chord.str();
+                std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+                
+                // Remove common suffixes
+                if (s.ends_with("ing") && s.length() > 5) {
+                    s = s.substr(0, s.length() - 3);
+                } else if (s.ends_with("ed") && s.length() > 4) {
+                    s = s.substr(0, s.length() - 2);
+                } else if (s.ends_with("ly") && s.length() > 4) {
+                    s = s.substr(0, s.length() - 2);
+                } else if (s.ends_with("s") && s.length() > 3 && !s.ends_with("ss")) {
+                    s = s.substr(0, s.length() - 1);
+                }
+                
+                stemmed.emplace_back(s);
+            }
+            return Feed(pluss::make_note(stemmed), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+Feed Feed::lemmatize() const {
+    // Simplified lemmatization - similar to stemming but rule-based
+    return stem("basic");
+}
+
+Feed Feed::ngrams(int n) const {
+    if (is_note()) {
+        try {
+            auto vec = as_note().vector();
+            std::vector<pluss::Chord> ngrams_result;
+            
+            if (static_cast<int>(vec.size()) < n) {
+                return *this;
+            }
+            
+            for (size_t i = 0; i <= vec.size() - n; ++i) {
+                std::string ngram;
+                for (int j = 0; j < n; ++j) {
+                    if (j > 0) ngram += " ";
+                    ngram += vec[i + j].str();
+                }
+                ngrams_result.emplace_back(ngram);
+            }
+            return Feed(pluss::make_note(ngrams_result), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+Feed Feed::bag_of_words() const {
+    if (is_note()) {
+        try {
+            auto vec = as_note().vector();
+            std::unordered_map<std::string, int> word_counts;
+            
+            // Count word frequencies
+            for (const auto& chord : vec) {
+                std::string word = chord.str();
+                word_counts[word]++;
+            }
+            
+            // Convert to parallel vectors
+            std::vector<pluss::Chord> words;
+            std::vector<double> counts;
+            for (const auto& [word, count] : word_counts) {
+                words.emplace_back(word);
+                counts.push_back(static_cast<double>(count));
+            }
+            
+            // Return as Note (could be extended to return Catalog with word and count fields)
+            return Feed(pluss::make_note(words), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+Feed Feed::extract_keywords(int top_n) const {
+    // Simplified keyword extraction - get most frequent non-stopword terms
+    auto cleaned = remove_stopwords().remove_punctuation();
+    auto bow = cleaned.bag_of_words();
+    // Would need frequency sorting - placeholder returns cleaned text
+    return cleaned.head(top_n);
+}
+
+Feed Feed::extract_entities(const std::string& /*entity_type*/) const {
+    // Simplified entity extraction - capitalized words
+    if (is_note()) {
+        try {
+            auto vec = as_note().vector();
+            std::vector<pluss::Chord> entities;
+            
+            for (const auto& chord : vec) {
+                std::string s = chord.str();
+                if (!s.empty() && std::isupper(s[0])) {
+                    entities.emplace_back(s);
+                }
+            }
+            return Feed(pluss::make_note(entities), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+// ===== Text Similarity and Distance =====
+
+double Feed::cosine_similarity(const Feed& other) const {
+    if (is_series() && other.is_series()) {
+        auto s1 = as_series();
+        auto s2 = other.as_series();
+        
+        if (s1.numel() != s2.numel()) {
+            return 0.0;
+        }
+        
+        // Compute cosine similarity
+        double dot_product = (s1 * s2).sum().item<double>();
+        double norm1 = s1.norm().item<double>();
+        double norm2 = s2.norm().item<double>();
+        
+        if (norm1 == 0.0 || norm2 == 0.0) return 0.0;
+        return dot_product / (norm1 * norm2);
+    }
+    return 0.0;
+}
+
+double Feed::jaccard_similarity(const Feed& other) const {
+    if (is_note() && other.is_note()) {
+        auto vec1 = as_note().vector();
+        auto vec2 = other.as_note().vector();
+        
+        std::unordered_set<std::string> set1, set2;
+        for (const auto& chord : vec1) set1.insert(chord.str());
+        for (const auto& chord : vec2) set2.insert(chord.str());
+        
+        // Count intersection
+        size_t intersection = 0;
+        for (const auto& item : set1) {
+            if (set2.find(item) != set2.end()) {
+                intersection++;
+            }
+        }
+        
+        size_t union_size = set1.size() + set2.size() - intersection;
+        if (union_size == 0) return 0.0;
+        
+        return static_cast<double>(intersection) / static_cast<double>(union_size);
+    }
+    return 0.0;
+}
+
+double Feed::levenshtein_distance(const Feed& other) const {
+    if (is_note() && other.is_note()) {
+        auto vec1 = as_note().vector();
+        auto vec2 = other.as_note().vector();
+        
+        if (vec1.empty() || vec2.empty()) return 0.0;
+        
+        // Compute for first elements only (simplified)
+        std::string s1 = vec1[0].str();
+        std::string s2 = vec2[0].str();
+        
+        size_t m = s1.length();
+        size_t n = s2.length();
+        
+        std::vector<std::vector<size_t>> dp(m + 1, std::vector<size_t>(n + 1));
+        
+        for (size_t i = 0; i <= m; ++i) dp[i][0] = i;
+        for (size_t j = 0; j <= n; ++j) dp[0][j] = j;
+        
+        for (size_t i = 1; i <= m; ++i) {
+            for (size_t j = 1; j <= n; ++j) {
+                if (s1[i-1] == s2[j-1]) {
+                    dp[i][j] = dp[i-1][j-1];
+                } else {
+                    dp[i][j] = 1 + std::min({dp[i-1][j], dp[i][j-1], dp[i-1][j-1]});
+                }
+            }
+        }
+        
+        return static_cast<double>(dp[m][n]);
+    }
+    return 0.0;
+}
+
+Feed Feed::pairwise_similarity(const Feed& other, const std::string& method) const {
+    if (method == "cosine") {
+        double sim = cosine_similarity(other);
+        return Feed(pluss::value({sim}), "similarity");
+    } else if (method == "jaccard") {
+        double sim = jaccard_similarity(other);
+        return Feed(pluss::value({sim}), "similarity");
+    }
+    return *this;
+}
+
+// ===== Text Statistics =====
+
+Feed Feed::word_count() const {
+    if (is_note()) {
+        try {
+            auto vec = as_note().vector();
+            std::vector<double> counts;
+            
+            for (const auto& chord : vec) {
+                std::string s = chord.str();
+                std::istringstream iss(s);
+                std::string word;
+                int count = 0;
+                while (iss >> word) count++;
+                counts.push_back(static_cast<double>(count));
+            }
+            
+            return Feed(pluss::value(counts), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+Feed Feed::unique_word_count() const {
+    if (is_note()) {
+        try {
+            auto vec = as_note().vector();
+            std::vector<double> counts;
+            
+            for (const auto& chord : vec) {
+                std::string s = chord.str();
+                std::unordered_set<std::string> unique_words;
+                std::istringstream iss(s);
+                std::string word;
+                while (iss >> word) unique_words.insert(word);
+                counts.push_back(static_cast<double>(unique_words.size()));
+            }
+            
+            return Feed(pluss::value(counts), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+Feed Feed::char_count() const {
+    return str_length();
+}
+
+Feed Feed::sentence_count() const {
+    if (is_note()) {
+        try {
+            auto vec = as_note().vector();
+            std::vector<double> counts;
+            
+            for (const auto& chord : vec) {
+                std::string s = chord.str();
+                int count = 0;
+                for (char c : s) {
+                    if (c == '.' || c == '!' || c == '?') count++;
+                }
+                if (count == 0 && !s.empty()) count = 1;  // At least 1 sentence if non-empty
+                counts.push_back(static_cast<double>(count));
+            }
+            
+            return Feed(pluss::value(counts), name_);
+        } catch (...) {}
+    }
+    return *this;
+}
+
+Feed Feed::avg_word_length() const {
+    if (is_note()) {
+        try {
+            auto vec = as_note().vector();
+            std::vector<double> avgs;
+            
+            for (const auto& chord : vec) {
+                std::string s = chord.str();
+                std::istringstream iss(s);
+                std::string word;
+                double total_len = 0;
+                int word_count = 0;
+                while (iss >> word) {
+                    total_len += word.length();
+                    word_count++;
+                }
+                double avg = (word_count > 0) ? (total_len / word_count) : 0.0;
+                avgs.push_back(avg);
+            }
+            
+            return Feed(pluss::value(avgs), name_);
         } catch (...) {}
     }
     return *this;

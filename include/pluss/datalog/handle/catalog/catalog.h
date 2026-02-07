@@ -86,10 +86,28 @@ public:
     Catalog apply(const std::string& field, std::function<Feed(const Feed&)> func) const;
     void apply_inplace(const std::string& field, std::function<Feed(const Feed&)> func);
     
+    // Document/Text Operations (for text field collections)
+    Catalog text_preprocess(const std::string& field) const;
+    Catalog extract_keywords(const std::string& field, int top_n = 10) const;
+    Catalog compute_similarity(const std::string& field1, const std::string& field2, 
+                              const std::string& method = "cosine") const;
+    Catalog filter_by_text(const std::string& field, const std::string& pattern) const;
+    Catalog add_text_features(const std::string& field) const;
+    Feed aggregate_text_stats(const std::string& field, const std::string& stat_type) const;
+    Catalog tfidf(const std::string& field) const;
+    
     // Display
     void display(int64_t max_rows = 10) const;
     void info() const;
     std::string to_string() const;
+    
+    // I/O operations (unified load API like DataFrame)
+    static Catalog load(const std::string& format, const std::string& filename, const std::string& name = "");
+    
+    // CSV I/O (backwards compatibility - delegates to load)
+    static Catalog read_csv(const std::string& filename, const std::string& name = "");
+    static Catalog read_csv_with_key(const std::string& filename, const std::string& key_column, const std::string& name = "");
+    void to_csv(const std::string& filename) const;
     
     // Serialization
     std::string to_json() const;
