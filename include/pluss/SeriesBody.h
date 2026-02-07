@@ -138,6 +138,10 @@ namespace pluss {
       PLUSS_INTERNAL_DISPATCH({ return Series(at::TensorBase::wrap_tensor_impl(std::move(tensor_impl))); });
     }
 
+    // Concatenate a sequence of Series along a given dimension
+    static Series cat(const SeriesList& series_list, int64_t dim = 0);
+    static Series cat(const SeriesList& series_list, Dimname dim);
+
   // using TensorBase::size;
   // using TensorBase::sym_size;
   // using TensorBase::stride;
@@ -4917,6 +4921,24 @@ inline Series Series::to_padded_tensor(double padding, OptionalIntArrayRef outpu
 
 inline Series Series::to_padded_tensor_symint(double padding, OptionalSymIntArrayRef output_size) const {
   PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::to_padded_tensor::call(tensor(), padding, output_size)); });
+}
+
+inline Series Series::cat(const SeriesList& series_list, int64_t dim) {
+  std::vector<at::Tensor> tensors;
+  tensors.reserve(series_list.size());
+  for (const auto& s : series_list) {
+    tensors.push_back(s.tensor());
+  }
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::cat(tensors, dim)); });
+}
+
+inline Series Series::cat(const SeriesList& series_list, Dimname dim) {
+  std::vector<at::Tensor> tensors;
+  tensors.reserve(series_list.size());
+  for (const auto& s : series_list) {
+    tensors.push_back(s.tensor());
+  }
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::cat(tensors, dim)); });
 }
 
 } // namespace pluss

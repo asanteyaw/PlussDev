@@ -24,7 +24,7 @@
 
 #include <pluss/Series.h>
 #include <pluss/Note.h>
-#include <pluss/Chord.h>
+#include <pluss/Timeline.h>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -40,22 +40,18 @@ class Memo;
 
 /**
  * @brief Variant type for Memo value storage  
- * Supports: null, bool, int, double, string, Chord, arrays, Series, Note, nested documents
- * Note: Series/Note/Documents are stored via shared_ptr to avoid large object sizes
+ * Simplified to use only core pluss types: Series, Note, Timeline, and nested documents
+ * All scalar types (int, double, bool, string) are represented as Series or Note
+ * Series: encapsulates all numeric types (int, double, bool, numeric arrays)
+ * Note: encapsulates all text types (string, Chord, text arrays)
+ * Timeline: time-series data
+ * Document: nested Memo structures
  */
 using MemoValue = std::variant<
     std::monostate,                                               // null
-    bool,                                                         // boolean
-    int64_t,                                                     // integer
-    double,                                                       // floating point
-    std::string,                                                  // string
-    pluss::Chord,                                                 // Chord (single text element)
-    std::vector<bool>,                                           // boolean array
-    std::vector<int64_t>,                                       // integer array
-    std::vector<double>,                                         // double array
-    std::vector<std::string>,                                   // string array
-    std::shared_ptr<pluss::Series>,                              // Series (numeric vector)
-    std::shared_ptr<pluss::Note>,                                // Note (text vector)
+    std::shared_ptr<pluss::Series>,                              // Series (all numeric types)
+    std::shared_ptr<pluss::Note>,                                // Note (all text types)
+    std::shared_ptr<pluss::Timeline>,                            // Timeline (time-series)
     std::shared_ptr<std::unordered_map<std::string, Memo>>       // nested document
 >;
 
@@ -81,22 +77,18 @@ public:
     // ========== Constructors ==========
     
     Memo();  // null memo
-    explicit Memo(bool value);
-    explicit Memo(int value);
-    explicit Memo(int64_t value);
-    explicit Memo(double value);
-    explicit Memo(const std::string& value);
-    explicit Memo(std::string&& value);
-    explicit Memo(const char* value);
-    explicit Memo(const pluss::Chord& value);
-    explicit Memo(const std::vector<bool>& value);
-    explicit Memo(const std::vector<int64_t>& value);
-    explicit Memo(const std::vector<double>& value);
-    explicit Memo(const std::vector<std::string>& value);
     explicit Memo(const pluss::Series& value);
     explicit Memo(const pluss::Note& value);
+    explicit Memo(const pluss::Timeline& value);
     explicit Memo(const DocumentValue& value);
     explicit Memo(const std::shared_ptr<DocumentValue>& value);
+    
+    // Convenience constructors (wrap scalars in Series/Note)
+    static Memo from_scalar(double value);
+    static Memo from_scalar(int64_t value);
+    static Memo from_scalar(bool value);
+    static Memo from_text(const std::string& value);
+    static Memo from_text(const pluss::Chord& value);
     
     // Named field constructor
     Memo(const MemoValue& value, const std::string& field_name);
@@ -104,38 +96,19 @@ public:
     // ========== Type Checking ==========
     
     [[nodiscard]] bool is_null() const noexcept;
-    [[nodiscard]] bool is_bool() const noexcept;
-    [[nodiscard]] bool is_int() const noexcept;
-    [[nodiscard]] bool is_double() const noexcept;
-    [[nodiscard]] bool is_string() const noexcept;
-    [[nodiscard]] bool is_chord() const noexcept;
-    [[nodiscard]] bool is_scalar() const noexcept;
-    [[nodiscard]] bool is_array() const noexcept;
-    [[nodiscard]] bool is_document() const noexcept;
     [[nodiscard]] bool is_series() const noexcept;
     [[nodiscard]] bool is_note() const noexcept;
-    [[nodiscard]] bool is_numeric() const noexcept;
-    [[nodiscard]] bool is_text() const noexcept;
+    [[nodiscard]] bool is_timeline() const noexcept;
+    [[nodiscard]] bool is_document() const noexcept;
+    [[nodiscard]] bool is_numeric() const noexcept;  // alias for is_series
+    [[nodiscard]] bool is_text() const noexcept;     // alias for is_note
     
     // ========== Type Extraction ==========
     
-    [[nodiscard]] bool as_bool() const;
-    [[nodiscard]] int64_t as_int() const;
-    [[nodiscard]] double as_double() const;
-    [[nodiscard]] std::string as_string() const;
-    [[nodiscard]] pluss::Chord as_chord() const;
-    [[nodiscard]] std::vector<int64_t> as_int_array() const;
-    [[nodiscard]] std::vector<double> as_double_array() const;
-    [[nodiscard]] std::vector<std::string> as_string_array() const;
     [[nodiscard]] pluss::Series as_series() const;
     [[nodiscard]] pluss::Note as_note() const;
+    [[nodiscard]] pluss::Timeline as_timeline() const;
     [[nodiscard]] DocumentValue as_document() const;
-    
-    // Safe extraction with default
-    [[nodiscard]] bool get_bool(bool default_val = false) const noexcept;
-    [[nodiscard]] int64_t get_int(int64_t default_val = 0) const noexcept;
-    [[nodiscard]] double get_double(double default_val = 0.0) const noexcept;
-    [[nodiscard]] std::string get_string(const std::string& default_val = "") const noexcept;
     
     // ========== Document Operations (for nested Memos) ==========
     
@@ -233,12 +206,9 @@ public:
     
     // ========== Conversion Operations ==========
     
-    [[nodiscard]] Memo to_series() const;  // Convert to Series if possible
-    [[nodiscard]] Memo to_note() const;    // Convert to Note if possible
-    [[nodiscard]] Memo to_int() const;
-    [[nodiscard]] Memo to_double() const;
-    [[nodiscard]] Memo to_string_memo() const;
-    [[nodiscard]] Memo to_bool_memo() const;
+    [[nodiscard]] Memo to_series() const;   // Ensure value is Series
+    [[nodiscard]] Memo to_note() const;     // Ensure value is Note
+    [[nodiscard]] Memo to_timeline() const; // Ensure value is Timeline
     
     // ========== Display and Serialization ==========
     
