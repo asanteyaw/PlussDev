@@ -91,7 +91,7 @@ void DataFrame::info(int format) const {
     if (!col_names.empty()) num_rows = static_cast<size_t>(this->get_col(col_names.front()).size());
 
     std::cout << "<class 'pluss::table::DataFrame'>\n";
-    std::cout << "Index: 0 to " << (num_rows == 0 ? 0 : num_rows - 1) << "\n";
+    std::cout << "Case: 0 to " << (num_rows == 0 ? 0 : num_rows - 1) << "\n";
     std::cout << "Data columns (total " << col_names.size() << "):\n";
 
     // Build DataFrame with column info (Column, Non-Null Count, Dtype)

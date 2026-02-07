@@ -1,14 +1,13 @@
 /**
  * @file catalog_ex.cpp
- * @brief Catalog (2D) - Document Collection Examples
+ * @brief Catalog (2D) - Dictionary of Feeds Examples
  * 
- * Demonstrates Catalog operations (MongoDB collection-like).
+ * Demonstrates Catalog operations (dictionary-based table).
  * Catalog is analogous to DataFrame in the Table module.
  */
 
 #include <iostream>
 #include <pluss/pluss.h>
-#include <pluss/datalog/handle/catalog/catalog.h>
 
 using namespace pluss;
 using namespace pluss::handle;
@@ -20,384 +19,238 @@ void print_separator(const std::string& title) {
 }
 
 int main() {
-    print_separator("Catalog (2D) - Document Collection");
+    print_separator("Catalog (2D) - Dictionary of Feeds");
     
-    std::cout << "Catalog represents a MongoDB-like collection of documents:\n";
-    std::cout << "  Feed (1D)      → Document field\n";
-    std::cout << "  Catalog (2D)   → Collection of documents (Feed-First)\n";
-    std::cout << "  Archive (3D)   → Database of collections\n\n";
-    
-    // ============================================================
-    // Example 1: Creating a Catalog and Inserting Documents
-    // ============================================================
-    print_separator("1. Creating Catalog and Inserting Documents");
-    
-    auto products = std::make_shared<Catalog>("products");
-    std::cout << "Created empty catalog: " << products->name() << "\n";
-    std::cout << "Initial size: " << products->size() << "\n\n";
-    
-    // Create documents
-    Catalog::Document laptop = {
-        {"_id", Feed(1, "_id")},
-        {"name", Feed("Laptop Pro 15", "name")},
-        {"price", Feed(1299.99, "price")},
-        {"category", Feed("electronics", "category")},
-        {"stock", Feed(45, "stock")},
-        {"rating", Feed(4.5, "rating")},
-        {"tags", Feed(std::vector<std::string>{"computers", "portable", "work"}, "tags")}
-    };
-    
-    Catalog::Document phone = {
-        {"_id", Feed(2, "_id")},
-        {"name", Feed("Smartphone X", "name")},
-        {"price", Feed(899.99, "price")},
-        {"category", Feed("electronics", "category")},
-        {"stock", Feed(120, "stock")},
-        {"rating", Feed(4.7, "rating")},
-        {"tags", Feed(std::vector<std::string>{"mobile", "communication"}, "tags")}
-    };
-    
-    Catalog::Document tablet = {
-        {"_id", Feed(3, "_id")},
-        {"name", Feed("Tablet Plus", "name")},
-        {"price", Feed(499.99, "price")},
-        {"category", Feed("electronics", "category")},
-        {"stock", Feed(75, "stock")},
-        {"rating", Feed(4.3, "rating")},
-        {"tags", Feed(std::vector<std::string>{"portable", "reading", "entertainment"}, "tags")}
-    };
-    
-    Catalog::Document monitor = {
-        {"_id", Feed(4, "_id")},
-        {"name", Feed("4K Monitor 27\"", "name")},
-        {"price", Feed(349.99, "price")},
-        {"category", Feed("electronics", "category")},
-        {"stock", Feed(30, "stock")},
-        {"rating", Feed(4.6, "rating")},
-        {"tags", Feed(std::vector<std::string>{"display", "work"}, "tags")}
-    };
-    
-    // Insert one
-    products = products->insert_one(laptop);
-    std::cout << "Inserted 1 document (laptop)\n";
-    std::cout << "Size: " << products->size() << "\n\n";
-    
-    // Insert many
-    products = products->insert_many({phone, tablet, monitor});
-    std::cout << "Inserted 3 more documents\n";
-    std::cout << "Total size: " << products->size() << " documents\n\n";
+    std::cout << "Catalog is a dictionary-based collection of Feeds:\n";
+    std::cout << "  Feed (1D)      → Homogeneous field\n";
+    std::cout << "  Catalog (2D)   → Dictionary of Feeds (Feed-First)\n";
+    std::cout << "  Archive (3D)   → Dictionary of Catalogs\n\n";
     
     // ============================================================
-    // Example 2: Finding Documents (Simple Queries)
+    // Example 1: Creating a Catalog
     // ============================================================
-    print_separator("2. Finding Documents - Simple Queries");
+    print_separator("1. Creating and Populating a Catalog");
     
-    std::cout << "Query 1: Find all electronics:\n";
-    auto all_electronics = products->find(
-        Catalog::eq("category", Feed::ScalarValue(std::string("electronics")))
-    );
-    std::cout << "  Found: " << all_electronics.size() << " products\n\n";
+    Catalog products("products");
+    std::cout << "Created catalog: " << products.name() << "\n";
+    std::cout << "Initial size: " << products.num_fields() << " fields\n\n";
     
-    std::cout << "Query 2: Find products priced >= $500:\n";
-    auto expensive = products->find(
-        Catalog::gte("price", Feed::ScalarValue(500.0))
-    );
-    std::cout << "  Found: " << expensive.size() << " expensive products\n";
-    for (const auto& doc : expensive) {
-        std::cout << "    - " << doc.at("name").to_string() 
-                  << ": $" << doc.at("price").to_string() << "\n";
+    // Add fields to the catalog using Series (numeric data)
+    products["id"] = Feed(pluss::value({1.0, 2.0, 3.0, 4.0}), "id");
+    products["price"] = Feed(pluss::value({1299.99, 899.99, 499.99, 349.99}), "price");
+    products["stock"] = Feed(pluss::value({45.0, 120.0, 75.0, 30.0}), "stock");
+    products["rating"] = Feed(pluss::value({4.5, 4.7, 4.3, 4.6}), "rating");
+    
+    // Add text fields using Note
+    products["name"] = Feed(pluss::make_note({"Laptop Pro 15", "Smartphone X", "Tablet Plus", "4K Monitor 27\""}), "name");
+    products["category"] = Feed(pluss::make_note({"electronics", "electronics", "electronics", "electronics"}), "category");
+    
+    std::cout << "Added fields to catalog\n";
+    std::cout << "Catalog now has " << products.num_fields() << " fields and " 
+              << products.size() << " rows\n\n";
+    
+    std::cout << "Field names: ";
+    for (const auto& key : products.keys()) {
+        std::cout << key << " ";
     }
-    std::cout << "\n";
+    std::cout << "\n\n";
     
-    std::cout << "Query 3: Find top-rated products (rating > 4.5):\n";
-    auto top_rated = products->find(
-        Catalog::gt("rating", Feed::ScalarValue(4.5))
-    );
-    std::cout << "  Found: " << top_rated.size() << " top-rated products\n";
-    for (const auto& doc : top_rated) {
-        std::cout << "    - " << doc.at("name").to_string() 
-                  << ": " << doc.at("rating").to_string() << " stars\n";
-    }
+    // Display the catalog
+    std::cout << "Catalog display:\n";
+    products.display();
     std::cout << "\n";
     
     // ============================================================
-    // Example 3: Complex Queries (Logical Operators)
+    // Example 2: Accessing and Querying Data
     // ============================================================
-    print_separator("3. Complex Queries - Logical Operators");
+    print_separator("2. Accessing and Querying Data");
     
-    std::cout << "Query: Price between $400-$1000 AND rating > 4.4:\n";
-    auto filtered_products = products->find(
-        Catalog::and_({
-            Catalog::gte("price", Feed::ScalarValue(400.0)),
-            Catalog::lte("price", Feed::ScalarValue(1000.0)),
-            Catalog::gt("rating", Feed::ScalarValue(4.4))
-        })
-    );
-    std::cout << "  Found: " << filtered_products.size() << " products\n";
-    for (const auto& doc : filtered_products) {
-        std::cout << "    - " << doc.at("name").to_string() 
-                  << ": $" << doc.at("price").to_string()
-                  << ", " << doc.at("rating").to_string() << " stars\n";
-    }
+    // Access a single field
+    std::cout << "Product names:\n";
+    auto names = products["name"];
+    names.display();
     std::cout << "\n";
     
-    std::cout << "Query: Rating >= 4.6 OR price < $400:\n";
-    auto or_query = products->find(
-        Catalog::or_({
-            Catalog::gte("rating", Feed::ScalarValue(4.6)),
-            Catalog::lt("price", Feed::ScalarValue(400.0))
-        })
-    );
-    std::cout << "  Found: " << or_query.size() << " products\n\n";
+    std::cout << "Product prices:\n";
+    auto prices = products["price"];
+    prices.display();
+    std::cout << "\n";
     
-    std::cout << "Query: Products $in price list:\n";
-    auto in_prices = products->find(
-        Catalog::in("price", {
-            Feed::ScalarValue(499.99),
-            Feed::ScalarValue(899.99)
-        })
-    );
-    std::cout << "  Found: " << in_prices.size() << " products at specific prices\n\n";
+    // Check if field exists
+    std::cout << "Checking field existence:\n";
+    std::cout << "  has('price'): " << (products.has("price") ? "yes" : "no") << "\n";
+    std::cout << "  has('brand'): " << (products.has("brand") ? "yes" : "no") << "\n\n";
     
     // ============================================================
-    // Example 4: Find with Projection
+    // Example 3: Filtering
     // ============================================================
-    print_separator("4. Find with Projection (Select Fields)");
+    print_separator("3. Filtering Rows");
     
-    std::cout << "Query: All products, but only show name and price:\n";
-    auto all_query = [](const Catalog::Document&) { return true; };
-    Catalog::Projection fields = {"name", "price"};
-    auto projected = products->find(all_query, fields);
+    std::cout << "Filter products with price > 500:\n";
+    auto price_series = products["price"].as_series();
+    auto mask = price_series.gt(500.0);
+    auto expensive = products.filter(mask);
+    expensive.display();
+    std::cout << "\n";
     
-    std::cout << "  Results (name, price only):\n";
-    for (const auto& doc : projected) {
-        std::cout << "    - " << doc.at("name").to_string() 
-                  << ": $" << doc.at("price").to_string() << "\n";
-    }
+    std::cout << "Filter products with stock < 50:\n";
+    auto stock_series = products["stock"].as_series();
+    auto low_stock_mask = stock_series.lt(50.0);
+    auto low_stock = products.filter(low_stock_mask);
+    low_stock.display();
     std::cout << "\n";
     
     // ============================================================
-    // Example 5: Find One and Count
+    // Example 4: Sorting
     // ============================================================
-    print_separator("5. Find One and Count Operations");
-    
-    std::cout << "Find one product with price > $1000:\n";
-    auto high_end = products->find_one(
-        Catalog::gt("price", Feed::ScalarValue(1000.0))
-    );
-    if (!high_end.empty()) {
-        std::cout << "  Found: " << high_end.at("name").to_string() << "\n\n";
-    } else {
-        std::cout << "  No products found above $1000\n\n";
-    }
-    
-    std::cout << "Count products in stock (stock > 0):\n";
-    auto in_stock_count = products->count(
-        Catalog::gt("stock", Feed::ScalarValue(0))
-    );
-    std::cout << "  Count: " << in_stock_count << " products in stock\n\n";
-    
-    std::cout << "Check if any product costs exactly $899.99:\n";
-    bool exists = products->exists(
-        Catalog::eq("price", Feed::ScalarValue(899.99))
-    );
-    std::cout << "  Exists: " << (exists ? "yes" : "no") << "\n\n";
-    
-    // ============================================================
-    // Example 6: Update Operations
-    // ============================================================
-    print_separator("6. Update Operations");
-    
-    std::cout << "Update 1: Set 'on_sale' flag for laptop:\n";
-    products = products->update_one(
-        Catalog::eq("name", Feed::ScalarValue(std::string("Laptop Pro 15"))),
-        Catalog::set("on_sale", Feed(true, "on_sale"))
-    );
-    std::cout << "  Updated laptop with on_sale flag\n\n";
-    
-    std::cout << "Update 2: Increase stock by 10 for all products:\n";
-    products = products->update_many(
-        all_query,
-        Catalog::inc("stock", 10.0)
-    );
-    std::cout << "  Increased stock for all products\n\n";
-    
-    std::cout << "Update 3: Apply 15% discount to expensive items (price >= $1000):\n";
-    products = products->update_many(
-        Catalog::gte("price", Feed::ScalarValue(1000.0)),
-        Catalog::mul("price", 0.85)
-    );
-    std::cout << "  Applied 15% discount\n\n";
-    
-    std::cout << "Update 4: Rename field 'rating' to 'stars':\n";
-    products = products->update_many(
-        all_query,
-        Catalog::rename("rating", "stars")
-    );
-    std::cout << "  Renamed field\n\n";
-    
-    // ============================================================
-    // Example 7: Array Update Operations
-    // ============================================================
-    print_separator("7. Array Update Operations");
-    
-    std::cout << "Update: Add 'featured' tag to top-rated products:\n";
-    products = products->update_many(
-        Catalog::gte("stars", Feed::ScalarValue(4.6)),
-        Catalog::push("tags", Feed::ScalarValue(std::string("featured")))
-    );
-    std::cout << "  Added 'featured' tag\n\n";
-    
-    std::cout << "Update: Remove 'portable' tag from tablets:\n";
-    products = products->update_one(
-        Catalog::eq("name", Feed::ScalarValue(std::string("Tablet Plus"))),
-        Catalog::pull("tags", Feed::ScalarValue(std::string("portable")))
-    );
-    std::cout << "  Removed 'portable' tag\n\n";
-    
-    // ============================================================
-    // Example 8: Delete Operations
-    // ============================================================
-    print_separator("8. Delete Operations");
-    
-    std::cout << "Initial catalog size: " << products->size() << "\n\n";
-    
-    std::cout << "Delete one: Remove product with lowest stock:\n";
-    products = products->delete_one(
-        Catalog::lt("stock", Feed::ScalarValue(50))
-    );
-    std::cout << "  Deleted 1 product\n";
-    std::cout << "  New size: " << products->size() << "\n\n";
-    
-    std::cout << "Delete many: Remove all out-of-stock items (stock <= 0):\n";
-    auto before_delete = products->size();
-    products = products->delete_many(
-        Catalog::lte("stock", Feed::ScalarValue(0))
-    );
-    auto deleted_count = before_delete - products->size();
-    std::cout << "  Deleted " << deleted_count << " products\n";
-    std::cout << "  Final size: " << products->size() << "\n\n";
-    
-    // ============================================================
-    // Example 9: Aggregation Operations
-    // ============================================================
-    print_separator("9. Aggregation Operations");
-    
-    std::cout << "Statistical aggregations (Feed-First):\n\n";
-    
-    double avg_price = products->avg("price");
-    double total_stock = products->sum("stock");
-    double min_price = products->min("price");
-    double max_price = products->max("price");
-    int64_t product_count = products->count_field("name");
-    
-    std::cout << "  Average price:    $" << avg_price << "\n";
-    std::cout << "  Total stock:      " << total_stock << " units\n";
-    std::cout << "  Price range:      $" << min_price << " - $" << max_price << "\n";
-    std::cout << "  Product count:    " << product_count << "\n\n";
-    
-    // ============================================================
-    // Example 10: Grouping
-    // ============================================================
-    print_separator("10. Grouping");
-    
-    std::cout << "Group products by category:\n";
-    auto grouped = products->group("category");
-    std::cout << "  Groups created: " << grouped->size() << "\n\n";
-    
-    // ============================================================
-    // Example 11: Sorting, Limiting, Skipping
-    // ============================================================
-    print_separator("11. Sorting, Limiting, and Skipping");
+    print_separator("4. Sorting");
     
     std::cout << "Sort by price (ascending):\n";
-    auto sorted_asc = products->sort("price", true);
-    std::cout << "  Sorted catalog size: " << sorted_asc->size() << "\n\n";
+    auto sorted_asc = products.sort("price", true);
+    sorted_asc.display();
+    std::cout << "\n";
     
-    std::cout << "Sort by rating (descending):\n";
-    auto sorted_desc = products->sort("stars", false);
-    std::cout << "  Sorted catalog size: " << sorted_desc->size() << "\n\n";
+    std::cout << "Sort by price (descending):\n";
+    auto sorted_desc = products.sort("price", false);
+    sorted_desc.display();
+    std::cout << "\n";
     
-    std::cout << "Get top 2 products:\n";
-    auto top_2 = sorted_desc->limit(2);
-    std::cout << "  Limited to: " << top_2->size() << " products\n\n";
-    
-    std::cout << "Skip first 1, then limit to 2:\n";
-    auto paginated = sorted_desc->skip(1)->limit(2);
-    std::cout << "  Page size: " << paginated->size() << " products\n\n";
-    
-    // ============================================================
-    // Example 12: Aggregation Pipeline
-    // ============================================================
-    print_separator("12. Aggregation Pipeline");
-    
-    std::cout << "Pipeline: Filter → Project → Sort → Limit:\n\n";
-    
-    auto pipeline_result = products->aggregate()
-        ->match(Catalog::gte("stars", Feed::ScalarValue(4.0)))
-        ->project({"name", "price", "stars"})
-        ->sort("stars", false)
-        ->limit(3)
-        ->execute();
-    
-    std::cout << "  Pipeline executed\n";
-    std::cout << "  Results: " << pipeline_result->size() << " documents\n\n";
+    std::cout << "Sort by multiple fields (rating desc, then price asc):\n";
+    auto multi_sorted = products.sort_by({"rating", "price"}, {false, true});
+    multi_sorted.display();
+    std::cout << "\n";
     
     // ============================================================
-    // Example 13: Indexing
+    // Example 5: Slicing and Indexing
     // ============================================================
-    print_separator("13. Indexing");
+    print_separator("5. Slicing and Indexing");
     
-    std::cout << "Creating indexes:\n";
-    products->create_index("price", false);
-    products->create_index("category", false);
-    products->create_index("name", true);  // unique
-    std::cout << "  Created 3 indexes\n\n";
+    std::cout << "First 2 rows (head):\n";
+    products.head(2).display();
+    std::cout << "\n";
     
-    auto indexes = products->list_indexes();
-    std::cout << "Existing indexes:\n";
-    for (const auto& idx : indexes) {
-        std::cout << "  - " << idx << "\n";
+    std::cout << "Last 2 rows (tail):\n";
+    products.tail(2).display();
+    std::cout << "\n";
+    
+    std::cout << "Rows 1-3 (slice):\n";
+    products.slice(1, 3).display();
+    std::cout << "\n";
+    
+    // ============================================================
+    // Example 6: Grouping
+    // ============================================================
+    print_separator("6. Grouping");
+    
+    std::cout << "Group by category:\n";
+    auto groups = products.group_by("category");
+    std::cout << "Number of groups: " << groups.size() << "\n\n";
+    
+    for (const auto& [category, group_catalog] : groups) {
+        std::cout << "Category: " << category << "\n";
+        std::cout << "  Count: " << group_catalog.size() << " products\n";
+        std::cout << "  Average price: $" << group_catalog.mean("price").mean() << "\n";
+        std::cout << "  Total stock: " << group_catalog.sum("stock").sum() << "\n\n";
     }
-    std::cout << "\n";
-    
-    std::cout << "Dropping index on 'category':\n";
-    products->drop_index("category");
-    std::cout << "  Index dropped\n\n";
     
     // ============================================================
-    // Example 14: Catalog I/O
+    // Example 7: Field Operations
     // ============================================================
-    print_separator("14. Catalog I/O");
+    print_separator("7. Field Operations");
     
-    std::cout << "Exporting catalog to JSON:\n";
-    std::string json = products->to_json();
-    std::cout << "  JSON size: " << json.length() << " bytes\n\n";
-    
-    std::cout << "Display catalog info:\n";
-    products->info();
+    std::cout << "Select specific fields:\n";
+    auto subset = products.select({"name", "price", "rating"});
+    subset.display();
     std::cout << "\n";
     
-    std::cout << "Display first 10 documents:\n";
-    products->display(10);
+    std::cout << "Drop fields:\n";
+    auto dropped = products.drop({"stock", "category"});
+    dropped.display();
     std::cout << "\n";
     
+    std::cout << "Rename fields:\n";
+    auto renamed = products.rename({{"name", "product_name"}, {"price", "unit_price"}});
+    renamed.head(3).display();
+    std::cout << "\n";
+    
+    // ============================================================
+    // Example 8: Aggregations
+    // ============================================================
+    print_separator("8. Aggregations");
+    
+    std::cout << "Sum of stock:\n";
+    auto total_stock = products.sum("stock");
+    std::cout << "  Total: " << total_stock.sum() << "\n\n";
+    
+    std::cout << "Average price:\n";
+    auto avg_price = products.mean("price");
+    std::cout << "  Average: $" << avg_price.mean() << "\n\n";
+    
+    std::cout << "Min and Max rating:\n";
+    auto min_rating = products.min("rating");
+    auto max_rating = products.max("rating");
+    std::cout << "  Min: " << min_rating.min() << "\n";
+    std::cout << "  Max: " << max_rating.max() << "\n\n";
+    
+    std::cout << "Total count:\n";
+    std::cout << "  " << products.count() << " rows\n\n";
+    
+    // ============================================================
+    // Example 9: Merging Catalogs
+    // ============================================================
+    print_separator("9. Merging Catalogs");
+    
+    // Create another catalog
+    Catalog suppliers("suppliers");
+    suppliers["id"] = Feed(pluss::value({1.0, 2.0, 3.0}), "id");
+    suppliers["supplier"] = Feed(pluss::make_note({"TechCorp", "MobileCo", "DisplayInc"}), "supplier");
+    suppliers["contact"] = Feed(pluss::make_note({"tech@corp.com", "info@mobile.co", "sales@display.inc"}), "contact");
+    
+    std::cout << "Suppliers catalog:\n";
+    suppliers.display();
+    std::cout << "\n";
+    
+    std::cout << "Inner join on 'id':\n";
+    auto inner_joined = products.merge(suppliers, "id", "inner");
+    inner_joined.display();
+    std::cout << "\n";
+    
+    std::cout << "Left join on 'id':\n";
+    auto left_joined = products.merge(suppliers, "id", "left");
+    left_joined.display();
+    std::cout << "\n";
+    
+    // ============================================================
+    // Example 10: Catalog Information
+    // ============================================================
+    print_separator("10. Catalog Information");
+    
+    std::cout << "Catalog info:\n";
+    products.info();
+    std::cout << "\n";
+    
+    std::cout << "Catalog as string:\n";
+    std::cout << products.to_string() << "\n\n";
+    
+    // ============================================================
+    // Summary
+    // ============================================================
     print_separator("Summary");
     
-    std::cout << "Catalog (2D) provides MongoDB-like collection operations:\n\n";
-    std::cout << "  ✅ CRUD: insert, find, update, delete\n";
-    std::cout << "  ✅ Query builders: eq, lt, gt, and, or, in\n";
-    std::cout << "  ✅ Projections: select specific fields\n";
-    std::cout << "  ✅ Update operators: $set, $inc, $mul, $push, $pull\n";
-    std::cout << "  ✅ Aggregations: sum, avg, min, max, count\n";
-    std::cout << "  ✅ Grouping and sorting\n";
-    std::cout << "  ✅ Pagination: limit, skip\n";
-    std::cout << "  ✅ Aggregation pipelines\n";
-    std::cout << "  ✅ Indexing for performance\n";
-    std::cout << "  ✅ JSON import/export\n\n";
+    std::cout << "Catalog (2D) provides dictionary-based table operations:\n\n";
+    std::cout << "  ✅ Field access: operator[], at(), has(), remove()\n";
+    std::cout << "  ✅ Metadata: size(), num_fields(), keys(), empty()\n";
+    std::cout << "  ✅ Indexing: head(), tail(), slice(), filter()\n";
+    std::cout << "  ✅ Sorting: sort(), sort_by()\n";
+    std::cout << "  ✅ Grouping: group_by() returns map<string, Catalog>\n";
+    std::cout << "  ✅ Field ops: select(), drop(), rename()\n";
+    std::cout << "  ✅ Aggregations: sum(), mean(), min(), max(), count()\n";
+    std::cout << "  ✅ Merging: merge() with inner/left/right/outer joins\n";
+    std::cout << "  ✅ Display: info(), display(), to_string()\n\n";
     
-    std::cout << "Catalog delegates to Feed operations (Feed-First design)!\n";
-    std::cout << "Next: See archive_ex.cpp for Archive (3D) examples.\n\n";
+    std::cout << "Catalog complements DataFrame from the Table module:\n";
+    std::cout << "  - Use DataFrame (Thread-First) for row-oriented operations\n";
+    std::cout << "  - Use Catalog (Feed-First) for field-oriented operations\n\n";
     
     return 0;
 }

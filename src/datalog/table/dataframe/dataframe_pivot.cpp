@@ -9,33 +9,33 @@ namespace pluss::table {
 
 // Pivot implementation - reshapes data from long to wide format
 std::shared_ptr<DataFrame> DataFrame::pivot(
-    const std::string& index,
+    const std::string& case_col,
     const std::string& columns,
     const std::string& values) const {
     
     // Get the columns as threads
-    auto index_thread = get_col(index);
+    auto case_thread = get_col(case_col);
     auto columns_thread = get_col(columns);
     auto values_thread = get_col(values);
     
-    const int64_t num_rows = index_thread.size();
+    const int64_t num_rows = case_thread.size();
     
-    // Extract unique values for index and columns (vectorized)
-    auto unique_indices = index_thread.unique();
+    // Extract unique values for case and columns (vectorized)
+    auto unique_cases = case_thread.unique();
     auto unique_columns = columns_thread.unique();
     
     // Create result DataFrame structure
     auto result = std::make_shared<DataFrame>();
     
-    // Get unique index values as vector
-    std::vector<double> index_vals;
-    if (unique_indices.is_series()) {
-        auto tensor = at::Tensor(unique_indices.as_series().data());
+    // Get unique case values as vector
+    std::vector<double> case_vals;
+    if (unique_cases.is_series()) {
+        auto tensor = at::Tensor(unique_cases.as_series().data());
         auto flat = tensor.view({-1});
-        index_vals.resize(flat.numel());
+        case_vals.resize(flat.numel());
         
         for (int64_t i = 0; i < flat.numel(); ++i) {
-            index_vals[i] = flat[i].item<double>();
+            case_vals[i] = flat[i].item<double>();
         }
     }
     
@@ -51,13 +51,13 @@ std::shared_ptr<DataFrame> DataFrame::pivot(
     }
     
     // Build pivot table using vectorized operations
-    // Create a map: (index_val, col_val) -> value
+    // Create a map: (case_val, col_val) -> value
     std::unordered_map<std::string, double> pivot_map;
     
     for (int64_t i = 0; i < num_rows; ++i) {
-        std::string idx_key = index_thread.cell_value(i);
+        std::string case_key = case_thread.cell_value(i);
         std::string col_key = columns_thread.cell_value(i);
-        std::string map_key = idx_key + "_" + col_key;
+        std::string map_key = case_key + "_" + col_key;
         
         if (values_thread.is_series()) {
             pivot_map[map_key] = values_thread.as_series()[i].item<double>();
@@ -67,10 +67,10 @@ std::shared_ptr<DataFrame> DataFrame::pivot(
     // Build result columns
     for (const auto& col_val : col_vals) {
         std::vector<double> col_data;
-        col_data.reserve(index_vals.size());
+        col_data.reserve(case_vals.size());
         
-        for (const auto& idx_val : index_vals) {
-            std::string map_key = std::to_string(idx_val) + "_" + col_val;
+        for (const auto& case_val : case_vals) {
+            std::string map_key = std::to_string(case_val) + "_" + col_val;
             auto it = pivot_map.find(map_key);
             if (it != pivot_map.end()) {
                 col_data.push_back(it->second);
@@ -84,10 +84,10 @@ std::shared_ptr<DataFrame> DataFrame::pivot(
             col_val));
     }
     
-    // Add index column
-    result = result->set_col(index, Thread(
-        pluss::from_blob(index_vals.data(), {static_cast<int64_t>(index_vals.size())}), 
-        index));
+    // Add case column
+    result = result->set_col(case_col, Thread(
+        pluss::from_blob(case_vals.data(), {static_cast<int64_t>(case_vals.size())}), 
+        case_col));
     
     return result;
 }
@@ -95,29 +95,29 @@ std::shared_ptr<DataFrame> DataFrame::pivot(
 // Pivot table with aggregation - more flexible than pivot
 std::shared_ptr<DataFrame> DataFrame::pivot_table(
     const std::string& values,
-    const std::string& index,
+    const std::string& case_col,
     const std::string& columns,
     const std::string& aggfunc) const {
     
     // Get threads
-    auto index_thread = get_col(index);
+    auto case_thread = get_col(case_col);
     auto columns_thread = get_col(columns);
     auto values_thread = get_col(values);
     
-    const int64_t num_rows = index_thread.size();
+    const int64_t num_rows = case_thread.size();
     
     // Get unique values (vectorized)
-    auto unique_indices = index_thread.unique();
+    auto unique_cases = case_thread.unique();
     auto unique_columns = columns_thread.unique();
     
     // Extract unique values as vectors
-    std::vector<double> index_vals;
-    if (unique_indices.is_series()) {
-        auto tensor = at::Tensor(unique_indices.as_series().data());
+    std::vector<double> case_vals;
+    if (unique_cases.is_series()) {
+        auto tensor = at::Tensor(unique_cases.as_series().data());
         auto flat = tensor.view({-1});
-        index_vals.resize(flat.numel());
+        case_vals.resize(flat.numel());
         for (int64_t i = 0; i < flat.numel(); ++i) {
-            index_vals[i] = flat[i].item<double>();
+            case_vals[i] = flat[i].item<double>();
         }
     }
     
@@ -130,13 +130,13 @@ std::shared_ptr<DataFrame> DataFrame::pivot_table(
         }
     }
     
-    // Build groups: (index_val, col_val) -> vector of values
+    // Build groups: (case_val, col_val) -> vector of values
     std::unordered_map<std::string, std::vector<double>> groups;
     
     for (int64_t i = 0; i < num_rows; ++i) {
-        std::string idx_key = index_thread.cell_value(i);
+        std::string case_key = case_thread.cell_value(i);
         std::string col_key = columns_thread.cell_value(i);
-        std::string map_key = idx_key + "_" + col_key;
+        std::string map_key = case_key + "_" + col_key;
         
         if (values_thread.is_series()) {
             groups[map_key].push_back(values_thread.as_series()[i].item<double>());
@@ -183,10 +183,10 @@ std::shared_ptr<DataFrame> DataFrame::pivot_table(
     
     for (const auto& col_val : col_vals) {
         std::vector<double> col_data;
-        col_data.reserve(index_vals.size());
+        col_data.reserve(case_vals.size());
         
-        for (const auto& idx_val : index_vals) {
-            std::string map_key = std::to_string(idx_val) + "_" + col_val;
+        for (const auto& case_val : case_vals) {
+            std::string map_key = std::to_string(case_val) + "_" + col_val;
             auto it = groups.find(map_key);
             if (it != groups.end()) {
                 col_data.push_back(agg_func(it->second));
@@ -200,10 +200,10 @@ std::shared_ptr<DataFrame> DataFrame::pivot_table(
             col_val));
     }
     
-    // Add index column
-    result = result->set_col(index, Thread(
-        pluss::from_blob(index_vals.data(), {static_cast<int64_t>(index_vals.size())}), 
-        index));
+    // Add case column
+    result = result->set_col(case_col, Thread(
+        pluss::from_blob(case_vals.data(), {static_cast<int64_t>(case_vals.size())}), 
+        case_col));
     
     return result;
 }

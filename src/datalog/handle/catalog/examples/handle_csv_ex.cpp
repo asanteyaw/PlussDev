@@ -26,8 +26,8 @@ void example_1_read_csv() {
     print_separator("Example 1: Basic CSV Reading");
     
     try {
-        // Read messy_data.csv from the data directory
-        auto catalog = Catalog::read_csv("../data/messy_data.csv", "messy_data");
+        // Read messy_data.csv from the data directory using unified load() API
+        auto catalog = Catalog::load("csv", "../data/messy_data.csv", "messy_data");
         
         std::cout << "Successfully loaded CSV into Catalog\n";
         catalog.info();
@@ -43,13 +43,13 @@ void example_2_catalog_operations() {
     print_separator("Example 2: Advanced Catalog Operations");
     
     try {
-        auto catalog = Catalog::read_csv("../data/messy_data.csv", "messy_data");
+        auto catalog = Catalog::load("csv", "../data/messy_data.csv", "messy_data");
         
         // Filter operation
         if (catalog.has("age")) {
             std::cout << "Filtering by age > 25:\n";
             auto age_series = catalog["age"].as_series();
-            auto mask = age_series > 25.0;
+            auto mask = age_series.gt(25.0);
             auto filtered = catalog.filter(mask);
             filtered.head(3).display();
         }
@@ -80,16 +80,14 @@ void example_2_catalog_operations() {
 void example_3_text_processing() {
     print_separator("Example 3: Text Processing with Feed");
     
-    // Create sample text data
-    std::vector<std::string> texts = {
+    // Create sample text data using initializer list
+    Feed text_feed(pluss::make_note({
         "The quick brown fox jumps over the lazy dog",
         "Natural Language Processing is fascinating!",
         "Data science combines statistics and programming",
         "Machine learning algorithms learn from data",
         "Text analytics reveals insights from documents"
-    };
-    
-    Feed text_feed(pluss::make_note(texts), "sample_texts");
+    }), "sample_texts");
     
     // Basic string operations
     std::cout << "Original texts:\n";
@@ -131,13 +129,10 @@ void example_3_text_processing() {
 void example_4_text_similarity() {
     print_separator("Example 4: Text Similarity");
     
-    std::vector<std::string> docs1 = {"machine", "learning", "algorithm"};
-    std::vector<std::string> docs2 = {"machine", "learning", "model"};
-    std::vector<std::string> docs3 = {"natural", "language", "processing"};
-    
-    Feed feed1(pluss::make_note(docs1), "doc1");
-    Feed feed2(pluss::make_note(docs2), "doc2");
-    Feed feed3(pluss::make_note(docs3), "doc3");
+    // Create feeds using initializer lists
+    Feed feed1(pluss::make_note({"machine", "learning", "algorithm"}), "doc1");
+    Feed feed2(pluss::make_note({"machine", "learning", "model"}), "doc2");
+    Feed feed3(pluss::make_note({"natural", "language", "processing"}), "doc3");
     
     std::cout << "Document 1: machine learning algorithm\n";
     std::cout << "Document 2: machine learning model\n";
@@ -181,27 +176,20 @@ void example_6_corpus_management() {
     // Create a text corpus archive
     Archive corpus("text_corpus");
     
-    // Create sample document catalogs
-    Catalog doc1("document1");
-    std::vector<std::string> texts1 = {
+    // Create and populate document catalogs directly in the archive
+    corpus["doc1"]["content"] = Feed(pluss::make_note({
         "Artificial intelligence is transforming industries",
         "Machine learning algorithms detect patterns in data",
         "Neural networks mimic human brain structure"
-    };
-    doc1["content"] = Feed(pluss::make_note(texts1), "content");
-    doc1["doc_id"] = Feed(pluss::value({1.0, 2.0, 3.0}), "doc_id");
+    }), "content");
+    corpus["doc1"]["doc_id"] = Feed(pluss::value({1.0, 2.0, 3.0}), "doc_id");
     
-    Catalog doc2("document2");
-    std::vector<std::string> texts2 = {
+    corpus["doc2"]["content"] = Feed(pluss::make_note({
         "Data science combines statistics and computer science",
         "Big data analytics reveal business insights",
         "Predictive models forecast future trends"
-    };
-    doc2["content"] = Feed(pluss::make_note(texts2), "content");
-    doc2["doc_id"] = Feed(pluss::value({4.0, 5.0, 6.0}), "doc_id");
-    
-    corpus["doc1"] = doc1;
-    corpus["doc2"] = doc2;
+    }), "content");
+    corpus["doc2"]["doc_id"] = Feed(pluss::value({4.0, 5.0, 6.0}), "doc_id");
     
     // Corpus statistics
     std::cout << "Corpus statistics:\n";
@@ -276,7 +264,7 @@ void example_8_write_csv() {
         std::cout << "\nCatalog written to: " << output_file << "\n";
         
         // Read it back
-        auto read_back = Catalog::read_csv(output_file, "read_back");
+        auto read_back = Catalog::load("csv", output_file, "read_back");
         std::cout << "\nRead back from CSV:\n";
         read_back.display();
         

@@ -1,14 +1,13 @@
 /**
  * @file archive_ex.cpp
- * @brief Archive (3D) - Database of Collections Examples
+ * @brief Archive (3D) - Collection of Catalogs Examples
  * 
- * Demonstrates Archive operations (MongoDB database-like).
+ * Demonstrates Archive operations with the actual API.
  * Archive is analogous to Atlas in the Table module.
  */
 
 #include <iostream>
 #include <pluss/pluss.h>
-#include <pluss/datalog/handle/archive/archive.h>
 
 using namespace pluss;
 using namespace pluss::handle;
@@ -20,423 +19,264 @@ void print_separator(const std::string& title) {
 }
 
 int main() {
-    print_separator("Archive (3D) - Database of Collections");
+    print_separator("Archive (3D) - Collection of Catalogs");
     
-    std::cout << "Archive represents a MongoDB-like database:\n";
-    std::cout << "  Feed (1D)      → Document field\n";
-    std::cout << "  Catalog (2D)   → Collection of documents\n";
-    std::cout << "  Archive (3D)   → Database of collections (Feed-First)\n\n";
+    std::cout << "Archive is a dictionary-based collection of Catalogs:\n";
+    std::cout << "  Feed (1D)      → Homogeneous field\n";
+    std::cout << "  Catalog (2D)   → Dictionary of Feeds\n";
+    std::cout << "  Archive (3D)   → Dictionary of Catalogs\n\n";
     
     // ============================================================
-    // Example 1: Creating Archive and Collections
+    // Example 1: Creating Archive and Adding Catalogs
     // ============================================================
-    print_separator("1. Creating Archive and Managing Collections");
+    print_separator("1. Creating Archive and Managing Catalogs");
     
-    auto ecommerce = std::make_shared<Archive>("ecommerce_db");
-    std::cout << "Created database: " << ecommerce->name() << "\n";
-    std::cout << "Initial collections: " << ecommerce->num_collections() << "\n\n";
+    Archive company("company_data");
+    std::cout << "Created archive: " << company.name() << "\n";
+    std::cout << "Initial catalogs: " << company.num_catalogs() << "\n\n";
     
-    // Create collections
-    ecommerce = ecommerce->create_collection("products");
-    ecommerce = ecommerce->create_collection("customers");
-    ecommerce = ecommerce->create_collection("orders");
-    ecommerce = ecommerce->create_collection("reviews");
+    // Create and add catalogs directly using operator[]
+    std::cout << "Adding catalogs:\n";
+    company["employees"]["id"] = Feed(pluss::value({1.0, 2.0, 3.0}), "id");
+    company["employees"]["name"] = Feed(pluss::make_note({"Alice", "Bob", "Charlie"}), "name");
+    company["employees"]["salary"] = Feed(pluss::value({75000.0, 85000.0, 95000.0}), "salary");
+    std::cout << "  - employees (3 rows)\n";
     
-    std::cout << "Created collections:\n";
-    auto collections = ecommerce->list_collections();
-    for (const auto& name : collections) {
+    company["departments"]["dept_id"] = Feed(pluss::value({1.0, 2.0}), "dept_id");
+    company["departments"]["dept_name"] = Feed(pluss::make_note({"Engineering", "Sales"}), "dept_name");
+    company["departments"]["budget"] = Feed(pluss::value({500000.0, 300000.0}), "budget");
+    std::cout << "  - departments (2 rows)\n";
+    
+    company["projects"]["proj_id"] = Feed(pluss::value({101.0, 102.0, 103.0}), "proj_id");
+    company["projects"]["proj_name"] = Feed(pluss::make_note({"WebApp", "MobileApp", "DataPipeline"}), "proj_name");
+    company["projects"]["status"] = Feed(pluss::make_note({"active", "active", "completed"}), "status");
+    std::cout << "  - projects (3 rows)\n\n";
+    
+    std::cout << "Total catalogs: " << company.num_catalogs() << "\n";
+    std::cout << "Catalog names: ";
+    for (const auto& key : company.keys()) {
+        std::cout << key << " ";
+    }
+    std::cout << "\n\n";
+    
+    // ============================================================
+    // Example 2: Accessing Catalogs
+    // ============================================================
+    print_separator("2. Accessing and Displaying Catalogs");
+    
+    std::cout << "Employees catalog:\n";
+    company["employees"].display();
+    
+    std::cout << "\nDepartments catalog:\n";
+    company["departments"].display();
+    
+    // Check if catalog exists
+    std::cout << "\nChecking catalog existence:\n";
+    std::cout << "  has('employees'): " << (company.has("employees") ? "yes" : "no") << "\n";
+    std::cout << "  has('customers'): " << (company.has("customers") ? "yes" : "no") << "\n\n";
+    
+    // ============================================================
+    // Example 3: Archive Statistics
+    // ============================================================
+    print_separator("3. Archive Statistics");
+    
+    std::cout << "Archive overview:\n";
+    company.info();
+    
+    std::cout << "\nArchive summary:\n";
+    company.summary();
+    
+    std::cout << "\nCatalog sizes:\n";
+    auto sizes = company.catalog_sizes();
+    for (const auto& [name, size] : sizes) {
+        std::cout << "  " << name << ": " << size << " rows\n";
+    }
+    
+    std::cout << "\nTotal rows across all catalogs: " << company.total_rows() << "\n\n";
+    
+    // ============================================================
+    // Example 4: Cross-Catalog Operations
+    // ============================================================
+    print_separator("4. Cross-Catalog Operations");
+    
+    // Merge two catalogs
+    std::cout << "Merging employees and departments (if they have common key):\n";
+    try {
+        auto merged = company.merge_catalogs("employees", "departments", "dept_id", "inner");
+        std::cout << "Merged catalog:\n";
+        merged.display();
+    } catch (const std::exception& e) {
+        std::cout << "Cannot merge: " << e.what() << "\n";
+    }
+    std::cout << "\n";
+    
+    // Union catalogs
+    std::cout << "Union of catalogs:\n";
+    try {
+        auto combined = company.union_catalogs({"employees", "departments"});
+        std::cout << "Combined catalog has " << combined.size() << " rows\n";
+    } catch (const std::exception& e) {
+        std::cout << "Cannot union: " << e.what() << "\n";
+    }
+    std::cout << "\n";
+    
+    // ============================================================
+    // Example 5: Aggregations Across Catalogs
+    // ============================================================
+    print_separator("5. Aggregations Across Catalogs");
+    
+    std::cout << "Aggregate 'salary' field across all catalogs:\n";
+    auto salary_agg = company.aggregate_field("salary", "sum");
+    for (const auto& [catalog_name, value] : salary_agg) {
+        std::cout << "  " << catalog_name << ": $" << value << "\n";
+    }
+    std::cout << "\n";
+    
+    std::cout << "Summary of all 'salary' aggregation:\n";
+    auto salary_summary = company.aggregate_all("salary", "sum");
+    salary_summary.display();
+    std::cout << "\n";
+    
+    // ============================================================
+    // Example 6: Search Operations
+    // ============================================================
+    print_separator("6. Search Operations");
+    
+    std::cout << "Find catalogs with 'name' field:\n";
+    auto catalogs_with_name = company.find_catalogs_with_field("name");
+    for (const auto& name : catalogs_with_name) {
         std::cout << "  - " << name << "\n";
     }
-    std::cout << "\nTotal collections: " << ecommerce->num_collections() << "\n\n";
-    
-    // ============================================================
-    // Example 2: Populating Collections
-    // ============================================================
-    print_separator("2. Populating Collections with Data");
-    
-    // Get products collection
-    auto products = ecommerce->get_collection("products");
-    
-    std::cout << "Adding products to 'products' collection:\n";
-    
-    // Create product documents
-    std::vector<Catalog::Document> product_docs = {
-        {
-            {"_id", Feed(1, "_id")},
-            {"name", Feed("Laptop Pro", "name")},
-            {"price", Feed(1299.99, "price")},
-            {"category", Feed("electronics", "category")},
-            {"stock", Feed(50, "stock")}
-        },
-        {
-            {"_id", Feed(2, "_id")},
-            {"name", Feed("Wireless Mouse", "name")},
-            {"price", Feed(29.99, "price")},
-            {"category", Feed("accessories", "category")},
-            {"stock", Feed(200, "stock")}
-        },
-        {
-            {"_id", Feed(3, "_id")},
-            {"name", Feed("USB-C Hub", "name")},
-            {"price", Feed(49.99, "price")},
-            {"category", Feed("accessories", "category")},
-            {"stock", Feed(150, "stock")}
-        }
-    };
-    
-    products = products->insert_many(product_docs);
-    ecommerce = ecommerce->set_collection("products", products);
-    std::cout << "  Inserted " << product_docs.size() << " products\n\n";
-    
-    // Add customers
-    auto customers = ecommerce->get_collection("customers");
-    
-    std::cout << "Adding customers to 'customers' collection:\n";
-    
-    std::vector<Catalog::Document> customer_docs = {
-        {
-            {"_id", Feed(101, "_id")},
-            {"name", Feed("Alice Johnson", "name")},
-            {"email", Feed("alice@example.com", "email")},
-            {"country", Feed("USA", "country")}
-        },
-        {
-            {"_id", Feed(102, "_id")},
-            {"name", Feed("Bob Smith", "name")},
-            {"email", Feed("bob@example.com", "email")},
-            {"country", Feed("Canada", "country")}
-        }
-    };
-    
-    customers = customers->insert_many(customer_docs);
-    ecommerce = ecommerce->set_collection("customers", customers);
-    std::cout << "  Inserted " << customer_docs.size() << " customers\n\n";
-    
-    // Add orders
-    auto orders = ecommerce->get_collection("orders");
-    
-    std::cout << "Adding orders to 'orders' collection:\n";
-    
-    std::vector<Catalog::Document> order_docs = {
-        {
-            {"_id", Feed(1001, "_id")},
-            {"customer_id", Feed(101, "customer_id")},
-            {"product_id", Feed(1, "product_id")},
-            {"quantity", Feed(1, "quantity")},
-            {"total", Feed(1299.99, "total")}
-        },
-        {
-            {"_id", Feed(1002, "_id")},
-            {"customer_id", Feed(102, "customer_id")},
-            {"product_id", Feed(2, "product_id")},
-            {"quantity", Feed(2, "quantity")},
-            {"total", Feed(59.98, "total")}
-        },
-        {
-            {"_id", Feed(1003, "_id")},
-            {"customer_id", Feed(101, "customer_id")},
-            {"product_id", Feed(3, "product_id")},
-            {"quantity", Feed(1, "quantity")},
-            {"total", Feed(49.99, "total")}
-        }
-    };
-    
-    orders = orders->insert_many(order_docs);
-    ecommerce = ecommerce->set_collection("orders", orders);
-    std::cout << "  Inserted " << order_docs.size() << " orders\n\n";
-    
-    // ============================================================
-    // Example 3: Database Statistics
-    // ============================================================
-    print_separator("3. Database Statistics");
-    
-    std::cout << "Database overview:\n";
-    std::cout << "  Name: " << ecommerce->name() << "\n";
-    std::cout << "  Collections: " << ecommerce->num_collections() << "\n";
-    std::cout << "  Total documents: " << ecommerce->total_documents() << "\n";
-    std::cout << "  Database size: " << ecommerce->total_size_mb() << " MB\n\n";
-    
-    std::cout << "Collection sizes:\n";
-    auto sizes = ecommerce->collection_sizes();
-    for (const auto& [name, size] : sizes) {
-        std::cout << "  " << name << ": " << size << " documents\n";
-    }
     std::cout << "\n";
     
-    std::cout << "Specific collection document count:\n";
-    std::cout << "  products: " << ecommerce->count_documents("products") << "\n";
-    std::cout << "  customers: " << ecommerce->count_documents("customers") << "\n";
-    std::cout << "  orders: " << ecommerce->count_documents("orders") << "\n\n";
-    
-    // ============================================================
-    // Example 4: Cross-Collection Queries
-    // ============================================================
-    print_separator("4. Cross-Collection Queries");
-    
-    std::cout << "Search for documents with 'price' field across all collections:\n";
-    auto price_query = Catalog::exists("price", true);
-    auto results = ecommerce->find_in_all(price_query);
-    
-    std::cout << "  Results:\n";
-    for (const auto& [coll_name, docs] : results) {
-        std::cout << "    " << coll_name << ": " << docs.size() << " documents\n";
-    }
-    std::cout << "\n";
-    
-    std::cout << "Count documents with 'email' field in all collections:\n";
-    auto email_query = Catalog::exists("email", true);
-    auto counts = ecommerce->count_in_all(email_query);
-    std::cout << "  Results:\n";
-    for (const auto& [coll_name, count] : counts) {
-        std::cout << "    " << coll_name << ": " << count << " documents\n";
-    }
+    std::cout << "Search for 'Alice' in 'name' fields:\n";
+    auto search_results = company.search_catalogs("name", "Alice");
+    search_results.info();
     std::cout << "\n";
     
     // ============================================================
-    // Example 5: Database-Level Aggregations
+    // Example 7: Filter and Transform Operations
     // ============================================================
-    print_separator("5. Database-Level Aggregations");
+    print_separator("7. Filter and Transform Operations");
     
-    std::cout << "Aggregate 'total' field across all collections:\n";
-    double total_revenue = ecommerce->sum_across("total");
-    std::cout << "  Total revenue: $" << total_revenue << "\n\n";
+    std::cout << "Filter all catalogs where salary > 80000:\n";
+    auto high_salary = company.filter_all("salary", [](const Feed& f) {
+        return f.as_series().gt(80000.0);
+    });
+    std::cout << "Filtered archive has " << high_salary.num_catalogs() << " catalogs\n";
+    high_salary.info();
+    std::cout << "\n";
     
-    std::cout << "Average 'price' across all collections:\n";
-    double avg_price = ecommerce->avg_across("price");
-    std::cout << "  Average price: $" << avg_price << "\n\n";
-    
-    std::cout << "Total document count across database:\n";
-    int64_t total_docs = ecommerce->count_across();
-    std::cout << "  Total: " << total_docs << " documents\n\n";
-    
-    // ============================================================
-    // Example 6: Union Collections
-    // ============================================================
-    print_separator("6. Union Collections");
-    
-    std::cout << "Combining products and accessories:\n";
-    // Note: This would work if we had separate collections
-    std::cout << "  Union creates a merged view of multiple collections\n";
-    std::cout << "  Example: union_collections({'products', 'accessories'})\n\n";
+    std::cout << "Transform all catalogs (add a constant field):\n";
+    auto transformed = company.transform_all([](const Catalog& cat) {
+        Catalog result = cat;
+        auto catalog_size = static_cast<double>(cat.size());
+        result["row_count"] = Feed(pluss::full({static_cast<int64_t>(catalog_size)}, catalog_size), "row_count");
+        return result;
+    });
+    std::cout << "Transformed archive:\n";
+    transformed["employees"].head(3).display();
+    std::cout << "\n";
     
     // ============================================================
-    // Example 7: Map Collections (Apply Operation to All)
+    // Example 8: Apply Operations to All Catalogs
     // ============================================================
-    print_separator("7. Map Collections");
+    print_separator("8. Apply Operations to All Catalogs");
     
-    std::cout << "Adding 'last_updated' timestamp to all documents in all collections:\n";
-    
-    auto updated_db = ecommerce->map_collections([](const auto& catalog) {
-        // Add timestamp to all documents
-        return catalog->update_many(
-            [](const auto&) { return true; },  // all documents
-            Catalog::current_date("last_updated")
-        );
+    std::cout << "Adding 'archived' field to all catalogs:\n";
+    company.apply_all([](Catalog& cat) {
+        cat["archived"] = Feed(pluss::zeros({cat.size()}), "archived");
     });
     
-    std::cout << "  Applied timestamp to all collections\n\n";
+    std::cout << "Updated employees catalog:\n";
+    company["employees"].head(3).display();
+    std::cout << "\n";
     
     // ============================================================
-    // Example 8: Filter Collections
+    // Example 9: CSV I/O Operations
     // ============================================================
-    print_separator("8. Filter Collections");
+    print_separator("9. CSV I/O Operations");
     
-    std::cout << "Filter collections with more than 2 documents:\n";
+    std::cout << "Writing archive to CSV files:\n";
+    try {
+        company.to_csv_collection("./archive_output");
+        std::cout << "  Written to ./archive_output directory\n";
+    } catch (const std::exception& e) {
+        std::cout << "  Error: " << e.what() << "\n";
+    }
+    std::cout << "\n";
     
-    auto large_collections = ecommerce->filter_collections([](const auto& catalog) {
-        return catalog->size() > 2;
-    });
-    
-    std::cout << "  Filtered collections: " << large_collections->num_collections() << "\n";
-    auto filtered_names = large_collections->list_collections();
-    for (const auto& name : filtered_names) {
-        std::cout << "    - " << name << "\n";
+    std::cout << "Reading CSV collection:\n";
+    try {
+        std::vector<std::pair<std::string, std::string>> csv_files = {
+            {"../data/messy_data.csv", "messy_data"}
+        };
+        auto loaded_archive = Archive::read_csv_collection(csv_files);
+        std::cout << "  Loaded archive with " << loaded_archive.num_catalogs() << " catalogs\n";
+        loaded_archive.info();
+    } catch (const std::exception& e) {
+        std::cout << "  Error: " << e.what() << "\n";
     }
     std::cout << "\n";
     
     // ============================================================
-    // Example 9: Indexing Across Collections
+    // Example 10: Archive Display
     // ============================================================
-    print_separator("9. Database-Wide Indexing");
+    print_separator("10. Archive Display");
     
-    std::cout << "Creating indexes on '_id' field in all collections:\n";
-    ecommerce->create_index_all("_id", true);  // unique index
-    std::cout << "  Created unique indexes on '_id'\n\n";
+    std::cout << "Full archive display:\n";
+    company.display(5);
+    std::cout << "\n";
     
-    std::cout << "Creating indexes on 'name' field in all collections:\n";
-    ecommerce->create_index_all("name", false);
-    std::cout << "  Created indexes on 'name'\n\n";
-    
-    std::cout << "Dropping indexes on 'name' from all collections:\n";
-    ecommerce->drop_index_all("name");
-    std::cout << "  Dropped indexes\n\n";
+    std::cout << "Archive as string:\n";
+    std::cout << company.to_string() << "\n\n";
     
     // ============================================================
-    // Example 10: Transactions
+    // Example 11: Removing Catalogs
     // ============================================================
-    print_separator("10. Transactions");
+    print_separator("11. Removing Catalogs");
     
-    std::cout << "Starting transaction:\n";
-    auto txn = ecommerce->begin_transaction();
-    
-    // Create a new order
-    Catalog::Document new_order = {
-        {"_id", Feed(1004, "_id")},
-        {"customer_id", Feed(102, "customer_id")},
-        {"product_id", Feed(1, "product_id")},
-        {"quantity", Feed(1, "quantity")},
-        {"total", Feed(1299.99, "total")}
-    };
-    
-    txn->insert("orders", new_order);
-    std::cout << "  - Insert new order\n";
-    
-    // Update product stock
-    txn->update("products",
-        Catalog::eq("_id", Feed::ScalarValue(1)),
-        Catalog::inc("stock", -1.0)
-    );
-    std::cout << "  - Decrease product stock\n";
-    
-    // Update customer
-    txn->update("customers",
-        Catalog::eq("_id", Feed::ScalarValue(102)),
-        Catalog::inc("total_orders", 1.0)
-    );
-    std::cout << "  - Update customer order count\n\n";
-    
-    std::cout << "Committing transaction:\n";
-    auto updated = txn->commit();
-    std::cout << "  Transaction committed successfully\n\n";
-    
-    // ============================================================
-    // Example 11: Backup and Restore
-    // ============================================================
-    print_separator("11. Backup and Restore");
-    
-    std::cout << "Creating snapshot:\n";
-    auto snapshot = ecommerce->snapshot();
-    std::cout << "  Snapshot created\n\n";
-    
-    std::cout << "Exporting database to JSON:\n";
-    std::string json_backup = ecommerce->export_to_json();
-    std::cout << "  JSON size: " << json_backup.length() << " bytes\n\n";
-    
-    std::cout << "Exporting database to BSON:\n";
-    std::string bson_backup = ecommerce->export_to_bson();
-    std::cout << "  BSON size: " << bson_backup.length() << " bytes\n\n";
-    
-    std::cout << "Saving to file:\n";
-    ecommerce->save_to_file("ecommerce_backup.json", "json");
-    std::cout << "  Saved to ecommerce_backup.json\n\n";
-    
-    std::cout << "Restoring from snapshot:\n";
-    auto restored = ecommerce->restore(snapshot);
-    std::cout << "  Database restored\n\n";
-    
-    // ============================================================
-    // Example 12: Collection Management
-    // ============================================================
-    print_separator("12. Collection Management");
-    
-    std::cout << "Renaming collection:\n";
-    ecommerce = ecommerce->rename_collection("reviews", "product_reviews");
-    std::cout << "  Renamed 'reviews' to 'product_reviews'\n\n";
-    
-    std::cout << "Dropping collection:\n";
-    ecommerce = ecommerce->drop_collection("product_reviews");
-    std::cout << "  Dropped 'product_reviews' collection\n";
-    std::cout << "  Remaining collections: " << ecommerce->num_collections() << "\n\n";
-    
-    std::cout << "Checking collection existence:\n";
-    std::cout << "  has_collection('products'): " 
-              << (ecommerce->has_collection("products") ? "yes" : "no") << "\n";
-    std::cout << "  has_collection('reviews'): " 
-              << (ecommerce->has_collection("reviews") ? "yes" : "no") << "\n\n";
-    
-    // ============================================================
-    // Example 13: Database Metadata
-    // ============================================================
-    print_separator("13. Database Metadata");
-    
-    std::cout << "Database stats:\n";
-    auto stats = ecommerce->stats();
-    for (const auto& [key, value] : stats) {
-        std::cout << "  " << key << ": " << value << "\n";
+    std::cout << "Removing 'projects' catalog:\n";
+    company.remove("projects");
+    std::cout << "  Remaining catalogs: " << company.num_catalogs() << "\n";
+    std::cout << "  Catalog names: ";
+    for (const auto& key : company.keys()) {
+        std::cout << key << " ";
     }
-    std::cout << "\n";
-    
-    std::cout << "Database schema:\n";
-    std::cout << ecommerce->schema() << "\n\n";
+    std::cout << "\n\n";
     
     // ============================================================
-    // Example 14: Database Display
+    // Example 12: Iterating Over Catalogs
     // ============================================================
-    print_separator("14. Database Display");
+    print_separator("12. Iterating Over Catalogs");
     
-    std::cout << "Database information:\n";
-    ecommerce->info();
-    std::cout << "\n";
-    
-    std::cout << "Database structure:\n";
-    ecommerce->display();
-    std::cout << "\n";
-    
-    // ============================================================
-    // Example 15: Merge Archives
-    // ============================================================
-    print_separator("15. Merge Archives");
-    
-    std::cout << "Creating second database:\n";
-    auto analytics = std::make_shared<Archive>("analytics_db");
-    analytics = analytics->create_collection("logs");
-    analytics = analytics->create_collection("metrics");
-    std::cout << "  Created analytics_db with 2 collections\n\n";
-    
-    std::cout << "Merging databases:\n";
-    auto merged = ecommerce->merge_archives(analytics);
-    std::cout << "  Merged database collections: " << merged->num_collections() << "\n";
-    auto merged_colls = merged->list_collections();
-    for (const auto& name : merged_colls) {
-        std::cout << "    - " << name << "\n";
+    std::cout << "Iterating through all catalogs:\n";
+    for (const auto& [name, catalog] : company) {
+        std::cout << "  " << name << ": " << catalog.size() << " rows, " 
+                  << catalog.num_fields() << " fields\n";
     }
     std::cout << "\n";
     
     // ============================================================
-    // Example 16: Database Maintenance
+    // Summary
     // ============================================================
-    print_separator("16. Database Maintenance");
-    
-    std::cout << "Validating database integrity:\n";
-    ecommerce->validate();
-    std::cout << "  Database validated\n\n";
-    
-    std::cout << "Compacting database:\n";
-    ecommerce->compact();
-    std::cout << "  Database compacted (optimized storage)\n\n";
-    
     print_separator("Summary");
     
-    std::cout << "Archive (3D) provides MongoDB-like database operations:\n\n";
-    std::cout << "  ✅ Collection management: create, drop, rename\n";
-    std::cout << "  ✅ Cross-collection queries: find_in_all, count_in_all\n";
-    std::cout << "  ✅ Database aggregations: sum_across, avg_across\n";
-    std::cout << "  ✅ Collection operations: union, intersect, merge\n";
-    std::cout << "  ✅ Map/filter operations: apply to all collections\n";
-    std::cout << "  ✅ Database-wide indexing\n";
-    std::cout << "  ✅ Transactions: commit/rollback\n";
-    std::cout << "  ✅ Backup/restore: JSON, BSON, snapshots\n";
-    std::cout << "  ✅ Database statistics and metadata\n";
-    std::cout << "  ✅ Maintenance: validate, compact\n\n";
+    std::cout << "Archive (3D) provides dictionary-based catalog management:\n\n";
+    std::cout << "  ✅ Catalog storage: operator[], at(), has(), remove()\n";
+    std::cout << "  ✅ Archive metadata: num_catalogs(), keys(), catalog_sizes()\n";
+    std::cout << "  ✅ Cross-catalog operations: merge_catalogs(), union_catalogs()\n";
+    std::cout << "  ✅ Aggregations: aggregate_field(), aggregate_all()\n";
+    std::cout << "  ✅ Search: search_catalogs(), find_catalogs_with_field()\n";
+    std::cout << "  ✅ Batch operations: filter_all(), transform_all(), apply_all()\n";
+    std::cout << "  ✅ Statistics: summary(), total_rows()\n";
+    std::cout << "  ✅ I/O: read_csv_collection(), to_csv_collection()\n";
+    std::cout << "  ✅ Display: info(), display(), to_string()\n\n";
     
     std::cout << "Feed-First Design Complete!\n";
     std::cout << "  Feed (1D)    → feed_ex.cpp\n";
     std::cout << "  Catalog (2D) → catalog_ex.cpp\n";
     std::cout << "  Archive (3D) → archive_ex.cpp\n\n";
-    
-    std::cout << "This complements the Thread-First design (Table module):\n";
-    std::cout << "  - Use Table (Thread-First) for SQL-like operations\n";
-    std::cout << "  - Use Handle (Feed-First) for MongoDB-like operations\n\n";
     
     return 0;
 }

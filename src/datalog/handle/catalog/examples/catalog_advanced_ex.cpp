@@ -9,9 +9,7 @@
  * - Text processing
  */
 
-#include <pluss/datalog/handle/catalog/catalog.h>
-#include <pluss/series_factory.h>
-#include <pluss/note_factory.h>
+#include <pluss/pluss.h>
 #include <iostream>
 
 using namespace pluss::handle;

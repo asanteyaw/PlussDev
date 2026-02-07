@@ -1,6 +1,4 @@
-#include <pluss/datalog/handle/archive/archive.h>
-#include <pluss/note_factory.h>
-#include <pluss/series_factory.h>
+#include <pluss/pluss.h>
 #include <stdexcept>
 #include <iostream>
 #include <sstream>

@@ -12,7 +12,6 @@
 
 #include <iostream>
 #include <pluss/pluss.h>
-#include <pluss/datalog/handle/feed/feed.h>
 
 using namespace pluss;
 using namespace pluss::handle;

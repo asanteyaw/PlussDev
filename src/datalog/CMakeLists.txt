@@ -4,5 +4,5 @@ target_sources(pluss PRIVATE
 
 add_subdirectory(csv)
 add_subdirectory(handle)
-add_subdirectory(register)
+add_subdirectory(registry)
 add_subdirectory(table)

@@ -37,7 +37,7 @@ public:
     // Conditional filtering (mask should be a boolean Series)
     [[nodiscard]] std::shared_ptr<DataFrame> loc(const pluss::Series& condition) const;
 
-    // Index-based selection
+    // Case-based selection
     [[nodiscard]] std::shared_ptr<DataFrame> iloc(int64_t row_start, int64_t row_end) const;
     [[nodiscard]] std::unordered_map<std::string, pluss::table::Thread> iloc(int64_t row) const;
 
@@ -73,7 +73,7 @@ public:
     [[nodiscard]] std::shared_ptr<DataFrame> set_cols(const std::vector<std::string>& column_names, const std::vector<pluss::table::Thread>& values) const;
 
     // Save CSV
-    void to_csv(const std::string& filename) const;
+    void to_csv(const std::string& filename, bool write_case = true) const;
 
     // ========== PANDAS-STYLE METHODS (Thread-First Design) ==========
     // These delegate to Thread operations for efficient vectorized execution
@@ -86,16 +86,16 @@ public:
     [[nodiscard]] std::shared_ptr<DataFrame> take(const std::vector<int64_t>& indices) const;
     [[nodiscard]] std::shared_ptr<DataFrame> truncate(int64_t before, int64_t after) const;
     
-    // Sorting and indexing
+    // Sorting and case management
     [[nodiscard]] std::shared_ptr<DataFrame> sort_values(const std::string& by, bool ascending = true) const;
     [[nodiscard]] std::shared_ptr<DataFrame> sort_values(const std::vector<std::string>& by, bool ascending = true) const;
-    [[nodiscard]] std::shared_ptr<DataFrame> sort_index(bool ascending = true) const;
+    [[nodiscard]] std::shared_ptr<DataFrame> sort_case(bool ascending = true) const;
     [[nodiscard]] std::shared_ptr<DataFrame> nlargest(int64_t n, const std::string& col) const;
     [[nodiscard]] std::shared_ptr<DataFrame> nsmallest(int64_t n, const std::string& col) const;
-    [[nodiscard]] std::shared_ptr<DataFrame> reset_index(bool drop = false) const;
-    [[nodiscard]] std::shared_ptr<DataFrame> set_index(const std::string& col_name) const;
-    [[nodiscard]] std::string idxmax(const std::string& col) const;
-    [[nodiscard]] std::string idxmin(const std::string& col) const;
+    [[nodiscard]] std::shared_ptr<DataFrame> reset_case(bool drop = false) const;
+    [[nodiscard]] std::shared_ptr<DataFrame> set_case(const std::string& col_name) const;
+    [[nodiscard]] std::string casemax(const std::string& col) const;
+    [[nodiscard]] std::string casemin(const std::string& col) const;
     
     // Filtering and selection
     [[nodiscard]] std::shared_ptr<DataFrame> drop(const std::vector<std::string>& columns) const;
@@ -228,20 +228,20 @@ public:
         const std::string& rsuffix = "_right") const;
     [[nodiscard]] std::shared_ptr<DataFrame> combine_first(const std::shared_ptr<DataFrame>& other) const;
     [[nodiscard]] std::shared_ptr<DataFrame> update(const std::shared_ptr<DataFrame>& other) const;
-    [[nodiscard]] std::shared_ptr<DataFrame> append(const std::shared_ptr<DataFrame>& other, bool ignore_index = false) const;
+    [[nodiscard]] std::shared_ptr<DataFrame> append(const std::shared_ptr<DataFrame>& other, bool ignore_case = false) const;
     static std::shared_ptr<DataFrame> concat(
         const std::vector<std::shared_ptr<DataFrame>>& dfs,
         int axis = 0,
-        bool ignore_index = false);
+        bool ignore_case = false);
     
     // Reshaping
     [[nodiscard]] std::shared_ptr<DataFrame> pivot(
-        const std::string& index,
+        const std::string& case_col,
         const std::string& columns,
         const std::string& values) const;
     [[nodiscard]] std::shared_ptr<DataFrame> pivot_table(
         const std::string& values,
-        const std::string& index,
+        const std::string& case_col,
         const std::string& columns,
         const std::string& aggfunc = "mean") const;
     [[nodiscard]] std::shared_ptr<DataFrame> melt(
@@ -298,8 +298,8 @@ public:
     // Time series operations
     [[nodiscard]] std::shared_ptr<DataFrame> resample(const std::string& rule) const;
     [[nodiscard]] std::shared_ptr<DataFrame> asfreq(const std::string& freq) const;
-    [[nodiscard]] int64_t first_valid_index() const;
-    [[nodiscard]] int64_t last_valid_index() const;
+    [[nodiscard]] int64_t first_valid_case() const;
+    [[nodiscard]] int64_t last_valid_case() const;
     
     // Utility methods
     [[nodiscard]] bool equals(const std::shared_ptr<DataFrame>& other) const;

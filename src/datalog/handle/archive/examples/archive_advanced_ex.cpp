@@ -9,9 +9,7 @@
  * - Statistical summaries
  */
 
-#include <pluss/datalog/handle/archive/archive.h>
-#include <pluss/series_factory.h>
-#include <pluss/note_factory.h>
+#include <pluss/pluss.h>
 #include <iostream>
 
 using namespace pluss::handle;
@@ -21,20 +19,15 @@ void example_basic_archive() {
     
     Archive company("company_data");
     
-    // Create employees catalog
-    Catalog employees("employees");
-    employees["id"] = Feed(pluss::value({1.0, 2.0, 3.0}), "id");
-    employees["name"] = Feed(pluss::make_note({"Alice", "Bob", "Charlie"}), "name");
-    employees["salary"] = Feed(pluss::value({75000.0, 85000.0, 95000.0}), "salary");
+    // Create employees catalog directly in archive
+    company["employees"]["id"] = Feed(pluss::value({1.0, 2.0, 3.0}), "id");
+    company["employees"]["name"] = Feed(pluss::make_note({"Alice", "Bob", "Charlie"}), "name");
+    company["employees"]["salary"] = Feed(pluss::value({75000.0, 85000.0, 95000.0}), "salary");
     
-    // Create departments catalog
-    Catalog departments("departments");
-    departments["dept_id"] = Feed(pluss::value({1.0, 2.0}), "dept_id");
-    departments["dept_name"] = Feed(pluss::make_note({"Engineering", "Sales"}), "dept_name");
-    departments["budget"] = Feed(pluss::value({500000.0, 300000.0}), "budget");
-    
-    company["employees"] = employees;
-    company["departments"] = departments;
+    // Create departments catalog directly in archive
+    company["departments"]["dept_id"] = Feed(pluss::value({1.0, 2.0}), "dept_id");
+    company["departments"]["dept_name"] = Feed(pluss::make_note({"Engineering", "Sales"}), "dept_name");
+    company["departments"]["budget"] = Feed(pluss::value({500000.0, 300000.0}), "budget");
     
     std::cout << "Archive created with " << company.num_catalogs() << " catalogs\n";
     company.info();
@@ -48,25 +41,18 @@ void example_batch_operations() {
     
     Archive sales_archive("sales_by_region");
     
-    // Create regional sales catalogs
-    Catalog north("north");
-    north["product"] = Feed(pluss::make_note({"Laptop", "Mouse", "Keyboard"}), "product");
-    north["revenue"] = Feed(pluss::value({15000.0, 3000.0, 5000.0}), "revenue");
-    north["units"] = Feed(pluss::value({15.0, 100.0, 50.0}), "units");
+    // Create regional sales catalogs directly in archive
+    sales_archive["north"]["product"] = Feed(pluss::make_note({"Laptop", "Mouse", "Keyboard"}), "product");
+    sales_archive["north"]["revenue"] = Feed(pluss::value({15000.0, 3000.0, 5000.0}), "revenue");
+    sales_archive["north"]["units"] = Feed(pluss::value({15.0, 100.0, 50.0}), "units");
     
-    Catalog south("south");
-    south["product"] = Feed(pluss::make_note({"Laptop", "Monitor", "Webcam"}), "product");
-    south["revenue"] = Feed(pluss::value({25000.0, 12000.0, 4000.0}), "revenue");
-    south["units"] = Feed(pluss::value({25.0, 40.0, 50.0}), "units");
+    sales_archive["south"]["product"] = Feed(pluss::make_note({"Laptop", "Monitor", "Webcam"}), "product");
+    sales_archive["south"]["revenue"] = Feed(pluss::value({25000.0, 12000.0, 4000.0}), "revenue");
+    sales_archive["south"]["units"] = Feed(pluss::value({25.0, 40.0, 50.0}), "units");
     
-    Catalog east("east");
-    east["product"] = Feed(pluss::make_note({"Mouse", "Keyboard", "Headset"}), "product");
-    east["revenue"] = Feed(pluss::value({2000.0, 6000.0, 8000.0}), "revenue");
-    east["units"] = Feed(pluss::value({80.0, 60.0, 40.0}), "units");
-    
-    sales_archive["north"] = north;
-    sales_archive["south"] = south;
-    sales_archive["east"] = east;
+    sales_archive["east"]["product"] = Feed(pluss::make_note({"Mouse", "Keyboard", "Headset"}), "product");
+    sales_archive["east"]["revenue"] = Feed(pluss::value({2000.0, 6000.0, 8000.0}), "revenue");
+    sales_archive["east"]["units"] = Feed(pluss::value({80.0, 60.0, 40.0}), "units");
     
     std::cout << "Sales Archive:\n";
     sales_archive.info();
@@ -83,7 +69,7 @@ void example_batch_operations() {
     // Filter across all catalogs
     std::cout << "\n--- High Revenue Products (>10000) ---\n";
     auto high_revenue = sales_archive.filter_all("revenue", [](const Feed& f) {
-        return f.gt(10000.0).as_series();
+        return f.as_series().gt(10000.0);
     });
     high_revenue.display();
 }
@@ -93,18 +79,14 @@ void example_cross_catalog_operations() {
     
     Archive store("multi_store");
     
-    Catalog store_a("store_a");
-    store_a["product_id"] = Feed(pluss::value({1.0, 2.0, 3.0}), "product_id");
-    store_a["name"] = Feed(pluss::make_note({"Widget", "Gadget", "Tool"}), "name");
-    store_a["price"] = Feed(pluss::value({10.0, 25.0, 15.0}), "price");
+    // Create store catalogs directly in archive
+    store["store_a"]["product_id"] = Feed(pluss::value({1.0, 2.0, 3.0}), "product_id");
+    store["store_a"]["name"] = Feed(pluss::make_note({"Widget", "Gadget", "Tool"}), "name");
+    store["store_a"]["price"] = Feed(pluss::value({10.0, 25.0, 15.0}), "price");
     
-    Catalog store_b("store_b");
-    store_b["product_id"] = Feed(pluss::value({1.0, 2.0, 4.0}), "product_id");
-    store_b["name"] = Feed(pluss::make_note({"Widget", "Gadget", "Device"}), "name");
-    store_b["price"] = Feed(pluss::value({12.0, 23.0, 30.0}), "price");
-    
-    store["store_a"] = store_a;
-    store["store_b"] = store_b;
+    store["store_b"]["product_id"] = Feed(pluss::value({1.0, 2.0, 4.0}), "product_id");
+    store["store_b"]["name"] = Feed(pluss::make_note({"Widget", "Gadget", "Device"}), "name");
+    store["store_b"]["price"] = Feed(pluss::value({12.0, 23.0, 30.0}), "price");
     
     // Merge two catalogs
     std::cout << "\n--- Merge Store A and Store B on product_id ---\n";
@@ -126,32 +108,25 @@ void example_corpus_management() {
     
     Archive corpus("document_corpus");
     
-    // Create multiple document collections
-    Catalog tech_docs("tech_docs");
-    tech_docs["doc_id"] = Feed(pluss::value({1.0, 2.0, 3.0}), "doc_id");
-    tech_docs["content"] = Feed(pluss::make_note({
+    // Create multiple document collections directly in archive
+    corpus["tech"]["doc_id"] = Feed(pluss::value({1.0, 2.0, 3.0}), "doc_id");
+    corpus["tech"]["content"] = Feed(pluss::make_note({
         "Machine learning algorithms improve prediction accuracy.",
         "Deep neural networks process complex data patterns.",
         "Artificial intelligence transforms business processes."
     }), "content");
     
-    Catalog business_docs("business_docs");
-    business_docs["doc_id"] = Feed(pluss::value({1.0, 2.0}), "doc_id");
-    business_docs["content"] = Feed(pluss::make_note({
+    corpus["business"]["doc_id"] = Feed(pluss::value({1.0, 2.0}), "doc_id");
+    corpus["business"]["content"] = Feed(pluss::make_note({
         "Strategic planning drives organizational success.",
         "Market analysis guides investment decisions."
     }), "content");
     
-    Catalog research_docs("research_docs");
-    research_docs["doc_id"] = Feed(pluss::value({1.0, 2.0}), "doc_id");
-    research_docs["content"] = Feed(pluss::make_note({
+    corpus["research"]["doc_id"] = Feed(pluss::value({1.0, 2.0}), "doc_id");
+    corpus["research"]["content"] = Feed(pluss::make_note({
         "Quantum computing promises computational breakthroughs.",
         "Blockchain technology ensures secure transactions."
     }), "content");
-    
-    corpus["tech"] = tech_docs;
-    corpus["business"] = business_docs;
-    corpus["research"] = research_docs;
     
     std::cout << "Document Corpus:\n";
     corpus.info();
@@ -185,18 +160,14 @@ void example_search_operations() {
     
     Archive library("library");
     
-    Catalog fiction("fiction");
-    fiction["title"] = Feed(pluss::make_note({"1984", "Brave New World", "Fahrenheit 451"}), "title");
-    fiction["author"] = Feed(pluss::make_note({"Orwell", "Huxley", "Bradbury"}), "author");
-    fiction["year"] = Feed(pluss::value({1949.0, 1932.0, 1953.0}), "year");
+    // Create library catalogs directly in archive
+    library["fiction"]["title"] = Feed(pluss::make_note({"1984", "Brave New World", "Fahrenheit 451"}), "title");
+    library["fiction"]["author"] = Feed(pluss::make_note({"Orwell", "Huxley", "Bradbury"}), "author");
+    library["fiction"]["year"] = Feed(pluss::value({1949.0, 1932.0, 1953.0}), "year");
     
-    Catalog nonfiction("nonfiction");
-    nonfiction["title"] = Feed(pluss::make_note({"Sapiens", "Educated", "Thinking Fast and Slow"}), "title");
-    nonfiction["author"] = Feed(pluss::make_note({"Harari", "Westover", "Kahneman"}), "author");
-    nonfiction["year"] = Feed(pluss::value({2011.0, 2018.0, 2011.0}), "year");
-    
-    library["fiction"] = fiction;
-    library["nonfiction"] = nonfiction;
+    library["nonfiction"]["title"] = Feed(pluss::make_note({"Sapiens", "Educated", "Thinking Fast and Slow"}), "title");
+    library["nonfiction"]["author"] = Feed(pluss::make_note({"Harari", "Westover", "Kahneman"}), "author");
+    library["nonfiction"]["year"] = Feed(pluss::value({2011.0, 2018.0, 2011.0}), "year");
     
     // Search for books by author
     std::cout << "\n--- Search for 'Orwell' ---\n";
@@ -217,9 +188,8 @@ void example_search_operations() {
         
         Catalog result = cat;
         auto years = cat.at("year");
-        auto decades = years.apply([](const Feed& f) {
-            return f.floor() / 10.0 * 10.0;
-        });
+        auto year_series = years.as_series();
+        auto decades = Feed((year_series.floor() / 10.0) * 10.0, "decade");
         result["decade"] = decades;
         return result;
     });

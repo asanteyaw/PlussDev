@@ -1,7 +1,4 @@
-#include <pluss/datalog/handle/feed/feed.h>
-#include <pluss/NoteOps.h>
-#include <pluss/note_factory.h>
-#include <pluss/series_factory.h>
+#include <pluss/pluss.h>
 #include <algorithm>
 #include <unordered_map>
 #include <unordered_set>

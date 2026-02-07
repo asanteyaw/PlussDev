@@ -1,8 +1,4 @@
-#include <pluss/datalog/handle/catalog/catalog.h>
-#include <pluss/Series.h>
-#include <pluss/series_factory.h>
-#include <pluss/datalog/table/dataframe/dataframe.h>
-#include <pluss/datalog/converters.h>
+#include <pluss/pluss.h>
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>

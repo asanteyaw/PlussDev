@@ -139,13 +139,18 @@ std::shared_ptr<DataFrame> DataFrame::to(const torch::Device& device) const {
     return df;
 }
 
-void DataFrame::to_csv(const std::string& filename) const {
+void DataFrame::to_csv(const std::string& filename, bool write_case) const {
     // Thread-First: Use Thread.cell_value() to get string representation
     std::ofstream f(filename);
     
     const auto col_names = columns();
     
     // Write header
+    if (write_case) {
+        f << "case";  // Add case column header
+        if (!col_names.empty()) f << ",";
+    }
+    
     for (size_t i = 0; i < col_names.size(); ++i) {
         if (i > 0) f << ",";
         f << col_names[i];
@@ -159,6 +164,11 @@ void DataFrame::to_csv(const std::string& filename) const {
     
     // Write data rows
     for (int64_t i = 0; i < rows; ++i) {
+        if (write_case) {
+            f << i;  // Write case (row number)
+            if (!col_names.empty()) f << ",";
+        }
+        
         for (size_t j = 0; j < col_names.size(); ++j) {
             if (j > 0) f << ",";
             
@@ -944,13 +954,13 @@ std::shared_ptr<DataFrame> DataFrame::nsmallest(int64_t n, const std::string& co
     return df;
 }
 
-std::string DataFrame::idxmax(const std::string& col) const {
+std::string DataFrame::casemax(const std::string& col) const {
     // Thread-First: delegate to Thread.idxmax()
     int64_t idx = get_col(col).idxmax();
     return std::to_string(idx);
 }
 
-std::string DataFrame::idxmin(const std::string& col) const {
+std::string DataFrame::casemin(const std::string& col) const {
     // Thread-First: delegate to Thread.idxmin()
     int64_t idx = get_col(col).idxmin();
     return std::to_string(idx);
@@ -1134,6 +1144,115 @@ std::string DataFrame::to_json(const std::string& /*orient*/) const {
     }
     oss << "}";
     return oss.str();
+}
+
+// ========== Case (Index) Management Methods ==========
+
+std::shared_ptr<DataFrame> DataFrame::sort_case(bool ascending) const {
+    // Sort by the implicit row case (0, 1, 2, ...) - essentially returns a copy
+    // In pandas, this would sort by the index values
+    // Since we use implicit integer indices, we just return a sorted copy
+    if (ascending) {
+        return copy();  // Already in ascending order (0, 1, 2, ...)
+    } else {
+        // Reverse the rows
+        auto result = std::make_shared<DataFrame>();
+        const auto cols = columns();
+        if (cols.empty()) return result;
+        
+        const int64_t n_rows = get_col(cols[0]).size();
+        std::vector<int64_t> indices;
+        indices.reserve(n_rows);
+        for (int64_t i = n_rows - 1; i >= 0; --i) {
+            indices.push_back(i);
+        }
+        
+        return take(indices);
+    }
+}
+
+std::shared_ptr<DataFrame> DataFrame::reset_case(bool drop) const {
+    // Reset case to default (0, 1, 2, ...) - essentially returns a copy
+    // In pandas, reset_index moves the index into a column
+    // Since we use implicit integer indices, this is a no-op unless drop=false
+    if (drop) {
+        return copy();
+    } else {
+        // Add a new column called "case" with the row numbers
+        auto result = copy();
+        const auto cols = columns();
+        if (cols.empty()) return result;
+        
+        const int64_t n_rows = get_col(cols[0]).size();
+        std::vector<double> case_vals;
+        case_vals.reserve(n_rows);
+        for (int64_t i = 0; i < n_rows; ++i) {
+            case_vals.push_back(static_cast<double>(i));
+        }
+        
+        result = result->set_col("case", Thread(
+            pluss::from_blob(case_vals.data(), {n_rows}), 
+            "case"));
+        
+        return result;
+    }
+}
+
+std::shared_ptr<DataFrame> DataFrame::set_case(const std::string& col_name) const {
+    // Set a column as the case (pandas: set_index)
+    // For now, we'll remove the column and treat it as metadata
+    // This is a simplified implementation - full pandas functionality would store the index
+    return drop({col_name});
+}
+
+int64_t DataFrame::first_valid_case() const {
+    // Return the first case (row) with all non-null values
+    const auto cols = columns();
+    if (cols.empty()) return -1;
+    
+    const int64_t n_rows = get_col(cols[0]).size();
+    
+    for (int64_t i = 0; i < n_rows; ++i) {
+        bool all_valid = true;
+        for (const auto& col : cols) {
+            const auto thread = get_col(col);
+            if (thread.is_series()) {
+                double val = thread.as_series()[i].item<double>();
+                if (std::isnan(val)) {
+                    all_valid = false;
+                    break;
+                }
+            }
+        }
+        if (all_valid) return i;
+    }
+    
+    return -1;
+}
+
+int64_t DataFrame::last_valid_case() const {
+    // Return the last case (row) with all non-null values
+    const auto cols = columns();
+    if (cols.empty()) return -1;
+    
+    const int64_t n_rows = get_col(cols[0]).size();
+    
+    for (int64_t i = n_rows - 1; i >= 0; --i) {
+        bool all_valid = true;
+        for (const auto& col : cols) {
+            const auto thread = get_col(col);
+            if (thread.is_series()) {
+                double val = thread.as_series()[i].item<double>();
+                if (std::isnan(val)) {
+                    all_valid = false;
+                    break;
+                }
+            }
+        }
+        if (all_valid) return i;
+    }
+    
+    return -1;
 }
 
 } // namespace pluss::table
