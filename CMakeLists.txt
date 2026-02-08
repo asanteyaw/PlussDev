@@ -28,8 +28,17 @@ add_library(pluss STATIC)
 # ==============================
 # Dependencies
 # ==============================
+# For conda environments
+if(DEFINED ENV{CONDA_PREFIX})
+    set(CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX};${CMAKE_PREFIX_PATH}")
+    include_directories($ENV{CONDA_PREFIX}/include)
+    link_directories($ENV{CONDA_PREFIX}/lib)
+endif()
+
 find_package(Torch REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBZIP REQUIRED libzip)
 
 # Show where OpenSSL was found and add include dir as a fallback
 message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
@@ -37,9 +46,15 @@ if(DEFINED OPENSSL_INCLUDE_DIR)
     target_include_directories(pluss PUBLIC ${OPENSSL_INCLUDE_DIR})
 endif()
 
+# Add libzip include directories
+if(LIBZIP_FOUND)
+    message(STATUS "Found libzip: ${LIBZIP_LIBRARIES}")
+    target_include_directories(pluss PUBLIC ${LIBZIP_INCLUDE_DIRS})
+endif()
+
 target_link_libraries(pluss
     PUBLIC  ${TORCH_LIBRARIES}
-    PRIVATE OpenSSL::Crypto
+    PRIVATE OpenSSL::Crypto ${LIBZIP_LIBRARIES}
 )
 
 # ==============================
