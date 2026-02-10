@@ -15,3 +15,23 @@ using ArrayRef = ::ArrayRef<T>;
 using IntArrayRef = ::IntArrayRef;
 } // namespace pluss
 } // namespace MSharp
+
+// Top-level compatibility aliases: map a few commonly expected symbols
+// into the MSharp namespace so internal headers that refer to them
+// (e.g. intrusive_ptr_target, intrusive_ptr, Series, TensorImpl)
+// will resolve.
+namespace MSharp {
+// intrusive_ptr target and smart pointer are implemented in `pluss`.
+using intrusive_ptr_target = ::pluss::intrusive_ptr_target;
+template <typename T>
+using intrusive_ptr = ::pluss::intrusive_ptr<T>;
+
+// Series/Tensor aliases: forward to pluss equivalents
+using Series = ::pluss::Series;
+using TensorBase = ::pluss::TensorBase;
+using TensorImpl = ::pluss::TensorImpl;
+
+// Symmetric/alias types used in symbolic shapes
+using SymDimVector = ::MSharp::DimVector;
+using SymInt = ::MSharp::SymInt;
+} // namespace MSharp

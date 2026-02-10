@@ -9,7 +9,8 @@ template <typename T>
 class intrusive_ptr {
  public:
   intrusive_ptr() : ptr_(nullptr) {}
-  explicit intrusive_ptr(T* p) : ptr_(p) {}
+  intrusive_ptr(std::nullptr_t) : ptr_(nullptr) {}
+  intrusive_ptr(T* p) : ptr_(p) {}
   T* get() const { return ptr_; }
   T* release() {
     T* p = ptr_;

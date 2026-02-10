@@ -7,7 +7,7 @@ namespace MSharp {
 class SymInt {
  public:
   SymInt() : value_(0) {}
-  explicit SymInt(int64_t v) : value_(v) {}
+  SymInt(int64_t v) : value_(v) {}
   int64_t toInt() const { return value_; }
   bool is_heap_allocated() const { return false; }
   int64_t guard_int(const char* /*file*/, int64_t /*line*/) const { return value_; }
