@@ -234,7 +234,7 @@ namespace pluss {
   }
   Series operator[](const Scalar & index) const {
     if (!index.isIntegral(false)) {
-      TORCH_CHECK_INDEX(false, "Can only index tensors with integral scalars");
+      PLUSS_CHECK_INDEX(false, "Can only index tensors with integral scalars");
     }
     return this->operator[](index.toLong());
   }
@@ -242,10 +242,10 @@ namespace pluss {
     // These properties are checked in the Scalar constructor, but we already
     // check them here to provide more useful diagnostics for the user.
     if (!index.defined()) {
-      TORCH_CHECK_INDEX(false, "Can only index with tensors that are defined");
+      PLUSS_CHECK_INDEX(false, "Can only index with tensors that are defined");
     }
     if (index.dim() != 0) {
-      TORCH_CHECK_INDEX(false,
+      PLUSS_CHECK_INDEX(false,
                         "Can only index with tensors that are scalars (zero-dim)");
     }
     // The Scalar(at::Series) constructor is explicit, so we need to call it.

@@ -111,7 +111,7 @@ def generate_implementation(method):
     const_str = " const" if is_const else ""
     
     implementation = f"inline {return_type} Series::{name}({params}){const_str} {{\n"
-    implementation += f"  TORCH_CHECK(this->defined(), \"{name} called on undefined Series\");\n"
+    implementation += f"  PLUSS_CHECK(this->defined(), \"{name} called on undefined Series\");\n"
     
     # For simplicity, just use the at::Series method directly
     if is_inplace:
