@@ -1,0 +1,37 @@
+#pragma once
+
+#if !defined(_MSC_VER) && __cplusplus < 201703L
+#error C++17 or later compatible compiler is required to use PlussQit.
+#endif
+
+#include <PlussQit/Context.h>
+#include <PlussQit/Device.h>
+#include <PlussQit/DeviceGuard.h>
+#include <PlussQit/DimVector.h>
+#include <PlussQit/Dispatch.h>
+#include <PlussQit/Formatting.h>
+#include <PlussQit/Functions.h>
+#include <PlussQit/NamedSeries.h>
+#include <PlussQit/ScalarOps.h>
+#include <PlussQit/Series.h>
+#include <PlussQit/SeriesGeometry.h>
+#include <PlussQit/SeriesIndexing.h>
+#include <PlussQit/SeriesOperators.h>
+#include <PlussQit/Version.h>
+#include <PlussQit/core/ATenGeneral.h>
+#include <PlussQit/core/Generator.h>
+#include <PlussQit/core/Reduction.h>
+#include <PlussQit/core/Scalar.h>
+#include <PlussQit/core/UnsafeFromTH.h>
+#include <PlussQit/core/ivalue.h>
+#include <PlussQit/core/jit_type.h>
+#include <MSharp/core/Allocator.h>
+#include <MSharp/core/InferenceMode.h>
+#include <MSharp/core/Layout.h>
+#include <MSharp/core/Storage.h>
+#include <MSharp/core/SeriesOptions.h>
+#include <MSharp/util/Exception.h>
+
+// TODO: try to remove this
+// There is some back story, see https://github.com/pytorch/pytorch/issues/48684
+#include <PlussQit/NativeFunctions.h>

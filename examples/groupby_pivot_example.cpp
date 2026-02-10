@@ -20,10 +20,10 @@ int main() {
     
     // Create sample sales data
     auto sales_df = std::make_shared<DataFrame>(std::unordered_map<std::string, Series>{
-        {"region", from_torch(torch::tensor({1.0, 1.0, 2.0, 2.0, 3.0, 3.0}))},
-        {"product", from_torch(torch::tensor({101.0, 102.0, 101.0, 102.0, 101.0, 102.0}))},
-        {"sales", from_torch(torch::tensor({100.0, 150.0, 120.0, 180.0, 90.0, 200.0}))},
-        {"revenue", from_torch(torch::tensor({1000.0, 2250.0, 1200.0, 2700.0, 900.0, 3000.0}))}
+        {"region", from_torch(torch::series({1.0, 1.0, 2.0, 2.0, 3.0, 3.0}))},
+        {"product", from_torch(torch::series({101.0, 102.0, 101.0, 102.0, 101.0, 102.0}))},
+        {"sales", from_torch(torch::series({100.0, 150.0, 120.0, 180.0, 90.0, 200.0}))},
+        {"revenue", from_torch(torch::series({1000.0, 2250.0, 1200.0, 2700.0, 900.0, 3000.0}))}
     });
     
     std::cout << "Original DataFrame:\n";
@@ -60,9 +60,9 @@ int main() {
     
     // Create data with multiple grouping dimensions
     auto multi_df = std::make_shared<DataFrame>(std::unordered_map<std::string, Series>{
-        {"region", from_torch(torch::tensor({1.0, 1.0, 1.0, 2.0, 2.0, 2.0}))},
-        {"quarter", from_torch(torch::tensor({1.0, 2.0, 3.0, 1.0, 2.0, 3.0}))},
-        {"revenue", from_torch(torch::tensor({1000.0, 1200.0, 1100.0, 1500.0, 1600.0, 1400.0}))}
+        {"region", from_torch(torch::series({1.0, 1.0, 1.0, 2.0, 2.0, 2.0}))},
+        {"quarter", from_torch(torch::series({1.0, 2.0, 3.0, 1.0, 2.0, 3.0}))},
+        {"revenue", from_torch(torch::series({1000.0, 1200.0, 1100.0, 1500.0, 1600.0, 1400.0}))}
     });
     
     std::cout << "Original DataFrame:\n";
@@ -80,9 +80,9 @@ int main() {
     
     // Create long-format data
     auto long_df = std::make_shared<DataFrame>(std::unordered_map<std::string, Series>{
-        {"date", from_torch(torch::tensor({1.0, 1.0, 2.0, 2.0, 3.0, 3.0}))},
-        {"product", from_torch(torch::tensor({1.0, 2.0, 1.0, 2.0, 1.0, 2.0}))},
-        {"sales", from_torch(torch::tensor({100.0, 150.0, 120.0, 180.0, 90.0, 200.0}))}
+        {"date", from_torch(torch::series({1.0, 1.0, 2.0, 2.0, 3.0, 3.0}))},
+        {"product", from_torch(torch::series({1.0, 2.0, 1.0, 2.0, 1.0, 2.0}))},
+        {"sales", from_torch(torch::series({100.0, 150.0, 120.0, 180.0, 90.0, 200.0}))}
     });
     
     std::cout << "Long-format data:\n";
@@ -99,9 +99,9 @@ int main() {
     
     // Create data with duplicate combinations (needs aggregation)
     auto pivot_data = std::make_shared<DataFrame>(std::unordered_map<std::string, Series>{
-        {"region", from_torch(torch::tensor({1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 1.0, 1.0}))},
-        {"quarter", from_torch(torch::tensor({1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 2.0}))},
-        {"revenue", from_torch(torch::tensor({1000.0, 1100.0, 1200.0, 1500.0, 1600.0, 1400.0, 950.0, 1250.0}))}
+        {"region", from_torch(torch::series({1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 1.0, 1.0}))},
+        {"quarter", from_torch(torch::series({1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 2.0}))},
+        {"revenue", from_torch(torch::series({1000.0, 1100.0, 1200.0, 1500.0, 1600.0, 1400.0, 950.0, 1250.0}))}
     });
     
     std::cout << "Data with duplicates (multiple observations per region-quarter):\n";
@@ -126,10 +126,10 @@ int main() {
     
     // Create monthly sales data
     auto monthly = std::make_shared<DataFrame>(std::unordered_map<std::string, Series>{
-        {"month", from_torch(torch::tensor({1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0}))},
-        {"category", from_torch(torch::tensor({1.0, 2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0}))},
-        {"units_sold", from_torch(torch::tensor({100.0, 85.0, 120.0, 110.0, 90.0, 130.0, 95.0, 88.0, 125.0}))},
-        {"price", from_torch(torch::tensor({10.5, 15.0, 8.0, 10.5, 15.0, 8.0, 10.5, 15.0, 8.0}))}
+        {"month", from_torch(torch::series({1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0}))},
+        {"category", from_torch(torch::series({1.0, 2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0}))},
+        {"units_sold", from_torch(torch::series({100.0, 85.0, 120.0, 110.0, 90.0, 130.0, 95.0, 88.0, 125.0}))},
+        {"price", from_torch(torch::series({10.5, 15.0, 8.0, 10.5, 15.0, 8.0, 10.5, 15.0, 8.0}))}
     });
     
     std::cout << "Monthly sales data:\n";

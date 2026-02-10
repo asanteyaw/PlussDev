@@ -7,8 +7,8 @@
 
 using namespace pluss;
 
-static void print_sizes(const at::Tensor& tensor) {
-    auto sizes = tensor.sizes();
+static void print_sizes(const at::Series& series) {
+    auto sizes = series.sizes();
     std::cout << "[";
     for (size_t i = 0; i < static_cast<size_t>(sizes.size()); ++i) {
         if (i) std::cout << ", ";
@@ -59,7 +59,7 @@ int main() {
         std::cout << "2D Small Matrix Series:\n" << s2d_small << "\n\n";
         
         // Create a 2D matrix with custom values
-        at::Tensor custom_tensor = at::ones({3, 3});
+        at::Series custom_tensor = at::ones({3, 3});
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 custom_tensor[i][j] = i * 3 + j;

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <c10/util/Exception.h>
+#include <MSharp/util/Exception.h>
 
 namespace pluss {
 
@@ -62,7 +62,7 @@ private:
     }
 };
 
-inline std::string clean_torch_error(const c10::Error& e) {
+inline std::string clean_torch_error(const MSharp::Error& e) {
     std::string msg = e.what_without_backtrace();
     const std::vector<std::string> prefixes = {
         "RuntimeError: ", "Error: ", "Exception: "
@@ -83,7 +83,7 @@ inline std::string clean_torch_error(const c10::Error& e) {
   } catch (pluss::PlussError& e) {                                                      \
     e.add_frame(pluss::SourceLocation(__FILE__, __LINE__, __func__));                   \
     throw;                                                                              \
-  } catch (const c10::Error& e) {                                                       \
+  } catch (const MSharp::Error& e) {                                                       \
     throw pluss::PlussError(pluss::clean_torch_error(e), pluss::SourceLocation(__FILE__, __LINE__, __func__)); \
   } catch (const std::exception& e) {                                                   \
     throw pluss::PlussError(e.what(), pluss::SourceLocation(__FILE__, __LINE__, __func__)); \
@@ -95,7 +95,7 @@ inline std::string clean_torch_error(const c10::Error& e) {
   } catch (pluss::PlussError& e) {                                                      \
     e.add_frame(pluss::SourceLocation(__FILE__, __LINE__, __func__));                   \
     throw;                                                                              \
-  } catch (const c10::Error& e) {                                                       \
+  } catch (const MSharp::Error& e) {                                                       \
     throw pluss::PlussError(pluss::clean_torch_error(e), pluss::SourceLocation(__FILE__, __LINE__, __func__)); \
   } catch (const std::exception& e) {                                                   \
     throw pluss::PlussError(e.what(), pluss::SourceLocation(__FILE__, __LINE__, __func__)); \

@@ -1,0 +1,8 @@
+#pragma once
+
+// Compatibility shim: include the renamed SeriesBase and map the type
+#include <PlussQit/core/SeriesBase.h>
+
+namespace at {
+    using TensorBase = ::pluss::SeriesBase;
+}

@@ -113,25 +113,25 @@ def generate_implementation(method):
     implementation = f"inline {return_type} Series::{name}({params}){const_str} {{\n"
     implementation += f"  TORCH_CHECK(this->defined(), \"{name} called on undefined Series\");\n"
     
-    # For simplicity, just use the at::Tensor method directly
+    # For simplicity, just use the at::Series method directly
     if is_inplace:
         if is_const:
             # If it's const, we need to use const_cast
-            implementation += f"  at::Tensor(const_cast<Series&>(*this)).{name}({', '.join(param_names)});\n"
+            implementation += f"  at::Series(const_cast<Series&>(*this)).{name}({', '.join(param_names)});\n"
             implementation += "  return const_cast<Series&>(*this);\n"
         else:
-            implementation += f"  at::Tensor(*this).{name}({', '.join(param_names)});\n"
+            implementation += f"  at::Series(*this).{name}({', '.join(param_names)});\n"
             implementation += "  return *this;\n"
     else:
         if return_ref:
             if is_const:
-                implementation += f"  at::Tensor(const_cast<Series&>(*this)).{name}({', '.join(param_names)});\n"
+                implementation += f"  at::Series(const_cast<Series&>(*this)).{name}({', '.join(param_names)});\n"
                 implementation += "  return const_cast<Series&>(*this);\n"
             else:
-                implementation += f"  at::Tensor(*this).{name}({', '.join(param_names)});\n"
+                implementation += f"  at::Series(*this).{name}({', '.join(param_names)});\n"
                 implementation += "  return *this;\n"
         else:
-            implementation += f"  return Series(at::Tensor(*this).{name}({', '.join(param_names)}));\n"
+            implementation += f"  return Series(at::Series(*this).{name}({', '.join(param_names)}));\n"
     
     implementation += "}\n\n"
     return implementation

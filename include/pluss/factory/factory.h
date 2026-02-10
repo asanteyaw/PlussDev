@@ -22,6 +22,6 @@ Value from_vec(const std::vector<std::vector<std::vector<double>>>& list, const 
 // === Random / Torch bridge ===
 Value rand(const std::vector<int64_t>& shape, const Options& opt = {});
 Value randn(const std::vector<int64_t>& shape, const Options& opt = {});
-Value from_torch(const torch::Tensor& t);
+Value from_torch(const torch::Series& t);
 
 }  // namespace pluss

@@ -8,7 +8,7 @@ The next generation technical computing and AI mega library
 
 using namespace pluss;
 
-// Create a Series (1D numeric tensor)
+// Create a Series (1D numeric series)
 auto data = Series({1.0, 2.0, 3.0, 4.0, 5.0});
 std::cout << "Mean: " << data.mean().item<float>() << "\n";
 
@@ -65,7 +65,7 @@ See [`examples/parallel_csv_example.cpp`](examples/parallel_csv_example.cpp) for
 
 PlussMa follows a thread-first design philosophy:
 
-- **Series**: 1D numeric tensor (PyTorch-backed)
+- **Series**: 1D numeric series (PyTorch-backed)
 - **Note**: 1D text/string data
 - **Timeline**: 1D date/time data
 - **Thread**: Unified 1D container (holds Series, Note, or Timeline)

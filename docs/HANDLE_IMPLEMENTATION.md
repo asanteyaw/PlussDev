@@ -278,7 +278,7 @@ for (const auto& [product, group] : groups) {
 ### Memory Efficiency
 - Zero-copy conversions where possible
 - Lazy evaluation for chained operations
-- Efficient tensor operations via LibTorch
+- Efficient series operations via LibTorch
 
 ### CSV Reading
 - Delegates to proven DataFrame::read_csv()
@@ -333,7 +333,7 @@ ninja handle_csv_example catalog_advanced_ex archive_advanced_ex text_nlp_ex
 ## Key Achievements ✅
 
 1. ✅ **Complete Table Parity**: Catalog matches DataFrame functionality
-2. ✅ **Vectorized Operations**: All operations use efficient tensor ops
+2. ✅ **Vectorized Operations**: All operations use efficient series ops
 3. ✅ **Text-First Design**: 30+ NLP methods at Feed level
 4. ✅ **Document Processing**: 10+ methods at Catalog level
 5. ✅ **Corpus Management**: 10+ methods at Archive level

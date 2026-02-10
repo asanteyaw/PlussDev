@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pluss/Fusion.h"
-#include <pluss/SeriesBody.h>
+#include <PlussQit/core/SeriesBody.h>
 #include <pluss/Types.h>
 #include <pluss/series_factory.h>
 #include <pluss/Fusion.h>
@@ -45,7 +45,7 @@ public:
     /**
      * @brief Forward pass
      * 
-     * @param input Input tensor of shape (batch, input_size)
+     * @param input Input series of shape (batch, input_size)
      * @param hidden Previous hidden state tuple (h_0, c_0) of shapes (batch, hidden_size)
      * @return std::tuple<Series, Series> New hidden state tuple (h_1, c_1)
      */

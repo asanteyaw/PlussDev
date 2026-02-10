@@ -1,0 +1,6 @@
+#pragma once
+
+// Minimal shim for PlussQit SeriesBody. Includes TensorBase compatibility.
+#include <PlussQit/core/SeriesBase.h>
+
+// Forward include for compatibility; more symbols can be added as needed.

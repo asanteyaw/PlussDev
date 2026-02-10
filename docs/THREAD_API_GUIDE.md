@@ -3,7 +3,7 @@
 ## Overview
 
 `Thread` is the foundation of the thread-first design in PlussMa. It represents a 1D data structure (like a pandas Series) that can hold three types of values:
-- **Series**: Numeric tensor data (built on PyTorch)
+- **Series**: Numeric series data (built on PyTorch)
 - **Note**: String/text data
 - **Timeline**: Date/time data
 
@@ -16,7 +16,7 @@
 using namespace pluss::table;
 
 // Series Thread (numeric data)
-auto prices = pluss::from_torch(torch::tensor({10.5, 12.3, 11.8}));
+auto prices = pluss::from_torch(torch::series({10.5, 12.3, 11.8}));
 Thread price_thread(prices, "price");
 
 // Note Thread (string data)
@@ -34,7 +34,7 @@ The `values()` method returns a reference to the underlying variant that holds S
 ### Method 1: Direct Type Checking (Recommended)
 
 ```cpp
-Thread thread(pluss::from_torch(torch::tensor({1.0, 2.0, 3.0})), "data");
+Thread thread(pluss::from_torch(torch::series({1.0, 2.0, 3.0})), "data");
 
 // Check type first
 if (thread.is_series()) {
@@ -100,7 +100,7 @@ if (std::holds_alternative<pluss::Series>(content)) {
 Use Series methods directly:
 
 ```cpp
-Thread thread(pluss::from_torch(torch::tensor({1.0, 2.0, 3.0, 4.0, 5.0})), "data");
+Thread thread(pluss::from_torch(torch::series({1.0, 2.0, 3.0, 4.0, 5.0})), "data");
 
 if (thread.is_series()) {
     const auto& s = thread.as_series();
@@ -151,7 +151,7 @@ auto dropped = thread.dropna();            // Remove NA values
 
 ```cpp
 // Boolean indexing
-auto condition = pluss::from_torch(torch::tensor({true, false, true, false, true}));
+auto condition = pluss::from_torch(torch::series({true, false, true, false, true}));
 auto filtered = thread.loc(condition);
 ```
 
@@ -245,7 +245,7 @@ timeline.to_Series();         // Convert to numeric Series
 
 2. **Use pluss::from_torch() for creating Series**:
    ```cpp
-   auto series = pluss::from_torch(torch::tensor({1.0, 2.0, 3.0}));
+   auto series = pluss::from_torch(torch::series({1.0, 2.0, 3.0}));
    ```
 
 3. **Prefer const references**:
@@ -310,7 +310,7 @@ using namespace pluss::table;
 
 int main() {
     // Create thread
-    auto data = pluss::from_torch(torch::tensor({100.0, 105.0, 103.0, 108.0, 110.0}));
+    auto data = pluss::from_torch(torch::series({100.0, 105.0, 103.0, 108.0, 110.0}));
     Thread prices(data, "stock_price");
     
     // Check content type

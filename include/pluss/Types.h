@@ -1,13 +1,13 @@
 #pragma once
 
-#include <c10/core/Scalar.h>
-#include <c10/util/ArrayRef.h>
-#include <c10/core/MemoryFormat.h>
-#include <c10/core/Device.h>
-#include <c10/core/SymInt.h>
-#include <c10/core/SymIntArrayRef.h>
-#include <ATen/core/Dimname.h>
-#include <ATen/core/Generator.h>
+#include <MSharp/core/Scalar.h>
+#include <MSharp/util/ArrayRef.h>
+#include <MSharp/core/MemoryFormat.h>
+#include <MSharp/core/Device.h>
+#include <MSharp/core/SymInt.h>
+#include <MSharp/core/SymIntArrayRef.h>
+#include <PlussQit/core/Dimname.h>
+#include <PlussQit/core/Generator.h>
 #include <torch/csrc/api/include/torch/types.h>
 #include <torch/csrc/api/include/torch/detail/TensorDataContainer.h>
 #include <optional>
@@ -37,8 +37,8 @@ public:
     ArrayRef() = default;
     ArrayRef(const std::vector<T>& data) : data_(data) {}
     ArrayRef(std::initializer_list<T> data) : data_(data) {}
-    ArrayRef(const c10::ArrayRef<T>& ref) : data_(ref.begin(), ref.end()) {}
-    operator c10::ArrayRef<T>() const { return c10::ArrayRef<T>(data_); }
+    ArrayRef(const MSharp::ArrayRef<T>& ref) : data_(ref.begin(), ref.end()) {}
+    operator MSharp::ArrayRef<T>() const { return MSharp::ArrayRef<T>(data_); }
 
     size_t size() const { return data_.size(); }
     auto begin() const { return data_.begin(); }
@@ -88,23 +88,23 @@ class OptionalIntArrayRef {
 
 class SymInt {
 private:
-    c10::SymInt symint_;
+    MSharp::SymInt symint_;
 public:
     SymInt() = default;
     SymInt(int64_t value) : symint_(value) {}
-    SymInt(const c10::SymInt& symint) : symint_(symint) {}
-    operator c10::SymInt() const { return symint_; }
+    SymInt(const MSharp::SymInt& symint) : symint_(symint) {}
+    operator MSharp::SymInt() const { return symint_; }
 };
 
 class SymIntArrayRef {
 private:
-    std::vector<c10::SymInt> data_;
+    std::vector<MSharp::SymInt> data_;
 public:
     SymIntArrayRef() = default;
-    SymIntArrayRef(const std::vector<c10::SymInt>& data) : data_(data) {}
-    SymIntArrayRef(std::initializer_list<c10::SymInt> data) : data_(data) {}
-    SymIntArrayRef(const c10::SymIntArrayRef& ref) : data_(ref.begin(), ref.end()) {}
-    operator c10::SymIntArrayRef() const { return c10::SymIntArrayRef(data_); }
+    SymIntArrayRef(const std::vector<MSharp::SymInt>& data) : data_(data) {}
+    SymIntArrayRef(std::initializer_list<MSharp::SymInt> data) : data_(data) {}
+    SymIntArrayRef(const MSharp::SymIntArrayRef& ref) : data_(ref.begin(), ref.end()) {}
+    operator MSharp::SymIntArrayRef() const { return MSharp::SymIntArrayRef(data_); }
 };
 
 class OptionalSymIntArrayRef {
@@ -189,7 +189,7 @@ public:
 //     public:
 //         SeriesDataContainer() = default;
     
-//         // Allow construction from any valid tensor-like input (1D, vector, scalar, etc.)
+//         // Allow construction from any valid series-like input (1D, vector, scalar, etc.)
 //         template <typename T>
 //         SeriesDataContainer(T&& data)
 //             noexcept(noexcept(torch::detail::TensorDataContainer(std::forward<T>(data))))
@@ -203,8 +203,8 @@ public:
 //         // Implicit conversion to torch::detail::TensorDataContainer
 //         operator torch::detail::TensorDataContainer() const { return container_; }
     
-//         // Convert to Tensor using torch's internal logic
-//         at::Tensor convert_to_tensor(const at::TensorOptions& opts) const {
+//         // Convert to Series using torch's internal logic
+//         at::Series convert_to_tensor(const at::TensorOptions& opts) const {
 //             return container_.convert_to_tensor(opts);
 //         }
 //     };
@@ -278,7 +278,7 @@ struct SeriesOptions {
         SeriesOptions& sparse_csr(bool v = true) { is_sparse_csr_ = v; return *this; }
     
         std::optional<caffe2::TypeMeta> type_meta_opt() const {
-            return dtype_ ? std::optional<caffe2::TypeMeta>(c10::scalarTypeToTypeMeta(*dtype_)) : std::nullopt;
+            return dtype_ ? std::optional<caffe2::TypeMeta>(MSharp::scalarTypeToTypeMeta(*dtype_)) : std::nullopt;
         }
     
         operator at::TensorOptions() const {
@@ -314,11 +314,11 @@ struct SeriesOptions {
 
 template<typename T>
 using optional = std::optional<T>;
-using string_view = c10::string_view;
+using string_view = MSharp::string_view;
 using Layout = at::Layout;
 using QScheme = at::QScheme;
 using Storage = at::Storage;
-using Stream = c10::Stream;
+using Stream = MSharp::Stream;
 constexpr auto nullopt = std::nullopt;
 
 template <typename In, typename Out>

@@ -1,0 +1,5 @@
+# Local configuration for CMake
+# This file is included by the main CMakeLists.txt
+
+# Set PyTorch path from conda environment
+set(CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}/lib/python3.12/site-packages/torch;${CMAKE_PREFIX_PATH}")

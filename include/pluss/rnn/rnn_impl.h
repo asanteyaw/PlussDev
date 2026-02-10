@@ -1,7 +1,7 @@
 #pragma once
 
-#include <c10/core/DeviceType.h>
-#include <pluss/SeriesBody.h>
+#include <MSharp/core/DeviceType.h>
+#include <PlussQit/core/SeriesBody.h>
 #include <pluss/Types.h>
 #include <internals/core/include/b10/deets/operations.h>
 #include <pluss/Fusion.h>
@@ -26,7 +26,7 @@ public:
     /**
      * @brief Construct a new PackedSequence
      * 
-     * @param data The packed data tensor
+     * @param data The packed data series
      * @param batch_sizes Batch sizes for each step
      * @param sorted_indices Indices to sort the sequences by length
      * @param unsorted_indices Indices to unsort the sequences
@@ -37,36 +37,36 @@ public:
           sorted_indices_(sorted_indices), unsorted_indices_(unsorted_indices) {}
     
     /**
-     * @brief Get the packed data tensor
+     * @brief Get the packed data series
      * 
-     * @return const Series& Packed data tensor
+     * @return const Series& Packed data series
      */
     const Series& data() const {
         return data_;
     }
     
     /**
-     * @brief Get the batch sizes tensor
+     * @brief Get the batch sizes series
      * 
-     * @return const Series& Batch sizes tensor
+     * @return const Series& Batch sizes series
      */
     const Series& batch_sizes() const {
         return batch_sizes_;
     }
     
     /**
-     * @brief Get the sorted indices tensor
+     * @brief Get the sorted indices series
      * 
-     * @return const Series& Sorted indices tensor
+     * @return const Series& Sorted indices series
      */
     const Series& sorted_indices() const {
         return sorted_indices_;
     }
     
     /**
-     * @brief Get the unsorted indices tensor
+     * @brief Get the unsorted indices series
      * 
-     * @return const Series& Unsorted indices tensor
+     * @return const Series& Unsorted indices series
      */
     const Series& unsorted_indices() const {
         return unsorted_indices_;
@@ -106,14 +106,14 @@ PackedSequence pack_padded_sequence(const Series& input, const Series& lengths, 
     for (const auto& p : lengths_idx) {
         sorted_indices_vec.push_back(p.second);
     }
-    Series sorted_indices = b10::detail::series_gen(torch::tensor(sorted_indices_vec, torch::dtype(torch::kInt64)));
+    Series sorted_indices = b10::detail::series_gen(torch::series(sorted_indices_vec, torch::dtype(torch::kInt64)));
     
     // Create unsorted indices
     std::vector<int64_t> unsorted_indices_vec(batch_size);
     for (int64_t i = 0; i < batch_size; ++i) {
         unsorted_indices_vec[sorted_indices_vec[i]] = i;
     }
-    Series unsorted_indices = b10::detail::series_gen(torch::tensor(unsorted_indices_vec, torch::dtype(torch::kInt64)));
+    Series unsorted_indices = b10::detail::series_gen(torch::series(unsorted_indices_vec, torch::dtype(torch::kInt64)));
     
     // Sort sequences
     Series sorted_input;
@@ -135,7 +135,7 @@ PackedSequence pack_padded_sequence(const Series& input, const Series& lengths, 
         }
         batch_sizes_vec.push_back(current_batch_size);
     }
-    Series batch_sizes = b10::detail::series_gen(torch::tensor(batch_sizes_vec, torch::dtype(torch::kInt64)));
+    Series batch_sizes = b10::detail::series_gen(torch::series(batch_sizes_vec, torch::dtype(torch::kInt64)));
     
     // Pack sequences
     std::vector<Series> packed_chunks;
@@ -179,7 +179,7 @@ std::tuple<Series, Series> pad_packed_sequence(const PackedSequence& sequence, b
     int64_t batch_size = unsorted_indices.sizes()[0];
     int64_t hidden_size = data.shape(1);
     
-    // Create padded tensor
+    // Create padded series
     std::vector<int64_t> padded_sizes;
     if (batch_first) {
         padded_sizes = {batch_size, max_seq_len, hidden_size};
@@ -189,7 +189,7 @@ std::tuple<Series, Series> pad_packed_sequence(const PackedSequence& sequence, b
     Series padded = pluss::zeros(padded_sizes, 
                                pluss::config({{"dtype", "int64"}, {"requires_grad", "false"}}));
     
-    // Create lengths tensor
+    // Create lengths series
     std::vector<int64_t> lengths_vec(batch_size, 0);
     
     // Unpack sequences
@@ -223,8 +223,8 @@ std::tuple<Series, Series> pad_packed_sequence(const PackedSequence& sequence, b
         sorted_padded = padded.index_select(1, unsorted_indices);
     }
     
-    // Create lengths tensor
-    Series lengths = b10::detail::series_gen(torch::tensor(lengths_vec, torch::dtype(torch::kInt64)));
+    // Create lengths series
+    Series lengths = b10::detail::series_gen(torch::series(lengths_vec, torch::dtype(torch::kInt64)));
     
     return std::make_tuple(sorted_padded, lengths);
 }
@@ -290,7 +290,7 @@ public:
     /**
      * @brief Forward pass
      * 
-     * @param input Input tensor of shape (seq_len, batch, input_size) or (batch, seq_len, input_size)
+     * @param input Input series of shape (seq_len, batch, input_size) or (batch, seq_len, input_size)
      * @param hx Initial hidden state
      * @return std::tuple<Series, Series> Output and final hidden state
      */
@@ -443,10 +443,10 @@ protected:
     /**
      * @brief Apply dropout
      * 
-     * @param x Input tensor
+     * @param x Input series
      * @param p Dropout probability
      * @param training Whether in training mode
-     * @return Series Output tensor
+     * @return Series Output series
      */
     Series dropout_layer(const Series& x, double p, bool training = true) const {
         if (!training || p == 0.0) {
@@ -489,7 +489,7 @@ public:
     /**
      * @brief Forward pass
      * 
-     * @param input Input tensor of shape (seq_len, batch, input_size) or (batch, seq_len, input_size)
+     * @param input Input series of shape (seq_len, batch, input_size) or (batch, seq_len, input_size)
      * @param hx Initial hidden state of shape (num_layers * num_directions, batch, hidden_size)
      * @return std::tuple<Series, Series> Output and final hidden state
      */
@@ -623,7 +623,7 @@ public:
     /**
      * @brief Forward pass
      * 
-     * @param input Input tensor of shape (seq_len, batch, input_size) or (batch, seq_len, input_size)
+     * @param input Input series of shape (seq_len, batch, input_size) or (batch, seq_len, input_size)
      * @param hx Initial hidden state tuple (h_0, c_0) of shapes (num_layers * num_directions, batch, hidden_size)
      * @return std::tuple<Series, std::tuple<Series, Series>> Output and final hidden state tuple (h_n, c_n)
      */
@@ -778,7 +778,7 @@ public:
  /**
   * @brief Forward pass
   * 
-  * @param input Input tensor of shape (seq_len, batch, input_size) or (batch, seq_len, input_size)
+  * @param input Input series of shape (seq_len, batch, input_size) or (batch, seq_len, input_size)
   * @param hx Initial hidden state of shape (num_layers * num_directions, batch, hidden_size)
   * @return std::tuple<Series, Series> Output and final hidden state
   */

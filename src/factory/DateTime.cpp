@@ -487,19 +487,19 @@ DateTime::DateTime(const std::string& datetime_str) {
         has_time_ = time_success;
         
         if (has_date_) {
-            date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+            date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
         }
         
         if (has_time_) {
-            time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+            time_series_ = Series(torch::series(static_cast<int64_t>(time_int)));
         }
     } else {
         // Default to current date and time
         auto now = std::chrono::system_clock::now();
         auto [date_int, time_int] = timePointToInternalFormat(now);
         
-        date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
-        time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+        date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
+        time_series_ = Series(torch::series(static_cast<int64_t>(time_int)));
         has_date_ = true;
         has_time_ = true;
     }
@@ -507,13 +507,13 @@ DateTime::DateTime(const std::string& datetime_str) {
 
 DateTime::DateTime(int year, int month, int day) {
     int64_t date_int = year * 10000 + month * 100 + day;
-    date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+    date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
     has_date_ = true;
 }
 
 DateTime::DateTime(int hour, int minute, int second) {
     int64_t time_int = hour * 10000 + minute * 100 + second;
-    time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+    time_series_ = Series(torch::series(static_cast<int64_t>(time_int)));
     has_time_ = true;
 }
 
@@ -521,8 +521,8 @@ DateTime::DateTime(int year, int month, int day, int hour, int minute, int secon
     int64_t date_int = year * 10000 + month * 100 + day;
     int64_t time_int = hour * 10000 + minute * 100 + second;
     
-    date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
-    time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+    date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
+    time_series_ = Series(torch::series(static_cast<int64_t>(time_int)));
     has_date_ = true;
     has_time_ = true;
 }
@@ -545,7 +545,7 @@ DateTime DateTime::today() {
     auto [date_int, _] = timePointToInternalFormat(now);
     
     DateTime dt;
-    dt.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+    dt.date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
     dt.has_date_ = true;
     dt.has_time_ = false;
     
@@ -558,7 +558,7 @@ DateTime DateTime::yesterday() {
     auto [date_int, _] = timePointToInternalFormat(yesterday);
     
     DateTime dt;
-    dt.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+    dt.date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
     dt.has_date_ = true;
     dt.has_time_ = false;
     
@@ -571,7 +571,7 @@ DateTime DateTime::tomorrow() {
     auto [date_int, _] = timePointToInternalFormat(tomorrow);
     
     DateTime dt;
-    dt.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+    dt.date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
     dt.has_date_ = true;
     dt.has_time_ = false;
     
@@ -587,8 +587,8 @@ DateTime DateTime::fromTimestamp(int64_t timestamp) {
     auto [date_int, time_int] = timePointToInternalFormat(tp);
     
     DateTime dt;
-    dt.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
-    dt.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+    dt.date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
+    dt.time_series_ = Series(torch::series(static_cast<int64_t>(time_int)));
     dt.has_date_ = true;
     dt.has_time_ = true;
     
@@ -712,7 +712,7 @@ void DateTime::setYear(int year) {
         // If no date set, use current date
         auto now = std::chrono::system_clock::now();
         auto [date_int, _] = timePointToInternalFormat(now);
-        date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
         has_date_ = true;
     }
     
@@ -721,7 +721,7 @@ void DateTime::setYear(int year) {
     int day = date_val % 100;
     
     int64_t new_date = year * 10000 + month * 100 + day;
-    date_series_ = Series(torch::tensor(static_cast<int64_t>(new_date)));
+    date_series_ = Series(torch::series(static_cast<int64_t>(new_date)));
 }
 
 void DateTime::setMonth(int month) {
@@ -729,7 +729,7 @@ void DateTime::setMonth(int month) {
         // If no date set, use current date
         auto now = std::chrono::system_clock::now();
         auto [date_int, _] = timePointToInternalFormat(now);
-        date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
         has_date_ = true;
     }
     
@@ -756,7 +756,7 @@ void DateTime::setMonth(int month) {
     }
     
     int64_t new_date = year * 10000 + month * 100 + day;
-    date_series_ = Series(torch::tensor(static_cast<int64_t>(new_date)));
+    date_series_ = Series(torch::series(static_cast<int64_t>(new_date)));
 }
 
 void DateTime::setDay(int day) {
@@ -764,7 +764,7 @@ void DateTime::setDay(int day) {
         // If no date set, use current date
         auto now = std::chrono::system_clock::now();
         auto [date_int, _] = timePointToInternalFormat(now);
-        date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
         has_date_ = true;
     }
     
@@ -787,13 +787,13 @@ void DateTime::setDay(int day) {
     }
     
     int64_t new_date = year * 10000 + month * 100 + day;
-    date_series_ = Series(torch::tensor(static_cast<int64_t>(new_date)));
+    date_series_ = Series(torch::series(static_cast<int64_t>(new_date)));
 }
 
 void DateTime::setHour(int hour) {
     if (!has_time_) {
         // If no time set, use midnight
-        time_series_ = Series(torch::tensor(static_cast<int64_t>(0)));
+        time_series_ = Series(torch::series(static_cast<int64_t>(0)));
         has_time_ = true;
     }
     
@@ -807,13 +807,13 @@ void DateTime::setHour(int hour) {
     }
     
     int64_t new_time = hour * 10000 + minute * 100 + second;
-    time_series_ = Series(torch::tensor(static_cast<int64_t>(new_time)));
+    time_series_ = Series(torch::series(static_cast<int64_t>(new_time)));
 }
 
 void DateTime::setMinute(int minute) {
     if (!has_time_) {
         // If no time set, use midnight
-        time_series_ = Series(torch::tensor(static_cast<int64_t>(0)));
+        time_series_ = Series(torch::series(static_cast<int64_t>(0)));
         has_time_ = true;
     }
     
@@ -827,13 +827,13 @@ void DateTime::setMinute(int minute) {
     }
     
     int64_t new_time = hour * 10000 + minute * 100 + second;
-    time_series_ = Series(torch::tensor(static_cast<int64_t>(new_time)));
+    time_series_ = Series(torch::series(static_cast<int64_t>(new_time)));
 }
 
 void DateTime::setSecond(int second) {
     if (!has_time_) {
         // If no time set, use midnight
-        time_series_ = Series(torch::tensor(static_cast<int64_t>(0)));
+        time_series_ = Series(torch::series(static_cast<int64_t>(0)));
         has_time_ = true;
     }
     
@@ -847,7 +847,7 @@ void DateTime::setSecond(int second) {
     }
     
     int64_t new_time = hour * 10000 + minute * 100 + second;
-    time_series_ = Series(torch::tensor(static_cast<int64_t>(new_time)));
+    time_series_ = Series(torch::series(static_cast<int64_t>(new_time)));
 }
 
 // Formatting
@@ -971,7 +971,7 @@ DateTime DateTime::addDays(int days) const {
     
     DateTime result(*this);
     if (has_date_) {
-        result.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        result.date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
     }
     
     return result;
@@ -985,10 +985,10 @@ DateTime DateTime::addHours(int hours) const {
     
     DateTime result(*this);
     if (has_date_) {
-        result.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        result.date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
     }
     if (has_time_) {
-        result.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+        result.time_series_ = Series(torch::series(static_cast<int64_t>(time_int)));
     }
     
     return result;
@@ -1002,10 +1002,10 @@ DateTime DateTime::addMinutes(int minutes) const {
     
     DateTime result(*this);
     if (has_date_) {
-        result.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        result.date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
     }
     if (has_time_) {
-        result.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+        result.time_series_ = Series(torch::series(static_cast<int64_t>(time_int)));
     }
     
     return result;
@@ -1019,10 +1019,10 @@ DateTime DateTime::addSeconds(int seconds) const {
     
     DateTime result(*this);
     if (has_date_) {
-        result.date_series_ = Series(torch::tensor(static_cast<int64_t>(date_int)));
+        result.date_series_ = Series(torch::series(static_cast<int64_t>(date_int)));
     }
     if (has_time_) {
-        result.time_series_ = Series(torch::tensor(static_cast<int64_t>(time_int)));
+        result.time_series_ = Series(torch::series(static_cast<int64_t>(time_int)));
     }
     
     return result;

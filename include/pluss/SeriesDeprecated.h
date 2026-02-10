@@ -1,65 +1,65 @@
 #pragma once
 
-#include <ATen/core/TensorBody.h>
+#include <PlussQit/core/SeriesBody.h>
 #include "Types.h"
-#include <ATen/core/ScalarType.h>
-#include <ATen/ops/and_ops.h>
-#include <ATen/ops/argsort_ops.h>
-#include <ATen/ops/bitwise_and_ops.h>
-#include <ATen/ops/bitwise_left_shift_ops.h>
-#include <ATen/ops/bitwise_or_ops.h>
-#include <ATen/ops/bitwise_right_shift_ops.h>
-#include <ATen/ops/bitwise_xor_ops.h>
-#include <ATen/ops/copysign_ops.h>
-#include <ATen/ops/div_ops.h>
-#include <ATen/ops/divide_ops.h>
-#include <ATen/ops/eq_ops.h>
-#include <ATen/ops/fmod_ops.h>
-#include <ATen/ops/gather_ops.h>
-#include <ATen/ops/ge_ops.h>
-#include <ATen/ops/greater_equal_ops.h>
-#include <ATen/ops/greater_ops.h>
-#include <ATen/ops/gt_ops.h>
-#include <ATen/ops/histogram_ops.h>
-#include <ATen/ops/hsplit_ops.h>
-#include <ATen/ops/index_fill_ops.h>
-#include <ATen/ops/index_select_ops.h>
-#include <ATen/ops/le_ops.h>
-#include <ATen/ops/lerp_ops.h>
-#include <ATen/ops/less_equal_ops.h>
-#include <ATen/ops/less_ops.h>
-#include <ATen/ops/lshift_ops.h>
-#include <ATen/ops/lt_ops.h>
-#include <ATen/ops/masked_fill_ops.h>
-#include <ATen/ops/mode_ops.h>
-#include <ATen/ops/mul_ops.h>
-#include <ATen/ops/multiply_ops.h>
-#include <ATen/ops/ne_ops.h>
-#include <ATen/ops/not_equal_ops.h>
-#include <ATen/ops/or_ops.h>
-#include <ATen/ops/remainder_ops.h>
-#include <ATen/ops/round_ops.h>
-#include <ATen/ops/rshift_ops.h>
-#include <ATen/ops/scatter_reduce_ops.h>
-#include <ATen/ops/split_ops.h>
-#include <ATen/ops/squeeze_ops.h>
-#include <ATen/ops/stack.h>
-#include <ATen/ops/sub_ops.h>
-#include <ATen/ops/subtract_ops.h>
-#include <ATen/ops/sum_ops.h>
-#include <ATen/ops/true_divide_ops.h>
-#include <ATen/ops/var_ops.h>
-#include <ATen/ops/view_ops.h>
-#include <ATen/ops/vsplit_ops.h>
-#include <ATen/ops/xlogy_ops.h>
-#include <ATen/ops/xor_ops.h>
-#include <c10/core/TensorImpl.h>
-#include <c10/core/UndefinedTensorImpl.h>
-#include <c10/util/ArrayRef.h>
-#include <c10/util/Exception.h>
-#include <c10/util/Optional.h>
-#include <c10/util/intrusive_ptr.h>
-#include <ATen/core/TensorBase.h>
+#include <PlussQit/core/ScalarType.h>
+#include <PlussQit/ops/and_ops.h>
+#include <PlussQit/ops/argsort_ops.h>
+#include <PlussQit/ops/bitwise_and_ops.h>
+#include <PlussQit/ops/bitwise_left_shift_ops.h>
+#include <PlussQit/ops/bitwise_or_ops.h>
+#include <PlussQit/ops/bitwise_right_shift_ops.h>
+#include <PlussQit/ops/bitwise_xor_ops.h>
+#include <PlussQit/ops/copysign_ops.h>
+#include <PlussQit/ops/div_ops.h>
+#include <PlussQit/ops/divide_ops.h>
+#include <PlussQit/ops/eq_ops.h>
+#include <PlussQit/ops/fmod_ops.h>
+#include <PlussQit/ops/gather_ops.h>
+#include <PlussQit/ops/ge_ops.h>
+#include <PlussQit/ops/greater_equal_ops.h>
+#include <PlussQit/ops/greater_ops.h>
+#include <PlussQit/ops/gt_ops.h>
+#include <PlussQit/ops/histogram_ops.h>
+#include <PlussQit/ops/hsplit_ops.h>
+#include <PlussQit/ops/index_fill_ops.h>
+#include <PlussQit/ops/index_select_ops.h>
+#include <PlussQit/ops/le_ops.h>
+#include <PlussQit/ops/lerp_ops.h>
+#include <PlussQit/ops/less_equal_ops.h>
+#include <PlussQit/ops/less_ops.h>
+#include <PlussQit/ops/lshift_ops.h>
+#include <PlussQit/ops/lt_ops.h>
+#include <PlussQit/ops/masked_fill_ops.h>
+#include <PlussQit/ops/mode_ops.h>
+#include <PlussQit/ops/mul_ops.h>
+#include <PlussQit/ops/multiply_ops.h>
+#include <PlussQit/ops/ne_ops.h>
+#include <PlussQit/ops/not_equal_ops.h>
+#include <PlussQit/ops/or_ops.h>
+#include <PlussQit/ops/remainder_ops.h>
+#include <PlussQit/ops/round_ops.h>
+#include <PlussQit/ops/rshift_ops.h>
+#include <PlussQit/ops/scatter_reduce_ops.h>
+#include <PlussQit/ops/split_ops.h>
+#include <PlussQit/ops/squeeze_ops.h>
+#include <PlussQit/ops/stack.h>
+#include <PlussQit/ops/sub_ops.h>
+#include <PlussQit/ops/subtract_ops.h>
+#include <PlussQit/ops/sum_ops.h>
+#include <PlussQit/ops/true_divide_ops.h>
+#include <PlussQit/ops/var_ops.h>
+#include <PlussQit/ops/view_ops.h>
+#include <PlussQit/ops/vsplit_ops.h>
+#include <PlussQit/ops/xlogy_ops.h>
+#include <PlussQit/ops/xor_ops.h>
+#include <MSharp/core/SeriesImpl.h>
+#include <MSharp/core/UndefinedSeriesImpl.h>
+#include <MSharp/util/ArrayRef.h>
+#include <MSharp/util/Exception.h>
+#include <MSharp/util/Optional.h>
+#include <MSharp/util/intrusive_ptr.h>
+#include <PlussQit/core/SeriesBase.h>
 #include "Series.h"
 #include "Types.h"
 
@@ -69,10 +69,10 @@ namespace pluss {
   class SeriesRef;
   class Series;
   using SeriesList = ArrayRef<Series>;
-  // using SeriesList = c10::ArrayRef<Series>;
-  using ISeriesList = c10::IListRef<Series>;
+  // using SeriesList = MSharp::ArrayRef<Series>;
+  using ISeriesList = MSharp::IListRef<Series>;
   
-  using Stream = c10::Stream;
+  using Stream = MSharp::Stream;
   
   // Series is a "generic" object holding a pointer to the underlying TensorImpl object, which
   // has an embedded reference count. In this way, Series is similar to boost::intrusive_ptr.
@@ -94,16 +94,16 @@ namespace pluss {
   
   class TORCH_API Series: public at::TensorBase {
     private:
-    // Conversion to at::Tensor
-    operator at::Tensor() const {
-      return at::Tensor(static_cast<const at::TensorBase&>(*this));
+    // Conversion to at::Series
+    operator at::Series() const {
+      return at::Series(static_cast<const at::TensorBase&>(*this));
     }
    protected:
     // Create a Series with a +0 reference count. Special care must be
     // taken to avoid decrementing this reference count at destruction
     // time. Intended to support MaybeOwnedTraits<Series>.
     explicit Series(unsafe_borrow_t, const at::TensorBase& rhs): at::TensorBase(unsafe_borrow_t{}, rhs) {}
-    friend c10::MaybeOwnedTraits<Series>;
+    friend MSharp::MaybeOwnedTraits<Series>;
     friend OptionalSeriesRef;
     friend SeriesRef;
   
@@ -112,7 +112,7 @@ namespace pluss {
     // This constructor should not be used by end users and is an implementation
     // detail invoked by autogenerated code.
     explicit Series(
-        c10::intrusive_ptr<c10::TensorImpl, c10::UndefinedTensorImpl> tensor_impl)
+        MSharp::intrusive_ptr<MSharp::TensorImpl, MSharp::UndefinedTensorImpl> tensor_impl)
         : at::TensorBase(std::move(tensor_impl)) {}
     Series(const Series &series) = default;
     Series(Series &&series) = default;
@@ -125,7 +125,7 @@ namespace pluss {
     // Creates a new wrapper from TensorImpl. Intentionally a free method because
     // it should be used with care. Checks necessary invariants
     static Series wrap_tensor_impl(
-        c10::intrusive_ptr<c10::TensorImpl, c10::UndefinedTensorImpl> tensor_impl) {
+        MSharp::intrusive_ptr<MSharp::TensorImpl, MSharp::UndefinedTensorImpl> tensor_impl) {
       PLUSS_INTERNAL_DISPATCH({ return Series(at::TensorBase::wrap_tensor_impl(std::move(tensor_impl))); });
     }
 
@@ -151,75 +151,75 @@ namespace pluss {
 
   // Arithmetic operations with scalar
   inline Series operator+(const Series& other) const {
-    PLUSS_INTERNAL_DISPATCH({ return Series(at::Tensor(*this).add(other)); });
+    PLUSS_INTERNAL_DISPATCH({ return Series(at::Series(*this).add(other)); });
   }
 
   Series operator+(const Scalar& scalar) const {
-    PLUSS_INTERNAL_DISPATCH({ return Series(at::Tensor(*this).add(scalar)); });
+    PLUSS_INTERNAL_DISPATCH({ return Series(at::Series(*this).add(scalar)); });
   }
 
   inline Series operator-(const Series& other) const {
-    PLUSS_INTERNAL_DISPATCH({ return Series(at::Tensor(*this).sub(other)); });
+    PLUSS_INTERNAL_DISPATCH({ return Series(at::Series(*this).sub(other)); });
   }
 
   Series operator-(const Scalar& scalar) const {
-    PLUSS_INTERNAL_DISPATCH({ return Series(at::Tensor(*this).sub(scalar)); });
+    PLUSS_INTERNAL_DISPATCH({ return Series(at::Series(*this).sub(scalar)); });
   }
 
   inline Series operator*(const Series& other) const {
-    PLUSS_INTERNAL_DISPATCH({ return Series(at::Tensor(*this).mul(other)); });
+    PLUSS_INTERNAL_DISPATCH({ return Series(at::Series(*this).mul(other)); });
   }
 
   Series operator*(const Scalar& scalar) const {
-    PLUSS_INTERNAL_DISPATCH({ return Series(at::Tensor(*this).mul(scalar)); });
+    PLUSS_INTERNAL_DISPATCH({ return Series(at::Series(*this).mul(scalar)); });
   }
 
   inline Series operator/(const Series& other) const {
-    PLUSS_INTERNAL_DISPATCH({ return Series(at::Tensor(*this).div(other)); });
+    PLUSS_INTERNAL_DISPATCH({ return Series(at::Series(*this).div(other)); });
   }
 
   Series operator/(const Scalar& scalar) const {
-    PLUSS_INTERNAL_DISPATCH({ return Series(at::Tensor(*this).div(scalar)); });
+    PLUSS_INTERNAL_DISPATCH({ return Series(at::Series(*this).div(scalar)); });
   }
 
   // In-place arithmetic operations
   Series& operator+=(const Series& other) {
-    at::Tensor(*this).add_(at::Tensor(other));
+    at::Series(*this).add_(at::Series(other));
     return *this;
   }
 
   Series& operator+=(const Scalar& scalar) {
-    at::Tensor(*this).add_(scalar);
+    at::Series(*this).add_(scalar);
     return *this;
   }
 
   Series& operator-=(const Series& other) {
-    at::Tensor(*this).sub_(at::Tensor(other));
+    at::Series(*this).sub_(at::Series(other));
     return *this;
   }
 
   Series& operator-=(const Scalar& scalar) {
-    at::Tensor(*this).sub_(scalar);
+    at::Series(*this).sub_(scalar);
     return *this;
   }
 
   Series& operator*=(const Series& other) {
-    at::Tensor(*this).mul_(at::Tensor(other));
+    at::Series(*this).mul_(at::Series(other));
     return *this;
   }
 
   Series& operator*=(const Scalar& scalar) {
-    at::Tensor(*this).mul_(scalar);
+    at::Series(*this).mul_(scalar);
     return *this;
   }
 
   Series& operator/=(const Series& other) {
-    at::Tensor(*this).div_(at::Tensor(other));
+    at::Series(*this).div_(at::Series(other));
     return *this;
   }
 
   Series& operator/=(const Scalar& scalar) {
-    at::Tensor(*this).div_(scalar);
+    at::Series(*this).div_(scalar);
     return *this;
   }
 
@@ -248,7 +248,7 @@ namespace pluss {
       TORCH_CHECK_INDEX(false,
                         "Can only index with tensors that are scalars (zero-dim)");
     }
-    // The Scalar(at::Tensor) constructor is explicit, so we need to call it.
+    // The Scalar(at::Series) constructor is explicit, so we need to call it.
     return this->operator[](index.item());
   }
   Series operator[](int64_t index) const {
@@ -258,7 +258,7 @@ namespace pluss {
     return Series(); // This line is never reached, but needed for compilation
   }
 
-  at::Tensor tensor() const { return at::Tensor(static_cast<const at::TensorBase&>(*this)); }
+  at::Series series() const { return at::Series(static_cast<const at::TensorBase&>(*this)); }
   
   // Stream overload for Series
   friend std::ostream& operator<<(std::ostream& os, const Series& s);
@@ -392,7 +392,7 @@ namespace pluss {
   Series clip(const optional<Series> & min={}, const optional<Series> & max={}) const;
   Series & clip_(const optional<Scalar> & min, const optional<Scalar> & max=::std::nullopt) const;
   Series & clip_(const optional<Series> & min={}, const optional<Series> & max={}) const;
-  Series __dispatch_contiguous(MemoryFormat memory_format=c10::MemoryFormat::Contiguous) const;
+  Series __dispatch_contiguous(MemoryFormat memory_format=MSharp::MemoryFormat::Contiguous) const;
   Series & copy_(const Series & src, bool non_blocking=false) const;
   Series cos() const;
   Series & cos_() const;
@@ -440,7 +440,7 @@ namespace pluss {
   Series & true_divide_(const Series & other) const;
   Series true_divide(const Scalar & other) const;
   Series & true_divide_(const Scalar & other) const;
-  Series dot(const Series & tensor) const;
+  Series dot(const Series & series) const;
   Series vdot(const Series & other) const;
   Series new_empty(IntArrayRef size, SeriesOptions options={}) const;
   Series new_empty(IntArrayRef size, optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory) const;
@@ -832,7 +832,7 @@ namespace pluss {
   Series & set__symint(const Series & source, SymInt storage_offset, SymIntArrayRef size, SymIntArrayRef stride={}) const;
   Series & set_(const Series & source) const;
   Series & set_() const;
-  bool is_set_to(const Series & tensor) const;
+  bool is_set_to(const Series & series) const;
   Series & masked_fill_(const Series & mask, const Scalar & value) const;
   Series masked_fill(const Series & mask, const Scalar & value) const;
   Series & masked_fill_(const Series & mask, const Series & value) const;
@@ -1125,12 +1125,12 @@ namespace pluss {
   }
 
   // Scalar item() const {
-  //   return at::Tensor(*this).item();
+  //   return at::Series(*this).item();
   // }
 
   // String representation
   std::string toString() const {
-    return at::Tensor(*this).toString();
+    return at::Series(*this).toString();
   }
 
 };
@@ -1154,7 +1154,7 @@ inline Series Series::rename(optional<DimnameList> names) const {
 }
 
 inline Series& Series::rename_(optional<DimnameList> names) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::rename_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), names); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::rename_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), names); });
   return const_cast<Series&>(*this);
 }
 
@@ -1179,7 +1179,7 @@ inline Series Series::abs() const {
 }
 
 inline Series& Series::abs_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::abs_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::abs_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1188,7 +1188,7 @@ inline Series Series::absolute() const {
 }
 
 inline Series& Series::absolute_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::absolute_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::absolute_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1201,7 +1201,7 @@ inline Series Series::sgn() const {
 }
 
 inline Series& Series::sgn_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::sgn_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::sgn_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1210,7 +1210,7 @@ inline Series Series::chalf(optional<MemoryFormat> memory_format) const {
 }
 
 // inline Device Series::device() const {
-//   return this->tensor().device();
+//   return this->series().device();
 // }
 
 inline SeriesOptions Series::options_config() const {
@@ -1224,7 +1224,7 @@ inline SeriesOptions Series::options_config() const {
 }
 
 inline Device Series::platform() const {
-  return this->tensor().device();
+  return this->series().device();
 }
 
 inline Series Series::_conj() const {
@@ -1240,7 +1240,7 @@ inline Series Series::conj_physical() const {
 }
 
 inline Series& Series::conj_physical_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::conj_physical_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::conj_physical_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1262,7 +1262,7 @@ inline Series Series::acos() const {
 }
 
 inline Series& Series::acos_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::acos_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::acos_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1271,26 +1271,26 @@ inline Series Series::arccos() const {
 }
 
 inline Series& Series::arccos_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::arccos_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::arccos_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::add(const Series & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(tensor().add(other.tensor(), alpha)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(series().add(other.series(), alpha)); });
 }
 
 inline Series Series::add(const Scalar & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(tensor().add(other, alpha)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(series().add(other, alpha)); });
 }
 
 
 inline Series& Series::add_(const Series & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::add__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::add__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, alpha); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::add_(const Scalar & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::add__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::add__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, alpha); });
   return const_cast<Series&>(*this);
 }
 
@@ -1299,7 +1299,7 @@ inline Series Series::addmv(const Series & mat, const Series & vec, const Scalar
 }
 
 inline Series& Series::addmv_(const Series & mat, const Series & vec, const Scalar & beta, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::addmv_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), mat, vec, beta, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::addmv_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), mat, vec, beta, alpha); });
   return const_cast<Series&>(*this);
 }
 
@@ -1308,7 +1308,7 @@ inline Series Series::addr(const Series & vec1, const Series & vec2, const Scala
 }
 
 inline Series& Series::addr_(const Series & vec1, const Series & vec2, const Scalar & beta, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::addr_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), vec1, vec2, beta, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::addr_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), vec1, vec2, beta, alpha); });
   return const_cast<Series&>(*this);
 }
 
@@ -1361,7 +1361,7 @@ inline Series Series::acosh() const {
 }
 
 inline Series& Series::acosh_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::acosh_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::acosh_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1370,7 +1370,7 @@ inline Series Series::arccosh() const {
 }
 
 inline Series& Series::arccosh_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::arccosh_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::arccosh_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1379,7 +1379,7 @@ inline Series Series::asinh() const {
 }
 
 inline Series& Series::asinh_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::asinh_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::asinh_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1388,7 +1388,7 @@ inline Series Series::arcsinh() const {
 }
 
 inline Series& Series::arcsinh_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::arcsinh_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::arcsinh_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1397,7 +1397,7 @@ inline Series Series::atanh() const {
 }
 
 inline Series& Series::atanh_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::atanh_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::atanh_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1406,12 +1406,12 @@ inline Series Series::arctanh() const {
 }
 
 inline Series& Series::arctanh_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::arctanh_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::arctanh_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::as_strided(IntArrayRef size, IntArrayRef stride, optional<int64_t> storage_offset) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::as_strided::call(*this, c10::fromIntArrayRefSlow(size), c10::fromIntArrayRefSlow(stride), storage_offset)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::as_strided::call(*this, MSharp::fromIntArrayRefSlow(size), MSharp::fromIntArrayRefSlow(stride), storage_offset)); });
 }
 
 inline Series Series::as_strided_symint(SymIntArrayRef size, SymIntArrayRef stride, optional<SymInt> storage_offset) const {
@@ -1419,12 +1419,12 @@ inline Series Series::as_strided_symint(SymIntArrayRef size, SymIntArrayRef stri
 }
 
 inline const Series& Series::as_strided_(IntArrayRef size, IntArrayRef stride, optional<int64_t> storage_offset) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::as_strided_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), c10::fromIntArrayRefSlow(size), c10::fromIntArrayRefSlow(stride), storage_offset); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::as_strided_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), MSharp::fromIntArrayRefSlow(size), MSharp::fromIntArrayRefSlow(stride), storage_offset); });
   return *this;
 }
 
 inline const Series& Series::as_strided__symint(SymIntArrayRef size, SymIntArrayRef stride, optional<SymInt> storage_offset) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::as_strided_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), size, stride, storage_offset); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::as_strided_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), size, stride, storage_offset); });
   return *this;
 }
 
@@ -1433,7 +1433,7 @@ inline Series Series::asin() const {
 }
 
 inline Series& Series::asin_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::asin_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::asin_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1442,7 +1442,7 @@ inline Series Series::arcsin() const {
 }
 
 inline Series& Series::arcsin_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::arcsin_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::arcsin_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1451,7 +1451,7 @@ inline Series Series::atan() const {
 }
 
 inline Series& Series::atan_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::atan_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::atan_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1460,7 +1460,7 @@ inline Series Series::arctan() const {
 }
 
 inline Series& Series::arctan_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::arctan_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::arctan_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1469,7 +1469,7 @@ inline Series Series::baddbmm(const Series & batch1, const Series & batch2, cons
 }
 
 inline Series& Series::baddbmm_(const Series & batch1, const Series & batch2, const Scalar & beta, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::baddbmm_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), batch1, batch2, beta, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::baddbmm_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), batch1, batch2, beta, alpha); });
   return const_cast<Series&>(*this);
 }
 
@@ -1482,17 +1482,17 @@ inline Series Series::bernoulli(double p, optional<Generator> generator) const {
 }
 
 inline Series& Series::bernoulli_(const Series & p, optional<Generator> generator) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bernoulli__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), p, generator); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bernoulli__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), p, generator); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::bernoulli_(double p, optional<Generator> generator) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bernoulli__float::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), p, generator); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bernoulli__float::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), p, generator); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::bincount(const optional<Series> & weights, int64_t minlength) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::bincount::call(*this, weights->tensor(), minlength)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::bincount::call(*this, weights->series(), minlength)); });
 }
 
 inline Series Series::bitwise_not() const {
@@ -1500,7 +1500,7 @@ inline Series Series::bitwise_not() const {
 }
 
 inline Series& Series::bitwise_not_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_not_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_not_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1509,7 +1509,7 @@ inline Series Series::copysign(const Series & other) const {
 }
 
 inline Series& Series::copysign_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::copysign__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::copysign__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -1518,7 +1518,7 @@ inline Series Series::copysign(const Scalar & other) const {
 }
 
 inline Series& Series::copysign_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::copysign__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::copysign__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -1531,7 +1531,7 @@ inline Series Series::logical_not() const {
 }
 
 inline Series& Series::logical_not_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::logical_not_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::logical_not_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1540,7 +1540,7 @@ inline Series Series::logical_xor(const Series & other) const {
 }
 
 inline Series& Series::logical_xor_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::logical_xor_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::logical_xor_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -1549,7 +1549,7 @@ inline Series Series::logical_and(const Series & other) const {
 }
 
 inline Series& Series::logical_and_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::logical_and_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::logical_and_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -1559,7 +1559,7 @@ inline Scalar Series::item() const {
 
 template <typename T>
 inline T Series::item() const {
-  PLUSS_INTERNAL_DISPATCH({ return at::Tensor(*this).template item<T>(); });
+  PLUSS_INTERNAL_DISPATCH({ return at::Series(*this).template item<T>(); });
 }
 
 inline Series Series::logical_or(const Series & other) const {
@@ -1567,7 +1567,7 @@ inline Series Series::logical_or(const Series & other) const {
 }
 
 inline Series& Series::logical_or_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::logical_or_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::logical_or_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -1576,7 +1576,7 @@ inline Series Series::bmm(const Series & mat2) const {
 }
 
 inline Series Series::broadcast_to(IntArrayRef size) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::broadcast_to::call(*this, c10::fromIntArrayRefSlow(size))); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::broadcast_to::call(*this, MSharp::fromIntArrayRefSlow(size))); });
 }
 
 inline Series Series::broadcast_to_symint(SymIntArrayRef size) const {
@@ -1588,7 +1588,7 @@ inline Series Series::ceil() const {
 }
 
 inline Series& Series::ceil_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::ceil_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::ceil_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1629,7 +1629,7 @@ inline ::std::vector<Series> Series::tensor_split_symint(SymInt sections, int64_
 }
 
 inline ::std::vector<Series> Series::tensor_split(IntArrayRef indices, int64_t dim) const {
-  auto ts = at::_ops::tensor_split_indices::call(*this, c10::fromIntArrayRefSlow(indices), dim);
+  auto ts = at::_ops::tensor_split_indices::call(*this, MSharp::fromIntArrayRefSlow(indices), dim);
   std::vector<Series> out;
   out.reserve(ts.size());
   for (const auto& t : ts)
@@ -1660,7 +1660,7 @@ inline Series Series::clamp(const optional<Scalar> & min, const optional<Scalar>
 }
 
 inline Series Series::clamp(const optional<Series> & min, const optional<Series> & max) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::clamp_Tensor::call(*this, min->tensor(), max->tensor())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::clamp_Tensor::call(*this, min->series(), max->series())); });
 }
 
 inline Series Series::clamp_max(const Scalar & max) const {
@@ -1680,32 +1680,32 @@ inline Series Series::clamp_min(const Series & min) const {
 }
 
 inline Series& Series::clamp_(const optional<Scalar> & min, const optional<Scalar> & max) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), min, max); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), min, max); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::clamp_(const optional<Series> & min, const optional<Series> & max) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), min->tensor(), max->tensor()); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), min->series(), max->series()); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::clamp_max_(const Scalar & max) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp_max_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), max); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp_max_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), max); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::clamp_max_(const Series & max) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp_max__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), max); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp_max__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), max); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::clamp_min_(const Scalar & min) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp_min_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), min); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp_min_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), min); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::clamp_min_(const Series & min) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp_min__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), min); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::clamp_min__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), min); });
   return const_cast<Series&>(*this);
 }
 
@@ -1714,21 +1714,21 @@ inline Series Series::clip(const optional<Scalar> & min, const optional<Scalar> 
 }
 
 inline Series& Series::clip_(const optional<Scalar> & min, const optional<Scalar> & max) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::clip_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), min, max); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::clip_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), min, max); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::clip(const optional<Series> & min, const optional<Series> & max) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::clip_Tensor::call(*this, min->tensor(), max->tensor())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::clip_Tensor::call(*this, min->series(), max->series())); });
 }
 
 inline Series& Series::clip_(const optional<Series> & min, const optional<Series> & max) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::clip__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), min->tensor(), max->tensor()); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::clip__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), min->series(), max->series()); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::copy_(const Series & src, bool non_blocking) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::copy_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), src, non_blocking); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::copy_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), src, non_blocking); });
   return const_cast<Series&>(*this);
 }
 
@@ -1737,7 +1737,7 @@ inline Series Series::cos() const {
 }
 
 inline Series& Series::cos_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::cos_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::cos_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1746,7 +1746,7 @@ inline Series Series::cosh() const {
 }
 
 inline Series& Series::cosh_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::cosh_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::cosh_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -1759,7 +1759,7 @@ inline Series Series::count_nonzero(optional<int64_t> dim) const {
 }
 
 inline Series Series::cov(int64_t correction, const optional<Series> & fweights, const optional<Series> & aweights) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::cov::call(*this, correction, fweights->tensor(), aweights->tensor())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::cov::call(*this, correction, fweights->series(), aweights->series())); });
 }
 
 inline Series Series::corrcoef() const {
@@ -1803,22 +1803,22 @@ inline Series Series::cumsum(Dimname dim, optional<ScalarType> dtype) const {
 }
 
 inline Series& Series::cumprod_(int64_t dim, optional<ScalarType> dtype) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::cumprod_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, dtype); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::cumprod_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, dtype); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::cumprod_(Dimname dim, optional<ScalarType> dtype) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::cumprod__dimname::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, dtype); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::cumprod__dimname::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, dtype); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::cumsum_(int64_t dim, optional<ScalarType> dtype) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::cumsum_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, dtype); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::cumsum_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, dtype); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::cumsum_(Dimname dim, optional<ScalarType> dtype) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::cumsum__dimname::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, dtype); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::cumsum__dimname::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, dtype); });
   return const_cast<Series&>(*this);
 }
 
@@ -1839,47 +1839,47 @@ inline Series Series::diagonal(Dimname outdim, Dimname dim1, Dimname dim2, int64
 }
 
 inline Series Series::diff(int64_t n, int64_t dim, const optional<Series> & prepend, const optional<Series> & append) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::diff::call(*this, n, dim, prepend->tensor(), append->tensor())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::diff::call(*this, n, dim, prepend->series(), append->series())); });
 }
 
 inline Series Series::div(const Series& other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(tensor().div(other.tensor())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(series().div(other.series())); });
 }
 
 inline Series& Series::div_(const Series& other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::div__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)),other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::div__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)),other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::div(const Series & other, optional<string_view> rounding_mode) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Tensor_mode::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, rounding_mode)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Tensor_mode::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, rounding_mode)); });
 }
 
 inline Series& Series::div_(const Series & other, optional<string_view> rounding_mode) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::div__Tensor_mode::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, rounding_mode); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::div__Tensor_mode::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, rounding_mode); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::div(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(tensor().div(other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(series().div(other)); });
 }
 
 inline Series& Series::div_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::div__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::div__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::div(const Scalar & other, optional<string_view> rounding_mode) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Scalar_mode::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, rounding_mode)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::div_Scalar_mode::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, rounding_mode)); });
 }
 
 inline Series& Series::div_(const Scalar & other, optional<string_view> rounding_mode) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::div__Scalar_mode::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, rounding_mode); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::div__Scalar_mode::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, rounding_mode); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::fill_diagonal_(const Scalar & fill_value, bool wrap) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::fill_diagonal_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), fill_value, wrap); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::fill_diagonal_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), fill_value, wrap); });
   return const_cast<Series&>(*this);
 }
 
@@ -1888,7 +1888,7 @@ inline Series Series::divide(const Series & other) const {
 }
 
 inline Series& Series::divide_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::divide__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::divide__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -1897,7 +1897,7 @@ inline Series Series::divide(const Scalar & other) const {
 }
 
 inline Series& Series::divide_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::divide__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::divide__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -1906,7 +1906,7 @@ inline Series Series::divide(const Series & other, optional<string_view> roundin
 }
 
 inline Series& Series::divide_(const Series & other, optional<string_view> rounding_mode) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::divide__Tensor_mode::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, rounding_mode); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::divide__Tensor_mode::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, rounding_mode); });
   return const_cast<Series&>(*this);
 }
 
@@ -1915,7 +1915,7 @@ inline Series Series::divide(const Scalar & other, optional<string_view> roundin
 }
 
 inline Series& Series::divide_(const Scalar & other, optional<string_view> rounding_mode) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::divide__Scalar_mode::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, rounding_mode); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::divide__Scalar_mode::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, rounding_mode); });
   return const_cast<Series&>(*this);
 }
 
@@ -1924,7 +1924,7 @@ inline Series Series::true_divide(const Series & other) const {
 }
 
 inline Series& Series::true_divide_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::true_divide__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::true_divide__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -1933,12 +1933,12 @@ inline Series Series::true_divide(const Scalar & other) const {
 }
 
 inline Series& Series::true_divide_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::true_divide__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::true_divide__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
-inline Series Series::dot(const Series & tensor) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::dot::call(*this, tensor)); });
+inline Series Series::dot(const Series & series) const {
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::dot::call(*this, series)); });
 }
 
 inline Series Series::vdot(const Series & other) const {
@@ -1946,15 +1946,15 @@ inline Series Series::vdot(const Series & other) const {
 }
 
 inline Series Series::new_empty(IntArrayRef size, SeriesOptions options) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty::call(*this, c10::fromIntArrayRefSlow(size), c10::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty::call(*this, MSharp::fromIntArrayRefSlow(size), MSharp::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
 }
 
 inline Series Series::new_empty(IntArrayRef size, optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty::call(*this, c10::fromIntArrayRefSlow(size), dtype, layout, device, pin_memory)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty::call(*this, MSharp::fromIntArrayRefSlow(size), dtype, layout, device, pin_memory)); });
 }
 
 inline Series Series::new_empty_symint(SymIntArrayRef size, SeriesOptions options) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty::call(*this, size, c10::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty::call(*this, size, MSharp::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
 }
 
 inline Series Series::new_empty_symint(SymIntArrayRef size, optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory) const {
@@ -1962,15 +1962,15 @@ inline Series Series::new_empty_symint(SymIntArrayRef size, optional<ScalarType>
 }
 
 inline Series Series::new_empty_strided(IntArrayRef size, IntArrayRef stride, SeriesOptions options) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty_strided::call(*this, c10::fromIntArrayRefSlow(size), c10::fromIntArrayRefSlow(stride), c10::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty_strided::call(*this, MSharp::fromIntArrayRefSlow(size), MSharp::fromIntArrayRefSlow(stride), MSharp::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
 }
 
 inline Series Series::new_empty_strided(IntArrayRef size, IntArrayRef stride, optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty_strided::call(*this, c10::fromIntArrayRefSlow(size), c10::fromIntArrayRefSlow(stride), dtype, layout, device, pin_memory)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty_strided::call(*this, MSharp::fromIntArrayRefSlow(size), MSharp::fromIntArrayRefSlow(stride), dtype, layout, device, pin_memory)); });
 }
 
 inline Series Series::new_empty_strided_symint(SymIntArrayRef size, SymIntArrayRef stride, SeriesOptions options) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty_strided::call(*this, size, stride, c10::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_empty_strided::call(*this, size, stride, MSharp::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
 }
 
 inline Series Series::new_empty_strided_symint(SymIntArrayRef size, SymIntArrayRef stride, optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory) const {
@@ -1978,15 +1978,15 @@ inline Series Series::new_empty_strided_symint(SymIntArrayRef size, SymIntArrayR
 }
 
 inline Series Series::new_full(IntArrayRef size, const Scalar & fill_value, SeriesOptions options) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_full::call(*this, c10::fromIntArrayRefSlow(size), fill_value, c10::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_full::call(*this, MSharp::fromIntArrayRefSlow(size), fill_value, MSharp::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
 }
 
 inline Series Series::new_full(IntArrayRef size, const Scalar & fill_value, optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_full::call(*this, c10::fromIntArrayRefSlow(size), fill_value, dtype, layout, device, pin_memory)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_full::call(*this, MSharp::fromIntArrayRefSlow(size), fill_value, dtype, layout, device, pin_memory)); });
 }
 
 inline Series Series::new_full_symint(SymIntArrayRef size, const Scalar & fill_value, SeriesOptions options) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_full::call(*this, size, fill_value, c10::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_full::call(*this, size, fill_value, MSharp::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
 }
 
 inline Series Series::new_full_symint(SymIntArrayRef size, const Scalar & fill_value, optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory) const {
@@ -1994,15 +1994,15 @@ inline Series Series::new_full_symint(SymIntArrayRef size, const Scalar & fill_v
 }
 
 inline Series Series::new_zeros(IntArrayRef size, SeriesOptions options) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_zeros::call(*this, c10::fromIntArrayRefSlow(size), c10::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_zeros::call(*this, MSharp::fromIntArrayRefSlow(size), MSharp::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
 }
 
 inline Series Series::new_zeros(IntArrayRef size, optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_zeros::call(*this, c10::fromIntArrayRefSlow(size), dtype, layout, device, pin_memory)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_zeros::call(*this, MSharp::fromIntArrayRefSlow(size), dtype, layout, device, pin_memory)); });
 }
 
 inline Series Series::new_zeros_symint(SymIntArrayRef size, SeriesOptions options) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_zeros::call(*this, size, c10::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_zeros::call(*this, size, MSharp::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
 }
 
 inline Series Series::new_zeros_symint(SymIntArrayRef size, optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory) const {
@@ -2010,15 +2010,15 @@ inline Series Series::new_zeros_symint(SymIntArrayRef size, optional<ScalarType>
 }
 
 inline Series Series::new_ones(IntArrayRef size, SeriesOptions options) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_ones::call(*this, c10::fromIntArrayRefSlow(size), c10::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_ones::call(*this, MSharp::fromIntArrayRefSlow(size), MSharp::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
 }
 
 inline Series Series::new_ones(IntArrayRef size, optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_ones::call(*this, c10::fromIntArrayRefSlow(size), dtype, layout, device, pin_memory)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_ones::call(*this, MSharp::fromIntArrayRefSlow(size), dtype, layout, device, pin_memory)); });
 }
 
 inline Series Series::new_ones_symint(SymIntArrayRef size, SeriesOptions options) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_ones::call(*this, size, c10::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::new_ones::call(*this, size, MSharp::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt())); });
 }
 
 inline Series Series::new_ones_symint(SymIntArrayRef size, optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory) const {
@@ -2026,12 +2026,12 @@ inline Series Series::new_ones_symint(SymIntArrayRef size, optional<ScalarType> 
 }
 
 inline const Series& Series::resize_(IntArrayRef size, optional<MemoryFormat> memory_format) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::resize_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), c10::fromIntArrayRefSlow(size), memory_format); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::resize_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), MSharp::fromIntArrayRefSlow(size), memory_format); });
   return *this;
 }
 
 inline const Series& Series::resize__symint(SymIntArrayRef size, optional<MemoryFormat> memory_format) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::resize_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), size, memory_format); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::resize_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), size, memory_format); });
   return *this;
 }
 
@@ -2040,7 +2040,7 @@ inline Series Series::erf() const {
 }
 
 inline Series& Series::erf_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::erf_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::erf_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2049,7 +2049,7 @@ inline Series Series::erfc() const {
 }
 
 inline Series& Series::erfc_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::erfc_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::erfc_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2058,7 +2058,7 @@ inline Series Series::exp() const {
 }
 
 inline Series& Series::exp_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::exp_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::exp_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2067,7 +2067,7 @@ inline Series Series::exp2() const {
 }
 
 inline Series& Series::exp2_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::exp2_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::exp2_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2076,12 +2076,12 @@ inline Series Series::expm1() const {
 }
 
 inline Series& Series::expm1_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::expm1_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::expm1_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::expand(IntArrayRef size, bool implicit) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::expand::call(*this, c10::fromIntArrayRefSlow(size), implicit)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::expand::call(*this, MSharp::fromIntArrayRefSlow(size), implicit)); });
 }
 
 inline Series Series::expand_symint(SymIntArrayRef size, bool implicit) const {
@@ -2109,7 +2109,7 @@ inline Series Series::flatten(DimnameList dims, Dimname out_dim) const {
 }
 
 inline Series Series::unflatten(int64_t dim, IntArrayRef sizes) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::unflatten_int::call(*this, dim, c10::fromIntArrayRefSlow(sizes))); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::unflatten_int::call(*this, dim, MSharp::fromIntArrayRefSlow(sizes))); });
 }
 
 inline Series Series::unflatten_symint(int64_t dim, SymIntArrayRef sizes) const {
@@ -2117,7 +2117,7 @@ inline Series Series::unflatten_symint(int64_t dim, SymIntArrayRef sizes) const 
 }
 
 inline Series Series::unflatten(Dimname dim, IntArrayRef sizes, DimnameList names) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::unflatten_Dimname::call(*this, dim, c10::fromIntArrayRefSlow(sizes), names)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::unflatten_Dimname::call(*this, dim, MSharp::fromIntArrayRefSlow(sizes), names)); });
 }
 
 inline Series Series::unflatten_symint(Dimname dim, SymIntArrayRef sizes, DimnameList names) const {
@@ -2125,12 +2125,12 @@ inline Series Series::unflatten_symint(Dimname dim, SymIntArrayRef sizes, Dimnam
 }
 
 inline Series& Series::fill_(const Scalar & value) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::fill__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), value); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::fill__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), value); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::fill_(const Series & value) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::fill__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), value); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::fill__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), value); });
   return const_cast<Series&>(*this);
 }
 
@@ -2139,7 +2139,7 @@ inline Series Series::floor() const {
 }
 
 inline Series& Series::floor_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::floor_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::floor_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2148,7 +2148,7 @@ inline Series Series::floor_divide(const Series & other) const {
 }
 
 inline Series& Series::floor_divide_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::floor_divide__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::floor_divide__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -2157,7 +2157,7 @@ inline Series Series::floor_divide(const Scalar & other) const {
 }
 
 inline Series& Series::floor_divide_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::floor_divide__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::floor_divide__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -2166,7 +2166,7 @@ inline Series Series::frac() const {
 }
 
 inline Series& Series::frac_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::frac_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::frac_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2175,7 +2175,7 @@ inline Series Series::gcd(const Series & other) const {
 }
 
 inline Series& Series::gcd_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::gcd_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::gcd_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -2184,18 +2184,18 @@ inline Series Series::lcm(const Series & other) const {
 }
 
 inline Series& Series::lcm_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::lcm_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::lcm_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 // inline Series Series::index(const std::vector<optional<Series>>& indices) const {
-//   List<optional<at::Tensor>> at_indices;
+//   List<optional<at::Series>> at_indices;
 //   at_indices.reserve(indices.size());
 
 //   for (size_t i = 0; i < indices.size(); ++i) {
 //     const auto& opt_series = indices[i];
 //     if (opt_series) {
-//       at_indices.push_back(at::Tensor(*opt_series));
+//       at_indices.push_back(at::Series(*opt_series));
 //     } else {
 //       at_indices.push_back(std::std::nullopt);
 //     }
@@ -2205,12 +2205,12 @@ inline Series& Series::lcm_(const Series & other) const {
 // }
 
 inline Series Series::index(const std::vector<std::optional<Series>>& indices) const {
-  c10::List<std::optional<at::Tensor>> at_indices;
+  MSharp::List<std::optional<at::Series>> at_indices;
   at_indices.reserve(indices.size());
 
   for (const auto& opt_series : indices) {
     if (opt_series) {
-      at_indices.push_back(at::Tensor(*opt_series));
+      at_indices.push_back(at::Series(*opt_series));
     } else {
       at_indices.push_back(std::nullopt);
     }
@@ -2220,7 +2220,7 @@ inline Series Series::index(const std::vector<std::optional<Series>>& indices) c
 }
 
 inline Series& Series::index_copy_(int64_t dim, const Series & index, const Series & source) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_copy_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, source); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_copy_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, source); });
   return const_cast<Series&>(*this);
 }
 
@@ -2229,7 +2229,7 @@ inline Series Series::index_copy(int64_t dim, const Series & index, const Series
 }
 
 inline Series& Series::index_copy_(Dimname dim, const Series & index, const Series & source) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_copy__dimname::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, source); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_copy__dimname::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, source); });
   return const_cast<Series&>(*this);
 }
 
@@ -2238,37 +2238,37 @@ inline Series Series::index_copy(Dimname dim, const Series & index, const Series
 }
 
 inline Series& Series::index_put_(const std::vector<optional<Series>>& indices, const Series& values, bool accumulate) const {
-  c10::List<optional<at::Tensor>> at_indices;
+  MSharp::List<optional<at::Series>> at_indices;
   at_indices.reserve(indices.size());
 
   for (size_t i = 0; i < indices.size(); ++i) {
     const auto& opt_series = indices[i];
     if (opt_series) {
-      at_indices.push_back(at::Tensor(*opt_series));
+      at_indices.push_back(at::Series(*opt_series));
     } else {
       at_indices.push_back(std::nullopt);
     }
   }
 
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_put_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), at_indices, values, accumulate); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_put_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), at_indices, values, accumulate); });
 
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::index_put(const std::vector<optional<Series>>& indices, const Series& values, bool accumulate) const {
-  c10::List<optional<at::Tensor>> at_indices;
+  MSharp::List<optional<at::Series>> at_indices;
   at_indices.reserve(indices.size());
 
   for (size_t i = 0; i < indices.size(); ++i) {
     const auto& opt_series = indices[i];
     if (opt_series) {
-      at_indices.push_back(at::Tensor(*opt_series));
+      at_indices.push_back(at::Series(*opt_series));
     } else {
       at_indices.push_back(std::nullopt);
     }
   }
 
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_put::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), at_indices, values, accumulate); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_put::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), at_indices, values, accumulate); });
 
   return const_cast<Series&>(*this);
 }
@@ -2320,9 +2320,9 @@ inline bool Series::is_same_size(const Series & other) const {
   PLUSS_INTERNAL_DISPATCH({ return at::_ops::is_same_size::call(*this, other); });
 }
 
-inline Series Series::to_cpu() const { PLUSS_INTERNAL_DISPATCH({ return Series(this->tensor().to(at::kCPU)); }); }
-inline Series Series::to_cuda() const { PLUSS_INTERNAL_DISPATCH({ return Series(this->tensor().to(at::kCUDA)); }); }
-inline Series Series::to_mps() const { PLUSS_INTERNAL_DISPATCH({ return Series(this->tensor().to(at::kMPS)); }); }
+inline Series Series::to_cpu() const { PLUSS_INTERNAL_DISPATCH({ return Series(this->series().to(at::kCPU)); }); }
+inline Series Series::to_cuda() const { PLUSS_INTERNAL_DISPATCH({ return Series(this->series().to(at::kCUDA)); }); }
+inline Series Series::to_mps() const { PLUSS_INTERNAL_DISPATCH({ return Series(this->series().to(at::kMPS)); }); }
 // inline Series Series::__dispatch_is_signed() const {
 //   PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__dispatch_is_signed::call(*this)); });
 // }
@@ -2354,7 +2354,7 @@ inline Series Series::nan_to_num(optional<double> nan, optional<double> posinf, 
 }
 
 inline Series& Series::nan_to_num_(optional<double> nan, optional<double> posinf, optional<double> neginf) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::nan_to_num_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), nan, posinf, neginf); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::nan_to_num_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), nan, posinf, neginf); });
   return const_cast<Series&>(*this);
 }
 
@@ -2363,7 +2363,7 @@ inline Series Series::ldexp(const Series & other) const {
 }
 
 inline Series& Series::ldexp_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::ldexp_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::ldexp_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -2372,7 +2372,7 @@ inline Series Series::log() const {
 }
 
 inline Series& Series::log_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::log_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::log_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2381,7 +2381,7 @@ inline Series Series::log10() const {
 }
 
 inline Series& Series::log10_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::log10_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::log10_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2390,7 +2390,7 @@ inline Series Series::log1p() const {
 }
 
 inline Series& Series::log1p_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::log1p_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::log1p_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2399,7 +2399,7 @@ inline Series Series::log2() const {
 }
 
 inline Series& Series::log2_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::log2_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::log2_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2420,12 +2420,12 @@ inline Series Series::xlogy(const Scalar & other) const {
 }
 
 inline Series& Series::xlogy_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::xlogy__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::xlogy__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::xlogy_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::xlogy__Scalar_Other::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::xlogy__Scalar_Other::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -2557,20 +2557,20 @@ inline ::std::tuple<Series, Series> Series::mode(Dimname dim, bool keepdim) cons
 }
 
 inline Series Series::mul(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(tensor().mul(other.tensor())); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(series().mul(other.series())); });
 }
 
 inline Series& Series::mul_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::mul__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::mul__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::mul(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(tensor().mul(other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(series().mul(other)); });
 }
 
 inline Series& Series::mul_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::mul__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::mul__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -2579,7 +2579,7 @@ inline Series Series::multiply(const Series & other) const {
 }
 
 inline Series& Series::multiply_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::multiply__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::multiply__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -2588,7 +2588,7 @@ inline Series Series::multiply(const Scalar & other) const {
 }
 
 inline Series& Series::multiply_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::multiply__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::multiply__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -2601,7 +2601,7 @@ inline Series Series::mvlgamma(int64_t p) const {
 }
 
 inline Series& Series::mvlgamma_(int64_t p) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::mvlgamma_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), p); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::mvlgamma_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), p); });
   return const_cast<Series&>(*this);
 }
 
@@ -2686,7 +2686,7 @@ inline Series Series::rad2deg() const {
 }
 
 inline Series& Series::rad2deg_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::rad2deg_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::rad2deg_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2695,7 +2695,7 @@ inline Series Series::deg2rad() const {
 }
 
 inline Series& Series::deg2rad_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::deg2rad_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::deg2rad_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2708,7 +2708,7 @@ inline Series Series::reciprocal() const {
 }
 
 inline Series& Series::reciprocal_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::reciprocal_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::reciprocal_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2717,7 +2717,7 @@ inline Series Series::neg() const {
 }
 
 inline Series& Series::neg_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::neg_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::neg_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2726,12 +2726,12 @@ inline Series Series::negative() const {
 }
 
 inline Series& Series::negative_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::negative_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::negative_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::repeat(IntArrayRef repeats) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::repeat::call(*this, c10::fromIntArrayRefSlow(repeats))); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::repeat::call(*this, MSharp::fromIntArrayRefSlow(repeats))); });
 }
 
 inline Series Series::repeat_symint(SymIntArrayRef repeats) const {
@@ -2755,7 +2755,7 @@ inline Series Series::repeat_interleave_symint(SymInt repeats, optional<int64_t>
 }
 
 inline Series Series::reshape(IntArrayRef shape) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::reshape::call(*this, c10::fromIntArrayRefSlow(shape))); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::reshape::call(*this, MSharp::fromIntArrayRefSlow(shape))); });
 }
 
 inline Series Series::reshape_symint(SymIntArrayRef shape) const {
@@ -2763,7 +2763,7 @@ inline Series Series::reshape_symint(SymIntArrayRef shape) const {
 }
 
 inline Series Series::_reshape_alias(IntArrayRef size, IntArrayRef stride) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::_reshape_alias::call(*this, c10::fromIntArrayRefSlow(size), c10::fromIntArrayRefSlow(stride))); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::_reshape_alias::call(*this, MSharp::fromIntArrayRefSlow(size), MSharp::fromIntArrayRefSlow(stride))); });
 }
 
 inline Series Series::_reshape_alias_symint(SymIntArrayRef size, SymIntArrayRef stride) const {
@@ -2779,7 +2779,7 @@ inline Series Series::round() const {
 }
 
 inline Series& Series::round_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::round_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::round_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2788,7 +2788,7 @@ inline Series Series::round(int64_t decimals) const {
 }
 
 inline Series& Series::round_(int64_t decimals) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::round__decimals::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), decimals); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::round__decimals::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), decimals); });
   return const_cast<Series&>(*this);
 }
 
@@ -2797,7 +2797,7 @@ inline Series Series::relu() const {
 }
 
 inline Series& Series::relu_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::relu_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::relu_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2818,7 +2818,7 @@ inline Series Series::rsqrt() const {
 }
 
 inline Series& Series::rsqrt_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::rsqrt_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::rsqrt_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2839,7 +2839,7 @@ inline Series Series::sigmoid() const {
 }
 
 inline Series& Series::sigmoid_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::sigmoid_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::sigmoid_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2848,7 +2848,7 @@ inline Series Series::logit(optional<double> eps) const {
 }
 
 inline Series& Series::logit_(optional<double> eps) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::logit_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), eps); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::logit_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), eps); });
   return const_cast<Series&>(*this);
 }
 
@@ -2857,7 +2857,7 @@ inline Series Series::sin() const {
 }
 
 inline Series& Series::sin_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::sin_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::sin_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2866,7 +2866,7 @@ inline Series Series::sinc() const {
 }
 
 inline Series& Series::sinc_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::sinc_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::sinc_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2875,7 +2875,7 @@ inline Series Series::sinh() const {
 }
 
 inline Series& Series::sinh_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::sinh_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::sinh_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2884,7 +2884,7 @@ inline Series Series::detach() const {
 }
 
 inline Series& Series::detach_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::detach_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::detach_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -2929,7 +2929,7 @@ inline Series Series::diagonal_scatter(const Series & src, int64_t offset, int64
 }
 
 inline Series Series::as_strided_scatter(const Series & src, IntArrayRef size, IntArrayRef stride, optional<int64_t> storage_offset) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::as_strided_scatter::call(*this, src, c10::fromIntArrayRefSlow(size), c10::fromIntArrayRefSlow(stride), storage_offset.has_value() ? ::std::make_optional(SymInt(*storage_offset)) : ::std::nullopt)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::as_strided_scatter::call(*this, src, MSharp::fromIntArrayRefSlow(size), MSharp::fromIntArrayRefSlow(stride), storage_offset.has_value() ? ::std::make_optional(SymInt(*storage_offset)) : ::std::nullopt)); });
 }
 
 inline Series Series::as_strided_scatter_symint(const Series & src, SymIntArrayRef size, SymIntArrayRef stride, optional<SymInt> storage_offset) const {
@@ -2985,7 +2985,7 @@ inline ::std::vector<Series> Series::split_symint(SymInt split_size, int64_t dim
 }
 
 inline ::std::vector<Series> Series::split(IntArrayRef split_size, int64_t dim) const {
-  auto ts = at::_ops::split_sizes::call(*this, c10::fromIntArrayRefSlow(split_size), dim);
+  auto ts = at::_ops::split_sizes::call(*this, MSharp::fromIntArrayRefSlow(split_size), dim);
   std::vector<Series> out;
   out.reserve(ts.size());
   for (const auto& t : ts)
@@ -3003,7 +3003,7 @@ inline ::std::vector<Series> Series::split_symint(SymIntArrayRef split_size, int
 }
 
 inline ::std::vector<Series> Series::unsafe_split_with_sizes(IntArrayRef split_sizes, int64_t dim) const {
-  auto ts = at::_ops::unsafe_split_with_sizes::call(*this, c10::fromIntArrayRefSlow(split_sizes), dim);
+  auto ts = at::_ops::unsafe_split_with_sizes::call(*this, MSharp::fromIntArrayRefSlow(split_sizes), dim);
   std::vector<Series> out;
   out.reserve(ts.size());
   for (const auto& t : ts)
@@ -3021,7 +3021,7 @@ inline ::std::vector<Series> Series::unsafe_split_with_sizes_symint(SymIntArrayR
 }
 
 inline ::std::vector<Series> Series::split_with_sizes(IntArrayRef split_sizes, int64_t dim) const {
-  auto ts = at::_ops::split_with_sizes::call(*this, c10::fromIntArrayRefSlow(split_sizes), dim);
+  auto ts = at::_ops::split_with_sizes::call(*this, MSharp::fromIntArrayRefSlow(split_sizes), dim);
   std::vector<Series> out;
   out.reserve(ts.size());
   for (const auto& t : ts)
@@ -3109,22 +3109,22 @@ inline Series Series::squeeze(IntArrayRef dim) const {
 }
 
 inline Series& Series::squeeze_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::squeeze_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::squeeze_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::squeeze_(int64_t dim) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::squeeze__dim::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::squeeze__dim::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::squeeze_(IntArrayRef dim) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::squeeze__dims::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::squeeze__dims::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::squeeze_(Dimname dim) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::squeeze__dimname::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::squeeze__dimname::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim); });
   return const_cast<Series&>(*this);
 }
 
@@ -3133,15 +3133,15 @@ inline Series Series::sspaddmm(const Series & mat1, const Series & mat2, const S
 }
 
 inline Series Series::stft(int64_t n_fft, optional<int64_t> hop_length, optional<int64_t> win_length, const optional<Series> & window, bool normalized, optional<bool> onesided, optional<bool> return_complex) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::stft::call(*this, n_fft, hop_length, win_length, window->tensor(), normalized, onesided, return_complex)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::stft::call(*this, n_fft, hop_length, win_length, window->series(), normalized, onesided, return_complex)); });
 }
 
 inline Series Series::stft(int64_t n_fft, optional<int64_t> hop_length, optional<int64_t> win_length, const optional<Series> & window, bool center, string_view pad_mode, bool normalized, optional<bool> onesided, optional<bool> return_complex) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::stft_center::call(*this, n_fft, hop_length, win_length, window->tensor(), center, pad_mode, normalized, onesided, return_complex)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::stft_center::call(*this, n_fft, hop_length, win_length, window->series(), center, pad_mode, normalized, onesided, return_complex)); });
 }
 
 inline Series Series::istft(int64_t n_fft, optional<int64_t> hop_length, optional<int64_t> win_length, const optional<Series> & window, bool center, bool normalized, optional<bool> onesided, optional<int64_t> length, bool return_complex) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::istft::call(*this, n_fft, hop_length, win_length, window->tensor(), center, normalized, onesided, length, return_complex)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::istft::call(*this, n_fft, hop_length, win_length, window->series(), center, normalized, onesided, length, return_complex)); });
 }
 
 inline int64_t Series::stride(Dimname dim) const {
@@ -3165,7 +3165,7 @@ inline Series Series::nansum(OptionalIntArrayRef dim, bool keepdim, optional<Sca
 }
 
 inline Series Series::sum_to_size(IntArrayRef size) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::sum_to_size::call(*this, c10::fromIntArrayRefSlow(size))); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::sum_to_size::call(*this, MSharp::fromIntArrayRefSlow(size))); });
 }
 
 inline Series Series::sum_to_size_symint(SymIntArrayRef size) const {
@@ -3177,7 +3177,7 @@ inline Series Series::sqrt() const {
 }
 
 inline Series& Series::sqrt_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::sqrt_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::sqrt_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -3186,7 +3186,7 @@ inline Series Series::square() const {
 }
 
 inline Series& Series::square_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::square_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::square_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -3227,7 +3227,7 @@ inline Series Series::t() const {
 }
 
 inline Series& Series::t_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::t_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::t_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -3236,7 +3236,7 @@ inline Series Series::tan() const {
 }
 
 inline Series& Series::tan_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::tan_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::tan_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -3245,12 +3245,12 @@ inline Series Series::tanh() const {
 }
 
 inline Series& Series::tanh_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::tanh_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::tanh_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::tile(IntArrayRef dims) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::tile::call(*this, c10::fromIntArrayRefSlow(dims))); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::tile::call(*this, MSharp::fromIntArrayRefSlow(dims))); });
 }
 
 inline Series Series::tile_symint(SymIntArrayRef dims) const {
@@ -3266,7 +3266,7 @@ inline Series Series::transpose(Dimname dim0, Dimname dim1) const {
 }
 
 inline Series& Series::transpose_(int64_t dim0, int64_t dim1) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::transpose_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim0, dim1); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::transpose_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim0, dim1); });
   return const_cast<Series&>(*this);
 }
 
@@ -3283,7 +3283,7 @@ inline Series Series::flipud() const {
 }
 
 inline Series Series::roll(IntArrayRef shifts, IntArrayRef dims) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::roll::call(*this, c10::fromIntArrayRefSlow(shifts), dims)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::roll::call(*this, MSharp::fromIntArrayRefSlow(shifts), dims)); });
 }
 
 inline Series Series::roll_symint(SymIntArrayRef shifts, IntArrayRef dims) const {
@@ -3311,7 +3311,7 @@ inline Series Series::trunc() const {
 }
 
 inline Series& Series::trunc_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::trunc_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::trunc_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -3320,7 +3320,7 @@ inline Series Series::fix() const {
 }
 
 inline Series& Series::fix_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::fix_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::fix_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -3333,7 +3333,7 @@ inline Series Series::unsqueeze(int64_t dim) const {
 }
 
 inline Series& Series::unsqueeze_(int64_t dim) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::unsqueeze_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::unsqueeze_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim); });
   return const_cast<Series&>(*this);
 }
 
@@ -3407,35 +3407,35 @@ inline Series Series::positive() const {
 }
 
 inline const Series& Series::resize_as_(const Series& the_template, std::optional<MemoryFormat> memory_format) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::resize_as_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), the_template, memory_format); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::resize_as_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), the_template, memory_format); });
   return *this;
 }
 
 inline const Series& Series::resize_as_sparse_(const Series & the_template) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::resize_as_sparse_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), the_template); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::resize_as_sparse_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), the_template); });
   return *this;
 }
 
 inline Series& Series::zero_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::zero_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::zero_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::sub(const Series & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(tensor().sub(other.tensor(), alpha)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(series().sub(other.series(), alpha)); });
 }
 
 inline Series& Series::sub_(const Series & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::sub__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::sub__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, alpha); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::sub(const Scalar & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(tensor().sub(other, alpha)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(series().sub(other, alpha)); });
 }
 
 inline Series& Series::sub_(const Scalar & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::sub__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::sub__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, alpha); });
   return const_cast<Series&>(*this);
 }
 
@@ -3444,7 +3444,7 @@ inline Series Series::subtract(const Series & other, const Scalar & alpha) const
 }
 
 inline Series& Series::subtract_(const Series & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::subtract__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::subtract__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, alpha); });
   return const_cast<Series&>(*this);
 }
 
@@ -3453,7 +3453,7 @@ inline Series Series::subtract(const Scalar & other, const Scalar & alpha) const
 }
 
 inline Series& Series::subtract_(const Scalar & other, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::subtract__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::subtract__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other, alpha); });
   return const_cast<Series&>(*this);
 }
 
@@ -3462,7 +3462,7 @@ inline Series Series::heaviside(const Series & values) const {
 }
 
 inline Series& Series::heaviside_(const Series & values) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::heaviside_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), values); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::heaviside_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), values); });
   return const_cast<Series&>(*this);
 }
 
@@ -3471,7 +3471,7 @@ inline Series Series::addmm(const Series & mat1, const Series & mat2, const Scal
 }
 
 inline Series& Series::addmm_(const Series & mat1, const Series & mat2, const Scalar & beta, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::addmm_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), mat1, mat2, beta, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::addmm_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), mat1, mat2, beta, alpha); });
   return const_cast<Series&>(*this);
 }
 
@@ -3480,12 +3480,12 @@ inline Series Series::_addmm_activation(const Series & mat1, const Series & mat2
 }
 
 inline const Series& Series::sparse_resize_(IntArrayRef size, int64_t sparse_dim, int64_t dense_dim) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::sparse_resize_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), size, sparse_dim, dense_dim); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::sparse_resize_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), size, sparse_dim, dense_dim); });
   return *this;
 }
 
 inline const Series& Series::sparse_resize_and_clear_(IntArrayRef size, int64_t sparse_dim, int64_t dense_dim) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::sparse_resize_and_clear_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), size, sparse_dim, dense_dim); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::sparse_resize_and_clear_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), size, sparse_dim, dense_dim); });
   return *this;
 }
 
@@ -3542,7 +3542,7 @@ inline Series Series::_values() const {
 }
 
 inline Series& Series::_coalesced_(bool coalesced) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::_coalesced_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), coalesced); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::_coalesced_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), coalesced); });
   return const_cast<Series&>(*this);
 }
 
@@ -3677,7 +3677,7 @@ inline Series Series::_autocast_to_full_precision(bool cuda_enabled, bool cpu_en
 }
 
 inline Series Series::to(SeriesOptions options, bool non_blocking, bool copy, optional<MemoryFormat> memory_format) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::to_dtype_layout::call(*this, c10::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt(), non_blocking, copy, c10::impl::check_tensor_options_and_extract_memory_format(options, memory_format))); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::to_dtype_layout::call(*this, MSharp::optTypeMetaToScalarType(options.type_meta_opt()), options.layout_opt(), options.device_opt(), options.pinned_memory_opt(), non_blocking, copy, MSharp::impl::check_tensor_options_and_extract_memory_format(options, memory_format))); });
 }
 
 inline Series Series::to(optional<ScalarType> dtype, optional<Layout> layout, optional<Device> device, optional<bool> pin_memory, bool non_blocking, bool copy, optional<MemoryFormat> memory_format) const {
@@ -3697,46 +3697,46 @@ inline Series Series::to(const Series & other, bool non_blocking, bool copy, opt
 }
 
 inline Series& Series::set_(Storage source) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Storage::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), source); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Storage::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), source); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::set_(Storage source, int64_t storage_offset, IntArrayRef size, IntArrayRef stride) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Storage_storage_offset::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), source, storage_offset, c10::fromIntArrayRefSlow(size), c10::fromIntArrayRefSlow(stride)); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Storage_storage_offset::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), source, storage_offset, MSharp::fromIntArrayRefSlow(size), MSharp::fromIntArrayRefSlow(stride)); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::set__symint(Storage source, SymInt storage_offset, SymIntArrayRef size, SymIntArrayRef stride) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Storage_storage_offset::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), source, storage_offset, size, stride); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Storage_storage_offset::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), source, storage_offset, size, stride); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::set_(const Series & source, int64_t storage_offset, IntArrayRef size, IntArrayRef stride) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Tensor_storage_offset::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), source, storage_offset, c10::fromIntArrayRefSlow(size), c10::fromIntArrayRefSlow(stride)); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Tensor_storage_offset::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), source, storage_offset, MSharp::fromIntArrayRefSlow(size), MSharp::fromIntArrayRefSlow(stride)); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::set__symint(const Series & source, SymInt storage_offset, SymIntArrayRef size, SymIntArrayRef stride) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Tensor_storage_offset::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), source, storage_offset, size, stride); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Tensor_storage_offset::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), source, storage_offset, size, stride); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::set_(const Series & source) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), source); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::set__source_Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), source); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::set_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::set_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::set_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
-inline bool Series::is_set_to(const Series & tensor) const {
-  PLUSS_INTERNAL_DISPATCH({ return at::_ops::is_set_to::call(*this, tensor); });
+inline bool Series::is_set_to(const Series & series) const {
+  PLUSS_INTERNAL_DISPATCH({ return at::_ops::is_set_to::call(*this, series); });
 }
 
 inline Series& Series::masked_fill_(const Series & mask, const Scalar & value) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::masked_fill__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), mask, value); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::masked_fill__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), mask, value); });
   return const_cast<Series&>(*this);
 }
 
@@ -3745,7 +3745,7 @@ inline Series Series::masked_fill(const Series & mask, const Scalar & value) con
 }
 
 inline Series& Series::masked_fill_(const Series & mask, const Series & value) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::masked_fill__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), mask, value); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::masked_fill__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), mask, value); });
   return const_cast<Series&>(*this);
 }
 
@@ -3754,7 +3754,7 @@ inline Series Series::masked_fill(const Series & mask, const Series & value) con
 }
 
 inline Series& Series::masked_scatter_(const Series & mask, const Series & source) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::masked_scatter_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), mask, source); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::masked_scatter_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), mask, source); });
   return const_cast<Series&>(*this);
 }
 
@@ -3763,7 +3763,7 @@ inline Series Series::masked_scatter(const Series & mask, const Series & source)
 }
 
 inline Series Series::view(IntArrayRef size) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::view::call(*this, c10::fromIntArrayRefSlow(size))); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::view::call(*this, MSharp::fromIntArrayRefSlow(size))); });
 }
 
 inline Series Series::view_symint(SymIntArrayRef size) const {
@@ -3775,7 +3775,7 @@ inline Series Series::view(ScalarType dtype) const {
 }
 
 inline Series& Series::put_(const Series & index, const Series & source, bool accumulate) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::put_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), index, source, accumulate); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::put_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), index, source, accumulate); });
   return const_cast<Series&>(*this);
 }
 
@@ -3784,7 +3784,7 @@ inline Series Series::put(const Series & index, const Series & source, bool accu
 }
 
 inline Series& Series::index_add_(int64_t dim, const Series & index, const Series & source, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_add_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, source, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_add_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, source, alpha); });
   return const_cast<Series&>(*this);
 }
 
@@ -3797,7 +3797,7 @@ inline Series Series::index_add(Dimname dim, const Series & index, const Series 
 }
 
 inline Series& Series::index_reduce_(int64_t dim, const Series & index, const Series & source, string_view reduce, bool include_self) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_reduce_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, source, reduce, include_self); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_reduce_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, source, reduce, include_self); });
   return const_cast<Series&>(*this);
 }
 
@@ -3806,7 +3806,7 @@ inline Series Series::index_reduce(int64_t dim, const Series & index, const Seri
 }
 
 inline Series& Series::index_fill_(int64_t dim, const Series & index, const Scalar & value) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_fill__int_Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, value); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_fill__int_Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, value); });
   return const_cast<Series&>(*this);
 }
 
@@ -3815,7 +3815,7 @@ inline Series Series::index_fill(int64_t dim, const Series & index, const Scalar
 }
 
 inline Series& Series::index_fill_(int64_t dim, const Series & index, const Series & value) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_fill__int_Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, value); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_fill__int_Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, value); });
   return const_cast<Series&>(*this);
 }
 
@@ -3824,12 +3824,12 @@ inline Series Series::index_fill(int64_t dim, const Series & index, const Series
 }
 
 inline Series& Series::index_fill_(Dimname dim, const Series & index, const Scalar & value) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_fill__Dimname_Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, value); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_fill__Dimname_Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, value); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::index_fill_(Dimname dim, const Series & index, const Series & value) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_fill__Dimname_Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, value); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::index_fill__Dimname_Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, value); });
   return const_cast<Series&>(*this);
 }
 
@@ -3846,7 +3846,7 @@ inline Series Series::scatter(int64_t dim, const Series & index, const Series & 
 }
 
 inline Series& Series::scatter_(int64_t dim, const Series & index, const Series & src) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter__src::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, src); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter__src::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, src); });
   return const_cast<Series&>(*this);
 }
 
@@ -3855,7 +3855,7 @@ inline Series Series::scatter(int64_t dim, const Series & index, const Scalar & 
 }
 
 inline Series& Series::scatter_(int64_t dim, const Series & index, const Scalar & value) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter__value::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, value); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter__value::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, value); });
   return const_cast<Series&>(*this);
 }
 
@@ -3864,7 +3864,7 @@ inline Series Series::scatter(int64_t dim, const Series & index, const Series & 
 }
 
 inline Series& Series::scatter_(int64_t dim, const Series & index, const Series & src, string_view reduce) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter__reduce::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, src, reduce); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter__reduce::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, src, reduce); });
   return const_cast<Series&>(*this);
 }
 
@@ -3873,7 +3873,7 @@ inline Series Series::scatter(int64_t dim, const Series & index, const Scalar & 
 }
 
 inline Series& Series::scatter_(int64_t dim, const Series & index, const Scalar & value, string_view reduce) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter__value_reduce::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, value, reduce); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter__value_reduce::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, value, reduce); });
   return const_cast<Series&>(*this);
 }
 
@@ -3890,7 +3890,7 @@ inline Series Series::scatter_add(int64_t dim, const Series & index, const Serie
 }
 
 inline Series& Series::scatter_add_(int64_t dim, const Series & index, const Series & src) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter_add_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, src); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter_add_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, src); });
   return const_cast<Series&>(*this);
 }
 
@@ -3903,17 +3903,17 @@ inline Series Series::scatter_reduce(int64_t dim, const Series & index, const Se
 }
 
 inline Series& Series::scatter_reduce_(int64_t dim, const Series & index, const Series & src, string_view reduce, bool include_self) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter_reduce__two::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim, index, src, reduce, include_self); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::scatter_reduce__two::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim, index, src, reduce, include_self); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::eq_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::eq__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::eq__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::eq_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::eq__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::eq__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -3926,30 +3926,30 @@ inline Series Series::bitwise_and(const Series & other) const {
 }
 
 inline Series& Series::bitwise_and_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_and__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_and__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::bitwise_and_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_and__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_and__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::__and__(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__and___Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__and___Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other)); });
 }
 
 inline Series Series::__and__(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__and___Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__and___Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other)); });
 }
 
 inline Series& Series::__iand__(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::__iand___Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::__iand___Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::__iand__(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::__iand___Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::__iand___Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -3962,30 +3962,30 @@ inline Series Series::bitwise_or(const Series & other) const {
 }
 
 inline Series& Series::bitwise_or_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_or__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_or__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::bitwise_or_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_or__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_or__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::__or__(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__or___Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__or___Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other)); });
 }
 
 inline Series Series::__or__(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__or___Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__or___Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other)); });
 }
 
 inline Series& Series::__ior__(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ior___Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ior___Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::__ior__(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ior___Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ior___Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -3998,48 +3998,48 @@ inline Series Series::bitwise_xor(const Series & other) const {
 }
 
 inline Series& Series::bitwise_xor_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_xor__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_xor__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::bitwise_xor_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_xor__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_xor__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::__xor__(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__xor___Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__xor___Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other)); });
 }
 
 inline Series Series::__xor__(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__xor___Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__xor___Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other)); });
 }
 
 inline Series& Series::__ixor__(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ixor___Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ixor___Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::__ixor__(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ixor___Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ixor___Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::__lshift__(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__lshift___Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__lshift___Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other)); });
 }
 
 inline Series Series::__lshift__(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__lshift___Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__lshift___Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other)); });
 }
 
 inline Series& Series::__ilshift__(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ilshift___Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ilshift___Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::__ilshift__(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ilshift___Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::__ilshift___Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4048,7 +4048,7 @@ inline Series Series::bitwise_left_shift(const Series & other) const {
 }
 
 inline Series& Series::bitwise_left_shift_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_left_shift__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_left_shift__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4057,25 +4057,25 @@ inline Series Series::bitwise_left_shift(const Scalar & other) const {
 }
 
 inline Series& Series::bitwise_left_shift_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_left_shift__Tensor_Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_left_shift__Tensor_Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series Series::__rshift__(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__rshift___Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__rshift___Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other)); });
 }
 
 inline Series Series::__rshift__(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__rshift___Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::__rshift___Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other)); });
 }
 
 inline Series& Series::__irshift__(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::__irshift___Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::__irshift___Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::__irshift__(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::__irshift___Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::__irshift___Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4084,7 +4084,7 @@ inline Series Series::bitwise_right_shift(const Series & other) const {
 }
 
 inline Series& Series::bitwise_right_shift_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_right_shift__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_right_shift__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4093,37 +4093,37 @@ inline Series Series::bitwise_right_shift(const Scalar & other) const {
 }
 
 inline Series& Series::bitwise_right_shift_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_right_shift__Tensor_Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::bitwise_right_shift__Tensor_Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::tril_(int64_t diagonal) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::tril_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), diagonal); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::tril_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), diagonal); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::triu_(int64_t diagonal) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::triu_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), diagonal); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::triu_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), diagonal); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::digamma_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::digamma_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::digamma_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::lerp_(const Series & end, const Scalar & weight) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::lerp__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), end, weight); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::lerp__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), end, weight); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::lerp_(const Series & end, const Series & weight) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::lerp__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), end, weight); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::lerp__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), end, weight); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::addbmm_(const Series & batch1, const Series & batch2, const Scalar & beta, const Scalar & alpha) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::addbmm_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), batch1, batch2, beta, alpha); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::addbmm_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), batch1, batch2, beta, alpha); });
   return const_cast<Series&>(*this);
 }
 
@@ -4132,42 +4132,42 @@ inline Series Series::addbmm(const Series & batch1, const Series & batch2, const
 }
 
 inline Series& Series::random_(int64_t from, optional<int64_t> to, optional<Generator> generator) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::random__from::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), from, to, generator); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::random__from::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), from, to, generator); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::random_(int64_t to, optional<Generator> generator) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::random__to::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), to, generator); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::random__to::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), to, generator); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::random_(optional<Generator> generator) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::random_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), generator); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::random_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), generator); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::uniform_(double from, double to, optional<Generator> generator) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::uniform_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), from, to, generator); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::uniform_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), from, to, generator); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::cauchy_(double median, double sigma, optional<Generator> generator) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::cauchy_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), median, sigma, generator); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::cauchy_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), median, sigma, generator); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::log_normal_(double mean, double std, optional<Generator> generator) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::log_normal_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), mean, std, generator); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::log_normal_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), mean, std, generator); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::exponential_(double lambd, optional<Generator> generator) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::exponential_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), lambd, generator); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::exponential_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), lambd, generator); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::geometric_(double p, optional<Generator> generator) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::geometric_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), p, generator); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::geometric_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), p, generator); });
   return const_cast<Series&>(*this);
 }
 
@@ -4200,12 +4200,12 @@ inline Series Series::ne(const Series & other) const {
 }
 
 inline Series& Series::ne_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::ne__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::ne__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::ne_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::ne__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::ne__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4218,12 +4218,12 @@ inline Series Series::not_equal(const Series & other) const {
 }
 
 inline Series& Series::not_equal_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::not_equal__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::not_equal__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::not_equal_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::not_equal__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::not_equal__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4244,12 +4244,12 @@ inline Series Series::ge(const Series & other) const {
 }
 
 inline Series& Series::ge_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::ge__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::ge__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::ge_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::ge__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::ge__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4262,12 +4262,12 @@ inline Series Series::greater_equal(const Series & other) const {
 }
 
 inline Series& Series::greater_equal_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::greater_equal__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::greater_equal__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::greater_equal_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::greater_equal__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::greater_equal__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4280,12 +4280,12 @@ inline Series Series::le(const Series & other) const {
 }
 
 inline Series& Series::le_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::le__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::le__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::le_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::le__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::le__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4298,12 +4298,12 @@ inline Series Series::less_equal(const Series & other) const {
 }
 
 inline Series& Series::less_equal_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::less_equal__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::less_equal__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::less_equal_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::less_equal__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::less_equal__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4316,12 +4316,12 @@ inline Series Series::gt(const Series & other) const {
 }
 
 inline Series& Series::gt_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::gt__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::gt__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::gt_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::gt__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::gt__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4334,12 +4334,12 @@ inline Series Series::greater(const Series & other) const {
 }
 
 inline Series& Series::greater_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::greater__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::greater__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::greater_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::greater__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::greater__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4352,12 +4352,12 @@ inline Series Series::lt(const Series & other) const {
 }
 
 inline Series& Series::lt_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::lt__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::lt__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::lt_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::lt__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::lt__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4370,12 +4370,12 @@ inline Series Series::less(const Series & other) const {
 }
 
 inline Series& Series::less_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::less__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::less__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::less_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::less__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::less__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4408,7 +4408,7 @@ inline Series Series::nonzero_static(int64_t size, int64_t fill_value) const {
 }
 
 inline ::std::vector<Series> Series::nonzero_numpy() const {
-  auto ts = at::_ops::nonzero_numpy::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)));
+  auto ts = at::_ops::nonzero_numpy::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)));
   std::vector<Series> out;
   out.reserve(ts.size());
   for (const auto& t : ts)
@@ -4433,7 +4433,7 @@ inline Series Series::addcmul(const Series & tensor1, const Series & tensor2, co
 }
 
 inline Series& Series::addcmul_(const Series & tensor1, const Series & tensor2, const Scalar & value) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::addcmul_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), tensor1, tensor2, value); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::addcmul_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), tensor1, tensor2, value); });
   return const_cast<Series&>(*this);
 }
 
@@ -4442,13 +4442,13 @@ inline Series Series::addcdiv(const Series & tensor1, const Series & tensor2, co
 }
 
 inline Series& Series::addcdiv_(const Series & tensor1, const Series & tensor2, const Scalar & value) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::addcdiv_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), tensor1, tensor2, value); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::addcdiv_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), tensor1, tensor2, value); });
   return const_cast<Series&>(*this);
 }
 
 inline ::std::tuple<Series, Series> Series::triangular_solve(const Series& A, bool upper, bool transpose, bool unitriangular) const {
   auto [solution, cloned_A] = at::_ops::triangular_solve::call(
-    const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)),
+    const_cast<at::Series&>(static_cast<const at::Series&>(*this)),
     A, upper, transpose, unitriangular
   );
   return {Series(solution), Series(cloned_A)};
@@ -4464,7 +4464,7 @@ inline Series Series::swapaxes(int64_t axis0, int64_t axis1) const {
 }
 
 inline Series& Series::swapaxes_(int64_t axis0, int64_t axis1) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::swapaxes_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), axis0, axis1); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::swapaxes_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), axis0, axis1); });
   return const_cast<Series&>(*this);
 }
 
@@ -4473,7 +4473,7 @@ inline Series Series::swapdims(int64_t dim0, int64_t dim1) const {
 }
 
 inline Series& Series::swapdims_(int64_t dim0, int64_t dim1) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::swapdims_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), dim0, dim1); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::swapdims_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), dim0, dim1); });
   return const_cast<Series&>(*this);
 }
 
@@ -4516,7 +4516,7 @@ inline Series Series::multinomial(int64_t num_samples, bool replacement, optiona
 }
 
 inline Series& Series::lgamma_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::lgamma_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::lgamma_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -4533,7 +4533,7 @@ inline Series Series::polygamma(int64_t n) const {
 }
 
 inline Series& Series::polygamma_(int64_t n) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::polygamma_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), n); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::polygamma_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), n); });
   return const_cast<Series&>(*this);
 }
 
@@ -4542,7 +4542,7 @@ inline Series Series::erfinv() const {
 }
 
 inline Series& Series::erfinv_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::erfinv_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::erfinv_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -4551,7 +4551,7 @@ inline Series Series::i0() const {
 }
 
 inline Series& Series::i0_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::i0_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::i0_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -4560,7 +4560,7 @@ inline Series Series::sign() const {
 }
 
 inline Series& Series::sign_() const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::sign_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this))); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::sign_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this))); });
   return const_cast<Series&>(*this);
 }
 
@@ -4573,7 +4573,7 @@ inline Series Series::dist(const Series & other, const Scalar & p) const {
 }
 
 inline Series& Series::atan2_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::atan2_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::atan2_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4586,7 +4586,7 @@ inline Series Series::arctan2(const Series & other) const {
 }
 
 inline Series& Series::arctan2_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::arctan2_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::arctan2_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4603,12 +4603,12 @@ inline Series Series::histc(int64_t bins, const Scalar & min, const Scalar & max
 }
 
 inline ::std::tuple<Series, Series> Series::histogram(const Series& bins, const optional<Series>& weight, bool density) const {
-  auto [hist, bin_edges] = at::_ops::histogram_bins_tensor::call(*this, bins, weight->tensor(), density);
+  auto [hist, bin_edges] = at::_ops::histogram_bins_tensor::call(*this, bins, weight->series(), density);
   return {Series(hist), Series(bin_edges)};
 }
 
 inline ::std::tuple<Series, Series> Series::histogram(int64_t bins, optional<ArrayRef<double>> range, const optional<Series> & weight, bool density) const {
-  auto [hist, bin_edges] = at::_ops::histogram_bin_ct::call(*this, bins, range, weight->tensor(), density);
+  auto [hist, bin_edges] = at::_ops::histogram_bin_ct::call(*this, bins, range, weight->series(), density);
   return {Series(hist), Series(bin_edges)};
 }
 
@@ -4617,7 +4617,7 @@ inline Series Series::fmod(const Scalar & other) const {
 }
 
 inline Series& Series::fmod_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::fmod__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::fmod__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4626,7 +4626,7 @@ inline Series Series::fmod(const Series & other) const {
 }
 
 inline Series& Series::fmod_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::fmod__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::fmod__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4635,7 +4635,7 @@ inline Series Series::hypot(const Series & other) const {
 }
 
 inline Series& Series::hypot_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::hypot_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::hypot_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4644,7 +4644,7 @@ inline Series Series::igamma(const Series & other) const {
 }
 
 inline Series& Series::igamma_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::igamma_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::igamma_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4653,7 +4653,7 @@ inline Series Series::igammac(const Series & other) const {
 }
 
 inline Series& Series::igammac_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::igammac_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::igammac_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4662,7 +4662,7 @@ inline Series Series::nextafter(const Series & other) const {
 }
 
 inline Series& Series::nextafter_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::nextafter_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::nextafter_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4671,7 +4671,7 @@ inline Series Series::remainder(const Scalar & other) const {
 }
 
 inline Series& Series::remainder_(const Scalar & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::remainder__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::remainder__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4680,7 +4680,7 @@ inline Series Series::remainder(const Series & other) const {
 }
 
 inline Series& Series::remainder_(const Series & other) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::remainder__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), other); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::remainder__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), other); });
   return const_cast<Series&>(*this);
 }
 
@@ -4791,7 +4791,7 @@ inline Series Series::renorm(const Scalar & p, int64_t dim, const Scalar & maxno
 }
 
 inline Series& Series::renorm_(const Scalar & p, int64_t dim, const Scalar & maxnorm) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::renorm_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), p, dim, maxnorm); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::renorm_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), p, dim, maxnorm); });
   return const_cast<Series&>(*this);
 }
 
@@ -4812,12 +4812,12 @@ inline Series Series::pow(const Scalar & exponent) const {
 }
 
 inline Series& Series::pow_(const Scalar & exponent) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::pow__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), exponent); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::pow__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), exponent); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::pow_(const Series & exponent) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::pow__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), exponent); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::pow__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), exponent); });
   return const_cast<Series&>(*this);
 }
 
@@ -4830,17 +4830,17 @@ inline Series Series::float_power(const Scalar & exponent) const {
 }
 
 inline Series& Series::float_power_(const Scalar & exponent) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::float_power__Scalar::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), exponent); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::float_power__Scalar::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), exponent); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::float_power_(const Series & exponent) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::float_power__Tensor::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), exponent); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::float_power__Tensor::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), exponent); });
   return const_cast<Series&>(*this);
 }
 
 inline Series& Series::normal_(double mean, double std, optional<Generator> generator) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::normal_::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), mean, std, generator); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::normal_::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), mean, std, generator); });
   return const_cast<Series&>(*this);
 }
 
@@ -4857,7 +4857,7 @@ inline Series Series::isinf() const {
 }
 
 inline void Series::record_stream(Stream s) const {
-  PLUSS_INTERNAL_DISPATCH({ at::_ops::record_stream::call(const_cast<at::Tensor&>(static_cast<const at::Tensor&>(*this)), s); });
+  PLUSS_INTERNAL_DISPATCH({ at::_ops::record_stream::call(const_cast<at::Series&>(static_cast<const at::Series&>(*this)), s); });
 }
 
 inline Series Series::isposinf() const {
@@ -4898,7 +4898,7 @@ inline Series Series::ger(const Series & vec2) const {
 }
 
 inline Series Series::to_padded_tensor(double padding, OptionalIntArrayRef output_size) const {
-  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::to_padded_tensor::call(*this, padding, output_size.has_value() ? ::std::make_optional(c10::fromIntArrayRefSlow(*output_size)) : ::std::nullopt)); });
+  PLUSS_INTERNAL_DISPATCH({ return Series(at::_ops::to_padded_tensor::call(*this, padding, output_size.has_value() ? ::std::make_optional(MSharp::fromIntArrayRefSlow(*output_size)) : ::std::nullopt)); });
 }
 
 inline Series Series::to_padded_tensor_symint(double padding, OptionalSymIntArrayRef output_size) const {

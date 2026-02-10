@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pluss/SeriesBody.h>
+#include <PlussQit/core/SeriesBody.h>
 #include <pluss/Note.h>
 #include <pluss/series_factory.h>
 #include <type_traits>
@@ -90,10 +90,10 @@ void apply_vectorized(Result& result, F&& func, Args&&... args) {
             // For Series, we can use the index method with a scalar
             if constexpr (is_pluss_type_v<std::decay_t<Result>> && 
                           std::is_same_v<std::decay_t<Result>, pluss::Series>) {
-                // Create a tensor with a single value
-                at::Tensor value_tensor = at::scalar_tensor(value);
+                // Create a series with a single value
+                at::Series value_tensor = at::scalar_tensor(value);
                 // Use index_put_ to set the value at index j
-                at::Tensor result_tensor = result;
+                at::Series result_tensor = result;
                 result_tensor.index_put_({j}, value_tensor);
             }
             // For Note, we would need a different approach

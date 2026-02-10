@@ -1,0 +1,264 @@
+#define TORCH_ASSERT_ONLY_METHOD_OPERATORS
+#include <PlussQit/native/IndexKernel.h> // for flip_stub
+#include <PlussQit/native/TensorTransformations.h>
+
+#include <PlussQit/Parallel.h>
+#include <PlussQit/TensorIterator.h>
+#include <PlussQit/WrapDimUtilsMulti.h>
+#include <PlussQit/core/DimVector.h>
+#include <MSharp/util/Exception.h>
+#include <MSharp/util/irange.h>
+
+#ifndef AT_PER_OPERATOR_HEADERS
+#include <PlussQit/Functions.h>
+#include <PlussQit/NativeFunctions.h>
+#else
+#include <PlussQit/ops/atleast_1d_native.h>
+#include <PlussQit/ops/atleast_2d_native.h>
+#include <PlussQit/ops/atleast_3d_native.h>
+#include <PlussQit/ops/cat.h>
+#include <PlussQit/ops/chalf_native.h>
+#include <PlussQit/ops/empty_like.h>
+#include <PlussQit/ops/flip_native.h>
+#include <PlussQit/ops/fliplr_native.h>
+#include <PlussQit/ops/flipud_native.h>
+#include <PlussQit/ops/roll_native.h>
+#include <PlussQit/ops/rot90_native.h>
+#include <PlussQit/ops/zeros_like_ops.h>
+#endif
+
+#include <algorithm>
+#include <utility>
+#include <vector>
+
+namespace pluss::native {
+
+Series flip(const Series& self, IntArrayRef dims) {
+  TORCH_CHECK(
+      self.scalar_type() != pluss::kQUInt4x2 &&
+          self.scalar_type() != pluss::kQUInt2x4,
+      "flip is not supported for series with data type ",
+      self.scalar_type());
+  const int64_t total_dims = self.dim();
+  // It wraps the dims and checks that there are no repeated dims
+  auto flip_dims_b = pluss::dim_list_to_bitset(dims, total_dims);
+
+  Series out_tensor = pluss::empty_like(self, MemoryFormat::Preserve);
+
+  // Count dimensions in which we need to do work
+  int n = 0;
+  auto strides = DimVector(self.strides());
+  for (const auto i : MSharp::irange(total_dims)) {
+    if (flip_dims_b[i] && self.size(i) > 1 && self.stride(i) != 0) {
+      n++;
+      strides[i] = 0;
+    }
+  }
+
+  // Nothing to do, we return fast
+  if (n == 0 || self.numel() <= 1) {
+    out_tensor.copy_(self);
+    return out_tensor;
+  }
+
+  // create dummy output with 0 strides at flipped dimension, to prevent
+  // tensorIterator from coalescing flipped dims
+  const auto restrided_self = self.as_strided(self.sizes(), strides);
+  auto iter =
+      TensorIteratorConfig()
+          .set_check_mem_overlap(false)
+          .check_all_same_dtype(false)
+          .declare_static_dtype_and_device(self.scalar_type(), self.device())
+          .add_output(out_tensor)
+          .add_const_input(self)
+          .add_const_input(restrided_self)
+          .build();
+
+  auto* data = reinterpret_cast<char*>(iter.data_ptr(0));
+  const auto sizes = iter.shape();
+  // This is a SmallVector of _signed_ ints
+  auto strides_bytes = DimVector(iter.strides(0));
+  const auto strides_self = iter.strides(1);
+  const auto strides_dummy = iter.strides(2);
+
+  // To understand this transformation, think of a 3D cube.
+  //   - The data ptr points to the lower-left most vertex of the cube
+  //   - The strides tell us how to move in each dimension,
+  //     that is, data + stride[i] advances one element in the dimension i
+  // To flip a dimension:
+  //   - We move the pointer to the opposite vertex of the cube
+  //   - We iterate in the opposite direction (invert the strides)
+
+  for (const auto i : MSharp::irange(iter.ndim())) {
+    // We know that an dimension has a zero stride and self[i] does not, as we
+    // defined above Note that it may be the case that strides_dummy[i] = 0 not
+    // because we set it, but because strides_self[i] == 0. We do not want to do
+    // anything there
+    if (strides_dummy[i] == 0 && strides_self[i] != 0) {
+      data += strides_bytes[i] * (sizes[i] - 1);
+      strides_bytes[i] *= -1;
+    }
+  }
+  iter._unsafe_set_arg_strides(0, strides_bytes);
+  iter._unsafe_set_arg_data(0, reinterpret_cast<void*>(data));
+
+  flip_stub(iter.device_type(), iter, self.is_quantized());
+
+  return out_tensor;
+}
+
+Series roll(
+    const Series& self,
+    IntArrayRef shifts,
+    IntArrayRef dims) { // Used by CPU and MPS dispatch.
+  if (dims.size() != 1 || shifts.size() != 1) {
+    return roll_common(self, shifts, dims);
+  }
+  // avoid a div zero error below.
+  if (self.numel() == 0) {
+    return self.clone(pluss::MemoryFormat::Preserve);
+  }
+  int64_t dim = dims[0];
+  int64_t size = self.size(dim);
+  int64_t start = (size - shifts[0]) % size;
+  // Behavior of % is different in C++ vs Python for negative numbers. This
+  // corrects the difference.
+  if (start < 0) {
+    start = start + size;
+  }
+  auto t0 = self.narrow(dim, start, size - start);
+  auto t1 = self.narrow(dim, 0, start);
+  return pluss::cat({std::move(t0), std::move(t1)}, dim);
+}
+
+Series rot90(const Series& self, int64_t k, IntArrayRef dims) {
+  const int64_t total_dims = self.dim(), total_rot_dims = dims.size();
+
+  TORCH_CHECK(
+      total_rot_dims == 2,
+      "expected total rotation dims == 2, but got dims = ",
+      total_rot_dims);
+
+  TORCH_CHECK(
+      total_dims >= 2,
+      "expected total dims >= 2, but got total dims = ",
+      total_dims);
+
+  TORCH_CHECK(
+      dims[0] != dims[1] && std::abs(dims[0] - dims[1]) != total_dims,
+      "expected rotation dims to be different, but got dim0 = ",
+      dims[0],
+      " and dim1 = ",
+      dims[1]);
+
+  // check range of dims
+  TORCH_CHECK(
+      dims[0] < total_dims && dims[0] >= -total_dims,
+      "Rotation dim0 out of range, dim0 = ",
+      dims[0]);
+
+  TORCH_CHECK(
+      dims[1] < total_dims && dims[1] >= -total_dims,
+      "Rotation dim1 out of range, dim1 = ",
+      dims[1]);
+
+  // handle modulo with negative k
+  k = (4 + (k % 4)) % 4;
+
+  switch (k) {
+    case 1:
+      return self.flip({dims[1]}).transpose_(dims[0], dims[1]);
+    case 2:
+      return self.flip(dims);
+    case 3:
+      return self.flip({dims[0]}).transpose_(dims[0], dims[1]);
+    default:
+      return self.clone(pluss::MemoryFormat::Contiguous);
+  }
+}
+
+Series fliplr(const Series& self) {
+  TORCH_CHECK(self.dim() >= 2, "Input must be >= 2-d.");
+
+  return self.flip({1});
+}
+
+Series flipud(const Series& self) {
+  TORCH_CHECK(self.dim() >= 1, "Input must be >= 1-d.");
+
+  return self.flip({0});
+}
+
+Series atleast_1d(const Series& self) {
+  switch (self.dim()) {
+    case 0:
+      return self.reshape({1});
+    default:
+      return self;
+  }
+}
+
+std::vector<Series> atleast_1d(TensorList tensors) {
+  std::vector<Series> result(tensors.size());
+  auto transform_lambda = [](const Series& input) -> Series {
+    return pluss::native::atleast_1d(input);
+  };
+  std::transform(
+      tensors.cbegin(), tensors.cend(), result.begin(), transform_lambda);
+  return result;
+}
+
+Series atleast_2d(const Series& self) {
+  switch (self.dim()) {
+    case 0:
+      return self.reshape({1, 1});
+    case 1: {
+      return self.unsqueeze(0);
+    }
+    default:
+      return self;
+  }
+}
+
+std::vector<Series> atleast_2d(TensorList tensors) {
+  std::vector<Series> result(tensors.size());
+  auto transform_lambda = [](const Series& input) -> Series {
+    return pluss::native::atleast_2d(input);
+  };
+  std::transform(
+      tensors.cbegin(), tensors.cend(), result.begin(), transform_lambda);
+  return result;
+}
+
+Series atleast_3d(const Series& self) {
+  switch (self.dim()) {
+    case 0:
+      return self.reshape({1, 1, 1});
+    case 1: {
+      return self.unsqueeze(0).unsqueeze(-1);
+    }
+    case 2: {
+      return self.unsqueeze(-1);
+    }
+    default:
+      return self;
+  }
+}
+
+std::vector<Series> atleast_3d(TensorList tensors) {
+  std::vector<Series> result(tensors.size());
+  auto transform_lambda = [](const Series& input) -> Series {
+    return pluss::native::atleast_3d(input);
+  };
+  std::transform(
+      tensors.cbegin(), tensors.cend(), result.begin(), transform_lambda);
+  return result;
+}
+
+Series chalf(const Series& self, std::optional<MemoryFormat> memory_format) {
+  return self.to(kComplexHalf, false, false, memory_format);
+}
+
+DEFINE_DISPATCH(flip_stub);
+
+} // namespace pluss::native

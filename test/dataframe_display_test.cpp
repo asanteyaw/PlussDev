@@ -68,7 +68,7 @@ static void test_row_truncation_head_tail() {
     vals.reserve(50);
     for (int64_t i = 0; i < 50; ++i) vals.push_back(i);
 
-    df = df->set_col("x", Thread(pluss::from_torch(torch::tensor(vals)), "x"));
+    df = df->set_col("x", Thread(pluss::from_torch(torch::series(vals)), "x"));
 
     pluss::table::io::DisplayOptions opt;
     opt.max_width = 80;

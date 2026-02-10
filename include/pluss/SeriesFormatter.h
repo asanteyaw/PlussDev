@@ -4,8 +4,8 @@
 #include <sstream>
 #include <iomanip>
 #include <vector>
-#include <ATen/core/TensorBody.h>
-#include <c10/core/ScalarType.h>
+#include <PlussQit/core/SeriesBody.h>
+#include <MSharp/core/ScalarType.h>
 #include "SeriesBody.h"
 
 namespace pluss {
@@ -36,7 +36,7 @@ public:
     }
 
     // Format a scalar value
-    static std::string format_scalar(const at::Tensor& t) {
+    static std::string format_scalar(const at::Series& t) {
         if (t.numel() != 1) {
             return "Error: Not a scalar";
         }
@@ -84,7 +84,7 @@ public:
 
     // Format a Series for output
     static std::string format_series(const Series& s) {
-        const at::Tensor& t = s.tensor();
+        const at::Series& t = s.series();
         std::ostringstream oss;
         
         // Get shape and dtype
@@ -103,18 +103,18 @@ public:
         }
         oss << "], dtype=" << dtype_to_string(t.scalar_type()) << "):\n";
         
-        // Format the tensor data
+        // Format the series data
         if (t.dim() == 0) {
-            // 0D tensor (scalar)
+            // 0D series (scalar)
             oss << format_scalar(t);
         } else if (t.dim() == 1) {
-            // 1D tensor (vector)
+            // 1D series (vector)
             format_1d(oss, t);
         } else if (t.dim() == 2) {
-            // 2D tensor (matrix)
+            // 2D series (matrix)
             format_2d(oss, t);
         } else {
-            // Higher dimensional tensor
+            // Higher dimensional series
             format_nd(oss, t);
         }
         
@@ -123,7 +123,7 @@ public:
 
 private:
     // Format a floating point value with appropriate precision
-    static void format_float_value(std::ostringstream& oss, const at::Tensor& t) {
+    static void format_float_value(std::ostringstream& oss, const at::Series& t) {
         double value;
         
         switch (t.scalar_type()) {
@@ -171,18 +171,18 @@ private:
     }
     
     // Format a complex value
-    static void format_complex_value(std::ostringstream& oss, const at::Tensor& t) {
-        c10::complex<double> value;
+    static void format_complex_value(std::ostringstream& oss, const at::Series& t) {
+        MSharp::complex<double> value;
         
         switch (t.scalar_type()) {
             case at::ScalarType::ComplexHalf:
-                value = static_cast<c10::complex<double>>(t.item<c10::complex<at::Half>>());
+                value = static_cast<MSharp::complex<double>>(t.item<MSharp::complex<at::Half>>());
                 break;
             case at::ScalarType::ComplexFloat:
-                value = static_cast<c10::complex<double>>(t.item<c10::complex<float>>());
+                value = static_cast<MSharp::complex<double>>(t.item<MSharp::complex<float>>());
                 break;
             case at::ScalarType::ComplexDouble:
-                value = t.item<c10::complex<double>>();
+                value = t.item<MSharp::complex<double>>();
                 break;
             default:
                 oss << "Unsupported complex type";
@@ -249,8 +249,8 @@ private:
         }
     }
     
-    // Format a 1D tensor
-    static void format_1d(std::ostringstream& oss, const at::Tensor& t) {
+    // Format a 1D series
+    static void format_1d(std::ostringstream& oss, const at::Series& t) {
         int64_t size = t.size(0);
         
         // If 10 or fewer elements, print all
@@ -281,8 +281,8 @@ private:
         }
     }
     
-    // Format a 2D tensor
-    static void format_2d(std::ostringstream& oss, const at::Tensor& t) {
+    // Format a 2D series
+    static void format_2d(std::ostringstream& oss, const at::Series& t) {
         int64_t rows = t.size(0);
         int64_t cols = t.size(1);
         
@@ -335,8 +335,8 @@ private:
         oss << "]";
     }
     
-    // Format a higher dimensional tensor
-    static void format_nd(std::ostringstream& oss, const at::Tensor& t) {
+    // Format a higher dimensional series
+    static void format_nd(std::ostringstream& oss, const at::Series& t) {
         // For higher dimensions, we'll use a recursive approach
         oss << "[";
         
@@ -351,7 +351,7 @@ private:
         
         for (int64_t i = 0; i < show_items; i++) {
             // Extract the (n-1)-dimensional slice
-            at::Tensor slice = t[i];
+            at::Series slice = t[i];
             
             if (slice.dim() == 2) {
                 format_2d(oss, slice);

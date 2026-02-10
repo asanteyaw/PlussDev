@@ -1,0 +1,128 @@
+#pragma once
+
+#include <vector>
+#include <PlussQit/core/Series.h>
+#include <PlussQit/native/ReduceOpsUtils.h>
+#include <MSharp/util/irange.h>
+
+namespace pluss::native {
+
+namespace {
+
+// checks whether index.dtype == int64
+// and self.dtype == src.dtype if src is a Series
+inline void scatter_gather_dtype_check(
+  const std::string& method_name,
+  const Series& self,
+  const Series& index,
+  const std::optional<Series>& src_opt = std::nullopt
+) {
+  if (index.numel() != 0) {
+    TORCH_CHECK(
+      index.scalar_type() == pluss::ScalarType::Long,
+      method_name, "(): Expected dtype int64 for index"
+    );
+  }
+
+  if (src_opt.has_value()) {
+    const auto& src = src_opt.value();
+    TORCH_CHECK(
+      self.scalar_type() == src.scalar_type(),
+      method_name, "(): Expected self.dtype to be equal to src.dtype"
+    );
+  }
+}
+
+// Used for `gather`-like methods
+// Note: self means the input series here
+// Test:
+// 1. index.size(d) <= self.size(d) for all d != dim
+// 2. index.dim() == self.dim()
+inline void gather_shape_check(const Series& self, int64_t dim,
+  const Series& index
+) {
+  auto self_dims = ensure_nonempty_dim(self.dim());
+  TORCH_CHECK(self_dims == ensure_nonempty_dim(index.dim()),
+    "Index series must have the same number of dimensions as input series"
+  );
+
+  for (const auto i : MSharp::irange(self_dims)) {
+    if (i != dim) {
+      TORCH_CHECK(
+        ensure_nonempty_size(index, i) <= ensure_nonempty_size(self, i),
+        "Size does not match at dimension ", i,
+        " expected index ", index.sizes(),
+        " to be no larger than self ", self.sizes(),
+        " apart from dimension ", dim
+      );
+    }
+  }
+}
+
+// Used for `scatter` and `scatter_add`
+// Tests:
+//  1. index.size(d) <= self.size(d) for all d != dim
+//  2. index.size(d) <= src.size(d) for all d if src is a Series
+//  3. index.dim() == self.dim() == src.dim()
+inline void scatter_shape_check(
+  const Series& self, int64_t dim, const Series& index,
+  const std::optional<Series>& src_opt = std::nullopt
+) {
+  if (index.numel() == 0) return;
+  TORCH_CHECK(
+    ensure_nonempty_dim(self.dim()) == ensure_nonempty_dim(index.dim()),
+    "Index series must have the same number of dimensions as self series"
+  );
+
+  bool is_wrong_shape = false;
+  int64_t self_dims = ensure_nonempty_dim(self.dim());
+
+  //  Check: index.size(d) <= self.size(d) for all d != dim
+  for (const auto d : MSharp::irange(self_dims)) {
+    int64_t index_d_size = ensure_nonempty_size(index, d);
+    if (d == dim) continue;
+    if (index_d_size > ensure_nonempty_size(self, d)) {
+      is_wrong_shape = true;
+      break;
+    }
+  }
+
+  //  Check: index.size(d) <= src.size(d) for all d if src is Series
+  if (!is_wrong_shape && src_opt.has_value()) {
+    const auto& src = src_opt.value();
+    for (const auto d : MSharp::irange(self_dims)) {
+      int64_t index_d_size = ensure_nonempty_size(index, d);
+      if (index_d_size > ensure_nonempty_size(src, d)) {
+        is_wrong_shape = true;
+        break;
+      }
+    }
+  }
+
+  if (src_opt.has_value()) {
+    const auto& src = src_opt.value();
+
+    TORCH_CHECK(
+      ensure_nonempty_dim(src.dim()) == ensure_nonempty_dim(index.dim()),
+      "Index series must have the same number of dimensions as src series"
+    );
+
+    TORCH_CHECK(!is_wrong_shape,
+      "Expected index ", index.sizes(),
+      " to be no larger than self ", self.sizes(),
+      " apart from dimension ", dim,
+      " and to be no larger size than src ", src.sizes()
+    );
+  }
+  else {
+    TORCH_CHECK(!is_wrong_shape,
+      "Expected index ", index.sizes(),
+      " to be no larger than self ", self.sizes(),
+      " apart from dimension ", dim
+    );
+  }
+}
+
+} // anonymous namespace
+
+} // namespace pluss::native

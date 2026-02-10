@@ -40,7 +40,7 @@ int main() {
     
     std::cout << "Example 2: Index out of bounds error\n";
     std::cout << "----------------------------------\n";
-    // Create a tensor
+    // Create a series
     Series t3 = pluss::arange(0, 5);
     
     // This will cause an index out of bounds error
@@ -55,10 +55,10 @@ int main() {
     
     std::cout << "Example 3: Type error\n";
     std::cout << "-------------------\n";
-    // Create a boolean tensor
+    // Create a boolean series
     Series t4 = pluss::value({true, false, true});
     
-    // This will cause a type error (can't compute mean of boolean tensor)
+    // This will cause a type error (can't compute mean of boolean series)
     // The error will be automatically converted to a PlussError with traceback
     try {
         (void)t4.mean();

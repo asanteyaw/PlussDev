@@ -99,8 +99,8 @@ CSVData load_csv(const std::string& filepath, size_t max_rows = 0) {
     return data;
 }
 
-// Convert string column to numeric tensor
-torch::Tensor column_to_tensor(const std::vector<std::vector<std::string>>& rows, size_t col_idx) {
+// Convert string column to numeric series
+torch::Series column_to_tensor(const std::vector<std::vector<std::string>>& rows, size_t col_idx) {
     std::vector<float> values;
     values.reserve(rows.size());
     
@@ -117,7 +117,7 @@ torch::Tensor column_to_tensor(const std::vector<std::vector<std::string>>& rows
         }
     }
     
-    return torch::tensor(values);
+    return torch::series(values);
 }
 
 int main() {
@@ -178,8 +178,8 @@ int main() {
     {
         Timer timer("Thread Creation from CSV columns");
         for (size_t i = 0; i < col_indices.size(); ++i) {
-            auto tensor = column_to_tensor(sample_data.rows, col_indices[i]);
-            threads.emplace_back(pluss::from_torch(tensor), numeric_cols[i]);
+            auto series = column_to_tensor(sample_data.rows, col_indices[i]);
+            threads.emplace_back(pluss::from_torch(series), numeric_cols[i]);
         }
     }
     std::cout << "  ✓ Created " << threads.size() << " Thread objects\n";
@@ -263,8 +263,8 @@ int main() {
             std::vector<Thread> region_threads;
             
             for (size_t j = 0; j < col_indices.size(); ++j) {
-                auto tensor = column_to_tensor(sample_data.rows, col_indices[j]).slice(0, 0, size);
-                region_threads.emplace_back(pluss::from_torch(tensor), numeric_cols[j]);
+                auto series = column_to_tensor(sample_data.rows, col_indices[j]).slice(0, 0, size);
+                region_threads.emplace_back(pluss::from_torch(series), numeric_cols[j]);
             }
             
             region_dfs.push_back(std::make_shared<DataFrame>(region_threads));
@@ -362,8 +362,8 @@ int main() {
         Timer timer("Large DataFrame Creation (500k rows)");
         std::vector<Thread> large_threads;
         for (size_t i = 0; i < col_indices.size(); ++i) {
-            auto tensor = column_to_tensor(large_data.rows, col_indices[i]);
-            large_threads.emplace_back(pluss::from_torch(tensor), numeric_cols[i]);
+            auto series = column_to_tensor(large_data.rows, col_indices[i]);
+            large_threads.emplace_back(pluss::from_torch(series), numeric_cols[i]);
         }
         auto large_df = std::make_shared<DataFrame>(large_threads);
         

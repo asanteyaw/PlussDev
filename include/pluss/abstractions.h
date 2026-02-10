@@ -4,7 +4,7 @@
 #include <pluss/util_helpers.h>
 #include <pluss/series_factory.h>
 #include <pluss/note_factory.h>
-#include <ATen/Parallel.h>
+#include <PlussQit/Parallel.h>
 #include <type_traits>
 #include <tuple>
 #include <utility>

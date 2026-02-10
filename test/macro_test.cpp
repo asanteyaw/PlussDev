@@ -76,33 +76,33 @@ void test_assert(bool condition, const char* expr_str, const char* file, int lin
 }
 
 void test_torch_tensor() {
-    std::cout << "\n=== Testing PLUSS_DISPATCH with torch::Tensor ===\n";
+    std::cout << "\n=== Testing PLUSS_DISPATCH with torch::Series ===\n";
     
-    // Create a tensor
-    torch::Tensor tensor = torch::ones({2, 3});
+    // Create a series
+    torch::Series series = torch::ones({2, 3});
     
     // Test PLUSS_DISPATCH with various methods
-    torch::Tensor result1 = PLUSS_DISPATCH(tensor, add, 5);
+    torch::Series result1 = PLUSS_DISPATCH(series, add, 5);
     EXPECT_TRUE(torch::all(result1 == 6).item<bool>());
-    std::cout << "tensor.add(5) result: " << result1 << std::endl;
+    std::cout << "series.add(5) result: " << result1 << std::endl;
     
     // Test with multiple arguments
-    torch::Tensor other = torch::ones({2, 3}) * 2;
-    // Note: For torch::Tensor, we use PLUSS_DISPATCH directly
-    torch::Tensor result2 = PLUSS_DISPATCH(tensor, add, other, 3.0);
+    torch::Series other = torch::ones({2, 3}) * 2;
+    // Note: For torch::Series, we use PLUSS_DISPATCH directly
+    torch::Series result2 = PLUSS_DISPATCH(series, add, other, 3.0);
     EXPECT_TRUE(torch::all(result2 == 7).item<bool>());  // 1 + 2*3 = 7
-    std::cout << "tensor.add(other, 3.0) result: " << result2 << std::endl;
+    std::cout << "series.add(other, 3.0) result: " << result2 << std::endl;
     
     // Another multi-argument method
-    torch::Tensor sliced = PLUSS_DISPATCH(tensor, index, {torch::indexing::Slice(0, 1), torch::indexing::Slice(0, 2)});
+    torch::Series sliced = PLUSS_DISPATCH(series, index, {torch::indexing::Slice(0, 1), torch::indexing::Slice(0, 2)});
     EXPECT_EQ(sliced.sizes()[0], 1);
     EXPECT_EQ(sliced.sizes()[1], 2);
-    std::cout << "tensor.index({Slice(0, 1), Slice(0, 2)}) result: " << sliced << std::endl;
+    std::cout << "series.index({Slice(0, 1), Slice(0, 2)}) result: " << sliced << std::endl;
     
-    // Note: For torch::Tensor, we use PLUSS_DISPATCH directly
-    // This is because torch::Tensor methods are not traditional C++ member functions
+    // Note: For torch::Series, we use PLUSS_DISPATCH directly
+    // This is because torch::Series methods are not traditional C++ member functions
     // and work better with the macro-based approach
-    std::cout << "\n=== Note: For torch::Tensor, we use PLUSS_DISPATCH directly ===\n";
+    std::cout << "\n=== Note: For torch::Series, we use PLUSS_DISPATCH directly ===\n";
 }
 
 void test_pluss_note() {
@@ -218,15 +218,15 @@ void test_custom_type() {
 //     std::cout << "\n=== Testing pluss::queue function ===\n";
     
 //     // Test with Series
-//     pluss::Series s1 = torch::tensor({1, 2, 3, 4, 5});
-//     pluss::Series s2 = torch::tensor({10, 20, 30, 40, 50});
+//     pluss::Series s1 = torch::series({1, 2, 3, 4, 5});
+//     pluss::Series s2 = torch::series({10, 20, 30, 40, 50});
     
 //     // Test with a simple lambda function
 //     auto add_lambda = [](float a, float b) { return a + b; };
 //     pluss::Series result1 = pluss::queue(add_lambda, s1, s2);
     
 //     EXPECT_EQ(result1.numel(), 5);
-//     EXPECT_TRUE(torch::all(result1 == torch::tensor({11, 22, 33, 44, 55})).item<bool>());
+//     EXPECT_TRUE(torch::all(result1 == torch::series({11, 22, 33, 44, 55})).item<bool>());
 //     std::cout << "pluss::queue(add_lambda, s1, s2) result: " << result1 << std::endl;
     
 //     // Test with a more complex function
@@ -234,7 +234,7 @@ void test_custom_type() {
 //     pluss::Series result2 = pluss::queue(multiply_and_add, s1, s2);
     
 //     EXPECT_EQ(result2.numel(), 5);
-//     EXPECT_TRUE(torch::all(result2 == torch::tensor({15, 45, 95, 165, 255})).item<bool>());
+//     EXPECT_TRUE(torch::all(result2 == torch::series({15, 45, 95, 165, 255})).item<bool>());
 //     std::cout << "pluss::queue(multiply_and_add, s1, s2) result: " << result2 << std::endl;
     
 //     // Test with a scalar and a Series
@@ -243,7 +243,7 @@ void test_custom_type() {
 //     pluss::Series result3 = pluss::queue(add_scalar, s1, scalar_value);
     
 //     EXPECT_EQ(result3.numel(), 5);
-//     EXPECT_TRUE(torch::all(result3 == torch::tensor({101, 102, 103, 104, 105})).item<bool>());
+//     EXPECT_TRUE(torch::all(result3 == torch::series({101, 102, 103, 104, 105})).item<bool>());
 //     std::cout << "pluss::queue(add_scalar, s1, 100.0f) result: " << result3 << std::endl;
     
 //     // Test with Note objects
@@ -262,7 +262,7 @@ void test_custom_type() {
 //     auto result5 = pluss::queue(to_length, note1);
     
 //     EXPECT_EQ(result5.numel(), 2);
-//     EXPECT_TRUE(torch::all(result5 == torch::tensor({5, 5})).item<bool>());
+//     EXPECT_TRUE(torch::all(result5 == torch::series({5, 5})).item<bool>());
 //     std::cout << "pluss::queue(to_length, note1) result: " << result5 << std::endl;
     
 //     // Test with a function that takes multiple arguments of different types
@@ -271,8 +271,8 @@ void test_custom_type() {
 //     };
     
 //     pluss::Note note3 = pluss::content({"Test", "Example"});
-//     pluss::Series nums = torch::tensor({1, 2});
-//     pluss::Series values = torch::tensor({3.14f, 2.71f});
+//     pluss::Series nums = torch::series({1, 2});
+//     pluss::Series values = torch::series({3.14f, 2.71f});
     
 //     pluss::Note result6 = pluss::queue(format_string, note3, nums, values);
     

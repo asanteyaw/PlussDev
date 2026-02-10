@@ -131,8 +131,8 @@ CSVData load_full_csv(const std::string& filepath) {
     return data;
 }
 
-// Convert column to numeric tensor
-torch::Tensor column_to_tensor(const std::vector<std::vector<std::string>>& rows, 
+// Convert column to numeric series
+torch::Series column_to_tensor(const std::vector<std::vector<std::string>>& rows, 
                                 size_t col_idx, bool allow_nan = true) {
     std::vector<float> values;
     values.reserve(rows.size());
@@ -150,7 +150,7 @@ torch::Tensor column_to_tensor(const std::vector<std::vector<std::string>>& rows
         }
     }
     
-    return torch::tensor(values);
+    return torch::series(values);
 }
 
 // Extract string column for categorical analysis
@@ -250,8 +250,8 @@ int main() {
         
         for (const auto& col : numeric_cols) {
             if (col_idx.find(col) != col_idx.end()) {
-                auto tensor = column_to_tensor(data.rows, col_idx[col]);
-                threads.emplace_back(pluss::from_torch(tensor), col);
+                auto series = column_to_tensor(data.rows, col_idx[col]);
+                threads.emplace_back(pluss::from_torch(series), col);
             }
         }
         
@@ -724,8 +724,8 @@ int main() {
                 }
             }
             
-            region_threads.emplace_back(pluss::from_torch(torch::tensor(region_severity)), "Severity");
-            region_threads.emplace_back(pluss::from_torch(torch::tensor(region_distance)), "Distance(mi)");
+            region_threads.emplace_back(pluss::from_torch(torch::series(region_severity)), "Severity");
+            region_threads.emplace_back(pluss::from_torch(torch::series(region_distance)), "Distance(mi)");
             
             region_dfs.push_back(std::make_shared<DataFrame>(region_threads));
             region_names.push_back(region.name);

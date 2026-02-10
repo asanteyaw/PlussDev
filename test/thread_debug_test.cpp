@@ -6,8 +6,8 @@ using namespace pluss::table;
 int main() {
     // Test Series add directly first
     std::cout << "Testing Series add directly:\n";
-    auto s1 = pluss::from_torch(torch::tensor({10.0, 20.0, 30.0}));
-    auto s2 = pluss::from_torch(torch::tensor({2.0, 3.0, 4.0}));
+    auto s1 = pluss::from_torch(torch::series({10.0, 20.0, 30.0}));
+    auto s2 = pluss::from_torch(torch::series({2.0, 3.0, 4.0}));
     
     std::cout << "s1: " << s1[0].item<double>() << ", " << s1[1].item<double>() << ", " << s1[2].item<double>() << "\n";
     std::cout << "s2: " << s2[0].item<double>() << ", " << s2[1].item<double>() << ", " << s2[2].item<double>() << "\n";
@@ -24,20 +24,20 @@ int main() {
     auto s_add_alpha = s1.add(s2, 1.0);
     std::cout << "s1.add(s2, 1.0): " << s_add_alpha[0].item<double>() << ", " << s_add_alpha[1].item<double>() << ", " << s_add_alpha[2].item<double>() << "\n";
     
-    // Test calling tensor() method
-    auto t_add = s1.tensor().add(s2.tensor());
-    std::cout << "s1.tensor().add(s2.tensor()): " << t_add[0].item<double>() << ", " << t_add[1].item<double>() << ", " << t_add[2].item<double>() << "\n";
+    // Test calling series() method
+    auto t_add = s1.series().add(s2.series());
+    std::cout << "s1.series().add(s2.series()): " << t_add[0].item<double>() << ", " << t_add[1].item<double>() << ", " << t_add[2].item<double>() << "\n";
     
-    // Test calling tensor().add with alpha
-    auto t_add_alpha = s1.tensor().add(s2.tensor(), 1.0);
-    std::cout << "s1.tensor().add(s2.tensor(), 1.0): " << t_add_alpha[0].item<double>() << ", " << t_add_alpha[1].item<double>() << ", " << t_add_alpha[2].item<double>() << "\n";
+    // Test calling series().add with alpha
+    auto t_add_alpha = s1.series().add(s2.series(), 1.0);
+    std::cout << "s1.series().add(s2.series(), 1.0): " << t_add_alpha[0].item<double>() << ", " << t_add_alpha[1].item<double>() << ", " << t_add_alpha[2].item<double>() << "\n";
     
     std::cout << "Expected: 12, 23, 34\n\n";
     
     // Test Thread add
     std::cout << "Testing Thread add operation:\n";
-    auto data1 = pluss::from_torch(torch::tensor({10.0, 20.0, 30.0}));
-    auto data2 = pluss::from_torch(torch::tensor({2.0, 3.0, 4.0}));
+    auto data1 = pluss::from_torch(torch::series({10.0, 20.0, 30.0}));
+    auto data2 = pluss::from_torch(torch::series({2.0, 3.0, 4.0}));
     Thread t1(data1, "t1");
     Thread t2(data2, "t2");
     
@@ -61,7 +61,7 @@ int main() {
     
     // Test round
     std::cout << "\nTesting round operation:\n";
-    auto decimal_data = pluss::from_torch(torch::tensor({1.234, 2.567, 3.891}));
+    auto decimal_data = pluss::from_torch(torch::series({1.234, 2.567, 3.891}));
     Thread t_dec(decimal_data, "decimal");
     
     std::cout << "t_dec is_series: " << t_dec.is_series() << "\n";

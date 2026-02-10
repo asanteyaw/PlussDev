@@ -8,11 +8,11 @@
 using namespace pluss::table;
 
 // Helper to create DataFrame from column specification
-std::shared_ptr<DataFrame> create_df(const std::vector<std::pair<std::string, at::Tensor>>& columns) {
+std::shared_ptr<DataFrame> create_df(const std::vector<std::pair<std::string, at::Series>>& columns) {
     std::vector<Thread> threads;
     threads.reserve(columns.size());
-    for (const auto& [name, tensor] : columns) {
-        threads.emplace_back(pluss::from_torch(tensor), name);
+    for (const auto& [name, series] : columns) {
+        threads.emplace_back(pluss::from_torch(series), name);
     }
     return std::make_shared<DataFrame>(threads);
 }
@@ -101,7 +101,7 @@ int main() {
     
     try {
         // Create DataFrames with different column counts
-        std::vector<std::pair<std::string, at::Tensor>> cols_30, cols_15, cols_9;
+        std::vector<std::pair<std::string, at::Series>> cols_30, cols_15, cols_9;
         for (int i = 0; i < 30; ++i) {
             cols_30.push_back({"feature_" + std::to_string(i), torch::randn({1000})});
         }

@@ -3,7 +3,7 @@
 #include <internals/core/include/b10/deets/operations_fwd.h>
 
 #include <pluss/Note.h>
-#include <pluss/SeriesBody.h>
+#include <PlussQit/core/SeriesBody.h>
 
 #include <string>
 #include <utility>

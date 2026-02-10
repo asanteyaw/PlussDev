@@ -5,10 +5,46 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/LocalConfig.cmake")
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBZIP REQUIRED libzip)
 project(plussma LANGUAGES CXX)
 
-include(CTest)
+# Provide a top-level 'pluss' library so subdirectories can attach sources
+add_library(pluss STATIC)
+target_include_directories(pluss PUBLIC ${CMAKE_SOURCE_DIR}/include)
+set_target_properties(pluss PROPERTIES CXX_STANDARD 20)
+
+# Provide an alias so older CMakeLists that expect a `PlussQit` target still work
+add_library(PlussQit ALIAS pluss)
+
+# Define a simple EXCLUDE macro expected by some internal CMakeLists
+# Removes items in ARGN from the list named by VAR
+macro(EXCLUDE VAR)
+    foreach(_itm IN LISTS ARGN)
+        list(REMOVE_ITEM ${VAR} ${_itm})
+    endforeach()
+endmacro()
+
+# Minimal append_filelist used by internal CMakeLists (stub for configure)
+macro(append_filelist NAME VAR)
+    set(_cur ${${NAME}})
+    set(_add ${${VAR}})
+    foreach(_i IN LISTS _add)
+        list(APPEND _cur ${_i})
+    endforeach()
+    set(${NAME} ${_cur} PARENT_SCOPE)
+endmacro()
+
+# lowercase alias used in some files
+macro(exclude) 
+    _EXCLUDE_CALL(${ARGV0})
+endmacro()
+
+macro(_EXCLUDE_CALL VAR)
+    foreach(_itm IN LISTS ARGN)
+        list(REMOVE_ITEM ${VAR} ${_itm})
+    endforeach()
+endmacro()
 
 # ==============================
 # Global configuration
@@ -23,67 +59,24 @@ add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 # ==============================
 # Create library 
 # ==============================
-add_library(pluss STATIC)
+# Core internals live under include/internals/PlussQit (CodeM/CodeN/CodeL)
+add_subdirectory(include/internals/PlussQit/CodeM)
+add_subdirectory(include/internals/PlussQit/CodeN)
+add_subdirectory(include/internals/PlussQit/CodeL)
 
-# ==============================
-# Dependencies
-# ==============================
-# For conda environments
-if(DEFINED ENV{CONDA_PREFIX})
-    set(CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX};${CMAKE_PREFIX_PATH}")
-    include_directories($ENV{CONDA_PREFIX}/include)
-    link_directories($ENV{CONDA_PREFIX}/lib)
+# Optional external PlussQit examples (kept separate)
+if(EXISTS "${CMAKE_SOURCE_DIR}/PlussQit/CMakeLists.txt")
+    add_subdirectory(PlussQit)
 endif()
 
-find_package(Torch REQUIRED)
-find_package(OpenSSL REQUIRED)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(LIBZIP REQUIRED libzip)
-
-# Show where OpenSSL was found and add include dir as a fallback
-message(STATUS "OpenSSL include: ${OPENSSL_INCLUDE_DIR}")
-if(DEFINED OPENSSL_INCLUDE_DIR)
-    target_include_directories(pluss PUBLIC ${OPENSSL_INCLUDE_DIR})
+# Plussible, PlussTica and PlussMic are example/test modules that
+# attach sources to the top-level 'pluss' target. Make them optional
+# so a quick configure/build of the core `PlussQit` internals is fast.
+option(BUILD_EXTRAS "Build example/test modules (Plussible/PlussTica/PlussMic)" OFF)
+if(BUILD_EXTRAS)
+    add_subdirectory(Plussible)
+    add_subdirectory(PlussTica)
+    add_subdirectory(PlussMic)
+else()
+    message(STATUS "Skipping Plussible/PlussTica/PlussMic (set -DBUILD_EXTRAS=ON to include)")
 endif()
-
-# Add libzip include directories
-if(LIBZIP_FOUND)
-    message(STATUS "Found libzip: ${LIBZIP_LIBRARIES}")
-    target_include_directories(pluss PUBLIC ${LIBZIP_INCLUDE_DIRS})
-endif()
-
-target_link_libraries(pluss
-    PUBLIC  ${TORCH_LIBRARIES}
-    PRIVATE OpenSSL::Crypto ${LIBZIP_LIBRARIES}
-)
-
-# ==============================
-# Include paths
-# ==============================
-target_include_directories(pluss
-    PUBLIC
-        ${PROJECT_SOURCE_DIR}/include
-        ${PROJECT_SOURCE_DIR}/include/pluss
-        ${TORCH_INCLUDE_DIRS}
-)
-
-# ==============================
-# Subdirectories (add sources)
-# ==============================
-add_subdirectory(src/Series)
-add_subdirectory(src/Chord)
-add_subdirectory(src/Note)
-add_subdirectory(src/TL)
-add_subdirectory(src/error)
-add_subdirectory(src/plotism)
-add_subdirectory(src/spaces)
-add_subdirectory(src/datalog)
-add_subdirectory(test)
-add_subdirectory(examples)
-
-# ==============================
-# Compiler flags
-# ==============================
-target_compile_options(pluss PRIVATE
-    -O3 -Wall -Wextra -Wno-sign-compare -Wno-unused-variable
-)

@@ -1,0 +1,98 @@
+// Returns the frequency of elements of input non-negative integer series.
+#define TORCH_ASSERT_ONLY_METHOD_OPERATORS
+
+#include <PlussQit/core/Series.h>
+#include <PlussQit/Dispatch.h>
+#include <MSharp/util/irange.h>
+
+#include <limits>
+
+#ifndef AT_PER_OPERATOR_HEADERS
+#include <PlussQit/Functions.h>
+#include <PlussQit/NativeFunctions.h>
+#else
+#include <PlussQit/ops/bincount_native.h>
+#include <PlussQit/ops/zeros.h>
+#endif
+
+namespace pluss::native {
+
+///////////////// bincount /////////////////
+namespace {
+
+template <typename input_t, typename weights_t>
+Series _bincount_cpu_template(
+    const Series& self,
+    const Series& weights,
+    int64_t minlength) {
+  if (minlength < 0) {
+    TORCH_CHECK(false, "minlength should be >= 0");
+  }
+  if (self.dim() == 1 && self.numel() == 0) {
+    return pluss::zeros({minlength}, kLong);
+  }
+  if (self.dim() != 1 || *self.min().data_ptr<input_t>() < 0) {
+    TORCH_CHECK(false, "bincount only supports 1-d non-negative integral inputs.");
+  }
+
+  // Ensure max_val < 2 ^ 63 - 1 (9223372036854775807)
+  auto max_val = *self.max().data_ptr<input_t>();
+  if (max_val >= std::numeric_limits<int64_t>::max()) {
+    TORCH_CHECK(false,
+        "maximum value of input overflowed, it should be < ",
+        std::numeric_limits<int64_t>::max(),
+        " but got ",
+        max_val
+    );
+  }
+
+  bool has_weights = weights.defined();
+  if (has_weights && (weights.dim() != 1 || weights.size(0) != self.size(0))) {
+    TORCH_CHECK(false, "weights should be 1-d and have the same length as input");
+  }
+
+  Series output;
+  int64_t self_size = self.size(0);
+  int64_t nbins = static_cast<int64_t>(max_val) + 1L;
+  nbins = std::max(nbins, minlength); // at least minlength # of bins
+
+  const input_t* self_p = self.const_data_ptr<input_t>();
+  if (has_weights) {
+    output = pluss::zeros(
+        {nbins},
+        optTypeMetaToScalarType(weights.options().dtype_opt()),
+        weights.options().layout_opt(),
+        weights.options().device_opt(),
+        weights.options().pinned_memory_opt());
+    weights_t* output_p = output.data_ptr<weights_t>();
+    const weights_t* weights_p = weights.const_data_ptr<weights_t>();
+    for (const auto i : MSharp::irange(self_size)) {
+      output_p[self_p[i]] += weights_p[i];
+    }
+  } else {
+    output = pluss::zeros({nbins}, kLong);
+    int64_t* output_p = output.data_ptr<int64_t>();
+    for (const auto i : MSharp::irange(self_size)) {
+      output_p[self_p[i]] += 1L;
+    }
+  }
+  return output;
+}
+} // namespace
+
+Series
+_bincount_cpu(const Series& self, const std::optional<Series>& weights_opt, int64_t minlength) {
+  // See [Note: hacky wrapper removal for optional series]
+  MSharp::MaybeOwned<Series> weights_maybe_owned = pluss::borrow_from_optional_tensor(weights_opt);
+  const Series& weights = *weights_maybe_owned;
+
+  return AT_DISPATCH_INTEGRAL_TYPES(self.scalar_type(), "bincount_cpu", [&] {
+    const auto scalar = weights.scalar_type();
+    if (scalar == ScalarType::Undefined || scalar == ScalarType::Float)
+      return _bincount_cpu_template<scalar_t, float>(self.contiguous(), weights.contiguous(), minlength);
+    return _bincount_cpu_template<scalar_t, double>(
+        self.contiguous(), weights.contiguous().to(kDouble), minlength);
+  });
+}
+
+} // namespace pluss::native

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pluss/SeriesBody.h>
+#include <PlussQit/core/SeriesBody.h>
 #include <pluss/Types.h>
 #include <pluss/series_factory.h>
 
@@ -37,8 +37,8 @@ public:
     /**
      * @brief Construct a new Fusion module with pre-initialized weights and biases
      * 
-     * @param weight Weight tensor of shape (out_features, in_features)
-     * @param bias Bias tensor of shape (out_features) or empty tensor
+     * @param weight Weight series of shape (out_features, in_features)
+     * @param bias Bias series of shape (out_features) or empty series
      */
    Fusion(const Series& weight, const Series& bias = Series())
         : weight_(weight), bias_(bias), 
@@ -47,21 +47,21 @@ public:
         
         // Validate dimensions
         PLUSS_INTERNAL_CHECK(weight.dim() == 2, 
-                            "Weight tensor should be 2D, got " + std::to_string(weight.dim()) + "D");
+                            "Weight series should be 2D, got " + std::to_string(weight.dim()) + "D");
         
         if (with_bias_) {
             PLUSS_INTERNAL_CHECK(bias.dim() == 1, 
-                                "Bias tensor should be 1D, got " + std::to_string(bias.dim()) + "D");
+                                "Bias series should be 1D, got " + std::to_string(bias.dim()) + "D");
             PLUSS_INTERNAL_CHECK(bias.sizes()[0] == out_features_, 
-                                "Bias tensor size should match out_features");
+                                "Bias series size should match out_features");
         }
     }
     
     /**
      * @brief Apply the linear transformation
      * 
-     * @param input Input tensor of shape (*, in_features) where * means any number of dimensions
-     * @return Output tensor of shape (*, out_features)
+     * @param input Input series of shape (*, in_features) where * means any number of dimensions
+     * @return Output series of shape (*, out_features)
      */
     Series forward(const Series& input) const {
         PLUSS_INTERNAL_DISPATCH({
@@ -83,18 +83,18 @@ public:
     }
     
     /**
-     * @brief Get the weight tensor
+     * @brief Get the weight series
      * 
-     * @return Weight tensor
+     * @return Weight series
      */
     const Series& weight() const {
         return weight_;
     }
     
     /**
-     * @brief Get the bias tensor
+     * @brief Get the bias series
      * 
-     * @return Bias tensor or empty tensor if no bias
+     * @return Bias series or empty series if no bias
      */
     const Series& bias() const {
         return bias_;
@@ -138,16 +138,16 @@ private:
 /**
  * @brief Apply a linear transformation to the input
  * 
- * @param input Input tensor of shape (*, in_features)
- * @param weight Weight tensor of shape (out_features, in_features)
- * @param bias Bias tensor of shape (out_features) or empty tensor
- * @return Output tensor of shape (*, out_features)
+ * @param input Input series of shape (*, in_features)
+ * @param weight Weight series of shape (out_features, in_features)
+ * @param bias Bias series of shape (out_features) or empty series
+ * @return Output series of shape (*, out_features)
  */
 inline Series Fusion(const Series& input, const Series& weight, const Series& bias = Series()) {
     PLUSS_INTERNAL_DISPATCH({
         // Validate dimensions
         PLUSS_INTERNAL_CHECK(weight.dim() == 2, 
-                            "Weight tensor should be 2D, got " + std::to_string(weight.dim()) + "D");
+                            "Weight series should be 2D, got " + std::to_string(weight.dim()) + "D");
         PLUSS_INTERNAL_CHECK(input.sizes()[input.dim()-1] == weight.sizes()[1], 
                             "Last dimension of input should match second dimension of weight");
         
@@ -157,9 +157,9 @@ inline Series Fusion(const Series& input, const Series& weight, const Series& bi
         // Add bias if provided
         if (bias.defined() && bias.numel() > 0) {
             PLUSS_INTERNAL_CHECK(bias.dim() == 1, 
-                                "Bias tensor should be 1D, got " + std::to_string(bias.dim()) + "D");
+                                "Bias series should be 1D, got " + std::to_string(bias.dim()) + "D");
             PLUSS_INTERNAL_CHECK(bias.sizes()[0] == weight.sizes()[0], 
-                                "Bias tensor size should match first dimension of weight");
+                                "Bias series size should match first dimension of weight");
             
             output.add_(bias);
         }

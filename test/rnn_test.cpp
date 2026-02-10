@@ -30,10 +30,10 @@ protected:
         input_size = 10;
         hidden_size = 20;
         
-        // Create input tensor
+        // Create input series
         input = create_random_series({seq_len, batch_size, input_size});
         
-        // Create batch_first input tensor
+        // Create batch_first input series
         input_batch_first = input.permute({1, 0, 2});  // (batch, seq, input)
     }
     

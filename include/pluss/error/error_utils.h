@@ -2,7 +2,7 @@
 
 #include "error.h"
 #include <exception>
-#include <c10/util/Exception.h>
+#include <MSharp/util/Exception.h>
 
 namespace pluss {
 
@@ -16,7 +16,7 @@ template <typename Func>
 auto attempt(Func&& func) -> decltype(func()) {
     try {
         return func();
-    } catch (const c10::Error& e) {
+    } catch (const MSharp::Error& e) {
         throw PlussError(sanitize_torch_message(e.what()));
     } catch (const std::exception& e) {
         throw PlussError(std::string("std::exception: ") + e.what());

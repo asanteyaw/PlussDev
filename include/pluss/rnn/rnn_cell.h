@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pluss/SeriesBody.h>
+#include <PlussQit/core/SeriesBody.h>
 #include <pluss/Types.h>
 #include <pluss/series_factory.h>
 #include <pluss/Fusion.h>
@@ -46,7 +46,7 @@ public:
     /**
      * @brief Forward pass
      * 
-     * @param input Input tensor of shape (batch, input_size)
+     * @param input Input series of shape (batch, input_size)
      * @param hx Previous hidden state of shape (batch, hidden_size)
      * @return Series New hidden state of shape (batch, hidden_size)
      */

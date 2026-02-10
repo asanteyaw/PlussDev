@@ -4,7 +4,7 @@
 #include <torch/torch.h>
 
 #include <pluss/Types.h>
-#include <pluss/SeriesBody.h>
+#include <PlussQit/core/SeriesBody.h>
 #include <pluss/series_factory.h>
 #include <pluss/note_factory.h>
 #include <pluss/SeriesFormatter.h>
