@@ -1,0 +1,2436 @@
+#include "CodeM/core/OpsInternal.h"
+
+#include <algorithm>
+#include <array>
+#include <cstring>
+#include <span>
+#include "CodeM/core/Errors.h"
+#include "CodeM/core/TypePromotion.h"
+#include "CodeM/native/cpu/ReduceKernels.h"
+#include "CodeM/native/cpu/WhereClampKernels.h"
+#include "CodeM/native/cpu/ActivationKernels.h"
+#include "CodeM/native/cpu/SoftmaxKernels.h"
+#include "CodeM/native/cpu/ScatterKernels.h"
+#include "CodeM/native/cpu/Reductions.h"
+#include "CodeM/native/cpu/GatherScatterKernels.h"
+#include "CodeM/native/cpu/IndexingExtras.h"
+#include "CodeM/core/SeriesIterator.h"
+#include "CodeM/native/cpu/KernelTable.h"
+#include "CodeM/native/cpu/UnaryBasicOps.h"
+#include "CodeM/native/cpu/UnaryMathKernels.h"
+#include "CodeM/native/cpu/UnaryMoreKernels.h"
+#include "CodeM/native/cpu/UnaryExtraMathKernels.h"
+#include "CodeM/native/cpu/BinaryExtraMathKernels.h"
+#include "CodeM/core/Complex.h"
+#include "CodeM/core/Half.h"
+
+namespace pluss::codem::ops_internal {
+
+static std::vector<std::int64_t> broadcast_out_shape_(std::span<const std::int64_t> a, std::span<const std::int64_t> b) {
+  return SeriesIterator::broadcast_shape(a, b);
+}
+
+static Series binary_op_(native::cpu::BinaryOpId op, const Series& a0, const Series& b0) {
+  ScalarType dt = promote_types(a0.scalar_type(), b0.scalar_type());
+  Series a = (a0.scalar_type()==dt) ? a0 : a0.to(dt);
+  Series b = (b0.scalar_type()==dt) ? b0 : b0.to(dt);
+  auto out_shape = broadcast_out_shape_(a.sizes(), b.sizes());
+  Series out = Series::empty(out_shape, dt);
+  auto fn = native::cpu::lookup_binary(op, dt);
+  PLUSS_CHECK(fn != nullptr, "binary kernel missing");
+  fn(a, b, out);
+  return out;
+}
+
+static Series cmp_op_(native::cpu::BinaryOpId op, const Series& a0, const Series& b0) {
+  ScalarType dt = promote_types(a0.scalar_type(), b0.scalar_type());
+  Series a = (a0.scalar_type()==dt) ? a0 : a0.to(dt);
+  Series b = (b0.scalar_type()==dt) ? b0 : b0.to(dt);
+  auto out_shape = broadcast_out_shape_(a.sizes(), b.sizes());
+  Series out = Series::empty(out_shape, ScalarType::Bool);
+  auto fn = native::cpu::lookup_binary(op, dt);
+  PLUSS_CHECK(fn != nullptr, "compare kernel missing");
+  fn(a, b, out);
+  return out;
+}
+
+static Series unary_op_(native::cpu::UnaryOpId op, const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type());
+  auto fn = native::cpu::lookup_unary(op, a.scalar_type());
+  PLUSS_CHECK(fn != nullptr, "unary kernel missing");
+  fn(a, out);
+  return out;
+}
+
+Series add(const Series& a, const Series& b) {
+  const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
+  auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
+  auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
+ return binary_op_(native::cpu::BinaryOpId::Add, a, b); }
+Series sub(const Series& a, const Series& b) {
+  const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
+  auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
+  auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
+ return binary_op_(native::cpu::BinaryOpId::Sub, a, b); }
+Series mul(const Series& a, const Series& b) {
+  const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
+  auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
+  auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
+ return binary_op_(native::cpu::BinaryOpId::Mul, a, b); }
+Series div(const Series& a, const Series& b) {
+  const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
+  auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
+  auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
+ return binary_op_(native::cpu::BinaryOpId::Div, a, b); }
+Series pow(const Series& a, const Series& b) {
+  const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
+  auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
+  auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
+ return binary_op_(native::cpu::BinaryOpId::Pow, a, b); }
+
+
+Series conj(const Series& a) {
+  PLUSS_CHECK(a.defined(), "conj: undefined");
+  if (a.scalar_type() == ScalarType::Complex64) {
+    Series out = Series::empty(a.sizes(), ScalarType::Complex64);
+    auto aa = a.contiguous();
+    auto* op = reinterpret_cast<Complex64*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const Complex64*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::conj(ap[i]);
+    return out;
+  }
+  if (a.scalar_type() == ScalarType::Complex128) {
+    Series out = Series::empty(a.sizes(), ScalarType::Complex128);
+    auto aa = a.contiguous();
+    auto* op = reinterpret_cast<Complex128*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const Complex128*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::conj(ap[i]);
+    return out;
+  }
+  // For real dtypes, conj is identity.
+  return a.clone();
+}
+
+Series real(const Series& a) {
+  PLUSS_CHECK(a.defined(), "real: undefined");
+  if (a.scalar_type() == ScalarType::Complex64) {
+    Series out = Series::empty(a.sizes(), ScalarType::Float32);
+    auto aa = a.contiguous();
+    auto* op = reinterpret_cast<float*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const Complex64*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::real(ap[i]);
+    return out;
+  }
+  if (a.scalar_type() == ScalarType::Complex128) {
+    Series out = Series::empty(a.sizes(), ScalarType::Float64);
+    auto aa = a.contiguous();
+    auto* op = reinterpret_cast<double*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const Complex128*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::real(ap[i]);
+    return out;
+  }
+  return a.clone();
+}
+
+Series imag(const Series& a) {
+  PLUSS_CHECK(a.defined(), "imag: undefined");
+  if (a.scalar_type() == ScalarType::Complex64) {
+    Series out = Series::empty(a.sizes(), ScalarType::Float32);
+    auto aa = a.contiguous();
+    auto* op = reinterpret_cast<float*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const Complex64*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::imag(ap[i]);
+    return out;
+  }
+  if (a.scalar_type() == ScalarType::Complex128) {
+    Series out = Series::empty(a.sizes(), ScalarType::Float64);
+    auto aa = a.contiguous();
+    auto* op = reinterpret_cast<double*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const Complex128*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::imag(ap[i]);
+    return out;
+  }
+  // real dtype -> 0
+  Series out = Series::zeros(a.sizes(), (a.scalar_type()==ScalarType::Float64)?ScalarType::Float64:ScalarType::Float32);
+  return out;
+}
+
+Series angle(const Series& a) {
+  PLUSS_CHECK(a.defined(), "angle: undefined");
+  if (a.scalar_type() == ScalarType::Complex64) {
+    Series out = Series::empty(a.sizes(), ScalarType::Float32);
+    auto aa = a.contiguous();
+    auto* op = reinterpret_cast<float*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const Complex64*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::arg(ap[i]);
+    return out;
+  }
+  if (a.scalar_type() == ScalarType::Complex128) {
+    Series out = Series::empty(a.sizes(), ScalarType::Float64);
+    auto aa = a.contiguous();
+    auto* op = reinterpret_cast<double*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const Complex128*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::arg(ap[i]);
+    return out;
+  }
+  // For real inputs, match torch.angle semantics: atan2(0,x)
+  Series out = Series::empty(a.sizes(), (a.scalar_type()==ScalarType::Float64)?ScalarType::Float64:ScalarType::Float32);
+  auto aa = a.contiguous().to(out.scalar_type());
+  if (out.scalar_type()==ScalarType::Float64) {
+    auto* op = reinterpret_cast<double*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const double*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::atan2(0.0, ap[i]);
+  } else {
+    auto* op = reinterpret_cast<float*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const float*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::atan2(0.0f, ap[i]);
+  }
+  return out;
+}
+
+Series abs(const Series& a) {
+  if (a.scalar_type() == ScalarType::Complex64) {
+    Series out = Series::empty(a.sizes(), ScalarType::Float32);
+    auto aa = a.contiguous();
+    auto* op = reinterpret_cast<float*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const Complex64*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::abs(ap[i]);
+    return out;
+  }
+  if (a.scalar_type() == ScalarType::Complex128) {
+    Series out = Series::empty(a.sizes(), ScalarType::Float64);
+    auto aa = a.contiguous();
+    auto* op = reinterpret_cast<double*>(out.raw_data());
+    const auto* ap = reinterpret_cast<const Complex128*>(aa.raw_data());
+    for (std::int64_t i=0;i<aa.numel();++i) op[i] = std::abs(ap[i]);
+    return out;
+  }
+  return unary_op_(native::cpu::UnaryOpId::Abs, a);
+}
+Series neg(const Series& a) { return unary_op_(native::cpu::UnaryOpId::Neg, a); }
+
+Series eq(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Eq, a, b); }
+Series ne(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Ne, a, b); }
+Series lt(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Lt, a, b); }
+Series le(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Le, a, b); }
+Series gt(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Gt, a, b); }
+Series ge(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Ge, a, b); }
+
+Series sqrt(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::sqrt(a, out); return out; }
+Series floor(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::floor(a, out); return out; }
+Series ceil(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::ceil(a, out); return out; }
+Series round(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::round(a, out); return out; }
+Series trunc(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::trunc(a, out); return out; }
+Series isnan(const Series& a) { Series out = Series::empty(a.sizes(), ScalarType::Bool); native::cpu::isnan(a, out); return out; }
+Series isinf(const Series& a) { Series out = Series::empty(a.sizes(), ScalarType::Bool); native::cpu::isinf(a, out); return out; }
+
+Series sin(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::sin(a, out); return out; }
+Series cos(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::cos(a, out); return out; }
+Series tanh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::tanh(a, out); return out; }
+
+Series tan(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::tan(a, out); return out; }
+Series asin(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::asin(a, out); return out; }
+Series acos(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::acos(a, out); return out; }
+Series atan(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::atan(a, out); return out; }
+Series sinh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::sinh(a, out); return out; }
+Series cosh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::cosh(a, out); return out; }
+
+Series log1p(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::log1p(a, out); return out; }
+Series expm1(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::expm1(a, out); return out; }
+Series reciprocal(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::reciprocal(a, out); return out; }
+
+Series erf(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::erf(a, out); return out; }
+Series erfc(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::erfc(a, out); return out; }
+Series lgamma(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::lgamma(a, out); return out; }
+Series asinh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::asinh(a, out); return out; }
+Series acosh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::acosh(a, out); return out; }
+Series atanh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::atanh(a, out); return out; }
+
+Series isfinite(const Series& a) { Series out = Series::empty(a.sizes(), ScalarType::Bool); native::cpu::isfinite(a, out); return out; }
+
+Series logical_not(const Series& a) { Series out = Series::empty(a.sizes(), ScalarType::Bool); native::cpu::logical_not(a, out); return out; }
+
+Series logical_and(const Series& a, const Series& b) {
+  PLUSS_CHECK(a.defined() && b.defined(), "logical_and: undefined");
+  PLUSS_CHECK(a.scalar_type() == ScalarType::Bool && b.scalar_type() == ScalarType::Bool, "logical_and: expects bool tensors");
+  auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
+  auto aa = a.expand(shape, true).contiguous();
+  auto bb = b.expand(shape, true).contiguous();
+  Series out = Series::empty(shape, ScalarType::Bool);
+  auto* op = reinterpret_cast<bool*>(const_cast<std::byte*>(out.raw_data()));
+  const bool* ap = reinterpret_cast<const bool*>(aa.raw_data());
+  const bool* bp = reinterpret_cast<const bool*>(bb.raw_data());
+  const auto n = out.numel();
+  for (std::int64_t i=0;i<n;++i) op[i] = ap[i] && bp[i];
+  return out;
+}
+
+Series logical_or(const Series& a, const Series& b) {
+  PLUSS_CHECK(a.defined() && b.defined(), "logical_or: undefined");
+  PLUSS_CHECK(a.scalar_type() == ScalarType::Bool && b.scalar_type() == ScalarType::Bool, "logical_or: expects bool tensors");
+  auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
+  auto aa = a.expand(shape, true).contiguous();
+  auto bb = b.expand(shape, true).contiguous();
+  Series out = Series::empty(shape, ScalarType::Bool);
+  auto* op = reinterpret_cast<bool*>(const_cast<std::byte*>(out.raw_data()));
+  const bool* ap = reinterpret_cast<const bool*>(aa.raw_data());
+  const bool* bp = reinterpret_cast<const bool*>(bb.raw_data());
+  const auto n = out.numel();
+  for (std::int64_t i=0;i<n;++i) op[i] = ap[i] || bp[i];
+  return out;
+}
+
+Series logical_xor(const Series& a, const Series& b) {
+  PLUSS_CHECK(a.defined() && b.defined(), "logical_xor: undefined");
+  PLUSS_CHECK(a.scalar_type() == ScalarType::Bool && b.scalar_type() == ScalarType::Bool, "logical_xor: expects bool tensors");
+  auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
+  auto aa = a.expand(shape, true).contiguous();
+  auto bb = b.expand(shape, true).contiguous();
+  Series out = Series::empty(shape, ScalarType::Bool);
+  auto* op = reinterpret_cast<bool*>(const_cast<std::byte*>(out.raw_data()));
+  const bool* ap = reinterpret_cast<const bool*>(aa.raw_data());
+  const bool* bp = reinterpret_cast<const bool*>(bb.raw_data());
+  const auto n = out.numel();
+  for (std::int64_t i=0;i<n;++i) op[i] = (ap[i] != bp[i]);
+  return out;
+}
+
+Series masked_select(const Series& a, const Series& mask) {
+  PLUSS_CHECK(mask.scalar_type() == ScalarType::Bool, "masked_select: mask must be bool");
+  // Broadcast mask to a's shape (Torch-like).
+  auto bshape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
+  {
+    auto asz = a.sizes();
+    PLUSS_CHECK(asz.size() == bshape.size(), "masked_select: a must match broadcasted shape");
+    PLUSS_CHECK(std::equal(asz.begin(), asz.end(), bshape.begin()), "masked_select: a must match broadcasted shape");
+  }
+  auto mm = mask.expand(std::span<const std::int64_t>(bshape.data(), bshape.size()), /*implicit=*/true).contiguous();
+  auto aa = a.contiguous();
+
+  const bool* mp = reinterpret_cast<const bool*>(mm.raw_data());
+  const auto n = aa.numel();
+  std::int64_t count = 0;
+  for (std::int64_t i=0;i<n;++i) if (mp[i]) ++count;
+
+  const std::array<std::int64_t, 1> out_sizes{count};
+  Series out = Series::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), aa.scalar_type());
+  const auto item = aa.dtype().itemsize;
+  const std::byte* ap = aa.raw_data();
+  auto* op = reinterpret_cast<std::byte*>(out.raw_mutable_data());
+  std::int64_t j = 0;
+  for (std::int64_t i=0;i<n;++i) {
+    if (!mp[i]) continue;
+    std::memcpy(op + j*item, ap + i*item, (std::size_t)item);
+    ++j;
+  }
+  return out;
+}
+
+
+Series masked_fill(const Series& a, const Series& mask, const Series& value) {
+  Series out = a.clone();
+  masked_fill_(out, mask, value);
+  return out;
+}
+
+Series masked_fill(const Series& a, const Series& mask, double value) {
+  Series out = a.clone();
+  masked_fill_(out, mask, value);
+  return out;
+}
+
+Series& masked_fill_(Series& a, const Series& mask, const Series& value) {
+  PLUSS_CHECK(mask.scalar_type() == ScalarType::Bool, "masked_fill_: mask must be bool");
+  PLUSS_CHECK(value.numel() == 1, "masked_fill_: value must be scalar");
+  auto shape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
+  // If shapes differ, expand a to shape then write back only if same storage: for now require same shape to keep safe alias invariants.
+  {
+    auto asz = a.sizes();
+    PLUSS_CHECK(asz.size() == shape.size(), "masked_fill_: shape mismatch (in-place requires mask broadcast to match a)");
+    PLUSS_CHECK(std::equal(asz.begin(), asz.end(), shape.begin()), "masked_fill_: shape mismatch (in-place requires mask broadcast to match a)");
+  }
+  PLUSS_CHECK(a.is_contiguous(), "masked_fill_: in-place requires a contiguous Series");
+  auto mm = mask.expand(shape, true).contiguous();
+  const bool* mp = reinterpret_cast<const bool*>(mm.raw_data());
+
+  // Value cast
+  Series vv = value.to(a.scalar_type()).contiguous();
+  const auto item = a.dtype().itemsize;
+  const std::byte* vp = vv.raw_data();
+
+  auto* ap = reinterpret_cast<std::byte*>(a.raw_mutable_data());
+  const auto n = a.numel();
+  for (std::int64_t i=0;i<n;++i) {
+    if (!mp[i]) continue;
+    std::memcpy(ap + i*item, vp, (std::size_t)item);
+  }
+  return a;
+}
+
+Series& masked_fill_(Series& a, const Series& mask, double value) {
+  const std::array<std::int64_t, 1> one{1};
+  auto v = Series::full(std::span<const std::int64_t>(one.data(), one.size()), value, ScalarType::Float64).to(a.scalar_type());
+  return masked_fill_(a, mask, v);
+}
+
+static std::vector<std::int64_t> out_sizes_for_reduce_(std::span<const std::int64_t> sizes, std::int64_t dim, bool keepdim) {
+  std::vector<std::int64_t> out(sizes.begin(), sizes.end());
+  if (dim < 0) dim += (std::int64_t)out.size();
+  PLUSS_CHECK(dim >= 0 && dim < (std::int64_t)out.size(), "reduce: dim out of range");
+  if (keepdim) out[(std::size_t)dim] = 1;
+  else out.erase(out.begin() + dim);
+  return out;
+}
+
+static Series maybe_keepdim_(Series out, std::span<const std::int64_t> in_sizes, std::int64_t dim, bool keepdim) {
+  if (keepdim) return out;
+  // already dropped dim
+  return out;
+}
+
+Series sum(const Series& a) {
+  PLUSS_CHECK(a.defined(), "sum: undefined");
+  if (a.dim() == 0) return a.clone();
+  auto aa = a.contiguous();
+  Series out = Series::empty({}, aa.scalar_type());
+  native::cpu::sum_all(aa, out);
+  return out;
+}
+
+Series sum(const Series& a, std::int64_t dim, bool keepdim) {
+  PLUSS_CHECK(a.defined(), "sum: undefined");
+  if (a.dim() == 0) return a.clone();
+  auto aa = a.contiguous();
+  const auto nd = aa.dim();
+  if (dim < 0) dim += nd;
+  auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, keepdim);
+  Series out = Series::empty(out_sizes, aa.scalar_type());
+  // kernel expects dropped-dim shape, so if keepdim=true, we reduce into a dropped shape then reshape
+  if (keepdim) {
+    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, /*keepdim=*/false);
+    Series tmp = Series::empty(tmp_sizes, aa.scalar_type());
+    native::cpu::sum_dim(aa, dim, tmp);
+    // reshape into keepdim
+    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
+    ks[(std::size_t)dim] = 1;
+    return tmp.reshape(ks);
+  }
+  native::cpu::sum_dim(aa, dim, out);
+  return out;
+}
+
+Series prod(const Series& a) {
+  PLUSS_CHECK(a.defined(), "prod: undefined");
+  if (a.dim() == 0) return a.clone();
+  // prod_all not yet specialized: reduce sequentially using dim kernel
+  Series cur = a.contiguous();
+  for (std::int64_t d = (std::int64_t)cur.dim()-1; d>=0; --d) cur = prod(cur, d, false);
+  return cur;
+}
+
+Series prod(const Series& a, std::int64_t dim, bool keepdim) {
+  PLUSS_CHECK(a.defined(), "prod: undefined");
+  if (a.dim() == 0) return a.clone();
+  auto aa = a.contiguous();
+  const auto nd = aa.dim();
+  if (dim < 0) dim += nd;
+  if (keepdim) {
+    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+    Series tmp = Series::empty(tmp_sizes, aa.scalar_type());
+    native::cpu::prod_dim(aa, dim, tmp);
+    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
+    ks[(std::size_t)dim] = 1;
+    return tmp.reshape(ks);
+  }
+  auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+  Series out = Series::empty(out_sizes, aa.scalar_type());
+  native::cpu::prod_dim(aa, dim, out);
+  return out;
+}
+
+Series mean(const Series& a) {
+  PLUSS_CHECK(a.defined(), "mean: undefined");
+  if (a.dim() == 0) return a.clone();
+  auto aa = a.contiguous();
+  // mean_all kernel exists for float32/64/16/bf16 in Patch40 expand; for others, promote to float32.
+  ScalarType dt = aa.scalar_type();
+  if (dt != ScalarType::Float64 && dt != ScalarType::Float32 && dt != ScalarType::Float16 && dt != ScalarType::BFloat16 && dt != ScalarType::Complex64 && dt != ScalarType::Complex128) {
+    aa = aa.to(ScalarType::Float32);
+    dt = ScalarType::Float32;
+  }
+  Series out = Series::empty({}, dt);
+  native::cpu::mean_all(aa, out);
+  return out;
+}
+
+Series mean(const Series& a, std::int64_t dim, bool keepdim) {
+  PLUSS_CHECK(a.defined(), "mean: undefined");
+  if (a.dim() == 0) return a.clone();
+  // mean = sum / reduce_n, for float types; for integral, promote to float32
+  Series aa = a.contiguous();
+  ScalarType dt = aa.scalar_type();
+  if (dt != ScalarType::Float64 && dt != ScalarType::Float32 && dt != ScalarType::Float16 && dt != ScalarType::BFloat16 && dt != ScalarType::Complex64 && dt != ScalarType::Complex128) {
+    aa = aa.to(ScalarType::Float32);
+    dt = ScalarType::Float32;
+  }
+  Series s = sum(aa, dim, keepdim);
+  const auto nd = aa.dim();
+  if (dim < 0) dim += nd;
+  const auto reduce_n = aa.sizes()[(std::size_t)dim];
+  if (dt == ScalarType::Float64) {
+    auto* p = reinterpret_cast<double*>(s.raw_data());
+    for (std::int64_t i=0;i<s.numel();++i) p[i] /= (double)reduce_n;
+  } else if (dt == ScalarType::Float32) {
+    auto* p = reinterpret_cast<float*>(s.raw_data());
+    for (std::int64_t i=0;i<s.numel();++i) p[i] /= (float)reduce_n;
+  } else if (dt == ScalarType::Float16) {
+    auto* p = reinterpret_cast<Float16*>(s.raw_data());
+    for (std::int64_t i=0;i<s.numel();++i) p[i] = float16_from_float(float16_to_float(p[i]) / (float)reduce_n);
+  } else if (dt == ScalarType::BFloat16) {
+    auto* p = reinterpret_cast<BFloat16*>(s.raw_data());
+    for (std::int64_t i=0;i<s.numel();++i) p[i] = bfloat16_from_float(bfloat16_to_float(p[i]) / (float)reduce_n);
+  } else if (dt == ScalarType::Complex64) {
+    auto* p = reinterpret_cast<Complex64*>(s.raw_data());
+    const float inv = 1.0f / (float)reduce_n;
+    for (std::int64_t i=0;i<s.numel();++i) p[i] = p[i] * inv;
+  } else if (dt == ScalarType::Complex128) {
+    auto* p = reinterpret_cast<Complex128*>(s.raw_data());
+    const double inv = 1.0 / (double)reduce_n;
+    for (std::int64_t i=0;i<s.numel();++i) p[i] = p[i] * inv;
+  }
+  return s;
+}
+
+Series amax(const Series& a) {
+  PLUSS_CHECK(a.defined(), "amax: undefined");
+  if (a.dim() == 0) return a.clone();
+  Series cur = a.contiguous();
+  for (std::int64_t d = (std::int64_t)cur.dim()-1; d>=0; --d) cur = amax(cur, d, false);
+  return cur;
+}
+Series amax(const Series& a, std::int64_t dim, bool keepdim) {
+  PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
+              "amax: complex dtype not supported for ordered reduction");
+
+  PLUSS_CHECK(a.defined(), "amax: undefined");
+  if (a.dim() == 0) return a.clone();
+  auto aa = a.contiguous();
+  const auto nd = aa.dim();
+  if (dim < 0) dim += nd;
+  if (keepdim) {
+    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+    Series tmp = Series::empty(tmp_sizes, aa.scalar_type());
+    native::cpu::amax_dim(aa, dim, tmp);
+    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
+    ks[(std::size_t)dim] = 1;
+    return tmp.reshape(ks);
+  }
+  auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+  Series out = Series::empty(out_sizes, aa.scalar_type());
+  native::cpu::amax_dim(aa, dim, out);
+  return out;
+}
+
+Series amin(const Series& a) {
+  PLUSS_CHECK(a.defined(), "amin: undefined");
+  if (a.dim() == 0) return a.clone();
+  Series cur = a.contiguous();
+  for (std::int64_t d = (std::int64_t)cur.dim()-1; d>=0; --d) cur = amin(cur, d, false);
+  return cur;
+}
+Series amin(const Series& a, std::int64_t dim, bool keepdim) {
+  PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
+              "amin: complex dtype not supported for ordered reduction");
+
+  PLUSS_CHECK(a.defined(), "amin: undefined");
+  if (a.dim() == 0) return a.clone();
+  auto aa = a.contiguous();
+  const auto nd = aa.dim();
+  if (dim < 0) dim += nd;
+  if (keepdim) {
+    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+    Series tmp = Series::empty(tmp_sizes, aa.scalar_type());
+    native::cpu::amin_dim(aa, dim, tmp);
+    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
+    ks[(std::size_t)dim] = 1;
+    return tmp.reshape(ks);
+  }
+  auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+  Series out = Series::empty(out_sizes, aa.scalar_type());
+  native::cpu::amin_dim(aa, dim, out);
+  return out;
+}
+
+Series all(const Series& a) {
+  PLUSS_CHECK(a.defined(), "all: undefined");
+  if (a.dim()==0) return a.to(ScalarType::Bool);
+  Series cur = a.to(ScalarType::Bool).contiguous();
+  for (std::int64_t d=(std::int64_t)cur.dim()-1; d>=0; --d) cur = all(cur, d, false);
+  return cur;
+}
+Series all(const Series& a, std::int64_t dim, bool keepdim) {
+  PLUSS_CHECK(a.defined(), "all: undefined");
+  if (a.dim()==0) return a.to(ScalarType::Bool);
+  auto aa = a.to(ScalarType::Bool).contiguous();
+  const auto nd = aa.dim();
+  if (dim < 0) dim += nd;
+  if (keepdim) {
+    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+    Series tmp = Series::empty(tmp_sizes, ScalarType::Bool);
+    native::cpu::all_dim(aa, dim, tmp);
+    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
+    ks[(std::size_t)dim] = 1;
+    return tmp.reshape(ks);
+  }
+  auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+  Series out = Series::empty(out_sizes, ScalarType::Bool);
+  native::cpu::all_dim(aa, dim, out);
+  return out;
+}
+
+Series any(const Series& a) {
+  PLUSS_CHECK(a.defined(), "any: undefined");
+  if (a.dim()==0) return a.to(ScalarType::Bool);
+  Series cur = a.to(ScalarType::Bool).contiguous();
+  for (std::int64_t d=(std::int64_t)cur.dim()-1; d>=0; --d) cur = any(cur, d, false);
+  return cur;
+}
+Series any(const Series& a, std::int64_t dim, bool keepdim) {
+  PLUSS_CHECK(a.defined(), "any: undefined");
+  if (a.dim()==0) return a.to(ScalarType::Bool);
+  auto aa = a.to(ScalarType::Bool).contiguous();
+  const auto nd = aa.dim();
+  if (dim < 0) dim += nd;
+  if (keepdim) {
+    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+    Series tmp = Series::empty(tmp_sizes, ScalarType::Bool);
+    native::cpu::any_dim(aa, dim, tmp);
+    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
+    ks[(std::size_t)dim] = 1;
+    return tmp.reshape(ks);
+  }
+  auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
+  Series out = Series::empty(out_sizes, ScalarType::Bool);
+  native::cpu::any_dim(aa, dim, out);
+  return out;
+}
+
+Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
+  PLUSS_CHECK(a.defined(), "argmax: undefined");
+  return native::cpu::argmax(a, dim, keepdim);
+}
+Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
+  PLUSS_CHECK(a.defined(), "argmin: undefined");
+  return native::cpu::argmin(a, dim, keepdim);
+}
+
+Series where(const Series& cond, const Series& a, const Series& b) {
+  PLUSS_CHECK(cond.defined() && a.defined() && b.defined(), "where: undefined");
+  auto shape = SeriesIterator::broadcast_shape(cond.sizes(), SeriesIterator::broadcast_shape(a.sizes(), b.sizes()));
+  auto cc = cond.expand(std::span<const std::int64_t>(shape.data(), shape.size()), /*implicit=*/true);
+  auto aa = a.expand(std::span<const std::int64_t>(shape.data(), shape.size()), /*implicit=*/true);
+  auto bb = b.expand(std::span<const std::int64_t>(shape.data(), shape.size()), /*implicit=*/true);
+  ScalarType dt = promote_types(aa.scalar_type(), bb.scalar_type());
+  aa = aa.to(dt);
+  bb = bb.to(dt);
+  Series out = Series::empty(shape, dt);
+  native::cpu::where(cc, aa, bb, out);
+  return out;
+}
+
+Series clamp(const Series& a, double min, double max) {
+  Series out = a.clone();
+  clamp_(out, min, max);
+  return out;
+}
+
+Series& clamp_(Series& a, double min, double max) {
+  PLUSS_CHECK(a.defined(), "clamp_: undefined");
+  PLUSS_CHECK(min <= max, "clamp_: min must be <= max");
+  PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
+              "clamp_: complex dtype not supported");
+  auto aa = a.contiguous();
+  native::cpu::clamp_inplace(aa, min, max);
+  if (a.is_contiguous()) {
+    std::memcpy(a.raw_mutable_data(), aa.raw_data(), (std::size_t)(aa.dtype().itemsize * aa.numel()));
+    return a;
+  }
+  throw_error("clamp_: non-contiguous target not supported yet");
+}
+
+Series relu(const Series& a) {
+  Series out = a.clone();
+  relu_(out);
+  return out;
+}
+
+Series& relu_(Series& a) {
+  PLUSS_CHECK(a.defined(), "relu_: undefined");
+  PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
+              "relu_: complex dtype not supported");
+  auto aa = a.contiguous();
+  native::cpu::relu_inplace(aa);
+  if (a.is_contiguous()) {
+    std::memcpy(a.raw_mutable_data(), aa.raw_data(), (std::size_t)(aa.dtype().itemsize * aa.numel()));
+    return a;
+  }
+
+  throw_error("relu_: non-contiguous target not supported yet");
+}
+
+Series sigmoid(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type());
+  auto aa = a.contiguous();
+  native::cpu::sigmoid(aa, out);
+  return out;
+}
+Series& sigmoid_(Series& a) {
+  PLUSS_CHECK(a.is_contiguous(), "sigmoid_: requires contiguous");
+  native::cpu::sigmoid_inplace(a);
+  return a;
+}
+
+Series softplus(const Series& a, double beta, double threshold) {
+  Series out = Series::empty(a.sizes(), a.scalar_type());
+  auto aa = a.contiguous();
+  native::cpu::softplus(aa, out, beta, threshold);
+  return out;
+}
+Series& softplus_(Series& a, double beta, double threshold) {
+  PLUSS_CHECK(a.is_contiguous(), "softplus_: requires contiguous");
+  native::cpu::softplus_inplace(a, beta, threshold);
+  return a;
+}
+
+Series silu(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type());
+  auto aa = a.contiguous();
+  native::cpu::silu(aa, out);
+  return out;
+}
+Series& silu_(Series& a) {
+  PLUSS_CHECK(a.is_contiguous(), "silu_: requires contiguous");
+  native::cpu::silu_inplace(a);
+  return a;
+}
+
+Series gelu(const Series& a, bool approximate) {
+  Series out = Series::empty(a.sizes(), a.scalar_type());
+  auto aa = a.contiguous();
+  native::cpu::gelu(aa, out, approximate);
+  return out;
+}
+Series& gelu_(Series& a, bool approximate) {
+  PLUSS_CHECK(a.is_contiguous(), "gelu_: requires contiguous");
+  native::cpu::gelu_inplace(a, approximate);
+  return a;
+}
+
+Series leaky_relu(const Series& a, double negative_slope) {
+  Series out = Series::empty(a.sizes(), a.scalar_type());
+  auto aa = a.contiguous();
+  native::cpu::leaky_relu(aa, out, negative_slope);
+  return out;
+}
+Series& leaky_relu_(Series& a, double negative_slope) {
+  PLUSS_CHECK(a.is_contiguous(), "leaky_relu_: requires contiguous");
+  native::cpu::leaky_relu_inplace(a, negative_slope);
+  return a;
+}
+
+Series softmax(const Series& a, std::int64_t dim) { return native::cpu::softmax(a, dim); }
+Series log_softmax(const Series& a, std::int64_t dim) { return native::cpu::log_softmax(a, dim); }
+Series logsumexp(const Series& a, std::int64_t dim, bool keepdim) { return native::cpu::logsumexp(a, dim, keepdim); }
+
+Series scatter_add(const Series& a, std::int64_t dim, const Series& index, const Series& src) {
+  return native::cpu::scatter_add(a, dim, index, src);
+}
+Series& scatter_add_(Series& a, std::int64_t dim, const Series& index, const Series& src) {
+  native::cpu::scatter_add_inplace(a, dim, index, src);
+  return a;
+}
+Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self) {
+  return native::cpu::scatter_reduce(a, dim, index, src, reduce, include_self);
+}
+Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self, bool has_initial, double initial) {
+  return native::cpu::scatter_reduce(a, dim, index, src, reduce, include_self, has_initial, initial);
+}
+Series& scatter_reduce_(Series& a, std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self) {
+  native::cpu::scatter_reduce_inplace(a, dim, index, src, reduce, include_self);
+  return a;
+}
+Series& scatter_reduce_(Series& a, std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self, bool has_initial, double initial) {
+  native::cpu::scatter_reduce_inplace(a, dim, index, src, reduce, include_self, has_initial, initial);
+  return a;
+}
+
+Series masked_fill(const Series& a, const Series& mask, double value) {
+  Series out = a.clone();
+  masked_fill_(out, mask, value);
+  return out;
+}
+
+Series& masked_fill_(Series& a, const Series& mask, double value) {
+  PLUSS_CHECK(a.defined() && mask.defined(), "masked_fill_: undefined");
+  PLUSS_CHECK(mask.scalar_type() == ScalarType::Bool, "masked_fill_: mask must be Bool");
+  auto shape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
+  if (shape != std::vector<std::int64_t>(a.sizes().begin(), a.sizes().end())) {
+    // if a needs broadcast, materialize into new tensor (Torch-like in-place restriction)
+    throw_error("masked_fill_: cannot broadcast target tensor in-place");
+  }
+  Series mm = mask.expand(a.sizes()).contiguous();
+  native::cpu::masked_fill_inplace(a, mm, value);
+  return a;
+}
+
+Series gather(const Series& input, std::int64_t dim, const Series& index) {
+  return native::cpu::gather(input, dim, index);
+}
+
+
+Series maximum(const Series& a, const Series& b) {
+  auto out = Series::empty(broadcast_shape(a, b), promote_types(a.scalar_type(), b.scalar_type()));
+  auto aa = a.contiguous().to(out.scalar_type());
+  auto bb = b.contiguous().to(out.scalar_type());
+  native::cpu::maximum(aa, bb, out);
+  return out;
+}
+
+Series minimum(const Series& a, const Series& b) {
+  auto out = Series::empty(broadcast_shape(a, b), promote_types(a.scalar_type(), b.scalar_type()));
+  auto aa = a.contiguous().to(out.scalar_type());
+  auto bb = b.contiguous().to(out.scalar_type());
+  native::cpu::minimum(aa, bb, out);
+  return out;
+}
+
+Series atan2(const Series& a, const Series& b) {
+  auto out = Series::empty(broadcast_shape(a, b), promote_types(a.scalar_type(), b.scalar_type()));
+  auto aa = a.contiguous().to(out.scalar_type());
+  auto bb = b.contiguous().to(out.scalar_type());
+  native::cpu::atan2(aa, bb, out);
+  return out;
+}
+
+Series fmod(const Series& a, const Series& b) {
+  auto out = Series::empty(broadcast_shape(a, b), promote_types(a.scalar_type(), b.scalar_type()));
+  auto aa = a.contiguous().to(out.scalar_type());
+  auto bb = b.contiguous().to(out.scalar_type());
+  native::cpu::fmod(aa, bb, out);
+  return out;
+}
+
+Series remainder(const Series& a, const Series& b) {
+  auto out = Series::empty(broadcast_shape(a, b), promote_types(a.scalar_type(), b.scalar_type()));
+  auto aa = a.contiguous().to(out.scalar_type());
+  auto bb = b.contiguous().to(out.scalar_type());
+  native::cpu::remainder(aa, bb, out);
+  return out;
+}
+
+Series rsqrt(const Series& a) {
+  auto out = Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32));
+  auto aa = a.contiguous().to(out.scalar_type());
+  native::cpu::rsqrt(aa, out);
+  return out;
+}
+Series log2(const Series& a) {
+  auto out = Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32));
+  auto aa = a.contiguous().to(out.scalar_type());
+  native::cpu::log2(aa, out);
+  return out;
+}
+Series log10(const Series& a) {
+  auto out = Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32));
+  auto aa = a.contiguous().to(out.scalar_type());
+  native::cpu::log10(aa, out);
+  return out;
+}
+Series exp2(const Series& a) {
+  auto out = Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32));
+  auto aa = a.contiguous().to(out.scalar_type());
+  native::cpu::exp2(aa, out);
+  return out;
+}
+Series cbrt(const Series& a) {
+  auto out = Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32));
+  auto aa = a.contiguous().to(out.scalar_type());
+  native::cpu::cbrt(aa, out);
+  return out;
+}
+Series square(const Series& a) {
+  auto out = Series::empty(a.sizes(), a.scalar_type());
+  auto aa = a.contiguous();
+  native::cpu::square(aa, out);
+  return out;
+}
+
+Series nan_to_num(const Series& a, double nan, double posinf, double neginf) {
+  auto out = a.clone().contiguous();
+  native::cpu::nan_to_num(out, nan, posinf, neginf);
+  return out;
+}
+Series& nan_to_num_(Series& a, double nan, double posinf, double neginf) {
+  auto aa = a.contiguous();
+  native::cpu::nan_to_num(aa, nan, posinf, neginf);
+  // copy back into original view if needed
+  if (!a.is_contiguous()) a.copy_(aa);
+  return a;
+}
+
+Series clamp_min(const Series& a, double lo) {
+  auto out = a.clone().contiguous();
+  native::cpu::clamp_min(out, lo);
+  return out;
+}
+Series& clamp_min_(Series& a, double lo) {
+  auto aa = a.contiguous();
+  native::cpu::clamp_min(aa, lo);
+  if (!a.is_contiguous()) a.copy_(aa);
+  return a;
+}
+
+Series clamp_max(const Series& a, double hi) {
+  auto out = a.clone().contiguous();
+  native::cpu::clamp_max(out, hi);
+  return out;
+}
+Series& clamp_max_(Series& a, double hi) {
+  auto aa = a.contiguous();
+  native::cpu::clamp_max(aa, hi);
+  if (!a.is_contiguous()) a.copy_(aa);
+  return a;
+}
+
+
+Series masked_scatter(const Series& a, const Series& mask, const Series& src) {
+  Series out = a.clone();
+  masked_scatter_(out, mask, src);
+  return out;
+}
+
+Series& masked_scatter_(Series& a, const Series& mask, const Series& src) {
+  PLUSS_CHECK(mask.scalar_type() == ScalarType::Bool, "masked_scatter_: mask must be bool");
+  auto shape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
+  PLUSS_CHECK(a.sizes() == shape, "masked_scatter_: shape mismatch (require a already broadcasted)");
+  auto mm = mask.expand(shape, true).contiguous();
+  const bool* mp = reinterpret_cast<const bool*>(mm.raw_data());
+  const auto n = a.numel();
+  std::int64_t count = 0;
+  for (std::int64_t i=0;i<n;++i) if (mp[i]) ++count;
+  PLUSS_CHECK(src.numel() == count, "masked_scatter_: src numel must match number of True in mask");
+  auto ss = src.contiguous().to(a.scalar_type());
+
+  const auto item = a.dtype().itemsize;
+  std::byte* ap = const_cast<std::byte*>(a.raw_mutable_data());
+  const std::byte* sp = ss.raw_data();
+  std::int64_t j = 0;
+  for (std::int64_t i=0;i<n;++i) {
+    if (!mp[i]) continue;
+    std::memcpy(ap + i*item, sp + j*item, (std::size_t)item);
+    ++j;
+  }
+  return a;
+}
+
+Series unique(const Series& a, bool sorted) {
+  PLUSS_CHECK(a.dim() == 1 || a.numel() == 0, "unique: only 1D supported in this CPU reference implementation");
+  auto x = a.contiguous();
+  // For float NaN: treat NaNs as equal for uniqueness, similar to Torch's default behavior in CPU path.
+  // We'll normalize by mapping NaNs to a single sentinel during comparison but keep original values.
+  if (x.scalar_type() == ScalarType::Float32) {
+    const auto* p = reinterpret_cast<const float*>(x.raw_data());
+    std::vector<float> v(p, p + x.numel());
+    if (sorted) std::sort(v.begin(), v.end(), [](float u,float w){
+      const bool un = std::isnan(u), wn = std::isnan(w);
+      if (un && wn) return false;
+      if (un) return false;
+      if (wn) return true;
+      return u < w;
+    });
+    v.erase(std::unique(v.begin(), v.end(), [](float u,float w){
+      const bool un = std::isnan(u), wn = std::isnan(w);
+      if (un && wn) return true;
+      return u == w;
+    }), v.end());
+    Series out = Series::empty({(std::int64_t)v.size()}, ScalarType::Float32);
+    std::memcpy(out.raw_mutable_data(), v.data(), v.size()*sizeof(float));
+    return out;
+  }
+  if (x.scalar_type() == ScalarType::Float64) {
+    const auto* p = reinterpret_cast<const double*>(x.raw_data());
+    std::vector<double> v(p, p + x.numel());
+    if (sorted) std::sort(v.begin(), v.end(), [](double u,double w){
+      const bool un = std::isnan(u), wn = std::isnan(w);
+      if (un && wn) return false;
+      if (un) return false;
+      if (wn) return true;
+      return u < w;
+    });
+    v.erase(std::unique(v.begin(), v.end(), [](double u,double w){
+      const bool un = std::isnan(u), wn = std::isnan(w);
+      if (un && wn) return true;
+      return u == w;
+    }), v.end());
+    Series out = Series::empty({(std::int64_t)v.size()}, ScalarType::Float64);
+    std::memcpy(out.raw_mutable_data(), v.data(), v.size()*sizeof(double));
+    return out;
+  }
+  // Integer/bool path
+  auto st = x.scalar_type();
+  PLUSS_CHECK(is_integral_type(st) || st == ScalarType::Bool, "unique: dtype not supported");
+  std::vector<std::int64_t> vv;
+  vv.reserve((std::size_t)x.numel());
+  for (std::int64_t i=0;i<x.numel();++i) vv.push_back(x.item_i64(i));
+  if (sorted) std::sort(vv.begin(), vv.end());
+  vv.erase(std::unique(vv.begin(), vv.end()), vv.end());
+  Series out = Series::empty({(std::int64_t)vv.size()}, ScalarType::Int64);
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_mutable_data());
+  for (std::size_t i=0;i<vv.size();++i) op[i]=vv[i];
+  return out;
+}
+
+Series bincount(const Series& a, std::int64_t minlength) {
+  PLUSS_CHECK(a.scalar_type() == ScalarType::Int64 || a.scalar_type() == ScalarType::Int32 ||
+              a.scalar_type() == ScalarType::Int16 || a.scalar_type() == ScalarType::Int8, "bincount: input must be integer");
+  auto x = a.contiguous();
+  const auto n = x.numel();
+  std::int64_t maxv = -1;
+  for (std::int64_t i=0;i<n;++i) {
+    const auto v = x.item_i64(i);
+    PLUSS_CHECK(v >= 0, "bincount: input must be non-negative");
+    if (v > maxv) maxv = v;
+  }
+  const std::int64_t outn = std::max<std::int64_t>(minlength, maxv + 1);
+  Series out = Series::zeros({outn}, ScalarType::Int64);
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_mutable_data());
+  for (std::int64_t i=0;i<n;++i) {
+    const auto v = x.item_i64(i);
+    ++op[v];
+  }
+  return out;
+}
+
+Series histc(const Series& a, std::int64_t bins, double min, double max) {
+  PLUSS_CHECK(bins > 0, "histc: bins must be > 0");
+  auto x = a.contiguous().to(ScalarType::Float64);
+  const auto n = x.numel();
+  const auto* p = reinterpret_cast<const double*>(x.raw_data());
+  if (min == 0.0 && max == 0.0) {
+    // infer min/max ignoring NaN/inf
+    bool any = false;
+    double mn=0, mx=0;
+    for (std::int64_t i=0;i<n;++i) {
+      const auto v = p[i];
+      if (!std::isfinite(v)) continue;
+      if (!any) { mn = mx = v; any=true; }
+      else { mn = std::min(mn,v); mx = std::max(mx,v); }
+    }
+    if (!any) { mn = 0.0; mx = 0.0; }
+    min = mn; max = mx;
+  }
+  Series out = Series::zeros({bins}, ScalarType::Int64);
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_mutable_data());
+  if (bins == 1) {
+    // all finite in one bin if within [min,max]
+    for (std::int64_t i=0;i<n;++i) {
+      const auto v=p[i];
+      if (!std::isfinite(v)) continue;
+      if (v >= min && v <= max) ++op[0];
+    }
+    return out;
+  }
+  const double scale = (bins) / (max - min);
+  for (std::int64_t i=0;i<n;++i) {
+    const auto v=p[i];
+    if (!std::isfinite(v)) continue;
+    if (v < min || v > max) continue;
+    std::int64_t b = (v == max) ? (bins-1) : (std::int64_t)((v - min) * scale);
+    if (b < 0) b = 0;
+    if (b >= bins) b = bins-1;
+    ++op[b];
+  }
+  return out;
+}
+
+Series nonzero(const Series& a) {
+  // Torch returns a 2D int64 tensor of indices (nnz x ndim). For scalar, returns either (1 x 0)??;
+  // We'll follow: if scalar and nonzero -> (1 x 0), else (0 x 0).
+  const auto nd = a.dim();
+  auto mask = (nd == 0) ? a.ne(0.0) : a.ne(0.0).contiguous(); // bool mask
+  const bool* mp = reinterpret_cast<const bool*>(mask.raw_data());
+  const auto n = mask.numel();
+  std::int64_t count = 0;
+  for (std::int64_t i=0;i<n;++i) if (mp[i]) ++count;
+
+  std::vector<std::int64_t> out_sizes;
+  if (nd == 0) out_sizes = {count, 0};
+  else out_sizes = {count, nd};
+
+  Series out = Series::empty(out_sizes, ScalarType::Int64);
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_mutable_data());
+
+  if (count == 0) return out;
+  if (nd == 0) return out;
+
+  // Precompute strides for row-major index unraveling
+  std::vector<std::int64_t> strides((std::size_t)nd, 1);
+  for (std::int64_t d = nd-2; d >= 0; --d) {
+    strides[(std::size_t)d] = strides[(std::size_t)(d+1)] * a.sizes()[(std::size_t)(d+1)];
+  }
+
+  std::int64_t row = 0;
+  for (std::int64_t lin=0; lin<n; ++lin) {
+    if (!mp[lin]) continue;
+    std::int64_t rem = lin;
+    for (std::int64_t d=0; d<nd; ++d) {
+      const auto s = strides[(std::size_t)d];
+      const auto idx = rem / s;
+      rem -= idx * s;
+      op[row*nd + d] = idx;
+    }
+    ++row;
+  }
+  return out;
+}
+
+static bool same_numel(std::span<const std::int64_t> a, std::span<const std::int64_t> b) {
+  return compute_numel(a) == compute_numel(b);
+}
+
+static bool can_view_as(const Series& x, std::span<const std::int64_t> new_sizes) {
+  // Conservative v0: only contiguous may view.
+  return x.is_contiguous() && same_numel(x.sizes(), new_sizes);
+}
+
+Series Series::empty(std::span<const std::int64_t> sizes, ScalarType st) {
+  const auto dt = dtype_of(st);
+  const auto n = compute_numel(sizes);
+  Storage storage(static_cast<std::size_t>(n) * dt.itemsize);
+  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+      std::move(storage), 0,
+      std::vector<std::int64_t>(sizes.begin(), sizes.end()),
+      contiguous_strides(sizes),
+      st);
+  return Series(std::move(impl));
+}
+
+
+Series Series::make_from_doubles(const std::vector<double>& flat, std::span<const std::int64_t> sizes, ScalarType st) {
+  const std::int64_t n = compute_numel(sizes);
+  PLUSS_CHECK((std::int64_t)flat.size() == n, "make_from_doubles: size mismatch");
+  Series out = Series::empty(sizes, st);
+  // Write via float64 temp for simplicity, then cast if needed.
+  Series tmp = Series::empty(sizes, ScalarType::Float64);
+  std::memcpy(tmp.raw_mutable_data(), flat.data(), sizeof(double) * (std::size_t)n);
+  out.copy_(tmp.to(st), false);
+  return out;
+}
+
+Series Series::zeros(std::span<const std::int64_t> sizes, ScalarType st) {
+  auto t = empty(sizes, st);
+  const auto dt = t.dtype();
+  std::memset(t.raw_data(), 0, static_cast<std::size_t>(t.numel()) * dt.itemsize);
+  return t;
+}
+
+Series Series::ones(std::span<const std::int64_t> sizes, ScalarType st) {
+  auto t = empty(sizes, st);
+  const auto n = t.numel();
+  switch (st) {
+    case ScalarType::Float64: {
+      auto* p = reinterpret_cast<double*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i]=1.0;
+      return t;
+    }
+    case ScalarType::Float32: {
+      auto* p = reinterpret_cast<float*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i]=1.0f;
+      return t;
+    }
+    case ScalarType::Float16: {
+      auto* p = reinterpret_cast<std::uint16_t*>(t.raw_data());
+      // 1.0 in IEEE half is 0x3C00
+      for (std::int64_t i=0;i<n;++i) p[i]=0x3C00u;
+      return t;
+    }
+    case ScalarType::BFloat16: {
+      auto* p = reinterpret_cast<std::uint16_t*>(t.raw_data());
+      // 1.0f in bfloat16 is upper16(0x3F800000) => 0x3F80
+      for (std::int64_t i=0;i<n;++i) p[i]=0x3F80u;
+      return t;
+    }
+    case ScalarType::Int64: {
+      auto* p = reinterpret_cast<std::int64_t*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i]=1;
+      return t;
+    }
+    case ScalarType::Int32: {
+      auto* p = reinterpret_cast<std::int32_t*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i]=1;
+      return t;
+    }
+    case ScalarType::Int16: {
+      auto* p = reinterpret_cast<std::int16_t*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i]=1;
+      return t;
+    }
+    case ScalarType::Int8: {
+      auto* p = reinterpret_cast<std::int8_t*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i]=1;
+      return t;
+    }
+    case ScalarType::UInt8: {
+      auto* p = reinterpret_cast<std::uint8_t*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i]=1;
+      return t;
+    }
+    case ScalarType::Bool: {
+      auto* p = reinterpret_cast<std::uint8_t*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i]=1;
+      return t;
+    }
+    case ScalarType::Complex64: {
+      auto* p = reinterpret_cast<Complex64*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i] = Complex64(1.0f, 0.0f);
+      return t;
+    }
+    case ScalarType::Complex128: {
+      auto* p = reinterpret_cast<Complex128*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i] = Complex128(1.0, 0.0);
+      return t;
+    }
+    default:
+      break;
+  }
+  throw_error("ones: dtype not implemented");
+}
+
+Series Series::full(std::span<const std::int64_t> sizes, double value, ScalarType st) {
+  auto t = empty(sizes, st);
+  const auto n = t.numel();
+  switch (st) {
+    case ScalarType::Float64: {
+      auto* p = reinterpret_cast<double*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i]=static_cast<double>(value);
+      return t;
+    }
+    case ScalarType::Float32: {
+      auto* p = reinterpret_cast<float*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i]=static_cast<float>(value);
+      return t;
+    }
+    case ScalarType::Float16: {
+      auto* p = reinterpret_cast<std::uint16_t*>(t.raw_data());
+      // use to() conversion path via float32 helper
+      Series tmp = Series::full(sizes, value, ScalarType::Float32);
+      auto half = tmp.to(ScalarType::Float16);
+      std::memcpy(p, half.raw_data(), (std::size_t)n * 2);
+      return t;
+    }
+    case ScalarType::BFloat16: {
+      auto* p = reinterpret_cast<std::uint16_t*>(t.raw_data());
+      Series tmp = Series::full(sizes, value, ScalarType::Float32);
+      auto bf = tmp.to(ScalarType::BFloat16);
+      std::memcpy(p, bf.raw_data(), (std::size_t)n * 2);
+      return t;
+    }
+    case ScalarType::Int64: {
+      auto* p = reinterpret_cast<std::int64_t*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i]=static_cast<std::int64_t>(value);
+      return t;
+    }
+    case ScalarType::Complex64: {
+      auto* p = reinterpret_cast<Complex64*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i] = Complex64((float)value, 0.0f);
+      return t;
+    }
+    case ScalarType::Complex128: {
+      auto* p = reinterpret_cast<Complex128*>(t.raw_data());
+      for (std::int64_t i=0;i<n;++i) p[i] = Complex128((double)value, 0.0);
+      return t;
+    }
+    default:
+      break;
+  }
+  throw_error("full: dtype not implemented");
+}
+
+Series Series::view(std::span<const std::int64_t> new_sizes) const {
+  if (!defined()) throw_error("view: undefined");
+  if (!can_view_as(*this, new_sizes)) throw_error("view: requires contiguous in v0");
+  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+      impl_->storage(), impl_->storage_offset_elems(),
+      std::vector<std::int64_t>(new_sizes.begin(), new_sizes.end()),
+      contiguous_strides(new_sizes),
+      scalar_type());
+  return Series(std::move(impl));
+}
+
+Series Series::reshape(std::span<const std::int64_t> new_sizes) const {
+  if (!defined()) throw_error("reshape: undefined");
+  if (can_view_as(*this, new_sizes)) return view(new_sizes);
+  return contiguous().view(new_sizes);
+}
+
+Series Series::transpose(std::int64_t d0, std::int64_t d1) const {
+  if (!defined()) throw_error("transpose: undefined");
+  const auto nd = dim();
+  if (d0 < 0) d0 += nd;
+  if (d1 < 0) d1 += nd;
+  if (d0 < 0 || d0 >= nd || d1 < 0 || d1 >= nd) throw_error("transpose: dim out of range");
+  if (d0 == d1) return *this;
+
+  auto ns = std::vector<std::int64_t>(sizes().begin(), sizes().end());
+  auto nt = std::vector<std::int64_t>(strides().begin(), strides().end());
+  std::swap(ns[static_cast<std::size_t>(d0)], ns[static_cast<std::size_t>(d1)]);
+  std::swap(nt[static_cast<std::size_t>(d0)], nt[static_cast<std::size_t>(d1)]);
+
+  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+      impl_->storage(), impl_->storage_offset_elems(),
+      std::move(ns), std::move(nt),
+      scalar_type());
+  return Series(std::move(impl));
+}
+
+
+Series Series::permute(std::span<const std::int64_t> dims) const {
+  if (!defined()) throw_error("permute: undefined");
+  const auto nd = dim();
+  PLUSS_CHECK((std::int64_t)dims.size() == nd, "permute: dims must have length == dim()");
+  std::vector<std::int64_t> dd(dims.begin(), dims.end());
+  // normalize negatives
+  for (auto& d : dd) { if (d < 0) d += nd; }
+  std::vector<std::uint8_t> seen((std::size_t)nd, 0);
+  for (auto d : dd) {
+    PLUSS_CHECK(d >= 0 && d < nd, "permute: dim out of range");
+    PLUSS_CHECK(!seen[(std::size_t)d], "permute: duplicate dim");
+    seen[(std::size_t)d] = 1;
+  }
+  auto ns = std::vector<std::int64_t>(nd);
+  auto nt = std::vector<std::int64_t>(nd);
+  for (std::int64_t i=0;i<nd;++i) {
+    ns[(std::size_t)i] = sizes()[(std::size_t)dd[(std::size_t)i]];
+    nt[(std::size_t)i] = strides()[(std::size_t)dd[(std::size_t)i]];
+  }
+  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+      impl_->storage(), impl_->storage_offset_elems(),
+      std::move(ns), std::move(nt),
+      scalar_type());
+  return Series(std::move(impl));
+}
+
+Series Series::unsqueeze(std::int64_t dim_) const {
+  if (!defined()) throw_error("unsqueeze: undefined");
+  const auto nd = dim();
+  if (dim_ < 0) dim_ += (nd + 1);
+  PLUSS_CHECK(dim_ >= 0 && dim_ <= nd, "unsqueeze: dim out of range");
+  auto ns = std::vector<std::int64_t>(sizes().begin(), sizes().end());
+  auto nt = std::vector<std::int64_t>(strides().begin(), strides().end());
+  ns.insert(ns.begin() + dim_, 1);
+  std::int64_t stride = 1;
+  if (nd == 0) stride = 1;
+  else if (dim_ == nd) stride = nt.back();
+  else stride = nt[(std::size_t)dim_] * ns[(std::size_t)dim_+1];
+  nt.insert(nt.begin() + dim_, stride);
+  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+      impl_->storage(), impl_->storage_offset_elems(),
+      std::move(ns), std::move(nt),
+      scalar_type());
+  return Series(std::move(impl));
+}
+
+Series Series::squeeze() const {
+  if (!defined()) throw_error("squeeze: undefined");
+  const auto nd = dim();
+  std::vector<std::int64_t> ns;
+  std::vector<std::int64_t> nt;
+  ns.reserve((std::size_t)nd);
+  nt.reserve((std::size_t)nd);
+  for (std::int64_t i=0;i<nd;++i) {
+    if (sizes()[(std::size_t)i] == 1) continue;
+    ns.push_back(sizes()[(std::size_t)i]);
+    nt.push_back(strides()[(std::size_t)i]);
+  }
+  if (ns.empty()) { ns.push_back(1); nt.push_back(1); }
+  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+      impl_->storage(), impl_->storage_offset_elems(),
+      std::move(ns), std::move(nt),
+      scalar_type());
+  return Series(std::move(impl));
+}
+
+Series Series::squeeze(std::int64_t dim_) const {
+  if (!defined()) throw_error("squeeze(dim): undefined");
+  const auto nd = dim();
+  if (dim_ < 0) dim_ += nd;
+  PLUSS_CHECK(dim_ >= 0 && dim_ < nd, "squeeze(dim): dim out of range");
+  if (sizes()[(std::size_t)dim_] != 1) return *this;
+  auto ns = std::vector<std::int64_t>(sizes().begin(), sizes().end());
+  auto nt = std::vector<std::int64_t>(strides().begin(), strides().end());
+  ns.erase(ns.begin() + dim_);
+  nt.erase(nt.begin() + dim_);
+  if (ns.empty()) { ns.push_back(1); nt.push_back(1); }
+  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+      impl_->storage(), impl_->storage_offset_elems(),
+      std::move(ns), std::move(nt),
+      scalar_type());
+  return Series(std::move(impl));
+}
+
+Series Series::flatten(std::int64_t start_dim, std::int64_t end_dim) const {
+  if (!defined()) throw_error("flatten: undefined");
+  const auto nd = dim();
+  if (start_dim < 0) start_dim += nd;
+  if (end_dim < 0) end_dim += nd;
+  PLUSS_CHECK(start_dim >= 0 && start_dim < nd, "flatten: start_dim out of range");
+  PLUSS_CHECK(end_dim >= 0 && end_dim < nd, "flatten: end_dim out of range");
+  PLUSS_CHECK(start_dim <= end_dim, "flatten: start_dim must be <= end_dim");
+
+  std::vector<std::int64_t> new_sizes;
+  new_sizes.reserve((std::size_t)nd - (std::size_t)(end_dim-start_dim));
+  for (std::int64_t i=0;i<start_dim;++i) new_sizes.push_back(sizes()[(std::size_t)i]);
+  std::int64_t flat = 1;
+  for (std::int64_t i=start_dim;i<=end_dim;++i) flat *= sizes()[(std::size_t)i];
+  new_sizes.push_back(flat);
+  for (std::int64_t i=end_dim+1;i<nd;++i) new_sizes.push_back(sizes()[(std::size_t)i]);
+
+  return reshape(new_sizes);
+}
+
+Series Series::norm(double p) const {
+  if (!defined()) throw_error("norm: undefined");
+  // Complex not supported for now (Torch supports abs-based norm; we can add later)
+  // complex norms use abs-based definition
+
+  if (p == 2.0) {
+    auto y = this->mul(*this).sum();
+    return y.sqrt();
+  }
+  if (p == 1.0) {
+    return this->abs().sum();
+  }
+  if (std::isinf(p)) {
+    return this->abs().amax();
+  }
+  // general p-norm: (sum |x|^p)^(1/p)
+  auto y = this->abs().pow(p).sum();
+  return y.pow(1.0/p);
+}
+
+Series Series::norm(double p, std::int64_t dim_, bool keepdim) const {
+  if (!defined()) throw_error("norm(dim): undefined");
+  // complex norms use abs-based definition
+
+  if (p == 2.0) {
+    auto y = this->mul(*this).sum(dim_, keepdim);
+    return y.sqrt();
+  }
+  if (p == 1.0) {
+    return this->abs().sum(dim_, keepdim);
+  }
+  if (std::isinf(p)) {
+    return this->abs().amax(dim_, keepdim);
+  }
+  auto y = this->abs().pow(p).sum(dim_, keepdim);
+  return y.pow(1.0 / p);
+}
+
+static void check_float_for_var(const Series& a, const char* name) {
+  const auto dt = a.scalar_type();
+  const bool ok = (dt == ScalarType::Float64 || dt == ScalarType::Float32 || dt == ScalarType::Float16 || dt == ScalarType::BFloat16);
+  PLUSS_CHECK(ok, std::string(name) + ": expects floating dtype");
+}
+
+Series Series::var(bool unbiased) const {
+check_float_for_var(*this, "var");
+auto aa = contiguous();
+const auto n = aa.numel();
+PLUSS_CHECK(n > 0, "var: empty");
+// Welford: one-pass stable variance.
+if (aa.scalar_type() == ScalarType::Float32) {
+  const float* p = reinterpret_cast<const float*>(aa.raw_data());
+  double mean = 0.0;
+  double m2 = 0.0;
+  for (std::int64_t i=0;i<n;++i) {
+    const double x = (double)p[i];
+    const double delta = x - mean;
+    mean += delta / (double)(i+1);
+    const double delta2 = x - mean;
+    m2 += delta * delta2;
+  }
+  const double denom = unbiased ? (double)(n-1) : (double)n;
+  PLUSS_CHECK(!unbiased || n > 1, "var(unbiased): n must be > 1");
+  const double v = m2 / denom;
+  const std::array<std::int64_t, 1> one{1};
+  return Series::full(std::span<const std::int64_t>(one.data(), one.size()), v, ScalarType::Float64).to(scalar_type());
+}
+if (aa.scalar_type() == ScalarType::Float64) {
+  const double* p = reinterpret_cast<const double*>(aa.raw_data());
+  double mean = 0.0;
+  double m2 = 0.0;
+  for (std::int64_t i=0;i<n;++i) {
+    const double x = p[i];
+    const double delta = x - mean;
+    mean += delta / (double)(i+1);
+    const double delta2 = x - mean;
+    m2 += delta * delta2;
+  }
+  const double denom = unbiased ? (double)(n-1) : (double)n;
+  PLUSS_CHECK(!unbiased || n > 1, "var(unbiased): n must be > 1");
+  const double v = m2 / denom;
+  const std::array<std::int64_t, 1> one{1};
+  return Series::full(std::span<const std::int64_t>(one.data(), one.size()), v, ScalarType::Float64).to(scalar_type());
+}
+// For float16/bfloat16: accumulate in float64 via float conversion.
+{
+  auto f = aa.to(ScalarType::Float32);
+  return f.var(unbiased).to(scalar_type());
+}
+}
+
+Series Series::var(std::int64_t dim_, bool unbiased, bool keepdim) const {
+  check_float_for_var(*this, "var(dim)");
+  auto m = mean(dim_, true);
+  auto diff = this->sub(m);
+  auto v = diff.mul(diff).mean(dim_, keepdim);
+  if (unbiased) {
+    const double n = (double)sizes()[(std::size_t)((dim_<0)?(dim_+dim()):dim_)];
+    if (n > 1.0) {
+      const std::array<std::int64_t, 1> one{1};
+      auto corr = Series::full(std::span<const std::int64_t>(one.data(), one.size()), n/(n-1.0), ScalarType::Float64).to(v.scalar_type());
+      v = v.mul(corr);
+    }
+  }
+  return v;
+}
+
+Series Series::std(bool unbiased) const {
+  return var(unbiased).sqrt();
+}
+
+Series Series::std(std::int64_t dim_, bool unbiased, bool keepdim) const {
+  return var(dim_, unbiased, keepdim).sqrt();
+}
+Series Series::contiguous() const {
+  if (!defined()) throw_error("contiguous: undefined");
+  if (is_contiguous()) return *this;
+
+  Series out = Series::empty(sizes(), scalar_type());
+  SeriesIterator it = SeriesIterator::unary(*this, out);
+  it.copy_out_from_in(*this, out);
+  return out;
+}
+
+Series Series::to(ScalarType dst) const {
+  if (!defined()) throw_error("to: undefined");
+  if (dst == scalar_type()) return *this;
+
+  auto src = contiguous();
+  Series out = Series::empty(src.sizes(), dst);
+  const auto n = src.numel();
+
+  auto store_bool = [&](std::int64_t i, bool v) {
+    reinterpret_cast<std::uint8_t*>(out.raw_data())[i] = v ? 1 : 0;
+  };
+
+  auto load_as_f64 = [&](ScalarType st, std::int64_t i) -> double {
+    switch (st) {
+      case ScalarType::Bool: return reinterpret_cast<const std::uint8_t*>(src.raw_data())[i] ? 1.0 : 0.0;
+      case ScalarType::UInt8: return reinterpret_cast<const std::uint8_t*>(src.raw_data())[i];
+      case ScalarType::UInt16: return reinterpret_cast<const std::uint16_t*>(src.raw_data())[i];
+      case ScalarType::UInt32: return reinterpret_cast<const std::uint32_t*>(src.raw_data())[i];
+      case ScalarType::UInt64: return static_cast<double>(reinterpret_cast<const std::uint64_t*>(src.raw_data())[i]);
+      case ScalarType::Int8: return reinterpret_cast<const std::int8_t*>(src.raw_data())[i];
+      case ScalarType::Int16: return reinterpret_cast<const std::int16_t*>(src.raw_data())[i];
+      case ScalarType::Int32: return reinterpret_cast<const std::int32_t*>(src.raw_data())[i];
+      case ScalarType::Int64: return static_cast<double>(reinterpret_cast<const std::int64_t*>(src.raw_data())[i]);
+      case ScalarType::Float16: return float16_to_float(reinterpret_cast<const Float16*>(src.raw_data())[i]);
+      case ScalarType::BFloat16: return bfloat16_to_float(reinterpret_cast<const BFloat16*>(src.raw_data())[i]);
+      case ScalarType::Float32: return reinterpret_cast<const float*>(src.raw_data())[i];
+      case ScalarType::Float64: return reinterpret_cast<const double*>(src.raw_data())[i];
+      default: throw_error("to: unsupported source dtype"); return 0.0;
+    }
+  };
+
+  auto store_from_f64 = [&](ScalarType st, std::int64_t i, double v) {
+    switch (st) {
+      case ScalarType::Bool: store_bool(i, v != 0.0); return;
+      case ScalarType::UInt8: reinterpret_cast<std::uint8_t*>(out.raw_data())[i] = static_cast<std::uint8_t>(v); return;
+      case ScalarType::UInt16: reinterpret_cast<std::uint16_t*>(out.raw_data())[i] = static_cast<std::uint16_t>(v); return;
+      case ScalarType::UInt32: reinterpret_cast<std::uint32_t*>(out.raw_data())[i] = static_cast<std::uint32_t>(v); return;
+      case ScalarType::UInt64: reinterpret_cast<std::uint64_t*>(out.raw_data())[i] = static_cast<std::uint64_t>(v); return;
+      case ScalarType::Int8: reinterpret_cast<std::int8_t*>(out.raw_data())[i] = static_cast<std::int8_t>(v); return;
+      case ScalarType::Int16: reinterpret_cast<std::int16_t*>(out.raw_data())[i] = static_cast<std::int16_t>(v); return;
+      case ScalarType::Int32: reinterpret_cast<std::int32_t*>(out.raw_data())[i] = static_cast<std::int32_t>(v); return;
+      case ScalarType::Int64: reinterpret_cast<std::int64_t*>(out.raw_data())[i] = static_cast<std::int64_t>(v); return;
+      case ScalarType::Float16: reinterpret_cast<Float16*>(out.raw_data())[i] = float16_from_float(static_cast<float>(v)); return;
+      case ScalarType::BFloat16: reinterpret_cast<BFloat16*>(out.raw_data())[i] = bfloat16_from_float(static_cast<float>(v)); return;
+      case ScalarType::Float32: reinterpret_cast<float*>(out.raw_data())[i] = static_cast<float>(v); return;
+      case ScalarType::Float64: reinterpret_cast<double*>(out.raw_data())[i] = v; return;
+      default: throw_error("to: unsupported destination dtype"); return;
+    }
+  };
+
+  for (std::int64_t i=0; i<n; ++i) {
+    const double v = load_as_f64(src.scalar_type(), i);
+    store_from_f64(dst, i, v);
+  }
+  return out;
+}
+
+Series Series::select(std::int64_t dim, std::int64_t index) const {
+  if (!defined()) throw_error("select: undefined");
+  auto nd = this->dim();
+  if (dim < 0) dim += nd;
+  if (dim < 0 || dim >= nd) throw_error("select: dim out of range");
+  auto sizes_v = std::vector<std::int64_t>(sizes().begin(), sizes().end());
+  auto strides_v = std::vector<std::int64_t>(strides().begin(), strides().end());
+  const auto size_dim = sizes_v[static_cast<std::size_t>(dim)];
+  if (index < 0) index += size_dim;
+  if (index < 0 || index >= size_dim) throw_error("select: index out of range");
+  // Remove dimension, adjust offset
+  const auto offset_add = index * strides_v[static_cast<std::size_t>(dim)];
+  sizes_v.erase(sizes_v.begin() + dim);
+  strides_v.erase(strides_v.begin() + dim);
+
+  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+      impl_->storage(),
+      impl_->storage_offset_elems() + offset_add,
+      std::move(sizes_v),
+      std::move(strides_v),
+      scalar_type());
+  return Series(std::move(impl));
+}
+
+static void ensure_writable_(Series& self) {
+  if (!self.defined()) throw_error("inplace: undefined");
+  // detach if shared
+  if (!self.unique()) {
+    self = self.clone();
+  }
+  if (!self.is_contiguous()) {
+    self = self.contiguous().clone();
+  }
+}
+
+static Series expand_to_self_(const Series& rhs, const Series& self) {
+  // If shapes match, ok
+  if (std::vector<std::int64_t>(rhs.sizes().begin(), rhs.sizes().end()) ==
+      std::vector<std::int64_t>(self.sizes().begin(), self.sizes().end())) {
+    return rhs;
+  }
+  // Allow broadcast via expand if rhs can expand to self sizes
+  return rhs.expand(self.sizes(), /*implicit=*/true);
+}
+
+Series& Series::add_(const Series& rhs, double alpha) {
+  ensure_writable_(*this);
+  Series b = expand_to_self_(rhs, *this).to(scalar_type());
+  if (alpha != 1.0) {
+    b = b.mul(alpha).to(scalar_type());
+  }
+  pluss::codem::native::cpu::add(*this, b, *this);
+  return *this;
+}
+
+Series& Series::add_(const Series& other, double alpha, const Series& out) {
+  // The generated signature provides an 'out' argument that is const; treat it as
+  // an aliasing hint and validate if possible.
+  if (out.defined()) {
+    PLUSS_CHECK(out.unsafe_impl() == this->unsafe_impl(), "add_: 'out' must alias self");
+  }
+  return add_(other, alpha);
+}
+
+Series& Series::add_(double other, double alpha) {
+  // Promote scalar to Series and delegate.
+  const std::array<std::int64_t, 1> one{1};
+  auto s = Series::full(std::span<const std::int64_t>(one.data(), one.size()), other, scalar_type());
+  return add_(s, alpha);
+}
+
+Series& Series::sub_(const Series& rhs, double alpha) {
+  ensure_writable_(*this);
+  Series b = expand_to_self_(rhs, *this).to(scalar_type());
+  if (alpha != 1.0) {
+    b = b.mul(alpha).to(scalar_type());
+  }
+  pluss::codem::native::cpu::sub(*this, b, *this);
+  return *this;
+}
+
+Series& Series::sub_(const Series& other, double alpha, const Series& out) {
+  if (out.defined()) {
+    PLUSS_CHECK(out.unsafe_impl() == this->unsafe_impl(), "sub_: 'out' must alias self");
+  }
+  return sub_(other, alpha);
+}
+
+Series& Series::sub_(double other, double alpha) {
+  const std::array<std::int64_t, 1> one{1};
+  auto s = Series::full(std::span<const std::int64_t>(one.data(), one.size()), other, scalar_type());
+  return sub_(s, alpha);
+}
+
+Series& Series::mul_(const Series& rhs) {
+  ensure_writable_(*this);
+  auto b = expand_to_self_(rhs, *this).to(scalar_type());
+  pluss::codem::native::cpu::mul(*this, b, *this);
+  return *this;
+}
+
+Series& Series::div_(const Series& rhs) {
+  ensure_writable_(*this);
+  auto b = expand_to_self_(rhs, *this).to(scalar_type());
+  pluss::codem::native::cpu::div(*this, b, *this);
+  return *this;
+}
+
+Series Series::arange(double start, double end, double step, ScalarType dtype) {
+  if (step == 0.0) throw_error("arange: step cannot be 0");
+  const double nreal = (end - start) / step;
+  std::int64_t n = (std::int64_t)std::ceil(nreal);
+  if (n < 0) n = 0;
+  Series out = Series::empty({n}, dtype);
+  for (std::int64_t i=0;i<n;++i) {
+    const double v = start + (double)i * step;
+    // reuse to() storage helper via scalar temporary
+    // write directly:
+    switch (dtype) {
+      case ScalarType::Float64: reinterpret_cast<double*>(out.raw_data())[i] = v; break;
+      case ScalarType::Float32: reinterpret_cast<float*>(out.raw_data())[i] = (float)v; break;
+      case ScalarType::Float16: reinterpret_cast<Float16*>(out.raw_data())[i] = float16_from_float((float)v); break;
+      case ScalarType::BFloat16: reinterpret_cast<BFloat16*>(out.raw_data())[i] = bfloat16_from_float((float)v); break;
+      case ScalarType::Int64: reinterpret_cast<std::int64_t*>(out.raw_data())[i] = (std::int64_t)v; break;
+      case ScalarType::Int32: reinterpret_cast<std::int32_t*>(out.raw_data())[i] = (std::int32_t)v; break;
+      case ScalarType::Int16: reinterpret_cast<std::int16_t*>(out.raw_data())[i] = (std::int16_t)v; break;
+      case ScalarType::Int8: reinterpret_cast<std::int8_t*>(out.raw_data())[i] = (std::int8_t)v; break;
+      case ScalarType::UInt64: reinterpret_cast<std::uint64_t*>(out.raw_data())[i] = (std::uint64_t)v; break;
+      case ScalarType::UInt32: reinterpret_cast<std::uint32_t*>(out.raw_data())[i] = (std::uint32_t)v; break;
+      case ScalarType::UInt16: reinterpret_cast<std::uint16_t*>(out.raw_data())[i] = (std::uint16_t)v; break;
+      case ScalarType::UInt8: reinterpret_cast<std::uint8_t*>(out.raw_data())[i] = (std::uint8_t)v; break;
+      case ScalarType::Bool: reinterpret_cast<std::uint8_t*>(out.raw_data())[i] = (v != 0.0) ? 1 : 0; break;
+      default: throw_error("arange: dtype not implemented");
+    }
+  }
+  return out;
+}
+
+Series Series::linspace(double start, double end, std::int64_t steps, ScalarType dtype) {
+  if (steps < 0) throw_error("linspace: steps must be >= 0");
+  Series out = Series::empty({steps}, dtype);
+  if (steps == 0) return out;
+  if (steps == 1) {
+    return Series::full({1}, start, dtype);
+  }
+  const double denom = (double)(steps - 1);
+  for (std::int64_t i=0;i<steps;++i) {
+    const double t = (double)i / denom;
+    const double v = start + t * (end - start);
+    switch (dtype) {
+      case ScalarType::Float64: reinterpret_cast<double*>(out.raw_data())[i] = v; break;
+      case ScalarType::Float32: reinterpret_cast<float*>(out.raw_data())[i] = (float)v; break;
+      case ScalarType::Float16: reinterpret_cast<Float16*>(out.raw_data())[i] = float16_from_float((float)v); break;
+      case ScalarType::BFloat16: reinterpret_cast<BFloat16*>(out.raw_data())[i] = bfloat16_from_float((float)v); break;
+      default: throw_error("linspace: dtype not implemented (float types only for now)");
+    }
+  }
+  return out;
+}
+
+Series Series::eye(std::int64_t n, std::int64_t m, ScalarType dtype) {
+  if (n < 0 || m < 0) throw_error("eye: sizes must be >= 0");
+  Series out = Series::zeros({n,m}, dtype);
+  const std::int64_t k = (n < m) ? n : m;
+  for (std::int64_t i=0;i<k;++i) {
+    const std::int64_t idx = i * out.strides()[0] + i * out.strides()[1];
+    switch (dtype) {
+      case ScalarType::Float64: reinterpret_cast<double*>(out.raw_data())[idx] = 1.0; break;
+      case ScalarType::Float32: reinterpret_cast<float*>(out.raw_data())[idx] = 1.0f; break;
+      case ScalarType::Float16: reinterpret_cast<Float16*>(out.raw_data())[idx] = float16_from_float(1.0f); break;
+      case ScalarType::BFloat16: reinterpret_cast<BFloat16*>(out.raw_data())[idx] = bfloat16_from_float(1.0f); break;
+      case ScalarType::Int64: reinterpret_cast<std::int64_t*>(out.raw_data())[idx] = 1; break;
+      case ScalarType::Int32: reinterpret_cast<std::int32_t*>(out.raw_data())[idx] = 1; break;
+      case ScalarType::Int16: reinterpret_cast<std::int16_t*>(out.raw_data())[idx] = 1; break;
+      case ScalarType::Int8: reinterpret_cast<std::int8_t*>(out.raw_data())[idx] = 1; break;
+      case ScalarType::UInt64: reinterpret_cast<std::uint64_t*>(out.raw_data())[idx] = 1; break;
+      case ScalarType::UInt32: reinterpret_cast<std::uint32_t*>(out.raw_data())[idx] = 1; break;
+      case ScalarType::UInt16: reinterpret_cast<std::uint16_t*>(out.raw_data())[idx] = 1; break;
+      case ScalarType::UInt8: reinterpret_cast<std::uint8_t*>(out.raw_data())[idx] = 1; break;
+      case ScalarType::Bool: reinterpret_cast<std::uint8_t*>(out.raw_data())[idx] = 1; break;
+      default: throw_error("eye: dtype not implemented");
+    }
+  }
+  return out;
+}
+
+Series Series::rand(std::span<const std::int64_t> sizes, ScalarType dtype, std::uint64_t seed) {
+  if (!(dtype == ScalarType::Float32 || dtype == ScalarType::Float64 || dtype == ScalarType::Float16 || dtype == ScalarType::BFloat16))
+    throw_error("rand: dtype must be float");
+  Series out = Series::empty(sizes, dtype);
+  auto state = seed ? seed : 0x123456789abcdef0ULL;
+  const auto n = out.numel();
+  for (std::int64_t i=0;i<n;++i) {
+    const float v = (float)u01_(state);
+    if (dtype == ScalarType::Float64) reinterpret_cast<double*>(out.raw_data())[i] = (double)v;
+    else if (dtype == ScalarType::Float32) reinterpret_cast<float*>(out.raw_data())[i] = v;
+    else if (dtype == ScalarType::Float16) reinterpret_cast<Float16*>(out.raw_data())[i] = float16_from_float(v);
+    else reinterpret_cast<BFloat16*>(out.raw_data())[i] = bfloat16_from_float(v);
+  }
+  return out;
+}
+
+Series Series::randn(std::span<const std::int64_t> sizes, ScalarType dtype, std::uint64_t seed) {
+  if (!(dtype == ScalarType::Float32 || dtype == ScalarType::Float64 || dtype == ScalarType::Float16 || dtype == ScalarType::BFloat16))
+    throw_error("randn: dtype must be float");
+  Series out = Series::empty(sizes, dtype);
+  auto state = seed ? seed : 0x0f1e2d3c4b5a6978ULL;
+  const auto n = out.numel();
+  for (std::int64_t i=0;i<n; i+=2) {
+    const double u1 = std::max(1e-12, u01_(state));
+    const double u2 = u01_(state);
+    const double r = std::sqrt(-2.0 * std::log(u1));
+    const double th = 2.0 * 3.14159265358979323846 * u2;
+    const float z0 = (float)(r * std::cos(th));
+    const float z1 = (float)(r * std::sin(th));
+    auto store = [&](std::int64_t j, float v) {
+      if (dtype == ScalarType::Float64) reinterpret_cast<double*>(out.raw_data())[j] = (double)v;
+      else if (dtype == ScalarType::Float32) reinterpret_cast<float*>(out.raw_data())[j] = v;
+      else if (dtype == ScalarType::Float16) reinterpret_cast<Float16*>(out.raw_data())[j] = float16_from_float(v);
+      else reinterpret_cast<BFloat16*>(out.raw_data())[j] = bfloat16_from_float(v);
+    };
+    store(i, z0);
+    if (i+1 < n) store(i+1, z1);
+  }
+  return out;
+}
+
+Series Series::from_storage(const Storage& storage, std::int64_t storage_offset,
+                            const std::vector<std::int64_t>& sizes,
+                            const std::vector<std::int64_t>& strides,
+                            ScalarType dtype) {
+  if (!storage.defined()) throw_error("from_storage: undefined storage");
+  // Interop / external views must be non-overlapping & dense (debug-enforced).
+  check_view_invariants(sizes, strides);
+  return Series(pluss::msharp::make_snap<SeriesImpl>(storage, storage_offset, sizes, strides, dtype));
+}
+
+static Series bitwise_binary_(const Series& a, const Series& b,
+                              void(*fn)(const Series&, const Series&, const Series&)) {
+  auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
+  Series out = Series::empty(shape, a.scalar_type());
+  fn(a.expand(out.sizes()), b.expand(out.sizes()), out);
+  return out;
+}
+
+static Series as_bool(const Series& x) {
+  if (x.scalar_type() == ScalarType::Bool) return x;
+  return x.to(ScalarType::Bool);
+}
+
+Series Series::bitwise_and(const Series& rhs) const { return bitwise_binary_(*this, rhs, native::cpu::bitwise_and); }
+Series Series::bitwise_or(const Series& rhs) const { return bitwise_binary_(*this, rhs, native::cpu::bitwise_or); }
+Series Series::bitwise_xor(const Series& rhs) const { return bitwise_binary_(*this, rhs, native::cpu::bitwise_xor); }
+
+Series Series::bitwise_not() const {
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::bitwise_not(*this, out);
+  return out;
+}
+
+Series Series::logical_and(const Series& rhs) const { return as_bool(*this).bitwise_and(as_bool(rhs)); }
+Series Series::logical_or(const Series& rhs) const { return as_bool(*this).bitwise_or(as_bool(rhs)); }
+Series Series::logical_xor(const Series& rhs) const { return as_bool(*this).bitwise_xor(as_bool(rhs)); }
+Series Series::logical_not() const { return as_bool(*this).bitwise_not(); }
+
+static Series unary_out_(const Series& a, void(*fn)(const Series&, Series&)) {
+  Series out = Series::empty(a.sizes(), a.scalar_type());
+  fn(a, out);
+  return out;
+}
+
+static Series& unary_inplace_(Series& a, void(*fn)(const Series&, Series&)) {
+  // Safe for dense layouts. For non-dense, we materialize to contiguous then write back.
+  if (!is_non_overlapping_and_dense(std::vector<std::int64_t>(a.sizes().begin(), a.sizes().end()),
+                                   std::vector<std::int64_t>(a.strides().begin(), a.strides().end()))) {
+    Series tmp = a.contiguous();
+    fn(tmp, tmp);
+    a.copy_(tmp);
+    return a;
+  }
+  fn(a, a);
+  return a;
+}
+
+Series Series::exp() const { return unary_out_(*this, native::cpu::exp); }
+Series Series::log() const { return unary_out_(*this, native::cpu::log); }
+Series Series::sqrt() const { return unary_out_(*this, native::cpu::sqrt); }
+Series Series::sin() const { return unary_out_(*this, native::cpu::sin); }
+Series Series::cos() const { return unary_out_(*this, native::cpu::cos); }
+Series Series::tanh() const { return unary_out_(*this, native::cpu::tanh); }
+
+Series& Series::exp_() { return unary_inplace_(*this, native::cpu::exp); }
+Series& Series::log_() { return unary_inplace_(*this, native::cpu::log); }
+Series& Series::sqrt_() { return unary_inplace_(*this, native::cpu::sqrt); }
+Series& Series::sin_() { return unary_inplace_(*this, native::cpu::sin); }
+Series& Series::cos_() { return unary_inplace_(*this, native::cpu::cos); }
+Series& Series::tanh_() { return unary_inplace_(*this, native::cpu::tanh); }
+
+Series Series::unite(const std::vector<Series>& others, std::int64_t dim) const {
+  std::vector<Series> xs;
+  xs.reserve(others.size() + 1);
+  xs.push_back(*this);
+  for (auto& t : others) xs.push_back(t);
+  return native::cpu::cat(xs, dim);
+}
+
+Series Series::pile(const std::vector<Series>& others, std::int64_t dim) const {
+  std::vector<Series> xs;
+  xs.reserve(others.size() + 1);
+  xs.push_back(*this);
+  for (auto& t : others) xs.push_back(t);
+  return native::cpu::stack(xs, dim);
+}
+
+Series Series::gather(std::int64_t dim, const Series& index) const {
+  return native::cpu::gather(*this, dim, index);
+}
+
+Series Series::scatter(std::int64_t dim, const Series& index, const Series& src) const {
+  return native::cpu::scatter(*this, dim, index, src);
+}
+
+Series& Series::scatter_(std::int64_t dim, const Series& index, const Series& src) {
+  native::cpu::scatter_(*this, dim, index, src);
+  return *this;
+}
+
+Series Series::scatter_add(std::int64_t dim, const Series& index, const Series& src) const {
+  return native::cpu::scatter_add(*this, dim, index, src);
+}
+
+Series& Series::scatter_add_(std::int64_t dim, const Series& index, const Series& src) {
+  native::cpu::scatter_add_inplace(*this, dim, index, src);
+  return *this;
+}
+
+static Series scalar_to_series_(double v, ScalarType dt) {
+  // For now: create 1-element Series of dtype matching `dt` (or float64 fallback).
+  ScalarType use = dt;
+  if (use == ScalarType::Bool) use = ScalarType::Float32;
+  Series s = Series::full({1}, v, use);
+  return s;
+}
+
+Series Series::add(double rhs) const { return this->add(scalar_to_series_(rhs, scalar_type())); }
+Series Series::sub(double rhs) const { return this->sub(scalar_to_series_(rhs, scalar_type())); }
+Series Series::mul(double rhs) const { return this->mul(scalar_to_series_(rhs, scalar_type())); }
+Series Series::div(double rhs) const { return this->div(scalar_to_series_(rhs, scalar_type())); }
+Series Series::pow(double rhs) const { return this->pow(scalar_to_series_(rhs, scalar_type())); }
+Series Series::minimum(double rhs) const { return this->minimum(scalar_to_series_(rhs, scalar_type())); }
+Series Series::maximum(double rhs) const { return this->maximum(scalar_to_series_(rhs, scalar_type())); }
+
+Series Series::eq(double rhs) const { return this->eq(scalar_to_series_(rhs, scalar_type())); }
+Series Series::ne(double rhs) const { return this->ne(scalar_to_series_(rhs, scalar_type())); }
+Series Series::lt(double rhs) const { return this->lt(scalar_to_series_(rhs, scalar_type())); }
+Series Series::le(double rhs) const { return this->le(scalar_to_series_(rhs, scalar_type())); }
+Series Series::gt(double rhs) const { return this->gt(scalar_to_series_(rhs, scalar_type())); }
+Series Series::ge(double rhs) const { return this->ge(scalar_to_series_(rhs, scalar_type())); }
+
+Series& Series::add_(double rhs) { return this->add_(scalar_to_series_(rhs, scalar_type())); }
+Series& Series::sub_(double rhs) { return this->sub_(scalar_to_series_(rhs, scalar_type())); }
+Series& Series::mul_(double rhs) { return this->mul_(scalar_to_series_(rhs, scalar_type())); }
+Series& Series::div_(double rhs) { return this->div_(scalar_to_series_(rhs, scalar_type())); }
+Series& Series::pow_(double rhs) { Series out = this->pow(rhs); this->copy_(out); return *this; }
+Series& Series::minimum_(double rhs) { Series out = this->minimum(rhs); this->copy_(out); return *this; }
+Series& Series::maximum_(double rhs) { Series out = this->maximum(rhs); this->copy_(out); return *this; }
+
+Series Series::index(const std::vector<Series>& indices) const { return pluss::codem::ops_internal::index(*this, indices); }
+Series Series::take(const Series& index) const { return pluss::codem::ops_internal::take(*this, index); }
+Series Series::put_(const Series& index, const Series& source, bool accumulate) {
+  Series out = pluss::codem::ops_internal::put(*this, index, source, accumulate);
+  this->copy_(out);
+  return *this;
+}
+Series Series::nonzero() const { return pluss::codem::ops_internal::nonzero(*this); }
+
+static Series unary_more_out_(const Series& a, void(*fn)(const Series&, Series&)) { Series out = Series::empty(a.sizes(), a.scalar_type()); fn(a,out); return out; }
+static Series& unary_more_inplace_(Series& a, void(*fn)(const Series&, Series&)) { Series out = unary_more_out_(a, fn); a.copy_(out); return a; }
+
+Series Series::tan() const { return unary_more_out_(*this, native::cpu::tan); }
+Series& Series::tan_() { return unary_more_inplace_(*this, native::cpu::tan); }
+
+Series Series::asin() const { return unary_more_out_(*this, native::cpu::asin); }
+Series& Series::asin_() { return unary_more_inplace_(*this, native::cpu::asin); }
+
+Series Series::acos() const { return unary_more_out_(*this, native::cpu::acos); }
+Series& Series::acos_() { return unary_more_inplace_(*this, native::cpu::acos); }
+
+Series Series::atan() const { return unary_more_out_(*this, native::cpu::atan); }
+Series& Series::atan_() { return unary_more_inplace_(*this, native::cpu::atan); }
+
+Series Series::sinh() const { return unary_more_out_(*this, native::cpu::sinh); }
+Series& Series::sinh_() { return unary_more_inplace_(*this, native::cpu::sinh); }
+
+Series Series::cosh() const { return unary_more_out_(*this, native::cpu::cosh); }
+Series& Series::cosh_() { return unary_more_inplace_(*this, native::cpu::cosh); }
+
+Series Series::floor() const { return unary_more_out_(*this, native::cpu::floor); }
+Series& Series::floor_() { return unary_more_inplace_(*this, native::cpu::floor); }
+
+Series Series::ceil() const { return unary_more_out_(*this, native::cpu::ceil); }
+Series& Series::ceil_() { return unary_more_inplace_(*this, native::cpu::ceil); }
+
+Series Series::round() const { return unary_more_out_(*this, native::cpu::round); }
+Series& Series::round_() { return unary_more_inplace_(*this, native::cpu::round); }
+
+Series Series::trunc() const { return unary_more_out_(*this, native::cpu::trunc); }
+Series& Series::trunc_() { return unary_more_inplace_(*this, native::cpu::trunc); }
+
+Series Series::reciprocal() const { return unary_more_out_(*this, native::cpu::reciprocal); }
+Series& Series::reciprocal_() { return unary_more_inplace_(*this, native::cpu::reciprocal); }
+
+Series Series::sigmoid() const { return unary_more_out_(*this, native::cpu::sigmoid); }
+Series& Series::sigmoid_() { return unary_more_inplace_(*this, native::cpu::sigmoid); }
+
+Series Series::relu() const { return unary_more_out_(*this, native::cpu::relu); }
+Series& Series::relu_() { return unary_more_inplace_(*this, native::cpu::relu); }
+
+Series Series::logical_not() const { return unary_more_out_(*this, native::cpu::logical_not); }
+Series& Series::logical_not_() { return unary_more_inplace_(*this, native::cpu::logical_not); }
+
+#ifdef PLUSS_CODEM_GEN_AVAILABLE
+#include "CodeM/Series/SeriesOpsInternalMethods.cpp.inc"
+#endif
+
+
+Series Series::masked_select(const Series& mask) const {
+  return pluss::codem::ops_internal::masked_select(*this, mask);
+}
+
+Series Series::masked_scatter(const Series& mask, const Series& src) const {
+  return pluss::codem::ops_internal::masked_scatter(*this, mask, src);
+}
+
+Series& Series::masked_scatter_(const Series& mask, const Series& src) {
+  return pluss::codem::ops_internal::masked_scatter_(*this, mask, src);
+}
+
+Series Series::unique(bool sorted) const {
+  return pluss::codem::ops_internal::unique(*this, sorted);
+}
+
+Series Series::bincount(std::int64_t minlength) const {
+  return pluss::codem::ops_internal::bincount(*this, minlength);
+}
+
+Series Series::histc(std::int64_t bins, double min, double max) const {
+  return pluss::codem::ops_internal::histc(*this, bins, min, max);
+}
+
+Series Series::log1p() const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  auto fn = native::cpu::lookup_unary(native::cpu::UnaryOpId::Log1p, scalar_type());
+  PLUSS_CHECK(fn != nullptr, "log1p: kernel missing");
+  fn(*this, out);
+  return out;
+}
+Series& Series::log1p_() {
+  PLUSS_CALL_GUARD();
+  Series out = log1p();
+  copy_(out);
+  return *this;
+}
+
+Series Series::expm1() const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::expm1(*this, out);
+  return out;
+}
+Series& Series::expm1_() {
+  PLUSS_CALL_GUARD();
+  Series out = expm1();
+  copy_(out);
+  return *this;
+}
+
+Series Series::erf() const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::erf(*this, out);
+  return out;
+}
+Series& Series::erf_() {
+  PLUSS_CALL_GUARD();
+  Series out = erf();
+  copy_(out);
+  return *this;
+}
+
+Series Series::erfc() const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::erfc(*this, out);
+  return out;
+}
+Series& Series::erfc_() {
+  PLUSS_CALL_GUARD();
+  Series out = erfc();
+  copy_(out);
+  return *this;
+}
+
+Series Series::lgamma() const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::lgamma(*this, out);
+  return out;
+}
+Series& Series::lgamma_() {
+  PLUSS_CALL_GUARD();
+  Series out = lgamma();
+  copy_(out);
+  return *this;
+}
+
+Series Series::asinh() const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::asinh(*this, out);
+  return out;
+}
+Series& Series::asinh_() {
+  PLUSS_CALL_GUARD();
+  Series out = asinh();
+  copy_(out);
+  return *this;
+}
+
+Series Series::acosh() const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::acosh(*this, out);
+  return out;
+}
+Series& Series::acosh_() {
+  PLUSS_CALL_GUARD();
+  Series out = acosh();
+  copy_(out);
+  return *this;
+}
+
+Series Series::atanh() const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::atanh(*this, out);
+  return out;
+}
+Series& Series::atanh_() {
+  PLUSS_CALL_GUARD();
+  Series out = atanh();
+  copy_(out);
+  return *this;
+}
+
+Series Series::isnan() const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), ScalarType::Bool);
+  native::cpu::isnan(*this, out);
+  return out;
+}
+Series& Series::isnan_() {
+  PLUSS_CALL_GUARD();
+  // in-place predicate makes little sense; keep for API parity
+  throw_error("isnan_: in-place not supported");
+}
+
+Series Series::isinf() const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), ScalarType::Bool);
+  native::cpu::isinf(*this, out);
+  return out;
+}
+Series& Series::isinf_() {
+  PLUSS_CALL_GUARD();
+  // in-place predicate makes little sense; keep for API parity
+  throw_error("isinf_: in-place not supported");
+}
+
+Series Series::isfinite() const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), ScalarType::Bool);
+  native::cpu::isfinite(*this, out);
+  return out;
+}
+Series& Series::isfinite_() {
+  PLUSS_CALL_GUARD();
+  // in-place predicate makes little sense; keep for API parity
+  throw_error("isfinite_: in-place not supported");
+}
+
+static std::vector<std::int64_t> out_sizes_reduce_(const pluss::codem::Series& a, std::int64_t dim, bool keepdim) {
+  auto sz = a.sizes();
+  if (dim < 0) dim += (std::int64_t)sz.size();
+  std::vector<std::int64_t> out;
+  out.reserve(sz.size() - (keepdim?0:1));
+  for (std::int64_t i=0;i<(std::int64_t)sz.size();++i) {
+    if (i==dim) {
+      if (keepdim) out.push_back(1);
+    } else {
+      out.push_back(sz[(size_t)i]);
+    }
+  }
+  if (out.empty()) out.push_back(1);
+  return out;
+}
+
+Series Series::sum(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  Series a = is_contiguous() ? *this : contiguous();
+  auto osz = out_sizes_reduce_(a, dim, keepdim);
+  Series out = Series::empty(osz, a.scalar_type());
+  native::cpu::sum_dim(a, dim, out);
+  return out;
+}
+
+Series Series::mean(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  Series s = sum(dim, keepdim);
+  auto sz = sizes();
+  if (dim < 0) dim += (std::int64_t)sz.size();
+  const double denom = (double)sz[(size_t)dim];
+  return s.div(denom);
+}
+
+Series Series::amax(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  Series a = is_contiguous() ? *this : contiguous();
+  auto osz = out_sizes_reduce_(a, dim, keepdim);
+  Series out = Series::empty(osz, a.scalar_type());
+  native::cpu::amax_dim(a, dim, out);
+  return out;
+}
+
+Series Series::amin(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  Series a = is_contiguous() ? *this : contiguous();
+  auto osz = out_sizes_reduce_(a, dim, keepdim);
+  Series out = Series::empty(osz, a.scalar_type());
+  native::cpu::amin_dim(a, dim, out);
+  return out;
+}
+
+Series Series::all(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  Series a = is_contiguous() ? *this : contiguous();
+  auto osz = out_sizes_reduce_(a, dim, keepdim);
+  Series out = Series::empty(osz, ScalarType::Bool);
+  native::cpu::all_dim(a, dim, out);
+  return out;
+}
+
+Series Series::any(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  Series a = is_contiguous() ? *this : contiguous();
+  auto osz = out_sizes_reduce_(a, dim, keepdim);
+  Series out = Series::empty(osz, ScalarType::Bool);
+  native::cpu::any_dim(a, dim, out);
+  return out;
+}
+
+Series Series::mean() const {
+  PLUSS_CALL_GUARD();
+  Series a = is_contiguous() ? *this : contiguous();
+  Series out = Series::empty({1}, a.scalar_type());
+  native::cpu::mean_all(a, out);
+  return out;
+}
+
+Series Series::where(const Series& condition, const Series& other) const {
+  PLUSS_CALL_GUARD();
+  // dtype promotion
+  ScalarType dt = promote_types(scalar_type(), other.scalar_type());
+  Series a = (scalar_type()==dt) ? *this : to(dt);
+  Series b = (other.scalar_type()==dt) ? other : other.to(dt);
+  Series c = condition;
+  if (c.scalar_type()!=ScalarType::Bool) c = c.to(ScalarType::Bool);
+
+  // broadcasted output shape
+  auto s1 = SeriesIterator::broadcast_shape_of(c.sizes(), a.sizes());
+  auto out_shape = SeriesIterator::broadcast_shape_of(s1, b.sizes());
+
+  Series out = Series::empty(out_shape, dt);
+  native::cpu::where(c, a, b, out);
+  return out;
+}
+
+Series& Series::where_(const Series& condition, const Series& other) {
+  PLUSS_CALL_GUARD();
+  Series out = where(condition, other);
+  copy_(out);
+  return *this;
+}
+
+Series Series::clamp_min(double min) const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::clamp_min(*this, min, out);
+  return out;
+}
+
+Series& Series::clamp_min_(double min) {
+  PLUSS_CALL_GUARD();
+  Series out = clamp_min(min);
+  copy_(out);
+  return *this;
+}
+
+Series Series::clamp_max(double max) const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::clamp_max(*this, max, out);
+  return out;
+}
+
+Series& Series::clamp_max_(double max) {
+  PLUSS_CALL_GUARD();
+  Series out = clamp_max(max);
+  copy_(out);
+  return *this;
+}
+
+Series Series::nan_to_num(double nan, double posinf, double neginf) const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::nan_to_num(*this, nan, posinf, neginf, out);
+  return out;
+}
+
+Series& Series::nan_to_num_(double nan, double posinf, double neginf) {
+  PLUSS_CALL_GUARD();
+  Series out = nan_to_num(nan, posinf, neginf);
+  copy_(out);
+  return *this;
+}
+
+Series Series::cumsum(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  (void)keepdim; // same shape output; keepdim for API parity
+  Series a = is_contiguous() ? *this : contiguous();
+  Series out = Series::empty(a.sizes(), a.scalar_type());
+  native::cpu::cumsum_dim(a, dim, out);
+  return out;
+}
+
+
+
+Series& Series::cumsum_(std::int64_t dim, bool keepdim) {
+  PLUSS_CALL_GUARD();
+  Series out = cumsum(dim, keepdim);
+  copy_(out);
+  return *this;
+}
+
+
+
+Series Series::cumprod(std::int64_t dim, bool keepdim) const {
+  PLUSS_CALL_GUARD();
+  (void)keepdim;
+  Series a = is_contiguous() ? *this : contiguous();
+  Series out = Series::empty(a.sizes(), a.scalar_type());
+  native::cpu::cumprod_dim(a, dim, out);
+  return out;
+}
+
+
+
+Series& Series::cumprod_(std::int64_t dim, bool keepdim) {
+  PLUSS_CALL_GUARD();
+  Series out = cumprod(dim, keepdim);
+  copy_(out);
+  return *this;
+}
+
+
+Series Series::where(const Series& condition, double other) const {
+  PLUSS_CALL_GUARD();
+  Series b = Series::full({}, other, scalar_type()).expand_as(*this);
+  return where(condition, b);
+}
+Series& Series::where_(const Series& condition, double other) {
+  PLUSS_CALL_GUARD();
+  Series out = where(condition, other);
+  copy_(out);
+  return *this;
+}
+
+Series Series::clamp_min(const Series& min) const {
+  PLUSS_CALL_GUARD();
+  // broadcast min against self
+  Series m = (min.scalar_type()==scalar_type()) ? min : min.to(scalar_type());
+  Series cond = this->ge(m);
+  return this->where(cond, m);
+}
+Series& Series::clamp_min_(const Series& min) {
+  PLUSS_CALL_GUARD();
+  Series out = clamp_min(min);
+  copy_(out);
+  return *this;
+}
+
+
+Series Series::clamp_max(const Series& max) const {
+  PLUSS_CALL_GUARD();
+  Series m = (max.scalar_type()==scalar_type()) ? max : max.to(scalar_type());
+  Series cond = this->le(m);
+  return this->where(cond, m);
+}
+Series& Series::clamp_max_(const Series& max) {
+  PLUSS_CALL_GUARD();
+  Series out = clamp_max(max);
+  copy_(out);
+  return *this;
+}
+
+
+Series Series::scatter_reduce_sum(std::int64_t dim, const Series& index, const Series& src, bool include_self) const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::scatter_reduce(*this, dim, index, src, native::cpu::ScatterReduce::Sum, out, include_self, false, 0.0);
+  return out;
+}
+Series Series::scatter_reduce_amax(std::int64_t dim, const Series& index, const Series& src, bool include_self) const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::scatter_reduce(*this, dim, index, src, native::cpu::ScatterReduce::AMax, out, include_self, false, 0.0);
+  return out;
+}
+Series Series::scatter_reduce_amin(std::int64_t dim, const Series& index, const Series& src, bool include_self) const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::scatter_reduce(*this, dim, index, src, native::cpu::ScatterReduce::AMin, out, include_self, false, 0.0);
+  return out;
+}
+Series Series::scatter_reduce_sum(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::scatter_reduce(*this, dim, index, src, native::cpu::ScatterReduce::Sum, out, include_self, true, initial_scalar);
+  return out;
+}
+Series Series::scatter_reduce_amax(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::scatter_reduce(*this, dim, index, src, native::cpu::ScatterReduce::AMax, out, include_self, true, initial_scalar);
+  return out;
+}
+Series Series::scatter_reduce_amin(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const {
+  PLUSS_CALL_GUARD();
+  Series out = Series::empty(sizes(), scalar_type());
+  native::cpu::scatter_reduce(*this, dim, index, src, native::cpu::ScatterReduce::AMin, out, include_self, true, initial_scalar);
+  return out;
+}
+
+} // namespace pluss::codem::ops_internal

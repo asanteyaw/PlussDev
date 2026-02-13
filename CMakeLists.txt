@@ -57,26 +57,12 @@ set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
 add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 
 # ==============================
-# Create library 
+# Create libraries
 # ==============================
-# Core internals live under include/internals/PlussQit (CodeM/CodeN/CodeL)
-add_subdirectory(include/internals/PlussQit/CodeM)
-add_subdirectory(include/internals/PlussQit/CodeN)
-add_subdirectory(include/internals/PlussQit/CodeL)
 
-# Optional external PlussQit examples (kept separate)
-if(EXISTS "${CMAKE_SOURCE_DIR}/PlussQit/CMakeLists.txt")
-    add_subdirectory(PlussQit)
-endif()
+add_subdirectory(PlussAI)
+add_subdirectory(PlussQit)
+add_subdirectory(PlussPl)
+add_subdirectory(PlussTiq)
+add_subdirectory(PlussMic)
 
-# Plussible, PlussTica and PlussMic are example/test modules that
-# attach sources to the top-level 'pluss' target. Make them optional
-# so a quick configure/build of the core `PlussQit` internals is fast.
-option(BUILD_EXTRAS "Build example/test modules (Plussible/PlussTica/PlussMic)" OFF)
-if(BUILD_EXTRAS)
-    add_subdirectory(Plussible)
-    add_subdirectory(PlussTica)
-    add_subdirectory(PlussMic)
-else()
-    message(STATUS "Skipping Plussible/PlussTica/PlussMic (set -DBUILD_EXTRAS=ON to include)")
-endif()

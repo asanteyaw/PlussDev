@@ -1,0 +1,37 @@
+#include <catch2/catch_test_macros.hpp>
+#include <pluss/pluss.h>
+#include <pluss/config.h>
+
+#include <vector>
+
+
+TEST_CASE("config unordered map and tags", "[config]") {
+  auto cfg1 = pluss::config({{"dtype","float16"},{"pinned",true}});
+  Series a = pluss::zeros({2,2}, cfg1);
+  REQUIRE(a.scalar_type() == ScalarType::Float16);
+
+  Series b = pluss::zeros({2,2}, pluss::cfg::dtype(ScalarType::Int16), pluss::cfg::pinned(false));
+  REQUIRE(b.scalar_type() == ScalarType::Int16);
+}
+
+TEST_CASE("value and make_series", "[factory]") {
+  Series v = pluss::value(2.0, ScalarType::Float64);
+  REQUIRE(v.scalar_type() == ScalarType::Float64);
+
+  std::vector<std::int64_t> data = {1,2,3,4};
+  Series x = pluss::make_series<std::int64_t>(data, std::span<const std::int64_t>({2,2}));
+  REQUIRE(x.scalar_type() == ScalarType::Int64);
+  auto* p = reinterpret_cast<const std::int64_t*>(x.raw_data());
+  REQUIRE(p[3] == 4);
+}
+
+TEST_CASE("from_blob external memory", "[from_blob]") {
+  auto* mem = (std::int32_t*)std::malloc(sizeof(std::int32_t)*6);
+  for (int i=0;i<6;++i) mem[i]=i;
+  bool freed=false;
+  Series s = pluss::from_blob(mem, {2,3}, {3,1}, [&](void* p){ freed=true; std::free(p); }, pluss::Config{}.with_dtype(ScalarType::Int32));
+  REQUIRE(s.scalar_type() == ScalarType::Int32);
+  auto* p = reinterpret_cast<const std::int32_t*>(s.raw_data());
+  REQUIRE(p[5] == 5);
+  // when s destructs, deleter called (freed becomes true) - can't reliably test here, but ensure no crash
+}

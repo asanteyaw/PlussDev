@@ -104,3 +104,248 @@ make
 ## License
 
 See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md)
+
+
+
+
+
+
+namespace pluss::codem {
+
+
+static std::uint64_t splitmix64_(std::uint64_t& x) {
+  x += 0x9e3779b97f4a7c15ULL;
+  std::uint64_t z = x;
+  z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
+  return z ^ (z >> 31);
+}
+static double u01_(std::uint64_t& state) {
+  const std::uint64_t r = splitmix64_(state);
+  // 53-bit mantissa
+  return (double)((r >> 11) * (1.0 / 9007199254740992.0));
+}
+
+#ifdef PLUSS_ENABLE_TORCH
+#include <pluss/codem/torch_interop.h>
+#endif
+
+namespace pluss::codem {
+#ifdef PLUSS_ENABLE_TORCH
+torch::Tensor Series::tensor() const { return pluss::codem::detail::to_torch(*this); }
+#endif
+} // namespace pluss::codem
+
+Series Series::add(const Series& rhs) const { return pluss::codem::ops_internal::add(*this, rhs); }
+Series Series::sub(const Series& rhs) const { return pluss::codem::ops_internal::sub(*this, rhs); }
+Series Series::mul(const Series& rhs) const { return pluss::codem::ops_internal::mul(*this, rhs); }
+Series Series::div(const Series& rhs) const { return pluss::codem::ops_internal::div(*this, rhs); }
+
+Series Series::pow(const Series& rhs) const { return pluss::codem::ops_internal::pow(*this, rhs); }
+Series Series::abs() const { return pluss::codem::ops_internal::abs(*this); }
+
+Series Series::conj() const { return pluss::codem::ops_internal::conj(*this); }
+Series Series::real() const { return pluss::codem::ops_internal::real(*this); }
+Series Series::imag() const { return pluss::codem::ops_internal::imag(*this); }
+Series Series::angle() const { return pluss::codem::ops_internal::angle(*this); }
+Series Series::sign() const { return pluss::codem::ops_internal::sign(*this); }
+
+Series Series::eq(const Series& rhs) const { return pluss::codem::ops_internal::eq(*this, rhs); }
+Series Series::ne(const Series& rhs) const { return pluss::codem::ops_internal::ne(*this, rhs); }
+Series Series::lt(const Series& rhs) const { return pluss::codem::ops_internal::lt(*this, rhs); }
+Series Series::le(const Series& rhs) const { return pluss::codem::ops_internal::le(*this, rhs); }
+Series Series::gt(const Series& rhs) const { return pluss::codem::ops_internal::gt(*this, rhs); }
+Series Series::ge(const Series& rhs) const { return pluss::codem::ops_internal::ge(*this, rhs); }
+
+Series Series::minimum(const Series& rhs) const { return pluss::codem::ops_internal::minimum(*this, rhs); }
+Series Series::maximum(const Series& rhs) const { return pluss::codem::ops_internal::maximum(*this, rhs); }
+Series Series::clamp(double lo, double hi) const { return pluss::codem::ops_internal::clamp(*this, lo, hi); }
+
+
+Series Series::sum() const { return pluss::codem::ops_internal::sum(*this); }
+Series Series::sum(std::int64_t dim, bool keepdim) const { return pluss::codem::ops_internal::sum(*this, dim, keepdim); }
+
+Series Series::mean() const { return pluss::codem::ops_internal::mean(*this); }
+Series Series::mean(std::int64_t dim, bool keepdim) const { return pluss::codem::ops_internal::mean(*this, dim, keepdim); }
+
+Series Series::prod() const { return pluss::codem::ops_internal::prod(*this); }
+Series Series::prod(std::int64_t dim, bool keepdim) const { return pluss::codem::ops_internal::prod(*this, dim, keepdim); }
+
+Series Series::amax() const { return pluss::codem::ops_internal::amax(*this); }
+Series Series::amax(std::int64_t dim, bool keepdim) const { return pluss::codem::ops_internal::amax(*this, dim, keepdim); }
+
+Series Series::amin() const { return pluss::codem::ops_internal::amin(*this); }
+Series Series::amin(std::int64_t dim, bool keepdim) const { return pluss::codem::ops_internal::amin(*this, dim, keepdim); }
+
+Series Series::all() const { return pluss::codem::ops_internal::all(*this); }
+Series Series::all(std::int64_t dim, bool keepdim) const { return pluss::codem::ops_internal::all(*this, dim, keepdim); }
+
+Series Series::any() const { return pluss::codem::ops_internal::any(*this); }
+Series Series::any(std::int64_t dim, bool keepdim) const { return pluss::codem::ops_internal::any(*this, dim, keepdim); }
+
+Series Series::argmax(std::int64_t dim, bool keepdim) const { return pluss::codem::ops_internal::argmax(*this, dim, keepdim); }
+Series Series::argmin(std::int64_t dim, bool keepdim) const { return pluss::codem::ops_internal::argmin(*this, dim, keepdim); }
+
+Series Series::where(const Series& a, const Series& b) const {
+  return pluss::codem::ops_internal::where(*this, a, b);
+}
+
+Series Series::masked_fill(const Series& mask, double value) const {
+  return pluss::codem::ops_internal::masked_fill(*this, mask, value);
+}
+
+Series& Series::masked_fill_(const Series& mask, double value) {
+  return pluss::codem::ops_internal::masked_fill_(*this, mask, value);
+}
+
+Series Series::gather(std::int64_t dim, const Series& index) const {
+  return pluss::codem::ops_internal::gather(*this, dim, index);
+}
+
+
+
+
+
+
+
+
+
+
+
+// --- Patch23: expanded method surface implementations (subset) ---
+
+pluss::codem::Series pluss::codem::Series::log1p() const { PLUSS_CALL_GUARD(); throw_error("log1p: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::log1p_() { PLUSS_CALL_GUARD(); throw_error("log1p_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::expm1() const { PLUSS_CALL_GUARD(); throw_error("expm1: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::expm1_() { PLUSS_CALL_GUARD(); throw_error("expm1_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::erf() const { PLUSS_CALL_GUARD(); throw_error("erf: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::erf_() { PLUSS_CALL_GUARD(); throw_error("erf_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::erfc() const { PLUSS_CALL_GUARD(); throw_error("erfc: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::erfc_() { PLUSS_CALL_GUARD(); throw_error("erfc_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::lgamma() const { PLUSS_CALL_GUARD(); throw_error("lgamma: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::lgamma_() { PLUSS_CALL_GUARD(); throw_error("lgamma_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::digamma() const { PLUSS_CALL_GUARD(); throw_error("digamma: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::digamma_() { PLUSS_CALL_GUARD(); throw_error("digamma_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::asinh() const { PLUSS_CALL_GUARD(); throw_error("asinh: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::asinh_() { PLUSS_CALL_GUARD(); throw_error("asinh_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::acosh() const { PLUSS_CALL_GUARD(); throw_error("acosh: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::acosh_() { PLUSS_CALL_GUARD(); throw_error("acosh_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::atanh() const { PLUSS_CALL_GUARD(); throw_error("atanh: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::atanh_() { PLUSS_CALL_GUARD(); throw_error("atanh_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::isnan() const { PLUSS_CALL_GUARD(); throw_error("isnan: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::isnan_() { PLUSS_CALL_GUARD(); throw_error("isnan_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::isinf() const { PLUSS_CALL_GUARD(); throw_error("isinf: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::isinf_() { PLUSS_CALL_GUARD(); throw_error("isinf_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::isfinite() const { PLUSS_CALL_GUARD(); throw_error("isfinite: not implemented yet"); }
+pluss::codem::Series& pluss::codem::Series::isfinite_() { PLUSS_CALL_GUARD(); throw_error("isfinite_: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::put(const Series& index, const Series& source, bool accumulate) const { PLUSS_CALL_GUARD(); return pluss::codem::ops_internal::put(*this, index, source, accumulate); }
+pluss::codem::Series pluss::codem::Series::sum(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("sum(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::sum(std::span<const std::int64_t> dims, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dims; (void)keepdim; throw_error("sum(dims): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::mean(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("mean(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::mean(std::span<const std::int64_t> dims, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dims; (void)keepdim; throw_error("mean(dims): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::prod(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("prod(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::prod(std::span<const std::int64_t> dims, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dims; (void)keepdim; throw_error("prod(dims): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::amax(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("amax(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::amax(std::span<const std::int64_t> dims, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dims; (void)keepdim; throw_error("amax(dims): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::amin(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("amin(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::amin(std::span<const std::int64_t> dims, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dims; (void)keepdim; throw_error("amin(dims): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::all(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("all(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::all(std::span<const std::int64_t> dims, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dims; (void)keepdim; throw_error("all(dims): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::any(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("any(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::any(std::span<const std::int64_t> dims, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dims; (void)keepdim; throw_error("any(dims): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::argmax(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("argmax(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::argmax(std::span<const std::int64_t> dims, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dims; (void)keepdim; throw_error("argmax(dims): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::argmin(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("argmin(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::argmin(std::span<const std::int64_t> dims, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dims; (void)keepdim; throw_error("argmin(dims): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::cumsum() const { PLUSS_CALL_GUARD(); throw_error("cumsum: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::cumsum(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("cumsum(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::cumprod() const { PLUSS_CALL_GUARD(); throw_error("cumprod: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::cumprod(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("cumprod(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::logsumexp() const { PLUSS_CALL_GUARD(); throw_error("logsumexp: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::logsumexp(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("logsumexp(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::std() const { PLUSS_CALL_GUARD(); throw_error("std: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::std(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("std(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::var() const { PLUSS_CALL_GUARD(); throw_error("var: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::var(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("var(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::median() const { PLUSS_CALL_GUARD(); throw_error("median: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::median(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("median(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::quantile() const { PLUSS_CALL_GUARD(); throw_error("quantile: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::quantile(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("quantile(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::topk() const { PLUSS_CALL_GUARD(); throw_error("topk: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::topk(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("topk(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::kthvalue() const { PLUSS_CALL_GUARD(); throw_error("kthvalue: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::kthvalue(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("kthvalue(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::unique() const { PLUSS_CALL_GUARD(); throw_error("unique: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::unique(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("unique(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::sort() const { PLUSS_CALL_GUARD(); throw_error("sort: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::sort(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("sort(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::argsort() const { PLUSS_CALL_GUARD(); throw_error("argsort: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::argsort(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("argsort(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::conv1d() const { PLUSS_CALL_GUARD(); throw_error("conv1d: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::conv1d(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("conv1d(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::conv2d() const { PLUSS_CALL_GUARD(); throw_error("conv2d: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::conv2d(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("conv2d(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::conv3d() const { PLUSS_CALL_GUARD(); throw_error("conv3d: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::conv3d(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("conv3d(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::max_pool1d() const { PLUSS_CALL_GUARD(); throw_error("max_pool1d: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::max_pool1d(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("max_pool1d(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::max_pool2d() const { PLUSS_CALL_GUARD(); throw_error("max_pool2d: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::max_pool2d(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("max_pool2d(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::einsum() const { PLUSS_CALL_GUARD(); throw_error("einsum: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::einsum(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("einsum(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::bmm() const { PLUSS_CALL_GUARD(); throw_error("bmm: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::bmm(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("bmm(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::mm() const { PLUSS_CALL_GUARD(); throw_error("mm: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::mm(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("mm(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::mv() const { PLUSS_CALL_GUARD(); throw_error("mv: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::mv(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("mv(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::dot() const { PLUSS_CALL_GUARD(); throw_error("dot: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::dot(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("dot(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::vdot() const { PLUSS_CALL_GUARD(); throw_error("vdot: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::vdot(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("vdot(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::norm() const { PLUSS_CALL_GUARD(); throw_error("norm: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::norm(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("norm(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::frobenius_norm() const { PLUSS_CALL_GUARD(); throw_error("frobenius_norm: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::frobenius_norm(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("frobenius_norm(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::linalg_svd() const { PLUSS_CALL_GUARD(); throw_error("linalg_svd: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::linalg_svd(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("linalg_svd(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::linalg_qr() const { PLUSS_CALL_GUARD(); throw_error("linalg_qr: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::linalg_qr(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("linalg_qr(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::linalg_inv() const { PLUSS_CALL_GUARD(); throw_error("linalg_inv: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::linalg_inv(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("linalg_inv(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::pad() const { PLUSS_CALL_GUARD(); throw_error("pad: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::pad(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("pad(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::roll() const { PLUSS_CALL_GUARD(); throw_error("roll: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::roll(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("roll(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::flip() const { PLUSS_CALL_GUARD(); throw_error("flip: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::flip(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("flip(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::rot90() const { PLUSS_CALL_GUARD(); throw_error("rot90: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::rot90(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("rot90(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::repeat_interleave() const { PLUSS_CALL_GUARD(); throw_error("repeat_interleave: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::repeat_interleave(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("repeat_interleave(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::index_add() const { PLUSS_CALL_GUARD(); throw_error("index_add: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::index_add(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("index_add(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::index_copy() const { PLUSS_CALL_GUARD(); throw_error("index_copy: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::index_copy(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("index_copy(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::gather_nd() const { PLUSS_CALL_GUARD(); throw_error("gather_nd: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::gather_nd(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("gather_nd(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::take_along_dim() const { PLUSS_CALL_GUARD(); throw_error("take_along_dim: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::take_along_dim(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("take_along_dim(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::clamp_min() const { PLUSS_CALL_GUARD(); throw_error("clamp_min: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::clamp_min(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("clamp_min(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::clamp_max() const { PLUSS_CALL_GUARD(); throw_error("clamp_max: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::clamp_max(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("clamp_max(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::nan_to_num() const { PLUSS_CALL_GUARD(); throw_error("nan_to_num: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::nan_to_num(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("nan_to_num(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::where() const { PLUSS_CALL_GUARD(); throw_error("where: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::where(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("where(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::lerp() const { PLUSS_CALL_GUARD(); throw_error("lerp: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::lerp(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("lerp(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::addcdiv() const { PLUSS_CALL_GUARD(); throw_error("addcdiv: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::addcdiv(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("addcdiv(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::addcmul() const { PLUSS_CALL_GUARD(); throw_error("addcmul: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::addcmul(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("addcmul(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::bitwise_left_shift() const { PLUSS_CALL_GUARD(); throw_error("bitwise_left_shift: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::bitwise_left_shift(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("bitwise_left_shift(dim): not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::bitwise_right_shift() const { PLUSS_CALL_GUARD(); throw_error("bitwise_right_shift: not implemented yet"); }
+pluss::codem::Series pluss::codem::Series::bitwise_right_shift(std::int64_t dim, bool keepdim) const { PLUSS_CALL_GUARD(); (void)dim; (void)keepdim; throw_error("bitwise_right_shift(dim): not implemented yet"); }

@@ -1,0 +1,96 @@
+ops:
+  - name: add
+    signature: "Series add(const Series& a, const Series& b)"
+  - name: sub
+    signature: "Series sub(const Series& a, const Series& b)"
+  - name: mul
+    signature: "Series mul(const Series& a, const Series& b)"
+  - name: div
+    signature: "Series div(const Series& a, const Series& b)"
+  - name: neg
+    signature: "Series neg(const Series& a)"
+  - name: abs
+    signature: "Series abs(const Series& a)"
+  - name: exp
+    signature: "Series exp(const Series& a)"
+  - name: log
+    signature: "Series log(const Series& a)"
+  - name: sqrt
+    signature: "Series sqrt(const Series& a)"
+  - name: sin
+    signature: "Series sin(const Series& a)"
+  - name: cos
+    signature: "Series cos(const Series& a)"
+  - name: tanh
+    signature: "Series tanh(const Series& a)"
+  - name: sum
+    signature: "Series sum(const Series& a, std::int64_t dim, bool keepdim)"
+  - name: mean
+    signature: "Series mean(const Series& a, std::int64_t dim, bool keepdim)"
+  - name: amax
+    signature: "Series amax(const Series& a, std::int64_t dim, bool keepdim)"
+  - name: amin
+    signature: "Series amin(const Series& a, std::int64_t dim, bool keepdim)"
+  - name: argmax
+    signature: "Series argmax(const Series& a, std::int64_t dim, bool keepdim)"
+  - name: argmin
+    signature: "Series argmin(const Series& a, std::int64_t dim, bool keepdim)"
+  - name: index_select
+    signature: "Series index_select(const Series& a, std::int64_t dim, const Series& index)"
+  - name: masked_select
+    signature: "Series masked_select(const Series& a, const Series& mask)"
+  - name: matmul
+    signature: "Series matmul(const Series& a, const Series& b)"
+  - name: gather
+    signature: "Series gather(const Series& input, std::int64_t dim, const Series& index)"
+  - name: scatter
+    signature: "Series scatter(const Series& input, std::int64_t dim, const Series& index, const Series& src)"
+  - name: scatter_add
+    signature: "Series scatter_add(const Series& input, std::int64_t dim, const Series& index, const Series& src)"
+  - name: where
+    signature: "Series where(const Series& cond, const Series& a, const Series& b)"
+  - name: masked_fill
+    signature: "Series masked_fill(const Series& a, const Series& mask, double value)"
+  - name: nonzero
+    signature: "Series nonzero(const Series& mask)"
+  - name: take
+    signature: "Series take(const Series& a, const Series& index)"
+  - name: put
+    signature: "Series put(const Series& a, const Series& index, const Series& src, bool accumulate)"
+  - name: index
+    signature: "Series index(const Series& a, const std::vector<Series>& indices)"
+  - name: index_put
+    signature: "Series index_put(const Series& a, const std::vector<Series>& indices, const Series& values, bool accumulate)"
+  - name: cat
+    signature: "Series cat(const std::vector<Series>& tensors, std::int64_t dim)"
+  - name: stack
+    signature: "Series stack(const std::vector<Series>& tensors, std::int64_t dim)"
+  - name: eq
+    signature: "Series eq(const Series& a, const Series& b)"
+  - name: ne
+    signature: "Series ne(const Series& a, const Series& b)"
+  - name: lt
+    signature: "Series lt(const Series& a, const Series& b)"
+  - name: le
+    signature: "Series le(const Series& a, const Series& b)"
+  - name: gt
+    signature: "Series gt(const Series& a, const Series& b)"
+  - name: ge
+    signature: "Series ge(const Series& a, const Series& b)"
+  - name: minimum
+    signature: "Series minimum(const Series& a, const Series& b)"
+  - name: maximum
+    signature: "Series maximum(const Series& a, const Series& b)"
+  - name: clamp
+    signature: "Series clamp(const Series& a, double lo, double hi)"
+  - name: pow
+    signature: "Series pow(const Series& a, const Series& b)"
+  - name: sign
+    signature: "Series sign(const Series& a)"
+  - name: sum_all
+    signature: "Series sum_all(const Series& a)"
+  - name: all_all
+    signature: "Series all_all(const Series& a)"
+  - name: any_all
+    signature: "Series any_all(const Series& a)"
+

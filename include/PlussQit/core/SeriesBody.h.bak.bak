@@ -1,6 +1,0 @@
-#pragma once
-
-// Minimal shim for ATen TensorBody. Includes TensorBase compatibility.
-#include <ATen/core/TensorBase.h>
-
-// Forward include for compatibility; more symbols can be added as needed.
