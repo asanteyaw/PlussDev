@@ -128,23 +128,23 @@ namespace pluss::codem::ops_internal {
   // Indexing helpers
   Series gather(const Series& input, std::int64_t dim, const Series& index);
 
-Series maximum(const Series& a, const Series& b);
-Series minimum(const Series& a, const Series& b);
-Series fmod(const Series& a, const Series& b);
-Series remainder(const Series& a, const Series& b);
-Series atan2(const Series& a, const Series& b);
-Series clamp_min(const Series& a, double lo);
-Series& clamp_min_(Series& a, double lo);
-Series clamp_max(const Series& a, double hi);
-Series& clamp_max_(Series& a, double hi);
-Series rsqrt(const Series& a);
-Series log2(const Series& a);
-Series log10(const Series& a);
-Series exp2(const Series& a);
-Series cbrt(const Series& a);
-Series square(const Series& a);
-Series nan_to_num(const Series& a, double nan=0.0, double posinf=0.0, double neginf=0.0);
-Series& nan_to_num_(Series& a, double nan=0.0, double posinf=0.0, double neginf=0.0);
+  Series maximum(const Series& a, const Series& b);
+  Series minimum(const Series& a, const Series& b);
+  Series fmod(const Series& a, const Series& b);
+  Series remainder(const Series& a, const Series& b);
+  Series atan2(const Series& a, const Series& b);
+  Series clamp_min(const Series& a, double lo);
+  Series& clamp_min_(Series& a, double lo);
+  Series clamp_max(const Series& a, double hi);
+  Series& clamp_max_(Series& a, double hi);
+  Series rsqrt(const Series& a);
+  Series log2(const Series& a);
+  Series log10(const Series& a);
+  Series exp2(const Series& a);
+  Series cbrt(const Series& a);
+  Series square(const Series& a);
+  Series nan_to_num(const Series& a, double nan=0.0, double posinf=0.0, double neginf=0.0);
+  Series& nan_to_num_(Series& a, double nan=0.0, double posinf=0.0, double neginf=0.0);
 
 
   // Counting / histogram / unique (CPU-only)

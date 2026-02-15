@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+import argparse
+import re
+from pathlib import Path
+from typing import List, Tuple, Dict
+
+_ws = re.compile(r"\s+")
+
+def _collapse_ws(s: str) -> str:
+    return _ws.sub(" ", s).strip()
+
+# Parse the declaration lines we generated in SeriesMethods.inc:
+#   "  Series foo(int x=0, bool y=false) const;"
+DECL_RE = re.compile(
+    r"""^\s*
+        (?P<ret>Series(?:\s*&)?)
+        \s+
+        (?P<name>[A-Za-z_]\w*)
+        \s*\(\s*(?P<params>.*?)\s*\)
+        \s*(?P<const>const)?
+        \s*;
+        \s*$
+    """,
+    re.VERBOSE,
+)
+
+def strip_defaults_keep_names(param_list: str) -> str:
+    """For definitions, keep parameter names if present, but strip default initializers."""
+    s = param_list.strip()
+    if not s or s == "void":
+        return ""
+    # Remove defaults at top-level (similar light parser)
+    out = []
+    start = 0
+    depth_angle = depth_paren = depth_brace = 0
+    i = 0
+    while i < len(s):
+        ch = s[i]
+        if ch == "<": depth_angle += 1
+        elif ch == ">": depth_angle = max(0, depth_angle - 1)
+        elif ch == "(": depth_paren += 1
+        elif ch == ")": depth_paren = max(0, depth_paren - 1)
+        elif ch == "{": depth_brace += 1
+        elif ch == "}": depth_brace = max(0, depth_brace - 1)
+        elif ch == "=" and depth_angle == 0 and depth_paren == 0 and depth_brace == 0:
+            # skip until next comma at top-level
+            j = i + 1
+            while j < len(s):
+                cj = s[j]
+                if cj == "<": depth_angle += 1
+                elif cj == ">": depth_angle = max(0, depth_angle - 1)
+                elif cj == "(": depth_paren += 1
+                elif cj == ")": depth_paren = max(0, depth_paren - 1)
+                elif cj == "{": depth_brace += 1
+                elif cj == "}": depth_brace = max(0, depth_brace - 1)
+                elif cj == "," and depth_angle == 0 and depth_paren == 0 and depth_brace == 0:
+                    break
+                j += 1
+            i = j
+            continue
+        i += 1
+    # Simpler: just split on commas not in templates/parens/braces, then strip "=..."
+    params = []
+    start = 0
+    depth_angle = depth_paren = depth_brace = 0
+    for i, ch in enumerate(s):
+        if ch == "<": depth_angle += 1
+        elif ch == ">": depth_angle = max(0, depth_angle - 1)
+        elif ch == "(": depth_paren += 1
+        elif ch == ")": depth_paren = max(0, depth_paren - 1)
+        elif ch == "{": depth_brace += 1
+        elif ch == "}": depth_brace = max(0, depth_brace - 1)
+        elif ch == "," and depth_angle == 0 and depth_paren == 0 and depth_brace == 0:
+            params.append(s[start:i].strip())
+            start = i + 1
+    params.append(s[start:].strip())
+
+    cleaned = []
+    for p in params:
+        # remove default initializer at top-level within param
+        depth_angle = depth_paren = depth_brace = 0
+        cut = None
+        for k, ch in enumerate(p):
+            if ch == "<": depth_angle += 1
+            elif ch == ">": depth_angle = max(0, depth_angle - 1)
+            elif ch == "(": depth_paren += 1
+            elif ch == ")": depth_paren = max(0, depth_paren - 1)
+            elif ch == "{": depth_brace += 1
+            elif ch == "}": depth_brace = max(0, depth_brace - 1)
+            elif ch == "=" and depth_angle == 0 and depth_paren == 0 and depth_brace == 0:
+                cut = k
+                break
+        if cut is not None:
+            p = p[:cut].strip()
+        cleaned.append(_collapse_ws(p))
+    return ", ".join(cleaned)
+
+def ensure_param_names(param_list: str) -> str:
+    """
+    If a parameter doesn't have a name, add a synthetic one (a0, a1, ...),
+    because definitions need parameter names.
+    """
+    if not param_list.strip():
+        return ""
+    params = [p.strip() for p in param_list.split(",")]
+    out = []
+    for i, p in enumerate(params):
+        # If it already has an identifier at end, keep it
+        # Otherwise append ' a{i}'.
+        # This is heuristic but works for typical 'type name' patterns.
+        tokens = p.split()
+        if len(tokens) >= 2:
+            out.append(p)
+        else:
+            out.append(p + f" a{i}")
+    return ", ".join(out)
+
+def read_methods_inc(methods_inc_path: Path) -> List[Tuple[str, str, str, bool]]:
+    items = []
+    for raw in methods_inc_path.read_text(encoding="utf-8").splitlines():
+        m = DECL_RE.match(raw)
+        if not m:
+            continue
+        ret = m.group("ret").strip()
+        name = m.group("name")
+        params = m.group("params") or ""
+        is_const = (m.group("const") is not None)
+        items.append((ret, name, params, is_const))
+    return items
+
+def generate_dispatch(
+    decls: List[Tuple[str, str, str, bool]],
+    out_path: Path,
+    namespace: str = "pluss::codem::ops_internal",
+    header_comment: str = "// @generated by tools/regenerate_series_methods_dispatch_inc.py",
+) -> None:
+    lines = [header_comment, "", "using namespace pluss::codem;", ""]
+    for ret, name, params, _ in decls:
+        # Torch-style: all methods are const
+        const_s = " const"
+        clean_params = strip_defaults_keep_names(params)
+        clean_params = ensure_param_names(clean_params)
+
+        # Extract argument names from clean_params
+        arg_names = []
+        if clean_params.strip():
+            for p in clean_params.split(","):
+                p = p.strip()
+                tokens = p.split()
+                if tokens:
+                    arg_names.append(tokens[-1])
+
+        # Decide how to pass self: mutating ops (Series&) need const_cast
+        if ret.strip().endswith("&"):
+            self_expr = "const_cast<Series&>(*this)"
+        else:
+            self_expr = "*this"
+
+        call_args = ", ".join([self_expr] + arg_names)
+
+        lines.append(
+            f"{ret} Series::{name}({clean_params}){const_s} "
+            f"{{ return {namespace}::{name}({call_args}); }}"
+        )
+    lines.append("")
+    out_path.write_text("\n".join(lines), encoding="utf-8")
+    print(f"Wrote {out_path} with {len(decls)} method definitions.")
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--methods-inc", required=True, help="Path to SeriesMethods.inc (declarations)")
+    ap.add_argument("--out", required=True, help="Output path for SeriesMethodsDispatch.inc")
+    ap.add_argument("--namespace", default="pluss::codem::ops_internal", help="Dispatch namespace")
+    args = ap.parse_args()
+
+    decls = read_methods_inc(Path(args.methods_inc))
+    if not decls:
+        raise SystemExit("No Series declarations found in methods inc.")
+    generate_dispatch(decls, Path(args.out), namespace=args.namespace)
+
+if __name__ == "__main__":
+    main()

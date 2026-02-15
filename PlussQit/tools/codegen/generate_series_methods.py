@@ -56,6 +56,19 @@ def sanitize_name(n: str):
   if n == "stack": return "pile"
   return n
 
+def strip_defaults(sig: str) -> str:
+  """Normalize a C++ parameter list string by removing default initializers.
+
+  This lets us de-duplicate declarations that differ only by default arguments,
+  which are NOT part of the C++ function signature.
+  """
+  # Remove any `=...` default initializer within each parameter
+  parts = [p.strip() for p in sig.split(",") if p.strip()]
+  nd = []
+  for p in parts:
+    nd.append(re.sub(r"\s*=\s*[^,]+$", "", p).strip())
+  return ", ".join(nd)
+
 def main():
   ap = argparse.ArgumentParser()
   ap.add_argument("--yaml", required=True)
@@ -78,7 +91,7 @@ def main():
       if any(b in lname for b in BAN_SUB): continue
       self_ops.append((name, argv))
 
-  groups = {}
+  groups = {}  # name -> { normalized_sig : emitted_sig }
   for full, argv in self_ops:
     base = full.split(".")[0]
     parts = [x.strip() for x in argv.split(",")][1:]  # drop self
@@ -92,21 +105,29 @@ def main():
       mapped.append(ma)
     if not ok: continue
     sig = ", ".join(mapped)
-    groups.setdefault(base, set()).add(sig)
+    nsig = strip_defaults(sig)
+    groups.setdefault(base, {})
+    # Prefer the signature that carries defaults (more user-friendly) if present
+    prev = groups[base].get(nsig)
+    if prev is None or ("=" not in prev and "=" in sig):
+      groups[base][nsig] = sig
 
   # augment with scalar rhs when only 1 Series arg
-  aug = {k:set(v) for k,v in groups.items()}
-  for name, sigs in groups.items():
-    for sig in list(sigs):
+  aug = {k: dict(v) for k, v in groups.items()}  # copy
+  for name, sigmap in groups.items():
+    for nsig, sig in list(sigmap.items()):
       if sig.count("const Series&") == 1:
         pname = re.findall(r"const Series&\s+([A-Za-z0-9_]+)", sig)[0]
         aug_sig = re.sub(rf"const Series&\s+{pname}", f"double {pname}", sig)
-        aug[name].add(aug_sig)
+        aug_nsig = strip_defaults(aug_sig)
+        prev = aug[name].get(aug_nsig)
+        if prev is None or ("=" not in prev and "=" in aug_sig):
+          aug[name][aug_nsig] = aug_sig
 
   decls, stubs = [], []
   for name in sorted(aug.keys()):
     cpp = sanitize_name(name)
-    for sig in sorted(aug[name]):
+    for sig in sorted(aug[name].values()):
       decls.append(f"  Series {cpp}({sig}) const;")
       decls.append(f"  Series& {cpp}_({sig});")
       stubs.append(f"Series Series::{cpp}({sig}) const {{ PLUSS_CALL_GUARD(); throw_error(\"{cpp}: not implemented yet\"); }}")

@@ -30,6 +30,19 @@ static std::vector<std::int64_t> broadcast_out_shape_(std::span<const std::int64
   return SeriesIterator::broadcast_shape(a, b);
 }
 
+static std::uint64_t splitmix64_(std::uint64_t& x) {
+  x += 0x9e3779b97f4a7c15ULL;
+  std::uint64_t z = x;
+  z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
+  return z ^ (z >> 31);
+}
+static double u01_(std::uint64_t& state) {
+  const std::uint64_t r = splitmix64_(state);
+  // 53-bit mantissa
+  return (double)((r >> 11) * (1.0 / 9007199254740992.0));
+}
+
 static Series binary_op_(native::cpu::BinaryOpId op, const Series& a0, const Series& b0) {
   ScalarType dt = promote_types(a0.scalar_type(), b0.scalar_type());
   Series a = (a0.scalar_type()==dt) ? a0 : a0.to(dt);
@@ -66,22 +79,23 @@ Series add(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
- return binary_op_(native::cpu::BinaryOpId::Add, a, b); }
+  return binary_op_(native::cpu::BinaryOpId::Add, a, b); }
+
 Series sub(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
- return binary_op_(native::cpu::BinaryOpId::Sub, a, b); }
+  return binary_op_(native::cpu::BinaryOpId::Sub, a, b); }
 Series mul(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
- return binary_op_(native::cpu::BinaryOpId::Mul, a, b); }
+  return binary_op_(native::cpu::BinaryOpId::Mul, a, b); }
 Series div(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
- return binary_op_(native::cpu::BinaryOpId::Div, a, b); }
+  return binary_op_(native::cpu::BinaryOpId::Div, a, b); }
 Series pow(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
