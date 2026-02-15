@@ -26,7 +26,8 @@
 
 namespace pluss::codem::ops_internal {
 
-static std::vector<std::int64_t> broadcast_out_shape_(std::span<const std::int64_t> a, std::span<const std::int64_t> b) {
+static std::vector<std::int64_t> broadcast_out_shape_(std::span<const std::int64_t> a,
+                                                      std::span<const std::int64_t> b) {
   return SeriesIterator::broadcast_shape(a, b);
 }
 
@@ -79,28 +80,28 @@ Series add(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
-  return binary_op_(native::cpu::BinaryOpId::Add, a, b); }
+  return binary_op_(native::cpu::BinaryOpId::Add, aa, bb); }
 
 Series sub(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
-  return binary_op_(native::cpu::BinaryOpId::Sub, a, b); }
+  return binary_op_(native::cpu::BinaryOpId::Sub, aa, bb); }
 Series mul(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
-  return binary_op_(native::cpu::BinaryOpId::Mul, a, b); }
+  return binary_op_(native::cpu::BinaryOpId::Mul, aa, bb); }
 Series div(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
-  return binary_op_(native::cpu::BinaryOpId::Div, a, b); }
+  return binary_op_(native::cpu::BinaryOpId::Div, aa, bb); }
 Series pow(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
- return binary_op_(native::cpu::BinaryOpId::Pow, a, b); }
+ return binary_op_(native::cpu::BinaryOpId::Pow, aa, bb); }
 
 
 Series conj(const Series& a) {
@@ -231,6 +232,13 @@ Series gt(const Series& a, const Series& b) { return cmp_op_(native::cpu::Binary
 Series ge(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Ge, a, b); }
 
 Series sqrt(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::sqrt(a, out); return out; }
+Series exp(const Series& a) { return a.exp(); }
+Series log(const Series& a) { return a.log(); }
+
+Series& exp_(Series& a) { return a.exp_(); }
+Series& log_(Series& a) { return a.log_(); }
+Series& sqrt_(Series& a) { return a.sqrt_(); }
+
 Series floor(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::floor(a, out); return out; }
 Series ceil(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::ceil(a, out); return out; }
 Series round(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::round(a, out); return out; }
@@ -259,6 +267,25 @@ Series lgamma(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_
 Series asinh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::asinh(a, out); return out; }
 Series acosh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::acosh(a, out); return out; }
 Series atanh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type()); native::cpu::atanh(a, out); return out; }
+
+// Shape ops
+Series squeeze(const Series& a) {return native::cpu::squeeze(a);}
+Series squeeze(const Series& a, std::int64_t dim) {return native::cpu::squeeze(a, dim);}
+Series& squeeze_(Series& a) {return native::cpu::squeeze_(a);}
+Series& squeeze_(Series& a, std::int64_t dim) {return native::cpu::squeeze_(a, dim);}
+
+// Bitwise ops
+Series bitwise_not(const Series& a) {return native::cpu::bitwise_not(a);}
+Series& bitwise_not_(Series& a) {return native::cpu::bitwise_not_(a);}
+
+Series bitwise_and(const Series& a, const Series& b) {return native::cpu::bitwise_and(a, b);}
+Series& bitwise_and_(Series& a, const Series& b) {return native::cpu::bitwise_and_(a, b);}
+
+Series bitwise_or(const Series& a, const Series& b) {return native::cpu::bitwise_or(a, b);}
+Series& bitwise_or_(Series& a, const Series& b) {return native::cpu::bitwise_or_(a, b);}
+
+Series bitwise_xor(const Series& a, const Series& b) {return native::cpu::bitwise_xor(a, b);}
+Series& bitwise_xor_(Series& a, const Series& b) {return native::cpu::bitwise_xor_(a, b);}
 
 Series isfinite(const Series& a) { Series out = Series::empty(a.sizes(), ScalarType::Bool); native::cpu::isfinite(a, out); return out; }
 
@@ -778,32 +805,13 @@ Series& scatter_reduce_(Series& a, std::int64_t dim, const Series& index, const 
   return a;
 }
 
-Series masked_fill(const Series& a, const Series& mask, double value) {
-  Series out = a.clone();
-  masked_fill_(out, mask, value);
-  return out;
-}
-
-Series& masked_fill_(Series& a, const Series& mask, double value) {
-  PLUSS_CHECK(a.defined() && mask.defined(), "masked_fill_: undefined");
-  PLUSS_CHECK(mask.scalar_type() == ScalarType::Bool, "masked_fill_: mask must be Bool");
-  auto shape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
-  if (shape != std::vector<std::int64_t>(a.sizes().begin(), a.sizes().end())) {
-    // if a needs broadcast, materialize into new tensor (Torch-like in-place restriction)
-    throw_error("masked_fill_: cannot broadcast target tensor in-place");
-  }
-  Series mm = mask.expand(a.sizes()).contiguous();
-  native::cpu::masked_fill_inplace(a, mm, value);
-  return a;
-}
-
 Series gather(const Series& input, std::int64_t dim, const Series& index) {
   return native::cpu::gather(input, dim, index);
 }
 
 
 Series maximum(const Series& a, const Series& b) {
-  auto out = Series::empty(broadcast_shape(a, b), promote_types(a.scalar_type(), b.scalar_type()));
+  auto out = Series::empty(SeriesIterator::broadcast_shape(a.sizes(), b.sizes()), promote_types(a.scalar_type(), b.scalar_type()));
   auto aa = a.contiguous().to(out.scalar_type());
   auto bb = b.contiguous().to(out.scalar_type());
   native::cpu::maximum(aa, bb, out);
@@ -811,7 +819,7 @@ Series maximum(const Series& a, const Series& b) {
 }
 
 Series minimum(const Series& a, const Series& b) {
-  auto out = Series::empty(broadcast_shape(a, b), promote_types(a.scalar_type(), b.scalar_type()));
+  auto out = Series::empty(SeriesIterator::broadcast_shape(a.sizes(), b.sizes()), promote_types(a.scalar_type(), b.scalar_type()));
   auto aa = a.contiguous().to(out.scalar_type());
   auto bb = b.contiguous().to(out.scalar_type());
   native::cpu::minimum(aa, bb, out);
@@ -819,7 +827,7 @@ Series minimum(const Series& a, const Series& b) {
 }
 
 Series atan2(const Series& a, const Series& b) {
-  auto out = Series::empty(broadcast_shape(a, b), promote_types(a.scalar_type(), b.scalar_type()));
+  auto out = Series::empty(SeriesIterator::broadcast_shape(a.sizes(), b.sizes()), promote_types(a.scalar_type(), b.scalar_type()));
   auto aa = a.contiguous().to(out.scalar_type());
   auto bb = b.contiguous().to(out.scalar_type());
   native::cpu::atan2(aa, bb, out);
@@ -827,7 +835,7 @@ Series atan2(const Series& a, const Series& b) {
 }
 
 Series fmod(const Series& a, const Series& b) {
-  auto out = Series::empty(broadcast_shape(a, b), promote_types(a.scalar_type(), b.scalar_type()));
+  auto out = Series::empty(SeriesIterator::broadcast_shape(a.sizes(), b.sizes()), promote_types(a.scalar_type(), b.scalar_type()));
   auto aa = a.contiguous().to(out.scalar_type());
   auto bb = b.contiguous().to(out.scalar_type());
   native::cpu::fmod(aa, bb, out);
@@ -835,7 +843,7 @@ Series fmod(const Series& a, const Series& b) {
 }
 
 Series remainder(const Series& a, const Series& b) {
-  auto out = Series::empty(broadcast_shape(a, b), promote_types(a.scalar_type(), b.scalar_type()));
+  auto out = Series::empty(SeriesIterator::broadcast_shape(a.sizes(), b.sizes()), promote_types(a.scalar_type(), b.scalar_type()));
   auto aa = a.contiguous().to(out.scalar_type());
   auto bb = b.contiguous().to(out.scalar_type());
   native::cpu::remainder(aa, bb, out);
@@ -2014,34 +2022,17 @@ Series& Series::relu_() { return unary_more_inplace_(*this, native::cpu::relu); 
 Series Series::logical_not() const { return unary_more_out_(*this, native::cpu::logical_not); }
 Series& Series::logical_not_() { return unary_more_inplace_(*this, native::cpu::logical_not); }
 
-#ifdef PLUSS_CODEM_GEN_AVAILABLE
-#include "CodeM/Series/SeriesOpsInternalMethods.cpp.inc"
-#endif
+Series Series::masked_select(const Series& mask) const {return pluss::codem::ops_internal::masked_select(*this, mask);}
 
+Series Series::masked_scatter(const Series& mask, const Series& src) const {return pluss::codem::ops_internal::masked_scatter(*this, mask, src);}
 
-Series Series::masked_select(const Series& mask) const {
-  return pluss::codem::ops_internal::masked_select(*this, mask);
-}
+Series& Series::masked_scatter_(const Series& mask, const Series& src) {return pluss::codem::ops_internal::masked_scatter_(*this, mask, src);}
 
-Series Series::masked_scatter(const Series& mask, const Series& src) const {
-  return pluss::codem::ops_internal::masked_scatter(*this, mask, src);
-}
+Series Series::unique(bool sorted) const {return pluss::codem::ops_internal::unique(*this, sorted);}
 
-Series& Series::masked_scatter_(const Series& mask, const Series& src) {
-  return pluss::codem::ops_internal::masked_scatter_(*this, mask, src);
-}
+Series Series::bincount(std::int64_t minlength) const {return pluss::codem::ops_internal::bincount(*this, minlength);}
 
-Series Series::unique(bool sorted) const {
-  return pluss::codem::ops_internal::unique(*this, sorted);
-}
-
-Series Series::bincount(std::int64_t minlength) const {
-  return pluss::codem::ops_internal::bincount(*this, minlength);
-}
-
-Series Series::histc(std::int64_t bins, double min, double max) const {
-  return pluss::codem::ops_internal::histc(*this, bins, min, max);
-}
+Series Series::histc(std::int64_t bins, double min, double max) const {return pluss::codem::ops_internal::histc(*this, bins, min, max);}
 
 Series Series::log1p() const {
   PLUSS_CALL_GUARD();

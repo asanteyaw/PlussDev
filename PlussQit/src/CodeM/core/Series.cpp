@@ -25,27 +25,88 @@
 #include <algorithm>
 #include <array>
 #include <vector>
+#include <cmath>
 #include <cstring>
 #include <cstring>
 
 namespace pluss::codem {
-  #include "CodeM/Core/SeriesCat.cpp"
 
-  // implementations of extra methods in Series.h. It probably implemented elsewhere in the 
-  // codebase, but we can put it here for now since it's not yet codegen'd and we want to keep the generated method dispatch clean and focused on the generated methods themselves.
+  // ---- Extra convenience methods declared in Series.h (Torch-inspired, CPU-only for now) ----
 
-  // Variance / std (dim overloads are used internally but not yet codegen'd).
-  Series var(std::int64_t dim, bool unbiased, bool keepdim) const{
-    // find where they are implemented and delegate to them when ready.
+  Series Series::var(std::int64_t dim, bool unbiased, bool keepdim) const {
+    // Torch-style variance along a dimension.
+    // We compute: mean((x - mean(x))^2) and optionally apply Bessel correction.
+    PLUSS_CHECK(this->defined(), "var: undefined series");
+
+    // Keep mean's dim so broadcasting works for subtraction.
+    const Series m = this->mean(dim, /*keepdim=*/true);
+    const Series diff = ops_internal::sub(*this, m);
+    const Series sq = ops_internal::mul(diff, diff);
+
+    Series v = ops_internal::mean(sq, dim, keepdim);
+
+    if (unbiased) {
+      const auto n = this->size(dim);
+      if (n > 1) {
+        const double corr = static_cast<double>(n) / static_cast<double>(n - 1);
+        v = v.mul(corr);
+      }
+      // If n<=1, match torch-like behavior: return zeros (already implied by mean on empty/size1 paths).
+    }
+    return v;
   }
-  Series std(std::int64_t dim, bool unbiased=true, bool keepdim=false) const{
-    // if they are not implemented yet, implement them and delegate from here.
+
+  Series Series::std(std::int64_t dim, bool unbiased, bool keepdim) const {
+    // Standard deviation is sqrt(variance).
+    const Series v = this->var(dim, unbiased, keepdim);
+    return ops_internal::sqrt(v);
   }
 
-  // Norm overloads used throughout the codebase.
-  Series norm(double p, std::int64_t dim, bool keepdim=false) const{}
+  Series Series::norm(double p, std::int64_t dim, bool keepdim) const {
+    // Basic p-norm along a dimension.
+    // Supports p=1,2, +/-inf, and general finite p>0.
+    PLUSS_CHECK(this->defined(), "norm: undefined series");
 
-  // PlussQit naming deviations (method-first aliases).
-  Series pile(const std::vector<Series>& others, std::int64_t dim=0) const{}
-  Series unite(const std::vector<Series>& others, std::int64_t dim=0) const{}
+    if (std::isinf(p)) {
+      const Series a = this->abs();
+      if (p > 0) return a.amax(dim, keepdim);
+      return a.amin(dim, keepdim);
+    }
+
+    PLUSS_CHECK(p > 0.0, "norm: p must be > 0 for now");
+
+    const Series a = this->abs();
+
+    if (p == 1.0) {
+      return a.sum(dim, keepdim);
+    }
+
+    if (p == 2.0) {
+      // sqrt(sum(x^2))
+      const Series s = a.pow(2.0).sum(dim, keepdim);
+      return s.pow(0.5);
+    }
+
+    // General p: (sum(|x|^p))^(1/p)
+    const Series s = a.pow(p).sum(dim, keepdim);
+    return s.pow(1.0 / p);
+  }
+
+  Series Series::pile(const std::vector<Series>& others, std::int64_t dim) const {
+    // Method-first alias for stack: stack([self] + others, dim)
+    std::vector<Series> all;
+    all.reserve(1 + others.size());
+    all.push_back(*this);
+    all.insert(all.end(), others.begin(), others.end());
+    return Series::stack(all, dim);
+  }
+
+  Series Series::unite(const std::vector<Series>& others, std::int64_t dim) const {
+    // Method-first alias for cat: cat([self] + others, dim)
+    std::vector<Series> all;
+    all.reserve(1 + others.size());
+    all.push_back(*this);
+    all.insert(all.end(), others.begin(), others.end());
+    return Series::cat(all, dim);
+  }
 }

@@ -18,12 +18,10 @@
 
 namespace pluss::codem {
 
+
 // Forward declaration for tensor memory/layout format used by generated APIs.
 // Full definition should come from the appropriate header if/when needed.
 enum class MemoryFormat;
-
-// Torch-like integer array reference type used by generated APIs.
-// We represent it as a span of 64-bit ints.
 
 // User-facing Series (Torch-like Tensor).
 // User-facing Series (Torch-like Tensor).
@@ -45,8 +43,10 @@ public:
 
   void* raw_mutable_data() noexcept { return reinterpret_cast<void*>(raw_data()); }
 
-  // Expanded Torch-aligned method surface (auto-generated declarations).
-  #include "CodeM/core/SeriesMethods.inc"
+
+  // Generated Torch-style templated wrappers (collect args and dispatch via _compat::invoke).
+  // This header must be included *inside* the class so the methods become members.
+  #include "CodeM/generated/SeriesMethodsGen.h"
 
   // ---- C++ convenience operators (Torch-like) ----
   // These are thin wrappers around the generated method surface.

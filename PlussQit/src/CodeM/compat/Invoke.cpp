@@ -1,4 +1,6 @@
-#include "CodeM/torch_compat/Invoke.h"
+#include "CodeM/compat/Invoke.h"
+#include "CodeM/core/Scalar.h"
+#include <type_traits>
 
 #include "CodeM/core/OpsInternal.h"
 #include "CodeM/core/Series.h"
@@ -10,6 +12,7 @@ namespace pluss::codem::_compat {
 
 using pluss::codem::warn;
 
+
 static std::string sig(std::string_view op, const Args& args) {
   std::ostringstream os;
   os << op << "(";
@@ -17,27 +20,31 @@ static std::string sig(std::string_view op, const Args& args) {
     if (i) os << ", ";
     const auto& v = args[i].v;
     if (std::holds_alternative<const Series*>(v)) os << "Series";
+    else if (std::holds_alternative<Scalar>(v)) os << "Scalar";
     else if (std::holds_alternative<double>(v)) os << "double";
     else if (std::holds_alternative<std::int64_t>(v)) os << "int64";
     else if (std::holds_alternative<bool>(v)) os << "bool";
     else if (std::holds_alternative<std::string>(v)) os << "string";
     else if (std::holds_alternative<Arg::IntList>(v)) os << "int64[]";
-    else os << "None";
+    else if (std::holds_alternative<std::monostate>(v)) os << "None";
+    else os << "?";
   }
   os << ")";
   return os.str();
 }
 
-static Series not_impl(std::string_view op, const Args& args, const Series& self) {
-  warn(std::string("Unrouted op: ") + sig(op, args) + "
-Falling back to identity (clone). Please file an issue.");
-  return self.clone();
+static Series not_impl(std::string_view op, const Args& args, const Series&) {
+  // Fail fast: silent identity fallbacks hide bugs and break correctness.
+  PLUSS_CHECK(false, std::string("Unrouted op: ") + sig(op, args));
+  return Series{};
 }
 
-static Series& not_impl_inplace(std::string_view op, const Args& args, Series& self) {
-  warn(std::string("Unrouted in-place op: ") + sig(op, args) + "
-Falling back to no-op. Please file an issue.");
-  return self;
+static Series& not_impl_inplace(std::string_view op, const Args& args, Series&) {
+  // Fail fast: silent no-op fallbacks hide bugs and break correctness.
+  PLUSS_CHECK(false, std::string("Unrouted in-place op: ") + sig(op, args));
+  // Unreachable; keep return for compiler.
+  static Series* dummy = nullptr;
+  return *dummy;
 }
 
 static const Series& as_series(const Arg& a) {
@@ -45,9 +52,37 @@ static const Series& as_series(const Arg& a) {
   return *std::get<const Series*>(a.v);
 }
 
+
+static double scalar_to_double(const Scalar& s) {
+  return std::visit(
+      [](const auto& v) -> double {
+        using T = std::decay_t<decltype(v)>;
+        if constexpr (std::is_same_v<T, double>) return v;
+        else if constexpr (std::is_same_v<T, bool>) return v ? 1.0 : 0.0;
+        else if constexpr (std::is_same_v<T, std::int64_t>) return static_cast<double>(v);
+        else if constexpr (std::is_same_v<T, std::uint64_t>) return static_cast<double>(v);
+        else return 0.0;
+      },
+      s.storage());
+}
+
+static std::int64_t scalar_to_i64(const Scalar& s) {
+  return std::visit(
+      [](const auto& v) -> std::int64_t {
+        using T = std::decay_t<decltype(v)>;
+        if constexpr (std::is_same_v<T, std::int64_t>) return v;
+        else if constexpr (std::is_same_v<T, std::uint64_t>) return static_cast<std::int64_t>(v);
+        else if constexpr (std::is_same_v<T, bool>) return v ? 1 : 0;
+        else if constexpr (std::is_same_v<T, double>) return static_cast<std::int64_t>(v);
+        else return 0;
+      },
+      s.storage());
+}
+
 static double as_double(const Arg& a) {
   if (std::holds_alternative<double>(a.v)) return std::get<double>(a.v);
   if (std::holds_alternative<std::int64_t>(a.v)) return static_cast<double>(std::get<std::int64_t>(a.v));
+  if (std::holds_alternative<Scalar>(a.v)) return scalar_to_double(std::get<Scalar>(a.v));
   PLUSS_CHECK(false, "Expected numeric scalar");
   return 0.0;
 }
@@ -55,6 +90,7 @@ static double as_double(const Arg& a) {
 static std::int64_t as_i64(const Arg& a) {
   if (std::holds_alternative<std::int64_t>(a.v)) return std::get<std::int64_t>(a.v);
   if (std::holds_alternative<double>(a.v)) return static_cast<std::int64_t>(std::get<double>(a.v));
+  if (std::holds_alternative<Scalar>(a.v)) return scalar_to_i64(std::get<Scalar>(a.v));
   PLUSS_CHECK(false, "Expected int64 scalar");
   return 0;
 }
@@ -62,9 +98,12 @@ static std::int64_t as_i64(const Arg& a) {
 static bool as_bool(const Arg& a) {
   if (std::holds_alternative<bool>(a.v)) return std::get<bool>(a.v);
   if (std::holds_alternative<std::int64_t>(a.v)) return std::get<std::int64_t>(a.v) != 0;
+  if (std::holds_alternative<double>(a.v)) return std::get<double>(a.v) != 0.0;
+  if (std::holds_alternative<Scalar>(a.v)) return scalar_to_double(std::get<Scalar>(a.v)) != 0.0;
   PLUSS_CHECK(false, "Expected bool");
   return false;
 }
+
 
 static std::span<const std::int64_t> as_intlist(const Arg& a) {
   PLUSS_CHECK(std::holds_alternative<Arg::IntList>(a.v), "Expected int64 list");
@@ -125,12 +164,40 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
 
     if (op == "contiguous") return self.contiguous();
     if (op == "clone") return self.clone();
-    if (op == "squeeze") return self.squeeze();
-    if (op == "unique") return self.unique(true);
-    if (op == "nonzero") return ops_internal::nonzero(self);
+    if (op == "squeeze") {
+      if (args.empty()) return ops_internal::squeeze(self);
+      if (args.size() == 1) return ops_internal::squeeze(self, as_i64(args[0]));
+      PLUSS_CHECK(false, "squeeze: expected 0 or 1 args");
+    }
+
+    if (op == "unique") {
+      // Torch has more variants; we support unique(sorted=true/false)
+      bool sorted = true;
+      if (!args.empty()) sorted = as_bool(args[0]);
+      return ops_internal::unique(self, sorted);
+    }
 
     // bitwise unary
-    if (op == "bitwise_not") return self.bitwise_not();
+    if (op == "bitwise_not") {
+      PLUSS_CHECK(args.empty(), "bitwise_not: expected 0 args");
+      return ops_internal::bitwise_not(self);
+    }
+    if (op == "nonzero") return ops_internal::nonzero(self);
+
+    if (op == "bitwise_and") {
+      PLUSS_CHECK(args.size() == 1, "bitwise_and: expected 1 arg");
+      return ops_internal::bitwise_and(self, as_series(args[0]));
+    }
+
+    if (op == "bitwise_or") {
+      PLUSS_CHECK(args.size() == 1, "bitwise_or: expected 1 arg");
+      return ops_internal::bitwise_or(self, as_series(args[0]));
+    }
+
+    if (op == "bitwise_xor") {
+      PLUSS_CHECK(args.size() == 1, "bitwise_xor: expected 1 arg");
+      return ops_internal::bitwise_xor(self, as_series(args[0]));
+    }
 
     return not_impl(op, args, self);
   }
@@ -142,26 +209,26 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     // scalar
     if (std::holds_alternative<double>(a0) || std::holds_alternative<std::int64_t>(a0)) {
       const double s = as_double(args[0]);
-      if (op == "mul") return self.mul(s);
-      if (op == "add") return self.add(s);
-      if (op == "sub") return self.sub(s);
-      if (op == "div") return self.div(s);
-      if (op == "pow") return self.pow(s);
+      if (op == "mul") return ops_internal::mul(self, s);
+      if (op == "add") return ops_internal::add(self, s);
+      if (op == "sub") return ops_internal::sub(self, s);
+      if (op == "div") return ops_internal::div(self, s);
+      if (op == "pow") return ops_internal::pow(self, s);
       if (op == "clamp_min") return ops_internal::clamp_min(self, s);
       if (op == "clamp_max") return ops_internal::clamp_max(self, s);
-      if (op == "bincount") return self.bincount((std::int64_t)s);
-      if (op == "argsort") return self.argsort((std::int64_t)s, /*descending=*/false, /*stable=*/false);
+      if (op == "bincount") return ops_internal::bincount(self, (std::int64_t)s);
+      if (op == "argsort") return ops_internal::argsort(self, (std::int64_t)s, /*descending=*/false, /*stable=*/false);
       if (op == "softmax") return ops_internal::softmax(self, (std::int64_t)s);
       if (op == "log_softmax") return ops_internal::log_softmax(self, (std::int64_t)s);
-      if (op == "sum") return self.sum((std::int64_t)s, false);
-      if (op == "mean") return self.mean((std::int64_t)s, false);
-      if (op == "prod") return self.prod((std::int64_t)s, false);
-      if (op == "amax") return self.amax((std::int64_t)s, false);
-      if (op == "amin") return self.amin((std::int64_t)s, false);
-      if (op == "all") return self.all((std::int64_t)s, false);
-      if (op == "any") return self.any((std::int64_t)s, false);
-      if (op == "argmax") return self.argmax((std::int64_t)s, false);
-      if (op == "argmin") return self.argmin((std::int64_t)s, false);
+      if (op == "sum") return ops_internal::sum(self, (std::int64_t)s, /*keepdim=*/false);
+      if (op == "mean") return ops_internal::mean(self, (std::int64_t)s, /*keepdim=*/false);
+      if (op == "prod") return ops_internal::prod(self, (std::int64_t)s, /*keepdim=*/false);
+      if (op == "amax") return ops_internal::amax(self, (std::int64_t)s, /*keepdim=*/false);
+      if (op == "amin") return ops_internal::amin(self, (std::int64_t)s, /*keepdim=*/false);
+      if (op == "all") return ops_internal::all(self, (std::int64_t)s, /*keepdim=*/false);
+      if (op == "any") return ops_internal::any(self, (std::int64_t)s, /*keepdim=*/false);
+      if (op == "argmax") return ops_internal::argmax(self, (std::int64_t)s, /*keepdim=*/false);
+      if (op == "argmin") return ops_internal::argmin(self, (std::int64_t)s, /*keepdim=*/false);
       return not_impl(op, args, self);
     }
 
@@ -175,10 +242,10 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     // Series
     if (std::holds_alternative<const Series*>(a0)) {
       const Series& other = as_series(args[0]);
-      if (op == "add") return self.add(other);
-      if (op == "sub") return self.sub(other);
-      if (op == "mul") return self.mul(other);
-      if (op == "div") return self.div(other);
+      if (op == "add") return ops_internal::add(self, other);
+      if (op == "sub") return ops_internal::sub(self, other);
+      if (op == "mul") return ops_internal::mul(self, other);
+      if (op == "div") return ops_internal::div(self, other);
 
       if (op == "eq") return ops_internal::eq(self, other);
       if (op == "ne") return ops_internal::ne(self, other);
@@ -197,10 +264,10 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "remainder") return ops_internal::remainder(self, other);
       if (op == "atan2") return ops_internal::atan2(self, other);
 
-      if (op == "matmul") return self.matmul(other);
+      if (op == "matmul") return ops_internal::matmul(self, other);
 
-      if (op == "masked_select") return self.masked_select(other);
-      if (op == "gather") return self.gather(/*dim=*/0, other); // dim provided via other overloads
+      if (op == "masked_select") return ops_internal::masked_select(self, other);
+      if (op == "gather") return not_impl(op, args, self); // gather requires (dim, index)
       // note: masked_scatter needs 2 args (mask, src)
       return not_impl(op, args, self);
     }
@@ -208,10 +275,10 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     // intlist
     if (std::holds_alternative<Arg::IntList>(a0)) {
       auto sizes = as_intlist(args[0]);
-      if (op == "reshape") return self.reshape(sizes);
-      if (op == "view") return self.view(sizes);
-      if (op == "expand") return self.expand(sizes);
-      if (op == "permute") return self.permute(sizes);
+      if (op == "reshape") return ops_internal::reshape(self, sizes);
+      if (op == "view") return ops_internal::view(self, sizes);
+      if (op == "expand") return ops_internal::expand(self, sizes);
+      if (op == "permute") return ops_internal::permute(self, sizes);
       return not_impl(op, args, self);
     }
 
@@ -230,20 +297,20 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       const double y = as_double(args[1]);
       if (op == "clamp") return self.clamp(x, y);
       if (op == "softplus") return ops_internal::softplus(self, x, y);
-      if (op == "leaky_relu") return ops_internal::leaky_relu(self, x);
-      if (op == "squeeze") return self.squeeze((std::int64_t)x);
-      if (op == "unsqueeze") return self.unsqueeze((std::int64_t)x);
-      if (op == "transpose") return self.transpose((std::int64_t)x, (std::int64_t)y);
-      if (op == "sum") return self.sum((std::int64_t)x, as_bool(args[1]));
-      if (op == "mean") return self.mean((std::int64_t)x, as_bool(args[1]));
-      if (op == "prod") return self.prod((std::int64_t)x, as_bool(args[1]));
-      if (op == "amax") return self.amax((std::int64_t)x, as_bool(args[1]));
-      if (op == "amin") return self.amin((std::int64_t)x, as_bool(args[1]));
-      if (op == "all") return self.all((std::int64_t)x, as_bool(args[1]));
-      if (op == "any") return self.any((std::int64_t)x, as_bool(args[1]));
-      if (op == "argmax") return self.argmax((std::int64_t)x, as_bool(args[1]));
-      if (op == "argmin") return self.argmin((std::int64_t)x, as_bool(args[1]));
-      if (op == "argsort") return self.argsort((std::int64_t)x, as_bool(args[1]), /*stable=*/false);
+      if (op == "leaky_relu") return not_impl(op, args, self); // leaky_relu takes 1 scalar (negative_slope) in this dispatcher
+      if (op == "squeeze") return ops_internal::squeeze(self, (std::int64_t)x);
+      if (op == "unsqueeze") return ops_internal::unsqueeze(self, (std::int64_t)x);
+      if (op == "transpose") return ops_internal::transpose(self, (std::int64_t)x, (std::int64_t)y);
+      if (op == "sum") return ops_internal::sum(self, (std::int64_t)x, as_bool(args[1]));
+      if (op == "mean") return ops_internal::mean(self, (std::int64_t)x, as_bool(args[1]));
+      if (op == "prod") return ops_internal::prod(self, (std::int64_t)x, as_bool(args[1]));
+      if (op == "amax") return ops_internal::amax(self, (std::int64_t)x, as_bool(args[1]));
+      if (op == "amin") return ops_internal::amin(self, (std::int64_t)x, as_bool(args[1]));
+      if (op == "all") return ops_internal::all(self, (std::int64_t)x, as_bool(args[1]));
+      if (op == "any") return ops_internal::any(self, (std::int64_t)x, as_bool(args[1]));
+      if (op == "argmax") return ops_internal::argmax(self, (std::int64_t)x, as_bool(args[1]));
+      if (op == "argmin") return ops_internal::argmin(self, (std::int64_t)x, as_bool(args[1]));
+      if (op == "argsort") return ops_internal::argsort(self, (std::int64_t)x, as_bool(args[1]), /*stable=*/false);
       return not_impl(op, args, self);
     }
 
@@ -254,8 +321,8 @@ if ((std::holds_alternative<double>(a0) || std::holds_alternative<std::int64_t>(
   const auto dim = as_i64(args[0]);
   const Series& other = as_series(args[1]);
   if (op == "gather") return self.gather(dim, other);
-  if (op == "scatter") return self.scatter(dim, other, /*src=*/Series{}); // handled in 3-arg form
-  if (op == "scatter_add") return self.scatter_add(dim, other, /*src=*/Series{});
+  if (op == "scatter") return not_impl(op, args, self); // scatter requires (dim, index, src)
+  if (op == "scatter_add") return not_impl(op, args, self); // scatter_add requires (dim, index, src)
   return not_impl(op, args, self);
 }
 // Series + Series
@@ -289,12 +356,9 @@ if ((std::holds_alternative<double>(a0) || std::holds_alternative<std::int64_t>(
       const auto dim = as_i64(args[0]);
       const auto start = as_i64(args[1]);
       const auto len = as_i64(args[2]);
-      if (op == "narrow") return self.narrow(dim, start, len);
-      if (op == "slice") return self.slice(dim, start, start + len, /*step=*/1);
-      if (op == "select") return self.select(dim, start);
-      if (op == "argsort") return self.argsort(dim, /*descending=*/(bool)start, /*stable=*/(bool)len);
-      if (op == "sort") { auto pr = self.sort(dim, /*descending=*/(bool)start, /*stable=*/(bool)len); return pr.first; }
-      if (op == "topk") { auto pr = self.topk(start, dim, /*largest=*/(bool)len, /*sorted=*/true); return pr.first; }
+      if (op == "narrow") return ops_internal::narrow(self, dim, start, len);
+      if (op == "slice") return ops_internal::slice(self, dim, start, start + len, /*step=*/1);
+      if (op == "select") return ops_internal::select(self, dim, start);
     }
 
     return not_impl(op, args, self);
@@ -324,10 +388,10 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     const auto& a0 = args[0].v;
     if (std::holds_alternative<double>(a0) || std::holds_alternative<std::int64_t>(a0)) {
       const double s = as_double(args[0]);
-      if (op == "add_") return self.add_(s);
-      if (op == "sub_") return self.sub_(s);
-      if (op == "mul_") return self.mul_(s);
-      if (op == "div_") return self.div_(s);
+      if (op == "add_") return ops_internal::add_(self, s);
+      if (op == "sub_") return ops_internal::sub_(self, s);
+      if (op == "mul_") return ops_internal::mul_(self, s);
+      if (op == "div_") return ops_internal::div_(self, s);
       if (op == "leaky_relu_") return ops_internal::leaky_relu_(self, s);
       if (op == "clamp_min_") return ops_internal::clamp_min_(self, s);
       if (op == "clamp_max_") return ops_internal::clamp_max_(self, s);
@@ -335,10 +399,10 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     }
     if (std::holds_alternative<const Series*>(a0)) {
       const Series& other = as_series(args[0]);
-      if (op == "add_") return self.add_(other);
-      if (op == "sub_") return self.sub_(other);
-      if (op == "mul_") return self.mul_(other);
-      if (op == "div_") return self.div_(other);
+      if (op == "add_") return ops_internal::add_(self, other);
+      if (op == "sub_") return ops_internal::sub_(self, other);
+      if (op == "mul_") return ops_internal::mul_(self, other);
+      if (op == "div_") return ops_internal::div_(self, other);
       return not_impl_inplace(op, args, self);
     }
     return not_impl_inplace(op, args, self);
@@ -374,8 +438,8 @@ if (args.size() == 3) {
     const auto dim = as_i64(args[0]);
     const Series& index = as_series(args[1]);
     const Series& src = as_series(args[2]);
-    if (op == "scatter_") return self.scatter_(dim, index, src);
-    if (op == "scatter_add_") return self.scatter_add_(dim, index, src);
+    if (op == "scatter_") return ops_internal::scatter_(self, dim, index, src);
+    if (op == "scatter_add_") return ops_internal::scatter_add_(self, dim, index, src);
     return not_impl_inplace(op, args, self);
   }
   return not_impl_inplace(op, args, self);

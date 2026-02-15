@@ -19,6 +19,14 @@ namespace pluss::codem::ops_internal {
   Series ge(const Series& a, const Series& b);
 
   Series sqrt(const Series& a);
+  // Extra unary math used by the compat invoke layer.
+  Series exp(const Series& a);
+  Series log(const Series& a);
+
+  // In-place variants used by the compat invoke layer.
+  Series& exp_(Series& a);
+  Series& log_(Series& a);
+  Series& sqrt_(Series& a);
   Series floor(const Series& a);
   Series ceil(const Series& a);
   Series round(const Series& a);
@@ -149,6 +157,25 @@ namespace pluss::codem::ops_internal {
 
   // Counting / histogram / unique (CPU-only)
   Series unique(const Series& a, bool sorted=true);
+    // Shape ops
+  Series squeeze(const Series& a);
+  Series squeeze(const Series& a, std::int64_t dim);
+  Series& squeeze_(Series& a);
+  Series& squeeze_(Series& a, std::int64_t dim);
+
+  // Bitwise ops (CPU-only)
+  Series bitwise_not(const Series& a);
+  Series& bitwise_not_(Series& a);
+
+  Series bitwise_and(const Series& a, const Series& b);
+  Series& bitwise_and_(Series& a, const Series& b);
+
+  Series bitwise_or(const Series& a, const Series& b);
+  Series& bitwise_or_(Series& a, const Series& b);
+
+  Series bitwise_xor(const Series& a, const Series& b);
+  Series& bitwise_xor_(Series& a, const Series& b);
+  
   Series bincount(const Series& a, std::int64_t minlength=0);
   Series histc(const Series& a, std::int64_t bins=100, double min=0.0, double max=0.0);
   Series masked_scatter(const Series& a, const Series& mask, const Series& src);
@@ -161,4 +188,3 @@ namespace pluss::codem::ops_internal {
   // Nonzero (returns indices, int64)
   Series nonzero(const Series& a);
 
-} // namespace pluss::codem::ops_internal
