@@ -1,5 +1,5 @@
 #pragma once
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 
 namespace pluss::codem::native::cpu {
   // Many unary floating-point ops (Float16/BFloat16/Float32/Float64).

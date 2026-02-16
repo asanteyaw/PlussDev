@@ -1,5 +1,5 @@
 #pragma once
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 
 namespace pluss::codem::native::cpu {
   Series gather(const Series& input, std::int64_t dim, const Series& index);

@@ -3,15 +3,22 @@
 #include <span>
 
 #include "CodeM/core/SeriesImpl.h"
-#include "MSharp/SnapPtr.h"
+#include "MSharp/IntrusivePtr.h"
+#include "pluss/export.h"
 
 namespace pluss::codem {
 
 // Handle type (Torch-like TensorBase): cheap copy, shared underlying impl.
-class SeriesBase {
+class CODEM_API SeriesBase {
 public:
   SeriesBase() = default;
-  explicit SeriesBase(pluss::msharp::SnapPtr<SeriesImpl> impl) : impl_(std::move(impl)) {}
+  // NOTE: Like at::TensorBase, this constructor is an implementation detail.
+  // End users should NOT construct Series/SeriesBase directly; they should use
+  // factories (pluss::value, pluss::make_series, etc.).
+protected:
+  explicit SeriesBase(pluss::msharp::intrusive_ptr<SeriesImpl> impl) : impl_(std::move(impl)) {}
+
+public:
 
   bool defined() const noexcept { return (bool)impl_; }
   bool unique() const noexcept { return impl_.unique(); }
@@ -35,10 +42,10 @@ public:
   const std::byte* raw_data() const;
 
 protected:
-  pluss::msharp::SnapPtr<SeriesImpl> impl_{nullptr};
+  pluss::msharp::intrusive_ptr<SeriesImpl> impl_{nullptr};
 
-  const pluss::msharp::SnapPtr<SeriesImpl>& impl() const noexcept { return impl_; }
-  pluss::msharp::SnapPtr<SeriesImpl>& impl() noexcept { return impl_; }
+  const pluss::msharp::intrusive_ptr<SeriesImpl>& impl() const noexcept { return impl_; }
+  pluss::msharp::intrusive_ptr<SeriesImpl>& impl() noexcept { return impl_; }
 };
 
 } // namespace pluss::codem

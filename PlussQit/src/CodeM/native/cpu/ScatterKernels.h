@@ -1,5 +1,5 @@
 #pragma once
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 #include <string>
 
 namespace pluss::codem::native::cpu {

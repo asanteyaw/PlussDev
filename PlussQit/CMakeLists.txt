@@ -15,6 +15,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(PLUSSQIT_BUILD_TESTS "Build tests" ON)
 option(PLUSSQIT_USE_FMT "Use fmt for messages" ON)
 option(PLUSSQIT_FETCH_DEPS "Allow CMake to FetchContent dependencies (fmt/Catch2)" OFF)
+option(PLUSSQIT_BUILD_CODEM "Build CodeM (Series/Tensor)" OFF)
+option(PLUSSQIT_CODEN_ENABLE_SERIES_INTEROP "Enable CodeN helpers that return CodeM::Series" OFF)
 
 include(FetchContent)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
@@ -37,6 +39,7 @@ endif()
 
 
 # ---- CodeM (ATen-like) ----
+if (PLUSSQIT_BUILD_CODEM)
 set(PLUSSQIT_GEN_DIR ${CMAKE_BINARY_DIR}/generated)
 set(SERIES_GEN_DIR ${PLUSSQIT_GEN_DIR})
 file(MAKE_DIRECTORY ${PLUSSQIT_GEN_DIR})
@@ -158,6 +161,7 @@ target_compile_definitions(plussqit_codem PRIVATE PLUSS_CODEM_GEN_AVAILABLE)
 target_include_directories(plussqit_codem
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${PLUSSQIT_GEN_DIR}>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
@@ -175,6 +179,59 @@ else()
   target_compile_definitions(plussqit_codem PUBLIC PLUSSQIT_HAS_FMT=0)
 endif()
 
+# Close optional CodeM block before defining CodeN.
+endif() # PLUSSQIT_BUILD_CODEM
+
+# ---- CodeN (text, Note/Chord) ----
+file(GLOB_RECURSE PLUSSQIT_CODEN_CPP CONFIGURE_DEPENDS
+  "src/CodeN/core/*.cpp"
+  "src/CodeN/native/cpu/*.cpp"
+  "src/CodeN/compat/*.cpp"
+)
+
+add_library(plussqit_coden
+  ${PLUSSQIT_CODEN_CPP}
+  src/Flame/Flame.h
+  src/CodeN/core/Errors.h
+  src/CodeN/core/TextArena.h
+  src/CodeN/core/ChordImpl.h
+  src/CodeN/core/ChordBase.h
+  src/CodeN/core/ChordSlim.h
+  src/CodeN/core/ChordSurface.h
+  src/CodeN/core/Chord.h
+  src/CodeN/core/NoteImpl.h
+  src/CodeN/core/NoteBase.h
+  src/CodeN/core/NoteSlim.h
+  src/CodeN/core/NoteSurface.h
+  src/CodeN/core/TokenBatch.h
+  src/CodeN/core/Note.h
+  src/CodeN/core/OpsInternal.h
+  src/CodeN/compat/Dispatch.h
+  src/CodeN/compat/Dispatch.cpp
+)
+
+add_library(PlussQit::CodeN ALIAS plussqit_coden)
+
+target_include_directories(plussqit_coden
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+
+target_compile_features(plussqit_coden PUBLIC cxx_std_20)
+target_compile_definitions(plussqit_coden PRIVATE CODEN_BUILD_MAIN_LIB)
+
+# Optional: CodeN <-> CodeM interop (guards the tiny surface in Note.h)
+if (PLUSSQIT_CODEN_ENABLE_SERIES_INTEROP AND PLUSSQIT_BUILD_CODEM)
+  target_compile_definitions(plussqit_coden PUBLIC CODEN_ENABLE_SERIES_INTEROP)
+  target_link_libraries(plussqit_coden PUBLIC PlussQit::CodeM)
+endif()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
+  target_compile_options(plussqit_coden PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+
 if (PLUSSQIT_BUILD_TESTS)
   enable_testing()
   find_package(Catch2 3 QUIET)
@@ -191,15 +248,25 @@ if (PLUSSQIT_BUILD_TESTS)
     message(WARNING "Catch2 v3 not found; disabling tests. Install Catch2 or set PLUSSQIT_FETCH_DEPS=ON to fetch it.")
   else()
     add_executable(plussqit_tests
+      tests/test_coden_patch03_basic.cpp
       tests/test_codem_core.cpp
       tests/test_codem_broadcast.cpp
     )
     target_link_libraries(plussqit_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_tests PRIVATE cxx_std_20)
 
+    # CodeN-only tests (kept separate so CodeN can evolve even when CodeM is mid-refactor).
+    add_executable(plussqit_coden_tests
+      tests/test_coden_patch03_basic.cpp
+      tests/test_coden_patch06_note_structure.cpp
+    )
+    target_link_libraries(plussqit_coden_tests PRIVATE PlussQit::CodeN Catch2::Catch2WithMain)
+    target_compile_features(plussqit_coden_tests PRIVATE cxx_std_20)
+
     include(CTest)
     include(Catch)
     catch_discover_tests(plussqit_tests)
+    catch_discover_tests(plussqit_coden_tests)
   endif()
 endif()
 
@@ -207,28 +274,39 @@ endif()
 # ---- Install (optional) ----
 include(GNUInstallDirs)
 
-install(TARGETS plussqit_codem
+install(TARGETS plussqit_coden
   EXPORT PlussQitTargets
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+if (PLUSSQIT_BUILD_CODEM)
+  install(TARGETS plussqit_codem
+    EXPORT PlussQitTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
+endif()
+
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-# Generated headers are included for completeness.
-install(DIRECTORY ${SERIES_GEN_DIR}/CodeM/Series/
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Series
-)
+# Generated Series headers are included for completeness (CodeM only).
+if (PLUSSQIT_BUILD_CODEM)
+  install(DIRECTORY ${SERIES_GEN_DIR}/CodeM/Series/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Series
+  )
+endif()
 
 install(EXPORT PlussQitTargets
   NAMESPACE pluss::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/PlussQit
 )
 
-if(APPLE)
+if(APPLE AND PLUSSQIT_BUILD_CODEM)
   find_library(PLUSS_ACCELERATE_FRAMEWORK Accelerate)
   if(PLUSS_ACCELERATE_FRAMEWORK)
     target_link_libraries(plussqit_codem PUBLIC ${PLUSS_ACCELERATE_FRAMEWORK})

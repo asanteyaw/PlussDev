@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/factories/ValueInitList.h"
 #include "CodeM/core/Storage.h"
 #include "CodeM/core/Errors.h"

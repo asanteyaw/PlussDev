@@ -1,4 +1,5 @@
 #pragma once
+#include "pluss/export.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -6,7 +7,7 @@
 namespace pluss::codem {
 
 // CPU-only storage (shareable). Later: allocator interface, external memory, mmap, etc.
-class Storage final {
+class CODEM_API Storage final {
 public:
   Storage() = default;
   explicit Storage(std::size_t nbytes, std::size_t alignment = 64);

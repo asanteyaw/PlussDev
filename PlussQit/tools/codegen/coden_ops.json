@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "ops": [
+    {"group": "Chord", "name": "lower", "pretty": "Chord lower()", "args": []},
+    {"group": "Chord", "name": "strip", "pretty": "Chord strip()", "args": []},
+    {"group": "Chord", "name": "replace", "pretty": "Chord replace(string from, string to)", "args": ["string", "string"]},
+
+    {"group": "Chord->bool", "name": "contains", "pretty": "bool contains(string needle)", "args": ["string"]},
+
+    {"group": "Note", "name": "lower", "pretty": "Note lower()", "args": []},
+    {"group": "Note", "name": "strip", "pretty": "Note strip()", "args": []},
+    {"group": "Note", "name": "reshape", "pretty": "Note reshape(intlist sizes)", "args": ["intlist"]},
+    {"group": "Note", "name": "permute", "pretty": "Note permute(intlist dims)", "args": ["intlist"]},
+    {"group": "Note", "name": "transpose", "pretty": "Note transpose(int64 dim0, int64 dim1)", "args": ["int64", "int64"]},
+    {"group": "Note", "name": "select", "pretty": "Note select(int64 dim, int64 index)", "args": ["int64", "int64"]},
+    {"group": "Note", "name": "narrow", "pretty": "Note narrow(int64 dim, int64 start, int64 length)", "args": ["int64", "int64", "int64"]},
+
+    {"group": "Note->u8list", "name": "contains", "pretty": "u8list contains(string needle)", "args": ["string"]},
+    {"group": "Note->i64list", "name": "lengths_bytes", "pretty": "i64list lengths_bytes()", "args": []},
+    {"group": "Note->TokenBatch", "name": "split_whitespace", "pretty": "TokenBatch split_whitespace()", "args": []}
+  ]
+}

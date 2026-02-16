@@ -1,4 +1,5 @@
 #pragma once
+#include "pluss/export.h"
 #include <cstdint>
 #include <span>
 #include <vector>
@@ -10,7 +11,7 @@
 namespace pluss::codem {
 
 // Metadata+storage backing object (Torch-like TensorImpl).
-class SeriesImpl final : public pluss::msharp::RefCounted {
+class CODEM_API SeriesImpl final : public pluss::msharp::RefCounted {
 public:
   SeriesImpl(Storage storage,
              std::int64_t storage_offset_elems,

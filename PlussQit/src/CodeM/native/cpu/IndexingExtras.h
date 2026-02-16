@@ -1,5 +1,5 @@
 #pragma once
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 
 namespace pluss::codem::native::cpu {
   Series where_scalar(const Series& cond, const Series& a, const Series& b); // reserved

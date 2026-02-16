@@ -1,11 +1,12 @@
 #pragma once
+#include "pluss/export.h"
 #include <cstdint>
 #include <variant>
 
 namespace pluss::codem {
 
 // Minimal scalar container (CPU-only).
-class Scalar final {
+class CODEM_API Scalar final {
 public:
   using Storage = std::variant<bool, std::int64_t, std::uint64_t, double>;
   Scalar(bool v) : v_(v) {}

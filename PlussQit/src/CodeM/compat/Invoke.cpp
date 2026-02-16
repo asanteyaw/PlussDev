@@ -3,7 +3,7 @@
 #include <type_traits>
 
 #include "CodeM/core/OpsInternal.h"
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/Errors.h"
 
 #include <sstream>

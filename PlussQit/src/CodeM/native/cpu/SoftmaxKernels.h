@@ -1,5 +1,5 @@
 #pragma once
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 
 namespace pluss::codem::native::cpu {
   // softmax/log_softmax over dim for floating dtypes (float/half/bf16/double). Complex unsupported.

@@ -2,7 +2,7 @@
 #include "CodeM/core/Half.h"
 #include "CodeM/core/Complex.h"
 #include "CodeM/core/ScalarType.h"
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/SeriesIterator.h"
 
 #include <cmath>

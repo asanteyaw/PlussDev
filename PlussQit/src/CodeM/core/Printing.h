@@ -1,7 +1,7 @@
 #pragma once
 #include <iosfwd>
 #include <string>
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 
 namespace pluss::codem {
 

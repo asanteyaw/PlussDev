@@ -13,10 +13,15 @@
 #include "CodeM/core/Storage.h"
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/Scalar.h"
-#include "MSharp/SnapPtr.h"
+#include "MSharp/IntrusivePtr.h"
+#include "pluss/export.h"
 
 
 namespace pluss::codem {
+
+namespace ops_internal {
+struct SeriesFactoryAccess;
+} // namespace ops_internal
 
 
 // Forward declaration for tensor memory/layout format used by generated APIs.
@@ -25,9 +30,9 @@ enum class MemoryFormat;
 
 // User-facing Series (Torch-like Tensor).
 // User-facing Series (Torch-like Tensor).
-class Series : public SeriesBase {
+class CODEM_API Series : public SeriesBase {
 public:
-  using SeriesBase::SeriesBase;
+  Series() = default;
 
   // Factory helpers (Torch-style free-functions live elsewhere; keep these for convenience).
   static Series empty(std::span<const std::int64_t> sizes, ScalarType st);
@@ -44,31 +49,22 @@ public:
   void* raw_mutable_data() noexcept { return reinterpret_cast<void*>(raw_data()); }
 
 
-  // Generated Torch-style templated wrappers (collect args and dispatch via _compat::invoke).
-  // This header must be included *inside* the class so the methods become members.
-  #include "CodeM/generated/SeriesMethodsGen.h"
+// ---------------------------------------------------------------------------
+// Full op surface
+// ---------------------------------------------------------------------------
+// The bulk of the Torch-like API (generated wrappers + operator sugar) lives in
+// a separate header to avoid poisoning light includes.
+//
+// - Most internal code should include SeriesBase.h or SeriesSlim.h.
+// - End-user code should include Series.h (default, full surface).
+//
+// To forbid pulling in the full surface from a translation unit, define
+// CODEM_ASSERT_NO_SERIES_SURFACE before including Series.h (or include
+// SeriesSlim.h).
+#if !defined(CODEM_NO_SERIES_SURFACE)
+  #include "CodeM/core/SeriesSurface.h"
+#endif
 
-  // ---- C++ convenience operators (Torch-like) ----
-  // These are thin wrappers around the generated method surface.
-  // NOTE: We only provide Series-vs-Series operators here. Scalar operators
-  // can be added later once the scalar type used by CodeM is finalized.
-
-  // Out-of-place arithmetic
-  Series operator+(const Series& other) const { return add(other); }
-  Series operator-(const Series& other) const { return sub(other); }
-  Series operator*(const Series& other) const { return mul(other); }
-  Series operator/(const Series& other) const { return div(other); }
-
-  // In-place arithmetic
-  Series& operator+=(const Series& other) { add_(other); return *this; }
-  Series& operator-=(const Series& other) { sub_(other); return *this; }
-  Series& operator*=(const Series& other) { mul_(other); return *this; }
-  Series& operator/=(const Series& other) { div_(other); return *this; }
-
-  // In-place bitwise
-  Series& operator&=(const Series& other) { bitwise_and_(other); return *this; }
-  Series& operator|=(const Series& other) { bitwise_or_(other); return *this; }
-  Series& operator^=(const Series& other) { bitwise_xor_(other); return *this; }
 
   // ---- Core reductions / a small torch-compatible surface ----
   // These are depended on internally (e.g. norm implementation) and are implemented
@@ -84,6 +80,15 @@ public:
   // PlussQit naming deviations (method-first aliases).
   Series pile(const std::vector<Series>& others, std::int64_t dim=0) const;
   Series unite(const std::vector<Series>& others, std::int64_t dim=0) const;
+
+private:
+  // Internal-only ctor: Series objects are created via factories and internal
+  // kernels (ops_internal), not by end users.
+  explicit Series(pluss::msharp::intrusive_ptr<SeriesImpl> impl)
+      : SeriesBase(std::move(impl)) {}
+
+  // Internal construction hook used by ops_internal implementations.
+  friend struct ops_internal::SeriesFactoryAccess;
 };
 
 

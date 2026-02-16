@@ -1,5 +1,8 @@
 #include "CodeM/core/OpsInternal.h"
 
+// OpsInternal.cpp defines Series member functions; it requires the full Series type.
+#include "CodeM/core/Series.h"
+
 #include <algorithm>
 #include <array>
 #include <cstring>
@@ -1129,12 +1132,12 @@ Series Series::empty(std::span<const std::int64_t> sizes, ScalarType st) {
   const auto dt = dtype_of(st);
   const auto n = compute_numel(sizes);
   Storage storage(static_cast<std::size_t>(n) * dt.itemsize);
-  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+  auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       std::move(storage), 0,
       std::vector<std::int64_t>(sizes.begin(), sizes.end()),
       contiguous_strides(sizes),
       st);
-  return Series(std::move(impl));
+  return SeriesFactoryAccess::wrap(std::move(impl));
 }
 
 
@@ -1281,12 +1284,12 @@ Series Series::full(std::span<const std::int64_t> sizes, double value, ScalarTyp
 Series Series::view(std::span<const std::int64_t> new_sizes) const {
   if (!defined()) throw_error("view: undefined");
   if (!can_view_as(*this, new_sizes)) throw_error("view: requires contiguous in v0");
-  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+  auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(), impl_->storage_offset_elems(),
       std::vector<std::int64_t>(new_sizes.begin(), new_sizes.end()),
       contiguous_strides(new_sizes),
       scalar_type());
-  return Series(std::move(impl));
+  return ops_internal::SeriesFactoryAccess::wrap(std::move(impl));
 }
 
 Series Series::reshape(std::span<const std::int64_t> new_sizes) const {
@@ -1308,11 +1311,11 @@ Series Series::transpose(std::int64_t d0, std::int64_t d1) const {
   std::swap(ns[static_cast<std::size_t>(d0)], ns[static_cast<std::size_t>(d1)]);
   std::swap(nt[static_cast<std::size_t>(d0)], nt[static_cast<std::size_t>(d1)]);
 
-  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+  auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(), impl_->storage_offset_elems(),
       std::move(ns), std::move(nt),
       scalar_type());
-  return Series(std::move(impl));
+  return ops_internal::SeriesFactoryAccess::wrap(std::move(impl));
 }
 
 
@@ -1335,11 +1338,11 @@ Series Series::permute(std::span<const std::int64_t> dims) const {
     ns[(std::size_t)i] = sizes()[(std::size_t)dd[(std::size_t)i]];
     nt[(std::size_t)i] = strides()[(std::size_t)dd[(std::size_t)i]];
   }
-  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+  auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(), impl_->storage_offset_elems(),
       std::move(ns), std::move(nt),
       scalar_type());
-  return Series(std::move(impl));
+  return ops_internal::SeriesFactoryAccess::wrap(std::move(impl));
 }
 
 Series Series::unsqueeze(std::int64_t dim_) const {
@@ -1355,11 +1358,11 @@ Series Series::unsqueeze(std::int64_t dim_) const {
   else if (dim_ == nd) stride = nt.back();
   else stride = nt[(std::size_t)dim_] * ns[(std::size_t)dim_+1];
   nt.insert(nt.begin() + dim_, stride);
-  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+  auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(), impl_->storage_offset_elems(),
       std::move(ns), std::move(nt),
       scalar_type());
-  return Series(std::move(impl));
+  return ops_internal::SeriesFactoryAccess::wrap(std::move(impl));
 }
 
 Series Series::squeeze() const {
@@ -1375,11 +1378,11 @@ Series Series::squeeze() const {
     nt.push_back(strides()[(std::size_t)i]);
   }
   if (ns.empty()) { ns.push_back(1); nt.push_back(1); }
-  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+  auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(), impl_->storage_offset_elems(),
       std::move(ns), std::move(nt),
       scalar_type());
-  return Series(std::move(impl));
+  return ops_internal::SeriesFactoryAccess::wrap(std::move(impl));
 }
 
 Series Series::squeeze(std::int64_t dim_) const {
@@ -1393,11 +1396,11 @@ Series Series::squeeze(std::int64_t dim_) const {
   ns.erase(ns.begin() + dim_);
   nt.erase(nt.begin() + dim_);
   if (ns.empty()) { ns.push_back(1); nt.push_back(1); }
-  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+  auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(), impl_->storage_offset_elems(),
       std::move(ns), std::move(nt),
       scalar_type());
-  return Series(std::move(impl));
+  return ops_internal::SeriesFactoryAccess::wrap(std::move(impl));
 }
 
 Series Series::flatten(std::int64_t start_dim, std::int64_t end_dim) const {
@@ -1616,13 +1619,13 @@ Series Series::select(std::int64_t dim, std::int64_t index) const {
   sizes_v.erase(sizes_v.begin() + dim);
   strides_v.erase(strides_v.begin() + dim);
 
-  auto impl = pluss::msharp::make_snap<SeriesImpl>(
+  auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(),
       impl_->storage_offset_elems() + offset_add,
       std::move(sizes_v),
       std::move(strides_v),
       scalar_type());
-  return Series(std::move(impl));
+  return ops_internal::SeriesFactoryAccess::wrap(std::move(impl));
 }
 
 static void ensure_writable_(Series& self) {
@@ -1835,7 +1838,8 @@ Series Series::from_storage(const Storage& storage, std::int64_t storage_offset,
   if (!storage.defined()) throw_error("from_storage: undefined storage");
   // Interop / external views must be non-overlapping & dense (debug-enforced).
   check_view_invariants(sizes, strides);
-  return Series(pluss::msharp::make_snap<SeriesImpl>(storage, storage_offset, sizes, strides, dtype));
+  return ops_internal::SeriesFactoryAccess::wrap(
+      pluss::msharp::make_intrusive<SeriesImpl>(storage, storage_offset, sizes, strides, dtype));
 }
 
 static Series bitwise_binary_(const Series& a, const Series& b,

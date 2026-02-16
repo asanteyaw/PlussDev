@@ -1,7 +1,15 @@
 #pragma once
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 
 namespace pluss::codem::ops_internal {
+
+// Internal construction hook: ops_internal implementations can materialize a
+// Series from an implementation pointer, while end users cannot.
+struct SeriesFactoryAccess {
+  static Series wrap(pluss::msharp::intrusive_ptr<SeriesImpl> impl) {
+    return Series(std::move(impl));
+  }
+};
   Series add(const Series& a, const Series& b);
   Series sub(const Series& a, const Series& b);
   Series mul(const Series& a, const Series& b);
@@ -187,4 +195,6 @@ namespace pluss::codem::ops_internal {
 
   // Nonzero (returns indices, int64)
   Series nonzero(const Series& a);
+
+} // namespace pluss::codem::ops_internal
 

@@ -1,4 +1,4 @@
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/StackTrace.h"
 

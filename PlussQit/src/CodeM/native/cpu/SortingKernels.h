@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <utility>
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 
 namespace pluss::codem::native::cpu {
 

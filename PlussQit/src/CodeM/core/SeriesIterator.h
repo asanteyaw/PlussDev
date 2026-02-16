@@ -4,7 +4,7 @@
 #include <vector>
 #include <functional>
 
-#include "CodeM/core/Series.h"
+#include "CodeM/core/SeriesSlim.h"
 
 namespace pluss::codem {
 
