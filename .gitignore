@@ -115,3 +115,6 @@ wheelhouse/
 # ===================================
 .DS_Store
 Thumbs.db
+
+# Local ATen reference checkout (not part of PlussQit source)
+aten/

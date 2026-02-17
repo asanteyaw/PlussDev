@@ -15,7 +15,7 @@ static void unary_apply(const Series& a, const Series& out_, F fn) {
   SeriesIterator it = SeriesIterator::unary(a, out);
   const auto* ap = reinterpret_cast<const T*>(a.raw_data());
   auto* op = reinterpret_cast<T*>(out.raw_data());
-  it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t){
+  it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t, std::int64_t){
     op[lin] = fn(ap[ao]);
   });
 }
@@ -27,7 +27,7 @@ static void unary_half(const Series& a, const Series& out_, F fn,
   SeriesIterator it = SeriesIterator::unary(a, out);
   const auto* ap = reinterpret_cast<const HalfT*>(a.raw_data());
   auto* op = reinterpret_cast<HalfT*>(out.raw_data());
-  it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t){
+  it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t, std::int64_t){
     const float x = to_f(ap[ao]);
     op[lin] = from_f(fn(x));
   });

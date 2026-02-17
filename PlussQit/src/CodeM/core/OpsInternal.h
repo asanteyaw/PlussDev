@@ -1,5 +1,5 @@
 #pragma once
-#include "CodeM/core/SeriesSlim.h"
+#include "CodeM/core/Series.h"
 
 namespace pluss::codem::ops_internal {
 
@@ -13,10 +13,21 @@ struct SeriesFactoryAccess {
   Series add(const Series& a, const Series& b);
   Series sub(const Series& a, const Series& b);
   Series mul(const Series& a, const Series& b);
+    Series addcmul(const Series& a, const Series& b, const Series& c, double value=1.0);
+    Series& addcmul_(Series& a, const Series& b, const Series& c, double value=1.0);
+    Series addcdiv(const Series& a, const Series& b, const Series& c, double value=1.0);
+    Series& addcdiv_(Series& a, const Series& b, const Series& c, double value=1.0);
   Series div(const Series& a, const Series& b);
   Series pow(const Series& a, const Series& b);
+  // Scalar variants
+  Series add(const Series& a, double s);
+  Series sub(const Series& a, double s);
+  Series mul(const Series& a, double s);
+  Series div(const Series& a, double s);
+  Series pow(const Series& a, double s);
 
   Series abs(const Series& a);
+  Series& abs_(Series& a);
   Series neg(const Series& a);
 
   Series eq(const Series& a, const Series& b);
@@ -41,6 +52,15 @@ struct SeriesFactoryAccess {
   Series trunc(const Series& a);
   Series isnan(const Series& a);
   Series isinf(const Series& a);
+  // In-place arithmetic (scalar and elementwise)
+  Series& add_(Series& a, double s);
+  Series& sub_(Series& a, double s);
+  Series& mul_(Series& a, double s);
+  Series& div_(Series& a, double s);
+  Series& add_(Series& a, const Series& b);
+  Series& sub_(Series& a, const Series& b);
+  Series& mul_(Series& a, const Series& b);
+  Series& div_(Series& a, const Series& b);
   // Unary math (CPU-only)
   Series sin(const Series& a);
   Series cos(const Series& a);
@@ -197,4 +217,3 @@ struct SeriesFactoryAccess {
   Series nonzero(const Series& a);
 
 } // namespace pluss::codem::ops_internal
-

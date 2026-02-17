@@ -2,13 +2,17 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/Half.h"
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 
+namespace pluss::codem::native::cpu {
 
 static bool fast_contiguous_unary_ok_(const Series& a, const Series& out) {
+  if (!(a.is_contiguous() && out.is_contiguous() && a.numel() == out.numel())) return false;
+  if (a.sizes().size() != out.sizes().size()) return false;
   return a.is_contiguous() && out.is_contiguous() &&
-         a.numel() == out.numel() && a.sizes() == out.sizes();
+         std::equal(a.sizes().begin(), a.sizes().end(), out.sizes().begin());
 }
 
 template <class T, class Op>
@@ -22,8 +26,6 @@ static void fast_contiguous_unary_(const Series& a, Series& out, Op&& op) {
 #endif
   for (std::int64_t i=0;i<n;++i) optr[i] = op(ap[i]);
 }
-
-namespace pluss::codem::native::cpu {
 
 template <class T, class Fn>
 static void unary_loop(const Series& a, Series& out, Fn&& fn) {
@@ -162,4 +164,4 @@ void isinf(const Series& a, Series& out) {
   it.for_each_index([&](std::int64_t lin, std::int64_t, std::int64_t, std::int64_t){ op[lin] = 0; });
 }
 
-} // namespace
+} // namespace pluss::codem::native::cpu

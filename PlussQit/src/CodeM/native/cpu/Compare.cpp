@@ -31,7 +31,7 @@ static void cmp_half_apply(const Series& a, const Series& b, Series& out, Op&& o
 #define DEFINE_CMP(name, OP) \
   void name(const Series& a, const Series& b, const Series& out_) { \
     auto& out = const_cast<Series&>(out_); \
-    if (out.scalar_type() != ScalarType::Bool) throw_error(#name \": out must be bool\"); \
+    if (out.scalar_type() != ScalarType::Bool) throw_error(#name ": out must be bool"); \
     switch (a.scalar_type()) { \
       case ScalarType::Bool:    cmp_apply<std::uint8_t>(a,b,out,[](auto x,auto y){ return (x!=0) OP (y!=0); }); return; \
       case ScalarType::UInt8:   cmp_apply<std::uint8_t>(a,b,out,[](auto x,auto y){ return x OP y; }); return; \
@@ -46,7 +46,7 @@ static void cmp_half_apply(const Series& a, const Series& b, Series& out, Op&& o
       case ScalarType::Float32: cmp_apply<float>(a, b, out, [](float x,float y){ return x OP y; }); return; \
       case ScalarType::Float16: cmp_half_apply<Float16>(a,b,out,[](float x,float y){ return x OP y; }, float16_to_float); return; \
       case ScalarType::BFloat16: cmp_half_apply<BFloat16>(a,b,out,[](float x,float y){ return x OP y; }, bfloat16_to_float); return; \
-      default: throw_error(#name \": dtype not implemented\"); \
+      default: throw_error(#name ": dtype not implemented"); \
     } \
   }
 

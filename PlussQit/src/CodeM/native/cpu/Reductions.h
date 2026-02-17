@@ -7,4 +7,7 @@ namespace pluss::codem::native::cpu {
   Series amin(const Series& a, std::int64_t dim, bool keepdim);
   Series argmax(const Series& a, std::int64_t dim, bool keepdim);
   Series argmin(const Series& a, std::int64_t dim, bool keepdim);
+  Series sum_all(const Series& a);
+  Series all_all(const Series& a);
+  Series any_all(const Series& a);
 }

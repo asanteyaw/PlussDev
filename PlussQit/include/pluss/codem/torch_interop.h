@@ -10,7 +10,7 @@
 #include <memory>
 #include <vector>
 
-#include "pluss/pluss.h" // pluss::codem::Series, ScalarType
+#include "pluss/codem/codem.h" // pluss::codem::Series, ScalarType
 
 namespace pluss::codem {
 
@@ -115,6 +115,10 @@ namespace detail { inline torch::Tensor to_torch(const Series& s) {
 }
 
 } // namespace detail
+
+inline torch::Tensor to_torch(const Series& s) {
+  return detail::to_torch(s);
+}
 
 } // namespace pluss::codem
 

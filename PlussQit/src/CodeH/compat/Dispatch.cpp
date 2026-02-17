@@ -6,38 +6,7 @@
 
 namespace pluss::codeh::_compat {
 
-using ::pluss::codeh::detail::impl_add_duration;
-using ::pluss::codeh::detail::impl_add_offset;
-using ::pluss::codeh::detail::impl_cmp;
-using ::pluss::codeh::detail::impl_date_range;
-using ::pluss::codeh::detail::impl_diff;
-using ::pluss::codeh::detail::impl_dt_field;
-using ::pluss::codeh::detail::impl_dt_round;
-using ::pluss::codeh::detail::impl_isoformat;
-using ::pluss::codeh::detail::impl_strftime;
-using ::pluss::codeh::detail::impl_sub_duration;
-using ::pluss::codeh::detail::impl_sub_offset;
-using ::pluss::codeh::detail::impl_tz_convert;
-using ::pluss::codeh::detail::impl_tz_localize;
-using ::pluss::codeh::detail::impl_abs_duration;
-using ::pluss::codeh::detail::impl_sign_duration;
-using ::pluss::codeh::detail::impl_clip_duration;
-using ::pluss::codeh::detail::impl_fill_nat_duration;
-using ::pluss::codeh::detail::impl_where_duration;
-using ::pluss::codeh::detail::impl_mul_i64;
-using ::pluss::codeh::detail::impl_div_i64;
-using ::pluss::codeh::detail::impl_floordiv_i64;
-using ::pluss::codeh::detail::impl_mod_i64;
-using ::pluss::codeh::detail::impl_total;
-using ::pluss::codeh::detail::impl_component;
-using ::pluss::codeh::detail::impl_round;
-using ::pluss::codeh::detail::impl_min_duration;
-using ::pluss::codeh::detail::impl_max_duration;
-using ::pluss::codeh::detail::impl_sort_duration;
-using ::pluss::codeh::detail::impl_unique_duration;
-using ::pluss::codeh::detail::impl_argsort_duration;
-using ::pluss::codeh::detail::impl_to_nanos_flat;
-using ::pluss::codeh::detail::impl_duration_to_note;
+namespace deets = ::pluss::codeh::detail;
 
 namespace {
 
@@ -106,136 +75,136 @@ inline const Duration* arg_optional_duration(const Args& args, std::size_t i) {
 } // namespace
 
 Timeline call_timeline(std::string_view op, const Timeline& self, const Args& args) {
-  if (op == "add_duration") return impl_add_duration(self, arg_as<Duration>(args, 0));
-  if (op == "sub_duration") return impl_sub_duration(self, arg_as<Duration>(args, 0));
-  if (op == "add_offset") return impl_add_offset(self, arg_as<CalendarOffset>(args, 0));
-  if (op == "sub_offset") return impl_sub_offset(self, arg_as<CalendarOffset>(args, 0));
-  if (op == "dt_floor") return impl_dt_round(self, "floor", arg_sv(args, 0));
-  if (op == "dt_ceil") return impl_dt_round(self, "ceil", arg_sv(args, 0));
-  if (op == "dt_round") return impl_dt_round(self, "round", arg_sv(args, 0));
+  if (op == "add_duration") return deets::impl_add_duration(self, arg_as<Duration>(args, 0));
+  if (op == "sub_duration") return deets::impl_sub_duration(self, arg_as<Duration>(args, 0));
+  if (op == "add_offset") return deets::impl_add_offset(self, arg_as<CalendarOffset>(args, 0));
+  if (op == "sub_offset") return deets::impl_sub_offset(self, arg_as<CalendarOffset>(args, 0));
+  if (op == "dt_floor") return deets::impl_dt_round(self, "floor", arg_sv(args, 0));
+  if (op == "dt_ceil") return deets::impl_dt_round(self, "ceil", arg_sv(args, 0));
+  if (op == "dt_round") return deets::impl_dt_round(self, "round", arg_sv(args, 0));
   if (op == "date_range") {
     const auto& end = arg_as<Timeline>(args, 0);
     const auto freq = arg_sv(args, 1);
     const auto step = arg_i64(args, 2);
-    return impl_date_range(self, end, freq, step);
+    return deets::impl_date_range(self, end, freq, step);
   }
-  if (op == "tz_convert") return impl_tz_convert(self, arg_sv(args, 0));
-  if (op == "tz_localize") return impl_tz_localize(self, arg_sv(args, 0), (int)arg_i64(args, 1), arg_sv(args, 2));
-  if (op == "to_utc") return impl_tz_convert(self, "UTC");
+  if (op == "tz_convert") return deets::impl_tz_convert(self, arg_sv(args, 0));
+  if (op == "tz_localize") return deets::impl_tz_localize(self, arg_sv(args, 0), (int)arg_i64(args, 1), arg_sv(args, 2));
+  if (op == "to_utc") return deets::impl_tz_convert(self, "UTC");
 
   // Rounding/normalization (Timeline-level convenience)
-  if (op == "floor") return impl_dt_round(self, "floor", arg_sv(args, 0));
-  if (op == "ceil") return impl_dt_round(self, "ceil", arg_sv(args, 0));
-  if (op == "round") return impl_dt_round(self, "round", arg_sv(args, 0));
-  if (op == "normalize") return impl_dt_round(self, "floor", "D");
-  if (op == "date") return impl_dt_round(self, "floor", "D");
-  if (op == "time") return ::pluss::codeh::detail::impl_time_of_day(self);
+  if (op == "floor") return deets::impl_dt_round(self, "floor", arg_sv(args, 0));
+  if (op == "ceil") return deets::impl_dt_round(self, "ceil", arg_sv(args, 0));
+  if (op == "round") return deets::impl_dt_round(self, "round", arg_sv(args, 0));
+  if (op == "normalize") return deets::impl_dt_round(self, "floor", "D");
+  if (op == "date") return deets::impl_dt_round(self, "floor", "D");
+  if (op == "time") return deets::impl_time_of_day(self);
 
-  if (op == "min") return ::pluss::codeh::detail::impl_min(self);
-  if (op == "max") return ::pluss::codeh::detail::impl_max(self);
-  if (op == "sort") return ::pluss::codeh::detail::impl_sort(self);
-  if (op == "unique") return ::pluss::codeh::detail::impl_unique(self);
-  if (op == "drop_duplicates") return ::pluss::codeh::detail::impl_unique(self);
+  if (op == "min") return deets::impl_min(self);
+  if (op == "max") return deets::impl_max(self);
+  if (op == "sort") return deets::impl_sort(self);
+  if (op == "unique") return deets::impl_unique(self);
+  if (op == "drop_duplicates") return deets::impl_unique(self);
 
-  if (op == "fill_nat") return ::pluss::codeh::detail::impl_fill_nat(self, arg_as<Timeline>(args, 0));
-  if (op == "where") return ::pluss::codeh::detail::impl_where(self, arg_as<pluss::codem::Series>(args, 0), arg_as<Timeline>(args, 1));
+  if (op == "fill_nat") return deets::impl_fill_nat(self, arg_as<Timeline>(args, 0));
+  if (op == "where") return deets::impl_where(self, arg_as<pluss::codem::Series>(args, 0), arg_as<Timeline>(args, 1));
 
-  if (op == "add_nanos") return ::pluss::codeh::detail::impl_add_nanos(self, arg_i64(args, 0));
+  if (op == "add_nanos") return deets::impl_add_nanos(self, arg_i64(args, 0));
   CODEM_FAIL("CodeH invoke: unknown Timeline op");
 }
 
 Duration call_duration(std::string_view op, const Duration& self, const Args& args) {
-  if (op == "add") return ::pluss::codeh::detail::impl_add_duration(self, arg_as<Duration>(args, 0));
-  if (op == "sub") return ::pluss::codeh::detail::impl_sub_duration(self, arg_as<Duration>(args, 0));
-  if (op == "neg") return ::pluss::codeh::detail::impl_neg_duration(self);
+  if (op == "add") return deets::impl_add_duration(self, arg_as<Duration>(args, 0));
+  if (op == "sub") return deets::impl_sub_duration(self, arg_as<Duration>(args, 0));
+  if (op == "neg") return deets::impl_neg_duration(self);
   if (op == "range") {
     const auto& end = arg_as<Duration>(args, 0);
     const auto& step = arg_as<Duration>(args, 1);
-    return ::pluss::codeh::detail::impl_range(self, end, step);
+    return deets::impl_range(self, end, step);
   }
-  if (op == "abs") return impl_abs_duration(self);
-  if (op == "sign") return impl_sign_duration(self);
-  if (op == "clip") return impl_clip_duration(self, arg_as<Duration>(args, 0), arg_as<Duration>(args, 1));
-  if (op == "fill_nat") return impl_fill_nat_duration(self, arg_as<Duration>(args, 0));
-  if (op == "where") return impl_where_duration(self, arg_as<pluss::codem::Series>(args, 0), arg_as<Duration>(args, 1));
-  if (op == "mul_i64") return impl_mul_i64(self, arg_i64(args, 0));
-  if (op == "div_i64") return impl_div_i64(self, arg_i64(args, 0));
-  if (op == "floordiv_i64") return impl_floordiv_i64(self, arg_i64(args, 0));
-  if (op == "mod_i64") return impl_mod_i64(self, arg_i64(args, 0));
-  if (op == "floor") return impl_round(self, "floor", arg_sv(args, 0));
-  if (op == "ceil") return impl_round(self, "ceil", arg_sv(args, 0));
-  if (op == "round") return impl_round(self, "round", arg_sv(args, 0));
-  if (op == "min") return impl_min_duration(self);
-  if (op == "max") return impl_max_duration(self);
-  if (op == "sort") return impl_sort_duration(self);
-  if (op == "unique") return impl_unique_duration(self);
+  if (op == "abs") return deets::impl_abs_duration(self);
+  if (op == "sign") return deets::impl_sign_duration(self);
+  if (op == "clip") return deets::impl_clip_duration(self, arg_as<Duration>(args, 0), arg_as<Duration>(args, 1));
+  if (op == "fill_nat") return deets::impl_fill_nat_duration(self, arg_as<Duration>(args, 0));
+  if (op == "where") return deets::impl_where_duration(self, arg_as<pluss::codem::Series>(args, 0), arg_as<Duration>(args, 1));
+  if (op == "mul_i64") return deets::impl_mul_i64(self, arg_i64(args, 0));
+  if (op == "div_i64") return deets::impl_div_i64(self, arg_i64(args, 0));
+  if (op == "floordiv_i64") return deets::impl_floordiv_i64(self, arg_i64(args, 0));
+  if (op == "mod_i64") return deets::impl_mod_i64(self, arg_i64(args, 0));
+  if (op == "floor") return deets::impl_round(self, "floor", arg_sv(args, 0));
+  if (op == "ceil") return deets::impl_round(self, "ceil", arg_sv(args, 0));
+  if (op == "round") return deets::impl_round(self, "round", arg_sv(args, 0));
+  if (op == "min") return deets::impl_min_duration(self);
+  if (op == "max") return deets::impl_max_duration(self);
+  if (op == "sort") return deets::impl_sort_duration(self);
+  if (op == "unique") return deets::impl_unique_duration(self);
   CODEM_FAIL("CodeH invoke: unknown Duration op");
 }
 
 pluss::codem::Series call_series_duration(std::string_view op, const Duration& self, const Args& args) {
   if (op == "eq" || op == "ne" || op == "lt" || op == "le" || op == "gt" || op == "ge") {
-    return ::pluss::codeh::detail::impl_cmp_duration(self, arg_as<Duration>(args, 0), op);
+    return deets::impl_cmp_duration(self, arg_as<Duration>(args, 0), op);
   }
-  if (op == "isnat") return ::pluss::codeh::detail::impl_isnat_duration(self);
-  if (op == "isvalid") return ::pluss::codeh::detail::impl_isvalid_duration(self);
-  if (op == "total") return impl_total(self, arg_sv(args, 0));
-  if (op == "component") return impl_component(self, arg_sv(args, 0));
-  if (op == "argsort") return impl_argsort_duration(self);
+  if (op == "isnat") return deets::impl_isnat_duration(self);
+  if (op == "isvalid") return deets::impl_isvalid_duration(self);
+  if (op == "total") return deets::impl_total(self, arg_sv(args, 0));
+  if (op == "component") return deets::impl_component(self, arg_sv(args, 0));
+  if (op == "argsort") return deets::impl_argsort_duration(self);
   CODEM_FAIL("CodeH invoke: unknown Duration->Series op");
 }
 
 pluss::coden::Note call_note_duration(std::string_view op, const Duration& self, const Args& args) {
-  if (op == "to_note") return impl_duration_to_note(self, "full");
-  if (op == "to_note_compact") return impl_duration_to_note(self, "compact");
-  if (op == "to_note_iso") return impl_duration_to_note(self, "compact");
+  if (op == "to_note") return deets::impl_duration_to_note(self, "full");
+  if (op == "to_note_compact") return deets::impl_duration_to_note(self, "compact");
+  if (op == "to_note_iso") return deets::impl_duration_to_note(self, "compact");
   (void)args;
   CODEM_FAIL("CodeH invoke: unknown Duration->Note op");
 }
 
 std::vector<std::int64_t> call_i64vec_duration(std::string_view op, const Duration& self, const Args&) {
-  if (op == "to_nanos_flat") return impl_to_nanos_flat(self);
+  if (op == "to_nanos_flat") return deets::impl_to_nanos_flat(self);
   CODEM_FAIL("CodeH invoke: unknown Duration->vector<int64> op");
 }
 
 Duration call_duration_from_timeline(std::string_view op, const Timeline& self, const Args& args) {
-  if (op == "diff") return impl_diff(self, arg_as<Timeline>(args, 0));
+  if (op == "diff") return deets::impl_diff(self, arg_as<Timeline>(args, 0));
   CODEM_FAIL("CodeH invoke: unknown Timeline->Duration op");
 }
 
 pluss::codem::Series call_series_timeline(std::string_view op, const Timeline& self, const Args& args) {
   if (op == "eq" || op == "ne" || op == "lt" || op == "le" || op == "gt" || op == "ge") {
-    return impl_cmp(self, arg_as<Timeline>(args, 0), op);
+    return deets::impl_cmp(self, arg_as<Timeline>(args, 0), op);
   }
 
   // Generic dt-field extraction: op names are "dt_<field>".
   if (op.size() > 3 && op.substr(0,3) == "dt_") {
-    return impl_dt_field(self, op.substr(3));
+    return deets::impl_dt_field(self, op.substr(3));
   }
 
   // Generic calendar predicates: op names are "is_<predicate>".
   if (op.size() > 3 && op.substr(0,3) == "is_") {
-    return ::pluss::codeh::detail::impl_dt_predicate(self, op);
+    return deets::impl_dt_predicate(self, op);
   }
 
-  if (op == "isnat") return ::pluss::codeh::detail::impl_isnat(self);
-  if (op == "isvalid") return ::pluss::codeh::detail::impl_isvalid(self);
-  if (op == "argsort") return ::pluss::codeh::detail::impl_argsort(self);
+  if (op == "isnat") return deets::impl_isnat(self);
+  if (op == "isvalid") return deets::impl_isvalid(self);
+  if (op == "argsort") return deets::impl_argsort(self);
 
-  if (op == "searchsorted_left") return ::pluss::codeh::detail::impl_searchsorted(self, arg_as<Timeline>(args, 0), true);
-  if (op == "searchsorted_right") return ::pluss::codeh::detail::impl_searchsorted(self, arg_as<Timeline>(args, 0), false);
+  if (op == "searchsorted_left") return deets::impl_searchsorted(self, arg_as<Timeline>(args, 0), true);
+  if (op == "searchsorted_right") return deets::impl_searchsorted(self, arg_as<Timeline>(args, 0), false);
   CODEM_FAIL("CodeH invoke: unknown Timeline->Series op");
 }
 
 pluss::coden::Note call_note_timeline(std::string_view op, const Timeline& self, const Args& args) {
-  if (op == "strftime") return impl_strftime(self, arg_sv(args, 0));
-  if (op == "to_note_iso") return impl_strftime(self, "%Y-%m-%dT%H:%M:%S.%f%z");
-  if (op == "weekday_name") return ::pluss::codeh::detail::impl_weekday_name(self);
-  if (op == "month_name") return ::pluss::codeh::detail::impl_month_name(self);
+  if (op == "strftime") return deets::impl_strftime(self, arg_sv(args, 0));
+  if (op == "to_note_iso") return deets::impl_strftime(self, "%Y-%m-%dT%H:%M:%S.%f%z");
+  if (op == "weekday_name") return deets::impl_weekday_name(self);
+  if (op == "month_name") return deets::impl_month_name(self);
   CODEM_FAIL("CodeH invoke: unknown Timeline->Note op");
 }
 
 std::string call_string_timeline(std::string_view op, const Timeline& self, const Args&) {
-  if (op == "isoformat") return impl_isoformat(self);
+  if (op == "isoformat") return deets::impl_isoformat(self);
   CODEM_FAIL("CodeH invoke: unknown Timeline->string op");
 }
 
@@ -250,7 +219,7 @@ std::vector<std::int64_t> call_i64vec_timeline(std::string_view op, const Timeli
 }
 
 TimeIndex call_timeindex_from_timeline(std::string_view op, const Timeline& self, const Args& args) {
-  if (op == "from_timeline") {
+  if (op == "make_timeindex") {
     const bool require_sorted = arg_bool(args, 0);
     return ::pluss::codeh::_compat::detail::Access::from_timeline(self, require_sorted);
   }

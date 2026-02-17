@@ -18,6 +18,22 @@ namespace pluss::codem { class Series; class Scalar; }
 
 namespace pluss::codem::_compat {
 
+// Forward declarations for template dispatch helpers. The full template
+// definitions are provided later when the translation unit includes this
+// header a second time with `PLUSS_CODEM_SERIES_COMPLETE` defined (see
+// the bottom of this header). Declaring them here allows the generated
+// Series method wrappers to call `_compat::invoke`/`invoke_` while the
+// body of `pluss::codem::Series` is still being parsed.
+template <class... A>
+Series invoke(std::string_view op, const Series& self, A&&... a);
+
+template <class... A>
+Series& invoke_(std::string_view op, Series& self, A&&... a);
+
+template <class... A>
+Series& invoke_(std::string_view op, const Series& self, A&&... a);
+
+
 namespace detail {
 
 // Convert SymInt -> int64 without requiring a conversion operator.

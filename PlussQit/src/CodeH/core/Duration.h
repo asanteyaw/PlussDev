@@ -104,6 +104,7 @@ private:
 
   friend class Timeline;
   friend class TimeIndex;
+  friend Duration detail::impl_diff(const Timeline&, const Timeline&);
   friend Duration pluss::codeh::ops_internal::duration_from_nanos(std::span<const std::int64_t>,
                                                                  std::span<const std::int64_t>);
   friend Duration detail::impl_add_duration(const Duration&, const Duration&);

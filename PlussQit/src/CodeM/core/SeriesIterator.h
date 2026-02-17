@@ -40,7 +40,10 @@ public:
                                                   std::span<const std::int64_t> b);
 
 private:
-  Series m_{}, a_{}, b_{}, out_{};
+  Series m_ = Series::undefined();
+  Series a_ = Series::undefined();
+  Series b_ = Series::undefined();
+  Series out_ = Series::undefined();
   std::vector<std::int64_t> shape_;
   std::vector<std::int64_t> m_strides_, a_strides_, b_strides_, o_strides_; // in elements
 

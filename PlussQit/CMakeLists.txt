@@ -16,6 +16,7 @@ option(PLUSSQIT_BUILD_TESTS "Build tests" ON)
 option(PLUSSQIT_USE_FMT "Use fmt for messages" ON)
 option(PLUSSQIT_FETCH_DEPS "Allow CMake to FetchContent dependencies (fmt/Catch2)" OFF)
 option(PLUSSQIT_BUILD_CODEM "Build CodeM (Series/Tensor)" OFF)
+option(PLUSSQIT_BUILD_CODEM_SMOKE_TESTS "Build ad-hoc CodeM smoke executables" OFF)
 option(PLUSSQIT_CODEN_ENABLE_SERIES_INTEROP "Enable CodeN helpers that return CodeM::Series" OFF)
 
 include(FetchContent)
@@ -128,6 +129,8 @@ add_custom_command(
 # source layout is intentionally regular.
 file(GLOB_RECURSE PLUSSQIT_CODEM_CORE_CPP CONFIGURE_DEPENDS
   "src/CodeM/core/*.cpp"
+  "src/CodeM/core/ops_impl/*.cpp"
+  "src/CodeM/compat/*.cpp"
   "src/CodeM/native/cpu/*.cpp"
 )
 list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/SeriesTorchAlignedStubs.cpp") # optional stub file remains explicit below
@@ -177,6 +180,13 @@ if (PLUSSQIT_USE_FMT)
   target_compile_definitions(plussqit_codem PUBLIC PLUSSQIT_HAS_FMT=1)
 else()
   target_compile_definitions(plussqit_codem PUBLIC PLUSSQIT_HAS_FMT=0)
+endif()
+
+if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_CODEM_SMOKE_TESTS)
+  add_executable(plussqit_addcmul_test src/CodeM/tools/addcmul_test.cpp)
+  target_link_libraries(plussqit_addcmul_test PRIVATE plussqit_codem)
+  target_include_directories(plussqit_addcmul_test PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
+  add_test(NAME addcmul_test COMMAND plussqit_addcmul_test)
 endif()
 
 # Close optional CodeM block before defining CodeN.
@@ -234,6 +244,16 @@ endif()
 
 if (PLUSSQIT_BUILD_TESTS)
   enable_testing()
+
+  file(GLOB CODEM_TEST_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/CodeM/*.cpp"
+  )
+  list(FILTER CODEM_TEST_SOURCES EXCLUDE REGEX ".*/test_codem_nocatch_smoke\\.cpp$")
+
+  file(GLOB CODEN_TEST_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/CodeN/*.cpp"
+  )
+
   find_package(Catch2 3 QUIET)
   if (NOT Catch2_FOUND AND PLUSSQIT_FETCH_DEPS)
     FetchContent_Declare(
@@ -245,21 +265,22 @@ if (PLUSSQIT_BUILD_TESTS)
   endif()
 
   if (NOT Catch2_FOUND)
-    message(WARNING "Catch2 v3 not found; disabling tests. Install Catch2 or set PLUSSQIT_FETCH_DEPS=ON to fetch it.")
+    message(STATUS "Catch2 v3 not found; building no-catch CodeM smoke tests instead.")
+    if (PLUSSQIT_BUILD_CODEM)
+      add_executable(plussqit_codem_nocatch_tests
+        tests/CodeM/test_codem_nocatch_smoke.cpp
+      )
+      target_link_libraries(plussqit_codem_nocatch_tests PRIVATE PlussQit::CodeM)
+      target_compile_features(plussqit_codem_nocatch_tests PRIVATE cxx_std_20)
+      add_test(NAME codem_nocatch_smoke COMMAND plussqit_codem_nocatch_tests)
+    endif()
   else()
-    add_executable(plussqit_tests
-      tests/test_coden_patch03_basic.cpp
-      tests/test_codem_core.cpp
-      tests/test_codem_broadcast.cpp
-    )
+    add_executable(plussqit_tests ${CODEM_TEST_SOURCES})
     target_link_libraries(plussqit_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_tests PRIVATE cxx_std_20)
 
     # CodeN-only tests (kept separate so CodeN can evolve even when CodeM is mid-refactor).
-    add_executable(plussqit_coden_tests
-      tests/test_coden_patch03_basic.cpp
-      tests/test_coden_patch06_note_structure.cpp
-    )
+    add_executable(plussqit_coden_tests ${CODEN_TEST_SOURCES})
     target_link_libraries(plussqit_coden_tests PRIVATE PlussQit::CodeN Catch2::Catch2WithMain)
     target_compile_features(plussqit_coden_tests PRIVATE cxx_std_20)
 

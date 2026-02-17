@@ -134,11 +134,8 @@ Series scatter(const Series& input, std::int64_t dim, const Series& index, const
   return out;
 }
 
-} // namespace pluss::codem::native::cpu
-
-
 void scatter_(Series& input, std::int64_t dim, const Series& index, const Series& src) {
-  Series out = scatter(input, dim, index, src);
-  input.copy_(out);
+  input = scatter(input, dim, index, src);
 }
 
+} // namespace pluss::codem::native::cpu

@@ -35,6 +35,38 @@ void SeriesIterator::for_each_index_ternary(
   // Simple recursive-less iteration: maintain index vector
   std::vector<std::int64_t> idx((size_t)nd, 0);
   const std::int64_t n = numel();
+  // Parallel threshold and body similar to for_each_index
+  constexpr std::int64_t grain = 1 << 14;
+  auto linear_to_index = [&](std::int64_t lin, std::vector<std::int64_t>& idx_out) {
+    for (std::int64_t i = nd - 1; i >= 0; --i) {
+      const auto s = shape_[(size_t)i];
+      idx_out[(size_t)i] = (s == 0) ? 0 : (lin % s);
+      lin = (s == 0) ? 0 : (lin / s);
+    }
+  };
+
+  auto offset = [&](const std::vector<std::int64_t>& strides, const std::vector<std::int64_t>& idx_in) -> std::int64_t {
+    std::int64_t off = 0;
+    for (std::size_t i = 0; i < idx_in.size(); ++i) off += idx_in[i] * strides[i];
+    return off;
+  };
+
+  if (n >= (1 << 18)) {
+    auto body = [&](std::int64_t b0, std::int64_t b1){
+      std::vector<std::int64_t> local_idx((size_t)nd);
+      for (std::int64_t lin = b0; lin < b1; ++lin) {
+        linear_to_index(lin, local_idx);
+        const std::int64_t mo = offset(m_strides_, local_idx);
+        const std::int64_t ao = offset(a_strides_, local_idx);
+        const std::int64_t bo = offset(b_strides_, local_idx);
+        const std::int64_t oo = offset(o_strides_, local_idx);
+        fn(lin, mo, ao, bo, oo);
+      }
+    };
+    pluss::msharp::parallel_for(0, n, grain, body);
+    return;
+  }
+
   for (std::int64_t lin = 0; lin < n; ++lin) {
     std::int64_t mo = 0, ao = 0, bo = 0, oo = 0;
     for (std::int64_t d = 0; d < nd; ++d) {

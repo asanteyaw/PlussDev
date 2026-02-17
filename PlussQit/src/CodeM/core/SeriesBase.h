@@ -8,6 +8,12 @@
 
 namespace pluss::codem {
 
+enum class Platform : std::uint8_t {
+  CPU = 0,
+  CUDA = 1,
+  MPS = 2
+};
+
 // Handle type (Torch-like TensorBase): cheap copy, shared underlying impl.
 class CODEM_API SeriesBase {
 public:
@@ -35,7 +41,9 @@ public:
   std::span<const std::int64_t> strides() const;
   std::int64_t dim() const;
   std::int64_t numel() const;
+  std::int64_t itemsize() const { return static_cast<std::int64_t>(dtype().itemsize); }
   bool is_contiguous() const;
+  Platform platform() const noexcept { return Platform::CPU; } // CPU-only for now.
 
   // Raw storage access (byte-addressable).
   std::byte* raw_data();

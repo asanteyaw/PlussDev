@@ -131,7 +131,7 @@ static void scatter_reduce_impl_contig(Series& a, std::int64_t dim, const Series
 //   - if include_self: keep existing self values
 //   - else: fill identity for reduce
   if (has_initial) {
-    Series self_backup;
+    Series self_backup = Series::undefined();
     if (include_self) self_backup = a.clone();
     T* ap0 = reinterpret_cast<T*>(const_cast<std::byte*>(a.raw_data()));
     const T init = (T)initial;

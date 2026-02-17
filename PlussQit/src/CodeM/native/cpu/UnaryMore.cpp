@@ -44,7 +44,6 @@ DISPATCH_FLOAT_ONLY(round, std::round(x), std::round(x))
 DISPATCH_FLOAT_ONLY(trunc, std::trunc(x), std::trunc(x))
 
 DISPATCH_FLOAT_ONLY(reciprocal, (1.0 / x), (1.0f / x))
-DISPATCH_FLOAT_ONLY(sigmoid, (1.0 / (1.0 + std::exp(-x))), (1.0f / (1.0f + std::exp(-x))))
 
 DISPATCH_FLOAT_ONLY(log1p, std::log1p(x), std::log1p(x))
 DISPATCH_FLOAT_ONLY(expm1, std::expm1(x), std::expm1(x))
@@ -55,7 +54,6 @@ DISPATCH_FLOAT_ONLY(asinh, std::asinh(x), std::asinh(x))
 DISPATCH_FLOAT_ONLY(acosh, std::acosh(x), std::acosh(x))
 DISPATCH_FLOAT_ONLY(atanh, std::atanh(x), std::atanh(x))
 
-DISPATCH_FLOAT_ONLY(relu, (x > 0 ? x : 0.0), (x > 0 ? x : 0.0f))
 
 #undef DISPATCH_FLOAT_ONLY
 

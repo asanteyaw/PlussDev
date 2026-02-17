@@ -151,6 +151,7 @@ inline Series from_blob(
   });
   Storage stor(sp, nbytes, 1);
   return Series::from_storage(stor,
+      /*storage_offset=*/0,
       std::vector<std::int64_t>(sizes.begin(), sizes.end()),
       std::vector<std::int64_t>(strides.begin(), strides.end()),
       dtype);

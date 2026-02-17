@@ -1,4 +1,5 @@
 #include "CodeM/core/Errors.h"
+#include "CodeM/core/Half.h"
 #include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/native/cpu/Reductions.h"
@@ -7,6 +8,9 @@
 #include <cstring>
 
 namespace pluss::codem::native::cpu {
+
+// Implemented in ReduceAndIndex.cpp.
+Series sum(const Series& a, std::int64_t dim, bool keepdim);
 
 Series mean(const Series& a, std::int64_t dim, bool keepdim) {
   auto s = sum(a, dim, keepdim);

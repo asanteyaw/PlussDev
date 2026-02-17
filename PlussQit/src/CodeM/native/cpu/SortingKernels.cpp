@@ -138,6 +138,18 @@ std::pair<Series, Series> sort(const Series& a, std::int64_t dim, bool descendin
       sort_rows((const std::uint8_t*)x.raw_data(), (std::uint8_t*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
                 rows, cols, descending, stable);
       break;
+    case ScalarType::UInt16:
+      sort_rows((const std::uint16_t*)x.raw_data(), (std::uint16_t*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
+                rows, cols, descending, stable);
+      break;
+    case ScalarType::UInt32:
+      sort_rows((const std::uint32_t*)x.raw_data(), (std::uint32_t*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
+                rows, cols, descending, stable);
+      break;
+    case ScalarType::UInt64:
+      sort_rows((const std::uint64_t*)x.raw_data(), (std::uint64_t*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
+                rows, cols, descending, stable);
+      break;
     case ScalarType::Bool:
       sort_rows((const bool*)x.raw_data(), (bool*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
                 rows, cols, descending, stable);
@@ -168,7 +180,7 @@ std::pair<Series, Series> topk(const Series& a, std::int64_t k, std::int64_t dim
   std::int64_t rows = 1;
   for (std::size_t i=0;i+1<x.sizes().size();++i) rows *= x.sizes()[i];
 
-  auto out_sizes = x.sizes();
+  auto out_sizes = std::vector<std::int64_t>(x.sizes().begin(), x.sizes().end());
   out_sizes.back() = k;
   Series vals = Series::empty(out_sizes, x.scalar_type());
   Series idx = Series::empty(out_sizes, ScalarType::Int64);
@@ -188,6 +200,34 @@ std::pair<Series, Series> topk(const Series& a, std::int64_t k, std::int64_t dim
       break;
     case ScalarType::Int32:
       topk_rows((const std::int32_t*)x.raw_data(), (std::int32_t*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
+                rows, cols, k, largest, sorted_);
+      break;
+    case ScalarType::Int16:
+      topk_rows((const std::int16_t*)x.raw_data(), (std::int16_t*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
+                rows, cols, k, largest, sorted_);
+      break;
+    case ScalarType::Int8:
+      topk_rows((const std::int8_t*)x.raw_data(), (std::int8_t*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
+                rows, cols, k, largest, sorted_);
+      break;
+    case ScalarType::UInt8:
+      topk_rows((const std::uint8_t*)x.raw_data(), (std::uint8_t*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
+                rows, cols, k, largest, sorted_);
+      break;
+    case ScalarType::UInt16:
+      topk_rows((const std::uint16_t*)x.raw_data(), (std::uint16_t*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
+                rows, cols, k, largest, sorted_);
+      break;
+    case ScalarType::UInt32:
+      topk_rows((const std::uint32_t*)x.raw_data(), (std::uint32_t*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
+                rows, cols, k, largest, sorted_);
+      break;
+    case ScalarType::UInt64:
+      topk_rows((const std::uint64_t*)x.raw_data(), (std::uint64_t*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
+                rows, cols, k, largest, sorted_);
+      break;
+    case ScalarType::Bool:
+      topk_rows((const bool*)x.raw_data(), (bool*)vals.raw_data(), (std::int64_t*)idx.raw_data(),
                 rows, cols, k, largest, sorted_);
       break;
     default:

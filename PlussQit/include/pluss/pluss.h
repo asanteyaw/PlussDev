@@ -1,29 +1,13 @@
 #pragma once
 
-#include "pluss/export.h"
-#include "pluss/config.h"
-#include "pluss/codem/codem.h"
-#include "CodeM/core/Config.h"
-
-#include <cstdint>
-#include <initializer_list>
-#include <span>
-#include <type_traits>
-#include <utility>
-#include <vector>
-
-#include "pluss/detail/factory_deduction.h"
-
-namespace pluss {
-  using Series = pluss::codem::Series;
-  using Config = pluss::codem::Config;
-  using ScalarType = pluss::codem::ScalarType;
-  using BlobDeleter = pluss::codem::BlobDeleter;
-
-  // ---- Config builder helpers ----
-  using pluss::config; // from pluss/config.h
-  namespace detail {
-    using pluss::detail::make_config;
-  }
-
-} // namespace pluss
+// Primary user-facing umbrella include.
+//
+// For CodeM (Series/Tensor-style API), this exports:
+// - pluss::Series
+// - pluss::value(...)
+// - pluss::make_series(...)
+// - pluss::zeros/ones/full/rand/... factories
+// - pluss::from_torch(...) / pluss::to_torch(...) (when PLUSS_ENABLE_TORCH=ON)
+//
+// Keep this include thin by delegating to module-level umbrellas.
+#include "pluss/codem/series_factory.h"

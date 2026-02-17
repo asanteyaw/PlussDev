@@ -4,16 +4,22 @@
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/SeriesIterator.h"
+#include "CodeM/native/cpu/TernaryApply.h"
 
 #include <cmath>
 #include <cstdint>
 #include <algorithm>
 
+namespace pluss::codem::native::cpu {
 
 static bool fast_contiguous_binary_ok_(const Series& a, const Series& b, const Series& out) {
+  const bool same_ab = a.sizes().size() == b.sizes().size() &&
+                       std::equal(a.sizes().begin(), a.sizes().end(), b.sizes().begin());
+  const bool same_ao = a.sizes().size() == out.sizes().size() &&
+                       std::equal(a.sizes().begin(), a.sizes().end(), out.sizes().begin());
   return a.is_contiguous() && b.is_contiguous() && out.is_contiguous() &&
          a.numel() == b.numel() && a.numel() == out.numel() &&
-         a.sizes() == b.sizes() && a.sizes() == out.sizes();
+         same_ab && same_ao;
 }
 
 template <class T, class Op>
@@ -31,9 +37,13 @@ static void fast_contiguous_binary_(const Series& a, const Series& b, Series& ou
 
 
 static bool is_contig_same_shape(const Series& a, const Series& b, const Series& out) {
+  const bool same_ab = a.sizes().size() == b.sizes().size() &&
+                       std::equal(a.sizes().begin(), a.sizes().end(), b.sizes().begin());
+  const bool same_ao = a.sizes().size() == out.sizes().size() &&
+                       std::equal(a.sizes().begin(), a.sizes().end(), out.sizes().begin());
   return a.is_contiguous() && b.is_contiguous() && out.is_contiguous() &&
          a.numel() == b.numel() && a.numel() == out.numel() &&
-         a.sizes() == b.sizes() && a.sizes() == out.sizes();
+         same_ab && same_ao;
 }
 
 static bool fast_path_add(const Series& a, const Series& b, const Series& out) {
@@ -93,8 +103,6 @@ static bool fast_path_mul(const Series& a, const Series& b, const Series& out) {
   }
   return false;
 }
-namespace pluss::codem::native::cpu {
-
 template <class T, class Op>
 static void binary_apply(const Series& a, const Series& b, Series& out, Op&& op) {
   if (fast_contiguous_binary_ok_(a,b,out)) { fast_contiguous_binary_<T>(a,b,out,op); return; }
@@ -106,6 +114,8 @@ static void binary_apply(const Series& a, const Series& b, Series& out, Op&& op)
     optr[lin] = op(ap[ao], bp[bo]);
   });
 }
+
+
 
 template <class T, class Op>
 static void unary_apply(const Series& a, Series& out, Op&& op) {
@@ -146,10 +156,10 @@ static void unary_half_apply(const Series& a, Series& out, Op&& op, FromF32&& fr
   void name(const Series& a, const Series& b, const Series& out_) { \
     auto& out = const_cast<Series&>(out_); \
     switch (a.scalar_type()) { \
-      case ScalarType::Float64: binary_apply<double>(a,b,out,[](double x,double y){ return (double)(OP); }); return; \
-      case ScalarType::Float32: binary_apply<float>(a,b,out,[](float x,float y){ return (float)(OP); }); return; \
-      case ScalarType::Float16: binary_half_apply<Float16>(a,b,out,[](float x,float y){ return (float)(OP); }, float16_from_float, float16_to_float); return; \
-      case ScalarType::BFloat16: binary_half_apply<BFloat16>(a,b,out,[](float x,float y){ return (float)(OP); }, bfloat16_from_float, bfloat16_to_float); return; \
+      case ScalarType::Float64: binary_apply<double>(a,b,out,[](double x,double y){ return (double)(x OP y); }); return; \
+      case ScalarType::Float32: binary_apply<float>(a,b,out,[](float x,float y){ return (float)(x OP y); }); return; \
+      case ScalarType::Float16: binary_half_apply<Float16>(a,b,out,[](float x,float y){ return (float)(x OP y); }, float16_from_float, float16_to_float); return; \
+      case ScalarType::BFloat16: binary_half_apply<BFloat16>(a,b,out,[](float x,float y){ return (float)(x OP y); }, bfloat16_from_float, bfloat16_to_float); return; \
       case ScalarType::Complex64: binary_apply<Complex64>(a,b,out,[](Complex64 x, Complex64 y){ return x OP y; }); return; \
       case ScalarType::Complex128: binary_apply<Complex128>(a,b,out,[](Complex128 x, Complex128 y){ return x OP y; }); return; \
       case ScalarType::Int8: binary_apply<std::int8_t>(a,b,out,[](auto x,auto y){ return (std::int8_t)(x OP y); }); return; \
@@ -160,7 +170,7 @@ static void unary_half_apply(const Series& a, Series& out, Op&& op, FromF32&& fr
       case ScalarType::UInt32: binary_apply<std::uint32_t>(a,b,out,[](auto x,auto y){ return (std::uint32_t)(x OP y); }); return; \
       case ScalarType::Int64: binary_apply<std::int64_t>(a,b,out,[](auto x,auto y){ return (std::int64_t)(x OP y); }); return; \
       case ScalarType::UInt64: binary_apply<std::uint64_t>(a,b,out,[](auto x,auto y){ return (std::uint64_t)(x OP y); }); return; \
-      default: throw_error(#name \": dtype not implemented\"); \
+      default: throw_error(#name ": dtype not implemented"); \
     } \
   }
 
@@ -170,6 +180,30 @@ DISPATCH_BINARY_INTS(mul, *)
 DISPATCH_BINARY_INTS(div, /)
 
 #undef DISPATCH_BINARY_INTS
+
+void neg(const Series& a, Series& out) {
+  switch (a.scalar_type()) {
+    case ScalarType::Float64: unary_apply<double>(a, out, [](double x) { return -x; }); return;
+    case ScalarType::Float32: unary_apply<float>(a, out, [](float x) { return -x; }); return;
+    case ScalarType::Float16:
+      unary_half_apply<Float16>(a, out, [](float x) { return -x; }, float16_from_float, float16_to_float);
+      return;
+    case ScalarType::BFloat16:
+      unary_half_apply<BFloat16>(a, out, [](float x) { return -x; }, bfloat16_from_float, bfloat16_to_float);
+      return;
+    case ScalarType::Complex64: unary_apply<Complex64>(a, out, [](Complex64 x) { return -x; }); return;
+    case ScalarType::Complex128: unary_apply<Complex128>(a, out, [](Complex128 x) { return -x; }); return;
+    case ScalarType::Int8: unary_apply<std::int8_t>(a, out, [](std::int8_t x) { return (std::int8_t)(-x); }); return;
+    case ScalarType::UInt8: unary_apply<std::uint8_t>(a, out, [](std::uint8_t x) { return (std::uint8_t)(-x); }); return;
+    case ScalarType::Int16: unary_apply<std::int16_t>(a, out, [](std::int16_t x) { return (std::int16_t)(-x); }); return;
+    case ScalarType::UInt16: unary_apply<std::uint16_t>(a, out, [](std::uint16_t x) { return (std::uint16_t)(-x); }); return;
+    case ScalarType::Int32: unary_apply<std::int32_t>(a, out, [](std::int32_t x) { return -x; }); return;
+    case ScalarType::UInt32: unary_apply<std::uint32_t>(a, out, [](std::uint32_t x) { return (std::uint32_t)(-x); }); return;
+    case ScalarType::Int64: unary_apply<std::int64_t>(a, out, [](std::int64_t x) { return -x; }); return;
+    case ScalarType::UInt64: unary_apply<std::uint64_t>(a, out, [](std::uint64_t x) { return (std::uint64_t)(-x); }); return;
+    default: throw_error("neg: dtype not implemented");
+  }
+}
 
 void pow(const Series& a, const Series& b, const Series& out_) {
   auto& out = const_cast<Series&>(out_);

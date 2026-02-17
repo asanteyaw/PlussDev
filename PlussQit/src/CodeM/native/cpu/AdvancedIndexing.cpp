@@ -4,6 +4,8 @@
 #include "CodeM/core/Half.h"
 #include "CodeM/core/Complex.h"
 #include "CodeM/core/SeriesIterator.h"
+#include "CodeM/core/OpsInternal.h"
+#include "CodeM/native/cpu/IndexingExtras.h"
 
 #include <vector>
 #include <algorithm>
@@ -11,6 +13,12 @@
 #include <cstring>
 
 namespace pluss::codem::native::cpu {
+
+static void lin_to_idx(std::int64_t lin, std::span<const std::int64_t> shape, std::vector<std::int64_t>& idx);
+static Series bool_dim_to_positions(const Series& mask);
+static std::vector<Series> bool_mask_to_multi_indices(const Series& mask);
+Series index(const Series& a, const std::vector<Series>& indices);
+Series index_put(const Series& a, const std::vector<Series>& indices, const Series& values, bool accumulate);
 
 // Advanced indexing engine (CPU-only, v2).
 //
@@ -85,7 +93,7 @@ static std::vector<Series> normalize_indices_to_nd(const std::vector<Series>& in
   std::vector<Series> out;
   out.reserve((std::size_t)nd);
   for (auto& s: indices) out.push_back(s);
-  while ((std::int64_t)out.size() < nd) out.push_back(Series{});
+  while ((std::int64_t)out.size() < nd) out.push_back(Series::undefined());
   return out;
 }
 
@@ -269,7 +277,7 @@ static Series index_torch_like(const Series& a, const std::vector<Series>& indic
 static Series index_put_torch_like(const Series& a, const std::vector<Series>& indices_in, const Series& values, bool accumulate);
 
 static std::vector<Series> bool_mask_to_multi_indices(const Series& mask) {
-  auto nz = nonzero(mask); // [nnz, nd]
+  auto nz = pluss::codem::ops_internal::nonzero(mask); // [nnz, nd]
   auto nzc = nz.contiguous();
   const auto nnz = nzc.sizes()[0];
   const auto nd = nzc.sizes()[1];
@@ -287,7 +295,7 @@ static std::vector<Series> bool_mask_to_multi_indices(const Series& mask) {
 
 static Series bool_dim_to_positions(const Series& mask) {
   // mask is 1D
-  auto nz = nonzero(mask); // [nnz,1]
+  auto nz = pluss::codem::ops_internal::nonzero(mask); // [nnz,1]
   Series pos = Series::empty({nz.sizes()[0]}, ScalarType::Int64);
   auto* pp = reinterpret_cast<std::int64_t*>(pos.raw_data());
   auto* np = reinterpret_cast<const std::int64_t*>(nz.raw_data());
@@ -417,7 +425,8 @@ static Series index_torch_like(const Series& a, const std::vector<Series>& indic
   std::vector<Series> idxp;
   idxp.reserve((std::size_t)nd);
   for (std::int64_t d=0; d<nd; ++d) {
-    if (!idx[(std::size_t)d].defined()) { idxp.push_back(Series{}); continue; }
+    const auto od = perm[(std::size_t)d];
+    if (!idx[(std::size_t)od].defined()) { idxp.push_back(Series::undefined()); continue; }
     idxp.push_back(idx[(std::size_t)od]);
   }
 
@@ -445,7 +454,13 @@ static Series index_put_torch_like(const Series& a, const std::vector<Series>& i
     // No indexing => replace entire tensor. Torch would broadcast values; we require same numel unless scalar.
     if (values.numel() == 1) {
       Series out = a.clone();
-      out.fill_(values.item_double());
+      Series vv = values.to(out.scalar_type()).contiguous();
+      const auto item = out.itemsize();
+      const auto* vp = vv.raw_data();
+      auto* op = const_cast<std::byte*>(out.raw_data());
+      for (std::int64_t i = 0; i < out.numel(); ++i) {
+        std::memcpy(op + (std::ptrdiff_t)i * (std::ptrdiff_t)item, vp, (std::size_t)item);
+      }
       return out;
     }
     PLUSS_CHECK(values.numel() == a.numel(), "index_put: values must match tensor size when no indices");
@@ -498,7 +513,8 @@ static Series index_put_torch_like(const Series& a, const std::vector<Series>& i
   std::vector<Series> idxp;
   idxp.reserve((std::size_t)nd);
   for (std::int64_t d=0; d<nd; ++d) {
-    if (!idx[(std::size_t)d].defined()) { idxp.push_back(Series{}); continue; }
+    const auto od = perm[(std::size_t)d];
+    if (!idx[(std::size_t)od].defined()) { idxp.push_back(Series::undefined()); continue; }
     idxp.push_back(idx[(std::size_t)od]);
   }
 
@@ -533,7 +549,7 @@ Series index(const Series& a, const std::vector<Series>& indices) {
     if (need) return index_torch_like(a, indices);
   }
 if (indices.size() == 1 && indices[0].scalar_type() == ScalarType::Bool) {
-    return masked_select(a, indices[0]);
+    return ops_internal::masked_select(a, indices[0]);
   }
 
   const auto nd = a.dim();
@@ -622,11 +638,15 @@ Series index_put(const Series& a, const std::vector<Series>& indices, const Seri
     auto shape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
     if (shape != std::vector<std::int64_t>(a.sizes().begin(), a.sizes().end()))
       throw_error("index_put: mask must broadcast to a.shape");
+    if (mask.sizes().size() != a.sizes().size() ||
+        !std::equal(mask.sizes().begin(), mask.sizes().end(), a.sizes().begin())) {
+      throw_error("index_put: broadcasted bool mask requires expand support; provide exact-shape mask");
+    }
 
     auto aa = a.contiguous();
-    auto mm = mask.expand(a.sizes()); // use expand if needed
+    auto mm = mask.contiguous();
 
-    auto nz = nonzero(mm); // [nnz, nd]
+    auto nz = ops_internal::nonzero(mm); // [nnz, nd]
     const auto nd = aa.dim();
     const auto nnz = nz.sizes()[0];
 
@@ -682,7 +702,10 @@ Series index_put(const Series& a, const std::vector<Series>& indices, const Seri
           if (!(ms == 1 || ms == as)) { ok = false; break; }
         }
         if (ok) {
-          auto em = mask.expand(a.sizes()).contiguous();
+          PLUSS_CHECK(mask.sizes().size() == a.sizes().size() &&
+                          std::equal(mask.sizes().begin(), mask.sizes().end(), a.sizes().begin()),
+                      "index_put: full-rank bool mask broadcast requires expand support");
+          auto em = mask.contiguous();
           auto cols = bool_mask_to_multi_indices(em);
           for (std::int64_t k=0; k<nd; ++k) {
             adv_dims.push_back(k);
@@ -756,6 +779,15 @@ if (adv_dims.empty()) throw_error("index_put: no indices");
   idx_es.reserve(adv_tensors.size());
   for (std::size_t i=0; i<adv_tensors.size(); ++i) {
     idx_es.push_back(expand_strides(adv_tensors[i].sizes(), adv_tensors[i].strides(), bshape));
+  }
+
+  Series vv = values.contiguous();
+  if (storage_aliases(out, vv)) vv = vv.clone().contiguous();
+
+  std::vector<std::int64_t> touched;
+  if (!accumulate) {
+    const std::int64_t total_updates = head_total * tail_total;
+    if (total_updates <= 1'000'000) touched.reserve((std::size_t)total_updates);
   }
 
   const auto dt = out.dtype();
@@ -847,316 +879,12 @@ if (adv_dims.empty()) throw_error("index_put: no indices");
     }
   }
 
+  return out;
+}
+
+void index_put_inplace(Series& a, const std::vector<Series>& indices, const Series& values, bool accumulate) {
+  Series out = index_put(a, indices, values, accumulate);
+  copy_into(a, out);
 }
 
 } // namespace pluss::codem::native::cpu
-
-
-void index_put_inplace(Series& a, const std::vector<Series>& indices, const Series& values, bool accumulate) {
-  if (!a.defined() || !values.defined()) throw_error("index_put_: undefined");
-  if (indices.empty()) throw_error("index_put_: empty indices");
-
-
-  // Torch-like mixed indexing path (non-leading advanced, mixed bool/int, multi-d masks).
-  if ((std::int64_t)indices.size() == a.dim()) {
-    bool need = false;
-    for (const auto& t : indices) {
-      if (!t.defined()) { need = true; break; }
-      if (t.scalar_type() == ScalarType::Bool) { need = true; break; }
-    }
-    if (need) {
-      // Compute updated result using the Torch-like engine, then copy into the destination view.
-      auto updated = index_put_torch_like(a, indices, values, accumulate);
-      // Safety: if values aliases a, force materialize values before mutation is observed.
-      copy_into(a, updated);
-      return;
-    }
-  }
-
-// Bool mask path
-  if (indices.size() == 1 && indices[0].scalar_type() == ScalarType::Bool) {
-    auto mask = indices[0];
-    auto shape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
-    if (shape != std::vector<std::int64_t>(a.sizes().begin(), a.sizes().end()))
-      throw_error("index_put_: mask must broadcast to a.shape");
-
-    auto mm = mask.expand(a.sizes());
-    auto nz = nonzero(mm); // [nnz, nd]
-    const auto nd = a.dim();
-    const auto nnz = nz.sizes()[0];
-
-    // Flatten indices into storage offsets for this view (uses strides!)
-    Series flat = Series::empty({nnz}, ScalarType::Int64);
-    auto* fp = reinterpret_cast<std::int64_t*>(flat.raw_data());
-    auto* mip = reinterpret_cast<const std::int64_t*>(nz.raw_data());
-    for (std::int64_t i=0;i<nnz;++i){
-      std::int64_t o=0;
-      for (std::int64_t d=0; d<nd; ++d) o += mip[i*nd + d] * a.strides()[(std::size_t)d];
-      fp[i]=o;
-    }
-
-    if (values.scalar_type() != a.scalar_type()) throw_error("index_put_: values dtype mismatch");
-    if (!(values.numel()==1 || values.numel()==nnz)) throw_error("index_put_: values must be scalar or match nnz");
-    // put() returns new; implement in-place put by calling existing put then copying back via raw storage offsets
-    // For now: write directly using the flat offsets.
-        const auto dt = a.dtype();
-    auto* ap = const_cast<std::byte*>(a.raw_data());
-    const auto* vp = vv.raw_data();
-    for (std::int64_t i=0;i<nnz;++i) {
-      const std::int64_t out_off = fp[i];
-      const std::int64_t v_off = (vv.numel()==1) ? 0 : i;
-      if (accumulate) {
-        switch (a.scalar_type()) {
-          case ScalarType::Float64:
-            reinterpret_cast<double*>(ap)[out_off] += reinterpret_cast<const double*>(vp)[v_off]; break;
-          case ScalarType::Float32:
-            reinterpret_cast<float*>(ap)[out_off] += reinterpret_cast<const float*>(vp)[v_off]; break;
-          case ScalarType::Int64:
-            reinterpret_cast<std::int64_t*>(ap)[out_off] += reinterpret_cast<const std::int64_t*>(vp)[v_off]; break;
-          case ScalarType::Int32:
-            reinterpret_cast<std::int32_t*>(ap)[out_off] += reinterpret_cast<const std::int32_t*>(vp)[v_off]; break;
-          case ScalarType::Int16:
-            reinterpret_cast<std::int16_t*>(ap)[out_off] += reinterpret_cast<const std::int16_t*>(vp)[v_off]; break;
-          case ScalarType::Int8:
-            reinterpret_cast<std::int8_t*>(ap)[out_off] += reinterpret_cast<const std::int8_t*>(vp)[v_off]; break;
-          case ScalarType::UInt8:
-            reinterpret_cast<std::uint8_t*>(ap)[out_off] = (std::uint8_t)(reinterpret_cast<std::uint8_t*>(ap)[out_off] + reinterpret_cast<const std::uint8_t*>(vp)[v_off]); break;
-          case ScalarType::Float16: {
-            auto* ap16 = reinterpret_cast<Float16*>(ap);
-            const auto* vp16 = reinterpret_cast<const Float16*>(vp);
-            float cur = float16_to_float(ap16[out_off]);
-            float val = float16_to_float(vp16[v_off]);
-            ap16[out_off] = float16_from_float(cur + val);
-            break;
-          }
-          case ScalarType::BFloat16: {
-            auto* ap16 = reinterpret_cast<BFloat16*>(ap);
-            const auto* vp16 = reinterpret_cast<const BFloat16*>(vp);
-            float cur = bfloat16_to_float(ap16[out_off]);
-            float val = bfloat16_to_float(vp16[v_off]);
-            ap16[out_off] = bfloat16_from_float(cur + val);
-            break;
-          }
-          case ScalarType::Complex64: {
-            auto* apc = reinterpret_cast<Complex64*>(ap);
-            const auto* vpc = reinterpret_cast<const Complex64*>(vp);
-            apc[out_off] = apc[out_off] + vpc[v_off];
-            break;
-          }
-          case ScalarType::Complex128: {
-            auto* apc = reinterpret_cast<Complex128*>(ap);
-            const auto* vpc = reinterpret_cast<const Complex128*>(vp);
-            apc[out_off] = apc[out_off] + vpc[v_off];
-            break;
-          }
-          default:
-            throw_error("index_put_: accumulate dtype not implemented");
-        }
-        continue;
-      } else {
-        std::memcpy(ap + (std::ptrdiff_t)out_off * (std::ptrdiff_t)dt.itemsize,
-                    vp + (std::ptrdiff_t)v_off  * (std::ptrdiff_t)dt.itemsize,
-                    dt.itemsize);
-      }
-    }
-    return;
-  }
-
-  const auto nd = a.dim();
-  const auto k = (std::int64_t)indices.size();
-  if (k <= 0 || k > nd) throw_error("index_put_: invalid number of indices");
-
-  for (auto& t: indices) if (t.scalar_type()!=ScalarType::Int64) throw_error("index_put_: indices must be int64 (or single bool mask)");
-
-  // broadcast indices
-  std::vector<std::vector<std::int64_t>> ishapes;
-  std::vector<Series> idxc;
-  for (auto& t: indices) { idxc.push_back(t.contiguous()); ishapes.push_back(std::vector<std::int64_t>(t.sizes().begin(), t.sizes().end())); }
-  auto bshape = broadcast_shape_many(ishapes);
-  const std::int64_t head_total = compute_numel(bshape);
-
-  const bool adv_contiguous = [&](){
-    if (adv_dims.empty()) return true;
-    for (std::size_t i=1;i<adv_dims.size();++i) if (adv_dims[i] != adv_dims[i-1] + 1) return false;
-    return true;
-  }();
-
-
-  // tail shape (remaining dims)
-  std::vector<std::int64_t> tail_shape;
-  tail_shape.reserve((std::size_t)(nd - k));
-  for (std::int64_t d=k; d<nd; ++d) tail_shape.push_back(a.sizes()[(std::size_t)d]);
-  const std::int64_t tail_total = compute_numel(tail_shape);
-
-  if (values.scalar_type() != a.scalar_type()) throw_error("index_put_: values dtype mismatch");
-
-  // values broadcast:
-  // - scalar
-  // - head_total (one per indexed position, broadcasting over tail)
-  // - head_total * tail_total (full match)
-  const auto vnum = values.numel();
-  const bool v_scalar = (vnum == 1);
-  const bool v_head = (vnum == head_total);
-  const bool v_full = (vnum == head_total * tail_total);
-  if (!(v_scalar || v_head || v_full)) throw_error("index_put_: values must be scalar, head_total, or full output match");
-
-
-  // expanded strides for each index into bshape
-  std::vector<std::vector<std::int64_t>> idx_es;
-  idx_es.reserve(k);
-  for (std::int64_t d=0; d<k; ++d) idx_es.push_back(expand_strides(idxc[(std::size_t)d].sizes(), idxc[(std::size_t)d].strides(), bshape));
-
-  const auto dt = a.dtype();
-  auto* ap = const_cast<std::byte*>(a.raw_data());
-  const auto* vp = vv.raw_data();
-
-  std::vector<std::int64_t> hidx(bshape.size(), 0);
-  std::vector<std::int64_t> tidx(tail_shape.size(), 0);
-
-
-  auto add_inplace = [&](std::int64_t out_off, std::int64_t v_off){
-    switch (a.scalar_type()) {
-      case ScalarType::Float64:
-        reinterpret_cast<double*>(ap)[out_off] += reinterpret_cast<const double*>(vp)[v_off]; return;
-      case ScalarType::Float32:
-        reinterpret_cast<float*>(ap)[out_off] += reinterpret_cast<const float*>(vp)[v_off]; return;
-      case ScalarType::Int64:
-        reinterpret_cast<std::int64_t*>(ap)[out_off] += reinterpret_cast<const std::int64_t*>(vp)[v_off]; return;
-      case ScalarType::Int32:
-        reinterpret_cast<std::int32_t*>(ap)[out_off] += reinterpret_cast<const std::int32_t*>(vp)[v_off]; return;
-      case ScalarType::Int16:
-        reinterpret_cast<std::int16_t*>(ap)[out_off] += reinterpret_cast<const std::int16_t*>(vp)[v_off]; return;
-      case ScalarType::Int8:
-        reinterpret_cast<std::int8_t*>(ap)[out_off] += reinterpret_cast<const std::int8_t*>(vp)[v_off]; return;
-      case ScalarType::UInt8:
-        reinterpret_cast<std::uint8_t*>(ap)[out_off] = (std::uint8_t)(reinterpret_cast<std::uint8_t*>(ap)[out_off] + reinterpret_cast<const std::uint8_t*>(vp)[v_off]); return;
-      case ScalarType::Float16: {
-        auto* ap16 = reinterpret_cast<Float16*>(ap);
-        const auto* vp16 = reinterpret_cast<const Float16*>(vp);
-        float cur = float16_to_float(ap16[out_off]);
-        float val = float16_to_float(vp16[v_off]);
-        ap16[out_off] = float16_from_float(cur + val);
-        return;
-      }
-      case ScalarType::BFloat16: {
-        auto* ap16 = reinterpret_cast<BFloat16*>(ap);
-        const auto* vp16 = reinterpret_cast<const BFloat16*>(vp);
-        float cur = bfloat16_to_float(ap16[out_off]);
-        float val = bfloat16_to_float(vp16[v_off]);
-        ap16[out_off] = bfloat16_from_float(cur + val);
-        return;
-      }
-      case ScalarType::Complex64: {
-        auto* apc = reinterpret_cast<Complex64*>(ap);
-        const auto* vpc = reinterpret_cast<const Complex64*>(vp);
-        apc[out_off] = apc[out_off] + vpc[v_off];
-        return;
-      }
-      case ScalarType::Complex128: {
-        auto* apc = reinterpret_cast<Complex128*>(ap);
-        const auto* vpc = reinterpret_cast<const Complex128*>(vp);
-        apc[out_off] = apc[out_off] + vpc[v_off];
-        return;
-      }
-      default:
-        break;
-    }
-    throw_error("index_put_: accumulate dtype not implemented");
-  };
-
-
-
-  // Torch compatibility / safety: if accumulate=false and there are duplicate output indices,
-  // Torch semantics become order-dependent. We choose to error in production builds for determinism.
-  std::vector<std::int64_t> touched;
-  if (!accumulate) {
-    const std::int64_t total_updates = head_total * tail_total;
-    // Avoid pathological memory blowups; skip duplicate detection for enormous updates.
-    if (total_updates <= 1'000'000) touched.reserve((std::size_t)total_updates);
-  }
-
-  // If values aliases a (same storage), materialize values first to avoid self-overlap write-then-read hazards.
-    if (storage_aliases(a, values)) vv = values.clone().contiguous();
-
-for (std::int64_t lin=0; lin<head_total; ++lin) {
-    lin_to_idx(lin, bshape, hidx);
-
-    std::int64_t base_off = 0;
-    for (std::int64_t d=0; d<k; ++d) {
-      const auto io = off(hidx, idx_es[(std::size_t)d]);
-      auto kidx = reinterpret_cast<const std::int64_t*>(idxc[(std::size_t)d].raw_data())[io];
-      const auto dim_size = a.sizes()[(std::size_t)d];
-      if (kidx < 0) kidx += dim_size;
-      if (kidx < 0 || kidx >= dim_size) throw_error("index_put_: index out of range");
-      base_off += kidx * a.strides()[(std::size_t)d];
-    }
-
-    for (std::int64_t tj=0; tj<tail_total; ++tj) {
-      lin_to_idx(tj, tail_shape, tidx);
-      std::int64_t tail_off = 0;
-      for (std::size_t td=0; td<tidx.size(); ++td) {
-        tail_off += tidx[td] * a.strides()[(std::size_t)k + td];
-      }
-      const std::int64_t out_off = base_off + tail_off;
-      if (!accumulate && !touched.empty()) touched.push_back(out_off);
-      const std::int64_t v_off = [&](){
-        if (v_scalar) return (std::int64_t)0;
-        if (v_head) return lin;
-        if (!adv_contiguous) return lin*tail_total + tj;
-
-        const std::int64_t first_adv = adv_dims.front();
-        std::vector<std::int64_t> sel_sizes;
-        sel_sizes.reserve((std::size_t)nd);
-        for (std::int64_t d=0; d<nd; ++d) {
-          const bool isA = (std::find(adv_dims.begin(), adv_dims.end(), d) != adv_dims.end());
-          if (d < first_adv && !isA) sel_sizes.push_back(a.sizes()[(std::size_t)d]);
-        }
-        for (auto s : bshape) sel_sizes.push_back(s);
-        for (std::int64_t d=0; d<nd; ++d) {
-          const bool isA = (std::find(adv_dims.begin(), adv_dims.end(), d) != adv_dims.end());
-          if (d > adv_dims.back() && !isA) sel_sizes.push_back(a.sizes()[(std::size_t)d]);
-        }
-
-        std::vector<std::int64_t> sel_idx;
-        sel_idx.reserve(sel_sizes.size());
-
-        std::size_t tpos = 0;
-        for (std::int64_t d=0; d<nd; ++d) {
-          const bool isA = (std::find(adv_dims.begin(), adv_dims.end(), d) != adv_dims.end());
-          if (!isA) {
-            if (d < first_adv) sel_idx.push_back(tidx[tpos]);
-            ++tpos;
-          }
-        }
-        for (auto v : bidx) sel_idx.push_back(v);
-
-        tpos = 0;
-        for (std::int64_t d=0; d<nd; ++d) {
-          const bool isA = (std::find(adv_dims.begin(), adv_dims.end(), d) != adv_dims.end());
-          if (!isA) {
-            if (d > adv_dims.back()) sel_idx.push_back(tidx[tpos]);
-            ++tpos;
-          }
-        }
-
-        std::int64_t off=0; std::int64_t stride=1;
-        for (std::size_t i=sel_sizes.size(); i-- > 0;) { off += sel_idx[i]*stride; stride*=sel_sizes[i]; }
-        return off;
-      }();
-      if (accumulate) add_inplace(out_off, v_off);
-      else std::memcpy(ap + (std::ptrdiff_t)out_off * (std::ptrdiff_t)dt.itemsize,
-                       vp + (std::ptrdiff_t)v_off  * (std::ptrdiff_t)dt.itemsize,
-                       dt.itemsize);
-    }
-  }
-
-  if (!accumulate && !touched.empty()) {
-    std::sort(touched.begin(), touched.end());
-    auto it = std::adjacent_find(touched.begin(), touched.end());
-    if (it != touched.end()) {
-      throw_error("index_put_: duplicate indices with accumulate=false is nondeterministic; use accumulate=true");
-    }
-  }
-
-}
-
