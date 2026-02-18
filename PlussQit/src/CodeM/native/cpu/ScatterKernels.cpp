@@ -169,7 +169,7 @@ static void scatter_reduce_impl_contig(Series& a, std::int64_t dim, const Series
 // Half/bfloat16 compute in float
 template <class HalfT, class LoadF, class StoreF>
 static void scatter_reduce_half_contig(Series& a, std::int64_t dim, const Series& index, const Series& src,
-                                       const std::string& reduce, bool include_self, bool has_initial, double initial, LoadF&& load, StoreF&& store) {
+                                       const std::string& reduce, bool include_self, bool /*has_initial*/, double /*initial*/, LoadF&& load, StoreF&& store) {
   PLUSS_CHECK(a.is_contiguous() && index.is_contiguous() && src.is_contiguous(), "scatter_reduce: requires contiguous");
   auto sh = compute_shape(a, dim, index, "scatter_reduce");
 

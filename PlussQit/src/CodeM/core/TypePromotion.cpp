@@ -19,17 +19,6 @@ static bool is_complex(ScalarType t){
   return t == ScalarType::Complex64 || t == ScalarType::Complex128;
 }
 
-static int float_rank(ScalarType t){
-  switch (t) {
-    case ScalarType::Float8E4M3FN: return 0;
-    case ScalarType::Float8E5M2: return 0;
-    case ScalarType::Float16: return 1;
-    case ScalarType::BFloat16: return 1;
-    case ScalarType::Float32: return 2;
-    case ScalarType::Float64: return 3;
-    default: return -1;
-  }
-}
 static int int_rank(ScalarType t){
   switch (t) {
     case ScalarType::Int8: return 0;
@@ -48,9 +37,6 @@ static int complex_rank(ScalarType t){
   }
 }
 
-static ScalarType higher_float(ScalarType a, ScalarType b){
-  return (float_rank(a) >= float_rank(b)) ? a : b;
-}
 static ScalarType higher_int(ScalarType a, ScalarType b){
   return (int_rank(a) >= int_rank(b)) ? a : b;
 }

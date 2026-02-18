@@ -106,7 +106,7 @@ void test_factories() {
 
 void test_aux_let_queue() {
   std::cout << "[RUN] aux:let\n";
-  auto lv = let(std::vector<int>{1, 2, 3})
+  auto lv = suppose(std::vector<int>{1, 2, 3})
                 .then([](const std::vector<int>& x) {
                   std::vector<int> y = x;
                   for (auto& v : y) v *= 2;
@@ -120,11 +120,14 @@ void test_aux_let_queue() {
                 .value();
   expect_eq(lv, std::vector<int>{2, 4, 6}, "let pipeline");
 
-  auto gv = let(5).then([](int x) { return x + 3; }).value();
-  expect_true(gv == 8, "global let alias");
+  auto gv = suppose(5).then([](int x) { return x + 3; }).value();
+  expect_true(gv == 8, "global suppose alias");
 
-  auto la = let.as<double>(3).then([](double x) { return x + 0.5; }).value();
-  expect_close(la, 3.5, 1e-12, "let typed conversion");
+  auto la = suppose.as<double>(3).then([](double x) { return x + 0.5; }).value();
+  expect_close(la, 3.5, 1e-12, "suppose typed conversion");
+
+  let declared = pluss::value({1.0, 2.0, 3.0});
+  expect_true(declared.numel() == 3, "let declaration alias to auto");
 
   std::cout << "[RUN] aux:queue_range\n";
   std::vector<int> xs{1, 2, 3, 4};

@@ -2249,8 +2249,9 @@ Series Series::isnan() const {
 }
 Series& Series::isnan_() {
   PLUSS_CALL_GUARD();
-  // in-place predicate makes little sense; keep for API parity
-  throw_error("isnan_: in-place not supported");
+  Series out = isnan().to(scalar_type());
+  copy_(out);
+  return *this;
 }
 
 Series Series::isinf() const {
@@ -2261,8 +2262,9 @@ Series Series::isinf() const {
 }
 Series& Series::isinf_() {
   PLUSS_CALL_GUARD();
-  // in-place predicate makes little sense; keep for API parity
-  throw_error("isinf_: in-place not supported");
+  Series out = isinf().to(scalar_type());
+  copy_(out);
+  return *this;
 }
 
 Series Series::isfinite() const {
@@ -2273,8 +2275,9 @@ Series Series::isfinite() const {
 }
 Series& Series::isfinite_() {
   PLUSS_CALL_GUARD();
-  // in-place predicate makes little sense; keep for API parity
-  throw_error("isfinite_: in-place not supported");
+  Series out = isfinite().to(scalar_type());
+  copy_(out);
+  return *this;
 }
 
 static std::vector<std::int64_t> out_sizes_reduce_(const pluss::codem::Series& a, std::int64_t dim, bool keepdim) {

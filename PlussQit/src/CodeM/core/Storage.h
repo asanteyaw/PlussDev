@@ -18,6 +18,7 @@ public:
   std::byte* data() noexcept { return data_.get(); }
   const std::byte* data() const noexcept { return data_.get(); }
   std::size_t nbytes() const noexcept { return nbytes_; }
+  std::size_t alignment() const noexcept { return alignment_; }
   bool defined() const noexcept { return static_cast<bool>(data_); }
   std::shared_ptr<std::byte> handle() const noexcept { return data_; }
 

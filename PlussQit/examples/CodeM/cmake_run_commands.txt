@@ -1,0 +1,39 @@
+cmake -S .. -B . --fresh \
+  -DPKG_CONFIG_EXECUTABLE=/Users/yawasante/software/miniconda3/envs/cpp_env/bin/pkg-config \
+  -DCMAKE_PREFIX_PATH=/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/torch \
+  -DTorch_DIR=/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/torch/share/cmake/Torch \
+  -DPLUSS_ENABLE_TORCH=ON \
+  -DPLUSSQIT_BUILD_CODEM=ON \
+  -DPLUSSQIT_BUILD_EXAMPLES=ON \
+  -DPLUSSQIT_BUILD_TESTS=ON
+
+
+cmake --build . -j
+
+cmake --build . --target plussqit_codem_series_usage_demo -j8
+
+
+./build/PlussQit/plussqit_codem_series_usage_demo
+./build/PlussQit/plussqit_codem_aux_let_queue_demo
+./build/PlussQit/plussqit_codem_series_methods_demo
+./build/PlussQit/plussqit_codem_linear_alg_demo
+./build/PlussQit/plussqit_codem_stats_demo
+./build/PlussQit/plussqit_codem_signal_demo
+
+
+cmake --build . -j
+./PlussQit/plussqit_codem_series_usage_demo
+
+
+// Outside of Build 
+cmake -S . -B build \
+  -DPLUSSQIT_BUILD_CODEM=ON \
+  -DPLUSSQIT_BUILD_EXAMPLES=ON \
+  -DPLUSSQIT_BUILD_TESTS=ON
+
+cmake --build build -j
+
+
+./build/PlussQit/plussqit_codem_series_usage_demo
+
+

@@ -3,6 +3,7 @@
 #include <functional>
 #include <type_traits>
 #include <utility>
+#include <variant>
 
 namespace pluss::aux {
 
@@ -84,7 +85,7 @@ private:
   T value_;
 };
 
-struct let_t {
+struct suppose_t {
   template <class T>
   constexpr auto operator()(T&& value) const {
     return let_box<std::decay_t<T>>(std::forward<T>(value));
@@ -93,11 +94,78 @@ struct let_t {
   template <class To, class From>
   constexpr auto as(From&& value) const {
     static_assert(std::is_constructible_v<To, From&&>,
-                  "let.as<To>(value): To must be constructible from value");
+                  "suppose.as<To>(value): To must be constructible from value");
     return let_box<To>(To(std::forward<From>(value)));
   }
 };
 
-inline constexpr let_t let{};
+inline constexpr suppose_t suppose{};
+
+template <class... Ts>
+class let_one_of {
+  static_assert(sizeof...(Ts) >= 2, "let_as(T1, T2, ...): provide at least two candidate types");
+
+public:
+  using variant_type = std::variant<Ts...>;
+
+  let_one_of() = delete;
+  let_one_of(const let_one_of&) = default;
+  let_one_of(let_one_of&&) noexcept = default;
+  let_one_of& operator=(const let_one_of&) = default;
+  let_one_of& operator=(let_one_of&&) noexcept = default;
+  ~let_one_of() = default;
+
+  template <class U,
+            class D = std::decay_t<U>,
+            std::enable_if_t<(std::is_same_v<D, Ts> || ...), int> = 0>
+  constexpr let_one_of(U&& value)
+      : value_(std::in_place_type<D>, std::forward<U>(value)) {}
+
+  template <class U,
+            class D = std::decay_t<U>,
+            std::enable_if_t<(std::is_same_v<D, Ts> || ...), int> = 0>
+  constexpr let_one_of& operator=(U&& value) {
+    value_.template emplace<D>(std::forward<U>(value));
+    return *this;
+  }
+
+  constexpr variant_type& value() & noexcept { return value_; }
+  constexpr const variant_type& value() const& noexcept { return value_; }
+  constexpr variant_type&& value() && noexcept { return std::move(value_); }
+  constexpr const variant_type&& value() const&& noexcept { return std::move(value_); }
+
+  template <class T>
+  constexpr bool is() const noexcept {
+    return std::holds_alternative<T>(value_);
+  }
+
+  template <class T>
+  constexpr T& get() & {
+    return std::get<T>(value_);
+  }
+
+  template <class T>
+  constexpr const T& get() const& {
+    return std::get<T>(value_);
+  }
+
+  template <class T>
+  constexpr T&& get() && {
+    return std::get<T>(std::move(value_));
+  }
+
+  template <class F>
+  constexpr decltype(auto) visit(F&& fn) & {
+    return std::visit(std::forward<F>(fn), value_);
+  }
+
+  template <class F>
+  constexpr decltype(auto) visit(F&& fn) const& {
+    return std::visit(std::forward<F>(fn), value_);
+  }
+
+private:
+  variant_type value_;
+};
 
 } // namespace pluss::aux

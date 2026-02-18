@@ -105,11 +105,6 @@ static Series bool_1d_to_positions(const Series& mask) {
   return bool_dim_to_positions(mask);
 }
 
-static bool any_defined(const std::vector<Series>& v) {
-  for (auto& t : v) if (t.defined()) return true;
-  return false;
-}
-
 // Build permutation that moves all advanced indexed dims to the front, preserving order.
 static std::vector<std::int64_t> adv_to_front_perm(std::int64_t nd, const std::vector<int>& is_adv) {
   std::vector<std::int64_t> perm;

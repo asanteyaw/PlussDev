@@ -174,7 +174,6 @@ void SeriesIterator::coalesce_dims() {
 SeriesIterator SeriesIterator::binary(const Series& a, const Series& b, const Series& out) {
   if (!a.defined() || !b.defined() || !out.defined()) throw_error("SeriesIterator: undefined");
   if (a.scalar_type() != b.scalar_type()) throw_error("SeriesIterator: dtype mismatch (binary)");
-  if (a.scalar_type() != out.scalar_type()) throw_error("SeriesIterator: out dtype mismatch");
 
   SeriesIterator it;
   it.shape_ = broadcast_shape(a.sizes(), b.sizes());
@@ -194,7 +193,6 @@ SeriesIterator SeriesIterator::binary(const Series& a, const Series& b, const Se
 
 SeriesIterator SeriesIterator::unary(const Series& a, const Series& out) {
   if (!a.defined() || !out.defined()) throw_error("SeriesIterator: undefined");
-  if (a.scalar_type() != out.scalar_type()) throw_error("SeriesIterator: out dtype mismatch");
 
   SeriesIterator it;
   it.shape_ = std::vector<std::int64_t>(a.sizes().begin(), a.sizes().end());

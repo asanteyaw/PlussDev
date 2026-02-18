@@ -13,8 +13,7 @@ inline bool is_non_overlapping_and_dense(const std::vector<std::int64_t>& sizes,
                                         const std::vector<std::int64_t>& strides) {
   if (sizes.size() != strides.size()) return false;
   // zero-numel is always fine
-  std::int64_t numel = 1;
-  for (auto s: sizes) { if (s < 0) return false; if (s==0) return true; numel *= s; }
+  for (auto s: sizes) { if (s < 0) return false; if (s==0) return true; }
   // Sort dims by stride magnitude (like torch)
   std::vector<std::size_t> perm(sizes.size());
   for (std::size_t i=0;i<perm.size();++i) perm[i]=i;

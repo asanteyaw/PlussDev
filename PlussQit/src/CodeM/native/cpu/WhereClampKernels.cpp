@@ -73,17 +73,18 @@ void relu_inplace(const Series& a) {
 
 
 void where(const Series& cond, const Series& a, const Series& b, Series& out) {
-  PLUSS_CHECK(cond.scalar_type() == ScalarType::Bool, "where: cond must be Bool");  PLUSS_CHECK(a.scalar_type() == out.scalar_type() && b.scalar_type() == out.scalar_type(),
+  PLUSS_CHECK(a.scalar_type() == out.scalar_type() && b.scalar_type() == out.scalar_type(),
               "where: current kernel requires a,b,out have same dtype (promotion handled at Series level)");
 
-  SeriesIterator it = SeriesIterator::ternary(cond, a, b, out);
-  const auto* mp = reinterpret_cast<const std::uint8_t*>(cond.raw_data());
+  Series cond_bool = (cond.scalar_type() == ScalarType::Bool) ? cond : cond.to(ScalarType::Bool);
+  SeriesIterator it = SeriesIterator::ternary(cond_bool, a, b, out);
+  const auto* mp = reinterpret_cast<const std::uint8_t*>(cond_bool.raw_data());
   switch (out.scalar_type()) {
     case ScalarType::Float64: {
       auto* op = reinterpret_cast<double*>(out.raw_data());
       auto* ap = reinterpret_cast<const double*>(a.raw_data());
       auto* bp = reinterpret_cast<const double*>(b.raw_data());
-      it.for_each_index_ternary([&](std::int64_t lin, std::int64_t mo, std::int64_t ao, std::int64_t bo, std::int64_t oo){
+      it.for_each_index_ternary([&](std::int64_t /*lin*/, std::int64_t mo, std::int64_t ao, std::int64_t bo, std::int64_t oo){
         op[oo] = mp[mo] ? ap[ao] : bp[bo];
       });
       return;
@@ -92,7 +93,7 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
       auto* op = reinterpret_cast<float*>(out.raw_data());
       auto* ap = reinterpret_cast<const float*>(a.raw_data());
       auto* bp = reinterpret_cast<const float*>(b.raw_data());
-      it.for_each_index_ternary([&](std::int64_t lin, std::int64_t mo, std::int64_t ao, std::int64_t bo, std::int64_t oo){
+      it.for_each_index_ternary([&](std::int64_t /*lin*/, std::int64_t mo, std::int64_t ao, std::int64_t bo, std::int64_t oo){
         op[oo] = mp[mo] ? ap[ao] : bp[bo];
       });
       return;
@@ -101,7 +102,7 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
       auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
       auto* ap = reinterpret_cast<const std::int64_t*>(a.raw_data());
       auto* bp = reinterpret_cast<const std::int64_t*>(b.raw_data());
-      it.for_each_index_ternary([&](std::int64_t lin, std::int64_t mo, std::int64_t ao, std::int64_t bo, std::int64_t oo){
+      it.for_each_index_ternary([&](std::int64_t /*lin*/, std::int64_t mo, std::int64_t ao, std::int64_t bo, std::int64_t oo){
         op[oo] = mp[mo] ? ap[ao] : bp[bo];
       });
       return;

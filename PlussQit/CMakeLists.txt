@@ -20,6 +20,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(PLUSSQIT_BUILD_TESTS "Build tests" ON)
+option(PLUSSQIT_BUILD_EXAMPLES "Build examples" ON)
 option(PLUSSQIT_USE_FMT "Use fmt for messages" ON)
 option(PLUSSQIT_FETCH_DEPS "Allow CMake to FetchContent dependencies (fmt/Catch2)" OFF)
 option(PLUSSQIT_BUILD_CODEM "Build CodeM (Series/Tensor)" OFF)
@@ -225,6 +226,26 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_CODEM_SMOKE_TESTS)
   target_link_libraries(plussqit_addcmul_test PRIVATE plussqit_codem)
   target_include_directories(plussqit_addcmul_test PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
   add_test(NAME addcmul_test COMMAND plussqit_addcmul_test)
+endif()
+
+if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
+  add_executable(plussqit_codem_series_usage_demo examples/CodeM/series_usage_demo.cpp)
+  target_link_libraries(plussqit_codem_series_usage_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_aux_let_queue_demo examples/CodeM/aux_let_queue_demo.cpp)
+  target_link_libraries(plussqit_codem_aux_let_queue_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_series_methods_demo examples/CodeM/series_methods_demo.cpp)
+  target_link_libraries(plussqit_codem_series_methods_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_linear_alg_demo examples/CodeM/linear_alg_demo.cpp)
+  target_link_libraries(plussqit_codem_linear_alg_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_stats_demo examples/CodeM/stats_demo.cpp)
+  target_link_libraries(plussqit_codem_stats_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_signal_demo examples/CodeM/signal_demo.cpp)
+  target_link_libraries(plussqit_codem_signal_demo PRIVATE PlussQit::CodeM)
 endif()
 
 # Close optional CodeM block before defining CodeN.
@@ -477,6 +498,7 @@ if(APPLE AND PLUSSQIT_BUILD_CODEM)
   if(PLUSS_ACCELERATE_FRAMEWORK)
     target_link_libraries(plussqit_codem PUBLIC ${PLUSS_ACCELERATE_FRAMEWORK})
     target_compile_definitions(plussqit_codem PUBLIC PLUSS_HAS_ACCELERATE=1)
+    target_compile_definitions(plussqit_codem PUBLIC ACCELERATE_NEW_LAPACK=1)
   else()
     target_compile_definitions(plussqit_codem PUBLIC PLUSS_HAS_ACCELERATE=0)
   endif()

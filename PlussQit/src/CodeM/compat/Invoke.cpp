@@ -2750,6 +2750,17 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       return not_impl(op, args, self);
     }
 
+    // string
+    if (std::holds_alternative<std::string>(a0)) {
+      const auto dist = as_string(args[0]);
+      if (op == "pdf" || op == "cdf") {
+        PLUSS_CHECK(dist == "norm" || dist == "normal" || dist == "gaussian",
+                    std::string(op) + ": unsupported distribution '" + std::string(dist) + "'");
+        return (op == "pdf") ? pdf_impl(self, 0.0, 1.0) : cdf_impl(self, 0.0, 1.0);
+      }
+      return not_impl(op, args, self);
+    }
+
     // Series
     if (std::holds_alternative<const Series*>(a0)) {
       const Series& other = as_series(args[0]);
@@ -2779,9 +2790,14 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "logical_and") return ops_internal::logical_and(self, other);
       if (op == "logical_or") return ops_internal::logical_or(self, other);
       if (op == "logical_xor") return ops_internal::logical_xor(self, other);
+      if (op == "bitwise_and") return ops_internal::bitwise_and(self, other);
+      if (op == "bitwise_or") return ops_internal::bitwise_or(self, other);
+      if (op == "bitwise_xor") return ops_internal::bitwise_xor(self, other);
 
       if (op == "maximum") return ops_internal::maximum(self, other);
       if (op == "minimum") return ops_internal::minimum(self, other);
+      if (op == "clamp_min") return self.clamp_min(other);
+      if (op == "clamp_max") return self.clamp_max(other);
       if (op == "nextafter") return nextafter_impl(self, other);
       if (op == "bitwise_left_shift") return bitshift_series_impl(self, other, /*left=*/true);
       if (op == "bitwise_right_shift") return bitshift_series_impl(self, other, /*left=*/false);
@@ -3042,6 +3058,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (std::holds_alternative<const Series*>(a0) && is_numeric_scalar_arg(args[1])) {
       const Series& other = as_series(args[0]);
       const double s = as_double(args[1]);
+      if (op == "where") return self.where(other, s);
       if (op == "diagonal_scatter") return diagonal_scatter_impl(self, other, (std::int64_t)s);
       if (op == "cholesky_solve") return cholesky_solve_impl(self, other, s != 0.0);
       if (op == "triangular_solve") return triangular_solve_impl(self, other, s != 0.0, /*unitriangular=*/false);
@@ -3075,6 +3092,7 @@ if (is_numeric_scalar_arg(args[0]) &&
     if (std::holds_alternative<const Series*>(a0) && std::holds_alternative<const Series*>(a1)) {
       const Series& m = as_series(args[0]);
       const Series& s = as_series(args[1]);
+      if (op == "where") return self.where(m, s);
       if (op == "masked_fill") return ops_internal::masked_fill(self, m, s);
       if (op == "cdist" || op == "pdist2") return cdist_impl(self, m, 2.0);
       if (op == "addmm") return combine_beta_alpha(self, native::cpu::matmul(m, s), /*beta=*/1.0, /*alpha=*/1.0);

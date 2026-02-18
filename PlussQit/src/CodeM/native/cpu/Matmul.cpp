@@ -11,6 +11,7 @@
 
 namespace pluss::codem::native::cpu {
 
+#if !PLUSS_HAS_ACCELERATE
 static void naive_matmul_f64(const double* A, const double* B, double* C,
                              std::int64_t M, std::int64_t N, std::int64_t K) {
   for (std::int64_t i=0;i<M;++i) {
@@ -32,6 +33,7 @@ static void naive_matmul_f32(const float* A, const float* B, float* C,
     }
   }
 }
+#endif
 
 Series matmul(const Series& a, const Series& b) {
   if (!a.defined() || !b.defined()) throw_error("matmul: undefined");

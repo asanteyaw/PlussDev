@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-static bool fast_contiguous_ternary_ok_(const pluss::codem::Series& a, const pluss::codem::Series& b, const pluss::codem::Series& c, const pluss::codem::Series& out) {
+inline bool fast_contiguous_ternary_ok_(const pluss::codem::Series& a, const pluss::codem::Series& b, const pluss::codem::Series& c, const pluss::codem::Series& out) {
   if (!(a.is_contiguous() && b.is_contiguous() && c.is_contiguous() && out.is_contiguous())) return false;
   if (!(a.numel() == b.numel() && a.numel() == c.numel() && a.numel() == out.numel())) return false;
   auto as = a.sizes();

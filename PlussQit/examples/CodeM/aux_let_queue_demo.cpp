@@ -1,10 +1,16 @@
+// If you ever want to disable let macro behavior in a TU, define PLUSS_DISABLE_LET_AUTO before including pluss.h>
+// #define PLUSS_DISABLE_LET_AUTO
 #include <pluss/pluss.h>
 
 #include <iostream>
 #include <vector>
 
+pluss::Series calc_tip (pluss::Series bills, double tip_percent) {
+  return bills.mul(tip_percent / 100.0);
+}
+
 int main() {
-  auto doubled = let(std::vector<int>{1, 2, 3, 4})
+  auto doubled = suppose(std::vector<int>{1, 2, 3, 4})
                      .then([](std::vector<int> v) {
                        for (auto& x : v) x *= 2;
                        return v;
@@ -28,5 +34,8 @@ int main() {
   for (auto v : squared.to_vec<double>()) std::cout << v << " ";
   std::cout << "\n";
 
+  let bills = pluss::value({42.50, 35.85, 50.03, 15.21, 5.45});
+  let tips = pluss::queue(calc_tip, bills);
+  
   return 0;
 }
