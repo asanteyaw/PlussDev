@@ -24,11 +24,6 @@
 #endif
 
 namespace pluss {
-  using Series = codem::Series;
-  using Config = codem::Config;
-  using ScalarType = codem::ScalarType;
-  using Platform = codem::Platform;
-  using BlobDeleter = codem::BlobDeleter;
 
   // ---- Config builder helpers ----
   using pluss::config; // from pluss/config.h

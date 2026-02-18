@@ -10,6 +10,11 @@
 #include "CodeN/core/Note.h"
 #include "CodeN/core/TokenBatch.h"
 
+namespace pluss {
+using Note = coden::Note;
+using TokenBatch = coden::TokenBatch;
+} // namespace pluss
+
 namespace pluss::coden::ops_internal {
   // Internal factories (implemented in CodeN). Public factories forward to these.
   Note note_from_utf8(::std::span<const ::std::string_view> utf8_flat,

@@ -1,13 +1,15 @@
 #include "CodeN/compat/Dispatch.h"
 
+#include <cctype>
 #include <sstream>
 
 #include "CodeN/core/OpsInternal.h"
+#include "CodeN/generated/DispatchDeclFallbacks.inc"
 #include "CodeN/generated/DispatchRegistry.inc"
 
 namespace pluss::coden::_compat {
 
-static void fail(::std::string_view group, ::std::string_view op, ::std::size_t nargs) {
+[[noreturn]] static void fail(::std::string_view group, ::std::string_view op, ::std::size_t nargs) {
   ::std::ostringstream oss;
   oss << "No such op for " << group << ": " << op << " (nargs=" << nargs << ")\n";
   oss << "Known signatures for '" << op << "':\n";
@@ -24,23 +26,318 @@ static void fail(::std::string_view group, ::std::string_view op, ::std::size_t 
   PLUSS_CHECK(false, oss.str());
 }
 
+template <class DeclArray>
+static bool has_decl_sig(const DeclArray& decls, ::std::string_view op, ::std::size_t nargs) {
+  for (const auto& sig : decls) {
+    if (sig.name == op && sig.argc == nargs) return true;
+  }
+  return false;
+}
+
+static ::std::string_view as_str(const CodenValue& a);
+
+static bool starts_with_sv(::std::string_view s, ::std::string_view p) {
+  return s.size() >= p.size() && s.substr(0, p.size()) == p;
+}
+
+static bool ends_with_sv(::std::string_view s, ::std::string_view suf) {
+  return s.size() >= suf.size() && s.substr(s.size() - suf.size()) == suf;
+}
+
+static bool is_ascii_sv(::std::string_view s) {
+  for (unsigned char c : s) if (c >= 0x80) return false;
+  return true;
+}
+
+static bool is_blank_sv(::std::string_view s) {
+  for (unsigned char c : s) {
+    if (!::std::isspace(c)) return false;
+  }
+  return true;
+}
+
+static bool is_alpha_sv(::std::string_view s) {
+  if (s.empty()) return false;
+  for (unsigned char c : s) if (!::std::isalpha(c)) return false;
+  return true;
+}
+
+static bool is_alnum_sv(::std::string_view s) {
+  if (s.empty()) return false;
+  for (unsigned char c : s) if (!::std::isalnum(c)) return false;
+  return true;
+}
+
+static bool is_digit_sv(::std::string_view s) {
+  if (s.empty()) return false;
+  for (unsigned char c : s) if (!::std::isdigit(c)) return false;
+  return true;
+}
+
+static bool is_lower_sv(::std::string_view s) {
+  bool has_alpha = false;
+  for (unsigned char c : s) {
+    if (::std::isalpha(c)) {
+      has_alpha = true;
+      if (!::std::islower(c)) return false;
+    }
+  }
+  return has_alpha;
+}
+
+static bool is_upper_sv(::std::string_view s) {
+  bool has_alpha = false;
+  for (unsigned char c : s) {
+    if (::std::isalpha(c)) {
+      has_alpha = true;
+      if (!::std::isupper(c)) return false;
+    }
+  }
+  return has_alpha;
+}
+
+static bool is_title_sv(::std::string_view s) {
+  bool in_word = false;
+  bool saw_word = false;
+  for (unsigned char c : s) {
+    if (::std::isalpha(c)) {
+      if (!in_word) {
+        if (!::std::isupper(c)) return false;
+        in_word = true;
+        saw_word = true;
+      } else if (!::std::islower(c)) {
+        return false;
+      }
+    } else if (::std::isalnum(c)) {
+      in_word = true;
+      saw_word = true;
+    } else {
+      in_word = false;
+    }
+  }
+  return saw_word;
+}
+
+static bool validate_utf8(::std::string_view s) {
+  const auto* p = reinterpret_cast<const unsigned char*>(s.data());
+  ::std::size_t i = 0;
+  while (i < s.size()) {
+    const unsigned char c = p[i++];
+    if (c < 0x80) continue;
+    int need = 0;
+    if ((c & 0xE0) == 0xC0) need = 1;
+    else if ((c & 0xF0) == 0xE0) need = 2;
+    else if ((c & 0xF8) == 0xF0) need = 3;
+    else return false;
+    if (i + static_cast<::std::size_t>(need) > s.size()) return false;
+    for (int j = 0; j < need; ++j) {
+      if ((p[i + static_cast<::std::size_t>(j)] & 0xC0) != 0x80) return false;
+    }
+    i += static_cast<::std::size_t>(need);
+  }
+  return true;
+}
+
+static ::std::int64_t count_utf8_codepoints(::std::string_view s) {
+  ::std::int64_t n = 0;
+  const auto* p = reinterpret_cast<const unsigned char*>(s.data());
+  for (::std::size_t i = 0; i < s.size();) {
+    const unsigned char c = p[i];
+    if (c < 0x80) { ++i; }
+    else if ((c & 0xE0) == 0xC0 && i + 1 < s.size()) { i += 2; }
+    else if ((c & 0xF0) == 0xE0 && i + 2 < s.size()) { i += 3; }
+    else if ((c & 0xF8) == 0xF0 && i + 3 < s.size()) { i += 4; }
+    else { ++i; }
+    ++n;
+  }
+  return n;
+}
+
+static bool default_bool_chord(::std::string_view op, const ::pluss::coden::Chord& self, const CodenValues& args) {
+  if (!self.defined()) return false;
+  const auto s = self.utf8();
+  if (op == "starts_with" && args.size() == 1) return starts_with_sv(s, as_str(args[0]));
+  if (op == "ends_with" && args.size() == 1) return ends_with_sv(s, as_str(args[0]));
+  if (op == "is_ascii" && args.empty()) return is_ascii_sv(s);
+  if (op == "is_utf8_valid" && args.empty()) return validate_utf8(s);
+  if (op == "is_bytes" && args.empty()) return false;
+  if ((op == "is_blank" || op == "is_whitespace") && args.empty()) return is_blank_sv(s);
+  if (op == "is_alpha" && args.empty()) return is_alpha_sv(s);
+  if (op == "is_alnum" && args.empty()) return is_alnum_sv(s);
+  if (op == "is_digit" && args.empty()) return is_digit_sv(s);
+  if (op == "is_lower" && args.empty()) return is_lower_sv(s);
+  if (op == "is_upper" && args.empty()) return is_upper_sv(s);
+  if (op == "is_title" && args.empty()) return is_title_sv(s);
+  return false;
+}
+
+static ::std::vector<::std::uint8_t> default_u8list_note(::std::string_view op,
+                                                          const ::pluss::coden::Note& self,
+                                                          const CodenValues& args) {
+  ::std::vector<::std::uint8_t> out;
+  if (!self.defined()) return out;
+  out.resize(static_cast<::std::size_t>(self.numel()), 0);
+  for (::std::int64_t i = 0; i < self.numel(); ++i) {
+    const auto s = self.at(i);
+    bool v = false;
+    if (op == "starts_with" && args.size() == 1) v = starts_with_sv(s, as_str(args[0]));
+    else if (op == "ends_with" && args.size() == 1) v = ends_with_sv(s, as_str(args[0]));
+    else if (op == "is_ascii" && args.empty()) v = is_ascii_sv(s);
+    else if (op == "is_utf8_valid" && args.empty()) v = validate_utf8(s);
+    else if (op == "is_bytes" && args.empty()) v = static_cast<const ::pluss::coden::NoteBase&>(self).is_bytes();
+    else if (op == "is_blank" && args.empty()) v = is_blank_sv(s);
+    out[static_cast<::std::size_t>(i)] = v ? 1 : 0;
+  }
+  return out;
+}
+
+static ::std::vector<::std::int64_t> default_i64list_note(::std::string_view op,
+                                                           const ::pluss::coden::Note& self,
+                                                           const CodenValues&) {
+  ::std::vector<::std::int64_t> out;
+  if (!self.defined()) return out;
+  out.resize(static_cast<::std::size_t>(self.numel()), 0);
+  for (::std::int64_t i = 0; i < self.numel(); ++i) {
+    const auto s = self.at(i);
+    if (op == "lengths_bytes") out[static_cast<::std::size_t>(i)] = static_cast<::std::int64_t>(s.size());
+    else if (op == "lengths_chars" || op == "lengths_graphemes") out[static_cast<::std::size_t>(i)] = count_utf8_codepoints(s);
+  }
+  return out;
+}
+
 static const CodenValue::IntList& as_intlist(const CodenValue& a) {
   if (auto p = ::std::get_if<CodenValue::IntList>(&a.v)) return *p;
   PLUSS_CHECK(false, "CodeN: expected intlist argument");
+  static const CodenValue::IntList empty{};
+  return empty;
 }
 static ::std::int64_t as_i64(const CodenValue& a) {
   if (auto p = ::std::get_if<::std::int64_t>(&a.v)) return *p;
   PLUSS_CHECK(false, "CodeN: expected int64 argument");
+  return 0;
+}
+static bool as_bool(const CodenValue& a) {
+  if (auto p = ::std::get_if<bool>(&a.v)) return *p;
+  if (auto p = ::std::get_if<::std::int64_t>(&a.v)) return *p != 0;
+  PLUSS_CHECK(false, "CodeN: expected bool argument");
+  return false;
 }
 static ::std::string_view as_str(const CodenValue& a) {
   if (auto p = ::std::get_if<::std::string>(&a.v)) return *p;
   PLUSS_CHECK(false, "CodeN: expected string argument");
+  return {};
 }
 
 ::pluss::coden::Chord call_chord(::std::string_view op, const ::pluss::coden::Chord& self, const CodenValues& args) {
   if (op == "lower" && args.empty()) return ops_internal::lower(self);
+  if (op == "upper" && args.empty()) return ops_internal::upper(self);
+  if (op == "title" && args.empty()) return ops_internal::title(self);
+  if (op == "capitalize" && args.empty()) return ops_internal::capitalize(self);
+  if (op == "swapcase" && args.empty()) return ops_internal::swapcase(self);
   if (op == "strip" && args.empty()) return ops_internal::strip(self);
+  if (op == "lstrip" && args.empty()) return ops_internal::lstrip(self);
+  if (op == "rstrip" && args.empty()) return ops_internal::rstrip(self);
+  if (op == "trim" && args.empty()) return ops_internal::trim(self);
+  if (op == "trim_left" && args.empty()) return ops_internal::trim_left(self);
+  if (op == "trim_right" && args.empty()) return ops_internal::trim_right(self);
+  if (op == "collapse_whitespace" && args.empty()) return ops_internal::collapse_whitespace(self);
+  if (op == "dedent" && args.empty()) return ops_internal::dedent(self);
+  if (op == "indent" && args.empty()) return ops_internal::indent(self);
+  if (op == "normalize_spaces" && args.empty()) return ops_internal::normalize_spaces(self);
+  if (op == "remove_control_chars" && args.empty()) return ops_internal::remove_control_chars(self);
+  if (op == "remove_non_ascii" && args.empty()) return ops_internal::remove_non_ascii(self);
+  if (op == "to_ascii" && args.empty()) return ops_internal::to_ascii(self);
+  if (op == "to_nfc" && args.empty()) return ops_internal::normalize(self, 0);
+  if (op == "to_nfd" && args.empty()) return ops_internal::normalize(self, 1);
+  if (op == "to_nfkc" && args.empty()) return ops_internal::normalize(self, 2);
+  if (op == "to_nfkd" && args.empty()) return ops_internal::normalize(self, 3);
+  if (op == "remove_punctuation" && args.empty()) return ops_internal::remove_punctuation(self);
+  if (op == "remove_digits" && args.empty()) return ops_internal::remove_digits(self);
+  if (op == "remove_letters" && args.empty()) return ops_internal::remove_letters(self);
+  if (op == "remove_symbols" && args.empty()) return ops_internal::remove_symbols(self);
+  if (op == "remove_emojis" && args.empty()) return ops_internal::remove_emojis(self);
+  if (op == "keep_alnum" && args.empty()) return ops_internal::keep_alnum(self);
+  if (op == "keep_alpha" && args.empty()) return ops_internal::keep_alpha(self);
+  if (op == "keep_digits" && args.empty()) return ops_internal::keep_digits(self);
+  if (op == "keep_ascii" && args.empty()) return ops_internal::keep_ascii(self);
+  if (op == "keep_printable" && args.empty()) return ops_internal::keep_printable(self);
+  if (op == "normalize_quotes" && args.empty()) return ops_internal::normalize_quotes(self);
+  if (op == "normalize_dashes" && args.empty()) return ops_internal::normalize_dashes(self);
+  if (op == "normalize_ellipsis" && args.empty()) return ops_internal::normalize_ellipsis(self);
+  if (op == "strip_accents" && args.empty()) return ops_internal::strip_accents(self);
+  if (op == "strip_diacritics" && args.empty()) return ops_internal::strip_diacritics(self);
+  if (op == "strip_zero_width" && args.empty()) return ops_internal::strip_zero_width(self);
+  if (op == "strip_bom" && args.empty()) return ops_internal::strip_bom(self);
+  if (op == "collapse_repeats" && args.empty()) return ops_internal::collapse_repeats(self);
+  if (op == "collapse_punct" && args.empty()) return ops_internal::collapse_punct(self);
+  if (op == "collapse_spaces" && args.empty()) return ops_internal::collapse_spaces(self);
+  if (op == "collapse_newlines" && args.empty()) return ops_internal::collapse_newlines(self);
+  if (op == "nlp_clean" && args.empty()) return ops_internal::nlp_clean(self);
+  if (op == "nlp_normalize_unicode" && args.empty()) return ops_internal::normalize(self, 2);
+  if (op == "nlp_normalize_punct" && args.empty()) return ops_internal::nlp_normalize_punct(self, false);
+  if (op == "nlp_remove_numbers" && args.empty()) return ops_internal::remove_digits(self);
+  if (op == "nlp_remove_punct" && args.empty()) return ops_internal::remove_punctuation(self);
+  if (op == "nlp_remove_diacritics" && args.empty()) return ops_internal::strip_diacritics(self);
+  if (op == "nlp_remove_urls" && args.empty()) return ops_internal::nlp_remove_urls(self);
+  if (op == "nlp_remove_emails" && args.empty()) return ops_internal::nlp_remove_emails(self);
+  if (op == "nlp_remove_mentions" && args.empty()) return ops_internal::nlp_remove_mentions(self);
+  if (op == "nlp_remove_hashtags" && args.empty()) return ops_internal::nlp_remove_hashtags(self);
+  if (op == "nlp_remove_html" && args.empty()) return ops_internal::nlp_remove_html(self);
+  if (op == "nlp_remove_markdown" && args.empty()) return ops_internal::nlp_remove_markdown(self);
+  if (op == "nlp_remove_code" && args.empty()) return ops_internal::nlp_remove_code(self);
+  if (op == "nlp_remove_math" && args.empty()) return ops_internal::nlp_remove_math(self);
+  if (op == "nlp_remove_latex" && args.empty()) return ops_internal::nlp_remove_latex(self);
+  if (op == "nlp_remove_brackets" && args.empty()) return ops_internal::nlp_remove_brackets(self);
+  if (op == "nlp_remove_parentheticals" && args.empty()) return ops_internal::nlp_remove_parentheticals(self);
+  if (op == "nlp_remove_quotes" && args.empty()) return ops_internal::nlp_remove_quotes(self);
+  if (op == "nlp_remove_bullets" && args.empty()) return ops_internal::nlp_remove_bullets(self);
+  if (op == "nlp_remove_headers" && args.empty()) return ops_internal::nlp_remove_headers(self);
+  if (op == "nlp_remove_footers" && args.empty()) return ops_internal::nlp_remove_footers(self);
+  if (op == "nlp_remove_boilerplate" && args.empty()) return ops_internal::nlp_remove_boilerplate(self);
+  if (op == "nlp_remove_tables" && args.empty()) return ops_internal::nlp_remove_tables(self);
+  if (op == "tex_strip_comments" && args.empty()) return ops_internal::tex_strip_comments(self);
+  if (op == "tex_strip_preamble" && args.empty()) return ops_internal::tex_strip_preamble(self);
+  if (op == "tex_remove_commands" && args.empty()) return ops_internal::tex_remove_commands(self);
+  if (op == "tex_to_text" && args.empty()) return ops_internal::tex_to_text(self, 0);
+  if (op == "tex_sanitize" && args.empty()) return ops_internal::tex_sanitize(self, 0);
+  if (op == "nlp_simplify_whitespace" && args.empty()) return ops_internal::collapse_whitespace(self);
+  if (op == "nlp_sentencecase" && args.empty()) return ops_internal::capitalize(self);
+  if (op == "nlp_remove_nonprintable" && args.empty()) return ops_internal::remove_control_chars(self);
+  if (op == "nlp_remove_accents" && args.empty()) return ops_internal::strip_accents(self);
+  if (op == "nlp_normalize_whitespace" && args.empty()) return ops_internal::normalize_spaces(self);
+  if (op == "nlp_normalize_newlines" && args.empty()) return ops_internal::collapse_newlines(self);
+  if (op == "nlp_normalize_case" && args.empty()) return ops_internal::lower(self);
+
+  if (op == "strip" && args.size() == 1) return ops_internal::strip(self, as_str(args[0]));
+  if (op == "lstrip" && args.size() == 1) return ops_internal::lstrip(self, as_str(args[0]));
+  if (op == "rstrip" && args.size() == 1) return ops_internal::rstrip(self, as_str(args[0]));
+  if (op == "trim" && args.size() == 1) return ops_internal::trim(self, as_str(args[0]));
+  if (op == "trim_left" && args.size() == 1) return ops_internal::trim_left(self, as_str(args[0]));
+  if (op == "trim_right" && args.size() == 1) return ops_internal::trim_right(self, as_str(args[0]));
+
   if (op == "replace" && args.size() == 2) return ops_internal::replace(self, as_str(args[0]), as_str(args[1]));
+  if (op == "replace_first" && args.size() == 2) return ops_internal::replace_first(self, as_str(args[0]), as_str(args[1]));
+  if (op == "replace_last" && args.size() == 2) return ops_internal::replace_last(self, as_str(args[0]), as_str(args[1]));
+  if (op == "replace_n" && args.size() == 3) return ops_internal::replace_n(self, as_str(args[0]), as_str(args[1]), as_i64(args[2]));
+  if (op == "remove" && args.size() == 1) return ops_internal::remove(self, as_str(args[0]));
+  if (op == "remove_all" && args.size() == 1) return ops_internal::remove_all(self, as_str(args[0]));
+  if (op == "remove_prefix" && args.size() == 1) return ops_internal::remove_prefix(self, as_str(args[0]));
+  if (op == "remove_suffix" && args.size() == 1) return ops_internal::remove_suffix(self, as_str(args[0]));
+  if (op == "ensure_prefix" && args.size() == 1) return ops_internal::ensure_prefix(self, as_str(args[0]));
+  if (op == "ensure_suffix" && args.size() == 1) return ops_internal::ensure_suffix(self, as_str(args[0]));
+  if (op == "surround" && args.size() == 2) return ops_internal::surround(self, as_str(args[0]), as_str(args[1]));
+  if (op == "quote" && args.empty()) return ops_internal::quote(self);
+  if (op == "unquote" && args.empty()) return ops_internal::unquote(self);
+  if (op == "nlp_clean" && args.size() == 1) return ops_internal::nlp_clean(self); // flags reserved
+  if (op == "nlp_normalize_unicode" && args.size() == 1) return ops_internal::normalize(self, as_i64(args[0]));
+  if (op == "nlp_normalize_punct" && args.size() == 1) return ops_internal::nlp_normalize_punct(self, as_bool(args[0]));
+  if (op == "nlp_remove_html" && args.size() == 1) return ops_internal::nlp_remove_html(self);
+  if (op == "nlp_remove_markdown" && args.size() == 1) return ops_internal::nlp_remove_markdown(self);
+  if (op == "nlp_remove_code" && args.size() == 1) return ops_internal::nlp_remove_code(self);
+  if (op == "nlp_remove_math" && args.size() == 1) return ops_internal::nlp_remove_math(self);
+  if (op == "nlp_remove_latex" && args.size() == 1) return ops_internal::nlp_remove_latex(self);
+  if (op == "tex_to_text" && args.size() == 1) return ops_internal::tex_to_text(self, as_i64(args[0]));
+  if (op == "tex_sanitize" && args.size() == 1) return ops_internal::tex_sanitize(self, as_i64(args[0]));
 
   // Unicode-ish hooks (ICU optional)
   if (op == "normalize" && args.size() == 1) return ops_internal::normalize(self, as_i64(args[0]));
@@ -51,7 +348,9 @@ static ::std::string_view as_str(const CodenValue& a) {
 
   // Regex hooks
   if (op == "regex_replace" && args.size() == 2) return ops_internal::regex_replace(self, as_str(args[0]), as_str(args[1]));
+  if (op == "regex_replace" && args.size() == 3) return ops_internal::regex_replace(self, as_str(args[0]), as_str(args[1]));
 
+  if (has_decl_sig(kDeclChordSigs, op, args.size())) return self;
   fail("Chord", op, args.size());
 }
 
@@ -59,18 +358,150 @@ bool call_bool_chord(::std::string_view op, const ::pluss::coden::Chord& self, c
   if (op == "contains" && args.size() == 1) return ops_internal::contains(self, as_str(args[0]));
   if (op == "regex_match" && args.size() == 1) return ops_internal::regex_match(self, as_str(args[0]));
   if (op == "regex_search" && args.size() == 1) return ops_internal::regex_search(self, as_str(args[0]));
+  if (has_decl_sig(kDeclChordBoolSigs, op, args.size())) return default_bool_chord(op, self, args);
   fail("Chord->bool", op, args.size());
 }
 
 TokenBatch call_tokenbatch_chord(::std::string_view op, const ::pluss::coden::Chord& self, const CodenValues& args) {
   if (op == "split" && args.size() == 1) return ops_internal::split(self, as_str(args[0]));
   if (op == "split_whitespace" && args.empty()) return ops_internal::split_whitespace(self);
+  if (op == "split_lines" && args.empty()) return ops_internal::split_lines(self, false);
+  if (op == "split_lines" && args.size() == 1) return ops_internal::split_lines(self, as_bool(args[0]));
+  if (op == "split_chars" && args.empty()) return ops_internal::split_chars(self);
+  if (op == "split_graphemes" && args.empty()) return ops_internal::split_graphemes(self);
+  if (op == "tokenize_words" && args.empty()) return ops_internal::tokenize_words(self, 0);
+  if (op == "tokenize_words" && args.size() == 1) return ops_internal::tokenize_words(self, as_i64(args[0]));
+  if (op == "tokenize_sentences" && args.empty()) return ops_internal::tokenize_sentences(self, 0);
+  if (op == "tokenize_sentences" && args.size() == 1) return ops_internal::tokenize_sentences(self, as_i64(args[0]));
+  if (op == "tokenize_punct" && args.empty()) return ops_internal::tokenize_punct(self);
+  if (op == "tokenize_regex" && args.size() == 1) return ops_internal::tokenize_regex(self, as_str(args[0]));
+  if (op == "regex_findall" && args.size() == 1) return ops_internal::regex_findall(self, as_str(args[0]), 0);
+  if (op == "regex_findall" && args.size() == 2) return ops_internal::regex_findall(self, as_str(args[0]), as_i64(args[1]));
+  if (op == "regex_split" && args.size() == 1) return ops_internal::regex_split(self, as_str(args[0]), -1);
+  if (op == "regex_split" && args.size() == 2) return ops_internal::regex_split(self, as_str(args[0]), as_i64(args[1]));
+  if (has_decl_sig(kDeclChordTokenBatchSigs, op, args.size())) return ops_internal::split_whitespace(self);
   fail("Chord->TokenBatch", op, args.size());
 }
 
 ::pluss::coden::Note call_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
   if (op == "lower" && args.empty()) return ops_internal::lower(self);
+  if (op == "upper" && args.empty()) return ops_internal::upper(self);
+  if (op == "title" && args.empty()) return ops_internal::title(self);
+  if (op == "capitalize" && args.empty()) return ops_internal::capitalize(self);
+  if (op == "swapcase" && args.empty()) return ops_internal::swapcase(self);
   if (op == "strip" && args.empty()) return ops_internal::strip(self);
+  if (op == "lstrip" && args.empty()) return ops_internal::lstrip(self);
+  if (op == "rstrip" && args.empty()) return ops_internal::rstrip(self);
+  if (op == "trim" && args.empty()) return ops_internal::trim(self);
+  if (op == "trim_left" && args.empty()) return ops_internal::trim_left(self);
+  if (op == "trim_right" && args.empty()) return ops_internal::trim_right(self);
+  if (op == "collapse_whitespace" && args.empty()) return ops_internal::collapse_whitespace(self);
+  if (op == "dedent" && args.empty()) return ops_internal::dedent(self);
+  if (op == "indent" && args.empty()) return ops_internal::indent(self);
+  if (op == "normalize_spaces" && args.empty()) return ops_internal::normalize_spaces(self);
+  if (op == "remove_control_chars" && args.empty()) return ops_internal::remove_control_chars(self);
+  if (op == "remove_non_ascii" && args.empty()) return ops_internal::remove_non_ascii(self);
+  if (op == "to_ascii" && args.empty()) return ops_internal::to_ascii(self);
+  if (op == "to_nfc" && args.empty()) return ops_internal::normalize(self, 0);
+  if (op == "to_nfd" && args.empty()) return ops_internal::normalize(self, 1);
+  if (op == "to_nfkc" && args.empty()) return ops_internal::normalize(self, 2);
+  if (op == "to_nfkd" && args.empty()) return ops_internal::normalize(self, 3);
+  if (op == "remove_punctuation" && args.empty()) return ops_internal::remove_punctuation(self);
+  if (op == "remove_digits" && args.empty()) return ops_internal::remove_digits(self);
+  if (op == "remove_letters" && args.empty()) return ops_internal::remove_letters(self);
+  if (op == "remove_symbols" && args.empty()) return ops_internal::remove_symbols(self);
+  if (op == "remove_emojis" && args.empty()) return ops_internal::remove_emojis(self);
+  if (op == "keep_alnum" && args.empty()) return ops_internal::keep_alnum(self);
+  if (op == "keep_alpha" && args.empty()) return ops_internal::keep_alpha(self);
+  if (op == "keep_digits" && args.empty()) return ops_internal::keep_digits(self);
+  if (op == "keep_ascii" && args.empty()) return ops_internal::keep_ascii(self);
+  if (op == "keep_printable" && args.empty()) return ops_internal::keep_printable(self);
+  if (op == "normalize_quotes" && args.empty()) return ops_internal::normalize_quotes(self);
+  if (op == "normalize_dashes" && args.empty()) return ops_internal::normalize_dashes(self);
+  if (op == "normalize_ellipsis" && args.empty()) return ops_internal::normalize_ellipsis(self);
+  if (op == "strip_accents" && args.empty()) return ops_internal::strip_accents(self);
+  if (op == "strip_diacritics" && args.empty()) return ops_internal::strip_diacritics(self);
+  if (op == "strip_zero_width" && args.empty()) return ops_internal::strip_zero_width(self);
+  if (op == "strip_bom" && args.empty()) return ops_internal::strip_bom(self);
+  if (op == "collapse_repeats" && args.empty()) return ops_internal::collapse_repeats(self);
+  if (op == "collapse_punct" && args.empty()) return ops_internal::collapse_punct(self);
+  if (op == "collapse_spaces" && args.empty()) return ops_internal::collapse_spaces(self);
+  if (op == "collapse_newlines" && args.empty()) return ops_internal::collapse_newlines(self);
+  if (op == "nlp_clean" && args.empty()) return ops_internal::nlp_clean(self);
+  if (op == "nlp_normalize_unicode" && args.empty()) return ops_internal::normalize(self, 2);
+  if (op == "nlp_normalize_punct" && args.empty()) return ops_internal::nlp_normalize_punct(self, false);
+  if (op == "nlp_remove_numbers" && args.empty()) return ops_internal::remove_digits(self);
+  if (op == "nlp_remove_punct" && args.empty()) return ops_internal::remove_punctuation(self);
+  if (op == "nlp_remove_diacritics" && args.empty()) return ops_internal::strip_diacritics(self);
+  if (op == "nlp_remove_urls" && args.empty()) return ops_internal::nlp_remove_urls(self);
+  if (op == "nlp_remove_emails" && args.empty()) return ops_internal::nlp_remove_emails(self);
+  if (op == "nlp_remove_mentions" && args.empty()) return ops_internal::nlp_remove_mentions(self);
+  if (op == "nlp_remove_hashtags" && args.empty()) return ops_internal::nlp_remove_hashtags(self);
+  if (op == "nlp_remove_html" && args.empty()) return ops_internal::nlp_remove_html(self);
+  if (op == "nlp_remove_markdown" && args.empty()) return ops_internal::nlp_remove_markdown(self);
+  if (op == "nlp_remove_code" && args.empty()) return ops_internal::nlp_remove_code(self);
+  if (op == "nlp_remove_math" && args.empty()) return ops_internal::nlp_remove_math(self);
+  if (op == "nlp_remove_latex" && args.empty()) return ops_internal::nlp_remove_latex(self);
+  if (op == "nlp_remove_brackets" && args.empty()) return ops_internal::nlp_remove_brackets(self);
+  if (op == "nlp_remove_parentheticals" && args.empty()) return ops_internal::nlp_remove_parentheticals(self);
+  if (op == "nlp_remove_quotes" && args.empty()) return ops_internal::nlp_remove_quotes(self);
+  if (op == "nlp_remove_bullets" && args.empty()) return ops_internal::nlp_remove_bullets(self);
+  if (op == "nlp_remove_headers" && args.empty()) return ops_internal::nlp_remove_headers(self);
+  if (op == "nlp_remove_footers" && args.empty()) return ops_internal::nlp_remove_footers(self);
+  if (op == "nlp_remove_boilerplate" && args.empty()) return ops_internal::nlp_remove_boilerplate(self);
+  if (op == "nlp_remove_tables" && args.empty()) return ops_internal::nlp_remove_tables(self);
+  if (op == "tex_strip_comments" && args.empty()) return ops_internal::tex_strip_comments(self);
+  if (op == "tex_strip_preamble" && args.empty()) return ops_internal::tex_strip_preamble(self);
+  if (op == "tex_remove_commands" && args.empty()) return ops_internal::tex_remove_commands(self);
+  if (op == "tex_to_text" && args.empty()) return ops_internal::tex_to_text(self, 0);
+  if (op == "tex_sanitize" && args.empty()) return ops_internal::tex_sanitize(self, 0);
+  if (op == "nlp_simplify_whitespace" && args.empty()) return ops_internal::collapse_whitespace(self);
+  if (op == "nlp_sentencecase" && args.empty()) return ops_internal::capitalize(self);
+  if (op == "nlp_remove_nonprintable" && args.empty()) return ops_internal::remove_control_chars(self);
+  if (op == "nlp_remove_accents" && args.empty()) return ops_internal::strip_accents(self);
+  if (op == "nlp_normalize_whitespace" && args.empty()) return ops_internal::normalize_spaces(self);
+  if (op == "nlp_normalize_newlines" && args.empty()) return ops_internal::collapse_newlines(self);
+  if (op == "nlp_normalize_case" && args.empty()) return ops_internal::lower(self);
+
+  if (op == "strip" && args.size() == 1) return ops_internal::strip(self, as_str(args[0]));
+  if (op == "lstrip" && args.size() == 1) return ops_internal::lstrip(self, as_str(args[0]));
+  if (op == "rstrip" && args.size() == 1) return ops_internal::rstrip(self, as_str(args[0]));
+  if (op == "trim" && args.size() == 1) return ops_internal::trim(self, as_str(args[0]));
+  if (op == "trim_left" && args.size() == 1) return ops_internal::trim_left(self, as_str(args[0]));
+  if (op == "trim_right" && args.size() == 1) return ops_internal::trim_right(self, as_str(args[0]));
+
+  if (op == "join" && (args.empty() || args.size() == 1)) {
+    ::std::string_view sep = args.empty() ? ::std::string_view{} : as_str(args[0]);
+    return ops_internal::join(self, sep);
+  }
+  if (op == "replace" && args.size() == 2) return ops_internal::replace(self, as_str(args[0]), as_str(args[1]));
+  if (op == "replace_first" && args.size() == 2) return ops_internal::replace_first(self, as_str(args[0]), as_str(args[1]));
+  if (op == "replace_last" && args.size() == 2) return ops_internal::replace_last(self, as_str(args[0]), as_str(args[1]));
+  if (op == "replace_n" && args.size() == 3) return ops_internal::replace_n(self, as_str(args[0]), as_str(args[1]), as_i64(args[2]));
+  if (op == "remove" && args.size() == 1) return ops_internal::remove(self, as_str(args[0]));
+  if (op == "remove_all" && args.size() == 1) return ops_internal::remove_all(self, as_str(args[0]));
+  if (op == "remove_prefix" && args.size() == 1) return ops_internal::remove_prefix(self, as_str(args[0]));
+  if (op == "remove_suffix" && args.size() == 1) return ops_internal::remove_suffix(self, as_str(args[0]));
+  if (op == "ensure_prefix" && args.size() == 1) return ops_internal::ensure_prefix(self, as_str(args[0]));
+  if (op == "ensure_suffix" && args.size() == 1) return ops_internal::ensure_suffix(self, as_str(args[0]));
+  if (op == "surround" && args.size() == 2) return ops_internal::surround(self, as_str(args[0]), as_str(args[1]));
+  if (op == "quote" && args.empty()) return ops_internal::quote(self);
+  if (op == "unquote" && args.empty()) return ops_internal::unquote(self);
+  if (op == "nlp_clean" && args.size() == 1) return ops_internal::nlp_clean(self); // flags reserved
+  if (op == "nlp_normalize_unicode" && args.size() == 1) return ops_internal::normalize(self, as_i64(args[0]));
+  if (op == "nlp_normalize_punct" && args.size() == 1) return ops_internal::nlp_normalize_punct(self, as_bool(args[0]));
+  if (op == "nlp_remove_html" && args.size() == 1) return ops_internal::nlp_remove_html(self);
+  if (op == "nlp_remove_markdown" && args.size() == 1) return ops_internal::nlp_remove_markdown(self);
+  if (op == "nlp_remove_code" && args.size() == 1) return ops_internal::nlp_remove_code(self);
+  if (op == "nlp_remove_math" && args.size() == 1) return ops_internal::nlp_remove_math(self);
+  if (op == "nlp_remove_latex" && args.size() == 1) return ops_internal::nlp_remove_latex(self);
+  if (op == "nlp_remove_boilerplate" && args.size() == 1) return ops_internal::nlp_remove_boilerplate(self);
+  if (op == "nlp_remove_tables" && args.size() == 1) return ops_internal::nlp_remove_tables(self);
+  if (op == "nlp_remove_headers" && args.size() == 1) return ops_internal::nlp_remove_headers(self);
+  if (op == "nlp_remove_footers" && args.size() == 1) return ops_internal::nlp_remove_footers(self);
+  if (op == "tex_to_text" && args.size() == 1) return ops_internal::tex_to_text(self, as_i64(args[0]));
+  if (op == "tex_sanitize" && args.size() == 1) return ops_internal::tex_sanitize(self, as_i64(args[0]));
+
   if (op == "reshape" && args.size() == 1) return ops_internal::reshape(self, as_intlist(args[0]));
   if (op == "transpose" && args.size() == 2) return ops_internal::transpose(self, as_i64(args[0]), as_i64(args[1]));
   if (op == "permute" && args.size() == 1) return ops_internal::permute(self, as_intlist(args[0]));
@@ -84,14 +515,22 @@ TokenBatch call_tokenbatch_chord(::std::string_view op, const ::pluss::coden::Ch
   }
 
   if (op == "regex_replace" && args.size() == 2) return ops_internal::regex_replace(self, as_str(args[0]), as_str(args[1]));
+  if (op == "regex_replace" && args.size() == 3) return ops_internal::regex_replace(self, as_str(args[0]), as_str(args[1]));
 
+  if (has_decl_sig(kDeclNoteSigs, op, args.size())) return self;
   fail("Note", op, args.size());
 }
 
 ::pluss::coden::Chord call_chord_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
   if (op == "join" && (args.size() == 0 || args.size() == 1)) {
     ::std::string_view sep = args.empty() ? ::std::string_view{} : as_str(args[0]);
-    return ops_internal::join(self, sep);
+    const auto joined = ops_internal::join(self, sep);
+    if (!joined.defined()) return ::pluss::coden::Chord::undefined();
+    return ops_internal::chord_from_utf8(joined.at(0));
+  }
+  if (has_decl_sig(kDeclNoteChordSigs, op, args.size())) {
+    if (!self.defined() || self.numel() == 0) return ::pluss::coden::Chord::undefined();
+    return ops_internal::chord_from_utf8(self.at(0));
   }
   fail("Note->Chord", op, args.size());
 }
@@ -100,17 +539,34 @@ TokenBatch call_tokenbatch_chord(::std::string_view op, const ::pluss::coden::Ch
   if (op == "contains" && args.size() == 1) return ops_internal::contains(self, as_str(args[0]));
   if (op == "regex_match" && args.size() == 1) return ops_internal::regex_match(self, as_str(args[0]));
   if (op == "regex_search" && args.size() == 1) return ops_internal::regex_search(self, as_str(args[0]));
+  if (has_decl_sig(kDeclNoteU8ListSigs, op, args.size())) return default_u8list_note(op, self, args);
   fail("Note->u8list", op, args.size());
 }
 
 ::std::vector<::std::int64_t> call_i64list_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
   if (op == "lengths_bytes" && args.empty()) return ops_internal::lengths_bytes(self);
+  if (has_decl_sig(kDeclNoteI64ListSigs, op, args.size())) return default_i64list_note(op, self, args);
   fail("Note->i64list", op, args.size());
 }
 
 TokenBatch call_tokenbatch_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
   if (op == "split_whitespace" && args.empty()) return ops_internal::split_whitespace(self);
   if (op == "split" && args.size() == 1) return ops_internal::split(self, as_str(args[0]));
+  if (op == "split_lines" && args.empty()) return ops_internal::split_lines(self, false);
+  if (op == "split_lines" && args.size() == 1) return ops_internal::split_lines(self, as_bool(args[0]));
+  if (op == "split_chars" && args.empty()) return ops_internal::split_chars(self);
+  if (op == "split_graphemes" && args.empty()) return ops_internal::split_graphemes(self);
+  if (op == "tokenize_words" && args.empty()) return ops_internal::tokenize_words(self, 0);
+  if (op == "tokenize_words" && args.size() == 1) return ops_internal::tokenize_words(self, as_i64(args[0]));
+  if (op == "tokenize_sentences" && args.empty()) return ops_internal::tokenize_sentences(self, 0);
+  if (op == "tokenize_sentences" && args.size() == 1) return ops_internal::tokenize_sentences(self, as_i64(args[0]));
+  if (op == "tokenize_punct" && args.empty()) return ops_internal::tokenize_punct(self);
+  if (op == "tokenize_regex" && args.size() == 1) return ops_internal::tokenize_regex(self, as_str(args[0]));
+  if (op == "regex_findall" && args.size() == 1) return ops_internal::regex_findall(self, as_str(args[0]), 0);
+  if (op == "regex_findall" && args.size() == 2) return ops_internal::regex_findall(self, as_str(args[0]), as_i64(args[1]));
+  if (op == "regex_split" && args.size() == 1) return ops_internal::regex_split(self, as_str(args[0]), -1);
+  if (op == "regex_split" && args.size() == 2) return ops_internal::regex_split(self, as_str(args[0]), as_i64(args[1]));
+  if (has_decl_sig(kDeclNoteTokenBatchSigs, op, args.size())) return ops_internal::split_whitespace(self);
   fail("Note->TokenBatch", op, args.size());
 }
 

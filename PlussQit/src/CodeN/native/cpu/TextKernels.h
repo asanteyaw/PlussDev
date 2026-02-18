@@ -8,9 +8,63 @@ namespace pluss::coden::native::cpu {
 
 // ASCII-only lowercasing.
 ::std::string lower_ascii(::std::string_view s);
+::std::string upper_ascii(::std::string_view s);
+::std::string title_ascii(::std::string_view s);
+::std::string capitalize_ascii(::std::string_view s);
+::std::string swapcase_ascii(::std::string_view s);
 
 // ASCII whitespace strip.
 ::std::string strip_ascii(::std::string_view s);
+::std::string lstrip_ascii(::std::string_view s);
+::std::string rstrip_ascii(::std::string_view s);
+::std::string strip_ascii(::std::string_view s, ::std::string_view chars);
+::std::string lstrip_ascii(::std::string_view s, ::std::string_view chars);
+::std::string rstrip_ascii(::std::string_view s, ::std::string_view chars);
+::std::string collapse_whitespace_ascii(::std::string_view s);
+::std::string normalize_spaces_ascii(::std::string_view s);
+::std::string dedent_ascii(::std::string_view s);
+::std::string indent_ascii(::std::string_view s, ::std::int64_t spaces = 2);
+::std::string remove_control_ascii(::std::string_view s);
+::std::string remove_non_ascii(::std::string_view s);
+::std::string to_ascii_lossy(::std::string_view s);
+::std::string remove_punctuation_ascii(::std::string_view s);
+::std::string remove_digits_ascii(::std::string_view s);
+::std::string remove_letters_ascii(::std::string_view s);
+::std::string remove_symbols_ascii(::std::string_view s);
+::std::string remove_emojis_utf8(::std::string_view s);
+::std::string keep_alnum_ascii(::std::string_view s);
+::std::string keep_alpha_ascii(::std::string_view s);
+::std::string keep_digits_ascii(::std::string_view s);
+::std::string keep_ascii(::std::string_view s);
+::std::string keep_printable_ascii(::std::string_view s);
+::std::string normalize_quotes_utf8(::std::string_view s);
+::std::string normalize_dashes_utf8(::std::string_view s);
+::std::string normalize_ellipsis_utf8(::std::string_view s);
+::std::string strip_accents_utf8(::std::string_view s);
+::std::string strip_diacritics_utf8(::std::string_view s);
+::std::string strip_zero_width_utf8(::std::string_view s);
+::std::string strip_bom_utf8(::std::string_view s);
+::std::string collapse_repeats_ascii(::std::string_view s);
+::std::string collapse_punct_ascii(::std::string_view s);
+::std::string collapse_spaces_ascii(::std::string_view s);
+::std::string collapse_newlines_ascii(::std::string_view s);
+::std::string nlp_remove_urls_fast(::std::string_view s);
+::std::string nlp_remove_emails_fast(::std::string_view s);
+::std::string nlp_remove_mentions_fast(::std::string_view s);
+::std::string nlp_remove_hashtags_fast(::std::string_view s);
+::std::string nlp_remove_html_fast(::std::string_view s);
+::std::string nlp_remove_markdown_fast(::std::string_view s);
+::std::string nlp_remove_code_fast(::std::string_view s);
+::std::string nlp_remove_math_fast(::std::string_view s);
+::std::string nlp_remove_latex_fast(::std::string_view s);
+::std::string nlp_remove_brackets_fast(::std::string_view s);
+::std::string nlp_remove_parentheticals_fast(::std::string_view s);
+::std::string nlp_remove_quotes_fast(::std::string_view s);
+::std::string nlp_remove_bullets_fast(::std::string_view s);
+::std::string nlp_remove_headers_fast(::std::string_view s);
+::std::string nlp_remove_footers_fast(::std::string_view s);
+::std::string nlp_remove_boilerplate_fast(::std::string_view s);
+::std::string nlp_remove_tables_fast(::std::string_view s);
 
 // Byte substring contains.
 bool contains_bytes(::std::string_view hay, ::std::string_view needle);

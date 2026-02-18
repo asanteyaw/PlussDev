@@ -263,8 +263,8 @@
   TokenBatch tex_extract_functions() const;
   TokenBatch tex_extract_numbers() const;
   TokenBatch tex_extract_identifiers() const;
-  Chord join() const;
-  Chord join(::std::string_view sep) const;
+  Note join() const;
+  Note join(::std::string_view sep) const;
   Note reshape(::std::span<const ::std::int64_t> sizes) const;
   Note transpose(::std::int64_t dim0, ::std::int64_t dim1) const;
   Note permute(::std::span<const ::std::int64_t> dims) const;

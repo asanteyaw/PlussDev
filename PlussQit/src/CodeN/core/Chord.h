@@ -14,12 +14,12 @@ namespace ops_internal {
 struct ChordFactoryAccess;
 } // namespace ops_internal
 
-struct TokenBatch;
+class TokenBatch;
 
-// User-facing scalar text object.
+// Internal scalar text handle.
 class CODEN_API Chord final : public ChordBase {
 public:
-  Chord() = default;
+  static Chord undefined() noexcept { return Chord(); }
 
   bool empty() const noexcept { return size_bytes() == 0; }
 
@@ -30,6 +30,8 @@ public:
   ::std::string to_utf8() const { return ::std::string(utf8()); }
 
 private:
+  Chord() = default;
+
   explicit Chord(::pluss::flame::intrusive_ptr<ChordImpl> impl)
       : ChordBase(::std::move(impl)) {}
 

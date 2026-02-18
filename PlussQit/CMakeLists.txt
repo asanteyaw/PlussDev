@@ -209,6 +209,26 @@ endif()
 endif() # PLUSSQIT_BUILD_CODEM
 
 # ---- CodeN (text, Note/Chord) ----
+set(CODEN_GEN_DIR ${CMAKE_BINARY_DIR}/generated/CodeN/generated)
+set(CODEN_DISPATCH_FALLBACKS_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/gen_coden_decl_dispatch_fallbacks.py)
+set(CODEN_NOTE_DECLS_GEN ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeN/generated/NoteMethodDeclsGen.h)
+set(CODEN_CHORD_DECLS_GEN ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeN/generated/ChordMethodDeclsGen.h)
+set(CODEN_DISPATCH_FALLBACKS_INC ${CODEN_GEN_DIR}/DispatchDeclFallbacks.inc)
+
+add_custom_command(
+  OUTPUT ${CODEN_DISPATCH_FALLBACKS_INC}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CODEN_GEN_DIR}
+  COMMAND ${Python3_EXECUTABLE} ${CODEN_DISPATCH_FALLBACKS_GEN_SCRIPT}
+          --note-decls ${CODEN_NOTE_DECLS_GEN}
+          --chord-decls ${CODEN_CHORD_DECLS_GEN}
+          --out ${CODEN_DISPATCH_FALLBACKS_INC}
+  DEPENDS
+    ${CODEN_DISPATCH_FALLBACKS_GEN_SCRIPT}
+    ${CODEN_NOTE_DECLS_GEN}
+    ${CODEN_CHORD_DECLS_GEN}
+  COMMENT "Generating CodeN declared-dispatch fallback registry"
+)
+
 file(GLOB_RECURSE PLUSSQIT_CODEN_CPP CONFIGURE_DEPENDS
   "src/CodeN/core/*.cpp"
   "src/CodeN/native/cpu/*.cpp"
@@ -216,6 +236,7 @@ file(GLOB_RECURSE PLUSSQIT_CODEN_CPP CONFIGURE_DEPENDS
 )
 
 add_library(plussqit_coden
+  ${CODEN_DISPATCH_FALLBACKS_INC}
   ${PLUSSQIT_CODEN_CPP}
   src/Flame/Flame.h
   src/CodeN/core/Errors.h
@@ -240,6 +261,7 @@ add_library(PlussQit::CodeN ALIAS plussqit_coden)
 
 target_include_directories(plussqit_coden
   PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/generated>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )

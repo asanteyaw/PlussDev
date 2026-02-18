@@ -50,8 +50,8 @@ inline constexpr OpSig kOpSigs[] = {
   {"split_whitespace", "TokenBatch Note split_whitespace()"},
   {"split", "TokenBatch Chord split(string delim)"},
   {"split", "TokenBatch Note split(string delim)"},
-  {"join", "Chord Note join()"},
-  {"join", "Chord Note join(string sep)"},
+  {"join", "Note join()"},
+  {"join", "Note join(string sep)"},
 
   {"lengths_bytes", "i64list Note lengths_bytes()"},
 };

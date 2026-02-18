@@ -5,7 +5,6 @@
 
 #include "CodeN/compat/Invoke.h"
 #include "CodeN/core/TokenBatch.h"
-#include "CodeN/core/Chord.h"
 
 namespace pluss::coden {
 
@@ -1057,12 +1056,12 @@ inline TokenBatch Note::tex_extract_identifiers() const {
   return ::pluss::coden::_compat::invoke<TokenBatch>("tex_extract_identifiers", *this);
 }
 
-inline Chord Note::join() const {
-  return ::pluss::coden::_compat::invoke<Chord>("join", *this);
+inline Note Note::join() const {
+  return ::pluss::coden::_compat::invoke<Note>("join", *this);
 }
 
-inline Chord Note::join(::std::string_view sep) const {
-  return ::pluss::coden::_compat::invoke<Chord>("join", *this, sep);
+inline Note Note::join(::std::string_view sep) const {
+  return ::pluss::coden::_compat::invoke<Note>("join", *this, sep);
 }
 
 inline Note Note::reshape(::std::span<const ::std::int64_t> sizes) const {
