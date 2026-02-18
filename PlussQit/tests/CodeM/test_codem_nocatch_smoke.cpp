@@ -6,6 +6,7 @@
 #include <exception>
 #include <functional>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -101,6 +102,71 @@ void test_factories() {
   std::cout << "[RUN] factories:tensor_alias\n";
   auto t = pluss::tensor({1, 2, 3});
   expect_true(t.numel() == 3, "tensor alias works");
+}
+
+void test_aux_let_queue() {
+  std::cout << "[RUN] aux:let\n";
+  auto lv = let(std::vector<int>{1, 2, 3})
+                .then([](const std::vector<int>& x) {
+                  std::vector<int> y = x;
+                  for (auto& v : y) v *= 2;
+                  return y;
+                })
+                .tap([](const std::vector<int>& x) {
+                  if (x.size() != 3) {
+                    throw std::runtime_error("let tap: unexpected size");
+                  }
+                })
+                .value();
+  expect_eq(lv, std::vector<int>{2, 4, 6}, "let pipeline");
+
+  auto gv = let(5).then([](int x) { return x + 3; }).value();
+  expect_true(gv == 8, "global let alias");
+
+  auto la = let.as<double>(3).then([](double x) { return x + 0.5; }).value();
+  expect_close(la, 3.5, 1e-12, "let typed conversion");
+
+  std::cout << "[RUN] aux:queue_range\n";
+  std::vector<int> xs{1, 2, 3, 4};
+  auto sq = pluss::queue([](int x) { return x * x; }, xs);
+  expect_eq(sq, std::vector<int>{1, 4, 9, 16}, "queue range unary");
+
+  std::cout << "[RUN] aux:queue_indexed\n";
+  auto with_idx = pluss::queue([](int x, std::size_t i) { return x + static_cast<int>(i); }, xs);
+  expect_eq(with_idx, std::vector<int>{1, 3, 5, 7}, "queue indexed callable");
+
+  std::cout << "[RUN] aux:queue_iterators\n";
+  auto it_res = pluss::queue([](int x) { return x - 1; }, xs.begin(), xs.end());
+  expect_eq(it_res, std::vector<int>{0, 1, 2, 3}, "queue iterator overload");
+
+  std::cout << "[RUN] aux:queue_binary\n";
+  std::vector<int> ys{10, 20, 30, 40};
+  auto sum = pluss::queue([](int a, int b) { return a + b; }, xs, ys);
+  expect_eq(sum, std::vector<int>{11, 22, 33, 44}, "queue binary zip");
+
+  std::cout << "[RUN] aux:queue_parallel\n";
+  auto par = pluss::queue(
+      [](int x) { return x * 3; },
+      xs,
+      pluss::queue_options{.exec = pluss::queue_exec::par, .grain_size = 1, .workers = 2});
+  expect_eq(par, std::vector<int>{3, 6, 9, 12}, "queue parallel");
+
+  std::cout << "[RUN] aux:queue_object\n";
+  struct Item {
+    int v;
+  };
+  struct Bump {
+    int delta;
+    Item operator()(const Item& it) const { return Item{it.v + delta}; }
+  };
+  std::vector<Item> items{{1}, {2}, {3}};
+  auto bumped = pluss::queue(Bump{5}, items);
+  expect_true(bumped.size() == 3 && bumped[0].v == 6 && bumped[2].v == 8, "queue callable object");
+
+  std::cout << "[RUN] aux:queue_series\n";
+  auto s = pluss::value(std::vector<double>{1.0, 2.0, 3.0}, {3});
+  auto ss = pluss::queue([](const pluss::Series& t) { return t.mul(t); }, s);
+  expect_eq(ss.to_vec<double>(), std::vector<double>{1.0, 4.0, 9.0}, "queue single-object apply");
 }
 
 void test_arithmetic_and_reduce() {
@@ -361,6 +427,8 @@ int main() {
   try {
     std::cout << "[RUN] factories\n";
     test_factories();
+    std::cout << "[RUN] aux\n";
+    test_aux_let_queue();
     std::cout << "[RUN] arith_reduce\n";
     test_arithmetic_and_reduce();
     std::cout << "[RUN] indexing_ops\n";

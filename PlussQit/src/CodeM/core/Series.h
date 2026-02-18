@@ -26,9 +26,7 @@
 #include "CodeM/compat/Invoke.h"
 
 #ifdef PLUSS_ENABLE_TORCH
-namespace torch {
-class Tensor;
-} // namespace torch
+#include <torch/torch.h>
 #endif
 
 

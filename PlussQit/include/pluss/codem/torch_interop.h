@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "pluss/codem/codem.h" // pluss::codem::Series, ScalarType
+#include "CodeM/core/ViewInvariants.h"
 
 namespace pluss::codem {
 

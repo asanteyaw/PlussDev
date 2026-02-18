@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import re
 from pathlib import Path
-ROOT = Path('/Users/yawasante/software/cxx/PlussMa')
+ROOT = Path(__file__).resolve().parents[1]
 DECL = ROOT / 'PlussQit/src/CodeM/core/SeriesMethods.inc'
 IMPL = ROOT / 'PlussQit/src/CodeM/core/SeriesMethods.cpp.inc'
 

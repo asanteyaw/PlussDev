@@ -6,7 +6,7 @@ impls that do not correspond to a declaration.
 """
 from pathlib import Path
 import re
-ROOT = Path('/Users/yawasante/software/cxx/PlussMa')
+ROOT = Path(__file__).resolve().parents[1]
 DECL = ROOT / 'PlussQit/src/CodeM/core/SeriesMethods.inc'
 IMPL = ROOT / 'PlussQit/src/CodeM/core/SeriesMethods.cpp.inc'
 

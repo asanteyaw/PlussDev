@@ -1,3 +1,0 @@
-codem_nocatch_smoke 0 0
----
-codem_nocatch_smoke

@@ -320,7 +320,7 @@ src/datalog/handle/
 
 1. **Start with Phase 1** - Implement Feed class:
    ```bash
-   cd /Users/yawasante/software/cxx/PlussMa
+   cd <repo-root>
    touch src/datalog/handle/feed/feed.cpp
    touch src/datalog/handle/feed/feed_test.cpp
    code src/datalog/handle/feed/feed.cpp

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import re
 from pathlib import Path
-ROOT = Path('/Users/yawasante/software/cxx/PlussMa')
+ROOT = Path(__file__).resolve().parents[1]
 GEN = ROOT / 'PlussQit/src/CodeM/Series/SeriesMethods.cpp.inc'
 CAND = ROOT / 'PlussQit/src/CodeM/core/OpsInternal.cpp'
 # also check generated ops files

@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-root = Path('/Users/yawasante/software/cxx/PlussMa')
+root = Path(__file__).resolve().parents[1]
 header = root / 'PlussQit' / 'src' / 'CodeM' / 'generated' / 'SeriesMethodsGen.h'
 invoke = root / 'PlussQit' / 'src' / 'CodeM' / 'compat' / 'Invoke.cpp'
 

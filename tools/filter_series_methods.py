@@ -2,8 +2,9 @@
 from pathlib import Path
 import re
 
-INCL = Path('PlussQit/src/CodeM/Series/SeriesMethods.cpp.inc')
-HEADER = Path('/Users/yawasante/software/cxx/PlussMa/SeriesLowLevel.h')
+ROOT = Path(__file__).resolve().parents[1]
+INCL = ROOT / 'PlussQit/src/CodeM/Series/SeriesMethods.cpp.inc'
+HEADER = ROOT / 'SeriesLowLevel.h'
 OUT = INCL.with_name('SeriesMethods.filtered.cpp.inc')
 
 hdr = HEADER.read_text(encoding='utf-8')

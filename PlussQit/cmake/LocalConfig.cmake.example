@@ -1,0 +1,10 @@
+# Local-only configuration. Copy to LocalConfig.cmake (ignored by git)
+# and edit values for your machine.
+
+# Example: point CMake to a local Torch install (Conda/PyTorch wheel layout).
+# set(CMAKE_PREFIX_PATH "/path/to/site-packages/torch" CACHE STRING "" FORCE)
+
+# Example: enable torch interop/binaries for local builds.
+# set(PLUSS_ENABLE_TORCH ON CACHE BOOL "" FORCE)
+# set(PLUSSQIT_BUILD_CODEM ON CACHE BOOL "" FORCE)
+# set(BUILD_BENCHMARKS ON CACHE BOOL "" FORCE)

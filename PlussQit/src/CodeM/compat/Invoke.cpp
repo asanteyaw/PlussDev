@@ -9,6 +9,7 @@
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/Errors.h"
 #include "CodeM/native/cpu/ConcatStackKernels.h"
+#include "CodeM/native/cpu/GatherScatterKernels.h"
 #include "CodeM/native/cpu/IndexingExtras.h"
 #include "CodeM/native/cpu/SignalDistanceKernels.h"
 #include "CodeM/native/cpu/SortingKernels.h"
@@ -2126,7 +2127,7 @@ static Series select_scatter_impl(const Series& self, const Series& src, std::in
   PLUSS_CHECK(x.dim() == self.dim(), "select_scatter: src rank mismatch");
   PLUSS_CHECK(x.sizes()[(std::size_t)dim] == 1, "select_scatter: src size at dim must be 1");
   auto idx = Series::full(x.sizes(), static_cast<double>(index), ScalarType::Int64);
-  return self.scatter(dim, idx, x);
+  return native::cpu::scatter(self, dim, idx, x);
 }
 
 static Series slice_scatter_impl(
@@ -2166,7 +2167,7 @@ static Series slice_scatter_impl(
       for (std::int64_t i = 0; i < inner; ++i) ip[(o * n + k) * inner + i] = ids[(std::size_t)k];
     }
   }
-  return self.scatter(dim, idx, x);
+  return native::cpu::scatter(self, dim, idx, x);
 }
 
 static Series triangular_solve_impl(const Series& b, const Series& a, bool upper, bool unitriangular) {
@@ -3126,6 +3127,12 @@ if (is_numeric_scalar_arg(args[0]) &&
       const auto dim = as_i64(args[0]);
       const auto& index = as_series(args[1]);
       auto src = as_series(args[2]).to(self.scalar_type());
+      if (op == "scatter") {
+        return native::cpu::scatter(self, dim, index, src);
+      }
+      if (op == "scatter_add") {
+        return ops_internal::scatter_add(self, dim, index, src);
+      }
       if (op == "index_copy") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_copy: currently implemented for 1D dim=0");
         return native::cpu::put(self, index.to(ScalarType::Int64), src, /*accumulate=*/false);
@@ -3776,7 +3783,10 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const auto dim = as_i64(args[0]);
       const Series& index = as_series(args[1]);
       const Series& src = as_series(args[2]);
-      if (op == "scatter_") { self = self.scatter(dim, index, src); return self; }
+      if (op == "scatter_") {
+        native::cpu::scatter_(self, dim, index, src);
+        return self;
+      }
       if (op == "scatter_add_") return ops_internal::scatter_add_(self, dim, index, src);
       if (op == "index_copy_") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_copy_: currently implemented for 1D dim=0");

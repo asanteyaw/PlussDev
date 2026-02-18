@@ -1,4 +1,11 @@
 cmake_minimum_required(VERSION 3.25)
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/LocalConfig.cmake")
+  include("${CMAKE_SOURCE_DIR}/cmake/LocalConfig.cmake")
+endif()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 project(PlussQit LANGUAGES CXX)
 
 option(PLUSS_ENABLE_TORCH "Enable LibTorch interop" OFF)
@@ -188,6 +195,17 @@ target_include_directories(plussqit_codem
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+if(PLUSS_ENABLE_TORCH)
+  if(TORCH_INCLUDE_DIRS)
+    target_include_directories(plussqit_codem PUBLIC ${TORCH_INCLUDE_DIRS})
+  endif()
+  if(TORCH_CXX_FLAGS)
+    separate_arguments(_PLUSS_TORCH_CXX_FLAGS NATIVE_COMMAND "${TORCH_CXX_FLAGS}")
+    target_compile_options(plussqit_codem PUBLIC ${_PLUSS_TORCH_CXX_FLAGS})
+  endif()
+  target_link_libraries(plussqit_codem PUBLIC ${TORCH_LIBRARIES})
+endif()
 
 target_compile_features(plussqit_codem PUBLIC cxx_std_20)
 
@@ -429,6 +447,9 @@ endif()
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/aux/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/aux
+)
 
 # Generated Series headers are included for completeness (CodeM only).
 if (PLUSSQIT_BUILD_CODEM)
@@ -463,6 +484,19 @@ endif()
 
 if(BUILD_BENCHMARKS)
   add_executable(bench_ops benchmarks/bench_ops.cpp)
-  target_link_libraries(bench_ops PRIVATE plussqit)
+  if (PLUSSQIT_BUILD_CODEM)
+    target_link_libraries(bench_ops PRIVATE PlussQit::CodeM)
+  else()
+    target_link_libraries(bench_ops PRIVATE plussqit)
+  endif()
   target_include_directories(bench_ops PRIVATE include)
+
+  if (PLUSSQIT_BUILD_CODEM AND PLUSS_ENABLE_TORCH)
+    add_executable(bench_torch_parity benchmarks/bench_torch_parity.cpp)
+    target_link_libraries(bench_torch_parity PRIVATE PlussQit::CodeM ${TORCH_LIBRARIES})
+    target_include_directories(bench_torch_parity PRIVATE include)
+    if (TORCH_CXX_FLAGS)
+      target_compile_options(bench_torch_parity PRIVATE ${TORCH_CXX_FLAGS})
+    endif()
+  endif()
 endif()

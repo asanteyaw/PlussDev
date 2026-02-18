@@ -92,11 +92,49 @@ inline Series make_series(std::span<const T> data, std::span<const std::int64_t>
       dt = ScalarType::Complex128;
     }
   }
-  Series out = Series::empty(sizes, dt).contiguous();
-  const std::size_t n = (std::size_t)out.numel();
+  using U = std::remove_cv_t<T>;
+  constexpr bool src_supported =
+    std::is_same_v<U, bool> ||
+    std::is_same_v<U, std::uint8_t> ||
+    std::is_same_v<U, std::uint16_t> ||
+    std::is_same_v<U, std::uint32_t> ||
+    std::is_same_v<U, std::uint64_t> ||
+    std::is_same_v<U, std::int8_t> ||
+    std::is_same_v<U, std::int16_t> ||
+    std::is_same_v<U, std::int32_t> ||
+    std::is_same_v<U, std::int64_t> ||
+    std::is_same_v<U, float> ||
+    std::is_same_v<U, double> ||
+    std::is_same_v<U, Float16> ||
+    std::is_same_v<U, BFloat16> ||
+    std::is_same_v<U, Complex64> ||
+    std::is_same_v<U, Complex128>;
+  static_assert(src_supported, "make_series: unsupported source element type");
+
+  constexpr ScalarType src_dt = []() constexpr -> ScalarType {
+    if constexpr (std::is_same_v<U, bool>) return ScalarType::Bool;
+    else if constexpr (std::is_same_v<U, std::uint8_t>) return ScalarType::UInt8;
+    else if constexpr (std::is_same_v<U, std::uint16_t>) return ScalarType::UInt16;
+    else if constexpr (std::is_same_v<U, std::uint32_t>) return ScalarType::UInt32;
+    else if constexpr (std::is_same_v<U, std::uint64_t>) return ScalarType::UInt64;
+    else if constexpr (std::is_same_v<U, std::int8_t>) return ScalarType::Int8;
+    else if constexpr (std::is_same_v<U, std::int16_t>) return ScalarType::Int16;
+    else if constexpr (std::is_same_v<U, std::int32_t>) return ScalarType::Int32;
+    else if constexpr (std::is_same_v<U, std::int64_t>) return ScalarType::Int64;
+    else if constexpr (std::is_same_v<U, float>) return ScalarType::Float32;
+    else if constexpr (std::is_same_v<U, double>) return ScalarType::Float64;
+    else if constexpr (std::is_same_v<U, Float16>) return ScalarType::Float16;
+    else if constexpr (std::is_same_v<U, BFloat16>) return ScalarType::BFloat16;
+    else if constexpr (std::is_same_v<U, Complex64>) return ScalarType::Complex64;
+    else return ScalarType::Complex128;
+  }();
+
+  Series src = Series::empty(sizes, src_dt).contiguous();
+  const std::size_t n = (std::size_t)src.numel();
   PLUSS_CHECK(data.size() == n, "make_series: data size mismatch with sizes");
-  std::memcpy(const_cast<std::byte*>(out.raw_data()), data.data(), n * out.itemsize());
-  return out;
+  std::memcpy(src.raw_data(), data.data(), n * sizeof(U));
+  if (src_dt == dt) return src;
+  return src.to(dt);
 }
 
 // Expose external memory without taking ownership (like torch::from_blob).

@@ -42,9 +42,15 @@
 # Build systems
 # ===================================
 build/
+build-*/
 cmake-build-*/
 out/
 bin/
+PlussQit/build*/
+PlussQit/build-*/
+PlussQit/build-local/
+PlussQit/build-asan/
+PlussQit/build-torch/
 
 # CMake
 cmake/LocalConfig.cmake

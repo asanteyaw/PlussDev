@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-ROOT = Path('/Users/yawasante/software/cxx/PlussMa')
+ROOT = Path(__file__).resolve().parents[1]
 GEN = ROOT / 'PlussQit/src/CodeM/Series/SeriesMethods.cpp.inc'
 OUT = ROOT / 'PlussQit/src/CodeM/Series/SeriesMethods.filtered.cpp.inc'
 
