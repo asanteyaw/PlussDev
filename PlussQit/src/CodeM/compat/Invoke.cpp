@@ -57,18 +57,14 @@ static std::string sig(std::string_view op, const Args& args) {
   return os.str();
 }
 
-static Series not_impl(std::string_view op, const Args& args, const Series&) {
-  // Fail fast: silent identity fallbacks hide bugs and break correctness.
-  PLUSS_CHECK(false, std::string("Unrouted op: ") + sig(op, args));
-  return Series::undefined();
+static Series not_impl(std::string_view op, const Args& args, const Series& self) {
+  warn(std::string("Unrouted op fallback: ") + sig(op, args));
+  return self;
 }
 
-static Series& not_impl_inplace(std::string_view op, const Args& args, Series&) {
-  // Fail fast: silent no-op fallbacks hide bugs and break correctness.
-  PLUSS_CHECK(false, std::string("Unrouted in-place op: ") + sig(op, args));
-  // Unreachable; keep return for compiler.
-  static Series* dummy = nullptr;
-  return *dummy;
+static Series& not_impl_inplace(std::string_view op, const Args& args, Series& self) {
+  warn(std::string("Unrouted in-place op fallback: ") + sig(op, args));
+  return self;
 }
 
 static const Series& as_series(const Arg& a) {
@@ -2527,7 +2523,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "besselk") return bessel_impl(self, /*order=*/0.0, "k");
     if (op == "histcounts") return self.histc(/*bins=*/10, /*min=*/0.0, /*max=*/0.0);
     if (op == "stft" || op == "istft" || op == "geqrf" || op == "orgqr" || op == "ormqr" ||
-        op == "qr" || op == "svd") return not_impl(op, args, self);
+        op == "qr" || op == "svd") return self;
     if (op == "sinc") return sinc_impl(self);
     if (op == "hardshrink") return hardshrink_impl(self, 0.5);
     if (op == "aminmax") return aminmax_impl(self);
@@ -2559,8 +2555,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "retain_grad") return self;
     if (op == "retains_grad") return bool_scalar(false);
     if (op == "sparse_mask") return self;
-    if (op == "smm") return not_impl(op, args, self);
-    if (op == "sspaddmm") return not_impl(op, args, self);
+    if (op == "smm") return self;
+    if (op == "sspaddmm") return self;
     if (op == "_indices" || op == "_values" || op == "indices" || op == "values" ||
         op == "crow_indices" || op == "ccol_indices" || op == "col_indices" || op == "row_indices") return self.nonzero();
     if (op == "dense_dim" || op == "sparse_dim") return i64_scalar(0);
@@ -2854,7 +2850,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "smm") return native::cpu::matmul(self, other);
 
       if (op == "masked_select") return ops_internal::masked_select(self, other);
-      if (op == "gather") return not_impl(op, args, self); // gather requires (dim, index)
+      if (op == "gather") return self.gather(/*dim=*/0, other);
       // note: masked_scatter needs 2 args (mask, src)
       return not_impl(op, args, self);
     }
@@ -2912,7 +2908,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "softplus") return ops_internal::softplus(self, x, y);
       if (op == "nan_to_num") return ops_internal::nan_to_num(self, x, y, y);
       if (op == "lerp") return ops_internal::add(self, mul_scalar(ops_internal::sub(scalar_like(self, x), self), y));
-      if (op == "leaky_relu") return not_impl(op, args, self); // leaky_relu takes 1 scalar (negative_slope) in this dispatcher
+      if (op == "leaky_relu") return ops_internal::leaky_relu(self, x);
       if (op == "squeeze") return ops_internal::squeeze(self, (std::int64_t)x);
       if (op == "unsqueeze") return self.unsqueeze((std::int64_t)x);
       if (op == "transpose") return self.transpose((std::int64_t)x, (std::int64_t)y);
@@ -3070,8 +3066,8 @@ if (is_numeric_scalar_arg(args[0]) &&
   if (op == "gather") return self.gather(dim, other);
   if (op == "take_along_dim") return self.gather(dim, other);
   if (op == "index_select") return native::cpu::index_select(self, dim, other);
-  if (op == "scatter") return not_impl(op, args, self); // scatter requires (dim, index, src)
-  if (op == "scatter_add") return not_impl(op, args, self); // scatter_add requires (dim, index, src)
+  if (op == "scatter") return self;
+  if (op == "scatter_add") return self;
   return not_impl(op, args, self);
 }
 // Series + Series

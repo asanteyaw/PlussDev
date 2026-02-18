@@ -1,53 +1,16 @@
 #pragma once
 
-#include "CodeM/core/SeriesSlim.h"
+#include "CodeM/core/Series.h"
+#include "CodeM/core/Config.h"
+#include "CodeM/core/OpsInternal.h"
 #include "CodeM/core/factories/ValueInitList.h"
 #include "CodeM/core/Storage.h"
 #include "CodeM/core/Errors.h"
-
-// Generated ops headers (produced into build dir)
-#include "CodeM/ops/add_ops.h"
-#include "CodeM/ops/sub_ops.h"
-#include "CodeM/ops/mul_ops.h"
-#include "CodeM/ops/div_ops.h"
-#include "CodeM/ops/neg_ops.h"
-#include "CodeM/ops/abs_ops.h"
-#include "CodeM/ops/exp_ops.h"
-#include "CodeM/ops/log_ops.h"
-#include "CodeM/ops/sqrt_ops.h"
-#include "CodeM/ops/sin_ops.h"
-#include "CodeM/ops/cos_ops.h"
-#include "CodeM/ops/tanh_ops.h"
-#include "CodeM/ops/sum_ops.h"
-#include "CodeM/ops/mean_ops.h"
-#include "CodeM/ops/amax_ops.h"
-#include "CodeM/ops/amin_ops.h"
-#include "CodeM/ops/argmax_ops.h"
-#include "CodeM/ops/argmin_ops.h"
-#include "CodeM/ops/index_select_ops.h"
-#include "CodeM/ops/masked_select_ops.h"
-#include "CodeM/ops/matmul_ops.h"
-#include "CodeM/ops/gather_ops.h"
-#include "CodeM/ops/scatter_ops.h"
-#include "CodeM/ops/scatter_add_ops.h"
-#include "CodeM/ops/where_ops.h"
-#include "CodeM/ops/masked_fill_ops.h"
-#include "CodeM/ops/nonzero_ops.h"
-#include "CodeM/ops/take_ops.h"
-#include "CodeM/ops/put_ops.h"
-#include "CodeM/ops/index_ops.h"
-#include "CodeM/ops/index_put_ops.h"
-#include "CodeM/ops/cat_ops.h"
-#include "CodeM/ops/stack_ops.h"
-#include "CodeM/ops/eq_ops.h"
-#include "CodeM/ops/ne_ops.h"
-#include "CodeM/ops/lt_ops.h"
-#include "CodeM/ops/le_ops.h"
-#include "CodeM/ops/gt_ops.h"
-#include "CodeM/ops/ge_ops.h"
-#include "CodeM/ops/minimum_ops.h"
-#include "CodeM/ops/maximum_ops.h"
-#include "CodeM/ops/clamp_ops.h"
+#include <cstring>
+#include <functional>
+#include <limits>
+#include <memory>
+#include <type_traits>
 
 namespace pluss::codem {
 
@@ -163,17 +126,13 @@ inline Series from_blob(
     if (deleter) deleter((void*)p);
   });
   Storage stor(sp, nbytes, 1);
-  return Series::from_storage(stor,
-      /*storage_offset=*/0,
-      std::vector<std::int64_t>(sizes.begin(), sizes.end()),
-      std::vector<std::int64_t>(strides.begin(), strides.end()),
-      dtype);
+  return ops_internal::SeriesFactoryAccess::wrap(
+      pluss::msharp::make_intrusive<SeriesImpl>(
+          stor,
+          /*storage_offset_elems=*/0,
+          std::vector<std::int64_t>(sizes.begin(), sizes.end()),
+          std::vector<std::int64_t>(strides.begin(), strides.end()),
+          dtype));
 }
-
-inline Series arange(double start, double end, double step=1.0, ScalarType dtype=ScalarType::Int64) { return Series::arange(start,end,step,dtype); }
-inline Series linspace(double start, double end, std::int64_t steps, ScalarType dtype=ScalarType::Float32) { return Series::linspace(start,end,steps,dtype); }
-inline Series eye(std::int64_t n, std::int64_t m=-1, ScalarType dtype=ScalarType::Float32) { return Series::eye(n, (m<0)?n:m, dtype); }
-inline Series rand(std::span<const std::int64_t> sizes, ScalarType dtype=ScalarType::Float32, std::uint64_t seed=0) { return Series::rand(sizes,dtype,seed); }
-inline Series randn(std::span<const std::int64_t> sizes, ScalarType dtype=ScalarType::Float32, std::uint64_t seed=0) { return Series::randn(sizes,dtype,seed); }
 
 } // namespace pluss::codem

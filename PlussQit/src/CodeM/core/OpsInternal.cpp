@@ -492,9 +492,14 @@ static std::vector<std::int64_t> out_sizes_for_reduce_(std::span<const std::int6
 }
 
 static Series maybe_keepdim_(Series out, std::span<const std::int64_t> in_sizes, std::int64_t dim, bool keepdim) {
-  if (keepdim) return out;
-  // already dropped dim
-  return out;
+  if (!keepdim) return out;
+  const auto nd = static_cast<std::int64_t>(in_sizes.size());
+  if (nd == 0) return out;
+  if (dim < 0) dim += nd;
+  PLUSS_CHECK(dim >= 0 && dim < nd, "reduce: dim out of range");
+  std::vector<std::int64_t> ks(in_sizes.begin(), in_sizes.end());
+  ks[(std::size_t)dim] = 1;
+  return out.reshape(ks);
 }
 
 Series sum(const Series& a) {
@@ -512,20 +517,10 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
   auto aa = a.contiguous();
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
-  auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, keepdim);
+  auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, /*keepdim=*/false);
   Series out = Series::empty(out_sizes, aa.scalar_type());
-  // kernel expects dropped-dim shape, so if keepdim=true, we reduce into a dropped shape then reshape
-  if (keepdim) {
-    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, /*keepdim=*/false);
-    Series tmp = Series::empty(tmp_sizes, aa.scalar_type());
-    native::cpu::sum_dim(aa, dim, tmp);
-    // reshape into keepdim
-    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
-    ks[(std::size_t)dim] = 1;
-    return tmp.reshape(ks);
-  }
   native::cpu::sum_dim(aa, dim, out);
-  return out;
+  return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
 }
 
 Series prod(const Series& a) {
@@ -543,18 +538,10 @@ Series prod(const Series& a, std::int64_t dim, bool keepdim) {
   auto aa = a.contiguous();
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
-  if (keepdim) {
-    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
-    Series tmp = Series::empty(tmp_sizes, aa.scalar_type());
-    native::cpu::prod_dim(aa, dim, tmp);
-    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
-    ks[(std::size_t)dim] = 1;
-    return tmp.reshape(ks);
-  }
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
   Series out = Series::empty(out_sizes, aa.scalar_type());
   native::cpu::prod_dim(aa, dim, out);
-  return out;
+  return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
 }
 
 Series mean(const Series& a) {
@@ -627,18 +614,10 @@ Series amax(const Series& a, std::int64_t dim, bool keepdim) {
   auto aa = a.contiguous();
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
-  if (keepdim) {
-    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
-    Series tmp = Series::empty(tmp_sizes, aa.scalar_type());
-    native::cpu::amax_dim(aa, dim, tmp);
-    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
-    ks[(std::size_t)dim] = 1;
-    return tmp.reshape(ks);
-  }
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
   Series out = Series::empty(out_sizes, aa.scalar_type());
   native::cpu::amax_dim(aa, dim, out);
-  return out;
+  return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
 }
 
 Series amin(const Series& a) {
@@ -657,18 +636,10 @@ Series amin(const Series& a, std::int64_t dim, bool keepdim) {
   auto aa = a.contiguous();
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
-  if (keepdim) {
-    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
-    Series tmp = Series::empty(tmp_sizes, aa.scalar_type());
-    native::cpu::amin_dim(aa, dim, tmp);
-    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
-    ks[(std::size_t)dim] = 1;
-    return tmp.reshape(ks);
-  }
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
   Series out = Series::empty(out_sizes, aa.scalar_type());
   native::cpu::amin_dim(aa, dim, out);
-  return out;
+  return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
 }
 
 Series all(const Series& a) {
@@ -684,18 +655,10 @@ Series all(const Series& a, std::int64_t dim, bool keepdim) {
   auto aa = a.to(ScalarType::Bool).contiguous();
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
-  if (keepdim) {
-    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
-    Series tmp = Series::empty(tmp_sizes, ScalarType::Bool);
-    native::cpu::all_dim(aa, dim, tmp);
-    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
-    ks[(std::size_t)dim] = 1;
-    return tmp.reshape(ks);
-  }
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
   Series out = Series::empty(out_sizes, ScalarType::Bool);
   native::cpu::all_dim(aa, dim, out);
-  return out;
+  return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
 }
 
 Series any(const Series& a) {
@@ -711,18 +674,10 @@ Series any(const Series& a, std::int64_t dim, bool keepdim) {
   auto aa = a.to(ScalarType::Bool).contiguous();
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
-  if (keepdim) {
-    auto tmp_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
-    Series tmp = Series::empty(tmp_sizes, ScalarType::Bool);
-    native::cpu::any_dim(aa, dim, tmp);
-    std::vector<std::int64_t> ks(aa.sizes().begin(), aa.sizes().end());
-    ks[(std::size_t)dim] = 1;
-    return tmp.reshape(ks);
-  }
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, false);
   Series out = Series::empty(out_sizes, ScalarType::Bool);
   native::cpu::any_dim(aa, dim, out);
-  return out;
+  return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
 }
 
 Series argmax(const Series& a, std::int64_t dim, bool keepdim) {

@@ -560,34 +560,24 @@ namespace pluss {
     return codem::value(list, dtype);
   }
 
-  // Torch-style alias for factory construction from host values.
-  template <class T>
-  inline Series tensor(std::initializer_list<T> list) {
-    return codem::value(list, pluss::detail::dtype_from_init_list<std::initializer_list<T>>());
-  }
-  template <class T>
-  inline Series tensor(std::initializer_list<T> list, ScalarType dtype) {
-    return codem::value(list, dtype);
-  }
-  template <class T>
-  inline Series tensor(const std::vector<T>& data,
-                       std::initializer_list<std::int64_t> sizes,
-                       Config cfg = {}) {
-    return codem::make_series<T>(
-      data,
-      std::span<const std::int64_t>(sizes.begin(), sizes.size()),
-      cfg
-    );
-  }
-  inline Series tensor(double v, ScalarType dtype = ScalarType::Float32) {
+  // make_series overloads for scalar and initializer_list host values.
+  inline Series make_series(double v, ScalarType dtype = ScalarType::Float32) {
     return codem::value(v, dtype);
   }
   template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
-  inline Series tensor(T v, ScalarType dtype = ScalarType::Int64) {
+  inline Series make_series(T v, ScalarType dtype = ScalarType::Int64) {
     return codem::value(v, dtype);
   }
-  inline Series tensor(bool v, ScalarType dtype = ScalarType::Bool) {
+  inline Series make_series(bool v, ScalarType dtype = ScalarType::Bool) {
     return codem::value(v, dtype);
+  }
+  template <class T>
+  inline Series make_series(std::initializer_list<T> list) {
+    return codem::value(list, pluss::detail::dtype_from_init_list<std::initializer_list<T>>());
+  }
+  template <class T>
+  inline Series make_series(std::initializer_list<T> list, ScalarType dtype) {
+    return codem::value(list, dtype);
   }
 
   // Compatibility factory: construct from an existing contiguous host buffer.
@@ -636,6 +626,32 @@ namespace pluss {
     using T = std::remove_cv_t<typename Container::value_type>;
     const auto span = std::span<const T>(data.data(), data.size());
     return codem::make_series<T>(span, std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
+  }
+
+  // Torch-style alias; consolidated through make_series overloads.
+  template <class T>
+  inline Series tensor(std::initializer_list<T> list) {
+    return make_series(list);
+  }
+  template <class T>
+  inline Series tensor(std::initializer_list<T> list, ScalarType dtype) {
+    return make_series(list, dtype);
+  }
+  template <class T>
+  inline Series tensor(const std::vector<T>& data,
+                       std::initializer_list<std::int64_t> sizes,
+                       Config cfg = {}) {
+    return make_series(data, sizes, cfg);
+  }
+  inline Series tensor(double v, ScalarType dtype = ScalarType::Float32) {
+    return make_series(v, dtype);
+  }
+  template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
+  inline Series tensor(T v, ScalarType dtype = ScalarType::Int64) {
+    return make_series(v, dtype);
+  }
+  inline Series tensor(bool v, ScalarType dtype = ScalarType::Bool) {
+    return make_series(v, dtype);
   }
 
   inline Series from_blob(void* data,
