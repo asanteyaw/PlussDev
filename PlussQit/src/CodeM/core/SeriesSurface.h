@@ -35,3 +35,11 @@ Series& operator/=(const Series& other) { div_(other); return *this; }
 Series& operator&=(const Series& other) { bitwise_and_(other); return *this; }
 Series& operator|=(const Series& other) { bitwise_or_(other); return *this; }
 Series& operator^=(const Series& other) { bitwise_xor_(other); return *this; }
+
+// Comparison operators (mask-producing, Torch-like)
+Series operator==(const Series& other) const { return eq(other); }
+Series operator!=(const Series& other) const { return ne(other); }
+Series operator<(const Series& other) const { return lt(other); }
+Series operator<=(const Series& other) const { return le(other); }
+Series operator>(const Series& other) const { return gt(other); }
+Series operator>=(const Series& other) const { return ge(other); }

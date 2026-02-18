@@ -8,11 +8,16 @@
 #include <string_view>
 
 #include "CodeN/core/Note.h"
+#include "CodeN/core/Printing.h"
 #include "CodeN/core/TokenBatch.h"
 
 namespace pluss {
 using Note = coden::Note;
 using TokenBatch = coden::TokenBatch;
+using NotePrintOptions = coden::NotePrintOptions;
+using coden::to_string;
+using coden::print_note;
+using coden::operator<<;
 } // namespace pluss
 
 namespace pluss::coden::ops_internal {

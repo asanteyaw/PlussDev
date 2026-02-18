@@ -2,9 +2,11 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/Half.h"
 #include "CodeM/core/Complex.h"
+#include "MSharp/Parallel.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <thread>
 #include <vector>
 
 namespace pluss::codem::native::cpu {
@@ -54,6 +56,52 @@ static float load_f16(Float16 x){ return float16_to_float(x); }
 static float load_bf16(BFloat16 x){ return bfloat16_to_float(x); }
 static Float16 store_f16(float x){ return float16_from_float(x); }
 static BFloat16 store_bf16(float x){ return bfloat16_from_float(x); }
+
+template <class T>
+static double sum_real_fast_(const T* ap, std::int64_t n) {
+  if (n <= 0) return 0.0;
+
+  constexpr std::int64_t kParallelThreshold = (1LL << 20); // 1M elems
+  if (n < kParallelThreshold) {
+    double acc0 = 0.0, acc1 = 0.0, acc2 = 0.0, acc3 = 0.0;
+    std::int64_t i = 0;
+    for (; i + 4 <= n; i += 4) {
+      acc0 += static_cast<double>(ap[i + 0]);
+      acc1 += static_cast<double>(ap[i + 1]);
+      acc2 += static_cast<double>(ap[i + 2]);
+      acc3 += static_cast<double>(ap[i + 3]);
+    }
+    double acc = (acc0 + acc1) + (acc2 + acc3);
+    for (; i < n; ++i) acc += static_cast<double>(ap[i]);
+    return acc;
+  }
+
+  const std::int64_t grain = std::max<std::int64_t>(1LL << 18, n / 32);
+  const std::int64_t blocks = (n + grain - 1) / grain;
+  std::vector<double> partial(static_cast<std::size_t>(blocks), 0.0);
+
+  pluss::msharp::parallel_for(0, blocks, 1, [&](std::int64_t b0, std::int64_t b1) {
+    for (std::int64_t b = b0; b < b1; ++b) {
+      const std::int64_t start = b * grain;
+      const std::int64_t end = std::min<std::int64_t>(n, start + grain);
+      double acc0 = 0.0, acc1 = 0.0, acc2 = 0.0, acc3 = 0.0;
+      std::int64_t i = start;
+      for (; i + 4 <= end; i += 4) {
+        acc0 += static_cast<double>(ap[i + 0]);
+        acc1 += static_cast<double>(ap[i + 1]);
+        acc2 += static_cast<double>(ap[i + 2]);
+        acc3 += static_cast<double>(ap[i + 3]);
+      }
+      double acc = (acc0 + acc1) + (acc2 + acc3);
+      for (; i < end; ++i) acc += static_cast<double>(ap[i]);
+      partial[static_cast<std::size_t>(b)] = acc;
+    }
+  });
+
+  double total = 0.0;
+  for (double v : partial) total += v;
+  return total;
+}
 
 void sum_dim(const Series& a, std::int64_t dim, Series& out) {
   PLUSS_CHECK(a.is_contiguous(), "sum_dim: requires contiguous");
@@ -269,13 +317,13 @@ void sum_all(const Series& a, Series& out) {
   switch (a.scalar_type()) {
     case ScalarType::Float64: {
       const auto* ap = reinterpret_cast<const double*>(a.raw_data());
-      double acc=0; for (std::int64_t i=0;i<a.numel();++i) acc += ap[i];
+      const double acc = sum_real_fast_(ap, a.numel());
       *reinterpret_cast<double*>(out.raw_data()) = acc;
       return;
     }
     case ScalarType::Float32: {
       const auto* ap = reinterpret_cast<const float*>(a.raw_data());
-      float acc=0; for (std::int64_t i=0;i<a.numel();++i) acc += ap[i];
+      const float acc = static_cast<float>(sum_real_fast_(ap, a.numel()));
       *reinterpret_cast<float*>(out.raw_data()) = acc;
       return;
     }

@@ -29,5 +29,17 @@ int main() {
   let q = pluss::make_series(std::vector<double>{0, 1, 2, 1, 3, 1}, {3, 2});
   std::cout << "cdist(p, q):\n" << p.cdist(q) << "\n";
 
+  pluss::Series s1{pluss::value({3.4, 2.4})}, s2{pluss::value({3.4, 2.4, 4.3})};
+  pluss::Series s3 = s1 - s2;
+  pluss::Series s4 = s1 + s2;
+
+  std::cout << "s3:\n" << s3 << "\n\n";
+  std::cout << "s4:\n" << s4 << "\n\n";
+  std::cout << "s1 == s2:\n" << (s1 == s2) << "\n\n";
+  std::cout << "s1 >= s2:\n" << (s1 >= s2) << "\n\n";
+  std::cout << "s1 != s2:\n" << (s1 != s2) << "\n\n";
+  std::cout << "ternary chain (s1 == s2 == s3):\n" << (pluss::tri(s1) == s2 == s3) << "\n\n";
+  std::cout << "ternary mixed (s1 >= s2 < s3):\n" << (pluss::tri(s1) >= s2 < s3) << "\n\n";
+
   return 0;
 }

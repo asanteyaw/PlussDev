@@ -27,6 +27,7 @@ option(PLUSSQIT_BUILD_CODEM "Build CodeM (Series/Tensor)" OFF)
 option(PLUSSQIT_BUILD_CODEH "Build CodeH (Timeline/Duration/TimeIndex)" ${PLUSSQIT_BUILD_CODEM})
 option(PLUSSQIT_BUILD_CODEM_SMOKE_TESTS "Build ad-hoc CodeM smoke executables" OFF)
 option(PLUSSQIT_CODEN_ENABLE_SERIES_INTEROP "Enable CodeN helpers that return CodeM::Series" OFF)
+option(BUILD_BENCHMARKS "Build benchmark executables" OFF)
 
 set(PLUSSQIT_GEN_DIR ${CMAKE_BINARY_DIR}/generated)
 file(MAKE_DIRECTORY ${PLUSSQIT_GEN_DIR})
@@ -161,6 +162,8 @@ file(GLOB_RECURSE PLUSSQIT_CODEM_CORE_CPP CONFIGURE_DEPENDS
   "src/CodeM/native/cpu/*.cpp"
 )
 list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/SeriesTorchAlignedStubs.cpp") # optional stub file remains explicit below
+# Duplicate compare implementation; keep CompareOps.cpp as canonical kernel entry.
+list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/cpu/Compare.cpp")
 
 add_library(plussqit_codem
   src/MSharp/core/MSharpMacros.h
@@ -322,6 +325,26 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
   target_compile_options(plussqit_coden PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+if (PLUSSQIT_BUILD_EXAMPLES)
+  add_executable(plussqit_coden_note_cleanup_demo examples/CodeN/note_cleanup_demo.cpp)
+  target_link_libraries(plussqit_coden_note_cleanup_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_cleanup_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_method_families_demo examples/CodeN/note_method_families_demo.cpp)
+  target_link_libraries(plussqit_coden_note_method_families_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_method_families_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_printing_demo examples/CodeN/note_printing_demo.cpp)
+  target_link_libraries(plussqit_coden_note_printing_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_printing_demo PRIVATE PlussQit::CodeM)
+  endif()
+endif()
+
 # ---- CodeH (time, Timeline/Duration/TimeIndex) ----
 if (PLUSSQIT_BUILD_CODEH)
   if (NOT PLUSSQIT_BUILD_CODEM)
@@ -398,6 +421,7 @@ if (PLUSSQIT_BUILD_TESTS)
   file(GLOB CODEN_TEST_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/CodeN/*.cpp"
   )
+  list(FILTER CODEN_TEST_SOURCES EXCLUDE REGEX ".*/test_coden_nocatch_smoke\\.cpp$")
 
   find_package(Catch2 3 QUIET)
   if (NOT Catch2_FOUND AND PLUSSQIT_FETCH_DEPS)
@@ -410,7 +434,7 @@ if (PLUSSQIT_BUILD_TESTS)
   endif()
 
   if (NOT Catch2_FOUND)
-    message(STATUS "Catch2 v3 not found; building no-catch CodeM smoke tests instead.")
+    message(STATUS "Catch2 v3 not found; building no-catch CodeM/CodeN smoke tests instead.")
     if (PLUSSQIT_BUILD_CODEM)
       add_executable(plussqit_codem_nocatch_tests
         tests/CodeM/test_codem_nocatch_smoke.cpp
@@ -419,6 +443,15 @@ if (PLUSSQIT_BUILD_TESTS)
       target_compile_features(plussqit_codem_nocatch_tests PRIVATE cxx_std_20)
       add_test(NAME codem_nocatch_smoke COMMAND plussqit_codem_nocatch_tests)
     endif()
+    add_executable(plussqit_coden_nocatch_tests
+      tests/CodeN/test_coden_nocatch_smoke.cpp
+    )
+    target_link_libraries(plussqit_coden_nocatch_tests PRIVATE PlussQit::CodeN)
+    if (TARGET plussqit_codem)
+      target_link_libraries(plussqit_coden_nocatch_tests PRIVATE PlussQit::CodeM)
+    endif()
+    target_compile_features(plussqit_coden_nocatch_tests PRIVATE cxx_std_20)
+    add_test(NAME coden_nocatch_smoke COMMAND plussqit_coden_nocatch_tests)
   else()
     add_executable(plussqit_tests ${CODEM_TEST_SOURCES})
     target_link_libraries(plussqit_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
@@ -520,5 +553,12 @@ if(BUILD_BENCHMARKS)
     if (TORCH_CXX_FLAGS)
       target_compile_options(bench_torch_parity PRIVATE ${TORCH_CXX_FLAGS})
     endif()
+
+    add_custom_target(codem_torch90_tranche
+      COMMAND $<TARGET_FILE:bench_torch_parity> --target-score=90 --emit-csv
+      DEPENDS bench_torch_parity
+      USES_TERMINAL
+      COMMENT "Run CodeM torch-level CPU tranche scorecard (target >= 90)"
+    )
   endif()
 endif()

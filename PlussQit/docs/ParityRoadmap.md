@@ -12,3 +12,8 @@ This document is a living checklist of remaining work to reach "Torch-like CPU c
 ## Patch 52 progress
 - index_put_ accumulate supports half/bf16/complex/integer widening paths (advanced path)
 - tanh/softplus contiguous hot paths (float32/64)
+
+## Torch-90 tranche loop
+
+- Active measured cycle is documented in `docs/Torch90_TrancheCycle.md`.
+- Gate command: `cmake --build build --target codem_torch90_tranche`.

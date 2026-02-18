@@ -5,7 +5,8 @@ cmake -S .. -B . --fresh \
   -DPLUSS_ENABLE_TORCH=ON \
   -DPLUSSQIT_BUILD_CODEM=ON \
   -DPLUSSQIT_BUILD_EXAMPLES=ON \
-  -DPLUSSQIT_BUILD_TESTS=ON
+  -DPLUSSQIT_BUILD_TESTS=ON \
+  -DBUILD_BENCHMARKS=ON
 
 
 cmake --build . -j
@@ -19,6 +20,10 @@ cmake --build . --target plussqit_codem_series_usage_demo -j8
 ./build/PlussQit/plussqit_codem_linear_alg_demo
 ./build/PlussQit/plussqit_codem_stats_demo
 ./build/PlussQit/plussqit_codem_signal_demo
+./build/PlussQit/bench_torch_parity --emit-csv
+
+
+cmake --build . --target codem_torch90_tranche -j8
 
 
 cmake --build . -j
@@ -26,14 +31,15 @@ cmake --build . -j
 
 
 // Outside of Build 
+
 cmake -S . -B build \
   -DPLUSSQIT_BUILD_CODEM=ON \
   -DPLUSSQIT_BUILD_EXAMPLES=ON \
-  -DPLUSSQIT_BUILD_TESTS=ON
+  -DPLUSSQIT_BUILD_TESTS=ON \
+  -DBUILD_BENCHMARKS=ON
 
 cmake --build build -j
 
 
 ./build/PlussQit/plussqit_codem_series_usage_demo
-
 

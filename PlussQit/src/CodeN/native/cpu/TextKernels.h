@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace pluss::coden::native::cpu {
@@ -65,6 +67,15 @@ namespace pluss::coden::native::cpu {
 ::std::string nlp_remove_footers_fast(::std::string_view s);
 ::std::string nlp_remove_boilerplate_fast(::std::string_view s);
 ::std::string nlp_remove_tables_fast(::std::string_view s);
+::std::string nlp_mask_numbers_fast(::std::string_view s);
+::std::string nlp_mask_emails_fast(::std::string_view s);
+::std::string nlp_mask_urls_fast(::std::string_view s);
+::std::string nlp_mask_mentions_fast(::std::string_view s);
+::std::string nlp_mask_hashtags_fast(::std::string_view s);
+::std::string nlp_mask_dates_fast(::std::string_view s);
+::std::string nlp_mask_times_fast(::std::string_view s);
+::std::string nlp_mask_currency_fast(::std::string_view s);
+::std::string nlp_mask_pii_fast(::std::string_view s, ::std::int64_t flags = 0);
 
 // Byte substring contains.
 bool contains_bytes(::std::string_view hay, ::std::string_view needle);
@@ -78,5 +89,22 @@ bool contains_bytes(::std::string_view hay, ::std::string_view needle);
 // Split by an explicit delimiter (non-empty), returning (offset,len) spans into the input view.
 ::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_delim_spans(::std::string_view s, ::std::string_view delim);
 
+// Split on ASCII punctuation boundaries (delimiter = non-alnum).
+::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_on_punct_spans(::std::string_view s);
+
+// Split on ASCII word boundaries: start=[A-Za-z0-9_], body=[A-Za-z0-9_'].
+::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_word_spans(::std::string_view s);
+
+// ASCII sentence splitting with punctuation boundary scan.
+// Boundary markers: '.', '!', '?' followed by whitespace or end-of-input.
+::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_sentences_spans_ascii(::std::string_view s);
+
+// Lowercase with SIMD lower_ascii + single-pass token extraction/filtering.
+void tokenize_words_ascii_lower_filtered(::std::string_view s,
+                                         ::std::vector<::std::string>& out,
+                                         bool alpha_only = false,
+                                         bool alnum_only = false,
+                                         ::std::int64_t min_len = 0,
+                                         ::std::int64_t max_len = -1);
 
 } // namespace pluss::coden::native::cpu

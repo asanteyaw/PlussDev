@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <limits>
 #include <regex>
 #include <string>
 #include <utility>
@@ -57,6 +58,126 @@ inline bool is_ascii_punct(unsigned char c) {
 
 inline bool is_ascii_printable(unsigned char c) {
   return c >= 32 && c <= 126;
+}
+
+inline bool is_ascii_word_start(unsigned char c) {
+  return is_ascii_alnum(c) || c == '_';
+}
+
+inline bool is_ascii_word_body(unsigned char c) {
+  return is_ascii_alnum(c) || c == '_' || c == '\'';
+}
+
+#if defined(__ARM_NEON)
+inline ::std::uint32_t char_eq_mask_16(const unsigned char* p, unsigned char c) {
+  const uint8x16_t v = vld1q_u8(p);
+  const uint8x16_t m = vceqq_u8(v, vdupq_n_u8(c));
+  alignas(16) unsigned char lanes[16];
+  vst1q_u8(lanes, m);
+  ::std::uint32_t mask = 0;
+  for (int i = 0; i < 16; ++i) {
+    if (lanes[i] != 0) mask |= (1u << static_cast<::std::uint32_t>(i));
+  }
+  return mask;
+}
+
+inline ::std::uint32_t non_alnum_mask_16(const unsigned char* p) {
+  const uint8x16_t v = vld1q_u8(p);
+  const uint8x16_t ascii = vcltq_u8(v, vdupq_n_u8(static_cast<uint8_t>(0x80)));
+  const uint8x16_t A = vandq_u8(vcgeq_u8(v, vdupq_n_u8(static_cast<uint8_t>('A'))),
+                                vcleq_u8(v, vdupq_n_u8(static_cast<uint8_t>('Z'))));
+  const uint8x16_t a = vandq_u8(vcgeq_u8(v, vdupq_n_u8(static_cast<uint8_t>('a'))),
+                                vcleq_u8(v, vdupq_n_u8(static_cast<uint8_t>('z'))));
+  const uint8x16_t d = vandq_u8(vcgeq_u8(v, vdupq_n_u8(static_cast<uint8_t>('0'))),
+                                vcleq_u8(v, vdupq_n_u8(static_cast<uint8_t>('9'))));
+  const uint8x16_t alnum = vandq_u8(ascii, vorrq_u8(vorrq_u8(A, a), d));
+  const uint8x16_t non_alnum = vmvnq_u8(alnum);
+  alignas(16) unsigned char lanes[16];
+  vst1q_u8(lanes, non_alnum);
+  ::std::uint32_t mask = 0;
+  for (int i = 0; i < 16; ++i) {
+    if (lanes[i] != 0) mask |= (1u << static_cast<::std::uint32_t>(i));
+  }
+  return mask;
+}
+#elif defined(__SSE2__)
+inline ::std::uint32_t char_eq_mask_16(const unsigned char* p, unsigned char c) {
+  const __m128i v = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p));
+  const __m128i k = _mm_set1_epi8(static_cast<char>(c));
+  return static_cast<::std::uint32_t>(_mm_movemask_epi8(_mm_cmpeq_epi8(v, k)));
+}
+
+inline ::std::uint32_t non_alnum_mask_16(const unsigned char* p) {
+  const __m128i v = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p));
+  const __m128i flip = _mm_set1_epi8(static_cast<char>(0x80));
+  const __m128i one = _mm_set1_epi8(1);
+  const __m128i vf = _mm_xor_si128(v, flip);
+
+  const __m128i A = _mm_set1_epi8(static_cast<char>('A' ^ 0x80));
+  const __m128i Z = _mm_set1_epi8(static_cast<char>('Z' ^ 0x80));
+  const __m128i a = _mm_set1_epi8(static_cast<char>('a' ^ 0x80));
+  const __m128i z = _mm_set1_epi8(static_cast<char>('z' ^ 0x80));
+  const __m128i d0 = _mm_set1_epi8(static_cast<char>('0' ^ 0x80));
+  const __m128i d9 = _mm_set1_epi8(static_cast<char>('9' ^ 0x80));
+
+  const __m128i geA = _mm_cmpgt_epi8(vf, _mm_sub_epi8(A, one));
+  const __m128i leZ = _mm_cmpgt_epi8(_mm_add_epi8(Z, one), vf);
+  const __m128i inA = _mm_and_si128(geA, leZ);
+
+  const __m128i gea = _mm_cmpgt_epi8(vf, _mm_sub_epi8(a, one));
+  const __m128i lez = _mm_cmpgt_epi8(_mm_add_epi8(z, one), vf);
+  const __m128i ina = _mm_and_si128(gea, lez);
+
+  const __m128i ge0 = _mm_cmpgt_epi8(vf, _mm_sub_epi8(d0, one));
+  const __m128i le9 = _mm_cmpgt_epi8(_mm_add_epi8(d9, one), vf);
+  const __m128i ind = _mm_and_si128(ge0, le9);
+
+  const __m128i ascii = _mm_cmpeq_epi8(_mm_and_si128(v, _mm_set1_epi8(static_cast<char>(0x80))), _mm_setzero_si128());
+  const __m128i alnum = _mm_and_si128(ascii, _mm_or_si128(_mm_or_si128(inA, ina), ind));
+  const __m128i non_alnum = _mm_andnot_si128(alnum, _mm_set1_epi8(static_cast<char>(0xFF)));
+  return static_cast<::std::uint32_t>(_mm_movemask_epi8(non_alnum));
+}
+#else
+inline ::std::uint32_t char_eq_mask_16(const unsigned char* p, unsigned char c) {
+  ::std::uint32_t mask = 0;
+  for (int i = 0; i < 16; ++i) {
+    if (p[i] == c) mask |= (1u << static_cast<::std::uint32_t>(i));
+  }
+  return mask;
+}
+
+inline ::std::uint32_t non_alnum_mask_16(const unsigned char* p) {
+  ::std::uint32_t mask = 0;
+  for (int i = 0; i < 16; ++i) {
+    if (!is_ascii_alnum(p[i])) mask |= (1u << static_cast<::std::uint32_t>(i));
+  }
+  return mask;
+}
+#endif
+
+inline ::std::uint32_t ws_mask_16(const unsigned char* p) {
+  return char_eq_mask_16(p, static_cast<unsigned char>(' ')) |
+         char_eq_mask_16(p, static_cast<unsigned char>('\t')) |
+         char_eq_mask_16(p, static_cast<unsigned char>('\n')) |
+         char_eq_mask_16(p, static_cast<unsigned char>('\r')) |
+         char_eq_mask_16(p, static_cast<unsigned char>('\f')) |
+         char_eq_mask_16(p, static_cast<unsigned char>('\v'));
+}
+
+inline ::std::uint32_t sentence_punct_mask_16(const unsigned char* p) {
+  return char_eq_mask_16(p, static_cast<unsigned char>('.')) |
+         char_eq_mask_16(p, static_cast<unsigned char>('!')) |
+         char_eq_mask_16(p, static_cast<unsigned char>('?'));
+}
+
+inline ::std::size_t first_set_bit_32(::std::uint32_t x) {
+#if defined(__clang__) || defined(__GNUC__)
+  return static_cast<::std::size_t>(__builtin_ctz(x));
+#else
+  ::std::size_t k = 0;
+  while (((x >> k) & 1u) == 0u) ++k;
+  return k;
+#endif
 }
 
 inline bool is_combining_diacritic(std::uint32_t cp) {
@@ -110,6 +231,13 @@ inline std::array<bool, 256> make_char_mask(std::string_view chars) {
 inline bool has_any_char(std::string_view s, std::string_view chars) {
   for (const char c : chars) {
     if (s.find(c) != std::string_view::npos) return true;
+  }
+  return false;
+}
+
+inline bool has_any_digit(std::string_view s) {
+  for (unsigned char c : s) {
+    if (is_ascii_digit(c)) return true;
   }
   return false;
 }
@@ -1015,6 +1143,115 @@ inline std::string transform_lines(std::string_view s, const std::function<bool(
   return normalize_removed(out);
 }
 
+::std::string nlp_mask_numbers_fast(::std::string_view s) {
+  if (!has_any_digit(s)) return ::std::string(s);
+  ::std::string out;
+  out.reserve(s.size() + 16);
+  ::std::size_t i = 0;
+  while (i < s.size()) {
+    const unsigned char c = static_cast<unsigned char>(s[i]);
+    if (!is_ascii_digit(c)) {
+      out.push_back(static_cast<char>(c));
+      ++i;
+      continue;
+    }
+    out.append("[NUM]");
+    ++i;
+    while (i < s.size()) {
+      const unsigned char d = static_cast<unsigned char>(s[i]);
+      if (is_ascii_digit(d)) {
+        ++i;
+        continue;
+      }
+      if ((d == ',' || d == '.' || d == '-' || d == '/' || d == ':' || d == '_') &&
+          i + 1 < s.size() && is_ascii_digit(static_cast<unsigned char>(s[i + 1]))) {
+        ++i;
+        continue;
+      }
+      break;
+    }
+  }
+  return out;
+}
+
+::std::string nlp_mask_emails_fast(::std::string_view s) {
+  if (s.find('@') == ::std::string_view::npos) return ::std::string(s);
+  static const ::std::regex kEmailRe(R"(([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}))");
+  return ::std::regex_replace(::std::string(s), kEmailRe, "[EMAIL]");
+}
+
+::std::string nlp_mask_urls_fast(::std::string_view s) {
+  if (!contains_ci(s, "http") && !contains_ci(s, "www.")) return ::std::string(s);
+  static const ::std::regex kUrlRe(R"((https?:\/\/[^\s<>"')\]]+|www\.[^\s<>"')\]]+))", ::std::regex::icase);
+  return ::std::regex_replace(::std::string(s), kUrlRe, "[URL]");
+}
+
+::std::string nlp_mask_mentions_fast(::std::string_view s) {
+  if (s.find('@') == ::std::string_view::npos) return ::std::string(s);
+  static const ::std::regex kMentionRe(R"((^|[\s(])@[A-Za-z0-9_]+)", ::std::regex::icase);
+  return ::std::regex_replace(::std::string(s), kMentionRe, "$1[MENTION]");
+}
+
+::std::string nlp_mask_hashtags_fast(::std::string_view s) {
+  if (s.find('#') == ::std::string_view::npos) return ::std::string(s);
+  static const ::std::regex kHashRe(R"((^|[\s(])#[A-Za-z0-9_]+)", ::std::regex::icase);
+  return ::std::regex_replace(::std::string(s), kHashRe, "$1[HASHTAG]");
+}
+
+::std::string nlp_mask_dates_fast(::std::string_view s) {
+  if (!has_any_digit(s) && !contains_ci(s, "jan") && !contains_ci(s, "feb") &&
+      !contains_ci(s, "mar") && !contains_ci(s, "apr") && !contains_ci(s, "may") &&
+      !contains_ci(s, "jun") && !contains_ci(s, "jul") && !contains_ci(s, "aug") &&
+      !contains_ci(s, "sep") && !contains_ci(s, "oct") && !contains_ci(s, "nov") &&
+      !contains_ci(s, "dec")) {
+    return ::std::string(s);
+  }
+  static const ::std::regex kDateRe(
+      R"(\b(?:\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+\d{1,2}(?:,\s*\d{2,4})?)\b)",
+      ::std::regex::icase);
+  return ::std::regex_replace(::std::string(s), kDateRe, "[DATE]");
+}
+
+::std::string nlp_mask_times_fast(::std::string_view s) {
+  if (!has_any_digit(s)) return ::std::string(s);
+  static const ::std::regex kTimeRe(
+      R"(\b(?:(?:[01]?\d|2[0-3]):[0-5]\d(?:\s?[AaPp][Mm])?|(?:1[0-2]|0?[1-9])\s?[AaPp][Mm])\b)");
+  return ::std::regex_replace(::std::string(s), kTimeRe, "[TIME]");
+}
+
+::std::string nlp_mask_currency_fast(::std::string_view s) {
+  if (!has_any_digit(s) && !has_any_char(s, "$")) return ::std::string(s);
+  static const ::std::regex kCurrencyRe(
+      R"((?:\$\s*\d+(?:[.,]\d+)*(?:\s?[kKmMbB])?|\b\d+(?:[.,]\d+)*\s?(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY|INR)\b|\b(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY|INR)\s?\d+(?:[.,]\d+)*\b))",
+      ::std::regex::icase);
+  return ::std::regex_replace(::std::string(s), kCurrencyRe, "[CUR]");
+}
+
+::std::string nlp_mask_pii_fast(::std::string_view s, ::std::int64_t flags) {
+  constexpr ::std::int64_t kNumbers = 1 << 0;
+  constexpr ::std::int64_t kEmails = 1 << 1;
+  constexpr ::std::int64_t kUrls = 1 << 2;
+  constexpr ::std::int64_t kMentions = 1 << 3;
+  constexpr ::std::int64_t kHashtags = 1 << 4;
+  constexpr ::std::int64_t kDates = 1 << 5;
+  constexpr ::std::int64_t kTimes = 1 << 6;
+  constexpr ::std::int64_t kCurrency = 1 << 7;
+  constexpr ::std::int64_t kAll = kNumbers | kEmails | kUrls | kMentions | kHashtags | kDates | kTimes | kCurrency;
+  const ::std::int64_t m = (flags <= 0) ? kAll : (flags & kAll);
+  if (m == 0) return ::std::string(s);
+
+  ::std::string out(s);
+  if (m & kEmails) out = nlp_mask_emails_fast(out);
+  if (m & kUrls) out = nlp_mask_urls_fast(out);
+  if (m & kMentions) out = nlp_mask_mentions_fast(out);
+  if (m & kHashtags) out = nlp_mask_hashtags_fast(out);
+  if (m & kCurrency) out = nlp_mask_currency_fast(out);
+  if (m & kDates) out = nlp_mask_dates_fast(out);
+  if (m & kTimes) out = nlp_mask_times_fast(out);
+  if (m & kNumbers) out = nlp_mask_numbers_fast(out);
+  return out;
+}
+
 bool contains_bytes(::std::string_view hay, ::std::string_view needle) {
   if (needle.empty()) return true;
   return hay.find(needle) != ::std::string_view::npos;
@@ -1040,20 +1277,187 @@ bool contains_bytes(::std::string_view hay, ::std::string_view needle) {
 ::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_whitespace_spans(::std::string_view s) {
   ::std::vector<::std::pair<::std::size_t, ::std::size_t>> out;
   const ::std::size_t n = s.size();
+  const auto* bytes = reinterpret_cast<const unsigned char*>(s.data());
   ::std::size_t i = 0;
 
-  auto is_ws = [](unsigned char c) -> bool {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v';
-  };
-
   while (i < n) {
-    while (i < n && is_ws(static_cast<unsigned char>(s[i]))) ++i;
+    while (i + 16 <= n) {
+      const ::std::uint32_t mask = ws_mask_16(bytes + i) & 0xFFFFu;
+      if (mask == 0xFFFFu) {
+        i += 16;
+        continue;
+      }
+      if (mask != 0u) {
+        i += first_set_bit_32((~mask) & 0xFFFFu);
+      }
+      break;
+    }
+    while (i < n && is_ascii_space(bytes[i])) ++i;
     if (i >= n) break;
     const ::std::size_t start = i;
-    while (i < n && !is_ws(static_cast<unsigned char>(s[i]))) ++i;
+    while (i + 16 <= n) {
+      const ::std::uint32_t mask = ws_mask_16(bytes + i) & 0xFFFFu;
+      if (mask == 0u) {
+        i += 16;
+        continue;
+      }
+      i += first_set_bit_32(mask);
+      break;
+    }
+    while (i < n && !is_ascii_space(bytes[i])) ++i;
     out.emplace_back(start, i - start);
   }
   return out;
+}
+
+::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_on_punct_spans(::std::string_view s) {
+  ::std::vector<::std::pair<::std::size_t, ::std::size_t>> out;
+  const ::std::size_t n = s.size();
+  ::std::size_t i = 0;
+  const auto* bytes = reinterpret_cast<const unsigned char*>(s.data());
+
+  while (i < n) {
+    while (i < n && !is_ascii_alnum(bytes[i])) ++i;
+    if (i >= n) break;
+    const ::std::size_t start = i;
+
+    while (i + 16 <= n) {
+      const ::std::uint32_t mask = non_alnum_mask_16(bytes + i);
+      if (mask == 0u) {
+        i += 16;
+      } else {
+        i += first_set_bit_32(mask);
+        break;
+      }
+    }
+    while (i < n && is_ascii_alnum(bytes[i])) ++i;
+    out.emplace_back(start, i - start);
+  }
+  return out;
+}
+
+::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_word_spans(::std::string_view s) {
+  ::std::vector<::std::pair<::std::size_t, ::std::size_t>> out;
+  const ::std::size_t n = s.size();
+  const auto* bytes = reinterpret_cast<const unsigned char*>(s.data());
+  ::std::size_t i = 0;
+
+  while (i < n) {
+    while (i + 16 <= n) {
+      ::std::uint32_t delim = non_alnum_mask_16(bytes + i) & 0xFFFFu;
+      delim &= ~char_eq_mask_16(bytes + i, static_cast<unsigned char>('_'));
+      delim &= 0xFFFFu;
+      if (delim == 0xFFFFu) {
+        i += 16;
+        continue;
+      }
+      if (delim != 0u) {
+        i += first_set_bit_32((~delim) & 0xFFFFu);
+      }
+      break;
+    }
+    while (i < n && !is_ascii_word_start(bytes[i])) ++i;
+    if (i >= n) break;
+    const ::std::size_t start = i;
+
+    while (i + 16 <= n) {
+      ::std::uint32_t delim = non_alnum_mask_16(bytes + i) & 0xFFFFu;
+      delim &= ~char_eq_mask_16(bytes + i, static_cast<unsigned char>('_'));
+      delim &= ~char_eq_mask_16(bytes + i, static_cast<unsigned char>('\''));
+      delim &= 0xFFFFu;
+      if (delim == 0u) {
+        i += 16;
+        continue;
+      }
+      i += first_set_bit_32(delim);
+      break;
+    }
+    while (i < n && is_ascii_word_body(bytes[i])) ++i;
+    out.emplace_back(start, i - start);
+  }
+  return out;
+}
+
+::std::vector<::std::pair<::std::size_t, ::std::size_t>> split_sentences_spans_ascii(::std::string_view s) {
+  ::std::vector<::std::pair<::std::size_t, ::std::size_t>> out;
+  const ::std::size_t n = s.size();
+  const auto* bytes = reinterpret_cast<const unsigned char*>(s.data());
+  ::std::size_t i = 0;
+
+  const auto emit_trimmed = [&](::std::size_t b, ::std::size_t e) {
+    while (b < e && is_ascii_space(bytes[b])) ++b;
+    while (e > b && is_ascii_space(bytes[e - 1])) --e;
+    if (e > b) out.emplace_back(b, e - b);
+  };
+
+  while (i < n) {
+    while (i < n && is_ascii_space(bytes[i])) ++i;
+    if (i >= n) break;
+    const ::std::size_t start = i;
+
+    while (true) {
+      while (i + 16 <= n) {
+        const ::std::uint32_t mask = sentence_punct_mask_16(bytes + i) & 0xFFFFu;
+        if (mask == 0u) {
+          i += 16;
+          continue;
+        }
+        i += first_set_bit_32(mask);
+        break;
+      }
+      while (i < n && bytes[i] != '.' && bytes[i] != '!' && bytes[i] != '?') ++i;
+      if (i >= n) {
+        emit_trimmed(start, n);
+        return out;
+      }
+
+      ::std::size_t j = i + 1;
+      while (j < n && (bytes[j] == '.' || bytes[j] == '!' || bytes[j] == '?')) ++j;
+      if (j == n || is_ascii_space(bytes[j])) {
+        emit_trimmed(start, j);
+        i = j;
+        break;
+      }
+      i = j;
+    }
+  }
+  return out;
+}
+
+void tokenize_words_ascii_lower_filtered(::std::string_view s,
+                                         ::std::vector<::std::string>& out,
+                                         bool alpha_only,
+                                         bool alnum_only,
+                                         ::std::int64_t min_len,
+                                         ::std::int64_t max_len) {
+  const ::std::size_t min_l = static_cast<::std::size_t>(::std::max<::std::int64_t>(0, min_len));
+  const ::std::size_t max_l =
+      (max_len < 0) ? ::std::numeric_limits<::std::size_t>::max() : static_cast<::std::size_t>(max_len);
+  if (max_l < min_l) return;
+
+  const ::std::string lower = lower_ascii(s);
+  const auto* p = reinterpret_cast<const unsigned char*>(lower.data());
+  const auto spans = split_word_spans(lower);
+  out.reserve(out.size() + spans.size());
+  for (const auto& [start, len] : spans) {
+    if (len < min_l || len > max_l) continue;
+
+    bool keep = true;
+    if (alpha_only || alnum_only) {
+      for (::std::size_t k = start; k < start + len; ++k) {
+        const unsigned char c = p[k];
+        if (alpha_only && !is_ascii_alpha(c)) {
+          keep = false;
+          break;
+        }
+        if (alnum_only && !is_ascii_alnum(c)) {
+          keep = false;
+          break;
+        }
+      }
+    }
+    if (keep) out.emplace_back(lower.substr(start, len));
+  }
 }
 
 } // namespace pluss::coden::native::cpu

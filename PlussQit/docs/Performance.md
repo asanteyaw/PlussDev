@@ -18,3 +18,7 @@ Once the semantics and edge-cases are fixed, PlussQit can add:
 - fused loops (where safe) to reduce memory traffic
 
 This avoids rewriting vectorized kernels multiple times due to shifting semantics.
+
+## Execution cadence
+
+Use the tranche loop in `docs/Torch90_TrancheCycle.md` to drive measured CPU parity progress toward a 90-point torch-level score.

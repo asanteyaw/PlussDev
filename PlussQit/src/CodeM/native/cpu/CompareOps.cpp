@@ -2,27 +2,76 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/Half.h"
-#include "CodeM/core/Complex.h"
-#include <complex>
+#include <algorithm>
 #include <cstdint>
 
 namespace pluss::codem::native::cpu {
 
+static bool fast_contiguous_cmp_ok_(const Series& a, const Series& b, const Series& out) {
+  const bool same_ab = a.sizes().size() == b.sizes().size() &&
+                       std::equal(a.sizes().begin(), a.sizes().end(), b.sizes().begin());
+  const bool same_ao = a.sizes().size() == out.sizes().size() &&
+                       std::equal(a.sizes().begin(), a.sizes().end(), out.sizes().begin());
+  return a.is_contiguous() && b.is_contiguous() && out.is_contiguous() &&
+         a.numel() == b.numel() && a.numel() == out.numel() &&
+         same_ab && same_ao;
+}
+
 template <class T, class Pred>
-static void cmp_loop(SeriesIterator& it, Pred&& pred) {
-  auto* outp = reinterpret_cast<std::uint8_t*>(const_cast<std::byte*>(it.out().raw_data()));
-  const auto* ap = reinterpret_cast<const T*>(it.a().raw_data());
-  const auto* bp = reinterpret_cast<const T*>(it.b().raw_data());
+static void cmp_contiguous_fast_(const Series& a, const Series& b, const Series& out, Pred&& pred) {
+  auto* outp = reinterpret_cast<std::uint8_t*>(const_cast<std::byte*>(out.raw_data()));
+  const auto* ap = reinterpret_cast<const T*>(a.raw_data());
+  const auto* bp = reinterpret_cast<const T*>(b.raw_data());
+  const auto n = out.numel();
+#if defined(__clang__)
+#pragma clang loop vectorize(enable)
+#pragma clang loop interleave(enable)
+#endif
+  for (std::int64_t i = 0; i < n; ++i) {
+    outp[i] = pred(ap[i], bp[i]) ? 1 : 0;
+  }
+}
+
+template <class T, class Pred>
+static void cmp_loop(const Series& a, const Series& b, const Series& out, Pred&& pred) {
+  if (fast_contiguous_cmp_ok_(a, b, out)) {
+    cmp_contiguous_fast_<T>(a, b, out, pred);
+    return;
+  }
+  SeriesIterator it = SeriesIterator::binary(a, b, out);
+  auto* outp = reinterpret_cast<std::uint8_t*>(const_cast<std::byte*>(out.raw_data()));
+  const auto* ap = reinterpret_cast<const T*>(a.raw_data());
+  const auto* bp = reinterpret_cast<const T*>(b.raw_data());
   it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t bo, std::int64_t) {
     outp[lin] = pred(ap[ao], bp[bo]) ? 1 : 0;
   });
 }
 
 template <class HalfT, class ToF32, class Pred>
-static void cmp_half_loop(SeriesIterator& it, Pred&& pred, ToF32&& to) {
-  auto* outp = reinterpret_cast<std::uint8_t*>(const_cast<std::byte*>(it.out().raw_data()));
-  const auto* ap = reinterpret_cast<const HalfT*>(it.a().raw_data());
-  const auto* bp = reinterpret_cast<const HalfT*>(it.b().raw_data());
+static void cmp_half_contiguous_fast_(const Series& a, const Series& b, const Series& out, Pred&& pred, ToF32&& to) {
+  auto* outp = reinterpret_cast<std::uint8_t*>(const_cast<std::byte*>(out.raw_data()));
+  const auto* ap = reinterpret_cast<const HalfT*>(a.raw_data());
+  const auto* bp = reinterpret_cast<const HalfT*>(b.raw_data());
+  const auto n = out.numel();
+#if defined(__clang__)
+#pragma clang loop vectorize(enable)
+#pragma clang loop interleave(enable)
+#endif
+  for (std::int64_t i = 0; i < n; ++i) {
+    outp[i] = pred(to(ap[i]), to(bp[i])) ? 1 : 0;
+  }
+}
+
+template <class HalfT, class ToF32, class Pred>
+static void cmp_half_loop(const Series& a, const Series& b, const Series& out, Pred&& pred, ToF32&& to) {
+  if (fast_contiguous_cmp_ok_(a, b, out)) {
+    cmp_half_contiguous_fast_<HalfT>(a, b, out, pred, to);
+    return;
+  }
+  SeriesIterator it = SeriesIterator::binary(a, b, out);
+  auto* outp = reinterpret_cast<std::uint8_t*>(const_cast<std::byte*>(out.raw_data()));
+  const auto* ap = reinterpret_cast<const HalfT*>(a.raw_data());
+  const auto* bp = reinterpret_cast<const HalfT*>(b.raw_data());
   it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t bo, std::int64_t) {
     outp[lin] = pred(to(ap[ao]), to(bp[bo])) ? 1 : 0;
   });
@@ -31,21 +80,20 @@ static void cmp_half_loop(SeriesIterator& it, Pred&& pred, ToF32&& to) {
 template <class Pred>
 static void dispatch_cmp(const Series& a, const Series& b, const Series& out, Pred&& pred, const char* name) {
   PLUSS_CHECK(out.scalar_type() == ScalarType::Bool, "compare: out must be Bool");
-  SeriesIterator it = SeriesIterator::binary(a, b, out);
   switch (a.scalar_type()) {
-    case ScalarType::Float64: cmp_loop<double>(it, pred); return;
-    case ScalarType::Float32: cmp_loop<float>(it, pred); return;
-    case ScalarType::Float16: cmp_half_loop<Float16>(it, pred, float16_to_float); return;
-    case ScalarType::BFloat16: cmp_half_loop<BFloat16>(it, pred, bfloat16_to_float); return;
-    case ScalarType::Int64: cmp_loop<std::int64_t>(it, pred); return;
-    case ScalarType::Int32: cmp_loop<std::int32_t>(it, pred); return;
-    case ScalarType::Int16: cmp_loop<std::int16_t>(it, pred); return;
-    case ScalarType::Int8:  cmp_loop<std::int8_t>(it, pred); return;
-    case ScalarType::UInt64: cmp_loop<std::uint64_t>(it, pred); return;
-    case ScalarType::UInt32: cmp_loop<std::uint32_t>(it, pred); return;
-    case ScalarType::UInt16: cmp_loop<std::uint16_t>(it, pred); return;
-    case ScalarType::UInt8:  cmp_loop<std::uint8_t>(it, pred); return;
-    case ScalarType::Bool:   cmp_loop<std::uint8_t>(it, pred); return;
+    case ScalarType::Float64: cmp_loop<double>(a, b, out, pred); return;
+    case ScalarType::Float32: cmp_loop<float>(a, b, out, pred); return;
+    case ScalarType::Float16: cmp_half_loop<Float16>(a, b, out, pred, float16_to_float); return;
+    case ScalarType::BFloat16: cmp_half_loop<BFloat16>(a, b, out, pred, bfloat16_to_float); return;
+    case ScalarType::Int64: cmp_loop<std::int64_t>(a, b, out, pred); return;
+    case ScalarType::Int32: cmp_loop<std::int32_t>(a, b, out, pred); return;
+    case ScalarType::Int16: cmp_loop<std::int16_t>(a, b, out, pred); return;
+    case ScalarType::Int8:  cmp_loop<std::int8_t>(a, b, out, pred); return;
+    case ScalarType::UInt64: cmp_loop<std::uint64_t>(a, b, out, pred); return;
+    case ScalarType::UInt32: cmp_loop<std::uint32_t>(a, b, out, pred); return;
+    case ScalarType::UInt16: cmp_loop<std::uint16_t>(a, b, out, pred); return;
+    case ScalarType::UInt8:  cmp_loop<std::uint8_t>(a, b, out, pred); return;
+    case ScalarType::Bool:   cmp_loop<std::uint8_t>(a, b, out, pred); return;
     default: break;
   }
   throw_error(std::string(name) + ": dtype not implemented");

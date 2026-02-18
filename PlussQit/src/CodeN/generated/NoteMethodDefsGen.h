@@ -800,6 +800,10 @@ inline TokenBatch Note::split_sentences() const {
   return ::pluss::coden::_compat::invoke<TokenBatch>("split_sentences", *this);
 }
 
+inline TokenBatch Note::split_on_punct() const {
+  return ::pluss::coden::_compat::invoke<TokenBatch>("split_on_punct", *this);
+}
+
 inline TokenBatch Note::split_graphemes() const {
   return ::pluss::coden::_compat::invoke<TokenBatch>("split_graphemes", *this);
 }
@@ -1638,6 +1642,66 @@ inline Note Note::phonetic_metaphone() const {
 
 inline Note Note::phonetic_double_metaphone() const {
   return ::pluss::coden::_compat::invoke<Note>("phonetic_double_metaphone", *this);
+}
+
+inline TokenBatch Note::intersect_acronyms(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<TokenBatch>("intersect_acronyms", *this, other);
+}
+
+inline TokenBatch Note::intersect_citations(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<TokenBatch>("intersect_citations", *this, other);
+}
+
+inline TokenBatch Note::intersect_math_symbols(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<TokenBatch>("intersect_math_symbols", *this, other);
+}
+
+inline TokenBatch Note::intersect_tokens(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<TokenBatch>("intersect_tokens", *this, other);
+}
+
+inline TokenBatch Note::intersect_terms(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<TokenBatch>("intersect_terms", *this, other);
+}
+
+inline Note Note::jaccard_acronyms(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<Note>("jaccard_acronyms", *this, other);
+}
+
+inline Note Note::jaccard_citations(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<Note>("jaccard_citations", *this, other);
+}
+
+inline Note Note::jaccard_math_symbols(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<Note>("jaccard_math_symbols", *this, other);
+}
+
+inline Note Note::jaccard_tokens(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<Note>("jaccard_tokens", *this, other);
+}
+
+inline Note Note::jaccard_terms(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<Note>("jaccard_terms", *this, other);
+}
+
+inline Note Note::overlap_acronyms(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<Note>("overlap_acronyms", *this, other);
+}
+
+inline Note Note::overlap_citations(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<Note>("overlap_citations", *this, other);
+}
+
+inline Note Note::overlap_math_symbols(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<Note>("overlap_math_symbols", *this, other);
+}
+
+inline Note Note::overlap_tokens(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<Note>("overlap_tokens", *this, other);
+}
+
+inline Note Note::overlap_terms(const Note& other) const {
+  return ::pluss::coden::_compat::invoke<Note>("overlap_terms", *this, other);
 }
 
 inline TokenBatch Note::diff_words(const Note& other) const {
