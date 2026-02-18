@@ -1,15 +1,23 @@
 # Code generation
 
-PlussQit keeps the "Torch-aligned" method surface in checked-in `.inc` files.
+`SeriesMethodsGen.h` is generated (during CMake build) from:
 
-To refresh from upstream Torch YAML:
+- `src/CodeM/native/native_functions.yaml`
+- `src/CodeM/core/OpsInternal.h` (extra method names)
+- `tools/codegen/series_methods_seed.txt` (compatibility seed list)
+
+Generator:
 
 ```bash
-python3 tools/codegen/generate_series_methods.py \
-  --yaml path/to/native_functions.yaml \
-  --out-methods src/CodeM/core/SeriesTorchAlignedMethods.inc \
-  --out-stubs   src/CodeM/core/SeriesTorchAlignedStubs.inc
+python3 tools/codegen/generate_series_methods_gen_h.py \
+  --yaml src/CodeM/native/native_functions.yaml \
+  --opsinternal src/CodeM/core/OpsInternal.h \
+  --seed-list tools/codegen/series_methods_seed.txt \
+  --out src/CodeM/generated/SeriesMethodsGen.h
 ```
 
-Stubs are compiled from `src/CodeM/core/SeriesTorchAlignedStubs.cpp`.
-When you implement an op, remove it from the stub file (or add a generation filter).
+How to add methods:
+
+1. Add method schema/name in `native_functions.yaml` (preferred).
+2. If it is a non-YAML extension method, add the name to the seed list or generator extras.
+3. Route/implement it in `src/CodeM/compat/Invoke.cpp` (and CPU kernels where needed).

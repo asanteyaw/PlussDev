@@ -47,6 +47,8 @@ file(MAKE_DIRECTORY ${PLUSSQIT_GEN_DIR})
 
 set(CODEM_NATIVE_YAML ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/native_functions.yaml)
 set(CODEM_GEN_SCRIPT  ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_ops.py)
+set(SERIES_METHODS_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/generate_series_methods_gen_h.py)
+set(SERIES_METHODS_SEED_LIST ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/series_methods_seed.txt)
 
 
 set(SERIES_OPSINTERNAL_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/generate_series_methods_from_opsinternal.py)
@@ -65,6 +67,19 @@ add_custom_command(
           --out-defs  ${SERIES_OPSINTERNAL_DEFS}
   DEPENDS ${SERIES_OPSINTERNAL_H} ${SERIES_OPSINTERNAL_GEN_SCRIPT}
   COMMENT "Generating Series method wrappers from OpsInternal.h"
+)
+
+set(SERIES_METHODS_GEN_HEADER ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesMethodsGen.h)
+add_custom_command(
+  OUTPUT ${SERIES_METHODS_GEN_HEADER}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${PLUSSQIT_GEN_DIR}/CodeM/generated
+  COMMAND ${Python3_EXECUTABLE} ${SERIES_METHODS_GEN_SCRIPT}
+          --yaml ${CODEM_NATIVE_YAML}
+          --opsinternal ${SERIES_OPSINTERNAL_H}
+          --seed-list ${SERIES_METHODS_SEED_LIST}
+          --out ${SERIES_METHODS_GEN_HEADER}
+  DEPENDS ${CODEM_NATIVE_YAML} ${SERIES_OPSINTERNAL_H} ${SERIES_METHODS_SEED_LIST} ${SERIES_METHODS_GEN_SCRIPT}
+  COMMENT "Generating SeriesMethodsGen.h from native_functions.yaml"
 )
 
 add_custom_command(
@@ -153,6 +168,7 @@ add_library(plussqit_codem
   # src/CodeM/core/SeriesTorchAlignedStubs.cpp
   ${SERIES_OPSINTERNAL_DECLS}
   ${SERIES_OPSINTERNAL_DEFS}
+  ${SERIES_METHODS_GEN_HEADER}
   ${PLUSSQIT_CODEM_CORE_CPP}
   ${PLUSSQIT_GEN_DIR}/CodeM/ops/ops_generated.cpp
 )
@@ -163,9 +179,9 @@ target_compile_definitions(plussqit_codem PRIVATE PLUSS_CODEM_GEN_AVAILABLE)
 
 target_include_directories(plussqit_codem
   PUBLIC
+    $<BUILD_INTERFACE:${PLUSSQIT_GEN_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${PLUSSQIT_GEN_DIR}>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -317,6 +333,9 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
 
 # Generated Series headers are included for completeness (CodeM only).
 if (PLUSSQIT_BUILD_CODEM)
+  install(DIRECTORY ${SERIES_GEN_DIR}/CodeM/generated/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeM/generated
+  )
   install(DIRECTORY ${SERIES_GEN_DIR}/CodeM/Series/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Series
   )

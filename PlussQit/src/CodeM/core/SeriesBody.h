@@ -107,14 +107,27 @@ inline Series make_series(std::span<const T> data, std::span<const std::int64_t>
   // Infer dtype from T if user didn't override explicitly.
   ScalarType dt = cfg.dtype;
   if (dt == ScalarType::Float32) {
-    if constexpr (std::is_same_v<T,double>) dt = ScalarType::Float64;
-    else if constexpr (std::is_same_v<T,float>) dt = ScalarType::Float32;
-    else if constexpr (std::is_same_v<T,std::int64_t>) dt = ScalarType::Int64;
-    else if constexpr (std::is_same_v<T,std::int32_t>) dt = ScalarType::Int32;
-    else if constexpr (std::is_same_v<T,std::int16_t>) dt = ScalarType::Int16;
-    else if constexpr (std::is_same_v<T,std::int8_t>) dt = ScalarType::Int8;
-    else if constexpr (std::is_same_v<T,std::uint8_t>) dt = ScalarType::UInt8;
-    else if constexpr (std::is_same_v<T,bool>) dt = ScalarType::Bool;
+    using U = std::remove_cv_t<T>;
+    if constexpr (std::is_same_v<U, bool>) {
+      dt = ScalarType::Bool;
+    } else if constexpr (std::is_same_v<U, std::uint8_t>) {
+      dt = ScalarType::UInt8;
+    } else if constexpr (std::is_integral_v<U>) {
+      // Torch-like default integral promotion policy for factories.
+      dt = ScalarType::Int64;
+    } else if constexpr (std::is_same_v<U, double>) {
+      dt = ScalarType::Float64;
+    } else if constexpr (std::is_same_v<U, float>) {
+      dt = ScalarType::Float32;
+    } else if constexpr (std::is_same_v<U, Float16>) {
+      dt = ScalarType::Float16;
+    } else if constexpr (std::is_same_v<U, BFloat16>) {
+      dt = ScalarType::BFloat16;
+    } else if constexpr (std::is_same_v<U, Complex64>) {
+      dt = ScalarType::Complex64;
+    } else if constexpr (std::is_same_v<U, Complex128>) {
+      dt = ScalarType::Complex128;
+    }
   }
   Series out = Series::empty(sizes, dt).contiguous();
   const std::size_t n = (std::size_t)out.numel();

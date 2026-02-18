@@ -14,10 +14,11 @@ hdr_ops = set(re.findall(r"invoke\(\"([a-zA-Z0-9_]+)\"", hdr_text))
 # also include invoke_("op" in header for inplace wrappers
 hdr_ops |= set(re.findall(r"invoke_\(\"([a-zA-Z0-9_]+)\"", hdr_text))
 
-# extract implemented ops from Invoke.cpp: if (op == "op")
-impl_ops = set(re.findall(r"if \(op == \"([a-z0-9_]+)\"\)", inv_text))
-# also consider not_impl and other occurrences where op string might be referenced
-impl_ops |= set(re.findall(r"not_impl\(\"([a-z0-9_]+)\"", inv_text))
+# extract implemented/routed ops from Invoke.cpp:
+# - direct comparisons in any branch shape, including multi-op OR chains
+# - explicit throw helpers that hardcode op names
+impl_ops = set(re.findall(r'op\s*==\s*"([A-Za-z0-9_]+)"', inv_text))
+impl_ops |= set(re.findall(r'not_impl\("([A-Za-z0-9_]+)"', inv_text))
 
 # Compute differences
 missing = sorted(hdr_ops - impl_ops)
