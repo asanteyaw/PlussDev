@@ -6,7 +6,7 @@
 #include "pluss/export.h"
 
 #include "CodeH/core/Timeline.h"
-#include "CodeH/compat/Invoke.h"
+#include "CodeH/compat/InvokeFwd.h"
 
 namespace pluss::codeh {
 
@@ -21,7 +21,7 @@ public:
 // ---------------------------------------------------------------------------
 // Full op surface (pandas/MATLAB-inspired)
 // ---------------------------------------------------------------------------
-#if !defined(CODEH_NO_TIMEINDEX_SURFACE)
+#if defined(CODEH_ENABLE_TIMEINDEX_SURFACE) && !defined(CODEH_NO_TIMEINDEX_SURFACE)
   #include "CodeH/core/TimeIndexSurface.h"
 #endif
 
@@ -80,15 +80,10 @@ public:
   pluss::codem::Series join_asof(const TimeIndex& right,
                                 AsofDirection direction = AsofDirection::Backward,
                                 const Duration* tolerance = nullptr,
-                                bool allow_exact_matches = true) const {
-    if (tolerance) {
-      return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("join_asof", *this, right, direction, *tolerance, allow_exact_matches);
-    }
-    return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("join_asof", *this, right, direction, ::pluss::codeh::_compat::Arg{}, allow_exact_matches);
-  }
+                                bool allow_exact_matches = true) const;
 
   struct AlignUnion {
-    TimeIndex index;                // union index
+    Timeline index;                 // union index timeline
     pluss::codem::Series left_indexer;  // map union -> left (or -1)
     pluss::codem::Series right_indexer; // map union -> right (or -1)
   };

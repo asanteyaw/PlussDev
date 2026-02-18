@@ -16,8 +16,12 @@ option(PLUSSQIT_BUILD_TESTS "Build tests" ON)
 option(PLUSSQIT_USE_FMT "Use fmt for messages" ON)
 option(PLUSSQIT_FETCH_DEPS "Allow CMake to FetchContent dependencies (fmt/Catch2)" OFF)
 option(PLUSSQIT_BUILD_CODEM "Build CodeM (Series/Tensor)" OFF)
+option(PLUSSQIT_BUILD_CODEH "Build CodeH (Timeline/Duration/TimeIndex)" ${PLUSSQIT_BUILD_CODEM})
 option(PLUSSQIT_BUILD_CODEM_SMOKE_TESTS "Build ad-hoc CodeM smoke executables" OFF)
 option(PLUSSQIT_CODEN_ENABLE_SERIES_INTEROP "Enable CodeN helpers that return CodeM::Series" OFF)
+
+set(PLUSSQIT_GEN_DIR ${CMAKE_BINARY_DIR}/generated)
+file(MAKE_DIRECTORY ${PLUSSQIT_GEN_DIR})
 
 include(FetchContent)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
@@ -279,6 +283,70 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
   target_compile_options(plussqit_coden PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+# ---- CodeH (time, Timeline/Duration/TimeIndex) ----
+if (PLUSSQIT_BUILD_CODEH)
+  if (NOT PLUSSQIT_BUILD_CODEM)
+    message(FATAL_ERROR "PLUSSQIT_BUILD_CODEH requires PLUSSQIT_BUILD_CODEM=ON")
+  endif()
+
+  set(CODEH_GEN_DIR ${PLUSSQIT_GEN_DIR}/CodeH/generated)
+  set(CODEH_TIMELINE_METHODS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeH/generated/TimelineMethodsGen.h)
+  set(CODEH_DURATION_METHODS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeH/generated/DurationMethodsGen.h)
+  set(CODEH_TIMEINDEX_METHODS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeH/generated/TimeIndexMethodsGen.h)
+  set(CODEH_TIMELINE_METHODS_GEN ${CODEH_GEN_DIR}/TimelineMethodsGen.h)
+  set(CODEH_DURATION_METHODS_GEN ${CODEH_GEN_DIR}/DurationMethodsGen.h)
+  set(CODEH_TIMEINDEX_METHODS_GEN ${CODEH_GEN_DIR}/TimeIndexMethodsGen.h)
+
+  add_custom_command(
+    OUTPUT
+      ${CODEH_TIMELINE_METHODS_GEN}
+      ${CODEH_DURATION_METHODS_GEN}
+      ${CODEH_TIMEINDEX_METHODS_GEN}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CODEH_GEN_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CODEH_TIMELINE_METHODS_SRC} ${CODEH_TIMELINE_METHODS_GEN}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CODEH_DURATION_METHODS_SRC} ${CODEH_DURATION_METHODS_GEN}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CODEH_TIMEINDEX_METHODS_SRC} ${CODEH_TIMEINDEX_METHODS_GEN}
+    DEPENDS
+      ${CODEH_TIMELINE_METHODS_SRC}
+      ${CODEH_DURATION_METHODS_SRC}
+      ${CODEH_TIMEINDEX_METHODS_SRC}
+    COMMENT "Generating CodeH method-surface headers"
+  )
+
+  file(GLOB_RECURSE PLUSSQIT_CODEH_CPP CONFIGURE_DEPENDS
+    "src/CodeH/core/*.cpp"
+    "src/CodeH/compat/*.cpp"
+  )
+
+  add_library(plussqit_codeh
+    ${CODEH_TIMELINE_METHODS_GEN}
+    ${CODEH_DURATION_METHODS_GEN}
+    ${CODEH_TIMEINDEX_METHODS_GEN}
+    ${PLUSSQIT_CODEH_CPP}
+    src/CodeH/compat/Access.h
+    src/CodeH/compat/InvokeFwd.h
+    src/CodeH/core/Errors.h
+  )
+
+  add_library(PlussQit::CodeH ALIAS plussqit_codeh)
+
+  target_include_directories(plussqit_codeh
+    PUBLIC
+      $<BUILD_INTERFACE:${PLUSSQIT_GEN_DIR}>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
+
+  target_compile_features(plussqit_codeh PUBLIC cxx_std_20)
+  target_compile_definitions(plussqit_codeh PRIVATE CODEH_BUILD_MAIN_LIB)
+  target_link_libraries(plussqit_codeh PUBLIC PlussQit::CodeM PlussQit::CodeN)
+
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
+    target_compile_options(plussqit_codeh PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+endif()
+
 
 if (PLUSSQIT_BUILD_TESTS)
   enable_testing()
@@ -349,6 +417,15 @@ if (PLUSSQIT_BUILD_CODEM)
   )
 endif()
 
+if (PLUSSQIT_BUILD_CODEH)
+  install(TARGETS plussqit_codeh
+    EXPORT PlussQitTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
+endif()
+
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
@@ -360,6 +437,12 @@ if (PLUSSQIT_BUILD_CODEM)
   )
   install(DIRECTORY ${SERIES_GEN_DIR}/CodeM/Series/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Series
+  )
+endif()
+
+if (PLUSSQIT_BUILD_CODEH)
+  install(DIRECTORY ${PLUSSQIT_GEN_DIR}/CodeH/generated/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeH/generated
   )
 endif()
 

@@ -199,6 +199,19 @@ plussqit_coden/fast:
 .PHONY : plussqit_coden/fast
 
 #=============================================================================
+# Target rules for targets named plussqit_codeh
+
+# Build rule for target.
+plussqit_codeh: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codeh
+.PHONY : plussqit_codeh
+
+# fast build rule for target.
+plussqit_codeh/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/build
+.PHONY : plussqit_codeh/fast
+
+#=============================================================================
 # Target rules for targets named plussqit_codem_nocatch_tests
 
 # Build rule for target.
@@ -234,6 +247,174 @@ generated/CodeM/ops/ops_generated.s: generated/CodeM/ops/ops_generated.cpp.s
 generated/CodeM/ops/ops_generated.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codem.dir/build.make CMakeFiles/plussqit_codem.dir/generated/CodeM/ops/ops_generated.cpp.s
 .PHONY : generated/CodeM/ops/ops_generated.cpp.s
+
+src/CodeH/compat/Dispatch.o: src/CodeH/compat/Dispatch.cpp.o
+.PHONY : src/CodeH/compat/Dispatch.o
+
+# target to build an object file
+src/CodeH/compat/Dispatch.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/compat/Dispatch.cpp.o
+.PHONY : src/CodeH/compat/Dispatch.cpp.o
+
+src/CodeH/compat/Dispatch.i: src/CodeH/compat/Dispatch.cpp.i
+.PHONY : src/CodeH/compat/Dispatch.i
+
+# target to preprocess a source file
+src/CodeH/compat/Dispatch.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/compat/Dispatch.cpp.i
+.PHONY : src/CodeH/compat/Dispatch.cpp.i
+
+src/CodeH/compat/Dispatch.s: src/CodeH/compat/Dispatch.cpp.s
+.PHONY : src/CodeH/compat/Dispatch.s
+
+# target to generate assembly for a file
+src/CodeH/compat/Dispatch.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/compat/Dispatch.cpp.s
+.PHONY : src/CodeH/compat/Dispatch.cpp.s
+
+src/CodeH/core/Duration.o: src/CodeH/core/Duration.cpp.o
+.PHONY : src/CodeH/core/Duration.o
+
+# target to build an object file
+src/CodeH/core/Duration.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Duration.cpp.o
+.PHONY : src/CodeH/core/Duration.cpp.o
+
+src/CodeH/core/Duration.i: src/CodeH/core/Duration.cpp.i
+.PHONY : src/CodeH/core/Duration.i
+
+# target to preprocess a source file
+src/CodeH/core/Duration.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Duration.cpp.i
+.PHONY : src/CodeH/core/Duration.cpp.i
+
+src/CodeH/core/Duration.s: src/CodeH/core/Duration.cpp.s
+.PHONY : src/CodeH/core/Duration.s
+
+# target to generate assembly for a file
+src/CodeH/core/Duration.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Duration.cpp.s
+.PHONY : src/CodeH/core/Duration.cpp.s
+
+src/CodeH/core/DurationExtras.o: src/CodeH/core/DurationExtras.cpp.o
+.PHONY : src/CodeH/core/DurationExtras.o
+
+# target to build an object file
+src/CodeH/core/DurationExtras.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/DurationExtras.cpp.o
+.PHONY : src/CodeH/core/DurationExtras.cpp.o
+
+src/CodeH/core/DurationExtras.i: src/CodeH/core/DurationExtras.cpp.i
+.PHONY : src/CodeH/core/DurationExtras.i
+
+# target to preprocess a source file
+src/CodeH/core/DurationExtras.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/DurationExtras.cpp.i
+.PHONY : src/CodeH/core/DurationExtras.cpp.i
+
+src/CodeH/core/DurationExtras.s: src/CodeH/core/DurationExtras.cpp.s
+.PHONY : src/CodeH/core/DurationExtras.s
+
+# target to generate assembly for a file
+src/CodeH/core/DurationExtras.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/DurationExtras.cpp.s
+.PHONY : src/CodeH/core/DurationExtras.cpp.s
+
+src/CodeH/core/Offsets.o: src/CodeH/core/Offsets.cpp.o
+.PHONY : src/CodeH/core/Offsets.o
+
+# target to build an object file
+src/CodeH/core/Offsets.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Offsets.cpp.o
+.PHONY : src/CodeH/core/Offsets.cpp.o
+
+src/CodeH/core/Offsets.i: src/CodeH/core/Offsets.cpp.i
+.PHONY : src/CodeH/core/Offsets.i
+
+# target to preprocess a source file
+src/CodeH/core/Offsets.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Offsets.cpp.i
+.PHONY : src/CodeH/core/Offsets.cpp.i
+
+src/CodeH/core/Offsets.s: src/CodeH/core/Offsets.cpp.s
+.PHONY : src/CodeH/core/Offsets.s
+
+# target to generate assembly for a file
+src/CodeH/core/Offsets.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Offsets.cpp.s
+.PHONY : src/CodeH/core/Offsets.cpp.s
+
+src/CodeH/core/TimeIndex.o: src/CodeH/core/TimeIndex.cpp.o
+.PHONY : src/CodeH/core/TimeIndex.o
+
+# target to build an object file
+src/CodeH/core/TimeIndex.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimeIndex.cpp.o
+.PHONY : src/CodeH/core/TimeIndex.cpp.o
+
+src/CodeH/core/TimeIndex.i: src/CodeH/core/TimeIndex.cpp.i
+.PHONY : src/CodeH/core/TimeIndex.i
+
+# target to preprocess a source file
+src/CodeH/core/TimeIndex.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimeIndex.cpp.i
+.PHONY : src/CodeH/core/TimeIndex.cpp.i
+
+src/CodeH/core/TimeIndex.s: src/CodeH/core/TimeIndex.cpp.s
+.PHONY : src/CodeH/core/TimeIndex.s
+
+# target to generate assembly for a file
+src/CodeH/core/TimeIndex.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimeIndex.cpp.s
+.PHONY : src/CodeH/core/TimeIndex.cpp.s
+
+src/CodeH/core/TimeZone.o: src/CodeH/core/TimeZone.cpp.o
+.PHONY : src/CodeH/core/TimeZone.o
+
+# target to build an object file
+src/CodeH/core/TimeZone.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimeZone.cpp.o
+.PHONY : src/CodeH/core/TimeZone.cpp.o
+
+src/CodeH/core/TimeZone.i: src/CodeH/core/TimeZone.cpp.i
+.PHONY : src/CodeH/core/TimeZone.i
+
+# target to preprocess a source file
+src/CodeH/core/TimeZone.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimeZone.cpp.i
+.PHONY : src/CodeH/core/TimeZone.cpp.i
+
+src/CodeH/core/TimeZone.s: src/CodeH/core/TimeZone.cpp.s
+.PHONY : src/CodeH/core/TimeZone.s
+
+# target to generate assembly for a file
+src/CodeH/core/TimeZone.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/TimeZone.cpp.s
+.PHONY : src/CodeH/core/TimeZone.cpp.s
+
+src/CodeH/core/Timeline.o: src/CodeH/core/Timeline.cpp.o
+.PHONY : src/CodeH/core/Timeline.o
+
+# target to build an object file
+src/CodeH/core/Timeline.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Timeline.cpp.o
+.PHONY : src/CodeH/core/Timeline.cpp.o
+
+src/CodeH/core/Timeline.i: src/CodeH/core/Timeline.cpp.i
+.PHONY : src/CodeH/core/Timeline.i
+
+# target to preprocess a source file
+src/CodeH/core/Timeline.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Timeline.cpp.i
+.PHONY : src/CodeH/core/Timeline.cpp.i
+
+src/CodeH/core/Timeline.s: src/CodeH/core/Timeline.cpp.s
+.PHONY : src/CodeH/core/Timeline.s
+
+# target to generate assembly for a file
+src/CodeH/core/Timeline.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/plussqit_codeh.dir/build.make CMakeFiles/plussqit_codeh.dir/src/CodeH/core/Timeline.cpp.s
+.PHONY : src/CodeH/core/Timeline.cpp.s
 
 src/CodeM/compat/Invoke.o: src/CodeM/compat/Invoke.cpp.o
 .PHONY : src/CodeM/compat/Invoke.o
@@ -1496,12 +1677,34 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... plussqit_codeh"
 	@echo "... plussqit_codem"
 	@echo "... plussqit_codem_nocatch_tests"
 	@echo "... plussqit_coden"
 	@echo "... generated/CodeM/ops/ops_generated.o"
 	@echo "... generated/CodeM/ops/ops_generated.i"
 	@echo "... generated/CodeM/ops/ops_generated.s"
+	@echo "... src/CodeH/compat/Dispatch.o"
+	@echo "... src/CodeH/compat/Dispatch.i"
+	@echo "... src/CodeH/compat/Dispatch.s"
+	@echo "... src/CodeH/core/Duration.o"
+	@echo "... src/CodeH/core/Duration.i"
+	@echo "... src/CodeH/core/Duration.s"
+	@echo "... src/CodeH/core/DurationExtras.o"
+	@echo "... src/CodeH/core/DurationExtras.i"
+	@echo "... src/CodeH/core/DurationExtras.s"
+	@echo "... src/CodeH/core/Offsets.o"
+	@echo "... src/CodeH/core/Offsets.i"
+	@echo "... src/CodeH/core/Offsets.s"
+	@echo "... src/CodeH/core/TimeIndex.o"
+	@echo "... src/CodeH/core/TimeIndex.i"
+	@echo "... src/CodeH/core/TimeIndex.s"
+	@echo "... src/CodeH/core/TimeZone.o"
+	@echo "... src/CodeH/core/TimeZone.i"
+	@echo "... src/CodeH/core/TimeZone.s"
+	@echo "... src/CodeH/core/Timeline.o"
+	@echo "... src/CodeH/core/Timeline.i"
+	@echo "... src/CodeH/core/Timeline.s"
 	@echo "... src/CodeM/compat/Invoke.o"
 	@echo "... src/CodeM/compat/Invoke.i"
 	@echo "... src/CodeM/compat/Invoke.s"

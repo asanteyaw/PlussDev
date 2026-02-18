@@ -1,7 +1,9 @@
 #include "CodeH/core/Offsets.h"
 
 #include <chrono>
+#include <memory>
 
+#include "CodeH/core/Timeline.h"
 #include "CodeH/core/TimeZone.h"
 #include "CodeM/core/Errors.h"
 
@@ -118,5 +120,47 @@ std::int64_t MonthEnd::apply_utc(std::int64_t utc_epoch_nanos, const char* tz_na
   const std::int64_t new_local = pack_local(y, mo, dim, hh, mm, ss, nsec);
   return tz.local_to_utc(new_local, 0, "shift_forward");
 }
+
+namespace detail {
+
+static void check_timeline_core_(const Timeline& t) {
+  CODEM_CHECK(t.defined(), "Timeline: underlying Series is undefined");
+  CODEM_CHECK(t.dim() >= 0 && t.dim() <= 3, "Timeline: only supports 0D..3D");
+}
+
+static std::unique_ptr<CalendarOffset> negate_offset_(const CalendarOffset& off) {
+  if (const auto* p = dynamic_cast<const Months*>(&off)) {
+    return std::make_unique<Months>(-p->n);
+  }
+  if (const auto* p = dynamic_cast<const Years*>(&off)) {
+    return std::make_unique<Years>(-p->n);
+  }
+  if (const auto* p = dynamic_cast<const BusinessDays*>(&off)) {
+    return std::make_unique<BusinessDays>(-p->n);
+  }
+  if (const auto* p = dynamic_cast<const MonthEnd*>(&off)) {
+    return std::make_unique<MonthEnd>(-p->n);
+  }
+  CODEM_FAIL("Timeline::sub_offset: unsupported CalendarOffset subtype");
+}
+
+Timeline impl_add_offset(const Timeline& a, const CalendarOffset& off) {
+  check_timeline_core_(a);
+  auto out = pluss::codem::Series::empty(a.sizes(), pluss::codem::ScalarType::Int64);
+  const auto* in = reinterpret_cast<const std::int64_t*>(a.ticks_.raw_data());
+  auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
+  const char* tz_name = a.tz_name_.c_str();
+  for (std::int64_t i = 0; i < a.numel(); ++i) {
+    o[i] = (in[i] == Timeline::kNaT) ? Timeline::kNaT : off.apply_utc(in[i], tz_name);
+  }
+  return Timeline(std::move(out), a.tz_name_);
+}
+
+Timeline impl_sub_offset(const Timeline& a, const CalendarOffset& off) {
+  auto neg = negate_offset_(off);
+  return impl_add_offset(a, *neg);
+}
+
+} // namespace detail
 
 } // namespace pluss::codeh

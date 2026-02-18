@@ -127,6 +127,8 @@ Chord regex_replace(const Chord& x, ::std::string_view pattern, ::std::string_vi
 // Tokenization / splitting.
 TokenBatch split_whitespace(const Chord& x);
 TokenBatch split(const Chord& x, ::std::string_view delim);
+TokenBatch split_whitespace(const Chord& x, ::std::int64_t limit);
+TokenBatch split(const Chord& x, ::std::string_view delim, ::std::int64_t limit);
 TokenBatch split_lines(const Chord& x, bool keep_ends = false);
 TokenBatch split_chars(const Chord& x);
 TokenBatch split_graphemes(const Chord& x);
@@ -140,7 +142,25 @@ TokenBatch regex_split(const Chord& x, ::std::string_view pattern, ::std::int64_
 // TeX cleanup family (scalar semantics).
 Chord tex_strip_comments(const Chord& x);
 Chord tex_strip_preamble(const Chord& x);
+Chord tex_strip_metadata(const Chord& x);
 Chord tex_remove_commands(const Chord& x);
+Chord tex_remove_environments(const Chord& x);
+Chord tex_remove_environment(const Chord& x, ::std::string_view name);
+Chord tex_remove_labels(const Chord& x);
+Chord tex_remove_refs(const Chord& x);
+Chord tex_remove_citations(const Chord& x);
+Chord tex_remove_graphics(const Chord& x);
+Chord tex_remove_tables(const Chord& x);
+Chord tex_remove_figures(const Chord& x);
+Chord tex_remove_packages(const Chord& x);
+Chord tex_remove_bibliography(const Chord& x);
+Chord tex_remove_color(const Chord& x);
+Chord tex_remove_hyperref(const Chord& x);
+Chord tex_remove_urls(const Chord& x);
+Chord tex_strip_math(const Chord& x);
+Chord tex_strip_text(const Chord& x);
+Chord tex_strip_environments(const Chord& x);
+Chord tex_strip_commands(const Chord& x);
 Chord tex_to_text(const Chord& x, ::std::int64_t mode = 0);
 Chord tex_sanitize(const Chord& x, ::std::int64_t level = 0);
 
@@ -241,6 +261,8 @@ Note regex_replace(const Note& x, ::std::string_view pattern, ::std::string_view
 
 TokenBatch split_whitespace(const Note& x);
 TokenBatch split(const Note& x, ::std::string_view delim);
+TokenBatch split_whitespace(const Note& x, ::std::int64_t limit);
+TokenBatch split(const Note& x, ::std::string_view delim, ::std::int64_t limit);
 TokenBatch split_lines(const Note& x, bool keep_ends = false);
 TokenBatch split_chars(const Note& x);
 TokenBatch split_graphemes(const Note& x);
@@ -253,7 +275,25 @@ TokenBatch regex_split(const Note& x, ::std::string_view pattern, ::std::int64_t
 
 Note tex_strip_comments(const Note& x);
 Note tex_strip_preamble(const Note& x);
+Note tex_strip_metadata(const Note& x);
 Note tex_remove_commands(const Note& x);
+Note tex_remove_environments(const Note& x);
+Note tex_remove_environment(const Note& x, ::std::string_view name);
+Note tex_remove_labels(const Note& x);
+Note tex_remove_refs(const Note& x);
+Note tex_remove_citations(const Note& x);
+Note tex_remove_graphics(const Note& x);
+Note tex_remove_tables(const Note& x);
+Note tex_remove_figures(const Note& x);
+Note tex_remove_packages(const Note& x);
+Note tex_remove_bibliography(const Note& x);
+Note tex_remove_color(const Note& x);
+Note tex_remove_hyperref(const Note& x);
+Note tex_remove_urls(const Note& x);
+Note tex_strip_math(const Note& x);
+Note tex_strip_text(const Note& x);
+Note tex_strip_environments(const Note& x);
+Note tex_strip_commands(const Note& x);
 Note tex_to_text(const Note& x, ::std::int64_t mode = 0);
 Note tex_sanitize(const Note& x, ::std::int64_t level = 0);
 

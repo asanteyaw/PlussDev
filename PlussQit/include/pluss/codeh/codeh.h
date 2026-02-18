@@ -8,6 +8,7 @@
 #include "CodeH/core/Timeline.h"
 #include "CodeH/core/Duration.h"
 #include "CodeH/core/TimeIndex.h"
+#include "CodeH/compat/Invoke.h"
 
 namespace pluss::codeh::ops_internal {
 

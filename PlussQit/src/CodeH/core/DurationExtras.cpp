@@ -130,7 +130,7 @@ Duration impl_clip_duration(const Duration& a, const Duration& lo, const Duratio
   const auto* lv = reinterpret_cast<const std::int64_t*>(lo.nanos_.raw_data());
   const auto* hv = reinterpret_cast<const std::int64_t*>(hi.nanos_.raw_data());
   auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
-  it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t loff, std::int64_t hoff, std::int64_t oo) {
+  it.for_each_index_ternary([&](std::int64_t, std::int64_t ao, std::int64_t loff, std::int64_t hoff, std::int64_t oo) {
     const auto x = av[ao];
     const auto l = lv[loff];
     const auto h = hv[hoff];
@@ -169,7 +169,7 @@ Duration impl_where_duration(const Duration& a, const pluss::codem::Series& mask
   const auto* bv = reinterpret_cast<const std::int64_t*>(other.nanos_.raw_data());
   const auto* mv = reinterpret_cast<const std::uint8_t*>(mask.raw_data());
   auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
-  it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t bo, std::int64_t mo, std::int64_t oo) {
+  it.for_each_index_ternary([&](std::int64_t, std::int64_t ao, std::int64_t bo, std::int64_t mo, std::int64_t oo) {
     o[oo] = mv[mo] ? av[ao] : bv[bo];
   });
   return Duration(std::move(out));
@@ -313,13 +313,13 @@ Duration impl_round(const Duration& a, std::string_view mode, std::string_view u
 }
 
 static Duration reduce_minmax_(const Duration& a, bool want_min) {
-  check_duration_core_(a.nanos_);
-  CODEM_CHECK(a.nanos_.numel() > 0, "Duration reduction on empty array");
-  const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
+  CODEM_CHECK(a.defined(), "Duration reduction on undefined array");
+  const auto av = impl_to_nanos_flat(a);
+  CODEM_CHECK(!av.empty(), "Duration reduction on empty array");
   std::int64_t best = want_min ? (std::numeric_limits<std::int64_t>::max)()
                                : (std::numeric_limits<std::int64_t>::min)();
   bool any = false;
-  for (std::int64_t i = 0; i < a.nanos_.numel(); ++i) {
+  for (std::size_t i = 0; i < av.size(); ++i) {
     const auto x = av[i];
     if (x == Duration::kNaT) continue;
     any = true;

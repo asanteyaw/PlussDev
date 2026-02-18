@@ -109,4 +109,39 @@ Duration Duration::range(const Duration& start, const Duration& end, const Durat
   return Duration(std::move(out));
 }
 
+namespace ops_internal {
+
+Duration duration_from_nanos(std::span<const std::int64_t> nanos_flat,
+                             std::span<const std::int64_t> sizes) {
+  std::vector<std::int64_t> shape(sizes.begin(), sizes.end());
+  if (shape.empty()) {
+    CODEM_CHECK(nanos_flat.size() == 1, "duration_from_nanos: scalar expects 1 element");
+  } else {
+    std::int64_t prod = 1;
+    for (const auto s : shape) prod *= s;
+    CODEM_CHECK(prod == static_cast<std::int64_t>(nanos_flat.size()),
+                "duration_from_nanos: flat size mismatch");
+  }
+
+  auto out = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
+  if (!nanos_flat.empty()) {
+    std::memcpy(out.raw_data(), nanos_flat.data(),
+                nanos_flat.size() * sizeof(std::int64_t));
+  }
+  return Duration(std::move(out));
+}
+
+} // namespace ops_internal
+
+namespace detail {
+
+Duration impl_add_duration(const Duration& a, const Duration& b) { return a + b; }
+Duration impl_sub_duration(const Duration& a, const Duration& b) { return a - b; }
+Duration impl_neg_duration(const Duration& a) { return -a; }
+Duration impl_range(const Duration& start, const Duration& end, const Duration& step) {
+  return Duration::range(start, end, step);
+}
+
+} // namespace detail
+
 } // namespace pluss::codeh

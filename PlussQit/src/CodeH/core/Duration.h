@@ -5,7 +5,9 @@
 #include <cstdint>
 #include <span>
 #include <string>
+#include <string_view>
 #include <limits>
+#include <vector>
 
 #include "CodeH/core/Errors.h"
 #include "CodeM/core/Series.h"
@@ -13,13 +15,22 @@
 
 #include "CodeN/core/Note.h"
 
-#include "CodeH/compat/Invoke.h"
+namespace pluss::codeh {
+class Duration;
+class Timeline;
+} // namespace pluss::codeh
+namespace pluss::codeh::_compat::detail {
+struct Access;
+}
 
 namespace pluss::codeh::detail {
 Duration impl_add_duration(const Duration& a, const Duration& b);
 Duration impl_sub_duration(const Duration& a, const Duration& b);
 Duration impl_neg_duration(const Duration& a);
 Duration impl_range(const Duration& start, const Duration& end, const Duration& step);
+Duration impl_diff(const Timeline& a, const Timeline& b);
+Timeline impl_add_duration(const Timeline& a, const Duration& b);
+Timeline impl_sub_duration(const Timeline& a, const Duration& b);
 
 // Extended Timedelta surface
 pluss::codem::Series impl_cmp_duration(const Duration& a, const Duration& b, std::string_view op);
@@ -68,7 +79,7 @@ public:
 // ---------------------------------------------------------------------------
 // Full op surface (pandas/MATLAB-inspired)
 // ---------------------------------------------------------------------------
-#if !defined(CODEH_NO_DURATION_SURFACE)
+#if defined(CODEH_ENABLE_DURATION_SURFACE) && !defined(CODEH_NO_DURATION_SURFACE)
   #include "CodeH/core/DurationSurface.h"
 #endif
 
@@ -78,33 +89,25 @@ public:
   std::int64_t numel() const { return nanos_.numel(); }
 
   // Elementwise arithmetic (broadcasting via SeriesIterator).
-  Duration operator+(const Duration& other) const {
-    return ::pluss::codeh::_compat::invoke<Duration>("add", *this, other);
-  }
-  Duration operator-(const Duration& other) const {
-    return ::pluss::codeh::_compat::invoke<Duration>("sub", *this, other);
-  }
-  Duration operator-() const {
-    return ::pluss::codeh::_compat::invoke<Duration>("neg", *this);
-  }
+  Duration operator+(const Duration& other) const;
+  Duration operator-(const Duration& other) const;
+  Duration operator-() const;
 
   // Scalar helpers
-  static Duration from_scalar_nanos(std::int64_t nanos) {
-    const auto d = ::pluss::codeh::ops_internal::duration_from_nanos(std::span<const std::int64_t>(&nanos, 1), {});
-    return d;
-  }
+  static Duration from_scalar_nanos(std::int64_t nanos);
 
   // Range factory (like pandas timedelta_range)
   // Inclusive start; stops before exceeding end.
-  static Duration range(const Duration& start, const Duration& end, const Duration& step) {
-    return ::pluss::codeh::_compat::invoke<Duration>("range", start, end, step);
-  }
+  static Duration range(const Duration& start, const Duration& end, const Duration& step);
 
 private:
 
   friend class Timeline;
   friend class TimeIndex;
+  friend struct ::pluss::codeh::_compat::detail::Access;
   friend Duration detail::impl_diff(const Timeline&, const Timeline&);
+  friend Timeline detail::impl_add_duration(const Timeline&, const Duration&);
+  friend Timeline detail::impl_sub_duration(const Timeline&, const Duration&);
   friend Duration pluss::codeh::ops_internal::duration_from_nanos(std::span<const std::int64_t>,
                                                                  std::span<const std::int64_t>);
   friend Duration detail::impl_add_duration(const Duration&, const Duration&);
@@ -135,7 +138,7 @@ private:
   friend pluss::coden::Note detail::impl_duration_to_note(const Duration&, std::string_view);
   explicit Duration(pluss::codem::Series nanos) : nanos_(std::move(nanos)) {}
 
-  pluss::codem::Series nanos_{};
+  pluss::codem::Series nanos_;
 };
 
 } // namespace pluss::codeh

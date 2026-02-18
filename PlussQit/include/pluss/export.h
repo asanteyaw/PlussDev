@@ -56,6 +56,13 @@
   #define CODEN_API PLUSS_IMPORT
 #endif
 
+// CodeH (time: Timeline/Duration/TimeIndex)
+#ifdef CODEH_BUILD_MAIN_LIB
+  #define CODEH_API PLUSS_EXPORT
+#else
+  #define CODEH_API PLUSS_IMPORT
+#endif
+
 // Backward compatibility:
 // Existing code may use PLUSS_API as the main public macro.
 #ifndef PLUSS_API

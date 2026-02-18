@@ -16,6 +16,8 @@
 
 namespace pluss::codeh {
 
+namespace _compat { namespace detail { struct Access; } }
+
 class Timeline;
 class TimeIndex;
 struct CalendarOffset;
@@ -31,6 +33,8 @@ namespace detail {
 // Core impls called by invoke dispatch (see CodeH/compat/Dispatch.cpp)
 Timeline impl_add_duration(const Timeline& a, const Duration& d);
 Timeline impl_sub_duration(const Timeline& a, const Duration& d);
+Timeline impl_add_offset(const Timeline& a, const CalendarOffset& off);
+Timeline impl_sub_offset(const Timeline& a, const CalendarOffset& off);
 Duration impl_diff(const Timeline& a, const Timeline& b);
 pluss::codem::Series impl_cmp(const Timeline& a, const Timeline& b, std::string_view op);
 pluss::codem::Series impl_dt_field(const Timeline& a, std::string_view field);
@@ -68,7 +72,7 @@ public:
 
   Timeline() = delete; // construction via factories only
 
-#if !defined(CODEH_NO_TIMELINE_SURFACE)
+#if defined(CODEH_ENABLE_TIMELINE_SURFACE) && !defined(CODEH_NO_TIMELINE_SURFACE)
   #include "CodeH/core/TimelineSurface.h"
 #endif
 
@@ -91,6 +95,8 @@ private:
 
   friend Timeline detail::impl_add_duration(const Timeline&, const Duration&);
   friend Timeline detail::impl_sub_duration(const Timeline&, const Duration&);
+  friend Timeline detail::impl_add_offset(const Timeline&, const CalendarOffset&);
+  friend Timeline detail::impl_sub_offset(const Timeline&, const CalendarOffset&);
   friend Duration detail::impl_diff(const Timeline&, const Timeline&);
   friend pluss::codem::Series detail::impl_cmp(const Timeline&, const Timeline&, std::string_view);
   friend pluss::codem::Series detail::impl_dt_field(const Timeline&, std::string_view);
@@ -121,7 +127,7 @@ private:
   explicit Timeline(pluss::codem::Series ticks, std::string tz_name = "UTC")
       : ticks_(std::move(ticks)), tz_name_(std::move(tz_name)) {}
 
-  pluss::codem::Series ticks_{};
+  pluss::codem::Series ticks_;
   std::string tz_name_{"UTC"};
 };
 

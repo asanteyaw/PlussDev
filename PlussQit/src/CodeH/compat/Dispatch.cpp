@@ -3,6 +3,7 @@
 #include <string_view>
 
 #include "CodeH/compat/Invoke.h"
+#include "CodeH/compat/Access.h"
 
 namespace pluss::codeh::_compat {
 

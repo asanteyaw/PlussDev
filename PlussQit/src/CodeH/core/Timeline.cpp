@@ -2,6 +2,7 @@
 #include "CodeH/core/Timeline.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cctype>
 #include <cstring>
@@ -328,7 +329,7 @@ Timeline impl_add_duration(const Timeline& a, const Duration& d) {
   auto it = pluss::codem::SeriesIterator::binary(a.ticks_, d.nanos_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   const auto* bp = reinterpret_cast<const std::int64_t*>(it.b().raw_data());
-  auto* op = reinterpret_cast<std::int64_t*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t bo, std::int64_t oo) {
     const auto av = ap[ao];
     const auto bv = bp[bo];
@@ -346,7 +347,7 @@ Timeline impl_sub_duration(const Timeline& a, const Duration& d) {
   auto it = pluss::codem::SeriesIterator::binary(a.ticks_, d.nanos_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   const auto* bp = reinterpret_cast<const std::int64_t*>(it.b().raw_data());
-  auto* op = reinterpret_cast<std::int64_t*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t bo, std::int64_t oo) {
     const auto av = ap[ao];
     const auto bv = bp[bo];
@@ -363,7 +364,7 @@ Duration impl_diff(const Timeline& a, const Timeline& b) {
   auto it = pluss::codem::SeriesIterator::binary(a.ticks_, b.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   const auto* bp = reinterpret_cast<const std::int64_t*>(it.b().raw_data());
-  auto* op = reinterpret_cast<std::int64_t*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t bo, std::int64_t oo) {
     const auto av = ap[ao];
     const auto bv = bp[bo];
@@ -380,7 +381,7 @@ pluss::codem::Series impl_cmp(const Timeline& a, const Timeline& b, std::string_
   auto it = pluss::codem::SeriesIterator::binary(a.ticks_, b.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   const auto* bp = reinterpret_cast<const std::int64_t*>(it.b().raw_data());
-  auto* optr = reinterpret_cast<bool*>(it.out().raw_mutable_data());
+  auto* optr = reinterpret_cast<bool*>(out.raw_data());
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t bo, std::int64_t oo) {
     const auto av = ap[ao];
     const auto bv = bp[bo];
@@ -407,7 +408,7 @@ pluss::codem::Series impl_dt_field(const Timeline& a, std::string_view field) {
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   if (want_i64) {
-    auto* op = reinterpret_cast<std::int64_t*>(it.out().raw_mutable_data());
+    auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
     it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
       const auto v = ap[ao];
       if (v == Timeline::kNaT) { op[oo] = -1; return; }
@@ -419,7 +420,7 @@ pluss::codem::Series impl_dt_field(const Timeline& a, std::string_view field) {
     return out;
   }
 
-  auto* op = reinterpret_cast<std::int32_t*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<std::int32_t*>(out.raw_data());
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto v = ap[ao];
     if (v == Timeline::kNaT) { op[oo] = -1; return; }
@@ -468,7 +469,7 @@ pluss::codem::Series impl_dt_predicate(const Timeline& a, std::string_view pred_
   auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Bool);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
-  auto* op = reinterpret_cast<bool*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<bool*>(out.raw_data());
 
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto v = ap[ao];
@@ -518,7 +519,7 @@ Timeline impl_dt_round(const Timeline& a, std::string_view mode, std::string_vie
   auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
-  auto* op = reinterpret_cast<std::int64_t*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
 
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto v = ap[ao];
@@ -585,7 +586,10 @@ Timeline impl_date_range(const Timeline& start, const Timeline& end, std::string
   } else {
     for (std::int64_t v = s; v >= e; v += q * step) out.push_back(v);
   }
-  return Timeline(ops_internal::timeline_from_epoch_nanos(out, { (std::int64_t)out.size() }).ticks_.clone(), std::string(start.tz()));
+  const std::array<std::int64_t, 1> shape{
+      static_cast<std::int64_t>(out.size())};
+  return Timeline(ops_internal::timeline_from_epoch_nanos(out, shape).ticks_.clone(),
+                  std::string(start.tz()));
 }
 
 Timeline impl_tz_convert(const Timeline& a, std::string_view tz_name) {
@@ -597,24 +601,21 @@ Timeline impl_tz_convert(const Timeline& a, std::string_view tz_name) {
 Timeline impl_tz_localize(const Timeline& a, std::string_view tz_name, int fold, std::string_view nonexistent) {
   // Interpret ticks_ as naive *local* wall times in tz_name, convert to UTC instants.
   // This implementation supports fixed offsets directly; transition tables are handled by TimeZone registry.
-  (void)fold; (void)nonexistent; // reserved for DST folds/nonexistent handling
   check_timeline_core(a.ticks_);
   const auto tz = TimeZone::load(tz_name);
 
   auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
-  auto* op = reinterpret_cast<std::int64_t*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
 
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto local_ns = ap[ao];
     if (local_ns == Timeline::kNaT) { op[oo] = Timeline::kNaT; return; }
-    // Best-effort: use base offset for tz tables; true DST localization requires searching transitions (future patch).
-    const int off = tz.base_offset_minutes();
-    op[oo] = local_ns - (std::int64_t)off * 60LL * 1'000'000'000LL;
+    op[oo] = tz.local_to_utc(local_ns, fold, nonexistent);
   });
 
-  return Timeline(std::move(out), "UTC").tz_convert(tz_name);
+  return impl_tz_convert(Timeline(std::move(out), "UTC"), tz_name);
 }
 
 Timeline impl_time_of_day(const Timeline& a) {
@@ -624,7 +625,7 @@ Timeline impl_time_of_day(const Timeline& a) {
   auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
-  auto* op = reinterpret_cast<std::int64_t*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
   const auto base = sys_days(year(1970)/month(1)/day(1)).time_since_epoch().count();
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto v = ap[ao];
@@ -643,7 +644,7 @@ pluss::codem::Series impl_isnat(const Timeline& a) {
   auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Bool);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
-  auto* op = reinterpret_cast<bool*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<bool*>(out.raw_data());
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     op[oo] = (ap[ao] == Timeline::kNaT);
   });
@@ -655,7 +656,7 @@ pluss::codem::Series impl_isvalid(const Timeline& a) {
   auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Bool);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
-  auto* op = reinterpret_cast<bool*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<bool*>(out.raw_data());
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     op[oo] = (ap[ao] != Timeline::kNaT);
   });
@@ -686,7 +687,9 @@ pluss::codem::Series impl_argsort(const Timeline& a) {
   // Build Series<int64>
   std::vector<double> tmp; tmp.reserve(idx.size());
   for (auto v : idx) tmp.push_back((double)v);
-  auto out = pluss::codem::Series::make_from_doubles(tmp, {n}, pluss::codem::ScalarType::Int64);
+  const std::array<std::int64_t, 1> shape{n};
+  auto out = pluss::codem::Series::make_from_doubles(tmp, shape,
+                                                     pluss::codem::ScalarType::Int64);
   return out;
 }
 
@@ -700,7 +703,10 @@ Timeline impl_min(const Timeline& a) {
     if (v == Timeline::kNaT) continue;
     if (best == Timeline::kNaT || v < best) best = v;
   }
-  return ops_internal::timeline_from_epoch_nanos(std::span<const std::int64_t>(&best, 1), {}).tz_convert(a.tz());
+  return impl_tz_convert(
+      ops_internal::timeline_from_epoch_nanos(
+          std::span<const std::int64_t>(&best, 1), {}),
+      a.tz());
 }
 
 Timeline impl_max(const Timeline& a) {
@@ -713,7 +719,10 @@ Timeline impl_max(const Timeline& a) {
     if (v == Timeline::kNaT) continue;
     if (best == Timeline::kNaT || v > best) best = v;
   }
-  return ops_internal::timeline_from_epoch_nanos(std::span<const std::int64_t>(&best, 1), {}).tz_convert(a.tz());
+  return impl_tz_convert(
+      ops_internal::timeline_from_epoch_nanos(
+          std::span<const std::int64_t>(&best, 1), {}),
+      a.tz());
 }
 
 Timeline impl_sort(const Timeline& a) {
@@ -727,7 +736,9 @@ Timeline impl_sort(const Timeline& a) {
     if (v == Timeline::kNaT) return true;
     return u < v;
   });
-  return ops_internal::timeline_from_epoch_nanos(x, { (std::int64_t)x.size() }).tz_convert(a.tz());
+  const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(x.size())};
+  return impl_tz_convert(ops_internal::timeline_from_epoch_nanos(x, shape),
+                         a.tz());
 }
 
 Timeline impl_unique(const Timeline& a) {
@@ -737,7 +748,9 @@ Timeline impl_unique(const Timeline& a) {
   std::memcpy(x.data(), a.ticks_.raw_data(), (size_t)a.numel()*sizeof(std::int64_t));
   std::stable_sort(x.begin(), x.end());
   x.erase(std::unique(x.begin(), x.end()), x.end());
-  return ops_internal::timeline_from_epoch_nanos(x, { (std::int64_t)x.size() }).tz_convert(a.tz());
+  const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(x.size())};
+  return impl_tz_convert(ops_internal::timeline_from_epoch_nanos(x, shape),
+                         a.tz());
 }
 
 Timeline impl_fill_nat(const Timeline& a, const Timeline& value) {
@@ -748,7 +761,7 @@ Timeline impl_fill_nat(const Timeline& a, const Timeline& value) {
   auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
-  auto* op = reinterpret_cast<std::int64_t*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     op[oo] = (ap[ao] == Timeline::kNaT) ? v : ap[ao];
   });
@@ -766,7 +779,7 @@ Timeline impl_where(const Timeline& a, const pluss::codem::Series& mask, const T
   const auto* mp = reinterpret_cast<const bool*>(it.m().raw_data());
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
   const auto* bp = reinterpret_cast<const std::int64_t*>(it.b().raw_data());
-  auto* op = reinterpret_cast<std::int64_t*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
   it.for_each_index_ternary([&](std::int64_t, std::int64_t mo, std::int64_t ao, std::int64_t bo, std::int64_t oo) {
     op[oo] = mp[mo] ? ap[ao] : bp[bo];
   });
@@ -782,7 +795,7 @@ pluss::codem::Series impl_searchsorted(const Timeline& a, const Timeline& values
   auto out = pluss::codem::Series::empty(values.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(values.ticks_, out);
   const auto* vp = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
-  auto* op = reinterpret_cast<std::int64_t*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto k = vp[ao];
     if (k == Timeline::kNaT) { op[oo] = -1; return; }
@@ -797,7 +810,7 @@ Timeline impl_add_nanos(const Timeline& a, std::int64_t nanos) {
   auto out = pluss::codem::Series::empty(a.ticks_.sizes(), pluss::codem::ScalarType::Int64);
   auto it = pluss::codem::SeriesIterator::unary(a.ticks_, out);
   const auto* ap = reinterpret_cast<const std::int64_t*>(it.a().raw_data());
-  auto* op = reinterpret_cast<std::int64_t*>(it.out().raw_mutable_data());
+  auto* op = reinterpret_cast<std::int64_t*>(out.raw_data());
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto v = ap[ao];
     op[oo] = (v == Timeline::kNaT) ? Timeline::kNaT : (v + nanos);

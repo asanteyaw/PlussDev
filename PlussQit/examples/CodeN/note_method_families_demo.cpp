@@ -24,13 +24,21 @@ int main() {
   for (std::int64_t i = 0; i < words.tokens().numel(); ++i) {
     std::cout << "  word[" << i << "] = " << words.tokens().at(i) << "\n";
   }
+  auto limited = docs.split(",", 1);
+  std::cout << "split(',',1) offsets:";
+  for (std::int64_t off : limited.offsets()) std::cout << " " << off;
+  std::cout << "\n";
 
   pluss::Note tex = pluss::content(
       "\\documentclass{article}\n"
       "% comment\n"
       "\\begin{document}\n"
       "Text \\textbf{bold} and $x+y$.\n"
+      "\\label{l1}\\ref{l1}\\cite{k}\\href{https://x.y}{link}\n"
       "\\end{document}\n");
   std::cout << "tex_to_text:   " << tex.tex_to_text().at(0) << "\n";
+  std::cout << "tex_removers:  "
+            << tex.tex_remove_labels().tex_remove_refs().tex_remove_citations().tex_remove_urls().at(0)
+            << "\n";
   return 0;
 }

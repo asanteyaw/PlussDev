@@ -4,7 +4,7 @@
 #include <cctype>
 #include <string>
 
-#include "CodeM/core/Errors.h"
+#include "CodeH/core/Errors.h"
 
 namespace pluss::codeh {
 

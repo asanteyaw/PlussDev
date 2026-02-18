@@ -244,6 +244,52 @@ static void regex_split_to(::std::string_view s, const ::std::regex& re, ::std::
   out.emplace_back(owned.substr(pos));
 }
 
+static void split_delim_with_limit_to(::std::string_view s,
+                                      ::std::string_view delim,
+                                      ::std::int64_t limit,
+                                      ::std::vector<::std::string>& out) {
+  PLUSS_CHECK(!delim.empty(), "split: delimiter must be non-empty");
+  ::std::size_t pos = 0;
+  ::std::int64_t splits = 0;
+  while (pos <= s.size()) {
+    if (limit >= 0 && splits >= limit) {
+      out.emplace_back(s.substr(pos));
+      return;
+    }
+    const ::std::size_t p = s.find(delim, pos);
+    if (p == ::std::string_view::npos) {
+      out.emplace_back(s.substr(pos));
+      return;
+    }
+    out.emplace_back(s.substr(pos, p - pos));
+    pos = p + delim.size();
+    ++splits;
+  }
+}
+
+static void split_whitespace_with_limit_to(::std::string_view s,
+                                           ::std::int64_t limit,
+                                           ::std::vector<::std::string>& out) {
+  auto is_ws = [](unsigned char c) -> bool {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v';
+  };
+
+  ::std::size_t i = 0;
+  ::std::int64_t splits = 0;
+  while (i < s.size()) {
+    while (i < s.size() && is_ws(static_cast<unsigned char>(s[i]))) ++i;
+    if (i >= s.size()) break;
+    if (limit >= 0 && splits >= limit) {
+      out.emplace_back(::pluss::coden::native::cpu::strip_ascii(s.substr(i)));
+      return;
+    }
+    const ::std::size_t start = i;
+    while (i < s.size() && !is_ws(static_cast<unsigned char>(s[i]))) ++i;
+    out.emplace_back(s.substr(start, i - start));
+    ++splits;
+  }
+}
+
 template <class TokenizeFn>
 static TokenBatch tokenbatch_from_chord(const Chord& x, TokenizeFn&& fn) {
   if (!x.defined()) return TokenBatchFactoryAccess::make(Note::undefined(), {0,0});
@@ -329,6 +375,151 @@ static ::std::string tex_sanitize_text(::std::string_view s, ::std::int64_t leve
   ::std::string out = tex_to_text_text(s, level);
   if (level > 0) out = ::pluss::coden::native::cpu::lower_ascii(out);
   return out;
+}
+
+static ::std::string normalize_tex_removed(::std::string_view s) {
+  return ::pluss::coden::native::cpu::strip_ascii(
+      ::pluss::coden::native::cpu::collapse_whitespace_ascii(s));
+}
+
+static ::std::string regex_escape_text(::std::string_view s) {
+  ::std::string out;
+  out.reserve(s.size() * 2);
+  for (const char c : s) {
+    if (::std::isalnum(static_cast<unsigned char>(c)) || c == '_') out.push_back(c);
+    else {
+      out.push_back('\\');
+      out.push_back(c);
+    }
+  }
+  return out;
+}
+
+static ::std::string tex_remove_environment_text(::std::string_view s, ::std::string_view name) {
+  const ::std::string esc = regex_escape_text(name);
+  const ::std::regex re("\\\\begin\\{" + esc + "\\}[\\s\\S]*?\\\\end\\{" + esc + "\\}");
+  return normalize_tex_removed(::std::regex_replace(::std::string(s), re, " "));
+}
+
+static ::std::string tex_remove_environments_text(::std::string_view s) {
+  static const ::std::regex re(R"(\\begin\{([A-Za-z*@]+)\}[\s\S]*?\\end\{\1\})");
+  return normalize_tex_removed(::std::regex_replace(::std::string(s), re, " "));
+}
+
+static ::std::string tex_strip_metadata_text(::std::string_view s) {
+  static const ::std::regex meta_cmd(R"(\\(title|author|date|thanks)\s*\{[^{}]*\})");
+  static const ::std::regex maketitle_cmd(R"(\\maketitle\b)");
+  ::std::string out = ::std::regex_replace(::std::string(s), meta_cmd, " ");
+  out = ::std::regex_replace(out, maketitle_cmd, " ");
+  return normalize_tex_removed(out);
+}
+
+static ::std::string tex_remove_labels_text(::std::string_view s) {
+  static const ::std::regex re(R"(\\label\s*\{[^{}]*\})");
+  return normalize_tex_removed(::std::regex_replace(::std::string(s), re, " "));
+}
+
+static ::std::string tex_remove_refs_text(::std::string_view s) {
+  static const ::std::regex re(R"(\\(ref|eqref|autoref|pageref|nameref)\s*\{[^{}]*\})");
+  return normalize_tex_removed(::std::regex_replace(::std::string(s), re, " "));
+}
+
+static ::std::string tex_remove_citations_text(::std::string_view s) {
+  static const ::std::regex re(R"(\\cite[a-zA-Z*]*\s*(?:\[[^\]]*\])?\s*\{[^{}]*\})");
+  return normalize_tex_removed(::std::regex_replace(::std::string(s), re, " "));
+}
+
+static ::std::string tex_remove_graphics_text(::std::string_view s) {
+  static const ::std::regex cmd(R"(\\includegraphics\s*(?:\[[^\]]*\])?\s*\{[^{}]*\})");
+  ::std::string out = ::std::regex_replace(::std::string(s), cmd, " ");
+  out = tex_remove_environment_text(out, "figure");
+  out = tex_remove_environment_text(out, "figure*");
+  return normalize_tex_removed(out);
+}
+
+static ::std::string tex_remove_tables_text(::std::string_view s) {
+  ::std::string out(s);
+  out = tex_remove_environment_text(out, "table");
+  out = tex_remove_environment_text(out, "table*");
+  out = tex_remove_environment_text(out, "tabular");
+  out = tex_remove_environment_text(out, "tabular*");
+  out = tex_remove_environment_text(out, "longtable");
+  out = tex_remove_environment_text(out, "array");
+  return normalize_tex_removed(out);
+}
+
+static ::std::string tex_remove_figures_text(::std::string_view s) {
+  ::std::string out(s);
+  out = tex_remove_environment_text(out, "figure");
+  out = tex_remove_environment_text(out, "figure*");
+  out = tex_remove_environment_text(out, "wrapfigure");
+  out = tex_remove_environment_text(out, "subfigure");
+  return normalize_tex_removed(out);
+}
+
+static ::std::string tex_remove_packages_text(::std::string_view s) {
+  static const ::std::regex usepkg(R"(\\(usepackage|RequirePackage)\s*(?:\[[^\]]*\])?\s*\{[^{}]*\})");
+  static const ::std::regex docclass(R"(\\documentclass\s*(?:\[[^\]]*\])?\s*\{[^{}]*\})");
+  ::std::string out = ::std::regex_replace(::std::string(s), usepkg, " ");
+  out = ::std::regex_replace(out, docclass, " ");
+  return normalize_tex_removed(out);
+}
+
+static ::std::string tex_remove_bibliography_text(::std::string_view s) {
+  static const ::std::regex bibcmd(R"(\\(bibliography|addbibresource|printbibliography)\s*(?:\[[^\]]*\])?\s*(?:\{[^{}]*\})?)");
+  ::std::string out = ::std::regex_replace(::std::string(s), bibcmd, " ");
+  out = tex_remove_environment_text(out, "thebibliography");
+  return normalize_tex_removed(out);
+}
+
+static ::std::string tex_remove_hyperref_text(::std::string_view s) {
+  static const ::std::regex href(R"(\\href\s*\{[^{}]*\}\s*\{([^{}]*)\})");
+  static const ::std::regex hyperref(R"(\\hyperref\s*\[[^\]]*\]\s*\{([^{}]*)\})");
+  static const ::std::regex url(R"(\\url\s*\{[^{}]*\})");
+  ::std::string out = ::std::regex_replace(::std::string(s), href, "$1");
+  out = ::std::regex_replace(out, hyperref, "$1");
+  out = ::std::regex_replace(out, url, " ");
+  return normalize_tex_removed(out);
+}
+
+static ::std::string tex_remove_urls_text(::std::string_view s) {
+  return tex_remove_hyperref_text(s);
+}
+
+static ::std::string tex_remove_color_text(::std::string_view s) {
+  static const ::std::regex textcolor(R"(\\textcolor\s*\{[^{}]*\}\s*\{([^{}]*)\})");
+  static const ::std::regex colorbox(R"(\\(colorbox|fcolorbox)\s*\{[^{}]*\}(?:\s*\{[^{}]*\})?\s*\{([^{}]*)\})");
+  static const ::std::regex colorcmd(R"(\\(color|pagecolor)\s*\{[^{}]*\})");
+  ::std::string out = ::std::regex_replace(::std::string(s), textcolor, "$1");
+  out = ::std::regex_replace(out, colorbox, "$2");
+  out = ::std::regex_replace(out, colorcmd, " ");
+  return normalize_tex_removed(out);
+}
+
+static ::std::string tex_strip_math_text(::std::string_view s) {
+  return normalize_tex_removed(::pluss::coden::native::cpu::nlp_remove_math_fast(s));
+}
+
+static ::std::string strip_math_delims(::std::string_view m) {
+  if (starts_with_sv(m, "$$") && ends_with_sv(m, "$$") && m.size() >= 4) return ::std::string(m.substr(2, m.size() - 4));
+  if (starts_with_sv(m, "$") && ends_with_sv(m, "$") && m.size() >= 2) return ::std::string(m.substr(1, m.size() - 2));
+  if (starts_with_sv(m, "\\(") && ends_with_sv(m, "\\)") && m.size() >= 4) return ::std::string(m.substr(2, m.size() - 4));
+  if (starts_with_sv(m, "\\[") && ends_with_sv(m, "\\]") && m.size() >= 4) return ::std::string(m.substr(2, m.size() - 4));
+  return ::std::string(m);
+}
+
+static ::std::string tex_strip_text_text(::std::string_view s) {
+  static const ::std::regex math_re(R"(\$\$[\s\S]*?\$\$|\$[^$\n]+\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])");
+  ::std::string owned(s);
+  ::std::string out;
+  for (::std::sregex_iterator it(owned.begin(), owned.end(), math_re), end; it != end; ++it) {
+    ::std::string m = strip_math_delims((*it).str());
+    m = ::pluss::coden::native::cpu::strip_ascii(m);
+    if (m.empty()) continue;
+    if (!out.empty()) out.push_back(' ');
+    out.append(m);
+  }
+  return normalize_tex_removed(out);
 }
 
 static ::std::array<::std::int64_t,3> strides3(const ::std::array<::std::int64_t,3>& sizes, ::std::int64_t dim) {
@@ -559,8 +750,62 @@ Chord tex_strip_comments(const Chord& x) {
 Chord tex_strip_preamble(const Chord& x) {
   return transform_chord_text(x, [](auto s) { return tex_strip_preamble_text(s); });
 }
+Chord tex_strip_metadata(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_strip_metadata_text(s); });
+}
 Chord tex_remove_commands(const Chord& x) {
   return transform_chord_text(x, [](auto s) { return tex_remove_commands_text(s); });
+}
+Chord tex_remove_environments(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_environments_text(s); });
+}
+Chord tex_remove_environment(const Chord& x, ::std::string_view name) {
+  return transform_chord_text(x, [name](auto s) { return tex_remove_environment_text(s, name); });
+}
+Chord tex_remove_labels(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_labels_text(s); });
+}
+Chord tex_remove_refs(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_refs_text(s); });
+}
+Chord tex_remove_citations(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_citations_text(s); });
+}
+Chord tex_remove_graphics(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_graphics_text(s); });
+}
+Chord tex_remove_tables(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_tables_text(s); });
+}
+Chord tex_remove_figures(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_figures_text(s); });
+}
+Chord tex_remove_packages(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_packages_text(s); });
+}
+Chord tex_remove_bibliography(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_bibliography_text(s); });
+}
+Chord tex_remove_color(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_color_text(s); });
+}
+Chord tex_remove_hyperref(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_hyperref_text(s); });
+}
+Chord tex_remove_urls(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_remove_urls_text(s); });
+}
+Chord tex_strip_math(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_strip_math_text(s); });
+}
+Chord tex_strip_text(const Chord& x) {
+  return transform_chord_text(x, [](auto s) { return tex_strip_text_text(s); });
+}
+Chord tex_strip_environments(const Chord& x) {
+  return tex_remove_environments(x);
+}
+Chord tex_strip_commands(const Chord& x) {
+  return tex_remove_commands(x);
 }
 Chord tex_to_text(const Chord& x, ::std::int64_t mode) {
   return transform_chord_text(x, [mode](auto s) { return tex_to_text_text(s, mode); });
@@ -806,8 +1051,62 @@ Note tex_strip_comments(const Note& x) {
 Note tex_strip_preamble(const Note& x) {
   return transform_note_text(x, "Note::tex_strip_preamble", [](auto s) { return tex_strip_preamble_text(s); });
 }
+Note tex_strip_metadata(const Note& x) {
+  return transform_note_text(x, "Note::tex_strip_metadata", [](auto s) { return tex_strip_metadata_text(s); });
+}
 Note tex_remove_commands(const Note& x) {
   return transform_note_text(x, "Note::tex_remove_commands", [](auto s) { return tex_remove_commands_text(s); });
+}
+Note tex_remove_environments(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_environments", [](auto s) { return tex_remove_environments_text(s); });
+}
+Note tex_remove_environment(const Note& x, ::std::string_view name) {
+  return transform_note_text(x, "Note::tex_remove_environment(name)", [name](auto s) { return tex_remove_environment_text(s, name); });
+}
+Note tex_remove_labels(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_labels", [](auto s) { return tex_remove_labels_text(s); });
+}
+Note tex_remove_refs(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_refs", [](auto s) { return tex_remove_refs_text(s); });
+}
+Note tex_remove_citations(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_citations", [](auto s) { return tex_remove_citations_text(s); });
+}
+Note tex_remove_graphics(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_graphics", [](auto s) { return tex_remove_graphics_text(s); });
+}
+Note tex_remove_tables(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_tables", [](auto s) { return tex_remove_tables_text(s); });
+}
+Note tex_remove_figures(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_figures", [](auto s) { return tex_remove_figures_text(s); });
+}
+Note tex_remove_packages(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_packages", [](auto s) { return tex_remove_packages_text(s); });
+}
+Note tex_remove_bibliography(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_bibliography", [](auto s) { return tex_remove_bibliography_text(s); });
+}
+Note tex_remove_color(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_color", [](auto s) { return tex_remove_color_text(s); });
+}
+Note tex_remove_hyperref(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_hyperref", [](auto s) { return tex_remove_hyperref_text(s); });
+}
+Note tex_remove_urls(const Note& x) {
+  return transform_note_text(x, "Note::tex_remove_urls", [](auto s) { return tex_remove_urls_text(s); });
+}
+Note tex_strip_math(const Note& x) {
+  return transform_note_text(x, "Note::tex_strip_math", [](auto s) { return tex_strip_math_text(s); });
+}
+Note tex_strip_text(const Note& x) {
+  return transform_note_text(x, "Note::tex_strip_text", [](auto s) { return tex_strip_text_text(s); });
+}
+Note tex_strip_environments(const Note& x) {
+  return tex_remove_environments(x);
+}
+Note tex_strip_commands(const Note& x) {
+  return tex_remove_commands(x);
 }
 Note tex_to_text(const Note& x, ::std::int64_t mode) {
   return transform_note_text(x, "Note::tex_to_text", [mode](auto s) { return tex_to_text_text(s, mode); });
@@ -1064,52 +1363,7 @@ Note narrow(const Note& x, ::std::int64_t dim, ::std::int64_t start, ::std::int6
 }
 
 TokenBatch split_whitespace(const Note& x) {
-  if (!x.defined()) {
-    return TokenBatchFactoryAccess::make(Note::undefined(), {0});
-  }
-
-  const auto& impl = NoteAccess::impl(x);
-  require_text_note(*impl, "Note::split_whitespace");
-  const ::std::int64_t n = impl->numel();
-
-  ::std::vector<::std::int64_t> offsets;
-  offsets.resize(static_cast<::std::size_t>(n) + 1);
-  offsets[0] = 0;
-
-  // First pass: count tokens per element.
-  ::std::vector<::std::int64_t> counts(static_cast<::std::size_t>(n), 0);
-  ::std::int64_t total = 0;
-  for (::std::int64_t i = 0; i < n; ++i) {
-    auto spans = ::pluss::coden::native::cpu::split_whitespace_spans(impl->bytes_at(i));
-    const ::std::int64_t c = static_cast<::std::int64_t>(spans.size());
-    counts[static_cast<::std::size_t>(i)] = c;
-    total += c;
-  }
-  for (::std::int64_t i = 0; i < n; ++i) {
-    offsets[static_cast<::std::size_t>(i) + 1] = offsets[static_cast<::std::size_t>(i)] + counts[static_cast<::std::size_t>(i)];
-  }
-
-  // Build a 1D Note of tokens.
-  auto arena = ::pluss::flame::make_intrusive<TextArena>();
-  ::std::vector<NoteImpl::OffLen> token_spans;
-  token_spans.reserve(static_cast<::std::size_t>(total));
-
-  for (::std::int64_t i = 0; i < n; ++i) {
-    const auto s = impl->bytes_at(i);
-    auto spans = ::pluss::coden::native::cpu::split_whitespace_spans(s);
-    for (auto [off, len] : spans) {
-      const auto token = ::std::string_view(s.data() + off, static_cast<::std::size_t>(len));
-      const auto token_off = arena->append(token);
-      token_spans.push_back(token_off);
-    }
-  }
-
-  ::std::array<::std::int64_t, 3> sizes{static_cast<::std::int64_t>(token_spans.size()), 0, 0};
-  auto token_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      ::std::move(arena), ::std::move(token_spans), sizes, /*dim=*/1, NoteImpl::Encoding::Utf8Text);
-  Note tokens = NoteFactoryAccess::wrap(::std::move(token_impl));
-
-  return TokenBatchFactoryAccess::make(::std::move(tokens), ::std::move(offsets));
+  return split_whitespace(x, -1);
 }
 
 
@@ -1146,52 +1400,23 @@ Chord regex_replace(const Chord& x, ::std::string_view pattern, ::std::string_vi
 }
 
 TokenBatch split_whitespace(const Chord& x) {
-  if (!x.defined()) return TokenBatchFactoryAccess::make(Note::undefined(), {0,0});
-  const ::std::string_view s = x.utf8();
-  const auto spans = ::pluss::coden::native::cpu::split_whitespace_spans(s);
-
-  ::std::vector<::std::int64_t> offsets = {0, static_cast<::std::int64_t>(spans.size())};
-  auto arena = ::pluss::flame::make_intrusive<TextArena>();
-  ::std::vector<NoteImpl::OffLen> token_spans;
-  token_spans.reserve(spans.size());
-
-  for (auto [off, len] : spans) {
-    const auto token = ::std::string_view(s.data() + off, len);
-    auto [toff, tlen] = arena->append(token);
-    token_spans.push_back({toff, tlen});
-  }
-
-  ::std::array<::std::int64_t, 3> sizes{static_cast<::std::int64_t>(token_spans.size()), 0, 0};
-  auto token_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      ::std::move(arena), ::std::move(token_spans), sizes, /*dim=*/1, NoteImpl::Encoding::Utf8Text);
-  Note tokens = NoteFactoryAccess::wrap(::std::move(token_impl));
-
-  return TokenBatchFactoryAccess::make(::std::move(tokens), ::std::move(offsets));
+  return split_whitespace(x, -1);
 }
 
 TokenBatch split(const Chord& x, ::std::string_view delim) {
-  if (!x.defined()) return TokenBatchFactoryAccess::make(Note::undefined(), {0,0});
-  PLUSS_CHECK(!delim.empty(), "split: delimiter must be non-empty");
-  const ::std::string_view s = x.utf8();
-  const auto spans = ::pluss::coden::native::cpu::split_delim_spans(s, delim);
+  return split(x, delim, -1);
+}
 
-  ::std::vector<::std::int64_t> offsets = {0, static_cast<::std::int64_t>(spans.size())};
-  auto arena = ::pluss::flame::make_intrusive<TextArena>();
-  ::std::vector<NoteImpl::OffLen> token_spans;
-  token_spans.reserve(spans.size());
+TokenBatch split_whitespace(const Chord& x, ::std::int64_t limit) {
+  return tokenbatch_from_chord(x, [limit](::std::string_view s, ::std::vector<::std::string>& out) {
+    split_whitespace_with_limit_to(s, limit, out);
+  });
+}
 
-  for (auto [off, len] : spans) {
-    const auto token = ::std::string_view(s.data() + off, len);
-    auto [toff, tlen] = arena->append(token);
-    token_spans.push_back({toff, tlen});
-  }
-
-  ::std::array<::std::int64_t, 3> sizes{static_cast<::std::int64_t>(token_spans.size()), 0, 0};
-  auto token_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      ::std::move(arena), ::std::move(token_spans), sizes, /*dim=*/1, NoteImpl::Encoding::Utf8Text);
-  Note tokens = NoteFactoryAccess::wrap(::std::move(token_impl));
-
-  return TokenBatchFactoryAccess::make(::std::move(tokens), ::std::move(offsets));
+TokenBatch split(const Chord& x, ::std::string_view delim, ::std::int64_t limit) {
+  return tokenbatch_from_chord(x, [delim, limit](::std::string_view s, ::std::vector<::std::string>& out) {
+    split_delim_with_limit_to(s, delim, limit, out);
+  });
 }
 
 TokenBatch split_lines(const Chord& x, bool keep_ends) {
@@ -1310,44 +1535,19 @@ Note regex_replace(const Note& x, ::std::string_view pattern, ::std::string_view
 }
 
 TokenBatch split(const Note& x, ::std::string_view delim) {
-  if (!x.defined()) return TokenBatchFactoryAccess::make(Note::undefined(), {0});
-  PLUSS_CHECK(!delim.empty(), "split: delimiter must be non-empty");
+  return split(x, delim, -1);
+}
 
-  const auto& impl = NoteAccess::impl(x);
-  require_text_note(*impl, "Note::split");
-  const ::std::int64_t n = impl->numel();
+TokenBatch split_whitespace(const Note& x, ::std::int64_t limit) {
+  return tokenbatch_from_note(x, "Note::split_whitespace", [limit](::std::string_view s, ::std::vector<::std::string>& out) {
+    split_whitespace_with_limit_to(s, limit, out);
+  });
+}
 
-  ::std::vector<::std::int64_t> offsets(static_cast<::std::size_t>(n)+1);
-  offsets[0]=0;
-  ::std::vector<::std::int64_t> counts(static_cast<::std::size_t>(n),0);
-
-  ::std::int64_t total=0;
-  for (::std::int64_t i=0;i<n;++i) {
-    auto spans = ::pluss::coden::native::cpu::split_delim_spans(impl->bytes_at(i), delim);
-    counts[static_cast<::std::size_t>(i)] = static_cast<::std::int64_t>(spans.size());
-    total += counts[static_cast<::std::size_t>(i)];
-  }
-  for (::std::int64_t i=0;i<n;++i) offsets[static_cast<::std::size_t>(i)+1] = offsets[static_cast<::std::size_t>(i)] + counts[static_cast<::std::size_t>(i)];
-
-  auto arena = ::pluss::flame::make_intrusive<TextArena>();
-  ::std::vector<NoteImpl::OffLen> token_spans;
-  token_spans.reserve(static_cast<::std::size_t>(total));
-
-  for (::std::int64_t i=0;i<n;++i) {
-    const auto s = impl->bytes_at(i);
-    for (auto [off,len] : ::pluss::coden::native::cpu::split_delim_spans(s, delim)) {
-      const auto tok = ::std::string_view(s.data()+off, len);
-      auto [toff,tlen] = arena->append(tok);
-      token_spans.push_back({toff, tlen});
-    }
-  }
-
-  ::std::array<::std::int64_t,3> sizes{static_cast<::std::int64_t>(token_spans.size()),0,0};
-  auto token_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      ::std::move(arena), ::std::move(token_spans), sizes, /*dim=*/1, NoteImpl::Encoding::Utf8Text);
-  Note tokens = NoteFactoryAccess::wrap(::std::move(token_impl));
-
-  return TokenBatchFactoryAccess::make(::std::move(tokens), ::std::move(offsets));
+TokenBatch split(const Note& x, ::std::string_view delim, ::std::int64_t limit) {
+  return tokenbatch_from_note(x, "Note::split(delim,limit)", [delim, limit](::std::string_view s, ::std::vector<::std::string>& out) {
+    split_delim_with_limit_to(s, delim, limit, out);
+  });
 }
 
 TokenBatch split_lines(const Note& x, bool keep_ends) {
