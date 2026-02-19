@@ -1,5 +1,6 @@
 #include <pluss/pluss.h>
 
+#include <any>
 #include <cstdint>
 #include <iostream>
 #include <string>
@@ -39,26 +40,32 @@ int main() {
   std::cout << "year: " << qt_year.as<pluss::Series>().to_vec<std::int32_t>(0) << "\n\n";
 
   auto s = pluss::value({-4.0, 5.0, -6.0});
-  auto s_abs = pluss::dispense<pluss::Series>(s, "abs");
-  std::cout << "dispense<Series>(Series,\"abs\")[0]: " << s_abs.to_vec<double>(0) << "\n";
+  auto s_numel = pluss::dispense_as<std::int64_t>(
+      s, &pluss::Series::numel, pluss::args{});
+  std::cout << "dispense(Series,&Series::numel,args{}): " << s_numel << "\n";
 
   auto n = pluss::content({"apple", "banana", "apricot"});
-  auto starts_with_a = pluss::dispense<std::vector<std::uint8_t>>(n, "starts_with", "a");
-  std::cout << "dispense<vector<uint8_t>>(Note,\"starts_with\",\"a\"): ["
+  pluss::args starts_with_args;
+  starts_with_args.emplace_back(std::string_view("a"));
+  auto starts_with_a = pluss::dispense_as<std::vector<std::uint8_t>>(
+      n, &pluss::Note::starts_with, starts_with_args);
+  std::cout << "dispense(Note,&Note::starts_with,args{...}): ["
             << static_cast<int>(starts_with_a[0]) << ", "
             << static_cast<int>(starts_with_a[1]) << ", "
             << static_cast<int>(starts_with_a[2]) << "]\n";
 
   auto t = pluss::moment("2024-01-15T10:11:12Z");
-  auto day_floor = pluss::dispense<pluss::codeh::Timeline>(t, "floor", "D");
-  std::cout << "dispense<Timeline>(Timeline,\"floor\",\"D\")->hour: "
+  pluss::args floor_args;
+  floor_args.emplace_back(std::string_view("D"));
+  auto day_floor = pluss::dispense_as<pluss::codeh::Timeline>(
+      t, &pluss::codeh::Timeline::floor, floor_args);
+  std::cout << "dispense(Timeline,&Timeline::floor,args{...})->hour: "
             << day_floor.hour().to_vec<std::int32_t>(0) << "\n";
 
-  auto any_year = pluss::dispense_any(t, "year");
-  if (any_year.is<pluss::Series>()) {
-    std::cout << "dispense_any(Timeline,\"year\") resolved to Series, value="
-              << any_year.as<pluss::Series>().to_vec<std::int32_t>(0) << "\n";
-  }
+  auto year_series = pluss::dispense_as<pluss::Series>(
+      t, &pluss::codeh::Timeline::year, pluss::args{});
+  std::cout << "dispense(Timeline,&Timeline::year,args{}) value="
+            << year_series.to_vec<std::int32_t>(0) << "\n";
 
   std::cout << "\nDone.\n";
   return 0;

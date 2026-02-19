@@ -71,8 +71,11 @@ inline args pack_args(Ts&&... xs) {
 
 namespace detail {
 
-template <class Obj, class Ret, class... P>
-inline std::any call_pmf_any(Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...), std::span<const Value> args) {
+template <class Obj, class C, class Ret, class... P>
+inline std::any call_pmf_any(Obj& obj, Ret (C::*pmf)(P...), std::span<const Value> args)
+{
+  static_assert(std::is_base_of_v<C, std::decay_t<Obj>>,
+                "dispense(pmf): member-function owner must be a base of object type");
   if (args.size() != sizeof...(P)) {
     std::ostringstream oss;
     oss << "dispense(pmf): expected " << sizeof...(P) << " positional args, got " << args.size();
@@ -95,8 +98,11 @@ inline std::any call_pmf_any(Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...), std:
   }
 }
 
-template <class Obj, class Ret, class... P>
-inline std::any call_pmf_any(const Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...) const, std::span<const Value> args) {
+template <class Obj, class C, class Ret, class... P>
+inline std::any call_pmf_any(const Obj& obj, Ret (C::*pmf)(P...) const, std::span<const Value> args)
+{
+  static_assert(std::is_base_of_v<C, std::decay_t<Obj>>,
+                "dispense(pmf): member-function owner must be a base of object type");
   if (args.size() != sizeof...(P)) {
     std::ostringstream oss;
     oss << "dispense(pmf): expected " << sizeof...(P) << " positional args, got " << args.size();
@@ -123,36 +129,47 @@ inline std::any call_pmf_any(const Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...)
 
 // Heterogeneous "list" form using Args (std::vector<std::any>)
 
-template <class Obj, class Ret, class... P>
-inline std::any dispense(Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...), const Args& args) {
+template <class Obj, class C, class Ret, class... P>
+inline std::any dispense(Obj& obj, Ret (C::*pmf)(P...), const Args& args)
+{
   return detail::call_pmf_any(obj, pmf, std::span<const Value>(args.data(), args.size()));
 }
 
-template <class Obj, class Ret, class... P>
-inline std::any dispense(const Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...) const, const Args& args) {
+template <class Obj, class C, class Ret, class... P>
+inline std::any dispense(const Obj& obj, Ret (C::*pmf)(P...) const, const Args& args)
+{
   return detail::call_pmf_any(obj, pmf, std::span<const Value>(args.data(), args.size()));
 }
 
-template <class Obj, class Ret, class... P>
-inline std::any dispense(Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...), std::span<const Value> args) {
+template <class Obj, class C, class Ret, class... P>
+inline std::any dispense(Obj& obj, Ret (C::*pmf)(P...), std::span<const Value> args)
+{
   return detail::call_pmf_any(obj, pmf, args);
 }
 
-template <class Obj, class Ret, class... P>
-inline std::any dispense(const Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...) const, std::span<const Value> args) {
+template <class Obj, class C, class Ret, class... P>
+inline std::any dispense(const Obj& obj, Ret (C::*pmf)(P...) const, std::span<const Value> args)
+{
   return detail::call_pmf_any(obj, pmf, args);
 }
 
-// Fully type-safe tuple form (your accepted form)
+// Fully typed tuple form. Accepts convertible tuple element types too,
+// e.g. std::make_tuple("John", 29, 190) for (std::string, int, int).
 
-template <class Obj, class Ret, class... P>
-inline decltype(auto) dispense(Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...), const std::tuple<P...>& t) {
-  return std::apply([&](const P&... xs) -> decltype(auto) { return (obj.*pmf)(xs...); }, t);
+template <class Obj, class C, class Ret, class... P, class... A>
+inline decltype(auto) dispense(Obj& obj, Ret (C::*pmf)(P...), const std::tuple<A...>& t)
+requires(sizeof...(A) == sizeof...(P) && (std::is_convertible_v<const A&, P> && ...)) {
+  static_assert(std::is_base_of_v<C, std::decay_t<Obj>>,
+                "dispense(pmf): member-function owner must be a base of object type");
+  return std::apply([&](const A&... xs) -> decltype(auto) { return (obj.*pmf)(xs...); }, t);
 }
 
-template <class Obj, class Ret, class... P>
-inline decltype(auto) dispense(const Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...) const, const std::tuple<P...>& t) {
-  return std::apply([&](const P&... xs) -> decltype(auto) { return (obj.*pmf)(xs...); }, t);
+template <class Obj, class C, class Ret, class... P, class... A>
+inline decltype(auto) dispense(const Obj& obj, Ret (C::*pmf)(P...) const, const std::tuple<A...>& t)
+requires(sizeof...(A) == sizeof...(P) && (std::is_convertible_v<const A&, P> && ...)) {
+  static_assert(std::is_base_of_v<C, std::decay_t<Obj>>,
+                "dispense(pmf): member-function owner must be a base of object type");
+  return std::apply([&](const A&... xs) -> decltype(auto) { return (obj.*pmf)(xs...); }, t);
 }
 
 // -------------------------
@@ -186,6 +203,11 @@ inline std::any dispense(Obj& obj, std::string_view method, const Args& args) {
 template <class Obj>
 inline std::any dispense(Obj& obj, std::string_view method, const Kwargs& kwargs) {
   return ::pluss::toolchain::invoke(obj, method, kwargs);
+}
+
+template <class R, class Obj, class... CallArgs>
+inline R dispense_as(Obj&& obj, CallArgs&&... call_args) {
+  return std::any_cast<R>(dispense(std::forward<Obj>(obj), std::forward<CallArgs>(call_args)...));
 }
 
 } // namespace pluss
