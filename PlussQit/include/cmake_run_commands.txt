@@ -2,11 +2,10 @@ cmake -S .. -B . --fresh \
   -DPKG_CONFIG_EXECUTABLE=/Users/yawasante/software/miniconda3/envs/cpp_env/bin/pkg-config \
   -DCMAKE_PREFIX_PATH=/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/torch \
   -DTorch_DIR=/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/torch/share/cmake/Torch \
-  -DPLUSS_ENABLE_TORCH=ON \
   -DPLUSSQIT_BUILD_CODEM=ON \
   -DPLUSSQIT_BUILD_EXAMPLES=ON \
-  -DPLUSSQIT_BUILD_TESTS=ON \
-  -DBUILD_BENCHMARKS=ON
+  -DPLUSSQIT_BUILD_TESTS=OFF \
+  -DBUILD_BENCHMARKS=OFF
 
 
 cmake --build . -j
