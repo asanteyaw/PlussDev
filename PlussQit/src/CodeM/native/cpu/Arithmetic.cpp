@@ -57,20 +57,35 @@ template <class T>
 static bool try_accelerate_add_(const Series& a, const Series& b, Series& out) {
 #if defined(__APPLE__) && defined(PLUSS_HAS_ACCELERATE) && (PLUSS_HAS_ACCELERATE == 1)
   const auto n = out.numel();
+  constexpr std::int64_t kParallelThreshold = (1LL << 20);
   if constexpr (std::is_same_v<T, float>) {
     if (n <= 0) return true;
-    vDSP_vadd(reinterpret_cast<const float*>(a.raw_data()), 1,
-              reinterpret_cast<const float*>(b.raw_data()), 1,
-              reinterpret_cast<float*>(out.raw_data()), 1,
-              static_cast<vDSP_Length>(n));
+    const auto* ap = reinterpret_cast<const float*>(a.raw_data());
+    const auto* bp = reinterpret_cast<const float*>(b.raw_data());
+    auto* op = reinterpret_cast<float*>(out.raw_data());
+    if (n < kParallelThreshold) {
+      vDSP_vadd(ap, 1, bp, 1, op, 1, static_cast<vDSP_Length>(n));
+      return true;
+    }
+    const std::int64_t grain = std::max<std::int64_t>(1LL << 18, n / 32);
+    pluss::msharp::parallel_for(0, n, grain, [&](std::int64_t b0, std::int64_t b1) {
+      vDSP_vadd(ap + b0, 1, bp + b0, 1, op + b0, 1, static_cast<vDSP_Length>(b1 - b0));
+    });
     return true;
   }
   if constexpr (std::is_same_v<T, double>) {
     if (n <= 0) return true;
-    vDSP_vaddD(reinterpret_cast<const double*>(a.raw_data()), 1,
-               reinterpret_cast<const double*>(b.raw_data()), 1,
-               reinterpret_cast<double*>(out.raw_data()), 1,
-               static_cast<vDSP_Length>(n));
+    const auto* ap = reinterpret_cast<const double*>(a.raw_data());
+    const auto* bp = reinterpret_cast<const double*>(b.raw_data());
+    auto* op = reinterpret_cast<double*>(out.raw_data());
+    if (n < kParallelThreshold) {
+      vDSP_vaddD(ap, 1, bp, 1, op, 1, static_cast<vDSP_Length>(n));
+      return true;
+    }
+    const std::int64_t grain = std::max<std::int64_t>(1LL << 18, n / 32);
+    pluss::msharp::parallel_for(0, n, grain, [&](std::int64_t b0, std::int64_t b1) {
+      vDSP_vaddD(ap + b0, 1, bp + b0, 1, op + b0, 1, static_cast<vDSP_Length>(b1 - b0));
+    });
     return true;
   }
 #endif
@@ -82,20 +97,35 @@ template <class T>
 static bool try_accelerate_mul_(const Series& a, const Series& b, Series& out) {
 #if defined(__APPLE__) && defined(PLUSS_HAS_ACCELERATE) && (PLUSS_HAS_ACCELERATE == 1)
   const auto n = out.numel();
+  constexpr std::int64_t kParallelThreshold = (1LL << 20);
   if constexpr (std::is_same_v<T, float>) {
     if (n <= 0) return true;
-    vDSP_vmul(reinterpret_cast<const float*>(a.raw_data()), 1,
-              reinterpret_cast<const float*>(b.raw_data()), 1,
-              reinterpret_cast<float*>(out.raw_data()), 1,
-              static_cast<vDSP_Length>(n));
+    const auto* ap = reinterpret_cast<const float*>(a.raw_data());
+    const auto* bp = reinterpret_cast<const float*>(b.raw_data());
+    auto* op = reinterpret_cast<float*>(out.raw_data());
+    if (n < kParallelThreshold) {
+      vDSP_vmul(ap, 1, bp, 1, op, 1, static_cast<vDSP_Length>(n));
+      return true;
+    }
+    const std::int64_t grain = std::max<std::int64_t>(1LL << 18, n / 32);
+    pluss::msharp::parallel_for(0, n, grain, [&](std::int64_t b0, std::int64_t b1) {
+      vDSP_vmul(ap + b0, 1, bp + b0, 1, op + b0, 1, static_cast<vDSP_Length>(b1 - b0));
+    });
     return true;
   }
   if constexpr (std::is_same_v<T, double>) {
     if (n <= 0) return true;
-    vDSP_vmulD(reinterpret_cast<const double*>(a.raw_data()), 1,
-               reinterpret_cast<const double*>(b.raw_data()), 1,
-               reinterpret_cast<double*>(out.raw_data()), 1,
-               static_cast<vDSP_Length>(n));
+    const auto* ap = reinterpret_cast<const double*>(a.raw_data());
+    const auto* bp = reinterpret_cast<const double*>(b.raw_data());
+    auto* op = reinterpret_cast<double*>(out.raw_data());
+    if (n < kParallelThreshold) {
+      vDSP_vmulD(ap, 1, bp, 1, op, 1, static_cast<vDSP_Length>(n));
+      return true;
+    }
+    const std::int64_t grain = std::max<std::int64_t>(1LL << 18, n / 32);
+    pluss::msharp::parallel_for(0, n, grain, [&](std::int64_t b0, std::int64_t b1) {
+      vDSP_vmulD(ap + b0, 1, bp + b0, 1, op + b0, 1, static_cast<vDSP_Length>(b1 - b0));
+    });
     return true;
   }
 #endif

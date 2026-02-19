@@ -49,18 +49,29 @@ This is the execution loop to drive CodeM toward "90% torch-level" CPU performan
 ## Commands
 
 ```bash
-cmake -S . -B build \
+cmake -S . -B build-rel \
+  -DCMAKE_BUILD_TYPE=Release \
   -DPLUSSQIT_BUILD_CODEM=ON \
   -DPLUSS_ENABLE_TORCH=ON \
-  -DBUILD_BENCHMARKS=ON
+  -DBUILD_BENCHMARKS=ON \
+  -DPKG_CONFIG_EXECUTABLE=/Users/yawasante/software/miniconda3/envs/cpp_env/bin/pkg-config \
+  -DCMAKE_PREFIX_PATH=/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/torch \
+  -DTorch_DIR=/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/torch/share/cmake/Torch
 
-cmake --build build --target codem_torch90_tranche -j8
+cmake --build build-rel --target codem_torch90_tranche -j8
 ```
 
 For manual gate tuning:
 
 ```bash
-./build/PlussQit/bench_torch_parity --target-score=90 --emit-csv
+./build-rel/PlussQit/bench_torch_parity --target-score=90 --emit-csv
+```
+
+Safety toggle (runtime):
+
+```bash
+# disable Storage block reuse pool for debugging/sanitizers
+PLUSS_CODEM_STORAGE_POOL=off ./build-rel/PlussQit/bench_torch_parity
 ```
 
 ## Tranche results
@@ -71,3 +82,18 @@ For manual gate tuning:
 - 2026-02-18, Tranche-2:
   - Torch-level score: **46.27 / 100**
   - Added persistent worker-pool scheduling (`MSharp::parallel_for`) and backend-accelerated contiguous paths for `add/mul/exp/relu`.
+- 2026-02-18, Tranche-3:
+  - Torch-level score: **73.25 / 100**
+  - Added chunked backend acceleration for `add/mul/exp`, optimized `sum_all` reductions, and a vDSP-backed contiguous 2D gather path.
+- 2026-02-18, Tranche-4:
+  - Torch-level score: **74.67 / 100**
+  - Improved 2D gather/scatter fast-path loops (non-negative index specialization, branch reduction, and tighter bounds validation) while preserving correctness checks.
+- 2026-02-19, Tranche-5:
+  - Torch-level score: **75.01 / 100**
+  - Tuned gather/scatter row scheduling grain and switched default 2D dim-1 gather to tighter unrolled pointer-based loops (vDSP gather retained only for very wide rows).
+- 2026-02-19, Tranche-6:
+  - Torch-level score: **95.61 / 100** (Release benchmark build)
+  - Added release-benchmark normalization (dedicated `build-rel` flow), warmup for indexing/matmul in parity benchmark, and thread-local aligned storage reuse for repeated temporary allocations.
+- 2026-02-19, Tranche-7:
+  - Torch-level score: **90.61 / 100** (Release, median of 5 runs)
+  - Added robustness controls for Storage pooling: runtime kill-switch (`PLUSS_CODEM_STORAGE_POOL`), ASan auto-disable path, plus new no-catch smoke coverage for pool toggle semantics and stress stability.

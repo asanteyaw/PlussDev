@@ -1,8 +1,11 @@
 #include <pluss/pluss.h>
+#include "CodeM/core/Storage.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <cmath>
+#include <cstdlib>
 #include <exception>
 #include <functional>
 #include <iostream>
@@ -53,6 +56,34 @@ static_assert(!std::is_constructible_v<pluss::Series, std::initializer_list<doub
               "Series must not be direct-list-constructible by end users.");
 static_assert(!std::is_constructible_v<pluss::Series, std::vector<double>>,
               "Series must not be direct-constructible from host containers.");
+
+class ScopedEnvVar final {
+ public:
+  ScopedEnvVar(const char* key, const char* value) : key_(key) {
+    if (const char* existing = std::getenv(key_); existing != nullptr) {
+      had_previous_ = true;
+      previous_ = existing;
+    }
+    if (value) {
+      ::setenv(key_, value, 1);
+    } else {
+      ::unsetenv(key_);
+    }
+  }
+
+  ~ScopedEnvVar() {
+    if (had_previous_) {
+      ::setenv(key_, previous_.c_str(), 1);
+    } else {
+      ::unsetenv(key_);
+    }
+  }
+
+ private:
+  const char* key_;
+  bool had_previous_{false};
+  std::string previous_;
+};
 
 void test_factories() {
   std::cout << "[RUN] factories:value\n";
@@ -214,6 +245,60 @@ void test_unary_math_and_activations() {
 
   auto r = x.relu();
   expect_eq(r.to_vec<float>(), {0.0f, 0.0f, 0.0f, 1.0f}, "relu values");
+}
+
+void test_storage_pool_robustness() {
+  const char* env_key = "PLUSS_CODEM_STORAGE_POOL";
+
+  std::cout << "[RUN] storage_pool:toggle\n";
+  ScopedEnvVar restore(env_key, "1");
+
+  void* pooled_first = nullptr;
+  {
+    pluss::codem::Storage s(4096, 64);
+    pooled_first = s.data();
+  }
+  void* pooled_second = nullptr;
+  {
+    pluss::codem::Storage s(4096, 64);
+    pooled_second = s.data();
+  }
+  expect_true(pooled_first != nullptr && pooled_second != nullptr, "storage pool returns non-null blocks");
+  expect_true(pooled_first == pooled_second, "storage pool reuses same-size block when enabled");
+
+  {
+    ScopedEnvVar disable(env_key, "off");
+    void* disabled_ptr = nullptr;
+    {
+      pluss::codem::Storage s(4096, 64);
+      disabled_ptr = s.data();
+    }
+    expect_true(disabled_ptr != nullptr, "storage allocation works when pool disabled");
+    expect_true((reinterpret_cast<std::uintptr_t>(disabled_ptr) % 64) == 0, "disabled-path allocation alignment");
+  }
+
+  // Re-enabling should continue to use the previously cached pooled block.
+  void* pooled_third = nullptr;
+  {
+    pluss::codem::Storage s(4096, 64);
+    pooled_third = s.data();
+  }
+  expect_true(pooled_third == pooled_first, "pool state restored after temporary disable");
+
+  std::cout << "[RUN] storage_pool:stress\n";
+  bool stress_ok = true;
+  for (std::size_t i = 0; i < 20000; ++i) {
+    const std::size_t bytes = ((i % 97) + 1) * 64;
+    pluss::codem::Storage s(bytes, 64);
+    auto* p = s.data();
+    if (!p) {
+      stress_ok = false;
+      break;
+    }
+    p[0] = std::byte{static_cast<unsigned char>(i & 0xFFu)};
+    p[bytes - 1] = std::byte{static_cast<unsigned char>((i >> 8) & 0xFFu)};
+  }
+  expect_true(stress_ok, "storage pool stress allocation loop");
 }
 
 void test_dispatch_extensions() {
@@ -438,6 +523,8 @@ int main() {
     test_indexing_ops();
     std::cout << "[RUN] unary_activations\n";
     test_unary_math_and_activations();
+    std::cout << "[RUN] storage_pool\n";
+    test_storage_pool_robustness();
     std::cout << "[RUN] dispatch_extensions\n";
     test_dispatch_extensions();
     std::cout << "[RUN] matlab_hybrid\n";

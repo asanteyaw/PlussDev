@@ -1,11 +1,127 @@
 #include "CodeM/core/Storage.h"
 #include "CodeM/core/Errors.h"
 
+#include <cctype>
 #include <cstdlib>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace pluss::codem {
 
-void Storage::AlignedDeleter::operator()(std::byte* p) const noexcept { std::free(p); }
+namespace {
+
+struct CacheKey {
+  std::size_t alloc_size{0};
+  std::size_t alignment{0};
+  bool operator==(const CacheKey& other) const noexcept {
+    return alloc_size == other.alloc_size && alignment == other.alignment;
+  }
+};
+
+struct CacheKeyHash {
+  std::size_t operator()(const CacheKey& k) const noexcept {
+    const auto h1 = std::hash<std::size_t>{}(k.alloc_size);
+    const auto h2 = std::hash<std::size_t>{}(k.alignment);
+    return h1 ^ (h2 + 0x9e3779b97f4a7c15ULL + (h1 << 6) + (h1 >> 2));
+  }
+};
+
+struct ThreadLocalPool {
+  std::unordered_map<CacheKey, std::vector<void*>, CacheKeyHash> blocks;
+  std::size_t cached_bytes{0};
+};
+
+static bool ieq_token_(const char* s, const char* lit) {
+  if (!s || !lit) return false;
+  while (*s && *lit) {
+    const auto a = static_cast<unsigned char>(*s);
+    const auto b = static_cast<unsigned char>(*lit);
+    if (std::tolower(a) != std::tolower(b)) return false;
+    ++s;
+    ++lit;
+  }
+  return *s == '\0' && *lit == '\0';
+}
+
+static bool pool_disabled_from_env_() {
+  const char* raw = std::getenv("PLUSS_CODEM_STORAGE_POOL");
+  if (!raw) return false;
+  while (*raw && std::isspace(static_cast<unsigned char>(*raw))) ++raw;
+  if (*raw == '\0') return false;
+  if (ieq_token_(raw, "0")) return true;
+  if (ieq_token_(raw, "off")) return true;
+  if (ieq_token_(raw, "no")) return true;
+  if (ieq_token_(raw, "false")) return true;
+  if (ieq_token_(raw, "disable")) return true;
+  if (ieq_token_(raw, "disabled")) return true;
+  return false;
+}
+
+static bool storage_pool_enabled_() {
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+  return false;
+#endif
+#endif
+#if defined(__SANITIZE_ADDRESS__)
+  return false;
+#endif
+  return !pool_disabled_from_env_();
+}
+
+inline ThreadLocalPool& tls_pool_() {
+  // Keep pool alive for process lifetime to avoid static destruction ordering issues.
+  thread_local auto* pool = new ThreadLocalPool();
+  return *pool;
+}
+
+constexpr std::size_t kPerThreadBytesCap = std::size_t{128} * 1024 * 1024;
+constexpr std::size_t kPerKeyBlockCap = 16;
+
+static void* pool_take_(std::size_t alloc_size, std::size_t alignment) {
+  if (!storage_pool_enabled_()) return nullptr;
+  auto& pool = tls_pool_();
+  const CacheKey key{alloc_size, alignment};
+  auto it = pool.blocks.find(key);
+  if (it == pool.blocks.end() || it->second.empty()) return nullptr;
+  void* p = it->second.back();
+  it->second.pop_back();
+  if (it->second.empty()) pool.blocks.erase(it);
+  pool.cached_bytes -= alloc_size;
+  return p;
+}
+
+static void pool_put_(void* p, std::size_t alloc_size, std::size_t alignment) noexcept {
+  if (!p) return;
+  if (!storage_pool_enabled_()) {
+    std::free(p);
+    return;
+  }
+  if (alloc_size == 0 || alignment == 0) {
+    std::free(p);
+    return;
+  }
+  if (alloc_size > kPerThreadBytesCap / 2) {
+    std::free(p);
+    return;
+  }
+  auto& pool = tls_pool_();
+  const CacheKey key{alloc_size, alignment};
+  auto& bucket = pool.blocks[key];
+  if (bucket.size() >= kPerKeyBlockCap || pool.cached_bytes + alloc_size > kPerThreadBytesCap) {
+    std::free(p);
+    return;
+  }
+  bucket.push_back(p);
+  pool.cached_bytes += alloc_size;
+}
+
+} // namespace
+
+void Storage::AlignedDeleter::operator()(std::byte* p) const noexcept {
+  pool_put_(p, alloc_size, alignment);
+}
 
 static std::size_t round_up(std::size_t x, std::size_t a) { return (x + (a - 1)) / a * a; }
 
@@ -13,11 +129,13 @@ Storage::Storage(std::size_t nbytes, std::size_t alignment)
   : nbytes_(nbytes), alignment_(alignment) {
   if (nbytes == 0) return;
   if (alignment == 0) alignment = 64;
+  alignment_ = alignment;
   const std::size_t alloc_size = round_up(nbytes, alignment);
 
-  void* p = std::aligned_alloc(alignment, alloc_size);
+  void* p = pool_take_(alloc_size, alignment);
+  if (!p) p = std::aligned_alloc(alignment, alloc_size);
   if (!p) throw_error("Storage: aligned_alloc failed");
-  data_ = std::shared_ptr<std::byte>(reinterpret_cast<std::byte*>(p), AlignedDeleter{});
+  data_ = std::shared_ptr<std::byte>(reinterpret_cast<std::byte*>(p), AlignedDeleter{alloc_size, alignment});
 }
 
 Storage::Storage(std::shared_ptr<std::byte> external, std::size_t nbytes, std::size_t alignment)

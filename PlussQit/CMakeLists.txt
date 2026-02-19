@@ -238,6 +238,12 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_aux_let_queue_demo examples/CodeM/aux_let_queue_demo.cpp)
   target_link_libraries(plussqit_codem_aux_let_queue_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_queue_demo examples/CodeM/queue_demo.cpp)
+  target_link_libraries(plussqit_codem_queue_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_suppose_demo examples/CodeM/suppose_demo.cpp)
+  target_link_libraries(plussqit_codem_suppose_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_series_methods_demo examples/CodeM/series_methods_demo.cpp)
   target_link_libraries(plussqit_codem_series_methods_demo PRIVATE PlussQit::CodeM)
 

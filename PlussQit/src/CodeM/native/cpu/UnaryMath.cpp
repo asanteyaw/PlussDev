@@ -127,8 +127,10 @@ void exp(const Series& a, Series& out) {
         const auto* ap = reinterpret_cast<const double*>(a.raw_data());
 #if defined(__APPLE__) && defined(PLUSS_HAS_ACCELERATE) && (PLUSS_HAS_ACCELERATE == 1)
         if (n <= static_cast<std::int64_t>(std::numeric_limits<int>::max())) {
-          int nn = static_cast<int>(n);
-          vvexp(op, ap, &nn);
+          for_each_chunk_(n, [&](std::int64_t b0, std::int64_t b1) {
+            int nn = static_cast<int>(b1 - b0);
+            vvexp(op + b0, ap + b0, &nn);
+          });
           return;
         }
 #endif
@@ -145,8 +147,10 @@ void exp(const Series& a, Series& out) {
         const auto* ap = reinterpret_cast<const float*>(a.raw_data());
 #if defined(__APPLE__) && defined(PLUSS_HAS_ACCELERATE) && (PLUSS_HAS_ACCELERATE == 1)
         if (n <= static_cast<std::int64_t>(std::numeric_limits<int>::max())) {
-          int nn = static_cast<int>(n);
-          vvexpf(op, ap, &nn);
+          for_each_chunk_(n, [&](std::int64_t b0, std::int64_t b1) {
+            int nn = static_cast<int>(b1 - b0);
+            vvexpf(op + b0, ap + b0, &nn);
+          });
           return;
         }
 #endif

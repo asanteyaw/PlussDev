@@ -23,7 +23,11 @@ public:
   std::shared_ptr<std::byte> handle() const noexcept { return data_; }
 
 private:
-  struct AlignedDeleter { void operator()(std::byte* p) const noexcept; };
+  struct AlignedDeleter {
+    std::size_t alloc_size{0};
+    std::size_t alignment{0};
+    void operator()(std::byte* p) const noexcept;
+  };
 
   std::shared_ptr<std::byte> data_{nullptr};
   std::size_t nbytes_{0};

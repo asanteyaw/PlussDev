@@ -196,6 +196,12 @@ int main(int argc, char** argv) {
   auto idx = pluss::codem::from_torch(idx_t);
   auto src = pluss::codem::from_torch(src_t);
 
+  // Warm up indexing kernels and threadpool startup before timed runs.
+  c = x.gather(1, idx);
+  c = x.scatter(1, idx, src);
+  c_t = torch::gather(x_t, 1, idx_t);
+  c_t = x_t.scatter(1, idx_t, src_t);
+
   rows.push_back(Row{
       "gather",
       time_ms(iters_index, [&] {
@@ -227,6 +233,10 @@ int main(int argc, char** argv) {
   auto rhs_t = torch::rand({K, P}, torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCPU));
   auto lhs = pluss::codem::from_torch(lhs_t);
   auto rhs = pluss::codem::from_torch(rhs_t);
+
+  // Warm up matmul path before timing.
+  c = lhs.matmul(rhs);
+  c_t = torch::matmul(lhs_t, rhs_t);
 
   rows.push_back(Row{
       "matmul",

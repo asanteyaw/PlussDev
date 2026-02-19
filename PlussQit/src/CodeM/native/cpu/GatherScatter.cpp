@@ -6,6 +6,12 @@
 #include <cstring>
 #include <vector>
 #include <algorithm>
+#include <limits>
+#include <thread>
+#include <type_traits>
+#if defined(__APPLE__) && defined(PLUSS_HAS_ACCELERATE) && (PLUSS_HAS_ACCELERATE == 1)
+#include <Accelerate/Accelerate.h>
+#endif
 
 namespace pluss::codem::native::cpu {
 
@@ -22,23 +28,72 @@ static inline void for_each_row_(std::int64_t rows, const std::function<void(std
     fn(0, rows);
     return;
   }
-  const std::int64_t grain = std::max<std::int64_t>(8, rows / 16);
+  const unsigned hw = std::max(1u, std::thread::hardware_concurrency());
+  const std::int64_t target_blocks = std::max<std::int64_t>(16, static_cast<std::int64_t>(hw) * 4);
+  const std::int64_t grain = std::max<std::int64_t>(8, (rows + target_blocks - 1) / target_blocks);
   pluss::msharp::parallel_for(0, rows, grain, fn);
 }
 
 template <class T>
 static void gather_2d_fast_typed_(const T* in_p, std::int64_t in_rows, std::int64_t in_cols,
                                   const std::int64_t* ip, std::int64_t idx_rows, std::int64_t idx_cols,
-                                  std::int64_t dim, T* out_p) {
+                                  std::int64_t dim, bool all_nonnegative, T* out_p) {
   if (dim == 1) {
+#if defined(__APPLE__) && defined(PLUSS_HAS_ACCELERATE) && (PLUSS_HAS_ACCELERATE == 1)
+    // vDSP call overhead is significant for small-to-mid row widths.
+    // Keep this path for very wide rows where kernel launch cost is amortized.
+    if (all_nonnegative && idx_cols >= 16384) {
+      if constexpr (std::is_same_v<T, float> || std::is_same_v<T, double>) {
+        for_each_row_(idx_rows, [&](std::int64_t r0, std::int64_t r1) {
+          for (std::int64_t r = r0; r < r1; ++r) {
+            const std::int64_t row_base = r * idx_cols;
+            const std::int64_t in_row_base = r * in_cols;
+            const auto* gather_idx = reinterpret_cast<const vDSP_Length*>(ip + row_base);
+            if constexpr (std::is_same_v<T, float>) {
+              vDSP_vgathr(in_p + in_row_base + 1, gather_idx, 1, out_p + row_base, 1, static_cast<vDSP_Length>(idx_cols));
+            } else {
+              vDSP_vgathrD(in_p + in_row_base + 1, gather_idx, 1, out_p + row_base, 1, static_cast<vDSP_Length>(idx_cols));
+            }
+          }
+        });
+        return;
+      }
+    }
+#endif
     for_each_row_(idx_rows, [&](std::int64_t r0, std::int64_t r1) {
       for (std::int64_t r = r0; r < r1; ++r) {
-        const std::int64_t row_base = r * idx_cols;
-        const std::int64_t in_row_base = r * in_cols;
-        for (std::int64_t c = 0; c < idx_cols; ++c) {
-          std::int64_t k = ip[row_base + c];
-          if (k < 0) k += in_cols;
-          out_p[row_base + c] = in_p[in_row_base + k];
+        const auto* idx_row = ip + (r * idx_cols);
+        const auto* in_row = in_p + (r * in_cols);
+        auto* out_row = out_p + (r * idx_cols);
+        if (all_nonnegative) {
+          std::int64_t c = 0;
+          for (; c + 8 <= idx_cols; c += 8) {
+            const std::int64_t k0 = idx_row[c + 0];
+            const std::int64_t k1 = idx_row[c + 1];
+            const std::int64_t k2 = idx_row[c + 2];
+            const std::int64_t k3 = idx_row[c + 3];
+            const std::int64_t k4 = idx_row[c + 4];
+            const std::int64_t k5 = idx_row[c + 5];
+            const std::int64_t k6 = idx_row[c + 6];
+            const std::int64_t k7 = idx_row[c + 7];
+            out_row[c + 0] = in_row[k0];
+            out_row[c + 1] = in_row[k1];
+            out_row[c + 2] = in_row[k2];
+            out_row[c + 3] = in_row[k3];
+            out_row[c + 4] = in_row[k4];
+            out_row[c + 5] = in_row[k5];
+            out_row[c + 6] = in_row[k6];
+            out_row[c + 7] = in_row[k7];
+          }
+          for (; c < idx_cols; ++c) {
+            out_row[c] = in_row[idx_row[c]];
+          }
+        } else {
+          for (std::int64_t c = 0; c < idx_cols; ++c) {
+            std::int64_t k = idx_row[c];
+            if (k < 0) k += in_cols;
+            out_row[c] = in_row[k];
+          }
         }
       }
     });
@@ -48,10 +103,17 @@ static void gather_2d_fast_typed_(const T* in_p, std::int64_t in_rows, std::int6
   for_each_row_(idx_rows, [&](std::int64_t r0, std::int64_t r1) {
     for (std::int64_t r = r0; r < r1; ++r) {
       const std::int64_t row_base = r * idx_cols;
-      for (std::int64_t c = 0; c < idx_cols; ++c) {
-        std::int64_t k = ip[row_base + c];
-        if (k < 0) k += in_rows;
-        out_p[row_base + c] = in_p[k * in_cols + c];
+      if (all_nonnegative) {
+        for (std::int64_t c = 0; c < idx_cols; ++c) {
+          const std::int64_t k = ip[row_base + c];
+          out_p[row_base + c] = in_p[k * in_cols + c];
+        }
+      } else {
+        for (std::int64_t c = 0; c < idx_cols; ++c) {
+          std::int64_t k = ip[row_base + c];
+          if (k < 0) k += in_rows;
+          out_p[row_base + c] = in_p[k * in_cols + c];
+        }
       }
     }
   });
@@ -60,16 +122,42 @@ static void gather_2d_fast_typed_(const T* in_p, std::int64_t in_rows, std::int6
 template <class T>
 static void scatter_2d_fast_typed_(T* out_p, std::int64_t out_rows, std::int64_t out_cols,
                                    const std::int64_t* ip, const T* src_p,
-                                   std::int64_t idx_rows, std::int64_t idx_cols, std::int64_t dim) {
+                                   std::int64_t idx_rows, std::int64_t idx_cols, std::int64_t dim, bool all_nonnegative) {
   if (dim == 1) {
     for_each_row_(idx_rows, [&](std::int64_t r0, std::int64_t r1) {
       for (std::int64_t r = r0; r < r1; ++r) {
-        const std::int64_t row_base = r * idx_cols;
-        const std::int64_t out_row_base = r * out_cols;
-        for (std::int64_t c = 0; c < idx_cols; ++c) {
-          std::int64_t k = ip[row_base + c];
-          if (k < 0) k += out_cols;
-          out_p[out_row_base + k] = src_p[row_base + c];
+        const auto* idx_row = ip + (r * idx_cols);
+        const auto* src_row = src_p + (r * idx_cols);
+        auto* out_row = out_p + (r * out_cols);
+        if (all_nonnegative) {
+          std::int64_t c = 0;
+          for (; c + 8 <= idx_cols; c += 8) {
+            const std::int64_t k0 = idx_row[c + 0];
+            const std::int64_t k1 = idx_row[c + 1];
+            const std::int64_t k2 = idx_row[c + 2];
+            const std::int64_t k3 = idx_row[c + 3];
+            const std::int64_t k4 = idx_row[c + 4];
+            const std::int64_t k5 = idx_row[c + 5];
+            const std::int64_t k6 = idx_row[c + 6];
+            const std::int64_t k7 = idx_row[c + 7];
+            out_row[k0] = src_row[c + 0];
+            out_row[k1] = src_row[c + 1];
+            out_row[k2] = src_row[c + 2];
+            out_row[k3] = src_row[c + 3];
+            out_row[k4] = src_row[c + 4];
+            out_row[k5] = src_row[c + 5];
+            out_row[k6] = src_row[c + 6];
+            out_row[k7] = src_row[c + 7];
+          }
+          for (; c < idx_cols; ++c) {
+            out_row[idx_row[c]] = src_row[c];
+          }
+        } else {
+          for (std::int64_t c = 0; c < idx_cols; ++c) {
+            std::int64_t k = idx_row[c];
+            if (k < 0) k += out_cols;
+            out_row[k] = src_row[c];
+          }
         }
       }
     });
@@ -79,10 +167,17 @@ static void scatter_2d_fast_typed_(T* out_p, std::int64_t out_rows, std::int64_t
   // dim == 0: keep sequential order to preserve deterministic last-write behavior.
   for (std::int64_t r = 0; r < idx_rows; ++r) {
     const std::int64_t row_base = r * idx_cols;
-    for (std::int64_t c = 0; c < idx_cols; ++c) {
-      std::int64_t k = ip[row_base + c];
-      if (k < 0) k += out_rows;
-      out_p[k * out_cols + c] = src_p[row_base + c];
+    if (all_nonnegative) {
+      for (std::int64_t c = 0; c < idx_cols; ++c) {
+        const std::int64_t k = ip[row_base + c];
+        out_p[k * out_cols + c] = src_p[row_base + c];
+      }
+    } else {
+      for (std::int64_t c = 0; c < idx_cols; ++c) {
+        std::int64_t k = ip[row_base + c];
+        if (k < 0) k += out_rows;
+        out_p[k * out_cols + c] = src_p[row_base + c];
+      }
     }
   }
 }
@@ -100,19 +195,24 @@ static void gather_2d_fast_(const Series& input, std::int64_t dim, const Series&
 
   const std::int64_t total = idx_rows * idx_cols;
   const std::int64_t dim_bound = (dim == 1) ? in_cols : in_rows;
+  bool all_nonnegative = true;
+  std::int64_t min_k = std::numeric_limits<std::int64_t>::max();
+  std::int64_t max_k = std::numeric_limits<std::int64_t>::min();
   for (std::int64_t i = 0; i < total; ++i) {
-    std::int64_t k = ip[i];
-    if (k < 0) k += dim_bound;
-    PLUSS_CHECK(k >= 0 && k < dim_bound, "gather: index out of range");
+    const std::int64_t k = ip[i];
+    if (k < 0) all_nonnegative = false;
+    min_k = std::min(min_k, k);
+    max_k = std::max(max_k, k);
   }
+  PLUSS_CHECK(min_k >= -dim_bound && max_k < dim_bound, "gather: index out of range");
 
   switch (input.scalar_type()) {
     case ScalarType::Float32:
-      gather_2d_fast_typed_(reinterpret_cast<const float*>(in_b), in_rows, in_cols, ip, idx_rows, idx_cols, dim,
+      gather_2d_fast_typed_(reinterpret_cast<const float*>(in_b), in_rows, in_cols, ip, idx_rows, idx_cols, dim, all_nonnegative,
                             reinterpret_cast<float*>(out_b));
       return;
     case ScalarType::Float64:
-      gather_2d_fast_typed_(reinterpret_cast<const double*>(in_b), in_rows, in_cols, ip, idx_rows, idx_cols, dim,
+      gather_2d_fast_typed_(reinterpret_cast<const double*>(in_b), in_rows, in_cols, ip, idx_rows, idx_cols, dim, all_nonnegative,
                             reinterpret_cast<double*>(out_b));
       return;
     default: break;
@@ -162,20 +262,25 @@ static void scatter_2d_fast_(Series& out, std::int64_t dim, const Series& index,
 
   const std::int64_t total = idx_rows * idx_cols;
   const std::int64_t dim_bound = (dim == 1) ? out_cols : out_rows;
+  bool all_nonnegative = true;
+  std::int64_t min_k = std::numeric_limits<std::int64_t>::max();
+  std::int64_t max_k = std::numeric_limits<std::int64_t>::min();
   for (std::int64_t i = 0; i < total; ++i) {
-    std::int64_t k = ip[i];
-    if (k < 0) k += dim_bound;
-    PLUSS_CHECK(k >= 0 && k < dim_bound, "scatter: index out of range");
+    const std::int64_t k = ip[i];
+    if (k < 0) all_nonnegative = false;
+    min_k = std::min(min_k, k);
+    max_k = std::max(max_k, k);
   }
+  PLUSS_CHECK(min_k >= -dim_bound && max_k < dim_bound, "scatter: index out of range");
 
   switch (out.scalar_type()) {
     case ScalarType::Float32:
       scatter_2d_fast_typed_(reinterpret_cast<float*>(out_b), out_rows, out_cols, ip,
-                             reinterpret_cast<const float*>(sp), idx_rows, idx_cols, dim);
+                             reinterpret_cast<const float*>(sp), idx_rows, idx_cols, dim, all_nonnegative);
       return;
     case ScalarType::Float64:
       scatter_2d_fast_typed_(reinterpret_cast<double*>(out_b), out_rows, out_cols, ip,
-                             reinterpret_cast<const double*>(sp), idx_rows, idx_cols, dim);
+                             reinterpret_cast<const double*>(sp), idx_rows, idx_cols, dim, all_nonnegative);
       return;
     default: break;
   }

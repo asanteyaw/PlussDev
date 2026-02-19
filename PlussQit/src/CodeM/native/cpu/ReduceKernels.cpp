@@ -6,8 +6,11 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <thread>
+#include <type_traits>
 #include <vector>
+#if defined(__APPLE__) && defined(PLUSS_HAS_ACCELERATE) && (PLUSS_HAS_ACCELERATE == 1)
+#include <Accelerate/Accelerate.h>
+#endif
 
 namespace pluss::codem::native::cpu {
 
@@ -62,6 +65,53 @@ static double sum_real_fast_(const T* ap, std::int64_t n) {
   if (n <= 0) return 0.0;
 
   constexpr std::int64_t kParallelThreshold = (1LL << 20); // 1M elems
+#if defined(__APPLE__) && defined(PLUSS_HAS_ACCELERATE) && (PLUSS_HAS_ACCELERATE == 1)
+  if constexpr (std::is_same_v<T, float>) {
+    if (n < kParallelThreshold) {
+      float acc = 0.0f;
+      vDSP_sve(ap, 1, &acc, static_cast<vDSP_Length>(n));
+      return static_cast<double>(acc);
+    }
+    const std::int64_t grain = std::max<std::int64_t>(1LL << 18, n / 32);
+    const std::int64_t blocks = (n + grain - 1) / grain;
+    std::vector<double> partial(static_cast<std::size_t>(blocks), 0.0);
+    pluss::msharp::parallel_for(0, blocks, 1, [&](std::int64_t b0, std::int64_t b1) {
+      for (std::int64_t b = b0; b < b1; ++b) {
+        const std::int64_t start = b * grain;
+        const std::int64_t end = std::min<std::int64_t>(n, start + grain);
+        float acc = 0.0f;
+        vDSP_sve(ap + start, 1, &acc, static_cast<vDSP_Length>(end - start));
+        partial[static_cast<std::size_t>(b)] = static_cast<double>(acc);
+      }
+    });
+    double total = 0.0;
+    for (double v : partial) total += v;
+    return total;
+  }
+  if constexpr (std::is_same_v<T, double>) {
+    if (n < kParallelThreshold) {
+      double acc = 0.0;
+      vDSP_sveD(ap, 1, &acc, static_cast<vDSP_Length>(n));
+      return acc;
+    }
+    const std::int64_t grain = std::max<std::int64_t>(1LL << 18, n / 32);
+    const std::int64_t blocks = (n + grain - 1) / grain;
+    std::vector<double> partial(static_cast<std::size_t>(blocks), 0.0);
+    pluss::msharp::parallel_for(0, blocks, 1, [&](std::int64_t b0, std::int64_t b1) {
+      for (std::int64_t b = b0; b < b1; ++b) {
+        const std::int64_t start = b * grain;
+        const std::int64_t end = std::min<std::int64_t>(n, start + grain);
+        double acc = 0.0;
+        vDSP_sveD(ap + start, 1, &acc, static_cast<vDSP_Length>(end - start));
+        partial[static_cast<std::size_t>(b)] = acc;
+      }
+    });
+    double total = 0.0;
+    for (double v : partial) total += v;
+    return total;
+  }
+#endif
+
   if (n < kParallelThreshold) {
     double acc0 = 0.0, acc1 = 0.0, acc2 = 0.0, acc3 = 0.0;
     std::int64_t i = 0;
