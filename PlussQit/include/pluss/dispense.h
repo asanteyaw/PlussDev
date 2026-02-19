@@ -1,359 +1,191 @@
 #pragma once
 
-#include <cstdint>
-#include <exception>
-#include <optional>
+#include <any>
+#include <array>
+#include <sstream>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
-#include <variant>
 #include <vector>
 
-#include "CodeH/compat/Dispatch.h"
-#include "CodeM/compat/Invoke.h"
-#include "CodeM/core/Errors.h"
-#include "CodeN/compat/Dispatch.h"
-#include "pluss/queue.h"
+#include "toolchain/generic_look_up.h"
 
 namespace pluss {
 
-class DispenseValue {
-public:
-  using storage_type = std::variant<
-      ::pluss::Series,
-      ::pluss::Note,
-      ::pluss::codeh::Timeline,
-      ::pluss::codeh::Duration,
-      ::pluss::codeh::TimeIndex,
-      ::pluss::TokenBatch,
-      bool,
-      std::int64_t,
-      std::string,
-      std::vector<std::int64_t>,
-      std::vector<std::uint8_t>,
-      ::pluss::codeh::TimeIndex::ResampleBins,
-      ::pluss::codeh::TimeIndex::AlignUnion>;
+using Value = ::pluss::toolchain::Value;
+using Args = ::pluss::toolchain::Args;
+using Kwargs = ::pluss::toolchain::Kwargs;
 
-  DispenseValue(const ::pluss::Series& v) : v_(v) {}
-  DispenseValue(::pluss::Series&& v) : v_(std::move(v)) {}
-  DispenseValue(const ::pluss::Note& v) : v_(v) {}
-  DispenseValue(::pluss::Note&& v) : v_(std::move(v)) {}
-  DispenseValue(const ::pluss::codeh::Timeline& v) : v_(v) {}
-  DispenseValue(::pluss::codeh::Timeline&& v) : v_(std::move(v)) {}
-  DispenseValue(const ::pluss::codeh::Duration& v) : v_(v) {}
-  DispenseValue(::pluss::codeh::Duration&& v) : v_(std::move(v)) {}
-  DispenseValue(const ::pluss::codeh::TimeIndex& v) : v_(v) {}
-  DispenseValue(::pluss::codeh::TimeIndex&& v) : v_(std::move(v)) {}
-  DispenseValue(const ::pluss::TokenBatch& v) : v_(v) {}
-  DispenseValue(::pluss::TokenBatch&& v) : v_(std::move(v)) {}
-  DispenseValue(bool v) : v_(v) {}
-  DispenseValue(std::int64_t v) : v_(v) {}
-  DispenseValue(std::string v) : v_(std::move(v)) {}
-  DispenseValue(std::vector<std::int64_t> v) : v_(std::move(v)) {}
-  DispenseValue(std::vector<std::uint8_t> v) : v_(std::move(v)) {}
-  DispenseValue(const ::pluss::codeh::TimeIndex::ResampleBins& v) : v_(v) {}
-  DispenseValue(::pluss::codeh::TimeIndex::ResampleBins&& v) : v_(std::move(v)) {}
-  DispenseValue(const ::pluss::codeh::TimeIndex::AlignUnion& v) : v_(v) {}
-  DispenseValue(::pluss::codeh::TimeIndex::AlignUnion&& v) : v_(std::move(v)) {}
-
-  template <class T>
-  bool is() const noexcept {
-    return std::holds_alternative<T>(v_);
-  }
-
-  template <class T>
-  const T& as() const {
-    return std::get<T>(v_);
-  }
-
-  template <class T>
-  T& as() {
-    return std::get<T>(v_);
-  }
-
-private:
-  storage_type v_;
-};
+// -------------------------
+// Member-pointer invocation (NO registry)
+// -------------------------
 
 namespace detail {
 
 template <class T>
-inline constexpr bool always_false_v = false;
-
-template <class... A>
-inline ::pluss::codem::_compat::Args make_codem_args(A&&... a) {
-  ::pluss::codem::_compat::Args out;
-  out.reserve(sizeof...(A));
-  if constexpr (sizeof...(A) > 0) {
-    (out.emplace_back(::pluss::codem::_compat::Arg(std::forward<A>(a))), ...);
-  }
-  return out;
-}
-
-template <class... A>
-inline ::pluss::coden::_compat::CodenValues make_coden_args(A&&... a) {
-  auto to_coden_value = [](auto&& x) -> ::pluss::coden::_compat::CodenValue {
-    using X = std::decay_t<decltype(x)>;
-    if constexpr (std::is_same_v<X, const char*> || std::is_same_v<X, char*>) {
-      return ::pluss::coden::_compat::CodenValue(std::string_view(x ? x : ""));
+  inline ::pluss::toolchain::Value pack_one(T&& x) {
+    using U = std::remove_cvref_t<T>;
+    if constexpr (std::is_same_v<U, const char*> || std::is_same_v<U, char*>) {
+      return std::string(x);
+    } else if constexpr (std::is_array_v<U> && std::is_same_v<std::remove_extent_t<U>, char>) {
+      // string literal / char array
+      return std::string(x);
+    } else if constexpr (std::is_same_v<U, std::string_view>) {
+      return std::string(x);
     } else {
-      return ::pluss::coden::_compat::CodenValue(std::forward<decltype(x)>(x));
+      return ::pluss::toolchain::Value(std::forward<T>(x));
     }
-  };
-
-  ::pluss::coden::_compat::CodenValues out;
-  out.reserve(sizeof...(A));
-  if constexpr (sizeof...(A) > 0) {
-    (out.emplace_back(to_coden_value(std::forward<A>(a))), ...);
   }
+
+template <class... Ts>
+inline Args pack_args(Ts&&... xs) {
+  Args out;
+  out.reserve(sizeof...(Ts));
+  (out.emplace_back(detail::pack_one(std::forward<Ts>(xs))), ...);
   return out;
 }
 
-template <class... A>
-inline ::pluss::codeh::_compat::Args make_codeh_args(A&&... a) {
-  ::pluss::codeh::_compat::Args out;
-  out.xs.reserve(sizeof...(A));
-  if constexpr (sizeof...(A) > 0) {
-    (out.xs.emplace_back(::pluss::codeh::_compat::Arg(std::forward<A>(a))), ...);
+} // namespace detail
+
+struct args : public Args {
+  args() = default;
+
+  template <class... Ts>
+  explicit args(Ts&&... xs) {
+    this->reserve(sizeof...(Ts));
+    (this->emplace_back(detail::pack_one(std::forward<Ts>(xs))), ...);
   }
-  return out;
+};
+
+using kwargs = Kwargs;
+
+template <class... Ts>
+inline args pack_args(Ts&&... xs) {
+  return args(std::forward<Ts>(xs)...);
 }
 
-template <class... A>
-inline std::vector<::pluss::Queue::Arg> make_queue_args(A&&... a) {
-  std::vector<::pluss::Queue::Arg> out;
-  out.reserve(sizeof...(A));
-  if constexpr (sizeof...(A) > 0) {
-    (out.emplace_back(::pluss::Queue::Arg(std::forward<A>(a))), ...);
+namespace detail {
+
+template <class Obj, class Ret, class... P>
+inline std::any call_pmf_any(Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...), std::span<const Value> args) {
+  if (args.size() != sizeof...(P)) {
+    std::ostringstream oss;
+    oss << "dispense(pmf): expected " << sizeof...(P) << " positional args, got " << args.size();
+    throw std::runtime_error(oss.str());
   }
-  return out;
+
+  std::array<Value, sizeof...(P)> ordered{};
+  for (std::size_t i = 0; i < sizeof...(P); ++i) ordered[i] = args[i];
+
+  if constexpr (std::is_void_v<Ret>) {
+    [&]<std::size_t... I>(std::index_sequence<I...>) {
+      (obj.*pmf)(::pluss::toolchain::detail::any_to<P>(ordered[I])...);
+    }(std::make_index_sequence<sizeof...(P)>{});
+    return std::any{};
+  } else {
+    Ret r = [&]<std::size_t... I>(std::index_sequence<I...>) {
+      return (obj.*pmf)(::pluss::toolchain::detail::any_to<P>(ordered[I])...);
+    }(std::make_index_sequence<sizeof...(P)>{});
+    return std::any(std::move(r));
+  }
 }
 
-inline std::string_view normalize_timeline_method(std::string_view op) {
-  if (op == "to_timeindex") return "make_timeindex";
+template <class Obj, class Ret, class... P>
+inline std::any call_pmf_any(const Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...) const, std::span<const Value> args) {
+  if (args.size() != sizeof...(P)) {
+    std::ostringstream oss;
+    oss << "dispense(pmf): expected " << sizeof...(P) << " positional args, got " << args.size();
+    throw std::runtime_error(oss.str());
+  }
 
-  if (op == "year") return "dt_year";
-  if (op == "month") return "dt_month";
-  if (op == "day") return "dt_day";
-  if (op == "hour") return "dt_hour";
-  if (op == "minute") return "dt_minute";
-  if (op == "second") return "dt_second";
-  if (op == "quarter") return "dt_quarter";
-  if (op == "weekday" || op == "dayofweek" || op == "day_of_week") return "dt_weekday";
-  if (op == "dayofyear" || op == "day_of_year") return "dt_dayofyear";
-  if (op == "week" || op == "weekofyear" || op == "week_of_year") return "dt_week";
+  std::array<Value, sizeof...(P)> ordered{};
+  for (std::size_t i = 0; i < sizeof...(P); ++i) ordered[i] = args[i];
 
-  return op;
-}
-
-inline std::string_view normalize_timeindex_method(std::string_view op) {
-  if (op == "sort_values") return "sort";
-  if (op == "drop_duplicates") return "unique";
-  if (op == "freq") return "infer_freq";
-  return op;
-}
-
-template <class F>
-inline std::optional<DispenseValue> try_dispense(F&& fn, std::string& errors) {
-  try {
-    return DispenseValue(fn());
-  } catch (const std::exception& e) {
-    if (!errors.empty()) errors.append("\n---\n");
-    errors.append(e.what());
-    return std::nullopt;
+  if constexpr (std::is_void_v<Ret>) {
+    [&]<std::size_t... I>(std::index_sequence<I...>) {
+      (obj.*pmf)(::pluss::toolchain::detail::any_to<P>(ordered[I])...);
+    }(std::make_index_sequence<sizeof...(P)>{});
+    return std::any{};
+  } else {
+    Ret r = [&]<std::size_t... I>(std::index_sequence<I...>) {
+      return (obj.*pmf)(::pluss::toolchain::detail::any_to<P>(ordered[I])...);
+    }(std::make_index_sequence<sizeof...(P)>{});
+    return std::any(std::move(r));
   }
 }
 
 } // namespace detail
 
-template <class R, class Obj, class... A>
-R dispense(const Obj& obj, std::string_view method, A&&... args) {
-  using T = std::decay_t<Obj>;
+// Heterogeneous "list" form using Args (std::vector<std::any>)
 
-  if constexpr (std::is_same_v<T, ::pluss::Queue>) {
-    static_assert(std::is_same_v<R, ::pluss::Queue>,
-                  "dispense<Queue>(Queue, ...) requires R=pluss::Queue");
-    auto qargs = detail::make_queue_args(std::forward<A>(args)...);
-    return obj.invoke(method, std::span<const ::pluss::Queue::Arg>(qargs.data(), qargs.size()));
-  } else if constexpr (std::is_same_v<T, ::pluss::Series>) {
-    static_assert(std::is_same_v<R, ::pluss::Series>,
-                  "dispense<Series>(Series, ...) currently returns pluss::Series");
-    return ::pluss::codem::_compat::invoke_any(
-        method,
-        obj,
-        detail::make_codem_args(std::forward<A>(args)...));
-  } else if constexpr (std::is_same_v<T, ::pluss::Note>) {
-    const auto cargs = detail::make_coden_args(std::forward<A>(args)...);
-    if constexpr (std::is_same_v<R, ::pluss::Note>) {
-      return ::pluss::coden::_compat::call_note(method, obj, cargs);
-    } else if constexpr (std::is_same_v<R, std::vector<std::uint8_t>>) {
-      return ::pluss::coden::_compat::call_u8list_note(method, obj, cargs);
-    } else if constexpr (std::is_same_v<R, std::vector<std::int64_t>>) {
-      return ::pluss::coden::_compat::call_i64list_note(method, obj, cargs);
-    } else if constexpr (std::is_same_v<R, ::pluss::TokenBatch>) {
-      return ::pluss::coden::_compat::call_tokenbatch_note(method, obj, cargs);
-    } else {
-      static_assert(detail::always_false_v<R>,
-                    "dispense<R>(Note, ...): unsupported return type R");
-    }
-  } else if constexpr (std::is_same_v<T, ::pluss::codeh::Timeline>) {
-#if defined(CODEH_ENABLE_TIMELINE_SURFACE) || defined(CODEH_BUILD_MAIN_LIB)
-    const auto op = detail::normalize_timeline_method(method);
-    const auto hargs = detail::make_codeh_args(std::forward<A>(args)...);
-    if constexpr (std::is_same_v<R, ::pluss::codeh::Timeline>) {
-      return ::pluss::codeh::_compat::call_timeline(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, ::pluss::codeh::Duration>) {
-      return ::pluss::codeh::_compat::call_duration_from_timeline(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, ::pluss::Series>) {
-      return ::pluss::codeh::_compat::call_series_timeline(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, ::pluss::Note>) {
-      return ::pluss::codeh::_compat::call_note_timeline(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, std::string>) {
-      return ::pluss::codeh::_compat::call_string_timeline(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, bool>) {
-      return ::pluss::codeh::_compat::call_bool_timeline(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, std::vector<std::int64_t>>) {
-      return ::pluss::codeh::_compat::call_i64vec_timeline(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimeIndex>) {
-      return ::pluss::codeh::_compat::call_timeindex_from_timeline(op, obj, hargs);
-    } else {
-      static_assert(detail::always_false_v<R>,
-                    "dispense<R>(Timeline, ...): unsupported return type R");
-    }
-#else
-    (void)obj;
-    (void)method;
-    PLUSS_FAIL("dispense(Timeline): CodeH dispense is unavailable in this build. Link with PlussQit::CodeH.");
-#endif
-  } else if constexpr (std::is_same_v<T, ::pluss::codeh::TimeIndex>) {
-#if defined(CODEH_ENABLE_TIMELINE_SURFACE) || defined(CODEH_BUILD_MAIN_LIB)
-    const auto op = detail::normalize_timeindex_method(method);
-    const auto hargs = detail::make_codeh_args(std::forward<A>(args)...);
-    if constexpr (std::is_same_v<R, ::pluss::Series>) {
-      return ::pluss::codeh::_compat::call_series_timeindex(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, std::int64_t>) {
-      return ::pluss::codeh::_compat::call_i64_timeindex(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, bool>) {
-      return ::pluss::codeh::_compat::call_bool_timeindex(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, std::string>) {
-      return ::pluss::codeh::_compat::call_string_timeindex(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, ::pluss::Note>) {
-      return ::pluss::codeh::_compat::call_note_timeindex(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, ::pluss::codeh::Timeline>) {
-      return ::pluss::codeh::_compat::call_timeline_from_timeindex(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimeIndex>) {
-      return ::pluss::codeh::_compat::call_timeindex(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimeIndex::ResampleBins>) {
-      return ::pluss::codeh::_compat::call_resamplebins_timeindex(op, obj, hargs);
-    } else if constexpr (std::is_same_v<R, ::pluss::codeh::TimeIndex::AlignUnion>) {
-      return ::pluss::codeh::_compat::call_alignunion_timeindex(op, obj, hargs);
-    } else {
-      static_assert(detail::always_false_v<R>,
-                    "dispense<R>(TimeIndex, ...): unsupported return type R");
-    }
-#else
-    (void)obj;
-    (void)method;
-    PLUSS_FAIL("dispense(TimeIndex): CodeH dispense is unavailable in this build. Link with PlussQit::CodeH.");
-#endif
-  } else {
-    static_assert(detail::always_false_v<T>,
-                  "dispense<R>(obj, ...): unsupported object type");
-  }
+template <class Obj, class Ret, class... P>
+inline std::any dispense(Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...), const Args& args) {
+  return detail::call_pmf_any(obj, pmf, std::span<const Value>(args.data(), args.size()));
 }
 
-template <class Obj, class... A>
-DispenseValue dispense_any(const Obj& obj, std::string_view method, const A&... args) {
-  using T = std::decay_t<Obj>;
+template <class Obj, class Ret, class... P>
+inline std::any dispense(const Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...) const, const Args& args) {
+  return detail::call_pmf_any(obj, pmf, std::span<const Value>(args.data(), args.size()));
+}
 
-  if constexpr (std::is_same_v<T, ::pluss::Queue>) {
-    const auto q = dispense<::pluss::Queue>(obj, method, args...);
-    return q.visit([](const auto& v) -> DispenseValue {
-      return DispenseValue(v);
-    });
-  } else if constexpr (std::is_same_v<T, ::pluss::Series>) {
-    return DispenseValue(dispense<::pluss::Series>(obj, method, args...));
-  } else if constexpr (std::is_same_v<T, ::pluss::Note>) {
-    std::string errors;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::Note>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<std::vector<std::uint8_t>>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<std::vector<std::int64_t>>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::TokenBatch>(obj, method, args...);
-        }, errors)) return *out;
+template <class Obj, class Ret, class... P>
+inline std::any dispense(Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...), std::span<const Value> args) {
+  return detail::call_pmf_any(obj, pmf, args);
+}
 
-    PLUSS_FAIL(errors.empty() ? std::string("dispense_any(Note): unsupported method") : errors);
-  } else if constexpr (std::is_same_v<T, ::pluss::codeh::Timeline>) {
-    std::string errors;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::codeh::Timeline>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::codeh::Duration>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::Series>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::Note>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<std::string>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<bool>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<std::vector<std::int64_t>>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::codeh::TimeIndex>(obj, method, args...);
-        }, errors)) return *out;
+template <class Obj, class Ret, class... P>
+inline std::any dispense(const Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...) const, std::span<const Value> args) {
+  return detail::call_pmf_any(obj, pmf, args);
+}
 
-    PLUSS_FAIL(errors.empty() ? std::string("dispense_any(Timeline): unsupported method") : errors);
-  } else if constexpr (std::is_same_v<T, ::pluss::codeh::TimeIndex>) {
-    std::string errors;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::codeh::TimeIndex>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::codeh::Timeline>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::Series>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::Note>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<std::string>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<bool>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<std::int64_t>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::codeh::TimeIndex::ResampleBins>(obj, method, args...);
-        }, errors)) return *out;
-    if (auto out = detail::try_dispense([&]() {
-          return dispense<::pluss::codeh::TimeIndex::AlignUnion>(obj, method, args...);
-        }, errors)) return *out;
+// Fully type-safe tuple form (your accepted form)
 
-    PLUSS_FAIL(errors.empty() ? std::string("dispense_any(TimeIndex): unsupported method") : errors);
-  } else {
-    static_assert(detail::always_false_v<T>,
-                  "dispense_any(obj, ...): unsupported object type");
-  }
+template <class Obj, class Ret, class... P>
+inline decltype(auto) dispense(Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...), const std::tuple<P...>& t) {
+  return std::apply([&](const P&... xs) -> decltype(auto) { return (obj.*pmf)(xs...); }, t);
+}
+
+template <class Obj, class Ret, class... P>
+inline decltype(auto) dispense(const Obj& obj, Ret (std::decay_t<Obj>::*pmf)(P...) const, const std::tuple<P...>& t) {
+  return std::apply([&](const P&... xs) -> decltype(auto) { return (obj.*pmf)(xs...); }, t);
+}
+
+// -------------------------
+// OPTIONAL: string-based dispatch (requires registration)
+// -------------------------
+
+template <class T, class Ret, class... P>
+inline void register_method(std::string name,
+                            Ret (T::*pmf)(P...),
+                            std::initializer_list<std::string_view> param_names) {
+  ::pluss::toolchain::register_method<T, Ret, P...>(std::move(name), pmf, param_names);
+}
+
+template <class T, class Ret, class... P>
+inline void register_method(std::string name,
+                            Ret (T::*pmf)(P...) const,
+                            std::initializer_list<std::string_view> param_names) {
+  ::pluss::toolchain::register_method<T, Ret, P...>(std::move(name), pmf, param_names);
+}
+
+template <class Obj>
+inline std::any dispense(Obj& obj, std::string_view method, std::span<const Value> args) {
+  return ::pluss::toolchain::invoke(obj, method, args);
+}
+
+template <class Obj>
+inline std::any dispense(Obj& obj, std::string_view method, const Args& args) {
+  return ::pluss::toolchain::invoke(obj, method, std::span<const Value>(args.data(), args.size()));
+}
+
+template <class Obj>
+inline std::any dispense(Obj& obj, std::string_view method, const Kwargs& kwargs) {
+  return ::pluss::toolchain::invoke(obj, method, kwargs);
 }
 
 } // namespace pluss
