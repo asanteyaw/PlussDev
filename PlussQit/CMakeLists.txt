@@ -358,12 +358,13 @@ if (PLUSSQIT_BUILD_CODEH)
   endif()
 
   set(CODEH_GEN_DIR ${PLUSSQIT_GEN_DIR}/CodeH/generated)
-  set(CODEH_TIMELINE_METHODS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeH/generated/TimelineMethodsGen.h)
-  set(CODEH_DURATION_METHODS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeH/generated/DurationMethodsGen.h)
-  set(CODEH_TIMEINDEX_METHODS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeH/generated/TimeIndexMethodsGen.h)
   set(CODEH_TIMELINE_METHODS_GEN ${CODEH_GEN_DIR}/TimelineMethodsGen.h)
   set(CODEH_DURATION_METHODS_GEN ${CODEH_GEN_DIR}/DurationMethodsGen.h)
   set(CODEH_TIMEINDEX_METHODS_GEN ${CODEH_GEN_DIR}/TimeIndexMethodsGen.h)
+  set(CODEH_METHODS_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/gen_codeh_methods.py)
+  set(CODEH_TIMELINE_DT_FIELDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/codeh_timeline_dt_fields.tsv)
+  set(CODEH_TIMELINE_PREDICATES ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/codeh_timeline_predicates.tsv)
+  set(CODEH_TIMELINE_STRFTIME ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/codeh_timeline_strftime.tsv)
 
   add_custom_command(
     OUTPUT
@@ -371,13 +372,16 @@ if (PLUSSQIT_BUILD_CODEH)
       ${CODEH_DURATION_METHODS_GEN}
       ${CODEH_TIMEINDEX_METHODS_GEN}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CODEH_GEN_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CODEH_TIMELINE_METHODS_SRC} ${CODEH_TIMELINE_METHODS_GEN}
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CODEH_DURATION_METHODS_SRC} ${CODEH_DURATION_METHODS_GEN}
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CODEH_TIMEINDEX_METHODS_SRC} ${CODEH_TIMEINDEX_METHODS_GEN}
+    COMMAND ${Python3_EXECUTABLE} ${CODEH_METHODS_GEN_SCRIPT}
+            --timeline-dt-fields ${CODEH_TIMELINE_DT_FIELDS}
+            --timeline-predicates ${CODEH_TIMELINE_PREDICATES}
+            --timeline-strftime ${CODEH_TIMELINE_STRFTIME}
+            --out-dir ${CODEH_GEN_DIR}
     DEPENDS
-      ${CODEH_TIMELINE_METHODS_SRC}
-      ${CODEH_DURATION_METHODS_SRC}
-      ${CODEH_TIMEINDEX_METHODS_SRC}
+      ${CODEH_METHODS_GEN_SCRIPT}
+      ${CODEH_TIMELINE_DT_FIELDS}
+      ${CODEH_TIMELINE_PREDICATES}
+      ${CODEH_TIMELINE_STRFTIME}
     COMMENT "Generating CodeH method-surface headers"
   )
 
@@ -407,11 +411,33 @@ if (PLUSSQIT_BUILD_CODEH)
   )
 
   target_compile_features(plussqit_codeh PUBLIC cxx_std_20)
-  target_compile_definitions(plussqit_codeh PRIVATE CODEH_BUILD_MAIN_LIB)
+  target_compile_definitions(plussqit_codeh
+    PRIVATE CODEH_BUILD_MAIN_LIB
+    PUBLIC
+      CODEH_ENABLE_TIMELINE_SURFACE
+      CODEH_ENABLE_TIMEINDEX_SURFACE
+  )
   target_link_libraries(plussqit_codeh PUBLIC PlussQit::CodeM PlussQit::CodeN)
 
   if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
     target_compile_options(plussqit_codeh PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+
+  if (PLUSSQIT_BUILD_EXAMPLES)
+    add_executable(plussqit_codeh_timeline_printing_2d_3d_demo
+      examples/CodeH/timeline_printing_2d_3d_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_printing_2d_3d_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_dataframe_timeindex_methods_demo
+      examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_dataframe_timeindex_methods_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_timeline_non_generated_and_factory_methods_demo
+      examples/CodeH/timeline_non_generated_and_factory_methods_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_timeline_non_generated_and_factory_methods_demo PRIVATE PlussQit::CodeH)
   endif()
 endif()
 
@@ -428,6 +454,13 @@ if (PLUSSQIT_BUILD_TESTS)
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/CodeN/*.cpp"
   )
   list(FILTER CODEN_TEST_SOURCES EXCLUDE REGEX ".*/test_coden_nocatch_smoke\\.cpp$")
+
+  if (PLUSSQIT_BUILD_CODEH)
+    file(GLOB CODEH_TEST_SOURCES CONFIGURE_DEPENDS
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/CodeH/*.cpp"
+    )
+    list(FILTER CODEH_TEST_SOURCES EXCLUDE REGEX ".*/test_codeh_nocatch_smoke\\.cpp$")
+  endif()
 
   find_package(Catch2 3 QUIET)
   if (NOT Catch2_FOUND AND PLUSSQIT_FETCH_DEPS)
@@ -458,6 +491,15 @@ if (PLUSSQIT_BUILD_TESTS)
     endif()
     target_compile_features(plussqit_coden_nocatch_tests PRIVATE cxx_std_20)
     add_test(NAME coden_nocatch_smoke COMMAND plussqit_coden_nocatch_tests)
+
+    if (PLUSSQIT_BUILD_CODEH)
+      add_executable(plussqit_codeh_nocatch_tests
+        tests/CodeH/test_codeh_nocatch_smoke.cpp
+      )
+      target_link_libraries(plussqit_codeh_nocatch_tests PRIVATE PlussQit::CodeH)
+      target_compile_features(plussqit_codeh_nocatch_tests PRIVATE cxx_std_20)
+      add_test(NAME codeh_nocatch_smoke COMMAND plussqit_codeh_nocatch_tests)
+    endif()
   else()
     add_executable(plussqit_tests ${CODEM_TEST_SOURCES})
     target_link_libraries(plussqit_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
@@ -468,10 +510,19 @@ if (PLUSSQIT_BUILD_TESTS)
     target_link_libraries(plussqit_coden_tests PRIVATE PlussQit::CodeN Catch2::Catch2WithMain)
     target_compile_features(plussqit_coden_tests PRIVATE cxx_std_20)
 
+    if (PLUSSQIT_BUILD_CODEH AND CODEH_TEST_SOURCES)
+      add_executable(plussqit_codeh_tests ${CODEH_TEST_SOURCES})
+      target_link_libraries(plussqit_codeh_tests PRIVATE PlussQit::CodeH Catch2::Catch2WithMain)
+      target_compile_features(plussqit_codeh_tests PRIVATE cxx_std_20)
+    endif()
+
     include(CTest)
     include(Catch)
     catch_discover_tests(plussqit_tests)
     catch_discover_tests(plussqit_coden_tests)
+    if (PLUSSQIT_BUILD_CODEH AND TARGET plussqit_codeh_tests)
+      catch_discover_tests(plussqit_codeh_tests)
+    endif()
   endif()
 endif()
 

@@ -100,6 +100,7 @@ Timeline call_timeline(std::string_view op, const Timeline& self, const Args& ar
   if (op == "normalize") return deets::impl_dt_round(self, "floor", "D");
   if (op == "date") return deets::impl_dt_round(self, "floor", "D");
   if (op == "time") return deets::impl_time_of_day(self);
+  if (op == "time_of_day") return deets::impl_time_of_day(self);
 
   if (op == "min") return deets::impl_min(self);
   if (op == "max") return deets::impl_max(self);
@@ -220,7 +221,7 @@ std::vector<std::int64_t> call_i64vec_timeline(std::string_view op, const Timeli
 }
 
 TimeIndex call_timeindex_from_timeline(std::string_view op, const Timeline& self, const Args& args) {
-  if (op == "make_timeindex") {
+  if (op == "make_timeindex" || op == "from_timeline") {
     const bool require_sorted = arg_bool(args, 0);
     return ::pluss::codeh::_compat::detail::Access::from_timeline(self, require_sorted);
   }

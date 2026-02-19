@@ -8,6 +8,7 @@
 #include "CodeH/core/Timeline.h"
 #include "CodeH/core/Duration.h"
 #include "CodeH/core/TimeIndex.h"
+#include "CodeH/core/Printing.h"
 #include "CodeH/compat/Invoke.h"
 
 namespace pluss::codeh::ops_internal {
@@ -27,3 +28,10 @@ namespace pluss::codeh::ops_internal {
                                std::span<const std::int64_t> sizes);
 
 } // namespace pluss::codeh::ops_internal
+
+namespace pluss {
+
+using codeh::TimelinePrintOptions;
+using codeh::print_timeline;
+
+} // namespace pluss

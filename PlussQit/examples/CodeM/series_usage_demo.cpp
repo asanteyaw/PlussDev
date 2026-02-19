@@ -10,6 +10,7 @@
 
 int main() {
   pluss::Series a = pluss::value({1.0, 2.0, 3.0});
+#ifdef PLUSS_ENABLE_TORCH
   torch::Tensor A = torch::tensor({
         {1.0, 2.0, 3.0},
         {4.0, 5.0, 6.0}
@@ -26,6 +27,7 @@ int main() {
         }
     });
   let b2 = pluss::from_torch(B);
+#endif
   std::vector<std::int64_t> raw{10, 20, 30, 40};
   pluss::Series b = pluss::make_series(raw, {2, 2});
 
@@ -50,7 +52,13 @@ int main() {
   let rand_vals = pluss::randn({3, 4});
   std::cout << "randn(3,4) default:\n" << rand_vals << "\n";
   std::cout << "to vec:\n";
-  std::cout << "all:\n" << rand_vals.to_vec<double>() << "\n";
+  const auto all_vals = rand_vals.to_vec<double>();
+  std::cout << "all: [";
+  for (std::size_t i = 0; i < all_vals.size(); ++i) {
+    if (i != 0) std::cout << ", ";
+    std::cout << all_vals[i];
+  }
+  std::cout << "]\n";
   std::cout << "first via to_vec(index)=" << rand_vals.to_vec<double>(0) << "\n";
   auto h = rand_vals.to_host<double>();
   std::cout << "host shape=(" << h.shape()[0] << "," << h.shape()[1] << ") numel=" << h.numel() << "\n";
@@ -62,10 +70,12 @@ int main() {
   }
   std::cout << "bool host true_count=" << true_count << "\n";
 
+#ifdef PLUSS_ENABLE_TORCH
   std::cout << "looking at the from_torch conversion\n" << a2 << "\n";
   std::cout << "looking at the from_torch conversion\n" << b2 << "\n";
   std::cout << "looking at the from_torch conversion\n" << pluss::print_series(a2) << "\n";
   std::cout << "looking at the from_torch conversion\n" << pluss::print_series(b2) << "\n";
+#endif
 
   std::cout << "randn(3,4) pretty default:\n" << pluss::print_series(rand_vals) << "\n";
 
@@ -76,8 +86,10 @@ int main() {
   std::cout << "randn(8,6) default with row/col summary:\n" << big_mat << "\n";
   std::cout << "randn(8,6) pretty summarized:\n" << pluss::print_series(big_mat) << "\n";
 
+#ifdef PLUSS_ENABLE_TORCH
   let torch_b = pluss::to_torch(rand_3d);
   std::cout << "looking at the to_torch conversion\n" << torch_b << "\n";
+#endif
 
   let type_prom_2d = pluss::value ({
     {1, 2.5, 3},

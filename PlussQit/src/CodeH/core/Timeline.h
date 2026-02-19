@@ -8,9 +8,9 @@
 #include <string_view>
 #include <vector>
 
-#include "CodeH/core/Errors.h"
 #include "CodeH/core/Duration.h"
-#include "CodeM/core/Series.h"
+#include "CodeH/core/TimelineBase.h"
+#include "CodeH/compat/InvokeFwd.h"
 
 #include "pluss/coden/coden.h" // for Note
 
@@ -66,23 +66,18 @@ pluss::coden::Note impl_month_name(const Timeline& a);
 
 // Timeline: N-D (0D..3D) array of instants.
 // Canonical storage: epoch nanoseconds in UTC (int64).
-class CODEH_API Timeline {
+class CODEH_API Timeline : public TimelineBase {
 public:
   static constexpr std::int64_t kNaT = Duration::kNaT;
 
   Timeline() = delete; // construction via factories only
 
+  using TimelineBase::weekday_name;
+  using TimelineBase::month_name;
+
 #if defined(CODEH_ENABLE_TIMELINE_SURFACE) && !defined(CODEH_NO_TIMELINE_SURFACE)
   #include "CodeH/core/TimelineSurface.h"
 #endif
-
-  bool defined() const noexcept { return ticks_.defined(); }
-  std::span<const std::int64_t> sizes() const { return ticks_.sizes(); }
-  std::int64_t dim() const { return ticks_.dim(); }
-  std::int64_t numel() const { return ticks_.numel(); }
-
-  // Time zone metadata (pandas-like): ticks_ always represent UTC instants.
-  std::string_view tz() const noexcept { return tz_name_; }
 
 private:
   friend class TimeIndex;
@@ -125,10 +120,7 @@ private:
   friend pluss::coden::Note detail::impl_month_name(const Timeline&);
 
   explicit Timeline(pluss::codem::Series ticks, std::string tz_name = "UTC")
-      : ticks_(std::move(ticks)), tz_name_(std::move(tz_name)) {}
-
-  pluss::codem::Series ticks_;
-  std::string tz_name_{"UTC"};
+      : TimelineBase(std::move(ticks), std::move(tz_name)) {}
 };
 
 } // namespace pluss::codeh

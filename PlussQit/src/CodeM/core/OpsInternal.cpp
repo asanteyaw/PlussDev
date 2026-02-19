@@ -1190,7 +1190,9 @@ Series Series::undefined() {
 Series Series::empty(std::span<const std::int64_t> sizes, ScalarType st) {
   const auto dt = dtype_of(st);
   const auto n = compute_numel(sizes);
-  Storage storage(static_cast<std::size_t>(n) * dt.itemsize);
+  const auto bytes = std::max<std::size_t>(
+      1, static_cast<std::size_t>(n) * dt.itemsize);
+  Storage storage(bytes);
   auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       std::move(storage), 0,
       std::vector<std::int64_t>(sizes.begin(), sizes.end()),

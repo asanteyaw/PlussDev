@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "CodeH/core/Errors.h"
+#include "CodeH/compat/InvokeFwd.h"
 #include "CodeM/core/Series.h"
 #include "CodeM/core/SeriesIterator.h"
 

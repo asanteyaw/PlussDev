@@ -1,0 +1,194 @@
+to_note_iso	%Y-%m-%dT%H:%M:%S.%f%z
+to_note_date	%Y-%m-%d
+to_note_date_compact	%Y%m%d
+to_note_time	%H:%M:%S
+to_note_time_hm	%H:%M
+to_note_datetime	%Y-%m-%d %H:%M:%S
+to_note_rfc3339	%Y-%m-%dT%H:%M:%S%z
+to_note_rfc3339_nano	%Y-%m-%dT%H:%M:%S.%f%z
+to_note_ym	%Y-%m
+to_note_my	%m/%Y
+to_note_md	%m-%d
+to_note_dmy	%d-%m-%Y
+to_note_Ymd_hm_sp_dash	%Y-%m-%d %H:%M
+to_note_Ymd_hm_t_dash	%Y-%m-%dT%H:%M
+to_note_Ymd_hms_sp_dash	%Y-%m-%d %H:%M:%S
+to_note_Ymd_hms_t_dash	%Y-%m-%dT%H:%M:%S
+to_note_dmY_hm_sp_dash	%d-%m-%Y %H:%M
+to_note_dmY_hm_t_dash	%d-%m-%YT%H:%M
+to_note_dmY_hms_sp_dash	%d-%m-%Y %H:%M:%S
+to_note_dmY_hms_t_dash	%d-%m-%YT%H:%M:%S
+to_note_mdY_hm_sp_dash	%m-%d-%Y %H:%M
+to_note_mdY_hm_t_dash	%m-%d-%YT%H:%M
+to_note_mdY_hms_sp_dash	%m-%d-%Y %H:%M:%S
+to_note_mdY_hms_t_dash	%m-%d-%YT%H:%M:%S
+to_note_Ymd_hm_sp_slash	%Y/%m/%d %H:%M
+to_note_Ymd_hm_t_slash	%Y/%m/%dT%H:%M
+to_note_Ymd_hms_sp_slash	%Y/%m/%d %H:%M:%S
+to_note_Ymd_hms_t_slash	%Y/%m/%dT%H:%M:%S
+to_note_dmY_hm_sp_slash	%d/%m/%Y %H:%M
+to_note_dmY_hm_t_slash	%d/%m/%YT%H:%M
+to_note_dmY_hms_sp_slash	%d/%m/%Y %H:%M:%S
+to_note_dmY_hms_t_slash	%d/%m/%YT%H:%M:%S
+to_note_mdY_hm_sp_slash	%m/%d/%Y %H:%M
+to_note_mdY_hm_t_slash	%m/%d/%YT%H:%M
+to_note_mdY_hms_sp_slash	%m/%d/%Y %H:%M:%S
+to_note_mdY_hms_t_slash	%m/%d/%YT%H:%M:%S
+to_note_Ymd_hm_sp_dot	%Y.%m.%d %H:%M
+to_note_Ymd_hm_t_dot	%Y.%m.%dT%H:%M
+to_note_Ymd_hms_sp_dot	%Y.%m.%d %H:%M:%S
+to_note_Ymd_hms_t_dot	%Y.%m.%dT%H:%M:%S
+to_note_dmY_hm_sp_dot	%d.%m.%Y %H:%M
+to_note_dmY_hm_t_dot	%d.%m.%YT%H:%M
+to_note_dmY_hms_sp_dot	%d.%m.%Y %H:%M:%S
+to_note_dmY_hms_t_dot	%d.%m.%YT%H:%M:%S
+to_note_mdY_hm_sp_dot	%m.%d.%Y %H:%M
+to_note_mdY_hm_t_dot	%m.%d.%YT%H:%M
+to_note_mdY_hms_sp_dot	%m.%d.%Y %H:%M:%S
+to_note_mdY_hms_t_dot	%m.%d.%YT%H:%M:%S
+to_note_date_z	%Y-%m-%d%z
+to_note_date_nano	%Y-%m-%d.%f
+to_note_date_nano_z	%Y-%m-%d.%f%z
+to_note_date_compact_z	%Y%m%d%z
+to_note_date_compact_nano	%Y%m%d.%f
+to_note_date_compact_nano_z	%Y%m%d.%f%z
+to_note_time_z	%H:%M:%S%z
+to_note_time_nano	%H:%M:%S.%f
+to_note_time_nano_z	%H:%M:%S.%f%z
+to_note_time_hm_z	%H:%M%z
+to_note_time_hm_nano	%H:%M.%f
+to_note_time_hm_nano_z	%H:%M.%f%z
+to_note_datetime_z	%Y-%m-%d %H:%M:%S%z
+to_note_datetime_nano	%Y-%m-%d %H:%M:%S.%f
+to_note_datetime_nano_z	%Y-%m-%d %H:%M:%S.%f%z
+to_note_rfc3339_z	%Y-%m-%dT%H:%M:%S%z%z
+to_note_rfc3339_nano_z	%Y-%m-%dT%H:%M:%S%z.%f%z
+to_note_rfc3339_nano_nano	%Y-%m-%dT%H:%M:%S.%f%z.%f
+to_note_rfc3339_nano_nano_z	%Y-%m-%dT%H:%M:%S.%f%z.%f%z
+to_note_ym_z	%Y-%m%z
+to_note_ym_nano	%Y-%m.%f
+to_note_ym_nano_z	%Y-%m.%f%z
+to_note_my_z	%m/%Y%z
+to_note_my_nano	%m/%Y.%f
+to_note_my_nano_z	%m/%Y.%f%z
+to_note_md_z	%m-%d%z
+to_note_md_nano	%m-%d.%f
+to_note_md_nano_z	%m-%d.%f%z
+to_note_dmy_z	%d-%m-%Y%z
+to_note_dmy_nano	%d-%m-%Y.%f
+to_note_dmy_nano_z	%d-%m-%Y.%f%z
+to_note_Ymd_hm_sp_dash_z	%Y-%m-%d %H:%M%z
+to_note_Ymd_hm_sp_dash_nano	%Y-%m-%d %H:%M.%f
+to_note_Ymd_hm_sp_dash_nano_z	%Y-%m-%d %H:%M.%f%z
+to_note_Ymd_hm_t_dash_z	%Y-%m-%dT%H:%M%z
+to_note_Ymd_hm_t_dash_nano	%Y-%m-%dT%H:%M.%f
+to_note_Ymd_hm_t_dash_nano_z	%Y-%m-%dT%H:%M.%f%z
+to_note_Ymd_hms_sp_dash_z	%Y-%m-%d %H:%M:%S%z
+to_note_Ymd_hms_sp_dash_nano	%Y-%m-%d %H:%M:%S.%f
+to_note_Ymd_hms_sp_dash_nano_z	%Y-%m-%d %H:%M:%S.%f%z
+to_note_Ymd_hms_t_dash_z	%Y-%m-%dT%H:%M:%S%z
+to_note_Ymd_hms_t_dash_nano	%Y-%m-%dT%H:%M:%S.%f
+to_note_Ymd_hms_t_dash_nano_z	%Y-%m-%dT%H:%M:%S.%f%z
+to_note_dmY_hm_sp_dash_z	%d-%m-%Y %H:%M%z
+to_note_dmY_hm_sp_dash_nano	%d-%m-%Y %H:%M.%f
+to_note_dmY_hm_sp_dash_nano_z	%d-%m-%Y %H:%M.%f%z
+to_note_dmY_hm_t_dash_z	%d-%m-%YT%H:%M%z
+to_note_dmY_hm_t_dash_nano	%d-%m-%YT%H:%M.%f
+to_note_dmY_hm_t_dash_nano_z	%d-%m-%YT%H:%M.%f%z
+to_note_dmY_hms_sp_dash_z	%d-%m-%Y %H:%M:%S%z
+to_note_dmY_hms_sp_dash_nano	%d-%m-%Y %H:%M:%S.%f
+to_note_dmY_hms_sp_dash_nano_z	%d-%m-%Y %H:%M:%S.%f%z
+to_note_dmY_hms_t_dash_z	%d-%m-%YT%H:%M:%S%z
+to_note_dmY_hms_t_dash_nano	%d-%m-%YT%H:%M:%S.%f
+to_note_dmY_hms_t_dash_nano_z	%d-%m-%YT%H:%M:%S.%f%z
+to_note_mdY_hm_sp_dash_z	%m-%d-%Y %H:%M%z
+to_note_mdY_hm_sp_dash_nano	%m-%d-%Y %H:%M.%f
+to_note_mdY_hm_sp_dash_nano_z	%m-%d-%Y %H:%M.%f%z
+to_note_mdY_hm_t_dash_z	%m-%d-%YT%H:%M%z
+to_note_mdY_hm_t_dash_nano	%m-%d-%YT%H:%M.%f
+to_note_mdY_hm_t_dash_nano_z	%m-%d-%YT%H:%M.%f%z
+to_note_mdY_hms_sp_dash_z	%m-%d-%Y %H:%M:%S%z
+to_note_mdY_hms_sp_dash_nano	%m-%d-%Y %H:%M:%S.%f
+to_note_mdY_hms_sp_dash_nano_z	%m-%d-%Y %H:%M:%S.%f%z
+to_note_mdY_hms_t_dash_z	%m-%d-%YT%H:%M:%S%z
+to_note_mdY_hms_t_dash_nano	%m-%d-%YT%H:%M:%S.%f
+to_note_mdY_hms_t_dash_nano_z	%m-%d-%YT%H:%M:%S.%f%z
+to_note_Ymd_hm_sp_slash_z	%Y/%m/%d %H:%M%z
+to_note_Ymd_hm_sp_slash_nano	%Y/%m/%d %H:%M.%f
+to_note_Ymd_hm_sp_slash_nano_z	%Y/%m/%d %H:%M.%f%z
+to_note_Ymd_hm_t_slash_z	%Y/%m/%dT%H:%M%z
+to_note_Ymd_hm_t_slash_nano	%Y/%m/%dT%H:%M.%f
+to_note_Ymd_hm_t_slash_nano_z	%Y/%m/%dT%H:%M.%f%z
+to_note_Ymd_hms_sp_slash_z	%Y/%m/%d %H:%M:%S%z
+to_note_Ymd_hms_sp_slash_nano	%Y/%m/%d %H:%M:%S.%f
+to_note_Ymd_hms_sp_slash_nano_z	%Y/%m/%d %H:%M:%S.%f%z
+to_note_Ymd_hms_t_slash_z	%Y/%m/%dT%H:%M:%S%z
+to_note_Ymd_hms_t_slash_nano	%Y/%m/%dT%H:%M:%S.%f
+to_note_Ymd_hms_t_slash_nano_z	%Y/%m/%dT%H:%M:%S.%f%z
+to_note_dmY_hm_sp_slash_z	%d/%m/%Y %H:%M%z
+to_note_dmY_hm_sp_slash_nano	%d/%m/%Y %H:%M.%f
+to_note_dmY_hm_sp_slash_nano_z	%d/%m/%Y %H:%M.%f%z
+to_note_dmY_hm_t_slash_z	%d/%m/%YT%H:%M%z
+to_note_dmY_hm_t_slash_nano	%d/%m/%YT%H:%M.%f
+to_note_dmY_hm_t_slash_nano_z	%d/%m/%YT%H:%M.%f%z
+to_note_dmY_hms_sp_slash_z	%d/%m/%Y %H:%M:%S%z
+to_note_dmY_hms_sp_slash_nano	%d/%m/%Y %H:%M:%S.%f
+to_note_dmY_hms_sp_slash_nano_z	%d/%m/%Y %H:%M:%S.%f%z
+to_note_dmY_hms_t_slash_z	%d/%m/%YT%H:%M:%S%z
+to_note_dmY_hms_t_slash_nano	%d/%m/%YT%H:%M:%S.%f
+to_note_dmY_hms_t_slash_nano_z	%d/%m/%YT%H:%M:%S.%f%z
+to_note_mdY_hm_sp_slash_z	%m/%d/%Y %H:%M%z
+to_note_mdY_hm_sp_slash_nano	%m/%d/%Y %H:%M.%f
+to_note_mdY_hm_sp_slash_nano_z	%m/%d/%Y %H:%M.%f%z
+to_note_mdY_hm_t_slash_z	%m/%d/%YT%H:%M%z
+to_note_mdY_hm_t_slash_nano	%m/%d/%YT%H:%M.%f
+to_note_mdY_hm_t_slash_nano_z	%m/%d/%YT%H:%M.%f%z
+to_note_mdY_hms_sp_slash_z	%m/%d/%Y %H:%M:%S%z
+to_note_mdY_hms_sp_slash_nano	%m/%d/%Y %H:%M:%S.%f
+to_note_mdY_hms_sp_slash_nano_z	%m/%d/%Y %H:%M:%S.%f%z
+to_note_mdY_hms_t_slash_z	%m/%d/%YT%H:%M:%S%z
+to_note_mdY_hms_t_slash_nano	%m/%d/%YT%H:%M:%S.%f
+to_note_mdY_hms_t_slash_nano_z	%m/%d/%YT%H:%M:%S.%f%z
+to_note_Ymd_hm_sp_dot_z	%Y.%m.%d %H:%M%z
+to_note_Ymd_hm_sp_dot_nano	%Y.%m.%d %H:%M.%f
+to_note_Ymd_hm_sp_dot_nano_z	%Y.%m.%d %H:%M.%f%z
+to_note_Ymd_hm_t_dot_z	%Y.%m.%dT%H:%M%z
+to_note_Ymd_hm_t_dot_nano	%Y.%m.%dT%H:%M.%f
+to_note_Ymd_hm_t_dot_nano_z	%Y.%m.%dT%H:%M.%f%z
+to_note_Ymd_hms_sp_dot_z	%Y.%m.%d %H:%M:%S%z
+to_note_Ymd_hms_sp_dot_nano	%Y.%m.%d %H:%M:%S.%f
+to_note_Ymd_hms_sp_dot_nano_z	%Y.%m.%d %H:%M:%S.%f%z
+to_note_Ymd_hms_t_dot_z	%Y.%m.%dT%H:%M:%S%z
+to_note_Ymd_hms_t_dot_nano	%Y.%m.%dT%H:%M:%S.%f
+to_note_Ymd_hms_t_dot_nano_z	%Y.%m.%dT%H:%M:%S.%f%z
+to_note_dmY_hm_sp_dot_z	%d.%m.%Y %H:%M%z
+to_note_dmY_hm_sp_dot_nano	%d.%m.%Y %H:%M.%f
+to_note_dmY_hm_sp_dot_nano_z	%d.%m.%Y %H:%M.%f%z
+to_note_dmY_hm_t_dot_z	%d.%m.%YT%H:%M%z
+to_note_dmY_hm_t_dot_nano	%d.%m.%YT%H:%M.%f
+to_note_dmY_hm_t_dot_nano_z	%d.%m.%YT%H:%M.%f%z
+to_note_dmY_hms_sp_dot_z	%d.%m.%Y %H:%M:%S%z
+to_note_dmY_hms_sp_dot_nano	%d.%m.%Y %H:%M:%S.%f
+to_note_dmY_hms_sp_dot_nano_z	%d.%m.%Y %H:%M:%S.%f%z
+to_note_dmY_hms_t_dot_z	%d.%m.%YT%H:%M:%S%z
+to_note_dmY_hms_t_dot_nano	%d.%m.%YT%H:%M:%S.%f
+to_note_dmY_hms_t_dot_nano_z	%d.%m.%YT%H:%M:%S.%f%z
+to_note_mdY_hm_sp_dot_z	%m.%d.%Y %H:%M%z
+to_note_mdY_hm_sp_dot_nano	%m.%d.%Y %H:%M.%f
+to_note_mdY_hm_sp_dot_nano_z	%m.%d.%Y %H:%M.%f%z
+to_note_mdY_hm_t_dot_z	%m.%d.%YT%H:%M%z
+to_note_mdY_hm_t_dot_nano	%m.%d.%YT%H:%M.%f
+to_note_mdY_hm_t_dot_nano_z	%m.%d.%YT%H:%M.%f%z
+to_note_mdY_hms_sp_dot_z	%m.%d.%Y %H:%M:%S%z
+to_note_mdY_hms_sp_dot_nano	%m.%d.%Y %H:%M:%S.%f
+to_note_mdY_hms_sp_dot_nano_z	%m.%d.%Y %H:%M:%S.%f%z
+to_note_mdY_hms_t_dot_z	%m.%d.%YT%H:%M:%S%z
+to_note_mdY_hms_t_dot_nano	%m.%d.%YT%H:%M:%S.%f
+to_note_mdY_hms_t_dot_nano_z	%m.%d.%YT%H:%M:%S.%f%z
+to_note_weekday	%Y-%m-%d (%a)
+to_note_weekday_long	%Y-%m-%d (%A)
+to_note_month_name	%Y-%b-%d
+to_note_month_name_long	%Y-%B-%d
+to_note_month_year_name	%B %Y
+to_note_iso_week	%G-W%V-%u
+to_note_iso_week_compact	%G%V%u

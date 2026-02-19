@@ -124,8 +124,7 @@ std::int64_t MonthEnd::apply_utc(std::int64_t utc_epoch_nanos, const char* tz_na
 namespace detail {
 
 static void check_timeline_core_(const Timeline& t) {
-  CODEM_CHECK(t.defined(), "Timeline: underlying Series is undefined");
-  CODEM_CHECK(t.dim() >= 0 && t.dim() <= 3, "Timeline: only supports 0D..3D");
+  TimelineBase::validate_ticks_series(t.unsafe_ticks());
 }
 
 static std::unique_ptr<CalendarOffset> negate_offset_(const CalendarOffset& off) {
@@ -147,13 +146,13 @@ static std::unique_ptr<CalendarOffset> negate_offset_(const CalendarOffset& off)
 Timeline impl_add_offset(const Timeline& a, const CalendarOffset& off) {
   check_timeline_core_(a);
   auto out = pluss::codem::Series::empty(a.sizes(), pluss::codem::ScalarType::Int64);
-  const auto* in = reinterpret_cast<const std::int64_t*>(a.ticks_.raw_data());
+  const auto* in = reinterpret_cast<const std::int64_t*>(a.unsafe_ticks().raw_data());
   auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
-  const char* tz_name = a.tz_name_.c_str();
+  const char* tz_name = a.unsafe_tz_name().c_str();
   for (std::int64_t i = 0; i < a.numel(); ++i) {
     o[i] = (in[i] == Timeline::kNaT) ? Timeline::kNaT : off.apply_utc(in[i], tz_name);
   }
-  return Timeline(std::move(out), a.tz_name_);
+  return Timeline(std::move(out), a.unsafe_tz_name());
 }
 
 Timeline impl_sub_offset(const Timeline& a, const CalendarOffset& off) {

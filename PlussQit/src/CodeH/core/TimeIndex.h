@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <string_view>
 
 #include "pluss/export.h"
@@ -14,6 +15,8 @@ namespace _compat { namespace detail { struct Access; } }
 
 // A 1D, (optionally) monotonic Timeline axis with index-oriented utilities.
 // This is the key building block for pandas-like resampling/alignment.
+// Construction is intentionally routed through pluss::make_timeindex(...)
+// and Timeline::to_timeindex(...), not public constructors.
 class CODEH_API TimeIndex {
 public:
   TimeIndex() = delete;
@@ -24,11 +27,6 @@ public:
 #if defined(CODEH_ENABLE_TIMEINDEX_SURFACE) && !defined(CODEH_NO_TIMEINDEX_SURFACE)
   #include "CodeH/core/TimeIndexSurface.h"
 #endif
-
-  // Construct from a 1D Timeline. If require_sorted is true, validates non-decreasing order.
-  static TimeIndex from_timeline(const Timeline& t, bool require_sorted = true) {
-    return ::pluss::codeh::_compat::invoke<TimeIndex>("from_timeline", t, require_sorted);
-  }
 
   const Timeline& timeline() const noexcept { return t_; }
   std::int64_t size() const { return t_.numel(); }
@@ -98,3 +96,6 @@ private:
 };
 
 } // namespace pluss::codeh
+
+// TimeIndex inline methods route through _compat::invoke<...>.
+#include "CodeH/compat/Invoke.h"
