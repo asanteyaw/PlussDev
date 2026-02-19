@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -24,11 +25,13 @@ struct ScalarText final {
   bool numeric{false};
   bool negative{false};
   bool special{false};
+  bool ellipsis{false};
 };
 
 struct DecimalParts final {
-  std::size_t pre{0};
-  std::size_t post{0};
+  std::size_t pre_digits{0};
+  std::size_t post_digits{0};
+  bool has_sign{false};
 };
 
 struct VisiblePlan final {
@@ -213,19 +216,153 @@ static std::string clip_cell_(std::string s, const PrintOptions& opt) {
   return s.substr(0, m - 3) + "...";
 }
 
+static std::string center_text_(const std::string& s, std::size_t width) {
+  if (s.size() >= width) {
+    return s;
+  }
+  const std::size_t pad = width - s.size();
+  const std::size_t left = pad / 2;
+  const std::size_t right = pad - left;
+  return std::string(left, ' ') + s + std::string(right, ' ');
+}
+
 static DecimalParts decimal_parts_(const std::string& s) {
   DecimalParts out;
+  if (s.empty()) {
+    return out;
+  }
+  const std::size_t start = (s[0] == '-' || s[0] == '+') ? 1u : 0u;
+  out.has_sign = (start == 1u);
   const std::size_t epos = s.find_first_of("eE");
   const std::size_t body_end = (epos == std::string::npos) ? s.size() : epos;
-  const std::size_t dot = s.find('.');
+  const std::size_t dot = s.find('.', start);
 
   if (dot != std::string::npos && dot < body_end) {
-    out.pre = dot;
-    out.post = body_end - dot - 1;
+    out.pre_digits = dot - start;
+    out.post_digits = body_end - dot - 1;
   } else {
-    out.pre = body_end;
-    out.post = 0;
+    out.pre_digits = (body_end >= start) ? (body_end - start) : 0u;
+    out.post_digits = 0;
   }
+  return out;
+}
+
+struct FloatPrintStats final {
+  bool has_float_like{false};
+  bool has_finite{false};
+  double min_abs_nonzero{std::numeric_limits<double>::infinity()};
+  double max_abs{0.0};
+};
+
+static void update_float_stats_(double v, FloatPrintStats& st) {
+  st.has_float_like = true;
+  if (!std::isfinite(v)) {
+    return;
+  }
+  st.has_finite = true;
+  const double a = std::fabs(v);
+  st.max_abs = std::max(st.max_abs, a);
+  if (a > 0.0) {
+    st.min_abs_nonzero = std::min(st.min_abs_nonzero, a);
+  }
+}
+
+static FloatPrintStats collect_float_stats_(const Series& s) {
+  FloatPrintStats st;
+  const std::int64_t n = s.numel();
+  switch (s.scalar_type()) {
+    case ScalarType::Float64: {
+      const auto* p = reinterpret_cast<const double*>(s.raw_data());
+      for (std::int64_t i = 0; i < n; ++i) update_float_stats_(p[i], st);
+      break;
+    }
+    case ScalarType::Float32: {
+      const auto* p = reinterpret_cast<const float*>(s.raw_data());
+      for (std::int64_t i = 0; i < n; ++i) update_float_stats_(static_cast<double>(p[i]), st);
+      break;
+    }
+    case ScalarType::Float16: {
+      const auto* p = reinterpret_cast<const Float16*>(s.raw_data());
+      for (std::int64_t i = 0; i < n; ++i) update_float_stats_(float16_to_float(p[i]), st);
+      break;
+    }
+    case ScalarType::BFloat16: {
+      const auto* p = reinterpret_cast<const BFloat16*>(s.raw_data());
+      for (std::int64_t i = 0; i < n; ++i) update_float_stats_(bfloat16_to_float(p[i]), st);
+      break;
+    }
+    case ScalarType::Complex64: {
+      const auto* p = reinterpret_cast<const Complex64*>(s.raw_data());
+      for (std::int64_t i = 0; i < n; ++i) {
+        update_float_stats_(static_cast<double>(p[i].real()), st);
+        update_float_stats_(static_cast<double>(p[i].imag()), st);
+      }
+      break;
+    }
+    case ScalarType::Complex128: {
+      const auto* p = reinterpret_cast<const Complex128*>(s.raw_data());
+      for (std::int64_t i = 0; i < n; ++i) {
+        update_float_stats_(p[i].real(), st);
+        update_float_stats_(p[i].imag(), st);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+  return st;
+}
+
+static PrintOptions resolve_pretty_default_policy_(const Series& s, const PrintOptions& opt) {
+  PrintOptions out = opt;
+  const PrintOptions defaults{};
+  const bool user_precision_set = (opt.precision != defaults.precision);
+
+  // print_series default: torch-like readability baseline.
+  if (!user_precision_set) {
+    out.precision = 4;
+  }
+  if (out.pretty_align == defaults.pretty_align) {
+    out.pretty_align = PrintAlignMode::Decimal;
+  }
+
+  const bool summary_defaults_unchanged =
+      opt.pretty_matrix_max_rows == defaults.pretty_matrix_max_rows &&
+      opt.pretty_matrix_max_cols == defaults.pretty_matrix_max_cols &&
+      opt.pretty_row_head_items == defaults.pretty_row_head_items &&
+      opt.pretty_row_tail_items == defaults.pretty_row_tail_items &&
+      opt.pretty_col_head_items == defaults.pretty_col_head_items &&
+      opt.pretty_col_tail_items == defaults.pretty_col_tail_items;
+  const bool user_requested_wider_precision = user_precision_set && (opt.precision > 4);
+
+  // Default summary policy (when user didn't ask for wider precision):
+  // rows: >10 => keep first 5, last 1; cols: >7 => keep first 5, last 1.
+  if (summary_defaults_unchanged && !user_requested_wider_precision) {
+    out.pretty_matrix_max_rows = 10;
+    out.pretty_matrix_max_cols = 7;
+    out.pretty_row_head_items = 5;
+    out.pretty_row_tail_items = 1;
+    out.pretty_col_head_items = 5;
+    out.pretty_col_tail_items = 1;
+  }
+
+  // In default General mode, choose fixed vs scientific from data scale.
+  if (out.number_mode == PrintNumberMode::General) {
+    const FloatPrintStats st = collect_float_stats_(s);
+    if (st.has_float_like && st.has_finite) {
+      const std::int64_t p = std::max<std::int64_t>(0, out.precision);
+      // Switch to scientific only when fixed formatting would hide nonzero values as 0.000...,
+      // or when magnitudes get very large for the chosen precision.
+      const double zero_round_threshold = 0.5 * std::pow(10.0, -static_cast<double>(p));
+      const double large_threshold = std::pow(10.0, static_cast<double>(p + 2));
+      const bool too_small_for_fixed =
+          std::isfinite(st.min_abs_nonzero) && st.min_abs_nonzero < zero_round_threshold;
+      const bool too_large_for_fixed = st.max_abs >= large_threshold;
+      out.number_mode =
+          (too_small_for_fixed || too_large_for_fixed) ? PrintNumberMode::Scientific : PrintNumberMode::Fixed;
+    }
+  }
+
   return out;
 }
 
@@ -532,12 +669,14 @@ static void format_matrix_block_(std::ostringstream& oss,
   std::vector<std::size_t> col_widths(out_cols, 3u);
   std::vector<std::size_t> col_pre(out_cols, 0u);
   std::vector<std::size_t> col_post(out_cols, 0u);
+  std::vector<std::size_t> col_sign(out_cols, 0u);
 
   for (std::size_t r = 0; r < out_rows; ++r) {
     for (std::size_t c = 0; c < out_cols; ++c) {
       ScalarText cell;
       if (row_tokens[r] < 0 || col_tokens[c] < 0) {
         cell.text = "...";
+        cell.ellipsis = true;
       } else {
         const std::int64_t off = base_off + row_tokens[r] * row_stride + col_tokens[c] * col_stride;
         cell = scalar_text_at_(s, off, opt);
@@ -546,18 +685,20 @@ static void format_matrix_block_(std::ostringstream& oss,
 
       const std::size_t len = cell.text.size();
       col_widths[c] = std::max(col_widths[c], len);
-      if (cell.numeric && opt.pretty_align == PrintAlignMode::Decimal) {
+      if (cell.numeric &&
+          (opt.pretty_align == PrintAlignMode::Decimal || opt.pretty_align == PrintAlignMode::Left)) {
         const DecimalParts dp = decimal_parts_(cell.text);
-        col_pre[c] = std::max(col_pre[c], dp.pre);
-        col_post[c] = std::max(col_post[c], dp.post);
+        col_pre[c] = std::max(col_pre[c], dp.pre_digits);
+        col_post[c] = std::max(col_post[c], dp.post_digits);
+        col_sign[c] = std::max(col_sign[c], static_cast<std::size_t>(dp.has_sign ? 1 : 0));
       }
       cells[r][c] = std::move(cell);
     }
   }
 
   for (std::size_t c = 0; c < out_cols; ++c) {
-    if (opt.pretty_align == PrintAlignMode::Decimal) {
-      const std::size_t w = col_pre[c] + (col_post[c] > 0 ? (1 + col_post[c]) : 0);
+    if (opt.pretty_align == PrintAlignMode::Decimal || opt.pretty_align == PrintAlignMode::Left) {
+      const std::size_t w = col_sign[c] + col_pre[c] + (col_post[c] > 0 ? (1 + col_post[c]) : 0);
       col_widths[c] = std::max(col_widths[c], w);
     }
   }
@@ -577,18 +718,35 @@ static void format_matrix_block_(std::ostringstream& oss,
       const ScalarText& cell = cells[r][c];
       std::string padded;
 
-      if (opt.pretty_align == PrintAlignMode::Left) {
+      if (cell.ellipsis) {
+        padded = center_text_(cell.text, col_widths[c]);
+      } else if (opt.pretty_align == PrintAlignMode::Left && cell.numeric) {
+        const DecimalParts dp = decimal_parts_(cell.text);
+        const std::size_t sign_width = dp.has_sign ? 1u : 0u;
+        const std::size_t lead =
+            (col_sign[c] - std::min(col_sign[c], sign_width)) + (col_pre[c] - dp.pre_digits);
+        padded.assign(lead, ' ');
+        padded += cell.text;
+        if (col_post[c] > dp.post_digits) {
+          padded.append(col_post[c] - dp.post_digits, ' ');
+        }
+        if (padded.size() < col_widths[c]) {
+          padded.append(col_widths[c] - padded.size(), ' ');
+        }
+      } else if (opt.pretty_align == PrintAlignMode::Left) {
         padded = cell.text;
         if (padded.size() < col_widths[c]) {
           padded.append(col_widths[c] - padded.size(), ' ');
         }
       } else if (opt.pretty_align == PrintAlignMode::Decimal && cell.numeric) {
         const DecimalParts dp = decimal_parts_(cell.text);
-        padded.assign(col_pre[c] - dp.pre, ' ');
+        const std::size_t sign_width = dp.has_sign ? 1u : 0u;
+        const std::size_t lead =
+            (col_sign[c] - std::min(col_sign[c], sign_width)) + (col_pre[c] - dp.pre_digits);
+        padded.assign(lead, ' ');
         padded += cell.text;
-        const std::size_t post = dp.post;
-        if (col_post[c] > post) {
-          padded.append(col_post[c] - post, ' ');
+        if (col_post[c] > dp.post_digits) {
+          padded.append(col_post[c] - dp.post_digits, ' ');
         }
       } else {
         std::ostringstream ss;
@@ -811,7 +969,8 @@ std::string to_string(const Series& s, const PrintOptions& opt) {
 }
 
 std::string print_series(const Series& s, const PrintOptions& opt) {
-  return render_series_string_(s, opt, /*use_pretty_values=*/true);
+  const PrintOptions effective = resolve_pretty_default_policy_(s, opt);
+  return render_series_string_(s, effective, /*use_pretty_values=*/true);
 }
 
 std::ostream& print_series(std::ostream& os, const Series& s, const PrintOptions& opt) {

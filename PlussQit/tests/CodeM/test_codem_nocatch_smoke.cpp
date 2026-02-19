@@ -130,9 +130,47 @@ void test_factories() {
   std::cout << "[RUN] factories:zeroes_like\n";
   auto zlike = pluss::zeroes_like(s2);
   expect_true(zlike.scalar_type() == s2.scalar_type(), "zeroes_like alias works");
-  std::cout << "[RUN] factories:tensor_alias\n";
-  auto t = pluss::tensor({1, 2, 3});
-  expect_true(t.numel() == 3, "tensor alias works");
+  std::cout << "[RUN] factories:value_literal\n";
+  auto t = pluss::value({1, 2, 3});
+  expect_true(t.numel() == 3, "value literal works");
+
+  std::cout << "[RUN] factories:print_series_default_policy\n";
+  auto pretty_src = pluss::value({{0.24644905, 0.23562264}});
+  const std::string pretty_default = pluss::print_series(pretty_src);
+  expect_true(pretty_default.find("0.2464") != std::string::npos,
+              "print_series default uses 4dp for normal magnitudes");
+
+  pluss::PrintOptions pretty_more;
+  pretty_more.number_mode = pluss::codem::PrintNumberMode::Fixed;
+  pretty_more.precision = 6;
+  const std::string pretty_override = pluss::print_series(pretty_src, pretty_more);
+  expect_true(pretty_override.find("0.246449") != std::string::npos,
+              "print_series allows user precision override");
+
+  auto tiny_round = pluss::value({{0.000076, 1.0}});
+  const std::string tiny_round_s = pluss::print_series(tiny_round);
+  expect_true(tiny_round_s.find("0.0001") != std::string::npos && tiny_round_s.find("e-") == std::string::npos,
+              "print_series keeps fixed when tiny values still survive rounding");
+
+  auto tiny_scientific = pluss::value({{0.000023, 1.0}});
+  const std::string tiny_scientific_s = pluss::print_series(tiny_scientific);
+  expect_true(tiny_scientific_s.find("e-") != std::string::npos,
+              "print_series switches to scientific when fixed would round nonzero to zero");
+
+  auto wide = pluss::value({{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}});
+  const std::string wide_default = pluss::print_series(wide);
+  expect_true(wide_default.find("5.0000") != std::string::npos &&
+                  wide_default.find("6.0000") == std::string::npos &&
+                  wide_default.find("...") != std::string::npos,
+              "default summary keeps first five then tail one for wide matrices");
+
+  pluss::PrintOptions wider_precision;
+  wider_precision.precision = 6;
+  const std::string wide_user_precision = pluss::print_series(wide, wider_precision);
+  expect_true(wide_user_precision.find("2.000000") != std::string::npos &&
+                  wide_user_precision.find("3.000000") == std::string::npos &&
+                  wide_user_precision.find("...") != std::string::npos,
+              "precision >4 keeps legacy head-two summary unless user overrides summary fields");
 }
 
 void test_aux_let_queue() {

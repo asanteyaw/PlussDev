@@ -24,7 +24,7 @@ struct TernaryCompareChain {
   TernaryCompareOp first_op;
 };
 
-inline TernaryCompareBuilder tri(const Series& s) noexcept { return TernaryCompareBuilder{s}; }
+inline TernaryCompareBuilder Series::tri() const noexcept { return TernaryCompareBuilder{*this}; }
 
 inline Series ternary_compare_eval(const Series& a, const Series& b, TernaryCompareOp op) {
   switch (op) {
@@ -96,7 +96,6 @@ namespace pluss {
 
   using codem::to_string;
   using codem::print_series;
-  using codem::tri;
   using codem::operator<<;
 
 } // namespace pluss

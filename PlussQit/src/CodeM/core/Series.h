@@ -36,6 +36,8 @@ namespace ops_internal {
 struct SeriesFactoryAccess;
 } // namespace ops_internal
 
+struct TernaryCompareBuilder;
+
 
 // Forward declaration for tensor memory/layout format used by generated APIs.
 // Full definition should come from the appropriate header if/when needed.
@@ -83,6 +85,7 @@ public:
   Series to(ScalarType st) const;
   Series clone() const;
   Series platform(Platform target) const;
+  TernaryCompareBuilder tri() const noexcept;
 
 #ifdef PLUSS_ENABLE_TORCH
   ::torch::Tensor tensor() const;

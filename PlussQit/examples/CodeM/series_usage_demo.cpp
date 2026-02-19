@@ -1,3 +1,4 @@
+#include "pluss/codem/series_factory.h"
 #include <pluss/pluss.h>
 
 #include <complex>
@@ -9,6 +10,22 @@
 
 int main() {
   pluss::Series a = pluss::value({1.0, 2.0, 3.0});
+  torch::Tensor A = torch::tensor({
+        {1.0, 2.0, 3.0},
+        {4.0, 5.0, 6.0}
+    });
+  let a2 = pluss::from_torch(A);
+  torch::Tensor B = torch::tensor({
+        {
+            {1.0, 2.0},
+            {3.0, 4.0}
+        },
+        {
+            {5.0, 6.0},
+            {7.0, 8.0}
+        }
+    });
+  let b2 = pluss::from_torch(B);
   std::vector<std::int64_t> raw{10, 20, 30, 40};
   pluss::Series b = pluss::make_series(raw, {2, 2});
 
@@ -17,6 +34,9 @@ int main() {
 
   std::cout << "a numel=" << a.numel() << " c numel=" << c.numel() << "\n";
   std::cout << "b shape=(2,2) d=" << d.to_vec<std::int64_t>()[0] << "\n";
+
+  std::cout << "looking at 1D rendering\n" << pluss::print_series(a) << "\n";
+  std::cout << "looking at 0D rendering\n" << pluss::print_series(d) << "\n";
 
   let rv = pluss::normal(0.0, 1.0, {5});
   std::cout << "random values: " << rv << "\n";
@@ -42,6 +62,11 @@ int main() {
   }
   std::cout << "bool host true_count=" << true_count << "\n";
 
+  std::cout << "looking at the from_torch conversion\n" << a2 << "\n";
+  std::cout << "looking at the from_torch conversion\n" << b2 << "\n";
+  std::cout << "looking at the from_torch conversion\n" << pluss::print_series(a2) << "\n";
+  std::cout << "looking at the from_torch conversion\n" << pluss::print_series(b2) << "\n";
+
   std::cout << "randn(3,4) pretty default:\n" << pluss::print_series(rand_vals) << "\n";
 
   let rand_3d = pluss::randn({3, 4, 5});
@@ -50,6 +75,51 @@ int main() {
   let big_mat = pluss::randn({8, 6});
   std::cout << "randn(8,6) default with row/col summary:\n" << big_mat << "\n";
   std::cout << "randn(8,6) pretty summarized:\n" << pluss::print_series(big_mat) << "\n";
+
+  let torch_b = pluss::to_torch(rand_3d);
+  std::cout << "looking at the to_torch conversion\n" << torch_b << "\n";
+
+  let type_prom_2d = pluss::value ({
+    {1, 2.5, 3},
+    {4.75, 5, 6.125}
+      });
+  let type_prom_3d = pluss::value({
+    {
+      {1, 2.5, 3},
+      {4.75, 5, 6.125}
+    },
+    {
+      {7, 8.25, 9},
+      {10.5, 11, 12.625}
+    }
+  });
+
+  std::cout << "Mixed types 2D\n" << pluss::print_series(type_prom_2d) << "\n";
+  std::cout << "Mixed types 3D\n" << pluss::print_series(type_prom_3d) << "\n";
+
+  // 7D demos (rank-7): one rvalue literal path, one lvalue host-buffer path.
+  let seven_d_rvalue = pluss::value({
+    {
+      {
+        {
+          {
+            {
+              {1.0, 2.0, 3.0},
+              {4.0, 5.0, 6.0}
+            }
+          }
+        }
+      }
+    }
+  }); // shape=[1,1,1,1,1,2,3]
+  std::cout << "7D rvalue via value(...):\n" << pluss::print_series(seven_d_rvalue) << "\n";
+
+  std::vector<double> seven_d_host{10.0, 11.0, 12.0, 13.0, 14.0, 15.0};
+  let seven_d_lvalue = pluss::make_series(seven_d_host, {1, 1, 1, 1, 1, 2, 3});
+  std::cout << "7D lvalue via make_series(host, sizes):\n" << pluss::print_series(seven_d_lvalue) << "\n";
+
+  let large_2d = pluss::randn({11, 7});
+  std::cout << "large 2D with default summarization:\n" << pluss::print_series(large_2d) << "\n";
 
   // 1) Precision / notation / trailing-zero trim
   pluss::PrintOptions fixed_fmt;

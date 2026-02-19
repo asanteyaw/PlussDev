@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "pluss/detail/factory_deduction.h"
+#include "pluss/detail/nested_series_literal.h"
 
 #ifdef PLUSS_ENABLE_TORCH
 #include <torch/torch.h>
@@ -46,6 +47,7 @@ namespace pluss {
     inline bool same_shape(std::span<const std::int64_t> a, std::span<const std::int64_t> b) {
       return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin());
     }
+
   }
 
   // --------------------------------------------------------------------------
@@ -535,7 +537,7 @@ namespace pluss {
 #endif
 
   // --------------------------------------------------------------------------
-  // Value / blob / tensor-like factories (create NEW Series from user data)
+  // Value / blob / make_series factories (create NEW Series from user data)
   // --------------------------------------------------------------------------
 
   // Scalars:
@@ -544,7 +546,7 @@ namespace pluss {
   inline Series value(T v, ScalarType dtype = ScalarType::Int64) { return codem::value(v, dtype); }
   inline Series value(bool v, ScalarType dtype = ScalarType::Bool) { return codem::value(v, dtype); }
 
-  // Nested initializer_list: dtype auto-deduction when user doesn't specify.
+  // Nested initializer_list: fast path for homogeneous leaves.
   template <class T>
   inline Series value(std::initializer_list<T> list) {
     constexpr ScalarType dt = pluss::detail::dtype_from_init_list<std::initializer_list<T>>();
@@ -553,6 +555,14 @@ namespace pluss {
   template <class T>
   inline Series value(std::initializer_list<T> list, ScalarType dtype) {
     return codem::value(list, dtype);
+  }
+
+  // Mixed nested literals: single fallback path (supports up to 7D).
+  inline Series value(std::initializer_list<detail::NestedSeriesLiteral> list) {
+    return detail::to_series(detail::NestedSeriesLiteral(list));
+  }
+  inline Series value(std::initializer_list<detail::NestedSeriesLiteral> list, ScalarType dtype) {
+    return detail::to_series(detail::NestedSeriesLiteral(list), dtype);
   }
 
   // make_series overloads for scalar and initializer_list host values.
@@ -573,6 +583,12 @@ namespace pluss {
   template <class T>
   inline Series make_series(std::initializer_list<T> list, ScalarType dtype) {
     return codem::value(list, dtype);
+  }
+  inline Series make_series(std::initializer_list<detail::NestedSeriesLiteral> list) {
+    return value(list);
+  }
+  inline Series make_series(std::initializer_list<detail::NestedSeriesLiteral> list, ScalarType dtype) {
+    return value(list, dtype);
   }
 
   // Compatibility factory: construct from an existing contiguous host buffer.
@@ -621,32 +637,6 @@ namespace pluss {
     using T = std::remove_cv_t<typename Container::value_type>;
     const auto span = std::span<const T>(data.data(), data.size());
     return codem::make_series<T>(span, std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
-  }
-
-  // Torch-style alias; consolidated through make_series overloads.
-  template <class T>
-  inline Series tensor(std::initializer_list<T> list) {
-    return make_series(list);
-  }
-  template <class T>
-  inline Series tensor(std::initializer_list<T> list, ScalarType dtype) {
-    return make_series(list, dtype);
-  }
-  template <class T>
-  inline Series tensor(const std::vector<T>& data,
-                       std::initializer_list<std::int64_t> sizes,
-                       Config cfg = {}) {
-    return make_series(data, sizes, cfg);
-  }
-  inline Series tensor(double v, ScalarType dtype = ScalarType::Float32) {
-    return make_series(v, dtype);
-  }
-  template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
-  inline Series tensor(T v, ScalarType dtype = ScalarType::Int64) {
-    return make_series(v, dtype);
-  }
-  inline Series tensor(bool v, ScalarType dtype = ScalarType::Bool) {
-    return make_series(v, dtype);
   }
 
   inline Series from_blob(void* data,

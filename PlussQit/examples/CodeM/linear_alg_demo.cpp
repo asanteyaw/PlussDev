@@ -38,8 +38,8 @@ int main() {
   std::cout << "s1 == s2:\n" << (s1 == s2) << "\n\n";
   std::cout << "s1 >= s2:\n" << (s1 >= s2) << "\n\n";
   std::cout << "s1 != s2:\n" << (s1 != s2) << "\n\n";
-  std::cout << "ternary chain (s1 == s2 == s3):\n" << (pluss::tri(s1) == s2 == s3) << "\n\n";
-  std::cout << "ternary mixed (s1 >= s2 < s3):\n" << (pluss::tri(s1) >= s2 < s3) << "\n\n";
+  std::cout << "ternary chain (s1 == s2 == s3):\n" << (s1.tri() == s2 == s3) << "\n\n";
+  std::cout << "ternary mixed (s1 >= s2 < s3):\n" << (s1.tri() >= s2 < s3) << "\n\n";
 
   return 0;
 }
