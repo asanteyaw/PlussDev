@@ -3224,7 +3224,10 @@ if (is_numeric_scalar_arg(args[0]) &&
       if (op == "narrow") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st));
       if (op == "narrow_copy") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st)).clone();
       if (op == "slice") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st));
-      if (op == "select") return self.select(wd, st);
+      if (op == "select") {
+        // select keeps one index along dim and drops that axis.
+        return select_range(self, wd, st, 1).squeeze(wd);
+      }
       if (op == "slice_inverse") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st));
     }
 

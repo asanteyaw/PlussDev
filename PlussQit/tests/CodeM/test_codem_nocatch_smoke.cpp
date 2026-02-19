@@ -173,7 +173,7 @@ void test_factories() {
               "precision >4 keeps legacy head-two summary unless user overrides summary fields");
 }
 
-void test_aux_let_queue() {
+void test_aux_let_transmit() {
   std::cout << "[RUN] aux:let\n";
   auto lv = suppose(std::vector<int>{1, 2, 3})
                 .then([](const std::vector<int>& x) {
@@ -198,32 +198,32 @@ void test_aux_let_queue() {
   let declared = pluss::value({1.0, 2.0, 3.0});
   expect_true(declared.numel() == 3, "let declaration alias to auto");
 
-  std::cout << "[RUN] aux:queue_range\n";
+  std::cout << "[RUN] aux:transmit_range\n";
   std::vector<int> xs{1, 2, 3, 4};
-  auto sq = pluss::queue([](int x) { return x * x; }, xs);
-  expect_eq(sq, std::vector<int>{1, 4, 9, 16}, "queue range unary");
+  auto sq = pluss::transmit([](int x) { return x * x; }, xs);
+  expect_eq(sq, std::vector<int>{1, 4, 9, 16}, "transmit range unary");
 
-  std::cout << "[RUN] aux:queue_indexed\n";
-  auto with_idx = pluss::queue([](int x, std::size_t i) { return x + static_cast<int>(i); }, xs);
-  expect_eq(with_idx, std::vector<int>{1, 3, 5, 7}, "queue indexed callable");
+  std::cout << "[RUN] aux:transmit_indexed\n";
+  auto with_idx = pluss::transmit([](int x, std::size_t i) { return x + static_cast<int>(i); }, xs);
+  expect_eq(with_idx, std::vector<int>{1, 3, 5, 7}, "transmit indexed callable");
 
-  std::cout << "[RUN] aux:queue_iterators\n";
-  auto it_res = pluss::queue([](int x) { return x - 1; }, xs.begin(), xs.end());
-  expect_eq(it_res, std::vector<int>{0, 1, 2, 3}, "queue iterator overload");
+  std::cout << "[RUN] aux:transmit_iterators\n";
+  auto it_res = pluss::transmit([](int x) { return x - 1; }, xs.begin(), xs.end());
+  expect_eq(it_res, std::vector<int>{0, 1, 2, 3}, "transmit iterator overload");
 
-  std::cout << "[RUN] aux:queue_binary\n";
+  std::cout << "[RUN] aux:transmit_binary\n";
   std::vector<int> ys{10, 20, 30, 40};
-  auto sum = pluss::queue([](int a, int b) { return a + b; }, xs, ys);
-  expect_eq(sum, std::vector<int>{11, 22, 33, 44}, "queue binary zip");
+  auto sum = pluss::transmit([](int a, int b) { return a + b; }, xs, ys);
+  expect_eq(sum, std::vector<int>{11, 22, 33, 44}, "transmit binary zip");
 
-  std::cout << "[RUN] aux:queue_parallel\n";
-  auto par = pluss::queue(
+  std::cout << "[RUN] aux:transmit_parallel\n";
+  auto par = pluss::transmit(
       [](int x) { return x * 3; },
       xs,
-      pluss::queue_options{.exec = pluss::queue_exec::par, .grain_size = 1, .workers = 2});
-  expect_eq(par, std::vector<int>{3, 6, 9, 12}, "queue parallel");
+      pluss::transmit_options{.exec = pluss::transmit_exec::par, .grain_size = 1, .workers = 2});
+  expect_eq(par, std::vector<int>{3, 6, 9, 12}, "transmit parallel");
 
-  std::cout << "[RUN] aux:queue_object\n";
+  std::cout << "[RUN] aux:transmit_object\n";
   struct Item {
     int v;
   };
@@ -232,13 +232,13 @@ void test_aux_let_queue() {
     Item operator()(const Item& it) const { return Item{it.v + delta}; }
   };
   std::vector<Item> items{{1}, {2}, {3}};
-  auto bumped = pluss::queue(Bump{5}, items);
-  expect_true(bumped.size() == 3 && bumped[0].v == 6 && bumped[2].v == 8, "queue callable object");
+  auto bumped = pluss::transmit(Bump{5}, items);
+  expect_true(bumped.size() == 3 && bumped[0].v == 6 && bumped[2].v == 8, "transmit callable object");
 
-  std::cout << "[RUN] aux:queue_series\n";
+  std::cout << "[RUN] aux:transmit_series\n";
   auto s = pluss::value(std::vector<double>{1.0, 2.0, 3.0}, {3});
-  auto ss = pluss::queue([](const pluss::Series& t) { return t.mul(t); }, s);
-  expect_eq(ss.to_vec<double>(), std::vector<double>{1.0, 4.0, 9.0}, "queue single-object apply");
+  auto ss = pluss::transmit([](const pluss::Series& t) { return t.mul(t); }, s);
+  expect_eq(ss.to_vec<double>(), std::vector<double>{1.0, 4.0, 9.0}, "transmit single-object apply");
 }
 
 void test_arithmetic_and_reduce() {
@@ -554,7 +554,7 @@ int main() {
     std::cout << "[RUN] factories\n";
     test_factories();
     std::cout << "[RUN] aux\n";
-    test_aux_let_queue();
+    test_aux_let_transmit();
     std::cout << "[RUN] arith_reduce\n";
     test_arithmetic_and_reduce();
     std::cout << "[RUN] indexing_ops\n";

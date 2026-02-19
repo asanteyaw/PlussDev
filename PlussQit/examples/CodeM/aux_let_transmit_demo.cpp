@@ -17,14 +17,14 @@ int main() {
                      })
                      .value();
 
-  auto zipped = pluss::queue([](int a, int b, std::size_t i) {
+  auto zipped = pluss::transmit([](int a, int b, std::size_t i) {
                  return a + b + static_cast<int>(i);
                },
                doubled,
                std::vector<int>{10, 20, 30, 40});
 
   auto scores = pluss::value(std::vector<double>{79.4, 82.1, 78.5, 85.0}, {4});
-  auto squared = pluss::queue([](const pluss::Series& s) { return s.mul(s); }, scores);
+  auto squared = pluss::transmit([](const pluss::Series& s) { return s.mul(s); }, scores);
 
   std::cout << "zipped: ";
   for (auto v : zipped) std::cout << v << " ";
@@ -35,7 +35,7 @@ int main() {
   std::cout << "\n";
 
   let bills = pluss::value({42.50, 35.85, 50.03, 15.21, 5.45});
-  let tips = pluss::queue(calc_tip, bills);
+  let tips = pluss::transmit(calc_tip, bills);
   
   return 0;
 }

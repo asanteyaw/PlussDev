@@ -1,13 +1,16 @@
 #pragma once
 
 #include "aux/let.h"
-#include "aux/queue.h"
+#include "aux/transmit.h"
+#include "aux/translate.h"
 
 namespace pluss {
-using aux::queue;
-using aux::queue_exec;
-using aux::queue_into;
-using aux::queue_options;
+using aux::transmit;
+using aux::transmit_exec;
+using aux::transmit_into;
+using aux::transmit_options;
+using aux::translate;
+using aux::translate_options;
 using aux::suppose;
 } // namespace pluss
 

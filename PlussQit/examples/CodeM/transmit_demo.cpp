@@ -66,44 +66,44 @@ void print_ticket_vec(const std::string& label, const std::vector<Ticket>& value
 } // namespace
 
 int main() {
-  std::cout << "=== pluss::queue demo ===\n\n";
+  std::cout << "=== pluss::transmit demo ===\n\n";
 
   std::cout << "1) Single value (non-range)\n";
-  const auto single_square = pluss::queue(square_int, 9);
-  std::cout << "queue(square_int, 9) = " << single_square << "\n\n";
+  const auto single_square = pluss::transmit(square_int, 9);
+  std::cout << "transmit(square_int, 9) = " << single_square << "\n\n";
 
   std::cout << "2) Range + free functions\n";
   const std::vector<int> xs{1, 2, 3, 4, 5};
-  const auto squared = pluss::queue(square_int, xs);
-  const auto plus_idx = pluss::queue(add_index, xs);
+  const auto squared = pluss::transmit(square_int, xs);
+  const auto plus_idx = pluss::transmit(add_index, xs);
   print_vec("squared", squared);
   print_vec("plus_idx", plus_idx);
   std::cout << "\n";
 
-  std::cout << "3) Iterator overload + queue_into\n";
-  const auto tail_squared = pluss::queue(square_int, xs.begin() + 2, xs.end());
+  std::cout << "3) Iterator overload + transmit_into\n";
+  const auto tail_squared = pluss::transmit(square_int, xs.begin() + 2, xs.end());
   print_vec("tail_squared", tail_squared);
   std::vector<int> into_out;
   into_out.reserve(xs.size());
-  pluss::queue_into(add_index, xs, std::back_inserter(into_out));
-  print_vec("queue_into(add_index)", into_out);
+  pluss::transmit_into(add_index, xs, std::back_inserter(into_out));
+  print_vec("transmit_into(add_index)", into_out);
   std::cout << "\n";
 
   std::cout << "4) Zip two ranges (binary)\n";
   const std::vector<int> a{10, 20, 30, 40};
   const std::vector<int> b{1, 2, 3};
-  const auto zipped_add = pluss::queue(add_pair, a, b);
-  const auto zipped_add_i = pluss::queue(add_pair_with_index, a, b);
+  const auto zipped_add = pluss::transmit(add_pair, a, b);
+  const auto zipped_add_i = pluss::transmit(add_pair_with_index, a, b);
   print_vec("zip add", zipped_add);
   print_vec("zip add + index", zipped_add_i);
   std::cout << "\n";
 
   std::cout << "5) Parallel policy (same API, different execution)\n";
-  pluss::queue_options opts;
-  opts.exec = pluss::queue_exec::par;
+  pluss::transmit_options opts;
+  opts.exec = pluss::transmit_exec::par;
   opts.grain_size = 2;
   opts.workers = 4;
-  const auto par_result = pluss::queue(add_index, xs, opts);
+  const auto par_result = pluss::transmit(add_index, xs, opts);
   print_vec("parallel add_index", par_result);
   std::cout << "\n";
 
@@ -113,21 +113,21 @@ int main() {
       {"Concert B", 80.0},
       {"Conference", 300.0},
   };
-  const auto taxed = pluss::queue(AddVAT{0.15}, tickets);
+  const auto taxed = pluss::transmit(AddVAT{0.15}, tickets);
   print_ticket_vec("after VAT", taxed);
 
   const std::vector<int> seats{2, 4, 1};
-  const auto totals = pluss::queue(AttachSeats{}, taxed, seats);
+  const auto totals = pluss::transmit(AttachSeats{}, taxed, seats);
   print_vec("ticket totals", totals);
   std::cout << "\n";
 
   std::cout << "7) Lambdas (captures + ad-hoc transforms)\n";
   const std::vector<double> temps_c{0.0, 10.0, 20.0, 37.0};
-  const auto temps_f = pluss::queue(celsius_to_fahrenheit, temps_c);
+  const auto temps_f = pluss::transmit(celsius_to_fahrenheit, temps_c);
   print_vec("temperatures F", temps_f);
 
   const double scale = 1.25;
-  const auto scaled = pluss::queue([scale](double x, std::size_t i) {
+  const auto scaled = pluss::transmit([scale](double x, std::size_t i) {
     return x * scale + static_cast<double>(i);
   }, temps_f);
   print_vec("scaled with lambda", scaled);
@@ -135,14 +135,14 @@ int main() {
 
   std::cout << "8) With pluss::Series\n";
   auto bill = pluss::value(std::vector<double>{42.5, 35.85, 50.03}, {3});
-  const auto with_fee = pluss::queue(add_service_fee, bill);
-  print_vec("single Series via queue(add_service_fee, bill)", with_fee.to_vec<double>());
+  const auto with_fee = pluss::transmit(add_service_fee, bill);
+  print_vec("single Series via transmit(add_service_fee, bill)", with_fee.to_vec<double>());
 
   const std::vector<pluss::Series> batches{
       pluss::value(std::vector<double>{1.0, 2.0, 3.0}, {3}),
       pluss::value(std::vector<double>{4.0, 5.0, 6.0}, {3}),
   };
-  const auto batch_sums = pluss::queue([](const pluss::Series& s, std::size_t i) {
+  const auto batch_sums = pluss::transmit([](const pluss::Series& s, std::size_t i) {
     return s.mul(1.0 + static_cast<double>(i)).sum().to_vec<double>(0);
   }, batches);
   print_vec("vector<Series> -> scalar summary with lambda", batch_sums);

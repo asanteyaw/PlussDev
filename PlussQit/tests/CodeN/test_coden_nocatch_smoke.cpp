@@ -427,6 +427,37 @@ void test_note_factory_paths() {
   expect_true(escaped.dim() == 3 && escaped.sizes() == s3.sizes(), "tex methods preserve 3D shape");
 }
 
+void test_aux_transmit_translate_and_queue_basics() {
+  std::cout << "[RUN] aux:transmit_translate_queue\n";
+
+  const auto mapped = pluss::transmit([](int x) { return x * x; }, std::vector<int>{1, 2, 3});
+  expect_true(mapped.size() == 3 && mapped[2] == 9, "transmit maps range values");
+
+  pluss::Note n = pluss::content({{"aa", "bbb"}, {"c", "dddd"}});
+  const auto per_row_chars = pluss::translate(
+      [](const pluss::Note& row) {
+        std::int64_t total = 0;
+        for (std::int64_t i = 0; i < row.numel(); ++i) total += static_cast<std::int64_t>(row.at(i).size());
+        return total;
+      },
+      n,
+      0);
+  expect_true(per_row_chars.size() == 2, "translate(Note, axis=0) returns one value per row slice");
+  expect_true(per_row_chars[0] == 5 && per_row_chars[1] == 5, "translate computes per-slice aggregation");
+
+  pluss::Queue qn = n;
+  expect_true(qn.kind() == pluss::Queue::Kind::Note, "Queue stores Note");
+  expect_true(qn.defined(), "Queue reports defined for Note payload");
+  pluss::Queue qn_lower = qn.invoke("lower");
+  expect_true(qn_lower.as<pluss::Note>().at(0) == "aa", "Queue.invoke dispatches Note methods");
+
+  pluss::Queue qs = pluss::value({-1.0, 2.0, -3.0});
+  pluss::Queue qs_abs = qs.invoke("abs");
+  auto abs_vals = qs_abs.as<pluss::Series>().to_vec<double>();
+  expect_true(abs_vals.size() == 3 && abs_vals[0] == 1.0 && abs_vals[2] == 3.0,
+              "Queue.invoke dispatches Series methods");
+}
+
 } // namespace
 
 int main() {
@@ -438,6 +469,7 @@ int main() {
   test_high_yield_nlp_and_printing();
   test_tex_canonicalize_and_macros();
   test_note_factory_paths();
+  test_aux_transmit_translate_and_queue_basics();
 
   if (g_failures == 0) {
     std::cout << "[OK] CodeN no-catch smoke tests passed\n";

@@ -14,8 +14,8 @@ cmake --build . --target plussqit_codem_series_usage_demo -j8
 
 
 ./build/PlussQit/plussqit_codem_series_usage_demo
-./build/PlussQit/plussqit_codem_aux_let_queue_demo
-./build/PlussQit/plussqit_codem_queue_demo
+./build/PlussQit/plussqit_codem_aux_let_transmit_demo
+./build/PlussQit/plussqit_codem_transmit_demo
 ./build/PlussQit/plussqit_codem_suppose_demo
 ./build/PlussQit/plussqit_codem_series_methods_demo
 ./build/PlussQit/plussqit_codem_linear_alg_demo

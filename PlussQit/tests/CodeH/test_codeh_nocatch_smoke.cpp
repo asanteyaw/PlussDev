@@ -358,6 +358,72 @@ void test_3d_non_generated_timeline_support() {
   expect_true(t3_plus >= t3, "operator>= supports 3D");
 }
 
+void test_queue_dynamic_dispatch() {
+  std::cout << "[RUN] codeh:queue_dynamic_dispatch\n";
+
+  pluss::Queue qt = pluss::moment("2024-01-15T10:11:12Z");
+
+  const auto qf = qt.invoke("floor", {"D"});
+  expect_true(qf.kind() == pluss::Queue::Kind::Timeline, "Queue floor returns Timeline");
+  expect_true(qf.as<pluss::codeh::Timeline>().hour().to_vec<std::int32_t>(0) == 0,
+              "Queue floor(D) zeroes hour");
+
+  const auto qy = qt.invoke("year");
+  expect_true(qy.kind() == pluss::Queue::Kind::Series, "Queue year returns Series");
+  expect_true(qy.as<pluss::Series>().to_vec<std::int32_t>(0) == 2024,
+              "Queue year value");
+
+  const auto qn = qt.invoke("strftime", {"%Y-%m-%d"});
+  expect_true(qn.kind() == pluss::Queue::Kind::Note, "Queue strftime returns Note");
+  expect_true(qn.as<pluss::Note>().at(0) == "2024-01-15", "Queue strftime formatted value");
+
+  pluss::Queue qt1d = pluss::moment({
+      "2024-01-15T10:11:12Z",
+      "2024-01-16T10:11:12Z",
+  });
+  const auto qidx = qt1d.invoke("to_timeindex", {true});
+  expect_true(qidx.kind() == pluss::Queue::Kind::TimeIndex, "Queue to_timeindex returns TimeIndex");
+  expect_true(qidx.as<pluss::codeh::TimeIndex>().size() == 2, "Queue to_timeindex size");
+
+  const auto qidx_sorted = qidx.invoke("sort_values");
+  expect_true(qidx_sorted.kind() == pluss::Queue::Kind::TimeIndex, "Queue TimeIndex sort_values returns TimeIndex");
+}
+
+void test_dynamic_dispense_utility() {
+  std::cout << "[RUN] codeh:dynamic_dispense_utility\n";
+
+  const auto s = pluss::value({-1.0, 2.0, -3.0});
+  const auto s_abs = pluss::dispense<pluss::Series>(s, "abs");
+  const auto s_vals = s_abs.to_vec<double>();
+  expect_true(s_vals.size() == 3 && s_vals[0] == 1.0 && s_vals[2] == 3.0,
+              "dispense<Series>(Series, \"abs\")");
+
+  const auto n = pluss::content({"apple", "banana", "apricot"});
+  const auto starts_with_a = pluss::dispense<std::vector<std::uint8_t>>(n, "starts_with", "a");
+  expect_true(starts_with_a.size() == 3 && starts_with_a[0] == 1 && starts_with_a[1] == 0 && starts_with_a[2] == 1,
+              "dispense<vector<uint8_t>>(Note, \"starts_with\")");
+
+  const auto t = pluss::moment("2024-01-15T10:11:12Z");
+  const auto floor_d = pluss::dispense<pluss::codeh::Timeline>(t, "floor", "D");
+  expect_true(floor_d.hour().to_vec<std::int32_t>(0) == 0,
+              "dispense<Timeline>(Timeline, \"floor\", \"D\")");
+
+  const auto year_series = pluss::dispense<pluss::Series>(t, "year");
+  expect_true(year_series.to_vec<std::int32_t>(0) == 2024,
+              "dispense<Series>(Timeline, \"year\")");
+
+  const auto any_year = pluss::dispense_any(t, "year");
+  expect_true(any_year.is<pluss::Series>(), "dispense_any(Timeline, \"year\") resolved Series");
+  expect_true(any_year.as<pluss::Series>().to_vec<std::int32_t>(0) == 2024,
+              "dispense_any value");
+
+  const pluss::Queue qn = n;
+  const auto any_q = pluss::dispense_any(qn, "lower");
+  expect_true(any_q.is<pluss::Note>(), "dispense_any(Queue, \"lower\") resolved Note");
+  expect_true(any_q.as<pluss::Note>().at(0) == "apple",
+              "dispense_any(Queue, \"lower\") payload");
+}
+
 } // namespace
 
 int main() {
@@ -367,6 +433,8 @@ int main() {
   test_factory_rank_and_printing();
   test_generated_timeindex_dataframe_family();
   test_3d_non_generated_timeline_support();
+  test_queue_dynamic_dispatch();
+  test_dynamic_dispense_utility();
 
   if (g_failures != 0) {
     std::cerr << "[CodeH no-catch] failures=" << g_failures << "\n";

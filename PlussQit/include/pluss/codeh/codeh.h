@@ -30,7 +30,9 @@ namespace pluss::codeh::ops_internal {
 } // namespace pluss::codeh::ops_internal
 
 namespace pluss {
-
+using Timeline = codeh::Timeline;
+using Duration = codeh::Duration;
+using TimeIndex = codeh::TimeIndex;
 using codeh::TimelinePrintOptions;
 using codeh::print_timeline;
 
