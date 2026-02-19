@@ -373,6 +373,60 @@ void test_tex_canonicalize_and_macros() {
   expect_true(gfx.find("[graphic:fig]") != std::string::npos, "tex_resolve_graphics rewrites graphics");
 }
 
+void test_note_factory_paths() {
+  std::cout << "[RUN] coden:note_factories\n";
+
+  pluss::Note s0 = pluss::content("hi");
+  expect_true(s0.dim() == 0, "content(\"hi\") produces scalar note");
+
+  pluss::Note s1 = pluss::content({"a", "b", "c"});
+  expect_true(s1.dim() == 1 && s1.size(0) == 3, "content({\"a\",\"b\",\"c\"}) produces 1D note");
+
+  pluss::Note s2 = pluss::content({{"a", "b"}, {"c", "d"}});
+  expect_true(s2.dim() == 2 && s2.sizes() == std::vector<std::int64_t>({2, 2}), "content 2D nested list");
+
+  pluss::Note s3 = pluss::content({{{"a"}, {"b"}}, {{"c"}, {"d"}}});
+  expect_true(s3.dim() == 3 && s3.sizes() == std::vector<std::int64_t>({2, 2, 1}), "content 3D nested list");
+
+  pluss::Note m2 = pluss::make_note({{"x", "y"}, {"z", "w"}});
+  expect_true(m2.dim() == 2 && m2.at(0) == "x" && m2.at(3) == "w", "make_note 2D nested list");
+
+  const std::array<std::int64_t, 2> sz{2, 2};
+  std::vector<std::string> flat = {"p", "q", "r", "s"};
+  pluss::Note mf = pluss::make_note(flat, std::span<const std::int64_t>(sz.data(), sz.size()));
+  expect_true(mf.dim() == 2 && mf.at(2) == "r", "make_note(flat, sizes) constructs 2D");
+
+  pluss::Note lines = pluss::note_from_lines("a\nb\nc");
+  expect_true(lines.dim() == 1 && lines.size(0) == 3, "note_from_lines splits into 1D note");
+
+  pluss::Note words = pluss::note_from_words("alpha beta");
+  expect_true(words.dim() == 1 && words.size(0) == 2, "note_from_words splits words");
+
+  pluss::Note full = pluss::full_note({2, 2, 1}, "x");
+  expect_true(full.dim() == 3 && full.numel() == 4 && full.at(0) == "x", "full_note fills shape");
+
+  pluss::Note empty = pluss::empty_note({2, 1, 2});
+  expect_true(empty.dim() == 3 && empty.numel() == 4, "empty_note creates shape");
+
+  pluss::Note like = pluss::full_note_like(s2, "y");
+  expect_true(like.sizes() == s2.sizes(), "full_note_like copies shape");
+
+  pluss::Note b0 = pluss::bytes_content("hi");
+  expect_true(static_cast<const pluss::coden::NoteBase&>(b0).is_bytes(), "bytes_content uses bytes mode");
+
+  pluss::Note b2 = pluss::bytes_content({{"\x01", "\x02"}, {"\x03", "\x04"}});
+  expect_true(b2.dim() == 2 && b2.at(3).size() == 1, "bytes_content supports nested list");
+
+  pluss::Note bfull = pluss::full_bytes_note_like(b2, "\xFF");
+  expect_true(static_cast<const pluss::coden::NoteBase&>(bfull).is_bytes(), "full_bytes_note_like preserves bytes");
+
+  pluss::Note lower = s3.lower();
+  expect_true(lower.dim() == 3 && lower.sizes() == s3.sizes(), "methods preserve 3D shape");
+
+  pluss::Note escaped = s3.tex_escape();
+  expect_true(escaped.dim() == 3 && escaped.sizes() == s3.sizes(), "tex methods preserve 3D shape");
+}
+
 } // namespace
 
 int main() {
@@ -383,6 +437,7 @@ int main() {
   test_encoding_and_shape_ops();
   test_high_yield_nlp_and_printing();
   test_tex_canonicalize_and_macros();
+  test_note_factory_paths();
 
   if (g_failures == 0) {
     std::cout << "[OK] CodeN no-catch smoke tests passed\n";

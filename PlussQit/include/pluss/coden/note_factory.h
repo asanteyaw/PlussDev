@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "pluss/coden/coden.h"
+#include "pluss/detail/nested_note_literal.h"
 
 namespace pluss {
 
@@ -159,6 +160,15 @@ inline pluss::coden::Note content(std::initializer_list<const char*> utf8_1d) {
   return content(flat);
 }
 
+inline pluss::coden::Note content(std::initializer_list<pluss::detail::NestedNoteLiteral> utf8_nd) {
+  auto flattened = pluss::detail::flatten_note_literal(utf8_nd, 3, "pluss::content");
+  const auto views = coden_detail::to_string_views(
+      std::span<const std::string>(flattened.flat.data(), flattened.flat.size()));
+  return pluss::coden::ops_internal::note_from_utf8(
+      std::span<const std::string_view>(views.data(), views.size()),
+      std::span<const std::int64_t>(flattened.sizes.data(), flattened.sizes.size()));
+}
+
 inline pluss::coden::Note make_note(std::span<const std::string_view> utf8_flat,
                                     std::span<const std::int64_t> sizes) {
   return pluss::coden::ops_internal::note_from_utf8(utf8_flat, sizes);
@@ -196,6 +206,15 @@ inline pluss::coden::Note make_note(const std::vector<std::string_view>& utf8_1d
 
 inline pluss::coden::Note make_note(const std::vector<std::string>& utf8_1d) {
   return make_note(std::span<const std::string>(utf8_1d.data(), utf8_1d.size()));
+}
+
+inline pluss::coden::Note make_note(std::initializer_list<pluss::detail::NestedNoteLiteral> utf8_nd) {
+  auto flattened = pluss::detail::flatten_note_literal(utf8_nd, 3, "pluss::make_note");
+  const auto views = coden_detail::to_string_views(
+      std::span<const std::string>(flattened.flat.data(), flattened.flat.size()));
+  return pluss::coden::ops_internal::note_from_utf8(
+      std::span<const std::string_view>(views.data(), views.size()),
+      std::span<const std::int64_t>(flattened.sizes.data(), flattened.sizes.size()));
 }
 
 // rvalue-oriented scalar/1D factories.
@@ -262,6 +281,15 @@ inline pluss::coden::Note bytes_content(std::initializer_list<const char*> bytes
   return bytes_content(flat);
 }
 
+inline pluss::coden::Note bytes_content(std::initializer_list<pluss::detail::NestedNoteLiteral> bytes_nd) {
+  auto flattened = pluss::detail::flatten_note_literal(bytes_nd, 3, "pluss::bytes_content");
+  const auto views = coden_detail::to_string_views(
+      std::span<const std::string>(flattened.flat.data(), flattened.flat.size()));
+  return pluss::coden::ops_internal::note_from_bytes(
+      std::span<const std::string_view>(views.data(), views.size()),
+      std::span<const std::int64_t>(flattened.sizes.data(), flattened.sizes.size()));
+}
+
 inline pluss::coden::Note make_bytes_note(std::span<const std::string_view> bytes_flat,
                                           std::span<const std::int64_t> sizes) {
   return pluss::coden::ops_internal::note_from_bytes(bytes_flat, sizes);
@@ -270,6 +298,15 @@ inline pluss::coden::Note make_bytes_note(std::span<const std::string_view> byte
 inline pluss::coden::Note make_bytes_note(const std::vector<std::string_view>& flat,
                                           std::span<const std::int64_t> sizes) {
   return pluss::coden::ops_internal::note_from_bytes(flat, sizes);
+}
+
+inline pluss::coden::Note make_bytes_note(std::initializer_list<pluss::detail::NestedNoteLiteral> bytes_nd) {
+  auto flattened = pluss::detail::flatten_note_literal(bytes_nd, 3, "pluss::make_bytes_note");
+  const auto views = coden_detail::to_string_views(
+      std::span<const std::string>(flattened.flat.data(), flattened.flat.size()));
+  return pluss::coden::ops_internal::note_from_bytes(
+      std::span<const std::string_view>(views.data(), views.size()),
+      std::span<const std::int64_t>(flattened.sizes.data(), flattened.sizes.size()));
 }
 
 inline pluss::coden::Note full_bytes_note_like(const pluss::coden::Note& like, std::string_view value) {
