@@ -355,6 +355,12 @@ if (PLUSSQIT_BUILD_EXAMPLES)
   if (TARGET plussqit_codem)
     target_link_libraries(plussqit_coden_note_factory_demo PRIVATE PlussQit::CodeM)
   endif()
+
+  add_executable(plussqit_coden_note_base_methods_demo examples/CodeN/note_base_methods_demo.cpp)
+  target_link_libraries(plussqit_coden_note_base_methods_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_base_methods_demo PRIVATE PlussQit::CodeM)
+  endif()
 endif()
 
 # ---- CodeH (time, Timeline/Duration/TimeIndex) ----

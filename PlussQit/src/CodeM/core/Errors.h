@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdio>
+#include <sstream>
 #include <source_location>
 #include <stdexcept>
 #include <string>
@@ -17,6 +18,21 @@ namespace pluss::codem {
 struct Error : std::runtime_error {
   using std::runtime_error::runtime_error;
 };
+
+namespace detail {
+
+inline void oss_args(std::ostringstream&) {}
+
+template <typename First, typename... Rest>
+inline void oss_args(std::ostringstream& oss, First&& first, Rest&&... rest) {
+  oss << std::forward<First>(first);
+  if constexpr (sizeof...(rest) > 0) {
+    oss << " ";
+    oss_args(oss, std::forward<Rest>(rest)...);
+  }
+}
+
+} // namespace detail
 
 [[noreturn]] inline void throw_error(
     const std::string& msg,
@@ -85,6 +101,36 @@ template <class... Args>
     if (!(cond)) {             \
       ::pluss::codem::throw_error((msg)); \
     }                          \
+  } while (false)
+
+// Fail immediately with an error message.
+#define PLUSS_FAIL(msg)        \
+  do {                         \
+    ::pluss::codem::throw_error((msg)); \
+  } while (false)
+
+// Equality check with single evaluation of both operands.
+#define PLUSS_CHECK_EQ(a, b)   \
+  do {                         \
+    const auto& _pluss_lhs = (a); \
+    const auto& _pluss_rhs = (b); \
+    if (!(_pluss_lhs == _pluss_rhs)) { \
+      std::ostringstream _pluss_oss; \
+      _pluss_oss << "Expected equality but got (" \
+                 << #a << " = " << _pluss_lhs << ", " \
+                 << #b << " = " << _pluss_rhs << ")"; \
+      ::pluss::codem::throw_error(_pluss_oss.str()); \
+    } \
+  } while (false)
+
+// Variadic condition check that streams arbitrary context pieces.
+#define PLUSS_INSPECT(cond, ...) \
+  do { \
+    if (!(cond)) { \
+      std::ostringstream _pluss_oss; \
+      ::pluss::codem::detail::oss_args(_pluss_oss __VA_OPT__(,) __VA_ARGS__); \
+      ::pluss::codem::throw_error(_pluss_oss.str()); \
+    } \
   } while (false)
 
 } // namespace pluss::codem

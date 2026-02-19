@@ -4,8 +4,10 @@
 #include <cstddef>
 #include <future>
 #include <functional>
+#include <stdexcept>
 #include <iterator>
 #include <ranges>
+#include <span>
 #include <thread>
 #include <type_traits>
 #include <utility>
@@ -155,6 +157,118 @@ auto queue(F&& fn, R1&& a, R2&& b) {
   for (; it_a != end_a && it_b != end_b; ++it_a, ++it_b) {
     out.emplace_back(detail::invoke_binary(fn, *it_a, *it_b, i++));
   }
+  return out;
+}
+
+// NumPy-like apply_along_axis for 2D nested ranges.
+//
+// Requirements:
+// - `input` is a sized random-access range of rows
+// - each row is a sized random-access range
+// - rectangular (all rows same length) is assumed
+//
+// Semantics:
+// - axis == 0: apply `fn` to each column slice (length = rows)
+// - axis == 1: apply `fn` to each row slice (length = cols)
+//
+// The callable can accept either (std::span<const T>) or (std::span<const T>, index).
+//
+// NOTE: slices are materialized into a temporary std::vector<T> to keep this generic.
+// If you want zero-copy views for contiguous rows, we can add a specialized fast path.
+
+template <class F, class R2D>
+requires std::ranges::random_access_range<R2D> && std::ranges::sized_range<R2D> &&
+         std::ranges::random_access_range<std::ranges::range_reference_t<R2D>> &&
+         std::ranges::sized_range<std::ranges::range_reference_t<R2D>>
+auto apply_along_axis(F&& fn, R2D&& input, std::size_t axis, queue_options opts = {}) {
+  using row_ref_t = std::ranges::range_reference_t<R2D>;
+  using elem_ref_t = std::ranges::range_reference_t<row_ref_t>;
+  using elem_t = std::remove_cvref_t<elem_ref_t>;
+
+  const std::size_t nrows = static_cast<std::size_t>(std::ranges::size(input));
+  const std::size_t ncols = nrows == 0 ? 0 : static_cast<std::size_t>(std::ranges::size(*(std::ranges::begin(input))));
+
+  if (axis != 0 && axis != 1) {
+    throw std::invalid_argument("apply_along_axis: axis must be 0 or 1 for 2D inputs");
+  }
+
+  // Output element type is whatever fn(span[, i]) returns.
+  using slice_span_t = std::span<const elem_t>;
+  using out_t = detail::invoke_result_elem_t<F&, slice_span_t>;
+  std::vector<out_t> out;
+
+  const std::size_t nslices = (axis == 0) ? ncols : nrows;
+  out.reserve(nslices);
+
+  // Parallelization is only meaningful across slices.
+  if (opts.exec == queue_exec::par && opts.grain_size > 0 && std::default_initializable<out_t>) {
+    out.resize(nslices);
+    if (nslices == 0) return out;
+
+    const std::size_t hw = std::max<std::size_t>(1, std::thread::hardware_concurrency());
+    const std::size_t workers = std::max<std::size_t>(1, opts.workers == 0 ? hw : opts.workers);
+    const std::size_t chunks = std::max<std::size_t>(
+        1, std::min<std::size_t>(workers, (nslices + opts.grain_size - 1) / opts.grain_size));
+    const std::size_t block = (nslices + chunks - 1) / chunks;
+
+    auto fn_copy = std::forward<F>(fn);
+    std::vector<std::future<void>> futures;
+    futures.reserve(chunks);
+
+    for (std::size_t c = 0; c < chunks; ++c) {
+      const std::size_t start = c * block;
+      const std::size_t end = std::min<std::size_t>(nslices, start + block);
+      futures.emplace_back(std::async(std::launch::async, [&, start, end]() {
+        std::vector<elem_t> tmp;
+        if (axis == 0) {
+          tmp.resize(nrows);
+          for (std::size_t j = start; j < end; ++j) {
+            for (std::size_t i = 0; i < nrows; ++i) {
+              tmp[i] = *(std::ranges::begin(input) + static_cast<std::ptrdiff_t>(i));
+              tmp[i] = * (std::ranges::begin(*(std::ranges::begin(input) + static_cast<std::ptrdiff_t>(i))) + static_cast<std::ptrdiff_t>(j));
+            }
+            out[j] = detail::invoke_with_optional_index(fn_copy, slice_span_t(tmp.data(), tmp.size()), j);
+          }
+        } else {
+          tmp.resize(ncols);
+          for (std::size_t i = start; i < end; ++i) {
+            auto row_it = std::ranges::begin(input) + static_cast<std::ptrdiff_t>(i);
+            auto col_it = std::ranges::begin(*row_it);
+            for (std::size_t j = 0; j < ncols; ++j) {
+              tmp[j] = *(col_it + static_cast<std::ptrdiff_t>(j));
+            }
+            out[i] = detail::invoke_with_optional_index(fn_copy, slice_span_t(tmp.data(), tmp.size()), i);
+          }
+        }
+      }));
+    }
+
+    for (auto& f : futures) f.get();
+    return out;
+  }
+
+  std::vector<elem_t> tmp;
+  if (axis == 0) {
+    tmp.resize(nrows);
+    for (std::size_t j = 0; j < ncols; ++j) {
+      for (std::size_t i = 0; i < nrows; ++i) {
+        auto row_it = std::ranges::begin(input) + static_cast<std::ptrdiff_t>(i);
+        tmp[i] = *(std::ranges::begin(*row_it) + static_cast<std::ptrdiff_t>(j));
+      }
+      out.emplace_back(detail::invoke_with_optional_index(fn, slice_span_t(tmp.data(), tmp.size()), j));
+    }
+  } else {
+    tmp.resize(ncols);
+    for (std::size_t i = 0; i < nrows; ++i) {
+      auto row_it = std::ranges::begin(input) + static_cast<std::ptrdiff_t>(i);
+      auto col_it = std::ranges::begin(*row_it);
+      for (std::size_t j = 0; j < ncols; ++j) {
+        tmp[j] = *(col_it + static_cast<std::ptrdiff_t>(j));
+      }
+      out.emplace_back(detail::invoke_with_optional_index(fn, slice_span_t(tmp.data(), tmp.size()), i));
+    }
+  }
+
   return out;
 }
 
