@@ -37,3 +37,7 @@
 #include "pluss/queue.h"
 #include "pluss/dispense.h"
 #include "aux/UseAux.h"
+
+#if __has_include("pluss/mic.h")
+#include "pluss/mic.h"
+#endif
