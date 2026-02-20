@@ -81,6 +81,10 @@ std::vector<std::string> split_lines(const std::string& s) {
   return out;
 }
 
+std::size_t count_char(const std::string& s, char c) {
+  return static_cast<std::size_t>(std::count(s.begin(), s.end(), c));
+}
+
 void test_comma_fixture_load_and_case_index() {
   ReadCsvOptions options;
   options.filepath = fixture_path("messy_data.csv").string();
@@ -128,12 +132,11 @@ void test_semicolon_fixture_with_index_col() {
   expect_throw([&]() { (void)df.case_(); }, "case_() should fail when index is not Series-backed");
 
   pluss::table::display::DisplayOptions show_opts;
-  show_opts.max_rows = 8;
-  show_opts.max_columns = 4;
+  show_opts.mode = pluss::table::display::DisplayMode::Compact;
   show_opts.terminal_width = 120;
 
   const auto shown = df.to_string(show_opts);
-  expect(shown.find("case") != std::string::npos, "show output should contain case index header");
+  expect(shown.find("management") != std::string::npos, "show output should contain case index values");
   expect(shown.find("[40 cases x 3 columns]") != std::string::npos, "show output should contain shape footer");
 }
 
@@ -230,11 +233,7 @@ void test_display_engine_width_truncation_and_info() {
   const auto df = DataFrame::read_csv(options);
 
   pluss::table::display::DisplayOptions show_opts;
-  show_opts.max_rows = 6;
-  show_opts.max_columns = 3;
-  show_opts.edge_rows = 2;
-  show_opts.edge_columns = 1;
-  show_opts.max_cell_width = 12;
+  show_opts.mode = pluss::table::display::DisplayMode::Compact;
   show_opts.terminal_width = 44;
 
   const auto shown = df.to_string(show_opts);
@@ -245,16 +244,25 @@ void test_display_engine_width_truncation_and_info() {
            "display output exceeded configured terminal width");
   }
   expect(shown.find("...") != std::string::npos, "display output should include ellipsis under truncation");
+  expect(lines.size() >= 4, "display output should include table header/rows");
+  expect(lines[1].find("case") == std::string::npos, "display output should not render `case` as a column header");
+  for (std::size_t i = 1; i + 2 < lines.size(); ++i) {
+    if (lines[i].find('=') != std::string::npos || lines[i].find('-') != std::string::npos) {
+      continue;
+    }
+    expect(count_char(lines[i], '|') <= 1, "display output should render at most one vertical divider per row");
+  }
 
   std::ostringstream os;
   df.show(os, show_opts);
   expect(os.str() == shown, "show(stream) output should match to_string");
 
   const auto info = df.info_string();
-  expect(info.find("<class 'pluss::table::DataFrame'>") != std::string::npos, "info output missing class line");
-  expect(info.find("CaseIndex:") != std::string::npos, "info output missing CaseIndex line");
-  expect(info.find("Data columns (total") != std::string::npos, "info output missing columns summary");
-  expect(info.find("memory usage:") != std::string::npos, "info output missing memory usage");
+  expect(info.find("Class") != std::string::npos, "info output missing class field");
+  expect(info.find("pluss::") != std::string::npos, "info output missing class value");
+  expect(info.find("Case Range") != std::string::npos, "info output missing case range field");
+  expect(info.find("Dtypes") != std::string::npos, "info output missing dtype summary");
+  expect(info.find("Memory") != std::string::npos, "info output missing memory field");
 }
 
 void test_describe_numeric_summary() {

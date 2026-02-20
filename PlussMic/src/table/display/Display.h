@@ -12,6 +12,12 @@ class Atlas;
 
 namespace display {
 
+enum class DisplayMode : std::uint8_t {
+  Auto = 0,
+  Compact = 1,
+  Wide = 2,
+};
+
 struct TerminalInfo {
   std::int64_t columns{120};
   std::int64_t rows{40};
@@ -19,12 +25,7 @@ struct TerminalInfo {
 };
 
 struct DisplayOptions {
-  std::int64_t max_rows{20};
-  std::int64_t max_columns{20};
-  std::int64_t edge_rows{4};
-  std::int64_t edge_columns{3};
-  std::int64_t max_cell_width{28};
-  std::int64_t min_column_width{6};
+  DisplayMode mode{DisplayMode::Auto};
   std::int64_t terminal_width{0};  // <= 0 => detect from terminal
   std::int64_t terminal_height{0}; // <= 0 => detect from terminal
   bool show_shape_footer{true};
@@ -47,4 +48,3 @@ void print_info(std::ostream& os, const DataFrame& frame, const DisplayOptions& 
 } // namespace display
 
 } // namespace pluss::table
-

@@ -1,22 +1,16 @@
 #include <cstdint>
 #include <filesystem>
+#include <iostream>
 #include <string>
 #include <vector>
 
-#include <fmt/format.h>
-
-#include "pluss/pluss.h"
+#include <pluss/pluss.h>
 
 namespace {
 
 pluss::table::display::DisplayOptions demo_display() {
   pluss::table::display::DisplayOptions opts;
-  opts.max_rows = 10;
-  opts.max_columns = 8;
-  opts.edge_rows = 3;
-  opts.edge_columns = 3;
-  opts.max_cell_width = 24;
-  opts.terminal_width = 120;
+  opts.mode = pluss::table::display::DisplayMode::Auto;
   return opts;
 }
 
@@ -38,25 +32,25 @@ void run_comma_csv_demo() {
 
   auto df = pluss::table::DataFrame::load("csv", opts);
 
-  fmt::print("\n=== Comma CSV demo: messy_data.csv ===\n");
+  std::cout << "\n=== Comma CSV demo: messy_data.csv ===\n";
   df.show(demo_display());
 
   const auto idx = df.case_().to_vec<std::int64_t>();
-  fmt::print("\ncase() first={}, last={}, n={}\n", idx.front(), idx.back(), idx.size());
+  std::cout << "\ncase() first=" << idx.front() << ", last=" << idx.back() << ", n=" << idx.size() << "\n";
 
-  fmt::print("\n.head(5) output\n");
+  std::cout << "\n.head(5) output\n";
   (void)df.head(5, true);
 
-  fmt::print("\n.info() output\n");
+  std::cout << "\n.info() output\n";
   df.info();
 
-  fmt::print("\n.describe() output\n");
+  std::cout << "\n.describe() output\n";
   (void)df.describe(true);
 
-  fmt::print("\n.view(5, 10) output (5th to 9th rows)\n");
+  std::cout << "\n.view(5, 10) output (5th to 9th rows)\n";
   (void)df.view(5, 10, true);
 
-  fmt::print("\n.view(-5, -1) output (last 5 rows)\n");
+  std::cout << "\n.view(-5, -1) output (last 5 rows)\n";
   (void)df.view(-5, -1, true);
 }
 
@@ -70,17 +64,18 @@ void run_semicolon_csv_demo() {
 
   auto df = pluss::table::DataFrame::read_csv(opts);
 
-  fmt::print("\n=== Semicolon CSV demo: bank-full.csv ===\n");
-  fmt::print("`job` is used as case index, so index is textual instead of 0..n-1.\n");
+  std::cout << "\n=== Semicolon CSV demo: bank-full.csv ===\n";
+  std::cout << "`job` is used as case index.\n";
+  std::cout << "Index is textual (not 0..n-1).\n";
   df.show(demo_display());
 
-  fmt::print("\n.info() output\n");
+  std::cout << "\n.info() output\n";
   df.info();
 
-  fmt::print("\n.describe() output\n");
+  std::cout << "\n.describe() output\n";
   (void)df.describe(true);
 
-  fmt::print("\n.view(-5, -1) output on semicolon dataset\n");
+  std::cout << "\n.view(-5, -1) output on semicolon dataset\n";
   (void)df.view(-5, -1, true);
 }
 
@@ -98,9 +93,9 @@ void run_atlas_demo() {
   pluss::table::Atlas atlas({f0, f1});
 
   pluss::table::display::DisplayOptions opts_display = demo_display();
-  opts_display.max_rows = 6;
+  opts_display.mode = pluss::table::display::DisplayMode::Compact;
 
-  fmt::print("\n=== Atlas demo (2 frames) ===\n");
+  std::cout << "\n=== Atlas demo (2 frames) ===\n";
   atlas.show(opts_display);
 }
 

@@ -10,7 +10,6 @@
 #include <limits>
 #include <numeric>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -33,6 +32,51 @@
 namespace pluss::table::display {
 
 namespace {
+
+struct RowPlan {
+  std::vector<std::int64_t> head;
+  std::vector<std::int64_t> tail;
+  bool ellipsis{false};
+};
+
+struct ColPlan {
+  std::vector<std::int64_t> head;
+  std::vector<std::int64_t> tail;
+  bool ellipsis{false};
+};
+
+struct TableMatrix {
+  std::vector<std::string> headers;
+  std::vector<bool> right_align;
+  std::vector<std::int64_t> min_widths;
+  std::vector<std::vector<std::string>> rows;
+};
+
+struct ResponsivePreset {
+  std::int64_t edge_rows;
+  std::int64_t tail_rows;
+  std::int64_t edge_columns;
+  std::int64_t tail_columns;
+  std::int64_t min_column_width;
+  std::int64_t max_cell_width;
+  std::int64_t max_rows_cap;
+};
+
+struct EffectiveDisplayOptions {
+  std::int64_t max_rows{15};
+  std::int64_t max_columns{0};
+  std::int64_t edge_rows{5};
+  std::int64_t tail_rows{3};
+  std::int64_t edge_columns{3};
+  std::int64_t tail_columns{1};
+  std::int64_t max_cell_width{28};
+  std::int64_t min_column_width{4};
+  std::int64_t terminal_width{120};
+  std::int64_t terminal_height{40};
+  bool show_shape_footer{true};
+  bool show_case_index{true};
+  bool color{false};
+};
 
 std::string clip_cell(std::string s, std::int64_t maxw) {
   if (maxw <= 0) {
@@ -63,10 +107,7 @@ std::string right_pad(const std::string& s, std::int64_t width) {
 }
 
 std::string fit_line(std::string line, std::int64_t width) {
-  if (width <= 0) {
-    return line;
-  }
-  if (static_cast<std::int64_t>(line.size()) <= width) {
+  if (width <= 0 || static_cast<std::int64_t>(line.size()) <= width) {
     return line;
   }
   if (width <= 1) {
@@ -75,27 +116,6 @@ std::string fit_line(std::string line, std::int64_t width) {
   line.resize(static_cast<std::size_t>(width - 1));
   line.push_back('~');
   return line;
-}
-
-std::vector<std::int64_t> visible_indices(std::int64_t total, std::int64_t max_count, std::int64_t edge) {
-  std::vector<std::int64_t> out;
-  if (total <= 0) {
-    return out;
-  }
-  if (max_count <= 0) {
-    return out;
-  }
-  if (total <= max_count) {
-    out.reserve(static_cast<std::size_t>(total));
-    for (std::int64_t i = 0; i < total; ++i) out.push_back(i);
-    return out;
-  }
-
-  const auto e = std::max<std::int64_t>(1, std::min<std::int64_t>(edge, max_count / 2));
-  out.reserve(static_cast<std::size_t>(2 * e));
-  for (std::int64_t i = 0; i < e; ++i) out.push_back(i);
-  for (std::int64_t i = total - e; i < total; ++i) out.push_back(i);
-  return out;
 }
 
 std::string scalar_at(const pluss::Series& s, std::int64_t row) {
@@ -209,20 +229,399 @@ std::string human_bytes(std::uint64_t b) {
   return fmt::format("{:.2f} {}", v, units[u]);
 }
 
-struct VisibleLayout {
-  std::vector<std::int64_t> rows;
-  std::vector<std::int64_t> cols;
-  bool row_ellipsis{false};
-  bool col_ellipsis{false};
-};
+ResponsivePreset preset_for_terminal_width(std::int64_t width, DisplayMode mode) {
+  ResponsivePreset p{};
+  if (width < 80) {
+    p = ResponsivePreset{3, 2, 1, 1, 3, 12, 10};
+  } else if (width < 110) {
+    p = ResponsivePreset{4, 2, 2, 1, 4, 16, 12};
+  } else if (width < 140) {
+    p = ResponsivePreset{5, 3, 3, 1, 4, 22, 15};
+  } else if (width < 180) {
+    p = ResponsivePreset{6, 3, 4, 1, 5, 26, 20};
+  } else {
+    p = ResponsivePreset{8, 4, 5, 2, 6, 32, 26};
+  }
 
-VisibleLayout compute_layout(const DataFrame& frame, const DisplayOptions& options) {
-  VisibleLayout l;
-  l.rows = visible_indices(frame.nrows(), options.max_rows, options.edge_rows);
-  l.cols = visible_indices(frame.ncols(), options.max_columns, options.edge_columns);
-  l.row_ellipsis = static_cast<std::int64_t>(l.rows.size()) < frame.nrows();
-  l.col_ellipsis = static_cast<std::int64_t>(l.cols.size()) < frame.ncols();
-  return l;
+  if (mode == DisplayMode::Compact) {
+    p.edge_rows = std::max<std::int64_t>(2, p.edge_rows - 1);
+    p.tail_rows = std::max<std::int64_t>(1, p.tail_rows - 1);
+    p.edge_columns = std::max<std::int64_t>(1, p.edge_columns - 1);
+    p.tail_columns = 1;
+    p.max_cell_width = std::max<std::int64_t>(10, p.max_cell_width - 4);
+    p.max_rows_cap = std::max<std::int64_t>(8, p.max_rows_cap - 4);
+  } else if (mode == DisplayMode::Wide) {
+    p.edge_rows += 1;
+    p.tail_rows += 1;
+    p.edge_columns += 1;
+    p.tail_columns = std::max<std::int64_t>(2, p.tail_columns);
+    p.max_cell_width += 4;
+    p.max_rows_cap += 4;
+  }
+  return p;
+}
+
+EffectiveDisplayOptions resolve_effective_options(
+    const DisplayOptions& input,
+    const TerminalInfo& term,
+    bool info_mode) {
+  EffectiveDisplayOptions out;
+
+  const auto width = input.terminal_width > 0 ? input.terminal_width : std::max<std::int64_t>(40, term.columns);
+  const auto height = input.terminal_height > 0 ? input.terminal_height : std::max<std::int64_t>(20, term.rows);
+  const auto preset = preset_for_terminal_width(width, input.mode);
+
+  out.terminal_width = width;
+  out.terminal_height = height;
+  out.edge_rows = preset.edge_rows;
+  out.tail_rows = preset.tail_rows;
+  out.edge_columns = preset.edge_columns;
+  out.tail_columns = preset.tail_columns;
+  out.min_column_width = preset.min_column_width;
+  out.max_cell_width = preset.max_cell_width;
+  out.max_columns = 0;
+  out.show_shape_footer = input.show_shape_footer;
+  out.show_case_index = input.show_case_index;
+  out.color = input.color;
+
+  const auto budget = info_mode ? std::max<std::int64_t>(8, height - 18) : std::max<std::int64_t>(6, height - 10);
+  const auto min_rows = std::max<std::int64_t>(2, out.edge_rows + out.tail_rows + 1);
+  const auto auto_max_rows = std::clamp<std::int64_t>(budget, min_rows, preset.max_rows_cap);
+  out.max_rows = auto_max_rows;
+
+  if (info_mode) {
+    // Keep info metadata readable on medium/large terminals.
+    out.max_cell_width = std::max<std::int64_t>(out.max_cell_width, 28);
+  }
+
+  if (out.max_cell_width < out.min_column_width) {
+    out.max_cell_width = out.min_column_width;
+  }
+  return out;
+}
+
+RowPlan build_row_plan(std::int64_t total_rows, const EffectiveDisplayOptions& options) {
+  RowPlan p;
+  if (total_rows <= 0) {
+    return p;
+  }
+
+  if (options.max_rows <= 0 || total_rows <= options.max_rows) {
+    p.head.reserve(static_cast<std::size_t>(total_rows));
+    for (std::int64_t i = 0; i < total_rows; ++i) {
+      p.head.push_back(i);
+    }
+    return p;
+  }
+
+  std::int64_t head = std::max<std::int64_t>(1, options.edge_rows);
+  std::int64_t tail = std::max<std::int64_t>(1, options.tail_rows);
+  head = std::min<std::int64_t>(head, total_rows);
+  tail = std::min<std::int64_t>(tail, total_rows - head);
+
+  while (head + tail + 1 > options.max_rows) {
+    if (tail > 1) {
+      --tail;
+    } else if (head > 1) {
+      --head;
+    } else {
+      break;
+    }
+  }
+
+  if (head + tail >= total_rows) {
+    p.head.reserve(static_cast<std::size_t>(total_rows));
+    for (std::int64_t i = 0; i < total_rows; ++i) {
+      p.head.push_back(i);
+    }
+    return p;
+  }
+
+  p.head.reserve(static_cast<std::size_t>(head));
+  p.tail.reserve(static_cast<std::size_t>(tail));
+  for (std::int64_t i = 0; i < head; ++i) {
+    p.head.push_back(i);
+  }
+  for (std::int64_t i = total_rows - tail; i < total_rows; ++i) {
+    p.tail.push_back(i);
+  }
+  p.ellipsis = true;
+  return p;
+}
+
+ColPlan build_col_plan(std::int64_t total_cols, const EffectiveDisplayOptions& options, bool force_compact) {
+  ColPlan p;
+  if (total_cols <= 0) {
+    return p;
+  }
+
+  const bool capped = options.max_columns > 0 && total_cols > options.max_columns;
+  const bool compact = force_compact || capped;
+
+  if (!compact) {
+    p.head.reserve(static_cast<std::size_t>(total_cols));
+    for (std::int64_t i = 0; i < total_cols; ++i) {
+      p.head.push_back(i);
+    }
+    return p;
+  }
+
+  const std::int64_t head_count = std::max<std::int64_t>(1, options.edge_columns);
+  const std::int64_t tail_count = std::max<std::int64_t>(1, options.tail_columns);
+
+  const auto h = std::min<std::int64_t>(head_count, total_cols);
+  const auto t = std::min<std::int64_t>(tail_count, total_cols - h);
+
+  if (h + t >= total_cols) {
+    p.head.reserve(static_cast<std::size_t>(total_cols));
+    for (std::int64_t i = 0; i < total_cols; ++i) {
+      p.head.push_back(i);
+    }
+    return p;
+  }
+
+  p.head.reserve(static_cast<std::size_t>(h));
+  p.tail.reserve(static_cast<std::size_t>(t));
+  for (std::int64_t i = 0; i < h; ++i) {
+    p.head.push_back(i);
+  }
+  for (std::int64_t i = total_cols - t; i < total_cols; ++i) {
+    p.tail.push_back(i);
+  }
+  p.ellipsis = true;
+  return p;
+}
+
+std::int64_t table_line_width(const std::vector<std::int64_t>& widths) {
+  if (widths.empty()) {
+    return 0;
+  }
+  std::int64_t out = widths[0];
+  if (widths.size() >= 2) {
+    out += 3 + widths[1]; // " | " between index-like col and first real col
+    for (std::size_t i = 2; i < widths.size(); ++i) {
+      out += 2 + widths[i]; // "  " between real cols
+    }
+  }
+  return out;
+}
+
+std::vector<std::int64_t> compute_widths(
+    const TableMatrix& matrix,
+    const EffectiveDisplayOptions& options) {
+  std::vector<std::int64_t> widths(matrix.headers.size(), options.min_column_width);
+  for (std::size_t i = 0; i < matrix.headers.size(); ++i) {
+    widths[i] = std::max<std::int64_t>(matrix.min_widths[i],
+                                       std::min<std::int64_t>(options.max_cell_width,
+                                                              static_cast<std::int64_t>(matrix.headers[i].size())));
+  }
+
+  for (const auto& row : matrix.rows) {
+    for (std::size_t i = 0; i < row.size() && i < widths.size(); ++i) {
+      const auto cell_len = static_cast<std::int64_t>(row[i].size());
+      widths[i] = std::max<std::int64_t>(widths[i], std::min<std::int64_t>(options.max_cell_width, cell_len));
+    }
+  }
+  return widths;
+}
+
+void shrink_widths_to_fit(
+    std::vector<std::int64_t>& widths,
+    const std::vector<std::int64_t>& min_widths,
+    std::int64_t terminal_width) {
+  if (terminal_width <= 0 || widths.empty()) {
+    return;
+  }
+
+  while (table_line_width(widths) > terminal_width) {
+    std::size_t best = widths.size();
+    for (std::size_t i = 0; i < widths.size(); ++i) {
+      if (widths[i] > min_widths[i]) {
+        if (best == widths.size() || widths[i] > widths[best]) {
+          best = i;
+        }
+      }
+    }
+    if (best == widths.size()) {
+      break;
+    }
+    --widths[best];
+  }
+}
+
+std::string row_line(
+    const std::vector<std::string>& cells,
+    const std::vector<std::int64_t>& widths,
+    const std::vector<bool>& right_align) {
+  std::string line;
+  line.reserve(static_cast<std::size_t>(table_line_width(widths)) + 8);
+  if (widths.empty()) {
+    return line;
+  }
+
+  const auto first_raw = cells.empty() ? std::string{} : cells[0];
+  const auto first = clip_cell(first_raw, widths[0]);
+  line += right_align[0] ? left_pad(first, widths[0]) : right_pad(first, widths[0]);
+
+  if (widths.size() >= 2) {
+    const auto second_raw = cells.size() > 1 ? cells[1] : std::string{};
+    const auto second = clip_cell(second_raw, widths[1]);
+    line += " | ";
+    line += right_align[1] ? left_pad(second, widths[1]) : right_pad(second, widths[1]);
+
+    for (std::size_t i = 2; i < widths.size(); ++i) {
+      const auto raw = i < cells.size() ? cells[i] : std::string{};
+      const auto clipped = clip_cell(raw, widths[i]);
+      line += "  ";
+      line += right_align[i] ? left_pad(clipped, widths[i]) : right_pad(clipped, widths[i]);
+    }
+  }
+  return line;
+}
+
+std::string render_ascii_table(
+    const TableMatrix& matrix,
+    const EffectiveDisplayOptions& options,
+    std::int64_t terminal_width) {
+  if (matrix.headers.empty()) {
+    return "<empty>";
+  }
+
+  auto widths = compute_widths(matrix, options);
+  shrink_widths_to_fit(widths, matrix.min_widths, terminal_width);
+
+  const auto line_w = table_line_width(widths);
+  const std::string top = std::string(static_cast<std::size_t>(line_w), '=');
+  const std::string mid = std::string(static_cast<std::size_t>(line_w), '-');
+
+  std::vector<std::string> lines;
+  lines.reserve(matrix.rows.size() + 6);
+  lines.push_back(fit_line(top, terminal_width));
+  lines.push_back(fit_line(row_line(matrix.headers, widths, matrix.right_align), terminal_width));
+  lines.push_back(fit_line(mid, terminal_width));
+
+  for (const auto& r : matrix.rows) {
+    lines.push_back(fit_line(row_line(r, widths, matrix.right_align), terminal_width));
+  }
+
+  lines.push_back(fit_line(mid, terminal_width));
+
+  std::string out;
+  for (std::size_t i = 0; i < lines.size(); ++i) {
+    if (i) {
+      out.push_back('\n');
+    }
+    out += lines[i];
+  }
+  return out;
+}
+
+TableMatrix build_dataframe_matrix(
+    const DataFrame& frame,
+    const EffectiveDisplayOptions& options,
+    bool compact_columns) {
+  const auto row_plan = build_row_plan(frame.nrows(), options);
+  const auto col_plan = build_col_plan(frame.ncols(), options, compact_columns);
+
+  const auto names = frame.column_names();
+  const auto cols = frame.columns();
+
+  TableMatrix m;
+  if (options.show_case_index) {
+    m.headers.push_back("");
+    m.right_align.push_back(true);
+    m.min_widths.push_back(std::max<std::int64_t>(4, options.min_column_width));
+  }
+
+  auto add_real_col = [&](std::int64_t cidx) {
+    const auto header = clip_cell(names[static_cast<std::size_t>(cidx)], options.max_cell_width);
+    m.headers.push_back(header);
+    m.right_align.push_back(is_numeric_thread(cols[static_cast<std::size_t>(cidx)]));
+    m.min_widths.push_back(options.min_column_width);
+  };
+
+  for (const auto cidx : col_plan.head) {
+    add_real_col(cidx);
+  }
+  if (col_plan.ellipsis) {
+    m.headers.push_back("...");
+    m.right_align.push_back(false);
+    m.min_widths.push_back(3);
+  }
+  for (const auto cidx : col_plan.tail) {
+    add_real_col(cidx);
+  }
+
+  auto build_data_row = [&](std::int64_t ridx) {
+    std::vector<std::string> row;
+    row.reserve(m.headers.size());
+
+    if (options.show_case_index) {
+      row.push_back(clip_cell(thread_value_at(frame.case_index(), ridx), options.max_cell_width));
+    }
+
+    for (const auto cidx : col_plan.head) {
+      row.push_back(clip_cell(thread_value_at(cols[static_cast<std::size_t>(cidx)], ridx), options.max_cell_width));
+    }
+    if (col_plan.ellipsis) {
+      row.push_back("...");
+    }
+    for (const auto cidx : col_plan.tail) {
+      row.push_back(clip_cell(thread_value_at(cols[static_cast<std::size_t>(cidx)], ridx), options.max_cell_width));
+    }
+    return row;
+  };
+
+  m.rows.reserve(row_plan.head.size() + row_plan.tail.size() + (row_plan.ellipsis ? 1 : 0));
+  for (const auto ridx : row_plan.head) {
+    m.rows.push_back(build_data_row(ridx));
+  }
+  if (row_plan.ellipsis) {
+    m.rows.push_back(std::vector<std::string>(m.headers.size(), "..."));
+  }
+  for (const auto ridx : row_plan.tail) {
+    m.rows.push_back(build_data_row(ridx));
+  }
+
+  return m;
+}
+
+std::int64_t estimate_matrix_width(const TableMatrix& matrix, const EffectiveDisplayOptions& options) {
+  const auto widths = compute_widths(matrix, options);
+  return table_line_width(widths);
+}
+
+std::string dtype_summary_line(const std::unordered_map<std::string, std::int64_t>& dtype_counts) {
+  std::vector<std::string> parts;
+  parts.reserve(dtype_counts.size());
+  for (const auto& kv : dtype_counts) {
+    parts.push_back(fmt::format("{}({})", kv.first, kv.second));
+  }
+  std::sort(parts.begin(), parts.end());
+
+  std::string line;
+  for (std::size_t i = 0; i < parts.size(); ++i) {
+    if (i) {
+      line += ", ";
+    }
+    line += parts[i];
+  }
+  return line;
+}
+
+std::string logical_dtype_name(const Thread& t) {
+  switch (t.kind()) {
+    case ThreadKind::Series:
+      return "Series";
+    case ThreadKind::Note:
+      return "Note";
+    case ThreadKind::Timeline:
+      return "Timeline";
+    case ThreadKind::TimeIndex:
+      return "TimeIndex";
+    default:
+      return "Unknown";
+  }
 }
 
 } // namespace
@@ -252,105 +651,47 @@ TerminalInfo detect_terminal() {
 
 std::string render(const DataFrame& frame, const DisplayOptions& options) {
   const auto term = detect_terminal();
-  const auto terminal_width = options.terminal_width > 0 ? options.terminal_width : term.columns;
+  const auto effective = resolve_effective_options(options, term, false);
+  const auto terminal_width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
 
-  auto layout = compute_layout(frame, options);
-  const auto names = frame.column_names();
-  const auto cols = frame.columns();
+  auto working = effective;
+  bool compact = false;
+  auto matrix = build_dataframe_matrix(frame, working, compact);
 
-  std::vector<std::string> headers;
-  std::vector<std::int64_t> widths;
-  std::vector<bool> right_align_col;
-
-  if (options.show_case_index) {
-    headers.push_back("case");
-    widths.push_back(std::max<std::int64_t>(options.min_column_width, 4));
-    right_align_col.push_back(true);
-  }
-
-  for (const auto cidx : layout.cols) {
-    const auto h = clip_cell(names[static_cast<std::size_t>(cidx)], options.max_cell_width);
-    headers.push_back(h);
-    widths.push_back(std::max<std::int64_t>(options.min_column_width, static_cast<std::int64_t>(h.size())));
-    right_align_col.push_back(is_numeric_thread(cols[static_cast<std::size_t>(cidx)]));
-  }
-
-  if (layout.col_ellipsis) {
-    headers.push_back("...");
-    widths.push_back(3);
-    right_align_col.push_back(false);
-  }
-
-  struct RowCells {
-    std::vector<std::string> cells;
-    bool ellipsis{false};
-  };
-
-  std::vector<RowCells> rows;
-  rows.reserve(layout.rows.size() + (layout.row_ellipsis ? 1 : 0));
-
-  for (std::size_t ridx = 0; ridx < layout.rows.size(); ++ridx) {
-    const auto row = layout.rows[ridx];
-    if (layout.row_ellipsis && ridx == layout.rows.size() / 2) {
-      rows.push_back({{}, true});
-    }
-
-    RowCells r;
-    if (options.show_case_index) {
-      r.cells.push_back(clip_cell(thread_value_at(frame.case_index(), row), options.max_cell_width));
-    }
-    for (const auto cidx : layout.cols) {
-      const auto cell = clip_cell(thread_value_at(cols[static_cast<std::size_t>(cidx)], row), options.max_cell_width);
-      r.cells.push_back(cell);
-    }
-    if (layout.col_ellipsis) {
-      r.cells.push_back("...");
-    }
-
-    for (std::size_t c = 0; c < r.cells.size(); ++c) {
-      widths[c] = std::max<std::int64_t>(widths[c], static_cast<std::int64_t>(r.cells[c].size()));
-    }
-    rows.push_back(std::move(r));
-  }
-
-  for (auto& w : widths) {
-    w = std::clamp<std::int64_t>(w, options.min_column_width, options.max_cell_width);
-  }
-
-  std::vector<std::string> lines;
-  lines.reserve(rows.size() + 4);
-
-  std::string head_line;
-  for (std::size_t c = 0; c < headers.size(); ++c) {
-    if (c != 0) head_line += "  ";
-    head_line += right_pad(clip_cell(headers[c], widths[c]), widths[c]);
-  }
-  lines.push_back(fit_line(head_line, terminal_width));
-
-  for (const auto& r : rows) {
-    if (r.ellipsis) {
-      lines.push_back(fit_line("...", terminal_width));
+  while (estimate_matrix_width(matrix, working) > terminal_width) {
+    if (!compact && frame.ncols() > 1) {
+      compact = true;
+      matrix = build_dataframe_matrix(frame, working, compact);
       continue;
     }
-
-    std::string line;
-    for (std::size_t c = 0; c < r.cells.size(); ++c) {
-      if (c != 0) line += "  ";
-      const bool right_align = right_align_col[c];
-      const auto clipped = clip_cell(r.cells[c], widths[c]);
-      line += right_align ? left_pad(clipped, widths[c]) : right_pad(clipped, widths[c]);
+    if (working.max_cell_width > std::max<std::int64_t>(4, working.min_column_width)) {
+      --working.max_cell_width;
+      matrix = build_dataframe_matrix(frame, working, compact);
+      continue;
     }
-    lines.push_back(fit_line(line, terminal_width));
+    if (working.edge_columns > 1) {
+      --working.edge_columns;
+      compact = true;
+      matrix = build_dataframe_matrix(frame, working, compact);
+      continue;
+    }
+    if (working.tail_columns > 1) {
+      --working.tail_columns;
+      compact = true;
+      matrix = build_dataframe_matrix(frame, working, compact);
+      continue;
+    }
+    if (working.min_column_width > 2) {
+      --working.min_column_width;
+      matrix = build_dataframe_matrix(frame, working, compact);
+      continue;
+    }
+    break;
   }
 
-  if (options.show_shape_footer) {
-    lines.push_back(fmt::format("[{} cases x {} columns]", frame.nrows(), frame.ncols()));
-  }
-
-  std::string out;
-  for (std::size_t i = 0; i < lines.size(); ++i) {
-    if (i) out.push_back('\n');
-    out += lines[i];
+  std::string out = render_ascii_table(matrix, working, terminal_width);
+  if (working.show_shape_footer) {
+    out += fmt::format("\n[{} cases x {} columns]", frame.nrows(), frame.ncols());
   }
   return out;
 }
@@ -361,69 +702,107 @@ std::string render(const Thread& thread, const DisplayOptions& options) {
 }
 
 std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
-  (void)options;
+  const auto term = detect_terminal();
+  const auto effective = resolve_effective_options(options, term, true);
+  const auto terminal_width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
+
   const auto cols = frame.columns();
   const auto names = frame.column_names();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
   std::uint64_t memory_bytes = estimate_bytes(frame.case_index());
 
-  std::vector<std::string> lines;
-  lines.reserve(static_cast<std::size_t>(frame.ncols()) + 8);
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    const auto dtype = logical_dtype_name(cols[i]);
+    dtype_counts[dtype] += 1;
+    memory_bytes += estimate_bytes(cols[i]);
+  }
 
   const auto first_case = frame.nrows() > 0 ? thread_value_at(frame.case_index(), 0) : std::string("NA");
   const auto last_case = frame.nrows() > 0 ? thread_value_at(frame.case_index(), frame.nrows() - 1) : std::string("NA");
 
-  lines.push_back("<class 'pluss::table::DataFrame'>");
-  lines.push_back(fmt::format("CaseIndex: {} cases, {} to {}", frame.nrows(), first_case, last_case));
-  lines.push_back(fmt::format("Data columns (total {} columns):", frame.ncols()));
-  lines.push_back(" #  Column                     Non-Null Cases  Dtype");
-  lines.push_back("--- -------------------------- --------------  ----------------");
+  TableMatrix summary;
+  summary.headers = {"Field", "Value"};
+  summary.right_align = {false, false};
+  summary.min_widths = {5, 8};
+  summary.rows = {
+      {"Class", "pluss::table::DataFrame"},
+      {"Cases", fmt::format("{}", frame.nrows())},
+      {"Columns", fmt::format("{}", frame.ncols())},
+      {"Case Range", fmt::format("{} -> {}", first_case, last_case)},
+      {"Null Case Rows", fmt::format("{}", frame.count_null_rows())},
+      {"Dtypes", dtype_summary_line(dtype_counts)},
+      {"Memory", human_bytes(memory_bytes)},
+  };
 
-  for (std::size_t i = 0; i < names.size(); ++i) {
+  TableMatrix details;
+  details.headers = {"#", "Column", "Non-Null Cases", "Dtype"};
+  details.right_align = {true, false, true, false};
+  details.min_widths = {2, 6, 6, 5};
+  const auto detail_plan = build_row_plan(static_cast<std::int64_t>(names.size()), effective);
+  details.rows.reserve(detail_plan.head.size() + detail_plan.tail.size() + (detail_plan.ellipsis ? 1 : 0));
+
+  auto push_detail_row = [&](std::size_t i) {
     const auto nn = non_null_count(cols[i]);
-    const auto dtype = cols[i].dtype_name();
-    dtype_counts[dtype] += 1;
-    memory_bytes += estimate_bytes(cols[i]);
-    lines.push_back(fmt::format("{:>2}  {:<26} {:>14}  {}", i, clip_cell(names[i], 26), nn, dtype));
-  }
+    details.rows.push_back({
+        fmt::format("{}", i),
+        names[i],
+        fmt::format("{}", nn),
+        logical_dtype_name(cols[i]),
+    });
+  };
 
-  std::vector<std::string> dtype_chunks;
-  dtype_chunks.reserve(dtype_counts.size());
-  for (const auto& kv : dtype_counts) {
-    dtype_chunks.push_back(fmt::format("{}({})", kv.first, kv.second));
+  for (const auto i : detail_plan.head) {
+    push_detail_row(static_cast<std::size_t>(i));
   }
-  std::sort(dtype_chunks.begin(), dtype_chunks.end());
-
-  std::string dtypes_line;
-  for (std::size_t i = 0; i < dtype_chunks.size(); ++i) {
-    if (i) dtypes_line += ", ";
-    dtypes_line += dtype_chunks[i];
+  if (detail_plan.ellipsis) {
+    details.rows.push_back({"...", "...", "...", "..."});
   }
-
-  lines.push_back(fmt::format("dtypes: {}", dtypes_line));
-  lines.push_back(fmt::format("memory usage: {}", human_bytes(memory_bytes)));
+  for (const auto i : detail_plan.tail) {
+    push_detail_row(static_cast<std::size_t>(i));
+  }
 
   std::string out;
-  for (std::size_t i = 0; i < lines.size(); ++i) {
-    if (i) out.push_back('\n');
-    out += lines[i];
-  }
+  out += render_ascii_table(summary, effective, terminal_width);
+  out += "\n";
+  out += render_ascii_table(details, effective, terminal_width);
   return out;
 }
 
 std::string render(const Atlas& atlas, const DisplayOptions& options) {
+  const auto term = detect_terminal();
+  const auto effective = resolve_effective_options(options, term, false);
   std::vector<std::string> lines;
   lines.push_back(fmt::format("Atlas(depth={}, rows={}, cols={})", atlas.depth(), atlas.nrows(), atlas.ncols()));
 
-  const auto visible = visible_indices(atlas.depth(), std::max<std::int64_t>(2, options.edge_rows * 2), options.edge_rows);
-  const bool ellipsis = static_cast<std::int64_t>(visible.size()) < atlas.depth();
+  const auto total = atlas.depth();
+  const auto max_frames = std::max<std::int64_t>(2, effective.edge_rows + effective.tail_rows);
+  std::vector<std::int64_t> visible;
+  bool ellipsis = false;
+  if (total <= max_frames) {
+    visible.reserve(static_cast<std::size_t>(total));
+    for (std::int64_t i = 0; i < total; ++i) {
+      visible.push_back(i);
+    }
+  } else {
+    const auto head = std::max<std::int64_t>(1, effective.edge_rows);
+    const auto tail = std::max<std::int64_t>(1, effective.tail_rows);
+    for (std::int64_t i = 0; i < head; ++i) {
+      visible.push_back(i);
+    }
+    for (std::int64_t i = total - tail; i < total; ++i) {
+      visible.push_back(i);
+    }
+    ellipsis = true;
+  }
 
   DisplayOptions frame_opts = options;
-  frame_opts.max_rows = std::max<std::int64_t>(5, std::min<std::int64_t>(options.max_rows, 12));
+  if (frame_opts.mode == DisplayMode::Wide) {
+    frame_opts.mode = DisplayMode::Auto;
+  }
 
   for (std::size_t i = 0; i < visible.size(); ++i) {
-    if (ellipsis && i == visible.size() / 2) {
+    if (ellipsis && i == static_cast<std::size_t>(effective.edge_rows)) {
       lines.push_back("...");
     }
 
@@ -438,7 +817,9 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
 
   std::string out;
   for (std::size_t i = 0; i < lines.size(); ++i) {
-    if (i) out.push_back('\n');
+    if (i) {
+      out.push_back('\n');
+    }
     out += lines[i];
   }
   return out;
