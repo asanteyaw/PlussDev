@@ -564,9 +564,30 @@ LoadResult load_excel(std::string_view filepath,
   return load_excel(filepath, names, header);
 }
 
+LoadResult load_excel(std::string_view filepath,
+                      const std::vector<std::int64_t>& sheet_indices,
+                      bool header) {
+  ReadExcelOptions options;
+  options.header = header;
+  options.sheet_indices = sheet_indices;
+  options.all_sheets = sheet_indices.empty();
+  return LoadResult(::pluss::loader::load_excel_workbook(filepath, options));
+}
+
+LoadResult load_excel(std::string_view filepath,
+                      std::initializer_list<std::int64_t> sheet_indices,
+                      bool header) {
+  std::vector<std::int64_t> indices;
+  indices.reserve(sheet_indices.size());
+  for (const auto i : sheet_indices) {
+    indices.push_back(i);
+  }
+  return load_excel(filepath, indices, header);
+}
+
 Workbook load_excel_workbook(std::string_view filepath, const Config& config) {
   auto opts = excel_read_options_from_config(config);
-  if (!opts.all_sheets && opts.sheet_names.empty() && !opts.n_sheets.has_value()) {
+  if (!opts.all_sheets && opts.sheet_names.empty() && opts.sheet_indices.empty() && !opts.n_sheets.has_value()) {
     opts.all_sheets = true;
   }
   return ::pluss::loader::load_excel_workbook(filepath, opts);
@@ -596,7 +617,7 @@ LoadResult load(std::string_view source_type, std::string_view filepath, const C
   if (source == "excel" || source == "xlsx") {
     auto opts = excel_read_options_from_config(config);
     const bool workbook_mode =
-        opts.all_sheets || !opts.sheet_names.empty() || opts.n_sheets.has_value();
+        opts.all_sheets || !opts.sheet_names.empty() || !opts.sheet_indices.empty() || opts.n_sheets.has_value();
     if (workbook_mode) {
       return LoadResult(::pluss::loader::load_excel_workbook(filepath, opts));
     }

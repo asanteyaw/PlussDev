@@ -1,0 +1,165 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "PLUSS_ENABLE_TORCH": "OFF",
+        "PLUSSQIT_BUILD_CODEM": "ON",
+        "PLUSSQIT_BUILD_EXAMPLES": "OFF",
+        "PLUSSQIT_BUILD_TESTS": "OFF",
+        "BUILD_BENCHMARKS": "OFF"
+      }
+    },
+    {
+      "name": "core",
+      "displayName": "core (no torch)",
+      "description": "Portable default: build PlussMa core without Torch interop.",
+      "inherits": "base"
+    },
+    {
+      "name": "core-dev",
+      "displayName": "core-dev (examples on)",
+      "description": "Core build tuned for local development with examples enabled.",
+      "inherits": "base",
+      "cacheVariables": {
+        "PLUSSQIT_BUILD_EXAMPLES": "ON"
+      }
+    },
+    {
+      "name": "torch",
+      "displayName": "torch (optional interop)",
+      "description": "Enable Torch interop. Requires LIBTORCH_ROOT env var to point to libtorch CMake package root.",
+      "inherits": "base",
+      "cacheVariables": {
+        "PLUSS_ENABLE_TORCH": "ON",
+        "CMAKE_PREFIX_PATH": "$env{LIBTORCH_ROOT}",
+        "Torch_DIR": "$env{LIBTORCH_ROOT}/share/cmake/Torch"
+      }
+    },
+    {
+      "name": "cpp_env",
+      "displayName": "cpp_env (Conda dev preset)",
+      "description": "Convenience preset for the maintainer's cpp_env conda environment.",
+      "inherits": "core-dev",
+      "cacheVariables": {
+        "PKG_CONFIG_EXECUTABLE": "$env{HOME}/software/miniconda3/envs/cpp_env/bin/pkg-config"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "core",
+      "configurePreset": "core",
+      "jobs": 8
+    },
+    {
+      "name": "core-dev",
+      "configurePreset": "core-dev",
+      "jobs": 8
+    },
+    {
+      "name": "torch",
+      "configurePreset": "torch",
+      "jobs": 8
+    },
+    {
+      "name": "cpp_env",
+      "configurePreset": "cpp_env",
+      "jobs": 8
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "core",
+      "configurePreset": "core",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "core-dev",
+      "configurePreset": "core-dev",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "torch",
+      "configurePreset": "torch",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "cpp_env",
+      "configurePreset": "cpp_env",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "core_build",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "core"
+        },
+        {
+          "type": "build",
+          "name": "core"
+        }
+      ]
+    },
+    {
+      "name": "core_dev_build",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "core-dev"
+        },
+        {
+          "type": "build",
+          "name": "core-dev"
+        }
+      ]
+    },
+    {
+      "name": "torch_build",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "torch"
+        },
+        {
+          "type": "build",
+          "name": "torch"
+        }
+      ]
+    },
+    {
+      "name": "cpp_env_build",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "cpp_env"
+        },
+        {
+          "type": "build",
+          "name": "cpp_env"
+        }
+      ]
+    }
+  ]
+}

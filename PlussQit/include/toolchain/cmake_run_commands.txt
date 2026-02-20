@@ -43,3 +43,24 @@ cmake --build build -j
 
 
 ./build/PlussQit/plussqit_codem_series_usage_demo
+
+// Convenience
+
+How to use now
+
+Your machine:
+
+cmake --preset cpp_env --fresh
+cmake --build --preset cpp_env
+one command: cmake --workflow --preset cpp_env_build
+
+
+Third-party users (clean/default):
+
+cmake --preset core --fresh
+cmake --build --preset core
+Third-party users with Torch:
+
+export LIBTORCH_ROOT=/path/to/libtorch
+cmake --preset torch --fresh
+cmake --build --preset torch

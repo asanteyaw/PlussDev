@@ -5,9 +5,16 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/LocalConfig.cmake")
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(LIBZIP REQUIRED libzip)
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+    pkg_check_modules(LIBZIP QUIET libzip)
+endif()
 project(plussma LANGUAGES CXX)
+
+# PlussQit core numeric/time primitives are foundational for all higher layers
+# (including PlussMic). Keep them always enabled at the top-level.
+set(PLUSSQIT_BUILD_CODEM ON CACHE BOOL "Build CodeM (required by PlussMa libs)" FORCE)
+set(PLUSSQIT_BUILD_CODEH ON CACHE BOOL "Build CodeH (required by PlussMa libs)" FORCE)
 
 # Provide a top-level 'pluss' library so subdirectories can attach sources
 add_library(pluss STATIC)
@@ -62,7 +69,15 @@ add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 
 add_subdirectory(PlussAI)
 add_subdirectory(PlussQit)
+if(NOT TARGET plussqit_coden)
+    message(FATAL_ERROR "plussqit_coden (CodeN) must be built for PlussMa.")
+endif()
+if(NOT TARGET plussqit_codem)
+    message(FATAL_ERROR "plussqit_codem (CodeM) must be built for PlussMa.")
+endif()
+if(NOT TARGET plussqit_codeh)
+    message(FATAL_ERROR "plussqit_codeh (CodeH) must be built for PlussMa.")
+endif()
 add_subdirectory(PlussPl)
 add_subdirectory(PlussTiq)
 add_subdirectory(PlussMic)
-

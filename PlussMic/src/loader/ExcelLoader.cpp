@@ -176,15 +176,6 @@ std::string read_zip_entry(zip_t* archive, std::string_view path) {
   return out;
 }
 
-void write_zip_entry(zip_t* archive, std::string_view path, std::string_view content) {
-  auto* src = zip_source_buffer(archive, content.data(), content.size(), 0);
-  PLUSS_CHECK(src != nullptr, "save_excel: failed to create zip source");
-  if (zip_file_add(archive, std::string(path).c_str(), src, ZIP_FL_OVERWRITE | ZIP_FL_ENC_UTF_8) < 0) {
-    zip_source_free(src);
-    PLUSS_FAIL("save_excel: failed to add zip entry '" + std::string(path) + "'");
-  }
-}
-
 std::optional<std::string> xml_attr(std::string_view tag, std::string_view attr_name) {
   const std::string pattern = fmt::format("{}=\"", attr_name);
   const auto p = tag.find(pattern);
@@ -422,6 +413,7 @@ pluss::table::DataFrame load_excel(std::string_view filepath, const ReadExcelOpt
   PLUSS_CHECK(!filepath.empty(), "load_excel: filepath is empty");
   PLUSS_CHECK(!options.all_sheets, "load_excel: all_sheets=true requires load_excel_workbook");
   PLUSS_CHECK(options.sheet_names.empty(), "load_excel: sheet_names requires load_excel_workbook");
+  PLUSS_CHECK(options.sheet_indices.empty(), "load_excel: sheet_indices requires load_excel_workbook");
   PLUSS_CHECK(!options.n_sheets.has_value(), "load_excel: n_sheets requires load_excel_workbook");
 
   int err = 0;
@@ -484,6 +476,13 @@ Workbook load_excel_workbook(
       PLUSS_CHECK(it != sheets.end(), "load_excel_workbook: unknown sheet name '" + wanted_name + "'");
       selected_sheets.push_back(*it);
     }
+  } else if (!options.sheet_indices.empty()) {
+    selected_sheets.reserve(options.sheet_indices.size());
+    for (const auto idx : options.sheet_indices) {
+      PLUSS_CHECK(idx >= 0 && static_cast<std::size_t>(idx) < sheets.size(),
+                  "load_excel_workbook: sheet index out of range");
+      selected_sheets.push_back(sheets[static_cast<std::size_t>(idx)]);
+    }
   } else {
     selected_sheets = sheets;
   }
@@ -523,7 +522,7 @@ void save_excel(const pluss::table::DataFrame& frame,
   int err = 0;
   zip_t* archive = zip_open(std::string(filepath).c_str(), ZIP_CREATE | ZIP_TRUNCATE, &err);
   PLUSS_CHECK(archive != nullptr, "save_excel: failed to create workbook");
-  auto guard = std::unique_ptr<zip_t, decltype(&zip_close)>(archive, &zip_close);
+  auto guard = std::unique_ptr<zip_t, decltype(&zip_discard)>(archive, &zip_discard);
 
   const auto sheet_name = options.sheet_name.empty() ? std::string("Sheet1") : options.sheet_name;
   const auto names = frame.column_names();
@@ -596,11 +595,31 @@ void save_excel(const pluss::table::DataFrame& frame,
       R"(<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>)"
       R"(</Relationships>)";
 
-  write_zip_entry(archive, "[Content_Types].xml", content_types);
-  write_zip_entry(archive, "_rels/.rels", rels_root);
-  write_zip_entry(archive, "xl/workbook.xml", workbook_xml);
-  write_zip_entry(archive, "xl/_rels/workbook.xml.rels", workbook_rels);
-  write_zip_entry(archive, "xl/worksheets/sheet1.xml", sheet_xml);
+  // Keep source buffers alive until zip_close() finalizes all entries.
+  std::vector<std::string> zip_payloads;
+  zip_payloads.reserve(5);
+  auto add_entry = [&](std::string_view path, std::string payload) {
+    zip_payloads.push_back(std::move(payload));
+    const auto& stable = zip_payloads.back();
+    auto* src = zip_source_buffer(archive, stable.data(), stable.size(), 0);
+    PLUSS_CHECK(src != nullptr, "save_excel: failed to create zip source");
+    if (zip_file_add(archive, std::string(path).c_str(), src, ZIP_FL_OVERWRITE | ZIP_FL_ENC_UTF_8) < 0) {
+      zip_source_free(src);
+      PLUSS_FAIL("save_excel: failed to add zip entry '" + std::string(path) + "'");
+    }
+  };
+
+  add_entry("[Content_Types].xml", content_types);
+  add_entry("_rels/.rels", rels_root);
+  add_entry("xl/workbook.xml", workbook_xml);
+  add_entry("xl/_rels/workbook.xml.rels", workbook_rels);
+  add_entry("xl/worksheets/sheet1.xml", sheet_xml);
+
+  if (zip_close(archive) < 0) {
+    const char* zerr = zip_strerror(archive);
+    PLUSS_FAIL("save_excel: failed to finalize workbook: " + std::string(zerr ? zerr : "unknown error"));
+  }
+  guard.release();
 #else
   (void)frame;
   (void)filepath;

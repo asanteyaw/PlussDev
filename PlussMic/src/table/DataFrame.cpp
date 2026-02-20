@@ -517,6 +517,18 @@ pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
   return pluss::loader::load_excel(filepath, sheet_names, header);
 }
 
+pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
+                                                const std::vector<std::int64_t>& sheet_indices,
+                                                bool header) {
+  return pluss::loader::load_excel(filepath, sheet_indices, header);
+}
+
+pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
+                                                std::initializer_list<std::int64_t> sheet_indices,
+                                                bool header) {
+  return pluss::loader::load_excel(filepath, sheet_indices, header);
+}
+
 DataFrame DataFrame::load_parquet(std::string_view filepath) {
   return load_parquet(filepath, pluss::loader::Config{});
 }

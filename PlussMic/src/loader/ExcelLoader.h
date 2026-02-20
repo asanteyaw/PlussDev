@@ -18,6 +18,7 @@ struct ReadExcelOptions {
   std::optional<std::string> sheet_name{};
   std::optional<std::int64_t> sheet_index{};
   std::vector<std::string> sheet_names{};
+  std::vector<std::int64_t> sheet_indices{};
   std::optional<std::size_t> n_sheets{};
   bool all_sheets{false};
 };

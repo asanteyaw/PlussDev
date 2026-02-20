@@ -46,17 +46,24 @@ int main() {
 
 
    //==== Excel demo (requires libzip) ====
+   std::cout << "\n=== Excel demo: test_grades.xlsx ===\n";
    auto xls_df = pluss::table::DataFrame::load_excel(
       data_file("test_grades.xlsx").string(),
-      /*sheet name=*/"Data", // or use overload with sheet index: /*sheet index=*/0
+      /*sheet name=*/"Sheet 1", // or use overload with sheet index: /*sheet index=*/0
       /*header=*/true);
    xls_df.head();
 
    // multi-sheet workbook load via same load_excel family
    auto loaded = pluss::table::DataFrame::load_excel(
-      "../../data/report.xlsx",
-      /*sheet names=*/{"Products", "Prices"},
+      data_file("test_grades.xlsx").string(),
+      /*sheet names=*/{"Sheet 1", "Sheet 2"},
       /*header=*/true);
+
+   auto loaded_by_idx = pluss::table::DataFrame::load_excel(
+      data_file("test_grades.xlsx").string(),
+      /*sheet indices=*/{0, 1},
+      /*header=*/true);
+   std::cout << "loaded workbook by indices :\n" << loaded_by_idx << "\n";
 
    std::cout << "loaded workbook :\n" << loaded << "\n";
 
@@ -66,25 +73,28 @@ int main() {
    }
 
    std::cout << "loaded workbook :\n" << loaded << "\n";
-   loaded.sheets("Prices").head();
+   loaded.sheets("Sheet 1").head();
 
    // grab one sheet to use
-   let products_df = loaded.sheets("Products");
-   products_df.head();
+   let grades_df = loaded.sheets("Sheet 2");
+   grades_df.head();
 
    // list all sheet names
    auto sheet_names = loaded.sheet_names();
    std::cout << "\nAll sheet names in workbook:\n" << sheet_names << "\n";
 
    // read a sheet by index
-   auto first_sheet = loaded.sheet_by_index(0);
-   first_sheet.head();
+   // auto first_sheet = loaded.sheet_by_index(0);
+   // first_sheet.head();
 
-   // save a dataframe to Excel
-   products_df.save_excel("products_copy.xlsx", {{"sheet name", "Products"}});
+   // save a dataframe to Excel (positional, non-dictionary)
+   grades_df.save_excel(data_file("grades_copy.xlsx").string(), "Grades");
+   
+   // full positional form:
+   // grades_df.save_excel("grades_copy.xlsx", "Grades", /*add_cases=*/false, /*header=*/true, /*na_rep=*/"NA");
 
    // load entire workbook with all sheets (note: may consume more memory if many/large sheets)
-   auto loaded_full = pluss::table::DataFrame::load_excel("../../data/report.xlsx", nullptr, true);
+   auto loaded_full = pluss::table::DataFrame::load_excel(data_file("test_grades.xlsx").string(), nullptr, true);
    std::cout << "loaded full workbook :\n" << loaded_full << "\n";
 
   return 0;

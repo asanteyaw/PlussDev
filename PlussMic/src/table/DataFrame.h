@@ -127,6 +127,12 @@ public:
   static pluss::loader::LoadResult load_excel(std::string_view filepath,
                                               std::initializer_list<std::string_view> sheet_names,
                                               bool header = true);
+  static pluss::loader::LoadResult load_excel(std::string_view filepath,
+                                              const std::vector<std::int64_t>& sheet_indices,
+                                              bool header = true);
+  static pluss::loader::LoadResult load_excel(std::string_view filepath,
+                                              std::initializer_list<std::int64_t> sheet_indices,
+                                              bool header = true);
   static DataFrame load_parquet(std::string_view filepath);
   static DataFrame load_parquet(std::string_view filepath, const pluss::loader::Config& config);
   static DataFrame load_parquet(std::string_view filepath,

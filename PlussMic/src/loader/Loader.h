@@ -91,6 +91,12 @@ LoadResult load_excel(std::string_view filepath,
 LoadResult load_excel(std::string_view filepath,
                       std::initializer_list<std::string_view> sheet_names,
                       bool header = true);
+LoadResult load_excel(std::string_view filepath,
+                      const std::vector<std::int64_t>& sheet_indices,
+                      bool header = true);
+LoadResult load_excel(std::string_view filepath,
+                      std::initializer_list<std::int64_t> sheet_indices,
+                      bool header = true);
 Workbook load_excel_workbook(std::string_view filepath, const Config& config);
 Workbook load_excel_workbook(std::string_view filepath,
                              std::initializer_list<ConfigEntry> config_entries);
