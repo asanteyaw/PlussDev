@@ -6,8 +6,6 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <variant>
-#include <vector>
 
 #include "MSharp/IntrusivePtr.h"
 #include "table/display/Display.h"
@@ -17,6 +15,11 @@
 
 namespace pluss::table {
 
+namespace detail {
+class ThreadImpl;
+}
+class ThreadValue;
+
 enum class ThreadKind : std::uint8_t {
   Series = 0,
   Note = 1,
@@ -24,32 +27,26 @@ enum class ThreadKind : std::uint8_t {
   TimeIndex = 3,
 };
 
-using ThreadPayload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss::TimeIndex>;
-
-class ThreadImpl final : public pluss::msharp::RefCounted {
-public:
-  ThreadImpl(ThreadPayload payload, std::optional<pluss::Series> validity_mask);
-
-  ThreadPayload payload_;
-  ThreadKind kind_{ThreadKind::Series};
-  std::int64_t size_{0};
-  std::string dtype_name_;
-  std::optional<pluss::Series> validity_mask_;
-};
-
 class Thread {
 public:
-  Thread() = default;
+  Thread();
   Thread(const pluss::Series& data, std::optional<pluss::Series> validity_mask = std::nullopt);
   Thread(const pluss::Note& data, std::optional<pluss::Series> validity_mask = std::nullopt);
   Thread(const pluss::Timeline& data, std::optional<pluss::Series> validity_mask = std::nullopt);
   Thread(const pluss::TimeIndex& data, std::optional<pluss::Series> validity_mask = std::nullopt);
+  Thread(const Thread& other);
+  Thread(Thread&& other) noexcept;
+  Thread& operator=(const Thread& other);
+  Thread& operator=(Thread&& other) noexcept;
+  ~Thread();
 
   bool defined() const noexcept;
   bool unique() const noexcept;
   std::int64_t size() const;
   ThreadKind kind() const;
   std::string dtype_name() const;
+  ThreadValue value() const;
+  const Thread& values() const noexcept;
 
   bool has_validity_mask() const;
   const std::optional<pluss::Series>& validity_mask() const;
@@ -99,12 +96,35 @@ public:
   const pluss::TimeIndex& as_timeindex() const;
 
 private:
-  explicit Thread(pluss::msharp::intrusive_ptr<ThreadImpl> impl);
+  explicit Thread(pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl);
 
-  ThreadImpl& mut_impl_();
-  const ThreadImpl& impl_ref_() const;
+  detail::ThreadImpl& mut_impl_();
+  const detail::ThreadImpl& impl_ref_() const;
 
-  pluss::msharp::intrusive_ptr<ThreadImpl> impl_{nullptr};
+  pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl_{nullptr};
+};
+
+class ThreadValue {
+public:
+  ThreadValue() = default;
+  explicit ThreadValue(Thread thread);
+
+  bool defined() const noexcept;
+  ThreadKind kind() const;
+  const Thread& thread() const noexcept;
+
+  pluss::Series as_series() const;
+  pluss::Note as_note() const;
+  pluss::Timeline as_timeline() const;
+  pluss::TimeIndex as_timeindex() const;
+
+  operator pluss::Series() const;
+  operator pluss::Note() const;
+  operator pluss::Timeline() const;
+  operator pluss::TimeIndex() const;
+
+private:
+  Thread thread_{};
 };
 
 std::ostream& operator<<(std::ostream& os, const Thread& thread);

@@ -19,74 +19,67 @@ std::filesystem::path data_file(const std::string& name) {
 }
 
 void run_comma_csv_demo() {
-  pluss::loader::ReadCsvOptions opts;
-  opts.filepath = data_file("messy_data.csv").string();
-  opts.nrows = 32;
-  opts.usecols = {
-      "Business Case ID",
-      "Agency Name",
-      "Agency Project ID",
-      "Lifecycle Cost",
-      "Updated Date",
-  };
-
-  auto df = pluss::table::DataFrame::load("csv", opts);
+  auto df = pluss::table::DataFrame::load_csv(
+      data_file("messy_data.csv").string(),
+      {
+          {"nrows", 32},
+      });
 
   std::cout << "\n=== Comma CSV demo: messy_data.csv ===\n";
-  df.show(demo_display());
+  std::cout << df.to_string(demo_display()) << '\n';
 
-  const auto idx = df.case_().to_vec<std::int64_t>();
-  std::cout << "\ncase() first=" << idx.front() << ", last=" << idx.back() << ", n=" << idx.size() << "\n";
+  const auto idx = df.cases_series().to_vec<std::int64_t>();
+  std::cout << "\ncases() first=" << idx.front() << ", last=" << idx.back() << ", n=" << idx.size() << "\n";
 
   std::cout << "\n.head(5) output\n";
-  (void)df.head(5, true);
+  df.head(5);
+
+  std::cout << "\n.tail(5) output\n";
+  df.tail(5);
 
   std::cout << "\n.info() output\n";
   df.info();
 
   std::cout << "\n.describe() output\n";
-  (void)df.describe(true);
+  df.describe();
 
   std::cout << "\n.view(5, 10) output (5th to 9th rows)\n";
-  (void)df.view(5, 10, true);
+  df.view(5, 10);
 
   std::cout << "\n.view(-5, -1) output (last 5 rows)\n";
-  (void)df.view(-5, -1, true);
+  df.view(-5, -1);
 }
 
 void run_semicolon_csv_demo() {
-  pluss::loader::ReadCsvOptions opts;
-  opts.filepath = data_file("bank-full.csv").string();
-  opts.sep = ';';
-  opts.nrows = 24;
-  opts.usecols = {"age", "job", "balance", "duration", "y"};
-  opts.index_col = "job";
-
-  auto df = pluss::table::DataFrame::read_csv(opts);
+  auto df = pluss::table::DataFrame::load_csv(
+      data_file("bank-full.csv").string(),
+      {
+          {"nrows", 24},
+          {"case col", "job"},
+      });
 
   std::cout << "\n=== Semicolon CSV demo: bank-full.csv ===\n";
-  std::cout << "`job` is used as case index.\n";
+  std::cout << "`job` is used as cases axis.\n";
   std::cout << "Index is textual (not 0..n-1).\n";
-  df.show(demo_display());
+  std::cout << df.to_string(demo_display()) << '\n';
 
   std::cout << "\n.info() output\n";
   df.info();
 
   std::cout << "\n.describe() output\n";
-  (void)df.describe(true);
+  df.describe();
 
   std::cout << "\n.view(-5, -1) output on semicolon dataset\n";
-  (void)df.view(-5, -1, true);
+  df.view(-5, -1);
 }
 
 void run_atlas_demo() {
-  pluss::loader::ReadCsvOptions opts;
-  opts.filepath = data_file("bank-full.csv").string();
-  opts.sep = ';';
-  opts.nrows = 20;
-  opts.usecols = {"age", "balance", "duration"};
-
-  auto df = pluss::table::DataFrame::read_csv(opts);
+  auto df = pluss::table::DataFrame::load_csv(
+      data_file("bank-full.csv").string(),
+      {
+          {"nrows", 20},
+          {"columns", std::vector<std::string>{"age", "balance", "duration"}},
+      });
   auto f0 = df.slice(0, 10);
   auto f1 = df.slice(10, 20);
 

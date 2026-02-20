@@ -15,9 +15,26 @@
 
 namespace pluss::table {
 
+namespace detail {
+
+using Payload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss::TimeIndex>;
+
+class ThreadImpl final : public pluss::msharp::RefCounted {
+public:
+  ThreadImpl(Payload payload, std::optional<pluss::Series> validity_mask);
+
+  Payload payload_;
+  ThreadKind kind_{ThreadKind::Series};
+  std::int64_t size_{0};
+  std::string dtype_name_;
+  std::optional<pluss::Series> validity_mask_;
+};
+
+} // namespace detail
+
 namespace {
 
-using Payload = ThreadPayload;
+using Payload = detail::Payload;
 
 std::int64_t normalize_index(std::int64_t idx, std::int64_t size) {
   std::int64_t out = idx;
@@ -131,7 +148,7 @@ std::string infer_dtype_name(const Payload& payload) {
   }, payload);
 }
 
-pluss::msharp::intrusive_ptr<ThreadImpl> build_impl(
+pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_impl(
     Payload payload,
     std::optional<pluss::Series> validity_mask);
 
@@ -175,7 +192,7 @@ pluss::Timeline timeline_take(const pluss::Timeline& t, std::span<const std::int
 
 } // namespace
 
-ThreadImpl::ThreadImpl(Payload payload, std::optional<pluss::Series> validity_mask)
+detail::ThreadImpl::ThreadImpl(Payload payload, std::optional<pluss::Series> validity_mask)
     : payload_(std::move(payload)),
       kind_(infer_kind(payload_)),
       size_(infer_size(payload_)),
@@ -186,13 +203,13 @@ ThreadImpl::ThreadImpl(Payload payload, std::optional<pluss::Series> validity_ma
 
 namespace {
 
-pluss::msharp::intrusive_ptr<ThreadImpl> build_impl(
+pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_impl(
     Payload payload,
     std::optional<pluss::Series> validity_mask) {
-  return pluss::msharp::make_intrusive<ThreadImpl>(std::move(payload), std::move(validity_mask));
+  return pluss::msharp::make_intrusive<detail::ThreadImpl>(std::move(payload), std::move(validity_mask));
 }
 
-pluss::msharp::intrusive_ptr<ThreadImpl> clone_impl(const ThreadImpl& src) {
+pluss::msharp::intrusive_ptr<detail::ThreadImpl> clone_impl(const detail::ThreadImpl& src) {
   return build_impl(src.payload_, src.validity_mask_);
 }
 
@@ -204,7 +221,9 @@ double reduction_value(const pluss::Series& scalar_series, std::string_view wher
 
 } // namespace
 
-Thread::Thread(pluss::msharp::intrusive_ptr<ThreadImpl> impl) : impl_(std::move(impl)) {}
+Thread::Thread(pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl) : impl_(std::move(impl)) {}
+
+Thread::Thread() = default;
 
 Thread::Thread(const pluss::Series& data, std::optional<pluss::Series> validity_mask)
     : impl_(build_impl(Payload{data}, std::move(validity_mask))) {}
@@ -218,15 +237,21 @@ Thread::Thread(const pluss::Timeline& data, std::optional<pluss::Series> validit
 Thread::Thread(const pluss::TimeIndex& data, std::optional<pluss::Series> validity_mask)
     : impl_(build_impl(Payload{data}, std::move(validity_mask))) {}
 
+Thread::Thread(const Thread& other) = default;
+Thread::Thread(Thread&& other) noexcept = default;
+Thread& Thread::operator=(const Thread& other) = default;
+Thread& Thread::operator=(Thread&& other) noexcept = default;
+Thread::~Thread() = default;
+
 bool Thread::defined() const noexcept { return static_cast<bool>(impl_); }
 bool Thread::unique() const noexcept { return impl_.unique(); }
 
-const ThreadImpl& Thread::impl_ref_() const {
+const detail::ThreadImpl& Thread::impl_ref_() const {
   PLUSS_CHECK(defined(), "Thread: undefined handle");
   return *impl_;
 }
 
-ThreadImpl& Thread::mut_impl_() {
+detail::ThreadImpl& Thread::mut_impl_() {
   PLUSS_CHECK(defined(), "Thread: undefined handle");
   if (!impl_.unique()) {
     impl_ = clone_impl(*impl_);
@@ -237,6 +262,8 @@ ThreadImpl& Thread::mut_impl_() {
 std::int64_t Thread::size() const { return impl_ref_().size_; }
 ThreadKind Thread::kind() const { return impl_ref_().kind_; }
 std::string Thread::dtype_name() const { return impl_ref_().dtype_name_; }
+ThreadValue Thread::value() const { return ThreadValue(*this); }
+const Thread& Thread::values() const noexcept { return *this; }
 
 bool Thread::has_validity_mask() const { return impl_ref_().validity_mask_.has_value(); }
 
@@ -504,5 +531,21 @@ std::ostream& operator<<(std::ostream& os, const Thread& thread) {
   thread.show(os);
   return os;
 }
+
+ThreadValue::ThreadValue(Thread thread) : thread_(std::move(thread)) {}
+
+bool ThreadValue::defined() const noexcept { return thread_.defined(); }
+ThreadKind ThreadValue::kind() const { return thread_.kind(); }
+const Thread& ThreadValue::thread() const noexcept { return thread_; }
+
+pluss::Series ThreadValue::as_series() const { return thread_.as_series(); }
+pluss::Note ThreadValue::as_note() const { return thread_.as_note(); }
+pluss::Timeline ThreadValue::as_timeline() const { return thread_.as_timeline(); }
+pluss::TimeIndex ThreadValue::as_timeindex() const { return thread_.as_timeindex(); }
+
+ThreadValue::operator pluss::Series() const { return as_series(); }
+ThreadValue::operator pluss::Note() const { return as_note(); }
+ThreadValue::operator pluss::Timeline() const { return as_timeline(); }
+ThreadValue::operator pluss::TimeIndex() const { return as_timeindex(); }
 
 } // namespace pluss::table

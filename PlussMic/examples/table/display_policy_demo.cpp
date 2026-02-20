@@ -13,14 +13,14 @@ std::filesystem::path data_file(const std::string& name) {
 } // namespace
 
 int main() {
-  pluss::loader::ReadCsvOptions opts;
-  opts.filepath = data_file("messy_data.csv").string();
-  opts.nrows = 120;
-
-  auto df = pluss::table::DataFrame::read_csv(opts);
+  auto df = pluss::table::DataFrame::load_csv(
+      data_file("messy_data.csv").string(),
+      {
+          {"nrows", 120},
+      });
 
   std::cout << "=== display policy demo (dynamic terminal width) ===\n";
-  df.show();
+  std::cout << df << '\n';
 
   std::cout << "\n=== info table ===\n";
   df.info();
@@ -28,7 +28,7 @@ int main() {
   std::cout << "\n=== forced narrow width (60 cols) ===\n";
   pluss::table::display::DisplayOptions narrow;
   narrow.terminal_width = 60;
-  df.show(narrow);
+  std::cout << df.to_string(narrow) << '\n';
 
   return 0;
 }

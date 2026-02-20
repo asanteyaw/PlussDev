@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include <pluss/pluss.h>
 
@@ -13,25 +14,26 @@ std::filesystem::path data_file(const std::string& name) {
 } // namespace
 
 int main() {
-  pluss::loader::ReadCsvOptions opts;
-  opts.filepath = data_file("messy_data.csv").string();
-  opts.nrows = 80;
-  opts.usecols = {
-      "Business Case ID",
-      "Agency Name",
-      "Lifecycle Cost",
-      "Schedule Variance (in days)",
-      "Cost Variance (%)",
-  };
-
-  auto df = pluss::table::DataFrame::read_csv(opts);
+  auto df = pluss::table::DataFrame::load_csv(
+      data_file("messy_data.csv").string(),
+      {
+          {"nrows", 80},
+          {"columns",
+           std::vector<std::string>{
+               "Business Case ID",
+               "Agency Name",
+               "Lifecycle Cost",
+               "Schedule Variance (in days)",
+               "Cost Variance (%)",
+           }},
+      });
 
   std::cout << "=== describe demo ===\n";
   std::cout << "input\n";
-  df.head(8, true);
+  df.head(8);
 
   std::cout << "\nsummary statistics\n";
-  (void)df.describe(true);
+  df.describe();
 
   return 0;
 }

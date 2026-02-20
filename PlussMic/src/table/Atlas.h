@@ -14,22 +14,19 @@
 
 namespace pluss::table {
 
-class AtlasImpl final : public pluss::msharp::RefCounted {
-public:
-  AtlasImpl(std::vector<DataFrame> frames, std::optional<Thread> axis0_labels);
-  void validate_();
-
-  std::vector<DataFrame> frames_;
-  std::optional<Thread> axis0_labels_;
-  std::int64_t nrows_{0};
-  std::int64_t ncols_{0};
-  std::vector<std::string> names_;
-};
+namespace detail {
+class AtlasImpl;
+}
 
 class Atlas {
 public:
-  Atlas() = default;
+  Atlas();
   explicit Atlas(std::vector<DataFrame> frames, std::optional<Thread> axis0_labels = std::nullopt);
+  Atlas(const Atlas& other);
+  Atlas(Atlas&& other) noexcept;
+  Atlas& operator=(const Atlas& other);
+  Atlas& operator=(Atlas&& other) noexcept;
+  ~Atlas();
 
   bool defined() const noexcept;
   bool unique() const noexcept;
@@ -58,10 +55,10 @@ public:
   void show(std::ostream& os, const display::DisplayOptions& options = {}) const;
 
 private:
-  explicit Atlas(pluss::msharp::intrusive_ptr<AtlasImpl> impl);
+  explicit Atlas(pluss::msharp::intrusive_ptr<detail::AtlasImpl> impl);
 
-  const AtlasImpl& impl_ref_() const;
-  pluss::msharp::intrusive_ptr<AtlasImpl> impl_{nullptr};
+  const detail::AtlasImpl& impl_ref_() const;
+  pluss::msharp::intrusive_ptr<detail::AtlasImpl> impl_{nullptr};
 };
 
 std::ostream& operator<<(std::ostream& os, const Atlas& atlas);

@@ -15,11 +15,15 @@ add_executable(plussmic_dataframe_describe_demo
 add_executable(plussmic_display_policy_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/display_policy_demo.cpp
 )
+add_executable(plussmic_df_ex_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/df_ex_demo.cpp
+)
 
 target_link_libraries(plussmic_dataframe_initial_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_view_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_describe_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_display_policy_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_df_ex_demo PRIVATE PlussMic)
 
 target_compile_definitions(plussmic_dataframe_initial_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
@@ -31,5 +35,8 @@ target_compile_definitions(plussmic_dataframe_describe_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_display_policy_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_df_ex_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cctype>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -14,18 +15,47 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <variant>
+
+#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/Half.h"
 #include "loader/CsvLoader.h"
+#include "loader/Loader.h"
 #include "table/display/Display.h"
 
 namespace pluss::table {
+
+namespace detail {
+
+class DataFrameImpl final : public pluss::msharp::RefCounted {
+public:
+  DataFrameImpl(std::vector<std::string> names,
+                std::vector<Thread> columns,
+                std::optional<Thread> cases = std::nullopt);
+  void validate_and_reindex_();
+
+  std::vector<std::string> names_;
+  std::vector<Thread> columns_;
+  std::unordered_map<std::string, std::size_t> name_to_idx_;
+  std::int64_t nrows_{0};
+  Thread cases_{};
+};
+
+} // namespace detail
 
 namespace {
 
 std::string owned_name(std::string_view sv) {
   return std::string(sv.data(), sv.size());
+}
+
+std::string lower_copy(std::string s) {
+  for (auto& ch : s) {
+    ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+  }
+  return s;
 }
 
 std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::int64_t stop, std::int64_t size) {
@@ -37,6 +67,12 @@ std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::i
     e = s;
   }
   return {s, e};
+}
+
+std::int64_t normalize_row_index(std::int64_t row, std::int64_t size) {
+  auto out = row < 0 ? row + size : row;
+  PLUSS_CHECK(out >= 0 && out < size, "DataFrame: row index out of bounds");
+  return out;
 }
 
 std::vector<std::string> normalize_name_list(std::initializer_list<std::string_view> names) {
@@ -65,7 +101,7 @@ pluss::Series bool_series_from_keep(const std::vector<bool>& keep) {
   return out;
 }
 
-Thread default_case_index(std::int64_t nrows) {
+Thread default_cases(std::int64_t nrows) {
   PLUSS_CHECK(nrows >= 0, "DataFrame: nrows must be non-negative");
   std::vector<std::int64_t> idx(static_cast<std::size_t>(nrows));
   std::iota(idx.begin(), idx.end(), static_cast<std::int64_t>(0));
@@ -128,6 +164,72 @@ bool extract_numeric_value(const pluss::Series& s, std::int64_t idx, double& out
   }
 }
 
+std::string series_scalar_string_at(const pluss::Series& s, std::int64_t row) {
+  const auto* base = s.raw_data();
+  switch (s.scalar_type()) {
+    case pluss::codem::ScalarType::Bool:
+      return reinterpret_cast<const bool*>(base)[row] ? "true" : "false";
+    case pluss::codem::ScalarType::Int8:
+      return fmt::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
+    case pluss::codem::ScalarType::Int16:
+      return fmt::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
+    case pluss::codem::ScalarType::Int32:
+      return fmt::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
+    case pluss::codem::ScalarType::Int64:
+      return fmt::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
+    case pluss::codem::ScalarType::UInt8:
+      return fmt::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
+    case pluss::codem::ScalarType::UInt16:
+      return fmt::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
+    case pluss::codem::ScalarType::UInt32:
+      return fmt::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
+    case pluss::codem::ScalarType::UInt64:
+      return fmt::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
+    case pluss::codem::ScalarType::Float16:
+      return fmt::format("{:.6g}",
+                         pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]));
+    case pluss::codem::ScalarType::BFloat16:
+      return fmt::format("{:.6g}",
+                         pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]));
+    case pluss::codem::ScalarType::Float32:
+      return fmt::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
+    case pluss::codem::ScalarType::Float64:
+      return fmt::format("{:.12g}", reinterpret_cast<const double*>(base)[row]);
+    case pluss::codem::ScalarType::Complex64: {
+      const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
+      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+    }
+    case pluss::codem::ScalarType::Complex128: {
+      const auto v = reinterpret_cast<const pluss::codem::Complex128*>(base)[row];
+      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+    }
+    default:
+      return "";
+  }
+}
+
+std::string thread_scalar_string_at(const Thread& t, std::int64_t row) {
+  if (t.has_validity_mask()) {
+    const auto valid = t.validity_mask()->to_vec<bool>();
+    if (!valid[static_cast<std::size_t>(row)]) {
+      return "NA";
+    }
+  }
+
+  switch (t.kind()) {
+    case ThreadKind::Series:
+      return series_scalar_string_at(t.as_series(), row);
+    case ThreadKind::Note:
+      return std::string(t.as_note().at(row));
+    case ThreadKind::Timeline:
+      return fmt::format("{}", t.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+    case ThreadKind::TimeIndex:
+      return fmt::format("{}", t.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(row)]);
+    default:
+      return "";
+  }
+}
+
 Thread make_f64_thread(const std::vector<double>& values) {
   const auto n = static_cast<std::int64_t>(values.size());
   auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Float64);
@@ -172,17 +274,17 @@ std::int64_t normalize_view_stop(std::int64_t stop, std::int64_t nrows) {
 
 } // namespace
 
-DataFrameImpl::DataFrameImpl(std::vector<std::string> names,
-                             std::vector<Thread> columns,
-                             std::optional<Thread> case_index)
+detail::DataFrameImpl::DataFrameImpl(std::vector<std::string> names,
+                                     std::vector<Thread> columns,
+                                     std::optional<Thread> cases)
     : names_(std::move(names)), columns_(std::move(columns)) {
-  if (case_index.has_value()) {
-    case_index_ = *case_index;
+  if (cases.has_value()) {
+    cases_ = *cases;
   }
   validate_and_reindex_();
 }
 
-void DataFrameImpl::validate_and_reindex_() {
+void detail::DataFrameImpl::validate_and_reindex_() {
   PLUSS_CHECK(names_.size() == columns_.size(), "DataFrame: names/columns size mismatch");
   name_to_idx_.clear();
   name_to_idx_.reserve(names_.size());
@@ -206,17 +308,17 @@ void DataFrameImpl::validate_and_reindex_() {
 
   nrows_ = expected_rows.value_or(0);
 
-  if (!case_index_.defined()) {
-    case_index_ = default_case_index(nrows_);
+  if (!cases_.defined()) {
+    cases_ = default_cases(nrows_);
   }
-  PLUSS_CHECK(case_index_.defined(), "DataFrame: case index is undefined");
-  PLUSS_CHECK(case_index_.size() == nrows_, "DataFrame: case index length mismatch");
+  PLUSS_CHECK(cases_.defined(), "DataFrame: cases are undefined");
+  PLUSS_CHECK(cases_.size() == nrows_, "DataFrame: case length mismatch");
 }
 
 namespace {
 
-pluss::msharp::intrusive_ptr<DataFrameImpl> clone_impl(const DataFrameImpl& src) {
-  return pluss::msharp::make_intrusive<DataFrameImpl>(src.names_, src.columns_, src.case_index_);
+pluss::msharp::intrusive_ptr<detail::DataFrameImpl> clone_impl(const detail::DataFrameImpl& src) {
+  return pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, src.columns_, src.cases_);
 }
 
 } // namespace
@@ -228,9 +330,11 @@ const std::string& ColumnRef::name() const noexcept { return name_; }
 const Thread& ColumnRef::thread() const noexcept { return column_; }
 double ColumnRef::mean() const { return column_.mean(); }
 Thread ColumnRef::head(std::int64_t n) const { return column_.head(n); }
+ThreadValue ColumnRef::value() const { return column_.value(); }
+Thread ColumnRef::values() const { return column_; }
 
 DataFrame::DataFrame(std::vector<std::pair<std::string, Thread>> columns,
-                     std::optional<Thread> case_index) {
+                     std::optional<Thread> cases) {
   std::vector<std::string> names;
   std::vector<Thread> values;
   names.reserve(columns.size());
@@ -239,31 +343,202 @@ DataFrame::DataFrame(std::vector<std::pair<std::string, Thread>> columns,
     names.push_back(std::move(kv.first));
     values.push_back(std::move(kv.second));
   }
-  impl_ = pluss::msharp::make_intrusive<DataFrameImpl>(std::move(names), std::move(values), std::move(case_index));
+  impl_ = pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(names), std::move(values), std::move(cases));
 }
 
-DataFrame::DataFrame(pluss::msharp::intrusive_ptr<DataFrameImpl> impl) : impl_(std::move(impl)) {}
+DataFrame::DataFrame() = default;
 
-DataFrame DataFrame::load(std::string_view source_type, const pluss::loader::ReadCsvOptions& options) {
-  if (source_type == "csv") {
-    return pluss::loader::load_csv(options);
+DataFrame::DataFrame(pluss::msharp::intrusive_ptr<detail::DataFrameImpl> impl) : impl_(std::move(impl)) {}
+
+DataFrame::DataFrame(const DataFrame& other) = default;
+DataFrame::DataFrame(DataFrame&& other) noexcept = default;
+DataFrame& DataFrame::operator=(const DataFrame& other) = default;
+DataFrame& DataFrame::operator=(DataFrame&& other) noexcept = default;
+DataFrame::~DataFrame() = default;
+
+DataFrame DataFrame::load(std::string_view source_type, std::string_view filepath) {
+  return load(source_type, filepath, pluss::loader::Config{});
+}
+
+DataFrame DataFrame::load(std::string_view source_type,
+                          std::string_view filepath,
+                          const pluss::loader::Config& config) {
+  auto loaded = pluss::loader::load(source_type, filepath, config);
+  if (loaded.is_frame()) {
+    return loaded.dataframe();
+  }
+  PLUSS_FAIL("DataFrame::load: requested source returned a workbook. Use pluss::loader::load(...) for multi-sheet loads");
+}
+
+DataFrame DataFrame::load(std::string_view source_type,
+                          std::string_view filepath,
+                          std::initializer_list<pluss::loader::ConfigEntry> config_entries) {
+  return load(source_type, filepath, pluss::loader::config_from(config_entries));
+}
+
+DataFrame DataFrame::load(std::string_view source_type,
+                          std::string_view filepath,
+                          const pluss::loader::ReadCsvOptions& options) {
+  const auto source = lower_copy(owned_name(source_type));
+  if (source == "csv") {
+    return pluss::loader::load_csv(filepath, options);
   }
   PLUSS_FAIL("DataFrame::load: unsupported source type '" + std::string(source_type) + "'");
 }
 
-DataFrame DataFrame::read_csv(const pluss::loader::ReadCsvOptions& options) {
-  return pluss::loader::load_csv(options);
+DataFrame DataFrame::load(std::string_view source_type,
+                          std::string_view filepath,
+                          char sep,
+                          std::optional<std::size_t> nrows,
+                          std::vector<std::string> usecols,
+                          std::optional<std::string> case_col,
+                          pluss::loader::BadLinePolicy on_bad_lines) {
+  pluss::loader::ReadCsvOptions options;
+  options.sep = sep;
+  options.nrows = nrows;
+  options.usecols = std::move(usecols);
+  options.case_col = std::move(case_col);
+  options.on_bad_lines = on_bad_lines;
+  return load(source_type, filepath, options);
+}
+
+DataFrame DataFrame::load(std::string_view source_type,
+                          std::string_view filepath,
+                          char sep,
+                          std::optional<std::size_t> nrows,
+                          std::initializer_list<std::string_view> usecols,
+                          std::optional<std::string> case_col,
+                          pluss::loader::BadLinePolicy on_bad_lines) {
+  return load(source_type, filepath, sep, nrows, normalize_name_list(usecols), std::move(case_col), on_bad_lines);
+}
+
+DataFrame DataFrame::load_csv(std::string_view filepath) {
+  pluss::loader::ReadCsvOptions options;
+  return load_csv(filepath, options);
+}
+
+DataFrame DataFrame::load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options) {
+  return pluss::loader::load_csv(filepath, options);
+}
+
+DataFrame DataFrame::load_csv(std::string_view filepath, const pluss::loader::Config& config) {
+  return pluss::loader::load_csv(filepath, config);
+}
+
+DataFrame DataFrame::load_csv(std::string_view filepath,
+                              std::initializer_list<pluss::loader::ConfigEntry> config_entries) {
+  return pluss::loader::load_csv(filepath, config_entries);
+}
+
+DataFrame DataFrame::load_csv(std::string_view filepath,
+                              std::string_view header,
+                              std::string_view case_feature,
+                              std::string_view engine,
+                              std::optional<std::size_t> ncases) {
+  return pluss::loader::load_csv(filepath, header, case_feature, engine, ncases);
+}
+
+DataFrame DataFrame::load_csv(std::string_view filepath,
+                              std::string_view header,
+                              std::size_t ncases) {
+  return pluss::loader::load_csv(filepath, header, ncases);
+}
+
+DataFrame DataFrame::load_csv(std::string_view filepath,
+                              char sep,
+                              std::optional<std::size_t> nrows,
+                              std::vector<std::string> usecols,
+                              std::optional<std::string> case_col,
+                              pluss::loader::BadLinePolicy on_bad_lines) {
+  pluss::loader::ReadCsvOptions options;
+  options.sep = sep;
+  options.nrows = nrows;
+  options.usecols = std::move(usecols);
+  options.case_col = std::move(case_col);
+  options.on_bad_lines = on_bad_lines;
+  return load_csv(filepath, options);
+}
+
+DataFrame DataFrame::load_csv(std::string_view filepath,
+                              char sep,
+                              std::optional<std::size_t> nrows,
+                              std::initializer_list<std::string_view> usecols,
+                              std::optional<std::string> case_col,
+                              pluss::loader::BadLinePolicy on_bad_lines) {
+  return load_csv(filepath, sep, nrows, normalize_name_list(usecols), std::move(case_col), on_bad_lines);
+}
+
+DataFrame DataFrame::load_excel(std::string_view filepath) {
+  pluss::loader::ReadExcelOptions options;
+  return load_excel(filepath, options);
+}
+
+DataFrame DataFrame::load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options) {
+  return pluss::loader::load_excel(filepath, options);
+}
+
+DataFrame DataFrame::load_excel(std::string_view filepath, const pluss::loader::Config& config) {
+  return pluss::loader::load_excel(filepath, config);
+}
+
+DataFrame DataFrame::load_excel(std::string_view filepath,
+                                std::initializer_list<pluss::loader::ConfigEntry> config_entries) {
+  return pluss::loader::load_excel(filepath, config_entries);
+}
+
+DataFrame DataFrame::load_excel(std::string_view filepath,
+                                std::string_view sheet_name,
+                                bool header) {
+  const auto token = lower_copy(owned_name(sheet_name));
+  PLUSS_CHECK(token != "none",
+              "DataFrame::load_excel(sheet_name=\"none\") is workbook mode; use DataFrame::load_excel(filepath, nullptr, header)");
+  return pluss::loader::load_excel(filepath, sheet_name, header);
+}
+
+DataFrame DataFrame::load_excel(std::string_view filepath,
+                                std::int64_t sheet_index,
+                                bool header) {
+  return pluss::loader::load_excel(filepath, sheet_index, header);
+}
+
+pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath, std::nullptr_t all_sheets, bool header) {
+  return pluss::loader::load_excel(filepath, all_sheets, header);
+}
+
+pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
+                                                const std::vector<std::string>& sheet_names,
+                                                bool header) {
+  return pluss::loader::load_excel(filepath, sheet_names, header);
+}
+
+pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
+                                                std::initializer_list<std::string_view> sheet_names,
+                                                bool header) {
+  return pluss::loader::load_excel(filepath, sheet_names, header);
+}
+
+DataFrame DataFrame::load_parquet(std::string_view filepath) {
+  return load_parquet(filepath, pluss::loader::Config{});
+}
+
+DataFrame DataFrame::load_parquet(std::string_view filepath, const pluss::loader::Config& config) {
+  return pluss::loader::load_parquet(filepath, config);
+}
+
+DataFrame DataFrame::load_parquet(std::string_view filepath,
+                                  std::initializer_list<pluss::loader::ConfigEntry> config_entries) {
+  return pluss::loader::load_parquet(filepath, config_entries);
 }
 
 bool DataFrame::defined() const noexcept { return static_cast<bool>(impl_); }
 bool DataFrame::unique() const noexcept { return impl_.unique(); }
 
-const DataFrameImpl& DataFrame::impl_ref_() const {
+const detail::DataFrameImpl& DataFrame::impl_ref_() const {
   PLUSS_CHECK(defined(), "DataFrame: undefined handle");
   return *impl_;
 }
 
-DataFrameImpl& DataFrame::mut_impl_() {
+detail::DataFrameImpl& DataFrame::mut_impl_() {
   PLUSS_CHECK(defined(), "DataFrame: undefined handle");
   if (!impl_.unique()) {
     impl_ = clone_impl(*impl_);
@@ -273,32 +548,55 @@ DataFrameImpl& DataFrame::mut_impl_() {
 
 std::int64_t DataFrame::nrows() const { return impl_ref_().nrows_; }
 std::int64_t DataFrame::ncols() const { return static_cast<std::int64_t>(impl_ref_().columns_.size()); }
+std::int64_t DataFrame::nfeatures() const { return ncols(); }
 
 const std::vector<std::string>& DataFrame::column_names() const { return impl_ref_().names_; }
 
 std::vector<Thread> DataFrame::columns() const { return impl_ref_().columns_; }
+std::vector<Thread> DataFrame::values() const { return columns(); }
+const std::vector<std::string>& DataFrame::feature_names() const { return column_names(); }
+std::vector<Thread> DataFrame::features() const { return columns(); }
 
-const Thread& DataFrame::case_index() const { return impl_ref_().case_index_; }
+const Thread& DataFrame::cases() const { return impl_ref_().cases_; }
 
-pluss::Series DataFrame::index() const {
-  PLUSS_CHECK(case_index().kind() == ThreadKind::Series, "DataFrame::index requires a Series-backed case index");
-  return case_index().as_series();
+DataFrame DataFrame::cases(std::int64_t row) const {
+  const auto idx = normalize_row_index(row, nrows());
+  return slice(idx, idx + 1);
 }
 
-pluss::Series DataFrame::case_() const { return index(); }
+DataFrame DataFrame::cases(std::pair<std::int64_t, std::int64_t> row_span) const {
+  return slice(row_span.first, row_span.second);
+}
 
-DataFrame DataFrame::with_case_index(const Thread& case_idx) const {
+std::string DataFrame::cases(std::int64_t row, std::size_t feature_idx) const {
+  const auto r = normalize_row_index(row, nrows());
+  PLUSS_CHECK(feature_idx < static_cast<std::size_t>(ncols()), "DataFrame::cases(row, feature): feature index out of bounds");
   const auto& src = impl_ref_();
-  PLUSS_CHECK(case_idx.defined(), "DataFrame::with_case_index: case index is undefined");
-  PLUSS_CHECK(case_idx.size() == src.nrows_, "DataFrame::with_case_index: case index length mismatch");
-  return DataFrame(pluss::msharp::make_intrusive<DataFrameImpl>(src.names_, src.columns_, case_idx));
+  return thread_scalar_string_at(src.columns_[feature_idx], r);
 }
 
-DataFrame& DataFrame::with_case_index_(const Thread& case_idx) {
+std::string DataFrame::cases(std::int64_t row, std::string_view feature_name) const {
+  const auto r = normalize_row_index(row, nrows());
+  return thread_scalar_string_at(column(feature_name), r);
+}
+
+pluss::Series DataFrame::cases_series() const {
+  PLUSS_CHECK(cases().kind() == ThreadKind::Series, "DataFrame::cases_series requires a Series-backed case axis");
+  return cases().as_series();
+}
+
+DataFrame DataFrame::with_cases(const Thread& case_idx) const {
+  const auto& src = impl_ref_();
+  PLUSS_CHECK(case_idx.defined(), "DataFrame::with_cases: cases are undefined");
+  PLUSS_CHECK(case_idx.size() == src.nrows_, "DataFrame::with_cases: case length mismatch");
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, src.columns_, case_idx));
+}
+
+DataFrame& DataFrame::with_cases_(const Thread& case_idx) {
   auto& w = mut_impl_();
-  PLUSS_CHECK(case_idx.defined(), "DataFrame::with_case_index_: case index is undefined");
-  PLUSS_CHECK(case_idx.size() == w.nrows_, "DataFrame::with_case_index_: case index length mismatch");
-  w.case_index_ = case_idx;
+  PLUSS_CHECK(case_idx.defined(), "DataFrame::with_cases_: cases are undefined");
+  PLUSS_CHECK(case_idx.size() == w.nrows_, "DataFrame::with_cases_: case length mismatch");
+  w.cases_ = case_idx;
   w.validate_and_reindex_();
   return *this;
 }
@@ -308,6 +606,8 @@ bool DataFrame::has_column(std::string_view name) const {
   return src.name_to_idx_.find(owned_name(name)) != src.name_to_idx_.end();
 }
 
+bool DataFrame::has_feature(std::string_view name) const { return has_column(name); }
+
 Thread DataFrame::column(std::string_view name) const {
   const auto& src = impl_ref_();
   const auto it = src.name_to_idx_.find(owned_name(name));
@@ -315,8 +615,17 @@ Thread DataFrame::column(std::string_view name) const {
   return src.columns_[it->second];
 }
 
+Thread DataFrame::feature(std::string_view name) const { return column(name); }
+Thread DataFrame::features(std::string_view name) const { return feature(name); }
+
 ColumnRef DataFrame::column_ref(std::string_view name) const {
   return ColumnRef(owned_name(name), column(name));
+}
+
+ColumnRef DataFrame::feature_ref(std::string_view name) const { return column_ref(name); }
+
+DataFrame DataFrame::features(std::initializer_list<std::string_view> names) const {
+  return select(names);
 }
 
 DataFrame DataFrame::select(std::initializer_list<std::string_view> names) const {
@@ -334,7 +643,7 @@ DataFrame DataFrame::select(std::initializer_list<std::string_view> names) const
     out_names.push_back(n);
     out_cols.push_back(src.columns_[it->second]);
   }
-  return DataFrame(pluss::msharp::make_intrusive<DataFrameImpl>(std::move(out_names), std::move(out_cols), src.case_index_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
 }
 
 DataFrame DataFrame::drop(std::initializer_list<std::string_view> names) const {
@@ -358,7 +667,7 @@ DataFrame DataFrame::drop(std::initializer_list<std::string_view> names) const {
       out_cols.push_back(src.columns_[i]);
     }
   }
-  return DataFrame(pluss::msharp::make_intrusive<DataFrameImpl>(std::move(out_names), std::move(out_cols), src.case_index_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
 }
 
 DataFrame DataFrame::reorder(std::initializer_list<std::string_view> names) const {
@@ -391,7 +700,7 @@ DataFrame DataFrame::with_column(std::string name, const Thread& column_value) c
   } else {
     out_cols[it->second] = column_value;
   }
-  return DataFrame(pluss::msharp::make_intrusive<DataFrameImpl>(std::move(out_names), std::move(out_cols), src.case_index_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
 }
 
 DataFrame& DataFrame::with_column_(std::string name, const Thread& column_value) {
@@ -412,6 +721,14 @@ DataFrame& DataFrame::with_column_(std::string name, const Thread& column_value)
   return *this;
 }
 
+DataFrame DataFrame::with_feature(std::string name, const Thread& feature_value) const {
+  return with_column(std::move(name), feature_value);
+}
+
+DataFrame& DataFrame::with_feature_(std::string name, const Thread& feature_value) {
+  return with_column_(std::move(name), feature_value);
+}
+
 DataFrame DataFrame::rename(std::string_view old_name, std::string new_name) const {
   const auto& src = impl_ref_();
   const auto old_key = owned_name(old_name);
@@ -423,7 +740,7 @@ DataFrame DataFrame::rename(std::string_view old_name, std::string new_name) con
 
   auto out_names = src.names_;
   out_names[it->second] = std::move(new_name);
-  return DataFrame(pluss::msharp::make_intrusive<DataFrameImpl>(std::move(out_names), src.columns_, src.case_index_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), src.columns_, src.cases_));
 }
 
 DataFrame& DataFrame::rename_(std::string_view old_name, std::string new_name) {
@@ -475,8 +792,8 @@ DataFrame DataFrame::take(std::span<const std::int64_t> indices) const {
   for (const auto& c : src.columns_) {
     out_cols.push_back(c.take(indices));
   }
-  auto out_case = src.case_index_.take(indices);
-  return DataFrame(pluss::msharp::make_intrusive<DataFrameImpl>(src.names_, std::move(out_cols), std::move(out_case)));
+  auto out_case = src.cases_.take(indices);
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), std::move(out_case)));
 }
 
 DataFrame DataFrame::filter(const pluss::Series& bool_mask) const {
@@ -487,8 +804,8 @@ DataFrame DataFrame::filter(const pluss::Series& bool_mask) const {
   for (const auto& c : src.columns_) {
     out_cols.push_back(c.filter(bool_mask));
   }
-  auto out_case = src.case_index_.filter(bool_mask);
-  return DataFrame(pluss::msharp::make_intrusive<DataFrameImpl>(src.names_, std::move(out_cols), std::move(out_case)));
+  auto out_case = src.cases_.filter(bool_mask);
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), std::move(out_case)));
 }
 
 DataFrame DataFrame::fillna(double value) const {
@@ -502,7 +819,7 @@ DataFrame DataFrame::fillna(double value) const {
       out_cols.push_back(c);
     }
   }
-  return DataFrame(pluss::msharp::make_intrusive<DataFrameImpl>(src.names_, std::move(out_cols), src.case_index_));
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
 DataFrame& DataFrame::fillna_(double value) {
@@ -644,7 +961,7 @@ DataFrame DataFrame::describe(bool render) const {
       std::move(out_cols),
       make_note_thread({"count", "mean", "std", "min", "25%", "50%", "75%", "max"}));
   if (render) {
-    out.show();
+    display::print(std::cout, out);
   }
   return out;
 }
@@ -667,7 +984,7 @@ DataFrame DataFrame::view(std::int64_t start, std::int64_t stop, bool render) co
   }
 
   if (render) {
-    out.show();
+    display::print(std::cout, out);
   }
   return out;
 }
@@ -680,14 +997,6 @@ std::string DataFrame::info_string(const display::DisplayOptions& options) const
   return display::render_info(*this, options);
 }
 
-void DataFrame::show(const display::DisplayOptions& options) const {
-  display::print(std::cout, *this, options);
-}
-
-void DataFrame::show(std::ostream& os, const display::DisplayOptions& options) const {
-  display::print(os, *this, options);
-}
-
 void DataFrame::info(const display::DisplayOptions& options) const {
   display::print_info(std::cout, *this, options);
 }
@@ -696,8 +1005,98 @@ void DataFrame::info(std::ostream& os, const display::DisplayOptions& options) c
   display::print_info(os, *this, options);
 }
 
+void DataFrame::save_csv(std::string_view filepath) const {
+  pluss::loader::save_csv(*this, filepath, {});
+}
+
+void DataFrame::save_csv(std::string_view filepath,
+                         bool add_cases,
+                         bool header,
+                         char sep,
+                         std::string na_rep,
+                         std::optional<std::string> case_label,
+                         std::optional<std::string> float_format,
+                         char quotechar,
+                         bool doublequote,
+                         std::string line_terminator,
+                         char decimal,
+                         std::string encoding) const {
+  pluss::loader::WriteCsvOptions options;
+  options.sep = sep;
+  options.header = header;
+  options.add_cases = add_cases;
+  options.cases = add_cases;
+  options.na_rep = std::move(na_rep);
+  options.case_label = std::move(case_label);
+  options.float_format = std::move(float_format);
+  options.quotechar = quotechar;
+  options.doublequote = doublequote;
+  options.line_terminator = std::move(line_terminator);
+  options.decimal = decimal;
+  options.encoding = std::move(encoding);
+  pluss::loader::save_csv(*this, filepath, options);
+}
+
+void DataFrame::save_csv(std::string_view filepath, const pluss::loader::WriteCsvOptions& options) const {
+  pluss::loader::save_csv(*this, filepath, options);
+}
+
+void DataFrame::save_csv(std::string_view filepath, const pluss::loader::Config& config) const {
+  save_as("csv", filepath, config);
+}
+
+void DataFrame::save_csv(std::string_view filepath,
+                         std::initializer_list<pluss::loader::ConfigEntry> config_entries) const {
+  save_as("csv", filepath, config_entries);
+}
+
+void DataFrame::save_excel(std::string_view filepath) const {
+  pluss::loader::save_excel(*this, filepath, {});
+}
+
+void DataFrame::save_excel(std::string_view filepath,
+                           std::string sheet_name,
+                           bool add_cases,
+                           bool header,
+                           std::string na_rep,
+                           std::optional<std::string> case_label) const {
+  pluss::loader::WriteExcelOptions options;
+  options.sheet_name = std::move(sheet_name);
+  options.add_cases = add_cases;
+  options.cases = add_cases;
+  options.header = header;
+  options.na_rep = std::move(na_rep);
+  options.case_label = std::move(case_label);
+  pluss::loader::save_excel(*this, filepath, options);
+}
+
+void DataFrame::save_excel(std::string_view filepath, const pluss::loader::WriteExcelOptions& options) const {
+  pluss::loader::save_excel(*this, filepath, options);
+}
+
+void DataFrame::save_excel(std::string_view filepath, const pluss::loader::Config& config) const {
+  save_as("excel", filepath, config);
+}
+
+void DataFrame::save_excel(std::string_view filepath,
+                           std::initializer_list<pluss::loader::ConfigEntry> config_entries) const {
+  save_as("excel", filepath, config_entries);
+}
+
+void DataFrame::save_as(std::string_view target_type,
+                        std::string_view filepath,
+                        const pluss::loader::Config& config) const {
+  pluss::loader::save_as(*this, target_type, filepath, config);
+}
+
+void DataFrame::save_as(std::string_view target_type,
+                        std::string_view filepath,
+                        std::initializer_list<pluss::loader::ConfigEntry> config_entries) const {
+  save_as(target_type, filepath, pluss::loader::config_from(config_entries));
+}
+
 std::ostream& operator<<(std::ostream& os, const DataFrame& frame) {
-  frame.show(os);
+  os << frame.to_string();
   return os;
 }
 

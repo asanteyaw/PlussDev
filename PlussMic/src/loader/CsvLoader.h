@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -21,10 +22,20 @@ enum class BadLinePolicy : std::uint8_t {
   Skip = 2,
 };
 
+enum class CsvEngine : std::uint8_t {
+  Auto = 0,
+  Serial = 1,
+  Parallel = 2,
+};
+
 // Broad pandas-inspired option surface. Some options are hints/placeholders for
 // planned extensions (Excel/chunked readers) and may currently be no-ops.
 struct ReadCsvOptions {
   std::string filepath;
+  bool auto_detect_sep{true};
+  CsvEngine engine{CsvEngine::Auto};
+  std::optional<std::size_t> parallel_threads{};
+  std::size_t parallel_min_bytes{4 * 1024 * 1024};
 
   // Parsing structure
   char sep{','};
@@ -43,8 +54,8 @@ struct ReadCsvOptions {
   std::vector<std::string> names{};
   std::vector<std::string> usecols{};
   std::vector<std::size_t> usecols_idx{};
-  std::optional<std::string> index_col{};
-  std::optional<std::size_t> index_col_idx{};
+  std::optional<std::string> case_col{};
+  std::optional<std::size_t> case_col_idx{};
 
   // Row filtering / limits
   std::unordered_set<std::size_t> skiprows{};
@@ -76,7 +87,39 @@ struct ReadCsvOptions {
   std::optional<std::size_t> chunksize{};
 };
 
+struct WriteCsvOptions {
+  char sep{','};
+  bool header{true};
+  bool add_cases{false};
+  bool cases{false}; // legacy alias
+  std::optional<std::string> case_label{};
+  std::string na_rep{"NA"};
+  std::optional<std::string> float_format{};
+  char quotechar{'"'};
+  bool doublequote{true};
+  std::string line_terminator{"\n"};
+  char decimal{'.'};
+  std::string encoding{"utf-8"};
+};
+
 pluss::table::DataFrame load_csv(const ReadCsvOptions& options);
+pluss::table::DataFrame load_csv(std::string_view filepath, const ReadCsvOptions& options = {});
+pluss::table::DataFrame load_csv(std::string_view filepath,
+                                 char sep,
+                                 std::optional<std::size_t> nrows = std::nullopt,
+                                 std::vector<std::string> usecols = {},
+                                 std::optional<std::string> case_col = std::nullopt,
+                                 BadLinePolicy on_bad_lines = BadLinePolicy::Error);
+pluss::table::DataFrame load_csv(std::string_view filepath,
+                                 char sep,
+                                 std::optional<std::size_t> nrows,
+                                 std::initializer_list<std::string_view> usecols,
+                                 std::optional<std::string> case_col = std::nullopt,
+                                 BadLinePolicy on_bad_lines = BadLinePolicy::Error);
+pluss::table::DataFrame load_csv_records(const std::vector<std::vector<std::string>>& records,
+                                         const ReadCsvOptions& options = {});
+void save_csv(const pluss::table::DataFrame& frame,
+              std::string_view filepath,
+              const WriteCsvOptions& options = {});
 
 } // namespace pluss::loader
-

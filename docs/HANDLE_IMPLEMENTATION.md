@@ -116,7 +116,7 @@ Archive (3D)  → Multi-catalog management (corpus/database level)
 ## CSV Integration Strategy
 
 ### Approach: Leverage Table Infrastructure
-- Uses `DataFrame::read_csv()` internally (proven, fast, parallel-ready)
+- Uses `DataFrame::load_csv()` internally (proven, fast, parallel-ready)
 - Converts using existing converters (tablize/handelize)
 - Minimal duplication, maximum reliability
 
@@ -281,7 +281,7 @@ for (const auto& [product, group] : groups) {
 - Efficient series operations via LibTorch
 
 ### CSV Reading
-- Delegates to proven DataFrame::read_csv()
+- Delegates to proven DataFrame::load_csv()
 - Inherits parallel CSV reading capabilities
 - Minimal conversion overhead
 

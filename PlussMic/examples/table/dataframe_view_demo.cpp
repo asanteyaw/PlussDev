@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include <pluss/pluss.h>
 
@@ -13,23 +14,22 @@ std::filesystem::path data_file(const std::string& name) {
 } // namespace
 
 int main() {
-  pluss::loader::ReadCsvOptions opts;
-  opts.filepath = data_file("bank-full.csv").string();
-  opts.sep = ';';
-  opts.nrows = 32;
-  opts.usecols = {"age", "job", "balance", "duration", "y"};
-
-  auto df = pluss::table::DataFrame::read_csv(opts);
+  auto df = pluss::table::DataFrame::load_csv(
+      data_file("bank-full.csv").string(),
+      {
+          {"nrows", 32},
+          {"columns", std::vector<std::string>{"age", "job", "balance", "duration", "y"}},
+      });
 
   std::cout << "=== view demo ===\n";
   std::cout << "view(5, 10) -> rows 5..9\n";
-  (void)df.view(5, 10, true);
+  df.view(5, 10);
 
   std::cout << "\nview(-5, -1) -> last 5 rows\n";
-  (void)df.view(-5, -1, true);
+  df.view(-5, -1);
 
   std::cout << "\nview(0, 8) -> head equivalent\n";
-  (void)df.view(0, 8, true);
+  df.view(0, 8);
 
   return 0;
 }

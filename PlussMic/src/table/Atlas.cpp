@@ -12,6 +12,22 @@
 
 namespace pluss::table {
 
+namespace detail {
+
+class AtlasImpl final : public pluss::msharp::RefCounted {
+public:
+  AtlasImpl(std::vector<DataFrame> frames, std::optional<Thread> axis0_labels);
+  void validate_();
+
+  std::vector<DataFrame> frames_;
+  std::optional<Thread> axis0_labels_;
+  std::int64_t nrows_{0};
+  std::int64_t ncols_{0};
+  std::vector<std::string> names_;
+};
+
+} // namespace detail
+
 namespace {
 
 std::int64_t normalize_index(std::int64_t idx, std::int64_t size) {
@@ -104,12 +120,12 @@ std::int64_t find_timeline_label(const Thread& labels, const pluss::Timeline& ke
 
 } // namespace
 
-AtlasImpl::AtlasImpl(std::vector<DataFrame> frames, std::optional<Thread> axis0_labels)
+detail::AtlasImpl::AtlasImpl(std::vector<DataFrame> frames, std::optional<Thread> axis0_labels)
     : frames_(std::move(frames)), axis0_labels_(std::move(axis0_labels)) {
   validate_();
 }
 
-void AtlasImpl::validate_() {
+void detail::AtlasImpl::validate_() {
   if (frames_.empty()) {
     nrows_ = 0;
     ncols_ = 0;
@@ -132,14 +148,22 @@ void AtlasImpl::validate_() {
 }
 
 Atlas::Atlas(std::vector<DataFrame> frames, std::optional<Thread> axis0_labels)
-    : impl_(pluss::msharp::make_intrusive<AtlasImpl>(std::move(frames), std::move(axis0_labels))) {}
+    : impl_(pluss::msharp::make_intrusive<detail::AtlasImpl>(std::move(frames), std::move(axis0_labels))) {}
 
-Atlas::Atlas(pluss::msharp::intrusive_ptr<AtlasImpl> impl) : impl_(std::move(impl)) {}
+Atlas::Atlas() = default;
+
+Atlas::Atlas(pluss::msharp::intrusive_ptr<detail::AtlasImpl> impl) : impl_(std::move(impl)) {}
+
+Atlas::Atlas(const Atlas& other) = default;
+Atlas::Atlas(Atlas&& other) noexcept = default;
+Atlas& Atlas::operator=(const Atlas& other) = default;
+Atlas& Atlas::operator=(Atlas&& other) noexcept = default;
+Atlas::~Atlas() = default;
 
 bool Atlas::defined() const noexcept { return static_cast<bool>(impl_); }
 bool Atlas::unique() const noexcept { return impl_.unique(); }
 
-const AtlasImpl& Atlas::impl_ref_() const {
+const detail::AtlasImpl& Atlas::impl_ref_() const {
   PLUSS_CHECK(defined(), "Atlas: undefined handle");
   return *impl_;
 }

@@ -529,14 +529,14 @@ TableMatrix build_dataframe_matrix(
   TableMatrix m;
   if (options.show_case_index) {
     m.headers.push_back("");
-    m.right_align.push_back(true);
+    m.right_align.push_back(false);
     m.min_widths.push_back(std::max<std::int64_t>(4, options.min_column_width));
   }
 
   auto add_real_col = [&](std::int64_t cidx) {
     const auto header = clip_cell(names[static_cast<std::size_t>(cidx)], options.max_cell_width);
     m.headers.push_back(header);
-    m.right_align.push_back(is_numeric_thread(cols[static_cast<std::size_t>(cidx)]));
+    m.right_align.push_back(false);
     m.min_widths.push_back(options.min_column_width);
   };
 
@@ -557,7 +557,7 @@ TableMatrix build_dataframe_matrix(
     row.reserve(m.headers.size());
 
     if (options.show_case_index) {
-      row.push_back(clip_cell(thread_value_at(frame.case_index(), ridx), options.max_cell_width));
+      row.push_back(clip_cell(thread_value_at(frame.cases(), ridx), options.max_cell_width));
     }
 
     for (const auto cidx : col_plan.head) {
@@ -691,7 +691,7 @@ std::string render(const DataFrame& frame, const DisplayOptions& options) {
 
   std::string out = render_ascii_table(matrix, working, terminal_width);
   if (working.show_shape_footer) {
-    out += fmt::format("\n[{} cases x {} columns]", frame.nrows(), frame.ncols());
+    out += fmt::format("\n[{} cs x {} feat]", frame.nrows(), frame.ncols());
   }
   return out;
 }
@@ -710,7 +710,7 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   const auto names = frame.column_names();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
-  std::uint64_t memory_bytes = estimate_bytes(frame.case_index());
+  std::uint64_t memory_bytes = estimate_bytes(frame.cases());
 
   for (std::size_t i = 0; i < names.size(); ++i) {
     const auto dtype = logical_dtype_name(cols[i]);
@@ -718,8 +718,8 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
     memory_bytes += estimate_bytes(cols[i]);
   }
 
-  const auto first_case = frame.nrows() > 0 ? thread_value_at(frame.case_index(), 0) : std::string("NA");
-  const auto last_case = frame.nrows() > 0 ? thread_value_at(frame.case_index(), frame.nrows() - 1) : std::string("NA");
+  const auto first_case = frame.nrows() > 0 ? thread_value_at(frame.cases(), 0) : std::string("NA");
+  const auto last_case = frame.nrows() > 0 ? thread_value_at(frame.cases(), frame.nrows() - 1) : std::string("NA");
 
   TableMatrix summary;
   summary.headers = {"Field", "Value"};
@@ -728,7 +728,7 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   summary.rows = {
       {"Class", "pluss::table::DataFrame"},
       {"Cases", fmt::format("{}", frame.nrows())},
-      {"Columns", fmt::format("{}", frame.ncols())},
+      {"Features", fmt::format("{}", frame.ncols())},
       {"Case Range", fmt::format("{} -> {}", first_case, last_case)},
       {"Null Case Rows", fmt::format("{}", frame.count_null_rows())},
       {"Dtypes", dtype_summary_line(dtype_counts)},
@@ -736,8 +736,8 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   };
 
   TableMatrix details;
-  details.headers = {"#", "Column", "Non-Null Cases", "Dtype"};
-  details.right_align = {true, false, true, false};
+  details.headers = {"#", "Feature", "Non-Null Cases", "Dtype"};
+  details.right_align = {false, false, false, false};
   details.min_widths = {2, 6, 6, 5};
   const auto detail_plan = build_row_plan(static_cast<std::int64_t>(names.size()), effective);
   details.rows.reserve(detail_plan.head.size() + detail_plan.tail.size() + (detail_plan.ellipsis ? 1 : 0));
