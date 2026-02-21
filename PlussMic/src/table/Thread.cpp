@@ -4,6 +4,7 @@
 #include <array>
 #include <cctype>
 #include <cmath>
+#include <concepts>
 #include <cstdlib>
 #include <cstring>
 #include <deque>
@@ -221,12 +222,6 @@ pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_impl(
 
 pluss::msharp::intrusive_ptr<detail::ThreadImpl> clone_impl(const detail::ThreadImpl& src) {
   return build_impl(src.payload_, src.validity_mask_);
-}
-
-double reduction_value(const pluss::Series& scalar_series, std::string_view where) {
-  PLUSS_CHECK(scalar_series.defined(), std::string(where) + ": reduction output is undefined");
-  PLUSS_CHECK(scalar_series.numel() == 1, std::string(where) + ": reduction output must be scalar");
-  return scalar_series.to_vec<double>(0);
 }
 
 pluss::Series scalar_like_column(const pluss::Series& reference, double value) {
@@ -472,25 +467,6 @@ std::string thread_scalar_string_at(const Thread& t, std::int64_t row) {
 }
 
 bool compare_numbers(double lhs, double rhs, ThreadBinaryCompareOp op) {
-  switch (op) {
-    case ThreadBinaryCompareOp::Eq:
-      return lhs == rhs;
-    case ThreadBinaryCompareOp::Ne:
-      return lhs != rhs;
-    case ThreadBinaryCompareOp::Lt:
-      return lhs < rhs;
-    case ThreadBinaryCompareOp::Le:
-      return lhs <= rhs;
-    case ThreadBinaryCompareOp::Gt:
-      return lhs > rhs;
-    case ThreadBinaryCompareOp::Ge:
-      return lhs >= rhs;
-    default:
-      return false;
-  }
-}
-
-bool compare_strings(const std::string& lhs, const std::string& rhs, ThreadBinaryCompareOp op) {
   switch (op) {
     case ThreadBinaryCompareOp::Eq:
       return lhs == rhs;
@@ -928,6 +904,30 @@ Thread Thread::clip(double min_value, double max_value) const {
   return Thread(as_series().clamp(min_value, max_value), validity_mask());
 }
 
+Thread Thread::log() const {
+  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::log is only valid for Series payload");
+  auto s = as_series();
+  if (s.scalar_type() != pluss::codem::ScalarType::Float16
+      && s.scalar_type() != pluss::codem::ScalarType::BFloat16
+      && s.scalar_type() != pluss::codem::ScalarType::Float32
+      && s.scalar_type() != pluss::codem::ScalarType::Float64) {
+    s = s.to(pluss::codem::ScalarType::Float64);
+  }
+  return Thread(s.log(), validity_mask());
+}
+
+Thread Thread::exp() const {
+  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::exp is only valid for Series payload");
+  auto s = as_series();
+  if (s.scalar_type() != pluss::codem::ScalarType::Float16
+      && s.scalar_type() != pluss::codem::ScalarType::BFloat16
+      && s.scalar_type() != pluss::codem::ScalarType::Float32
+      && s.scalar_type() != pluss::codem::ScalarType::Float64) {
+    s = s.to(pluss::codem::ScalarType::Float64);
+  }
+  return Thread(s.exp(), validity_mask());
+}
+
 Thread& Thread::fillna_(double value) {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::fillna_(double) is only valid for Series payload");
   if (!has_validity_mask()) {
@@ -1045,64 +1045,73 @@ Thread Thread::bfill() const {
   return backward_fill_thread(*this);
 }
 
-double Thread::sum() const {
+pluss::Series Thread::sum() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::sum is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
     s = s.masked_select(*validity_mask());
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::sum on an empty (all-null) selection");
-  return reduction_value(s.sum(), "Thread::sum");
+  return s.sum();
 }
 
-double Thread::mean() const {
+pluss::Series Thread::mean() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::mean is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
     s = s.masked_select(*validity_mask());
   }
+  if (is_numeric_series_type(s)) {
+    s = s.to(pluss::codem::ScalarType::Float64);
+  }
   PLUSS_CHECK(s.numel() > 0, "Thread::mean on an empty (all-null) selection");
-  return reduction_value(s.mean(), "Thread::mean");
+  return s.mean();
 }
 
-double Thread::min() const {
+pluss::Series Thread::min() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::min is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
     s = s.masked_select(*validity_mask());
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::min on an empty (all-null) selection");
-  return reduction_value(s.min(), "Thread::min");
+  return s.min();
 }
 
-double Thread::max() const {
+pluss::Series Thread::max() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::max is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
     s = s.masked_select(*validity_mask());
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::max on an empty (all-null) selection");
-  return reduction_value(s.max(), "Thread::max");
+  return s.max();
 }
 
-double Thread::var(bool unbiased) const {
+pluss::Series Thread::var(bool unbiased) const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::var is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
     s = s.masked_select(*validity_mask());
   }
+  if (is_numeric_series_type(s)) {
+    s = s.to(pluss::codem::ScalarType::Float64);
+  }
   PLUSS_CHECK(s.numel() > 0, "Thread::var on an empty (all-null) selection");
-  return reduction_value(s.var(unbiased), "Thread::var");
+  return s.var(unbiased);
 }
 
-double Thread::std(bool unbiased) const {
+pluss::Series Thread::std(bool unbiased) const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::std is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
     s = s.masked_select(*validity_mask());
   }
+  if (is_numeric_series_type(s)) {
+    s = s.to(pluss::codem::ScalarType::Float64);
+  }
   PLUSS_CHECK(s.numel() > 0, "Thread::std on an empty (all-null) selection");
-  return reduction_value(s.std(unbiased), "Thread::std");
+  return s.std(unbiased);
 }
 
 Thread Thread::lower() const {
@@ -1228,6 +1237,33 @@ Thread Thread::compare(const Thread& other, ThreadBinaryCompareOp op) const {
     return Thread(out, combine_validity_masks(*this, other));
   }
 
+  if (kind() == ThreadKind::Note && other.kind() == ThreadKind::Note) {
+    const auto& lhs = as_note();
+    const auto& rhs = other.as_note();
+    std::vector<std::uint8_t> raw;
+    switch (op) {
+      case ThreadBinaryCompareOp::Eq:
+        raw = (lhs == rhs);
+        break;
+      case ThreadBinaryCompareOp::Ne:
+        raw = (lhs != rhs);
+        break;
+      case ThreadBinaryCompareOp::Lt:
+        raw = (lhs < rhs);
+        break;
+      case ThreadBinaryCompareOp::Le:
+        raw = (lhs <= rhs);
+        break;
+      case ThreadBinaryCompareOp::Gt:
+        raw = (lhs > rhs);
+        break;
+      case ThreadBinaryCompareOp::Ge:
+        raw = (lhs >= rhs);
+        break;
+    }
+    return Thread(bool_series_from_u8(raw), combine_validity_masks(*this, other));
+  }
+
   if ((kind() == ThreadKind::Timeline && other.kind() == ThreadKind::TimeIndex)
       || (kind() == ThreadKind::TimeIndex && other.kind() == ThreadKind::Timeline)) {
     const auto lhs_t = (kind() == ThreadKind::Timeline) ? as_timeline() : as_timeindex().timeline();
@@ -1256,32 +1292,7 @@ Thread Thread::compare(const Thread& other, ThreadBinaryCompareOp op) const {
     return Thread(out, combine_validity_masks(*this, other));
   }
 
-  auto out = pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool);
-  auto* p = reinterpret_cast<bool*>(out.raw_data());
-  std::optional<std::vector<bool>> lhs_valid;
-  std::optional<std::vector<bool>> rhs_valid;
-  if (has_validity_mask()) {
-    lhs_valid = validity_mask()->to_vec<bool>();
-  }
-  if (other.has_validity_mask()) {
-    rhs_valid = other.validity_mask()->to_vec<bool>();
-  }
-
-  for (std::int64_t i = 0; i < size(); ++i) {
-    if (lhs_valid.has_value() && !(*lhs_valid)[static_cast<std::size_t>(i)]) {
-      p[i] = false;
-      continue;
-    }
-    if (rhs_valid.has_value() && !(*rhs_valid)[static_cast<std::size_t>(i)]) {
-      p[i] = false;
-      continue;
-    }
-    p[i] = compare_strings(
-        thread_scalar_string_at(*this, i),
-        thread_scalar_string_at(other, i),
-        op);
-  }
-  return Thread(out, combine_validity_masks(*this, other));
+  PLUSS_FAIL("Thread::compare: unsupported payload combination");
 }
 
 int Thread::compare_rows(std::int64_t lhs_row, std::int64_t rhs_row, bool nulls_last) const {
@@ -1605,6 +1616,313 @@ Thread Thread::cast(
 
 Thread Thread::astype(pluss::codem::ScalarType dtype) const {
   return cast(ThreadCastTarget::Series, dtype);
+}
+
+namespace {
+const char* thread_kind_name(ThreadKind k) {
+  switch (k) {
+    case ThreadKind::Series:
+      return "Series";
+    case ThreadKind::Note:
+      return "Note";
+    case ThreadKind::Timeline:
+      return "Timeline";
+    case ThreadKind::TimeIndex:
+      return "TimeIndex";
+    default:
+      return "Unknown";
+  }
+}
+
+void ensure_numeric_thread_for_math(const Thread& t, std::string_view where) {
+  PLUSS_CHECK(t.defined(), std::string(where) + ": Thread is undefined");
+  PLUSS_CHECK(t.kind() == ThreadKind::Series,
+              std::string(where) + ": operation requires a Series-backed Thread");
+  PLUSS_CHECK(is_numeric_series_type(t.as_series()),
+              std::string(where) + ": operation requires a numeric Series payload");
+}
+
+void ensure_defined_thread_for_compare(const Thread& t, std::string_view where) {
+  PLUSS_CHECK(t.defined(), std::string(where) + ": Thread is undefined");
+}
+
+std::optional<std::int64_t> nonnegative_integral_scalar(double v) {
+  if (!std::isfinite(v) || v < 0.0) {
+    return std::nullopt;
+  }
+  const auto rounded = std::round(v);
+  if (std::fabs(v - rounded) > 1e-12) {
+    return std::nullopt;
+  }
+  if (rounded > static_cast<double>(std::numeric_limits<std::int64_t>::max())) {
+    return std::nullopt;
+  }
+  return static_cast<std::int64_t>(rounded);
+}
+
+const char* math_op_name(ThreadBinaryMathOp op) {
+  switch (op) {
+    case ThreadBinaryMathOp::Add:
+      return "+";
+    case ThreadBinaryMathOp::Sub:
+      return "-";
+    case ThreadBinaryMathOp::Mul:
+      return "*";
+    case ThreadBinaryMathOp::Div:
+      return "/";
+    case ThreadBinaryMathOp::TrueDiv:
+      return "/";
+    case ThreadBinaryMathOp::FloorDiv:
+      return "//";
+    case ThreadBinaryMathOp::Mod:
+      return "%";
+    case ThreadBinaryMathOp::Pow:
+      return "**";
+    default:
+      return "?";
+  }
+}
+
+const char* cmp_op_name(ThreadBinaryCompareOp op) {
+  switch (op) {
+    case ThreadBinaryCompareOp::Eq:
+      return "==";
+    case ThreadBinaryCompareOp::Ne:
+      return "!=";
+    case ThreadBinaryCompareOp::Lt:
+      return "<";
+    case ThreadBinaryCompareOp::Le:
+      return "<=";
+    case ThreadBinaryCompareOp::Gt:
+      return ">";
+    case ThreadBinaryCompareOp::Ge:
+      return ">=";
+    default:
+      return "?";
+  }
+}
+
+template <class Fn>
+Thread invoke_underlying(Fn&& fn, std::string_view where, std::string_view what) {
+  try {
+    return fn();
+  } catch (const std::exception& e) {
+    PLUSS_FAIL(std::string(where) + ": underlying " + std::string(what) + " operation failed: " + e.what());
+  } catch (...) {
+    PLUSS_FAIL(std::string(where) + ": underlying " + std::string(what) + " operation failed");
+  }
+}
+
+Thread binary_math_scalar(const Thread& lhs, double rhs, ThreadBinaryMathOp op, bool reverse, std::string_view where) {
+  PLUSS_CHECK(lhs.defined(), std::string(where) + ": Thread is undefined");
+  if (lhs.kind() == ThreadKind::Series) {
+    ensure_numeric_thread_for_math(lhs, where);
+    return invoke_underlying([&] { return lhs.numeric_binary(rhs, op, reverse); }, where, "Series math");
+  }
+
+  if (lhs.kind() == ThreadKind::Note && op == ThreadBinaryMathOp::Mul) {
+    const auto times = nonnegative_integral_scalar(rhs);
+    PLUSS_CHECK(times.has_value(),
+                std::string(where) + ": Note repetition requires a non-negative integral scalar");
+    return invoke_underlying(
+        [&] { return Thread(lhs.as_note() * *times, lhs.validity_mask()); },
+        where,
+        "Note repetition");
+  }
+
+  PLUSS_FAIL(std::string(where)
+             + ": unsupported payload for operator '" + math_op_name(op)
+             + "' (" + thread_kind_name(lhs.kind()) + " with scalar)");
+}
+
+Thread binary_math_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryMathOp op, std::string_view where) {
+  PLUSS_CHECK(lhs.defined() && rhs.defined(), std::string(where) + ": operand is undefined");
+  PLUSS_CHECK(lhs.size() == rhs.size(), std::string(where) + ": Thread size mismatch");
+
+  if (lhs.kind() == ThreadKind::Series && rhs.kind() == ThreadKind::Series) {
+    ensure_numeric_thread_for_math(lhs, where);
+    ensure_numeric_thread_for_math(rhs, where);
+    return invoke_underlying([&] { return lhs.numeric_binary(rhs, op); }, where, "Series math");
+  }
+
+  if (lhs.kind() == ThreadKind::Note && rhs.kind() == ThreadKind::Note && op == ThreadBinaryMathOp::Add) {
+    return invoke_underlying(
+        [&] { return Thread(lhs.as_note() + rhs.as_note(), combine_validity_masks(lhs, rhs)); },
+        where,
+        "Note concatenation");
+  }
+
+  PLUSS_FAIL(std::string(where)
+             + ": unsupported payload combination for operator '" + math_op_name(op)
+             + "' (" + thread_kind_name(lhs.kind()) + " vs " + thread_kind_name(rhs.kind()) + ")");
+}
+
+Thread compare_scalar(const Thread& lhs, double rhs, ThreadBinaryCompareOp op, std::string_view where) {
+  ensure_numeric_thread_for_math(lhs, where);
+  return invoke_underlying([&] { return lhs.compare(rhs, op); }, where, "Series compare");
+}
+
+Thread compare_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryCompareOp op, std::string_view where) {
+  ensure_defined_thread_for_compare(lhs, where);
+  ensure_defined_thread_for_compare(rhs, where);
+  PLUSS_CHECK(lhs.size() == rhs.size(), std::string(where) + ": Thread size mismatch");
+
+  const auto lk = lhs.kind();
+  const auto rk = rhs.kind();
+  const bool temporal_compare =
+      (lk == ThreadKind::Timeline && rk == ThreadKind::Timeline) ||
+      (lk == ThreadKind::TimeIndex && rk == ThreadKind::TimeIndex) ||
+      (lk == ThreadKind::Timeline && rk == ThreadKind::TimeIndex) ||
+      (lk == ThreadKind::TimeIndex && rk == ThreadKind::Timeline);
+
+  if (lk == ThreadKind::Series && rk == ThreadKind::Series) {
+    return invoke_underlying([&] { return lhs.compare(rhs, op); }, where, "Series compare");
+  }
+
+  if (lk == ThreadKind::Note && rk == ThreadKind::Note) {
+    return invoke_underlying([&] { return lhs.compare(rhs, op); }, where, "Note compare");
+  }
+
+  if (temporal_compare) {
+    return invoke_underlying([&] { return lhs.compare(rhs, op); }, where, "temporal compare");
+  }
+
+  PLUSS_FAIL(std::string(where)
+             + ": unsupported payload combination for operator '" + cmp_op_name(op)
+             + "' (" + thread_kind_name(lk) + " vs " + thread_kind_name(rk) + ")");
+}
+} // namespace
+
+Thread operator+(const Thread& lhs, double rhs) {
+  return binary_math_scalar(lhs, rhs, ThreadBinaryMathOp::Add, false, "Thread::operator+(Thread,double)");
+}
+
+Thread operator+(double lhs, const Thread& rhs) {
+  return binary_math_scalar(rhs, lhs, ThreadBinaryMathOp::Add, true, "Thread::operator+(double,Thread)");
+}
+
+Thread operator+(const Thread& lhs, const Thread& rhs) {
+  return binary_math_pair(lhs, rhs, ThreadBinaryMathOp::Add, "Thread::operator+(Thread,Thread)");
+}
+
+Thread operator-(const Thread& lhs, double rhs) {
+  return binary_math_scalar(lhs, rhs, ThreadBinaryMathOp::Sub, false, "Thread::operator-(Thread,double)");
+}
+
+Thread operator-(double lhs, const Thread& rhs) {
+  return binary_math_scalar(rhs, lhs, ThreadBinaryMathOp::Sub, true, "Thread::operator-(double,Thread)");
+}
+
+Thread operator-(const Thread& lhs, const Thread& rhs) {
+  return binary_math_pair(lhs, rhs, ThreadBinaryMathOp::Sub, "Thread::operator-(Thread,Thread)");
+}
+
+Thread operator*(const Thread& lhs, double rhs) {
+  return binary_math_scalar(lhs, rhs, ThreadBinaryMathOp::Mul, false, "Thread::operator*(Thread,double)");
+}
+
+Thread operator*(double lhs, const Thread& rhs) {
+  return binary_math_scalar(rhs, lhs, ThreadBinaryMathOp::Mul, true, "Thread::operator*(double,Thread)");
+}
+
+Thread operator*(const Thread& lhs, const Thread& rhs) {
+  return binary_math_pair(lhs, rhs, ThreadBinaryMathOp::Mul, "Thread::operator*(Thread,Thread)");
+}
+
+Thread operator/(const Thread& lhs, double rhs) {
+  return binary_math_scalar(lhs, rhs, ThreadBinaryMathOp::TrueDiv, false, "Thread::operator/(Thread,double)");
+}
+
+Thread operator/(double lhs, const Thread& rhs) {
+  return binary_math_scalar(rhs, lhs, ThreadBinaryMathOp::TrueDiv, true, "Thread::operator/(double,Thread)");
+}
+
+Thread operator/(const Thread& lhs, const Thread& rhs) {
+  return binary_math_pair(lhs, rhs, ThreadBinaryMathOp::TrueDiv, "Thread::operator/(Thread,Thread)");
+}
+
+Thread operator%(const Thread& lhs, double rhs) {
+  return binary_math_scalar(lhs, rhs, ThreadBinaryMathOp::Mod, false, "Thread::operator%(Thread,double)");
+}
+
+Thread operator%(double lhs, const Thread& rhs) {
+  return binary_math_scalar(rhs, lhs, ThreadBinaryMathOp::Mod, true, "Thread::operator%(double,Thread)");
+}
+
+Thread operator%(const Thread& lhs, const Thread& rhs) {
+  return binary_math_pair(lhs, rhs, ThreadBinaryMathOp::Mod, "Thread::operator%(Thread,Thread)");
+}
+
+Thread operator==(const Thread& lhs, double rhs) {
+  return compare_scalar(lhs, rhs, ThreadBinaryCompareOp::Eq, "Thread::operator==(Thread,double)");
+}
+
+Thread operator==(double lhs, const Thread& rhs) {
+  return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Eq, "Thread::operator==(double,Thread)");
+}
+
+Thread operator==(const Thread& lhs, const Thread& rhs) {
+  return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Eq, "Thread::operator==(Thread,Thread)");
+}
+
+Thread operator!=(const Thread& lhs, double rhs) {
+  return compare_scalar(lhs, rhs, ThreadBinaryCompareOp::Ne, "Thread::operator!=(Thread,double)");
+}
+
+Thread operator!=(double lhs, const Thread& rhs) {
+  return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Ne, "Thread::operator!=(double,Thread)");
+}
+
+Thread operator!=(const Thread& lhs, const Thread& rhs) {
+  return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Ne, "Thread::operator!=(Thread,Thread)");
+}
+
+Thread operator<(const Thread& lhs, double rhs) {
+  return compare_scalar(lhs, rhs, ThreadBinaryCompareOp::Lt, "Thread::operator<(Thread,double)");
+}
+
+Thread operator<(double lhs, const Thread& rhs) {
+  return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Gt, "Thread::operator<(double,Thread)");
+}
+
+Thread operator<(const Thread& lhs, const Thread& rhs) {
+  return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Lt, "Thread::operator<(Thread,Thread)");
+}
+
+Thread operator<=(const Thread& lhs, double rhs) {
+  return compare_scalar(lhs, rhs, ThreadBinaryCompareOp::Le, "Thread::operator<=(Thread,double)");
+}
+
+Thread operator<=(double lhs, const Thread& rhs) {
+  return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Ge, "Thread::operator<=(double,Thread)");
+}
+
+Thread operator<=(const Thread& lhs, const Thread& rhs) {
+  return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Le, "Thread::operator<=(Thread,Thread)");
+}
+
+Thread operator>(const Thread& lhs, double rhs) {
+  return compare_scalar(lhs, rhs, ThreadBinaryCompareOp::Gt, "Thread::operator>(Thread,double)");
+}
+
+Thread operator>(double lhs, const Thread& rhs) {
+  return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Lt, "Thread::operator>(double,Thread)");
+}
+
+Thread operator>(const Thread& lhs, const Thread& rhs) {
+  return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Gt, "Thread::operator>(Thread,Thread)");
+}
+
+Thread operator>=(const Thread& lhs, double rhs) {
+  return compare_scalar(lhs, rhs, ThreadBinaryCompareOp::Ge, "Thread::operator>=(Thread,double)");
+}
+
+Thread operator>=(double lhs, const Thread& rhs) {
+  return compare_scalar(rhs, lhs, ThreadBinaryCompareOp::Le, "Thread::operator>=(double,Thread)");
+}
+
+Thread operator>=(const Thread& lhs, const Thread& rhs) {
+  return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Ge, "Thread::operator>=(Thread,Thread)");
 }
 
 const pluss::Series& Thread::as_series() const {

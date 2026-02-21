@@ -77,6 +77,7 @@ PlussMa follows a thread-first design philosophy:
 ## Documentation
 
 - [Thread API Guide](docs/THREAD_API_GUIDE.md) - Comprehensive guide to working with Threads
+- [DataFrame + Atlas User Guide](docs/DATAFRAME_ATLAS_USER_GUIDE.md) - End-user guide for table APIs, verbs, and IO
 - [Examples](examples/) - Working code examples
 - [Tests](test/) - Extensive test suite with real-world datasets
 

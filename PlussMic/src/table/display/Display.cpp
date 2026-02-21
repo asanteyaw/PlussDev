@@ -869,19 +869,19 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
 }
 
 void print(std::ostream& os, const Thread& thread, const DisplayOptions& options) {
-  os << render(thread, options);
+  os << render(thread, options) << '\n';
 }
 
 void print(std::ostream& os, const DataFrame& frame, const DisplayOptions& options) {
-  os << render(frame, options);
+  os << render(frame, options) << '\n';
 }
 
 void print(std::ostream& os, const Atlas& atlas, const DisplayOptions& options) {
-  os << render(atlas, options);
+  os << render(atlas, options) << '\n';
 }
 
 void print_info(std::ostream& os, const DataFrame& frame, const DisplayOptions& options) {
-  os << render_info(frame, options);
+  os << render_info(frame, options) << '\n';
 }
 
 } // namespace pluss::table::display

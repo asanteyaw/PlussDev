@@ -445,28 +445,26 @@ void run_verb_walkthrough(const DataFrame& df) {
   df.tail(5);
   df.view(5, 10);
 
-  auto sel = df.select({"State", "City", "Severity", "Distance(mi)", "Start_Time", "Weather_Condition"});
+  auto sel = df.features({"State", "City", "Severity", "Distance(mi)", "Start_Time", "Weather_Condition"});
   (void)sel.drop({"City"}).reorder({"State", "Severity", "Distance(mi)", "Start_Time", "Weather_Condition"});
 
-  auto severe_mask = df.feature("Severity").compare(3.0, ThreadBinaryCompareOp::Ge).as_series();
-  auto q_mask = df.query(severe_mask);
-  auto q_pred = df.query([&](const DataFrame& frame) {
-    return frame.feature("Distance(mi)").compare(1.0, ThreadBinaryCompareOp::Gt).as_series();
-  });
+  auto severe_mask = df.features("Severity").compare(3.0, ThreadBinaryCompareOp::Ge).as_series();
+  auto q_mask = df.filter(severe_mask);
+  auto q_pred = df.filter(df.features("Distance(mi)").compare(1.0, ThreadBinaryCompareOp::Gt).as_series());
   auto q_expr = df.query(R"(Severity >= 3 and `Visibility(mi)` < 5)");
   (void)q_pred;
   (void)q_expr;
 
-  auto d_assign = df.derive({{"Severity_Copy", df.feature("Severity")}});
-  auto d_spec = d_assign.derive({{
+  auto d_assign = df.assign({{"Severity_Copy", df.features("Severity")}});
+  auto d_spec = d_assign.assign({{
       "Is_Severe",
       [](const DataFrame& frame) {
-        return frame.feature("Severity").compare(3.0, ThreadBinaryCompareOp::Ge);
+        return frame.features("Severity").compare(3.0, ThreadBinaryCompareOp::Ge);
       },
   }});
-  (void)d_spec.assign({{"Severity_Alias", d_spec.feature("Severity")}});
+  (void)d_spec.assign({{"Severity_Alias", d_spec.features("Severity")}});
 
-  auto sum = df.summarize({
+  auto sum = df.aggregate({
       {"rows", "Severity", DataFrame::SummaryOp::Count},
       {"severity_mean", "Severity", DataFrame::SummaryOp::Mean},
       {"severity_std", "Severity", DataFrame::SummaryOp::Std},
@@ -475,17 +473,17 @@ void run_verb_walkthrough(const DataFrame& df) {
   (void)df.agg({{"severity_max", "Severity", DataFrame::SummaryOp::Max}});
   (void)sum;
 
-  auto arranged = q_mask.arrange({"State"}).arrange({
+  auto arranged = q_mask.sort_values({"State"}).sort_values({
       {"Severity", false, true},
       {"Distance(mi)", false, true},
   });
   (void)arranged;
 
-  auto miss_isnull = df.missing(DataFrame::MissingOp::IsNull, {"Visibility(mi)", "Precipitation(in)", "Weather_Condition"});
-  auto miss_notnull = df.missing(DataFrame::MissingOp::NotNull, {"Visibility(mi)", "Precipitation(in)"});
-  auto miss_fill = df.missing({DataFrame::MissingOp::Fill, {"Precipitation(in)"}, 0.0});
+  auto miss_isnull = df.isna({"Visibility(mi)", "Precipitation(in)", "Weather_Condition"});
+  auto miss_notnull = df.notna({"Visibility(mi)", "Precipitation(in)"});
+  auto miss_fill = df.fillna(0.0, {"Precipitation(in)"});
   auto miss_drop_any = df.dropna();
-  auto miss_drop_all = df.missing(DataFrame::MissingOp::DropAll, {"Precipitation(in)", "Visibility(mi)"});
+  auto miss_drop_all = df.dropna_all({"Precipitation(in)", "Visibility(mi)"});
   auto miss_ffill = df.ffill();
   auto miss_bfill = df.bfill();
   (void)miss_isnull;
@@ -532,7 +530,7 @@ void run_verb_walkthrough(const DataFrame& df) {
                  .compare(arith.add(2.0));
   (void)cmp;
 
-  auto win = numeric.window({
+  auto win = numeric.rolling({
       DataFrame::WindowSpec{"severity_rollmean_12", "Severity", ThreadWindowOp::RollingMean, 12, 3},
       DataFrame::WindowSpec{"distance_rollmax_24", "Distance(mi)", ThreadWindowOp::RollingMax, 24, 1},
   });
@@ -606,38 +604,41 @@ int main(int argc, char** argv) {
       {"End_Time", ThreadCastTarget::Series, pluss::codem::ScalarType::Int64},
   });
 
-  const auto& severity_t = df.feature("Severity");
-  const auto& distance_t = df.feature("Distance(mi)");
-  const auto& street_t = df.feature("Street");
-  const auto& city_t = df.feature("City");
-  const auto& county_t = df.feature("County");
-  const auto& state_t = df.feature("State");
-  const auto& zip_t = df.feature("Zipcode");
-  const auto& timezone_t = df.feature("Timezone");
-  const auto& airport_t = df.feature("Airport_Code");
-  const auto& weather_t = df.feature("Weather_Condition");
-  const auto& temp_t = df.feature("Temperature(F)");
-  const auto& humidity_t = df.feature("Humidity(%)");
-  const auto& pressure_t = df.feature("Pressure(in)");
-  const auto& visibility_t = df.feature("Visibility(mi)");
-  const auto& wind_t = df.feature("Wind_Speed(mph)");
-  const auto& precip_t = df.feature("Precipitation(in)");
-  const auto& side_t = df.feature("Side");
-  const auto& junction_t = df.feature("Junction");
-  const auto& railway_t = df.feature("Railway");
-  const auto& roundabout_t = df.feature("Roundabout");
-  const auto& traffic_calming_t = df.feature("Traffic_Calming");
-  const auto& traffic_signal_t = df.feature("Traffic_Signal");
-  const auto& sunrise_t = df.feature("Sunrise_Sunset");
-  const auto& civil_t = df.feature("Civil_Twilight");
-  const auto& nautical_t = df.feature("Nautical_Twilight");
-  const auto& astro_t = df.feature("Astronomical_Twilight");
-  const auto& lat_t = df.feature("Start_Lat");
-  const auto& lng_t = df.feature("Start_Lng");
+  const auto& severity_t = df.features("Severity");
+  const auto& distance_t = df.features("Distance(mi)");
+  const auto& street_t = df.features("Street");
+  const auto& city_t = df.features("City");
+  const auto& county_t = df.features("County");
+  const auto& state_t = df.features("State");
+  const auto& zip_t = df.features("Zipcode");
+  const auto& timezone_t = df.features("Timezone");
+  const auto& airport_t = df.features("Airport_Code");
+  const auto& weather_t = df.features("Weather_Condition");
+  const auto& temp_t = df.features("Temperature(F)");
+  const auto& humidity_t = df.features("Humidity(%)");
+  const auto& pressure_t = df.features("Pressure(in)");
+  const auto& visibility_t = df.features("Visibility(mi)");
+  const auto& wind_t = df.features("Wind_Speed(mph)");
+  const auto& precip_t = df.features("Precipitation(in)");
+  const auto& side_t = df.features("Side");
+  const auto& junction_t = df.features("Junction");
+  const auto& railway_t = df.features("Railway");
+  const auto& roundabout_t = df.features("Roundabout");
+  const auto& traffic_calming_t = df.features("Traffic_Calming");
+  const auto& traffic_signal_t = df.features("Traffic_Signal");
+  const auto& sunrise_t = df.features("Sunrise_Sunset");
+  const auto& civil_t = df.features("Civil_Twilight");
+  const auto& nautical_t = df.features("Nautical_Twilight");
+  const auto& astro_t = df.features("Astronomical_Twilight");
+  const auto& lat_t = df.features("Start_Lat");
+  const auto& lng_t = df.features("Start_Lng");
 
-  const auto& start_note_t = start_as_note.feature("Start_Time");
-  const auto& start_ns_t = times_ns.feature("Start_Time");
-  const auto& end_ns_t = times_ns.feature("End_Time");
+  let something = distance_t.mean();
+  let something_else = df.features({"Distance(mi)", "Severity"});
+
+  const auto& start_note_t = start_as_note.features("Start_Time");
+  const auto& start_ns_t = times_ns.features("Start_Time");
+  const auto& end_ns_t = times_ns.features("End_Time");
 
   std::unordered_map<std::string, std::int64_t> state_count, city_count, county_count, timezone_count, zip_count,
       airport_count, geo_count, street_count, weather_count, weather_bucket_count, season_count, tod_count,

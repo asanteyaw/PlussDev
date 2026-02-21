@@ -99,6 +99,8 @@ public:
   Thread fillna(double value) const;
   Thread abs() const;
   Thread clip(double min_value, double max_value) const;
+  Thread log() const;
+  Thread exp() const;
 
   // Explicit mutating transforms (copy-on-write when shared).
   Thread& fillna_(double value);
@@ -113,13 +115,13 @@ public:
   Thread ffill() const;
   Thread bfill() const;
 
-  // Reductions (Series payload only).
-  double sum() const;
-  double mean() const;
-  double min() const;
-  double max() const;
-  double var(bool unbiased = true) const;
-  double std(bool unbiased = true) const;
+  // Reductions (Series payload only) return scalar Series (numel == 1).
+  pluss::Series sum() const;
+  pluss::Series mean() const;
+  pluss::Series min() const;
+  pluss::Series max() const;
+  pluss::Series var(bool unbiased = true) const;
+  pluss::Series std(bool unbiased = true) const;
 
   // Text operations (Note payload only).
   Thread lower() const;
@@ -153,6 +155,40 @@ private:
 
   pluss::msharp::intrusive_ptr<detail::ThreadImpl> impl_{nullptr};
 };
+
+Thread operator+(const Thread& lhs, double rhs);
+Thread operator+(double lhs, const Thread& rhs);
+Thread operator+(const Thread& lhs, const Thread& rhs);
+Thread operator-(const Thread& lhs, double rhs);
+Thread operator-(double lhs, const Thread& rhs);
+Thread operator-(const Thread& lhs, const Thread& rhs);
+Thread operator*(const Thread& lhs, double rhs);
+Thread operator*(double lhs, const Thread& rhs);
+Thread operator*(const Thread& lhs, const Thread& rhs);
+Thread operator/(const Thread& lhs, double rhs);
+Thread operator/(double lhs, const Thread& rhs);
+Thread operator/(const Thread& lhs, const Thread& rhs);
+Thread operator%(const Thread& lhs, double rhs);
+Thread operator%(double lhs, const Thread& rhs);
+Thread operator%(const Thread& lhs, const Thread& rhs);
+Thread operator==(const Thread& lhs, double rhs);
+Thread operator==(double lhs, const Thread& rhs);
+Thread operator==(const Thread& lhs, const Thread& rhs);
+Thread operator!=(const Thread& lhs, double rhs);
+Thread operator!=(double lhs, const Thread& rhs);
+Thread operator!=(const Thread& lhs, const Thread& rhs);
+Thread operator<(const Thread& lhs, double rhs);
+Thread operator<(double lhs, const Thread& rhs);
+Thread operator<(const Thread& lhs, const Thread& rhs);
+Thread operator<=(const Thread& lhs, double rhs);
+Thread operator<=(double lhs, const Thread& rhs);
+Thread operator<=(const Thread& lhs, const Thread& rhs);
+Thread operator>(const Thread& lhs, double rhs);
+Thread operator>(double lhs, const Thread& rhs);
+Thread operator>(const Thread& lhs, const Thread& rhs);
+Thread operator>=(const Thread& lhs, double rhs);
+Thread operator>=(double lhs, const Thread& rhs);
+Thread operator>=(const Thread& lhs, const Thread& rhs);
 
 class ThreadValue {
 public:

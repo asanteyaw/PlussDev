@@ -386,7 +386,7 @@ char effective_separator(const ReadCsvOptions& options) {
 }
 
 char sniff_separator_from_sample(std::string_view sample, std::optional<char> quotechar, char fallback) {
-  constexpr std::array<char, 5> kCandidates{',', ';', '\t', '|', ':'};
+  constexpr std::array<char, 4> kCandidates{',', ';', '\t', '|'};
   char best = fallback;
   double best_score = -std::numeric_limits<double>::infinity();
 

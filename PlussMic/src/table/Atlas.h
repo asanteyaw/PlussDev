@@ -45,7 +45,12 @@ public:
   DataFrame loc(std::int64_t label) const;
   DataFrame loc(const pluss::Timeline& label) const;
 
+  Atlas head(std::int64_t n = 5) const;
+  Atlas tail(std::int64_t n = 5) const;
   Atlas slice_frames(std::int64_t start, std::int64_t stop) const;
+  Atlas sort_depth(bool ascending = true, bool nulls_last = true) const;
+  Atlas relabel_depth(const Thread& labels) const;
+  Atlas align_depth(const Thread& labels) const;
 
   Atlas map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const;
   DataFrame aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const;

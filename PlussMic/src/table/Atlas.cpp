@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
+#include <numeric>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -118,6 +120,30 @@ std::int64_t find_timeline_label(const Thread& labels, const pluss::Timeline& ke
   return -1;
 }
 
+std::string label_string_at(const Thread& labels, std::int64_t i) {
+  switch (labels.kind()) {
+    case ThreadKind::Series: {
+      const auto s = labels.as_series();
+      switch (s.scalar_type()) {
+        case pluss::codem::ScalarType::Int64:
+          return std::to_string(s.to_vec<std::int64_t>(i));
+        case pluss::codem::ScalarType::Float64:
+          return std::to_string(s.to_vec<double>(i));
+        default:
+          return std::to_string(i);
+      }
+    }
+    case ThreadKind::Note:
+      return std::string(labels.as_note().at(i));
+    case ThreadKind::Timeline:
+      return std::to_string(labels.as_timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(i)]);
+    case ThreadKind::TimeIndex:
+      return std::to_string(labels.as_timeindex().timeline().to_epoch_nanos_vector()[static_cast<std::size_t>(i)]);
+    default:
+      return std::to_string(i);
+  }
+}
+
 } // namespace
 
 detail::AtlasImpl::AtlasImpl(std::vector<DataFrame> frames, std::optional<Thread> axis0_labels)
@@ -209,6 +235,16 @@ DataFrame Atlas::loc(const pluss::Timeline& label) const {
   return src.frames_[static_cast<std::size_t>(pos)];
 }
 
+Atlas Atlas::head(std::int64_t n) const {
+  const auto clipped = std::clamp<std::int64_t>(n, 0, depth());
+  return slice_frames(0, clipped);
+}
+
+Atlas Atlas::tail(std::int64_t n) const {
+  const auto clipped = std::clamp<std::int64_t>(n, 0, depth());
+  return slice_frames(depth() - clipped, depth());
+}
+
 Atlas Atlas::slice_frames(std::int64_t start, std::int64_t stop) const {
   const auto& src = impl_ref_();
   const auto [s, e] = normalize_slice(start, stop, static_cast<std::int64_t>(src.frames_.size()));
@@ -224,6 +260,65 @@ Atlas Atlas::slice_frames(std::int64_t start, std::int64_t stop) const {
     out_labels = src.axis0_labels_->slice(s, e);
   }
   return Atlas(std::move(out_frames), std::move(out_labels));
+}
+
+Atlas Atlas::sort_depth(bool ascending, bool nulls_last) const {
+  const auto& src = impl_ref_();
+  std::vector<std::int64_t> idx(static_cast<std::size_t>(depth()));
+  std::iota(idx.begin(), idx.end(), 0);
+
+  if (src.axis0_labels_.has_value()) {
+    const auto labels = *src.axis0_labels_;
+    std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t a, std::int64_t b) {
+      const auto cmp = labels.compare_rows(a, b, nulls_last);
+      return ascending ? (cmp < 0) : (cmp > 0);
+    });
+  } else if (!ascending) {
+    std::reverse(idx.begin(), idx.end());
+  }
+
+  std::vector<DataFrame> out_frames;
+  out_frames.reserve(idx.size());
+  for (const auto i : idx) {
+    out_frames.push_back(src.frames_[static_cast<std::size_t>(i)]);
+  }
+
+  std::optional<Thread> out_labels = std::nullopt;
+  if (src.axis0_labels_.has_value()) {
+    out_labels = src.axis0_labels_->take(idx);
+  }
+  return Atlas(std::move(out_frames), std::move(out_labels));
+}
+
+Atlas Atlas::relabel_depth(const Thread& labels) const {
+  return Atlas(impl_ref_().frames_, labels);
+}
+
+Atlas Atlas::align_depth(const Thread& labels) const {
+  const auto& src = impl_ref_();
+  PLUSS_CHECK(src.axis0_labels_.has_value(),
+              "Atlas::align_depth: current atlas has no depth labels");
+  PLUSS_CHECK(labels.defined(), "Atlas::align_depth: new labels are undefined");
+
+  std::unordered_map<std::string, std::int64_t> pos;
+  pos.reserve(static_cast<std::size_t>(depth()));
+  for (std::int64_t i = 0; i < depth(); ++i) {
+    pos.emplace(label_string_at(*src.axis0_labels_, i), i);
+  }
+
+  std::vector<DataFrame> out_frames;
+  out_frames.reserve(static_cast<std::size_t>(labels.size()));
+  std::vector<std::int64_t> take_idx;
+  take_idx.reserve(static_cast<std::size_t>(labels.size()));
+  for (std::int64_t i = 0; i < labels.size(); ++i) {
+    const auto key = label_string_at(labels, i);
+    const auto it = pos.find(key);
+    PLUSS_CHECK(it != pos.end(), "Atlas::align_depth: label not found '" + key + "'");
+    out_frames.push_back(src.frames_[static_cast<std::size_t>(it->second)]);
+    take_idx.push_back(i);
+  }
+  auto out_labels = labels.take(take_idx);
+  return Atlas(std::move(out_frames), out_labels);
 }
 
 Atlas Atlas::map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const {

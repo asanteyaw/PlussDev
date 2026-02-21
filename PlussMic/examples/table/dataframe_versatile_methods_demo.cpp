@@ -24,7 +24,7 @@ int main() {
   std::cout << "input\n";
   df.head(8);
 
-  const auto ages = df.feature("age").as_series().to_vec<std::int64_t>();
+  const auto ages = df.features("age").as_series().to_vec<std::int64_t>();
   auto mask = pluss::Series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
   auto* keep = reinterpret_cast<bool*>(mask.raw_data());
   for (std::size_t i = 0; i < ages.size(); ++i) {
@@ -32,7 +32,7 @@ int main() {
   }
 
   std::cout << "\nquery(mask): age >= 45\n";
-  auto older = df.query(mask);
+  auto older = df.filter(mask);
   older.head(8);
 
   std::cout << "\nquery(string): age >= 45 and job != 'unknown'\n";
@@ -48,10 +48,10 @@ int main() {
   core_jobs.head(8);
 
   std::cout << "\nderive(spec): add is_senior\n";
-  auto flagged = df.derive({{
+  auto flagged = df.assign({{
       "is_senior",
       [](const pluss::table::DataFrame& frame) {
-        const auto values = frame.feature("age").as_series().to_vec<std::int64_t>();
+        const auto values = frame.features("age").as_series().to_vec<std::int64_t>();
         auto out = pluss::Series::zeros({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Bool);
         auto* p = reinterpret_cast<bool*>(out.raw_data());
         for (std::size_t i = 0; i < values.size(); ++i) {
@@ -63,7 +63,7 @@ int main() {
   flagged.head(8);
 
   std::cout << "\nsummarize specs\n";
-  flagged.summarize(
+  flagged.aggregate(
       {
           {"rows", "age", pluss::table::DataFrame::SummaryOp::Count},
           {"age_mean", "age", pluss::table::DataFrame::SummaryOp::Mean},
@@ -91,8 +91,8 @@ int main() {
   numeric.compare(numeric.add(1.0)).head(5);
 
   std::cout << "\narrange: single + multi-feature sort\n";
-  df.arrange({"age"}).head(8);
-  df.arrange({
+  df.sort_values({"age"}).head(8);
+  df.sort_values({
       {"age", true, true},
       {"duration", false, true},
   }).head(8);
@@ -106,7 +106,7 @@ int main() {
   }}).head(8);
 
   std::cout << "\nwindow / rolling\n";
-  numeric.window(
+  numeric.rolling(
              {{
                  "age_roll_mean",
                  "age",
@@ -135,8 +135,8 @@ int main() {
           {"columns", {"Business Case ID", "Agency Name", "Lifecycle Cost"}},
       });
   missing_demo.head(8);
-  missing_demo.missing(pluss::table::DataFrame::MissingOp::IsNull).head(8);
-  missing_demo.missing({pluss::table::DataFrame::MissingOp::Fill, {"Lifecycle Cost"}, 0.0}).head(8);
+  missing_demo.isna().head(8);
+  missing_demo.fillna(0.0, {"Lifecycle Cost"}).head(8);
   missing_demo.ffill().head(8);
   missing_demo.bfill().head(8);
   missing_demo.dropna().head(8);

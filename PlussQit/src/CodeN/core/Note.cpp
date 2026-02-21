@@ -35,6 +35,146 @@ static ::std::string escape_for_debug(::std::string_view s) {
   return out;
 }
 
+enum class NoteCmpOp : ::std::uint8_t {
+  Eq = 0,
+  Ne = 1,
+  Lt = 2,
+  Le = 3,
+  Gt = 4,
+  Ge = 5,
+};
+
+::std::vector<::std::int64_t> note_shape(const Note& n) {
+  const auto s = n.sizes3();
+  ::std::vector<::std::int64_t> out;
+  out.reserve(static_cast<::std::size_t>(n.dim()));
+  for (::std::int64_t d = 0; d < n.dim(); ++d) {
+    out.push_back(s[static_cast<::std::size_t>(d)]);
+  }
+  return out;
+}
+
+void validate_note_pair_for_text_ops(const Note& lhs, const Note& rhs, ::std::string_view where) {
+  PLUSS_CHECK(lhs.defined() && rhs.defined(), ::std::string(where) + ": operands must be defined");
+  const bool lhs_bytes = static_cast<const NoteBase&>(lhs).is_bytes();
+  const bool rhs_bytes = static_cast<const NoteBase&>(rhs).is_bytes();
+  PLUSS_CHECK(lhs_bytes == rhs_bytes, ::std::string(where) + ": mixed bytes/utf8 operands are not supported");
+  const auto nx = lhs.numel();
+  const auto ny = rhs.numel();
+  const bool bx = (nx == 1);
+  const bool by = (ny == 1);
+  PLUSS_CHECK(nx == ny || bx || by, ::std::string(where) + ": expected equal numel or scalar broadcast");
+}
+
+Note note_concat_pair(const Note& lhs, const Note& rhs) {
+  validate_note_pair_for_text_ops(lhs, rhs, "Note::operator+");
+  const auto nx = lhs.numel();
+  const auto ny = rhs.numel();
+  const bool bx = (nx == 1);
+  const bool by = (ny == 1);
+  const auto n = (nx == ny) ? nx : (bx ? ny : nx);
+
+  ::std::vector<::std::string> out;
+  out.reserve(static_cast<::std::size_t>(n));
+  for (::std::int64_t i = 0; i < n; ++i) {
+    const auto x = lhs.at(bx ? 0 : i);
+    const auto y = rhs.at(by ? 0 : i);
+    ::std::string z;
+    z.reserve(x.size() + y.size());
+    z.append(x.data(), x.size());
+    z.append(y.data(), y.size());
+    out.push_back(::std::move(z));
+  }
+
+  ::std::vector<::std::string_view> flat;
+  flat.reserve(out.size());
+  for (const auto& v : out) flat.push_back(v);
+
+  const Note& shape_src = (nx == ny) ? lhs : (bx ? rhs : lhs);
+  const auto shape = note_shape(shape_src);
+  if (static_cast<const NoteBase&>(lhs).is_bytes()) {
+    return ops_internal::note_from_bytes(
+        ::std::span<const ::std::string_view>(flat.data(), flat.size()),
+        ::std::span<const ::std::int64_t>(shape.data(), shape.size()));
+  }
+  return ops_internal::note_from_utf8(
+      ::std::span<const ::std::string_view>(flat.data(), flat.size()),
+      ::std::span<const ::std::int64_t>(shape.data(), shape.size()));
+}
+
+Note note_repeat_scalar(const Note& n, ::std::int64_t times) {
+  PLUSS_CHECK(n.defined(), "Note::operator*: operand must be defined");
+  PLUSS_CHECK(times >= 0, "Note::operator*: repeat count must be >= 0");
+  ::std::vector<::std::string> out;
+  out.reserve(static_cast<::std::size_t>(n.numel()));
+  for (::std::int64_t i = 0; i < n.numel(); ++i) {
+    const auto s = n.at(i);
+    ::std::string z;
+    const auto reserve = static_cast<::std::size_t>(times) * s.size();
+    z.reserve(reserve);
+    for (::std::int64_t k = 0; k < times; ++k) {
+      z.append(s.data(), s.size());
+    }
+    out.push_back(::std::move(z));
+  }
+  ::std::vector<::std::string_view> flat;
+  flat.reserve(out.size());
+  for (const auto& v : out) flat.push_back(v);
+  const auto shape = note_shape(n);
+  if (static_cast<const NoteBase&>(n).is_bytes()) {
+    return ops_internal::note_from_bytes(
+        ::std::span<const ::std::string_view>(flat.data(), flat.size()),
+        ::std::span<const ::std::int64_t>(shape.data(), shape.size()));
+  }
+  return ops_internal::note_from_utf8(
+      ::std::span<const ::std::string_view>(flat.data(), flat.size()),
+      ::std::span<const ::std::int64_t>(shape.data(), shape.size()));
+}
+
+bool note_compare_strings(::std::string_view lhs, ::std::string_view rhs, NoteCmpOp op) {
+  switch (op) {
+    case NoteCmpOp::Eq:
+      return lhs == rhs;
+    case NoteCmpOp::Ne:
+      return lhs != rhs;
+    case NoteCmpOp::Lt:
+      return lhs < rhs;
+    case NoteCmpOp::Le:
+      return lhs <= rhs;
+    case NoteCmpOp::Gt:
+      return lhs > rhs;
+    case NoteCmpOp::Ge:
+      return lhs >= rhs;
+    default:
+      return false;
+  }
+}
+
+::std::vector<::std::uint8_t> note_compare_pair(const Note& lhs, const Note& rhs, NoteCmpOp op) {
+  validate_note_pair_for_text_ops(lhs, rhs, "Note::compare");
+  const auto nx = lhs.numel();
+  const auto ny = rhs.numel();
+  const bool bx = (nx == 1);
+  const bool by = (ny == 1);
+  const auto n = (nx == ny) ? nx : (bx ? ny : nx);
+  ::std::vector<::std::uint8_t> out(static_cast<::std::size_t>(n), 0);
+  for (::std::int64_t i = 0; i < n; ++i) {
+    out[static_cast<::std::size_t>(i)] =
+        static_cast<::std::uint8_t>(note_compare_strings(lhs.at(bx ? 0 : i), rhs.at(by ? 0 : i), op));
+  }
+  return out;
+}
+
+::std::vector<::std::uint8_t> note_compare_scalar(const Note& lhs, ::std::string_view rhs, NoteCmpOp op) {
+  PLUSS_CHECK(lhs.defined(), "Note::compare: lhs must be defined");
+  ::std::vector<::std::uint8_t> out(static_cast<::std::size_t>(lhs.numel()), 0);
+  for (::std::int64_t i = 0; i < lhs.numel(); ++i) {
+    out[static_cast<::std::size_t>(i)] =
+        static_cast<::std::uint8_t>(note_compare_strings(lhs.at(i), rhs, op));
+  }
+  return out;
+}
+
 } // namespace
 
 ::std::vector<NoteBase::index_type> NoteBase::shape() const {
@@ -192,6 +332,118 @@ NoteBase::value_type NoteBase::scalar() const {
   const auto& impl = this->impl();
   PLUSS_CHECK(linear >= 0 && linear < impl->numel(), "Note::at index out of range");
   return impl->bytes_at(linear);
+}
+
+Note Note::operator+(const Note& other) const { return note_concat_pair(*this, other); }
+Note Note::operator+(::std::string_view suffix) const {
+  const ::std::array<::std::string_view, 1> flat{suffix};
+  auto scalar = static_cast<const NoteBase&>(*this).is_bytes()
+                    ? ops_internal::note_from_bytes(flat, {})
+                    : ops_internal::note_from_utf8(flat, {});
+  return note_concat_pair(*this, scalar);
+}
+Note& Note::operator+=(const Note& other) {
+  *this = *this + other;
+  return *this;
+}
+Note& Note::operator+=(::std::string_view suffix) {
+  *this = *this + suffix;
+  return *this;
+}
+Note Note::operator*(::std::int64_t times) const { return note_repeat_scalar(*this, times); }
+Note& Note::operator*=(::std::int64_t times) {
+  *this = *this * times;
+  return *this;
+}
+
+::std::vector<::std::uint8_t> Note::operator==(const Note& other) const {
+  return note_compare_pair(*this, other, NoteCmpOp::Eq);
+}
+::std::vector<::std::uint8_t> Note::operator!=(const Note& other) const {
+  return note_compare_pair(*this, other, NoteCmpOp::Ne);
+}
+::std::vector<::std::uint8_t> Note::operator<(const Note& other) const {
+  return note_compare_pair(*this, other, NoteCmpOp::Lt);
+}
+::std::vector<::std::uint8_t> Note::operator<=(const Note& other) const {
+  return note_compare_pair(*this, other, NoteCmpOp::Le);
+}
+::std::vector<::std::uint8_t> Note::operator>(const Note& other) const {
+  return note_compare_pair(*this, other, NoteCmpOp::Gt);
+}
+::std::vector<::std::uint8_t> Note::operator>=(const Note& other) const {
+  return note_compare_pair(*this, other, NoteCmpOp::Ge);
+}
+
+::std::vector<::std::uint8_t> Note::operator==(::std::string_view other) const {
+  return note_compare_scalar(*this, other, NoteCmpOp::Eq);
+}
+::std::vector<::std::uint8_t> Note::operator!=(::std::string_view other) const {
+  return note_compare_scalar(*this, other, NoteCmpOp::Ne);
+}
+::std::vector<::std::uint8_t> Note::operator<(::std::string_view other) const {
+  return note_compare_scalar(*this, other, NoteCmpOp::Lt);
+}
+::std::vector<::std::uint8_t> Note::operator<=(::std::string_view other) const {
+  return note_compare_scalar(*this, other, NoteCmpOp::Le);
+}
+::std::vector<::std::uint8_t> Note::operator>(::std::string_view other) const {
+  return note_compare_scalar(*this, other, NoteCmpOp::Gt);
+}
+::std::vector<::std::uint8_t> Note::operator>=(::std::string_view other) const {
+  return note_compare_scalar(*this, other, NoteCmpOp::Ge);
+}
+
+Note operator+(::std::string_view prefix, const Note& rhs) {
+  const ::std::array<::std::string_view, 1> flat{prefix};
+  auto scalar = static_cast<const NoteBase&>(rhs).is_bytes()
+                    ? ops_internal::note_from_bytes(flat, {})
+                    : ops_internal::note_from_utf8(flat, {});
+  return scalar + rhs;
+}
+
+Note operator*(::std::int64_t times, const Note& rhs) { return rhs * times; }
+
+::std::vector<::std::uint8_t> operator==(::std::string_view lhs, const Note& rhs) {
+  const ::std::array<::std::string_view, 1> flat{lhs};
+  auto scalar = static_cast<const NoteBase&>(rhs).is_bytes()
+                    ? ops_internal::note_from_bytes(flat, {})
+                    : ops_internal::note_from_utf8(flat, {});
+  return scalar == rhs;
+}
+::std::vector<::std::uint8_t> operator!=(::std::string_view lhs, const Note& rhs) {
+  const auto eq = (lhs == rhs);
+  ::std::vector<::std::uint8_t> out(eq.size(), 0);
+  for (::std::size_t i = 0; i < eq.size(); ++i) out[i] = static_cast<::std::uint8_t>(eq[i] == 0);
+  return out;
+}
+::std::vector<::std::uint8_t> operator<(::std::string_view lhs, const Note& rhs) {
+  const ::std::array<::std::string_view, 1> flat{lhs};
+  auto scalar = static_cast<const NoteBase&>(rhs).is_bytes()
+                    ? ops_internal::note_from_bytes(flat, {})
+                    : ops_internal::note_from_utf8(flat, {});
+  return scalar < rhs;
+}
+::std::vector<::std::uint8_t> operator<=(::std::string_view lhs, const Note& rhs) {
+  const ::std::array<::std::string_view, 1> flat{lhs};
+  auto scalar = static_cast<const NoteBase&>(rhs).is_bytes()
+                    ? ops_internal::note_from_bytes(flat, {})
+                    : ops_internal::note_from_utf8(flat, {});
+  return scalar <= rhs;
+}
+::std::vector<::std::uint8_t> operator>(::std::string_view lhs, const Note& rhs) {
+  const ::std::array<::std::string_view, 1> flat{lhs};
+  auto scalar = static_cast<const NoteBase&>(rhs).is_bytes()
+                    ? ops_internal::note_from_bytes(flat, {})
+                    : ops_internal::note_from_utf8(flat, {});
+  return scalar > rhs;
+}
+::std::vector<::std::uint8_t> operator>=(::std::string_view lhs, const Note& rhs) {
+  const ::std::array<::std::string_view, 1> flat{lhs};
+  auto scalar = static_cast<const NoteBase&>(rhs).is_bytes()
+                    ? ops_internal::note_from_bytes(flat, {})
+                    : ops_internal::note_from_utf8(flat, {});
+  return scalar >= rhs;
 }
 
 } // namespace pluss::coden

@@ -44,6 +44,32 @@ public:
   // Full surface (hundreds of methods + factories)
   #include "CodeN/generated/NoteMethodDeclsGen.h"
 
+  // Text-aware operators.
+  // Supported semantics:
+  // - `+` : element-wise concatenation with scalar broadcast.
+  // - `*` : repeat each element `times` (times >= 0).
+  // - comparisons: lexical element-wise compare with scalar broadcast.
+  Note operator+(const Note& other) const;
+  Note operator+(::std::string_view suffix) const;
+  Note& operator+=(const Note& other);
+  Note& operator+=(::std::string_view suffix);
+  Note operator*(::std::int64_t times) const;
+  Note& operator*=(::std::int64_t times);
+
+  ::std::vector<::std::uint8_t> operator==(const Note& other) const;
+  ::std::vector<::std::uint8_t> operator!=(const Note& other) const;
+  ::std::vector<::std::uint8_t> operator<(const Note& other) const;
+  ::std::vector<::std::uint8_t> operator<=(const Note& other) const;
+  ::std::vector<::std::uint8_t> operator>(const Note& other) const;
+  ::std::vector<::std::uint8_t> operator>=(const Note& other) const;
+
+  ::std::vector<::std::uint8_t> operator==(::std::string_view other) const;
+  ::std::vector<::std::uint8_t> operator!=(::std::string_view other) const;
+  ::std::vector<::std::uint8_t> operator<(::std::string_view other) const;
+  ::std::vector<::std::uint8_t> operator<=(::std::string_view other) const;
+  ::std::vector<::std::uint8_t> operator>(::std::string_view other) const;
+  ::std::vector<::std::uint8_t> operator>=(::std::string_view other) const;
+
 #ifdef CODEN_ENABLE_SERIES_INTEROP
   // Interop helpers returning CodeM Series.
   pluss::codem::Series contains_series(::std::string_view needle) const;
@@ -58,6 +84,16 @@ private:
 
   friend struct ops_internal::NoteFactoryAccess;
 };
+
+Note operator+(::std::string_view prefix, const Note& rhs);
+Note operator*(::std::int64_t times, const Note& rhs);
+
+::std::vector<::std::uint8_t> operator==(::std::string_view lhs, const Note& rhs);
+::std::vector<::std::uint8_t> operator!=(::std::string_view lhs, const Note& rhs);
+::std::vector<::std::uint8_t> operator<(::std::string_view lhs, const Note& rhs);
+::std::vector<::std::uint8_t> operator<=(::std::string_view lhs, const Note& rhs);
+::std::vector<::std::uint8_t> operator>(::std::string_view lhs, const Note& rhs);
+::std::vector<::std::uint8_t> operator>=(::std::string_view lhs, const Note& rhs);
 
 
 } // namespace pluss::coden
