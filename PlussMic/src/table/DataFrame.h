@@ -24,6 +24,10 @@
 namespace pluss::loader {
 class LoadResult;
 }
+namespace pluss::signal {
+class Catalog;
+struct SignalizePolicy;
+}
 
 namespace pluss::table {
 
@@ -253,6 +257,9 @@ public:
   static DataFrame load_parquet(std::string_view filepath, const pluss::loader::Config& config);
   static DataFrame load_parquet(std::string_view filepath,
                                 std::initializer_list<pluss::loader::ConfigEntry> config_entries);
+
+  pluss::signal::Catalog signalize() const;
+  pluss::signal::Catalog signalize(const pluss::signal::SignalizePolicy& policy) const;
 
   bool defined() const noexcept;
   bool unique() const noexcept;

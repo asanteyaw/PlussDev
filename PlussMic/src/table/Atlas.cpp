@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "CodeM/core/Errors.h"
+#include "signal/Archive.h"
 #include "table/display/Display.h"
 
 namespace pluss::table {
@@ -338,6 +339,15 @@ DataFrame Atlas::aggregate_over_frames(
   PLUSS_CHECK(static_cast<bool>(fn), "Atlas::aggregate_over_frames: reducer function is empty");
   const auto& src = impl_ref_();
   return fn(src.frames_);
+}
+
+pluss::signal::Archive Atlas::signalize() const {
+  return signalize(pluss::signal::SignalizePolicy{});
+}
+
+pluss::signal::Archive Atlas::signalize(const pluss::signal::SignalizePolicy& policy) const {
+  PLUSS_CHECK(defined(), "Atlas::signalize requires a defined Atlas");
+  return pluss::signal::Archive::signalize(*this, policy);
 }
 
 std::string Atlas::to_string(const display::DisplayOptions& options) const {

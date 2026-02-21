@@ -611,3 +611,226 @@ Planned next major family:
 - `reshape` (melt/pivot-style operations)
 
 As new families/methods are added, update this guide in-place so end users always have one canonical DataFrame/Atlas reference.
+
+## 13. Signal Model (Stream -> Catalog -> Archive)
+
+`pluss::signal` is the unaligned keyed-stream model:
+
+- `Stream`: one typed 1D payload (`Series` / `Note` / `Timeline` / `TimeIndex`) with optional case labels and validity mask.
+- `Catalog`: named collection of `Stream` with varying lengths allowed.
+- `Archive`: stack of `Catalog`.
+
+Conversion:
+
+```cpp
+auto cat = df.signalize();      // DataFrame -> Catalog
+auto arc = atlas.signalize();   // Atlas -> Archive
+
+auto back_df = cat.tabelize();      // Catalog -> DataFrame
+auto back_atlas = arc.tabelize();   // Archive -> Atlas (frame-by-frame tabelize)
+```
+
+`Archive::tabelize(policy)` applies the same `TabelizePolicy` to each `Catalog`, then builds a strict `Atlas`. If resulting frames do not satisfy Atlas invariants (schema/shape consistency), construction throws.
+
+### Stream APIs (streamable ops live here)
+
+Core:
+
+```cpp
+auto n = s.size();
+auto k = s.kind();
+auto t = s.to_thread();
+```
+
+Predicates/transforms:
+
+```cpp
+auto nulls = s.isnull();
+auto nonnull = s.notnull();
+auto s2 = s.fillna(0.0).clip(0.0, 100.0).log();
+```
+
+Row-space:
+
+```cpp
+auto h = s.head(5);
+auto w = s.slice(10, 20);
+auto kept = s.filter(mask_series);
+auto clean = s.dropna();
+```
+
+Typed cast/reduction:
+
+```cpp
+auto s_num = s.cast(pluss::table::ThreadCastTarget::Series, pluss::codem::ScalarType::Float64);
+auto mu = s.mean();  // scalar Stream (Series payload, numel == 1)
+```
+
+Arithmetic/comparison (delegates to Thread semantics):
+
+```cpp
+auto z = s + 1.0;
+auto m = s >= 0.0;
+```
+
+### Catalog APIs (delegating/vectorized over streams)
+
+```cpp
+auto numeric = cat.series();
+auto text = cat.note();
+auto time = cat.timeline();
+
+auto h = cat.head(5);
+auto w = cat.slice(10, 20);
+
+auto cat2 = cat.fillna(0.0);                    // default: Series streams
+auto cat3 = cat.fillna(0.0, {"price", "qty"});  // explicit keys
+auto cat4 = cat.dropna();                        // per-stream dropna
+```
+
+### Key/value construction syntax
+
+Supported:
+
+```cpp
+using namespace pluss::signal::literals;
+pluss::signal::Catalog c({
+  "price"_k = price_stream,
+  "city"_k = city_stream,
+});
+```
+
+and standard pair form:
+
+```cpp
+pluss::signal::Catalog c({
+  {"price", price_stream},
+  {"city", city_stream},
+});
+```
+
+Not possible in C++:
+
+```cpp
+// "price" = price_stream
+```
+
+because string literals are not assignable lvalues.
+
+### Signal rendering
+
+`Stream`, `Catalog`, and `Archive` now render through `pluss::signal::display` and print JSON-shaped output:
+
+```cpp
+std::cout << s << "\n";
+std::cout << cat << "\n";
+std::cout << arc << "\n";
+```
+
+`Catalog` output is pretty JSON with:
+
+- top-level type/defined/nstreams
+- key preview
+- stream objects (`kind`, `size`, `dtype`, `cases`, `mask`, `preview`, optional `meta`)
+- terminal-aware head/tail key truncation with `"..."` omission markers
+
+`Archive` output is JSON summary with:
+
+- depth and depth-label presence
+- head/tail catalog summaries (index, optional label, nstreams, keys preview)
+- omission marker when depth is large
+
+### Catalog methods (current)
+
+Row/indexing:
+
+```cpp
+auto c1 = cat.head(10).tail(5);
+auto c2 = cat.slice(100, 200);
+auto c3 = cat.iloc(100, 200);
+auto c4 = cat.filter(mask_series);
+auto c5 = cat.masked_select(mask_series);
+```
+
+Field/structure:
+
+```cpp
+auto c_sel = cat.select({"price", "city"});
+auto c_drop = cat.drop({"zipcode"});
+auto c_ren = cat.rename({{"old_name", "new_name"}});
+```
+
+Sort/group/merge:
+
+```cpp
+auto c_s = cat.sort("price", false);
+auto c_m = cat.sort_by({"state", "city"}, {true, true});
+auto groups = cat.group_by("state"); // unordered_map<string, Catalog>
+auto joined = cat.merge(other, "id", "inner");
+```
+
+Aggregations:
+
+```cpp
+auto s = cat.sum("price");
+auto m = cat.mean("price");
+auto n = cat.count();
+```
+
+Apply/text:
+
+```cpp
+auto c_ap = cat.apply("price", [](const pluss::signal::Stream& s) { return s.fillna(0.0); });
+auto c_tx = cat.text_preprocess("description");
+auto c_kw = cat.extract_keywords("description", 20);
+```
+
+I/O and delegation policy:
+
+```cpp
+auto cat_csv = pluss::signal::Catalog::load_csv("data.csv");
+auto cat_xlsx = pluss::signal::Catalog::load_excel("data.xlsx");
+cat_csv.save_csv("out.csv");
+```
+
+`Catalog::load`, `Catalog::load_csv`, `Catalog::load_excel`, and `Catalog::save_csv` delegate to `DataFrame` I/O, then convert via `signalize()` / `tabelize()`.
+
+## 14. Bundle Model (Slot -> Registry -> Aisle)
+
+`pluss::bundle` is the document-native model:
+
+- `Slot`: 1D heterogeneous values (can mix `Series` / `Note` / `Timeline` / `TimeIndex` and scalar values).
+- `Registry`: named collection of `Slot` with varying lengths.
+- `Aisle`: stack of `Registry` with optional labels.
+
+This differs from `signal`:
+
+- `signal::Stream` is typed/homogeneous per stream.
+- `bundle::Slot` is heterogeneous by design.
+
+Example:
+
+```cpp
+using pluss::bundle::Slot;
+using pluss::bundle::Registry;
+using pluss::bundle::Aisle;
+
+Slot items({
+  std::int64_t{42},
+  std::string{"hello"},
+  pluss::make_series({1.0, 2.0, 3.0}),
+});
+
+Registry r({
+  {"items", items},
+  {"meta", Slot(std::vector<Slot::Value>{std::string{"doc-1"}, true})},
+});
+
+Aisle a({r});
+```
+
+Bridge policy:
+
+- `Registry::signalize()` exists but throws if a slot is not stream-compatible.
+- `Aisle::signalize()` delegates through each registry.
+- No general `bundelize()` from table/signal: heterogeneous slots are not reliably rectangularizable without lossy coercion.
