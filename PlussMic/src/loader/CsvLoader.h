@@ -36,6 +36,7 @@ struct ReadCsvOptions {
   CsvEngine engine{CsvEngine::Auto};
   std::optional<std::size_t> parallel_threads{};
   std::size_t parallel_min_bytes{4 * 1024 * 1024};
+  bool profile{false};
 
   // Parsing structure
   char sep{','};

@@ -6,16 +6,22 @@
 #include <charconv>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <exception>
 #include <limits>
 #include <optional>
+#include <atomic>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <thread>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -44,11 +50,59 @@ enum class InferredKind : std::uint8_t {
 
 using Thread = pluss::table::Thread;
 
+struct CsvRecordBuildProfile {
+  double filter_rows_ms{0.0};
+  double scan_cells_ms{0.0};
+  double infer_columns_ms{0.0};
+};
+
+struct CsvLoadProfile {
+  double detect_sep_ms{0.0};
+  double parse_records_ms{0.0};
+  double build_dataframe_ms{0.0};
+  double total_ms{0.0};
+  std::size_t total_rows{0};
+  std::size_t selected_rows{0};
+  std::size_t columns{0};
+};
+
 std::string lower_copy(std::string s) {
   for (auto& ch : s) {
     ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
   }
   return s;
+}
+
+bool csv_profile_enabled(const ReadCsvOptions& options) {
+  if (options.profile) {
+    return true;
+  }
+  if (const char* env = std::getenv("PLUSSMIC_CSV_PROFILE")) {
+    const auto flag = lower_copy(std::string(env));
+    return flag == "1" || flag == "true" || flag == "on" || flag == "yes";
+  }
+  return false;
+}
+
+double elapsed_ms(std::chrono::steady_clock::time_point start,
+                  std::chrono::steady_clock::time_point stop) {
+  return std::chrono::duration<double, std::milli>(stop - start).count();
+}
+
+std::size_t resolve_column_workers(const ReadCsvOptions& options, std::size_t column_count) {
+  if (column_count < 2) {
+    return 1;
+  }
+  std::size_t threads = 0;
+  if (options.parallel_threads.has_value() && *options.parallel_threads > 0) {
+    threads = *options.parallel_threads;
+  } else {
+    threads = static_cast<std::size_t>(std::thread::hardware_concurrency());
+  }
+  if (threads == 0) {
+    threads = 1;
+  }
+  return std::max<std::size_t>(1, std::min<std::size_t>(threads, column_count));
 }
 
 std::string trim_ascii(std::string_view s) {
@@ -753,7 +807,9 @@ Thread infer_column_thread(const std::string& col_name,
   std::optional<InferredKind> forced;
   (void)forced_kind_for(col_name, dtype_lower, forced);
 
-  const bool parse_dt = should_parse_as_datetime(col_name, source_col_index, options, dtype_lower);
+  const bool parse_dt =
+      (!forced.has_value() || *forced == InferredKind::DateTime)
+      && should_parse_as_datetime(col_name, source_col_index, options, dtype_lower);
   if (parse_dt || (forced.has_value() && *forced == InferredKind::DateTime)) {
     Thread out;
     if (try_make_timeline_thread(values, valid, options, out)) {
@@ -868,32 +924,6 @@ std::vector<std::size_t> resolve_usecols(const std::vector<std::string>& names,
 
   std::sort(out.begin(), out.end());
   out.erase(std::unique(out.begin(), out.end()), out.end());
-  return out;
-}
-
-std::vector<std::vector<std::string>> normalize_input_records(
-    const std::vector<std::vector<std::string>>& records,
-    const ReadCsvOptions& options) {
-  std::vector<std::vector<std::string>> out;
-  out.reserve(records.size());
-
-  for (std::size_t logical_row = 0; logical_row < records.size(); ++logical_row) {
-    if (options.skiprows_first_n > 0 && logical_row < options.skiprows_first_n) {
-      continue;
-    }
-    if (options.skiprows.find(logical_row) != options.skiprows.end()) {
-      continue;
-    }
-
-    auto row = records[logical_row];
-    if (options.skipinitialspace) {
-      for (auto& f : row) {
-        ltrim_inplace(f);
-      }
-    }
-    out.push_back(std::move(row));
-  }
-
   return out;
 }
 
@@ -1014,29 +1044,49 @@ std::string escape_csv_cell(std::string_view value, const WriteCsvOptions& optio
   return out;
 }
 
-} // namespace
+pluss::table::DataFrame build_dataframe_from_records(
+    const std::vector<std::vector<std::string>>& records,
+    const ReadCsvOptions& options,
+    CsvRecordBuildProfile* profile) {
+  const auto t_filter_start = std::chrono::steady_clock::now();
+  std::vector<std::size_t> kept_rows;
+  kept_rows.reserve(records.size());
+  for (std::size_t logical_row = 0; logical_row < records.size(); ++logical_row) {
+    if (options.skiprows_first_n > 0 && logical_row < options.skiprows_first_n) {
+      continue;
+    }
+    if (options.skiprows.find(logical_row) != options.skiprows.end()) {
+      continue;
+    }
+    kept_rows.push_back(logical_row);
+  }
+  if (profile != nullptr) {
+    profile->filter_rows_ms = elapsed_ms(t_filter_start, std::chrono::steady_clock::now());
+  }
 
-pluss::table::DataFrame load_csv_records(const std::vector<std::vector<std::string>>& records,
-                                         const ReadCsvOptions& options) {
-  auto normalized = normalize_input_records(records, options);
-  PLUSS_CHECK(!normalized.empty(), "load_csv: no rows parsed from csv");
+  PLUSS_CHECK(!kept_rows.empty(), "load_csv: no rows parsed from csv");
 
   std::vector<std::string> names;
-  std::size_t data_start = 0;
+  std::size_t data_start_pos = 0;
 
   if (options.header) {
     PLUSS_CHECK(options.header_row >= 0, "load_csv: header_row must be >= 0");
-    const auto h = static_cast<std::size_t>(options.header_row);
-    PLUSS_CHECK(h < normalized.size(), "load_csv: header_row is out of range");
-    names = normalized[h];
-    data_start = h + 1;
+    const auto header_pos = static_cast<std::size_t>(options.header_row);
+    PLUSS_CHECK(header_pos < kept_rows.size(), "load_csv: header_row is out of range");
+    names = records[kept_rows[header_pos]];
+    if (options.skipinitialspace) {
+      for (auto& n : names) {
+        ltrim_inplace(n);
+      }
+    }
+    data_start_pos = header_pos + 1;
   } else {
-    const auto ncol = normalized.front().size();
+    const auto ncol = records[kept_rows.front()].size();
     names.reserve(ncol);
     for (std::size_t i = 0; i < ncol; ++i) {
       names.push_back(fmt::format("feat_{}", i));
     }
-    data_start = 0;
+    data_start_pos = 0;
   }
 
   if (!options.names.empty()) {
@@ -1046,7 +1096,7 @@ pluss::table::DataFrame load_csv_records(const std::vector<std::vector<std::stri
   PLUSS_CHECK(!names.empty(), "load_csv: inferred zero columns");
 
   if (options.skipfooter > 0) {
-    const auto n_data = normalized.size() > data_start ? (normalized.size() - data_start) : 0;
+    const auto n_data = kept_rows.size() > data_start_pos ? (kept_rows.size() - data_start_pos) : 0;
     PLUSS_CHECK(options.skipfooter <= n_data, "load_csv: skipfooter exceeds number of data rows");
   }
 
@@ -1078,28 +1128,53 @@ pluss::table::DataFrame load_csv_records(const std::vector<std::vector<std::stri
     selected_names.push_back(names[c]);
   }
 
+  const auto data_end_pos = kept_rows.size() - options.skipfooter;
+  const auto raw_data_rows = data_end_pos > data_start_pos ? (data_end_pos - data_start_pos) : 0;
+  const auto reserve_rows = options.nrows.has_value()
+      ? std::min<std::size_t>(raw_data_rows, *options.nrows)
+      : raw_data_rows;
+
+  const auto t_scan_start = std::chrono::steady_clock::now();
   std::vector<std::vector<std::string>> values_by_col(selected_cols.size());
+  for (auto& values : values_by_col) {
+    values.reserve(reserve_rows);
+  }
   std::vector<std::string> case_values;
+  if (case_col.has_value()) {
+    case_values.reserve(reserve_rows);
+  }
 
   std::size_t bad_lines = 0;
   std::size_t accepted_rows = 0;
 
-  const std::size_t tail_cut = options.skipfooter;
-  const std::size_t final_end = normalized.size() - tail_cut;
+  auto push_cell = [&](std::vector<std::string>& out, const std::string& src) {
+    if (!options.skipinitialspace) {
+      out.push_back(src);
+      return;
+    }
+    if (!src.empty() && std::isspace(static_cast<unsigned char>(src.front()))) {
+      auto cell = src;
+      ltrim_inplace(cell);
+      out.push_back(std::move(cell));
+      return;
+    }
+    out.push_back(src);
+  };
 
-  for (std::size_t r = data_start; r < final_end; ++r) {
-    const auto& rec = normalized[r];
+  for (std::size_t pos = data_start_pos; pos < data_end_pos; ++pos) {
+    const auto row_idx = kept_rows[pos];
+    const auto& rec = records[row_idx];
 
     if (rec.size() != names.size()) {
       ++bad_lines;
       if (options.on_bad_lines == BadLinePolicy::Error) {
         PLUSS_FAIL(fmt::format("load_csv: bad line at data row {} (expected {} fields, got {})",
-                               r - data_start,
+                               pos - data_start_pos,
                                names.size(),
                                rec.size()));
       }
       if (options.on_bad_lines == BadLinePolicy::Warn) {
-        ::pluss::codem::warn(fmt::format("load_csv: skipping malformed row {}", r - data_start));
+        ::pluss::codem::warn(fmt::format("load_csv: skipping malformed row {}", pos - data_start_pos));
       }
       continue;
     }
@@ -1109,14 +1184,18 @@ pluss::table::DataFrame load_csv_records(const std::vector<std::vector<std::stri
     }
 
     for (std::size_t i = 0; i < selected_cols.size(); ++i) {
-      values_by_col[i].push_back(rec[selected_cols[i]]);
+      push_cell(values_by_col[i], rec[selected_cols[i]]);
     }
 
     if (case_col.has_value()) {
-      case_values.push_back(rec[*case_col]);
+      push_cell(case_values, rec[*case_col]);
     }
 
     ++accepted_rows;
+  }
+
+  if (profile != nullptr) {
+    profile->scan_cells_ms = elapsed_ms(t_scan_start, std::chrono::steady_clock::now());
   }
 
   if (options.on_bad_lines == BadLinePolicy::Warn && bad_lines > 0) {
@@ -1129,15 +1208,75 @@ pluss::table::DataFrame load_csv_records(const std::vector<std::vector<std::stri
     dtype_lower.emplace(kv.first, lower_copy(kv.second));
   }
 
-  std::vector<std::pair<std::string, pluss::table::Thread>> cols;
-  cols.reserve(selected_cols.size());
-  for (std::size_t i = 0; i < selected_cols.size(); ++i) {
-    cols.emplace_back(
-        selected_names[i],
-        infer_column_thread(selected_names[i], selected_cols[i], values_by_col[i], options, dtype_lower));
+  const auto t_infer_start = std::chrono::steady_clock::now();
+  std::vector<Thread> inferred(selected_cols.size());
+  const auto max_workers = resolve_column_workers(options, selected_cols.size());
+  const bool allow_parallel = options.engine != CsvEngine::Serial;
+  const bool use_parallel = allow_parallel && max_workers > 1 && selected_cols.size() >= 4;
+
+  if (use_parallel) {
+    std::atomic<std::size_t> next_index{0};
+    std::atomic<bool> failed{false};
+    std::exception_ptr first_error;
+    std::mutex error_mutex;
+
+    auto worker = [&]() {
+      while (true) {
+        if (failed.load(std::memory_order_relaxed)) {
+          return;
+        }
+        const auto i = next_index.fetch_add(1, std::memory_order_relaxed);
+        if (i >= selected_cols.size()) {
+          return;
+        }
+        try {
+          inferred[i] = infer_column_thread(
+              selected_names[i], selected_cols[i], values_by_col[i], options, dtype_lower);
+        } catch (...) {
+          {
+            std::lock_guard<std::mutex> lock(error_mutex);
+            if (!first_error) {
+              first_error = std::current_exception();
+            }
+          }
+          failed.store(true, std::memory_order_relaxed);
+          return;
+        }
+      }
+    };
+
+    std::vector<std::thread> workers;
+    workers.reserve(max_workers > 0 ? max_workers - 1 : 0);
+    for (std::size_t t = 1; t < max_workers; ++t) {
+      workers.emplace_back(worker);
+    }
+    worker();
+    for (auto& w : workers) {
+      if (w.joinable()) {
+        w.join();
+      }
+    }
+    if (first_error) {
+      std::rethrow_exception(first_error);
+    }
+  } else {
+    for (std::size_t i = 0; i < selected_cols.size(); ++i) {
+      inferred[i] = infer_column_thread(
+          selected_names[i], selected_cols[i], values_by_col[i], options, dtype_lower);
+    }
   }
 
-  std::optional<pluss::table::Thread> cases = std::nullopt;
+  if (profile != nullptr) {
+    profile->infer_columns_ms = elapsed_ms(t_infer_start, std::chrono::steady_clock::now());
+  }
+
+  std::vector<std::pair<std::string, Thread>> cols;
+  cols.reserve(selected_cols.size());
+  for (std::size_t i = 0; i < selected_cols.size(); ++i) {
+    cols.emplace_back(selected_names[i], std::move(inferred[i]));
+  }
+
+  std::optional<Thread> cases = std::nullopt;
   if (case_col.has_value()) {
     const auto case_name = names[*case_col];
     cases = infer_column_thread(case_name, *case_col, case_values, options, dtype_lower);
@@ -1146,11 +1285,25 @@ pluss::table::DataFrame load_csv_records(const std::vector<std::vector<std::stri
   return pluss::table::DataFrame(std::move(cols), std::move(cases));
 }
 
+} // namespace
+
+pluss::table::DataFrame load_csv_records(const std::vector<std::vector<std::string>>& records,
+                                         const ReadCsvOptions& options) {
+  return build_dataframe_from_records(records, options, nullptr);
+}
+
 pluss::table::DataFrame load_csv(const ReadCsvOptions& options) {
   PLUSS_CHECK(!options.filepath.empty(), "load_csv: filepath is empty");
 
+  const auto t_total_start = std::chrono::steady_clock::now();
+  CsvLoadProfile profile_stats;
+
   ReadCsvOptions resolved = options;
-  resolved.sep = detect_separator(options);
+  {
+    const auto t0 = std::chrono::steady_clock::now();
+    resolved.sep = detect_separator(options);
+    profile_stats.detect_sep_ms = elapsed_ms(t0, std::chrono::steady_clock::now());
+  }
 
   std::vector<std::vector<std::string>> records;
   auto parse_serial = [&]() {
@@ -1169,6 +1322,7 @@ pluss::table::DataFrame load_csv(const ReadCsvOptions& options) {
   const auto file_bytes = std::filesystem::file_size(resolved.filepath, fs_ec);
   const auto known_size = fs_ec ? static_cast<std::size_t>(0) : static_cast<std::size_t>(file_bytes);
 
+  const auto t_parse_start = std::chrono::steady_clock::now();
   const bool attempt_parallel = ParallelCsvReader::should_use_parallel(known_size, resolved);
   if (attempt_parallel) {
     try {
@@ -1184,8 +1338,37 @@ pluss::table::DataFrame load_csv(const ReadCsvOptions& options) {
   } else {
     records = parse_serial();
   }
+  profile_stats.parse_records_ms = elapsed_ms(t_parse_start, std::chrono::steady_clock::now());
+  profile_stats.total_rows = records.size();
 
-  return load_csv_records(records, resolved);
+  CsvRecordBuildProfile build_profile;
+  const auto t_build_start = std::chrono::steady_clock::now();
+  auto out = build_dataframe_from_records(records, resolved, &build_profile);
+  profile_stats.build_dataframe_ms = elapsed_ms(t_build_start, std::chrono::steady_clock::now());
+  profile_stats.total_ms = elapsed_ms(t_total_start, std::chrono::steady_clock::now());
+  profile_stats.selected_rows = static_cast<std::size_t>(out.nrows());
+  profile_stats.columns = static_cast<std::size_t>(out.ncols());
+
+  if (csv_profile_enabled(resolved)) {
+    fmt::print(
+        stderr,
+        "load_csv profile [{}]: total={:.2f} ms, detect_sep={:.2f} ms, parse_records={:.2f} ms, "
+        "build_dataframe={:.2f} ms, row_filter={:.2f} ms, scan_cells={:.2f} ms, infer_columns={:.2f} ms, "
+        "rows(raw/selected)={}/{}, cols={}\n",
+        resolved.filepath,
+        profile_stats.total_ms,
+        profile_stats.detect_sep_ms,
+        profile_stats.parse_records_ms,
+        profile_stats.build_dataframe_ms,
+        build_profile.filter_rows_ms,
+        build_profile.scan_cells_ms,
+        build_profile.infer_columns_ms,
+        profile_stats.total_rows,
+        profile_stats.selected_rows,
+        profile_stats.columns);
+  }
+
+  return out;
 }
 
 pluss::table::DataFrame load_csv(std::string_view filepath, const ReadCsvOptions& options) {

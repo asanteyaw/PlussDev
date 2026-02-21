@@ -86,15 +86,17 @@ int main() {
   std::cout << "file: " << us_csv << "\n";
   std::cout << "hardware_concurrency: " << std::thread::hardware_concurrency() << "\n";
 
-  constexpr std::size_t rounds = 1;
+  constexpr std::size_t rounds = 3;
 
   pluss::loader::ReadCsvOptions serial_opts;
   serial_opts.engine = pluss::loader::CsvEngine::Serial;
   serial_opts.parallel_min_bytes = 0;
+  serial_opts.profile = true;
 
   pluss::loader::ReadCsvOptions parallel_opts;
   parallel_opts.engine = pluss::loader::CsvEngine::Parallel;
   parallel_opts.parallel_min_bytes = 0;
+  parallel_opts.profile = true;
   if (const auto hw = std::thread::hardware_concurrency(); hw > 0) {
     parallel_opts.parallel_threads = static_cast<std::size_t>(hw);
   }

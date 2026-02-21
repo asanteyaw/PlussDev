@@ -214,6 +214,12 @@ ReadCsvOptions csv_read_options_from_config(const Config& config) {
     }
   }
 
+  if (const auto* v = find_config(config, {"profile", "csvprofile"})) {
+    if (auto b = parse_bool_value(*v); b.has_value()) {
+      options.profile = *b;
+    }
+  }
+
   return options;
 }
 

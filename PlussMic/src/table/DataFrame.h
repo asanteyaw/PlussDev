@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <initializer_list>
 #include <iosfwd>
 #include <optional>
@@ -49,6 +50,66 @@ private:
 
 class DataFrame {
 public:
+  enum class SummaryOp : std::uint8_t {
+    Count = 0,
+    Nunique = 1,
+    Sum = 2,
+    Mean = 3,
+    Min = 4,
+    Max = 5,
+    Std = 6,
+    Var = 7,
+  };
+
+  enum class MissingOp : std::uint8_t {
+    Fill = 0,
+    ForwardFill = 1,
+    BackwardFill = 2,
+    DropAny = 3,
+    DropAll = 4,
+    IsNull = 5,
+    NotNull = 6,
+  };
+
+  struct SummarySpec {
+    std::string output;
+    std::string feature;
+    SummaryOp op{SummaryOp::Mean};
+  };
+
+  struct DeriveSpec {
+    std::string feature;
+    std::function<Thread(const DataFrame&)> expr;
+  };
+
+  struct MissingSpec {
+    MissingOp op{MissingOp::DropAny};
+    std::vector<std::string> features{};
+    std::optional<double> value{std::nullopt};
+  };
+
+  struct ArrangeSpec {
+    std::string feature;
+    bool ascending{true};
+    bool nulls_last{true};
+  };
+
+  struct CastSpec {
+    std::string feature;
+    ThreadCastTarget target{ThreadCastTarget::Series};
+    std::optional<pluss::codem::ScalarType> series_dtype{std::nullopt};
+  };
+
+  struct WindowSpec {
+    std::string output;
+    std::string feature;
+    ThreadWindowOp op{ThreadWindowOp::RollingMean};
+    std::int64_t window{3};
+    std::int64_t min_periods{1};
+  };
+
+  using QueryFn = std::function<pluss::Series(const DataFrame&)>;
+
   DataFrame();
   explicit DataFrame(std::vector<std::pair<std::string, Thread>> columns,
                      std::optional<Thread> cases = std::nullopt);
@@ -171,6 +232,10 @@ public:
   DataFrame select(std::initializer_list<std::string_view> names) const;
   DataFrame drop(std::initializer_list<std::string_view> names) const;
   DataFrame reorder(std::initializer_list<std::string_view> names) const;
+  DataFrame arrange(std::initializer_list<std::string_view> features,
+                    bool ascending = true,
+                    bool nulls_last = true) const;
+  DataFrame arrange(std::initializer_list<ArrangeSpec> specs) const;
 
   DataFrame with_column(std::string name, const Thread& column) const;
   DataFrame& with_column_(std::string name, const Thread& column);
@@ -184,11 +249,78 @@ public:
   DataFrame tail(std::int64_t n = 5, bool render = true) const;
   DataFrame slice(std::int64_t start, std::int64_t stop) const;
   DataFrame take(std::span<const std::int64_t> indices) const;
+  DataFrame where(const pluss::Series& bool_mask) const;
   DataFrame filter(const pluss::Series& bool_mask) const;
+  DataFrame query(const pluss::Series& bool_mask) const;
+  DataFrame query(const QueryFn& predicate) const;
+  DataFrame query(std::string_view expression) const;
+  DataFrame derive(std::initializer_list<std::pair<std::string, Thread>> assignments) const;
+  DataFrame derive(std::initializer_list<DeriveSpec> specs) const;
+  DataFrame assign(std::initializer_list<std::pair<std::string, Thread>> assignments) const;
+  DataFrame assign(std::initializer_list<DeriveSpec> specs) const;
+  DataFrame summarize(std::initializer_list<SummarySpec> specs, bool render = true) const;
+  DataFrame agg(std::initializer_list<SummarySpec> specs, bool render = true) const;
+  DataFrame add(double other) const;
+  DataFrame add(const DataFrame& other) const;
+  DataFrame sub(double other) const;
+  DataFrame sub(const DataFrame& other) const;
+  DataFrame subtract(double other) const;
+  DataFrame subtract(const DataFrame& other) const;
+  DataFrame mul(double other) const;
+  DataFrame mul(const DataFrame& other) const;
+  DataFrame multiply(double other) const;
+  DataFrame multiply(const DataFrame& other) const;
+  DataFrame div(double other) const;
+  DataFrame div(const DataFrame& other) const;
+  DataFrame divide(double other) const;
+  DataFrame divide(const DataFrame& other) const;
+  DataFrame truediv(double other) const;
+  DataFrame truediv(const DataFrame& other) const;
+  DataFrame floordiv(double other) const;
+  DataFrame floordiv(const DataFrame& other) const;
+  DataFrame mod(double other) const;
+  DataFrame mod(const DataFrame& other) const;
+  DataFrame pow(double other) const;
+  DataFrame pow(const DataFrame& other) const;
+  DataFrame radd(double other) const;
+  DataFrame rsub(double other) const;
+  DataFrame rmul(double other) const;
+  DataFrame rdiv(double other) const;
+  DataFrame rtruediv(double other) const;
+  DataFrame rfloordiv(double other) const;
+  DataFrame rmod(double other) const;
+  DataFrame rpow(double other) const;
+  DataFrame eq(double other) const;
+  DataFrame eq(const DataFrame& other) const;
+  DataFrame ne(double other) const;
+  DataFrame ne(const DataFrame& other) const;
+  DataFrame lt(double other) const;
+  DataFrame lt(const DataFrame& other) const;
+  DataFrame le(double other) const;
+  DataFrame le(const DataFrame& other) const;
+  DataFrame gt(double other) const;
+  DataFrame gt(const DataFrame& other) const;
+  DataFrame ge(double other) const;
+  DataFrame ge(const DataFrame& other) const;
+  DataFrame compare(double other) const;
+  DataFrame compare(const DataFrame& other) const;
+  DataFrame missing(const MissingSpec& spec) const;
+  DataFrame missing(MissingOp op,
+                    std::initializer_list<std::string_view> features = {},
+                    std::optional<double> value = std::nullopt) const;
+  DataFrame cast(std::initializer_list<CastSpec> specs) const;
+  DataFrame cast(
+      std::initializer_list<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const;
+  DataFrame astype(
+      std::initializer_list<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const;
+  DataFrame window(std::initializer_list<WindowSpec> specs, bool keep_input = true) const;
+  DataFrame rolling(std::initializer_list<WindowSpec> specs, bool keep_input = true) const;
 
   DataFrame fillna(double value) const;
   DataFrame& fillna_(double value);
   DataFrame dropna() const;
+  DataFrame ffill() const;
+  DataFrame bfill() const;
   std::int64_t count_null_rows() const;
   DataFrame describe(bool render = true) const;
   DataFrame view(std::int64_t start, std::int64_t stop, bool render = true) const;
@@ -236,8 +368,11 @@ private:
   explicit DataFrame(pluss::msharp::intrusive_ptr<detail::DataFrameImpl> impl);
   detail::DataFrameImpl& mut_impl_();
   const detail::DataFrameImpl& impl_ref_() const;
+  void suppress_next_stream_() const;
+  bool consume_stream_suppression_() const;
 
   pluss::msharp::intrusive_ptr<detail::DataFrameImpl> impl_{nullptr};
+  friend std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
 };
 
 std::ostream& operator<<(std::ostream& os, const DataFrame& frame);

@@ -1,0 +1,145 @@
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include <pluss/pluss.h>
+
+namespace {
+
+std::filesystem::path data_file(const std::string& name) {
+  return std::filesystem::path(PLUSSMIC_SOURCE_DIR) / "data" / name;
+}
+
+} // namespace
+
+int main() {
+  pluss::loader::ReadCsvOptions options;
+  options.sep = ';';
+  options.nrows = 32;
+  options.usecols = {"age", "job", "balance", "duration"};
+  auto df = pluss::table::DataFrame::load_csv(data_file("bank-full.csv").string(), options);
+
+  std::cout << "=== versatile families demo ===\n";
+  std::cout << "input\n";
+  df.head(8);
+
+  const auto ages = df.feature("age").as_series().to_vec<std::int64_t>();
+  auto mask = pluss::Series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
+  auto* keep = reinterpret_cast<bool*>(mask.raw_data());
+  for (std::size_t i = 0; i < ages.size(); ++i) {
+    keep[i] = ages[i] >= 45;
+  }
+
+  std::cout << "\nquery(mask): age >= 45\n";
+  auto older = df.query(mask);
+  older.head(8);
+
+  std::cout << "\nquery(string): age >= 45 and job != 'unknown'\n";
+  auto older_known = df.query("age >= 45 and job != 'unknown'");
+  older_known.head(8);
+
+  std::cout << "\nquery(string): age between 45 and 50\n";
+  auto mid_band = df.query("age between 45 and 50");
+  mid_band.head(8);
+
+  std::cout << "\nquery(string): job in ('management', 'technician')\n";
+  auto core_jobs = df.query("job in ('management', 'technician')");
+  core_jobs.head(8);
+
+  std::cout << "\nderive(spec): add is_senior\n";
+  auto flagged = df.derive({{
+      "is_senior",
+      [](const pluss::table::DataFrame& frame) {
+        const auto values = frame.feature("age").as_series().to_vec<std::int64_t>();
+        auto out = pluss::Series::zeros({static_cast<std::int64_t>(values.size())}, pluss::codem::ScalarType::Bool);
+        auto* p = reinterpret_cast<bool*>(out.raw_data());
+        for (std::size_t i = 0; i < values.size(); ++i) {
+          p[i] = values[i] >= 50;
+        }
+        return pluss::table::Thread(out);
+      },
+  }});
+  flagged.head(8);
+
+  std::cout << "\nsummarize specs\n";
+  flagged.summarize(
+      {
+          {"rows", "age", pluss::table::DataFrame::SummaryOp::Count},
+          {"age_mean", "age", pluss::table::DataFrame::SummaryOp::Mean},
+          {"job_cardinality", "job", pluss::table::DataFrame::SummaryOp::Nunique},
+      },
+      true);
+
+  std::cout << "\nagg alias\n";
+  flagged.agg({{"balance_max", "balance", pluss::table::DataFrame::SummaryOp::Max}}, true);
+
+  auto numeric = df.features({"age", "balance", "duration"});
+  std::cout << "\narithmetic: add/subtract/multiply/divide\n";
+  numeric.add(1.0).head(5);
+  numeric.subtract(1.0).head(5);
+  numeric.multiply(2.0).head(5);
+  numeric.divide(2.0).head(5);
+
+  std::cout << "\nreverse arithmetic: rsub/rpow\n";
+  numeric.rsub(100.0).head(5);
+  numeric.rpow(2.0).head(5);
+
+  std::cout << "\ncomparisons: ge/eq/compare\n";
+  numeric.ge(45.0).head(5);
+  numeric.eq(numeric).head(5);
+  numeric.compare(numeric.add(1.0)).head(5);
+
+  std::cout << "\narrange: single + multi-feature sort\n";
+  df.arrange({"age"}).head(8);
+  df.arrange({
+      {"age", true, true},
+      {"duration", false, true},
+  }).head(8);
+
+  std::cout << "\ncast / astype\n";
+  df.astype({{"age", pluss::codem::ScalarType::Float64}}).head(8);
+  df.cast({{
+      "age",
+      pluss::table::ThreadCastTarget::Note,
+      std::nullopt,
+  }}).head(8);
+
+  std::cout << "\nwindow / rolling\n";
+  numeric.window(
+             {{
+                 "age_roll_mean",
+                 "age",
+                 pluss::table::ThreadWindowOp::RollingMean,
+                 3,
+                 2,
+             }},
+             false)
+      .head(8);
+  numeric.rolling(
+             {{
+                 "",
+                 "duration",
+                 pluss::table::ThreadWindowOp::RollingMax,
+                 5,
+                 1,
+             }},
+             true)
+      .head(8);
+
+  std::cout << "\nmissing: isnull / fill / ffill / bfill / drop\n";
+  auto missing_demo = pluss::table::DataFrame::load_csv(
+      data_file("messy_data.csv").string(),
+      {
+          {"nrows", 16},
+          {"columns", {"Business Case ID", "Agency Name", "Lifecycle Cost"}},
+      });
+  missing_demo.head(8);
+  missing_demo.missing(pluss::table::DataFrame::MissingOp::IsNull).head(8);
+  missing_demo.missing({pluss::table::DataFrame::MissingOp::Fill, {"Lifecycle Cost"}, 0.0}).head(8);
+  missing_demo.ffill().head(8);
+  missing_demo.bfill().head(8);
+  missing_demo.dropna().head(8);
+
+  return 0;
+}
