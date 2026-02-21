@@ -526,6 +526,39 @@ TableMatrix build_dataframe_matrix(
   const auto names = frame.column_names();
   const auto cols = frame.columns();
 
+  auto has_negative_visible_value = [&](std::int64_t cidx) {
+    const auto& col = cols[static_cast<std::size_t>(cidx)];
+    if (!is_numeric_thread(col)) {
+      return false;
+    }
+
+    auto row_is_negative = [&](std::int64_t ridx) {
+      const auto v = thread_value_at(col, ridx);
+      return !v.empty() && v.front() == '-';
+    };
+
+    for (const auto ridx : row_plan.head) {
+      if (row_is_negative(ridx)) {
+        return true;
+      }
+    }
+    for (const auto ridx : row_plan.tail) {
+      if (row_is_negative(ridx)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  std::unordered_map<std::int64_t, bool> sign_pad_by_column;
+  sign_pad_by_column.reserve(col_plan.head.size() + col_plan.tail.size());
+  for (const auto cidx : col_plan.head) {
+    sign_pad_by_column.emplace(cidx, has_negative_visible_value(cidx));
+  }
+  for (const auto cidx : col_plan.tail) {
+    sign_pad_by_column.emplace(cidx, has_negative_visible_value(cidx));
+  }
+
   TableMatrix m;
   if (options.show_case_index) {
     m.headers.push_back("");
@@ -560,14 +593,24 @@ TableMatrix build_dataframe_matrix(
       row.push_back(clip_cell(thread_value_at(frame.cases(), ridx), options.max_cell_width));
     }
 
+    auto render_data_cell = [&](std::int64_t cidx) {
+      std::string value = thread_value_at(cols[static_cast<std::size_t>(cidx)], ridx);
+      if (sign_pad_by_column.contains(cidx) && sign_pad_by_column.at(cidx)) {
+        if (!value.empty() && value != "NA" && value.front() != '-') {
+          value.insert(value.begin(), ' ');
+        }
+      }
+      return clip_cell(std::move(value), options.max_cell_width);
+    };
+
     for (const auto cidx : col_plan.head) {
-      row.push_back(clip_cell(thread_value_at(cols[static_cast<std::size_t>(cidx)], ridx), options.max_cell_width));
+      row.push_back(render_data_cell(cidx));
     }
     if (col_plan.ellipsis) {
       row.push_back("...");
     }
     for (const auto cidx : col_plan.tail) {
-      row.push_back(clip_cell(thread_value_at(cols[static_cast<std::size_t>(cidx)], ridx), options.max_cell_width));
+      row.push_back(render_data_cell(cidx));
     }
     return row;
   };
