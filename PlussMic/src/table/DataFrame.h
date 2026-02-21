@@ -51,6 +51,34 @@ private:
 
 class DataFrame {
 public:
+  class LetSlot {
+  public:
+    LetSlot(DataFrame& owner, std::string name);
+
+    LetSlot& operator=(const Thread& value);
+    LetSlot& operator=(const ThreadValue& value);
+    LetSlot& operator=(const DataFrame& frame);
+
+  private:
+    DataFrame* owner_{nullptr};
+    std::string name_{};
+  };
+
+  class LetSlots {
+  public:
+    LetSlots(DataFrame& owner, std::vector<std::string> names);
+
+    LetSlots& operator=(const DataFrame& frame);
+    LetSlots& operator=(std::initializer_list<Thread> values);
+    LetSlots& operator=(const std::vector<Thread>& values);
+
+  private:
+    void assign_from_threads(std::span<const Thread> values);
+
+    DataFrame* owner_{nullptr};
+    std::vector<std::string> names_{};
+  };
+
   enum class SummaryOp : std::uint8_t {
     Count = 0,
     Nunique = 1,
@@ -298,6 +326,8 @@ public:
 
   DataFrame with_column(std::string name, const Thread& column) const;
   DataFrame& with_column_(std::string name, const Thread& column);
+  LetSlot set(std::string_view name);
+  LetSlots set(std::initializer_list<std::string_view> names);
   DataFrame set_features(std::string_view name, const Thread& value) const;
   DataFrame& set_features_(std::string_view name, const Thread& value);
   DataFrame set_features(std::initializer_list<std::string_view> names,

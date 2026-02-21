@@ -96,6 +96,111 @@ auto df = DataFrame::load("csv", "../../data/messy_data.csv");
 auto loaded = pluss::loader::load("excel", "../../data/report.xlsx", {{"sheet name", "Prices"}});
 ```
 
+### Constructing In Memory (No CSV/Excel)
+
+You can build `Thread`, `DataFrame`, and `Atlas` directly from your own raw lvalues/containers.
+
+Build `Thread` values from pluss-native payloads:
+
+```cpp
+using pluss::table::Thread;
+
+// numeric lvalue container -> Series -> Thread
+std::vector<double> price_raw{12.5, 8.0, 19.2, 7.7};
+auto price_s = pluss::make_series(price_raw, {static_cast<std::int64_t>(price_raw.size())});
+Thread price_t(price_s);
+
+// text lvalue container -> Note -> Thread
+std::vector<std::string> city_raw{"Austin", "Dallas", "Houston", "Plano"};
+Thread city_t(pluss::make_note(city_raw));
+
+// datetime lvalue container -> Timeline -> Thread
+std::vector<std::string> ts_raw{
+    "2026-01-01 08:00:00",
+    "2026-01-01 09:00:00",
+    "2026-01-01 10:00:00",
+    "2026-01-01 11:00:00",
+};
+Thread start_t(pluss::make_timeline(ts_raw, {static_cast<std::int64_t>(ts_raw.size())}));
+
+// optional null mask (same length as payload)
+auto valid = pluss::make_series({true, true, false, true});
+Thread price_with_nulls(price_s, valid);
+```
+
+Build a `DataFrame` from named features:
+
+```cpp
+using pluss::table::DataFrame;
+
+DataFrame df({
+    {"price", price_t},
+    {"city", city_t},
+    {"start_time", start_t},
+});
+// default cases axis: 0..n-1
+```
+
+Build a `DataFrame` with explicit cases labels:
+
+```cpp
+Thread case_labels(pluss::make_note(std::vector<std::string>{"c0", "c1", "c2", "c3"}));
+
+DataFrame df_labeled({
+    {"price", price_t},
+    {"city", city_t},
+    {"start_time", start_t},
+}, case_labels);
+```
+
+Build an `Atlas` from multiple DataFrames:
+
+```cpp
+using pluss::table::Atlas;
+
+auto df_t0 = df;
+auto df_t1 = df.set_features("price", df.features("price") + 1.0);
+auto df_t2 = df_t1.set_features("price", df_t1.features("price") + 1.0);
+
+Atlas at(
+    std::vector<DataFrame>{df_t0, df_t1, df_t2},
+    Thread(pluss::make_note(std::vector<std::string>{"t0", "t1", "t2"}))
+);
+```
+
+Rules still apply during manual construction:
+
+- All features in a `DataFrame` must be 1D and case-aligned (same length).
+- `cases` length must equal `nrows`.
+- All frames in an `Atlas` must share schema and shape.
+
+Rvalue construction is also supported:
+
+```cpp
+using pluss::table::Thread;
+using pluss::table::DataFrame;
+using pluss::table::Atlas;
+
+// Thread from rvalue payloads
+Thread t_num(pluss::make_series({1.0, 2.0, 3.0}));
+Thread t_txt(pluss::content({"a", "b", "c"}));
+Thread t_dt(pluss::moment({"2026-01-01 08:00:00", "2026-01-01 09:00:00", "2026-01-01 10:00:00"}));
+
+// DataFrame from rvalue feature list
+DataFrame df_r({
+    {"x", Thread(pluss::make_series({1, 2, 3}))},
+    {"label", Thread(pluss::content({"u", "v", "w"}))},
+});
+
+// Atlas from rvalue frame stack
+Atlas at_r(
+    std::vector<DataFrame>{
+        df_r,
+        df_r.set_features("x", df_r.features("x") + 10.0)
+    }
+);
+```
+
 ## 4. Display And Rendering
 
 Display methods are terminal-aware and responsive:
@@ -175,6 +280,11 @@ df.set_features_("price", df.features("price").clip(0.0, 1000.0));
 
 // multi-feature assignment
 auto df3 = df.set_features({"a_new", "b_new"}, {df.features("a"), df.features("b")});
+
+// assignment sugar (in-place)
+df.set("price_plus_2") = df.features("price") + 2.0;
+df.set({"a_copy", "b_copy"}) = df.features({"a", "b"});
+// rhs must be case-compatible with target DataFrame (same number of cases)
 ```
 
 ## 6. Type-Oriented Projections
@@ -208,12 +318,12 @@ auto c = df.cast({
 
 The API uses focused canonical names:
 
-- **core naming**: `features`, `cases`, `sort_cases`, `tally`, `set_features`, `group_by`
+- **core naming**: `features`, `cases`, `sort_cases`, `tally`, `set_features`, `set`, `group_by`
 
 Complete method index (current public surface, grouped):
 
 - Access: `nrows`, `ncols`, `nfeatures`, `feature_names`, `features`, `cases`, `cases_series`, `iloc`, `at`, `iat`, `get`, `series_value`, `note_value`, `timeline_value`, `timeindex_value`
-- Feature/case mutation: `set_features`, `set_features_`, `with_column`, `with_column_`, `with_cases`, `with_cases_`, `insert`, `drop`, `reorder`, `rename`, `rename_`, `rename_features`, `relabel_features`, `set_axis`, `set_feature_axis`, `set_cases`, `reset_cases`, `align_cases`, `reindex_cases`, `conform_to`, `reindex_like`
+- Feature/case mutation: `set_features`, `set_features_`, `set`, `with_column`, `with_column_`, `with_cases`, `with_cases_`, `insert`, `drop`, `reorder`, `rename`, `rename_`, `rename_features`, `relabel_features`, `set_axis`, `set_feature_axis`, `set_cases`, `reset_cases`, `align_cases`, `reindex_cases`, `conform_to`, `reindex_like`
 - Selection/filtering: `head`, `tail`, `view`, `sample`, `slice`, `take`, `where`, `filter`, `query`
 - Derivation/aggregation/grouping: `assign`, `aggregate`, `group_by`, `pivot`, `pivot_table`, `count_by`, `mean_by`, `sum`, `mean`, `min`, `max`, `std`, `var`, `count`, `nunique`, `tally`, `describe`
 - Sorting/ranking: `sort_values`, `sort_cases`, `top`, `bottom`

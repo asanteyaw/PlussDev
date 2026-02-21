@@ -1107,6 +1107,38 @@ void test_versatile_dataframe_families() {
   const auto agg_out = df.aggregate({{"age_min", "age", DataFrame::SummaryOp::Min}}, false);
   expect(agg_out.nrows() == 1 && agg_out.ncols() == 1, "aggregate should summarize requested specs");
 
+  auto let_df = df.features({"age", "duration", "balance"});
+  let_df.set("age_copy") = let_df.features("age");
+  expect(let_df.has_feature("age_copy"), "set(single)=Thread should create/update feature");
+  expect(let_df.features("age_copy").as_series().to_vec<std::int64_t>() == let_df.features("age").as_series().to_vec<std::int64_t>(),
+         "set(single)=Thread should preserve assigned values");
+
+  let_df.set("age_plus_duration") = let_df.features("age") + let_df.features("duration");
+  expect(let_df.has_feature("age_plus_duration"), "set(single)=expression should assign computed Thread");
+
+  let_df.set("age") = let_df.features("duration");
+  expect(let_df.features("age").as_series().to_vec<std::int64_t>() ==
+             let_df.features("duration").as_series().to_vec<std::int64_t>(),
+         "set(single) should allow assigning into an existing feature");
+
+  let_df.set({"age_rhs", "dur_rhs"}) = let_df.features({"age", "duration"});
+  expect(let_df.has_feature("age_rhs") && let_df.has_feature("dur_rhs"),
+         "set(multi)=DataFrame should assign multiple features");
+
+  let_df.set({"age_rhs2", "dur_rhs2"}) = {let_df.features("age"), let_df.features("duration")};
+  expect(let_df.has_feature("age_rhs2") && let_df.has_feature("dur_rhs2"),
+         "set(multi)=initializer_list<Thread> should assign multiple features");
+
+  const auto short_age = let_df.head(3, false).features("age");
+  expect_throw([&]() { let_df.set("bad_len") = short_age; },
+               "set(single) should reject rhs length mismatch");
+  expect_throw([&]() {
+    let_df.set({"bad_a", "bad_b"}) = {
+        let_df.features("age"),
+        short_age,
+    };
+  }, "set(multi) should reject any rhs length mismatch");
+
   const auto numeric = df.features({"age", "balance", "duration"});
   const auto age0 = numeric.features("age").as_series().to_vec<std::int64_t>(0);
 

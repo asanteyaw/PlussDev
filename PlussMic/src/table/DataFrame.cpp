@@ -1458,6 +1458,84 @@ Thread ColumnRef::head(std::int64_t n) const { return column_.head(n); }
 ThreadValue ColumnRef::value() const { return column_.value(); }
 Thread ColumnRef::values() const { return column_; }
 
+DataFrame::LetSlot::LetSlot(DataFrame& owner, std::string name) : owner_(&owner), name_(std::move(name)) {
+  PLUSS_CHECK(owner_ != nullptr, "DataFrame::LetSlot: owner must be defined");
+  PLUSS_CHECK(!name_.empty(), "DataFrame::set: feature name cannot be empty");
+}
+
+DataFrame::LetSlot& DataFrame::LetSlot::operator=(const Thread& value) {
+  PLUSS_CHECK(value.defined(), "DataFrame::set(name)=Thread requires defined rhs thread");
+  if (owner_->ncols() > 0) {
+    PLUSS_CHECK(value.size() == owner_->nrows(),
+                "DataFrame::set(name)=Thread requires rhs length to match DataFrame cases");
+  }
+  owner_->set_features_(name_, value);
+  return *this;
+}
+
+DataFrame::LetSlot& DataFrame::LetSlot::operator=(const ThreadValue& value) {
+  return (*this = value.thread());
+}
+
+DataFrame::LetSlot& DataFrame::LetSlot::operator=(const DataFrame& frame) {
+  PLUSS_CHECK(frame.ncols() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
+  const auto cols = frame.features();
+  PLUSS_CHECK(cols.size() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
+  return (*this = cols.front());
+}
+
+DataFrame::LetSlots::LetSlots(DataFrame& owner, std::vector<std::string> names)
+    : owner_(&owner), names_(std::move(names)) {
+  PLUSS_CHECK(owner_ != nullptr, "DataFrame::LetSlots: owner must be defined");
+  PLUSS_CHECK(!names_.empty(), "DataFrame::set(names): at least one feature name is required");
+  std::unordered_set<std::string> seen;
+  seen.reserve(names_.size());
+  for (const auto& n : names_) {
+    PLUSS_CHECK(!n.empty(), "DataFrame::set(names): feature name cannot be empty");
+    PLUSS_CHECK(seen.insert(n).second, "DataFrame::set(names): duplicate feature name '" + n + "'");
+  }
+}
+
+void DataFrame::LetSlots::assign_from_threads(std::span<const Thread> values) {
+  PLUSS_CHECK(values.size() == names_.size(),
+              "DataFrame::set(names): rhs feature count must match lhs feature count");
+
+  std::optional<std::int64_t> expected_rows;
+  if (owner_->ncols() > 0) {
+    expected_rows = owner_->nrows();
+  }
+
+  for (const auto& value : values) {
+    PLUSS_CHECK(value.defined(), "DataFrame::set(names): rhs thread must be defined");
+    if (!expected_rows.has_value()) {
+      expected_rows = value.size();
+    } else {
+      PLUSS_CHECK(value.size() == *expected_rows,
+                  "DataFrame::set(names): rhs thread lengths must match target DataFrame cases");
+    }
+  }
+
+  for (std::size_t i = 0; i < names_.size(); ++i) {
+    owner_->set_features_(names_[i], values[i]);
+  }
+}
+
+DataFrame::LetSlots& DataFrame::LetSlots::operator=(const DataFrame& frame) {
+  const auto cols = frame.features();
+  assign_from_threads(std::span<const Thread>(cols.data(), cols.size()));
+  return *this;
+}
+
+DataFrame::LetSlots& DataFrame::LetSlots::operator=(std::initializer_list<Thread> values) {
+  assign_from_threads(std::span<const Thread>(values.begin(), values.size()));
+  return *this;
+}
+
+DataFrame::LetSlots& DataFrame::LetSlots::operator=(const std::vector<Thread>& values) {
+  assign_from_threads(std::span<const Thread>(values.data(), values.size()));
+  return *this;
+}
+
 DataFrame::DataFrame(std::vector<std::pair<std::string, Thread>> columns,
                      std::optional<Thread> cases) {
   std::vector<std::string> names;
@@ -2238,6 +2316,14 @@ DataFrame& DataFrame::with_column_(std::string name, const Thread& column_value)
   }
   w.validate_and_reindex_();
   return *this;
+}
+
+DataFrame::LetSlot DataFrame::set(std::string_view name) {
+  return LetSlot(*this, owned_name(name));
+}
+
+DataFrame::LetSlots DataFrame::set(std::initializer_list<std::string_view> names) {
+  return LetSlots(*this, normalize_name_list(names));
 }
 
 DataFrame DataFrame::set_features(std::string_view name, const Thread& value) const {
