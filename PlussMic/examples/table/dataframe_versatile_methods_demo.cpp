@@ -71,8 +71,8 @@ int main() {
       },
       true);
 
-  std::cout << "\nagg alias\n";
-  flagged.agg({{"balance_max", "balance", pluss::table::DataFrame::SummaryOp::Max}}, true);
+  std::cout << "\naggregate\n";
+  flagged.aggregate({{"balance_max", "balance", pluss::table::DataFrame::SummaryOp::Max}}, true);
 
   auto numeric = df.features({"age", "balance", "duration"});
   std::cout << "\narithmetic: add/subtract/multiply/divide\n";

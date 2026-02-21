@@ -470,7 +470,7 @@ void run_verb_walkthrough(const DataFrame& df) {
       {"severity_std", "Severity", DataFrame::SummaryOp::Std},
       {"distance_mean", "Distance(mi)", DataFrame::SummaryOp::Mean},
   });
-  (void)df.agg({{"severity_max", "Severity", DataFrame::SummaryOp::Max}});
+  (void)df.aggregate({{"severity_max", "Severity", DataFrame::SummaryOp::Max}});
   (void)sum;
 
   auto arranged = q_mask.sort_values({"State"}).sort_values({

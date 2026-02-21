@@ -310,6 +310,7 @@ public:
   DataFrame rename_features(
       std::initializer_list<std::pair<std::string_view, std::string_view>> renames) const;
   DataFrame relabel_features(std::initializer_list<std::string_view> feature_names) const;
+  DataFrame set_axis(std::initializer_list<std::string_view> feature_names) const;
   DataFrame set_feature_axis(std::initializer_list<std::string_view> feature_names) const;
   DataFrame conform_to(const DataFrame& other) const;
   DataFrame reindex_like(const DataFrame& other) const;
@@ -334,11 +335,21 @@ public:
   DataFrame assign(std::initializer_list<std::pair<std::string, Thread>> assignments) const;
   DataFrame assign(std::initializer_list<DeriveSpec> specs) const;
   DataFrame aggregate(std::initializer_list<SummarySpec> specs, bool render = true) const;
-  DataFrame agg(std::initializer_list<SummarySpec> specs, bool render = true) const;
-  DataFrame groupby(std::initializer_list<std::string_view> keys,
-                    std::initializer_list<GroupSpec> specs,
-                    bool dropna_keys = true,
-                    bool render = true) const;
+  DataFrame group_by(std::initializer_list<std::string_view> keys,
+                     std::initializer_list<GroupSpec> specs,
+                     bool dropna_keys = true,
+                     bool render = true) const;
+  DataFrame pivot(std::string_view case_feature,
+                  std::string_view feature_feature,
+                  std::string_view value_feature,
+                  bool dropna_keys = true,
+                  bool render = true) const;
+  DataFrame pivot_table(std::string_view case_feature,
+                        std::string_view feature_feature,
+                        std::string_view value_feature,
+                        GroupOp op = GroupOp::Mean,
+                        bool dropna_keys = true,
+                        bool render = true) const;
   DataFrame combine(const DataFrame& other) const;
   DataFrame combine(const DataFrame& other, const CombineSpec& spec) const;
   DataFrame count_by(std::string_view feature,
@@ -395,6 +406,14 @@ public:
   DataFrame ge(const DataFrame& other) const;
   DataFrame compare(double other) const;
   DataFrame compare(const DataFrame& other) const;
+  DataFrame sum(bool render = true) const;
+  DataFrame mean(bool render = true) const;
+  DataFrame min(bool render = true) const;
+  DataFrame max(bool render = true) const;
+  DataFrame std(bool render = true) const;
+  DataFrame var(bool render = true) const;
+  DataFrame count(bool render = true) const;
+  DataFrame nunique(bool render = true) const;
   DataFrame isna(std::initializer_list<std::string_view> features = {}) const;
   DataFrame isnull(std::initializer_list<std::string_view> features = {}) const;
   DataFrame notna(std::initializer_list<std::string_view> features = {}) const;
@@ -416,7 +435,13 @@ public:
   DataFrame bfill() const;
   std::int64_t count_null_rows() const;
   DataFrame describe(bool render = true) const;
+  DataFrame tally(std::string_view feature,
+                  std::int64_t top_n = 0,
+                  bool dropna = true,
+                  bool render = true) const;
   DataFrame view(std::int64_t start, std::int64_t stop, bool render = true) const;
+  DataFrame copy() const;
+  bool equals(const DataFrame& other) const;
 
   std::string to_string(const display::DisplayOptions& options = {}) const;
   std::string info_string(const display::DisplayOptions& options = {}) const;
@@ -472,6 +497,7 @@ private:
   DataFrame query(const QueryFn& predicate) const;
   DataFrame derive(std::initializer_list<std::pair<std::string, Thread>> assignments) const;
   DataFrame derive(std::initializer_list<DeriveSpec> specs) const;
+  DataFrame summarize_specs(const std::vector<SummarySpec>& specs, bool render = true) const;
   DataFrame summarize(std::initializer_list<SummarySpec> specs, bool render = true) const;
   DataFrame group(std::initializer_list<std::string_view> keys,
                   std::initializer_list<GroupSpec> specs,

@@ -20,7 +20,7 @@ Main table types:
 
 ## 2. Core Mental Model
 
-- A DataFrame is a collection of **features** (columns).
+- A DataFrame is a collection of **features**.
 - A DataFrame has a **case axis** (rows), conceptually equivalent to pandas index.
 - A feature payload is one pluss type via `Thread`:
   - `Series` (numeric/bool)
@@ -135,9 +135,8 @@ auto names = df.feature_names();
 Access features:
 
 ```cpp
-auto f = df.feature("price");         // Thread
-auto f2 = df.features("price");       // alias -> Thread
-auto subset = df.features({"price", "qty"}); // DataFrame subset
+auto f = df.features("price");                // Thread
+auto subset = df.features({"price", "qty"});  // DataFrame subset
 ```
 
 Access case axis:
@@ -163,6 +162,19 @@ Typed extraction helpers:
 auto s = df.series_value("price");
 auto t = df.note_value("city");
 auto dt = df.timeline_value("Updated Date");
+```
+
+Set/create features:
+
+```cpp
+// functional (returns a new DataFrame handle)
+auto df2 = df.set_features("price_plus_1", df.features("price") + 1.0);
+
+// in-place (mutates this DataFrame handle)
+df.set_features_("price", df.features("price").clip(0.0, 1000.0));
+
+// multi-feature assignment
+auto df3 = df.set_features({"a_new", "b_new"}, {df.features("a"), df.features("b")});
 ```
 
 ## 6. Type-Oriented Projections
@@ -192,27 +204,34 @@ auto c = df.cast({
 });
 ```
 
-## 7. Focused Methods (Current)
+## 7. DataFrame Method Catalog (Current)
 
-Primary end-user methods are focused and explicit:
+The API uses focused canonical names:
 
-- `filter` / `where` / `query`
-- `assign`
-- `aggregate` / `agg`
-- `groupby`
-- `sort_values` / `sort_cases` / `top` / `bottom`
-- `isna` / `notna` / `fillna` / `dropna` / `ffill` / `bfill`
-- `astype` / `cast_series` / `cast_note` / `cast_timeline` / `cast_timeindex`
-- `rolling`
-- `join` / `update` / `combine`
-- `iloc` / `at` / `iat` / `get` / `sample`
-- `repeated_cases` / `unique_cases` / `set_cases` / `reset_cases` / `align_cases`
-- `rename_features` / `relabel_features` / `conform_to` / `stitch_on`
-- `set_feature_axis` / `reindex_like` / `reindex_cases`
+- **core naming**: `features`, `cases`, `sort_cases`, `tally`, `set_features`, `group_by`
 
-`reshape` methods are planned next.
+Complete method index (current public surface, grouped):
 
-### 7.1 projection/select
+- Access: `nrows`, `ncols`, `nfeatures`, `feature_names`, `features`, `cases`, `cases_series`, `iloc`, `at`, `iat`, `get`, `series_value`, `note_value`, `timeline_value`, `timeindex_value`
+- Feature/case mutation: `set_features`, `set_features_`, `with_column`, `with_column_`, `with_cases`, `with_cases_`, `insert`, `drop`, `reorder`, `rename`, `rename_`, `rename_features`, `relabel_features`, `set_axis`, `set_feature_axis`, `set_cases`, `reset_cases`, `align_cases`, `reindex_cases`, `conform_to`, `reindex_like`
+- Selection/filtering: `head`, `tail`, `view`, `sample`, `slice`, `take`, `where`, `filter`, `query`
+- Derivation/aggregation/grouping: `assign`, `aggregate`, `group_by`, `pivot`, `pivot_table`, `count_by`, `mean_by`, `sum`, `mean`, `min`, `max`, `std`, `var`, `count`, `nunique`, `tally`, `describe`
+- Sorting/ranking: `sort_values`, `sort_cases`, `top`, `bottom`
+- Missing data: `isna`, `isnull`, `notna`, `notnull`, `fillna`, `fillna_`, `dropna`, `dropna_all`, `ffill`, `bfill`, `count_null_rows`
+- Type operations: `series`, `note`, `timeline`, `cast_series`, `cast_note`, `cast_timeline`, `cast_timeindex`, `cast`, `astype`
+- Window operations: `window`, `rolling`
+- Combine/join: `join`, `update`, `combine`, `stitch_on`
+- Arithmetic/comparison: `add`, `sub`, `subtract`, `mul`, `multiply`, `div`, `divide`, `truediv`, `floordiv`, `mod`, `pow`, `radd`, `rsub`, `rmul`, `rdiv`, `rtruediv`, `rfloordiv`, `rmod`, `rpow`, `eq`, `ne`, `lt`, `le`, `gt`, `ge`, `compare`
+- Structural/IO: `info`, `info_string`, `to_string`, `copy`, `equals`, `save_csv`, `save_excel`, `save_as`
+
+### 7.1 Selection and indexing
+
+- `head`, `tail`, `view`, `slice`, `take`, `sample`
+- `iloc`, `at`, `iat`, `get`
+- `features("name")`, `features({"a","b"})`
+- `cases()`, `cases(i)`, `cases({i,k})`, `cases(i, j_or_name)`
+
+### 7.2 projection/select
 
 ```cpp
 auto a = df.features({"price", "qty"});
@@ -220,7 +239,7 @@ auto b = df.drop({"debug_col"});
 auto c = df.reorder({"qty", "price", "city"});
 ```
 
-### 7.2 query
+### 7.3 query
 
 `query(...)` is for boolean-expression filtering (pandas-style `df[mask_expr]` replacement).
 
@@ -232,7 +251,7 @@ auto q2 = df.query("contains(city, 'York')");
 auto q3 = df.query("isnull(price)");
 ```
 
-### 7.3 assign
+### 7.4 assign
 
 ```cpp
 auto out = df.assign({
@@ -242,7 +261,7 @@ auto out = df.assign({
 });
 ```
 
-### 7.4 aggregate
+### 7.5 aggregate + summary
 
 ```cpp
 auto s = df.aggregate({
@@ -252,12 +271,25 @@ auto s = df.aggregate({
 });
 ```
 
-`agg(...)` is an alias of `aggregate(...)`.
-
-### 7.5 groupby
+Fast summary helpers:
 
 ```cpp
-auto g = df.groupby(
+auto s1 = df.sum();
+auto s2 = df.mean();
+auto s3 = df.min();
+auto s4 = df.max();
+auto s5 = df.std();
+auto s6 = df.var();
+auto s7 = df.count();
+auto s8 = df.nunique();
+auto s9 = df.tally("city");
+auto s10 = df.describe();
+```
+
+### 7.6 group_by
+
+```cpp
+auto g = df.group_by(
   {"city"},
   {
     {"rows", "", pluss::table::DataFrame::GroupOp::Count},
@@ -272,9 +304,11 @@ Convenience:
 ```cpp
 auto c = df.count_by("city", /*top_n=*/10);
 auto m = df.mean_by("city", "price", /*top_n=*/10, /*min_count=*/5);
+auto p = df.pivot("state", "severity", "distance");
+auto pt = df.pivot_table("state", "severity", "distance", pluss::table::DataFrame::GroupOp::Mean);
 ```
 
-### 7.6 sort_values
+### 7.7 sorting
 
 ```cpp
 auto a1 = df.sort_values({"price"});                  // ascending
@@ -284,7 +318,7 @@ auto a4 = df.top("price", 10);                        // top-10 by feature
 auto a5 = df.bottom("price", 10);                     // bottom-10 by feature
 ```
 
-### 7.7 missing-data methods
+### 7.8 missing-data methods
 
 ```cpp
 auto n1 = df.isna();
@@ -293,9 +327,10 @@ auto n3 = df.fillna(0.0);
 auto n4 = df.ffill();
 auto n5 = df.bfill();
 auto n6 = df.dropna();
+auto n7 = df.dropna_all({"price", "qty"});
 ```
 
-### 7.8 rolling/window
+### 7.9 rolling/window
 
 ```cpp
 auto r = df.rolling({
@@ -308,7 +343,7 @@ auto w = df.window({
 }, true);
 ```
 
-### 7.9 combine
+### 7.10 combine
 
 `combine` supports two primary operations:
 
@@ -329,7 +364,7 @@ auto updated = left.combine(right, spec2);
 
 Both frames must have identical case count.
 
-### 7.10 indexing helpers
+### 7.11 indexing helpers
 
 ```cpp
 auto row0 = df.iloc(0);
@@ -346,19 +381,12 @@ auto aligned = reset.align_cases(reset.cases());
 auto renamed = df.rename_features({{"price", "price_usd"}});
 auto relabeled = df.relabel_features({"feat_a", "feat_b", "feat_c"});
 auto relabeled2 = df.set_feature_axis({"feat_a", "feat_b", "feat_c"});
+auto relabeled3 = df.set_axis({"feat_a", "feat_b", "feat_c"}); // alias
 auto conformed = df.conform_to(other_df);
 auto reindexed_like = df.reindex_like(other_df);
 auto reindexed_cases = df.reindex_cases(other_df.cases());
 auto stitched = left_df.stitch_on("id", right_df, "id", "_r");
 auto stitched2 = left_df.stitch_on({"id", "bucket"}, right_df, {"id", "bucket"}, "_r");
-```
-
-Feature-engineering note:
-
-```cpp
-// Chainable constant feature from a reduction:
-auto distance_mean_log = df.feature("Distance(mi)").mean_like().log();
-auto out = df.with_column("distance_mean_log", distance_mean_log);
 ```
 
 ## 8. Arithmetic And Comparison APIs
@@ -370,6 +398,13 @@ DataFrame provides vectorized wrappers that delegate to Thread/Series semantics 
 - Comparison: `eq/ne/lt/le/gt/ge/compare`
 
 Each supports scalar and (where defined) frame-to-frame forms.
+
+Example:
+
+```cpp
+auto bumped = df.set_features("price", df.features("price") + 1.0);
+auto mask_df = df.features({"price", "qty"}).gt(0.0);
+```
 
 ## 9. Save APIs
 
@@ -454,8 +489,8 @@ std::cout << at << "\n";
 
 ## 11. Practical Guidance
 
-- Use `feature`/`features` and `cases` terminology consistently in user code.
-- Prefer focused methods (`query`, `assign`, `groupby`, `aggregate`, `sort_values`) over manual loops.
+- Use `features` and `cases` terminology consistently in user code.
+- Prefer focused methods (`query`, `assign`, `group_by`, `aggregate`, `sort_values`, `sort_cases`) over manual loops.
 - Use `render=false` when composing display-returning methods programmatically.
 - Keep heavy numeric/text/datetime operations at Thread-level semantics and let DataFrame orchestrate.
 

@@ -247,6 +247,16 @@ Thread make_f64_thread(const std::vector<double>& values) {
   return Thread(s);
 }
 
+Thread make_f64_thread(const std::vector<double>& values, const std::vector<bool>& valid) {
+  PLUSS_CHECK(values.size() == valid.size(), "make_f64_thread: values/valid length mismatch");
+  const auto n = static_cast<std::int64_t>(values.size());
+  auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Float64);
+  if (!values.empty()) {
+    std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(double));
+  }
+  return Thread(s, bool_series_from_keep(valid));
+}
+
 Thread make_note_thread(std::initializer_list<std::string_view> labels) {
   std::vector<std::string_view> views(labels.begin(), labels.end());
   const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(views.size())};
@@ -364,66 +374,33 @@ double numeric_reduce_value(const Thread& t, DataFrame::SummaryOp op) {
   PLUSS_CHECK(is_numeric_series_type(t.as_series()),
               "DataFrame::summarize: numeric reductions require numeric Series feature");
 
-  const auto& s = t.as_series();
-  std::vector<double> values;
-  values.reserve(static_cast<std::size_t>(t.size()));
-  if (t.has_validity_mask()) {
-    const auto valid = t.validity_mask()->to_vec<bool>();
-    for (std::int64_t i = 0; i < t.size(); ++i) {
-      if (!valid[static_cast<std::size_t>(i)]) {
-        continue;
-      }
-      double v = 0.0;
-      if (extract_numeric_value(s, i, v)) {
-        values.push_back(v);
-      }
-    }
-  } else {
-    for (std::int64_t i = 0; i < t.size(); ++i) {
-      double v = 0.0;
-      if (extract_numeric_value(s, i, v)) {
-        values.push_back(v);
-      }
-    }
-  }
-
-  if (values.empty()) {
+  // Delegate numeric reductions to Thread to keep 1D math semantics in Thread.
+  const auto clean = t.dropna();
+  if (clean.size() == 0) {
     return std::numeric_limits<double>::quiet_NaN();
   }
 
+  auto scalar_series_to_double = [](const pluss::Series& s, std::string_view where) {
+    PLUSS_CHECK(s.defined(), std::string(where) + ": scalar reduction produced undefined Series");
+    PLUSS_CHECK(s.numel() == 1, std::string(where) + ": scalar reduction must have numel=1");
+    double out = 0.0;
+    PLUSS_CHECK(extract_numeric_value(s, 0, out), std::string(where) + ": non-numeric scalar reduction result");
+    return out;
+  };
+
   switch (op) {
     case DataFrame::SummaryOp::Sum:
-      return std::accumulate(values.begin(), values.end(), 0.0);
+      return scalar_series_to_double(clean.sum(), "DataFrame::summarize(sum)");
     case DataFrame::SummaryOp::Mean:
-      return std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size());
+      return scalar_series_to_double(clean.mean(), "DataFrame::summarize(mean)");
     case DataFrame::SummaryOp::Min:
-      return *std::min_element(values.begin(), values.end());
+      return scalar_series_to_double(clean.min(), "DataFrame::summarize(min)");
     case DataFrame::SummaryOp::Max:
-      return *std::max_element(values.begin(), values.end());
-    case DataFrame::SummaryOp::Std: {
-      if (values.size() <= 1) {
-        return std::numeric_limits<double>::quiet_NaN();
-      }
-      const auto mean = std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size());
-      double sq = 0.0;
-      for (const auto v : values) {
-        const auto d = v - mean;
-        sq += d * d;
-      }
-      return std::sqrt(sq / static_cast<double>(values.size() - 1));
-    }
-    case DataFrame::SummaryOp::Var: {
-      if (values.size() <= 1) {
-        return std::numeric_limits<double>::quiet_NaN();
-      }
-      const auto mean = std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size());
-      double sq = 0.0;
-      for (const auto v : values) {
-        const auto d = v - mean;
-        sq += d * d;
-      }
-      return sq / static_cast<double>(values.size() - 1);
-    }
+      return scalar_series_to_double(clean.max(), "DataFrame::summarize(max)");
+    case DataFrame::SummaryOp::Std:
+      return scalar_series_to_double(clean.std(true), "DataFrame::summarize(std)");
+    case DataFrame::SummaryOp::Var:
+      return scalar_series_to_double(clean.var(true), "DataFrame::summarize(var)");
     default:
       PLUSS_FAIL("DataFrame::summarize: unsupported numeric SummaryOp");
   }
@@ -2356,6 +2333,10 @@ DataFrame DataFrame::set_feature_axis(std::initializer_list<std::string_view> fe
   return relabel_features(feature_names);
 }
 
+DataFrame DataFrame::set_axis(std::initializer_list<std::string_view> feature_names) const {
+  return set_feature_axis(feature_names);
+}
+
 DataFrame DataFrame::conform_to(const DataFrame& other) const {
   const auto& src = impl_ref_();
   const auto ordered = other.feature_names();
@@ -2673,8 +2654,8 @@ DataFrame DataFrame::assign(std::initializer_list<DeriveSpec> specs) const {
   return derive(specs);
 }
 
-DataFrame DataFrame::summarize(std::initializer_list<SummarySpec> specs, bool render) const {
-  PLUSS_CHECK(specs.size() != 0, "DataFrame::summarize: no SummarySpec supplied");
+DataFrame DataFrame::summarize_specs(const std::vector<SummarySpec>& specs, bool render) const {
+  PLUSS_CHECK(!specs.empty(), "DataFrame::summarize: no SummarySpec supplied");
 
   std::vector<std::pair<std::string, Thread>> out_cols;
   out_cols.reserve(specs.size());
@@ -2708,8 +2689,8 @@ DataFrame DataFrame::summarize(std::initializer_list<SummarySpec> specs, bool re
   return out;
 }
 
-DataFrame DataFrame::agg(std::initializer_list<SummarySpec> specs, bool render) const {
-  return summarize(specs, render);
+DataFrame DataFrame::summarize(std::initializer_list<SummarySpec> specs, bool render) const {
+  return summarize_specs(std::vector<SummarySpec>(specs.begin(), specs.end()), render);
 }
 
 DataFrame DataFrame::aggregate(std::initializer_list<SummarySpec> specs, bool render) const {
@@ -2949,11 +2930,176 @@ DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
   return out;
 }
 
-DataFrame DataFrame::groupby(std::initializer_list<std::string_view> keys,
-                             std::initializer_list<GroupSpec> specs,
-                             bool dropna_keys,
-                             bool render) const {
+DataFrame DataFrame::group_by(std::initializer_list<std::string_view> keys,
+                              std::initializer_list<GroupSpec> specs,
+                              bool dropna_keys,
+                              bool render) const {
   return group(keys, specs, dropna_keys, render);
+}
+
+DataFrame DataFrame::pivot(std::string_view case_feature,
+                           std::string_view feature_feature,
+                           std::string_view value_feature,
+                           bool dropna_keys,
+                           bool render) const {
+  const auto dup = group(
+      {case_feature, feature_feature},
+      {GroupSpec{"__pivot_cell_count__", "", GroupOp::Count}},
+      dropna_keys,
+      false);
+  const auto counts = dup.series_value("__pivot_cell_count__").to_vec<std::int64_t>();
+  const bool has_duplicate = std::any_of(counts.begin(), counts.end(), [](std::int64_t v) { return v > 1; });
+  PLUSS_CHECK(!has_duplicate,
+              "DataFrame::pivot: duplicate case/feature pairs found; use pivot_table with an aggregation op");
+  return pivot_table(case_feature, feature_feature, value_feature, GroupOp::Max, dropna_keys, render);
+}
+
+DataFrame DataFrame::pivot_table(std::string_view case_feature,
+                                 std::string_view feature_feature,
+                                 std::string_view value_feature,
+                                 GroupOp op,
+                                 bool dropna_keys,
+                                 bool render) const {
+  PLUSS_CHECK(op == GroupOp::Count || op == GroupOp::Nunique || op == GroupOp::Sum || op == GroupOp::Mean ||
+                  op == GroupOp::Min || op == GroupOp::Max,
+              "DataFrame::pivot_table: unsupported aggregation op");
+
+  const auto case_col = features(case_feature);
+  const auto feat_col = features(feature_feature);
+  const auto value_col = features(value_feature);
+
+  const bool needs_numeric = (op != GroupOp::Count && op != GroupOp::Nunique);
+  if (needs_numeric) {
+    PLUSS_CHECK(value_col.kind() == ThreadKind::Series && is_number_series_type(value_col.as_series()),
+                "DataFrame::pivot_table: Sum/Mean/Min/Max require a numeric Series value feature");
+  }
+
+  const auto case_vals = case_col.has_validity_mask() ? case_col.clear_validity_mask() : case_col;
+  const auto feat_vals = feat_col.has_validity_mask() ? feat_col.clear_validity_mask() : feat_col;
+  const auto value_vals = value_col.has_validity_mask() ? value_col.clear_validity_mask() : value_col;
+  const auto* value_series = (value_col.kind() == ThreadKind::Series) ? &value_col.as_series() : nullptr;
+
+  struct PivotAgg {
+    std::int64_t count{0};
+    double sum{0.0};
+    double min{0.0};
+    double max{0.0};
+    bool has_numeric{false};
+    std::unordered_set<std::string> uniq{};
+  };
+
+  std::unordered_map<std::string, std::size_t> case_to_row;
+  std::unordered_map<std::string, std::size_t> feat_to_col;
+  std::vector<std::string> case_labels;
+  std::vector<std::string> feat_labels;
+  std::vector<std::vector<PivotAgg>> grid;
+
+  case_to_row.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, nrows() / 64)));
+  feat_to_col.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, nrows() / 64)));
+
+  auto ensure_case = [&](const std::string& key) -> std::size_t {
+    const auto [it, inserted] = case_to_row.emplace(key, case_labels.size());
+    if (inserted) {
+      case_labels.push_back(key);
+      grid.emplace_back(feat_labels.size());
+    }
+    return it->second;
+  };
+
+  auto ensure_feature = [&](const std::string& key) -> std::size_t {
+    const auto [it, inserted] = feat_to_col.emplace(key, feat_labels.size());
+    if (inserted) {
+      feat_labels.push_back(key);
+      for (auto& row : grid) {
+        row.emplace_back();
+      }
+    }
+    return it->second;
+  };
+
+  for (std::int64_t r = 0; r < nrows(); ++r) {
+    const bool case_valid = case_col.is_valid(r);
+    const bool feat_valid = feat_col.is_valid(r);
+    if (dropna_keys && (!case_valid || !feat_valid)) {
+      continue;
+    }
+
+    const auto case_key = case_valid ? thread_scalar_string_at(case_vals, r) : std::string("NA");
+    const auto feat_key = feat_valid ? thread_scalar_string_at(feat_vals, r) : std::string("NA");
+    const auto row_idx = ensure_case(case_key);
+    const auto col_idx = ensure_feature(feat_key);
+    auto& agg = grid[row_idx][col_idx];
+
+    if (!value_col.is_valid(r)) {
+      continue;
+    }
+
+    if (op == GroupOp::Count) {
+      agg.count += 1;
+      continue;
+    }
+    if (op == GroupOp::Nunique) {
+      agg.uniq.insert(thread_scalar_string_at(value_vals, r));
+      continue;
+    }
+
+    double x = 0.0;
+    if (!extract_numeric_value(*value_series, r, x)) {
+      continue;
+    }
+    agg.count += 1;
+    agg.sum += x;
+    if (!agg.has_numeric) {
+      agg.min = x;
+      agg.max = x;
+      agg.has_numeric = true;
+    } else {
+      agg.min = std::min(agg.min, x);
+      agg.max = std::max(agg.max, x);
+    }
+  }
+
+  std::vector<std::pair<std::string, Thread>> out_cols;
+  out_cols.reserve(feat_labels.size());
+  for (std::size_t c = 0; c < feat_labels.size(); ++c) {
+    if (op == GroupOp::Count || op == GroupOp::Nunique) {
+      std::vector<std::int64_t> vals;
+      vals.reserve(case_labels.size());
+      for (std::size_t r = 0; r < case_labels.size(); ++r) {
+        const auto& agg = grid[r][c];
+        vals.push_back(op == GroupOp::Count ? agg.count : static_cast<std::int64_t>(agg.uniq.size()));
+      }
+      out_cols.emplace_back(feat_labels[c], make_i64_thread(vals));
+      continue;
+    }
+
+    std::vector<double> vals(case_labels.size(), std::numeric_limits<double>::quiet_NaN());
+    std::vector<bool> valid(case_labels.size(), false);
+    for (std::size_t r = 0; r < case_labels.size(); ++r) {
+      const auto& agg = grid[r][c];
+      if (op == GroupOp::Sum && agg.count > 0) {
+        vals[r] = agg.sum;
+        valid[r] = true;
+      } else if (op == GroupOp::Mean && agg.count > 0) {
+        vals[r] = agg.sum / static_cast<double>(agg.count);
+        valid[r] = true;
+      } else if (op == GroupOp::Min && agg.has_numeric) {
+        vals[r] = agg.min;
+        valid[r] = true;
+      } else if (op == GroupOp::Max && agg.has_numeric) {
+        vals[r] = agg.max;
+        valid[r] = true;
+      }
+    }
+    out_cols.emplace_back(feat_labels[c], make_f64_thread(vals, valid));
+  }
+
+  auto out = DataFrame(std::move(out_cols), make_note_thread(case_labels));
+  if (render) {
+    display::print(std::cout, out);
+    out.suppress_next_stream_();
+  }
+  return out;
 }
 
 DataFrame DataFrame::combine(const DataFrame& other) const {
@@ -3322,6 +3468,112 @@ DataFrame DataFrame::compare(double other) const {
 
 DataFrame DataFrame::compare(const DataFrame& other) const {
   return ne(other);
+}
+
+DataFrame DataFrame::sum(bool render) const {
+  const auto& src = impl_ref_();
+  std::vector<SummarySpec> specs;
+  specs.reserve(src.names_.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto& col = src.columns_[i];
+    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Sum});
+    }
+  }
+  PLUSS_CHECK(!specs.empty(), "DataFrame::sum: no numeric features");
+  return summarize_specs(specs, render);
+}
+
+DataFrame DataFrame::mean(bool render) const {
+  const auto& src = impl_ref_();
+  std::vector<SummarySpec> specs;
+  specs.reserve(src.names_.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto& col = src.columns_[i];
+    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Mean});
+    }
+  }
+  PLUSS_CHECK(!specs.empty(), "DataFrame::mean: no numeric features");
+  return summarize_specs(specs, render);
+}
+
+DataFrame DataFrame::min(bool render) const {
+  const auto& src = impl_ref_();
+  std::vector<SummarySpec> specs;
+  specs.reserve(src.names_.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto& col = src.columns_[i];
+    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Min});
+    }
+  }
+  PLUSS_CHECK(!specs.empty(), "DataFrame::min: no numeric features");
+  return summarize_specs(specs, render);
+}
+
+DataFrame DataFrame::max(bool render) const {
+  const auto& src = impl_ref_();
+  std::vector<SummarySpec> specs;
+  specs.reserve(src.names_.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto& col = src.columns_[i];
+    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Max});
+    }
+  }
+  PLUSS_CHECK(!specs.empty(), "DataFrame::max: no numeric features");
+  return summarize_specs(specs, render);
+}
+
+DataFrame DataFrame::std(bool render) const {
+  const auto& src = impl_ref_();
+  std::vector<SummarySpec> specs;
+  specs.reserve(src.names_.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto& col = src.columns_[i];
+    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Std});
+    }
+  }
+  PLUSS_CHECK(!specs.empty(), "DataFrame::std: no numeric features");
+  return summarize_specs(specs, render);
+}
+
+DataFrame DataFrame::var(bool render) const {
+  const auto& src = impl_ref_();
+  std::vector<SummarySpec> specs;
+  specs.reserve(src.names_.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto& col = src.columns_[i];
+    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Var});
+    }
+  }
+  PLUSS_CHECK(!specs.empty(), "DataFrame::var: no numeric features");
+  return summarize_specs(specs, render);
+}
+
+DataFrame DataFrame::count(bool render) const {
+  const auto& src = impl_ref_();
+  std::vector<SummarySpec> specs;
+  specs.reserve(src.names_.size());
+  for (const auto& name : src.names_) {
+    specs.push_back(SummarySpec{name, name, SummaryOp::Count});
+  }
+  PLUSS_CHECK(!specs.empty(), "DataFrame::count: no features");
+  return summarize_specs(specs, render);
+}
+
+DataFrame DataFrame::nunique(bool render) const {
+  const auto& src = impl_ref_();
+  std::vector<SummarySpec> specs;
+  specs.reserve(src.names_.size());
+  for (const auto& name : src.names_) {
+    specs.push_back(SummarySpec{name, name, SummaryOp::Nunique});
+  }
+  PLUSS_CHECK(!specs.empty(), "DataFrame::nunique: no features");
+  return summarize_specs(specs, render);
 }
 
 DataFrame DataFrame::missing(const MissingSpec& spec) const {
@@ -3720,6 +3972,13 @@ DataFrame DataFrame::describe(bool render) const {
   return out;
 }
 
+DataFrame DataFrame::tally(std::string_view feature_name,
+                           std::int64_t top_n,
+                           bool dropna,
+                           bool render) const {
+  return count_by(feature_name, top_n, dropna, render);
+}
+
 DataFrame DataFrame::view(std::int64_t start, std::int64_t stop, bool render) const {
   const auto n = nrows();
   const auto s = normalize_view_start(start, n);
@@ -3742,6 +4001,52 @@ DataFrame DataFrame::view(std::int64_t start, std::int64_t stop, bool render) co
     out.suppress_next_stream_();
   }
   return out;
+}
+
+DataFrame DataFrame::copy() const {
+  return *this;
+}
+
+bool DataFrame::equals(const DataFrame& other) const {
+  if (nrows() != other.nrows() || ncols() != other.ncols()) {
+    return false;
+  }
+  if (feature_names() != other.feature_names()) {
+    return false;
+  }
+  if (cases().dtype_name() != other.cases().dtype_name()) {
+    return false;
+  }
+  for (std::int64_t r = 0; r < nrows(); ++r) {
+    if (cases().is_valid(r) != other.cases().is_valid(r)) {
+      return false;
+    }
+    if (!cases().is_valid(r)) {
+      continue;
+    }
+    if (thread_scalar_string_at(cases(), r) != thread_scalar_string_at(other.cases(), r)) {
+      return false;
+    }
+  }
+  for (const auto& name : feature_names()) {
+    const auto lhs = features(name);
+    const auto rhs = other.features(name);
+    if (lhs.kind() != rhs.kind() || lhs.size() != rhs.size()) {
+      return false;
+    }
+    for (std::int64_t r = 0; r < lhs.size(); ++r) {
+      if (lhs.is_valid(r) != rhs.is_valid(r)) {
+        return false;
+      }
+      if (!lhs.is_valid(r)) {
+        continue;
+      }
+      if (thread_scalar_string_at(lhs, r) != thread_scalar_string_at(rhs, r)) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 std::string DataFrame::to_string(const display::DisplayOptions& options) const {

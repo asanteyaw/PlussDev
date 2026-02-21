@@ -634,7 +634,7 @@ void test_versatile_dataframe_families() {
   const auto aggregated = df.aggregate({{"rows", "age", DataFrame::SummaryOp::Count}}, false);
   expect(aggregated.nrows() == 1 && aggregated.ncols() == 1,
          "aggregate should produce one-row summary output");
-  const auto grouped_alias = df.groupby(
+  const auto grouped_alias = df.group_by(
       {"job"},
       {
           {"rows", "", DataFrame::GroupOp::Count},
@@ -642,7 +642,64 @@ void test_versatile_dataframe_families() {
       true,
       false);
   expect(grouped_alias.ncols() == 2 && grouped_alias.has_feature("rows"),
-         "groupby should delegate to grouped aggregations");
+         "group_by should perform grouped aggregations");
+
+  const auto pivot_path = write_temp_csv(
+      "pivot_base",
+      "state,severity,distance\n"
+      "CA,1,10\n"
+      "CA,2,20\n"
+      "TX,1,30\n"
+      "TX,2,40\n");
+  const auto pivot_df = DataFrame::load_csv(pivot_path.string());
+  const auto pivoted = pivot_df.pivot("state", "severity", "distance", true, false);
+  expect(pivoted.nrows() == 2 && pivoted.ncols() == 2, "pivot should reshape rows x unique feature labels");
+  const auto pivot_features = pivoted.feature_names();
+  expect(pivot_features.size() == 2, "pivot output should expose two pivoted features");
+  expect(pivoted.cases().kind() == ThreadKind::Note, "pivot should set cases to the pivot case feature values");
+  const auto pivot_cases = pivoted.cases().as_note();
+  std::int64_t row_ca = -1;
+  std::int64_t row_tx = -1;
+  for (std::int64_t i = 0; i < pivoted.nrows(); ++i) {
+    const auto key = std::string(pivot_cases.at(i));
+    if (key == "CA") {
+      row_ca = i;
+    } else if (key == "TX") {
+      row_tx = i;
+    }
+  }
+  expect(row_ca >= 0 && row_tx >= 0, "pivot should retain all case keys");
+  const auto c0 = pivoted.features(pivot_features[0]).as_series().to_vec<double>();
+  const auto c1 = pivoted.features(pivot_features[1]).as_series().to_vec<double>();
+  const auto ca0 = c0[static_cast<std::size_t>(row_ca)];
+  const auto ca1 = c1[static_cast<std::size_t>(row_ca)];
+  const auto tx0 = c0[static_cast<std::size_t>(row_tx)];
+  const auto tx1 = c1[static_cast<std::size_t>(row_tx)];
+  const bool layout_a =
+      (std::fabs(ca0 - 10.0) < 1e-9 && std::fabs(ca1 - 20.0) < 1e-9 && std::fabs(tx0 - 30.0) < 1e-9 &&
+       std::fabs(tx1 - 40.0) < 1e-9);
+  const bool layout_b =
+      (std::fabs(ca0 - 20.0) < 1e-9 && std::fabs(ca1 - 10.0) < 1e-9 && std::fabs(tx0 - 40.0) < 1e-9 &&
+       std::fabs(tx1 - 30.0) < 1e-9);
+  expect(layout_a || layout_b, "pivot should place values into correct case/feature cells");
+
+  const auto pivoted_mean = pivot_df.pivot_table("state", "severity", "distance", DataFrame::GroupOp::Mean, true, false);
+  expect(pivoted_mean.nrows() == 2 && pivoted_mean.ncols() == 2,
+         "pivot_table(mean) should reshape with aggregated values");
+
+  const auto pivot_dup_path = write_temp_csv(
+      "pivot_dup",
+      "state,severity,distance\n"
+      "CA,1,10\n"
+      "CA,1,12\n");
+  const auto pivot_dup = DataFrame::load_csv(pivot_dup_path.string());
+  expect_throw([&]() { (void)pivot_dup.pivot("state", "severity", "distance", true, false); },
+               "pivot should throw on duplicate case/feature pairs");
+  const auto pivot_dup_mean =
+      pivot_dup.pivot_table("state", "severity", "distance", DataFrame::GroupOp::Mean, true, false);
+  expect(pivot_dup_mean.nrows() == 1 && pivot_dup_mean.ncols() == 1, "pivot_table should aggregate duplicate pairs");
+  const auto d = pivot_dup_mean.features(pivot_dup_mean.feature_names().front()).as_series().to_vec<double>();
+  expect(std::fabs(d[0] - 11.0) < 1e-9, "pivot_table(mean) should aggregate duplicates correctly");
 
   const auto case_df = df.features({"job", "age"}).set_cases("job", true);
   expect(case_df.ncols() == 1 && case_df.feature_names()[0] == "age",
@@ -995,7 +1052,7 @@ void test_versatile_dataframe_families() {
   const auto name_counts_keep_na = df_nulls.count_by("name", 0, false, false);
   expect(name_counts_keep_na.nrows() == 3, "count_by(dropna=false) should include NA bucket");
 
-  const auto grouped_job = df.groupby(
+  const auto grouped_job = df.group_by(
       {"job"},
       {
           {"rows", "", DataFrame::GroupOp::Count},
@@ -1009,7 +1066,7 @@ void test_versatile_dataframe_families() {
              && grouped_job.has_feature("age_mean") && grouped_job.has_feature("job_nunique"),
          "group(single key) missing expected output features");
 
-  const auto grouped_multi = df.groupby(
+  const auto grouped_multi = df.group_by(
       {"job", "age"},
       {
           {"rows", "", DataFrame::GroupOp::Count},
@@ -1047,8 +1104,8 @@ void test_versatile_dataframe_families() {
   expect(std::fabs(kept_age[0] - left_age[0]) < 1e-9,
          "combine(update, overwrite=false) should keep left feature values");
 
-  const auto agg_out = df.agg({{"age_min", "age", DataFrame::SummaryOp::Min}}, false);
-  expect(agg_out.nrows() == 1 && agg_out.ncols() == 1, "agg alias should delegate to summarize");
+  const auto agg_out = df.aggregate({{"age_min", "age", DataFrame::SummaryOp::Min}}, false);
+  expect(agg_out.nrows() == 1 && agg_out.ncols() == 1, "aggregate should summarize requested specs");
 
   const auto numeric = df.features({"age", "balance", "duration"});
   const auto age0 = numeric.features("age").as_series().to_vec<std::int64_t>(0);
