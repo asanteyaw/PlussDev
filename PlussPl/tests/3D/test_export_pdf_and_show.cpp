@@ -1,0 +1,63 @@
+#include <chrono>
+#include <cmath>
+#include <cstddef>
+#include <filesystem>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include <fmt/format.h>
+
+#include "pluss/plotism/plotism.h"
+
+namespace {
+
+std::string unique_path(const std::string& stem, const std::string& ext) {
+  const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+  return (std::filesystem::temp_directory_path() / fmt::format("{}_{}{}", stem, now, ext)).string();
+}
+
+void require(bool cond, const std::string& msg) {
+  if (!cond) {
+    throw std::runtime_error(msg);
+  }
+}
+
+} // namespace
+
+int main() {
+  std::vector<double> x;
+  std::vector<double> y;
+  std::vector<double> z;
+  x.reserve(96);
+  y.reserve(96);
+  z.reserve(96);
+  for (std::size_t i = 0; i < 96; ++i) {
+    const double t = static_cast<double>(i) * 0.1;
+    x.push_back(std::cos(t));
+    y.push_back(std::sin(t));
+    z.push_back(0.05 * static_cast<double>(i));
+  }
+
+  auto fig = pluss::plotism::line3(x, y, z, "helix").with_title("test3d");
+  fig.x_label("x").y_label("y").z_label("z");
+
+  const std::string svg = unique_path("plusspl_test_3d", ".svg");
+  const std::string pdf = unique_path("plusspl_test_3d", ".pdf");
+
+  fig.save_svg(svg, 900, 700);
+  fig.save_pdf(pdf, 900, 700);
+
+  require(std::filesystem::exists(svg), "3D svg file was not created");
+  require(std::filesystem::exists(pdf), "3D pdf file was not created");
+  require(std::filesystem::file_size(svg) > 0, "3D svg file is empty");
+  require(std::filesystem::file_size(pdf) > 0, "3D pdf file is empty");
+
+  const bool opened = fig.show_window(false);
+  (void)opened;
+  fig.show();
+
+  std::cout << "[PASS] 3D export/show test\n";
+  return 0;
+}

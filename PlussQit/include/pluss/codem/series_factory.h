@@ -541,9 +541,22 @@ namespace pluss {
   // --------------------------------------------------------------------------
 
   // Scalars:
-  inline Series value(double v, ScalarType dtype = ScalarType::Float32) { return codem::value(v, dtype); }
+  template <class T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
+  inline Series value(
+      T v,
+      ScalarType dtype = std::is_same_v<std::remove_cv_t<T>, double>
+                              ? ScalarType::Float64
+                              : ScalarType::Float32) {
+    return codem::value(static_cast<double>(v), dtype);
+  }
   template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
-  inline Series value(T v, ScalarType dtype = ScalarType::Int64) { return codem::value(v, dtype); }
+  inline Series value(
+      T v,
+      ScalarType dtype = std::is_same_v<std::remove_cv_t<T>, std::uint8_t>
+                              ? ScalarType::UInt8
+                              : ScalarType::Int64) {
+    return codem::value(v, dtype);
+  }
   inline Series value(bool v, ScalarType dtype = ScalarType::Bool) { return codem::value(v, dtype); }
 
   // Nested initializer_list: fast path for homogeneous leaves.
@@ -566,11 +579,20 @@ namespace pluss {
   }
 
   // make_series overloads for scalar and initializer_list host values.
-  inline Series make_series(double v, ScalarType dtype = ScalarType::Float32) {
-    return codem::value(v, dtype);
+  template <class T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
+  inline Series make_series(
+      T v,
+      ScalarType dtype = std::is_same_v<std::remove_cv_t<T>, double>
+                              ? ScalarType::Float64
+                              : ScalarType::Float32) {
+    return codem::value(static_cast<double>(v), dtype);
   }
   template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
-  inline Series make_series(T v, ScalarType dtype = ScalarType::Int64) {
+  inline Series make_series(
+      T v,
+      ScalarType dtype = std::is_same_v<std::remove_cv_t<T>, std::uint8_t>
+                              ? ScalarType::UInt8
+                              : ScalarType::Int64) {
     return codem::value(v, dtype);
   }
   inline Series make_series(bool v, ScalarType dtype = ScalarType::Bool) {

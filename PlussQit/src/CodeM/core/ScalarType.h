@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <ostream>
 #include <string_view>
 
 namespace pluss::codem {
@@ -88,6 +89,11 @@ constexpr DType dtype_of(ScalarType st) noexcept {
     case ScalarType::Complex128:   return {st, 16, "complex128"};
     default:                       return {ScalarType::Float32, 4, "float32"};
   }
+}
+
+inline std::ostream& operator<<(std::ostream& os, ScalarType st) {
+  os << dtype_of(st).name;
+  return os;
 }
 
 

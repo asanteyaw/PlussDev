@@ -2355,7 +2355,8 @@ Series Series::any(std::int64_t dim, bool keepdim) const {
 Series Series::mean() const {
   PLUSS_CALL_GUARD();
   Series a = is_contiguous() ? *this : contiguous();
-  Series out = Series::empty({1}, a.scalar_type());
+  // Scalar reduction over all elements should produce a true 0D result.
+  Series out = Series::empty({}, a.scalar_type());
   native::cpu::mean_all(a, out);
   return out;
 }

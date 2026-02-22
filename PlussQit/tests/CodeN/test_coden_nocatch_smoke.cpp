@@ -458,6 +458,24 @@ void test_aux_transmit_translate_and_queue_basics() {
   auto abs_vals = qs_abs.as<pluss::Series>().to_vec<double>();
   expect_true(abs_vals.size() == 3 && abs_vals[0] == 1.0 && abs_vals[2] == 3.0,
               "Queue.invoke dispatches Series methods");
+
+  pluss::Queue qsum = qs + pluss::Queue(pluss::value({1.0, 1.0, 1.0}));
+  auto sum_vals = qsum.as<pluss::Series>().to_vec<double>();
+  expect_true(sum_vals.size() == 3 && sum_vals[0] == 0.0 && sum_vals[1] == 3.0 && sum_vals[2] == -2.0,
+              "Queue binary + delegates to Series");
+
+  pluss::Queue qcmp = qn == pluss::Queue(pluss::content({"aa", "zz"}));
+  auto cmp_vals = qcmp.as<pluss::Series>().to_vec<bool>();
+  expect_true(cmp_vals.size() == 2 && cmp_vals[0] && !cmp_vals[1],
+              "Queue Note comparison delegates safely");
+
+  pluss::Queue qwhere = pluss::Queue::where(
+      pluss::Queue(pluss::value({true, false, true})),
+      pluss::Queue(pluss::value({10.0, 20.0, 30.0})),
+      pluss::Queue(pluss::value({1.0, 2.0, 3.0})));
+  auto where_vals = qwhere.as<pluss::Series>().to_vec<double>();
+  expect_true(where_vals.size() == 3 && where_vals[0] == 10.0 && where_vals[1] == 2.0 && where_vals[2] == 30.0,
+              "Queue::where delegates ternary selection for Series");
 }
 
 } // namespace

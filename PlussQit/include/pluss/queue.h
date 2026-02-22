@@ -11,6 +11,8 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <ostream>
+#include <sstream>
 
 #include "CodeH/compat/Invoke.h"
 #include "CodeN/compat/Dispatch.h"
@@ -43,11 +45,6 @@ public:
   using timeline_type = ::pluss::codeh::Timeline;
   using timeindex_type = ::pluss::codeh::TimeIndex;
   using duration_type = ::pluss::codeh::Duration;
-
-  class SeriesOps;
-  class NoteOps;
-  class TimelineOps;
-  class TimeIndexOps;
 
   class Arg {
   public:
@@ -107,6 +104,9 @@ public:
     return Kind::TimeIndex;
   }
 
+  std::string_view kind_name() const noexcept { return kind_name(kind()); }
+  static constexpr std::string_view kind_name(Kind k) noexcept { return kind_name_impl_(k); }
+
   const ::pluss::Series& as_series() const {
     PLUSS_CHECK(is<::pluss::Series>(),
                 std::string("Queue.as_series(): payload kind is ") + std::string(kind_name(kind())));
@@ -155,10 +155,14 @@ public:
     return std::get<timeindex_type>(value_);
   }
 
-  SeriesOps series() const;
-  NoteOps note() const;
-  TimelineOps timeline() const;
-  TimeIndexOps timeindex() const;
+  const ::pluss::Series& series() const { return as_series(); }
+  ::pluss::Series& series() { return as_series(); }
+  const ::pluss::Note& note() const { return as_note(); }
+  ::pluss::Note& note() { return as_note(); }
+  const timeline_type& timeline() const { return as_timeline(); }
+  timeline_type& timeline() { return as_timeline(); }
+  const timeindex_type& timeindex() const { return as_timeindex(); }
+  timeindex_type& timeindex() { return as_timeindex(); }
 
   bool defined() const noexcept {
     return std::visit([](const auto& v) -> bool {
@@ -247,8 +251,64 @@ public:
     return out;
   }
 
+  // Unary operators
+  Queue operator+() const { return *this; }
+  Queue operator-() const {
+    try {
+      if (kind() == Kind::Series) {
+        return invoke("neg");
+      }
+      PLUSS_FAIL("Queue::operator-: unsupported for non-Series payload '" + std::string(kind_name(kind())) + "'");
+    } catch (const std::exception& e) {
+      PLUSS_FAIL(std::string("Queue::operator- failed: ") + e.what());
+    }
+  }
+
+  // Binary arithmetic operators
+  Queue operator+(const Queue& rhs) const { return binary_arith_("add", "+", rhs); }
+  Queue operator-(const Queue& rhs) const { return binary_arith_("sub", "-", rhs); }
+  Queue operator*(const Queue& rhs) const { return binary_arith_("mul", "*", rhs); }
+  Queue operator/(const Queue& rhs) const { return binary_arith_("div", "/", rhs); }
+  Queue operator%(const Queue& rhs) const { return binary_arith_("mod", "%", rhs); }
+
+  // Binary comparisons (vectorized, Queue result)
+  Queue operator==(const Queue& rhs) const { return binary_cmp_("eq", "==", rhs); }
+  Queue operator!=(const Queue& rhs) const { return binary_cmp_("ne", "!=", rhs); }
+  Queue operator<(const Queue& rhs) const { return binary_cmp_("lt", "<", rhs); }
+  Queue operator<=(const Queue& rhs) const { return binary_cmp_("le", "<=", rhs); }
+  Queue operator>(const Queue& rhs) const { return binary_cmp_("gt", ">", rhs); }
+  Queue operator>=(const Queue& rhs) const { return binary_cmp_("ge", ">=", rhs); }
+
+  // Ternary-style conditional select.
+  // Supports:
+  // - Series: where(mask, x, y)
+  // - Timeline: where(mask, x, y)
+  static Queue where(const Queue& condition, const Queue& x, const Queue& y) {
+    PLUSS_CHECK(condition.kind() == Kind::Series,
+                "Queue::where: condition must be a Series mask");
+    PLUSS_CHECK(x.kind() == y.kind(),
+                "Queue::where: x/y kind mismatch (" + std::string(kind_name(x.kind()))
+                    + " vs " + std::string(kind_name(y.kind())) + ")");
+
+    try {
+      switch (x.kind()) {
+        case Kind::Series:
+          return x.invoke("where", {condition.as_series(), y.as_series()});
+        case Kind::Timeline:
+          return x.invoke("where", {condition.as_series(), y.as_timeline()});
+        case Kind::Note:
+          PLUSS_FAIL("Queue::where: Note ternary selection is not supported");
+        case Kind::TimeIndex:
+          PLUSS_FAIL("Queue::where: TimeIndex ternary selection is not supported");
+      }
+      PLUSS_FAIL("Queue::where: unknown payload kind");
+    } catch (const std::exception& e) {
+      PLUSS_FAIL(std::string("Queue::where failed: ") + e.what());
+    }
+  }
+
 private:
-  static constexpr std::string_view kind_name(Kind k) noexcept {
+  static constexpr std::string_view kind_name_impl_(Kind k) noexcept {
     switch (k) {
       case Kind::Series:
         return "Series";
@@ -260,6 +320,69 @@ private:
         return "TimeIndex";
     }
     return "Unknown";
+  }
+
+  static ::pluss::Series u8_mask_to_bool_series_(const std::vector<std::uint8_t>& mask) {
+    auto out = ::pluss::Series::zeros({static_cast<std::int64_t>(mask.size())},
+                                      ::pluss::codem::ScalarType::Bool);
+    auto* p = reinterpret_cast<bool*>(out.raw_data());
+    for (std::size_t i = 0; i < mask.size(); ++i) {
+      p[i] = (mask[i] != 0);
+    }
+    return out;
+  }
+
+  Queue binary_arith_(std::string_view op_name, std::string_view symbol, const Queue& rhs) const {
+    PLUSS_CHECK(kind() == rhs.kind(),
+                "Queue::operator" + std::string(symbol) + ": kind mismatch ("
+                    + std::string(kind_name(kind())) + " vs " + std::string(kind_name(rhs.kind())) + ")");
+    try {
+      switch (kind()) {
+        case Kind::Series:
+          return invoke(op_name, {rhs.as_series()});
+        case Kind::Note:
+          if (op_name == "add") {
+            return Queue(note() + rhs.note());
+          }
+          PLUSS_FAIL("Queue::operator" + std::string(symbol)
+                     + ": unsupported for Note payloads");
+        case Kind::Timeline:
+          return invoke(op_name, {rhs.as_timeline()});
+        case Kind::TimeIndex:
+          return invoke(op_name, {rhs.as_timeindex()});
+      }
+      PLUSS_FAIL("Queue::operator" + std::string(symbol) + ": unknown payload kind");
+    } catch (const std::exception& e) {
+      PLUSS_FAIL("Queue::operator" + std::string(symbol) + " failed: " + std::string(e.what()));
+    }
+  }
+
+  Queue binary_cmp_(std::string_view op_name, std::string_view symbol, const Queue& rhs) const {
+    PLUSS_CHECK(kind() == rhs.kind(),
+                "Queue::operator" + std::string(symbol) + ": kind mismatch ("
+                    + std::string(kind_name(kind())) + " vs " + std::string(kind_name(rhs.kind())) + ")");
+    try {
+      switch (kind()) {
+        case Kind::Series:
+          return invoke(op_name, {rhs.as_series()});
+        case Kind::Note: {
+          if (op_name == "eq") return Queue(u8_mask_to_bool_series_(note() == rhs.note()));
+          if (op_name == "ne") return Queue(u8_mask_to_bool_series_(note() != rhs.note()));
+          if (op_name == "lt") return Queue(u8_mask_to_bool_series_(note() < rhs.note()));
+          if (op_name == "le") return Queue(u8_mask_to_bool_series_(note() <= rhs.note()));
+          if (op_name == "gt") return Queue(u8_mask_to_bool_series_(note() > rhs.note()));
+          if (op_name == "ge") return Queue(u8_mask_to_bool_series_(note() >= rhs.note()));
+          PLUSS_FAIL("Queue::operator" + std::string(symbol) + ": unsupported Note compare op");
+        }
+        case Kind::Timeline:
+          return invoke(op_name, {rhs.as_timeline()});
+        case Kind::TimeIndex:
+          return invoke(op_name, {rhs.as_timeindex()});
+      }
+      PLUSS_FAIL("Queue::operator" + std::string(symbol) + ": unknown payload kind");
+    } catch (const std::exception& e) {
+      PLUSS_FAIL("Queue::operator" + std::string(symbol) + " failed: " + std::string(e.what()));
+    }
   }
 
   static ::pluss::codem::_compat::Args to_codem_args(std::span<const Arg> args) {
@@ -429,102 +552,32 @@ private:
   storage_type value_;
 };
 
-class Queue::SeriesOps {
-public:
-  explicit SeriesOps(const Queue& q) : q_(&q) {
-    PLUSS_CHECK(q_->kind() == Kind::Series,
-                std::string("Queue.series(): payload kind is ") + std::string(Queue::kind_name(q_->kind())));
+inline std::ostream& operator<<(std::ostream& os, const Queue& q) {
+  auto write_wrapped = [&](std::string_view kind, std::string_view payload_prefix, const auto& payload) {
+    std::ostringstream tmp;
+    tmp << payload;
+    std::string body = tmp.str();
+    if (body.rfind(std::string(payload_prefix), 0) == 0) {
+      body.erase(0, payload_prefix.size());
+    }
+    os << "Queue<" << kind << ">" << body;
+  };
+
+  switch (q.kind()) {
+    case Queue::Kind::Series:
+      write_wrapped("Series", "Series", q.series());
+      break;
+    case Queue::Kind::Note:
+      write_wrapped("Note", "Note", q.note());
+      break;
+    case Queue::Kind::Timeline:
+      write_wrapped("Timeline", "Timeline", q.timeline());
+      break;
+    case Queue::Kind::TimeIndex:
+      os << "Queue<TimeIndex>(size=" << q.timeindex().size() << ", timeline=" << q.timeindex().timeline() << ")";
+      break;
   }
-
-  Queue invoke(std::string_view method, std::span<const Arg> args = {}) const { return q_->invoke(method, args); }
-  Queue invoke(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
-  Queue call(std::string_view method) const { return q_->invoke(method); }
-  Queue call(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
-
-  Queue log() const { return q_->invoke("log"); }
-  Queue abs() const { return q_->invoke("abs"); }
-  Queue exp() const { return q_->invoke("exp"); }
-  Queue sqrt() const { return q_->invoke("sqrt"); }
-  Queue floor() const { return q_->invoke("floor"); }
-  Queue ceil() const { return q_->invoke("ceil"); }
-  Queue round(std::int64_t decimals = 0) const { return q_->invoke("round", {decimals}); }
-
-private:
-  const Queue* q_{nullptr};
-};
-
-class Queue::NoteOps {
-public:
-  explicit NoteOps(const Queue& q) : q_(&q) {
-    PLUSS_CHECK(q_->kind() == Kind::Note,
-                std::string("Queue.note(): payload kind is ") + std::string(Queue::kind_name(q_->kind())));
-  }
-
-  Queue invoke(std::string_view method, std::span<const Arg> args = {}) const { return q_->invoke(method, args); }
-  Queue invoke(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
-  Queue call(std::string_view method) const { return q_->invoke(method); }
-  Queue call(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
-
-  Queue lower() const { return q_->invoke("lower"); }
-  Queue upper() const { return q_->invoke("upper"); }
-  Queue strip() const { return q_->invoke("strip"); }
-  Queue replace(std::string_view from, std::string_view to) const { return q_->invoke("replace", {from, to}); }
-
-private:
-  const Queue* q_{nullptr};
-};
-
-class Queue::TimelineOps {
-public:
-  explicit TimelineOps(const Queue& q) : q_(&q) {
-    PLUSS_CHECK(q_->kind() == Kind::Timeline,
-                std::string("Queue.timeline(): payload kind is ") + std::string(Queue::kind_name(q_->kind())));
-  }
-
-  Queue invoke(std::string_view method, std::span<const Arg> args = {}) const { return q_->invoke(method, args); }
-  Queue invoke(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
-  Queue call(std::string_view method) const { return q_->invoke(method); }
-  Queue call(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
-
-  Queue year() const { return q_->invoke("year"); }
-  Queue month() const { return q_->invoke("month"); }
-  Queue day() const { return q_->invoke("day"); }
-  Queue hour() const { return q_->invoke("hour"); }
-  Queue minute() const { return q_->invoke("minute"); }
-  Queue second() const { return q_->invoke("second"); }
-  Queue floor(std::string_view freq) const { return q_->invoke("floor", {freq}); }
-  Queue ceil(std::string_view freq) const { return q_->invoke("ceil", {freq}); }
-  Queue strftime(std::string_view fmt) const { return q_->invoke("strftime", {fmt}); }
-  Queue to_timeindex(bool require_sorted = true) const { return q_->invoke("to_timeindex", {require_sorted}); }
-
-private:
-  const Queue* q_{nullptr};
-};
-
-class Queue::TimeIndexOps {
-public:
-  explicit TimeIndexOps(const Queue& q) : q_(&q) {
-    PLUSS_CHECK(q_->kind() == Kind::TimeIndex,
-                std::string("Queue.timeindex(): payload kind is ") + std::string(Queue::kind_name(q_->kind())));
-  }
-
-  Queue invoke(std::string_view method, std::span<const Arg> args = {}) const { return q_->invoke(method, args); }
-  Queue invoke(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
-  Queue call(std::string_view method) const { return q_->invoke(method); }
-  Queue call(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
-
-  Queue sort_values() const { return q_->invoke("sort_values"); }
-  Queue drop_duplicates() const { return q_->invoke("drop_duplicates"); }
-  Queue freq() const { return q_->invoke("freq"); }
-  Queue to_timeline() const { return q_->invoke("to_timeline"); }
-
-private:
-  const Queue* q_{nullptr};
-};
-
-inline Queue::SeriesOps Queue::series() const { return SeriesOps(*this); }
-inline Queue::NoteOps Queue::note() const { return NoteOps(*this); }
-inline Queue::TimelineOps Queue::timeline() const { return TimelineOps(*this); }
-inline Queue::TimeIndexOps Queue::timeindex() const { return TimeIndexOps(*this); }
+  return os;
+}
 
 } // namespace pluss

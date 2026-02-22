@@ -113,6 +113,54 @@ public:
     return data[static_cast<std::size_t>(idx)];
   }
 
+  // Scalar extraction (Torch-style): requires exactly one element.
+  // Returns a native C++ value of the requested type.
+  template <class T>
+  T item() const {
+    PLUSS_CHECK(numel() == 1, "Series::item<T>: expected tensor with exactly one element");
+    return to_vec<T>(0);
+  }
+  // Dynamic scalar extraction: requires exactly one element.
+  // Returns a tagged Scalar when caller doesn't want to spell an explicit C++ type.
+  // Use item<T>() when exact native type extraction is required.
+  Scalar item() const {
+    PLUSS_CHECK(numel() == 1, "Series::item(): expected tensor with exactly one element");
+    switch (scalar_type()) {
+      case ScalarType::Bool:
+        return Scalar(to_vec<bool>(0), ScalarType::Bool);
+      case ScalarType::UInt8:
+        return Scalar(static_cast<std::uint64_t>(to_vec<std::uint8_t>(0)), ScalarType::UInt8);
+      case ScalarType::UInt16:
+        return Scalar(static_cast<std::uint64_t>(to_vec<std::uint16_t>(0)), ScalarType::UInt16);
+      case ScalarType::UInt32:
+        return Scalar(static_cast<std::uint64_t>(to_vec<std::uint32_t>(0)), ScalarType::UInt32);
+      case ScalarType::UInt64:
+        return Scalar(to_vec<std::uint64_t>(0), ScalarType::UInt64);
+      case ScalarType::Int8:
+        return Scalar(static_cast<std::int64_t>(to_vec<std::int8_t>(0)), ScalarType::Int8);
+      case ScalarType::Int16:
+        return Scalar(static_cast<std::int64_t>(to_vec<std::int16_t>(0)), ScalarType::Int16);
+      case ScalarType::Int32:
+        return Scalar(static_cast<std::int64_t>(to_vec<std::int32_t>(0)), ScalarType::Int32);
+      case ScalarType::Int64:
+        return Scalar(to_vec<std::int64_t>(0), ScalarType::Int64);
+      case ScalarType::Float16:
+      case ScalarType::BFloat16:
+      case ScalarType::Float8E4M3FN:
+      case ScalarType::Float8E5M2:
+        return Scalar(to(ScalarType::Float64).to_vec<double>(0), scalar_type());
+      case ScalarType::Float32:
+        return Scalar(static_cast<double>(to_vec<float>(0)), ScalarType::Float32);
+      case ScalarType::Float64:
+        return Scalar(to_vec<double>(0), ScalarType::Float64);
+      case ScalarType::Complex64:
+      case ScalarType::Complex128:
+        PLUSS_FAIL("Series::item(): complex dtype requires explicit item<Complex64>() or item<Complex128>()");
+      default:
+        PLUSS_FAIL("Series::item(): unsupported dtype for dynamic scalar extraction");
+    }
+  }
+
   // Materialize host data with full N-D metadata.
   template <class T>
   HostArray<T> to_host() const {
