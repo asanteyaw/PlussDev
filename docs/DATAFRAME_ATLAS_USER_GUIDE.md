@@ -325,14 +325,29 @@ Complete method index (current public surface, grouped):
 - Access: `nrows`, `ncols`, `nfeatures`, `feature_names`, `features`, `cases`, `cases_series`, `iloc`, `at`, `iat`, `get`, `series_value`, `note_value`, `timeline_value`, `timeindex_value`
 - Feature/case mutation: `set_features`, `set_features_`, `set`, `with_column`, `with_column_`, `with_cases`, `with_cases_`, `insert`, `drop`, `reorder`, `rename`, `rename_`, `rename_features`, `relabel_features`, `set_axis`, `set_feature_axis`, `set_cases`, `reset_cases`, `align_cases`, `reindex_cases`, `conform_to`, `reindex_like`
 - Selection/filtering: `head`, `tail`, `view`, `sample`, `slice`, `take`, `where`, `filter`, `query`
-- Derivation/aggregation/grouping: `assign`, `aggregate`, `group_by`, `pivot`, `pivot_table`, `count_by`, `mean_by`, `sum`, `mean`, `min`, `max`, `std`, `var`, `count`, `nunique`, `tally`, `describe`
+- Derivation/aggregation/grouping: `assign`, `transform`, `aggregate`, `group_by`, `pivot`, `pivot_table`, `count_by`, `mean_by`, `sum`, `mean`, `min`, `max`, `std`, `var`, `count`, `nunique`, `tally`, `describe`, `transpose`
+- Dimensional bridge: `unsqueeze` (DataFrame -> depth-1 Atlas), `squeeze` (Atlas -> DataFrame when depth==1)
 - Sorting/ranking: `sort_values`, `sort_cases`, `top`, `bottom`
 - Missing data: `isna`, `isnull`, `notna`, `notnull`, `fillna`, `fillna_`, `dropna`, `dropna_all`, `ffill`, `bfill`, `count_null_rows`
 - Type operations: `series`, `note`, `timeline`, `cast_series`, `cast_note`, `cast_timeline`, `cast_timeindex`, `cast`, `astype`
 - Window operations: `window`, `rolling`
 - Combine/join: `join`, `update`, `combine`, `stitch_on`
 - Arithmetic/comparison: `add`, `sub`, `subtract`, `mul`, `multiply`, `div`, `divide`, `truediv`, `floordiv`, `mod`, `pow`, `radd`, `rsub`, `rmul`, `rdiv`, `rtruediv`, `rfloordiv`, `rmod`, `rpow`, `eq`, `ne`, `lt`, `le`, `gt`, `ge`, `compare`
-- Structural/IO: `info`, `info_string`, `to_string`, `copy`, `equals`, `save_csv`, `save_excel`, `save_as`
+- Structural/IO: `info`, `info_string`, `to_string`, `copy`, `equals`, `transpose`, `save_csv`, `save_excel`, `save_as`
+
+### 7.6 squeeze / unsqueeze
+
+```cpp
+auto a1 = df.unsqueeze();     // depth = 1 Atlas
+auto df2 = a1.squeeze();      // requires depth == 1
+```
+
+With optional depth label:
+
+```cpp
+auto label = pluss::table::Thread(pluss::make_note({"batch_0"}, {1}));
+auto a2 = df.unsqueeze(label);
+```
 
 ### 7.1 Selection and indexing
 
@@ -361,7 +376,7 @@ auto q2 = df.query("contains(city, 'York')");
 auto q3 = df.query("isnull(price)");
 ```
 
-### 7.4 assign
+### 7.4 assign / transform
 
 ```cpp
 auto out = df.assign({
@@ -369,6 +384,15 @@ auto out = df.assign({
      return pluss::table::Thread(f.series_value("price").to(pluss::codem::ScalarType::Float64).ge(100.0));
    }},
 });
+```
+
+```cpp
+auto t0 = df.transform([](const pluss::table::Thread& f) {
+  if (f.kind() == pluss::table::ThreadKind::Series) return f + 1.0;
+  return f;
+});
+
+auto t1 = df.transform("price", [](const pluss::table::Thread& f) { return f.log(); });
 ```
 
 ### 7.5 aggregate + summary
@@ -612,9 +636,9 @@ Planned next major family:
 
 As new families/methods are added, update this guide in-place so end users always have one canonical DataFrame/Atlas reference.
 
-## 13. Signal Model (Stream -> Catalog -> Archive)
+## 13. Kindle Model (Stream -> Catalog -> Archive)
 
-`pluss::signal` is the unaligned keyed-stream model:
+`pluss::kindle` is the unaligned keyed-stream model:
 
 - `Stream`: one typed 1D payload (`Series` / `Note` / `Timeline` / `TimeIndex`) with optional case labels and validity mask.
 - `Catalog`: named collection of `Stream` with varying lengths allowed.
@@ -628,6 +652,8 @@ auto arc = atlas.kindelize();   // Atlas -> Archive
 
 auto back_df = cat.tabelize();      // Catalog -> DataFrame
 auto back_atlas = arc.tabelize();   // Archive -> Atlas (frame-by-frame tabelize)
+auto tbl = cat.to_table();          // explicit table rendering path (returns DataFrame)
+auto atl = arc.to_table();          // explicit table rendering path (returns Atlas)
 ```
 
 `Archive::tabelize(policy)` applies the same `TabelizePolicy` to each `Catalog`, then builds a strict `Atlas`. If resulting frames do not satisfy Atlas invariants (schema/shape consistency), construction throws.
@@ -693,8 +719,8 @@ auto cat4 = cat.dropna();                        // per-stream dropna
 Supported:
 
 ```cpp
-using namespace pluss::signal::literals;
-pluss::signal::Catalog c({
+using namespace pluss::kindle::literals;
+pluss::kindle::Catalog c({
   "price"_k = price_stream,
   "city"_k = city_stream,
 });
@@ -703,7 +729,7 @@ pluss::signal::Catalog c({
 and standard pair form:
 
 ```cpp
-pluss::signal::Catalog c({
+pluss::kindle::Catalog c({
   {"price", price_stream},
   {"city", city_stream},
 });
@@ -717,9 +743,9 @@ Not possible in C++:
 
 because string literals are not assignable lvalues.
 
-### Signal rendering
+### Kindle rendering
 
-`Stream`, `Catalog`, and `Archive` now render through `pluss::signal::display` and print JSON-shaped output:
+`Stream`, `Catalog`, and `Archive` render through `pluss::kindle::display` and print JSON-shaped output by default:
 
 ```cpp
 std::cout << s << "\n";
@@ -739,6 +765,19 @@ std::cout << arc << "\n";
 - depth and depth-label presence
 - head/tail catalog summaries (index, optional label, nstreams, keys preview)
 - omission marker when depth is large
+
+To render with the table engine explicitly:
+
+```cpp
+cat.head(10).to_table(); // DataFrame table renderer
+arc.to_table();          // Atlas table renderer
+```
+
+`Catalog::to_table()` does not require equal stream lengths. It uses `TabelizePolicy` alignment:
+- `inner` (default): intersection of case domains
+- `outer`: union of case domains
+- `left` / `right`: anchor-based alignment
+- `strict`: equal-domain enforcement
 
 ### Catalog methods (current)
 
@@ -780,7 +819,7 @@ auto n = cat.count();
 Apply/text:
 
 ```cpp
-auto c_ap = cat.apply("price", [](const pluss::signal::Stream& s) { return s.fillna(0.0); });
+auto c_ap = cat.apply("price", [](const pluss::kindle::Stream& s) { return s.fillna(0.0); });
 auto c_tx = cat.text_preprocess("description");
 auto c_kw = cat.extract_keywords("description", 20);
 ```
@@ -788,12 +827,12 @@ auto c_kw = cat.extract_keywords("description", 20);
 I/O and delegation policy:
 
 ```cpp
-auto cat_csv = pluss::signal::Catalog::load_csv("data.csv");
-auto cat_xlsx = pluss::signal::Catalog::load_excel("data.xlsx");
+auto cat_csv = pluss::kindle::Catalog::load_csv("data.csv");
+auto cat_xlsx = pluss::kindle::Catalog::load_excel("data.xlsx");
 cat_csv.save_csv("out.csv");
 ```
 
-`Catalog::load`, `Catalog::load_csv`, `Catalog::load_excel`, and `Catalog::save_csv` delegate to `DataFrame` I/O, then convert via `kindelize()` / `tabelize()`.
+`Catalog::load`, `Catalog::load_csv`, and `Catalog::load_excel` read through loader batch readers and construct `Catalog` directly (no DataFrame conversion step).
 
 ## 14. Bundle Model (Slot -> Registry -> Aisle)
 
@@ -803,9 +842,9 @@ cat_csv.save_csv("out.csv");
 - `Registry`: named collection of `Slot` with varying lengths.
 - `Aisle`: stack of `Registry` with optional labels.
 
-This differs from `signal`:
+This differs from `kindle`:
 
-- `signal::Stream` is typed/homogeneous per stream.
+- `kindle::Stream` is typed/homogeneous per stream.
 - `bundle::Slot` is heterogeneous by design.
 
 Example:

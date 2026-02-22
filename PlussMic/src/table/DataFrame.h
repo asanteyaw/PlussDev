@@ -26,6 +26,7 @@ class LoadResult;
 }
 namespace pluss::kindle {
 class Catalog;
+struct TabelizePolicy;
 struct KindelizePolicy;
 }
 
@@ -36,6 +37,7 @@ class DataFrameImpl;
 }
 class DataFrame;
 class DataFramePlotAccessor;
+class Atlas;
 
 class ColumnRef {
 public:
@@ -134,6 +136,11 @@ public:
   struct DeriveSpec {
     std::string feature;
     std::function<Thread(const DataFrame&)> expr;
+  };
+
+  struct TransformSpec {
+    std::string feature;
+    std::function<Thread(const Thread&)> expr;
   };
 
   struct MissingSpec {
@@ -261,6 +268,9 @@ public:
 
   pluss::kindle::Catalog kindelize() const;
   pluss::kindle::Catalog kindelize(const pluss::kindle::KindelizePolicy& policy) const;
+  static DataFrame tabelize(const pluss::kindle::Catalog& catalog);
+  static DataFrame tabelize(const pluss::kindle::Catalog& catalog,
+                            const pluss::kindle::TabelizePolicy& policy);
 
   bool defined() const noexcept;
   bool unique() const noexcept;
@@ -305,6 +315,7 @@ public:
   DataFrame series() const;
   DataFrame note() const;
   DataFrame timeline() const;
+  DataFrame timeindex() const;
   DataFrame cast_series(std::initializer_list<std::string_view> features,
                         std::optional<pluss::codem::ScalarType> dtype = std::nullopt) const;
   DataFrame cast_note(std::initializer_list<std::string_view> features) const;
@@ -368,11 +379,38 @@ public:
   DataFrame sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;
   DataFrame slice(std::int64_t start, std::int64_t stop) const;
   DataFrame take(std::span<const std::int64_t> indices) const;
+  DataFrame masked_select(const pluss::Series& bool_mask) const;
+  DataFrame select(const std::vector<std::string>& names) const;
+  DataFrame drop(const std::vector<std::string>& names) const;
+  DataFrame rename(const std::unordered_map<std::string, std::string>& mapping) const;
+  DataFrame sort(std::string_view by_feature, bool ascending = true, bool nulls_last = true) const;
+  DataFrame sort_by(const std::vector<std::string>& features,
+                    const std::vector<bool>& ascending = {},
+                    bool nulls_last = true) const;
+  std::unordered_map<std::string, DataFrame> group_by(std::string_view key_feature) const;
+  DataFrame merge(const DataFrame& other,
+                  std::string_view on,
+                  std::string_view how = "inner",
+                  std::string right_suffix = "_right") const;
+  DataFrame apply(std::string_view feature, const std::function<Thread(const Thread&)>& fn) const;
+  DataFrame& apply_(std::string_view feature, const std::function<Thread(const Thread&)>& fn);
+  DataFrame text_preprocess(std::string_view feature) const;
+  DataFrame extract_keywords(std::string_view feature, int top_n = 10) const;
+  DataFrame compute_similarity(std::string_view feature1,
+                               std::string_view feature2,
+                               std::string_view method = "cosine") const;
+  DataFrame filter_by_text(std::string_view feature, std::string_view pattern) const;
+  DataFrame add_text_features(std::string_view feature) const;
+  DataFrame aggregate_text_stats(std::string_view feature, std::string_view stat_type) const;
+  DataFrame tfidf(std::string_view feature) const;
   DataFrame where(const pluss::Series& bool_mask) const;
   DataFrame filter(const pluss::Series& bool_mask) const;
   DataFrame query(std::string_view expression) const;
   DataFrame assign(std::initializer_list<std::pair<std::string, Thread>> assignments) const;
   DataFrame assign(std::initializer_list<DeriveSpec> specs) const;
+  DataFrame transform(const std::function<Thread(const Thread&)>& fn) const;
+  DataFrame transform(std::string_view feature, const std::function<Thread(const Thread&)>& fn) const;
+  DataFrame transform(std::initializer_list<TransformSpec> specs) const;
   DataFrame aggregate(std::initializer_list<SummarySpec> specs, bool render = true) const;
   DataFrame group_by(std::initializer_list<std::string_view> keys,
                      std::initializer_list<GroupSpec> specs,
@@ -391,6 +429,8 @@ public:
                         bool render = true) const;
   DataFrame combine(const DataFrame& other) const;
   DataFrame combine(const DataFrame& other, const CombineSpec& spec) const;
+  Atlas unsqueeze() const;
+  Atlas unsqueeze(const Thread& depth_labels) const;
   DataFrame count_by(std::string_view feature,
                      std::int64_t top_n = 0,
                      bool dropna = true,
@@ -474,6 +514,7 @@ public:
   DataFrame bfill() const;
   std::int64_t count_null_rows() const;
   DataFrame describe(bool render = true) const;
+  DataFrame transpose(bool render = false) const;
   DataFrame tally(std::string_view feature,
                   std::int64_t top_n = 0,
                   bool dropna = true,

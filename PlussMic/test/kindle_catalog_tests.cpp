@@ -288,6 +288,9 @@ void test_catalog_mutation_tabelize_io() {
   const auto frame = base.tabelize(policy);
   expect(frame.nrows() == 5, "tabelize row count mismatch");
   expect(frame.nfeatures() >= base.nstreams(), "tabelize feature count mismatch");
+  const auto frame_via_to_table = base.to_table(policy, false);
+  expect(frame_via_to_table.nrows() == frame.nrows(), "to_table(row count) should match tabelize");
+  expect(frame_via_to_table.nfeatures() == frame.nfeatures(), "to_table(feature count) should match tabelize");
 
   expect(!base.to_string().empty(), "to_string should not be empty");
   expect(!base.to_json().empty(), "to_json should not be empty");
@@ -323,6 +326,22 @@ void test_catalog_mutation_tabelize_io() {
   expect_throw([&]() { (void)Catalog::from_json("{}"); }, "from_json should throw (not implemented)");
 }
 
+void test_archive_to_table_bridge() {
+  const auto base = make_base_frame();
+  const auto f0 = base.slice(0, 3);
+  const auto f1 = base.slice(2, 5);
+  const auto labels = pluss::table::Thread(
+      pluss::make_note(std::vector<std::string>{"batch_a", "batch_b"}, std::array<std::int64_t, 1>{2}));
+  const pluss::table::Atlas atlas({f0, f1}, labels);
+
+  const auto archive = pluss::kindle::Archive::kindelize(atlas);
+  const auto atlas_a = archive.tabelize();
+  const auto atlas_b = archive.to_table({}, false);
+  expect(atlas_a.depth() == atlas_b.depth(), "Archive::to_table depth mismatch");
+  expect(atlas_a.nrows() == atlas_b.nrows(), "Archive::to_table nrows mismatch");
+  expect(atlas_a.ncols() == atlas_b.ncols(), "Archive::to_table ncols mismatch");
+}
+
 } // namespace
 
 int main() {
@@ -332,6 +351,7 @@ int main() {
     test_catalog_sort_group_missing();
     test_catalog_aggregates_apply_text_merge();
     test_catalog_mutation_tabelize_io();
+    test_archive_to_table_bridge();
   } catch (const std::exception& e) {
     std::cerr << "[kindle_catalog_tests] failure: " << e.what() << "\n";
     return 1;

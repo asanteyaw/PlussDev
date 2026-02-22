@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <chrono>
 #include <cstdint>
@@ -530,6 +531,56 @@ void test_feature_value_cases_values_and_save_defaults() {
   expect(back_default.ncols() == df.ncols(), "save_csv default should not add cases column");
 }
 
+void test_transpose_shape_and_axes() {
+  const auto path = write_temp_csv(
+      "transpose_basic",
+      "a,b,c\n"
+      "1,2,x\n"
+      "3,4,y\n"
+      "5,6,z\n");
+  const auto df = DataFrame::load_csv(path.string());
+  const auto t = df.transpose(false);
+
+  expect(t.nrows() == df.ncols(), "transpose should swap row/feature dimensions (rows)");
+  expect(t.ncols() == df.nrows(), "transpose should swap row/feature dimensions (features)");
+  expect(t.cases().kind() == ThreadKind::Note, "transpose case axis should be Note-backed feature labels");
+
+  const auto tcases = t.cases().as_note();
+  expect(std::string(tcases.at(0)) == "a", "transpose cases[0] should equal first source feature name");
+  expect(std::string(tcases.at(2)) == "c", "transpose cases[last] should equal last source feature name");
+
+  expect(t.has_feature("0"), "transpose should expose source-case labels as output feature names");
+  const auto feature0 = t.features("0").as_note();
+  expect(std::fabs(std::stod(std::string(feature0.at(0))) - 1.0) < 1e-9,
+         "transpose cell mismatch at [feature=0, case=a]");
+  expect(std::string(feature0.at(2)) == "x", "transpose should preserve text values via Note casting");
+}
+
+void test_squeeze_unsqueeze_bridge() {
+  const auto path = write_temp_csv(
+      "squeeze_unsqueeze",
+      "a,b\n"
+      "1,x\n"
+      "2,y\n"
+      "3,z\n");
+  const auto df = DataFrame::load_csv(path.string());
+
+  const auto atlas = df.unsqueeze();
+  expect(atlas.depth() == 1, "unsqueeze should produce depth-1 atlas");
+  expect(atlas.nrows() == df.nrows(), "unsqueeze should preserve case count");
+  expect(atlas.ncols() == df.ncols(), "unsqueeze should preserve feature count");
+  expect(atlas.squeeze().equals(df), "squeeze(unsqueeze(df)) should roundtrip");
+
+  const auto label = pluss::table::Thread(
+      pluss::make_note(std::vector<std::string>{"batch_0"}, std::array<std::int64_t, 1>{1}));
+  const auto labeled = df.unsqueeze(label);
+  expect(labeled.axis0_labels().has_value(), "unsqueeze(depth_labels) should attach labels");
+  expect(labeled.squeeze().equals(df), "squeeze should preserve frame contents");
+
+  const auto atlas2 = pluss::table::Atlas({df, df});
+  expect_throw([&]() { (void)atlas2.squeeze(); }, "squeeze should throw when depth != 1");
+}
+
 void test_parallel_engine_matches_serial() {
   ReadCsvOptions serial;
   serial.sep = ';';
@@ -780,6 +831,13 @@ void test_versatile_dataframe_families() {
   align_ptr[1] = 0;
   const auto atlas_aligned = atlas.align_depth(pluss::table::Thread(align_series));
   expect(atlas_aligned.iloc(0).nrows() == f1.nrows(), "Atlas align_depth should reorder by requested labels");
+  expect(!atlas.empty() && atlas.frames().size() == static_cast<std::size_t>(atlas.depth()),
+         "Atlas should expose empty()/frames() with consistent depth");
+  const auto atlas_empty = pluss::table::Atlas();
+  expect(atlas_empty.empty(), "default Atlas should be empty");
+  const auto atlas_roundtrip = pluss::table::Atlas::tabelize(atlas.kindelize());
+  expect(atlas_roundtrip.depth() == atlas.depth() && atlas_roundtrip.nrows() == atlas.nrows(),
+         "Atlas::tabelize(Archive) should reconstruct atlas shape");
 
   std::int64_t expected_between = 0;
   std::int64_t expected_in = 0;
@@ -846,6 +904,109 @@ void test_versatile_dataframe_families() {
 
   const auto with_alias = df.assign({{"age_alias", df.features("age")}});
   expect(with_alias.has_feature("age_alias"), "assign alias should delegate to derive");
+
+  const auto transformed_all = df.transform([](const pluss::table::Thread& feature) {
+    if (feature.kind() == ThreadKind::Series) {
+      return feature + 1.0;
+    }
+    return feature;
+  });
+  expect(transformed_all.nrows() == df.nrows() && transformed_all.ncols() == df.ncols(),
+         "transform(all) should preserve frame shape");
+  expect(transformed_all.series_value("age").to_vec<std::int64_t>()[0] == age[0] + 1,
+         "transform(all) should transform Series-backed features");
+  expect(std::string(transformed_all.note_value("job").at(0)) == std::string(df.note_value("job").at(0)),
+         "transform(all) should allow passthrough for Note-backed features");
+
+  const auto transformed_age = df.transform("age", [](const pluss::table::Thread& feature) {
+    return feature * 2.0;
+  });
+  expect(transformed_age.series_value("age").to_vec<std::int64_t>()[0] == age[0] * 2,
+         "transform(feature) should update target feature");
+  expect(std::string(transformed_age.note_value("job").at(0)) == std::string(df.note_value("job").at(0)),
+         "transform(feature) should keep non-target features unchanged");
+
+  const auto transformed_specs = df.transform({
+      {"age", [](const pluss::table::Thread& feature) { return feature + 3.0; }},
+      {"duration", [](const pluss::table::Thread& feature) { return feature - 2.0; }},
+  });
+  expect(transformed_specs.series_value("age").to_vec<std::int64_t>()[0] == age[0] + 3,
+         "transform(specs) should apply per-feature transform");
+  expect(transformed_specs.series_value("duration").to_vec<std::int64_t>()[0] == duration[0] - 2,
+         "transform(specs) should apply second transform");
+  expect_throw([&]() {
+                (void)df.transform("age", [](const pluss::table::Thread& feature) { return feature.head(2); });
+              },
+              "transform should reject transformed feature length mismatches");
+
+  const auto selected_vec = df.select(std::vector<std::string>{"age", "job"});
+  expect(selected_vec.ncols() == 2 && selected_vec.has_feature("age") && selected_vec.has_feature("job"),
+         "select(vector) should project requested features");
+  const auto dropped_vec = df.drop(std::vector<std::string>{"balance"});
+  expect(!dropped_vec.has_feature("balance") && dropped_vec.ncols() == df.ncols() - 1,
+         "drop(vector) should remove requested features");
+
+  const auto renamed_map =
+      selected_vec.rename(std::unordered_map<std::string, std::string>{{"age", "age_new"}, {"job", "job_new"}});
+  expect(renamed_map.has_feature("age_new") && renamed_map.has_feature("job_new"),
+         "rename(mapping) should rename mapped features");
+
+  const auto sorted_single = df.sort("age", false);
+  const auto sorted_single_age = sorted_single.features("age").as_series().to_vec<std::int64_t>();
+  expect(sorted_single_age.size() >= 2 && sorted_single_age[0] >= sorted_single_age[1],
+         "sort(feature, descending) should sort as requested");
+
+  const auto sorted_multi = df.sort_by({"job", "age"}, {true, false});
+  expect(sorted_multi.nrows() == df.nrows() && sorted_multi.ncols() == df.ncols(),
+         "sort_by(features, ascending[]) should preserve shape");
+
+  const auto masked = df.masked_select(mask);
+  expect(masked.nrows() == q1.nrows(), "masked_select(mask) should alias filter(mask)");
+
+  const auto grouped_map = df.group_by("job");
+  expect(!grouped_map.empty(), "group_by(feature) should partition rows by feature values");
+  const auto one_group = grouped_map.begin()->second;
+  expect(one_group.ncols() == df.ncols() && one_group.nrows() > 0,
+         "group_by(feature) values should be DataFrame partitions");
+
+  const auto applied = df.apply("age", [](const pluss::table::Thread& feature) { return feature + 5.0; });
+  expect(applied.series_value("age").to_vec<std::int64_t>()[0] == age[0] + 5,
+         "apply(feature, fn) should transform selected feature");
+  auto applied_inplace = df;
+  applied_inplace.apply_("age", [](const pluss::table::Thread& feature) { return feature + 4.0; });
+  expect(applied_inplace.series_value("age").to_vec<std::int64_t>()[0] == age[0] + 4,
+         "apply_(feature, fn) should mutate selected feature");
+
+  const auto merged = jleft.merge(jright, "age", "inner", "_m");
+  expect(merged.nrows() > 0 && merged.has_feature("balance"),
+         "merge(on, inner) should join on key and include right payload features");
+
+  const auto text_path = write_temp_csv(
+      "df_text_wrappers",
+      "txt,txt2\n"
+      "heavy RAIN on road,rain on road\n"
+      "clear sky and sun,clear sky\n"
+      "fog near junction,fog near school\n");
+  const auto text_df = DataFrame::load_csv(text_path.string());
+  const auto text_clean = text_df.text_preprocess("txt");
+  expect(text_clean.nrows() == text_df.nrows(), "text_preprocess should preserve case count");
+  const auto keywords = text_df.extract_keywords("txt", 3);
+  expect(keywords.has_feature("keyword") && keywords.has_feature("count"),
+         "extract_keywords should return keyword/count features");
+  const auto sim_df = text_df.compute_similarity("txt", "txt2");
+  expect(sim_df.nrows() == text_df.nrows(), "compute_similarity should emit one score per case");
+  const auto filtered_text = text_df.filter_by_text("txt", "rain");
+  expect(filtered_text.nrows() == 1, "filter_by_text should keep matching text rows");
+  const auto enriched_text = text_df.add_text_features("txt");
+  expect(enriched_text.has_feature("txt_char_len") && enriched_text.has_feature("txt_word_count"),
+         "add_text_features should append generated text features");
+  const auto text_stats = text_df.aggregate_text_stats("txt", "count");
+  expect(text_stats.nrows() == 1 && text_stats.has_feature("value"),
+         "aggregate_text_stats should emit one-row stat table");
+  const auto text_tfidf = text_df.tfidf("txt");
+  expect(text_tfidf.has_feature("txt_tfidf_norm"), "tfidf should append tfidf norm feature");
+  const auto from_catalog = DataFrame::tabelize(df.head(5, false).kindelize());
+  expect(from_catalog.nrows() == 5, "DataFrame::tabelize(Catalog) should reconstruct frame rows");
 
   const auto summary = df.aggregate(
       {
@@ -1022,6 +1183,9 @@ void test_versatile_dataframe_families() {
 
   expect(tdf.timeline().ncols() == 2, "timeline() should retain Timeline features after cast_timeline");
   expect(tdf.timeline_value("start").numel() == 2, "timeline_value should expose Timeline payload");
+  const auto tdf_timeindex = tdf.cast_timeindex({"start"});
+  expect(tdf_timeindex.timeindex().ncols() == 1 && tdf_timeindex.has_feature("start"),
+         "timeindex() should retain only TimeIndex-backed features");
 
   const auto years = tdf.series_value("Start_Year").to_vec<std::int64_t>();
   expect(years.size() == 2 && years[0] == 2020 && years[1] == 2020,
@@ -1454,6 +1618,8 @@ int main() {
       {"col_names_none_and_save_as_csv", test_col_names_none_and_save_as_csv},
       {"loader_unified_load_result_for_csv", test_loader_unified_load_result_for_csv},
       {"feature_value_cases_values_and_save_defaults", test_feature_value_cases_values_and_save_defaults},
+      {"transpose_shape_and_axes", test_transpose_shape_and_axes},
+      {"squeeze_unsqueeze_bridge", test_squeeze_unsqueeze_bridge},
       {"parallel_engine_matches_serial", test_parallel_engine_matches_serial},
       {"versatile_dataframe_families", test_versatile_dataframe_families},
   };

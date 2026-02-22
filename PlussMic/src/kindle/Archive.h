@@ -43,6 +43,7 @@ public:
   const std::vector<Catalog>& catalogs() const;
 
   pluss::table::Atlas tabelize(const TabelizePolicy& policy = {}) const;
+  pluss::table::Atlas to_table(const TabelizePolicy& policy = {}, bool render = true) const;
 
   std::string to_string() const;
   void show(std::ostream& os) const;

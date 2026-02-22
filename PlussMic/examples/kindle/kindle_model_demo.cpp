@@ -221,6 +221,35 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   policy.collision = pluss::kindle::CollisionPolicy::Suffix;
   const auto back_df = catalog.tabelize(policy);
   std::cout << "tabelize shape: [" << back_df.nrows() << " cs x " << back_df.nfeatures() << " feat]\n";
+  std::cout << "to_table (table renderer):\n";
+  (void)catalog.head(5).to_table(policy, true);
+
+  std::cout << "\nragged catalog -> to_table (inner/outer/strict)\n";
+  const std::array<std::int64_t, 1> city_shape{3};
+  const pluss::kindle::Catalog ragged({
+      "price"_k = pluss::kindle::Stream(pluss::make_series(std::vector<double>{100.0, 101.0, 102.0, 103.0}, {4})),
+      "city"_k = pluss::kindle::Stream(pluss::make_note(std::vector<std::string>{"A", "B", "C"}, city_shape)),
+      "risk"_k = pluss::kindle::Stream(pluss::make_series(std::vector<double>{0.1, 0.2, 0.3, 0.4, 0.5}, {5})),
+  });
+
+  pluss::kindle::TabelizePolicy inner_policy;
+  inner_policy.align = pluss::kindle::AlignPolicy::Inner;
+  std::cout << "inner alignment:\n";
+  (void)ragged.to_table(inner_policy, true);
+
+  pluss::kindle::TabelizePolicy outer_policy;
+  outer_policy.align = pluss::kindle::AlignPolicy::Outer;
+  std::cout << "outer alignment:\n";
+  (void)ragged.to_table(outer_policy, true);
+
+  pluss::kindle::TabelizePolicy strict_policy;
+  strict_policy.align = pluss::kindle::AlignPolicy::Strict;
+  try {
+    (void)ragged.to_table(strict_policy, false);
+    std::cout << "strict alignment unexpectedly succeeded\n";
+  } catch (const std::exception& e) {
+    std::cout << "strict alignment expected failure: " << e.what() << "\n";
+  }
 
   const auto save_path = std::filesystem::temp_directory_path() / "plussmic_kindle_demo.csv";
   catalog.save_csv(save_path.string());
@@ -249,6 +278,8 @@ void demo_archive_methods(const pluss::table::DataFrame& base_df) {
   std::cout << "archive.tabelize depth: " << atlas_back.depth()
             << ", rows/frame: " << atlas_back.nrows()
             << ", features/frame: " << atlas_back.ncols() << "\n";
+  std::cout << "archive.to_table (atlas renderer):\n";
+  (void)archive.to_table({}, true);
 }
 
 void demo_loader_entrypoints() {

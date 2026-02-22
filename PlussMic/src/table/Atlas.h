@@ -14,6 +14,7 @@
 namespace pluss::kindle {
 class Archive;
 struct KindelizePolicy;
+struct TabelizePolicy;
 }
 
 namespace pluss::table {
@@ -34,6 +35,7 @@ public:
 
   bool defined() const noexcept;
   bool unique() const noexcept;
+  bool empty() const;
 
   std::int64_t depth() const;
   std::int64_t nrows() const;
@@ -41,10 +43,12 @@ public:
 
   const std::vector<std::string>& column_names() const;
   const std::optional<Thread>& axis0_labels() const;
+  const std::vector<DataFrame>& frames() const;
 
   DataFrame frame(std::int64_t index) const;
   DataFrame iloc(std::int64_t index) const;
   DataFramePlotAccessor plot(std::int64_t frame_index = 0) const;
+  DataFrame squeeze() const;
 
   DataFrame loc(std::string_view label) const;
   DataFrame loc(std::int64_t label) const;
@@ -61,6 +65,9 @@ public:
   DataFrame aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const;
   pluss::kindle::Archive kindelize() const;
   pluss::kindle::Archive kindelize(const pluss::kindle::KindelizePolicy& policy) const;
+  static Atlas tabelize(const pluss::kindle::Archive& archive);
+  static Atlas tabelize(const pluss::kindle::Archive& archive,
+                        const pluss::kindle::TabelizePolicy& policy);
 
   std::string to_string(const display::DisplayOptions& options = {}) const;
   void show(const display::DisplayOptions& options = {}) const;

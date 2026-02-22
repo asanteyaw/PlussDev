@@ -185,6 +185,7 @@ public:
   Catalog drop(std::initializer_list<std::string_view> keys) const;
 
   pluss::table::DataFrame tabelize(const TabelizePolicy& policy = {}) const;
+  pluss::table::DataFrame to_table(const TabelizePolicy& policy = {}, bool render = true) const;
 
   void display() const;
   void info() const;

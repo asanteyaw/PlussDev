@@ -80,6 +80,7 @@ int main() {
 
   std::cout << "\nsummary statistics\n";
   df.describe();
+  
 
   const auto us_csv = data_file("US_Accidents_Dec20.csv").string();
   std::cout << "\n=== CSV loader benchmark on US_Accidents_Dec20.csv ===\n";

@@ -62,6 +62,22 @@ int main() {
   }});
   flagged.head(8);
 
+  std::cout << "\ntransform: all numeric +1 (Note features pass-through)\n";
+  auto transformed_all = df.transform([](const pluss::table::Thread& feature) {
+    if (feature.kind() == pluss::table::ThreadKind::Series) {
+      return feature + 1.0;
+    }
+    return feature;
+  });
+  transformed_all.head(8);
+
+  std::cout << "\ntransform: targeted per-feature transforms\n";
+  auto transformed_targeted = df.transform({
+      {"age", [](const pluss::table::Thread& feature) { return feature * 2.0; }},
+      {"balance", [](const pluss::table::Thread& feature) { return feature + 100.0; }},
+  });
+  transformed_targeted.head(8);
+
   std::cout << "\nsummarize specs\n";
   flagged.aggregate(
       {
@@ -140,6 +156,9 @@ int main() {
   missing_demo.ffill().head(8);
   missing_demo.bfill().head(8);
   missing_demo.dropna().head(8);
+
+  std::cout << "\ntranspose\n";
+  df.features({"age", "job", "balance"}).transpose(true);
 
   return 0;
 }
