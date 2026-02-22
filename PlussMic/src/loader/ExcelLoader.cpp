@@ -408,7 +408,7 @@ std::vector<std::vector<std::string>> parse_sheet_table(zip_t* archive,
 
 } // namespace
 
-pluss::table::DataFrame load_excel(std::string_view filepath, const ReadExcelOptions& options) {
+CsvBatch read_excel_batch(std::string_view filepath, const ReadExcelOptions& options) {
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
   PLUSS_CHECK(!filepath.empty(), "load_excel: filepath is empty");
   PLUSS_CHECK(!options.all_sheets, "load_excel: all_sheets=true requires load_excel_workbook");
@@ -442,28 +442,28 @@ pluss::table::DataFrame load_excel(std::string_view filepath, const ReadExcelOpt
   const auto table = parse_sheet_table(archive, target, shared_strings);
   ReadCsvOptions csv_opts;
   csv_opts.header = options.header;
-  return load_csv_records(table, csv_opts);
+  return read_csv_records_batch(table, csv_opts);
 #else
   (void)filepath;
   (void)options;
-  PLUSS_FAIL("load_excel: Excel support not built (libzip not available)");
+  PLUSS_FAIL("read_excel_batch: Excel support not built (libzip not available)");
 #endif
 }
 
-Workbook load_excel_workbook(
+ExcelBatchWorkbook read_excel_workbook_batch(
     std::string_view filepath,
     const ReadExcelOptions& options) {
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
-  PLUSS_CHECK(!filepath.empty(), "load_excel_workbook: filepath is empty");
+  PLUSS_CHECK(!filepath.empty(), "read_excel_workbook_batch: filepath is empty");
 
   int err = 0;
   zip_t* archive = zip_open(std::string(filepath).c_str(), ZIP_RDONLY, &err);
-  PLUSS_CHECK(archive != nullptr, "load_excel_workbook: failed to open workbook");
+  PLUSS_CHECK(archive != nullptr, "read_excel_workbook_batch: failed to open workbook");
 
   auto guard = std::unique_ptr<zip_t, decltype(&zip_close)>(archive, &zip_close);
   const auto shared_strings = parse_shared_strings(archive);
   const auto sheets = parse_sheet_refs(archive);
-  PLUSS_CHECK(!sheets.empty(), "load_excel_workbook: workbook has no sheets");
+  PLUSS_CHECK(!sheets.empty(), "read_excel_workbook_batch: workbook has no sheets");
 
   std::vector<SheetRef> selected_sheets;
   if (!options.sheet_names.empty()) {
@@ -473,14 +473,14 @@ Workbook load_excel_workbook(
       auto it = std::find_if(sheets.begin(), sheets.end(), [&](const SheetRef& s) {
         return normalize_sheet_name(s.name) == wanted;
       });
-      PLUSS_CHECK(it != sheets.end(), "load_excel_workbook: unknown sheet name '" + wanted_name + "'");
+      PLUSS_CHECK(it != sheets.end(), "read_excel_workbook_batch: unknown sheet name '" + wanted_name + "'");
       selected_sheets.push_back(*it);
     }
   } else if (!options.sheet_indices.empty()) {
     selected_sheets.reserve(options.sheet_indices.size());
     for (const auto idx : options.sheet_indices) {
       PLUSS_CHECK(idx >= 0 && static_cast<std::size_t>(idx) < sheets.size(),
-                  "load_excel_workbook: sheet index out of range");
+                  "read_excel_workbook_batch: sheet index out of range");
       selected_sheets.push_back(sheets[static_cast<std::size_t>(idx)]);
     }
   } else {
@@ -494,7 +494,7 @@ Workbook load_excel_workbook(
     }
   }
 
-  Workbook out;
+  ExcelBatchWorkbook out;
   out.reserve(selected_sheets.size());
 
   ReadCsvOptions csv_opts;
@@ -502,14 +502,30 @@ Workbook load_excel_workbook(
 
   for (const auto& s : selected_sheets) {
     const auto table = parse_sheet_table(archive, s, shared_strings);
-    out.emplace_back(s.name, load_csv_records(table, csv_opts));
+    out.emplace_back(s.name, read_csv_records_batch(table, csv_opts));
   }
   return out;
 #else
   (void)filepath;
   (void)options;
-  PLUSS_FAIL("load_excel_workbook: Excel support not built (libzip not available)");
+  PLUSS_FAIL("read_excel_workbook_batch: Excel support not built (libzip not available)");
 #endif
+}
+
+pluss::table::DataFrame load_excel(std::string_view filepath, const ReadExcelOptions& options) {
+  auto batch = read_excel_batch(filepath, options);
+  return pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases));
+}
+
+Workbook load_excel_workbook(std::string_view filepath, const ReadExcelOptions& options) {
+  auto workbook_batch = read_excel_workbook_batch(filepath, options);
+  Workbook out;
+  out.reserve(workbook_batch.size());
+  for (auto& [sheet_name, batch] : workbook_batch) {
+    out.emplace_back(std::move(sheet_name),
+                     pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases)));
+  }
+  return out;
 }
 
 void save_excel(const pluss::table::DataFrame& frame,

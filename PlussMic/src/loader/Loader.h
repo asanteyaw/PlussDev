@@ -62,6 +62,16 @@ private:
 std::ostream& operator<<(std::ostream& os, const LoadResult& loaded);
 
 // Format-specific first-class loaders (recommended public API).
+CsvBatch read_csv_batch(std::string_view filepath, const Config& config);
+CsvBatch read_csv_batch(std::string_view filepath,
+                        std::initializer_list<ConfigEntry> config_entries);
+CsvBatch read_excel_batch(std::string_view filepath, const Config& config);
+CsvBatch read_excel_batch(std::string_view filepath,
+                          std::initializer_list<ConfigEntry> config_entries);
+ExcelBatchWorkbook read_excel_workbook_batch(std::string_view filepath, const Config& config);
+ExcelBatchWorkbook read_excel_workbook_batch(std::string_view filepath,
+                                             std::initializer_list<ConfigEntry> config_entries);
+
 pluss::table::DataFrame load_csv(std::string_view filepath, const Config& config);
 pluss::table::DataFrame load_csv(std::string_view filepath,
                                  std::initializer_list<ConfigEntry> config_entries);

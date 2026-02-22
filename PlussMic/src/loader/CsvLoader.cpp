@@ -1044,10 +1044,9 @@ std::string escape_csv_cell(std::string_view value, const WriteCsvOptions& optio
   return out;
 }
 
-pluss::table::DataFrame build_dataframe_from_records(
-    const std::vector<std::vector<std::string>>& records,
-    const ReadCsvOptions& options,
-    CsvRecordBuildProfile* profile) {
+CsvBatch build_batch_from_records(const std::vector<std::vector<std::string>>& records,
+                                  const ReadCsvOptions& options,
+                                  CsvRecordBuildProfile* profile) {
   const auto t_filter_start = std::chrono::steady_clock::now();
   std::vector<std::size_t> kept_rows;
   kept_rows.reserve(records.size());
@@ -1282,17 +1281,17 @@ pluss::table::DataFrame build_dataframe_from_records(
     cases = infer_column_thread(case_name, *case_col, case_values, options, dtype_lower);
   }
 
-  return pluss::table::DataFrame(std::move(cols), std::move(cases));
+  return CsvBatch{std::move(cols), std::move(cases)};
 }
 
 } // namespace
 
-pluss::table::DataFrame load_csv_records(const std::vector<std::vector<std::string>>& records,
-                                         const ReadCsvOptions& options) {
-  return build_dataframe_from_records(records, options, nullptr);
+CsvBatch read_csv_records_batch(const std::vector<std::vector<std::string>>& records,
+                                const ReadCsvOptions& options) {
+  return build_batch_from_records(records, options, nullptr);
 }
 
-pluss::table::DataFrame load_csv(const ReadCsvOptions& options) {
+CsvBatch read_csv_batch(const ReadCsvOptions& options) {
   PLUSS_CHECK(!options.filepath.empty(), "load_csv: filepath is empty");
 
   const auto t_total_start = std::chrono::steady_clock::now();
@@ -1343,11 +1342,13 @@ pluss::table::DataFrame load_csv(const ReadCsvOptions& options) {
 
   CsvRecordBuildProfile build_profile;
   const auto t_build_start = std::chrono::steady_clock::now();
-  auto out = build_dataframe_from_records(records, resolved, &build_profile);
+  auto out = build_batch_from_records(records, resolved, &build_profile);
   profile_stats.build_dataframe_ms = elapsed_ms(t_build_start, std::chrono::steady_clock::now());
   profile_stats.total_ms = elapsed_ms(t_total_start, std::chrono::steady_clock::now());
-  profile_stats.selected_rows = static_cast<std::size_t>(out.nrows());
-  profile_stats.columns = static_cast<std::size_t>(out.ncols());
+  profile_stats.selected_rows = out.features.empty()
+      ? (out.cases.has_value() ? static_cast<std::size_t>(out.cases->size()) : 0u)
+      : static_cast<std::size_t>(out.features.front().second.size());
+  profile_stats.columns = out.features.size();
 
   if (csv_profile_enabled(resolved)) {
     fmt::print(
@@ -1371,10 +1372,26 @@ pluss::table::DataFrame load_csv(const ReadCsvOptions& options) {
   return out;
 }
 
-pluss::table::DataFrame load_csv(std::string_view filepath, const ReadCsvOptions& options) {
+CsvBatch read_csv_batch(std::string_view filepath, const ReadCsvOptions& options) {
   ReadCsvOptions resolved = options;
   resolved.filepath = std::string(filepath);
-  return load_csv(resolved);
+  return read_csv_batch(resolved);
+}
+
+pluss::table::DataFrame load_csv_records(const std::vector<std::vector<std::string>>& records,
+                                         const ReadCsvOptions& options) {
+  auto batch = read_csv_records_batch(records, options);
+  return pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases));
+}
+
+pluss::table::DataFrame load_csv(const ReadCsvOptions& options) {
+  auto batch = read_csv_batch(options);
+  return pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases));
+}
+
+pluss::table::DataFrame load_csv(std::string_view filepath, const ReadCsvOptions& options) {
+  auto batch = read_csv_batch(filepath, options);
+  return pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases));
 }
 
 pluss::table::DataFrame load_csv(std::string_view filepath,

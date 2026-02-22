@@ -8,7 +8,10 @@
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
+
+#include "table/Thread.h"
 
 namespace pluss::table {
 class DataFrame;
@@ -102,6 +105,17 @@ struct WriteCsvOptions {
   char decimal{'.'};
   std::string encoding{"utf-8"};
 };
+
+// Neutral CSV ingest payload (no DataFrame ownership).
+struct CsvBatch {
+  std::vector<std::pair<std::string, pluss::table::Thread>> features{};
+  std::optional<pluss::table::Thread> cases{};
+};
+
+CsvBatch read_csv_batch(const ReadCsvOptions& options);
+CsvBatch read_csv_batch(std::string_view filepath, const ReadCsvOptions& options = {});
+CsvBatch read_csv_records_batch(const std::vector<std::vector<std::string>>& records,
+                                const ReadCsvOptions& options = {});
 
 pluss::table::DataFrame load_csv(const ReadCsvOptions& options);
 pluss::table::DataFrame load_csv(std::string_view filepath, const ReadCsvOptions& options = {});

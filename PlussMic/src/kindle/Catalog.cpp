@@ -314,6 +314,30 @@ std::string unique_case_feature_name(std::string base, const std::unordered_set<
   return candidate;
 }
 
+Catalog catalog_from_batch(pluss::loader::CsvBatch batch, const KindelizePolicy& policy = {}) {
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(batch.features.size() + (policy.materialize_case_stream ? 1u : 0u));
+
+  const auto case_axis = batch.cases;
+  std::unordered_set<std::string> names;
+  names.reserve(batch.features.size() * 2);
+  for (auto& [name, feature] : batch.features) {
+    auto s = policy.attach_cases_to_streams
+        ? Stream::from_thread(feature, case_axis)
+        : Stream::from_thread(feature);
+    names.insert(name);
+    out.emplace_back(std::move(name), std::move(s));
+  }
+
+  if (policy.materialize_case_stream && case_axis.has_value()) {
+    PLUSS_CHECK(names.find(policy.case_stream_name) == names.end(),
+                "Catalog::kindelize: case stream key collides with existing feature '" + policy.case_stream_name + "'");
+    out.emplace_back(policy.case_stream_name, Stream::from_thread(*case_axis));
+  }
+
+  return Catalog(std::move(out));
+}
+
 } // namespace
 
 namespace detail {
@@ -385,51 +409,67 @@ Catalog Catalog::kindelize(const pluss::table::DataFrame& frame, const Kindelize
 }
 
 Catalog Catalog::load(std::string_view source_type, std::string_view filepath) {
+  const auto source = lowercase_copy(trim_copy(source_type));
+  if (source == "csv") {
+    return load_csv(filepath);
+  }
+  if (source == "excel" || source == "xlsx") {
+    return load_excel(filepath);
+  }
   return load(source_type, filepath, pluss::loader::Config{});
 }
 
 Catalog Catalog::load(std::string_view source_type,
                       std::string_view filepath,
                       const pluss::loader::Config& config) {
-  auto loaded = pluss::loader::load(source_type, filepath, config);
-  if (loaded.is_frame()) {
-    return kindelize(loaded.dataframe());
+  const auto source = lowercase_copy(trim_copy(source_type));
+  if (source == "csv") {
+    return catalog_from_batch(pluss::loader::read_csv_batch(filepath, config));
   }
-  PLUSS_FAIL("Catalog::load: requested source returned a workbook. Use pluss::loader::load(...) for multi-sheet loads");
+  if (source == "excel" || source == "xlsx") {
+    return catalog_from_batch(pluss::loader::read_excel_batch(filepath, config));
+  }
+  if (source == "parquet") {
+    return kindelize(pluss::table::DataFrame::load_parquet(filepath, config));
+  }
+  PLUSS_FAIL("Catalog::load: unsupported source type '" + std::string(source_type) + "'");
 }
 
 Catalog Catalog::load_csv(std::string_view filepath) {
   pluss::loader::ReadCsvOptions options;
-  return kindelize(pluss::loader::load_csv(filepath, options));
+  return catalog_from_batch(pluss::loader::read_csv_batch(filepath, options));
 }
 
 Catalog Catalog::load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options) {
-  return kindelize(pluss::loader::load_csv(filepath, options));
+  return catalog_from_batch(pluss::loader::read_csv_batch(filepath, options));
 }
 
 Catalog Catalog::load_excel(std::string_view filepath) {
   pluss::loader::ReadExcelOptions options;
-  return kindelize(pluss::loader::load_excel(filepath, options));
+  return catalog_from_batch(pluss::loader::read_excel_batch(filepath, options));
 }
 
 Catalog Catalog::load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options) {
-  return kindelize(pluss::loader::load_excel(filepath, options));
+  return catalog_from_batch(pluss::loader::read_excel_batch(filepath, options));
 }
 
 Catalog Catalog::load_csv_with_key(std::string_view filepath,
                                    std::string_view key_field,
                                    const pluss::loader::ReadCsvOptions& options) {
-  auto frame = pluss::loader::load_csv(filepath, options);
+  auto batch = pluss::loader::read_csv_batch(filepath, options);
   const auto key = trim_copy(key_field);
   PLUSS_CHECK(!key.empty(), "Catalog::load_csv_with_key: key field cannot be empty");
-  PLUSS_CHECK(frame.has_feature(key),
+  auto it = std::find_if(batch.features.begin(),
+                         batch.features.end(),
+                         [&](const auto& kv) { return kv.first == key; });
+  PLUSS_CHECK(it != batch.features.end(),
               "Catalog::load_csv_with_key: key field not found '" + key + "'");
-  frame = frame.set_cases(key, false);
+  batch.cases = it->second;
   KindelizePolicy policy;
   policy.attach_cases_to_streams = true;
   policy.materialize_case_stream = true;
   policy.case_stream_name = "_case";
-  return kindelize(frame, policy);
+  return catalog_from_batch(std::move(batch), policy);
 }
 
 Catalog Catalog::from_json(std::string_view json_text) {

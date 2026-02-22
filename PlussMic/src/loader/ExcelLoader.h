@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "loader/CsvLoader.h"
+
 namespace pluss::table {
 class DataFrame;
 }
@@ -33,6 +35,11 @@ struct WriteExcelOptions {
 };
 
 using Workbook = std::vector<std::pair<std::string, pluss::table::DataFrame>>;
+using ExcelBatchWorkbook = std::vector<std::pair<std::string, CsvBatch>>;
+
+CsvBatch read_excel_batch(std::string_view filepath, const ReadExcelOptions& options = {});
+ExcelBatchWorkbook read_excel_workbook_batch(std::string_view filepath,
+                                             const ReadExcelOptions& options = {});
 
 pluss::table::DataFrame load_excel(std::string_view filepath, const ReadExcelOptions& options = {});
 Workbook load_excel_workbook(

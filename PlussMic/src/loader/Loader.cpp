@@ -472,8 +472,40 @@ std::ostream& operator<<(std::ostream& os, const LoadResult& loaded) {
   return os;
 }
 
+CsvBatch read_csv_batch(std::string_view filepath, const Config& config) {
+  return ::pluss::loader::read_csv_batch(filepath, csv_read_options_from_config(config));
+}
+
+CsvBatch read_csv_batch(std::string_view filepath,
+                        std::initializer_list<ConfigEntry> config_entries) {
+  return read_csv_batch(filepath, config_from(config_entries));
+}
+
+CsvBatch read_excel_batch(std::string_view filepath, const Config& config) {
+  return ::pluss::loader::read_excel_batch(filepath, excel_read_options_from_config(config));
+}
+
+CsvBatch read_excel_batch(std::string_view filepath,
+                          std::initializer_list<ConfigEntry> config_entries) {
+  return read_excel_batch(filepath, config_from(config_entries));
+}
+
+ExcelBatchWorkbook read_excel_workbook_batch(std::string_view filepath, const Config& config) {
+  auto opts = excel_read_options_from_config(config);
+  if (!opts.all_sheets && opts.sheet_names.empty() && opts.sheet_indices.empty() && !opts.n_sheets.has_value()) {
+    opts.all_sheets = true;
+  }
+  return ::pluss::loader::read_excel_workbook_batch(filepath, opts);
+}
+
+ExcelBatchWorkbook read_excel_workbook_batch(std::string_view filepath,
+                                             std::initializer_list<ConfigEntry> config_entries) {
+  return read_excel_workbook_batch(filepath, config_from(config_entries));
+}
+
 pluss::table::DataFrame load_csv(std::string_view filepath, const Config& config) {
-  return ::pluss::loader::load_csv(filepath, csv_read_options_from_config(config));
+  auto batch = read_csv_batch(filepath, config);
+  return pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases));
 }
 
 pluss::table::DataFrame load_csv(std::string_view filepath,
@@ -514,7 +546,8 @@ pluss::table::DataFrame load_csv(std::string_view filepath,
 }
 
 pluss::table::DataFrame load_excel(std::string_view filepath, const Config& config) {
-  return ::pluss::loader::load_excel(filepath, excel_read_options_from_config(config));
+  auto batch = read_excel_batch(filepath, config);
+  return pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases));
 }
 
 pluss::table::DataFrame load_excel(std::string_view filepath,
@@ -546,7 +579,14 @@ LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header) {
   ReadExcelOptions options;
   options.header = header;
   options.all_sheets = true;
-  return LoadResult(::pluss::loader::load_excel_workbook(filepath, options));
+  auto wb_batch = ::pluss::loader::read_excel_workbook_batch(filepath, options);
+  Workbook wb;
+  wb.reserve(wb_batch.size());
+  for (auto& [sheet_name, batch] : wb_batch) {
+    wb.emplace_back(std::move(sheet_name),
+                    pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases)));
+  }
+  return LoadResult(std::move(wb));
 }
 
 LoadResult load_excel(std::string_view filepath,
@@ -556,7 +596,14 @@ LoadResult load_excel(std::string_view filepath,
   options.header = header;
   options.sheet_names = sheet_names;
   options.all_sheets = sheet_names.empty();
-  return LoadResult(::pluss::loader::load_excel_workbook(filepath, options));
+  auto wb_batch = ::pluss::loader::read_excel_workbook_batch(filepath, options);
+  Workbook wb;
+  wb.reserve(wb_batch.size());
+  for (auto& [sheet_name, batch] : wb_batch) {
+    wb.emplace_back(std::move(sheet_name),
+                    pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases)));
+  }
+  return LoadResult(std::move(wb));
 }
 
 LoadResult load_excel(std::string_view filepath,
@@ -577,7 +624,14 @@ LoadResult load_excel(std::string_view filepath,
   options.header = header;
   options.sheet_indices = sheet_indices;
   options.all_sheets = sheet_indices.empty();
-  return LoadResult(::pluss::loader::load_excel_workbook(filepath, options));
+  auto wb_batch = ::pluss::loader::read_excel_workbook_batch(filepath, options);
+  Workbook wb;
+  wb.reserve(wb_batch.size());
+  for (auto& [sheet_name, batch] : wb_batch) {
+    wb.emplace_back(std::move(sheet_name),
+                    pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases)));
+  }
+  return LoadResult(std::move(wb));
 }
 
 LoadResult load_excel(std::string_view filepath,
@@ -592,11 +646,14 @@ LoadResult load_excel(std::string_view filepath,
 }
 
 Workbook load_excel_workbook(std::string_view filepath, const Config& config) {
-  auto opts = excel_read_options_from_config(config);
-  if (!opts.all_sheets && opts.sheet_names.empty() && opts.sheet_indices.empty() && !opts.n_sheets.has_value()) {
-    opts.all_sheets = true;
+  auto wb_batch = read_excel_workbook_batch(filepath, config);
+  Workbook wb;
+  wb.reserve(wb_batch.size());
+  for (auto& [sheet_name, batch] : wb_batch) {
+    wb.emplace_back(std::move(sheet_name),
+                    pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases)));
   }
-  return ::pluss::loader::load_excel_workbook(filepath, opts);
+  return wb;
 }
 
 Workbook load_excel_workbook(std::string_view filepath,
@@ -625,9 +682,17 @@ LoadResult load(std::string_view source_type, std::string_view filepath, const C
     const bool workbook_mode =
         opts.all_sheets || !opts.sheet_names.empty() || !opts.sheet_indices.empty() || opts.n_sheets.has_value();
     if (workbook_mode) {
-      return LoadResult(::pluss::loader::load_excel_workbook(filepath, opts));
+      auto wb_batch = ::pluss::loader::read_excel_workbook_batch(filepath, opts);
+      Workbook wb;
+      wb.reserve(wb_batch.size());
+      for (auto& [sheet_name, batch] : wb_batch) {
+        wb.emplace_back(std::move(sheet_name),
+                        pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases)));
+      }
+      return LoadResult(std::move(wb));
     }
-    return LoadResult(::pluss::loader::load_excel(filepath, opts));
+    auto batch = ::pluss::loader::read_excel_batch(filepath, opts);
+    return LoadResult(pluss::table::DataFrame(std::move(batch.features), std::move(batch.cases)));
   }
   if (source == "parquet") {
     return LoadResult(load_parquet(filepath, config));
