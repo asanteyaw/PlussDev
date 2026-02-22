@@ -11,7 +11,7 @@
 #include "MSharp/IntrusivePtr.h"
 #include "bundle/registry.h"
 
-namespace pluss::signal {
+namespace pluss::kindle {
 class Archive;
 }
 
@@ -47,8 +47,8 @@ public:
   Aisle apply_slot(std::string_view key, const std::function<Slot(const Slot&)>& fn) const;
   Aisle concat_depth(const Aisle& other) const;
 
-  pluss::signal::Archive signalize() const;
-  static Aisle from_signal(const pluss::signal::Archive& archive);
+  pluss::kindle::Archive kindelize() const;
+  static Aisle from_kindle(const pluss::kindle::Archive& archive);
 
   std::string to_string() const;
   std::string to_json() const;

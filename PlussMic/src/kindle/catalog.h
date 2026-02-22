@@ -15,13 +15,13 @@
 #include "loader/Config.h"
 #include "loader/CsvLoader.h"
 #include "loader/ExcelLoader.h"
-#include "signal/Stream.h"
+#include "kindle/Stream.h"
 
 namespace pluss::table {
 class DataFrame;
 }
 
-namespace pluss::signal {
+namespace pluss::kindle {
 
 struct NamedStream {
   std::string_view key{};
@@ -76,7 +76,7 @@ enum class CollisionPolicy : std::uint8_t {
   Overwrite = 2,
 };
 
-struct SignalizePolicy {
+struct KindelizePolicy {
   bool attach_cases_to_streams{true};
   bool materialize_case_stream{false};
   std::string case_stream_name{"_case"};
@@ -108,8 +108,8 @@ public:
   Catalog& operator=(Catalog&& other) noexcept;
   ~Catalog();
 
-  static Catalog signalize(const pluss::table::DataFrame& frame,
-                           const SignalizePolicy& policy = {});
+  static Catalog kindelize(const pluss::table::DataFrame& frame,
+                           const KindelizePolicy& policy = {});
   static Catalog load(std::string_view source_type,
                       std::string_view filepath);
   static Catalog load(std::string_view source_type,
@@ -205,4 +205,4 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const Catalog& catalog);
 
-} // namespace pluss::signal
+} // namespace pluss::kindle

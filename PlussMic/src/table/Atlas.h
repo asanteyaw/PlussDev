@@ -11,9 +11,9 @@
 #include "MSharp/IntrusivePtr.h"
 #include "table/DataFrame.h"
 #include "table/display/Display.h"
-namespace pluss::signal {
+namespace pluss::kindle {
 class Archive;
-struct SignalizePolicy;
+struct KindelizePolicy;
 }
 
 namespace pluss::table {
@@ -58,8 +58,8 @@ public:
 
   Atlas map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const;
   DataFrame aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const;
-  pluss::signal::Archive signalize() const;
-  pluss::signal::Archive signalize(const pluss::signal::SignalizePolicy& policy) const;
+  pluss::kindle::Archive kindelize() const;
+  pluss::kindle::Archive kindelize(const pluss::kindle::KindelizePolicy& policy) const;
 
   std::string to_string(const display::DisplayOptions& options = {}) const;
   void show(const display::DisplayOptions& options = {}) const;

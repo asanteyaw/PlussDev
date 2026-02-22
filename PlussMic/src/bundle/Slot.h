@@ -17,7 +17,7 @@
 #include "pluss/coden/coden.h"
 #include "pluss/codeh/codeh.h"
 
-namespace pluss::signal {
+namespace pluss::kindle {
 class Stream;
 }
 
@@ -70,8 +70,8 @@ public:
   std::unordered_map<std::string, std::int64_t> type_counts() const;
 
   // Conversion for bridge paths (throws when slot is not stream-compatible).
-  pluss::signal::Stream signalize() const;
-  static Slot from_signal(const pluss::signal::Stream& stream);
+  pluss::kindle::Stream kindelize() const;
+  static Slot from_kindle(const pluss::kindle::Stream& stream);
 
   std::string to_string() const;
   std::string to_json() const;

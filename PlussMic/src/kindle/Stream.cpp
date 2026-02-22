@@ -1,4 +1,4 @@
-#include "signal/Stream.h"
+#include "kindle/Stream.h"
 
 #include <algorithm>
 #include <ostream>
@@ -14,9 +14,9 @@
 #include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
-#include "signal/display/Display.h"
+#include "kindle/display/Display.h"
 
-namespace pluss::signal {
+namespace pluss::kindle {
 
 namespace {
 using Payload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss::TimeIndex>;
@@ -591,4 +591,4 @@ PLUSS_SIGNAL_DEFINE_CMP_OP(>=)
 #undef PLUSS_SIGNAL_DEFINE_MATH_OP
 #undef PLUSS_SIGNAL_DEFINE_CMP_OP
 
-} // namespace pluss::signal
+} // namespace pluss::kindle

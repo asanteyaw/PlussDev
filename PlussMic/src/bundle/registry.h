@@ -14,7 +14,7 @@
 #include "MSharp/IntrusivePtr.h"
 #include "bundle/Slot.h"
 
-namespace pluss::signal {
+namespace pluss::kindle {
 class Catalog;
 }
 
@@ -64,9 +64,9 @@ public:
   Registry set_slot(std::string_view key, const Slot& value) const;
   Registry& set_slot_(std::string_view key, const Slot& value);
 
-  // Bridge with signal model (may throw if slot heterogeneity is not stream-compatible).
-  pluss::signal::Catalog signalize() const;
-  static Registry from_signal(const pluss::signal::Catalog& catalog);
+  // Bridge with kindle model (may throw if slot heterogeneity is not stream-compatible).
+  pluss::kindle::Catalog kindelize() const;
+  static Registry from_kindle(const pluss::kindle::Catalog& catalog);
 
   std::string to_string() const;
   std::string to_json() const;

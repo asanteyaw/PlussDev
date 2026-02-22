@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 
-#include "pluss/pluss.h"
+#include <pluss/pluss.h>
 
 namespace {
 
@@ -68,12 +68,12 @@ pluss::table::DataFrame make_base_frame() {
                                 case_axis);
 }
 
-double scalar_stream_value(const pluss::signal::Stream& stream) {
+double scalar_stream_value(const pluss::kindle::Stream& stream) {
   const auto values = stream.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
   return values.empty() ? 0.0 : values[0];
 }
 
-void demo_stream_methods(const pluss::signal::Catalog& catalog) {
+void demo_stream_methods(const pluss::kindle::Catalog& catalog) {
   std::cout << "\n=== Stream Methods ===\n";
   auto metric = catalog.stream("metric");
   std::cout << "metric: " << metric << "\n";
@@ -100,8 +100,8 @@ void demo_stream_methods(const pluss::signal::Catalog& catalog) {
             << ", mean: " << scalar_stream_value(cleaned.mean()) << "\n";
 }
 
-void demo_catalog_methods(const pluss::signal::Catalog& base_catalog) {
-  using namespace pluss::signal::literals;
+void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
+  using namespace pluss::kindle::literals;
 
   std::cout << "\n=== Catalog Methods ===\n";
 
@@ -109,22 +109,22 @@ void demo_catalog_methods(const pluss::signal::Catalog& base_catalog) {
   const auto metric = base_catalog.stream("metric");
   const auto city = base_catalog.stream("city");
 
-  const pluss::signal::Catalog catalog_a(std::vector<std::pair<std::string, pluss::signal::Stream>>{
+  const pluss::kindle::Catalog catalog_a(std::vector<std::pair<std::string, pluss::kindle::Stream>>{
       {"id", ids},
       {"metric", metric},
       {"city", city},
   });
-  const pluss::signal::Catalog catalog_b({
+  const pluss::kindle::Catalog catalog_b({
       "id"_k = ids,
       "metric"_k = metric,
       "city"_k = city,
   });
-  std::vector<std::pair<std::string, pluss::signal::Stream>> items{
+  std::vector<std::pair<std::string, pluss::kindle::Stream>> items{
       {"id", ids},
       {"metric", metric},
       {"city", city},
   };
-  const pluss::signal::Catalog catalog_c(std::move(items));
+  const pluss::kindle::Catalog catalog_c(std::move(items));
 
   std::cout << "constructor shapes: "
             << catalog_a.nstreams() << ", "
@@ -175,15 +175,15 @@ void demo_catalog_methods(const pluss::signal::Catalog& base_catalog) {
   std::cout << "metric fillna rows: " << metric_filled.count()
             << ", metric dropna rows: " << metric_dropna.count() << "\n";
 
-  const auto right = pluss::signal::Catalog(std::vector<std::pair<std::string, pluss::signal::Stream>>{
+  const auto right = pluss::kindle::Catalog(std::vector<std::pair<std::string, pluss::kindle::Stream>>{
       {"id", ids},
-      {"bonus", pluss::signal::Stream(pluss::make_series(std::vector<double>{100.0, 200.0, 300.0, 400.0, 500.0}, {5}))},
+      {"bonus", pluss::kindle::Stream(pluss::make_series(std::vector<double>{100.0, 200.0, 300.0, 400.0, 500.0}, {5}))},
   });
   const auto merged = catalog.merge(right, "id");
   std::cout << "merged has bonus: " << merged.has("bonus") << "\n";
 
-  auto applied = catalog.apply("id", [](const pluss::signal::Stream& s) { return s + 10.0; });
-  applied.apply_("id", [](const pluss::signal::Stream& s) { return s * 2.0; });
+  auto applied = catalog.apply("id", [](const pluss::kindle::Stream& s) { return s + 10.0; });
+  applied.apply_("id", [](const pluss::kindle::Stream& s) { return s * 2.0; });
   std::cout << "applied id head: " << applied.stream("id").head(1).as_series().to_vec<std::int64_t>()[0] << "\n";
 
   const auto text_clean = catalog.text_preprocess("text");
@@ -205,24 +205,24 @@ void demo_catalog_methods(const pluss::signal::Catalog& base_catalog) {
   catalog = catalog.set_stream("id_plus_one", catalog.stream("id") + 1.0);
   catalog.set_stream_("city_copy", catalog.stream("city"));
   catalog = catalog.set_streams({
-      "ones"_k = pluss::signal::Stream(pluss::make_series(std::vector<double>{1, 1, 1, 1, 1}, {5})),
+      "ones"_k = pluss::kindle::Stream(pluss::make_series(std::vector<double>{1, 1, 1, 1, 1}, {5})),
   });
   catalog.set_streams_({
-      "flag"_k = pluss::signal::Stream(pluss::make_series(std::vector<double>{0, 1, 0, 1, 0}, {5})),
+      "flag"_k = pluss::kindle::Stream(pluss::make_series(std::vector<double>{0, 1, 0, 1, 0}, {5})),
   });
   catalog = catalog.drop({"flag"});
   std::cout << "after set/drop streams: " << catalog.nstreams() << "\n";
 
-  pluss::signal::TabelizePolicy policy;
-  policy.align = pluss::signal::AlignPolicy::Inner;
-  policy.index_mode = pluss::signal::IndexMode::ByCaseLabel;
+  pluss::kindle::TabelizePolicy policy;
+  policy.align = pluss::kindle::AlignPolicy::Inner;
+  policy.index_mode = pluss::kindle::IndexMode::ByCaseLabel;
   policy.include_case_feature = true;
   policy.case_feature_name = "case";
-  policy.collision = pluss::signal::CollisionPolicy::Suffix;
+  policy.collision = pluss::kindle::CollisionPolicy::Suffix;
   const auto back_df = catalog.tabelize(policy);
   std::cout << "tabelize shape: [" << back_df.nrows() << " cs x " << back_df.nfeatures() << " feat]\n";
 
-  const auto save_path = std::filesystem::temp_directory_path() / "plussmic_signal_demo.csv";
+  const auto save_path = std::filesystem::temp_directory_path() / "plussmic_kindle_demo.csv";
   catalog.save_csv(save_path.string());
   std::cout << "saved csv: " << save_path.string() << "\n";
 
@@ -240,7 +240,7 @@ void demo_archive_methods(const pluss::table::DataFrame& base_df) {
       pluss::make_note(std::vector<std::string>{"batch_a", "batch_b"}, std::array<std::int64_t, 1>{2}));
   const pluss::table::Atlas atlas({f0, f1}, labels);
 
-  const auto archive = pluss::signal::Archive::signalize(atlas);
+  const auto archive = pluss::kindle::Archive::kindelize(atlas);
   std::cout << "archive depth: " << archive.depth()
             << ", has depth labels: " << archive.depth_labels().has_value() << "\n";
   std::cout << "archive:\n" << archive << "\n";
@@ -256,11 +256,11 @@ void demo_loader_entrypoints() {
   const auto csv_path = data_file("messy_data.csv").string();
   const auto bank_path = data_file("bank-full.csv").string();
 
-  const auto loaded_csv = pluss::signal::Catalog::load_csv(csv_path);
+  const auto loaded_csv = pluss::kindle::Catalog::load_csv(csv_path);
   std::cout << "load_csv rows: " << loaded_csv.count()
             << ", streams: " << loaded_csv.nstreams() << "\n";
 
-  const auto loaded_generic = pluss::signal::Catalog::load(
+  const auto loaded_generic = pluss::kindle::Catalog::load(
       "csv",
       csv_path,
       pluss::loader::config_from({
@@ -270,12 +270,12 @@ void demo_loader_entrypoints() {
 
   pluss::loader::ReadCsvOptions key_opts;
   key_opts.nrows = 32;
-  const auto keyed = pluss::signal::Catalog::load_csv_with_key(bank_path, "job", key_opts);
+  const auto keyed = pluss::kindle::Catalog::load_csv_with_key(bank_path, "job", key_opts);
   std::cout << "load_csv_with_key has(_case): " << keyed.has("_case")
             << ", rows: " << keyed.count() << "\n";
 
   try {
-    (void)pluss::signal::Catalog::from_json("{}");
+    (void)pluss::kindle::Catalog::from_json("{}");
   } catch (const std::exception& e) {
     std::cout << "from_json expected failure: " << e.what() << "\n";
   }
@@ -286,7 +286,7 @@ void demo_loader_entrypoints() {
 int main() {
   try {
     const auto df = make_base_frame();
-    const auto catalog = pluss::signal::Catalog::signalize(df);
+    const auto catalog = pluss::kindle::Catalog::kindelize(df);
 
     std::cout << "Base catalog streams: " << catalog.nstreams()
               << ", rows: " << catalog.count() << "\n";
@@ -295,7 +295,7 @@ int main() {
     demo_archive_methods(df);
     demo_loader_entrypoints();
   } catch (const std::exception& e) {
-    std::cerr << "signal_model_demo failed: " << e.what() << "\n";
+    std::cerr << "kindle_model_demo failed: " << e.what() << "\n";
     return 1;
   }
   return 0;

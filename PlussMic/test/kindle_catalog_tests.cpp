@@ -16,9 +16,9 @@
 
 namespace {
 
-using pluss::signal::Catalog;
-using pluss::signal::Stream;
-using pluss::signal::StreamKind;
+using pluss::kindle::Catalog;
+using pluss::kindle::Stream;
+using pluss::kindle::StreamKind;
 using pluss::table::DataFrame;
 
 [[noreturn]] void fail(std::string_view msg) {
@@ -49,7 +49,7 @@ std::filesystem::path data_file(std::string_view name) {
 }
 
 std::filesystem::path temp_csv_path(std::string_view stem) {
-  const auto dir = std::filesystem::temp_directory_path() / "plussmic_signal_tests";
+  const auto dir = std::filesystem::temp_directory_path() / "plussmic_kindle_tests";
   std::filesystem::create_directories(dir);
   const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
   return dir / (std::string(stem) + "_" + std::to_string(stamp) + ".csv");
@@ -109,7 +109,7 @@ DataFrame make_base_frame() {
 }
 
 Catalog make_base_catalog() {
-  return Catalog::signalize(make_base_frame());
+  return Catalog::kindelize(make_base_frame());
 }
 
 void test_stream_methods() {
@@ -119,7 +119,7 @@ void test_stream_methods() {
   expect(metric.defined(), "metric stream should be defined");
   expect(metric.kind() == StreamKind::Series, "metric should be Series stream");
   expect(metric.size() == 5, "metric stream size mismatch");
-  expect(metric.has_cases(), "metric should carry cases after signalize");
+  expect(metric.has_cases(), "metric should carry cases after kindelize");
   expect(metric.has_validity_mask(), "metric should carry validity mask");
 
   metric = metric.with_meta("source", "test");
@@ -147,7 +147,7 @@ void test_stream_methods() {
 
 void test_catalog_construction_and_selection() {
   const auto base = make_base_catalog();
-  using namespace pluss::signal::literals;
+  using namespace pluss::kindle::literals;
   const auto via_named = Catalog({
       "id"_k = base.stream("id"),
       "city"_k = base.stream("city"),
@@ -262,7 +262,7 @@ void test_catalog_aggregates_apply_text_merge() {
 }
 
 void test_catalog_mutation_tabelize_io() {
-  using namespace pluss::signal::literals;
+  using namespace pluss::kindle::literals;
   auto base = make_base_catalog();
 
   base = base.set_stream("id_plus", base.stream("id") + 1.0);
@@ -279,12 +279,12 @@ void test_catalog_mutation_tabelize_io() {
   expect(base.has("ones"), "set_streams should add ones");
   expect(!base.has("flag"), "drop should remove flag");
 
-  pluss::signal::TabelizePolicy policy;
-  policy.align = pluss::signal::AlignPolicy::Inner;
-  policy.index_mode = pluss::signal::IndexMode::ByCaseLabel;
+  pluss::kindle::TabelizePolicy policy;
+  policy.align = pluss::kindle::AlignPolicy::Inner;
+  policy.index_mode = pluss::kindle::IndexMode::ByCaseLabel;
   policy.include_case_feature = true;
   policy.case_feature_name = "case";
-  policy.collision = pluss::signal::CollisionPolicy::Suffix;
+  policy.collision = pluss::kindle::CollisionPolicy::Suffix;
   const auto frame = base.tabelize(policy);
   expect(frame.nrows() == 5, "tabelize row count mismatch");
   expect(frame.nfeatures() >= base.nstreams(), "tabelize feature count mismatch");
@@ -333,10 +333,10 @@ int main() {
     test_catalog_aggregates_apply_text_merge();
     test_catalog_mutation_tabelize_io();
   } catch (const std::exception& e) {
-    std::cerr << "[signal_catalog_tests] failure: " << e.what() << "\n";
+    std::cerr << "[kindle_catalog_tests] failure: " << e.what() << "\n";
     return 1;
   }
 
-  std::cout << "[signal_catalog_tests] all checks passed\n";
+  std::cout << "[kindle_catalog_tests] all checks passed\n";
   return 0;
 }

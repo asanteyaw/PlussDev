@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "CodeM/core/Errors.h"
-#include "signal/catalog.h"
+#include "kindle/catalog.h"
 
 namespace pluss::bundle {
 
@@ -309,24 +309,24 @@ Registry& Registry::set_slot_(std::string_view key, const Slot& value) {
   return *this;
 }
 
-pluss::signal::Catalog Registry::signalize() const {
+pluss::kindle::Catalog Registry::kindelize() const {
   PLUSS_CHECK(defined(), "Registry: undefined handle");
-  std::vector<std::pair<std::string, pluss::signal::Stream>> out;
+  std::vector<std::pair<std::string, pluss::kindle::Stream>> out;
   out.reserve(static_cast<std::size_t>(nslots()));
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
-    out.emplace_back(impl_ref_().keys_[i], impl_ref_().slots_[i].signalize());
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().slots_[i].kindelize());
   }
-  return pluss::signal::Catalog(std::move(out));
+  return pluss::kindle::Catalog(std::move(out));
 }
 
-Registry Registry::from_signal(const pluss::signal::Catalog& catalog) {
-  PLUSS_CHECK(catalog.defined(), "Registry::from_signal: catalog undefined");
+Registry Registry::from_kindle(const pluss::kindle::Catalog& catalog) {
+  PLUSS_CHECK(catalog.defined(), "Registry::from_kindle: catalog undefined");
   std::vector<std::pair<std::string, Slot>> out;
   out.reserve(static_cast<std::size_t>(catalog.nstreams()));
   const auto streams = catalog.streams();
   const auto& names = catalog.keys();
   for (std::size_t i = 0; i < names.size(); ++i) {
-    out.emplace_back(names[i], Slot::from_signal(streams[i]));
+    out.emplace_back(names[i], Slot::from_kindle(streams[i]));
   }
   return Registry(std::move(out));
 }

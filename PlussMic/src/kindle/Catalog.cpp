@@ -1,4 +1,4 @@
-#include "signal/catalog.h"
+#include "kindle/catalog.h"
 
 #include <algorithm>
 #include <array>
@@ -21,12 +21,13 @@
 
 #include "CodeM/core/Errors.h"
 #include "loader/Config.h"
+#include "loader/Loader.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/coden/note_factory.h"
-#include "signal/display/Display.h"
+#include "kindle/display/Display.h"
 #include "table/DataFrame.h"
 
-namespace pluss::signal {
+namespace pluss::kindle {
 
 namespace {
 
@@ -361,8 +362,8 @@ Catalog::~Catalog() = default;
 
 Catalog::Catalog(pluss::msharp::intrusive_ptr<detail::CatalogImpl> impl) : impl_(std::move(impl)) {}
 
-Catalog Catalog::signalize(const pluss::table::DataFrame& frame, const SignalizePolicy& policy) {
-  PLUSS_CHECK(frame.defined(), "Catalog::signalize requires a defined DataFrame");
+Catalog Catalog::kindelize(const pluss::table::DataFrame& frame, const KindelizePolicy& policy) {
+  PLUSS_CHECK(frame.defined(), "Catalog::kindelize requires a defined DataFrame");
   std::vector<std::pair<std::string, Stream>> out;
   out.reserve(static_cast<std::size_t>(frame.nfeatures()) + (policy.materialize_case_stream ? 1u : 0u));
 
@@ -377,52 +378,58 @@ Catalog Catalog::signalize(const pluss::table::DataFrame& frame, const Signalize
   if (policy.materialize_case_stream) {
     PLUSS_CHECK(frame.feature_names().end() ==
                     std::find(frame.feature_names().begin(), frame.feature_names().end(), policy.case_stream_name),
-                "Catalog::signalize: case stream key collides with existing feature '" + policy.case_stream_name + "'");
+                "Catalog::kindelize: case stream key collides with existing feature '" + policy.case_stream_name + "'");
     out.emplace_back(policy.case_stream_name, Stream::from_thread(case_axis));
   }
   return Catalog(std::move(out));
 }
 
 Catalog Catalog::load(std::string_view source_type, std::string_view filepath) {
-  return signalize(pluss::table::DataFrame::load(source_type, filepath));
+  return load(source_type, filepath, pluss::loader::Config{});
 }
 
 Catalog Catalog::load(std::string_view source_type,
                       std::string_view filepath,
                       const pluss::loader::Config& config) {
-  return signalize(pluss::table::DataFrame::load(source_type, filepath, config));
+  auto loaded = pluss::loader::load(source_type, filepath, config);
+  if (loaded.is_frame()) {
+    return kindelize(loaded.dataframe());
+  }
+  PLUSS_FAIL("Catalog::load: requested source returned a workbook. Use pluss::loader::load(...) for multi-sheet loads");
 }
 
 Catalog Catalog::load_csv(std::string_view filepath) {
-  return signalize(pluss::table::DataFrame::load_csv(filepath));
+  pluss::loader::ReadCsvOptions options;
+  return kindelize(pluss::loader::load_csv(filepath, options));
 }
 
 Catalog Catalog::load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options) {
-  return signalize(pluss::table::DataFrame::load_csv(filepath, options));
+  return kindelize(pluss::loader::load_csv(filepath, options));
 }
 
 Catalog Catalog::load_excel(std::string_view filepath) {
-  return signalize(pluss::table::DataFrame::load_excel(filepath));
+  pluss::loader::ReadExcelOptions options;
+  return kindelize(pluss::loader::load_excel(filepath, options));
 }
 
 Catalog Catalog::load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options) {
-  return signalize(pluss::table::DataFrame::load_excel(filepath, options));
+  return kindelize(pluss::loader::load_excel(filepath, options));
 }
 
 Catalog Catalog::load_csv_with_key(std::string_view filepath,
                                    std::string_view key_field,
                                    const pluss::loader::ReadCsvOptions& options) {
-  auto frame = pluss::table::DataFrame::load_csv(filepath, options);
+  auto frame = pluss::loader::load_csv(filepath, options);
   const auto key = trim_copy(key_field);
   PLUSS_CHECK(!key.empty(), "Catalog::load_csv_with_key: key field cannot be empty");
   PLUSS_CHECK(frame.has_feature(key),
               "Catalog::load_csv_with_key: key field not found '" + key + "'");
   frame = frame.set_cases(key, false);
-  SignalizePolicy policy;
+  KindelizePolicy policy;
   policy.attach_cases_to_streams = true;
   policy.materialize_case_stream = true;
   policy.case_stream_name = "_case";
-  return signalize(frame, policy);
+  return kindelize(frame, policy);
 }
 
 Catalog Catalog::from_json(std::string_view json_text) {
@@ -765,7 +772,7 @@ Catalog Catalog::merge(const Catalog& other, std::string_view on, std::string_vi
   const auto right = other.tabelize();
   PLUSS_CHECK(left.has_feature(key), "Catalog::merge: left key not found '" + key + "'");
   PLUSS_CHECK(right.has_feature(key), "Catalog::merge: right key not found '" + key + "'");
-  return signalize(left.stitch_on(key, right, key));
+  return kindelize(left.stitch_on(key, right, key));
 }
 
 Catalog Catalog::apply(std::string_view field, const std::function<Stream(const Stream&)>& func) const {
@@ -1227,7 +1234,7 @@ void Catalog::display() const {
 }
 
 void Catalog::info() const {
-  tabelize().info();
+  display::print(std::cout, *this);
 }
 
 void Catalog::save_csv(std::string_view filename) const {
@@ -1275,4 +1282,4 @@ std::ostream& operator<<(std::ostream& os, const Catalog& catalog) {
   return os;
 }
 
-} // namespace pluss::signal
+} // namespace pluss::kindle

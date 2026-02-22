@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "CodeM/core/Errors.h"
-#include "signal/Archive.h"
+#include "kindle/Archive.h"
 #include "table/display/Display.h"
 
 namespace pluss::table {
@@ -341,13 +341,13 @@ DataFrame Atlas::aggregate_over_frames(
   return fn(src.frames_);
 }
 
-pluss::signal::Archive Atlas::signalize() const {
-  return signalize(pluss::signal::SignalizePolicy{});
+pluss::kindle::Archive Atlas::kindelize() const {
+  return kindelize(pluss::kindle::KindelizePolicy{});
 }
 
-pluss::signal::Archive Atlas::signalize(const pluss::signal::SignalizePolicy& policy) const {
-  PLUSS_CHECK(defined(), "Atlas::signalize requires a defined Atlas");
-  return pluss::signal::Archive::signalize(*this, policy);
+pluss::kindle::Archive Atlas::kindelize(const pluss::kindle::KindelizePolicy& policy) const {
+  PLUSS_CHECK(defined(), "Atlas::kindelize requires a defined Atlas");
+  return pluss::kindle::Archive::kindelize(*this, policy);
 }
 
 std::string Atlas::to_string(const display::DisplayOptions& options) const {

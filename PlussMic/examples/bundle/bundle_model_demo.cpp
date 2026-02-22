@@ -46,8 +46,8 @@ void demo_slot_methods() {
             << ", concat size: " << concatenated.size() << "\n";
   std::cout << "type_counts[int64]: " << type_counts.at("int64") << "\n";
 
-  const auto stream = ids.signalize();
-  const auto back_slot = pluss::bundle::Slot::from_signal(stream);
+  const auto stream = ids.kindelize();
+  const auto back_slot = pluss::bundle::Slot::from_kindle(stream);
   std::cout << "slot -> stream -> slot size: " << back_slot.size() << "\n";
 
   const pluss::bundle::Slot hetero({
@@ -56,9 +56,9 @@ void demo_slot_methods() {
       true,
   });
   try {
-    (void)hetero.signalize();
+    (void)hetero.kindelize();
   } catch (const std::exception& e) {
-    std::cout << "expected heterogeneous signalize failure: " << e.what() << "\n";
+    std::cout << "expected heterogeneous kindelize failure: " << e.what() << "\n";
   }
 
   std::cout << "slot json:\n" << ids.to_json() << "\n";
@@ -151,8 +151,8 @@ void demo_registry_methods() {
                            {"ids", ids},
                            {"city", cities},
                        })
-                           .signalize();
-  const auto from_catalog = pluss::bundle::Registry::from_signal(catalog);
+                           .kindelize();
+  const auto from_catalog = pluss::bundle::Registry::from_kindle(catalog);
   std::cout << "registry -> catalog -> registry nslots: " << from_catalog.nslots() << "\n";
   std::cout << "registry json:\n" << registry.to_json() << "\n";
 }
@@ -195,8 +195,8 @@ void demo_aisle_methods() {
             << ", applied depth: " << applied_slot.depth()
             << ", concat depth: " << concatenated.depth() << "\n";
 
-  const auto archive = aisle.signalize();
-  const auto back = pluss::bundle::Aisle::from_signal(archive);
+  const auto archive = aisle.kindelize();
+  const auto back = pluss::bundle::Aisle::from_kindle(archive);
   std::cout << "aisle -> archive -> aisle depth: " << back.depth()
             << ", labels: " << (back.labels().has_value() ? "yes" : "no") << "\n";
   std::cout << "aisle json:\n" << aisle.to_json() << "\n";

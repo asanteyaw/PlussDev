@@ -25,7 +25,7 @@
 #include "CodeM/core/Half.h"
 #include "loader/CsvLoader.h"
 #include "loader/Loader.h"
-#include "signal/catalog.h"
+#include "kindle/catalog.h"
 #include "table/display/Display.h"
 
 namespace pluss::table {
@@ -1746,13 +1746,13 @@ DataFrame DataFrame::load_parquet(std::string_view filepath,
   return pluss::loader::load_parquet(filepath, config_entries);
 }
 
-pluss::signal::Catalog DataFrame::signalize() const {
-  return signalize(pluss::signal::SignalizePolicy{});
+pluss::kindle::Catalog DataFrame::kindelize() const {
+  return kindelize(pluss::kindle::KindelizePolicy{});
 }
 
-pluss::signal::Catalog DataFrame::signalize(const pluss::signal::SignalizePolicy& policy) const {
-  PLUSS_CHECK(defined(), "DataFrame::signalize requires a defined DataFrame");
-  return pluss::signal::Catalog::signalize(*this, policy);
+pluss::kindle::Catalog DataFrame::kindelize(const pluss::kindle::KindelizePolicy& policy) const {
+  PLUSS_CHECK(defined(), "DataFrame::kindelize requires a defined DataFrame");
+  return pluss::kindle::Catalog::kindelize(*this, policy);
 }
 
 bool DataFrame::defined() const noexcept { return static_cast<bool>(impl_); }

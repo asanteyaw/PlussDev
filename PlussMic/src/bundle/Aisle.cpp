@@ -6,7 +6,7 @@
 #include <utility>
 
 #include "CodeM/core/Errors.h"
-#include "signal/Archive.h"
+#include "kindle/Archive.h"
 
 namespace pluss::bundle {
 
@@ -153,27 +153,27 @@ Aisle Aisle::concat_depth(const Aisle& other) const {
   return Aisle(std::move(out), std::move(merged_labels));
 }
 
-pluss::signal::Archive Aisle::signalize() const {
+pluss::kindle::Archive Aisle::kindelize() const {
   PLUSS_CHECK(defined(), "Aisle: undefined handle");
-  std::vector<pluss::signal::Catalog> out;
+  std::vector<pluss::kindle::Catalog> out;
   out.reserve(static_cast<std::size_t>(depth()));
   for (std::int64_t i = 0; i < depth(); ++i) {
-    out.push_back(registry(i).signalize());
+    out.push_back(registry(i).kindelize());
   }
-  std::optional<pluss::signal::Stream> depth_labels = std::nullopt;
-  if (labels().has_value()) depth_labels = labels()->signalize();
-  return pluss::signal::Archive(std::move(out), std::move(depth_labels));
+  std::optional<pluss::kindle::Stream> depth_labels = std::nullopt;
+  if (labels().has_value()) depth_labels = labels()->kindelize();
+  return pluss::kindle::Archive(std::move(out), std::move(depth_labels));
 }
 
-Aisle Aisle::from_signal(const pluss::signal::Archive& archive) {
-  PLUSS_CHECK(archive.defined(), "Aisle::from_signal: archive undefined");
+Aisle Aisle::from_kindle(const pluss::kindle::Archive& archive) {
+  PLUSS_CHECK(archive.defined(), "Aisle::from_kindle: archive undefined");
   std::vector<Registry> out;
   out.reserve(static_cast<std::size_t>(archive.depth()));
   for (std::int64_t i = 0; i < archive.depth(); ++i) {
-    out.push_back(Registry::from_signal(archive.catalog(i)));
+    out.push_back(Registry::from_kindle(archive.catalog(i)));
   }
   std::optional<Slot> labels = std::nullopt;
-  if (archive.depth_labels().has_value()) labels = Slot::from_signal(*archive.depth_labels());
+  if (archive.depth_labels().has_value()) labels = Slot::from_kindle(*archive.depth_labels());
   return Aisle(std::move(out), std::move(labels));
 }
 

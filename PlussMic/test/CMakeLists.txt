@@ -6,21 +6,21 @@ get_filename_component(PLUSSMIC_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLU
 add_executable(plussmic_table_csv_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/table_csv_parser_tests.cpp
 )
-add_executable(plussmic_signal_catalog_tests
-  ${CMAKE_CURRENT_SOURCE_DIR}/signal_catalog_tests.cpp
+add_executable(plussmic_kindle_catalog_tests
+  ${CMAKE_CURRENT_SOURCE_DIR}/kindle_catalog_tests.cpp
 )
 add_executable(plussmic_bundle_model_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/bundle_model_tests.cpp
 )
 
 target_link_libraries(plussmic_table_csv_tests PRIVATE PlussMic)
-target_link_libraries(plussmic_signal_catalog_tests PRIVATE PlussMic)
+target_link_libraries(plussmic_kindle_catalog_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_bundle_model_tests PRIVATE PlussMic)
 target_compile_definitions(plussmic_table_csv_tests PRIVATE
   FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
-target_compile_definitions(plussmic_signal_catalog_tests PRIVATE
+target_compile_definitions(plussmic_kindle_catalog_tests PRIVATE
   FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )

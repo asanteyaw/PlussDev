@@ -1,4 +1,4 @@
-#include "signal/display/Display.h"
+#include "kindle/display/Display.h"
 
 #include <algorithm>
 #include <ostream>
@@ -11,12 +11,12 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
-#include "signal/Archive.h"
-#include "signal/Stream.h"
-#include "signal/catalog.h"
+#include "kindle/Archive.h"
+#include "kindle/Stream.h"
+#include "kindle/catalog.h"
 #include "table/display/Display.h"
 
-namespace pluss::signal::display {
+namespace pluss::kindle::display {
 
 namespace {
 
@@ -279,4 +279,4 @@ void print(std::ostream& os, const Archive& archive, const DisplayOptions& optio
   os << render(archive, options) << '\n';
 }
 
-} // namespace pluss::signal::display
+} // namespace pluss::kindle::display

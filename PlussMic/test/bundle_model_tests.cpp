@@ -85,17 +85,17 @@ void test_slot_methods() {
   expect(concat.size() == 5, "concat size mismatch");
   expect(counts.at("int64") == 6, "type_counts[int64] mismatch");
 
-  const auto stream = ids.signalize();
-  expect(stream.size() == ids.size(), "Slot::signalize size mismatch");
-  expect(stream.kind() == pluss::signal::StreamKind::Series, "Slot::signalize kind mismatch");
-  const auto roundtrip = Slot::from_signal(stream);
-  expect(roundtrip.size() == ids.size(), "Slot::from_signal size mismatch");
+  const auto stream = ids.kindelize();
+  expect(stream.size() == ids.size(), "Slot::kindelize size mismatch");
+  expect(stream.kind() == pluss::kindle::StreamKind::Series, "Slot::kindelize kind mismatch");
+  const auto roundtrip = Slot::from_kindle(stream);
+  expect(roundtrip.size() == ids.size(), "Slot::from_kindle size mismatch");
 
   const Slot hetero({
       std::int64_t{1},
       std::string("x"),
   });
-  expect_throw([&]() { (void)hetero.signalize(); }, "heterogeneous slot signalize should throw");
+  expect_throw([&]() { (void)hetero.kindelize(); }, "heterogeneous slot kindelize should throw");
 }
 
 void test_registry_methods() {
@@ -191,16 +191,16 @@ void test_registry_methods() {
       {"ids", ids},
       {"city", city},
   });
-  const auto cat = clean.signalize();
-  expect(cat.nstreams() == 2, "Registry::signalize stream count mismatch");
-  const auto from_cat = Registry::from_signal(cat);
-  expect(from_cat.nslots() == 2, "Registry::from_signal slot count mismatch");
+  const auto cat = clean.kindelize();
+  expect(cat.nstreams() == 2, "Registry::kindelize stream count mismatch");
+  const auto from_cat = Registry::from_kindle(cat);
+  expect(from_cat.nslots() == 2, "Registry::from_kindle slot count mismatch");
 
   const auto mixed = Registry({
       {"ids", ids},
       {"mixed", Slot({std::int64_t{7}, std::string("bad")})},
   });
-  expect_throw([&]() { (void)mixed.signalize(); }, "Registry::signalize should throw on heterogeneous slot");
+  expect_throw([&]() { (void)mixed.kindelize(); }, "Registry::kindelize should throw on heterogeneous slot");
 }
 
 void test_aisle_methods() {
@@ -242,10 +242,10 @@ void test_aisle_methods() {
   expect(concat.labels().has_value(), "concat_depth should keep labels when both inputs labeled");
   expect(concat.labels()->size() == 4, "concat_depth labels size mismatch");
 
-  const auto archive = aisle.signalize();
-  expect(archive.depth() == 2, "Aisle::signalize archive depth mismatch");
-  const auto back = Aisle::from_signal(archive);
-  expect(back.depth() == 2, "Aisle::from_signal depth mismatch");
+  const auto archive = aisle.kindelize();
+  expect(archive.depth() == 2, "Aisle::kindelize archive depth mismatch");
+  const auto back = Aisle::from_kindle(archive);
+  expect(back.depth() == 2, "Aisle::from_kindle depth mismatch");
 
   expect(!aisle.to_string().empty(), "Aisle::to_string should not be empty");
   expect(!aisle.to_json().empty(), "Aisle::to_json should not be empty");

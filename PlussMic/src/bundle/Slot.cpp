@@ -13,7 +13,7 @@
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/coden/note_factory.h"
-#include "signal/Stream.h"
+#include "kindle/Stream.h"
 
 namespace pluss::bundle {
 
@@ -221,9 +221,9 @@ std::unordered_map<std::string, std::int64_t> Slot::type_counts() const {
   return out;
 }
 
-pluss::signal::Stream Slot::signalize() const {
+pluss::kindle::Stream Slot::kindelize() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
-  if (empty()) return pluss::signal::Stream(pluss::make_note(std::vector<std::string>{}));
+  if (empty()) return pluss::kindle::Stream(pluss::make_note(std::vector<std::string>{}));
 
   if (all_type<bool>(values())) {
     std::vector<bool> b;
@@ -233,44 +233,44 @@ pluss::signal::Stream Slot::signalize() const {
     auto s = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
     auto* p = reinterpret_cast<bool*>(s.raw_data());
     for (std::int64_t i = 0; i < n; ++i) p[i] = b[static_cast<std::size_t>(i)];
-    return pluss::signal::Stream(s);
+    return pluss::kindle::Stream(s);
   }
   if (all_type<std::int64_t>(values())) {
     std::vector<std::int64_t> x;
     x.reserve(values().size());
     for (const auto& v : values()) x.push_back(std::get<std::int64_t>(v));
-    return pluss::signal::Stream(pluss::make_series(x, {static_cast<std::int64_t>(x.size())}));
+    return pluss::kindle::Stream(pluss::make_series(x, {static_cast<std::int64_t>(x.size())}));
   }
   if (all_type<double>(values())) {
     std::vector<double> x;
     x.reserve(values().size());
     for (const auto& v : values()) x.push_back(std::get<double>(v));
-    return pluss::signal::Stream(pluss::make_series(x, {static_cast<std::int64_t>(x.size())}));
+    return pluss::kindle::Stream(pluss::make_series(x, {static_cast<std::int64_t>(x.size())}));
   }
   if (all_type<std::string>(values())) {
     std::vector<std::string> x;
     x.reserve(values().size());
     for (const auto& v : values()) x.push_back(std::get<std::string>(v));
-    return pluss::signal::Stream(pluss::make_note(x));
+    return pluss::kindle::Stream(pluss::make_note(x));
   }
   if (values().size() == 1) {
     const auto& v = values().front();
-    if (std::holds_alternative<pluss::Series>(v)) return pluss::signal::Stream(std::get<pluss::Series>(v));
-    if (std::holds_alternative<pluss::Note>(v)) return pluss::signal::Stream(std::get<pluss::Note>(v));
-    if (std::holds_alternative<pluss::Timeline>(v)) return pluss::signal::Stream(std::get<pluss::Timeline>(v));
-    if (std::holds_alternative<pluss::TimeIndex>(v)) return pluss::signal::Stream(std::get<pluss::TimeIndex>(v));
+    if (std::holds_alternative<pluss::Series>(v)) return pluss::kindle::Stream(std::get<pluss::Series>(v));
+    if (std::holds_alternative<pluss::Note>(v)) return pluss::kindle::Stream(std::get<pluss::Note>(v));
+    if (std::holds_alternative<pluss::Timeline>(v)) return pluss::kindle::Stream(std::get<pluss::Timeline>(v));
+    if (std::holds_alternative<pluss::TimeIndex>(v)) return pluss::kindle::Stream(std::get<pluss::TimeIndex>(v));
   }
 
-  PLUSS_FAIL("Slot::signalize: heterogeneous slot is not stream-compatible");
+  PLUSS_FAIL("Slot::kindelize: heterogeneous slot is not stream-compatible");
 }
 
-Slot Slot::from_signal(const pluss::signal::Stream& stream) {
-  PLUSS_CHECK(stream.defined(), "Slot::from_signal: stream undefined");
+Slot Slot::from_kindle(const pluss::kindle::Stream& stream) {
+  PLUSS_CHECK(stream.defined(), "Slot::from_kindle: stream undefined");
   const auto n = stream.size();
   std::vector<Value> out;
   out.reserve(static_cast<std::size_t>(n));
   switch (stream.kind()) {
-    case pluss::signal::StreamKind::Series: {
+    case pluss::kindle::StreamKind::Series: {
       const auto s = stream.as_series();
       if (s.scalar_type() == pluss::codem::ScalarType::Bool) {
         const auto x = s.to_vec<bool>();
@@ -284,17 +284,17 @@ Slot Slot::from_signal(const pluss::signal::Stream& stream) {
       }
       break;
     }
-    case pluss::signal::StreamKind::Note: {
+    case pluss::kindle::StreamKind::Note: {
       const auto& nte = stream.as_note();
       for (std::int64_t i = 0; i < n; ++i) out.push_back(std::string(nte.at(i)));
       break;
     }
-    case pluss::signal::StreamKind::Timeline: {
+    case pluss::kindle::StreamKind::Timeline: {
       const auto x = stream.as_timeline().to_epoch_nanos_vector();
       for (auto v : x) out.push_back(v);
       break;
     }
-    case pluss::signal::StreamKind::TimeIndex: {
+    case pluss::kindle::StreamKind::TimeIndex: {
       const auto x = stream.as_timeindex().timeline().to_epoch_nanos_vector();
       for (auto v : x) out.push_back(v);
       break;

@@ -4,13 +4,13 @@
 #include <iosfwd>
 #include <string>
 
-namespace pluss::signal {
+namespace pluss::kindle {
 class Stream;
 class Catalog;
 class Archive;
 }
 
-namespace pluss::signal::display {
+namespace pluss::kindle::display {
 
 struct DisplayOptions {
   std::int64_t terminal_width{0};   // <= 0 => detect from terminal
@@ -29,5 +29,5 @@ void print(std::ostream& os, const Stream& stream, const DisplayOptions& options
 void print(std::ostream& os, const Catalog& catalog, const DisplayOptions& options = {});
 void print(std::ostream& os, const Archive& archive, const DisplayOptions& options = {});
 
-} // namespace pluss::signal::display
+} // namespace pluss::kindle::display
 

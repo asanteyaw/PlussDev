@@ -11,7 +11,7 @@
 #include "MSharp/IntrusivePtr.h"
 #include "table/Thread.h"
 
-namespace pluss::signal {
+namespace pluss::kindle {
 
 namespace detail {
 class StreamImpl;
@@ -169,4 +169,4 @@ Stream operator>=(const Stream& lhs, double rhs);
 Stream operator>=(double lhs, const Stream& rhs);
 Stream operator>=(const Stream& lhs, const Stream& rhs);
 
-} // namespace pluss::signal
+} // namespace pluss::kindle

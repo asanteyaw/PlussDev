@@ -623,8 +623,8 @@ As new families/methods are added, update this guide in-place so end users alway
 Conversion:
 
 ```cpp
-auto cat = df.signalize();      // DataFrame -> Catalog
-auto arc = atlas.signalize();   // Atlas -> Archive
+auto cat = df.kindelize();      // DataFrame -> Catalog
+auto arc = atlas.kindelize();   // Atlas -> Archive
 
 auto back_df = cat.tabelize();      // Catalog -> DataFrame
 auto back_atlas = arc.tabelize();   // Archive -> Atlas (frame-by-frame tabelize)
@@ -793,7 +793,7 @@ auto cat_xlsx = pluss::signal::Catalog::load_excel("data.xlsx");
 cat_csv.save_csv("out.csv");
 ```
 
-`Catalog::load`, `Catalog::load_csv`, `Catalog::load_excel`, and `Catalog::save_csv` delegate to `DataFrame` I/O, then convert via `signalize()` / `tabelize()`.
+`Catalog::load`, `Catalog::load_csv`, `Catalog::load_excel`, and `Catalog::save_csv` delegate to `DataFrame` I/O, then convert via `kindelize()` / `tabelize()`.
 
 ## 14. Bundle Model (Slot -> Registry -> Aisle)
 
@@ -831,6 +831,6 @@ Aisle a({r});
 
 Bridge policy:
 
-- `Registry::signalize()` exists but throws if a slot is not stream-compatible.
-- `Aisle::signalize()` delegates through each registry.
+- `Registry::kindelize()` exists but throws if a slot is not stream-compatible.
+- `Aisle::kindelize()` delegates through each registry.
 - No general `bundelize()` from table/signal: heterogeneous slots are not reliably rectangularizable without lossy coercion.

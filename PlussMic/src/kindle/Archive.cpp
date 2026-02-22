@@ -1,14 +1,14 @@
-#include "signal/Archive.h"
+#include "kindle/Archive.h"
 
 #include <ostream>
 #include <sstream>
 #include <utility>
 
 #include "CodeM/core/Errors.h"
-#include "signal/display/Display.h"
+#include "kindle/display/Display.h"
 #include "table/Atlas.h"
 
-namespace pluss::signal {
+namespace pluss::kindle {
 
 namespace detail {
 class ArchiveImpl final : public pluss::msharp::RefCounted {
@@ -39,12 +39,12 @@ Archive::~Archive() = default;
 
 Archive::Archive(pluss::msharp::intrusive_ptr<detail::ArchiveImpl> impl) : impl_(std::move(impl)) {}
 
-Archive Archive::signalize(const pluss::table::Atlas& atlas, const SignalizePolicy& policy) {
-  PLUSS_CHECK(atlas.defined(), "Archive::signalize requires a defined Atlas");
+Archive Archive::kindelize(const pluss::table::Atlas& atlas, const KindelizePolicy& policy) {
+  PLUSS_CHECK(atlas.defined(), "Archive::kindelize requires a defined Atlas");
   std::vector<Catalog> catalogs;
   catalogs.reserve(static_cast<std::size_t>(atlas.depth()));
   for (std::int64_t i = 0; i < atlas.depth(); ++i) {
-    catalogs.push_back(Catalog::signalize(atlas.frame(i), policy));
+    catalogs.push_back(Catalog::kindelize(atlas.frame(i), policy));
   }
 
   std::optional<Stream> depth_labels = std::nullopt;
@@ -111,4 +111,4 @@ std::ostream& operator<<(std::ostream& os, const Archive& archive) {
   return os;
 }
 
-} // namespace pluss::signal
+} // namespace pluss::kindle

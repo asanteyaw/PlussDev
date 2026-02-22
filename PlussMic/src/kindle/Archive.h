@@ -6,13 +6,13 @@
 #include <vector>
 
 #include "MSharp/IntrusivePtr.h"
-#include "signal/catalog.h"
+#include "kindle/catalog.h"
 
 namespace pluss::table {
 class Atlas;
 }
 
-namespace pluss::signal {
+namespace pluss::kindle {
 
 namespace detail {
 class ArchiveImpl;
@@ -29,8 +29,8 @@ public:
   Archive& operator=(Archive&& other) noexcept;
   ~Archive();
 
-  static Archive signalize(const pluss::table::Atlas& atlas,
-                           const SignalizePolicy& policy = {});
+  static Archive kindelize(const pluss::table::Atlas& atlas,
+                           const KindelizePolicy& policy = {});
 
   bool defined() const noexcept;
   bool unique() const noexcept;
@@ -56,4 +56,4 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const Archive& archive);
 
-} // namespace pluss::signal
+} // namespace pluss::kindle
