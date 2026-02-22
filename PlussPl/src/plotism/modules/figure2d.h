@@ -14,6 +14,7 @@
 
 #include <fmt/format.h>
 
+#include "pluss/codem/series_factory.h"
 #include "pluss/plotism/modules/backend/default_backend.h"
 #include "pluss/plotism/modules/core.h"
 #include "pluss/plotism/modules/detail/show_helpers.h"
@@ -221,19 +222,19 @@ public:
     if (bins <= 0) {
       throw std::invalid_argument("plotism::Figure2D::add_hist: bins must be > 0");
     }
-    std::vector<double> finite;
-    finite.reserve(values.size());
-    for (const auto v : values) {
-      if (std::isfinite(v)) {
-        finite.push_back(v);
-      }
+    if (values.empty()) {
+      throw std::invalid_argument("plotism::Figure2D::add_hist: values contain no finite points");
     }
+
+    const auto value_series = pluss::make_series(values, {static_cast<std::int64_t>(values.size())});
+    const auto finite_series = value_series.masked_select(value_series.isfinite());
+    const auto finite = finite_series.to_vec<double>();
     if (finite.empty()) {
       throw std::invalid_argument("plotism::Figure2D::add_hist: values contain no finite points");
     }
-    const auto [min_it, max_it] = std::minmax_element(finite.begin(), finite.end());
-    const double min_v = *min_it;
-    const double max_v = *max_it;
+
+    const double min_v = finite_series.amin().item<double>();
+    const double max_v = finite_series.amax().item<double>();
     const double span = max_v - min_v;
     const double step = (span == 0.0) ? 1.0 : (span / static_cast<double>(bins));
 
@@ -247,18 +248,15 @@ public:
       x[static_cast<std::size_t>(i)] = left + 0.5 * step;
       labels.push_back(fmt::format("[{:.6g},{:.6g})", left, right));
     }
-    for (const auto v : finite) {
-      std::int64_t idx = 0;
-      if (span != 0.0) {
-        idx = static_cast<std::int64_t>((v - min_v) / step);
-        if (idx >= bins) {
-          idx = bins - 1;
-        }
-        if (idx < 0) {
-          idx = 0;
-        }
+
+    if (span == 0.0) {
+      y[0] = static_cast<double>(finite.size());
+    } else {
+      const auto counts = finite_series.histc(bins, min_v, max_v).to_vec<double>();
+      if (counts.size() != y.size()) {
+        throw std::runtime_error("plotism::Figure2D::add_hist: unexpected histc result size");
       }
-      y[static_cast<std::size_t>(idx)] += 1.0;
+      y = counts;
     }
 
     Trace2D t;

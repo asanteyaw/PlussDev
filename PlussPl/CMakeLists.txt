@@ -10,6 +10,9 @@ add_library(PlussPl INTERFACE)
 target_include_directories(PlussPl INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../PlussQit/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../PlussQit/src
+    ${CMAKE_BINARY_DIR}/generated
     ${CMAKE_CURRENT_SOURCE_DIR}/../ExLibs/fmt/include
 )
 
