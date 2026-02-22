@@ -181,8 +181,24 @@ void test_catalog_construction_and_selection() {
 
   const auto filt = base.filter(bool_mask({true, false, true, true, false}));
   const auto masked = base.masked_select(bool_mask({true, false, true, true, false}));
+  const auto where = base.where(bool_mask({true, false, true, true, false}));
   expect(filt.count() == 3, "filter count mismatch");
   expect(masked.count() == 3, "masked_select count mismatch");
+  expect(where.count() == 3, "where count mismatch");
+
+  const auto taken = base.take(std::vector<std::int64_t>{0, 2, 4});
+  expect(taken.count() == 3, "take count mismatch");
+
+  const auto sampled_a = base.sample(2, 42);
+  const auto sampled_b = base.sample(2, 42);
+  expect(sampled_a.stream("id").as_series().to_vec<std::int64_t>()
+             == sampled_b.stream("id").as_series().to_vec<std::int64_t>(),
+         "sample with same seed should be deterministic");
+
+  const auto queried = base.query([](const Catalog& c) {
+    return (c.stream("id") > 2.0).as_series();
+  });
+  expect(queried.count() == 3, "query count mismatch");
 
   const auto selected = base.select({"id", "city"});
   const auto dropped = base.drop(std::vector<std::string>{"time_index"});
@@ -210,8 +226,26 @@ void test_catalog_sort_group_missing() {
 
   const auto filled = base.fillna(0.0, {"metric"});
   const auto dropped = base.dropna({"metric"});
+  const auto ffilled = base.ffill({"metric"});
+  const auto bfilled = base.bfill({"metric"});
+  const auto nulls = base.isnull({"metric"});
+  const auto not_nulls = base.notnull({"metric"});
   expect(filled.count() == 5, "fillna should not change row count");
   expect(dropped.count() == 3, "dropna(metric) should drop null rows");
+  expect(ffilled.count() == 5, "ffill should preserve row count");
+  expect(bfilled.count() == 5, "bfill should preserve row count");
+  expect(nulls.stream("metric").kind() == StreamKind::Series, "isnull should return Series stream");
+  expect(not_nulls.stream("metric").kind() == StreamKind::Series, "notnull should return Series stream");
+
+  const auto id_as_note = base.cast_note({"id"});
+  const auto ts_as_series = base.cast_series({"timestamp"}, pluss::codem::ScalarType::Int64);
+  const auto ts_as_ti = base.cast_timeindex({"timestamp"});
+  const auto id_as_f64 = base.astype({"id"}, pluss::codem::ScalarType::Float64);
+  expect(id_as_note.stream("id").kind() == StreamKind::Note, "cast_note(id) kind mismatch");
+  expect(ts_as_series.stream("timestamp").kind() == StreamKind::Series, "cast_series(timestamp) kind mismatch");
+  expect(ts_as_ti.stream("timestamp").kind() == StreamKind::TimeIndex, "cast_timeindex(timestamp) kind mismatch");
+  expect(id_as_f64.stream("id").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
+         "astype(id,float64) scalar type mismatch");
 }
 
 void test_catalog_aggregates_apply_text_merge() {
@@ -233,6 +267,12 @@ void test_catalog_aggregates_apply_text_merge() {
   const auto applied = base.apply("id", [](const Stream& s) { return s + 10.0; });
   const auto applied_values = applied.stream("id").as_series().to_vec<std::int64_t>();
   expect(applied_values[0] == 13, "apply should transform target field");
+
+  const auto transformed_all = base.transform([](const Stream& s) { return s; });
+  const auto transformed_one = base.transform("id", [](const Stream& s) { return s + 1.0; });
+  expect(transformed_all.count() == base.count(), "transform(all) should preserve row count");
+  expect(transformed_one.stream("id").as_series().to_vec<std::int64_t>()[0] == 4,
+         "transform(field) should transform target field");
 
   base.apply_("id", [](const Stream& s) { return s - 1.0; });
   expect(base.stream("id").as_series().to_vec<std::int64_t>()[0] == 2, "apply_ should mutate target field");
@@ -335,6 +375,35 @@ void test_archive_to_table_bridge() {
   const pluss::table::Atlas atlas({f0, f1}, labels);
 
   const auto archive = pluss::kindle::Archive::kindelize(atlas);
+  expect(archive.iloc(0).nstreams() == 6, "Archive::iloc stream count mismatch");
+  expect(archive.loc("batch_b").nstreams() == 6, "Archive::loc(string) stream count mismatch");
+  expect(archive.head(1).depth() == 1, "Archive::head depth mismatch");
+  expect(archive.tail(1).depth() == 1, "Archive::tail depth mismatch");
+  expect(archive.slice_depth(0, 1).depth() == 1, "Archive::slice_depth mismatch");
+
+  const auto sorted_desc = archive.sort_depth(false);
+  const auto sorted_labels = sorted_desc.depth_labels()
+                                 ->to_thread()
+                                 .cast(pluss::table::ThreadCastTarget::Note)
+                                 .as_note();
+  expect(std::string(sorted_labels.at(0)) == "batch_b", "Archive::sort_depth(desc) label mismatch");
+
+  const auto relabeled = archive.relabel_depth(
+      Stream(pluss::make_note(std::vector<std::string>{"A", "B"}, std::array<std::int64_t, 1>{2})));
+  expect(relabeled.depth_labels().has_value(), "Archive::relabel_depth should set labels");
+
+  const auto aligned = archive.align_depth(
+      Stream(pluss::make_note(std::vector<std::string>{"batch_b", "batch_a"}, std::array<std::int64_t, 1>{2})));
+  const auto aligned_first = aligned.catalog(0).stream("id").as_series().to_vec<std::int64_t>();
+  expect(aligned_first == f1.features("id").as_series().to_vec<std::int64_t>(),
+         "Archive::align_depth should reorder catalogs");
+
+  const auto mapped = archive.map_catalogs([](const Catalog& c) { return c.select({"id", "city"}); });
+  expect(mapped.catalog(0).nstreams() == 2, "Archive::map_catalogs should transform each catalog");
+  const auto reduced = archive.aggregate_over_catalogs([](const std::vector<Catalog>& cats) { return cats.front(); });
+  expect(reduced.nstreams() == archive.catalog(0).nstreams(),
+         "Archive::aggregate_over_catalogs should return reducer output");
+
   const auto atlas_a = archive.tabelize();
   const auto atlas_b = archive.to_table({}, false);
   expect(atlas_a.depth() == atlas_b.depth(), "Archive::to_table depth mismatch");

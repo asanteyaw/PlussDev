@@ -156,6 +156,27 @@ Thread Thread::exp() const {
   return Thread(s.exp(), validity_mask());
 }
 
+const pluss::Series& Thread::series() const {
+  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::series is only valid for Series payload");
+  return as_series();
+}
+
+const pluss::Note& Thread::note() const {
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::note is only valid for Note payload");
+  return as_note();
+}
+
+const pluss::Timeline& Thread::timeline() const {
+  PLUSS_CHECK(kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex,
+              "Thread::timeline is only valid for Timeline/TimeIndex payload");
+  return kind() == ThreadKind::Timeline ? as_timeline() : as_timeindex().timeline();
+}
+
+const pluss::TimeIndex& Thread::timeindex() const {
+  PLUSS_CHECK(kind() == ThreadKind::TimeIndex, "Thread::timeindex is only valid for TimeIndex payload");
+  return as_timeindex();
+}
+
 Thread& Thread::fillna_(double value) {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::fillna_(double) is only valid for Series payload");
   if (!has_validity_mask()) {
@@ -347,9 +368,64 @@ Thread Thread::lower() const {
   return Thread(as_note().lower(), validity_mask());
 }
 
+Thread Thread::replace(std::string_view from, std::string_view to) const {
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::replace is only valid for Note payload");
+  return Thread(as_note().replace(from, to), validity_mask());
+}
+
 pluss::Series Thread::contains(std::string_view needle) const {
   PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::contains is only valid for Note payload");
   return bool_series_from_u8(as_note().contains(needle));
+}
+
+Thread Thread::year() const {
+  if (kind() == ThreadKind::Timeline) {
+    return Thread(as_timeline().year(), validity_mask());
+  }
+  if (kind() == ThreadKind::TimeIndex) {
+    return Thread(as_timeindex().timeline().year(), validity_mask());
+  }
+  PLUSS_FAIL("Thread::year is only valid for Timeline/TimeIndex payload");
+}
+
+Thread Thread::month() const {
+  if (kind() == ThreadKind::Timeline) {
+    return Thread(as_timeline().month(), validity_mask());
+  }
+  if (kind() == ThreadKind::TimeIndex) {
+    return Thread(as_timeindex().timeline().month(), validity_mask());
+  }
+  PLUSS_FAIL("Thread::month is only valid for Timeline/TimeIndex payload");
+}
+
+Thread Thread::day() const {
+  if (kind() == ThreadKind::Timeline) {
+    return Thread(as_timeline().day(), validity_mask());
+  }
+  if (kind() == ThreadKind::TimeIndex) {
+    return Thread(as_timeindex().timeline().day(), validity_mask());
+  }
+  PLUSS_FAIL("Thread::day is only valid for Timeline/TimeIndex payload");
+}
+
+Thread Thread::hour() const {
+  if (kind() == ThreadKind::Timeline) {
+    return Thread(as_timeline().hour(), validity_mask());
+  }
+  if (kind() == ThreadKind::TimeIndex) {
+    return Thread(as_timeindex().timeline().hour(), validity_mask());
+  }
+  PLUSS_FAIL("Thread::hour is only valid for Timeline/TimeIndex payload");
+}
+
+Thread Thread::to_note_weekday() const {
+  if (kind() == ThreadKind::Timeline) {
+    return Thread(as_timeline().to_note_weekday(), validity_mask());
+  }
+  if (kind() == ThreadKind::TimeIndex) {
+    return Thread(as_timeindex().timeline().to_note_weekday(), validity_mask());
+  }
+  PLUSS_FAIL("Thread::to_note_weekday is only valid for Timeline/TimeIndex payload");
 }
 
 Thread Thread::numeric_binary(double other, ThreadBinaryMathOp op, bool reverse) const {

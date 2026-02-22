@@ -52,19 +52,19 @@ int main(int argc, char** argv) {
       }, pluss::codem::ScalarType::Float64)
       .assign({
           pluss::table::DataFrame::DeriveSpec{"Start_Year", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.timeline_value("Start_Time").year());
+             return pluss::table::Thread(f.features("Start_Time").as_timeline().year());
            }},
           pluss::table::DataFrame::DeriveSpec{"Start_Month", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.timeline_value("Start_Time").month());
+             return pluss::table::Thread(f.features("Start_Time").as_timeline().month());
            }},
           pluss::table::DataFrame::DeriveSpec{"Start_Day", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.timeline_value("Start_Time").day());
+             return pluss::table::Thread(f.features("Start_Time").as_timeline().day());
            }},
           pluss::table::DataFrame::DeriveSpec{"Start_Hour", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.timeline_value("Start_Time").hour());
+             return pluss::table::Thread(f.features("Start_Time").as_timeline().hour());
            }},
           pluss::table::DataFrame::DeriveSpec{"Start_DOW", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.timeline_value("Start_Time").to_note_weekday());
+             return pluss::table::Thread(f.features("Start_Time").as_timeline().to_note_weekday());
            }},
           pluss::table::DataFrame::DeriveSpec{"Duration_min", [](const pluss::table::DataFrame& f) {
              auto end_ns = f.features("End_Time")
@@ -78,10 +78,10 @@ int main(int argc, char** argv) {
              return pluss::table::Thread(end_ns.sub(start_ns).div(6.0e10));
            }},
           pluss::table::DataFrame::DeriveSpec{"Sev_ge_3", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.series_value("Severity").ge(3.0));
+             return pluss::table::Thread(f.features("Severity").as_series().ge(3.0));
            }},
           pluss::table::DataFrame::DeriveSpec{"Is_RushHour", [](const pluss::table::DataFrame& f) {
-             const auto h = f.series_value("Start_Hour").to_vec<std::int64_t>();
+             const auto h = f.features("Start_Hour").as_series().to_vec<std::int64_t>();
              auto out = pluss::Series::zeros({static_cast<std::int64_t>(h.size())}, pluss::codem::ScalarType::Bool);
              auto* p = reinterpret_cast<bool*>(out.raw_data());
              for (std::size_t i = 0; i < h.size(); ++i) {
@@ -93,9 +93,9 @@ int main(int argc, char** argv) {
       });
 
   std::cout << "\nSplit by dtype groups:\n";
-  work.note().head(3);
-  work.series().head(3);
-  work.timeline().head(3);
+  work.note_features().head(3);
+  work.series_features().head(3);
+  work.timeline_features().head(3);
 
   std::cout << "\n// =========== Question One==========\n";
   std::cout << "// What are the top 5 states with the most accidents?\n";

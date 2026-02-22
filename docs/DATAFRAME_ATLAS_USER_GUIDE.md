@@ -292,9 +292,9 @@ df.set({"a_copy", "b_copy"}) = df.features({"a", "b"});
 Project DataFrame by high-level pluss type:
 
 ```cpp
-auto numeric_df = df.series();
-auto text_df = df.note();
-auto datetime_df = df.timeline();
+auto numeric_df = df.series_features();
+auto text_df = df.note_features();
+auto datetime_df = df.timeline_features();
 ```
 
 Cast features:

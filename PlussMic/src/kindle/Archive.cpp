@@ -1,7 +1,11 @@
 #include "kindle/Archive.h"
 
+#include <algorithm>
+#include <numeric>
 #include <ostream>
 #include <sstream>
+#include <string>
+#include <unordered_map>
 #include <utility>
 
 #include "CodeM/core/Errors.h"

@@ -9,7 +9,6 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -26,7 +25,6 @@ class LoadResult;
 }
 namespace pluss::kindle {
 class Catalog;
-struct TabelizePolicy;
 struct KindelizePolicy;
 }
 
@@ -64,6 +62,10 @@ public:
 
     LetSlot& operator=(const Thread& value);
     LetSlot& operator=(const ThreadValue& value);
+    LetSlot& operator=(const pluss::Series& value);
+    LetSlot& operator=(const pluss::Note& value);
+    LetSlot& operator=(const pluss::Timeline& value);
+    LetSlot& operator=(const pluss::TimeIndex& value);
     LetSlot& operator=(const DataFrame& frame);
 
   private:
@@ -265,12 +267,8 @@ public:
   static DataFrame load_parquet(std::string_view filepath, const pluss::loader::Config& config);
   static DataFrame load_parquet(std::string_view filepath,
                                 std::initializer_list<pluss::loader::ConfigEntry> config_entries);
-
   pluss::kindle::Catalog kindelize() const;
   pluss::kindle::Catalog kindelize(const pluss::kindle::KindelizePolicy& policy) const;
-  static DataFrame tabelize(const pluss::kindle::Catalog& catalog);
-  static DataFrame tabelize(const pluss::kindle::Catalog& catalog,
-                            const pluss::kindle::TabelizePolicy& policy);
 
   bool defined() const noexcept;
   bool unique() const noexcept;
@@ -307,15 +305,9 @@ public:
   ColumnRef feature_ref(std::string_view name) const;
   DataFrame features(std::initializer_list<std::string_view> names);
   DataFrame features(std::initializer_list<std::string_view> names) const;
-  pluss::Series series_value(std::string_view feature_name) const;
-  pluss::Note note_value(std::string_view feature_name) const;
-  pluss::Timeline timeline_value(std::string_view feature_name) const;
-  pluss::TimeIndex timeindex_value(std::string_view feature_name) const;
-
-  DataFrame series() const;
-  DataFrame note() const;
-  DataFrame timeline() const;
-  DataFrame timeindex() const;
+  DataFrame series_features() const;
+  DataFrame note_features() const;
+  DataFrame timeline_features() const;
   DataFrame cast_series(std::initializer_list<std::string_view> features,
                         std::optional<pluss::codem::ScalarType> dtype = std::nullopt) const;
   DataFrame cast_note(std::initializer_list<std::string_view> features) const;
@@ -379,30 +371,6 @@ public:
   DataFrame sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;
   DataFrame slice(std::int64_t start, std::int64_t stop) const;
   DataFrame take(std::span<const std::int64_t> indices) const;
-  DataFrame masked_select(const pluss::Series& bool_mask) const;
-  DataFrame select(const std::vector<std::string>& names) const;
-  DataFrame drop(const std::vector<std::string>& names) const;
-  DataFrame rename(const std::unordered_map<std::string, std::string>& mapping) const;
-  DataFrame sort(std::string_view by_feature, bool ascending = true, bool nulls_last = true) const;
-  DataFrame sort_by(const std::vector<std::string>& features,
-                    const std::vector<bool>& ascending = {},
-                    bool nulls_last = true) const;
-  std::unordered_map<std::string, DataFrame> group_by(std::string_view key_feature) const;
-  DataFrame merge(const DataFrame& other,
-                  std::string_view on,
-                  std::string_view how = "inner",
-                  std::string right_suffix = "_right") const;
-  DataFrame apply(std::string_view feature, const std::function<Thread(const Thread&)>& fn) const;
-  DataFrame& apply_(std::string_view feature, const std::function<Thread(const Thread&)>& fn);
-  DataFrame text_preprocess(std::string_view feature) const;
-  DataFrame extract_keywords(std::string_view feature, int top_n = 10) const;
-  DataFrame compute_similarity(std::string_view feature1,
-                               std::string_view feature2,
-                               std::string_view method = "cosine") const;
-  DataFrame filter_by_text(std::string_view feature, std::string_view pattern) const;
-  DataFrame add_text_features(std::string_view feature) const;
-  DataFrame aggregate_text_stats(std::string_view feature, std::string_view stat_type) const;
-  DataFrame tfidf(std::string_view feature) const;
   DataFrame where(const pluss::Series& bool_mask) const;
   DataFrame filter(const pluss::Series& bool_mask) const;
   DataFrame query(std::string_view expression) const;
@@ -411,6 +379,27 @@ public:
   DataFrame transform(const std::function<Thread(const Thread&)>& fn) const;
   DataFrame transform(std::string_view feature, const std::function<Thread(const Thread&)>& fn) const;
   DataFrame transform(std::initializer_list<TransformSpec> specs) const;
+  DataFrame tz_convert(std::initializer_list<std::string_view> features, std::string_view tz_name) const;
+  DataFrame tz_localize(std::initializer_list<std::string_view> features,
+                        std::string_view tz_name,
+                        int fold = 0,
+                        std::string_view nonexistent = "raise") const;
+  DataFrame to_utc(std::initializer_list<std::string_view> features) const;
+  DataFrame shift_time(std::initializer_list<std::string_view> features,
+                       int periods,
+                       std::string_view freq) const;
+  DataFrame floor_time(std::initializer_list<std::string_view> features,
+                       std::string_view unit) const;
+  DataFrame ceil_time(std::initializer_list<std::string_view> features,
+                      std::string_view unit) const;
+  DataFrame round_time(std::initializer_list<std::string_view> features,
+                       std::string_view unit) const;
+  DataFrame resample(std::string_view time_feature,
+                     std::initializer_list<std::string_view> value_features,
+                     std::string_view freq,
+                     std::string_view op = "mean",
+                     std::int64_t step = 1,
+                     bool render = true) const;
   DataFrame aggregate(std::initializer_list<SummarySpec> specs, bool render = true) const;
   DataFrame group_by(std::initializer_list<std::string_view> keys,
                      std::initializer_list<GroupSpec> specs,

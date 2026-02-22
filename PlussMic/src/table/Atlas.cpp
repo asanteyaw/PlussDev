@@ -17,6 +17,5 @@ namespace pluss::table {
 
 #include "table/ops/atlas/AtlasInternals.inc"
 #include "table/ops/atlas/AtlasCoreOps.inc"
-#include "table/ops/atlas/AtlasKindleInterop.inc"
 
 } // namespace pluss::table

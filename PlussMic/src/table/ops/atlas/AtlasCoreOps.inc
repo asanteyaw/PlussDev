@@ -177,3 +177,12 @@ DataFrame Atlas::aggregate_over_frames(
   const auto& src = impl_ref_();
   return fn(src.frames_);
 }
+
+pluss::kindle::Archive Atlas::kindelize() const {
+  return kindelize(pluss::kindle::KindelizePolicy{});
+}
+
+pluss::kindle::Archive Atlas::kindelize(const pluss::kindle::KindelizePolicy& policy) const {
+  PLUSS_CHECK(defined(), "Atlas::kindelize requires a defined Atlas");
+  return pluss::kindle::Archive::kindelize(*this, policy);
+}

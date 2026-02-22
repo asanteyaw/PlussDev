@@ -281,24 +281,6 @@ DataFrame DataFrame::group_by(std::initializer_list<std::string_view> keys,
   return group(keys, specs, dropna_keys, render);
 }
 
-std::unordered_map<std::string, DataFrame> DataFrame::group_by(std::string_view key_feature) const {
-  const auto key_col = features(key_feature);
-  const auto n = nrows();
-
-  std::unordered_map<std::string, std::vector<std::int64_t>> row_groups;
-  row_groups.reserve(static_cast<std::size_t>(std::max<std::int64_t>(1, n / 8)));
-  for (std::int64_t i = 0; i < n; ++i) {
-    row_groups[thread_scalar_string_at(key_col, i)].push_back(i);
-  }
-
-  std::unordered_map<std::string, DataFrame> out;
-  out.reserve(row_groups.size());
-  for (auto& [label, rows] : row_groups) {
-    out.emplace(label, take(rows));
-  }
-  return out;
-}
-
 DataFrame DataFrame::pivot(std::string_view case_feature,
                            std::string_view feature_feature,
                            std::string_view value_feature,
@@ -309,7 +291,7 @@ DataFrame DataFrame::pivot(std::string_view case_feature,
       {GroupSpec{"__pivot_cell_count__", "", GroupOp::Count}},
       dropna_keys,
       false);
-  const auto counts = dup.series_value("__pivot_cell_count__").to_vec<std::int64_t>();
+  const auto counts = dup.features("__pivot_cell_count__").as_series().to_vec<std::int64_t>();
   const bool has_duplicate = std::any_of(counts.begin(), counts.end(), [](std::int64_t v) { return v > 1; });
   PLUSS_CHECK(!has_duplicate,
               "DataFrame::pivot: duplicate case/feature pairs found; use pivot_table with an aggregation op");
@@ -554,8 +536,8 @@ DataFrame DataFrame::count_by(std::string_view feature_name,
                               bool dropna,
                               bool render) const {
   auto grouped = group({feature_name}, {GroupSpec{"count", "", GroupOp::Count}}, dropna, false);
-  const auto keys_note = grouped.note_value(feature_name);
-  const auto counts = grouped.series_value("count").to_vec<std::int64_t>();
+  const auto keys_note = grouped.features(feature_name).as_note();
+  const auto counts = grouped.features("count").as_series().to_vec<std::int64_t>();
 
   std::vector<std::pair<std::string, std::int64_t>> rows;
   rows.reserve(static_cast<std::size_t>(grouped.nrows()));
@@ -616,9 +598,9 @@ DataFrame DataFrame::mean_by(std::string_view group_feature_name,
     double mean{0.0};
     std::int64_t count{0};
   };
-  const auto groups_note = grouped.note_value(group_feature_name);
-  const auto grouped_means = grouped.series_value(mean_name).to_vec<double>();
-  const auto grouped_counts = grouped.series_value("count").to_vec<std::int64_t>();
+  const auto groups_note = grouped.features(group_feature_name).as_note();
+  const auto grouped_means = grouped.features(mean_name).as_series().to_vec<double>();
+  const auto grouped_counts = grouped.features("count").as_series().to_vec<std::int64_t>();
 
   std::vector<MeanRow> rows;
   rows.reserve(static_cast<std::size_t>(grouped.nrows()));
@@ -664,62 +646,6 @@ DataFrame DataFrame::mean_by(std::string_view group_feature_name,
   if (render) {
     display::print(std::cout, out);
     out.suppress_next_stream_();
-  }
-  return out;
-}
-
-DataFrame DataFrame::merge(const DataFrame& other,
-                           std::string_view on,
-                           std::string_view how,
-                           std::string right_suffix) const {
-  const auto how_norm = lower_copy(owned_name(how));
-  PLUSS_CHECK(how_norm == "inner",
-              "DataFrame::merge currently supports only how='inner'");
-  return stitch_on(on, other, on, std::move(right_suffix));
-}
-
-DataFrame DataFrame::text_preprocess(std::string_view feature) const {
-  auto out = kindelize().text_preprocess(feature).tabelize();
-  if (out.nrows() == nrows()) {
-    out = out.with_cases(cases());
-  }
-  return out;
-}
-
-DataFrame DataFrame::extract_keywords(std::string_view feature, int top_n) const {
-  return kindelize().extract_keywords(feature, top_n).tabelize();
-}
-
-DataFrame DataFrame::compute_similarity(std::string_view feature1,
-                                        std::string_view feature2,
-                                        std::string_view method) const {
-  auto out = kindelize().compute_similarity(feature1, feature2, method).tabelize();
-  if (out.nrows() == nrows()) {
-    out = out.with_cases(cases());
-  }
-  return out;
-}
-
-DataFrame DataFrame::filter_by_text(std::string_view feature, std::string_view pattern) const {
-  return kindelize().filter_by_text(feature, pattern).tabelize();
-}
-
-DataFrame DataFrame::add_text_features(std::string_view feature) const {
-  auto out = kindelize().add_text_features(feature).tabelize();
-  if (out.nrows() == nrows()) {
-    out = out.with_cases(cases());
-  }
-  return out;
-}
-
-DataFrame DataFrame::aggregate_text_stats(std::string_view feature, std::string_view stat_type) const {
-  return kindelize().aggregate_text_stats(feature, stat_type).tabelize();
-}
-
-DataFrame DataFrame::tfidf(std::string_view feature) const {
-  auto out = kindelize().tfidf(feature).tabelize();
-  if (out.nrows() == nrows()) {
-    out = out.with_cases(cases());
   }
   return out;
 }

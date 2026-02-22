@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <iosfwd>
 #include <optional>
+#include <string_view>
 #include <vector>
 
 #include "MSharp/IntrusivePtr.h"
@@ -40,7 +42,20 @@ public:
 
   const std::optional<Stream>& depth_labels() const;
   Catalog catalog(std::int64_t i) const;
+  Catalog iloc(std::int64_t i) const;
+  Catalog loc(std::string_view label) const;
+  Catalog loc(std::int64_t label) const;
+  Catalog loc(const pluss::Timeline& label) const;
   const std::vector<Catalog>& catalogs() const;
+
+  Archive head(std::int64_t n = 5) const;
+  Archive tail(std::int64_t n = 5) const;
+  Archive slice_depth(std::int64_t start, std::int64_t stop) const;
+  Archive sort_depth(bool ascending = true, bool nulls_last = true) const;
+  Archive relabel_depth(const Stream& labels) const;
+  Archive align_depth(const Stream& labels) const;
+  Archive map_catalogs(const std::function<Catalog(const Catalog&)>& fn) const;
+  Catalog aggregate_over_catalogs(const std::function<Catalog(const std::vector<Catalog>&)>& fn) const;
 
   pluss::table::Atlas tabelize(const TabelizePolicy& policy = {}) const;
   pluss::table::Atlas to_table(const TabelizePolicy& policy = {}, bool render = true) const;

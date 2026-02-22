@@ -835,9 +835,9 @@ void test_versatile_dataframe_families() {
          "Atlas should expose empty()/frames() with consistent depth");
   const auto atlas_empty = pluss::table::Atlas();
   expect(atlas_empty.empty(), "default Atlas should be empty");
-  const auto atlas_roundtrip = pluss::table::Atlas::tabelize(atlas.kindelize());
+  const auto atlas_roundtrip = pluss::kindle::Archive::kindelize(atlas).tabelize();
   expect(atlas_roundtrip.depth() == atlas.depth() && atlas_roundtrip.nrows() == atlas.nrows(),
-         "Atlas::tabelize(Archive) should reconstruct atlas shape");
+         "Archive::kindelize(atlas).tabelize() should reconstruct atlas shape");
 
   std::int64_t expected_between = 0;
   std::int64_t expected_in = 0;
@@ -913,73 +913,77 @@ void test_versatile_dataframe_families() {
   });
   expect(transformed_all.nrows() == df.nrows() && transformed_all.ncols() == df.ncols(),
          "transform(all) should preserve frame shape");
-  expect(transformed_all.series_value("age").to_vec<std::int64_t>()[0] == age[0] + 1,
+  expect(transformed_all.features("age").as_series().to_vec<std::int64_t>()[0] == age[0] + 1,
          "transform(all) should transform Series-backed features");
-  expect(std::string(transformed_all.note_value("job").at(0)) == std::string(df.note_value("job").at(0)),
+  expect(std::string(transformed_all.features("job").as_note().at(0)) == std::string(df.features("job").as_note().at(0)),
          "transform(all) should allow passthrough for Note-backed features");
 
   const auto transformed_age = df.transform("age", [](const pluss::table::Thread& feature) {
     return feature * 2.0;
   });
-  expect(transformed_age.series_value("age").to_vec<std::int64_t>()[0] == age[0] * 2,
+  expect(transformed_age.features("age").as_series().to_vec<std::int64_t>()[0] == age[0] * 2,
          "transform(feature) should update target feature");
-  expect(std::string(transformed_age.note_value("job").at(0)) == std::string(df.note_value("job").at(0)),
+  expect(std::string(transformed_age.features("job").as_note().at(0)) == std::string(df.features("job").as_note().at(0)),
          "transform(feature) should keep non-target features unchanged");
 
   const auto transformed_specs = df.transform({
       {"age", [](const pluss::table::Thread& feature) { return feature + 3.0; }},
       {"duration", [](const pluss::table::Thread& feature) { return feature - 2.0; }},
   });
-  expect(transformed_specs.series_value("age").to_vec<std::int64_t>()[0] == age[0] + 3,
+  expect(transformed_specs.features("age").as_series().to_vec<std::int64_t>()[0] == age[0] + 3,
          "transform(specs) should apply per-feature transform");
-  expect(transformed_specs.series_value("duration").to_vec<std::int64_t>()[0] == duration[0] - 2,
+  expect(transformed_specs.features("duration").as_series().to_vec<std::int64_t>()[0] == duration[0] - 2,
          "transform(specs) should apply second transform");
   expect_throw([&]() {
                 (void)df.transform("age", [](const pluss::table::Thread& feature) { return feature.head(2); });
               },
               "transform should reject transformed feature length mismatches");
 
-  const auto selected_vec = df.select(std::vector<std::string>{"age", "job"});
+  const auto selected_vec = df.features({"age", "job"});
   expect(selected_vec.ncols() == 2 && selected_vec.has_feature("age") && selected_vec.has_feature("job"),
-         "select(vector) should project requested features");
-  const auto dropped_vec = df.drop(std::vector<std::string>{"balance"});
+         "features({...}) should project requested features");
+  const auto dropped_vec = df.drop({"balance"});
   expect(!dropped_vec.has_feature("balance") && dropped_vec.ncols() == df.ncols() - 1,
-         "drop(vector) should remove requested features");
+         "drop({...}) should remove requested features");
 
-  const auto renamed_map =
-      selected_vec.rename(std::unordered_map<std::string, std::string>{{"age", "age_new"}, {"job", "job_new"}});
+  const auto renamed_map = selected_vec.rename_features({{"age", "age_new"}, {"job", "job_new"}});
   expect(renamed_map.has_feature("age_new") && renamed_map.has_feature("job_new"),
-         "rename(mapping) should rename mapped features");
+         "rename_features(...) should rename mapped features");
 
-  const auto sorted_single = df.sort("age", false);
+  const auto sorted_single = df.sort_values({"age"}, false);
   const auto sorted_single_age = sorted_single.features("age").as_series().to_vec<std::int64_t>();
   expect(sorted_single_age.size() >= 2 && sorted_single_age[0] >= sorted_single_age[1],
-         "sort(feature, descending) should sort as requested");
+         "sort_values(feature, descending) should sort as requested");
 
-  const auto sorted_multi = df.sort_by({"job", "age"}, {true, false});
+  const auto sorted_multi = df.sort_values({
+      DataFrame::ArrangeSpec{"job", true, true},
+      DataFrame::ArrangeSpec{"age", false, true},
+  });
   expect(sorted_multi.nrows() == df.nrows() && sorted_multi.ncols() == df.ncols(),
-         "sort_by(features, ascending[]) should preserve shape");
+         "sort_values(ArrangeSpec[]) should preserve shape");
 
-  const auto masked = df.masked_select(mask);
-  expect(masked.nrows() == q1.nrows(), "masked_select(mask) should alias filter(mask)");
+  const auto masked = df.filter(mask);
+  expect(masked.nrows() == q1.nrows(), "filter(mask) should select matching rows");
 
-  const auto grouped_map = df.group_by("job");
-  expect(!grouped_map.empty(), "group_by(feature) should partition rows by feature values");
-  const auto one_group = grouped_map.begin()->second;
-  expect(one_group.ncols() == df.ncols() && one_group.nrows() > 0,
-         "group_by(feature) values should be DataFrame partitions");
+  const auto grouped_frame = df.group_by(
+      {"job"},
+      {DataFrame::GroupSpec{"rows", "", DataFrame::GroupOp::Count}},
+      true,
+      false);
+  expect(grouped_frame.has_feature("job") && grouped_frame.has_feature("rows"),
+         "group_by(keys,specs) should return grouped aggregate DataFrame");
 
-  const auto applied = df.apply("age", [](const pluss::table::Thread& feature) { return feature + 5.0; });
-  expect(applied.series_value("age").to_vec<std::int64_t>()[0] == age[0] + 5,
-         "apply(feature, fn) should transform selected feature");
+  const auto applied = df.transform("age", [](const pluss::table::Thread& feature) { return feature + 5.0; });
+  expect(applied.features("age").as_series().to_vec<std::int64_t>()[0] == age[0] + 5,
+         "transform(feature, fn) should transform selected feature");
   auto applied_inplace = df;
-  applied_inplace.apply_("age", [](const pluss::table::Thread& feature) { return feature + 4.0; });
-  expect(applied_inplace.series_value("age").to_vec<std::int64_t>()[0] == age[0] + 4,
-         "apply_(feature, fn) should mutate selected feature");
+  applied_inplace = applied_inplace.transform("age", [](const pluss::table::Thread& feature) { return feature + 4.0; });
+  expect(applied_inplace.features("age").as_series().to_vec<std::int64_t>()[0] == age[0] + 4,
+         "transform(feature, fn) should support assignment-back update");
 
-  const auto merged = jleft.merge(jright, "age", "inner", "_m");
+  const auto merged = jleft.stitch_on("age", jright, "age", "_m");
   expect(merged.nrows() > 0 && merged.has_feature("balance"),
-         "merge(on, inner) should join on key and include right payload features");
+         "stitch_on should join on key and include right payload features");
 
   const auto text_path = write_temp_csv(
       "df_text_wrappers",
@@ -988,25 +992,26 @@ void test_versatile_dataframe_families() {
       "clear sky and sun,clear sky\n"
       "fog near junction,fog near school\n");
   const auto text_df = DataFrame::load_csv(text_path.string());
-  const auto text_clean = text_df.text_preprocess("txt");
+  const auto text_catalog = pluss::kindle::Catalog::kindelize(text_df);
+  const auto text_clean = text_catalog.text_preprocess("txt").tabelize();
   expect(text_clean.nrows() == text_df.nrows(), "text_preprocess should preserve case count");
-  const auto keywords = text_df.extract_keywords("txt", 3);
+  const auto keywords = text_catalog.extract_keywords("txt", 3).tabelize();
   expect(keywords.has_feature("keyword") && keywords.has_feature("count"),
          "extract_keywords should return keyword/count features");
-  const auto sim_df = text_df.compute_similarity("txt", "txt2");
+  const auto sim_df = text_catalog.compute_similarity("txt", "txt2").tabelize();
   expect(sim_df.nrows() == text_df.nrows(), "compute_similarity should emit one score per case");
-  const auto filtered_text = text_df.filter_by_text("txt", "rain");
+  const auto filtered_text = text_catalog.filter_by_text("txt", "rain").tabelize();
   expect(filtered_text.nrows() == 1, "filter_by_text should keep matching text rows");
-  const auto enriched_text = text_df.add_text_features("txt");
+  const auto enriched_text = text_catalog.add_text_features("txt").tabelize();
   expect(enriched_text.has_feature("txt_char_len") && enriched_text.has_feature("txt_word_count"),
          "add_text_features should append generated text features");
-  const auto text_stats = text_df.aggregate_text_stats("txt", "count");
+  const auto text_stats = text_catalog.aggregate_text_stats("txt", "count").tabelize();
   expect(text_stats.nrows() == 1 && text_stats.has_feature("value"),
          "aggregate_text_stats should emit one-row stat table");
-  const auto text_tfidf = text_df.tfidf("txt");
+  const auto text_tfidf = text_catalog.tfidf("txt").tabelize();
   expect(text_tfidf.has_feature("txt_tfidf_norm"), "tfidf should append tfidf norm feature");
-  const auto from_catalog = DataFrame::tabelize(df.head(5, false).kindelize());
-  expect(from_catalog.nrows() == 5, "DataFrame::tabelize(Catalog) should reconstruct frame rows");
+  const auto from_catalog = pluss::kindle::Catalog::kindelize(df.head(5, false)).tabelize();
+  expect(from_catalog.nrows() == 5, "Catalog::kindelize(df).tabelize() should reconstruct frame rows");
 
   const auto summary = df.aggregate(
       {
@@ -1022,14 +1027,14 @@ void test_versatile_dataframe_families() {
   expect(summary.features("jobs").as_series().to_vec<std::int64_t>(0) > 0,
          "summarize nunique should be positive for job feature");
 
-  const auto text_only = df.note();
+  const auto text_only = df.note_features();
   expect(text_only.ncols() == 1 && text_only.has_feature("job"),
-         "note() should retain only Note-backed features");
+         "note_features() should retain only Note-backed features");
 
-  const auto numeric_only = df.series();
+  const auto numeric_only = df.series_features();
   expect(numeric_only.ncols() == 3 && numeric_only.has_feature("age")
              && numeric_only.has_feature("balance") && numeric_only.has_feature("duration"),
-         "series() should retain Series-backed features");
+         "series_features() should retain Series-backed features");
 
   const auto age_thread = df.features("age");
   const auto mean_scalar = age_thread.mean();
@@ -1062,25 +1067,25 @@ void test_versatile_dataframe_families() {
          "Thread comparison operators should produce Thread outputs");
 
   auto df_assign = df;
-  const auto age_before = df_assign.series_value("age").to_vec<std::int64_t>();
+  const auto age_before = df_assign.features("age").as_series().to_vec<std::int64_t>();
   df_assign.with_column_("age", df_assign.features("age") + 7.0);
-  const auto age_after = df_assign.series_value("age").to_vec<std::int64_t>();
+  const auto age_after = df_assign.features("age").as_series().to_vec<std::int64_t>();
   expect(age_after.size() == age_before.size(), "feature assignment should preserve case count");
   expect(age_after[0] == age_before[0] + 7, "with_column_(\"age\", feature(\"age\") + 7) should update in place");
 
   df_assign.with_column_("age_plus_1", df_assign.features("age") + 1.0);
   expect(df_assign.has_feature("age_plus_1"),
          "with_column_(\"new\", feature(\"curr\") + 1) should create a new feature");
-  const auto age_plus = df_assign.series_value("age_plus_1").to_vec<std::int64_t>();
+  const auto age_plus = df_assign.features("age_plus_1").as_series().to_vec<std::int64_t>();
   expect(age_plus[0] == age_after[0] + 1, "new feature assignment should store RHS values");
 
   auto df_bulk = df;
-  const auto age_before_bulk = df_bulk.series_value("age").to_vec<std::int64_t>();
-  const auto dur_before_bulk = df_bulk.series_value("duration").to_vec<std::int64_t>();
+  const auto age_before_bulk = df_bulk.features("age").as_series().to_vec<std::int64_t>();
+  const auto dur_before_bulk = df_bulk.features("duration").as_series().to_vec<std::int64_t>();
   df_bulk.with_column_("age", df_bulk.features("age") + 2.0);
   df_bulk.with_column_("duration", df_bulk.features("duration") + 3.0);
-  const auto age_after_bulk = df_bulk.series_value("age").to_vec<std::int64_t>();
-  const auto dur_after_bulk = df_bulk.series_value("duration").to_vec<std::int64_t>();
+  const auto age_after_bulk = df_bulk.features("age").as_series().to_vec<std::int64_t>();
+  const auto dur_after_bulk = df_bulk.features("duration").as_series().to_vec<std::int64_t>();
   expect(age_after_bulk[0] == age_before_bulk[0] + 2 && dur_after_bulk[0] == dur_before_bulk[0] + 3,
          "with_column_ should update multiple existing features in place");
 
@@ -1108,30 +1113,30 @@ void test_versatile_dataframe_families() {
   expect(df_bulk.has_feature("age_copy3") && df_bulk.has_feature("dur_copy3"),
          "feature({..}) should return DataFrame for multi-feature copy workflows");
 
-  const auto temporal_only = df.timeline();
-  expect(temporal_only.ncols() == 0, "timeline() should be empty when no temporal features exist");
+  const auto temporal_only = df.timeline_features();
+  expect(temporal_only.ncols() == 0, "timeline_features() should be empty when no temporal features exist");
 
-  expect(df.series_value("age").numel() == df.nrows(), "series_value should expose Series payload");
-  expect(df.note_value("job").numel() == df.nrows(), "note_value should expose Note payload");
+  expect(df.features("age").as_series().numel() == df.nrows(), "as_series should expose Series payload");
+  expect(df.features("job").as_note().numel() == df.nrows(), "as_note should expose Note payload");
 
   const auto cast_age_to_f64 = df.astype({"age"}, pluss::codem::ScalarType::Float64);
-  expect(cast_age_to_f64.series_value("age").scalar_type() == pluss::codem::ScalarType::Float64,
+  expect(cast_age_to_f64.features("age").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
          "astype(features, dtype) should cast selected Series features");
 
   const auto age_ge = df.assign({{
       "age_ge_45",
       [](const DataFrame& frame) {
-        return pluss::table::Thread(frame.series_value("age").to(pluss::codem::ScalarType::Float64).ge(45.0));
+        return pluss::table::Thread(frame.features("age").as_series().to(pluss::codem::ScalarType::Float64).ge(45.0));
       },
   }});
   expect(age_ge.features("age_ge_45").kind() == ThreadKind::Series
-             && age_ge.series_value("age_ge_45").scalar_type() == pluss::codem::ScalarType::Bool,
+             && age_ge.features("age_ge_45").as_series().scalar_type() == pluss::codem::ScalarType::Bool,
          "derive should add a bool Series comparison feature");
 
   const auto age_in = df.assign({{
       "age_in_set",
       [](const DataFrame& frame) {
-        const auto ages = frame.series_value("age").to_vec<std::int64_t>();
+        const auto ages = frame.features("age").as_series().to_vec<std::int64_t>();
         auto out = pluss::Series::zeros({static_cast<std::int64_t>(ages.size())}, pluss::codem::ScalarType::Bool);
         auto* p = reinterpret_cast<bool*>(out.raw_data());
         for (std::size_t i = 0; i < ages.size(); ++i) {
@@ -1141,7 +1146,7 @@ void test_versatile_dataframe_families() {
       },
   }});
   expect(age_in.features("age_in_set").kind() == ThreadKind::Series
-             && age_in.series_value("age_in_set").scalar_type() == pluss::codem::ScalarType::Bool,
+             && age_in.features("age_in_set").as_series().scalar_type() == pluss::codem::ScalarType::Bool,
          "derive should add a bool Series membership feature");
 
   const auto tmp_time = write_temp_csv(
@@ -1153,10 +1158,10 @@ void test_versatile_dataframe_families() {
                        .cast_timeline({"start", "end"})
                        .assign({
                            {"Start_Year", [](const DataFrame& frame) {
-                              return pluss::table::Thread(frame.timeline_value("start").year());
+                              return pluss::table::Thread(frame.features("start").as_timeline().year());
                             }},
                            {"Start_Hour", [](const DataFrame& frame) {
-                              return pluss::table::Thread(frame.timeline_value("start").hour());
+                              return pluss::table::Thread(frame.features("start").as_timeline().hour());
                             }},
                            {"Duration_min", [](const DataFrame& frame) {
                               auto end_ns = frame.features("end")
@@ -1170,7 +1175,7 @@ void test_versatile_dataframe_families() {
                               return pluss::table::Thread(end_ns.sub(start_ns).div(6.0e10));
                             }},
                            {"Is_RushHour", [](const DataFrame& frame) {
-                              const auto h = frame.series_value("Start_Hour").to_vec<std::int64_t>();
+                              const auto h = frame.features("Start_Hour").as_series().to_vec<std::int64_t>();
                               auto out = pluss::Series::zeros({static_cast<std::int64_t>(h.size())}, pluss::codem::ScalarType::Bool);
                               auto* p = reinterpret_cast<bool*>(out.raw_data());
                               for (std::size_t i = 0; i < h.size(); ++i) {
@@ -1181,21 +1186,34 @@ void test_versatile_dataframe_families() {
                             }},
                        });
 
-  expect(tdf.timeline().ncols() == 2, "timeline() should retain Timeline features after cast_timeline");
-  expect(tdf.timeline_value("start").numel() == 2, "timeline_value should expose Timeline payload");
+  expect(tdf.timeline_features().ncols() == 2,
+         "timeline_features() should retain Timeline features after cast_timeline");
+  expect(tdf.features("start").as_timeline().numel() == 2, "as_timeline should expose Timeline payload");
   const auto tdf_timeindex = tdf.cast_timeindex({"start"});
-  expect(tdf_timeindex.timeindex().ncols() == 1 && tdf_timeindex.has_feature("start"),
-         "timeindex() should retain only TimeIndex-backed features");
+  expect(tdf_timeindex.timeline_features().ncols() == 2 && tdf_timeindex.has_feature("start")
+             && tdf_timeindex.has_feature("end"),
+         "timeline_features() should retain Timeline/TimeIndex-backed features");
+  const auto shifted_tdf = tdf.shift_time({"start"}, 1, "D");
+  expect(shifted_tdf.nrows() == tdf.nrows() && shifted_tdf.has_feature("start"),
+         "shift_time should preserve shape and update selected temporal feature");
+  const auto floored_tdf = tdf.floor_time({"start"}, "D");
+  expect(floored_tdf.nrows() == tdf.nrows(), "floor_time should preserve shape");
+  const auto localized_tdf = tdf.tz_localize({"start"}, "UTC");
+  const auto utc_tdf = localized_tdf.to_utc({"start"});
+  expect(utc_tdf.nrows() == tdf.nrows(), "tz_localize/to_utc should preserve shape");
+  const auto daily_mean = tdf.resample("start", {"Duration_min"}, "D", "mean", 1, false);
+  expect(daily_mean.nrows() == 2 && daily_mean.has_feature("Duration_min"),
+         "resample should aggregate values onto time bins");
 
-  const auto years = tdf.series_value("Start_Year").to_vec<std::int64_t>();
+  const auto years = tdf.features("Start_Year").as_series().to_vec<std::int64_t>();
   expect(years.size() == 2 && years[0] == 2020 && years[1] == 2020,
          "derive should expose Timeline year extraction");
 
-  const auto mins = tdf.series_value("Duration_min").to_vec<double>();
+  const auto mins = tdf.features("Duration_min").as_series().to_vec<double>();
   expect(mins.size() == 2 && std::fabs(mins[0] - 90.0) < 1e-6 && std::fabs(mins[1] - 60.0) < 1e-6,
          "derive should compute End_Time - Start_Time in minutes");
 
-  const auto rush = tdf.series_value("Is_RushHour").to_vec<bool>();
+  const auto rush = tdf.features("Is_RushHour").as_series().to_vec<bool>();
   expect(rush.size() == 2 && !rush[0] && rush[1],
          "derive should mark Start_Hour membership against provided values");
 
@@ -1251,20 +1269,20 @@ void test_versatile_dataframe_families() {
              && combined_features.has_feature("age_r") && combined_features.has_feature("duration"),
          "combine(features) expected feature names missing");
 
-  const auto bump_age = left_small.series_value("age").add(100.0);
+  const auto bump_age = left_small.features("age").as_series().add(100.0);
   const auto right_update = left_small.with_column("age", pluss::table::Thread(bump_age));
   const auto combined_update = left_small.combine(
       right_update,
       {DataFrame::CombineOp::Update, "_r", true});
-  const auto updated_age = combined_update.series_value("age").to(pluss::codem::ScalarType::Float64).to_vec<double>();
-  const auto left_age = left_small.series_value("age").to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto updated_age = combined_update.features("age").as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto left_age = left_small.features("age").as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
   expect(std::fabs(updated_age[0] - (left_age[0] + 100.0)) < 1e-9,
          "combine(update, overwrite=true) should replace overlapping features");
 
   const auto combined_update_keep = left_small.combine(
       right_update,
       {DataFrame::CombineOp::Update, "_r", false});
-  const auto kept_age = combined_update_keep.series_value("age").to(pluss::codem::ScalarType::Float64).to_vec<double>();
+  const auto kept_age = combined_update_keep.features("age").as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
   expect(std::fabs(kept_age[0] - left_age[0]) < 1e-9,
          "combine(update, overwrite=false) should keep left feature values");
 

@@ -102,6 +102,12 @@ public:
   Thread log() const;
   Thread exp() const;
 
+  // Type-scoped full-surface accessors (delegate into underlying pluss types).
+  const pluss::Series& series() const;
+  const pluss::Note& note() const;
+  const pluss::Timeline& timeline() const;
+  const pluss::TimeIndex& timeindex() const;
+
   // Explicit mutating transforms (copy-on-write when shared).
   Thread& fillna_(double value);
 
@@ -125,7 +131,15 @@ public:
 
   // Text operations (Note payload only).
   Thread lower() const;
+  Thread replace(std::string_view from, std::string_view to) const;
   pluss::Series contains(std::string_view needle) const;
+
+  // Time operations (Timeline / TimeIndex payload only).
+  Thread year() const;
+  Thread month() const;
+  Thread day() const;
+  Thread hour() const;
+  Thread to_note_weekday() const;
 
   // Binary operations for DataFrame-level delegation.
   Thread numeric_binary(double other, ThreadBinaryMathOp op, bool reverse = false) const;

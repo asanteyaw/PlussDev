@@ -127,10 +127,6 @@ Thread DataFrame::column(std::string_view name) const {
 
 Thread DataFrame::features(std::string_view name) { return column(name); }
 Thread DataFrame::features(std::string_view name) const { return column(name); }
-pluss::Series DataFrame::series_value(std::string_view feature_name) const { return features(feature_name).as_series(); }
-pluss::Note DataFrame::note_value(std::string_view feature_name) const { return features(feature_name).as_note(); }
-pluss::Timeline DataFrame::timeline_value(std::string_view feature_name) const { return features(feature_name).as_timeline(); }
-pluss::TimeIndex DataFrame::timeindex_value(std::string_view feature_name) const { return features(feature_name).as_timeindex(); }
 
 ColumnRef DataFrame::column_ref(std::string_view name) const {
   return ColumnRef(owned_name(name), column(name));
@@ -164,28 +160,7 @@ DataFrame DataFrame::select(std::initializer_list<std::string_view> names) const
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::select(const std::vector<std::string>& names) const {
-  const auto& src = impl_ref_();
-  std::vector<std::string> out_names;
-  std::vector<Thread> out_cols;
-  out_names.reserve(names.size());
-  out_cols.reserve(names.size());
-
-  std::unordered_set<std::string> seen;
-  seen.reserve(names.size());
-  for (const auto& n : names) {
-    PLUSS_CHECK(!n.empty(), "DataFrame::select(vector): feature name cannot be empty");
-    PLUSS_CHECK(seen.insert(n).second, "DataFrame::select(vector): duplicate feature '" + n + "'");
-    const auto it = src.name_to_idx_.find(n);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::select(vector): unknown feature '" + n + "'");
-    out_names.push_back(n);
-    out_cols.push_back(src.columns_[it->second]);
-  }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
-      std::move(out_names), std::move(out_cols), src.cases_));
-}
-
-DataFrame DataFrame::series() const {
+DataFrame DataFrame::series_features() const {
   const auto& src = impl_ref_();
   std::vector<std::string> out_names;
   std::vector<Thread> out_cols;
@@ -202,7 +177,7 @@ DataFrame DataFrame::series() const {
       std::move(out_names), std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::note() const {
+DataFrame DataFrame::note_features() const {
   const auto& src = impl_ref_();
   std::vector<std::string> out_names;
   std::vector<Thread> out_cols;
@@ -219,7 +194,7 @@ DataFrame DataFrame::note() const {
       std::move(out_names), std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::timeline() const {
+DataFrame DataFrame::timeline_features() const {
   const auto& src = impl_ref_();
   std::vector<std::string> out_names;
   std::vector<Thread> out_cols;
@@ -228,23 +203,6 @@ DataFrame DataFrame::timeline() const {
   for (std::size_t i = 0; i < src.columns_.size(); ++i) {
     const auto k = src.columns_[i].kind();
     if (k != ThreadKind::Timeline && k != ThreadKind::TimeIndex) {
-      continue;
-    }
-    out_names.push_back(src.names_[i]);
-    out_cols.push_back(src.columns_[i]);
-  }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
-      std::move(out_names), std::move(out_cols), src.cases_));
-}
-
-DataFrame DataFrame::timeindex() const {
-  const auto& src = impl_ref_();
-  std::vector<std::string> out_names;
-  std::vector<Thread> out_cols;
-  out_names.reserve(src.names_.size());
-  out_cols.reserve(src.columns_.size());
-  for (std::size_t i = 0; i < src.columns_.size(); ++i) {
-    if (src.columns_[i].kind() != ThreadKind::TimeIndex) {
       continue;
     }
     out_names.push_back(src.names_[i]);
@@ -386,30 +344,6 @@ DataFrame DataFrame::drop(std::initializer_list<std::string_view> names) const {
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::drop(const std::vector<std::string>& names) const {
-  const auto& src = impl_ref_();
-  std::unordered_set<std::string> drop_set;
-  drop_set.reserve(names.size());
-  for (const auto& n : names) {
-    PLUSS_CHECK(!n.empty(), "DataFrame::drop(vector): feature name cannot be empty");
-    PLUSS_CHECK(src.name_to_idx_.find(n) != src.name_to_idx_.end(), "DataFrame::drop(vector): unknown feature '" + n + "'");
-    drop_set.insert(n);
-  }
-
-  std::vector<std::string> out_names;
-  std::vector<Thread> out_cols;
-  out_names.reserve(src.names_.size());
-  out_cols.reserve(src.columns_.size());
-  for (std::size_t i = 0; i < src.names_.size(); ++i) {
-    if (drop_set.find(src.names_[i]) == drop_set.end()) {
-      out_names.push_back(src.names_[i]);
-      out_cols.push_back(src.columns_[i]);
-    }
-  }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
-      std::move(out_names), std::move(out_cols), src.cases_));
-}
-
 DataFrame DataFrame::reorder(std::initializer_list<std::string_view> names) const {
   const auto ordered = normalize_name_list(names);
   const auto& src = impl_ref_();
@@ -467,26 +401,6 @@ DataFrame DataFrame::sort_values(std::initializer_list<std::string_view> feature
 
 DataFrame DataFrame::sort_values(std::initializer_list<ArrangeSpec> specs) const {
   return arrange(specs);
-}
-
-DataFrame DataFrame::sort(std::string_view by_feature, bool ascending, bool nulls_last) const {
-  return sort_values({ArrangeSpec{owned_name(by_feature), ascending, nulls_last}});
-}
-
-DataFrame DataFrame::sort_by(const std::vector<std::string>& features,
-                             const std::vector<bool>& ascending,
-                             bool nulls_last) const {
-  PLUSS_CHECK(!features.empty(), "DataFrame::sort_by: at least one feature is required");
-  PLUSS_CHECK(ascending.empty() || ascending.size() == features.size(),
-              "DataFrame::sort_by: ascending size must be 0 or equal to features size");
-
-  std::vector<ArrangeSpec> specs;
-  specs.reserve(features.size());
-  for (std::size_t i = 0; i < features.size(); ++i) {
-    const auto asc = ascending.empty() ? true : ascending[i];
-    specs.push_back({features[i], asc, nulls_last});
-  }
-  return arrange_impl_frame(*this, specs);
 }
 
 DataFrame DataFrame::sort_cases(bool ascending, bool nulls_last) const {
@@ -706,35 +620,6 @@ DataFrame DataFrame::rename(std::string_view old_name, std::string new_name) con
   auto out_names = src.names_;
   out_names[it->second] = std::move(new_name);
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), src.columns_, src.cases_));
-}
-
-DataFrame DataFrame::rename(const std::unordered_map<std::string, std::string>& mapping) const {
-  const auto& src = impl_ref_();
-  if (mapping.empty()) {
-    return *this;
-  }
-
-  std::unordered_set<std::string> target_names;
-  target_names.reserve(src.names_.size() * 2);
-  std::vector<std::string> out_names;
-  out_names.reserve(src.names_.size());
-
-  for (const auto& name : src.names_) {
-    auto it = mapping.find(name);
-    std::string next = (it == mapping.end()) ? name : it->second;
-    PLUSS_CHECK(!next.empty(), "DataFrame::rename(mapping): target feature name cannot be empty");
-    PLUSS_CHECK(target_names.insert(next).second,
-                "DataFrame::rename(mapping): duplicate target feature '" + next + "'");
-    out_names.push_back(std::move(next));
-  }
-
-  for (const auto& [from, _] : mapping) {
-    PLUSS_CHECK(src.name_to_idx_.find(from) != src.name_to_idx_.end(),
-                "DataFrame::rename(mapping): unknown source feature '" + from + "'");
-  }
-
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
-      std::move(out_names), src.columns_, src.cases_));
 }
 
 DataFrame& DataFrame::rename_(std::string_view old_name, std::string new_name) {

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <ostream>
 #include <numeric>
+#include <random>
 #include <sstream>
 #include <string>
 #include <string_view>

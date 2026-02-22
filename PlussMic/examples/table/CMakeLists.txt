@@ -30,6 +30,9 @@ add_executable(plussmic_eda_us_accidents_demo
 add_executable(plussmic_dataframe_plot_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_plot_demo.cpp
 )
+add_executable(plussmic_dataframe_thread_values_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_thread_values_demo.cpp
+)
 
 target_link_libraries(plussmic_dataframe_initial_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_view_demo PRIVATE PlussMic)
@@ -40,6 +43,7 @@ target_link_libraries(plussmic_dataframe_versatile_methods_demo PRIVATE PlussMic
 target_link_libraries(plussmic_us_accidents_eda_verbs_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_eda_us_accidents_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_plot_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_dataframe_thread_values_demo PRIVATE PlussMic)
 
 target_compile_definitions(plussmic_dataframe_initial_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
@@ -66,5 +70,8 @@ target_compile_definitions(plussmic_eda_us_accidents_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_dataframe_plot_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_dataframe_thread_values_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )

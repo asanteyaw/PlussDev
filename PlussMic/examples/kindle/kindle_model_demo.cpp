@@ -269,7 +269,7 @@ void demo_archive_methods(const pluss::table::DataFrame& base_df) {
       pluss::make_note(std::vector<std::string>{"batch_a", "batch_b"}, std::array<std::int64_t, 1>{2}));
   const pluss::table::Atlas atlas({f0, f1}, labels);
 
-  const auto archive = pluss::kindle::Archive::kindelize(atlas);
+  const auto archive = atlas.kindelize();;
   std::cout << "archive depth: " << archive.depth()
             << ", has depth labels: " << archive.depth_labels().has_value() << "\n";
   std::cout << "archive:\n" << archive << "\n";

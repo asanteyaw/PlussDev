@@ -5,6 +5,7 @@
 #include <initializer_list>
 #include <iosfwd>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -97,6 +98,7 @@ struct TabelizePolicy {
 class Catalog {
 public:
   using const_iterator = std::vector<std::string>::const_iterator;
+  using QueryFn = std::function<pluss::Series(const Catalog&)>;
 
   Catalog();
   explicit Catalog(std::vector<std::pair<std::string, Stream>> streams);
@@ -147,7 +149,11 @@ public:
   Catalog tail(std::int64_t n) const;
   Catalog slice(std::int64_t start, std::int64_t stop) const;
   Catalog iloc(std::int64_t start, std::int64_t stop) const;
+  Catalog take(std::span<const std::int64_t> indices) const;
+  Catalog sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;
   Catalog filter(const pluss::Series& condition) const;
+  Catalog where(const pluss::Series& condition) const;
+  Catalog query(const QueryFn& fn) const;
   Catalog masked_select(const pluss::Series& mask) const;
   Catalog select(const std::vector<std::string>& field_names) const;
   Catalog drop(const std::vector<std::string>& field_names) const;
@@ -158,6 +164,17 @@ public:
   std::unordered_map<std::string, Catalog> group_by(std::string_view key_field) const;
   Catalog fillna(double value, std::initializer_list<std::string_view> keys = {}) const;
   Catalog dropna(std::initializer_list<std::string_view> keys = {}) const;
+  Catalog ffill(std::initializer_list<std::string_view> keys = {}) const;
+  Catalog bfill(std::initializer_list<std::string_view> keys = {}) const;
+  Catalog isnull(std::initializer_list<std::string_view> keys = {}) const;
+  Catalog notnull(std::initializer_list<std::string_view> keys = {}) const;
+  Catalog cast_series(std::initializer_list<std::string_view> keys,
+                      std::optional<pluss::codem::ScalarType> dtype = std::nullopt) const;
+  Catalog cast_note(std::initializer_list<std::string_view> keys) const;
+  Catalog cast_timeline(std::initializer_list<std::string_view> keys) const;
+  Catalog cast_timeindex(std::initializer_list<std::string_view> keys) const;
+  Catalog astype(std::initializer_list<std::string_view> keys,
+                 pluss::codem::ScalarType dtype) const;
   Stream sum(std::string_view field) const;
   Stream mean(std::string_view field) const;
   Stream min(std::string_view field) const;
@@ -166,6 +183,8 @@ public:
   Catalog merge(const Catalog& other, std::string_view on, std::string_view how = "inner") const;
   Catalog apply(std::string_view field, const std::function<Stream(const Stream&)>& func) const;
   Catalog& apply_(std::string_view field, const std::function<Stream(const Stream&)>& func);
+  Catalog transform(const std::function<Stream(const Stream&)>& fn) const;
+  Catalog transform(std::string_view field, const std::function<Stream(const Stream&)>& fn) const;
   Catalog text_preprocess(std::string_view field) const;
   Catalog extract_keywords(std::string_view field, int top_n = 10) const;
   Catalog compute_similarity(std::string_view field1,

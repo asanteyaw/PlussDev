@@ -27,6 +27,38 @@ DataFrame::LetSlot& DataFrame::LetSlot::operator=(const ThreadValue& value) {
   return (*this = value.thread());
 }
 
+DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Series& value) {
+  try {
+    return (*this = Thread(value));
+  } catch (const std::exception& e) {
+    PLUSS_FAIL("DataFrame::set(name)=Series failed: " + std::string(e.what()));
+  }
+}
+
+DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Note& value) {
+  try {
+    return (*this = Thread(value));
+  } catch (const std::exception& e) {
+    PLUSS_FAIL("DataFrame::set(name)=Note failed: " + std::string(e.what()));
+  }
+}
+
+DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Timeline& value) {
+  try {
+    return (*this = Thread(value));
+  } catch (const std::exception& e) {
+    PLUSS_FAIL("DataFrame::set(name)=Timeline failed: " + std::string(e.what()));
+  }
+}
+
+DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::TimeIndex& value) {
+  try {
+    return (*this = Thread(value));
+  } catch (const std::exception& e) {
+    PLUSS_FAIL("DataFrame::set(name)=TimeIndex failed: " + std::string(e.what()));
+  }
+}
+
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const DataFrame& frame) {
   PLUSS_CHECK(frame.ncols() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
   const auto cols = frame.features();
@@ -358,14 +390,4 @@ pluss::kindle::Catalog DataFrame::kindelize() const {
 pluss::kindle::Catalog DataFrame::kindelize(const pluss::kindle::KindelizePolicy& policy) const {
   PLUSS_CHECK(defined(), "DataFrame::kindelize requires a defined DataFrame");
   return pluss::kindle::Catalog::kindelize(*this, policy);
-}
-
-DataFrame DataFrame::tabelize(const pluss::kindle::Catalog& catalog) {
-  return tabelize(catalog, pluss::kindle::TabelizePolicy{});
-}
-
-DataFrame DataFrame::tabelize(const pluss::kindle::Catalog& catalog,
-                              const pluss::kindle::TabelizePolicy& policy) {
-  PLUSS_CHECK(catalog.defined(), "DataFrame::tabelize requires a defined Catalog");
-  return catalog.tabelize(policy);
 }
