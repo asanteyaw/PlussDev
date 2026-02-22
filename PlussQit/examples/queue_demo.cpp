@@ -24,20 +24,33 @@ int main() {
   std::cout << "=== pluss::Queue + dynamic dispense demo ===\n\n";
 
   pluss::Queue qs = pluss::value({-1.0, 2.0, -3.0});
+  std::cout << "Queue.as_series()[1]: " << qs.as_series().to_vec<double>()[1] << "\n";
+  std::cout << "Queue.series().log() kind: " << kind_name(qs.series().log().kind()) << "\n";
+  const auto qs_chain = qs.invoke({"log", "abs", "mean"});
+  std::cout << "Queue.invoke({\"log\",\"abs\",\"mean\"}) kind: " << kind_name(qs_chain.kind()) << "\n";
   auto qs_abs = qs.invoke("abs");
   std::cout << "Queue kind after abs: " << kind_name(qs_abs.kind()) << "\n";
   const auto abs_vals = qs_abs.as<pluss::Series>().to_vec<double>();
   std::cout << "abs values: [" << abs_vals[0] << ", " << abs_vals[1] << ", " << abs_vals[2] << "]\n\n";
 
   pluss::Queue qn = pluss::content({"Alpha", "Beta"});
+  std::cout << "Queue.note().lower()[0]: " << qn.note().lower().as_note().at(0) << "\n";
   auto qn_lower = qn.invoke("lower");
   std::cout << "Queue kind after lower: " << kind_name(qn_lower.kind()) << "\n";
   std::cout << "lower note[0]: " << qn_lower.as<pluss::Note>().at(0) << "\n\n";
 
   pluss::Queue qt = pluss::moment("2024-01-15T10:11:12Z");
+  std::cout << "Queue.timeline().hour(): " << qt.timeline().hour().as_series().to_vec<std::int32_t>(0) << "\n";
   auto qt_year = qt.invoke("year");
   std::cout << "Queue Timeline->year kind: " << kind_name(qt_year.kind()) << "\n";
   std::cout << "year: " << qt_year.as<pluss::Series>().to_vec<std::int32_t>(0) << "\n\n";
+
+  pluss::Queue qt1d = pluss::moment({
+      "2024-01-15T10:11:12Z",
+      "2024-01-16T10:11:12Z",
+  });
+  auto qidx = qt1d.invoke("to_timeindex", {true});
+  std::cout << "Queue.as_timeindex().size(): " << qidx.as_timeindex().size() << "\n\n";
 
   auto s = pluss::value({-4.0, 5.0, -6.0});
   auto s_numel = pluss::dispense_as<std::int64_t>(

@@ -362,6 +362,8 @@ void test_queue_dynamic_dispatch() {
   std::cout << "[RUN] codeh:queue_dynamic_dispatch\n";
 
   pluss::Queue qt = pluss::moment("2024-01-15T10:11:12Z");
+  expect_true(qt.as_timeline().year().to_vec<std::int32_t>(0) == 2024,
+              "Queue.as_timeline() exposes Timeline surface");
 
   const auto qf = qt.invoke("floor", {"D"});
   expect_true(qf.kind() == pluss::Queue::Kind::Timeline, "Queue floor returns Timeline");
@@ -384,6 +386,7 @@ void test_queue_dynamic_dispatch() {
   const auto qidx = qt1d.invoke("to_timeindex", {true});
   expect_true(qidx.kind() == pluss::Queue::Kind::TimeIndex, "Queue to_timeindex returns TimeIndex");
   expect_true(qidx.as<pluss::codeh::TimeIndex>().size() == 2, "Queue to_timeindex size");
+  expect_true(qidx.as_timeindex().size() == 2, "Queue.as_timeindex() exposes TimeIndex surface");
 
   const auto qidx_sorted = qidx.invoke("sort_values");
   expect_true(qidx_sorted.kind() == pluss::Queue::Kind::TimeIndex, "Queue TimeIndex sort_values returns TimeIndex");

@@ -44,6 +44,11 @@ public:
   using timeindex_type = ::pluss::codeh::TimeIndex;
   using duration_type = ::pluss::codeh::Duration;
 
+  class SeriesOps;
+  class NoteOps;
+  class TimelineOps;
+  class TimeIndexOps;
+
   class Arg {
   public:
     using storage_type = std::variant<
@@ -101,6 +106,59 @@ public:
     if (std::holds_alternative<timeline_type>(value_)) return Kind::Timeline;
     return Kind::TimeIndex;
   }
+
+  const ::pluss::Series& as_series() const {
+    PLUSS_CHECK(is<::pluss::Series>(),
+                std::string("Queue.as_series(): payload kind is ") + std::string(kind_name(kind())));
+    return std::get<::pluss::Series>(value_);
+  }
+
+  ::pluss::Series& as_series() {
+    PLUSS_CHECK(is<::pluss::Series>(),
+                std::string("Queue.as_series(): payload kind is ") + std::string(kind_name(kind())));
+    return std::get<::pluss::Series>(value_);
+  }
+
+  const ::pluss::Note& as_note() const {
+    PLUSS_CHECK(is<::pluss::Note>(),
+                std::string("Queue.as_note(): payload kind is ") + std::string(kind_name(kind())));
+    return std::get<::pluss::Note>(value_);
+  }
+
+  ::pluss::Note& as_note() {
+    PLUSS_CHECK(is<::pluss::Note>(),
+                std::string("Queue.as_note(): payload kind is ") + std::string(kind_name(kind())));
+    return std::get<::pluss::Note>(value_);
+  }
+
+  const timeline_type& as_timeline() const {
+    PLUSS_CHECK(is<timeline_type>(),
+                std::string("Queue.as_timeline(): payload kind is ") + std::string(kind_name(kind())));
+    return std::get<timeline_type>(value_);
+  }
+
+  timeline_type& as_timeline() {
+    PLUSS_CHECK(is<timeline_type>(),
+                std::string("Queue.as_timeline(): payload kind is ") + std::string(kind_name(kind())));
+    return std::get<timeline_type>(value_);
+  }
+
+  const timeindex_type& as_timeindex() const {
+    PLUSS_CHECK(is<timeindex_type>(),
+                std::string("Queue.as_timeindex(): payload kind is ") + std::string(kind_name(kind())));
+    return std::get<timeindex_type>(value_);
+  }
+
+  timeindex_type& as_timeindex() {
+    PLUSS_CHECK(is<timeindex_type>(),
+                std::string("Queue.as_timeindex(): payload kind is ") + std::string(kind_name(kind())));
+    return std::get<timeindex_type>(value_);
+  }
+
+  SeriesOps series() const;
+  NoteOps note() const;
+  TimelineOps timeline() const;
+  TimeIndexOps timeindex() const;
 
   bool defined() const noexcept {
     return std::visit([](const auto& v) -> bool {
@@ -180,7 +238,30 @@ public:
     return invoke(method, std::span<const Arg>(args.begin(), args.size()));
   }
 
+  Queue invoke(std::initializer_list<std::string_view> methods) const {
+    Queue out = *this;
+    for (const auto method : methods) {
+      PLUSS_CHECK(!method.empty(), "Queue.invoke(methods): method name cannot be empty");
+      out = out.invoke(method);
+    }
+    return out;
+  }
+
 private:
+  static constexpr std::string_view kind_name(Kind k) noexcept {
+    switch (k) {
+      case Kind::Series:
+        return "Series";
+      case Kind::Note:
+        return "Note";
+      case Kind::Timeline:
+        return "Timeline";
+      case Kind::TimeIndex:
+        return "TimeIndex";
+    }
+    return "Unknown";
+  }
+
   static ::pluss::codem::_compat::Args to_codem_args(std::span<const Arg> args) {
     ::pluss::codem::_compat::Args out;
     out.reserve(args.size());
@@ -347,5 +428,103 @@ private:
 
   storage_type value_;
 };
+
+class Queue::SeriesOps {
+public:
+  explicit SeriesOps(const Queue& q) : q_(&q) {
+    PLUSS_CHECK(q_->kind() == Kind::Series,
+                std::string("Queue.series(): payload kind is ") + std::string(Queue::kind_name(q_->kind())));
+  }
+
+  Queue invoke(std::string_view method, std::span<const Arg> args = {}) const { return q_->invoke(method, args); }
+  Queue invoke(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
+  Queue call(std::string_view method) const { return q_->invoke(method); }
+  Queue call(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
+
+  Queue log() const { return q_->invoke("log"); }
+  Queue abs() const { return q_->invoke("abs"); }
+  Queue exp() const { return q_->invoke("exp"); }
+  Queue sqrt() const { return q_->invoke("sqrt"); }
+  Queue floor() const { return q_->invoke("floor"); }
+  Queue ceil() const { return q_->invoke("ceil"); }
+  Queue round(std::int64_t decimals = 0) const { return q_->invoke("round", {decimals}); }
+
+private:
+  const Queue* q_{nullptr};
+};
+
+class Queue::NoteOps {
+public:
+  explicit NoteOps(const Queue& q) : q_(&q) {
+    PLUSS_CHECK(q_->kind() == Kind::Note,
+                std::string("Queue.note(): payload kind is ") + std::string(Queue::kind_name(q_->kind())));
+  }
+
+  Queue invoke(std::string_view method, std::span<const Arg> args = {}) const { return q_->invoke(method, args); }
+  Queue invoke(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
+  Queue call(std::string_view method) const { return q_->invoke(method); }
+  Queue call(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
+
+  Queue lower() const { return q_->invoke("lower"); }
+  Queue upper() const { return q_->invoke("upper"); }
+  Queue strip() const { return q_->invoke("strip"); }
+  Queue replace(std::string_view from, std::string_view to) const { return q_->invoke("replace", {from, to}); }
+
+private:
+  const Queue* q_{nullptr};
+};
+
+class Queue::TimelineOps {
+public:
+  explicit TimelineOps(const Queue& q) : q_(&q) {
+    PLUSS_CHECK(q_->kind() == Kind::Timeline,
+                std::string("Queue.timeline(): payload kind is ") + std::string(Queue::kind_name(q_->kind())));
+  }
+
+  Queue invoke(std::string_view method, std::span<const Arg> args = {}) const { return q_->invoke(method, args); }
+  Queue invoke(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
+  Queue call(std::string_view method) const { return q_->invoke(method); }
+  Queue call(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
+
+  Queue year() const { return q_->invoke("year"); }
+  Queue month() const { return q_->invoke("month"); }
+  Queue day() const { return q_->invoke("day"); }
+  Queue hour() const { return q_->invoke("hour"); }
+  Queue minute() const { return q_->invoke("minute"); }
+  Queue second() const { return q_->invoke("second"); }
+  Queue floor(std::string_view freq) const { return q_->invoke("floor", {freq}); }
+  Queue ceil(std::string_view freq) const { return q_->invoke("ceil", {freq}); }
+  Queue strftime(std::string_view fmt) const { return q_->invoke("strftime", {fmt}); }
+  Queue to_timeindex(bool require_sorted = true) const { return q_->invoke("to_timeindex", {require_sorted}); }
+
+private:
+  const Queue* q_{nullptr};
+};
+
+class Queue::TimeIndexOps {
+public:
+  explicit TimeIndexOps(const Queue& q) : q_(&q) {
+    PLUSS_CHECK(q_->kind() == Kind::TimeIndex,
+                std::string("Queue.timeindex(): payload kind is ") + std::string(Queue::kind_name(q_->kind())));
+  }
+
+  Queue invoke(std::string_view method, std::span<const Arg> args = {}) const { return q_->invoke(method, args); }
+  Queue invoke(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
+  Queue call(std::string_view method) const { return q_->invoke(method); }
+  Queue call(std::string_view method, std::initializer_list<Arg> args) const { return q_->invoke(method, args); }
+
+  Queue sort_values() const { return q_->invoke("sort_values"); }
+  Queue drop_duplicates() const { return q_->invoke("drop_duplicates"); }
+  Queue freq() const { return q_->invoke("freq"); }
+  Queue to_timeline() const { return q_->invoke("to_timeline"); }
+
+private:
+  const Queue* q_{nullptr};
+};
+
+inline Queue::SeriesOps Queue::series() const { return SeriesOps(*this); }
+inline Queue::NoteOps Queue::note() const { return NoteOps(*this); }
+inline Queue::TimelineOps Queue::timeline() const { return TimelineOps(*this); }
+inline Queue::TimeIndexOps Queue::timeindex() const { return TimeIndexOps(*this); }
 
 } // namespace pluss

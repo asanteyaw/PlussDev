@@ -448,10 +448,12 @@ void test_aux_transmit_translate_and_queue_basics() {
   pluss::Queue qn = n;
   expect_true(qn.kind() == pluss::Queue::Kind::Note, "Queue stores Note");
   expect_true(qn.defined(), "Queue reports defined for Note payload");
+  expect_true(qn.as_note().at(0) == "aa", "Queue.as_note() exposes Note surface");
   pluss::Queue qn_lower = qn.invoke("lower");
   expect_true(qn_lower.as<pluss::Note>().at(0) == "aa", "Queue.invoke dispatches Note methods");
 
   pluss::Queue qs = pluss::value({-1.0, 2.0, -3.0});
+  expect_true(qs.as_series().to_vec<double>()[1] == 2.0, "Queue.as_series() exposes Series surface");
   pluss::Queue qs_abs = qs.invoke("abs");
   auto abs_vals = qs_abs.as<pluss::Series>().to_vec<double>();
   expect_true(abs_vals.size() == 3 && abs_vals[0] == 1.0 && abs_vals[2] == 3.0,

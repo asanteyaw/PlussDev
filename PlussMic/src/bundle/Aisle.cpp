@@ -21,6 +21,22 @@ std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::i
   return {s, e};
 }
 
+std::string json_escape(std::string_view in) {
+  std::string out;
+  out.reserve(in.size() + 8);
+  for (char c : in) {
+    switch (c) {
+      case '\\': out += "\\\\"; break;
+      case '"': out += "\\\""; break;
+      case '\n': out += "\\n"; break;
+      case '\r': out += "\\r"; break;
+      case '\t': out += "\\t"; break;
+      default: out.push_back(c); break;
+    }
+  }
+  return out;
+}
+
 } // namespace
 
 namespace detail {

@@ -28,7 +28,41 @@ Registry Registry::from_kindle(const pluss::kindle::Catalog& catalog) {
   return Registry(std::move(out));
 }
 
-std::string Registry::to_string() const { return to_json(); }
+std::string Registry::to_string() const {
+  if (!defined()) return "{ \"_type\": \"Registry\", \"defined\": false }";
+
+  std::ostringstream oss;
+  oss << "{\n";
+  oss << "  \"_type\": \"Registry\",\n";
+  oss << "  \"defined\": true,\n";
+  oss << "  \"nslots\": " << nslots() << ",\n";
+  oss << "  \"fields\": {\n";
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto& key = impl_ref_().keys_[i];
+    const auto& slot = impl_ref_().slots_[i];
+    auto type_counts = slot.type_counts();
+    std::vector<std::pair<std::string, std::int64_t>> type_items(type_counts.begin(), type_counts.end());
+    std::sort(type_items.begin(), type_items.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+
+    oss << "    \"" << json_escape(key) << "\": {\n";
+    oss << "      \"size\": " << slot.size() << ",\n";
+    oss << "      \"types\": {";
+    if (!type_items.empty()) oss << "\n";
+    for (std::size_t j = 0; j < type_items.size(); ++j) {
+      oss << "        \"" << json_escape(type_items[j].first) << "\": " << type_items[j].second;
+      if (j + 1 < type_items.size()) oss << ",";
+      oss << "\n";
+    }
+    if (!type_items.empty()) oss << "      ";
+    oss << "}\n";
+    oss << "    }";
+    if (i + 1 < impl_ref_().keys_.size()) oss << ",";
+    oss << "\n";
+  }
+  oss << "  }\n";
+  oss << "}";
+  return oss.str();
+}
 
 std::string Registry::to_json() const {
   if (!defined()) return "{ \"_type\": \"Registry\", \"defined\": false }";
@@ -75,4 +109,3 @@ std::ostream& operator<<(std::ostream& os, const Registry& registry) {
   registry.show(os);
   return os;
 }
-

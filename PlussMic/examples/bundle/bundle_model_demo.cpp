@@ -154,6 +154,7 @@ void demo_registry_methods() {
                            .kindelize();
   const auto from_catalog = pluss::bundle::Registry::from_kindle(catalog);
   std::cout << "registry -> catalog -> registry nslots: " << from_catalog.nslots() << "\n";
+  std::cout << "registry display:\n" << registry << "\n";
   std::cout << "registry json:\n" << registry.to_json() << "\n";
 }
 
@@ -199,6 +200,7 @@ void demo_aisle_methods() {
   const auto back = pluss::bundle::Aisle::from_kindle(archive);
   std::cout << "aisle -> archive -> aisle depth: " << back.depth()
             << ", labels: " << (back.labels().has_value() ? "yes" : "no") << "\n";
+  std::cout << "aisle display:\n" << aisle << "\n";
   std::cout << "aisle json:\n" << aisle.to_json() << "\n";
 }
 
