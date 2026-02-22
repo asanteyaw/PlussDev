@@ -834,3 +834,56 @@ Bridge policy:
 - `Registry::kindelize()` exists but throws if a slot is not stream-compatible.
 - `Aisle::kindelize()` delegates through each registry.
 - No general `bundelize()` from table/signal: heterogeneous slots are not reliably rectangularizable without lossy coercion.
+
+## 15. Plotting with PlussPl
+
+`PlussPl` is a standalone plotting library under `pluss::plotism`.
+
+`PlussPl` now has explicit 2D/3D modules:
+
+- `Figure2D` (`line`, `scatter`, `bar`, `hist`, subplot layout, axis/legend/style)
+- `Figure3D` (`line3`, `scatter3`, `surface`)
+
+`PlussMic` provides DataFrame/Atlas wrappers on top of `plotism` (`df.plot()` style), separated from table core logic.
+
+```cpp
+#include <pluss/pluss.h>
+
+// Direct PlussPl usage (no DataFrame required)
+std::vector<double> x{0.0, 1.0, 2.0, 3.0};
+std::vector<double> y{1.0, 2.0, 1.5, 3.5};
+auto raw = pluss::plotism::line(x, y, "wave").with_title("Raw plotism line");
+raw.show();
+raw.save_svg("wave.svg"); // rendered graph file
+
+std::vector<double> z{0.2, 0.4, 0.1, 0.8};
+auto raw3 = pluss::plotism::line3(x, y, z, "wave3d").with_title("Raw 3D line");
+raw3.save_svg("wave3d.svg");
+
+auto df = pluss::table::DataFrame::load_csv("data.csv");
+
+// PlussMic wrappers (pandas-like)
+auto f1 = df.plot().line("price");
+auto f2 = df.plot().scatter("x", "y");
+auto f3 = df.plot().bar("count", "label");
+auto f4 = df.plot().hist("price", 20);
+
+f1.show();
+std::string spec = f1.to_json(); // JSON plot spec for downstream renderers
+f1.save_svg("price.svg");
+```
+
+Atlas slice plotting:
+
+```cpp
+pluss::table::Atlas atlas({df1, df2});
+auto f = atlas.plot(0).line("price");
+f.show();
+```
+
+Notes:
+
+- Plotting accepts `Series`, `Timeline`/`TimeIndex`, and numeric-like `Note` values.
+- `save_svg(...)` writes actual rendered graph files now.
+- `save_png(...)` is intentionally backend-gated and throws unless a raster backend is wired in your build.
+- `to_json()` remains the stable interchange surface for future GUI/web backends.

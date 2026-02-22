@@ -4,7 +4,7 @@ project(PlussPl LANGUAGES CXX)
 add_library(PlussPl INTERFACE)
 
 target_include_directories(PlussPl INTERFACE
-		${PROJECT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/2D/CMakeLists.txt")

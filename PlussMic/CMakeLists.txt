@@ -7,6 +7,7 @@ target_include_directories(PlussMic PUBLIC
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/../PlussPl/include
     ${PROJECT_SOURCE_DIR}/../include
     ${PROJECT_SOURCE_DIR}/../PlussQit/include
     ${PROJECT_SOURCE_DIR}/../PlussQit/src
@@ -25,6 +26,7 @@ add_subdirectory(src/bundle)
 add_subdirectory(src/table)
 
 target_link_libraries(PlussMic PUBLIC
+    PlussPl
     PlussQit
     plussqit_codeh
     plussqit_codem

@@ -44,6 +44,7 @@ public:
 
   DataFrame frame(std::int64_t index) const;
   DataFrame iloc(std::int64_t index) const;
+  DataFramePlotAccessor plot(std::int64_t frame_index = 0) const;
 
   DataFrame loc(std::string_view label) const;
   DataFrame loc(std::int64_t label) const;

@@ -35,6 +35,7 @@ namespace detail {
 class DataFrameImpl;
 }
 class DataFrame;
+class DataFramePlotAccessor;
 
 class ColumnRef {
 public:
@@ -333,6 +334,7 @@ public:
 
   DataFrame with_column(std::string name, const Thread& column) const;
   DataFrame& with_column_(std::string name, const Thread& column);
+  DataFramePlotAccessor plot() const;
   LetSlot set(std::string_view name);
   LetSlots set(std::initializer_list<std::string_view> names);
   DataFrame set_features(std::string_view name, const Thread& value) const;
@@ -552,3 +554,5 @@ private:
 std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
 
 } // namespace pluss::table
+
+#include "table/plot/DataFramePlot.h"
