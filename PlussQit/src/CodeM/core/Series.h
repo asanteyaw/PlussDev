@@ -88,13 +88,13 @@ public:
   Series contiguous() const;
   Series to(ScalarType st) const;
   // Torch-like transfer/cast entrypoints.
-  // CPU-only for now; non-CPU targets throw until backend support is added.
+  // Non-CPU backend support is incremental (MPS currently supports a subset).
   Series to(Platform target) const;
   Series to(Platform target, ScalarType st) const;
   Series clone() const;
   // Query current backend (Torch-like tensor.device() analog at Platform granularity).
   Platform platform() const noexcept { return SeriesBase::platform(); }
-  // Request transfer to another backend (stubbed until non-CPU backends are implemented).
+  // Request transfer to another backend.
   Series platform(Platform target) const;
   TernaryCompareBuilder tri() const noexcept;
 

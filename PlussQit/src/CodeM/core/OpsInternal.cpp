@@ -32,6 +32,7 @@
 #include "CodeM/native/cpu/UnaryMoreKernels.h"
 #include "CodeM/native/cpu/UnaryExtraMathKernels.h"
 #include "CodeM/native/cpu/BinaryExtraMathKernels.h"
+#include "CodeM/native/mps/Elementwise.h"
 #include "CodeM/core/Complex.h"
 #include "CodeM/core/Half.h"
 
@@ -114,6 +115,13 @@ static Series binary_op_(native::cpu::BinaryOpId op, const Series& a0, const Ser
   Series b = (b0.scalar_type()==dt) ? b0 : b0.to(dt);
   auto out_shape = broadcast_out_shape_(a.sizes(), b.sizes());
   Series out = Series::empty(out_shape, dt, a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_binary(op, dt)) {
+      throw_error("binary op: MPS path does not yet support this dtype/op combination");
+    }
+    native::mps::binary(op, a, b, out);
+    return out;
+  }
   auto fn = native::cpu::lookup_binary(op, dt);
   PLUSS_CHECK(fn != nullptr, "binary kernel missing");
   fn(a, b, out);
@@ -127,6 +135,13 @@ static Series cmp_op_(native::cpu::BinaryOpId op, const Series& a0, const Series
   Series b = (b0.scalar_type()==dt) ? b0 : b0.to(dt);
   auto out_shape = broadcast_out_shape_(a.sizes(), b.sizes());
   Series out = Series::empty(out_shape, ScalarType::Bool, a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_binary(op, dt)) {
+      throw_error("comparison op: MPS path does not yet support this dtype/op combination");
+    }
+    native::mps::binary(op, a, b, out);
+    return out;
+  }
   auto fn = native::cpu::lookup_binary(op, dt);
   PLUSS_CHECK(fn != nullptr, "compare kernel missing");
   fn(a, b, out);
@@ -135,6 +150,13 @@ static Series cmp_op_(native::cpu::BinaryOpId op, const Series& a0, const Series
 
 static Series unary_op_(native::cpu::UnaryOpId op, const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary(op, a.scalar_type())) {
+      throw_error("unary op: MPS path does not yet support this dtype/op combination");
+    }
+    native::mps::unary(op, a, out);
+    return out;
+  }
   auto fn = native::cpu::lookup_unary(op, a.scalar_type());
   PLUSS_CHECK(fn != nullptr, "unary kernel missing");
   fn(a, out);
@@ -336,9 +358,42 @@ Series le(const Series& a, const Series& b) { return cmp_op_(native::cpu::Binary
 Series gt(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Gt, a, b); }
 Series ge(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Ge, a, b); }
 
-Series sqrt(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::sqrt(a, out); return out; }
-Series exp(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::exp(a, out); return out; }
-Series log(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::log(a, out); return out; }
+Series sqrt(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Sqrt, a.scalar_type())) {
+      throw_error("sqrt: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Sqrt, a, out);
+    return out;
+  }
+  native::cpu::sqrt(a, out);
+  return out;
+}
+Series exp(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Exp, a.scalar_type())) {
+      throw_error("exp: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Exp, a, out);
+    return out;
+  }
+  native::cpu::exp(a, out);
+  return out;
+}
+Series log(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Log, a.scalar_type())) {
+      throw_error("log: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Log, a, out);
+    return out;
+  }
+  native::cpu::log(a, out);
+  return out;
+}
 
 Series& exp_(Series& a) {
   Series tmp = Series::empty(a.sizes(), a.scalar_type(), a.platform());
@@ -380,8 +435,8 @@ Series atan(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_ty
 Series sinh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::sinh(a, out); return out; }
 Series cosh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::cosh(a, out); return out; }
 
-Series log1p(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::log1p(a, out); return out; }
-Series expm1(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::expm1(a, out); return out; }
+Series log1p(const Series& a) { return unary_op_(native::cpu::UnaryOpId::Log1p, a); }
+Series expm1(const Series& a) { return unary_op_(native::cpu::UnaryOpId::Expm1, a); }
 Series reciprocal(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::reciprocal(a, out); return out; }
 
 Series erf(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::erf(a, out); return out; }
@@ -1726,11 +1781,10 @@ Series Series::platform(Platform target) const {
     case Platform::CUDA:
       throw_error("Series::platform(CUDA): CUDA backend not built yet");
     case Platform::MPS:
-#if defined(__APPLE__)
+      if (!native::mps::is_available()) {
+        throw_error("Series::platform(MPS): MPS backend is unavailable on this runtime/build");
+      }
       break;
-#else
-      throw_error("Series::platform(MPS): MPS backend requires Apple platform");
-#endif
     default:
       throw_error("Series::platform: unsupported platform");
   }

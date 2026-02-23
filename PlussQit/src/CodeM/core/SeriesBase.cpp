@@ -1,5 +1,6 @@
 #include "CodeM/core/SeriesBase.h"
 #include "CodeM/core/Errors.h"
+#include "CodeM/native/mps/BufferCache.h"
 
 namespace pluss::codem {
 
@@ -22,7 +23,20 @@ std::span<const std::int64_t> SeriesBase::strides() const {
 std::int64_t SeriesBase::dim() const { return static_cast<std::int64_t>(sizes().size()); }
 std::int64_t SeriesBase::numel() const { return impl_->numel(); }
 bool SeriesBase::is_contiguous() const { return impl_->is_contiguous(); }
-std::byte* SeriesBase::raw_data() { return impl_->raw_data(); }
-const std::byte* SeriesBase::raw_data() const { return impl_->raw_data(); }
+std::byte* SeriesBase::raw_data() {
+  if (!defined()) throw_error("SeriesBase: undefined");
+  if (impl_->platform() == Platform::MPS) {
+    native::mps::sync_host_if_needed(*this);
+    native::mps::mark_host_data_dirty(*this);
+  }
+  return impl_->raw_data();
+}
+const std::byte* SeriesBase::raw_data() const {
+  if (!defined()) throw_error("SeriesBase: undefined");
+  if (impl_->platform() == Platform::MPS) {
+    native::mps::sync_host_if_needed(*this);
+  }
+  return impl_->raw_data();
+}
 
 } // namespace pluss::codem

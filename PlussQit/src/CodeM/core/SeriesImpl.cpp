@@ -1,10 +1,15 @@
 #include "CodeM/core/SeriesImpl.h"
 #include "CodeM/core/ViewInvariants.h"
 #include "CodeM/core/Errors.h"
+#include "CodeM/native/mps/BufferCache.h"
 
 #include <cstddef>
 
 namespace pluss::codem {
+
+SeriesImpl::~SeriesImpl() {
+  native::mps::erase_series_entry(this);
+}
 
 std::int64_t compute_numel(std::span<const std::int64_t> sizes) {
   if (sizes.empty()) return 1;

@@ -14,6 +14,8 @@ namespace pluss::codem {
 // Metadata+storage backing object (Torch-like TensorImpl).
 class CODEM_API SeriesImpl final : public pluss::msharp::RefCounted {
 public:
+  ~SeriesImpl() override;
+
   SeriesImpl(Storage storage,
              std::int64_t storage_offset_elems,
              std::vector<std::int64_t> sizes,

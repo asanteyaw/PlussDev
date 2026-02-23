@@ -13,6 +13,7 @@
 #include "CodeM/native/cpu/IndexingExtras.h"
 #include "CodeM/native/cpu/SignalDistanceKernels.h"
 #include "CodeM/native/cpu/SortingKernels.h"
+#include "CodeM/native/mps/Matmul.h"
 
 #include <sstream>
 #include <array>
@@ -93,6 +94,17 @@ static void validate_series_arg_platforms(std::string_view op, const Series& sel
     const Series& other = *std::get<const Series*>(arg.v);
     ops_internal::require_same_platform(self, other, op);
   }
+}
+
+static Series matmul_dispatch_(const Series& a, const Series& b) {
+  ops_internal::require_same_platform(a, b, "matmul");
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_matmul(a, b)) {
+      throw_error("matmul: MPS path currently supports contiguous 2D float32 only");
+    }
+    return native::mps::matmul(a, b);
+  }
+  return native::cpu::matmul(a, b);
 }
 
 
@@ -1702,9 +1714,9 @@ static Series matrix_power_impl(const Series& self, std::int64_t n) {
   if (n < 0) base = inverse_impl(base);
   Series res = identity_f64(base.sizes()[0]);
   while (e > 0) {
-    if (e & 1ULL) res = native::cpu::matmul(res, base);
+    if (e & 1ULL) res = matmul_dispatch_(res, base);
     e >>= 1ULL;
-    if (e) base = native::cpu::matmul(base, base);
+    if (e) base = matmul_dispatch_(base, base);
   }
   return res;
 }
@@ -1716,7 +1728,7 @@ static Series matrix_exp_impl(const Series& self) {
   Series res = identity_f64(n);
   Series term = identity_f64(n);
   for (std::int64_t k = 1; k <= 18; ++k) {
-    term = native::cpu::matmul(term, a);
+    term = matmul_dispatch_(term, a);
     term = div_scalar(term, static_cast<double>(k));
     res = ops_internal::add(res, term);
   }
@@ -1749,7 +1761,7 @@ static Series cholesky_impl(const Series& self, bool upper) {
 static Series cholesky_inverse_impl(const Series& factor, bool upper) {
   Series l = factor.to(ScalarType::Float64);
   if (upper) l = l.transpose(0, 1);
-  auto a = native::cpu::matmul(l, l.transpose(0, 1));
+  auto a = matmul_dispatch_(l, l.transpose(0, 1));
   return inverse_impl(a);
 }
 
@@ -1833,7 +1845,7 @@ static Series covariance_impl(const Series& self) {
   const auto obs = x.sizes()[1];
   PLUSS_CHECK(obs >= 1, "cov: expected at least one observation");
   auto xc = centered_impl(x, 1);
-  auto cov = native::cpu::matmul(xc, xc.transpose(0, 1));
+  auto cov = matmul_dispatch_(xc, xc.transpose(0, 1));
   return div_scalar(cov, std::max<std::int64_t>(1, obs - 1));
 }
 
@@ -2241,13 +2253,13 @@ static Series pinverse_impl(const Series& self, double rcond) {
   if (m == n) return inverse_impl(a);
   const auto at = a.transpose(0, 1);
   if (m >= n) {
-    auto gram = native::cpu::matmul(at, a);
+    auto gram = matmul_dispatch_(at, a);
     auto reg = ops_internal::add(gram, mul_scalar(identity_f64(n), rcond));
-    return native::cpu::matmul(inverse_impl(reg), at);
+    return matmul_dispatch_(inverse_impl(reg), at);
   }
-  auto gram = native::cpu::matmul(a, at);
+  auto gram = matmul_dispatch_(a, at);
   auto reg = ops_internal::add(gram, mul_scalar(identity_f64(m), rcond));
-  return native::cpu::matmul(at, inverse_impl(reg));
+  return matmul_dispatch_(at, inverse_impl(reg));
 }
 
 static std::string_view canonical_op(std::string_view op) {
@@ -2810,7 +2822,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "prelu") return prelu_impl(self, other);
       if (op == "diagonal_scatter") return diagonal_scatter_impl(self, other, /*diagonal=*/0);
       if (op == "cholesky_solve") return cholesky_solve_impl(self, other, /*upper=*/false);
-      if (op == "lu_solve") return native::cpu::matmul(inverse_impl(other), self.to(ScalarType::Float64));
+      if (op == "lu_solve") return matmul_dispatch_(inverse_impl(other), self.to(ScalarType::Float64));
       if (op == "triangular_solve") return triangular_solve_impl(self, other, /*upper=*/true, /*unitriangular=*/false);
       if (op == "igamma") return igamma_impl(self, other, /*complement=*/false);
       if (op == "igammac") return igamma_impl(self, other, /*complement=*/true);
@@ -2866,12 +2878,12 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
                                                    std::equal(self.sizes().begin(), self.sizes().end(), other.sizes().begin()));
       if (op == "reshape_as" || op == "view_as") return self.reshape(other.sizes());
       if (op == "type_as") return self.to(other.scalar_type());
-      if (op == "ger") return native::cpu::matmul(self.unsqueeze(1), other.unsqueeze(0));
+      if (op == "ger") return matmul_dispatch_(self.unsqueeze(1), other.unsqueeze(0));
 
-      if (op == "matmul") return native::cpu::matmul(self, other);
-      if (op == "mm") return native::cpu::matmul(self, other);
-      if (op == "mv") return native::cpu::matmul(self, other);
-      if (op == "bmm") return native::cpu::matmul(self, other);
+      if (op == "matmul") return matmul_dispatch_(self, other);
+      if (op == "mm") return matmul_dispatch_(self, other);
+      if (op == "mv") return matmul_dispatch_(self, other);
+      if (op == "bmm") return matmul_dispatch_(self, other);
       if (op == "index") return self.take(other);
       if (op == "take") return self.take(other);
       if (op == "take_along_dim") {
@@ -2891,7 +2903,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
         PLUSS_CHECK(a1.numel() == b1.numel(), "inner: flattened inputs must have same numel");
         return ops_internal::sum(ops_internal::mul(a1, b1));
       }
-      if (op == "outer") return native::cpu::matmul(self.unsqueeze(1), other.unsqueeze(0));
+      if (op == "outer") return matmul_dispatch_(self.unsqueeze(1), other.unsqueeze(0));
       if (op == "vdot") return vdot_impl(self, other);
       if (op == "cross") return cross_impl(self, other, -1);
       if (op == "dist") return ops_internal::sub(self, other).norm(2.0);
@@ -2905,7 +2917,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "zeta") return zeta_impl(self, other);
       if (op == "cdist" || op == "pdist2") return cdist_impl(self, other, 2.0);
       if (op == "sparse_mask") return ops_internal::where(other.to(ScalarType::Bool), self, scalar_like(self, 0.0));
-      if (op == "smm") return native::cpu::matmul(self, other);
+      if (op == "smm") return matmul_dispatch_(self, other);
 
       if (op == "masked_select") return ops_internal::masked_select(self, other);
       if (op == "gather") return self.gather(/*dim=*/0, other);
@@ -3041,7 +3053,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       const bool b = as_bool(args[1]);
       if (op == "cholesky_solve") return cholesky_solve_impl(self, other, b);
       if (op == "triangular_solve") return triangular_solve_impl(self, other, b, /*unitriangular=*/false);
-      if (op == "lu_solve") return native::cpu::matmul(inverse_impl(other), self.to(ScalarType::Float64));
+      if (op == "lu_solve") return matmul_dispatch_(inverse_impl(other), self.to(ScalarType::Float64));
       return not_impl(op, args, self);
     }
 
@@ -3103,7 +3115,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "diagonal_scatter") return diagonal_scatter_impl(self, other, (std::int64_t)s);
       if (op == "cholesky_solve") return cholesky_solve_impl(self, other, s != 0.0);
       if (op == "triangular_solve") return triangular_solve_impl(self, other, s != 0.0, /*unitriangular=*/false);
-      if (op == "lu_solve") return native::cpu::matmul(inverse_impl(other), self.to(ScalarType::Float64));
+      if (op == "lu_solve") return matmul_dispatch_(inverse_impl(other), self.to(ScalarType::Float64));
       if (op == "lerp") return ops_internal::add(self, mul_scalar(ops_internal::sub(other, self), s));
       if (op == "take_along_dim") return self.gather((std::int64_t)s, other);
       if (op == "masked_fill") return ops_internal::masked_fill(self, other, s);
@@ -3136,14 +3148,14 @@ if (is_numeric_scalar_arg(args[0]) &&
       if (op == "where") return self.where(m, s);
       if (op == "masked_fill") return ops_internal::masked_fill(self, m, s);
       if (op == "cdist" || op == "pdist2") return cdist_impl(self, m, 2.0);
-      if (op == "addmm") return combine_beta_alpha(self, native::cpu::matmul(m, s), /*beta=*/1.0, /*alpha=*/1.0);
-      if (op == "addmv") return combine_beta_alpha(self, native::cpu::matmul(m, s), /*beta=*/1.0, /*alpha=*/1.0);
-      if (op == "addr") return combine_beta_alpha(self, native::cpu::matmul(m.unsqueeze(1), s.unsqueeze(0)), /*beta=*/1.0, /*alpha=*/1.0);
+      if (op == "addmm") return combine_beta_alpha(self, matmul_dispatch_(m, s), /*beta=*/1.0, /*alpha=*/1.0);
+      if (op == "addmv") return combine_beta_alpha(self, matmul_dispatch_(m, s), /*beta=*/1.0, /*alpha=*/1.0);
+      if (op == "addr") return combine_beta_alpha(self, matmul_dispatch_(m.unsqueeze(1), s.unsqueeze(0)), /*beta=*/1.0, /*alpha=*/1.0);
       if (op == "addbmm") {
-        Series upd = native::cpu::matmul(m, s).sum(/*dim=*/0, /*keepdim=*/false);
+        Series upd = matmul_dispatch_(m, s).sum(/*dim=*/0, /*keepdim=*/false);
         return combine_beta_alpha(self, upd, /*beta=*/1.0, /*alpha=*/1.0);
       }
-      if (op == "baddbmm") return combine_beta_alpha(self, native::cpu::matmul(m, s), /*beta=*/1.0, /*alpha=*/1.0);
+      if (op == "baddbmm") return combine_beta_alpha(self, matmul_dispatch_(m, s), /*beta=*/1.0, /*alpha=*/1.0);
       if (op == "lerp") return ops_internal::add(self, ops_internal::mul(ops_internal::sub(m, self), s));
       if (op == "masked_scatter") return self.masked_scatter(m, s);
       if (op == "where") return ops_internal::where(self, m, s);
@@ -3436,14 +3448,14 @@ if (is_numeric_scalar_arg(args[0]) &&
       const Series& c = as_series(args[1]);
       const double beta = as_double(args[2]);
       const double alpha = as_double(args[3]);
-      if (op == "addmm") return combine_beta_alpha(self, native::cpu::matmul(b, c), beta, alpha);
-      if (op == "addmv") return combine_beta_alpha(self, native::cpu::matmul(b, c), beta, alpha);
-      if (op == "addr") return combine_beta_alpha(self, native::cpu::matmul(b.unsqueeze(1), c.unsqueeze(0)), beta, alpha);
+      if (op == "addmm") return combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha);
+      if (op == "addmv") return combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha);
+      if (op == "addr") return combine_beta_alpha(self, matmul_dispatch_(b.unsqueeze(1), c.unsqueeze(0)), beta, alpha);
       if (op == "addbmm") {
-        Series upd = native::cpu::matmul(b, c).sum(/*dim=*/0, /*keepdim=*/false);
+        Series upd = matmul_dispatch_(b, c).sum(/*dim=*/0, /*keepdim=*/false);
         return combine_beta_alpha(self, upd, beta, alpha);
       }
-      if (op == "baddbmm") return combine_beta_alpha(self, native::cpu::matmul(b, c), beta, alpha);
+      if (op == "baddbmm") return combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha);
     }
     return not_impl(op, args, self);
   }
@@ -3802,14 +3814,14 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     if (std::holds_alternative<const Series*>(a0) && std::holds_alternative<const Series*>(a1)) {
       const Series& b = as_series(args[0]);
       const Series& c = as_series(args[1]);
-      if (op == "addmm_") { self = combine_beta_alpha(self, native::cpu::matmul(b, c), 1.0, 1.0); return self; }
-      if (op == "addmv_") { self = combine_beta_alpha(self, native::cpu::matmul(b, c), 1.0, 1.0); return self; }
-      if (op == "addr_") { self = combine_beta_alpha(self, native::cpu::matmul(b.unsqueeze(1), c.unsqueeze(0)), 1.0, 1.0); return self; }
+      if (op == "addmm_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), 1.0, 1.0); return self; }
+      if (op == "addmv_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), 1.0, 1.0); return self; }
+      if (op == "addr_") { self = combine_beta_alpha(self, matmul_dispatch_(b.unsqueeze(1), c.unsqueeze(0)), 1.0, 1.0); return self; }
       if (op == "addbmm_") {
-        self = combine_beta_alpha(self, native::cpu::matmul(b, c).sum(/*dim=*/0, /*keepdim=*/false), 1.0, 1.0);
+        self = combine_beta_alpha(self, matmul_dispatch_(b, c).sum(/*dim=*/0, /*keepdim=*/false), 1.0, 1.0);
         return self;
       }
-      if (op == "baddbmm_") { self = combine_beta_alpha(self, native::cpu::matmul(b, c), 1.0, 1.0); return self; }
+      if (op == "baddbmm_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), 1.0, 1.0); return self; }
       if (op == "masked_scatter_") return ops_internal::masked_scatter_(self, b, c);
       if (op == "masked_fill_") return ops_internal::masked_fill_(self, b, c);
       if (op == "index_put_") { self = native::cpu::put(self, b, c, /*accumulate=*/false); return self; }
@@ -3954,14 +3966,14 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const Series& c = as_series(args[1]);
       const double beta = as_double(args[2]);
       const double alpha = as_double(args[3]);
-      if (op == "addmm_") { self = combine_beta_alpha(self, native::cpu::matmul(b, c), beta, alpha); return self; }
-      if (op == "addmv_") { self = combine_beta_alpha(self, native::cpu::matmul(b, c), beta, alpha); return self; }
-      if (op == "addr_") { self = combine_beta_alpha(self, native::cpu::matmul(b.unsqueeze(1), c.unsqueeze(0)), beta, alpha); return self; }
+      if (op == "addmm_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha); return self; }
+      if (op == "addmv_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha); return self; }
+      if (op == "addr_") { self = combine_beta_alpha(self, matmul_dispatch_(b.unsqueeze(1), c.unsqueeze(0)), beta, alpha); return self; }
       if (op == "addbmm_") {
-        self = combine_beta_alpha(self, native::cpu::matmul(b, c).sum(/*dim=*/0, /*keepdim=*/false), beta, alpha);
+        self = combine_beta_alpha(self, matmul_dispatch_(b, c).sum(/*dim=*/0, /*keepdim=*/false), beta, alpha);
         return self;
       }
-      if (op == "baddbmm_") { self = combine_beta_alpha(self, native::cpu::matmul(b, c), beta, alpha); return self; }
+      if (op == "baddbmm_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), beta, alpha); return self; }
     }
     return not_impl_inplace(op, args, self);
   }

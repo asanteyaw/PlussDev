@@ -54,6 +54,9 @@ endif()
 
 # ---- CodeM (ATen-like) ----
 if (PLUSSQIT_BUILD_CODEM)
+if(APPLE)
+  enable_language(OBJCXX)
+endif()
 set(PLUSSQIT_GEN_DIR ${CMAKE_BINARY_DIR}/generated)
 set(SERIES_GEN_DIR ${PLUSSQIT_GEN_DIR})
 file(MAKE_DIRECTORY ${PLUSSQIT_GEN_DIR})
@@ -165,6 +168,20 @@ list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/
 # Duplicate compare implementation; keep CompareOps.cpp as canonical kernel entry.
 list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/cpu/Compare.cpp")
 
+if(APPLE)
+  set(PLUSSQIT_CODEM_MPS_SRC
+    src/CodeM/native/mps/BufferCache.mm
+    src/CodeM/native/mps/Elementwise.mm
+    src/CodeM/native/mps/Matmul.mm
+  )
+else()
+  set(PLUSSQIT_CODEM_MPS_SRC
+    src/CodeM/native/mps/BufferCacheStub.cpp
+    src/CodeM/native/mps/ElementwiseStub.cpp
+    src/CodeM/native/mps/MatmulStub.cpp
+  )
+endif()
+
 add_library(plussqit_codem
   src/MSharp/core/MSharpMacros.h
   src/CodeM/core/Errors.h
@@ -185,6 +202,7 @@ add_library(plussqit_codem
   ${SERIES_OPSINTERNAL_DEFS}
   ${SERIES_METHODS_GEN_HEADER}
   ${PLUSSQIT_CODEM_CORE_CPP}
+  ${PLUSSQIT_CODEM_MPS_SRC}
   ${PLUSSQIT_GEN_DIR}/CodeM/ops/ops_generated.cpp
 )
 
@@ -212,6 +230,10 @@ if(PLUSS_ENABLE_TORCH)
 endif()
 
 target_compile_features(plussqit_codem PUBLIC cxx_std_20)
+
+if(APPLE)
+  target_compile_options(plussqit_codem PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
+endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
   target_compile_options(plussqit_codem PRIVATE -Wall -Wextra -Wpedantic)
@@ -255,6 +277,9 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
 
   add_executable(plussqit_codem_signal_demo examples/CodeM/signal_demo.cpp)
   target_link_libraries(plussqit_codem_signal_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_mps_vs_cpu_demo examples/CodeM/mps_vs_cpu_demo.cpp)
+  target_link_libraries(plussqit_codem_mps_vs_cpu_demo PRIVATE PlussQit::CodeM)
 endif()
 
 # Close optional CodeM block before defining CodeN.
@@ -612,12 +637,21 @@ install(EXPORT PlussQitTargets
 
 if(APPLE AND PLUSSQIT_BUILD_CODEM)
   find_library(PLUSS_ACCELERATE_FRAMEWORK Accelerate)
+  find_library(PLUSS_METAL_FRAMEWORK Metal)
+  find_library(PLUSS_MPS_FRAMEWORK MetalPerformanceShaders)
+  find_library(PLUSS_FOUNDATION_FRAMEWORK Foundation)
   if(PLUSS_ACCELERATE_FRAMEWORK)
     target_link_libraries(plussqit_codem PUBLIC ${PLUSS_ACCELERATE_FRAMEWORK})
     target_compile_definitions(plussqit_codem PUBLIC PLUSS_HAS_ACCELERATE=1)
     target_compile_definitions(plussqit_codem PUBLIC ACCELERATE_NEW_LAPACK=1)
   else()
     target_compile_definitions(plussqit_codem PUBLIC PLUSS_HAS_ACCELERATE=0)
+  endif()
+  if(PLUSS_METAL_FRAMEWORK AND PLUSS_MPS_FRAMEWORK AND PLUSS_FOUNDATION_FRAMEWORK)
+    target_link_libraries(plussqit_codem PUBLIC ${PLUSS_METAL_FRAMEWORK} ${PLUSS_MPS_FRAMEWORK} ${PLUSS_FOUNDATION_FRAMEWORK})
+    target_compile_definitions(plussqit_codem PUBLIC PLUSS_HAS_MPS=1)
+  else()
+    target_compile_definitions(plussqit_codem PUBLIC PLUSS_HAS_MPS=0)
   endif()
 endif()
 

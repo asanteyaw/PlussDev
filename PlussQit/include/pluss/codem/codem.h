@@ -14,6 +14,8 @@ namespace pluss::codem {
 
 enum class TernaryCompareOp : std::uint8_t { Eq, Ne, Lt, Le, Gt, Ge };
 
+CODEM_API bool mps_backend_available() noexcept;
+
 struct TernaryCompareBuilder {
   const Series& first;
 };
@@ -91,11 +93,7 @@ inline bool platform_available(Platform p) noexcept {
     case Platform::CUDA:
       return false;
     case Platform::MPS:
-#if defined(__APPLE__)
-      return true;
-#else
-      return false;
-#endif
+      return mps_backend_available();
     default:
       return false;
   }
