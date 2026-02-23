@@ -396,48 +396,215 @@ Series log(const Series& a) {
 }
 
 Series& exp_(Series& a) {
-  Series tmp = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  native::cpu::exp(a, tmp);
-  const auto nbytes = static_cast<std::size_t>(tmp.numel()) * dtype_of(tmp.scalar_type()).itemsize;
-  std::memcpy(a.raw_mutable_data(), tmp.raw_data(), nbytes);
+  a = exp(a);
   return a;
 }
 Series& log_(Series& a) {
-  Series tmp = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  native::cpu::log(a, tmp);
-  const auto nbytes = static_cast<std::size_t>(tmp.numel()) * dtype_of(tmp.scalar_type()).itemsize;
-  std::memcpy(a.raw_mutable_data(), tmp.raw_data(), nbytes);
+  a = log(a);
   return a;
 }
 Series& sqrt_(Series& a) {
-  Series tmp = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  native::cpu::sqrt(a, tmp);
-  const auto nbytes = static_cast<std::size_t>(tmp.numel()) * dtype_of(tmp.scalar_type()).itemsize;
-  std::memcpy(a.raw_mutable_data(), tmp.raw_data(), nbytes);
+  a = sqrt(a);
   return a;
 }
 
-Series floor(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::floor(a, out); return out; }
-Series ceil(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::ceil(a, out); return out; }
-Series round(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::round(a, out); return out; }
-Series trunc(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::trunc(a, out); return out; }
-Series isnan(const Series& a) { Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform()); native::cpu::isnan(a, out); return out; }
-Series isinf(const Series& a) { Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform()); native::cpu::isinf(a, out); return out; }
+Series floor(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Floor, a.scalar_type())) {
+      throw_error("floor: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Floor, a, out);
+    return out;
+  }
+  native::cpu::floor(a, out);
+  return out;
+}
+Series ceil(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Ceil, a.scalar_type())) {
+      throw_error("ceil: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Ceil, a, out);
+    return out;
+  }
+  native::cpu::ceil(a, out);
+  return out;
+}
+Series round(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Round, a.scalar_type())) {
+      throw_error("round: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Round, a, out);
+    return out;
+  }
+  native::cpu::round(a, out);
+  return out;
+}
+Series trunc(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Trunc, a.scalar_type())) {
+      throw_error("trunc: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Trunc, a, out);
+    return out;
+  }
+  native::cpu::trunc(a, out);
+  return out;
+}
+Series isnan(const Series& a) {
+  Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsNan, a.scalar_type())) {
+      throw_error("isnan: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_pred(native::mps::UnaryPredOp::IsNan, a, out);
+    return out;
+  }
+  native::cpu::isnan(a, out);
+  return out;
+}
+Series isinf(const Series& a) {
+  Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsInf, a.scalar_type())) {
+      throw_error("isinf: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_pred(native::mps::UnaryPredOp::IsInf, a, out);
+    return out;
+  }
+  native::cpu::isinf(a, out);
+  return out;
+}
 
-Series sin(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::sin(a, out); return out; }
-Series cos(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::cos(a, out); return out; }
-Series tanh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::tanh(a, out); return out; }
+Series sin(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Sin, a.scalar_type())) {
+      throw_error("sin: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Sin, a, out);
+    return out;
+  }
+  native::cpu::sin(a, out);
+  return out;
+}
+Series cos(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Cos, a.scalar_type())) {
+      throw_error("cos: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Cos, a, out);
+    return out;
+  }
+  native::cpu::cos(a, out);
+  return out;
+}
+Series tanh(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Tanh, a.scalar_type())) {
+      throw_error("tanh: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Tanh, a, out);
+    return out;
+  }
+  native::cpu::tanh(a, out);
+  return out;
+}
 
-Series tan(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::tan(a, out); return out; }
-Series asin(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::asin(a, out); return out; }
-Series acos(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::acos(a, out); return out; }
-Series atan(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::atan(a, out); return out; }
-Series sinh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::sinh(a, out); return out; }
-Series cosh(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::cosh(a, out); return out; }
+Series tan(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Tan, a.scalar_type())) {
+      throw_error("tan: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Tan, a, out);
+    return out;
+  }
+  native::cpu::tan(a, out);
+  return out;
+}
+Series asin(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Asin, a.scalar_type())) {
+      throw_error("asin: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Asin, a, out);
+    return out;
+  }
+  native::cpu::asin(a, out);
+  return out;
+}
+Series acos(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Acos, a.scalar_type())) {
+      throw_error("acos: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Acos, a, out);
+    return out;
+  }
+  native::cpu::acos(a, out);
+  return out;
+}
+Series atan(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Atan, a.scalar_type())) {
+      throw_error("atan: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Atan, a, out);
+    return out;
+  }
+  native::cpu::atan(a, out);
+  return out;
+}
+Series sinh(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Sinh, a.scalar_type())) {
+      throw_error("sinh: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Sinh, a, out);
+    return out;
+  }
+  native::cpu::sinh(a, out);
+  return out;
+}
+Series cosh(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Cosh, a.scalar_type())) {
+      throw_error("cosh: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Cosh, a, out);
+    return out;
+  }
+  native::cpu::cosh(a, out);
+  return out;
+}
 
 Series log1p(const Series& a) { return unary_op_(native::cpu::UnaryOpId::Log1p, a); }
 Series expm1(const Series& a) { return unary_op_(native::cpu::UnaryOpId::Expm1, a); }
-Series reciprocal(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::reciprocal(a, out); return out; }
+Series reciprocal(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Reciprocal, a.scalar_type())) {
+      throw_error("reciprocal: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_math(native::mps::UnaryMathOp::Reciprocal, a, out);
+    return out;
+  }
+  native::cpu::reciprocal(a, out);
+  return out;
+}
 
 Series erf(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::erf(a, out); return out; }
 Series erfc(const Series& a) { Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform()); native::cpu::erfc(a, out); return out; }
@@ -465,7 +632,18 @@ Series& bitwise_or_(Series& a, const Series& b) { return a.bitwise_or_(b); }
 Series bitwise_xor(const Series& a, const Series& b) { return a.bitwise_xor(b); }
 Series& bitwise_xor_(Series& a, const Series& b) { return a.bitwise_xor_(b); }
 
-Series isfinite(const Series& a) { Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform()); native::cpu::isfinite(a, out); return out; }
+Series isfinite(const Series& a) {
+  Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsFinite, a.scalar_type())) {
+      throw_error("isfinite: MPS path does not yet support this dtype");
+    }
+    native::mps::unary_pred(native::mps::UnaryPredOp::IsFinite, a, out);
+    return out;
+  }
+  native::cpu::isfinite(a, out);
+  return out;
+}
 
 Series logical_not(const Series& a) { Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform()); native::cpu::logical_not(a, out); return out; }
 
@@ -816,9 +994,17 @@ Series where(const Series& cond, const Series& a, const Series& b) {
   auto aa = a.expand(std::span<const std::int64_t>(shape.data(), shape.size()), /*implicit=*/true);
   auto bb = b.expand(std::span<const std::int64_t>(shape.data(), shape.size()), /*implicit=*/true);
   ScalarType dt = promote_types(aa.scalar_type(), bb.scalar_type());
+  cc = (cc.scalar_type() == ScalarType::Bool) ? cc : cc.to(ScalarType::Bool);
   aa = aa.to(dt);
   bb = bb.to(dt);
   Series out = Series::empty(shape, dt, a.platform());
+  if (a.platform() == Platform::MPS) {
+    if (native::mps::supports_where(cc.scalar_type(), dt)) {
+      native::mps::where(cc.contiguous(), aa.contiguous(), bb.contiguous(), out);
+      return out;
+    }
+    throw_error("where: MPS path does not yet support this dtype combination");
+  }
   native::cpu::where(cc, aa, bb, out);
   return out;
 }
@@ -834,6 +1020,10 @@ Series& clamp_(Series& a, double min, double max) {
   PLUSS_CHECK(min <= max, "clamp_: min must be <= max");
   PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
               "clamp_: complex dtype not supported");
+  if (a.platform() == Platform::MPS) {
+    a = clamp_max(clamp_min(a, min), max);
+    return a;
+  }
   auto aa = a.contiguous();
   native::cpu::clamp_inplace(aa, min, max);
   if (a.is_contiguous()) {
@@ -853,6 +1043,15 @@ Series& relu_(Series& a) {
   PLUSS_CHECK(a.defined(), "relu_: undefined");
   PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
               "relu_: complex dtype not supported");
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Relu, a.scalar_type())) {
+      throw_error("relu_: MPS path does not yet support this dtype");
+    }
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+    native::mps::unary_math(native::mps::UnaryMathOp::Relu, a.contiguous(), out);
+    a.copy_(out);
+    return a;
+  }
   auto aa = a.contiguous();
   native::cpu::relu_inplace(aa);
   if (a.is_contiguous()) {
@@ -864,12 +1063,24 @@ Series& relu_(Series& a) {
 }
 
 Series sigmoid(const Series& a) {
+  if (a.platform() == Platform::MPS) {
+    if (!native::mps::supports_unary_math(native::mps::UnaryMathOp::Sigmoid, a.scalar_type())) {
+      throw_error("sigmoid: MPS path does not yet support this dtype");
+    }
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+    native::mps::unary_math(native::mps::UnaryMathOp::Sigmoid, a.contiguous(), out);
+    return out;
+  }
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   auto aa = a.contiguous();
   native::cpu::sigmoid(aa, out);
   return out;
 }
 Series& sigmoid_(Series& a) {
+  if (a.platform() == Platform::MPS) {
+    a = sigmoid(a);
+    return a;
+  }
   PLUSS_CHECK(a.is_contiguous(), "sigmoid_: requires contiguous");
   native::cpu::sigmoid_inplace(a);
   return a;
@@ -972,6 +1183,10 @@ Series maximum(const Series& a, const Series& b) {
   auto out = Series::empty(SeriesIterator::broadcast_shape(a.sizes(), b.sizes()), promote_types(a.scalar_type(), b.scalar_type()), a.platform());
   auto aa = a.contiguous().to(out.scalar_type());
   auto bb = b.contiguous().to(out.scalar_type());
+  if (a.platform() == Platform::MPS && out.scalar_type() == ScalarType::Float32) {
+    Series cond = ge(aa, bb);
+    return where(cond, aa, bb);
+  }
   native::cpu::maximum(aa, bb, out);
   return out;
 }
@@ -981,6 +1196,10 @@ Series minimum(const Series& a, const Series& b) {
   auto out = Series::empty(SeriesIterator::broadcast_shape(a.sizes(), b.sizes()), promote_types(a.scalar_type(), b.scalar_type()), a.platform());
   auto aa = a.contiguous().to(out.scalar_type());
   auto bb = b.contiguous().to(out.scalar_type());
+  if (a.platform() == Platform::MPS && out.scalar_type() == ScalarType::Float32) {
+    Series cond = le(aa, bb);
+    return where(cond, aa, bb);
+  }
   native::cpu::minimum(aa, bb, out);
   return out;
 }
@@ -1066,6 +1285,9 @@ Series& nan_to_num_(Series& a, double nan, double posinf, double neginf) {
 }
 
 Series clamp_min(const Series& a, double lo) {
+  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
+    return maximum(a, scalar_like_(a, lo));
+  }
   auto out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   auto aa = a.contiguous();
   native::cpu::clamp_min(aa, lo, out);
@@ -1081,6 +1303,9 @@ Series& clamp_min_(Series& a, double lo) {
 }
 
 Series clamp_max(const Series& a, double hi) {
+  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
+    return minimum(a, scalar_like_(a, hi));
+  }
   auto out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   auto aa = a.contiguous();
   native::cpu::clamp_max(aa, hi, out);
@@ -2144,38 +2369,19 @@ Series Series::logical_or(const Series& rhs) const { return as_bool(*this).bitwi
 Series Series::logical_xor(const Series& rhs) const { return as_bool(*this).bitwise_xor(as_bool(rhs)); }
 Series Series::logical_not() const { return as_bool(*this).bitwise_not(); }
 
-static Series unary_out_(const Series& a, void(*fn)(const Series&, Series&)) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  fn(a, out);
-  return out;
-}
+Series Series::exp() const { return ops_internal::exp(*this); }
+Series Series::log() const { return ops_internal::log(*this); }
+Series Series::sqrt() const { return ops_internal::sqrt(*this); }
+Series Series::sin() const { return ops_internal::sin(*this); }
+Series Series::cos() const { return ops_internal::cos(*this); }
+Series Series::tanh() const { return ops_internal::tanh(*this); }
 
-static Series& unary_inplace_(Series& a, void(*fn)(const Series&, Series&)) {
-  // Safe for dense layouts. For non-dense, we materialize to contiguous then write back.
-  if (!is_non_overlapping_and_dense(std::vector<std::int64_t>(a.sizes().begin(), a.sizes().end()),
-                                   std::vector<std::int64_t>(a.strides().begin(), a.strides().end()))) {
-    Series tmp = a.contiguous();
-    fn(tmp, tmp);
-    a.copy_(tmp);
-    return a;
-  }
-  fn(a, a);
-  return a;
-}
-
-Series Series::exp() const { return unary_out_(*this, native::cpu::exp); }
-Series Series::log() const { return unary_out_(*this, native::cpu::log); }
-Series Series::sqrt() const { return unary_out_(*this, native::cpu::sqrt); }
-Series Series::sin() const { return unary_out_(*this, native::cpu::sin); }
-Series Series::cos() const { return unary_out_(*this, native::cpu::cos); }
-Series Series::tanh() const { return unary_out_(*this, native::cpu::tanh); }
-
-Series& Series::exp_() { return unary_inplace_(*this, native::cpu::exp); }
-Series& Series::log_() { return unary_inplace_(*this, native::cpu::log); }
-Series& Series::sqrt_() { return unary_inplace_(*this, native::cpu::sqrt); }
-Series& Series::sin_() { return unary_inplace_(*this, native::cpu::sin); }
-Series& Series::cos_() { return unary_inplace_(*this, native::cpu::cos); }
-Series& Series::tanh_() { return unary_inplace_(*this, native::cpu::tanh); }
+Series& Series::exp_() { *this = exp(); return *this; }
+Series& Series::log_() { *this = log(); return *this; }
+Series& Series::sqrt_() { *this = sqrt(); return *this; }
+Series& Series::sin_() { *this = sin(); return *this; }
+Series& Series::cos_() { *this = cos(); return *this; }
+Series& Series::tanh_() { *this = tanh(); return *this; }
 
 Series Series::unite(const std::vector<Series>& others, std::int64_t dim) const {
   std::vector<Series> xs;
@@ -2282,44 +2488,44 @@ static Series unary_more_out_(const Series& a, void(*fn)(const Series&, Series&)
 }
 static Series& unary_more_inplace_(Series& a, void(*fn)(const Series&, Series&)) { Series out = unary_more_out_(a, fn); a.copy_(out); return a; }
 
-Series Series::tan() const { return unary_more_out_(*this, native::cpu::tan); }
-Series& Series::tan_() { return unary_more_inplace_(*this, native::cpu::tan); }
+Series Series::tan() const { return ops_internal::tan(*this); }
+Series& Series::tan_() { *this = tan(); return *this; }
 
-Series Series::asin() const { return unary_more_out_(*this, native::cpu::asin); }
-Series& Series::asin_() { return unary_more_inplace_(*this, native::cpu::asin); }
+Series Series::asin() const { return ops_internal::asin(*this); }
+Series& Series::asin_() { *this = asin(); return *this; }
 
-Series Series::acos() const { return unary_more_out_(*this, native::cpu::acos); }
-Series& Series::acos_() { return unary_more_inplace_(*this, native::cpu::acos); }
+Series Series::acos() const { return ops_internal::acos(*this); }
+Series& Series::acos_() { *this = acos(); return *this; }
 
-Series Series::atan() const { return unary_more_out_(*this, native::cpu::atan); }
-Series& Series::atan_() { return unary_more_inplace_(*this, native::cpu::atan); }
+Series Series::atan() const { return ops_internal::atan(*this); }
+Series& Series::atan_() { *this = atan(); return *this; }
 
-Series Series::sinh() const { return unary_more_out_(*this, native::cpu::sinh); }
-Series& Series::sinh_() { return unary_more_inplace_(*this, native::cpu::sinh); }
+Series Series::sinh() const { return ops_internal::sinh(*this); }
+Series& Series::sinh_() { *this = sinh(); return *this; }
 
-Series Series::cosh() const { return unary_more_out_(*this, native::cpu::cosh); }
-Series& Series::cosh_() { return unary_more_inplace_(*this, native::cpu::cosh); }
+Series Series::cosh() const { return ops_internal::cosh(*this); }
+Series& Series::cosh_() { *this = cosh(); return *this; }
 
-Series Series::floor() const { return unary_more_out_(*this, native::cpu::floor); }
-Series& Series::floor_() { return unary_more_inplace_(*this, native::cpu::floor); }
+Series Series::floor() const { return ops_internal::floor(*this); }
+Series& Series::floor_() { *this = floor(); return *this; }
 
-Series Series::ceil() const { return unary_more_out_(*this, native::cpu::ceil); }
-Series& Series::ceil_() { return unary_more_inplace_(*this, native::cpu::ceil); }
+Series Series::ceil() const { return ops_internal::ceil(*this); }
+Series& Series::ceil_() { *this = ceil(); return *this; }
 
-Series Series::round() const { return unary_more_out_(*this, native::cpu::round); }
-Series& Series::round_() { return unary_more_inplace_(*this, native::cpu::round); }
+Series Series::round() const { return ops_internal::round(*this); }
+Series& Series::round_() { *this = round(); return *this; }
 
-Series Series::trunc() const { return unary_more_out_(*this, native::cpu::trunc); }
-Series& Series::trunc_() { return unary_more_inplace_(*this, native::cpu::trunc); }
+Series Series::trunc() const { return ops_internal::trunc(*this); }
+Series& Series::trunc_() { *this = trunc(); return *this; }
 
-Series Series::reciprocal() const { return unary_more_out_(*this, native::cpu::reciprocal); }
-Series& Series::reciprocal_() { return unary_more_inplace_(*this, native::cpu::reciprocal); }
+Series Series::reciprocal() const { return ops_internal::reciprocal(*this); }
+Series& Series::reciprocal_() { *this = reciprocal(); return *this; }
 
-Series Series::sigmoid() const { return unary_more_out_(*this, native::cpu::sigmoid); }
-Series& Series::sigmoid_() { return unary_more_inplace_(*this, native::cpu::sigmoid); }
+Series Series::sigmoid() const { return ops_internal::sigmoid(*this); }
+Series& Series::sigmoid_() { *this = sigmoid(); return *this; }
 
-Series Series::relu() const { return unary_more_out_(*this, native::cpu::relu); }
-Series& Series::relu_() { return unary_more_inplace_(*this, native::cpu::relu); }
+Series Series::relu() const { return ops_internal::relu(*this); }
+Series& Series::relu_() { *this = relu(); return *this; }
 
 Series& Series::logical_not_() { return unary_more_inplace_(*this, native::cpu::logical_not); }
 
@@ -2337,136 +2543,90 @@ Series Series::histc(std::int64_t bins, double min, double max) const {return pl
 
 Series Series::log1p() const {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), scalar_type());
-  auto fn = native::cpu::lookup_unary(native::cpu::UnaryOpId::Log1p, scalar_type());
-  PLUSS_CHECK(fn != nullptr, "log1p: kernel missing");
-  fn(*this, out);
-  return out;
+  return ops_internal::log1p(*this);
 }
 Series& Series::log1p_() {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = log1p();
-  copy_(out);
+  *this = log1p();
   return *this;
 }
 
 Series Series::expm1() const {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), scalar_type());
-  native::cpu::expm1(*this, out);
-  return out;
+  return ops_internal::expm1(*this);
 }
 Series& Series::expm1_() {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = expm1();
-  copy_(out);
+  *this = expm1();
   return *this;
 }
 
 Series Series::erf() const {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), scalar_type());
-  native::cpu::erf(*this, out);
-  return out;
+  return ops_internal::erf(*this);
 }
 Series& Series::erf_() {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = erf();
-  copy_(out);
+  *this = erf();
   return *this;
 }
 
 Series Series::erfc() const {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), scalar_type());
-  native::cpu::erfc(*this, out);
-  return out;
+  return ops_internal::erfc(*this);
 }
 Series& Series::erfc_() {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = erfc();
-  copy_(out);
+  *this = erfc();
   return *this;
 }
 
 Series Series::lgamma() const {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), scalar_type());
-  native::cpu::lgamma(*this, out);
-  return out;
+  return ops_internal::lgamma(*this);
 }
 Series& Series::lgamma_() {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = lgamma();
-  copy_(out);
+  *this = lgamma();
   return *this;
 }
 
 Series Series::asinh() const {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), scalar_type());
-  native::cpu::asinh(*this, out);
-  return out;
+  return ops_internal::asinh(*this);
 }
 Series& Series::asinh_() {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = asinh();
-  copy_(out);
+  *this = asinh();
   return *this;
 }
 
 Series Series::acosh() const {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), scalar_type());
-  native::cpu::acosh(*this, out);
-  return out;
+  return ops_internal::acosh(*this);
 }
 Series& Series::acosh_() {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = acosh();
-  copy_(out);
+  *this = acosh();
   return *this;
 }
 
 Series Series::atanh() const {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), scalar_type());
-  native::cpu::atanh(*this, out);
-  return out;
+  return ops_internal::atanh(*this);
 }
 Series& Series::atanh_() {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = atanh();
-  copy_(out);
+  *this = atanh();
   return *this;
 }
 
 Series Series::isnan() const {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), ScalarType::Bool);
-  native::cpu::isnan(*this, out);
-  return out;
+  return ops_internal::isnan(*this);
 }
 Series& Series::isnan_() {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
   Series out = isnan().to(scalar_type());
   copy_(out);
   return *this;
@@ -2474,14 +2634,10 @@ Series& Series::isnan_() {
 
 Series Series::isinf() const {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), ScalarType::Bool);
-  native::cpu::isinf(*this, out);
-  return out;
+  return ops_internal::isinf(*this);
 }
 Series& Series::isinf_() {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
   Series out = isinf().to(scalar_type());
   copy_(out);
   return *this;
@@ -2489,14 +2645,10 @@ Series& Series::isinf_() {
 
 Series Series::isfinite() const {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), ScalarType::Bool);
-  native::cpu::isfinite(*this, out);
-  return out;
+  return ops_internal::isfinite(*this);
 }
 Series& Series::isfinite_() {
   PLUSS_CALL_GUARD();
-  ops_internal::PlatformScope platform_scope{platform()};
   Series out = isfinite().to(scalar_type());
   copy_(out);
   return *this;
@@ -2591,22 +2743,7 @@ Series Series::mean() const {
 Series Series::where(const Series& condition, const Series& other) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
-  require_same_platform(*this, condition, "where");
-  require_same_platform(*this, other, "where");
-  // dtype promotion
-  ScalarType dt = promote_types(scalar_type(), other.scalar_type());
-  Series a = (scalar_type()==dt) ? *this : to(dt);
-  Series b = (other.scalar_type()==dt) ? other : other.to(dt);
-  Series c = condition;
-  if (c.scalar_type()!=ScalarType::Bool) c = c.to(ScalarType::Bool);
-
-  // broadcasted output shape
-  auto s1 = SeriesIterator::broadcast_shape(c.sizes(), a.sizes());
-  auto out_shape = SeriesIterator::broadcast_shape(s1, b.sizes());
-
-  Series out = Series::empty(out_shape, dt, platform());
-  native::cpu::where(c, a, b, out);
-  return out;
+  return ops_internal::where(condition, *this, other);
 }
 
 Series& Series::where_(const Series& condition, const Series& other) {
@@ -2620,9 +2757,7 @@ Series& Series::where_(const Series& condition, const Series& other) {
 Series Series::clamp_min(double min) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), scalar_type());
-  native::cpu::clamp_min(*this, min, out);
-  return out;
+  return ops_internal::clamp_min(*this, min);
 }
 
 Series& Series::clamp_min_(double min) {
@@ -2636,9 +2771,7 @@ Series& Series::clamp_min_(double min) {
 Series Series::clamp_max(double max) const {
   PLUSS_CALL_GUARD();
   ops_internal::PlatformScope platform_scope{platform()};
-  Series out = Series::empty(sizes(), scalar_type());
-  native::cpu::clamp_max(*this, max, out);
-  return out;
+  return ops_internal::clamp_max(*this, max);
 }
 
 Series& Series::clamp_max_(double max) {

@@ -25,6 +25,12 @@ struct BinaryMeta {
   uint b_scalar;
 };
 
+struct TernaryMeta {
+  uint cond_scalar;
+  uint a_scalar;
+  uint b_scalar;
+};
+
 kernel void binary_f32(
     const device float* a [[buffer(0)]],
     const device float* b [[buffer(1)]],
@@ -66,6 +72,19 @@ kernel void binary_cmp_f32(
   out[gid] = v ? uchar(1) : uchar(0);
 }
 
+kernel void where_f32(
+    const device uchar* cond [[buffer(0)]],
+    const device float* a [[buffer(1)]],
+    const device float* b [[buffer(2)]],
+    device float* out [[buffer(3)]],
+    constant TernaryMeta& meta [[buffer(4)]],
+    uint gid [[thread_position_in_grid]]) {
+  bool m = cond[meta.cond_scalar != 0 ? 0 : gid] != 0;
+  float av = a[meta.a_scalar != 0 ? 0 : gid];
+  float bv = b[meta.b_scalar != 0 ? 0 : gid];
+  out[gid] = m ? av : bv;
+}
+
 struct UnaryMeta {
   uint op;
 };
@@ -85,14 +104,52 @@ kernel void unary_f32(
     case 4: v = exp(x); break;
     case 5: v = log(x); break;
     case 6: v = sqrt(x); break;
+    case 7: v = sin(x); break;
+    case 8: v = cos(x); break;
+    case 9: v = tanh(x); break;
+    case 10: v = tan(x); break;
+    case 11: v = asin(x); break;
+    case 12: v = acos(x); break;
+    case 13: v = atan(x); break;
+    case 14: v = sinh(x); break;
+    case 15: v = cosh(x); break;
+    case 16: v = 1.0f / x; break;
+    case 17: v = floor(x); break;
+    case 18: v = ceil(x); break;
+    case 19: v = round(x); break;
+    case 24: v = max(0.0f, x); break;
+    case 25: v = 1.0f / (1.0f + exp(-x)); break;
+    case 23: v = trunc(x); break;
     default: v = 0.0f; break;
   }
   out[gid] = v;
+}
+
+kernel void unary_pred_f32(
+    const device float* in [[buffer(0)]],
+    device uchar* out [[buffer(1)]],
+    constant UnaryMeta& meta [[buffer(2)]],
+    uint gid [[thread_position_in_grid]]) {
+  float x = in[gid];
+  bool v = false;
+  switch (meta.op) {
+    case 20: v = isnan(x); break;
+    case 21: v = isinf(x); break;
+    case 22: v = isfinite(x); break;
+    default: v = false; break;
+  }
+  out[gid] = v ? uchar(1) : uchar(0);
 }
 )metal";
 
 struct BinaryMetaHost {
   std::uint32_t op;
+  std::uint32_t a_scalar;
+  std::uint32_t b_scalar;
+};
+
+struct TernaryMetaHost {
+  std::uint32_t cond_scalar;
   std::uint32_t a_scalar;
   std::uint32_t b_scalar;
 };
@@ -108,7 +165,9 @@ struct Context {
   id<MTLLibrary> library{nil};
   id<MTLComputePipelineState> binary_f32{nil};
   id<MTLComputePipelineState> binary_cmp_f32{nil};
+  id<MTLComputePipelineState> where_f32{nil};
   id<MTLComputePipelineState> unary_f32{nil};
+  id<MTLComputePipelineState> unary_pred_f32{nil};
   std::string error{};
 };
 
@@ -165,7 +224,9 @@ Context& ctx_() {
 
       if (!make_pipeline("binary_f32", &ctx.binary_f32)) return;
       if (!make_pipeline("binary_cmp_f32", &ctx.binary_cmp_f32)) return;
+      if (!make_pipeline("where_f32", &ctx.where_f32)) return;
       if (!make_pipeline("unary_f32", &ctx.unary_f32)) return;
+      if (!make_pipeline("unary_pred_f32", &ctx.unary_pred_f32)) return;
       ctx.ready = true;
     }
   });
@@ -194,6 +255,7 @@ id<MTLCommandBuffer> encode_and_run_(id<MTLComputePipelineState> pso,
                                      id<MTLBuffer> b0,
                                      id<MTLBuffer> b1,
                                      id<MTLBuffer> b2,
+                                     id<MTLBuffer> b3,
                                      const void* meta_ptr,
                                      std::size_t meta_size,
                                      std::uint32_t meta_index,
@@ -222,6 +284,7 @@ id<MTLCommandBuffer> encode_and_run_(id<MTLComputePipelineState> pso,
     if (b0 != nil) [enc setBuffer:b0 offset:0 atIndex:0];
     if (b1 != nil) [enc setBuffer:b1 offset:0 atIndex:1];
     if (b2 != nil) [enc setBuffer:b2 offset:0 atIndex:2];
+    if (b3 != nil) [enc setBuffer:b3 offset:0 atIndex:3];
     [enc setBytes:meta_ptr length:meta_size atIndex:meta_index];
 
     const NSUInteger grid_n = static_cast<NSUInteger>(n);
@@ -278,6 +341,31 @@ std::uint32_t unary_math_code_(UnaryMathOp op) {
     case UnaryMathOp::Exp: return 4;
     case UnaryMathOp::Log: return 5;
     case UnaryMathOp::Sqrt: return 6;
+    case UnaryMathOp::Sin: return 7;
+    case UnaryMathOp::Cos: return 8;
+    case UnaryMathOp::Tanh: return 9;
+    case UnaryMathOp::Tan: return 10;
+    case UnaryMathOp::Asin: return 11;
+    case UnaryMathOp::Acos: return 12;
+    case UnaryMathOp::Atan: return 13;
+    case UnaryMathOp::Sinh: return 14;
+    case UnaryMathOp::Cosh: return 15;
+    case UnaryMathOp::Reciprocal: return 16;
+    case UnaryMathOp::Floor: return 17;
+    case UnaryMathOp::Ceil: return 18;
+    case UnaryMathOp::Round: return 19;
+    case UnaryMathOp::Trunc: return 23;
+    case UnaryMathOp::Relu: return 24;
+    case UnaryMathOp::Sigmoid: return 25;
+    default: return 999;
+  }
+}
+
+std::uint32_t unary_pred_code_(UnaryPredOp op) {
+  switch (op) {
+    case UnaryPredOp::IsNan: return 20;
+    case UnaryPredOp::IsInf: return 21;
+    case UnaryPredOp::IsFinite: return 22;
     default: return 999;
   }
 }
@@ -371,11 +459,67 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
         a_buf,
         b_buf,
         out_buf,
+        nil,
         &meta,
         sizeof(meta),
         3,
         out.numel(),
         "binary");
+    if (cb != nil) {
+      mark_device_data_dirty_mm(out, cb);
+    }
+  }
+}
+
+bool supports_where(ScalarType cond_dt, ScalarType data_dt) noexcept {
+  return cond_dt == ScalarType::Bool && data_dt == ScalarType::Float32;
+}
+
+void where(const Series& cond, const Series& a, const Series& b, Series& out) {
+  if (!is_available()) {
+    fail_("where: MPS backend unavailable");
+  }
+  validate_mps_tensor_(cond, "where");
+  validate_mps_tensor_(a, "where");
+  validate_mps_tensor_(b, "where");
+  validate_mps_tensor_(out, "where");
+  if (!supports_where(cond.scalar_type(), a.scalar_type()) || a.scalar_type() != b.scalar_type() ||
+      out.scalar_type() != a.scalar_type()) {
+    fail_("where: unsupported dtype combination on current MPS path");
+  }
+  require_scalar_or_dense_numel_(cond, out, "where", "condition");
+  require_scalar_or_dense_numel_(a, out, "where", "lhs");
+  require_scalar_or_dense_numel_(b, out, "where", "rhs");
+
+  auto& c = ctx_();
+  @autoreleasepool {
+    const std::size_t cond_bytes = static_cast<std::size_t>(cond.numel()) * sizeof(std::uint8_t);
+    const std::size_t a_bytes = static_cast<std::size_t>(a.numel()) * sizeof(float);
+    const std::size_t b_bytes = static_cast<std::size_t>(b.numel()) * sizeof(float);
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float);
+    id<MTLBuffer> cond_buf = ensure_device_buffer_for_read_mm(cond, c.device, cond_bytes);
+    id<MTLBuffer> a_buf = ensure_device_buffer_for_read_mm(a, c.device, a_bytes);
+    id<MTLBuffer> b_buf = ensure_device_buffer_for_read_mm(b, c.device, b_bytes);
+    id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
+    if (cond_buf == nil || a_buf == nil || b_buf == nil || out_buf == nil) {
+      fail_("where: failed to allocate Metal buffers");
+    }
+    TernaryMetaHost meta{
+        static_cast<std::uint32_t>(cond.numel() == 1 ? 1 : 0),
+        static_cast<std::uint32_t>(a.numel() == 1 ? 1 : 0),
+        static_cast<std::uint32_t>(b.numel() == 1 ? 1 : 0),
+    };
+    id<MTLCommandBuffer> cb = encode_and_run_(
+        c.where_f32,
+        cond_buf,
+        a_buf,
+        b_buf,
+        out_buf,
+        &meta,
+        sizeof(meta),
+        4,
+        out.numel(),
+        "where");
     if (cb != nil) {
       mark_device_data_dirty_mm(out, cb);
     }
@@ -427,7 +571,7 @@ void unary(cpu::UnaryOpId op, const Series& a, Series& out) {
     if (meta.op == 999) {
       fail_("unary: unsupported op code on current MPS path");
     }
-    id<MTLCommandBuffer> cb = encode_and_run_(c.unary_f32, in_buf, out_buf, nil, &meta, sizeof(meta), 2, out.numel(), "unary");
+    id<MTLCommandBuffer> cb = encode_and_run_(c.unary_f32, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "unary");
     if (cb != nil) {
       mark_device_data_dirty_mm(out, cb);
     }
@@ -442,6 +586,22 @@ bool supports_unary_math(UnaryMathOp op, ScalarType dt) noexcept {
     case UnaryMathOp::Exp:
     case UnaryMathOp::Log:
     case UnaryMathOp::Sqrt:
+    case UnaryMathOp::Sin:
+    case UnaryMathOp::Cos:
+    case UnaryMathOp::Tanh:
+    case UnaryMathOp::Tan:
+    case UnaryMathOp::Asin:
+    case UnaryMathOp::Acos:
+    case UnaryMathOp::Atan:
+    case UnaryMathOp::Sinh:
+    case UnaryMathOp::Cosh:
+    case UnaryMathOp::Reciprocal:
+    case UnaryMathOp::Floor:
+    case UnaryMathOp::Ceil:
+    case UnaryMathOp::Round:
+    case UnaryMathOp::Trunc:
+    case UnaryMathOp::Relu:
+    case UnaryMathOp::Sigmoid:
       return true;
     default:
       return false;
@@ -477,7 +637,60 @@ void unary_math(UnaryMathOp op, const Series& a, Series& out) {
     if (meta.op == 999) {
       fail_("unary_math: unsupported op code on current MPS path");
     }
-    id<MTLCommandBuffer> cb = encode_and_run_(c.unary_f32, in_buf, out_buf, nil, &meta, sizeof(meta), 2, out.numel(), "unary_math");
+    id<MTLCommandBuffer> cb = encode_and_run_(c.unary_f32, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "unary_math");
+    if (cb != nil) {
+      mark_device_data_dirty_mm(out, cb);
+    }
+  }
+}
+
+bool supports_unary_pred(UnaryPredOp op, ScalarType dt) noexcept {
+  if (dt != ScalarType::Float32) {
+    return false;
+  }
+  switch (op) {
+    case UnaryPredOp::IsNan:
+    case UnaryPredOp::IsInf:
+    case UnaryPredOp::IsFinite:
+      return true;
+    default:
+      return false;
+  }
+}
+
+void unary_pred(UnaryPredOp op, const Series& a, Series& out) {
+  if (!is_available()) {
+    fail_("unary_pred: MPS backend unavailable");
+  }
+  validate_mps_tensor_(a, "unary_pred");
+  validate_mps_tensor_(out, "unary_pred");
+  if (a.scalar_type() != ScalarType::Float32) {
+    fail_("unary_pred: only float32 input is supported on current MPS path");
+  }
+  if (out.scalar_type() != ScalarType::Bool) {
+    fail_("unary_pred: output must be bool on current MPS path");
+  }
+  if (!supports_unary_pred(op, a.scalar_type())) {
+    fail_("unary_pred: unsupported op on current MPS path");
+  }
+  if (a.numel() != out.numel()) {
+    fail_("unary_pred: shape mismatch on current MPS path");
+  }
+
+  auto& c = ctx_();
+  @autoreleasepool {
+    const std::size_t in_bytes = static_cast<std::size_t>(a.numel()) * sizeof(float);
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(std::uint8_t);
+    id<MTLBuffer> in_buf = ensure_device_buffer_for_read_mm(a, c.device, in_bytes);
+    id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
+    if (in_buf == nil || out_buf == nil) {
+      fail_("unary_pred: failed to allocate Metal buffers");
+    }
+    UnaryMetaHost meta{unary_pred_code_(op)};
+    if (meta.op == 999) {
+      fail_("unary_pred: unsupported op code on current MPS path");
+    }
+    id<MTLCommandBuffer> cb = encode_and_run_(c.unary_pred_f32, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "unary_pred");
     if (cb != nil) {
       mark_device_data_dirty_mm(out, cb);
     }

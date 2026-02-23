@@ -16,6 +16,14 @@ void binary(cpu::BinaryOpId, const Series&, const Series&, Series&) {
   throw_error("MPS backend is unavailable on this platform/build");
 }
 
+bool supports_where(ScalarType, ScalarType) noexcept {
+  return false;
+}
+
+void where(const Series&, const Series&, const Series&, Series&) {
+  throw_error("MPS backend is unavailable on this platform/build");
+}
+
 bool supports_unary(cpu::UnaryOpId, ScalarType) noexcept {
   return false;
 }
@@ -29,6 +37,14 @@ bool supports_unary_math(UnaryMathOp, ScalarType) noexcept {
 }
 
 void unary_math(UnaryMathOp, const Series&, Series&) {
+  throw_error("MPS backend is unavailable on this platform/build");
+}
+
+bool supports_unary_pred(UnaryPredOp, ScalarType) noexcept {
+  return false;
+}
+
+void unary_pred(UnaryPredOp, const Series&, Series&) {
   throw_error("MPS backend is unavailable on this platform/build");
 }
 

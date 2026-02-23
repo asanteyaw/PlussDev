@@ -280,6 +280,9 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
 
   add_executable(plussqit_codem_mps_vs_cpu_demo examples/CodeM/mps_vs_cpu_demo.cpp)
   target_link_libraries(plussqit_codem_mps_vs_cpu_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_mps_bulk_bench_demo examples/CodeM/mps_bulk_bench_demo.cpp)
+  target_link_libraries(plussqit_codem_mps_bulk_bench_demo PRIVATE PlussQit::CodeM)
 endif()
 
 # Close optional CodeM block before defining CodeN.
