@@ -129,9 +129,11 @@ void SeriesIterator::coalesce_dims() {
   if (shape_.size() <= 1) return;
 
   std::vector<std::int64_t> new_shape;
+  std::vector<std::int64_t> nm;
   std::vector<std::int64_t> na, nb, no;
 
   new_shape.reserve(shape_.size());
+  if (!m_strides_.empty()) nm.reserve(shape_.size());
   na.reserve(shape_.size()); nb.reserve(shape_.size()); no.reserve(shape_.size());
 
   auto can_merge = [&](std::size_t i, std::size_t j) {
@@ -139,33 +141,38 @@ void SeriesIterator::coalesce_dims() {
     //  - both dims are not broadcasted (stride != 0) OR both broadcasted (stride == 0)
     //  - and stride_i == shape_j * stride_j for each operand where stride != 0
     auto ok_operand = [&](const std::vector<std::int64_t>& st)->bool{
+      if (st.empty()) return true;
       const auto si = st[i], sj = st[j];
       if (si == 0 && sj == 0) return true;
       if (si == 0 || sj == 0) return false;
       return si == shape_[j] * sj;
     };
-    return ok_operand(a_strides_) && ok_operand(b_strides_) && ok_operand(o_strides_);
+    return ok_operand(m_strides_) && ok_operand(a_strides_) && ok_operand(b_strides_) && ok_operand(o_strides_);
   };
 
   std::size_t i = 0;
   while (i < shape_.size()) {
     std::int64_t cur = shape_[i];
+    std::int64_t sm = m_strides_.empty() ? 0 : m_strides_[i];
     std::int64_t sa = a_strides_[i], sb = b_strides_[i], so = o_strides_[i];
     std::size_t j = i;
     while (j + 1 < shape_.size() && can_merge(j, j+1)) {
       cur *= shape_[j+1];
       // keep sj (the "inner" stride) after merge
+      if (!m_strides_.empty()) sm = m_strides_[j+1];
       sa = a_strides_[j+1];
       sb = b_strides_[j+1];
       so = o_strides_[j+1];
       ++j;
     }
     new_shape.push_back(cur);
+    if (!m_strides_.empty()) nm.push_back(sm);
     na.push_back(sa); nb.push_back(sb); no.push_back(so);
     i = j + 1;
   }
 
   shape_ = std::move(new_shape);
+  if (!m_strides_.empty()) m_strides_ = std::move(nm);
   a_strides_ = std::move(na);
   b_strides_ = std::move(nb);
   o_strides_ = std::move(no);

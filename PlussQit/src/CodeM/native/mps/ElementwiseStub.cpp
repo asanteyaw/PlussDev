@@ -16,6 +16,18 @@ void binary(cpu::BinaryOpId, const Series&, const Series&, Series&) {
   throw_error("MPS backend is unavailable on this platform/build");
 }
 
+bool supports_maximum_minimum(ScalarType) noexcept {
+  return false;
+}
+
+void maximum(const Series&, const Series&, Series&) {
+  throw_error("MPS backend is unavailable on this platform/build");
+}
+
+void minimum(const Series&, const Series&, Series&) {
+  throw_error("MPS backend is unavailable on this platform/build");
+}
+
 bool supports_where(ScalarType, ScalarType) noexcept {
   return false;
 }

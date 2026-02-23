@@ -3,6 +3,7 @@
 #include <pluss/pluss.h>
 
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -100,6 +101,36 @@ int parse_i32(const char* s, const char* name) {
   return static_cast<int>(v);
 }
 
+bool ieq_(const char* a, const char* b) noexcept {
+  if (a == nullptr || b == nullptr) return false;
+  while (*a != '\0' && *b != '\0') {
+    if (std::tolower(static_cast<unsigned char>(*a)) != std::tolower(static_cast<unsigned char>(*b))) {
+      return false;
+    }
+    ++a;
+    ++b;
+  }
+  return *a == '\0' && *b == '\0';
+}
+
+bool parse_bool_env_(const char* key, bool def) noexcept {
+  const char* raw = std::getenv(key);
+  if (raw == nullptr || *raw == '\0') return def;
+  if (ieq_(raw, "1") || ieq_(raw, "true") || ieq_(raw, "yes") || ieq_(raw, "on")) return true;
+  if (ieq_(raw, "0") || ieq_(raw, "false") || ieq_(raw, "no") || ieq_(raw, "off")) return false;
+  return def;
+}
+
+int parse_i32_env_(const char* key, int def, int lo, int hi) noexcept {
+  const char* raw = std::getenv(key);
+  if (raw == nullptr || *raw == '\0') return def;
+  char* end = nullptr;
+  const long long v = std::strtoll(raw, &end, 10);
+  if (end == raw || (end != nullptr && *end != '\0')) return def;
+  if (v < lo || v > hi) return def;
+  return static_cast<int>(v);
+}
+
 ErrorStats compare_stats(const pluss::Series& cpu_last, const pluss::Series& mps_last) {
   const auto c = cpu_last.to_host<float>();
   const auto g = mps_last.to_host<float>();
@@ -154,6 +185,80 @@ ErrorStats compare_stats(const pluss::Series& cpu_last, const pluss::Series& mps
   return stats;
 }
 
+void trace_parity_chain(std::int64_t n, int trace_iters, std::uint64_t seed) {
+  if (!pluss::mps::is_ready()) return;
+
+  pluss::Config cpu_cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
+  pluss::Config mps_cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pMPS);
+
+  auto x_cpu = pluss::randn({n, n}, cpu_cfg, seed);
+  auto w1_cpu = pluss::randn({n, n}, cpu_cfg, seed + 1);
+  auto w2_cpu = pluss::randn({n, n}, cpu_cfg, seed + 2);
+  auto x_mps = pluss::randn({n, n}, mps_cfg, seed);
+  auto w1_mps = pluss::randn({n, n}, mps_cfg, seed + 1);
+  auto w2_mps = pluss::randn({n, n}, mps_cfg, seed + 2);
+
+  const auto dt = pluss::ScalarType::Float32;
+  const auto c_add_cpu = pluss::value(0.05, dt).to(pluss::pCPU);
+  const auto c_mul_cpu = pluss::value(0.75, dt).to(pluss::pCPU);
+  const auto c_div_cpu = pluss::value(1.25, dt).to(pluss::pCPU);
+  const auto c_eps_cpu = pluss::value(1e-3, dt).to(pluss::pCPU);
+  const auto c_shift_cpu = pluss::value(0.15, dt).to(pluss::pCPU);
+  const auto c_add_mps = c_add_cpu.to(pluss::pMPS);
+  const auto c_mul_mps = c_mul_cpu.to(pluss::pMPS);
+  const auto c_div_mps = c_div_cpu.to(pluss::pMPS);
+  const auto c_eps_mps = c_eps_cpu.to(pluss::pMPS);
+  const auto c_shift_mps = c_shift_cpu.to(pluss::pMPS);
+
+  auto report = [&](const char* stage, int iter) {
+    const auto cpu_last = x_cpu.to(pluss::pCPU, pluss::ScalarType::Float32);
+    const auto mps_last = x_mps.to(pluss::pCPU, pluss::ScalarType::Float32);
+    const auto err = compare_stats(cpu_last, mps_last);
+    std::cout << "  iter=" << iter << " stage=" << stage
+              << " mean_abs=" << err.mean_abs
+              << " max_abs=" << err.max_abs
+              << " mean_rel(sym)=" << err.mean_rel
+              << " p99_rel(sym)=" << err.p99_rel << "\n";
+  };
+
+  std::cout << "\nParity trace (complex_chain)\n";
+  std::cout << std::scientific << std::setprecision(6);
+  for (int i = 1; i <= trace_iters; ++i) {
+    x_cpu = x_cpu.matmul(w1_cpu);
+    x_mps = x_mps.matmul(w1_mps);
+    report("matmul_w1", i);
+
+    x_cpu = x_cpu.mul(c_mul_cpu).add(c_add_cpu);
+    x_mps = x_mps.mul(c_mul_mps).add(c_add_mps);
+    report("affine_1", i);
+
+    x_cpu = x_cpu.abs().add(c_eps_cpu);
+    x_mps = x_mps.abs().add(c_eps_mps);
+    report("abs_add_eps", i);
+
+    x_cpu = x_cpu.log().exp();
+    x_mps = x_mps.log().exp();
+    report("log_exp", i);
+
+    x_cpu = x_cpu.log1p().expm1();
+    x_mps = x_mps.log1p().expm1();
+    report("log1p_expm1", i);
+
+    x_cpu = x_cpu.matmul(w2_cpu);
+    x_mps = x_mps.matmul(w2_mps);
+    report("matmul_w2", i);
+
+    x_cpu = x_cpu.abs().add(c_shift_cpu).sqrt();
+    x_mps = x_mps.abs().add(c_shift_mps).sqrt();
+    report("abs_shift_sqrt", i);
+
+    x_cpu = x_cpu.mul(c_div_cpu).div(c_mul_cpu).add(c_add_cpu);
+    x_mps = x_mps.mul(c_div_mps).div(c_mul_mps).add(c_add_mps);
+    report("affine_2", i);
+  }
+  std::cout << std::fixed << std::setprecision(3);
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -188,7 +293,7 @@ int main(int argc, char** argv) {
     std::cout << "Benchmark settings\n";
     std::cout << "shape=(" << n << ", " << m << "), inner_iters=" << inner_iters
               << ", rounds=" << rounds << "\n";
-    std::cout << "MPS usable: " << (pluss::mps::is_usable() ? "true" : "false") << "\n\n";
+    std::cout << "MPS ready: " << (pluss::mps::is_ready() ? "true" : "false") << "\n\n";
 
     const std::uint64_t seed = 42;
     const auto cpu = run_bench(pluss::pCPU, n, inner_iters, rounds, seed);
@@ -197,8 +302,8 @@ int main(int argc, char** argv) {
               << ", avg_ms_per_round=" << (cpu.millis / static_cast<double>(rounds))
               << ", checksum=" << cpu.checksum << "\n";
 
-    if (!pluss::mps::is_usable()) {
-      std::cout << "\nMPS benchmark skipped because backend is not usable in this runtime/build.\n";
+    if (!pluss::mps::is_ready()) {
+      std::cout << "\nMPS benchmark skipped because backend is not ready in this runtime/build.\n";
       return 0;
     }
 
@@ -223,6 +328,11 @@ int main(int argc, char** argv) {
               << ", mps=" << err.mps_at_max_abs << "\n";
     std::cout << "max_rel_at[idx=" << err.max_rel_idx << "] cpu=" << err.cpu_at_max_rel
               << ", mps=" << err.mps_at_max_rel << "\n";
+
+    if (parse_bool_env_("PLUSS_MPS_TRACE_PARITY", false)) {
+      const int trace_iters = parse_i32_env_("PLUSS_MPS_TRACE_PARITY_ITERS", 1, 1, std::max(1, inner_iters));
+      trace_parity_chain(n, trace_iters, seed);
+    }
     return 0;
   } catch (const std::exception& e) {
     std::cerr << "mps_vs_cpu_demo error: " << e.what() << "\n";

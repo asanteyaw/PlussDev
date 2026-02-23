@@ -3,33 +3,60 @@
 
 #include "CodeM/core/Errors.h"
 
-#include <Metal/Metal.h>
 #include <Foundation/Foundation.h>
+#include <Metal/Metal.h>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <mutex>
+#include <span>
 #include <string>
 
 namespace pluss::codem::native::mps {
 namespace {
 
+constexpr std::size_t kMaxRank = 8;
+
 constexpr const char* kShaderSrc = R"metal(
 #include <metal_stdlib>
 using namespace metal;
 
+constant uint kMaxRank = 8;
+
 struct BinaryMeta {
   uint op;
-  uint a_scalar;
-  uint b_scalar;
+  uint mode;
+  uint ndim;
+  ulong out_sizes[kMaxRank];
+  ulong a_strides[kMaxRank];
+  ulong b_strides[kMaxRank];
 };
 
 struct TernaryMeta {
-  uint cond_scalar;
-  uint a_scalar;
-  uint b_scalar;
+  uint mode;
+  uint ndim;
+  ulong out_sizes[kMaxRank];
+  ulong cond_strides[kMaxRank];
+  ulong a_strides[kMaxRank];
+  ulong b_strides[kMaxRank];
 };
+
+inline ulong offset_from_linear(uint gid,
+                                uint ndim,
+                                constant ulong sizes[kMaxRank],
+                                constant ulong strides[kMaxRank]) {
+  ulong rem = static_cast<ulong>(gid);
+  ulong off = 0;
+  for (int d = static_cast<int>(ndim) - 1; d >= 0; --d) {
+    const ulong sz = sizes[d];
+    const ulong idx = (sz == 0) ? 0 : (rem % sz);
+    rem = (sz == 0) ? 0 : (rem / sz);
+    off += idx * strides[d];
+  }
+  return off;
+}
 
 kernel void binary_f32(
     const device float* a [[buffer(0)]],
@@ -37,8 +64,23 @@ kernel void binary_f32(
     device float* out [[buffer(2)]],
     constant BinaryMeta& meta [[buffer(3)]],
     uint gid [[thread_position_in_grid]]) {
-  float av = a[meta.a_scalar != 0 ? 0 : gid];
-  float bv = b[meta.b_scalar != 0 ? 0 : gid];
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 1) {
+    ao = 0;
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 2) {
+    ao = static_cast<ulong>(gid);
+    bo = 0;
+  } else {
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  const float av = a[ao];
+  const float bv = b[bo];
   float v = 0.0f;
   switch (meta.op) {
     case 0: v = av + bv; break;
@@ -57,8 +99,23 @@ kernel void binary_cmp_f32(
     device uchar* out [[buffer(2)]],
     constant BinaryMeta& meta [[buffer(3)]],
     uint gid [[thread_position_in_grid]]) {
-  float av = a[meta.a_scalar != 0 ? 0 : gid];
-  float bv = b[meta.b_scalar != 0 ? 0 : gid];
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 1) {
+    ao = 0;
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 2) {
+    ao = static_cast<ulong>(gid);
+    bo = 0;
+  } else {
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  const float av = a[ao];
+  const float bv = b[bo];
   bool v = false;
   switch (meta.op) {
     case 0: v = (av == bv); break;
@@ -72,6 +129,54 @@ kernel void binary_cmp_f32(
   out[gid] = v ? uchar(1) : uchar(0);
 }
 
+kernel void maximum_f32(
+    const device float* a [[buffer(0)]],
+    const device float* b [[buffer(1)]],
+    device float* out [[buffer(2)]],
+    constant BinaryMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 1) {
+    ao = 0;
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 2) {
+    ao = static_cast<ulong>(gid);
+    bo = 0;
+  } else {
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  out[gid] = fmax(a[ao], b[bo]);
+}
+
+kernel void minimum_f32(
+    const device float* a [[buffer(0)]],
+    const device float* b [[buffer(1)]],
+    device float* out [[buffer(2)]],
+    constant BinaryMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 1) {
+    ao = 0;
+    bo = static_cast<ulong>(gid);
+  } else if (meta.mode == 2) {
+    ao = static_cast<ulong>(gid);
+    bo = 0;
+  } else {
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  out[gid] = fmin(a[ao], b[bo]);
+}
+
 kernel void where_f32(
     const device uchar* cond [[buffer(0)]],
     const device float* a [[buffer(1)]],
@@ -79,10 +184,19 @@ kernel void where_f32(
     device float* out [[buffer(3)]],
     constant TernaryMeta& meta [[buffer(4)]],
     uint gid [[thread_position_in_grid]]) {
-  bool m = cond[meta.cond_scalar != 0 ? 0 : gid] != 0;
-  float av = a[meta.a_scalar != 0 ? 0 : gid];
-  float bv = b[meta.b_scalar != 0 ? 0 : gid];
-  out[gid] = m ? av : bv;
+  ulong co = 0;
+  ulong ao = 0;
+  ulong bo = 0;
+  if (meta.mode == 0) {
+    co = static_cast<ulong>(gid);
+    ao = static_cast<ulong>(gid);
+    bo = static_cast<ulong>(gid);
+  } else {
+    co = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.cond_strides);
+    ao = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.a_strides);
+    bo = offset_from_linear(gid, meta.ndim, meta.out_sizes, meta.b_strides);
+  }
+  out[gid] = (cond[co] != 0) ? a[ao] : b[bo];
 }
 
 struct UnaryMeta {
@@ -94,7 +208,7 @@ kernel void unary_f32(
     device float* out [[buffer(1)]],
     constant UnaryMeta& meta [[buffer(2)]],
     uint gid [[thread_position_in_grid]]) {
-  float x = in[gid];
+  const float x = in[gid];
   float v = 0.0f;
   switch (meta.op) {
     case 0: v = -x; break;
@@ -117,9 +231,9 @@ kernel void unary_f32(
     case 17: v = floor(x); break;
     case 18: v = ceil(x); break;
     case 19: v = round(x); break;
+    case 23: v = trunc(x); break;
     case 24: v = max(0.0f, x); break;
     case 25: v = 1.0f / (1.0f + exp(-x)); break;
-    case 23: v = trunc(x); break;
     default: v = 0.0f; break;
   }
   out[gid] = v;
@@ -130,7 +244,7 @@ kernel void unary_pred_f32(
     device uchar* out [[buffer(1)]],
     constant UnaryMeta& meta [[buffer(2)]],
     uint gid [[thread_position_in_grid]]) {
-  float x = in[gid];
+  const float x = in[gid];
   bool v = false;
   switch (meta.op) {
     case 20: v = isnan(x); break;
@@ -143,19 +257,25 @@ kernel void unary_pred_f32(
 )metal";
 
 struct BinaryMetaHost {
-  std::uint32_t op;
-  std::uint32_t a_scalar;
-  std::uint32_t b_scalar;
+  std::uint32_t op{0};
+  std::uint32_t mode{3};
+  std::uint32_t ndim{0};
+  std::array<std::uint64_t, kMaxRank> out_sizes{};
+  std::array<std::uint64_t, kMaxRank> a_strides{};
+  std::array<std::uint64_t, kMaxRank> b_strides{};
 };
 
 struct TernaryMetaHost {
-  std::uint32_t cond_scalar;
-  std::uint32_t a_scalar;
-  std::uint32_t b_scalar;
+  std::uint32_t mode{1};
+  std::uint32_t ndim{0};
+  std::array<std::uint64_t, kMaxRank> out_sizes{};
+  std::array<std::uint64_t, kMaxRank> cond_strides{};
+  std::array<std::uint64_t, kMaxRank> a_strides{};
+  std::array<std::uint64_t, kMaxRank> b_strides{};
 };
 
 struct UnaryMetaHost {
-  std::uint32_t op;
+  std::uint32_t op{0};
 };
 
 struct Context {
@@ -165,6 +285,8 @@ struct Context {
   id<MTLLibrary> library{nil};
   id<MTLComputePipelineState> binary_f32{nil};
   id<MTLComputePipelineState> binary_cmp_f32{nil};
+  id<MTLComputePipelineState> maximum_f32{nil};
+  id<MTLComputePipelineState> minimum_f32{nil};
   id<MTLComputePipelineState> where_f32{nil};
   id<MTLComputePipelineState> unary_f32{nil};
   id<MTLComputePipelineState> unary_pred_f32{nil};
@@ -224,6 +346,8 @@ Context& ctx_() {
 
       if (!make_pipeline("binary_f32", &ctx.binary_f32)) return;
       if (!make_pipeline("binary_cmp_f32", &ctx.binary_cmp_f32)) return;
+      if (!make_pipeline("maximum_f32", &ctx.maximum_f32)) return;
+      if (!make_pipeline("minimum_f32", &ctx.minimum_f32)) return;
       if (!make_pipeline("where_f32", &ctx.where_f32)) return;
       if (!make_pipeline("unary_f32", &ctx.unary_f32)) return;
       if (!make_pipeline("unary_pred_f32", &ctx.unary_pred_f32)) return;
@@ -243,24 +367,29 @@ void require_contiguous_(const Series& s, const char* op) {
   }
 }
 
-void require_scalar_or_dense_numel_(const Series& in, const Series& out, const char* op, const char* which) {
-  const auto in_n = in.numel();
-  const auto out_n = out.numel();
-  if (!(in_n == out_n || in_n == 1)) {
-    fail_(std::string(op) + ": MPS path currently supports only identical-shape or scalar broadcast for " + which);
+void validate_mps_tensor_(const Series& s, const char* op) {
+  if (!s.defined()) {
+    fail_(std::string(op) + ": undefined Series");
   }
+  if (s.platform() != Platform::MPS) {
+    fail_(std::string(op) + ": expected MPS Series");
+  }
+  if (s.scalar_type() != ScalarType::Float32 && s.scalar_type() != ScalarType::Bool) {
+    fail_(std::string(op) + ": unsupported dtype on current MPS path");
+  }
+  require_contiguous_(s, op);
 }
 
-id<MTLCommandBuffer> encode_and_run_(id<MTLComputePipelineState> pso,
-                                     id<MTLBuffer> b0,
-                                     id<MTLBuffer> b1,
-                                     id<MTLBuffer> b2,
-                                     id<MTLBuffer> b3,
-                                     const void* meta_ptr,
-                                     std::size_t meta_size,
-                                     std::uint32_t meta_index,
-                                     std::int64_t n,
-                                     const char* op_name) {
+id<MTLCommandBuffer> encode_op_(id<MTLComputePipelineState> pso,
+                                id<MTLBuffer> b0,
+                                id<MTLBuffer> b1,
+                                id<MTLBuffer> b2,
+                                id<MTLBuffer> b3,
+                                const void* meta_ptr,
+                                std::size_t meta_size,
+                                std::uint32_t meta_index,
+                                std::int64_t n,
+                                const char* op_name) {
   auto& c = ctx_();
   if (!c.ready) {
     fail_(std::string(op_name) + ": MPS backend unavailable (" + c.error + ")");
@@ -295,9 +424,97 @@ id<MTLCommandBuffer> encode_and_run_(id<MTLComputePipelineState> pso,
     const MTLSize group = MTLSizeMake(tg, 1, 1);
     [enc dispatchThreads:grid threadsPerThreadgroup:group];
     [enc endEncoding];
-    [cb commit];
     return cb;
   }
+}
+
+void fill_out_sizes_(std::span<const std::int64_t> out_sizes,
+                     std::array<std::uint64_t, kMaxRank>& dst,
+                     const char* op) {
+  if (out_sizes.size() > kMaxRank) {
+    fail_(std::string(op) + ": rank > 8 is unsupported on current MPS path");
+  }
+  dst.fill(1);
+  for (std::size_t i = 0; i < out_sizes.size(); ++i) {
+    if (out_sizes[i] < 0) {
+      fail_(std::string(op) + ": negative output size");
+    }
+    dst[i] = static_cast<std::uint64_t>(out_sizes[i]);
+  }
+}
+
+void fill_broadcast_strides_(const Series& in,
+                             std::span<const std::int64_t> out_sizes,
+                             std::array<std::uint64_t, kMaxRank>& dst,
+                             const char* op,
+                             const char* which) {
+  const auto in_sizes = in.sizes();
+  const auto in_strides = in.strides();
+  if (in_sizes.size() != in_strides.size()) {
+    fail_(std::string(op) + ": invalid sizes/strides for " + which);
+  }
+  if (out_sizes.size() > kMaxRank) {
+    fail_(std::string(op) + ": rank > 8 is unsupported");
+  }
+  if (in_sizes.size() > out_sizes.size()) {
+    fail_(std::string(op) + ": input rank exceeds output rank for " + which);
+  }
+
+  dst.fill(0);
+  std::size_t in_d = in_sizes.size();
+  for (std::size_t out_d = out_sizes.size(); out_d > 0; --out_d) {
+    const std::size_t oi = out_d - 1;
+    const auto out_sz = out_sizes[oi];
+    if (out_sz < 0) {
+      fail_(std::string(op) + ": negative output size for " + which);
+    }
+
+    std::int64_t in_sz = 1;
+    std::int64_t in_st = 0;
+    if (in_d > 0) {
+      --in_d;
+      in_sz = in_sizes[in_d];
+      in_st = in_strides[in_d];
+    }
+
+    if (in_sz == out_sz) {
+      if (in_st < 0) {
+        fail_(std::string(op) + ": negative stride unsupported for " + which);
+      }
+      dst[oi] = static_cast<std::uint64_t>(in_st);
+    } else if (in_sz == 1) {
+      dst[oi] = 0;
+    } else {
+      fail_(std::string(op) + ": incompatible broadcast shape for " + which);
+    }
+  }
+}
+
+bool same_shape_(const Series& x, const Series& y) {
+  const auto xs = x.sizes();
+  const auto ys = y.sizes();
+  return xs.size() == ys.size() && std::equal(xs.begin(), xs.end(), ys.begin());
+}
+
+std::uint32_t binary_mode_(const Series& a, const Series& b, const Series& out) {
+  if (a.numel() == out.numel() && b.numel() == out.numel() && same_shape_(a, out) && same_shape_(b, out)) {
+    return 0; // linear
+  }
+  if (a.numel() == 1 && b.numel() == out.numel() && same_shape_(b, out)) {
+    return 1; // scalar lhs
+  }
+  if (b.numel() == 1 && a.numel() == out.numel() && same_shape_(a, out)) {
+    return 2; // scalar rhs
+  }
+  return 3; // general broadcast
+}
+
+std::uint32_t ternary_mode_(const Series& cond, const Series& a, const Series& b, const Series& out) {
+  if (cond.numel() == out.numel() && a.numel() == out.numel() && b.numel() == out.numel() &&
+      same_shape_(cond, out) && same_shape_(a, out) && same_shape_(b, out)) {
+    return 0; // linear
+  }
+  return 1; // general broadcast
 }
 
 std::uint32_t binary_op_code_(cpu::BinaryOpId op, bool cmp) {
@@ -370,19 +587,6 @@ std::uint32_t unary_pred_code_(UnaryPredOp op) {
   }
 }
 
-void validate_mps_tensor_(const Series& s, const char* op) {
-  if (!s.defined()) {
-    fail_(std::string(op) + ": undefined Series");
-  }
-  if (s.platform() != Platform::MPS) {
-    fail_(std::string(op) + ": expected MPS Series");
-  }
-  if (s.scalar_type() != ScalarType::Float32 && s.scalar_type() != ScalarType::Bool) {
-    fail_(std::string(op) + ": unsupported dtype on current MPS path");
-  }
-  require_contiguous_(s, op);
-}
-
 } // namespace
 
 bool is_available() noexcept {
@@ -412,6 +616,10 @@ bool supports_binary(cpu::BinaryOpId op, ScalarType dt) noexcept {
   }
 }
 
+bool supports_maximum_minimum(ScalarType dt) noexcept {
+  return dt == ScalarType::Float32;
+}
+
 void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
   if (!is_available()) {
     fail_("binary: MPS backend unavailable");
@@ -428,9 +636,6 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
   if (!supports_binary(op, ScalarType::Float32)) {
     fail_("binary: unsupported op on current MPS path");
   }
-
-  require_scalar_or_dense_numel_(a, out, "binary", "lhs");
-  require_scalar_or_dense_numel_(b, out, "binary", "rhs");
   if (out.numel() < 0) {
     fail_("binary: invalid output numel");
   }
@@ -446,15 +651,21 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
     if (a_buf == nil || b_buf == nil || out_buf == nil) {
       fail_("binary: failed to allocate Metal buffers");
     }
-    BinaryMetaHost meta{
-        binary_op_code_(op, is_cmp),
-        static_cast<std::uint32_t>(a.numel() == 1 ? 1 : 0),
-        static_cast<std::uint32_t>(b.numel() == 1 ? 1 : 0),
-    };
+
+    BinaryMetaHost meta;
+    meta.op = binary_op_code_(op, is_cmp);
     if (meta.op == 999) {
       fail_("binary: unsupported op code on current MPS path");
     }
-    id<MTLCommandBuffer> cb = encode_and_run_(
+    meta.mode = binary_mode_(a, b, out);
+    meta.ndim = static_cast<std::uint32_t>(out.sizes().size());
+    fill_out_sizes_(out.sizes(), meta.out_sizes, "binary");
+    if (meta.mode == 3) {
+      fill_broadcast_strides_(a, out.sizes(), meta.a_strides, "binary", "lhs");
+      fill_broadcast_strides_(b, out.sizes(), meta.b_strides, "binary", "rhs");
+    }
+
+    id<MTLCommandBuffer> cb = encode_op_(
         is_cmp ? c.binary_cmp_f32 : c.binary_f32,
         a_buf,
         b_buf,
@@ -466,9 +677,75 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
         out.numel(),
         "binary");
     if (cb != nil) {
+      submit_command_buffer_mm(cb, out.numel());
       mark_device_data_dirty_mm(out, cb);
     }
   }
+}
+
+namespace {
+
+void maxmin_impl_(const char* op_name,
+                  id<MTLComputePipelineState> pso,
+                  const Series& a,
+                  const Series& b,
+                  Series& out) {
+  if (!is_available()) {
+    fail_(std::string(op_name) + ": MPS backend unavailable");
+  }
+  validate_mps_tensor_(a, op_name);
+  validate_mps_tensor_(b, op_name);
+  validate_mps_tensor_(out, op_name);
+  if (!supports_maximum_minimum(a.scalar_type()) ||
+      a.scalar_type() != b.scalar_type() ||
+      out.scalar_type() != a.scalar_type()) {
+    fail_(std::string(op_name) + ": unsupported dtype combination on current MPS path");
+  }
+  if (out.numel() < 0) {
+    fail_(std::string(op_name) + ": invalid output numel");
+  }
+
+  auto& c = ctx_();
+  @autoreleasepool {
+    const std::size_t a_bytes = static_cast<std::size_t>(a.numel()) * sizeof(float);
+    const std::size_t b_bytes = static_cast<std::size_t>(b.numel()) * sizeof(float);
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float);
+    id<MTLBuffer> a_buf = ensure_device_buffer_for_read_mm(a, c.device, a_bytes);
+    id<MTLBuffer> b_buf = ensure_device_buffer_for_read_mm(b, c.device, b_bytes);
+    id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
+    if (a_buf == nil || b_buf == nil || out_buf == nil) {
+      fail_(std::string(op_name) + ": failed to allocate Metal buffers");
+    }
+
+    BinaryMetaHost meta;
+    meta.op = 0;
+    meta.mode = binary_mode_(a, b, out);
+    meta.ndim = static_cast<std::uint32_t>(out.sizes().size());
+    fill_out_sizes_(out.sizes(), meta.out_sizes, op_name);
+    if (meta.mode == 3) {
+      fill_broadcast_strides_(a, out.sizes(), meta.a_strides, op_name, "lhs");
+      fill_broadcast_strides_(b, out.sizes(), meta.b_strides, op_name, "rhs");
+    }
+
+    id<MTLCommandBuffer> cb =
+        encode_op_(pso, a_buf, b_buf, out_buf, nil, &meta, sizeof(meta), 3, out.numel(), op_name);
+    if (cb != nil) {
+      submit_command_buffer_mm(cb, out.numel());
+      mark_device_data_dirty_mm(out, cb);
+    }
+  }
+}
+
+} // namespace
+
+void maximum(const Series& a, const Series& b, Series& out) {
+  auto& c = ctx_();
+  maxmin_impl_("maximum", c.maximum_f32, a, b, out);
+}
+
+void minimum(const Series& a, const Series& b, Series& out) {
+  auto& c = ctx_();
+  maxmin_impl_("minimum", c.minimum_f32, a, b, out);
 }
 
 bool supports_where(ScalarType cond_dt, ScalarType data_dt) noexcept {
@@ -487,9 +764,6 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
       out.scalar_type() != a.scalar_type()) {
     fail_("where: unsupported dtype combination on current MPS path");
   }
-  require_scalar_or_dense_numel_(cond, out, "where", "condition");
-  require_scalar_or_dense_numel_(a, out, "where", "lhs");
-  require_scalar_or_dense_numel_(b, out, "where", "rhs");
 
   auto& c = ctx_();
   @autoreleasepool {
@@ -504,12 +778,18 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
     if (cond_buf == nil || a_buf == nil || b_buf == nil || out_buf == nil) {
       fail_("where: failed to allocate Metal buffers");
     }
-    TernaryMetaHost meta{
-        static_cast<std::uint32_t>(cond.numel() == 1 ? 1 : 0),
-        static_cast<std::uint32_t>(a.numel() == 1 ? 1 : 0),
-        static_cast<std::uint32_t>(b.numel() == 1 ? 1 : 0),
-    };
-    id<MTLCommandBuffer> cb = encode_and_run_(
+
+    TernaryMetaHost meta;
+    meta.mode = ternary_mode_(cond, a, b, out);
+    meta.ndim = static_cast<std::uint32_t>(out.sizes().size());
+    fill_out_sizes_(out.sizes(), meta.out_sizes, "where");
+    if (meta.mode != 0) {
+      fill_broadcast_strides_(cond, out.sizes(), meta.cond_strides, "where", "condition");
+      fill_broadcast_strides_(a, out.sizes(), meta.a_strides, "where", "lhs");
+      fill_broadcast_strides_(b, out.sizes(), meta.b_strides, "where", "rhs");
+    }
+
+    id<MTLCommandBuffer> cb = encode_op_(
         c.where_f32,
         cond_buf,
         a_buf,
@@ -521,6 +801,7 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
         out.numel(),
         "where");
     if (cb != nil) {
+      submit_command_buffer_mm(cb, out.numel());
       mark_device_data_dirty_mm(out, cb);
     }
   }
@@ -571,8 +852,9 @@ void unary(cpu::UnaryOpId op, const Series& a, Series& out) {
     if (meta.op == 999) {
       fail_("unary: unsupported op code on current MPS path");
     }
-    id<MTLCommandBuffer> cb = encode_and_run_(c.unary_f32, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "unary");
+    id<MTLCommandBuffer> cb = encode_op_(c.unary_f32, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "unary");
     if (cb != nil) {
+      submit_command_buffer_mm(cb, out.numel());
       mark_device_data_dirty_mm(out, cb);
     }
   }
@@ -637,8 +919,9 @@ void unary_math(UnaryMathOp op, const Series& a, Series& out) {
     if (meta.op == 999) {
       fail_("unary_math: unsupported op code on current MPS path");
     }
-    id<MTLCommandBuffer> cb = encode_and_run_(c.unary_f32, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "unary_math");
+    id<MTLCommandBuffer> cb = encode_op_(c.unary_f32, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "unary_math");
     if (cb != nil) {
+      submit_command_buffer_mm(cb, out.numel());
       mark_device_data_dirty_mm(out, cb);
     }
   }
@@ -690,8 +973,9 @@ void unary_pred(UnaryPredOp op, const Series& a, Series& out) {
     if (meta.op == 999) {
       fail_("unary_pred: unsupported op code on current MPS path");
     }
-    id<MTLCommandBuffer> cb = encode_and_run_(c.unary_pred_f32, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "unary_pred");
+    id<MTLCommandBuffer> cb = encode_op_(c.unary_pred_f32, in_buf, out_buf, nil, nil, &meta, sizeof(meta), 2, out.numel(), "unary_pred");
     if (cb != nil) {
+      submit_command_buffer_mm(cb, out.numel());
       mark_device_data_dirty_mm(out, cb);
     }
   }

@@ -120,8 +120,12 @@ namespace pluss {
 
 namespace pluss::mps {
 
-inline bool is_usable() noexcept {
+inline bool is_ready() noexcept {
   return codem::platform_available(codem::Platform::MPS);
+}
+
+inline bool is_usable() noexcept {
+  return is_ready();
 }
 
 } // namespace pluss::mps

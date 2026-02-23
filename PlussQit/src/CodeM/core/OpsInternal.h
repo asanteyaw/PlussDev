@@ -174,6 +174,8 @@ void require_same_platform(const Series& a, const Series& b, std::string_view op
   Series& relu_(Series& a);
 
   // Scatter (Torch-inspired CPU-only)
+  Series scatter(const Series& a, std::int64_t dim, const Series& index, const Series& src);
+  Series& scatter_(Series& a, std::int64_t dim, const Series& index, const Series& src);
   Series scatter_add(const Series& a, std::int64_t dim, const Series& index, const Series& src);
   Series& scatter_add_(Series& a, std::int64_t dim, const Series& index, const Series& src);
   Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self=true);

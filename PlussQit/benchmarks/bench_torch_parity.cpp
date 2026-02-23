@@ -299,7 +299,7 @@ int main(int argc, char** argv) {
   std::cout << std::left << std::setw(28) << "to(cpu) noop-ish" << std::right
             << std::setw(16) << std::fixed << std::setprecision(3) << cpu_to_cpu_ms << "\n";
 
-  if (pluss::mps::is_usable()) {
+  if (pluss::mps::is_ready()) {
     auto a_mps = a.to(pluss::pMPS);
     auto b_mps = b.to(pluss::pMPS);
     auto m_mps = m.to(pluss::pMPS);

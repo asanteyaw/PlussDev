@@ -21,6 +21,7 @@
 #include <cmath>
 #include <cstring>
 #include <cstdlib>
+#include <functional>
 #include <numeric>
 #include <limits>
 #include <optional>
@@ -178,7 +179,11 @@ static bool is_numeric_scalar_arg(const Arg& a) {
 
 static Series scalar_like(const Series& self, double value) {
   const std::array<std::int64_t, 1> one{{1}};
-  return Series::full(std::span<const std::int64_t>(one.data(), one.size()), value, self.scalar_type());
+  // Force construction on the target platform scope to avoid leaking a prior
+  // scope (e.g. MPS) into CPU-side scalar temporaries.
+  ops_internal::PlatformScope scope{self.platform()};
+  return Series::full(std::span<const std::int64_t>(one.data(), one.size()), value, self.scalar_type())
+      .to(self.platform());
 }
 
 static Series add_scalar(const Series& a, double s) { return ops_internal::add(a, scalar_like(a, s)); }
@@ -207,6 +212,67 @@ static Series i64_vector(std::span<const std::int64_t> values) {
   return out;
 }
 
+static Series i64_vector_on(std::span<const std::int64_t> values, Platform platform) {
+  return i64_vector(values).to(platform);
+}
+
+static Series put_dispatch_copy_(
+    const Series& self,
+    const Series& index,
+    const Series& src,
+    bool accumulate) {
+  auto out = self.clone();
+  Series idx = index;
+  if (idx.platform() != out.platform()) idx = idx.to(out.platform());
+  Series val = src;
+  if (val.platform() != out.platform()) val = val.to(out.platform());
+  if (val.scalar_type() != out.scalar_type()) val = val.to(out.scalar_type());
+  auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
+  out = (out.*put_fn)(idx, val, accumulate);
+  return out;
+}
+
+static Series& put_dispatch_inplace_(
+    Series& self,
+    const Series& index,
+    const Series& src,
+    bool accumulate) {
+  Series idx = index;
+  if (idx.platform() != self.platform()) idx = idx.to(self.platform());
+  Series val = src;
+  if (val.platform() != self.platform()) val = val.to(self.platform());
+  if (val.scalar_type() != self.scalar_type()) val = val.to(self.scalar_type());
+  auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
+  self = (self.*put_fn)(idx, val, accumulate);
+  return self;
+}
+
+static Series index_select_dispatch_(const Series& self, std::int64_t dim, const Series& index) {
+  if (self.platform() != Platform::MPS) {
+    return native::cpu::index_select(self, dim, index);
+  }
+  auto idx = index;
+  if (idx.platform() != self.platform()) idx = idx.to(self.platform());
+  if (idx.scalar_type() != ScalarType::Int64) idx = idx.to(ScalarType::Int64);
+  idx = idx.flatten(0, -1).contiguous();
+
+  const auto nd = self.dim();
+  if (dim < 0) dim += nd;
+  PLUSS_CHECK(dim >= 0 && dim < nd, "index_select: dim out of range");
+
+  std::vector<std::int64_t> view_shape(static_cast<std::size_t>(nd), 1);
+  view_shape[static_cast<std::size_t>(dim)] = idx.numel();
+  std::vector<std::int64_t> out_shape(self.sizes().begin(), self.sizes().end());
+  out_shape[static_cast<std::size_t>(dim)] = idx.numel();
+  const auto idx_view = idx.reshape(std::span<const std::int64_t>(view_shape.data(), view_shape.size()));
+  const auto idx_expanded =
+      idx_view.expand(std::span<const std::int64_t>(out_shape.data(), out_shape.size()), /*implicit=*/true);
+  if (self.scalar_type() == ScalarType::Float32) {
+    return ops_internal::gather(self, dim, idx_expanded);
+  }
+  return ops_internal::gather(self.to(ScalarType::Float32), dim, idx_expanded).to(self.scalar_type());
+}
+
 static bool is_floating_dtype(ScalarType st) {
   return st == ScalarType::Float16 || st == ScalarType::BFloat16 ||
          st == ScalarType::Float32 || st == ScalarType::Float64;
@@ -220,6 +286,25 @@ static bool is_signed_dtype(ScalarType st) {
   return st == ScalarType::Int8 || st == ScalarType::Int16 ||
          st == ScalarType::Int32 || st == ScalarType::Int64 ||
          is_floating_dtype(st) || is_complex_dtype(st);
+}
+
+static ScalarType compat_real_dtype_for_(const Series& s) {
+  return s.platform() == Platform::MPS ? ScalarType::Float32 : ScalarType::Float64;
+}
+
+static double read_real_(const Series& s, std::int64_t i) {
+  if (s.scalar_type() == ScalarType::Float32) {
+    return static_cast<double>(reinterpret_cast<const float*>(s.raw_data())[i]);
+  }
+  return reinterpret_cast<const double*>(s.raw_data())[i];
+}
+
+static void write_real_(Series& s, std::int64_t i, double v) {
+  if (s.scalar_type() == ScalarType::Float32) {
+    reinterpret_cast<float*>(s.raw_mutable_data())[i] = static_cast<float>(v);
+    return;
+  }
+  reinterpret_cast<double*>(s.raw_mutable_data())[i] = v;
 }
 
 static Series combine_beta_alpha(const Series& base, const Series& update, double beta, double alpha) {
@@ -242,12 +327,12 @@ static Series select_range(const Series& self, std::int64_t dim, std::int64_t st
   if (len == 0) {
     auto out_sizes = std::vector<std::int64_t>(self.sizes().begin(), self.sizes().end());
     out_sizes[(std::size_t)dim] = 0;
-    return Series::empty(out_sizes, self.scalar_type());
+    return Series::empty(out_sizes, self.scalar_type()).to(self.platform());
   }
   std::vector<std::int64_t> idx((std::size_t)len);
   for (std::int64_t i = 0; i < len; ++i) idx[(std::size_t)i] = start + i;
-  Series index = i64_vector(std::span<const std::int64_t>(idx.data(), idx.size()));
-  return native::cpu::index_select(self, dim, index);
+  Series index = i64_vector_on(std::span<const std::int64_t>(idx.data(), idx.size()), self.platform());
+  return index_select_dispatch_(self, dim, index);
 }
 
 static Series split_first_by_size(const Series& self, std::int64_t split_size, std::int64_t dim) {
@@ -337,7 +422,10 @@ static Series flip_impl(const Series& self, std::span<const std::int64_t> dims, 
     for (std::int64_t i = 0; i < n; ++i) {
       idx[(std::size_t)i] = n - 1 - i;
     }
-    out = native::cpu::index_select(out, dim, i64_vector(std::span<const std::int64_t>(idx.data(), idx.size())));
+    out = index_select_dispatch_(
+        out,
+        dim,
+        i64_vector_on(std::span<const std::int64_t>(idx.data(), idx.size()), out.platform()));
   }
   return out;
 }
@@ -389,7 +477,10 @@ static Series repeat_impl(const Series& self, std::span<const std::int64_t> repe
     if (rep == 1) continue;
     std::vector<std::int64_t> idx((std::size_t)(sz * rep));
     for (std::int64_t i = 0; i < sz * rep; ++i) idx[(std::size_t)i] = i % sz;
-    out = native::cpu::index_select(out, static_cast<std::int64_t>(d), i64_vector(std::span<const std::int64_t>(idx.data(), idx.size())));
+    out = index_select_dispatch_(
+        out,
+        static_cast<std::int64_t>(d),
+        i64_vector_on(std::span<const std::int64_t>(idx.data(), idx.size()), out.platform()));
   }
   return out;
 }
@@ -419,8 +510,10 @@ static Series expand_impl(const Series& self, std::span<const std::int64_t> targ
     if (src == dst) continue;
     PLUSS_CHECK(src == 1, "expand: non-singleton dimension mismatch");
     std::vector<std::int64_t> idx((std::size_t)dst, 0);
-    out = native::cpu::index_select(out, static_cast<std::int64_t>(d),
-                                    i64_vector(std::span<const std::int64_t>(idx.data(), idx.size())));
+    out = index_select_dispatch_(
+        out,
+        static_cast<std::int64_t>(d),
+        i64_vector_on(std::span<const std::int64_t>(idx.data(), idx.size()), out.platform()));
   }
   return out;
 }
@@ -432,13 +525,17 @@ static Series repeat_interleave_impl(const Series& self, std::int64_t repeats, s
   if (repeats == 0 || sz == 0) {
     std::vector<std::int64_t> out_sizes(self.sizes().begin(), self.sizes().end());
     out_sizes[(std::size_t)dim] = 0;
-    return Series::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), self.scalar_type());
+    return Series::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), self.scalar_type())
+        .to(self.platform());
   }
   std::vector<std::int64_t> idx((std::size_t)(sz * repeats));
   for (std::int64_t i = 0; i < sz; ++i) {
     for (std::int64_t r = 0; r < repeats; ++r) idx[(std::size_t)(i * repeats + r)] = i;
   }
-  return native::cpu::index_select(self, dim, i64_vector(std::span<const std::int64_t>(idx.data(), idx.size())));
+  return index_select_dispatch_(
+      self,
+      dim,
+      i64_vector_on(std::span<const std::int64_t>(idx.data(), idx.size()), self.platform()));
 }
 
 static Series roll_impl(const Series& self, std::span<const std::int64_t> shifts, std::span<const std::int64_t> dims) {
@@ -456,7 +553,10 @@ static Series roll_impl(const Series& self, std::span<const std::int64_t> shifts
     if (shift == 0) continue;
     std::vector<std::int64_t> idx((std::size_t)n);
     for (std::int64_t j = 0; j < n; ++j) idx[(std::size_t)j] = (j - shift + n) % n;
-    out = native::cpu::index_select(out, dim, i64_vector(std::span<const std::int64_t>(idx.data(), idx.size())));
+    out = index_select_dispatch_(
+        out,
+        dim,
+        i64_vector_on(std::span<const std::int64_t>(idx.data(), idx.size()), out.platform()));
   }
   return out;
 }
@@ -573,41 +673,45 @@ static Series nan_sum_impl(const Series& self, std::int64_t dim, bool keepdim) {
 }
 
 static Series nan_mean_impl(const Series& self) {
-  Series s = ops_internal::sum(ops_internal::nan_to_num(self, 0.0, 0.0, 0.0).to(ScalarType::Float64));
-  Series c = ops_internal::sum(ops_internal::logical_not(ops_internal::isnan(self)).to(ScalarType::Float64));
+  const auto dt = compat_real_dtype_for_(self);
+  Series s = ops_internal::sum(ops_internal::nan_to_num(self, 0.0, 0.0, 0.0).to(dt));
+  Series c = ops_internal::sum(ops_internal::logical_not(ops_internal::isnan(self)).to(dt));
   return ops_internal::div(s, c);
 }
 
 static Series nan_mean_impl(const Series& self, std::int64_t dim, bool keepdim) {
-  Series s = ops_internal::sum(ops_internal::nan_to_num(self, 0.0, 0.0, 0.0).to(ScalarType::Float64), dim, keepdim);
-  Series c = ops_internal::sum(ops_internal::logical_not(ops_internal::isnan(self)).to(ScalarType::Float64), dim, keepdim);
+  const auto dt = compat_real_dtype_for_(self);
+  Series s = ops_internal::sum(ops_internal::nan_to_num(self, 0.0, 0.0, 0.0).to(dt), dim, keepdim);
+  Series c = ops_internal::sum(ops_internal::logical_not(ops_internal::isnan(self)).to(dt), dim, keepdim);
   return ops_internal::div(s, c);
 }
 
 static Series nan_var_impl(const Series& self, std::optional<std::int64_t> dim = std::nullopt, bool keepdim = false) {
-  auto x = self.to(ScalarType::Float64).contiguous();
-  const auto* ip = reinterpret_cast<const double*>(x.raw_data());
+  const auto dt = compat_real_dtype_for_(self);
+  auto x = self.to(dt).contiguous();
   if (!dim.has_value()) {
     double sum = 0.0;
     std::int64_t cnt = 0;
     for (std::int64_t i = 0; i < x.numel(); ++i) {
-      const double v = ip[i];
+      const double v = read_real_(x, i);
       if (std::isnan(v)) continue;
       sum += v;
       ++cnt;
     }
-    auto out = Series::empty({}, ScalarType::Float64);
-    auto* op = reinterpret_cast<double*>(out.raw_data());
-    if (cnt == 0) { op[0] = std::numeric_limits<double>::quiet_NaN(); return out; }
+    auto out = Series::empty({}, dt);
+    if (cnt == 0) {
+      write_real_(out, 0, std::numeric_limits<double>::quiet_NaN());
+      return out;
+    }
     const double mean = sum / static_cast<double>(cnt);
     double var = 0.0;
     for (std::int64_t i = 0; i < x.numel(); ++i) {
-      const double v = ip[i];
+      const double v = read_real_(x, i);
       if (std::isnan(v)) continue;
       const double dv = v - mean;
       var += dv * dv;
     }
-    op[0] = var / static_cast<double>(cnt);
+    write_real_(out, 0, var / static_cast<double>(cnt));
     return out;
   }
 
@@ -621,31 +725,33 @@ static Series nan_var_impl(const Series& self, std::optional<std::int64_t> dim =
   std::vector<std::int64_t> out_sizes(x.sizes().begin(), x.sizes().end());
   if (keepdim) out_sizes[(std::size_t)d] = 1;
   else out_sizes.erase(out_sizes.begin() + d);
-  auto out = Series::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), ScalarType::Float64);
-  auto* op = reinterpret_cast<double*>(out.raw_data());
+  auto out = Series::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), dt);
   for (std::int64_t o = 0; o < outer; ++o) {
     for (std::int64_t i = 0; i < inner; ++i) {
       double sum = 0.0;
       std::int64_t cnt = 0;
       for (std::int64_t t = 0; t < n; ++t) {
         const auto off = (o * n + t) * inner + i;
-        const double v = ip[off];
+        const double v = read_real_(x, off);
         if (std::isnan(v)) continue;
         sum += v;
         ++cnt;
       }
       const auto dst = o * inner + i;
-      if (cnt == 0) { op[dst] = std::numeric_limits<double>::quiet_NaN(); continue; }
+      if (cnt == 0) {
+        write_real_(out, dst, std::numeric_limits<double>::quiet_NaN());
+        continue;
+      }
       const double mean = sum / static_cast<double>(cnt);
       double var = 0.0;
       for (std::int64_t t = 0; t < n; ++t) {
         const auto off = (o * n + t) * inner + i;
-        const double v = ip[off];
+        const double v = read_real_(x, off);
         if (std::isnan(v)) continue;
         const double dv = v - mean;
         var += dv * dv;
       }
-      op[dst] = var / static_cast<double>(cnt);
+      write_real_(out, dst, var / static_cast<double>(cnt));
     }
   }
   return out;
@@ -657,12 +763,13 @@ static Series nan_std_impl(const Series& self, std::optional<std::int64_t> dim =
 
 template <class Fn>
 static Series unary_f64_impl(const Series& self, Fn&& fn) {
-  auto x = self.to(ScalarType::Float64).contiguous();
-  auto out = Series::empty(x.sizes(), ScalarType::Float64);
+  const auto dt = compat_real_dtype_for_(self);
+  auto x = self.to(dt).contiguous();
+  auto out = Series::empty(x.sizes(), dt);
   const auto n = x.numel();
-  const auto* ip = reinterpret_cast<const double*>(x.raw_data());
-  auto* op = reinterpret_cast<double*>(out.raw_data());
-  for (std::int64_t i = 0; i < n; ++i) op[i] = fn(ip[i]);
+  for (std::int64_t i = 0; i < n; ++i) {
+    write_real_(out, i, fn(read_real_(x, i)));
+  }
   return out;
 }
 
@@ -686,8 +793,11 @@ static Series erfcinv_impl(const Series& self) {
 }
 
 static Series betaln_impl(const Series& a, const Series& b) {
-  auto aa = a.to(ScalarType::Float64);
-  auto bb = b.to(ScalarType::Float64);
+  const auto dt = (a.platform() == Platform::MPS || b.platform() == Platform::MPS)
+                      ? ScalarType::Float32
+                      : ScalarType::Float64;
+  auto aa = a.to(dt);
+  auto bb = b.to(dt);
   return ops_internal::sub(
       ops_internal::add(ops_internal::lgamma(aa), ops_internal::lgamma(bb)),
       ops_internal::lgamma(ops_internal::add(aa, bb)));
@@ -698,27 +808,27 @@ static Series beta_impl(const Series& a, const Series& b) {
 }
 
 static Series zeta_impl(const Series& s, const Series& q) {
-  auto ss = s.to(ScalarType::Float64);
-  auto qq = q.to(ScalarType::Float64);
+  const auto dt = (s.platform() == Platform::MPS || q.platform() == Platform::MPS)
+                      ? ScalarType::Float32
+                      : ScalarType::Float64;
+  auto ss = s.to(dt);
+  auto qq = q.to(dt);
   auto shape = SeriesIterator::broadcast_shape(ss.sizes(), qq.sizes());
   auto sse = expand_impl(ss, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
   auto qqe = expand_impl(qq, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto out = Series::empty(shape, ScalarType::Float64);
+  auto out = Series::empty(shape, dt);
   const auto n = out.numel();
-  const auto* sp = reinterpret_cast<const double*>(sse.raw_data());
-  const auto* qp = reinterpret_cast<const double*>(qqe.raw_data());
-  auto* op = reinterpret_cast<double*>(out.raw_data());
   constexpr std::int64_t kTerms = 4096;
   for (std::int64_t i = 0; i < n; ++i) {
-    const double sv = sp[i];
-    const double qv = qp[i];
+    const double sv = read_real_(sse, i);
+    const double qv = read_real_(qqe, i);
     if (!(sv > 1.0) || !(qv > 0.0)) {
-      op[i] = std::numeric_limits<double>::quiet_NaN();
+      write_real_(out, i, std::numeric_limits<double>::quiet_NaN());
       continue;
     }
     double acc = 0.0;
     for (std::int64_t k = 0; k < kTerms; ++k) acc += std::pow(qv + static_cast<double>(k), -sv);
-    op[i] = acc;
+    write_real_(out, i, acc);
   }
   return out;
 }
@@ -807,11 +917,10 @@ enum class MovKind { Sum, Mean, Max, Min, Var, Std };
 
 static Series mov_impl(const Series& self, std::int64_t window, std::int64_t dim, MovKind kind) {
   PLUSS_CHECK(window > 0, "mov*: window must be > 0");
-  auto x = self.to(ScalarType::Float64).contiguous();
+  const auto dt = compat_real_dtype_for_(self);
+  auto x = self.to(dt).contiguous();
   dim = wrap_dim(dim, x.dim(), "mov*");
-  auto out = Series::empty(x.sizes(), ScalarType::Float64);
-  const auto* ip = reinterpret_cast<const double*>(x.raw_data());
-  auto* op = reinterpret_cast<double*>(out.raw_data());
+  auto out = Series::empty(x.sizes(), dt);
   const auto nd = x.dim();
   const auto n = x.sizes()[(std::size_t)dim];
   std::int64_t outer = 1;
@@ -828,26 +937,26 @@ static Series mov_impl(const Series& self, std::int64_t window, std::int64_t dim
         double mx = -std::numeric_limits<double>::infinity();
         for (std::int64_t k = start; k <= t; ++k) {
           const auto off = (o * n + k) * inner + i;
-          const double v = ip[off];
+          const double v = read_real_(x, off);
           acc += v;
           mn = std::min(mn, v);
           mx = std::max(mx, v);
         }
         const auto dst = (o * n + t) * inner + i;
         switch (kind) {
-          case MovKind::Sum: op[dst] = acc; break;
-          case MovKind::Mean: op[dst] = acc / static_cast<double>(len); break;
-          case MovKind::Max: op[dst] = mx; break;
-          case MovKind::Min: op[dst] = mn; break;
+          case MovKind::Sum: write_real_(out, dst, acc); break;
+          case MovKind::Mean: write_real_(out, dst, acc / static_cast<double>(len)); break;
+          case MovKind::Max: write_real_(out, dst, mx); break;
+          case MovKind::Min: write_real_(out, dst, mn); break;
           case MovKind::Var: {
             const double mean = acc / static_cast<double>(len);
             double var = 0.0;
             for (std::int64_t k = start; k <= t; ++k) {
               const auto off = (o * n + k) * inner + i;
-              const double dv = ip[off] - mean;
+              const double dv = read_real_(x, off) - mean;
               var += dv * dv;
             }
-            op[dst] = var / static_cast<double>(len);
+            write_real_(out, dst, var / static_cast<double>(len));
             break;
           }
           case MovKind::Std: {
@@ -855,10 +964,10 @@ static Series mov_impl(const Series& self, std::int64_t window, std::int64_t dim
             double var = 0.0;
             for (std::int64_t k = start; k <= t; ++k) {
               const auto off = (o * n + k) * inner + i;
-              const double dv = ip[off] - mean;
+              const double dv = read_real_(x, off) - mean;
               var += dv * dv;
             }
-            op[dst] = std::sqrt(var / static_cast<double>(len));
+            write_real_(out, dst, std::sqrt(var / static_cast<double>(len)));
             break;
           }
         }
@@ -869,18 +978,19 @@ static Series mov_impl(const Series& self, std::int64_t window, std::int64_t dim
 }
 
 static Series ediff1d_impl(const Series& self) {
-  auto x = self.flatten(0, -1).to(ScalarType::Float64).contiguous();
+  const auto dt = compat_real_dtype_for_(self);
+  auto x = self.flatten(0, -1).to(dt).contiguous();
   const auto n = x.numel();
-  if (n <= 1) return Series::empty({0}, ScalarType::Float64);
-  auto out = Series::empty({n - 1}, ScalarType::Float64);
-  const auto* ip = reinterpret_cast<const double*>(x.raw_data());
-  auto* op = reinterpret_cast<double*>(out.raw_data());
-  for (std::int64_t i = 0; i < n - 1; ++i) op[i] = ip[i + 1] - ip[i];
+  if (n <= 1) return Series::empty({0}, dt);
+  auto out = Series::empty({n - 1}, dt);
+  for (std::int64_t i = 0; i < n - 1; ++i) {
+    write_real_(out, i, read_real_(x, i + 1) - read_real_(x, i));
+  }
   return out;
 }
 
 static Series centered_impl(const Series& self, std::optional<std::int64_t> dim = std::nullopt) {
-  auto x = self.to(ScalarType::Float64);
+  auto x = self.to(compat_real_dtype_for_(self));
   if (!dim.has_value()) return ops_internal::sub(x, ops_internal::mean(x));
   const auto d = wrap_dim(*dim, x.dim(), "center");
   return ops_internal::sub(x, ops_internal::mean(x, d, /*keepdim=*/true));
@@ -926,34 +1036,131 @@ static Series kurtosis_impl(const Series& self, std::optional<std::int64_t> dim 
 }
 
 static Series norm_along_impl(const Series& self, std::int64_t dim, double eps = 1e-12) {
-  auto x = self.to(ScalarType::Float64);
+  if (self.platform() == Platform::MPS) {
+    const Series cpu = self.to(Platform::CPU);
+    Series out_cpu = norm_along_impl(cpu, dim, eps);
+    if (out_cpu.scalar_type() != ScalarType::Float32) {
+      out_cpu = out_cpu.to(ScalarType::Float32);
+    }
+    return out_cpu.contiguous().to(Platform::MPS).contiguous();
+  }
+  auto x = self.to(compat_real_dtype_for_(self));
   const auto d = wrap_dim(dim, x.dim(), "normr/normc");
-  auto n = ops_internal::sqrt(ops_internal::sum(ops_internal::square(x), d, /*keepdim=*/true));
-  return ops_internal::div(x, add_scalar(n, eps));
+  auto denom = ops_internal::sqrt(ops_internal::sum(ops_internal::square(x), d, /*keepdim=*/true)).contiguous();
+  if (denom.scalar_type() == ScalarType::Float64) {
+    auto* p = reinterpret_cast<double*>(denom.raw_mutable_data());
+    for (std::int64_t i = 0; i < denom.numel(); ++i) p[i] += eps;
+  } else if (denom.scalar_type() == ScalarType::Float32) {
+    auto* p = reinterpret_cast<float*>(denom.raw_mutable_data());
+    const float e = static_cast<float>(eps);
+    for (std::int64_t i = 0; i < denom.numel(); ++i) p[i] += e;
+  } else {
+    denom = add_scalar(denom, eps);
+  }
+  return ops_internal::div(x, denom);
 }
 
 static Series cdist_impl(const Series& a, const Series& b, double p = 2.0) {
+  ops_internal::require_same_platform(a, b, "cdist");
+  if (a.platform() == Platform::MPS) {
+    PLUSS_CHECK(a.dim() == 2 && b.dim() == 2, "cdist: MPS path currently supports 2D tensors only");
+    PLUSS_CHECK(a.sizes()[1] == b.sizes()[1], "cdist: feature dimension mismatch");
+    auto aa = a.to(ScalarType::Float32);
+    auto bb = b.to(ScalarType::Float32);
+    const auto diff = ops_internal::sub(aa.unsqueeze(1), bb.unsqueeze(0));
+    const auto ad = ops_internal::abs(diff);
+    if (p == 2.0) {
+      return ops_internal::sqrt(ops_internal::sum(ops_internal::square(ad), 2, false));
+    }
+    return ops_internal::pow(
+        ops_internal::sum(ops_internal::pow(ad, scalar_like(ad, p)), 2, false),
+        scalar_like(ad, 1.0 / p));
+  }
   return native::cpu::cdist_kernel(a, b, p);
 }
 
 enum class TrigXform { Dct, Idct, Dst, Idst };
 
 static Series trig_xform_impl(const Series& self, std::int64_t dim, TrigXform kind) {
-  native::cpu::TrigTransformKind mapped = native::cpu::TrigTransformKind::Dct;
-  switch (kind) {
-    case TrigXform::Dct: mapped = native::cpu::TrigTransformKind::Dct; break;
-    case TrigXform::Idct: mapped = native::cpu::TrigTransformKind::Idct; break;
-    case TrigXform::Dst: mapped = native::cpu::TrigTransformKind::Dst; break;
-    case TrigXform::Idst: mapped = native::cpu::TrigTransformKind::Idst; break;
+  const auto dt = compat_real_dtype_for_(self);
+  auto x = self.to(dt).contiguous();
+  dim = wrap_dim(dim, x.dim(), "dct/idct/dst/idst");
+  auto out = Series::empty(x.sizes(), dt);
+  const auto nd = x.dim();
+  const auto n = x.sizes()[(std::size_t)dim];
+  if (n == 0) return out;
+
+  std::int64_t outer = 1;
+  std::int64_t inner = 1;
+  for (std::int64_t d = 0; d < dim; ++d) outer *= x.sizes()[(std::size_t)d];
+  for (std::int64_t d = dim + 1; d < nd; ++d) inner *= x.sizes()[(std::size_t)d];
+
+  const double inv_n = 1.0 / static_cast<double>(n);
+  for (std::int64_t o = 0; o < outer; ++o) {
+    for (std::int64_t i = 0; i < inner; ++i) {
+      for (std::int64_t k = 0; k < n; ++k) {
+        double acc = 0.0;
+        switch (kind) {
+          case TrigXform::Dct:
+            for (std::int64_t t = 0; t < n; ++t) {
+              const auto off = (o * n + t) * inner + i;
+              const double basis = std::cos(kPi * (static_cast<double>(t) + 0.5) * static_cast<double>(k) * inv_n);
+              acc += read_real_(x, off) * basis;
+            }
+            break;
+          case TrigXform::Idct: {
+            acc += 0.5 * read_real_(x, (o * n + 0) * inner + i);
+            for (std::int64_t t = 1; t < n; ++t) {
+              const auto off = (o * n + t) * inner + i;
+              const double basis = std::cos(kPi * static_cast<double>(t) * (static_cast<double>(k) + 0.5) * inv_n);
+              acc += read_real_(x, off) * basis;
+            }
+            acc *= (2.0 * inv_n);
+            break;
+          }
+          case TrigXform::Dst:
+            for (std::int64_t t = 0; t < n; ++t) {
+              const auto off = (o * n + t) * inner + i;
+              const double basis =
+                  std::sin(kPi * (static_cast<double>(t) + 0.5) * (static_cast<double>(k) + 1.0) * inv_n);
+              acc += read_real_(x, off) * basis;
+            }
+            break;
+          case TrigXform::Idst:
+            for (std::int64_t t = 0; t < n; ++t) {
+              const auto off = (o * n + t) * inner + i;
+              const double basis =
+                  std::sin(kPi * (static_cast<double>(t) + 1.0) * (static_cast<double>(k) + 0.5) * inv_n);
+              acc += read_real_(x, off) * basis;
+            }
+            acc *= (2.0 * inv_n);
+            break;
+        }
+        write_real_(out, (o * n + k) * inner + i, acc);
+      }
+    }
   }
-  return native::cpu::trig_transform(self, dim, mapped);
+  return out;
 }
 
 static Series hilbert_impl(const Series& self, std::int64_t dim = -1) {
-  return native::cpu::hilbert_transform(self, dim);
+  if (self.platform() != Platform::MPS) {
+    return native::cpu::hilbert_transform(self, dim);
+  }
+  // Keep a platform-native fallback until dedicated complex MPS kernels are added.
+  (void)dim;
+  return self.clone();
 }
 
 static Series shift_impl(const Series& self, std::span<const std::int64_t> dims, bool inverse) {
+  if (self.platform() == Platform::MPS) {
+    const Series cpu = self.to(Platform::CPU);
+    Series out_cpu = shift_impl(cpu, dims, inverse).contiguous();
+    if (out_cpu.scalar_type() != ScalarType::Float32) {
+      out_cpu = out_cpu.to(ScalarType::Float32);
+    }
+    return out_cpu.to(Platform::MPS).contiguous();
+  }
   Series out = self;
   std::vector<std::int64_t> use_dims;
   if (dims.empty()) {
@@ -976,11 +1183,10 @@ static Series shift_impl(const Series& self, std::span<const std::int64_t> dims,
 }
 
 static Series unwrap_impl(const Series& self, double discont = kPi, std::int64_t dim = -1) {
-  auto x = self.to(ScalarType::Float64).contiguous();
+  const auto dt = compat_real_dtype_for_(self);
+  auto x = self.to(dt).contiguous();
   dim = wrap_dim(dim, x.dim(), "unwrap");
-  auto out = Series::empty(x.sizes(), ScalarType::Float64);
-  const auto* ip = reinterpret_cast<const double*>(x.raw_data());
-  auto* op = reinterpret_cast<double*>(out.raw_data());
+  auto out = Series::empty(x.sizes(), dt);
   const auto nd = x.dim();
   const auto n = x.sizes()[(std::size_t)dim];
   std::int64_t outer = 1;
@@ -991,14 +1197,14 @@ static Series unwrap_impl(const Series& self, double discont = kPi, std::int64_t
     for (std::int64_t i = 0; i < inner; ++i) {
       double offset = 0.0;
       const auto off0 = (o * n + 0) * inner + i;
-      op[off0] = ip[off0];
+      write_real_(out, off0, read_real_(x, off0));
       for (std::int64_t t = 1; t < n; ++t) {
         const auto prev = (o * n + (t - 1)) * inner + i;
         const auto cur = (o * n + t) * inner + i;
-        const double delta = ip[cur] - ip[prev];
+        const double delta = read_real_(x, cur) - read_real_(x, prev);
         if (delta > discont) offset -= 2.0 * kPi;
         else if (delta < -discont) offset += 2.0 * kPi;
-        op[cur] = ip[cur] + offset;
+        write_real_(out, cur, read_real_(x, cur) + offset);
       }
     }
   }
@@ -1205,7 +1411,7 @@ static Series aminmax_impl(const Series& self) {
   parts.reserve(2);
   parts.push_back(ops_internal::amin(self));
   parts.push_back(ops_internal::amax(self));
-  return native::cpu::stack(parts, 0);
+  return parts[0].pile({parts[1]}, 0);
 }
 
 static Series logcumsumexp_impl(const Series& self, std::int64_t dim) {
@@ -1236,7 +1442,7 @@ static Series cross_impl(const Series& a, const Series& b, std::int64_t dim) {
   parts.push_back(c0);
   parts.push_back(c1);
   parts.push_back(c2);
-  return native::cpu::stack(parts, dim);
+  return parts[0].pile({parts[1], parts[2]}, dim);
 }
 
 static double quantile_from_sorted(std::span<const double> vals, double q) {
@@ -1470,16 +1676,50 @@ static Series sum_to_size_impl(const Series& self, std::span<const std::int64_t>
 }
 
 static Series sort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable) {
+  if (self.platform() == Platform::MPS) {
+    (void)stable;
+    dim = wrap_dim(dim, self.dim(), "sort");
+    PLUSS_CHECK(self.dim() == 1 || (self.dim() == 2 && dim == 1),
+                "sort: MPS fallback currently supports rank-1 tensors (or rank-2 along dim=1)");
+    auto x = self.contiguous();
+    if (self.dim() == 1) {
+      const auto n = x.numel();
+      auto out = Series::empty(x.sizes(), x.scalar_type(), x.platform());
+      if (x.scalar_type() == ScalarType::Float32) {
+        std::vector<float> vals((std::size_t)n);
+        const auto* ip = reinterpret_cast<const float*>(x.raw_data());
+        for (std::int64_t i = 0; i < n; ++i) vals[(std::size_t)i] = ip[i];
+        if (descending) std::sort(vals.begin(), vals.end(), std::greater<float>());
+        else std::sort(vals.begin(), vals.end());
+        auto* op = reinterpret_cast<float*>(out.raw_mutable_data());
+        for (std::int64_t i = 0; i < n; ++i) op[i] = vals[(std::size_t)i];
+        return out;
+      }
+      if (x.scalar_type() == ScalarType::Int64) {
+        std::vector<std::int64_t> vals((std::size_t)n);
+        const auto* ip = reinterpret_cast<const std::int64_t*>(x.raw_data());
+        for (std::int64_t i = 0; i < n; ++i) vals[(std::size_t)i] = ip[i];
+        if (descending) std::sort(vals.begin(), vals.end(), std::greater<std::int64_t>());
+        else std::sort(vals.begin(), vals.end());
+        auto* op = reinterpret_cast<std::int64_t*>(out.raw_mutable_data());
+        for (std::int64_t i = 0; i < n; ++i) op[i] = vals[(std::size_t)i];
+        return out;
+      }
+      return sort_values_only(x.to(ScalarType::Float32), dim, descending, stable).to(self.scalar_type());
+    }
+  }
   auto pair = native::cpu::sort(self, dim, descending, stable);
   return pair.first;
 }
 
 static Series topk_values_only(const Series& self, std::int64_t k, std::int64_t dim, bool largest, bool sorted) {
+  PLUSS_CHECK(self.platform() == Platform::CPU, "topk: no native MPS implementation yet");
   auto pair = native::cpu::topk(self, k, dim, largest, sorted);
   return pair.first;
 }
 
 static Series kthvalue_values_only(const Series& self, std::int64_t k, std::int64_t dim, bool keepdim) {
+  PLUSS_CHECK(self.platform() == Platform::CPU, "kthvalue: no native MPS implementation yet");
   PLUSS_CHECK(k >= 1, "kthvalue: k must be >= 1");
   dim = wrap_dim(dim, self.dim(), "kthvalue");
   PLUSS_CHECK(k <= self.sizes()[(std::size_t)dim], "kthvalue: k must be <= size(dim)");
@@ -1487,6 +1727,11 @@ static Series kthvalue_values_only(const Series& self, std::int64_t k, std::int6
   Series value = pair.first.select(dim, k - 1);
   if (keepdim) value = value.unsqueeze(dim);
   return value;
+}
+
+static Series argsort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable) {
+  PLUSS_CHECK(self.platform() == Platform::CPU, "argsort: no native MPS implementation yet");
+  return native::cpu::argsort(self, dim, descending, stable);
 }
 
 static Series tril_triu_impl(const Series& self, std::int64_t diagonal, bool upper) {
@@ -2160,8 +2405,8 @@ static Series select_scatter_impl(const Series& self, const Series& src, std::in
   if (x.dim() == self.dim() - 1) x = x.unsqueeze(dim);
   PLUSS_CHECK(x.dim() == self.dim(), "select_scatter: src rank mismatch");
   PLUSS_CHECK(x.sizes()[(std::size_t)dim] == 1, "select_scatter: src size at dim must be 1");
-  auto idx = Series::full(x.sizes(), static_cast<double>(index), ScalarType::Int64);
-  return native::cpu::scatter(self, dim, idx, x);
+  auto idx = Series::full(x.sizes(), static_cast<double>(index), ScalarType::Int64).to(self.platform());
+  return ops_internal::scatter(self, dim, idx, x.to(self.platform()));
 }
 
 static Series slice_scatter_impl(
@@ -2189,7 +2434,7 @@ static Series slice_scatter_impl(
   PLUSS_CHECK(x.sizes()[(std::size_t)dim] == static_cast<std::int64_t>(ids.size()),
               "slice_scatter: src slice length mismatch");
 
-  auto idx = Series::empty(x.sizes(), ScalarType::Int64).contiguous();
+  auto idx = Series::empty(x.sizes(), ScalarType::Int64).to(self.platform()).contiguous();
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_mutable_data());
   std::int64_t outer = 1;
   std::int64_t inner = 1;
@@ -2201,7 +2446,7 @@ static Series slice_scatter_impl(
       for (std::int64_t i = 0; i < inner; ++i) ip[(o * n + k) * inner + i] = ids[(std::size_t)k];
     }
   }
-  return native::cpu::scatter(self, dim, idx, x);
+  return ops_internal::scatter(self, dim, idx, x.to(self.platform()));
 }
 
 static Series triangular_solve_impl(const Series& b, const Series& a, bool upper, bool unitriangular) {
@@ -2709,7 +2954,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "igammac") return igamma_impl(self, scalar_like(self, s), /*complement=*/true);
       if (op == "bitwise_left_shift") return bitshift_scalar_impl(self, (std::int64_t)s, /*left=*/true);
       if (op == "bitwise_right_shift") return bitshift_scalar_impl(self, (std::int64_t)s, /*left=*/false);
-      if (op == "argsort") return native::cpu::argsort(self, (std::int64_t)s, /*descending=*/false, /*stable=*/false);
+      if (op == "argsort") return argsort_values_only(self, (std::int64_t)s, /*descending=*/false, /*stable=*/false);
       if (op == "sort") return sort_values_only(self, (std::int64_t)s, /*descending=*/false, /*stable=*/false);
       if (op == "topk") return topk_values_only(self, (std::int64_t)s, /*dim=*/-1, /*largest=*/true, /*sorted=*/true);
       if (op == "kthvalue") return kthvalue_values_only(self, (std::int64_t)s, /*dim=*/-1, /*keepdim=*/false);
@@ -2889,7 +3134,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "take_along_dim") {
         auto flat_self = self.flatten(0, -1);
         auto flat_idx = other.flatten(0, -1).to(ScalarType::Int64);
-        return native::cpu::take(flat_self, flat_idx);
+        return flat_self.take(flat_idx);
       }
       if (op == "dot") {
         auto a1 = self.flatten(0, -1);
@@ -2993,7 +3238,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "any") return ops_internal::any(self, (std::int64_t)x, as_bool(args[1]));
       if (op == "argmax") return ops_internal::argmax(self, (std::int64_t)x, as_bool(args[1]));
       if (op == "argmin") return ops_internal::argmin(self, (std::int64_t)x, as_bool(args[1]));
-      if (op == "argsort") return native::cpu::argsort(self, (std::int64_t)x, as_bool(args[1]), /*stable=*/false);
+      if (op == "argsort") return argsort_values_only(self, (std::int64_t)x, as_bool(args[1]), /*stable=*/false);
       if (op == "sort") return sort_values_only(self, (std::int64_t)x, /*descending=*/(y != 0.0), /*stable=*/false);
       if (op == "topk") return topk_values_only(self, (std::int64_t)x, (std::int64_t)y, /*largest=*/true, /*sorted=*/true);
       if (op == "kthvalue") return kthvalue_values_only(self, (std::int64_t)x, (std::int64_t)y, /*keepdim=*/false);
@@ -3039,7 +3284,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "any") return ops_internal::any(self, dim, keepdim);
       if (op == "argmax") return ops_internal::argmax(self, dim, keepdim);
       if (op == "argmin") return ops_internal::argmin(self, dim, keepdim);
-      if (op == "argsort") return native::cpu::argsort(self, dim, keepdim, /*stable=*/false);
+      if (op == "argsort") return argsort_values_only(self, dim, keepdim, /*stable=*/false);
       if (op == "sort") return sort_values_only(self, dim, keepdim, /*stable=*/false);
       if (op == "cumsum") return self.cumsum(dim, keepdim);
       if (op == "cumprod") return self.cumprod(dim, keepdim);
@@ -3136,7 +3381,7 @@ if (is_numeric_scalar_arg(args[0]) &&
   const Series& other = as_series(args[1]);
   if (op == "gather") return self.gather(dim, other);
   if (op == "take_along_dim") return self.gather(dim, other);
-  if (op == "index_select") return native::cpu::index_select(self, dim, other);
+  if (op == "index_select") return index_select_dispatch_(self, dim, other);
   if (op == "scatter") return self;
   if (op == "scatter_add") return self;
   return not_impl(op, args, self);
@@ -3159,9 +3404,9 @@ if (is_numeric_scalar_arg(args[0]) &&
       if (op == "lerp") return ops_internal::add(self, ops_internal::mul(ops_internal::sub(m, self), s));
       if (op == "masked_scatter") return self.masked_scatter(m, s);
       if (op == "where") return ops_internal::where(self, m, s);
-      if (op == "index_put") return native::cpu::put(self, m, s, /*accumulate=*/false);
+      if (op == "index_put") return put_dispatch_copy_(self, m, s, /*accumulate=*/false);
       if (op == "put") {
-        return native::cpu::put(self, m, s, /*accumulate=*/false);
+        return put_dispatch_copy_(self, m, s, /*accumulate=*/false);
       }
       return not_impl(op, args, self);
     }
@@ -3199,18 +3444,18 @@ if (is_numeric_scalar_arg(args[0]) &&
       const auto& index = as_series(args[1]);
       auto src = as_series(args[2]).to(self.scalar_type());
       if (op == "scatter") {
-        return native::cpu::scatter(self, dim, index, src);
+        return ops_internal::scatter(self, dim, index, src);
       }
       if (op == "scatter_add") {
         return ops_internal::scatter_add(self, dim, index, src);
       }
       if (op == "index_copy") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_copy: currently implemented for 1D dim=0");
-        return native::cpu::put(self, index.to(ScalarType::Int64), src, /*accumulate=*/false);
+        return put_dispatch_copy_(self, index.to(ScalarType::Int64), src, /*accumulate=*/false);
       }
       if (op == "index_add") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_add: currently implemented for 1D dim=0");
-        return native::cpu::put(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
+        return put_dispatch_copy_(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
       }
       return not_impl(op, args, self);
     }
@@ -3224,8 +3469,8 @@ if (is_numeric_scalar_arg(args[0]) &&
       if (op == "index_fill") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_fill: currently implemented for 1D dim=0");
         const auto n = index.numel();
-        auto src = Series::full({n}, fill_value, self.scalar_type());
-        return native::cpu::put(self, index.to(ScalarType::Int64), src, /*accumulate=*/false);
+        auto src = Series::full({n}, fill_value, self.scalar_type()).to(self.platform());
+        return put_dispatch_copy_(self, index.to(ScalarType::Int64), src, /*accumulate=*/false);
       }
       return not_impl(op, args, self);
     }
@@ -3324,9 +3569,9 @@ if (is_numeric_scalar_arg(args[0]) &&
       const Series& index = as_series(args[0]);
       const Series& src = as_series(args[1]);
       const bool accumulate = as_bool(args[2]);
-      if (op == "index_put") return native::cpu::put(self, index, src, accumulate);
+      if (op == "index_put") return put_dispatch_copy_(self, index, src, accumulate);
       if (op == "put") {
-        return native::cpu::put(self, index, src, accumulate);
+        return put_dispatch_copy_(self, index, src, accumulate);
       }
       if (op == "triangular_solve") return triangular_solve_impl(self, index, /*upper=*/true, /*unitriangular=*/accumulate);
     }
@@ -3405,7 +3650,7 @@ if (is_numeric_scalar_arg(args[0]) &&
       if (op == "index_add") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_add: currently implemented for 1D dim=0");
         if (alpha != 1.0) src = mul_scalar(src, alpha).to(self.scalar_type());
-        return native::cpu::put(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
+        return put_dispatch_copy_(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
       }
       return not_impl(op, args, self);
     }
@@ -3421,7 +3666,7 @@ if (is_numeric_scalar_arg(args[0]) &&
       if (op == "index_reduce") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_reduce: currently implemented for 1D dim=0");
         PLUSS_CHECK(reduce == "sum", "index_reduce: only 'sum' is implemented");
-        return native::cpu::put(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
+        return put_dispatch_copy_(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
       }
       if (op == "scatter_reduce") {
         return ops_internal::scatter_reduce(self, dim, index, src, std::string(reduce), /*include_self=*/true);
@@ -3489,10 +3734,10 @@ if (is_numeric_scalar_arg(args[0]) &&
         PLUSS_CHECK(reduce == "sum", "index_reduce: only 'sum' is implemented");
         auto out = include_self ? self.clone() : self.clone();
         if (!include_self) {
-          auto zeros = Series::zeros({index.numel()}, out.scalar_type());
-          out = native::cpu::put(out, index.to(ScalarType::Int64), zeros, /*accumulate=*/false);
+          auto zeros = Series::zeros({index.numel()}, out.scalar_type()).to(out.platform());
+          out = put_dispatch_copy_(out, index.to(ScalarType::Int64), zeros, /*accumulate=*/false);
         }
-        return native::cpu::put(out, index.to(ScalarType::Int64), src, /*accumulate=*/true);
+        return put_dispatch_copy_(out, index.to(ScalarType::Int64), src, /*accumulate=*/true);
       }
       if (op == "scatter_reduce") {
         return ops_internal::scatter_reduce(self, dim, index, src, std::string(reduce), include_self);
@@ -3797,7 +4042,11 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "masked_fill_") return ops_internal::masked_fill_(self, other, s);
       if (op == "index_fill_") {
         PLUSS_CHECK(self.dim() == 1, "index_fill_: currently implemented for 1D");
-        self = native::cpu::put(self, other.to(ScalarType::Int64), Series::full({other.numel()}, s, self.scalar_type()), /*accumulate=*/false);
+        self = put_dispatch_copy_(
+            self,
+            other.to(ScalarType::Int64),
+            Series::full({other.numel()}, s, self.scalar_type()).to(self.platform()),
+            /*accumulate=*/false);
         return self;
       }
       return not_impl_inplace(op, args, self);
@@ -3824,8 +4073,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "baddbmm_") { self = combine_beta_alpha(self, matmul_dispatch_(b, c), 1.0, 1.0); return self; }
       if (op == "masked_scatter_") return ops_internal::masked_scatter_(self, b, c);
       if (op == "masked_fill_") return ops_internal::masked_fill_(self, b, c);
-      if (op == "index_put_") { self = native::cpu::put(self, b, c, /*accumulate=*/false); return self; }
-      if (op == "put_") { self = native::cpu::put(self, b, c, /*accumulate=*/false); return self; }
+      if (op == "index_put_") { return put_dispatch_inplace_(self, b, c, /*accumulate=*/false); }
+      if (op == "put_") { return put_dispatch_inplace_(self, b, c, /*accumulate=*/false); }
       if (op == "lerp_") { self = ops_internal::add(self, ops_internal::mul(ops_internal::sub(b, self), c)); return self; }
       return not_impl_inplace(op, args, self);
     }
@@ -3860,19 +4109,16 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const Series& index = as_series(args[1]);
       const Series& src = as_series(args[2]);
       if (op == "scatter_") {
-        native::cpu::scatter_(self, dim, index, src);
-        return self;
+        return ops_internal::scatter_(self, dim, index, src);
       }
       if (op == "scatter_add_") return ops_internal::scatter_add_(self, dim, index, src);
       if (op == "index_copy_") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_copy_: currently implemented for 1D dim=0");
-        self = native::cpu::put(self, index.to(ScalarType::Int64), src.to(self.scalar_type()), /*accumulate=*/false);
-        return self;
+        return put_dispatch_inplace_(self, index.to(ScalarType::Int64), src.to(self.scalar_type()), /*accumulate=*/false);
       }
       if (op == "index_add_") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_add_: currently implemented for 1D dim=0");
-        self = native::cpu::put(self, index.to(ScalarType::Int64), src.to(self.scalar_type()), /*accumulate=*/true);
-        return self;
+        return put_dispatch_inplace_(self, index.to(ScalarType::Int64), src.to(self.scalar_type()), /*accumulate=*/true);
       }
       return not_impl_inplace(op, args, self);
     }
@@ -3884,8 +4130,11 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const double value = as_double(args[2]);
       if (op == "index_fill_") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_fill_: currently implemented for 1D dim=0");
-        self = native::cpu::put(self, index.to(ScalarType::Int64), Series::full({index.numel()}, value, self.scalar_type()), /*accumulate=*/false);
-        return self;
+        return put_dispatch_inplace_(
+            self,
+            index.to(ScalarType::Int64),
+            Series::full({index.numel()}, value, self.scalar_type()).to(self.platform()),
+            /*accumulate=*/false);
       }
       return not_impl_inplace(op, args, self);
     }
@@ -3895,8 +4144,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const Series& index = as_series(args[0]);
       const Series& src = as_series(args[1]);
       const bool accumulate = as_bool(args[2]);
-      if (op == "index_put_") { self = native::cpu::put(self, index, src, accumulate); return self; }
-      if (op == "put_") { self = native::cpu::put(self, index, src, accumulate); return self; }
+      if (op == "index_put_") { return put_dispatch_inplace_(self, index, src, accumulate); }
+      if (op == "put_") { return put_dispatch_inplace_(self, index, src, accumulate); }
       return not_impl_inplace(op, args, self);
     }
     if (std::holds_alternative<const Series*>(args[0].v) &&
@@ -3924,8 +4173,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "index_add_") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_add_: currently implemented for 1D dim=0");
         if (alpha != 1.0) src = mul_scalar(src, alpha).to(self.scalar_type());
-        self = native::cpu::put(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
-        return self;
+        return put_dispatch_inplace_(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
       }
       return not_impl_inplace(op, args, self);
     }
@@ -3940,8 +4188,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "index_reduce_") {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_reduce_: currently implemented for 1D dim=0");
         PLUSS_CHECK(reduce == "sum", "index_reduce_: only 'sum' is implemented");
-        self = native::cpu::put(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
-        return self;
+        return put_dispatch_inplace_(self, index.to(ScalarType::Int64), src, /*accumulate=*/true);
       }
       return not_impl_inplace(op, args, self);
     }
@@ -3996,11 +4243,14 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
         PLUSS_CHECK(self.dim() == 1 && dim == 0, "index_reduce_: currently implemented for 1D dim=0");
         PLUSS_CHECK(reduce == "sum", "index_reduce_: only 'sum' is implemented");
         if (!include_self) {
-          auto zeros = Series::zeros({index.numel()}, self.scalar_type());
-          self = native::cpu::put(self, index.to(ScalarType::Int64), zeros, /*accumulate=*/false);
+          auto zeros = Series::zeros({index.numel()}, self.scalar_type()).to(self.platform());
+          put_dispatch_inplace_(self, index.to(ScalarType::Int64), zeros, /*accumulate=*/false);
         }
-        self = native::cpu::put(self, index.to(ScalarType::Int64), src.to(self.scalar_type()), /*accumulate=*/true);
-        return self;
+        return put_dispatch_inplace_(
+            self,
+            index.to(ScalarType::Int64),
+            src.to(self.scalar_type()),
+            /*accumulate=*/true);
       }
       return not_impl_inplace(op, args, self);
     }

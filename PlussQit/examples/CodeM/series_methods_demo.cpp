@@ -13,31 +13,45 @@ struct DemoCase {
   std::function<pluss::Series()> run;
 };
 
-int main() {
+int main(int argc, char** argv) {
   using pluss::Series;
+  using pluss::Platform;
   using pluss::ScalarType;
 
-  let x = pluss::value(std::vector<double>{-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0}, {7});
-  let y = pluss::value(std::vector<double>{3.0, 2.0, 1.0, 0.0, -1.0, -2.0, -3.0}, {7});
-  let pos = pluss::value(std::vector<double>{0.2, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0}, {7});
-  let unit = pluss::value(std::vector<double>{-0.9, -0.5, -0.1, 0.0, 0.1, 0.5, 0.9}, {7});
+  const bool want_mps = (argc > 1 && std::string(argv[1]) == "mps");
+  const bool mps_ready = pluss::mps::is_ready();
+  if (want_mps && !mps_ready) {
+    std::cerr << "Requested MPS, but MPS is not ready on this runtime. Aborting (no CPU fallback).\n";
+    return 2;
+  }
+  const Platform run_platform = want_mps ? pluss::pMPS : pluss::pCPU;
+  const ScalarType run_float_dt = (run_platform == pluss::pMPS) ? ScalarType::Float32 : ScalarType::Float64;
 
-  let m = pluss::value(std::vector<double>{1, 2, 3, 4, 5, 6}, {2, 3});
-  let n = pluss::value(std::vector<double>{6, 5, 4, 3, 2, 1}, {2, 3});
-  let mm = pluss::value(std::vector<double>{1,2,3,4,5,6,7,8,9}, {3,3});
+  auto make_f = [&](std::vector<double> vals, std::vector<std::int64_t> shape) {
+    return Series::make_from_doubles(vals, shape, run_float_dt).to(run_platform);
+  };
 
-  let i = pluss::make_series(std::vector<std::int64_t>{1,2,3,4,5,6,7}, {7});
-  let bi = pluss::make_series(std::vector<std::int64_t>{1,2,3,4,5,6}, {2,3});
+  let x = make_f({-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0}, {7});
+  let y = make_f({3.0, 2.0, 1.0, 0.0, -1.0, -2.0, -3.0}, {7});
+  let pos = make_f({0.2, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0}, {7});
+  let unit = make_f({-0.9, -0.5, -0.1, 0.0, 0.1, 0.5, 0.9}, {7});
 
-  let gather_src = pluss::make_series(std::vector<std::int64_t>{10, 20, 30, 40, 50, 60}, {2, 3});
-  let gather_idx = pluss::make_series(std::vector<std::int64_t>{2, 1, 0, 0, 1, 2}, {2, 3});
-  let scatter_base = pluss::Series::zeros({2, 3}, ScalarType::Int64);
-  let scatter_val = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {2, 3});
-  let flat_idx = pluss::make_series(std::vector<std::int64_t>{0, 3, 5}, {3});
-  let flat_src = pluss::make_series(std::vector<std::int64_t>{99, 88, 77}, {3});
+  let m = make_f({1, 2, 3, 4, 5, 6}, {2, 3});
+  let n = make_f({6, 5, 4, 3, 2, 1}, {2, 3});
+  let mm = make_f({1,2,3,4,5,6,7,8,9}, {3,3});
 
-  let cond = pluss::Series::ones({7}, ScalarType::Bool);
-  let mask = pluss::Series::ones({2, 3}, ScalarType::Bool);
+  let i = pluss::make_series(std::vector<std::int64_t>{1,2,3,4,5,6,7}, {7}).to(run_platform);
+  let bi = pluss::make_series(std::vector<std::int64_t>{1,2,3,4,5,6}, {2,3}).to(run_platform);
+
+  let gather_src = pluss::make_series(std::vector<std::int64_t>{10, 20, 30, 40, 50, 60}, {2, 3}).to(run_platform);
+  let gather_idx = pluss::make_series(std::vector<std::int64_t>{2, 1, 0, 0, 1, 2}, {2, 3}).to(run_platform);
+  let scatter_base = pluss::Series::zeros({2, 3}, ScalarType::Int64).to(run_platform);
+  let scatter_val = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {2, 3}).to(run_platform);
+  let flat_idx = pluss::make_series(std::vector<std::int64_t>{0, 3, 5}, {3}).to(run_platform);
+  let flat_src = pluss::make_series(std::vector<std::int64_t>{99, 88, 77}, {3}).to(run_platform);
+
+  let cond = pluss::Series::ones({7}, ScalarType::Bool).to(run_platform);
+  let mask = pluss::Series::ones({2, 3}, ScalarType::Bool).to(run_platform);
   const std::array<std::int64_t, 2> shape_3x2{3, 2};
   const std::array<std::int64_t, 2> perm_10{1, 0};
 
@@ -256,7 +270,8 @@ int main() {
   add_case("ifftshift", [&]{ return mm.fftshift().ifftshift(); });
   add_case("abs2", [&]{ return x.hilbert().abs2(); });
 
-  std::cout << "Running " << cases.size() << " Series method demos\n\n";
+  std::cout << "Running " << cases.size() << " Series method demos on "
+            << ((run_platform == pluss::pMPS) ? "MPS" : "CPU") << "\n\n";
   pluss::codem::PrintOptions po;
   po.edge_items = 2;
   po.max_elements = 12;

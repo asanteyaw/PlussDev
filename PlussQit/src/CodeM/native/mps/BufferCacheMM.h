@@ -31,5 +31,13 @@ inline void mark_device_data_dirty_mm(const SeriesBase& s, id<MTLCommandBuffer> 
   mark_device_data_dirty(s, (__bridge void*)cb);
 }
 
+inline void submit_command_buffer_mm(id<MTLCommandBuffer> cb, std::int64_t work_items_hint) {
+  submit_command_buffer((__bridge void*)cb, work_items_hint);
+}
+
+inline void wait_command_buffer_mm(id<MTLCommandBuffer> cb) {
+  wait_command_buffer((__bridge void*)cb);
+}
+
 } // namespace pluss::codem::native::mps
 #endif

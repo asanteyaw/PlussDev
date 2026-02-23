@@ -10,6 +10,10 @@ pluss::Series calc_tip (pluss::Series bills, double tip_percent) {
 }
 
 int main() {
+  let mps_ready = pluss::mps::is_ready();
+  let platform = mps_ready ? pluss::pMPS : pluss::pCPU;
+  std::cout << (mps_ready ? "MPS ready. Training on GPU." : "Training on CPU.") << '\n';
+
   auto doubled = suppose(std::vector<int>{1, 2, 3, 4})
                      .then([](std::vector<int> v) {
                        for (auto& x : v) x *= 2;

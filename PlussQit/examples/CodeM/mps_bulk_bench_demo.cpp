@@ -3,6 +3,7 @@
 #include <pluss/pluss.h>
 
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -274,6 +275,70 @@ int parse_i32(const char* s, const char* name) {
   return static_cast<int>(v);
 }
 
+bool ieq_(const char* a, const char* b) noexcept {
+  if (a == nullptr || b == nullptr) return false;
+  while (*a != '\0' && *b != '\0') {
+    if (std::tolower(static_cast<unsigned char>(*a)) != std::tolower(static_cast<unsigned char>(*b))) {
+      return false;
+    }
+    ++a;
+    ++b;
+  }
+  return *a == '\0' && *b == '\0';
+}
+
+bool parse_bool_env_(const char* key, bool def) noexcept {
+  const char* raw = std::getenv(key);
+  if (raw == nullptr || *raw == '\0') return def;
+  if (ieq_(raw, "1") || ieq_(raw, "true") || ieq_(raw, "yes") || ieq_(raw, "on")) return true;
+  if (ieq_(raw, "0") || ieq_(raw, "false") || ieq_(raw, "no") || ieq_(raw, "off")) return false;
+  return def;
+}
+
+int parse_i32_env_(const char* key, int def, int lo, int hi) noexcept {
+  const char* raw = std::getenv(key);
+  if (raw == nullptr || *raw == '\0') return def;
+  char* end = nullptr;
+  const long long v = std::strtoll(raw, &end, 10);
+  if (end == raw || (end != nullptr && *end != '\0')) return def;
+  if (v < lo || v > hi) return def;
+  return static_cast<int>(v);
+}
+
+bool should_trace_workload_(WorkloadKind k) noexcept {
+  const bool trace_enabled = parse_bool_env_("PLUSS_MPS_TRACE_PARITY", false);
+  if (!trace_enabled) {
+    return false;
+  }
+  const char* raw = std::getenv("PLUSS_MPS_TRACE_WORKLOAD");
+  if (raw == nullptr || *raw == '\0') {
+    return k == WorkloadKind::MatmulMix;
+  }
+  if (ieq_(raw, "all")) {
+    return true;
+  }
+  return ieq_(raw, workload_name(k));
+}
+
+void trace_workload_progress(WorkloadKind kind, std::int64_t n, int inner_iters, std::uint64_t seed) {
+  const int trace_iters = parse_i32_env_("PLUSS_MPS_TRACE_PARITY_ITERS", inner_iters, 1, std::max(1, inner_iters));
+  std::cout << "  parity_progress[" << workload_name(kind) << "]\n";
+  std::cout << std::scientific << std::setprecision(6);
+  for (int it = 1; it <= trace_iters; ++it) {
+    const auto cpu = run_workload(kind, pluss::pCPU, n, it, 1, seed);
+    const auto mps = run_workload(kind, pluss::pMPS, n, it, 1, seed);
+    const auto cpu_last = cpu.last.to(pluss::pCPU, pluss::ScalarType::Float32);
+    const auto mps_last = mps.last.to(pluss::pCPU, pluss::ScalarType::Float32);
+    const auto err = compare_stats(cpu_last, mps_last);
+    std::cout << "    iter=" << it
+              << " mean_abs=" << err.mean_abs
+              << " max_abs=" << err.max_abs
+              << " mean_rel(sym)=" << err.mean_rel
+              << " p99_rel(sym)=" << err.p99_rel << "\n";
+  }
+  std::cout << std::fixed << std::setprecision(3);
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -293,8 +358,8 @@ int main(int argc, char** argv) {
     std::cout << "Bulk benchmark settings\n";
     std::cout << "shape=(" << n << ", " << n << "), inner_iters=" << inner_iters
               << ", rounds=" << rounds << "\n";
-    const bool mps_ok = pluss::mps::is_usable();
-    std::cout << "MPS usable: " << (mps_ok ? "true" : "false") << "\n\n";
+    const bool mps_ok = pluss::mps::is_ready();
+    std::cout << "MPS ready: " << (mps_ok ? "true" : "false") << "\n\n";
 
     const std::vector<WorkloadKind> workloads{
       WorkloadKind::MatmulMix,
@@ -337,6 +402,11 @@ int main(int argc, char** argv) {
                 << ", p95_rel_err(sym)=" << err.p95_rel
                 << ", p99_rel_err(sym)=" << err.p99_rel << "\n\n";
       std::cout << std::fixed << std::setprecision(3);
+
+      if (should_trace_workload_(kind)) {
+        trace_workload_progress(kind, n, inner_iters, seed);
+        std::cout << "\n";
+      }
     }
 
     return 0;
