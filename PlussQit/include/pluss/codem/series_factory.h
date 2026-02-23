@@ -36,6 +36,15 @@ namespace pluss {
       return (cfg.dtype == ScalarType::Float32) ? like.scalar_type() : cfg.dtype;
     }
 
+    inline Platform resolve_config_platform(Config cfg) {
+      return cfg.platform;
+    }
+
+    inline Series move_to_config_platform(Series s, Config cfg) {
+      const Platform target = resolve_config_platform(cfg);
+      return (s.platform() == target) ? s : s.to(target);
+    }
+
     inline std::mt19937_64 make_rng(std::uint64_t seed) {
       if (seed != 0) {
         return std::mt19937_64(seed);
@@ -58,7 +67,7 @@ namespace pluss {
   inline Series empty(std::initializer_list<std::int64_t> sizes, ScalarType dt) {
     return empty(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt);
   }
-  inline Series empty(std::span<const std::int64_t> sizes, Config cfg) { return Series::empty(sizes, cfg.dtype); }
+  inline Series empty(std::span<const std::int64_t> sizes, Config cfg) { return Series::empty(sizes, cfg.dtype, cfg.platform); }
   inline Series empty(std::initializer_list<std::int64_t> sizes, Config cfg) {
     return empty(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
   }
@@ -79,7 +88,9 @@ namespace pluss {
   inline Series zeros(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32) {
     return zeros(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt);
   }
-  inline Series zeros(std::span<const std::int64_t> sizes, Config cfg) { return Series::zeros(sizes, cfg.dtype); }
+  inline Series zeros(std::span<const std::int64_t> sizes, Config cfg) {
+    return detail::move_to_config_platform(Series::zeros(sizes, cfg.dtype), cfg);
+  }
   inline Series zeros(std::initializer_list<std::int64_t> sizes, Config cfg) {
     return zeros(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
   }
@@ -100,7 +111,9 @@ namespace pluss {
   inline Series ones(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32) {
     return ones(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt);
   }
-  inline Series ones(std::span<const std::int64_t> sizes, Config cfg) { return Series::ones(sizes, cfg.dtype); }
+  inline Series ones(std::span<const std::int64_t> sizes, Config cfg) {
+    return detail::move_to_config_platform(Series::ones(sizes, cfg.dtype), cfg);
+  }
   inline Series ones(std::initializer_list<std::int64_t> sizes, Config cfg) {
     return ones(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
   }
@@ -121,7 +134,9 @@ namespace pluss {
   inline Series full(std::initializer_list<std::int64_t> sizes, double fill_value, ScalarType dt = ScalarType::Float32) {
     return full(std::span<const std::int64_t>(sizes.begin(), sizes.size()), fill_value, dt);
   }
-  inline Series full(std::span<const std::int64_t> sizes, double fill_value, Config cfg) { return Series::full(sizes, fill_value, cfg.dtype); }
+  inline Series full(std::span<const std::int64_t> sizes, double fill_value, Config cfg) {
+    return detail::move_to_config_platform(Series::full(sizes, fill_value, cfg.dtype), cfg);
+  }
   inline Series full(std::initializer_list<std::int64_t> sizes, double fill_value, Config cfg) {
     return full(std::span<const std::int64_t>(sizes.begin(), sizes.size()), fill_value, cfg);
   }
@@ -144,13 +159,36 @@ namespace pluss {
 
   // Ranges / random
   inline Series arange(std::int64_t start, std::int64_t end, std::int64_t step = 1, ScalarType dt = ScalarType::Int64) { return Series::arange(start, end, step, dt); }
+  inline Series arange(std::int64_t start, std::int64_t end, Config cfg) {
+    ScalarType dt = cfg.dtype;
+    if (dt == ScalarType::Float32) dt = ScalarType::Int64;
+    return detail::move_to_config_platform(Series::arange(start, end, 1, dt), cfg);
+  }
+  inline Series arange(std::int64_t start, std::int64_t end, std::int64_t step, Config cfg) {
+    ScalarType dt = cfg.dtype;
+    if (dt == ScalarType::Float32) dt = ScalarType::Int64;
+    return detail::move_to_config_platform(Series::arange(start, end, step, dt), cfg);
+  }
   inline Series linspace(double start, double end, std::int64_t steps, ScalarType dt = ScalarType::Float32) { return Series::linspace(start, end, steps, dt); }
+  inline Series linspace(double start, double end, std::int64_t steps, Config cfg) {
+    return detail::move_to_config_platform(Series::linspace(start, end, steps, cfg.dtype), cfg);
+  }
   inline Series eye(std::int64_t n, std::int64_t m = -1, ScalarType dt = ScalarType::Float32) { return Series::eye(n, m, dt); }
+  inline Series eye(std::int64_t n, Config cfg) {
+    return detail::move_to_config_platform(Series::eye(n, -1, cfg.dtype), cfg);
+  }
+  inline Series eye(std::int64_t n, std::int64_t m, Config cfg) {
+    return detail::move_to_config_platform(Series::eye(n, m, cfg.dtype), cfg);
+  }
 
   inline Series rand(std::span<const std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return Series::rand(sizes, dt, seed); }
   inline Series rand(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) {return Series::rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt, seed);}
-  inline Series rand(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) { return Series::rand(sizes, cfg.dtype, seed); }
-  inline Series rand(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {return Series::rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg.dtype, seed);}
+  inline Series rand(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
+    return detail::move_to_config_platform(Series::rand(sizes, cfg.dtype, seed), cfg);
+  }
+  inline Series rand(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
+    return rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
+  }
 
   template <class... Opts>
   inline Series rand(std::span<const std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
@@ -159,16 +197,18 @@ namespace pluss {
   template <class... Opts>
   inline Series rand(std::initializer_list<std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
     const Config cfg = detail::make_config(opts...);
-    return Series::rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg.dtype, seed);
+    return rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
   }
 
   inline Series randn(std::span<const std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return Series::randn(sizes, dt, seed); }
   inline Series randn(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) {
     return Series::randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt, seed);
   }
-  inline Series randn(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) { return Series::randn(sizes, cfg.dtype, seed); }
+  inline Series randn(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
+    return detail::move_to_config_platform(Series::randn(sizes, cfg.dtype, seed), cfg);
+  }
   inline Series randn(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
-    return Series::randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg.dtype, seed);
+    return randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
   }
   template <class... Opts>
   inline Series randn(std::span<const std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
@@ -177,7 +217,7 @@ namespace pluss {
   template <class... Opts>
   inline Series randn(std::initializer_list<std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
     const Config cfg = detail::make_config(opts...);
-    return Series::randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg.dtype, seed);
+    return randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
   }
 
   inline Series randint(std::int64_t lo, std::int64_t hi, std::span<const std::int64_t> sizes, ScalarType dt = ScalarType::Int64, std::uint64_t seed = 0) {
@@ -193,7 +233,7 @@ namespace pluss {
   inline Series randint(std::int64_t lo, std::int64_t hi, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;
-    return randint(lo, hi, sizes, dt, seed);
+    return detail::move_to_config_platform(randint(lo, hi, sizes, dt, seed), cfg);
   }
   inline Series randint(std::int64_t lo, std::int64_t hi, std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
     return randint(lo, hi, std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
@@ -234,6 +274,11 @@ namespace pluss {
     );
     return (dt == ScalarType::Int64) ? out : out.to(dt);
   }
+  inline Series randperm(std::int64_t n, Config cfg, std::uint64_t seed = 0) {
+    ScalarType dt = cfg.dtype;
+    if (dt == ScalarType::Float32) dt = ScalarType::Int64;
+    return detail::move_to_config_platform(randperm(n, dt, seed), cfg);
+  }
 
   inline Series normal(double mean,
                        double std,
@@ -245,10 +290,25 @@ namespace pluss {
   }
   inline Series normal(double mean,
                        double std,
+                       std::span<const std::int64_t> sizes,
+                       Config cfg,
+                       std::uint64_t seed = 0) {
+    PLUSS_CHECK(std >= 0.0, "normal: expected std >= 0");
+    return detail::move_to_config_platform(Series::randn(sizes, cfg.dtype, seed).mul(std).add(mean), cfg);
+  }
+  inline Series normal(double mean,
+                       double std,
                        std::initializer_list<std::int64_t> sizes,
                        ScalarType dt = ScalarType::Float32,
                        std::uint64_t seed = 0) {
     return normal(mean, std, std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt, seed);
+  }
+  inline Series normal(double mean,
+                       double std,
+                       std::initializer_list<std::int64_t> sizes,
+                       Config cfg,
+                       std::uint64_t seed = 0) {
+    return normal(mean, std, std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
   }
 
   inline Series bernoulli(std::span<const std::int64_t> sizes,
@@ -270,11 +330,25 @@ namespace pluss {
     Series out = codem::make_series<std::uint8_t>(bits, sizes, Config{}.with_dtype(ScalarType::Bool));
     return (dt == ScalarType::Bool) ? out : out.to(dt);
   }
+  inline Series bernoulli(std::span<const std::int64_t> sizes,
+                          double p,
+                          Config cfg,
+                          std::uint64_t seed = 0) {
+    ScalarType dt = cfg.dtype;
+    if (dt == ScalarType::Float32) dt = ScalarType::Bool;
+    return detail::move_to_config_platform(bernoulli(sizes, p, dt, seed), cfg);
+  }
   inline Series bernoulli(std::initializer_list<std::int64_t> sizes,
                           double p = 0.5,
                           ScalarType dt = ScalarType::Bool,
                           std::uint64_t seed = 0) {
     return bernoulli(std::span<const std::int64_t>(sizes.begin(), sizes.size()), p, dt, seed);
+  }
+  inline Series bernoulli(std::initializer_list<std::int64_t> sizes,
+                          double p,
+                          Config cfg,
+                          std::uint64_t seed = 0) {
+    return bernoulli(std::span<const std::int64_t>(sizes.begin(), sizes.size()), p, cfg, seed);
   }
 
   inline Series poisson(std::span<const std::int64_t>, double, ScalarType = ScalarType::Int64, std::uint64_t = 0) {
@@ -332,7 +406,7 @@ namespace pluss {
   // Like-factories
   inline Series empty_like(const Series& like, ScalarType dt) { return empty(like.sizes(), dt); }
   inline Series empty_like(const Series& like, Config cfg = {}) {
-    return empty_like(like, detail::resolve_like_dtype(like, cfg));
+    return detail::move_to_config_platform(empty_like(like, detail::resolve_like_dtype(like, cfg)), cfg);
   }
   template <class... Opts>
   inline Series empty_like(const Series& like, Opts... opts) {
@@ -341,7 +415,7 @@ namespace pluss {
 
   inline Series zeros_like(const Series& like, ScalarType dt) { return zeros(like.sizes(), dt); }
   inline Series zeros_like(const Series& like, Config cfg = {}) {
-    return zeros_like(like, detail::resolve_like_dtype(like, cfg));
+    return detail::move_to_config_platform(zeros_like(like, detail::resolve_like_dtype(like, cfg)), cfg);
   }
   template <class... Opts>
   inline Series zeros_like(const Series& like, Opts... opts) {
@@ -351,7 +425,7 @@ namespace pluss {
 
   inline Series ones_like(const Series& like, ScalarType dt) { return ones(like.sizes(), dt); }
   inline Series ones_like(const Series& like, Config cfg = {}) {
-    return ones_like(like, detail::resolve_like_dtype(like, cfg));
+    return detail::move_to_config_platform(ones_like(like, detail::resolve_like_dtype(like, cfg)), cfg);
   }
   template <class... Opts>
   inline Series ones_like(const Series& like, Opts... opts) {
@@ -362,7 +436,7 @@ namespace pluss {
     return full(like.sizes(), fill_value, dt);
   }
   inline Series full_like(const Series& like, double fill_value, Config cfg = {}) {
-    return full_like(like, fill_value, detail::resolve_like_dtype(like, cfg));
+    return detail::move_to_config_platform(full_like(like, fill_value, detail::resolve_like_dtype(like, cfg)), cfg);
   }
   template <class... Opts>
   inline Series full_like(const Series& like, double fill_value, Opts... opts) {
@@ -373,14 +447,14 @@ namespace pluss {
     return pluss::rand(like.sizes(), dt, seed);
   }
   inline Series rand_like(const Series& like, Config cfg = {}, std::uint64_t seed = 0) {
-    return rand_like(like, detail::resolve_like_dtype(like, cfg), seed);
+    return detail::move_to_config_platform(rand_like(like, detail::resolve_like_dtype(like, cfg), seed), cfg);
   }
 
   inline Series randn_like(const Series& like, ScalarType dt, std::uint64_t seed = 0) {
     return pluss::randn(like.sizes(), dt, seed);
   }
   inline Series randn_like(const Series& like, Config cfg = {}, std::uint64_t seed = 0) {
-    return randn_like(like, detail::resolve_like_dtype(like, cfg), seed);
+    return detail::move_to_config_platform(randn_like(like, detail::resolve_like_dtype(like, cfg), seed), cfg);
   }
 
   inline Series randint_like(const Series& like,
@@ -400,14 +474,14 @@ namespace pluss {
                              std::int64_t hi,
                              Config cfg,
                              std::uint64_t seed = 0) {
-    return randint_like(like, hi, detail::resolve_like_dtype(like, cfg), seed);
+    return detail::move_to_config_platform(randint_like(like, hi, detail::resolve_like_dtype(like, cfg), seed), cfg);
   }
   inline Series randint_like(const Series& like,
                              std::int64_t lo,
                              std::int64_t hi,
                              Config cfg,
                              std::uint64_t seed = 0) {
-    return randint_like(like, lo, hi, detail::resolve_like_dtype(like, cfg), seed);
+    return detail::move_to_config_platform(randint_like(like, lo, hi, detail::resolve_like_dtype(like, cfg), seed), cfg);
   }
 
   inline Series eye_like(const Series& like, ScalarType dt = ScalarType::Float32) {
@@ -417,7 +491,7 @@ namespace pluss {
     return pluss::eye(n, m, dt);
   }
   inline Series eye_like(const Series& like, Config cfg) {
-    return eye_like(like, detail::resolve_like_dtype(like, cfg));
+    return detail::move_to_config_platform(eye_like(like, detail::resolve_like_dtype(like, cfg)), cfg);
   }
   template <class... Opts>
   inline Series eye_like(const Series& like, Opts... opts) {
@@ -549,6 +623,14 @@ namespace pluss {
                               : ScalarType::Float32) {
     return codem::value(static_cast<double>(v), dtype);
   }
+  template <class T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
+  inline Series value(T v, Config cfg) {
+    const ScalarType dt =
+        (cfg.dtype == ScalarType::Float32)
+            ? (std::is_same_v<std::remove_cv_t<T>, double> ? ScalarType::Float64 : ScalarType::Float32)
+            : cfg.dtype;
+    return detail::move_to_config_platform(codem::value(static_cast<double>(v), dt), cfg);
+  }
   template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
   inline Series value(
       T v,
@@ -557,7 +639,19 @@ namespace pluss {
                               : ScalarType::Int64) {
     return codem::value(v, dtype);
   }
+  template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
+  inline Series value(T v, Config cfg) {
+    const ScalarType dt =
+        (cfg.dtype == ScalarType::Float32)
+            ? (std::is_same_v<std::remove_cv_t<T>, std::uint8_t> ? ScalarType::UInt8 : ScalarType::Int64)
+            : cfg.dtype;
+    return detail::move_to_config_platform(codem::value(v, dt), cfg);
+  }
   inline Series value(bool v, ScalarType dtype = ScalarType::Bool) { return codem::value(v, dtype); }
+  inline Series value(bool v, Config cfg) {
+    const ScalarType dt = (cfg.dtype == ScalarType::Float32) ? ScalarType::Bool : cfg.dtype;
+    return detail::move_to_config_platform(codem::value(v, dt), cfg);
+  }
 
   // Nested initializer_list: fast path for homogeneous leaves.
   template <class T>
@@ -569,6 +663,13 @@ namespace pluss {
   inline Series value(std::initializer_list<T> list, ScalarType dtype) {
     return codem::value(list, dtype);
   }
+  template <class T>
+  inline Series value(std::initializer_list<T> list, Config cfg) {
+    const ScalarType dt = (cfg.dtype == ScalarType::Float32)
+                              ? pluss::detail::dtype_from_init_list<std::initializer_list<T>>()
+                              : cfg.dtype;
+    return detail::move_to_config_platform(codem::value(list, dt), cfg);
+  }
 
   // Mixed nested literals: single fallback path (supports up to 7D).
   inline Series value(std::initializer_list<detail::NestedSeriesLiteral> list) {
@@ -576,6 +677,12 @@ namespace pluss {
   }
   inline Series value(std::initializer_list<detail::NestedSeriesLiteral> list, ScalarType dtype) {
     return detail::to_series(detail::NestedSeriesLiteral(list), dtype);
+  }
+  inline Series value(std::initializer_list<detail::NestedSeriesLiteral> list, Config cfg) {
+    Series out = (cfg.dtype == ScalarType::Float32)
+                     ? detail::to_series(detail::NestedSeriesLiteral(list))
+                     : detail::to_series(detail::NestedSeriesLiteral(list), cfg.dtype);
+    return detail::move_to_config_platform(std::move(out), cfg);
   }
 
   // make_series overloads for scalar and initializer_list host values.
@@ -587,6 +694,10 @@ namespace pluss {
                               : ScalarType::Float32) {
     return codem::value(static_cast<double>(v), dtype);
   }
+  template <class T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
+  inline Series make_series(T v, Config cfg) {
+    return value(v, cfg);
+  }
   template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
   inline Series make_series(
       T v,
@@ -595,8 +706,15 @@ namespace pluss {
                               : ScalarType::Int64) {
     return codem::value(v, dtype);
   }
+  template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
+  inline Series make_series(T v, Config cfg) {
+    return value(v, cfg);
+  }
   inline Series make_series(bool v, ScalarType dtype = ScalarType::Bool) {
     return codem::value(v, dtype);
+  }
+  inline Series make_series(bool v, Config cfg) {
+    return value(v, cfg);
   }
   template <class T>
   inline Series make_series(std::initializer_list<T> list) {
@@ -606,11 +724,18 @@ namespace pluss {
   inline Series make_series(std::initializer_list<T> list, ScalarType dtype) {
     return codem::value(list, dtype);
   }
+  template <class T>
+  inline Series make_series(std::initializer_list<T> list, Config cfg) {
+    return value(list, cfg);
+  }
   inline Series make_series(std::initializer_list<detail::NestedSeriesLiteral> list) {
     return value(list);
   }
   inline Series make_series(std::initializer_list<detail::NestedSeriesLiteral> list, ScalarType dtype) {
     return value(list, dtype);
+  }
+  inline Series make_series(std::initializer_list<detail::NestedSeriesLiteral> list, Config cfg) {
+    return value(list, cfg);
   }
 
   // Compatibility factory: construct from an existing contiguous host buffer.

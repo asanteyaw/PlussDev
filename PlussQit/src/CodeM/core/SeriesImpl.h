@@ -4,6 +4,7 @@
 #include <span>
 #include <vector>
 
+#include "CodeM/core/Platform.h"
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/Storage.h"
 #include "MSharp/SnapPtr.h"
@@ -17,7 +18,8 @@ public:
              std::int64_t storage_offset_elems,
              std::vector<std::int64_t> sizes,
              std::vector<std::int64_t> strides,
-             ScalarType st);
+             ScalarType st,
+             Platform platform = Platform::CPU);
 
   ScalarType scalar_type() const noexcept { return st_; }
   DType dtype() const noexcept { return dtype_of(st_); }
@@ -31,6 +33,7 @@ public:
 
   std::byte* raw_data() noexcept;
   const std::byte* raw_data() const noexcept;
+  Platform platform() const noexcept { return platform_; }
 
   const Storage& storage() const noexcept { return storage_; }
   std::int64_t storage_offset() const noexcept { return storage_offset_elems_ * static_cast<std::int64_t>(dtype_of(st_).itemsize); }
@@ -42,6 +45,7 @@ private:
   std::vector<std::int64_t> sizes_{};
   std::vector<std::int64_t> strides_{};
   ScalarType st_{ScalarType::Float32};
+  Platform platform_{Platform::CPU};
 };
 
 std::vector<std::int64_t> contiguous_strides(std::span<const std::int64_t> sizes);

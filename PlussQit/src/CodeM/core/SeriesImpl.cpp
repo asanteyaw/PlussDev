@@ -30,11 +30,13 @@ SeriesImpl::SeriesImpl(Storage storage,
                        std::int64_t storage_offset_elems,
                        std::vector<std::int64_t> sizes,
                        std::vector<std::int64_t> strides,
-                       ScalarType st) : storage_(std::move(storage)),
+                       ScalarType st,
+                       Platform platform) : storage_(std::move(storage)),
     storage_offset_elems_(storage_offset_elems),
     sizes_(std::move(sizes)),
     strides_(std::move(strides)),
-    st_(st) {
+    st_(st),
+    platform_(platform) {
   if (sizes_.size() != strides_.size()) throw_error("SeriesImpl: sizes/strides rank mismatch");
   for (auto s: sizes_) if (s < 0) throw_error("SeriesImpl: negative size");
 

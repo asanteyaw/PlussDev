@@ -96,5 +96,10 @@ inline std::ostream& operator<<(std::ostream& os, ScalarType st) {
   return os;
 }
 
+inline std::ostream& operator<<(std::ostream& os, const DType& dt) {
+  os << dt.name;
+  return os;
+}
+
 
 } // namespace pluss::codem

@@ -129,12 +129,14 @@ inline Series make_series(std::span<const T> data, std::span<const std::int64_t>
     else return ScalarType::Complex128;
   }();
 
-  Series src = Series::empty(sizes, src_dt).contiguous();
+  Series src = Series::empty(sizes, src_dt, cfg.platform).contiguous();
   const std::size_t n = (std::size_t)src.numel();
   PLUSS_CHECK(data.size() == n, "make_series: data size mismatch with sizes");
   std::memcpy(src.raw_data(), data.data(), n * sizeof(U));
-  if (src_dt == dt) return src;
-  return src.to(dt);
+  if (src_dt != dt) {
+    src = src.to(dt);
+  }
+  return (src.platform() == cfg.platform) ? src : src.to(cfg.platform);
 }
 
 // Expose external memory without taking ownership (like torch::from_blob).
@@ -170,7 +172,8 @@ inline Series from_blob(
           /*storage_offset_elems=*/0,
           std::vector<std::int64_t>(sizes.begin(), sizes.end()),
           std::vector<std::int64_t>(strides.begin(), strides.end()),
-          dtype));
+          dtype,
+          Platform::CPU));
 }
 
 } // namespace pluss::codem

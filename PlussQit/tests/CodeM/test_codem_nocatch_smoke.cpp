@@ -1,5 +1,6 @@
 #include <pluss/pluss.h>
 #include "CodeM/core/Storage.h"
+#include "CodeM/compat/Invoke.h"
 
 #include <array>
 #include <cstddef>
@@ -9,6 +10,7 @@
 #include <exception>
 #include <functional>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -89,6 +91,88 @@ void test_factories() {
   std::cout << "[RUN] factories:value\n";
   auto s1 = pluss::value({1.0, 2.0, 3.0});
   expect_true(s1.numel() == 3, "value(init_list) works");
+  expect_true(s1.platform() == pluss::Platform::CPU, "series.platform() getter reports CPU");
+
+  std::ostringstream stream_dtype;
+  stream_dtype << s1.dtype();
+  expect_true(stream_dtype.str() == "float64", "dtype stream operator prints dtype name");
+
+  std::ostringstream stream_shape;
+  stream_shape << s1.sizes();
+  expect_true(stream_shape.str() == "[3]", "sizes stream operator prints bracketed shape");
+
+  std::ostringstream stream_platform;
+  stream_platform << s1.platform();
+  expect_true(stream_platform.str() == "cpu", "platform stream operator prints backend name");
+
+  const auto unrouted_cpu = pluss::codem::_compat::invoke("__definitely_unrouted__", s1);
+  expect_true(unrouted_cpu.platform() == pluss::Platform::CPU,
+              "CPU unrouted compat op keeps legacy fallback behavior");
+
+  std::cout << "[RUN] factories:to_platform\n";
+  auto s1_cpu = s1.to(pluss::Platform::CPU);
+  expect_true(s1_cpu.platform() == pluss::Platform::CPU, "to(Platform::CPU) keeps CPU backend");
+
+  std::cout << "[RUN] factories:to_platform_dtype\n";
+  auto s1_f32 = s1.to(pluss::Platform::CPU, pluss::ScalarType::Float32);
+  expect_true(s1_f32.scalar_type() == pluss::ScalarType::Float32,
+              "to(Platform, dtype) applies dtype conversion");
+
+#if defined(__APPLE__)
+  std::cout << "[RUN] factories:to_mps_roundtrip\n";
+  auto s1_mps = s1.to(pluss::Platform::MPS);
+  expect_true(s1_mps.platform() == pluss::Platform::MPS, "to(MPS) marks MPS backend");
+  expect_eq(s1_mps.to_vec<double>(), s1.to_vec<double>(), "to(MPS) preserves values");
+
+  std::cout << "[RUN] factories:create_on_mps\n";
+  auto z_mps = pluss::zeros({2, 2}, pluss::cfg::platform(pluss::Platform::MPS));
+  expect_true(z_mps.platform() == pluss::Platform::MPS, "factory config platform creates MPS series");
+  expect_eq(z_mps.to_vec<float>(), std::vector<float>{0.0f, 0.0f, 0.0f, 0.0f}, "factory-created MPS zeros values");
+
+  auto s1_mps_f32 = s1_mps.to(pluss::ScalarType::Float32);
+  expect_true(s1_mps_f32.platform() == pluss::Platform::MPS, "dtype cast preserves MPS platform");
+  expect_true(s1_mps_f32.scalar_type() == pluss::ScalarType::Float32, "dtype cast on MPS updates dtype");
+
+  const std::array<std::int64_t, 1> reshaped_sizes{3};
+  auto s1_mps_reshaped = s1_mps.reshape(std::span<const std::int64_t>(reshaped_sizes.data(), reshaped_sizes.size()));
+  expect_true(s1_mps_reshaped.platform() == pluss::Platform::MPS, "view-like ops preserve MPS platform");
+
+  auto s1_mps_back = s1_mps.to(pluss::Platform::CPU);
+  expect_true(s1_mps_back.platform() == pluss::Platform::CPU, "MPS to CPU transfer works");
+  expect_eq(s1_mps_back.to_vec<double>(), s1.to_vec<double>(), "MPS to CPU roundtrip preserves values");
+
+  auto s1_mps_add = s1_mps.add(2.0);
+  expect_true(s1_mps_add.platform() == pluss::Platform::MPS, "ops on MPS stay on MPS");
+
+  auto s1_mps_chain = s1_mps.exp().log().square();
+  expect_true(s1_mps_chain.platform() == pluss::Platform::MPS,
+              "platform sticks across chained elementwise ops on MPS");
+
+  auto s1_mps_via_platform = s1.platform(pluss::Platform::MPS);
+  expect_true(s1_mps_via_platform.platform() == pluss::Platform::MPS,
+              "platform(target) moves Series to target backend");
+  expect_eq(s1_mps_via_platform.to_vec<double>(), s1_mps.to_vec<double>(),
+            "platform(target) and to(target) produce equivalent values");
+
+  expect_throws(
+      [&] {
+        (void)s1_mps.add(s1);
+      },
+      "mixed-platform arithmetic throws");
+
+  expect_throws(
+      [&] {
+        auto cond = s1_mps.gt(0.0);
+        (void)s1_mps.where(cond.to(pluss::Platform::CPU), s1_mps);
+      },
+      "mixed-platform where throws");
+
+  expect_throws(
+      [&] {
+        (void)pluss::codem::_compat::invoke("__definitely_unrouted__", s1_mps);
+      },
+      "unrouted compat op on MPS throws instead of silently falling back");
+#endif
 
   std::cout << "[RUN] factories:make_series\n";
   std::vector<float> raw{1.0f, 2.0f, 3.0f, 4.0f};
@@ -269,6 +353,23 @@ void test_indexing_ops() {
   auto dst = pluss::value(std::vector<std::int64_t>{0, 0, 0, 0}, {2, 2});
   auto sc = dst.scatter(1, idx, src);
   expect_eq(sc.to_vec<std::int64_t>(), {20, 10, 30, 40}, "scatter basic");
+
+  auto idx_neg = pluss::value(
+      std::vector<std::int64_t>{-1, 0, 0, -1},
+      {2, 2},
+      pluss::Config{}.with_dtype(pluss::ScalarType::Int64));
+  auto g_neg = src.gather(1, idx_neg);
+  expect_eq(g_neg.to_vec<std::int64_t>(), {20, 10, 30, 40}, "gather negative index");
+
+  auto sc_neg = dst.scatter(1, idx_neg, src);
+  expect_eq(sc_neg.to_vec<std::int64_t>(), {20, 10, 30, 40}, "scatter negative index");
+
+  auto idx_bad = pluss::value(
+      std::vector<std::int64_t>{2, 0, 0, 1},
+      {2, 2},
+      pluss::Config{}.with_dtype(pluss::ScalarType::Int64));
+  expect_throws([&] { (void)src.gather(1, idx_bad); }, "gather out-of-range throws");
+  expect_throws([&] { (void)dst.scatter(1, idx_bad, src); }, "scatter out-of-range throws");
 }
 
 void test_unary_math_and_activations() {

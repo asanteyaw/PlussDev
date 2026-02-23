@@ -289,6 +289,50 @@ int main(int argc, char** argv) {
   std::cout << "Ops within 1.25x Torch: " << within_125 << "/" << total_ops << "\n";
   std::cout << "Ops within 1.50x Torch: " << within_150 << "/" << total_ops << "\n";
   std::cout << "Ops within 2.00x Torch: " << within_200 << "/" << total_ops << "\n";
+
+  std::cout << "\nPlatform diagnostics (Series-only, not part of score):\n";
+  std::cout << std::left << std::setw(28) << "op" << std::right << std::setw(16) << "ms\n";
+  const double cpu_to_cpu_ms = time_ms(30, [&] {
+    auto t = a.to(pluss::pCPU);
+    sink += static_cast<float>(t.numel());
+  });
+  std::cout << std::left << std::setw(28) << "to(cpu) noop-ish" << std::right
+            << std::setw(16) << std::fixed << std::setprecision(3) << cpu_to_cpu_ms << "\n";
+
+  if (pluss::mps::is_usable()) {
+    auto a_mps = a.to(pluss::pMPS);
+    auto b_mps = b.to(pluss::pMPS);
+    auto m_mps = m.to(pluss::pMPS);
+    const double cpu_to_mps_ms = time_ms(30, [&] {
+      auto t = a.to(pluss::pMPS);
+      sink += static_cast<float>(t.numel());
+    });
+    const double mps_to_cpu_ms = time_ms(30, [&] {
+      auto t = a_mps.to(pluss::pCPU);
+      sink += static_cast<float>(t.numel());
+    });
+    const double mps_add_ms = time_ms(20, [&] {
+      auto t = a_mps.add(b_mps);
+      sink += first_f32(t);
+    });
+    const double mps_sum_ms = time_ms(12, [&] {
+      auto t = m_mps.sum();
+      sink += first_f32(t);
+    });
+    const double mps_view_ms = time_ms(40, [&] {
+      const std::vector<std::int64_t> shape{N / 2, 2};
+      auto t = a_mps.reshape(shape).flatten(0, -1);
+      sink += static_cast<float>(t.numel());
+    });
+    std::cout << std::left << std::setw(28) << "to(mps)" << std::right << std::setw(16) << cpu_to_mps_ms << "\n";
+    std::cout << std::left << std::setw(28) << "to(cpu) from mps" << std::right << std::setw(16) << mps_to_cpu_ms << "\n";
+    std::cout << std::left << std::setw(28) << "mps add" << std::right << std::setw(16) << mps_add_ms << "\n";
+    std::cout << std::left << std::setw(28) << "mps sum" << std::right << std::setw(16) << mps_sum_ms << "\n";
+    std::cout << std::left << std::setw(28) << "mps reshape+flatten" << std::right << std::setw(16) << mps_view_ms << "\n";
+  } else {
+    std::cout << std::left << std::setw(28) << "mps diagnostics" << std::right << std::setw(16) << "skipped\n";
+  }
+
   if (opts.emit_csv) {
     std::cout << "CSV,torch_level_score," << torch_level_score << "\n";
     std::cout << "CSV,ops_within_1.25x," << within_125 << "," << total_ops << "\n";

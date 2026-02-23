@@ -84,6 +84,23 @@ inline Series operator>=(const TernaryCompareChain& chain, const Series& rhs) {
   return ternary_compare_finish(chain, rhs, TernaryCompareOp::Ge);
 }
 
+inline bool platform_available(Platform p) noexcept {
+  switch (p) {
+    case Platform::CPU:
+      return true;
+    case Platform::CUDA:
+      return false;
+    case Platform::MPS:
+#if defined(__APPLE__)
+      return true;
+#else
+      return false;
+#endif
+    default:
+      return false;
+  }
+}
+
 } // namespace pluss::codem
 
 namespace pluss {
@@ -91,11 +108,22 @@ namespace pluss {
   using Config = codem::Config;
   using ScalarType = codem::ScalarType;
   using Platform = codem::Platform;
+  inline constexpr Platform pCPU = Platform::CPU;
+  inline constexpr Platform pMPS = Platform::MPS;
   using BlobDeleter = codem::BlobDeleter;
   using PrintOptions = codem::PrintOptions;
 
   using codem::to_string;
   using codem::print_series;
+  using codem::platform_available;
   using codem::operator<<;
 
 } // namespace pluss
+
+namespace pluss::mps {
+
+inline bool is_usable() noexcept {
+  return codem::platform_available(codem::Platform::MPS);
+}
+
+} // namespace pluss::mps

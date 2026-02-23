@@ -9,7 +9,7 @@
 int main() {
   std::cout << "=== pluss::Queue + dynamic dispense demo ===\n\n";
 
-  pluss::Queue qs = pluss::value({-1.0, 2.0, -3.0});
+  pluss::Queue qs = pluss::value({-1.0, 2.0, -3.0}).platform(pluss::pMPS);
   std::cout << "Queue: " << qs << "\n";
   std::cout << "Queue.as_series()[1]: " << qs.as_series().to_vec<double>()[1] << "\n";
   std::cout << "Queue.series().log()[0]: " << qs.series().log().to_vec<double>()[0] << "\n";

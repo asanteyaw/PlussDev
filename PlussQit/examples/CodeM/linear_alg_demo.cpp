@@ -16,10 +16,23 @@ int main() {
 
   let gram = a.transpose(0, 1).matmul(a);
   std::cout << "Gram = A^T A:\n" << gram << "\n\n";
-  std::cout << "det(Gram + 1e-3 I):\n" << gram.add(i3.mul(1e-3)).det() << "\n\n";
-  std::cout << "inverse(Gram + I):\n" << gram.add(i3).inverse() << "\n\n";
-  std::cout << "matrix_power(Gram + I, 2):\n" << gram.add(i3).matrix_power(2) << "\n\n";
-  std::cout << "cholesky(Gram + I):\n" << gram.add(i3).cholesky() << "\n\n";
+  auto gram_i = gram.add(i3);
+  std::cout << "subsp::linalg::det(Gram + I):\n" << pluss::subsp::math::linalg::det(gram_i) << "\n\n";
+  std::cout << "subsp::linalg::inverse(Gram + I):\n" << pluss::subsp::math::linalg::inverse(gram_i) << "\n\n";
+  std::cout << "subsp::linalg::matrix_power(Gram + I, 2):\n"
+            << pluss::subsp::math::linalg::matrix_power(gram_i, 2) << "\n\n";
+  std::cout << "subsp::linalg::matrix_exp(Gram + I):\n"
+            << pluss::subsp::math::linalg::matrix_exp(gram_i) << "\n\n";
+  std::cout << "subsp::linalg::cholesky(Gram + I):\n" << pluss::subsp::math::linalg::cholesky(gram_i) << "\n\n";
+
+  auto qr_res = pluss::subsp::math::linalg::qr(a);
+  std::cout << "subsp::linalg::qr(A).Q:\n" << qr_res.Q << "\n\n";
+  std::cout << "subsp::linalg::qr(A).R:\n" << qr_res.R << "\n\n";
+
+  auto svd_res = pluss::subsp::math::linalg::svd(a);
+  std::cout << "subsp::linalg::svd(A).U:\n" << svd_res.U << "\n\n";
+  std::cout << "subsp::linalg::svd(A).S:\n" << svd_res.S << "\n\n";
+  std::cout << "subsp::linalg::svd(A).Vh:\n" << svd_res.Vh << "\n\n";
 
   let x = pluss::make_series(std::vector<double>{1, 2, 3}, {3});
   let y = pluss::make_series(std::vector<double>{3, 2, 1}, {3});

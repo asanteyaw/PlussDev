@@ -16,14 +16,17 @@ namespace pluss {
 namespace cfg {
   struct DType { pluss::codem::ScalarType v; };
   struct Pinned { bool v; };
+  struct Platform { pluss::codem::Platform v; };
 
   inline DType dtype(pluss::codem::ScalarType v) { return DType{v}; }
   inline Pinned pinned(bool v) { return Pinned{v}; }
+  inline Platform platform(pluss::codem::Platform v) { return Platform{v}; }
 }
 
 namespace detail {
   inline void apply_opt(pluss::codem::Config& c, cfg::DType o) { c = c.with_dtype(o.v); }
   inline void apply_opt(pluss::codem::Config& c, cfg::Pinned o) { c = c.with_pinned(o.v); }
+  inline void apply_opt(pluss::codem::Config& c, cfg::Platform o) { c = c.with_platform(o.v); }
 
   template <class T>
   inline void apply_opt(pluss::codem::Config&, const T&) {
@@ -59,6 +62,15 @@ namespace detail {
     if (v=="0"||v=="false"||v=="no") return false;
     pluss::codem::throw_error("Invalid bool string: " + s);
   }
+
+  inline pluss::codem::Platform parse_platform(const std::string& s) {
+    auto v = s;
+    for (auto& ch : v) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    if (v == "cpu") return pluss::codem::Platform::CPU;
+    if (v == "cuda") return pluss::codem::Platform::CUDA;
+    if (v == "mps") return pluss::codem::Platform::MPS;
+    pluss::codem::throw_error("Invalid platform string: " + s);
+  }
 }
 
 // String-map based config builder (unordered, ergonomic; CPU-only subset).
@@ -68,7 +80,8 @@ inline pluss::codem::Config config(const std::unordered_map<std::string,std::str
     std::string key=k; for (auto& ch:key) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
     if (key=="dtype") c = c.with_dtype(detail::parse_dtype(v));
     else if (key=="pinned" || key=="pinned_memory") c = c.with_pinned(detail::parse_bool(v));
-    else pluss::codem::throw_error("Unknown Config key (CPU-only): " + k);
+    else if (key=="platform" || key=="device" || key=="backend") c = c.with_platform(detail::parse_platform(v));
+    else pluss::codem::throw_error("Unknown Config key: " + k);
   }
   return c;
 }

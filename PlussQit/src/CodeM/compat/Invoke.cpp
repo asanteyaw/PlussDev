@@ -59,11 +59,23 @@ static std::string sig(std::string_view op, const Args& args) {
 }
 
 static Series not_impl(std::string_view op, const Args& args, const Series& self) {
+  if (self.platform() != Platform::CPU) {
+    throw_error(
+        std::string("Unrouted op on non-CPU platform is disallowed: ") + sig(op, args) +
+        " (platform=" + (self.platform() == Platform::MPS ? "MPS" : self.platform() == Platform::CUDA ? "CUDA" : "UNKNOWN") +
+        "). Either implement backend kernel or move Series to CPU explicitly.");
+  }
   warn(std::string("Unrouted op fallback: ") + sig(op, args));
   return self;
 }
 
 static Series& not_impl_inplace(std::string_view op, const Args& args, Series& self) {
+  if (self.platform() != Platform::CPU) {
+    throw_error(
+        std::string("Unrouted in-place op on non-CPU platform is disallowed: ") + sig(op, args) +
+        " (platform=" + (self.platform() == Platform::MPS ? "MPS" : self.platform() == Platform::CUDA ? "CUDA" : "UNKNOWN") +
+        "). Either implement backend kernel or move Series to CPU explicitly.");
+  }
   warn(std::string("Unrouted in-place op fallback: ") + sig(op, args));
   return self;
 }
@@ -71,6 +83,16 @@ static Series& not_impl_inplace(std::string_view op, const Args& args, Series& s
 static const Series& as_series(const Arg& a) {
   PLUSS_CHECK(std::holds_alternative<const Series*>(a.v), "Expected Series");
   return *std::get<const Series*>(a.v);
+}
+
+static void validate_series_arg_platforms(std::string_view op, const Series& self, const Args& args) {
+  for (const auto& arg : args) {
+    if (!std::holds_alternative<const Series*>(arg.v)) {
+      continue;
+    }
+    const Series& other = *std::get<const Series*>(arg.v);
+    ops_internal::require_same_platform(self, other, op);
+  }
 }
 
 
@@ -2281,8 +2303,28 @@ static std::string_view canonical_inplace_op(std::string_view op) {
   return op;
 }
 
+static bool is_outsourced_linalg_op(std::string_view op) {
+  return op == "det" || op == "inverse" || op == "logdet" || op == "slogdet" ||
+         op == "matrix_exp" || op == "matrix_power" || op == "cholesky" ||
+         op == "cholesky_inverse" || op == "cholesky_solve" || op == "lu_solve" ||
+         op == "triangular_solve" || op == "pinverse" || op == "qr" || op == "svd" ||
+         op == "geqrf" || op == "orgqr" || op == "ormqr";
+}
+
+static void throw_outsourced_linalg_(std::string_view op) {
+  throw_error(
+      std::string(op) +
+      ": Series method is intentionally outsourced. Use pluss::subsp::math::linalg::" +
+      std::string(op) + "(...) instead.");
+}
+
 Series invoke_any(std::string_view op, const Series& self, const Args& args) {
   op = canonical_op(op);
+  if (is_outsourced_linalg_op(op)) {
+    throw_outsourced_linalg_(op);
+  }
+  ops_internal::PlatformScope platform_scope(self.platform());
+  validate_series_arg_platforms(op, self, args);
 
   // 0-arg common (unary)
   if (args.empty()) {
@@ -2523,8 +2565,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "besseli") return bessel_impl(self, /*order=*/0.0, "i");
     if (op == "besselk") return bessel_impl(self, /*order=*/0.0, "k");
     if (op == "histcounts") return self.histc(/*bins=*/10, /*min=*/0.0, /*max=*/0.0);
-    if (op == "stft" || op == "istft" || op == "geqrf" || op == "orgqr" || op == "ormqr" ||
-        op == "qr" || op == "svd") return self;
+    if (op == "stft" || op == "istft") return self;
     if (op == "sinc") return sinc_impl(self);
     if (op == "hardshrink") return hardshrink_impl(self, 0.5);
     if (op == "aminmax") return aminmax_impl(self);
@@ -3453,6 +3494,8 @@ if (is_numeric_scalar_arg(args[0]) &&
 
 Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
   op = canonical_inplace_op(op);
+  ops_internal::PlatformScope platform_scope(self.platform());
+  validate_series_arg_platforms(op, self, args);
 
   if (args.empty()) {
     if (op == "_coalesced_" || op == "sparse_resize_" || op == "resize_as_sparse_") return self;

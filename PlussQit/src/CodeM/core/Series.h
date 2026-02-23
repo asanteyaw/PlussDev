@@ -63,8 +63,12 @@ public:
   // Factory helpers (Torch-style free-functions live elsewhere; keep these for convenience).
   static Series undefined();
   static Series empty(std::span<const std::int64_t> sizes, ScalarType st);
+  static Series empty(std::span<const std::int64_t> sizes, ScalarType st, Platform platform);
   static Series empty(std::initializer_list<std::int64_t> sizes, ScalarType st) {
     return empty(std::span<const std::int64_t>(sizes.begin(), sizes.size()), st);
+  }
+  static Series empty(std::initializer_list<std::int64_t> sizes, ScalarType st, Platform platform) {
+    return empty(std::span<const std::int64_t>(sizes.begin(), sizes.size()), st, platform);
   }
   static Series zeros(std::span<const std::int64_t> sizes, ScalarType st);
   static Series zeros(std::initializer_list<std::int64_t> sizes, ScalarType st) {
@@ -83,7 +87,14 @@ public:
   // Core view/cast helpers used across the library.
   Series contiguous() const;
   Series to(ScalarType st) const;
+  // Torch-like transfer/cast entrypoints.
+  // CPU-only for now; non-CPU targets throw until backend support is added.
+  Series to(Platform target) const;
+  Series to(Platform target, ScalarType st) const;
   Series clone() const;
+  // Query current backend (Torch-like tensor.device() analog at Platform granularity).
+  Platform platform() const noexcept { return SeriesBase::platform(); }
+  // Request transfer to another backend (stubbed until non-CPU backends are implemented).
   Series platform(Platform target) const;
   TernaryCompareBuilder tri() const noexcept;
 

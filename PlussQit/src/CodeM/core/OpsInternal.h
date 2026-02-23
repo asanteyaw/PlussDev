@@ -1,5 +1,6 @@
 #pragma once
 #include "CodeM/core/Series.h"
+#include <string_view>
 
 namespace pluss::codem::ops_internal {
 
@@ -10,6 +11,23 @@ struct SeriesFactoryAccess {
     return Series(std::move(impl));
   }
 };
+
+// Scoped default platform for internal temporaries created via Series::empty(..., dtype).
+// Used by dispatch code to keep operation outputs on the active tensor platform.
+class PlatformScope final {
+ public:
+  explicit PlatformScope(Platform p) noexcept;
+  ~PlatformScope();
+  PlatformScope(const PlatformScope&) = delete;
+  PlatformScope& operator=(const PlatformScope&) = delete;
+
+ private:
+  bool active_{false};
+};
+
+// Enforce Torch-like same-platform semantics for tensor interop ops.
+void require_same_platform(const Series& a, const Series& b, std::string_view op);
+
   Series add(const Series& a, const Series& b);
   Series sub(const Series& a, const Series& b);
   Series mul(const Series& a, const Series& b);

@@ -1,18 +1,14 @@
 #pragma once
 #include <cstdint>
+#include <ostream>
 #include <span>
 
+#include "CodeM/core/Platform.h"
 #include "CodeM/core/SeriesImpl.h"
 #include "MSharp/IntrusivePtr.h"
 #include "pluss/export.h"
 
 namespace pluss::codem {
-
-enum class Platform : std::uint8_t {
-  CPU = 0,
-  CUDA = 1,
-  MPS = 2
-};
 
 // Handle type (Torch-like TensorBase): cheap copy, shared underlying impl.
 class CODEM_API SeriesBase {
@@ -43,7 +39,7 @@ public:
   std::int64_t numel() const;
   std::int64_t itemsize() const { return static_cast<std::int64_t>(dtype().itemsize); }
   bool is_contiguous() const;
-  Platform platform() const noexcept { return Platform::CPU; } // CPU-only for now.
+  Platform platform() const noexcept { return defined() ? impl_->platform() : Platform::CPU; }
 
   // Raw storage access (byte-addressable).
   std::byte* raw_data();
@@ -57,3 +53,15 @@ protected:
 };
 
 } // namespace pluss::codem
+
+inline std::ostream& operator<<(std::ostream& os, std::span<const std::int64_t> xs) {
+  os << '[';
+  for (std::size_t i = 0; i < xs.size(); ++i) {
+    if (i != 0) {
+      os << ", ";
+    }
+    os << xs[i];
+  }
+  os << ']';
+  return os;
+}

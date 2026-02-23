@@ -1,3 +1,4 @@
+#include "pluss/codem/codem.h"
 #include "pluss/codem/series_factory.h"
 #include <pluss/pluss.h>
 
@@ -9,7 +10,15 @@
 #include <vector>
 
 int main() {
-  pluss::Series a = pluss::value({1.0, 2.0, 3.0});
+  auto mps_usable = pluss::mps::is_usable();
+  pluss::Platform platform(mps_usable ? pluss::pMPS : pluss::pCPU);
+  std::cout << (mps_usable ? "MPS usable. Training on GPU." : "Training on CPU.") << '\n';
+  pluss::Series a = pluss::value({1.0, 2.0, 3.0}).to(platform);
+  std::cout << "Series a:\n" << a << "\n";
+  std::cout << "a dtype: " << a.dtype() << "\n";
+  std::cout << "a shape: " << a.sizes() << "\n";
+  std::cout << "a platform: " << a.platform() << "\n";
+  
 #ifdef PLUSS_ENABLE_TORCH
   torch::Tensor A = torch::tensor({
         {1.0, 2.0, 3.0},
@@ -29,7 +38,27 @@ int main() {
   let b2 = pluss::from_torch(B);
 #endif
   std::vector<std::int64_t> raw{10, 20, 30, 40};
-  pluss::Series b = pluss::make_series(raw, {2, 2});
+  pluss::Series b = pluss::make_series(raw, {2, 2}).to(platform);
+
+  const pluss::Platform p = a.platform();
+  std::cout << "a platform enum=" << static_cast<int>(p) << "\n";
+  auto a_cpu_f32 = a.to(pluss::Platform::CPU, pluss::ScalarType::Float32);
+  std::cout << "a.to(CPU, Float32) numel=" << a_cpu_f32.numel() << "\n";
+  auto default_cpu = pluss::zeros({2, 2});
+  std::cout << "zeros default platform enum=" << static_cast<int>(default_cpu.platform()) << "\n";
+  if (pluss::mps::is_usable()) {
+    auto created_mps = pluss::zeros({2, 2}, pluss::cfg::platform(pluss::Platform::MPS));
+    std::cout << "zeros(..., cfg::platform(MPS)) platform enum="
+              << static_cast<int>(created_mps.platform()) << "\n";
+  }
+  if (pluss::mps::is_usable()) {
+    auto a_mps = a.to(pluss::Platform::MPS);
+    std::cout << "a.to(MPS) platform enum=" << static_cast<int>(a_mps.platform()) << "\n";
+    auto a_mps_back = a_mps.to(pluss::Platform::CPU);
+    std::cout << "a.to(MPS).to(CPU) first=" << a_mps_back.to_vec<double>(0) << "\n";
+  } else {
+    std::cout << "MPS backend not available in this build/runtime\n";
+  }
 
   auto c = a.add(2.0).mul(3.0);
   auto d = b.sum();

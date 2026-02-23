@@ -917,7 +917,7 @@ static void append_metadata_(std::ostringstream& oss, const Series& s, const Pri
     }
     if (opt.show_dtype) maybe_dtype();
     if (opt.show_platform) {
-      const auto p = static_cast<const SeriesBase&>(s).platform();
+      const auto p = s.platform();
       append_field("platform", platform_name_(p));
     }
     if (opt.show_numel) append_field("numel", std::to_string(s.numel()));

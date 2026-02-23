@@ -34,6 +34,7 @@
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "pluss/codeh/timeindex_factory.h"
+#include "pluss/subsp/math/linalg.h"
 #include "pluss/queue.h"
 #include "pluss/dispense.h"
 #include "aux/UseAux.h"
