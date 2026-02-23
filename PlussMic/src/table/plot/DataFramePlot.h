@@ -6,7 +6,7 @@
 #include <string_view>
 
 #include "table/DataFrame.h"
-#include "pluss/plotism/plotism.h"
+#include "pluss/plot/plot.h"
 
 namespace pluss::table {
 
@@ -28,4 +28,3 @@ private:
 };
 
 } // namespace pluss::table
-

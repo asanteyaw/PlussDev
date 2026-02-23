@@ -7,15 +7,13 @@
 #include <string>
 #include <vector>
 
-#include <fmt/format.h>
-
-#include "pluss/plotism/plotism.h"
+#include "pluss/plot/plot.h"
 
 namespace {
 
 std::string unique_path(const std::string& stem, const std::string& ext) {
   const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
-  return (std::filesystem::temp_directory_path() / fmt::format("{}_{}{}", stem, now, ext)).string();
+  return (std::filesystem::temp_directory_path() / (stem + "_" + std::to_string(now) + ext)).string();
 }
 
 void require(bool cond, const std::string& msg) {

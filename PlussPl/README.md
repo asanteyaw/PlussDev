@@ -4,21 +4,21 @@
 
 ## Layout
 
-- `include/pluss/plotism/`
-- Public API surface and forwarding headers.
-- `src/plotism/`
+- `include/pluss/plot/`
+- Primary public API surface and forwarding headers.
+- `src/plot/`
 - Internal implementation headers grouped by module.
-- `src/plotism/modules/core.h`
+- `src/plot/modules/core.h`
 - Common utilities, formatting, escaping, and file IO helpers.
-- `src/plotism/modules/{axes.h,style.h,trace.h}`
+- `src/plot/modules/{axes.h,style.h,trace.h}`
 - Data/model objects for axes, style, traces.
-- `src/plotism/modules/{figure2d.h,figure3d.h,figure.h}`
+- `src/plot/modules/{figure2d.h,figure3d.h,figure.h}`
 - Figure API and per-dimension behavior.
-- `src/plotism/modules/backend/`
+- `src/plot/modules/backend/`
 - Backend abstraction and implementations.
-- `src/plotism/modules/backend/svg/`
+- `src/plot/modules/backend/svg/`
 - SVG renderer primitives + 2D/3D renderers.
-- `src/plotism/modules/backend/pdf/`
+- `src/plot/modules/backend/pdf/`
 - PDF renderer primitives + 2D/3D renderers.
 - `examples/`
 - Runnable demos by dimension.
@@ -40,8 +40,8 @@
 ```bash
 cmake -S . -B build -DPLUSSPL_ENABLE_INTERACTIVE_SHOW=ON
 cmake --build build -j4
-./build/PlussPl/examples/2D/plusspl_2d_interactive_show_demo
-./build/PlussPl/examples/3D/plusspl_3d_interactive_show_demo
+./build/PlussPl/examples/2D/plusspl_2d_interactive_2d_show_demo
+./build/PlussPl/examples/3D/plusspl_3d_interactive_3d_show_demo
 ./build/PlussPl/tests/2D/plusspl_test_2d_test_export_pdf_and_show
 ./build/PlussPl/tests/3D/plusspl_test_3d_test_export_pdf_and_show
 ```
@@ -49,4 +49,4 @@ cmake --build build -j4
 ## Notes
 
 - Library targets are compiled with C++20 (`target_compile_features(... cxx_std_20)`).
-- `fmt` is used in core formatting and demo/test output; headers are consumed via `ExLibs/fmt/include`.
+- `fmt` is used in internal core/rendering formatting paths; demos/tests stay standard C++ usage.

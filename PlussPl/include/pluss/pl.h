@@ -1,3 +1,3 @@
 #pragma once
 
-#include "pluss/plotism/plotism.h"
+#include "pluss/plot/plot.h"

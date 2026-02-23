@@ -16,7 +16,22 @@ target_include_directories(PlussPl INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/../ExLibs/fmt/include
 )
 
-target_link_libraries(PlussPl INTERFACE PlussQit)
+set(PLUSSPL_QIT_DEPS "")
+if(TARGET PlussQit::CodeM)
+    list(APPEND PLUSSPL_QIT_DEPS PlussQit::CodeM)
+endif()
+if(TARGET PlussQit::CodeN)
+    list(APPEND PLUSSPL_QIT_DEPS PlussQit::CodeN)
+endif()
+if(TARGET PlussQit::CodeH)
+    list(APPEND PLUSSPL_QIT_DEPS PlussQit::CodeH)
+endif()
+
+if(PLUSSPL_QIT_DEPS)
+    target_link_libraries(PlussPl INTERFACE ${PLUSSPL_QIT_DEPS})
+elseif(TARGET PlussQit)
+    target_link_libraries(PlussPl INTERFACE PlussQit)
+endif()
 
 set_target_properties(PlussPl PROPERTIES CXX_STANDARD 20)
 target_compile_features(PlussPl INTERFACE cxx_std_20)
