@@ -27,7 +27,7 @@
 //
 // Aux algorithm utilities:
 // - pluss::transmit(...) for elementwise map/zip transforms over values/ranges
-// - pluss::translate(...) for apply-along-axis style slice transforms
+// - pluss::transform_axis(...) for NumPy-style apply_along_axis slice transforms
 //
 // Keep this include thin by delegating to module-level umbrellas.
 #include "pluss/codem/series_factory.h"
@@ -35,6 +35,7 @@
 #include "pluss/codeh/timeline_factory.h"
 #include "pluss/codeh/timeindex_factory.h"
 #include "pluss/subsp/math/linalg.h"
+#include "pluss/subsp/math/optim.h"
 #include "pluss/queue.h"
 #include "pluss/dispense.h"
 #include "aux/UseAux.h"

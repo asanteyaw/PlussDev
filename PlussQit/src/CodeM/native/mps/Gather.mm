@@ -245,11 +245,11 @@ void gather(const Series& input, std::int64_t dim, const Series& index, Series& 
       fail_("mps::gather: failed to allocate Metal buffers");
     }
 
-    id<MTLCommandBuffer> cb = [c.queue commandBuffer];
+    id<MTLCommandBuffer> cb = create_command_buffer_mm(c.queue);
     if (cb == nil) {
       fail_("mps::gather: failed to create command buffer");
     }
-    id<MTLComputeCommandEncoder> enc = [cb computeCommandEncoder];
+    id<MTLComputeCommandEncoder> enc = create_compute_encoder_mm(cb);
     if (enc == nil) {
       fail_("mps::gather: failed to create compute encoder");
     }

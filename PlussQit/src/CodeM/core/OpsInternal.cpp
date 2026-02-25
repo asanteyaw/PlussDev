@@ -26,6 +26,7 @@
 #include "CodeM/native/cpu/IndexingExtras.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/ViewInvariants.h"
+#include "CodeM/core/SeriesTape.h"
 #include "CodeM/native/cpu/KernelTable.h"
 #include "CodeM/native/cpu/ArithmeticKernels.h"
 #include "CodeM/native/cpu/BitwiseKernels.h"
@@ -36,7 +37,7 @@
 #include "CodeM/native/cpu/BinaryExtraMathKernels.h"
 #include "CodeM/native/mps/Elementwise.h"
 #include "CodeM/native/mps/Gather.h"
-#include "CodeM/native/mps/BufferCache.h"
+#include "CodeM/native/mps/MPSRuntime.h"
 #include "CodeM/native/mps/Cast.h"
 #include "CodeM/native/mps/Cum.h"
 #include "CodeM/native/mps/Reductions.h"
@@ -226,27 +227,94 @@ Series unary_cpu_with_platform_dispatch_policy_(const Series& a, std::string_vie
   return out;
 }
 
+static bool same_shape_(const Series& a, const Series& b) {
+  if (!a.defined() || !b.defined()) return false;
+  return a.sizes().size() == b.sizes().size() &&
+         std::equal(a.sizes().begin(), a.sizes().end(), b.sizes().begin());
+}
+
+static Series reduce_sensitivity_to_like_(const Series& sens, const Series& like, const char* op) {
+  if (same_shape_(sens, like)) return sens;
+  if (like.numel() == 1) return sens.sum();
+  throw_error(std::string(op) + ": unsupported sensitivity reduction for broadcasted shape");
+  return sens;
+}
+
+static void maybe_link_binary_op_(
+    const Series& out,
+    const Series& a,
+    const Series& b,
+    const char* op,
+    std::function<Series(const Series&)> lhs_rule,
+    std::function<Series(const Series&)> rhs_rule) {
+  if (!series_tape::recording_enabled()) return;
+  const bool ta = series_tape::tracks_slope(a);
+  const bool tb = series_tape::tracks_slope(b);
+  if (!ta && !tb) return;
+
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->parents = {a, b};
+  link->propagate = [a, b, ta, tb, op, lhs_rule = std::move(lhs_rule), rhs_rule = std::move(rhs_rule)](const Series& out_sens) {
+    if (ta) {
+      const Series ga = reduce_sensitivity_to_like_(lhs_rule(out_sens), a, op);
+      series_tape::accumulate_sensitivity(a, ga);
+    }
+    if (tb) {
+      const Series gb = reduce_sensitivity_to_like_(rhs_rule(out_sens), b, op);
+      series_tape::accumulate_sensitivity(b, gb);
+    }
+  };
+  series_tape::bind_source_link(out, std::move(link));
+}
+
 Series add(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
-  return binary_op_(native::cpu::BinaryOpId::Add, aa, bb); }
+  auto out = binary_op_(native::cpu::BinaryOpId::Add, aa, bb);
+  maybe_link_binary_op_(
+      out, a, b, "add",
+      [](const Series& g) { return g; },
+      [](const Series& g) { return g; });
+  return out;
+}
 
 Series sub(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
-  return binary_op_(native::cpu::BinaryOpId::Sub, aa, bb); }
+  auto out = binary_op_(native::cpu::BinaryOpId::Sub, aa, bb);
+  maybe_link_binary_op_(
+      out, a, b, "sub",
+      [](const Series& g) { return g; },
+      [](const Series& g) { return g.neg(); });
+  return out;
+}
 Series mul(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
-  return binary_op_(native::cpu::BinaryOpId::Mul, aa, bb); }
+  auto out = binary_op_(native::cpu::BinaryOpId::Mul, aa, bb);
+  maybe_link_binary_op_(
+      out, a, b, "mul",
+      [b](const Series& g) { return g.mul(b); },
+      [a](const Series& g) { return g.mul(a); });
+  return out;
+}
 Series div(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
-  return binary_op_(native::cpu::BinaryOpId::Div, aa, bb); }
+  auto out = binary_op_(native::cpu::BinaryOpId::Div, aa, bb);
+  maybe_link_binary_op_(
+      out, a, b, "div",
+      [b](const Series& g) { return g.div(b); },
+      [a, b](const Series& g) {
+        const Series denom = b.mul(b);
+        return g.mul(a).div(denom).neg();
+      });
+  return out;
+}
 Series pow(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
@@ -439,7 +507,18 @@ Series abs(const Series& a) {
   return unary_op_(native::cpu::UnaryOpId::Abs, a);
 }
 Series& abs_(Series& a) { a = abs(a); return a; }
-Series neg(const Series& a) { return unary_op_(native::cpu::UnaryOpId::Neg, a); }
+Series neg(const Series& a) {
+  auto out = unary_op_(native::cpu::UnaryOpId::Neg, a);
+  if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+    auto link = std::make_shared<series_tape::SourceLink>();
+    link->parents = {a};
+    link->propagate = [a](const Series& out_sens) {
+      series_tape::accumulate_sensitivity(a, out_sens.neg());
+    };
+    series_tape::bind_source_link(out, std::move(link));
+  }
+  return out;
+}
 
 Series eq(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Eq, a, b); }
 Series ne(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Ne, a, b); }
@@ -1028,6 +1107,15 @@ Series sum(const Series& a) {
   }
   Series out = Series::empty({}, aa.scalar_type(), aa.platform());
   native::cpu::sum_all(aa, out);
+  if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+    auto link = std::make_shared<series_tape::SourceLink>();
+    link->parents = {a};
+    link->propagate = [a](const Series& out_sens) {
+      const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(out_sens);
+      series_tape::accumulate_sensitivity(a, ga);
+    };
+    series_tape::bind_source_link(out, std::move(link));
+  }
   return out;
 }
 
@@ -1042,12 +1130,44 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
   if (aa.platform() != Platform::CPU) {
     if (aa.platform() == Platform::MPS && native::mps::supports_sum_dim(aa.scalar_type())) {
       native::mps::sum_dim(aa, dim, out);
-      return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+      auto reduced = maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+      if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+        const auto norm_dim = dim;
+        auto link = std::make_shared<series_tape::SourceLink>();
+        link->parents = {a};
+        link->propagate = [a, norm_dim, keepdim](const Series& out_sens) {
+          Series shaped = out_sens;
+          if (!keepdim) {
+            shaped = shaped.unsqueeze(norm_dim);
+          }
+          shaped = shaped.expand(a.sizes(), true);
+          const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(shaped);
+          series_tape::accumulate_sensitivity(a, ga);
+        };
+        series_tape::bind_source_link(reduced, std::move(link));
+      }
+      return reduced;
     }
     require_backend_dispatch_supported_(aa.platform(), "sum(dim)");
   }
   native::cpu::sum_dim(aa, dim, out);
-  return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+  auto reduced = maybe_keepdim_(out, aa.sizes(), dim, keepdim);
+  if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+    const auto norm_dim = dim;
+    auto link = std::make_shared<series_tape::SourceLink>();
+    link->parents = {a};
+    link->propagate = [a, norm_dim, keepdim](const Series& out_sens) {
+      Series shaped = out_sens;
+      if (!keepdim) {
+        shaped = shaped.unsqueeze(norm_dim);
+      }
+      shaped = shaped.expand(a.sizes(), true);
+      const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(shaped);
+      series_tape::accumulate_sensitivity(a, ga);
+    };
+    series_tape::bind_source_link(reduced, std::move(link));
+  }
+  return reduced;
 }
 
 Series prod(const Series& a) {
@@ -1106,6 +1226,16 @@ Series mean(const Series& a) {
   }
   Series out = Series::empty({}, dt, aa.platform());
   native::cpu::mean_all(aa, out);
+  if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+    const double inv_n = 1.0 / static_cast<double>(a.numel());
+    auto link = std::make_shared<series_tape::SourceLink>();
+    link->parents = {a};
+    link->propagate = [a, inv_n](const Series& out_sens) {
+      const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(out_sens).mul(inv_n);
+      series_tape::accumulate_sensitivity(a, ga);
+    };
+    series_tape::bind_source_link(out, std::move(link));
+  }
   return out;
 }
 
@@ -1151,6 +1281,22 @@ Series mean(const Series& a, std::int64_t dim, bool keepdim) {
     auto* p = reinterpret_cast<Complex128*>(s.raw_data());
     const double inv = 1.0 / (double)reduce_n;
     for (std::int64_t i=0;i<s.numel();++i) p[i] = p[i] * inv;
+  }
+  if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+    const auto norm_dim = dim;
+    const double inv_n = 1.0 / static_cast<double>(reduce_n);
+    auto link = std::make_shared<series_tape::SourceLink>();
+    link->parents = {a};
+    link->propagate = [a, norm_dim, keepdim, inv_n](const Series& out_sens) {
+      Series shaped = out_sens;
+      if (!keepdim) {
+        shaped = shaped.unsqueeze(norm_dim);
+      }
+      shaped = shaped.expand(a.sizes(), true);
+      const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(shaped).mul(inv_n);
+      series_tape::accumulate_sensitivity(a, ga);
+    };
+    series_tape::bind_source_link(s, std::move(link));
   }
   return s;
 }

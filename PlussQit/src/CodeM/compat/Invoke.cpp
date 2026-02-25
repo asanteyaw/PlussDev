@@ -8,6 +8,7 @@
 #include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/Errors.h"
+#include "CodeM/core/SeriesTape.h"
 #include "CodeM/native/cpu/ConcatStackKernels.h"
 #include "CodeM/native/cpu/GatherScatterKernels.h"
 #include "CodeM/native/cpu/IndexingExtras.h"
@@ -106,6 +107,31 @@ static Series matmul_dispatch_(const Series& a, const Series& b) {
     return native::mps::matmul(a, b);
   }
   return native::cpu::matmul(a, b);
+}
+
+static Series matmul_with_tape_(const Series& a, const Series& b) {
+  Series out = matmul_dispatch_(a, b);
+  if (!series_tape::recording_enabled()) return out;
+  const bool ta = series_tape::tracks_slope(a);
+  const bool tb = series_tape::tracks_slope(b);
+  if (!ta && !tb) return out;
+  // Keep first pass simple: register 2D matmul pullbacks.
+  if (a.dim() != 2 || b.dim() != 2 || out.dim() != 2) return out;
+
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->parents = {a, b};
+  link->propagate = [a, b, ta, tb](const Series& out_sens) {
+    if (ta) {
+      const Series bt = b.transpose(0, 1);
+      series_tape::accumulate_sensitivity(a, matmul_dispatch_(out_sens, bt));
+    }
+    if (tb) {
+      const Series at = a.transpose(0, 1);
+      series_tape::accumulate_sensitivity(b, matmul_dispatch_(at, out_sens));
+    }
+  };
+  series_tape::bind_source_link(out, std::move(link));
+  return out;
 }
 
 
@@ -247,6 +273,43 @@ static Series& put_dispatch_inplace_(
   return self;
 }
 
+static Series make_expanded_gather_index_(
+    const Series& idx_flat_i64,
+    std::span<const std::int64_t> out_shape,
+    std::int64_t dim,
+    Platform target_platform) {
+  PLUSS_CHECK(idx_flat_i64.scalar_type() == ScalarType::Int64,
+              "index_select: expected flattened int64 index");
+
+  Series idx_cpu = idx_flat_i64;
+  if (idx_cpu.platform() != Platform::CPU) idx_cpu = idx_cpu.to(Platform::CPU);
+  idx_cpu = idx_cpu.contiguous();
+
+  Series expanded_cpu = Series::empty(out_shape, ScalarType::Int64, Platform::CPU);
+  const auto* src = reinterpret_cast<const std::int64_t*>(idx_cpu.raw_data());
+  auto* dst = reinterpret_cast<std::int64_t*>(expanded_cpu.raw_mutable_data());
+
+  const auto nd = static_cast<std::int64_t>(out_shape.size());
+  std::vector<std::int64_t> strides(static_cast<std::size_t>(nd), 1);
+  for (std::int64_t d = nd - 2; d >= 0; --d) {
+    strides[static_cast<std::size_t>(d)] =
+        strides[static_cast<std::size_t>(d + 1)] * out_shape[static_cast<std::size_t>(d + 1)];
+  }
+
+  const auto dim_size = out_shape[static_cast<std::size_t>(dim)];
+  PLUSS_CHECK(idx_cpu.numel() == dim_size, "index_select: internal index shape mismatch");
+
+  const auto out_numel = expanded_cpu.numel();
+  for (std::int64_t i = 0; i < out_numel; ++i) {
+    const std::int64_t pick = (dim_size == 0)
+                                  ? 0
+                                  : ((i / strides[static_cast<std::size_t>(dim)]) % dim_size);
+    dst[i] = src[pick];
+  }
+
+  return (target_platform == Platform::CPU) ? expanded_cpu : expanded_cpu.to(target_platform);
+}
+
 static Series index_select_dispatch_(const Series& self, std::int64_t dim, const Series& index) {
   if (self.platform() != Platform::MPS) {
     return native::cpu::index_select(self, dim, index);
@@ -260,13 +323,15 @@ static Series index_select_dispatch_(const Series& self, std::int64_t dim, const
   if (dim < 0) dim += nd;
   PLUSS_CHECK(dim >= 0 && dim < nd, "index_select: dim out of range");
 
-  std::vector<std::int64_t> view_shape(static_cast<std::size_t>(nd), 1);
-  view_shape[static_cast<std::size_t>(dim)] = idx.numel();
   std::vector<std::int64_t> out_shape(self.sizes().begin(), self.sizes().end());
   out_shape[static_cast<std::size_t>(dim)] = idx.numel();
-  const auto idx_view = idx.reshape(std::span<const std::int64_t>(view_shape.data(), view_shape.size()));
-  const auto idx_expanded =
-      idx_view.expand(std::span<const std::int64_t>(out_shape.data(), out_shape.size()), /*implicit=*/true);
+
+  const auto idx_expanded = make_expanded_gather_index_(
+      idx,
+      std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
+      dim,
+      self.platform());
+
   if (self.scalar_type() == ScalarType::Float32) {
     return ops_internal::gather(self, dim, idx_expanded);
   }
@@ -2583,9 +2648,18 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
   ops_internal::PlatformScope platform_scope(self.platform());
   validate_series_arg_platforms(op, self, args);
 
+  if (op == "_backward") {
+    std::optional<Series> seed;
+    if (!args.empty() && std::holds_alternative<const Series*>(args[0].v)) {
+      seed = as_series(args[0]);
+    }
+    series_tape::backpropagate(self, seed);
+    return self;
+  }
+
   // 0-arg common (unary)
   if (args.empty()) {
-    if (op == "_addmm_activation" || op == "_backward" || op == "_fw_primal") return self;
+    if (op == "_addmm_activation" || op == "_fw_primal") return self;
     if (op == "_autocast_to_full_precision") {
       if (self.scalar_type() == ScalarType::Float16 || self.scalar_type() == ScalarType::BFloat16) {
         return self.to(ScalarType::Float32);
@@ -2715,7 +2789,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "is_complex") return bool_scalar(is_complex_dtype(self.scalar_type()));
     if (op == "is_floating_point") return bool_scalar(is_floating_dtype(self.scalar_type()));
     if (op == "is_signed") return bool_scalar(is_signed_dtype(self.scalar_type()));
-    if (op == "is_conj" || op == "is_neg" || op == "is_leaf" || op == "is_inference" ||
+    if (op == "is_leaf") return bool_scalar(series_tape::is_leaf(self));
+    if (op == "is_conj" || op == "is_neg" || op == "is_inference" ||
         op == "is_distributed" || op == "is_pinned" || op == "is_coalesced" || op == "is_set_to") {
       return bool_scalar(false);
     }
@@ -2734,7 +2809,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     }
     if (op == "alias") return self;
     if (op == "data") return self;
-    if (op == "detach") return self;
+    if (op == "detach") return series_tape::separate(self);
     if (op == "_lazy_clone") return self.clone();
     if (op == "_neg_view") return ops_internal::neg(self);
     if (op == "to_dense") return self.clone();
@@ -2851,8 +2926,11 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
         op == "to_mkldnn" || op == "to_padded_tensor" ||
         op == "rename" || op == "refine_names" ||
         op == "set_data" || op == "rename_") return self;
-    if (op == "retain_grad") return self;
-    if (op == "retains_grad") return bool_scalar(false);
+    if (op == "retain_grad") {
+      series_tape::set_keep_sensitivity(self, true);
+      return self;
+    }
+    if (op == "retains_grad") return bool_scalar(series_tape::keeps_sensitivity(self));
     if (op == "sparse_mask") return self;
     if (op == "smm") return self;
     if (op == "sspaddmm") return self;
@@ -3041,6 +3119,10 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     // bool
     if (std::holds_alternative<bool>(a0)) {
       const bool b = as_bool(args[0]);
+      if (op == "retain_grad") {
+        series_tape::set_keep_sensitivity(self, b);
+        return self;
+      }
       if (op == "unique") return self.unique(b);
       if (op == "cholesky") return cholesky_impl(self, b);
       if (op == "cholesky_inverse") return cholesky_inverse_impl(self, b);
@@ -3125,10 +3207,10 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "type_as") return self.to(other.scalar_type());
       if (op == "ger") return matmul_dispatch_(self.unsqueeze(1), other.unsqueeze(0));
 
-      if (op == "matmul") return matmul_dispatch_(self, other);
-      if (op == "mm") return matmul_dispatch_(self, other);
-      if (op == "mv") return matmul_dispatch_(self, other);
-      if (op == "bmm") return matmul_dispatch_(self, other);
+      if (op == "matmul") return matmul_with_tape_(self, other);
+      if (op == "mm") return matmul_with_tape_(self, other);
+      if (op == "mv") return matmul_with_tape_(self, other);
+      if (op == "bmm") return matmul_with_tape_(self, other);
       if (op == "index") return self.take(other);
       if (op == "take") return self.take(other);
       if (op == "take_along_dim") {
@@ -3821,8 +3903,18 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     if (op == "isnan_") return self.isnan_();
     if (op == "isinf_") return self.isinf_();
     if (op == "isfinite_") return self.isfinite_();
-    if (op == "detach_") return self;
-    if (op == "rename_" || op == "set_" || op == "requires_grad_") return self;
+    if (op == "detach_") {
+      series_tape::set_tracks_slope(self, false);
+      series_tape::set_keep_sensitivity(self, false);
+      series_tape::clear_source_link(self);
+      series_tape::clear_sensitivity(self);
+      return self;
+    }
+    if (op == "requires_grad_") {
+      series_tape::set_tracks_slope(self, true);
+      return self;
+    }
+    if (op == "rename_" || op == "set_") return self;
     if (op == "abs_") { self = ops_internal::abs(self); return self; }
     if (op == "bitwise_not_") return ops_internal::bitwise_not_(self);
     if (op == "squeeze_") { self = ops_internal::squeeze(self); return self; }
@@ -3985,7 +4077,10 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       return not_impl_inplace(op, args, self);
     }
     if (std::holds_alternative<bool>(a0)) {
-      if (op == "requires_grad_") return self;
+      if (op == "requires_grad_") {
+        series_tape::set_tracks_slope(self, std::get<bool>(a0));
+        return self;
+      }
       return not_impl_inplace(op, args, self);
     }
     if (std::holds_alternative<Arg::IntList>(a0)) {

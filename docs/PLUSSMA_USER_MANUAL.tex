@@ -1,0 +1,418 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{longtable}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  urlcolor=blue!60!black,
+  pdftitle={PlussQit User Guide},
+  pdfauthor={PlussMa Contributors}
+}
+
+\lstdefinestyle{plusscode}{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black},
+  stringstyle=\color{green!40!black},
+  commentstyle=\color{gray!80!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=8pt,
+  frame=single,
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=2
+}
+
+\lstset{style=plusscode}
+
+\title{PlussQit User Guide\\\large Practical Series/Note/Timeline/TimeIndex Documentation}
+\author{PlussMa Contributors}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Purpose}
+This guide is focused on \textbf{how to use} PlussQit in real code.
+It is organized in this order:
+\begin{enumerate}[leftmargin=1.5em]
+  \item \texttt{Series} (CodeM)
+  \item \texttt{Note} (CodeN)
+  \item \texttt{Timeline + Duration} (CodeH)
+  \item \texttt{TimeIndex} (CodeH)
+\end{enumerate}
+
+For exhaustive API inventories, see Section~\ref{sec:api-index-files}.
+
+\section{Build and Run Demos}
+\subsection{Build with examples enabled}
+\begin{lstlisting}[language=bash]
+cmake --preset core-dev
+cmake --build --preset core-dev
+\end{lstlisting}
+
+\subsection{Most useful demo binaries}
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{build/PlussQit/plussqit\_codem\_series\_usage\_demo}
+  \item \texttt{build/PlussQit/plussqit\_codem\_series\_methods\_demo}
+  \item \texttt{build/PlussQit/plussqit\_codem\_stats\_demo}
+  \item \texttt{build/PlussQit/plussqit\_codem\_signal\_demo}
+  \item \texttt{build/PlussQit/plussqit\_coden\_note\_factory\_demo}
+  \item \texttt{build/PlussQit/plussqit\_coden\_note\_method\_families\_demo}
+  \item \texttt{build/PlussQit/plussqit\_codeh\_timeline\_non\_generated\_and\_factory\_methods\_demo}
+  \item \texttt{build/PlussQit/plussqit\_codeh\_timeline\_dataframe\_timeindex\_methods\_demo}
+\end{itemize}
+
+\section{Series (CodeM)}
+\subsection{Include and Type Aliases}
+\begin{lstlisting}[language=C++]
+#include <pluss/pluss.h>
+// narrower:
+#include <pluss/codem/codem.h>
+#include <pluss/codem/series_factory.h>
+
+using pluss::Series;
+using pluss::ScalarType;
+using pluss::Platform;
+\end{lstlisting}
+
+\subsection{Construction Cookbook}
+\subsubsection{1) Scalars}
+\begin{lstlisting}[language=C++]
+auto a = pluss::value(3.14);                  // scalar float
+auto b = pluss::value(42);                    // scalar int
+auto c = pluss::value(true);                  // scalar bool
+auto d = pluss::value(3.14, ScalarType::Float64);
+\end{lstlisting}
+
+\subsubsection{2) 1D/2D/N-D from literals}
+\begin{lstlisting}[language=C++]
+auto v = pluss::value({1.0, 2.0, 3.0});
+auto m = pluss::value({{1.0, 2.0}, {3.0, 4.0}});
+auto t = pluss::value({{{1,2},{3,4}}, {{5,6},{7,8}}});
+\end{lstlisting}
+
+\subsubsection{3) From lvalue host buffers}
+\begin{lstlisting}[language=C++]
+std::vector<double> flat{1,2,3,4,5,6};
+auto x = pluss::make_series(flat, {2,3});
+\end{lstlisting}
+
+\subsubsection{4) Shape factories}
+\begin{lstlisting}[language=C++]
+auto e = pluss::empty({2,3}, ScalarType::Float32);
+auto z = pluss::zeros({2,3});
+auto o = pluss::ones({2,3});
+auto f = pluss::full({2,3}, 7.5);
+\end{lstlisting}
+
+\subsubsection{5) Range and random factories}
+\begin{lstlisting}[language=C++]
+auto a = pluss::arange(0, 10);
+auto b = pluss::linspace(0.0, 1.0, 11);
+auto c = pluss::randn({3,4});
+auto d = pluss::randint(0, 100, {2,3});
+auto e = pluss::normal(0.0, 1.0, {5});
+\end{lstlisting}
+
+\subsubsection{6) Like-factories}
+\begin{lstlisting}[language=C++]
+auto base = pluss::zeros({2,3}, ScalarType::Float64);
+auto a = pluss::zeros_like(base);
+auto b = pluss::rand_like(base, ScalarType::Float64, 123);
+auto c = pluss::eye_like(base);
+\end{lstlisting}
+
+\subsubsection{7) Complex factories}
+\begin{lstlisting}[language=C++]
+auto re = pluss::linspace(0.0, 1.0, 4);
+auto im = pluss::linspace(1.0, 2.0, 4);
+auto z1 = pluss::complex(re, im, ScalarType::Complex64);
+auto z2 = pluss::polar(re.abs(), im, ScalarType::Complex64);
+\end{lstlisting}
+
+\subsection{Core Usage Patterns}
+\subsubsection{Inspect and move data}
+\begin{lstlisting}[language=C++]
+auto x = pluss::value({1.0,2.0,3.0});
+std::cout << x.dtype() << " " << x.sizes() << "\n";
+
+auto cpu_f32 = x.to(pluss::Platform::CPU, pluss::ScalarType::Float32);
+auto host = cpu_f32.to_host<float>();
+\end{lstlisting}
+
+\subsubsection{Math and reductions}
+\begin{lstlisting}[language=C++]
+auto x = pluss::normal(0.0, 1.0, {20});
+auto y = x.abs().add(1.0).log();
+auto mean = y.mean();
+auto stdv = y.std(false);
+auto s = y.sum();
+\end{lstlisting}
+
+\subsubsection{Indexing/shape transforms}
+\begin{lstlisting}[language=C++]
+auto m = pluss::value({1,2,3,4,5,6}, {2,3});
+auto t = m.transpose(0,1);
+auto r = m.reshape({3,2});
+auto f = m.flatten(0,1);
+\end{lstlisting}
+
+\subsubsection{Masking and gather/scatter}
+\begin{lstlisting}[language=C++]
+auto src = pluss::value({10,20,30,40,50,60}, {2,3});
+auto idx = pluss::value({2,1,0,0,1,2}, {2,3});
+auto g = src.gather(1, idx);
+
+auto base = pluss::zeros({2,3}, ScalarType::Int64);
+auto val  = pluss::value({1,2,3,4,5,6}, {2,3});
+auto out  = base.scatter_add(1, idx, val);
+\end{lstlisting}
+
+\subsubsection{Signal/statistics utilities}
+\begin{lstlisting}[language=C++]
+auto x = pluss::value(std::vector<double>{-3,-2,-1,0,1,2,3}, {7});
+auto xdct = x.dct();
+auto xrec = xdct.idct();
+auto h = x.hilbert();
+auto hist = x.histcounts(8, -3.0, 3.0);
+auto skew = x.skewness();
+auto kurt = x.kurtosis();
+\end{lstlisting}
+
+\subsection{Series Demo Map}
+\begin{longtable}{@{}p{0.36\linewidth}p{0.56\linewidth}@{}}
+\textbf{Demo} & \textbf{Best for} \\
+\hline
+\texttt{series\_usage\_demo.cpp} & Core construction, device/dtype, printing, host extraction \\
+\texttt{series\_methods\_demo.cpp} & Broad method families with pass/fail output \\
+\texttt{stats\_demo.cpp} & Moments, distributions, moving windows, NaN-aware stats \\
+\texttt{signal\_demo.cpp} & DCT/DST/Hilbert/phase/fftshift workflows \\
+\end{longtable}
+
+\section{Note (CodeN)}
+\subsection{Include and Basic Construction}
+\begin{lstlisting}[language=C++]
+#include <pluss/pluss.h>
+// narrower:
+#include <pluss/coden/coden.h>
+#include <pluss/coden/note_factory.h>
+
+auto s = pluss::content("hello");
+auto v = pluss::content({"a", "b", "c"});
+auto m = pluss::content({{"a","b"}, {"c","d"}});
+\end{lstlisting}
+
+\subsection{Factory Patterns You Will Actually Use}
+\begin{lstlisting}[language=C++]
+std::vector<std::string> flat{"p","q","r","s"};
+auto n = pluss::make_note(flat, std::array<std::int64_t,2>{2,2});
+
+auto from_lines = pluss::note_from_lines("line1\nline2\nline3");
+auto from_words = pluss::note_from_words("alpha beta gamma");
+
+auto filled = pluss::full_note({2,1,2}, "z");
+auto empty  = pluss::empty_note({2,2});
+
+// raw bytes mode
+auto bytes = pluss::bytes_content({{"\x01","\x02"}, {"\x03","\x04"}});
+\end{lstlisting}
+
+\subsection{Common Workflows}
+\subsubsection{Text cleanup + normalization}
+\begin{lstlisting}[language=C++]
+auto docs = pluss::content("One.\nTwo!");
+auto clean = docs.lower().collapse_whitespace().strip();
+\end{lstlisting}
+
+\subsubsection{Tokenization and split}
+\begin{lstlisting}[language=C++]
+auto docs = pluss::content("alpha beta gamma");
+auto words = docs.tokenize_words();
+for (std::int64_t i = 0; i < words.tokens().numel(); ++i) {
+  std::cout << words.tokens().at(i) << "\n";
+}
+\end{lstlisting}
+
+\subsubsection{NLP/TeX utilities}
+\begin{lstlisting}[language=C++]
+auto n = pluss::content("Email bob@example.com at 9:30am on 2025-01-03");
+auto masked = n.nlp_mask_pii();
+
+auto tex = pluss::content("\\textbf{Bold} and $x+y$");
+auto txt = tex.tex_to_text();
+\end{lstlisting}
+
+\subsubsection{Printing control}
+\begin{lstlisting}[language=C++]
+pluss::NotePrintOptions opt;
+opt.max_cell_chars = 24;
+opt.max_elements = 10;
+opt.edge_items = 2;
+std::cout << pluss::print_note(docs, opt) << "\n";
+\end{lstlisting}
+
+\subsection{Note Demo Map}
+\begin{longtable}{@{}p{0.36\linewidth}p{0.56\linewidth}@{}}
+\textbf{Demo} & \textbf{Best for} \\
+\hline
+\texttt{note\_factory\_demo.cpp} & All construction/factory paths \\
+\texttt{note\_base\_methods\_demo.cpp} & Shape/index/iterator/base helpers \\
+\texttt{note\_method\_families\_demo.cpp} & NLP/TeX/token method families \\
+\texttt{note\_printing\_demo.cpp} & Display and bytes rendering options \\
+\end{longtable}
+
+\section{Timeline and Duration (CodeH)}
+\subsection{Construct Timeline}
+\begin{lstlisting}[language=C++]
+#include <pluss/pluss.h>
+// narrower:
+#include <pluss/codeh/codeh.h>
+#include <pluss/codeh/timeline_factory.h>
+
+auto t0 = pluss::moment("2024-01-01T00:00:00Z");
+auto t1 = pluss::moment({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
+auto t2 = pluss::moment({{"2024-02-01T00:00:00Z", "2024-02-01T01:00:00Z"}});
+
+auto t3 = pluss::from_epoch_nanos(std::vector<std::int64_t>{0, 1'000'000'000}, std::vector<std::int64_t>{2});
+\end{lstlisting}
+
+\subsection{Construct Duration and do date arithmetic}
+\begin{lstlisting}[language=C++]
+auto d1 = pluss::duration_seconds(30);
+auto d2 = pluss::duration_minutes(5);
+auto d3 = pluss::duration_hours(1);
+auto d4 = pluss::duration_days(1);
+
+auto t = pluss::moment("2024-01-01T00:00:00Z");
+auto t_plus = t + d2;
+auto diff = t_plus - t;   // Duration
+\end{lstlisting}
+
+\subsection{Datetime field extraction, formatting, timezone}
+\begin{lstlisting}[language=C++]
+auto t = pluss::moment({"2024-01-01T00:00:00Z", "2024-06-15T12:30:00Z"});
+auto years = t.year();
+auto months = t.month();
+auto weekdays = t.weekday();
+
+auto text = t.strftime("%Y-%m-%d %H:%M:%S");
+auto local = t.tz_convert("UTC");
+auto floored = t.floor("D");
+\end{lstlisting}
+
+\subsection{Timeline Demo Map}
+\begin{longtable}{@{}p{0.36\linewidth}p{0.56\linewidth}@{}}
+\textbf{Demo} & \textbf{Best for} \\
+\hline
+\texttt{timeline\_non\_generated\_and\_factory\_methods\_demo.cpp} & Factories + legacy/non-generated helpers + conversions \\
+\texttt{timeline\_printing\_2d\_3d\_demo.cpp} & 2D/3D display and print options \\
+\end{longtable}
+
+\section{TimeIndex (CodeH)}
+\subsection{Construct and inspect}
+\begin{lstlisting}[language=C++]
+#include <pluss/pluss.h>
+#include <pluss/codeh/timeindex_factory.h>
+
+auto idx = pluss::make_timeindex({
+  "2024-01-01T00:00:00Z",
+  "2024-01-01T00:15:00Z",
+  "2024-01-01T00:45:00Z",
+  "2024-01-01T01:05:00Z",
+});
+
+std::cout << idx.freq() << "\n";
+std::cout << idx.is_monotonic_increasing() << "\n";
+\end{lstlisting}
+
+\subsection{Resample and rolling}
+\begin{lstlisting}[language=C++]
+auto values = pluss::value(std::vector<double>{10,20,30,40}, {4});
+
+auto hourly_sum = idx.resample_agg(values, "H", "sum", 1);
+auto hourly_mean = idx.resample_agg(values, "H", "mean", 1);
+
+auto win = pluss::duration_minutes(45);
+auto roll_sum = idx.rolling_agg(values, win, "sum");
+auto roll_max = idx.rolling_agg(values, win, "max");
+\end{lstlisting}
+
+\subsection{Slicing, asof, set-like ops}
+\begin{lstlisting}[language=C++]
+auto k = pluss::moment("2024-01-01T00:40:00Z");
+auto p = idx.searchsorted(k, false);
+auto a = idx.asof(k);
+auto s = idx.slice_time("2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z");
+\end{lstlisting}
+
+\subsection{TimeIndex Demo Map}
+\begin{longtable}{@{}p{0.36\linewidth}p{0.56\linewidth}@{}}
+\textbf{Demo} & \textbf{Best for} \\
+\hline
+\texttt{timeline\_dataframe\_timeindex\_methods\_demo.cpp} & Frequency inference, resample, rolling aggregation \\
+\end{longtable}
+
+\section{Method Families (Quick Reference)}
+\subsection{Series}
+\begin{itemize}[leftmargin=1.5em]
+  \item Core tensor ops: shape/view/permute/select/slice
+  \item Numeric ops: arithmetic, unary math, comparison, logical, bitwise
+  \item Reductions: sum/mean/min/max/var/std/norm/all/any
+  \item Data movement: to(platform), to(dtype), contiguous, clone, to\_host
+  \item Indexing/masking: where, take, gather/scatter/scatter\_add/scatter\_reduce, masked\_select
+  \item Stats/signal extras: pdf/cdf/histcounts/skewness/kurtosis/dct/dst/hilbert
+\end{itemize}
+
+\subsection{Note}
+\begin{itemize}[leftmargin=1.5em]
+  \item Text normalization/cleanup, regex, replace/remove families
+  \item Tokenization families: split/tokenize/ngrams/extractors
+  \item NLP families: masking, stopwords, language/readability/sentiment helpers
+  \item TeX families: strip/normalize/extract/convert helpers
+\end{itemize}
+
+\subsection{Timeline/TimeIndex}
+\begin{itemize}[leftmargin=1.5em]
+  \item Timeline: datetime field extraction, predicates, tz, rounding, format, min/max/sort/unique
+  \item TimeIndex: monotonic/unique checks, search/slice/asof, resample, rolling, set operations
+\end{itemize}
+
+\section{Exhaustive API Index Files}
+\label{sec:api-index-files}
+These files are generated from code and are intended as searchable reference inventories:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{docs/generated/series\_methods\_generated.txt}
+  \item \texttt{docs/generated/note\_methods\_decls\_from\_code.h}
+  \item \texttt{docs/generated/timeline\_methods\_signatures\_from\_code.h}
+  \item \texttt{docs/generated/timeindex\_methods\_signatures\_from\_code.h}
+\end{itemize}
+
+\section{Sphinx Migration Note}
+For long-term user-facing docs, Sphinx is a better fit than a single LaTeX file:
+\begin{itemize}[leftmargin=1.5em]
+  \item Multi-page structure with navigation/search
+  \item Better API reference layering (tutorials + reference + examples)
+  \item Easier incremental updates as methods evolve
+\end{itemize}
+A starter Sphinx skeleton is included under \texttt{docs/sphinx/}.
+
+\section{Build This PDF}
+\begin{lstlisting}[language=bash]
+pdflatex -output-directory docs docs/PLUSSMA_USER_MANUAL.tex
+pdflatex -output-directory docs docs/PLUSSMA_USER_MANUAL.tex
+\end{lstlisting}
+
+\end{document}

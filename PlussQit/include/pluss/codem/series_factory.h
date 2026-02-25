@@ -158,7 +158,9 @@ namespace pluss {
   inline Series inf(ScalarType dt = ScalarType::Float32) { return codem::inf(dt); }
 
   // Ranges / random
-  inline Series arange(std::int64_t start, std::int64_t end, std::int64_t step = 1, ScalarType dt = ScalarType::Int64) { return Series::arange(start, end, step, dt); }
+  inline Series arange(std::int64_t end, ScalarType dt = ScalarType::Int64) { return Series::arange(0, end, 1, dt); }
+  inline Series arange(std::int64_t start, std::int64_t end, ScalarType dt = ScalarType::Int64) { return Series::arange(start, end, 1, dt); }
+  inline Series arange(std::int64_t start, std::int64_t end, std::int64_t step, ScalarType dt = ScalarType::Int64) { return Series::arange(start, end, step, dt); }
   inline Series arange(std::int64_t start, std::int64_t end, Config cfg) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;

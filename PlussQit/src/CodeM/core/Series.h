@@ -187,6 +187,10 @@ public:
   #include "CodeM/Series/SeriesOpsInternalMethods.inc"
 #endif
 
+  Series reshape(std::initializer_list<std::int64_t> new_sizes) const {
+    return reshape(std::span<const std::int64_t>(new_sizes.begin(), new_sizes.size()));
+  }
+
 
 // ---------------------------------------------------------------------------
 // Full op surface

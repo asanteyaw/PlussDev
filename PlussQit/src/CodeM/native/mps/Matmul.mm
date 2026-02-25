@@ -262,7 +262,7 @@ Series matmul(const Series& a, const Series& b) {
                                                                                  beta:0.0];
       mm.options = allow_reduced_precision_() ? MPSKernelOptionsAllowReducedPrecision : MPSKernelOptionsNone;
 
-      id<MTLCommandBuffer> cb = [c.queue commandBuffer];
+      id<MTLCommandBuffer> cb = create_command_buffer_mm(c.queue);
       if (cb == nil) {
         fail_("mps::matmul: failed to create command buffer");
       }
@@ -277,11 +277,11 @@ Series matmul(const Series& a, const Series& b) {
       fail_("mps::matmul(strict): backend unavailable (" + sctx.error + ")");
     }
 
-    id<MTLCommandBuffer> cb = [c.queue commandBuffer];
+    id<MTLCommandBuffer> cb = create_command_buffer_mm(c.queue);
     if (cb == nil) {
       fail_("mps::matmul(strict): failed to create command buffer");
     }
-    id<MTLComputeCommandEncoder> enc = [cb computeCommandEncoder];
+    id<MTLComputeCommandEncoder> enc = create_compute_encoder_mm(cb);
     if (enc == nil) {
       fail_("mps::matmul(strict): failed to create compute encoder");
     }

@@ -46,6 +46,20 @@ kernel void cast_i64_to_f32(
     uint gid [[thread_position_in_grid]]) {
   out[gid] = float(in[gid]);
 }
+
+kernel void cast_u8_to_i64(
+    const device uchar* in [[buffer(0)]],
+    device long* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = long(in[gid] == uchar(0) ? 0 : 1);
+}
+
+kernel void cast_i64_to_u8(
+    const device long* in [[buffer(0)]],
+    device uchar* out [[buffer(1)]],
+    uint gid [[thread_position_in_grid]]) {
+  out[gid] = (in[gid] == 0) ? uchar(0) : uchar(1);
+}
 )metal";
 
 struct Context {
@@ -57,6 +71,8 @@ struct Context {
   id<MTLComputePipelineState> cast_u8_to_f32{nil};
   id<MTLComputePipelineState> cast_f32_to_i64{nil};
   id<MTLComputePipelineState> cast_i64_to_f32{nil};
+  id<MTLComputePipelineState> cast_u8_to_i64{nil};
+  id<MTLComputePipelineState> cast_i64_to_u8{nil};
   std::string error{};
 };
 
@@ -119,6 +135,8 @@ Context& ctx_() {
       if (!make_pipeline("cast_u8_to_f32", &ctx.cast_u8_to_f32)) return;
       if (!make_pipeline("cast_f32_to_i64", &ctx.cast_f32_to_i64)) return;
       if (!make_pipeline("cast_i64_to_f32", &ctx.cast_i64_to_f32)) return;
+      if (!make_pipeline("cast_u8_to_i64", &ctx.cast_u8_to_i64)) return;
+      if (!make_pipeline("cast_i64_to_u8", &ctx.cast_i64_to_u8)) return;
       ctx.ready = true;
     }
   });
@@ -156,6 +174,12 @@ id<MTLComputePipelineState> choose_pso_(Context& c, ScalarType src, ScalarType d
   if (src == ScalarType::Int64 && dst == ScalarType::Float32) {
     return c.cast_i64_to_f32;
   }
+  if (src == ScalarType::Bool && dst == ScalarType::Int64) {
+    return c.cast_u8_to_i64;
+  }
+  if (src == ScalarType::Int64 && dst == ScalarType::Bool) {
+    return c.cast_i64_to_u8;
+  }
   return nil;
 }
 
@@ -175,7 +199,9 @@ bool supports_cast(ScalarType src, ScalarType dst) noexcept {
   return (src == ScalarType::Float32 && dst == ScalarType::Bool) ||
          (src == ScalarType::Bool && dst == ScalarType::Float32) ||
          (src == ScalarType::Float32 && dst == ScalarType::Int64) ||
-         (src == ScalarType::Int64 && dst == ScalarType::Float32);
+         (src == ScalarType::Int64 && dst == ScalarType::Float32) ||
+         (src == ScalarType::Bool && dst == ScalarType::Int64) ||
+         (src == ScalarType::Int64 && dst == ScalarType::Bool);
 }
 
 void cast(const Series& in, Series& out) {
@@ -203,11 +229,11 @@ void cast(const Series& in, Series& out) {
       fail_("mps::cast: missing pipeline for dtype conversion");
     }
 
-    id<MTLCommandBuffer> cb = [c.queue commandBuffer];
+    id<MTLCommandBuffer> cb = create_command_buffer_mm(c.queue);
     if (cb == nil) {
       fail_("mps::cast: failed to create command buffer");
     }
-    id<MTLComputeCommandEncoder> enc = [cb computeCommandEncoder];
+    id<MTLComputeCommandEncoder> enc = create_compute_encoder_mm(cb);
     if (enc == nil) {
       fail_("mps::cast: failed to create compute encoder");
     }

@@ -171,6 +171,7 @@ list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/
 if(APPLE)
   set(PLUSSQIT_CODEM_MPS_SRC
     src/CodeM/native/mps/BufferCache.mm
+    src/CodeM/native/mps/MPSRuntime.mm
     src/CodeM/native/mps/Cast.mm
     src/CodeM/native/mps/Cum.mm
     src/CodeM/native/mps/Elementwise.mm
@@ -182,6 +183,7 @@ if(APPLE)
 else()
   set(PLUSSQIT_CODEM_MPS_SRC
     src/CodeM/native/mps/BufferCacheStub.cpp
+    src/CodeM/native/mps/MPSRuntimeStub.cpp
     src/CodeM/native/mps/CastStub.cpp
     src/CodeM/native/mps/CumStub.cpp
     src/CodeM/native/mps/ElementwiseStub.cpp
@@ -287,6 +289,9 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
 
   add_executable(plussqit_codem_signal_demo examples/CodeM/signal_demo.cpp)
   target_link_libraries(plussqit_codem_signal_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_autograd_optim_demo examples/CodeM/autograd_optim_demo.cpp)
+  target_link_libraries(plussqit_codem_autograd_optim_demo PRIVATE PlussQit::CodeM)
 
   add_executable(plussqit_codem_mps_vs_cpu_demo examples/CodeM/mps_vs_cpu_demo.cpp)
   target_link_libraries(plussqit_codem_mps_vs_cpu_demo PRIVATE PlussQit::CodeM)

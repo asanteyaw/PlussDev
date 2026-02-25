@@ -9,8 +9,8 @@ using aux::transmit;
 using aux::transmit_exec;
 using aux::transmit_into;
 using aux::transmit_options;
-using aux::translate;
-using aux::translate_options;
+using aux::transform_axis;
+using aux::transform_axis_options;
 using aux::suppose;
 } // namespace pluss
 

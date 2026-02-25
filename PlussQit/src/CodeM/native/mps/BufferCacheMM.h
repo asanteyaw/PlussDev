@@ -1,19 +1,12 @@
 #pragma once
 
 #include "CodeM/native/mps/BufferCache.h"
+#include "CodeM/native/mps/MPSRuntimeMM.h"
 
 #if defined(__OBJC__)
 #import <Metal/Metal.h>
 
 namespace pluss::codem::native::mps {
-
-inline id<MTLDevice> shared_device_mm() {
-  return (__bridge id<MTLDevice>)shared_device_handle();
-}
-
-inline id<MTLCommandQueue> shared_queue_mm() {
-  return (__bridge id<MTLCommandQueue>)shared_queue_handle();
-}
 
 inline id<MTLBuffer> ensure_device_buffer_for_read_mm(const SeriesBase& s,
                                                       id<MTLDevice> device,
@@ -29,14 +22,6 @@ inline id<MTLBuffer> ensure_device_buffer_for_write_mm(const SeriesBase& s,
 
 inline void mark_device_data_dirty_mm(const SeriesBase& s, id<MTLCommandBuffer> cb) {
   mark_device_data_dirty(s, (__bridge void*)cb);
-}
-
-inline void submit_command_buffer_mm(id<MTLCommandBuffer> cb, std::int64_t work_items_hint) {
-  submit_command_buffer((__bridge void*)cb, work_items_hint);
-}
-
-inline void wait_command_buffer_mm(id<MTLCommandBuffer> cb) {
-  wait_command_buffer((__bridge void*)cb);
 }
 
 } // namespace pluss::codem::native::mps

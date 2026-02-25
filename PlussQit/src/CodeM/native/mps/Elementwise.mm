@@ -401,11 +401,11 @@ id<MTLCommandBuffer> encode_op_(id<MTLComputePipelineState> pso,
     return nil;
   }
   @autoreleasepool {
-    id<MTLCommandBuffer> cb = [c.queue commandBuffer];
+    id<MTLCommandBuffer> cb = create_command_buffer_mm(c.queue);
     if (cb == nil) {
       fail_(std::string(op_name) + ": failed to create command buffer");
     }
-    id<MTLComputeCommandEncoder> enc = [cb computeCommandEncoder];
+    id<MTLComputeCommandEncoder> enc = create_compute_encoder_mm(cb);
     if (enc == nil) {
       fail_(std::string(op_name) + ": failed to create compute encoder");
     }

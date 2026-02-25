@@ -1,8 +1,10 @@
 #include <pluss/pluss.h>
 
+#include <any>
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -395,36 +397,34 @@ void test_queue_dynamic_dispatch() {
 void test_dynamic_dispense_utility() {
   std::cout << "[RUN] codeh:dynamic_dispense_utility\n";
 
-  const auto s = pluss::value({-1.0, 2.0, -3.0});
-  const auto s_abs = pluss::dispense<pluss::Series>(s, "abs");
-  const auto s_vals = s_abs.to_vec<double>();
-  expect_true(s_vals.size() == 3 && s_vals[0] == 1.0 && s_vals[2] == 3.0,
-              "dispense<Series>(Series, \"abs\")");
+  auto s = pluss::value({-1.0, 2.0, -3.0});
+  const auto s_numel = pluss::dispense(s, &pluss::Series::numel, std::make_tuple());
+  expect_true(s_numel == 3,
+              "dispense(Series,&Series::numel)");
 
-  const auto n = pluss::content({"apple", "banana", "apricot"});
-  const auto starts_with_a = pluss::dispense<std::vector<std::uint8_t>>(n, "starts_with", "a");
+  auto n = pluss::content({"apple", "banana", "apricot"});
+  const auto starts_with_a = pluss::dispense(n, &pluss::Note::starts_with, std::make_tuple("a"));
   expect_true(starts_with_a.size() == 3 && starts_with_a[0] == 1 && starts_with_a[1] == 0 && starts_with_a[2] == 1,
-              "dispense<vector<uint8_t>>(Note, \"starts_with\")");
+              "dispense(Note,&Note::starts_with)");
 
-  const auto t = pluss::moment("2024-01-15T10:11:12Z");
-  const auto floor_d = pluss::dispense<pluss::codeh::Timeline>(t, "floor", "D");
+  auto t = pluss::moment("2024-01-15T10:11:12Z");
+  const auto floor_d = pluss::dispense(t, &pluss::codeh::Timeline::floor, std::make_tuple("D"));
   expect_true(floor_d.hour().to_vec<std::int32_t>(0) == 0,
-              "dispense<Timeline>(Timeline, \"floor\", \"D\")");
+              "dispense(Timeline,&Timeline::floor)");
 
-  const auto year_series = pluss::dispense<pluss::Series>(t, "year");
+  const auto year_series = pluss::dispense(t, &pluss::codeh::Timeline::year, std::make_tuple());
   expect_true(year_series.to_vec<std::int32_t>(0) == 2024,
-              "dispense<Series>(Timeline, \"year\")");
+              "dispense(Timeline,&Timeline::year)");
 
-  const auto any_year = pluss::dispense_any(t, "year");
-  expect_true(any_year.is<pluss::Series>(), "dispense_any(Timeline, \"year\") resolved Series");
-  expect_true(any_year.as<pluss::Series>().to_vec<std::int32_t>(0) == 2024,
-              "dispense_any value");
+  const std::any any_year = pluss::dispense(t, &pluss::codeh::Timeline::year, pluss::args{});
+  const auto& any_year_series = std::any_cast<const pluss::Series&>(any_year);
+  expect_true(any_year_series.to_vec<std::int32_t>(0) == 2024,
+              "dispense(any Timeline::year) value");
 
-  const pluss::Queue qn = n;
-  const auto any_q = pluss::dispense_any(qn, "lower");
-  expect_true(any_q.is<pluss::Note>(), "dispense_any(Queue, \"lower\") resolved Note");
-  expect_true(any_q.as<pluss::Note>().at(0) == "apple",
-              "dispense_any(Queue, \"lower\") payload");
+  const std::any any_lower = pluss::dispense(n, &pluss::Note::lower, pluss::args{});
+  const auto& any_lower_note = std::any_cast<const pluss::Note&>(any_lower);
+  expect_true(any_lower_note.at(0) == "apple",
+              "dispense(any Note::lower) payload");
 }
 
 } // namespace

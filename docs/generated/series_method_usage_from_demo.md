@@ -1,0 +1,192 @@
+# Series Method Usage (from series_methods_demo.cpp)
+
+Each bullet is an actual call body used in the demo.
+
+- `view`: `return m.view(std::span<const std::int64_t>(shape_3x2.data(), shape_3x2.size()));`
+- `reshape`: `return m.reshape(std::span<const std::int64_t>(shape_3x2.data(), shape_3x2.size()));`
+- `transpose`: `return m.transpose(0, 1);`
+- `permute`: `return mm.permute(std::span<const std::int64_t>(perm_10.data(), perm_10.size()));`
+- `unsqueeze`: `return x.unsqueeze(0);`
+- `squeeze`: `return x.unsqueeze(0).squeeze();`
+- `squeeze(dim)`: `return x.unsqueeze(0).squeeze(0);`
+- `flatten`: `return mm.flatten(0, 1);`
+- `select`: `return mm.select(0, 1);`
+- `take`: `return gather_src.take(flat_idx);`
+- `nonzero`: `return cond.nonzero();`
+- `add(scalar)`: `return x.add(1.5);`
+- `sub(scalar)`: `return x.sub(1.5);`
+- `mul(scalar)`: `return x.mul(2.0);`
+- `div(scalar)`: `return x.div(2.0);`
+- `pow(scalar)`: `return pos.pow(2.0);`
+- `maximum(scalar)`: `return x.maximum(0.0);`
+- `minimum(scalar)`: `return x.minimum(0.0);`
+- `eq(scalar)`: `return x.eq(0.0);`
+- `ne(scalar)`: `return x.ne(0.0);`
+- `lt(scalar)`: `return x.lt(0.0);`
+- `le(scalar)`: `return x.le(0.0);`
+- `gt(scalar)`: `return x.gt(0.0);`
+- `ge(scalar)`: `return x.ge(0.0);`
+- `add(series)`: `return x.add(y);`
+- `sub(series)`: `return x.sub(y);`
+- `mul(series)`: `return x.mul(y);`
+- `div(series)`: `return pos.div(pos.add(1.0));`
+- `pow(series)`: `return pos.pow(pos.mul(0.0).add(2.0));`
+- `bitwise_and`: `return bi.bitwise_and(bi.add(1));`
+- `bitwise_or`: `return bi.bitwise_or(bi.add(1));`
+- `bitwise_xor`: `return bi.bitwise_xor(bi.add(1));`
+- `bitwise_not`: `return bi.bitwise_not();`
+- `logical_and`: `return x.gt(0.0).logical_and(x.lt(3.0));`
+- `logical_or`: `return x.gt(0.0).logical_or(x.lt(-2.0));`
+- `logical_xor`: `return x.gt(0.0).logical_xor(x.lt(0.0));`
+- `logical_not`: `return x.gt(0.0).logical_not();`
+- `exp`: `return pos.exp();`
+- `log`: `return pos.log();`
+- `sqrt`: `return pos.sqrt();`
+- `sin`: `return x.sin();`
+- `cos`: `return x.cos();`
+- `tan`: `return unit.tan();`
+- `asin`: `return unit.asin();`
+- `acos`: `return unit.acos();`
+- `atan`: `return x.atan();`
+- `sinh`: `return x.sinh();`
+- `cosh`: `return x.cosh();`
+- `tanh`: `return x.tanh();`
+- `floor`: `return x.div(2.0).floor();`
+- `ceil`: `return x.div(2.0).ceil();`
+- `round`: `return x.div(2.0).round();`
+- `trunc`: `return x.div(2.0).trunc();`
+- `reciprocal`: `return pos.reciprocal();`
+- `sigmoid`: `return x.sigmoid();`
+- `relu`: `return x.relu();`
+- `log1p`: `return pos.log1p();`
+- `expm1`: `return unit.expm1();`
+- `erf`: `return unit.erf();`
+- `erfc`: `return unit.erfc();`
+- `lgamma`: `return pos.lgamma();`
+- `asinh`: `return x.asinh();`
+- `acosh`: `return pos.add(1.0).acosh();`
+- `atanh`: `return unit.atanh();`
+- `isnan`: `return x.isnan();`
+- `isinf`: `return x.isinf();`
+- `isfinite`: `return x.isfinite();`
+- `sum(dim)`: `return mm.sum(1, false);`
+- `mean(dim)`: `return mm.mean(1, true);`
+- `amax(dim)`: `return mm.amax(1, false);`
+- `amin(dim)`: `return mm.amin(1, false);`
+- `all(dim)`: `return mm.gt(0.0).all(1, false);`
+- `any(dim)`: `return mm.gt(7.0).any(1, false);`
+- `mean()`: `return mm.mean();`
+- `norm`: `return x.norm(2.0);`
+- `var`: `return x.var(false);`
+- `std`: `return x.std(false);`
+- `cumsum`: `return mm.cumsum(1, false);`
+- `cumprod`: `return mm.cumprod(1, false);`
+- `where(series)`: `return x.where(cond, y);`
+- `where(scalar)`: `return x.where(cond, 42.0);`
+- `clamp_min(scalar)`: `return x.clamp_min(0.0);`
+- `clamp_max(scalar)`: `return x.clamp_max(0.0);`
+- `clamp_min(series)`: `return x.clamp_min(y);`
+- `clamp_max(series)`: `return x.clamp_max(y);`
+- `nan_to_num`: `return x.nan_to_num(0.0, 1e9, -1e9);`
+- `masked_select`: `return m.masked_select(mask);`
+- `masked_scatter`: `return m.masked_scatter(mask, n);`
+- `gather`: `return gather_src.gather(1, gather_idx);`
+- `scatter`: `return scatter_base.scatter(1, gather_idx, scatter_val);`
+- `scatter_add`: `return scatter_base.scatter_add(1, gather_idx, scatter_val);`
+- `scatter_reduce_sum`: `return scatter_base.scatter_reduce_sum(1, gather_idx, scatter_val, true);`
+- `scatter_reduce_amax`: `return scatter_base.scatter_reduce_amax(1, gather_idx, scatter_val, true);`
+- `scatter_reduce_amin`: `return scatter_base.scatter_reduce_amin(1, gather_idx, scatter_val, true);`
+- `unique`: `return i.unique(true);`
+- `bincount`: `return i.sub(1.0).to(ScalarType::Int64).bincount(0);`
+- `histc`: `return pos.histc(5, 0.0, 5.0);`
+- `exp_`: `auto t = pos.clone(); t.exp_(); return t;`
+- `log_`: `auto t = pos.clone(); t.log_(); return t;`
+- `sqrt_`: `auto t = pos.clone(); t.sqrt_(); return t;`
+- `sin_`: `auto t = x.clone(); t.sin_(); return t;`
+- `cos_`: `auto t = x.clone(); t.cos_(); return t;`
+- `tanh_`: `auto t = x.clone(); t.tanh_(); return t;`
+- `tan_`: `auto t = unit.clone(); t.tan_(); return t;`
+- `asin_`: `auto t = unit.clone(); t.asin_(); return t;`
+- `acos_`: `auto t = unit.clone(); t.acos_(); return t;`
+- `atan_`: `auto t = x.clone(); t.atan_(); return t;`
+- `sinh_`: `auto t = x.clone(); t.sinh_(); return t;`
+- `cosh_`: `auto t = x.clone(); t.cosh_(); return t;`
+- `floor_`: `auto t = x.div(2.0); t.floor_(); return t;`
+- `ceil_`: `auto t = x.div(2.0); t.ceil_(); return t;`
+- `round_`: `auto t = x.div(2.0); t.round_(); return t;`
+- `trunc_`: `auto t = x.div(2.0); t.trunc_(); return t;`
+- `reciprocal_`: `auto t = pos.clone(); t.reciprocal_(); return t;`
+- `sigmoid_`: `auto t = x.clone(); t.sigmoid_(); return t;`
+- `relu_`: `auto t = x.clone(); t.relu_(); return t;`
+- `logical_not_`: `auto t = x.gt(0.0); t.logical_not_(); return t;`
+- `log1p_`: `auto t = pos.clone(); t.log1p_(); return t;`
+- `expm1_`: `auto t = unit.clone(); t.expm1_(); return t;`
+- `erf_`: `auto t = unit.clone(); t.erf_(); return t;`
+- `erfc_`: `auto t = unit.clone(); t.erfc_(); return t;`
+- `lgamma_`: `auto t = pos.clone(); t.lgamma_(); return t;`
+- `asinh_`: `auto t = x.clone(); t.asinh_(); return t;`
+- `acosh_`: `auto t = pos.add(1.0); t.acosh_(); return t;`
+- `atanh_`: `auto t = unit.clone(); t.atanh_(); return t;`
+- `isnan_`: `auto t = x.clone(); t.isnan_(); return t;`
+- `isinf_`: `auto t = x.clone(); t.isinf_(); return t;`
+- `isfinite_`: `auto t = x.clone(); t.isfinite_(); return t;`
+- `add_`: `auto t = x.clone(); t.add_(1.0); return t;`
+- `sub_`: `auto t = x.clone(); t.sub_(1.0); return t;`
+- `mul_`: `auto t = x.clone(); t.mul_(2.0); return t;`
+- `div_`: `auto t = x.clone(); t.div_(2.0); return t;`
+- `pow_`: `auto t = pos.clone(); t.pow_(2.0); return t;`
+- `minimum_`: `auto t = x.clone(); t.minimum_(0.0); return t;`
+- `maximum_`: `auto t = x.clone(); t.maximum_(0.0); return t;`
+- `cumsum_`: `auto t = mm.clone(); pluss::codem::_compat::invoke_("cumsum_", t, 1LL, false); return t;`
+- `cumprod_`: `auto t = mm.clone(); pluss::codem::_compat::invoke_("cumprod_", t, 1LL, false); return t;`
+- `clamp_min_`: `auto t = x.clone(); t.clamp_min_(0.0); return t;`
+- `clamp_max_`: `auto t = x.clone(); t.clamp_max_(0.0); return t;`
+- `nan_to_num_`: `auto t = x.clone(); t.nan_to_num_(0.0, 1e9, -1e9); return t;`
+- `where_`: `auto t = x.clone(); t.where_(cond, y); return t;`
+- `scatter_`: `auto t = scatter_base.clone(); pluss::codem::_compat::invoke_("scatter_", t, 1LL, gather_idx, scatter_val); return t;`
+- `scatter_add_`: `auto t = scatter_base.clone(); pluss::codem::_compat::invoke_("scatter_add_", t, 1LL, gather_idx, scatter_val); return t;`
+- `masked_scatter_`: `auto t = m.clone(); pluss::codem::_compat::invoke_("masked_scatter_", t, mask, n); return t;`
+- `put_`: `auto t = gather_src.clone(); pluss::codem::_compat::invoke_("put_", t, flat_idx, flat_src, false); return t;`
+- `pdf(norm)`: `return pos.pdf("norm");`
+- `cdf(norm)`: `return pos.cdf("norm");`
+- `dct`: `return x.dct();`
+- `idct`: `return x.dct().idct();`
+- `dst`: `return x.dst();`
+- `idst`: `return x.dst().idst();`
+- `hilbert`: `return x.hilbert();`
+- `histcounts`: `return pos.histcounts(5, 0.0, 5.0);`
+- `skewness`: `return x.skewness();`
+- `kurtosis`: `return x.kurtosis();`
+- `nanvar`: `return x.nanvar();`
+- `nanstd`: `return x.nanstd();`
+- `ediff1d`: `return x.ediff1d();`
+- `movsum`: `return x.movsum(3);`
+- `movmean`: `return x.movmean(3);`
+- `movmax`: `return x.movmax(3);`
+- `movmin`: `return x.movmin(3);`
+- `movstd`: `return x.movstd(3);`
+- `movvar`: `return x.movvar(3);`
+- `pdist2`: `return m.pdist2(n);`
+- `cdist`: `return m.cdist(n);`
+- `normr`: `return m.normr();`
+- `normc`: `return m.normc();`
+- `standardize`: `return x.standardize();`
+- `center`: `return x.center();`
+- `besselj`: `return pos.besselj();`
+- `bessely`: `return pos.bessely();`
+- `besseli`: `return pos.besseli();`
+- `besselk`: `return pos.besselk();`
+- `beta`: `return pos.beta(2.0);`
+- `betaln`: `return pos.betaln(2.0);`
+- `erfcinv`: `return unit.abs().erfcinv();`
+- `zeta`: `return pos.zeta(1.0);`
+- `airy`: `return pos.airy();`
+- `unwrap`: `return x.unwrap();`
+- `cplxpair`: `return x.hilbert().cplxpair();`
+- `vdot`: `return x.vdot(y);`
+- `real`: `return x.hilbert().real();`
+- `imag`: `return x.hilbert().imag();`
+- `angle`: `return x.hilbert().angle();`
+- `fftshift`: `return mm.fftshift();`
+- `ifftshift`: `return mm.fftshift().ifftshift();`
+- `abs2`: `return x.hilbert().abs2();`

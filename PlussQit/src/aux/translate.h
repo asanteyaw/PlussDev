@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <future>
+#include <limits>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -18,7 +19,7 @@
 
 namespace pluss::aux {
 
-using translate_options = transmit_options;
+using transform_axis_options = transmit_options;
 
 namespace detail {
 
@@ -33,7 +34,7 @@ template <class F, class SliceFn>
 auto translate_slices(F&& fn,
                      std::size_t nslices,
                      SliceFn&& slice_fn,
-                     translate_options opts) {
+                     transform_axis_options opts) {
   using slice_t = std::decay_t<decltype(slice_fn(std::size_t{0}))>;
   using out_t = invoke_result_elem_t<F&, const slice_t&>;
 
@@ -75,88 +76,165 @@ auto translate_slices(F&& fn,
   return out;
 }
 
+struct axis_layout {
+  std::vector<std::int64_t> fixed_dims;
+  std::vector<std::int64_t> fixed_shape;
+  std::size_t nslices{1};
+};
+
+template <class SizeFn>
+axis_layout make_axis_layout(std::int64_t dim,
+                             std::int64_t axis,
+                             SizeFn&& size_fn,
+                             const char* where) {
+  axis_layout layout;
+  if (dim <= 1) return layout;
+  layout.fixed_dims.reserve(static_cast<std::size_t>(dim - 1));
+  layout.fixed_shape.reserve(static_cast<std::size_t>(dim - 1));
+
+  for (std::int64_t k = 0; k < dim; ++k) {
+    if (k == axis) continue;
+    const auto sz = size_fn(k);
+    CODEM_CHECK(sz >= 0, std::string(where) + ": invalid shape");
+    layout.fixed_dims.push_back(k);
+    layout.fixed_shape.push_back(sz);
+    if (sz == 0) {
+      layout.nslices = 0;
+      continue;
+    }
+    CODEM_CHECK(
+        layout.nslices <= std::numeric_limits<std::size_t>::max() / static_cast<std::size_t>(sz),
+        std::string(where) + ": slice space too large");
+    layout.nslices *= static_cast<std::size_t>(sz);
+  }
+  return layout;
+}
+
+inline std::vector<std::int64_t> unravel_index(std::size_t linear,
+                                               const std::vector<std::int64_t>& shape) {
+  std::vector<std::int64_t> coord(shape.size(), 0);
+  for (std::size_t i = shape.size(); i-- > 0;) {
+    const auto size_i = static_cast<std::size_t>(shape[i]);
+    if (size_i == 0) continue;
+    coord[i] = static_cast<std::int64_t>(linear % size_i);
+    linear /= size_i;
+  }
+  return coord;
+}
+
 } // namespace detail
 
 // NumPy-style apply_along_axis for Series (up to CodeM max rank).
-// Returns one result per slice in order along `axis`.
+// Applies fn to each 1D slice oriented along `axis`.
 template <class F>
-auto translate(F&& fn,
-              const pluss::Series& x,
-              std::int64_t axis,
-              translate_options opts = {}) {
-  CODEM_CHECK(x.defined(), "translate(Series): undefined input");
-  CODEM_CHECK(x.dim() > 0, "translate(Series): axis dispatch requires dim > 0");
-  const auto d = detail::wrap_axis(axis, x.dim(), "translate(Series)");
-  const auto nslices = static_cast<std::size_t>(x.sizes()[static_cast<std::size_t>(d)]);
+auto transform_axis(F&& fn,
+                    const pluss::Series& x,
+                    std::int64_t axis,
+                    transform_axis_options opts = {}) {
+  CODEM_CHECK(x.defined(), "transform_axis(Series): undefined input");
+  CODEM_CHECK(x.dim() > 0, "transform_axis(Series): axis dispatch requires dim > 0");
+  const auto d = detail::wrap_axis(axis, x.dim(), "transform_axis(Series)");
+  const auto sizes = x.sizes();
+  const auto layout = detail::make_axis_layout(
+      x.dim(),
+      d,
+      [&](std::int64_t k) {
+        return sizes[static_cast<std::size_t>(k)];
+      },
+      "transform_axis(Series)");
 
-  auto make_slice = [&](std::size_t i) {
-    return ::pluss::codem::_compat::invoke(
-        "select",
-        x,
-        d,
-        static_cast<std::int64_t>(i),
-        static_cast<std::int64_t>(1));
+  auto make_slice = [&](std::size_t linear_index) {
+    const auto fixed_index = detail::unravel_index(linear_index, layout.fixed_shape);
+    auto slice = x;
+    for (std::size_t p = layout.fixed_dims.size(); p-- > 0;) {
+      slice = ::pluss::codem::_compat::invoke(
+          "select",
+          slice,
+          layout.fixed_dims[p],
+          fixed_index[p],
+          static_cast<std::int64_t>(1));
+    }
+    return slice;
   };
 
-  return detail::translate_slices(std::forward<F>(fn), nslices, make_slice, opts);
+  return detail::translate_slices(std::forward<F>(fn), layout.nslices, make_slice, opts);
 }
 
 // NumPy-style apply_along_axis for Note (0D..3D).
 template <class F>
-auto translate(F&& fn,
-              const pluss::Note& x,
-              std::int64_t axis,
-              translate_options opts = {}) {
-  CODEM_CHECK(x.defined(), "translate(Note): undefined input");
-  CODEM_CHECK(x.dim() > 0, "translate(Note): axis dispatch requires dim > 0");
-  const auto d = detail::wrap_axis(axis, x.dim(), "translate(Note)");
-  const auto nslices = static_cast<std::size_t>(x.size(d));
+auto transform_axis(F&& fn,
+                    const pluss::Note& x,
+                    std::int64_t axis,
+                    transform_axis_options opts = {}) {
+  CODEM_CHECK(x.defined(), "transform_axis(Note): undefined input");
+  CODEM_CHECK(x.dim() > 0, "transform_axis(Note): axis dispatch requires dim > 0");
+  const auto d = detail::wrap_axis(axis, x.dim(), "transform_axis(Note)");
+  const auto layout = detail::make_axis_layout(
+      x.dim(),
+      d,
+      [&](std::int64_t k) { return x.size(k); },
+      "transform_axis(Note)");
 
-  auto make_slice = [&](std::size_t i) {
-    return ::pluss::coden::_compat::invoke<pluss::Note>(
-        "select",
-        x,
-        d,
-        static_cast<std::int64_t>(i));
+  auto make_slice = [&](std::size_t linear_index) {
+    const auto fixed_index = detail::unravel_index(linear_index, layout.fixed_shape);
+    auto slice = x;
+    for (std::size_t p = layout.fixed_dims.size(); p-- > 0;) {
+      slice = ::pluss::coden::_compat::invoke<pluss::Note>(
+          "select",
+          slice,
+          layout.fixed_dims[p],
+          fixed_index[p]);
+    }
+    return slice;
   };
 
-  return detail::translate_slices(std::forward<F>(fn), nslices, make_slice, opts);
+  return detail::translate_slices(std::forward<F>(fn), layout.nslices, make_slice, opts);
 }
 
 // NumPy-style apply_along_axis for Timeline (0D..3D).
-// Slices are returned as Timeline views reconstructed from selected tick Series.
+// Slices are returned as 1D Timeline views reconstructed from selected tick Series.
 template <class F>
-auto translate(F&& fn,
-              const pluss::codeh::Timeline& x,
-              std::int64_t axis,
-              translate_options opts = {}) {
-  CODEM_CHECK(x.defined(), "translate(Timeline): undefined input");
-  CODEM_CHECK(x.dim() > 0, "translate(Timeline): axis dispatch requires dim > 0");
-  const auto d = detail::wrap_axis(axis, x.dim(), "translate(Timeline)");
+auto transform_axis(F&& fn,
+                    const pluss::codeh::Timeline& x,
+                    std::int64_t axis,
+                    transform_axis_options opts = {}) {
+  CODEM_CHECK(x.defined(), "transform_axis(Timeline): undefined input");
+  CODEM_CHECK(x.dim() > 0, "transform_axis(Timeline): axis dispatch requires dim > 0");
+  const auto d = detail::wrap_axis(axis, x.dim(), "transform_axis(Timeline)");
   const auto sizes = x.sizes();
-  const auto nslices = static_cast<std::size_t>(sizes[static_cast<std::size_t>(d)]);
+  const auto layout = detail::make_axis_layout(
+      x.dim(),
+      d,
+      [&](std::int64_t k) {
+        return sizes[static_cast<std::size_t>(k)];
+      },
+      "transform_axis(Timeline)");
 
-  auto make_slice = [&](std::size_t i) {
-    const auto selected_ticks = ::pluss::codem::_compat::invoke(
-        "select",
-        x.unsafe_ticks(),
-        d,
-        static_cast<std::int64_t>(i),
-        static_cast<std::int64_t>(1));
-    return ::pluss::codeh::Timeline::fromSeries(selected_ticks);
+  auto make_slice = [&](std::size_t linear_index) {
+    const auto fixed_index = detail::unravel_index(linear_index, layout.fixed_shape);
+    auto ticks_slice = x.unsafe_ticks();
+    for (std::size_t p = layout.fixed_dims.size(); p-- > 0;) {
+      ticks_slice = ::pluss::codem::_compat::invoke(
+          "select",
+          ticks_slice,
+          layout.fixed_dims[p],
+          fixed_index[p],
+          static_cast<std::int64_t>(1));
+    }
+    return ::pluss::codeh::Timeline::fromSeries(ticks_slice);
   };
 
-  return detail::translate_slices(std::forward<F>(fn), nslices, make_slice, opts);
+  return detail::translate_slices(std::forward<F>(fn), layout.nslices, make_slice, opts);
 }
 
 // TimeIndex is 1D by design. axis must be 0 or -1.
 template <class F>
-auto translate(F&& fn,
-              const pluss::codeh::TimeIndex& x,
-              std::int64_t axis = 0,
-              translate_options opts = {}) {
+auto transform_axis(F&& fn,
+                    const pluss::codeh::TimeIndex& x,
+                    std::int64_t axis = 0,
+                    transform_axis_options opts = {}) {
   (void)opts;
-  const auto d = detail::wrap_axis(axis, 1, "translate(TimeIndex)");
+  const auto d = detail::wrap_axis(axis, 1, "transform_axis(TimeIndex)");
   (void)d;
   const auto t = x.timeline();
   return detail::invoke_with_optional_index(std::forward<F>(fn), t, 0);
@@ -165,6 +243,6 @@ auto translate(F&& fn,
 } // namespace pluss::aux
 
 namespace pluss {
-using aux::translate;
-using aux::translate_options;
+using aux::transform_axis;
+using aux::transform_axis_options;
 } // namespace pluss

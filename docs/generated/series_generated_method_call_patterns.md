@@ -1,0 +1,592 @@
+# Series Generated Method Call Patterns (from SeriesMethodsGen.h names)
+
+For each generated method name, call it as shown below.
+
+- `auto y = x._addmm_activation(...);`
+- `auto y = x._autocast_to_full_precision(...);`
+- `auto y = x._autocast_to_reduced_precision(...);`
+- `auto y = x._backward(...);`
+- `x._coalesced_(...);`
+- `auto y = x._conj(...);`
+- `auto y = x._conj_physical(...);`
+- `auto y = x._dimI(...);`
+- `auto y = x._dimV(...);`
+- `auto y = x._fw_primal(...);`
+- `auto y = x._indices(...);`
+- `auto y = x._is_all_true(...);`
+- `auto y = x._is_any_true(...);`
+- `auto y = x._is_zerotensor(...);`
+- `auto y = x._lazy_clone(...);`
+- `auto y = x._neg_view(...);`
+- `auto y = x._nested_tensor_size(...);`
+- `auto y = x._nested_tensor_storage_offsets(...);`
+- `auto y = x._nested_tensor_strides(...);`
+- `auto y = x._nnz(...);`
+- `auto y = x._reshape_alias(...);`
+- `auto y = x._sparse_mask_projection(...);`
+- `auto y = x._to_dense(...);`
+- `auto y = x._to_sparse(...);`
+- `auto y = x._to_sparse_bsc(...);`
+- `auto y = x._to_sparse_bsr(...);`
+- `auto y = x._to_sparse_csc(...);`
+- `auto y = x._to_sparse_csr(...);`
+- `auto y = x._values(...);`
+- `auto y = x._version(...);`
+- `auto y = x.abs(...);`
+- `auto y = x.abs2(...);`
+- `x.abs_(...);`
+- `auto y = x.absolute(...);`
+- `x.absolute_(...);`
+- `auto y = x.acos(...);`
+- `x.acos_(...);`
+- `auto y = x.acosh(...);`
+- `x.acosh_(...);`
+- `auto y = x.add(...);`
+- `x.add_(...);`
+- `auto y = x.addbmm(...);`
+- `x.addbmm_(...);`
+- `auto y = x.addcdiv(...);`
+- `x.addcdiv_(...);`
+- `auto y = x.addcmul(...);`
+- `x.addcmul_(...);`
+- `auto y = x.addmm(...);`
+- `x.addmm_(...);`
+- `auto y = x.addmv(...);`
+- `x.addmv_(...);`
+- `auto y = x.addr(...);`
+- `x.addr_(...);`
+- `auto y = x.adjoint(...);`
+- `auto y = x.airy(...);`
+- `auto y = x.alias(...);`
+- `auto y = x.align_as(...);`
+- `auto y = x.align_to(...);`
+- `auto y = x.all(...);`
+- `auto y = x.allclose(...);`
+- `auto y = x.amax(...);`
+- `auto y = x.amin(...);`
+- `auto y = x.aminmax(...);`
+- `auto y = x.angle(...);`
+- `auto y = x.any(...);`
+- `auto y = x.arccos(...);`
+- `x.arccos_(...);`
+- `auto y = x.arccosh(...);`
+- `x.arccosh_(...);`
+- `auto y = x.arcsin(...);`
+- `x.arcsin_(...);`
+- `auto y = x.arcsinh(...);`
+- `x.arcsinh_(...);`
+- `auto y = x.arctan(...);`
+- `auto y = x.arctan2(...);`
+- `x.arctan2_(...);`
+- `x.arctan_(...);`
+- `auto y = x.arctanh(...);`
+- `x.arctanh_(...);`
+- `auto y = x.argmax(...);`
+- `auto y = x.argmin(...);`
+- `auto y = x.argsort(...);`
+- `auto y = x.argwhere(...);`
+- `auto y = x.as_strided(...);`
+- `x.as_strided_(...);`
+- `auto y = x.as_strided_scatter(...);`
+- `auto y = x.asin(...);`
+- `x.asin_(...);`
+- `auto y = x.asinh(...);`
+- `x.asinh_(...);`
+- `auto y = x.atan(...);`
+- `auto y = x.atan2(...);`
+- `x.atan2_(...);`
+- `x.atan_(...);`
+- `auto y = x.atanh(...);`
+- `x.atanh_(...);`
+- `auto y = x.baddbmm(...);`
+- `x.baddbmm_(...);`
+- `auto y = x.bernoulli(...);`
+- `x.bernoulli_(...);`
+- `auto y = x.besseli(...);`
+- `auto y = x.besselj(...);`
+- `auto y = x.besselk(...);`
+- `auto y = x.bessely(...);`
+- `auto y = x.beta(...);`
+- `auto y = x.betaln(...);`
+- `auto y = x.bincount(...);`
+- `auto y = x.bitwise_and(...);`
+- `x.bitwise_and_(...);`
+- `auto y = x.bitwise_left_shift(...);`
+- `x.bitwise_left_shift_(...);`
+- `auto y = x.bitwise_not(...);`
+- `x.bitwise_not_(...);`
+- `auto y = x.bitwise_or(...);`
+- `x.bitwise_or_(...);`
+- `auto y = x.bitwise_right_shift(...);`
+- `x.bitwise_right_shift_(...);`
+- `auto y = x.bitwise_xor(...);`
+- `x.bitwise_xor_(...);`
+- `auto y = x.bmm(...);`
+- `auto y = x.broadcast_to(...);`
+- `x.cauchy_(...);`
+- `auto y = x.cbrt(...);`
+- `auto y = x.ccol_indices(...);`
+- `auto y = x.cdf(...);`
+- `auto y = x.cdist(...);`
+- `auto y = x.ceil(...);`
+- `auto y = x.center(...);`
+- `auto y = x.chalf(...);`
+- `auto y = x.cholesky(...);`
+- `auto y = x.cholesky_inverse(...);`
+- `auto y = x.cholesky_solve(...);`
+- `auto y = x.chunk(...);`
+- `auto y = x.clamp(...);`
+- `x.clamp_(...);`
+- `auto y = x.clamp_max(...);`
+- `x.clamp_max_(...);`
+- `auto y = x.clamp_min(...);`
+- `x.clamp_min_(...);`
+- `auto y = x.coalesce(...);`
+- `auto y = x.col_indices(...);`
+- `auto y = x.conj(...);`
+- `auto y = x.conj_physical(...);`
+- `x.conj_physical_(...);`
+- `x.copy_(...);`
+- `auto y = x.copysign(...);`
+- `x.copysign_(...);`
+- `auto y = x.corrcoef(...);`
+- `auto y = x.cos(...);`
+- `x.cos_(...);`
+- `auto y = x.cosh(...);`
+- `x.cosh_(...);`
+- `auto y = x.count_nonzero(...);`
+- `auto y = x.cov(...);`
+- `auto y = x.cplxpair(...);`
+- `auto y = x.cross(...);`
+- `auto y = x.crow_indices(...);`
+- `auto y = x.cummax(...);`
+- `auto y = x.cummin(...);`
+- `auto y = x.cumprod(...);`
+- `x.cumprod_(...);`
+- `auto y = x.cumsum(...);`
+- `x.cumsum_(...);`
+- `auto y = x.data(...);`
+- `auto y = x.dct(...);`
+- `auto y = x.deg2rad(...);`
+- `x.deg2rad_(...);`
+- `auto y = x.dense_dim(...);`
+- `auto y = x.dequantize(...);`
+- `auto y = x.det(...);`
+- `auto y = x.detach(...);`
+- `x.detach_(...);`
+- `auto y = x.diag(...);`
+- `auto y = x.diag_embed(...);`
+- `auto y = x.diagflat(...);`
+- `auto y = x.diagonal(...);`
+- `auto y = x.diagonal_scatter(...);`
+- `auto y = x.diff(...);`
+- `auto y = x.digamma(...);`
+- `x.digamma_(...);`
+- `auto y = x.dist(...);`
+- `auto y = x.div(...);`
+- `x.div_(...);`
+- `auto y = x.divide(...);`
+- `x.divide_(...);`
+- `auto y = x.dot(...);`
+- `auto y = x.dsplit(...);`
+- `auto y = x.dst(...);`
+- `auto y = x.ediff1d(...);`
+- `auto y = x.eq(...);`
+- `x.eq_(...);`
+- `auto y = x.equal(...);`
+- `auto y = x.erf(...);`
+- `x.erf_(...);`
+- `auto y = x.erfc(...);`
+- `x.erfc_(...);`
+- `auto y = x.erfcinv(...);`
+- `x.erfcinv_(...);`
+- `auto y = x.erfinv(...);`
+- `x.erfinv_(...);`
+- `auto y = x.exp(...);`
+- `auto y = x.exp2(...);`
+- `x.exp2_(...);`
+- `x.exp_(...);`
+- `auto y = x.expand(...);`
+- `auto y = x.expand_as(...);`
+- `auto y = x.expm1(...);`
+- `x.expm1_(...);`
+- `x.exponential_(...);`
+- `auto y = x.factorial(...);`
+- `auto y = x.fftshift(...);`
+- `x.fill_(...);`
+- `x.fill_diagonal_(...);`
+- `auto y = x.fix(...);`
+- `x.fix_(...);`
+- `auto y = x.flip(...);`
+- `auto y = x.fliplr(...);`
+- `auto y = x.flipud(...);`
+- `auto y = x.float_power(...);`
+- `x.float_power_(...);`
+- `auto y = x.floor(...);`
+- `auto y = x.floor_divide(...);`
+- `x.floor_divide_(...);`
+- `auto y = x.fmax(...);`
+- `auto y = x.fmin(...);`
+- `auto y = x.fmod(...);`
+- `x.fmod_(...);`
+- `auto y = x.frac(...);`
+- `x.frac_(...);`
+- `auto y = x.frexp(...);`
+- `auto y = x.gather(...);`
+- `auto y = x.gcd(...);`
+- `x.gcd_(...);`
+- `auto y = x.ge(...);`
+- `x.ge_(...);`
+- `auto y = x.gelu(...);`
+- `x.gelu_(...);`
+- `x.geometric_(...);`
+- `auto y = x.geqrf(...);`
+- `auto y = x.ger(...);`
+- `auto y = x.greater(...);`
+- `x.greater_(...);`
+- `auto y = x.greater_equal(...);`
+- `x.greater_equal_(...);`
+- `auto y = x.gt(...);`
+- `x.gt_(...);`
+- `auto y = x.hardshrink(...);`
+- `auto y = x.hardshrink_backward(...);`
+- `auto y = x.heaviside(...);`
+- `x.heaviside_(...);`
+- `auto y = x.hilbert(...);`
+- `auto y = x.histc(...);`
+- `auto y = x.histcounts(...);`
+- `auto y = x.histogram(...);`
+- `auto y = x.hsplit(...);`
+- `auto y = x.hypot(...);`
+- `x.hypot_(...);`
+- `auto y = x.i0(...);`
+- `x.i0_(...);`
+- `auto y = x.idct(...);`
+- `auto y = x.idst(...);`
+- `auto y = x.ifftshift(...);`
+- `auto y = x.igamma(...);`
+- `x.igamma_(...);`
+- `auto y = x.igammac(...);`
+- `x.igammac_(...);`
+- `auto y = x.imag(...);`
+- `auto y = x.index(...);`
+- `auto y = x.index_add(...);`
+- `x.index_add_(...);`
+- `auto y = x.index_copy(...);`
+- `x.index_copy_(...);`
+- `auto y = x.index_fill(...);`
+- `x.index_fill_(...);`
+- `auto y = x.index_put(...);`
+- `x.index_put_(...);`
+- `auto y = x.index_reduce(...);`
+- `x.index_reduce_(...);`
+- `auto y = x.index_select(...);`
+- `auto y = x.indices(...);`
+- `auto y = x.inner(...);`
+- `auto y = x.int_repr(...);`
+- `auto y = x.inverse(...);`
+- `auto y = x.is_coalesced(...);`
+- `auto y = x.is_complex(...);`
+- `auto y = x.is_conj(...);`
+- `auto y = x.is_distributed(...);`
+- `auto y = x.is_floating_point(...);`
+- `auto y = x.is_inference(...);`
+- `auto y = x.is_leaf(...);`
+- `auto y = x.is_neg(...);`
+- `auto y = x.is_nonzero(...);`
+- `auto y = x.is_pinned(...);`
+- `auto y = x.is_same_size(...);`
+- `auto y = x.is_set_to(...);`
+- `auto y = x.is_signed(...);`
+- `auto y = x.isclose(...);`
+- `auto y = x.isfinite(...);`
+- `auto y = x.isinf(...);`
+- `auto y = x.isnan(...);`
+- `auto y = x.isneginf(...);`
+- `auto y = x.isposinf(...);`
+- `auto y = x.isreal(...);`
+- `auto y = x.istft(...);`
+- `auto y = x.item(...);`
+- `auto y = x.kron(...);`
+- `auto y = x.kthvalue(...);`
+- `auto y = x.kurtosis(...);`
+- `auto y = x.lcm(...);`
+- `x.lcm_(...);`
+- `auto y = x.ldexp(...);`
+- `x.ldexp_(...);`
+- `auto y = x.le(...);`
+- `x.le_(...);`
+- `auto y = x.leaky_relu(...);`
+- `x.leaky_relu_(...);`
+- `auto y = x.lerp(...);`
+- `x.lerp_(...);`
+- `auto y = x.less(...);`
+- `x.less_(...);`
+- `auto y = x.less_equal(...);`
+- `x.less_equal_(...);`
+- `auto y = x.lgamma(...);`
+- `x.lgamma_(...);`
+- `auto y = x.log(...);`
+- `auto y = x.log10(...);`
+- `x.log10_(...);`
+- `auto y = x.log1p(...);`
+- `x.log1p_(...);`
+- `auto y = x.log2(...);`
+- `x.log2_(...);`
+- `x.log_(...);`
+- `x.log_normal_(...);`
+- `auto y = x.log_softmax(...);`
+- `auto y = x.logaddexp(...);`
+- `auto y = x.logaddexp2(...);`
+- `auto y = x.logcumsumexp(...);`
+- `auto y = x.logdet(...);`
+- `auto y = x.logical_and(...);`
+- `x.logical_and_(...);`
+- `auto y = x.logical_not(...);`
+- `x.logical_not_(...);`
+- `auto y = x.logical_or(...);`
+- `x.logical_or_(...);`
+- `auto y = x.logical_xor(...);`
+- `x.logical_xor_(...);`
+- `auto y = x.logit(...);`
+- `x.logit_(...);`
+- `auto y = x.logsumexp(...);`
+- `auto y = x.lt(...);`
+- `x.lt_(...);`
+- `auto y = x.lu_solve(...);`
+- `auto y = x.mH(...);`
+- `auto y = x.mT(...);`
+- `auto y = x.masked_fill(...);`
+- `x.masked_fill_(...);`
+- `auto y = x.masked_scatter(...);`
+- `x.masked_scatter_(...);`
+- `auto y = x.masked_select(...);`
+- `auto y = x.matmul(...);`
+- `auto y = x.matrix_H(...);`
+- `auto y = x.matrix_exp(...);`
+- `auto y = x.matrix_power(...);`
+- `auto y = x.max(...);`
+- `auto y = x.maximum(...);`
+- `auto y = x.mean(...);`
+- `auto y = x.median(...);`
+- `auto y = x.min(...);`
+- `auto y = x.minimum(...);`
+- `auto y = x.mm(...);`
+- `auto y = x.mode(...);`
+- `auto y = x.moveaxis(...);`
+- `auto y = x.movedim(...);`
+- `auto y = x.movmax(...);`
+- `auto y = x.movmean(...);`
+- `auto y = x.movmin(...);`
+- `auto y = x.movstd(...);`
+- `auto y = x.movsum(...);`
+- `auto y = x.movvar(...);`
+- `auto y = x.msort(...);`
+- `auto y = x.mul(...);`
+- `x.mul_(...);`
+- `auto y = x.multinomial(...);`
+- `auto y = x.multiply(...);`
+- `x.multiply_(...);`
+- `auto y = x.mv(...);`
+- `auto y = x.mvlgamma(...);`
+- `x.mvlgamma_(...);`
+- `auto y = x.nan_to_num(...);`
+- `x.nan_to_num_(...);`
+- `auto y = x.nanmean(...);`
+- `auto y = x.nanmedian(...);`
+- `auto y = x.nanquantile(...);`
+- `auto y = x.nanstd(...);`
+- `auto y = x.nansum(...);`
+- `auto y = x.nanvar(...);`
+- `auto y = x.narrow_copy(...);`
+- `auto y = x.ne(...);`
+- `x.ne_(...);`
+- `auto y = x.neg(...);`
+- `x.neg_(...);`
+- `auto y = x.negative(...);`
+- `x.negative_(...);`
+- `auto y = x.new_empty(...);`
+- `auto y = x.new_empty_strided(...);`
+- `auto y = x.new_full(...);`
+- `auto y = x.new_ones(...);`
+- `auto y = x.new_zeros(...);`
+- `auto y = x.nextafter(...);`
+- `x.nextafter_(...);`
+- `auto y = x.nonzero(...);`
+- `auto y = x.nonzero_numpy(...);`
+- `auto y = x.nonzero_static(...);`
+- `x.normal_(...);`
+- `auto y = x.normc(...);`
+- `auto y = x.normr(...);`
+- `auto y = x.not_equal(...);`
+- `x.not_equal_(...);`
+- `auto y = x.numpy_T(...);`
+- `auto y = x.orgqr(...);`
+- `auto y = x.ormqr(...);`
+- `auto y = x.outer(...);`
+- `auto y = x.output_nr(...);`
+- `auto y = x.pdf(...);`
+- `auto y = x.pdist2(...);`
+- `auto y = x.pin_memory(...);`
+- `auto y = x.pinverse(...);`
+- `auto y = x.polygamma(...);`
+- `x.polygamma_(...);`
+- `auto y = x.positive(...);`
+- `auto y = x.pow(...);`
+- `x.pow_(...);`
+- `auto y = x.prelu(...);`
+- `auto y = x.prod(...);`
+- `auto y = x.put(...);`
+- `x.put_(...);`
+- `auto y = x.q_per_channel_axis(...);`
+- `auto y = x.q_per_channel_scales(...);`
+- `auto y = x.q_per_channel_zero_points(...);`
+- `auto y = x.q_scale(...);`
+- `auto y = x.q_zero_point(...);`
+- `auto y = x.qr(...);`
+- `auto y = x.qscheme(...);`
+- `auto y = x.quantile(...);`
+- `auto y = x.rad2deg(...);`
+- `x.rad2deg_(...);`
+- `x.random_(...);`
+- `auto y = x.ravel(...);`
+- `auto y = x.real(...);`
+- `auto y = x.reciprocal(...);`
+- `x.reciprocal_(...);`
+- `auto y = x.record_stream(...);`
+- `auto y = x.refine_names(...);`
+- `auto y = x.relu(...);`
+- `x.relu_(...);`
+- `auto y = x.remainder(...);`
+- `x.remainder_(...);`
+- `auto y = x.rename(...);`
+- `x.rename_(...);`
+- `auto y = x.renorm(...);`
+- `x.renorm_(...);`
+- `auto y = x.repeat(...);`
+- `auto y = x.repeat_interleave(...);`
+- `x.requires_grad_(...);`
+- `auto y = x.reshape_as(...);`
+- `x.resize_(...);`
+- `x.resize_as_(...);`
+- `x.resize_as_sparse_(...);`
+- `auto y = x.resolve_conj(...);`
+- `auto y = x.resolve_neg(...);`
+- `auto y = x.retain_grad(...);`
+- `auto y = x.retains_grad(...);`
+- `auto y = x.roll(...);`
+- `auto y = x.rot90(...);`
+- `auto y = x.round(...);`
+- `auto y = x.row_indices(...);`
+- `auto y = x.rsqrt(...);`
+- `x.rsqrt_(...);`
+- `auto y = x.scatter(...);`
+- `x.scatter_(...);`
+- `auto y = x.scatter_add(...);`
+- `x.scatter_add_(...);`
+- `auto y = x.scatter_reduce(...);`
+- `x.scatter_reduce_(...);`
+- `auto y = x.select_scatter(...);`
+- `x.set_(...);`
+- `auto y = x.set_data(...);`
+- `auto y = x.sgn(...);`
+- `x.sgn_(...);`
+- `auto y = x.sigmoid(...);`
+- `x.sigmoid_(...);`
+- `auto y = x.sign(...);`
+- `x.sign_(...);`
+- `auto y = x.signbit(...);`
+- `auto y = x.silu(...);`
+- `x.silu_(...);`
+- `auto y = x.sin(...);`
+- `x.sin_(...);`
+- `auto y = x.sinc(...);`
+- `x.sinc_(...);`
+- `auto y = x.sinh(...);`
+- `x.sinh_(...);`
+- `auto y = x.size(...);`
+- `auto y = x.skewness(...);`
+- `auto y = x.slice_inverse(...);`
+- `auto y = x.slice_scatter(...);`
+- `auto y = x.slogdet(...);`
+- `auto y = x.smm(...);`
+- `auto y = x.softmax(...);`
+- `auto y = x.softplus(...);`
+- `x.softplus_(...);`
+- `auto y = x.sort(...);`
+- `auto y = x.sparse_dim(...);`
+- `auto y = x.sparse_mask(...);`
+- `x.sparse_resize_(...);`
+- `x.sparse_resize_and_clear_(...);`
+- `auto y = x.split(...);`
+- `auto y = x.split_with_sizes(...);`
+- `auto y = x.sqrt(...);`
+- `x.sqrt_(...);`
+- `auto y = x.square(...);`
+- `x.square_(...);`
+- `auto y = x.squeeze(...);`
+- `x.squeeze_(...);`
+- `auto y = x.sspaddmm(...);`
+- `auto y = x.standardize(...);`
+- `auto y = x.stft(...);`
+- `auto y = x.stride(...);`
+- `auto y = x.sub(...);`
+- `x.sub_(...);`
+- `auto y = x.subtract(...);`
+- `x.subtract_(...);`
+- `auto y = x.sum(...);`
+- `auto y = x.sum_to_size(...);`
+- `auto y = x.svd(...);`
+- `auto y = x.swapaxes(...);`
+- `x.swapaxes_(...);`
+- `auto y = x.swapdims(...);`
+- `x.swapdims_(...);`
+- `auto y = x.t(...);`
+- `x.t_(...);`
+- `auto y = x.take(...);`
+- `auto y = x.take_along_dim(...);`
+- `auto y = x.tan(...);`
+- `x.tan_(...);`
+- `auto y = x.tanh(...);`
+- `x.tanh_(...);`
+- `auto y = x.tensor_split(...);`
+- `auto y = x.tile(...);`
+- `auto y = x.to_dense(...);`
+- `auto y = x.to_mkldnn(...);`
+- `auto y = x.to_padded_tensor(...);`
+- `auto y = x.to_sparse(...);`
+- `auto y = x.to_sparse_bsc(...);`
+- `auto y = x.to_sparse_bsr(...);`
+- `auto y = x.to_sparse_csc(...);`
+- `auto y = x.to_sparse_csr(...);`
+- `auto y = x.topk(...);`
+- `auto y = x.trace(...);`
+- `x.transpose_(...);`
+- `auto y = x.triangular_solve(...);`
+- `auto y = x.tril(...);`
+- `x.tril_(...);`
+- `auto y = x.triu(...);`
+- `x.triu_(...);`
+- `auto y = x.true_divide(...);`
+- `x.true_divide_(...);`
+- `auto y = x.trunc(...);`
+- `auto y = x.type_as(...);`
+- `auto y = x.unbind(...);`
+- `auto y = x.unflatten(...);`
+- `auto y = x.unfold(...);`
+- `x.uniform_(...);`
+- `auto y = x.unique(...);`
+- `auto y = x.unsafe_chunk(...);`
+- `auto y = x.unsafe_split(...);`
+- `auto y = x.unsafe_split_with_sizes(...);`
+- `x.unsqueeze_(...);`
+- `auto y = x.unwrap(...);`
+- `auto y = x.values(...);`
+- `auto y = x.vdot(...);`
+- `auto y = x.view_as(...);`
+- `auto y = x.vsplit(...);`
+- `auto y = x.where(...);`
+- `auto y = x.xlogy(...);`
+- `x.xlogy_(...);`
+- `x.zero_(...);`
+- `auto y = x.zeta(...);`
