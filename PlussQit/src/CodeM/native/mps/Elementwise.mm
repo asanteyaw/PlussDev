@@ -1,5 +1,7 @@
 #include "CodeM/native/mps/Elementwise.h"
 #include "CodeM/native/mps/BufferCacheMM.h"
+#include "CodeM/native/mps/MPSAllocatorMM.h"
+#include "CodeM/native/mps/MPSGraphCache.h"
 
 #include "CodeM/core/Errors.h"
 
@@ -13,6 +15,7 @@
 #include <mutex>
 #include <span>
 #include <string>
+#include <vector>
 
 namespace pluss::codem::native::mps {
 namespace {
@@ -414,7 +417,12 @@ id<MTLCommandBuffer> encode_op_(id<MTLComputePipelineState> pso,
     if (b1 != nil) [enc setBuffer:b1 offset:0 atIndex:1];
     if (b2 != nil) [enc setBuffer:b2 offset:0 atIndex:2];
     if (b3 != nil) [enc setBuffer:b3 offset:0 atIndex:3];
-    [enc setBytes:meta_ptr length:meta_size atIndex:meta_index];
+    id<MTLBuffer> meta_buf = acquire_pooled_buffer_mm(c.device, meta_size, op_name);
+    if (meta_buf == nil) {
+      fail_(std::string(op_name) + ": failed to allocate metadata buffer");
+    }
+    std::memcpy([meta_buf contents], meta_ptr, meta_size);
+    [enc setBuffer:meta_buf offset:0 atIndex:meta_index];
 
     const NSUInteger grid_n = static_cast<NSUInteger>(n);
     NSUInteger tg = pso.maxTotalThreadsPerThreadgroup;
@@ -424,6 +432,7 @@ id<MTLCommandBuffer> encode_op_(id<MTLComputePipelineState> pso,
     const MTLSize group = MTLSizeMake(tg, 1, 1);
     [enc dispatchThreads:grid threadsPerThreadgroup:group];
     [enc endEncoding];
+    defer_release_pooled_buffer_mm(meta_buf, cb);
     return cb;
   }
 }
@@ -587,6 +596,38 @@ std::uint32_t unary_pred_code_(UnaryPredOp op) {
   }
 }
 
+void append_dims_(std::vector<std::int64_t>& dst, std::span<const std::int64_t> dims) {
+  dst.push_back(static_cast<std::int64_t>(dims.size()));
+  dst.insert(dst.end(), dims.begin(), dims.end());
+}
+
+std::vector<std::int64_t> make_binary_cache_aux_(std::uint32_t op_code, std::uint32_t mode,
+                                                 const Series& a, const Series& b, const Series& out) {
+  std::vector<std::int64_t> aux;
+  aux.reserve(4 + a.dim() + b.dim() + out.dim());
+  aux.push_back(static_cast<std::int64_t>(op_code));
+  aux.push_back(static_cast<std::int64_t>(mode));
+  append_dims_(aux, a.sizes());
+  append_dims_(aux, b.sizes());
+  append_dims_(aux, out.sizes());
+  return aux;
+}
+
+std::vector<std::int64_t> make_where_cache_aux_(std::uint32_t mode,
+                                                const Series& cond,
+                                                const Series& a,
+                                                const Series& b,
+                                                const Series& out) {
+  std::vector<std::int64_t> aux;
+  aux.reserve(3 + cond.dim() + a.dim() + b.dim() + out.dim());
+  aux.push_back(static_cast<std::int64_t>(mode));
+  append_dims_(aux, cond.sizes());
+  append_dims_(aux, a.sizes());
+  append_dims_(aux, b.sizes());
+  append_dims_(aux, out.sizes());
+  return aux;
+}
+
 } // namespace
 
 bool is_available() noexcept {
@@ -651,18 +692,28 @@ void binary(cpu::BinaryOpId op, const Series& a, const Series& b, Series& out) {
     if (a_buf == nil || b_buf == nil || out_buf == nil) {
       fail_("binary: failed to allocate Metal buffers");
     }
-
-    BinaryMetaHost meta;
-    meta.op = binary_op_code_(op, is_cmp);
-    if (meta.op == 999) {
+    BinaryMetaHost meta{};
+    const std::uint32_t op_code = binary_op_code_(op, is_cmp);
+    if (op_code == 999) {
       fail_("binary: unsupported op code on current MPS path");
     }
-    meta.mode = binary_mode_(a, b, out);
-    meta.ndim = static_cast<std::uint32_t>(out.sizes().size());
-    fill_out_sizes_(out.sizes(), meta.out_sizes, "binary");
-    if (meta.mode == 3) {
-      fill_broadcast_strides_(a, out.sizes(), meta.a_strides, "binary", "lhs");
-      fill_broadcast_strides_(b, out.sizes(), meta.b_strides, "binary", "rhs");
+    const std::uint32_t mode = binary_mode_(a, b, out);
+    const auto aux = make_binary_cache_aux_(op_code, mode, a, b, out);
+    const GraphCacheKeyView cache_key{
+        is_cmp ? "elementwise.binary_cmp" : "elementwise.binary",
+        ScalarType::Float32,
+        out.sizes(),
+        aux};
+    if (!graph_cache_lookup(cache_key, &meta, sizeof(meta))) {
+      meta.op = op_code;
+      meta.mode = mode;
+      meta.ndim = static_cast<std::uint32_t>(out.sizes().size());
+      fill_out_sizes_(out.sizes(), meta.out_sizes, "binary");
+      if (meta.mode == 3) {
+        fill_broadcast_strides_(a, out.sizes(), meta.a_strides, "binary", "lhs");
+        fill_broadcast_strides_(b, out.sizes(), meta.b_strides, "binary", "rhs");
+      }
+      graph_cache_store(cache_key, &meta, sizeof(meta));
     }
 
     id<MTLCommandBuffer> cb = encode_op_(
@@ -716,15 +767,20 @@ void maxmin_impl_(const char* op_name,
     if (a_buf == nil || b_buf == nil || out_buf == nil) {
       fail_(std::string(op_name) + ": failed to allocate Metal buffers");
     }
-
-    BinaryMetaHost meta;
-    meta.op = 0;
-    meta.mode = binary_mode_(a, b, out);
-    meta.ndim = static_cast<std::uint32_t>(out.sizes().size());
-    fill_out_sizes_(out.sizes(), meta.out_sizes, op_name);
-    if (meta.mode == 3) {
-      fill_broadcast_strides_(a, out.sizes(), meta.a_strides, op_name, "lhs");
-      fill_broadcast_strides_(b, out.sizes(), meta.b_strides, op_name, "rhs");
+    BinaryMetaHost meta{};
+    const std::uint32_t mode = binary_mode_(a, b, out);
+    const auto aux = make_binary_cache_aux_(0u, mode, a, b, out);
+    const GraphCacheKeyView cache_key{op_name, ScalarType::Float32, out.sizes(), aux};
+    if (!graph_cache_lookup(cache_key, &meta, sizeof(meta))) {
+      meta.op = 0;
+      meta.mode = mode;
+      meta.ndim = static_cast<std::uint32_t>(out.sizes().size());
+      fill_out_sizes_(out.sizes(), meta.out_sizes, op_name);
+      if (meta.mode == 3) {
+        fill_broadcast_strides_(a, out.sizes(), meta.a_strides, op_name, "lhs");
+        fill_broadcast_strides_(b, out.sizes(), meta.b_strides, op_name, "rhs");
+      }
+      graph_cache_store(cache_key, &meta, sizeof(meta));
     }
 
     id<MTLCommandBuffer> cb =
@@ -778,15 +834,20 @@ void where(const Series& cond, const Series& a, const Series& b, Series& out) {
     if (cond_buf == nil || a_buf == nil || b_buf == nil || out_buf == nil) {
       fail_("where: failed to allocate Metal buffers");
     }
-
-    TernaryMetaHost meta;
-    meta.mode = ternary_mode_(cond, a, b, out);
-    meta.ndim = static_cast<std::uint32_t>(out.sizes().size());
-    fill_out_sizes_(out.sizes(), meta.out_sizes, "where");
-    if (meta.mode != 0) {
-      fill_broadcast_strides_(cond, out.sizes(), meta.cond_strides, "where", "condition");
-      fill_broadcast_strides_(a, out.sizes(), meta.a_strides, "where", "lhs");
-      fill_broadcast_strides_(b, out.sizes(), meta.b_strides, "where", "rhs");
+    TernaryMetaHost meta{};
+    const std::uint32_t mode = ternary_mode_(cond, a, b, out);
+    const auto aux = make_where_cache_aux_(mode, cond, a, b, out);
+    const GraphCacheKeyView cache_key{"elementwise.where", ScalarType::Float32, out.sizes(), aux};
+    if (!graph_cache_lookup(cache_key, &meta, sizeof(meta))) {
+      meta.mode = mode;
+      meta.ndim = static_cast<std::uint32_t>(out.sizes().size());
+      fill_out_sizes_(out.sizes(), meta.out_sizes, "where");
+      if (meta.mode != 0) {
+        fill_broadcast_strides_(cond, out.sizes(), meta.cond_strides, "where", "condition");
+        fill_broadcast_strides_(a, out.sizes(), meta.a_strides, "where", "lhs");
+        fill_broadcast_strides_(b, out.sizes(), meta.b_strides, "where", "rhs");
+      }
+      graph_cache_store(cache_key, &meta, sizeof(meta));
     }
 
     id<MTLCommandBuffer> cb = encode_op_(

@@ -1,6 +1,7 @@
 #include "CodeM/native/mps/BufferCache.h"
 
 #include "CodeM/core/Errors.h"
+#include "CodeM/native/mps/MPSAllocatorMM.h"
 
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
@@ -53,6 +54,16 @@ void wait_pending_(CacheEntry& e) {
   if (e.pending != nil) {
     [e.pending waitUntilCompleted];
     e.pending = nil;
+  }
+}
+
+void release_entry_buffer_(CacheEntry& e) {
+  if (e.buffer != nil) {
+    release_pooled_buffer_mm(e.buffer);
+    e.buffer = nil;
+    e.nbytes = 0;
+    e.device_valid = false;
+    e.device_dirty = false;
   }
 }
 
@@ -116,13 +127,12 @@ void* ensure_device_buffer_for_read(const SeriesBase& s, void* device_handle, st
 
   if (e.buffer == nil || e.nbytes != bytes) {
     wait_pending_(e);
-    e.buffer = [device newBufferWithLength:bytes options:MTLResourceStorageModeShared];
+    release_entry_buffer_(e);
+    e.buffer = acquire_pooled_buffer_mm(device, bytes, "series_read");
     if (e.buffer == nil) {
       throw_error("MPS cache read: failed to allocate MTLBuffer");
     }
     e.nbytes = bytes;
-    e.device_valid = false;
-    e.device_dirty = false;
   }
 
   if (e.host_dirty || !e.device_valid) {
@@ -158,7 +168,8 @@ void* ensure_device_buffer_for_write(const SeriesBase& s, void* device_handle, s
 
   if (e.buffer == nil || e.nbytes != bytes) {
     wait_pending_(e);
-    e.buffer = [device newBufferWithLength:bytes options:MTLResourceStorageModeShared];
+    release_entry_buffer_(e);
+    e.buffer = acquire_pooled_buffer_mm(device, bytes, "series_write");
     if (e.buffer == nil) {
       throw_error("MPS cache write: failed to allocate MTLBuffer");
     }
@@ -191,6 +202,7 @@ void erase_series_entry(const SeriesImpl* impl) noexcept {
     return;
   }
   wait_pending_(it->second);
+  release_entry_buffer_(it->second);
   cache_().erase(it);
 }
 

@@ -171,6 +171,8 @@ list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/
 if(APPLE)
   set(PLUSSQIT_CODEM_MPS_SRC
     src/CodeM/native/mps/BufferCache.mm
+    src/CodeM/native/mps/MPSAllocator.mm
+    src/CodeM/native/mps/MPSGraphCache.mm
     src/CodeM/native/mps/MPSRuntime.mm
     src/CodeM/native/mps/Cast.mm
     src/CodeM/native/mps/Cum.mm
@@ -183,6 +185,8 @@ if(APPLE)
 else()
   set(PLUSSQIT_CODEM_MPS_SRC
     src/CodeM/native/mps/BufferCacheStub.cpp
+    src/CodeM/native/mps/MPSAllocatorStub.cpp
+    src/CodeM/native/mps/MPSGraphCacheStub.cpp
     src/CodeM/native/mps/MPSRuntimeStub.cpp
     src/CodeM/native/mps/CastStub.cpp
     src/CodeM/native/mps/CumStub.cpp

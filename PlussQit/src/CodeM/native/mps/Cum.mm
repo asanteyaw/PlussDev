@@ -1,5 +1,7 @@
 #include "CodeM/native/mps/Cum.h"
 #include "CodeM/native/mps/BufferCacheMM.h"
+#include "CodeM/native/mps/MPSAllocatorMM.h"
+#include "CodeM/native/mps/MPSGraphCache.h"
 
 #include "CodeM/core/Errors.h"
 
@@ -10,8 +12,10 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <mutex>
 #include <string>
+#include <vector>
 
 namespace pluss::codem::native::mps {
 namespace {
@@ -209,6 +213,35 @@ void validate_inputs_(const Series& in, const Series& out, std::int64_t dim, Cum
   }
 }
 
+template <class SpanLike>
+void append_dims_(std::vector<std::int64_t>& dst, const SpanLike& dims) {
+  dst.push_back(static_cast<std::int64_t>(dims.size()));
+  for (const auto v : dims) {
+    dst.push_back(static_cast<std::int64_t>(v));
+  }
+}
+
+std::vector<std::int64_t> make_cum_cache_aux_(const Series& in, const Series& out, std::int64_t dim) {
+  std::vector<std::int64_t> aux;
+  aux.reserve(3 + 2 * in.dim() + out.dim());
+  aux.push_back(dim);
+  append_dims_(aux, in.sizes());
+  append_dims_(aux, in.strides());
+  append_dims_(aux, out.sizes());
+  return aux;
+}
+
+CumMetaHost cached_cum_meta_(const char* op_name, const Series& in, const Series& out, std::int64_t dim) {
+  CumMetaHost meta{};
+  const auto aux = make_cum_cache_aux_(in, out, dim);
+  const GraphCacheKeyView cache_key{op_name, in.scalar_type(), in.sizes(), aux};
+  if (!graph_cache_lookup(cache_key, &meta, sizeof(meta))) {
+    validate_inputs_(in, out, dim, meta, op_name);
+    graph_cache_store(cache_key, &meta, sizeof(meta));
+  }
+  return meta;
+}
+
 void encode_cum_(id<MTLComputePipelineState> pso,
                  const Series& in,
                  Series& out,
@@ -235,7 +268,12 @@ void encode_cum_(id<MTLComputePipelineState> pso,
     [enc setComputePipelineState:pso];
     [enc setBuffer:in_buf offset:0 atIndex:0];
     [enc setBuffer:out_buf offset:0 atIndex:1];
-    [enc setBytes:&meta length:sizeof(meta) atIndex:2];
+    id<MTLBuffer> meta_buf = acquire_pooled_buffer_mm(c.device, sizeof(meta), op_name);
+    if (meta_buf == nil) {
+      fail_(std::string(op_name) + ": failed to allocate metadata buffer");
+    }
+    std::memcpy([meta_buf contents], &meta, sizeof(meta));
+    [enc setBuffer:meta_buf offset:0 atIndex:2];
 
     const NSUInteger grid_n = static_cast<NSUInteger>(out.numel());
     NSUInteger tg = pso.maxTotalThreadsPerThreadgroup;
@@ -245,6 +283,7 @@ void encode_cum_(id<MTLComputePipelineState> pso,
     [enc endEncoding];
     submit_command_buffer_mm(cb, out.numel());
     mark_device_data_dirty_mm(out, cb);
+    defer_release_pooled_buffer_mm(meta_buf, cb);
   }
 }
 
@@ -264,8 +303,7 @@ void cumsum_dim(const Series& in, std::int64_t dim, Series& out) {
     fail_("mps::cumsum_dim: backend unavailable (" + c.error + ")");
   }
   if (out.numel() == 0) return;
-  CumMetaHost meta;
-  validate_inputs_(in, out, dim, meta, "mps::cumsum_dim");
+  const CumMetaHost meta = cached_cum_meta_("mps::cumsum_dim", in, out, dim);
   encode_cum_(c.cumsum_dim_f32, in, out, meta, "mps::cumsum_dim");
 }
 
@@ -275,8 +313,7 @@ void cumprod_dim(const Series& in, std::int64_t dim, Series& out) {
     fail_("mps::cumprod_dim: backend unavailable (" + c.error + ")");
   }
   if (out.numel() == 0) return;
-  CumMetaHost meta;
-  validate_inputs_(in, out, dim, meta, "mps::cumprod_dim");
+  const CumMetaHost meta = cached_cum_meta_("mps::cumprod_dim", in, out, dim);
   encode_cum_(c.cumprod_dim_f32, in, out, meta, "mps::cumprod_dim");
 }
 

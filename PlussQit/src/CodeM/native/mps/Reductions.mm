@@ -1,5 +1,7 @@
 #include "CodeM/native/mps/Reductions.h"
 #include "CodeM/native/mps/BufferCacheMM.h"
+#include "CodeM/native/mps/MPSAllocatorMM.h"
+#include "CodeM/native/mps/MPSGraphCache.h"
 
 #include "CodeM/core/Errors.h"
 
@@ -10,8 +12,10 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <mutex>
 #include <string>
+#include <vector>
 
 namespace pluss::codem::native::mps {
 namespace {
@@ -336,6 +340,35 @@ void fill_meta_(const Series& a, const Series& out, std::int64_t dim, ReduceMeta
   }
 }
 
+template <class SpanLike>
+void append_dims_(std::vector<std::int64_t>& dst, const SpanLike& dims) {
+  dst.push_back(static_cast<std::int64_t>(dims.size()));
+  for (const auto v : dims) {
+    dst.push_back(static_cast<std::int64_t>(v));
+  }
+}
+
+std::vector<std::int64_t> make_reduce_cache_aux_(const Series& a, const Series& out, std::int64_t dim) {
+  std::vector<std::int64_t> aux;
+  aux.reserve(4 + 2 * a.dim() + out.dim());
+  aux.push_back(dim);
+  append_dims_(aux, a.sizes());
+  append_dims_(aux, a.strides());
+  append_dims_(aux, out.sizes());
+  return aux;
+}
+
+ReduceMetaHost cached_reduce_meta_(const char* op_name, const Series& a, const Series& out, std::int64_t dim) {
+  ReduceMetaHost meta{};
+  const auto aux = make_reduce_cache_aux_(a, out, dim);
+  const GraphCacheKeyView cache_key{op_name, a.scalar_type(), a.sizes(), aux};
+  if (!graph_cache_lookup(cache_key, &meta, sizeof(meta))) {
+    fill_meta_(a, out, dim, meta, op_name);
+    graph_cache_store(cache_key, &meta, sizeof(meta));
+  }
+  return meta;
+}
+
 void encode_reduce_(id<MTLComputePipelineState> pso,
                     id<MTLBuffer> in_buf,
                     id<MTLBuffer> out_buf,
@@ -366,7 +399,12 @@ void encode_reduce_(id<MTLComputePipelineState> pso,
     [enc setComputePipelineState:pso];
     [enc setBuffer:in_buf offset:0 atIndex:0];
     [enc setBuffer:out_buf offset:0 atIndex:1];
-    [enc setBytes:&meta length:sizeof(meta) atIndex:2];
+    id<MTLBuffer> meta_buf = acquire_pooled_buffer_mm(c.device, sizeof(meta), op);
+    if (meta_buf == nil) {
+      fail_(std::string(op) + ": failed to allocate metadata buffer");
+    }
+    std::memcpy([meta_buf contents], &meta, sizeof(meta));
+    [enc setBuffer:meta_buf offset:0 atIndex:2];
 
     const NSUInteger grid_n = static_cast<NSUInteger>(out_numel);
     NSUInteger tg = pso.maxTotalThreadsPerThreadgroup;
@@ -377,6 +415,7 @@ void encode_reduce_(id<MTLComputePipelineState> pso,
 
     submit_command_buffer_mm(cb, out_numel);
     mark_device_data_dirty_mm(out_series, cb);
+    defer_release_pooled_buffer_mm(meta_buf, cb);
   }
 }
 
@@ -416,8 +455,7 @@ void sum_dim(const Series& a, std::int64_t dim, Series& out) {
     if (in_buf == nil || out_buf == nil) {
       fail_("mps::sum_dim: failed to allocate Metal buffers");
     }
-    ReduceMetaHost meta;
-    fill_meta_(a, out, dim, meta, "mps::sum_dim");
+    const ReduceMetaHost meta = cached_reduce_meta_("mps::sum_dim", a, out, dim);
     encode_reduce_(c.sum_dim_f32, in_buf, out_buf, meta, out.numel(), out, "mps::sum_dim");
   }
 }
@@ -436,8 +474,7 @@ void prod_dim(const Series& a, std::int64_t dim, Series& out) {
     if (in_buf == nil || out_buf == nil) {
       fail_("mps::prod_dim: failed to allocate Metal buffers");
     }
-    ReduceMetaHost meta;
-    fill_meta_(a, out, dim, meta, "mps::prod_dim");
+    const ReduceMetaHost meta = cached_reduce_meta_("mps::prod_dim", a, out, dim);
     encode_reduce_(c.prod_dim_f32, in_buf, out_buf, meta, out.numel(), out, "mps::prod_dim");
   }
 }
@@ -456,8 +493,7 @@ void amax_dim(const Series& a, std::int64_t dim, Series& out) {
     if (in_buf == nil || out_buf == nil) {
       fail_("mps::amax_dim: failed to allocate Metal buffers");
     }
-    ReduceMetaHost meta;
-    fill_meta_(a, out, dim, meta, "mps::amax_dim");
+    const ReduceMetaHost meta = cached_reduce_meta_("mps::amax_dim", a, out, dim);
     encode_reduce_(c.amax_dim_f32, in_buf, out_buf, meta, out.numel(), out, "mps::amax_dim");
   }
 }
@@ -476,8 +512,7 @@ void amin_dim(const Series& a, std::int64_t dim, Series& out) {
     if (in_buf == nil || out_buf == nil) {
       fail_("mps::amin_dim: failed to allocate Metal buffers");
     }
-    ReduceMetaHost meta;
-    fill_meta_(a, out, dim, meta, "mps::amin_dim");
+    const ReduceMetaHost meta = cached_reduce_meta_("mps::amin_dim", a, out, dim);
     encode_reduce_(c.amin_dim_f32, in_buf, out_buf, meta, out.numel(), out, "mps::amin_dim");
   }
 }
@@ -496,8 +531,7 @@ void all_dim(const Series& a, std::int64_t dim, Series& out) {
     if (in_buf == nil || out_buf == nil) {
       fail_("mps::all_dim: failed to allocate Metal buffers");
     }
-    ReduceMetaHost meta;
-    fill_meta_(a, out, dim, meta, "mps::all_dim");
+    const ReduceMetaHost meta = cached_reduce_meta_("mps::all_dim", a, out, dim);
     encode_reduce_(c.all_dim_u8, in_buf, out_buf, meta, out.numel(), out, "mps::all_dim");
   }
 }
@@ -516,8 +550,7 @@ void any_dim(const Series& a, std::int64_t dim, Series& out) {
     if (in_buf == nil || out_buf == nil) {
       fail_("mps::any_dim: failed to allocate Metal buffers");
     }
-    ReduceMetaHost meta;
-    fill_meta_(a, out, dim, meta, "mps::any_dim");
+    const ReduceMetaHost meta = cached_reduce_meta_("mps::any_dim", a, out, dim);
     encode_reduce_(c.any_dim_u8, in_buf, out_buf, meta, out.numel(), out, "mps::any_dim");
   }
 }
@@ -536,8 +569,7 @@ void argmax_dim(const Series& a, std::int64_t dim, Series& out) {
     if (in_buf == nil || out_buf == nil) {
       fail_("mps::argmax_dim: failed to allocate Metal buffers");
     }
-    ReduceMetaHost meta;
-    fill_meta_(a, out, dim, meta, "mps::argmax_dim");
+    const ReduceMetaHost meta = cached_reduce_meta_("mps::argmax_dim", a, out, dim);
     encode_reduce_(c.argmax_dim_f32, in_buf, out_buf, meta, out.numel(), out, "mps::argmax_dim");
   }
 }
@@ -556,8 +588,7 @@ void argmin_dim(const Series& a, std::int64_t dim, Series& out) {
     if (in_buf == nil || out_buf == nil) {
       fail_("mps::argmin_dim: failed to allocate Metal buffers");
     }
-    ReduceMetaHost meta;
-    fill_meta_(a, out, dim, meta, "mps::argmin_dim");
+    const ReduceMetaHost meta = cached_reduce_meta_("mps::argmin_dim", a, out, dim);
     encode_reduce_(c.argmin_dim_f32, in_buf, out_buf, meta, out.numel(), out, "mps::argmin_dim");
   }
 }
