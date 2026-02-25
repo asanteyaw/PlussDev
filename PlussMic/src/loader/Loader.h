@@ -61,7 +61,32 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const LoadResult& loaded);
 
+ReadCsvOptions csv_options_from_config(const Config& config);
+ReadExcelOptions excel_options_from_config(const Config& config);
+
 // Format-specific first-class loaders (recommended public API).
+CsvRawBatch read_csv_raw_batch(std::string_view filepath, const Config& config);
+CsvRawBatch read_csv_raw_batch(std::string_view filepath,
+                               std::initializer_list<ConfigEntry> config_entries);
+CsvRawBatch read_txt_raw_batch(std::string_view filepath, const Config& config);
+CsvRawBatch read_txt_raw_batch(std::string_view filepath,
+                               std::initializer_list<ConfigEntry> config_entries);
+CsvRawBatch read_excel_raw_batch(std::string_view filepath, const Config& config);
+CsvRawBatch read_excel_raw_batch(std::string_view filepath,
+                                 std::initializer_list<ConfigEntry> config_entries);
+ExcelRawBatchWorkbook read_excel_workbook_raw_batch(std::string_view filepath, const Config& config);
+ExcelRawBatchWorkbook read_excel_workbook_raw_batch(std::string_view filepath,
+                                                    std::initializer_list<ConfigEntry> config_entries);
+CsvRawBatch read_parquet_raw_batch(std::string_view filepath, const Config& config = {});
+CsvRawBatch read_parquet_raw_batch(std::string_view filepath,
+                                   std::initializer_list<ConfigEntry> config_entries);
+CsvRawBatch read_json_raw_batch(std::string_view filepath, const Config& config = {});
+CsvRawBatch read_json_raw_batch(std::string_view filepath,
+                                std::initializer_list<ConfigEntry> config_entries);
+CsvRawBatch read_json_raw_text(std::string_view json_text, const Config& config = {});
+CsvRawBatch read_json_raw_text(std::string_view json_text,
+                               std::initializer_list<ConfigEntry> config_entries);
+
 CsvBatch read_csv_batch(std::string_view filepath, const Config& config);
 CsvBatch read_csv_batch(std::string_view filepath,
                         std::initializer_list<ConfigEntry> config_entries);
@@ -83,6 +108,9 @@ pluss::table::DataFrame load_csv(std::string_view filepath,
 pluss::table::DataFrame load_csv(std::string_view filepath,
                                  std::string_view header,
                                  std::size_t ncases);
+pluss::table::DataFrame load_txt(std::string_view filepath, const Config& config = {});
+pluss::table::DataFrame load_txt(std::string_view filepath,
+                                 std::initializer_list<ConfigEntry> config_entries);
 pluss::table::DataFrame load_excel(std::string_view filepath, const Config& config);
 pluss::table::DataFrame load_excel(std::string_view filepath,
                                    std::initializer_list<ConfigEntry> config_entries);
@@ -113,6 +141,9 @@ Workbook load_excel_workbook(std::string_view filepath,
 pluss::table::DataFrame load_parquet(std::string_view filepath, const Config& config = {});
 pluss::table::DataFrame load_parquet(std::string_view filepath,
                                      std::initializer_list<ConfigEntry> config_entries);
+pluss::table::DataFrame load_json(std::string_view filepath, const Config& config = {});
+pluss::table::DataFrame load_json(std::string_view filepath,
+                                  std::initializer_list<ConfigEntry> config_entries);
 
 // Central delegating loader (kept for dynamic dispatch-style workflows).
 LoadResult load(std::string_view source_type, std::string_view filepath, const Config& config = {});

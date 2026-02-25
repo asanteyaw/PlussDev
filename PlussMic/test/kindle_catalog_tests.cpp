@@ -237,6 +237,53 @@ void test_catalog_sort_group_missing() {
   expect(nulls.stream("metric").kind() == StreamKind::Series, "isnull should return Series stream");
   expect(not_nulls.stream("metric").kind() == StreamKind::Series, "notnull should return Series stream");
 
+  const std::array<std::int64_t, 1> shape4{4};
+  const auto mixed_missing = Catalog(std::vector<std::pair<std::string, Stream>>{
+      {"note_col",
+       Stream(pluss::make_note(std::vector<std::string>{"a", "", "c", ""}, shape4),
+              bool_mask({true, false, true, false}))},
+      {"ts_col",
+       Stream(pluss::moment({
+                  "2024-01-01T00:00:00Z",
+                  "2024-01-02T00:00:00Z",
+                  "2024-01-03T00:00:00Z",
+                  "2024-01-04T00:00:00Z",
+              }),
+              bool_mask({true, false, true, false}))},
+      {"ti_col",
+       Stream(pluss::make_timeindex({
+                  "2024-01-01T00:00:00Z",
+                  "2024-01-02T00:00:00Z",
+                  "2024-01-03T00:00:00Z",
+                  "2024-01-04T00:00:00Z",
+              }),
+              bool_mask({true, false, true, false}))},
+  });
+
+  const auto note_filled = mixed_missing.fillna("missing", {"note_col"});
+  expect(std::string(note_filled.stream("note_col").as_note().at(1)) == "missing",
+         "Catalog::fillna(string, keys) should replace null Note values");
+  expect(!note_filled.stream("note_col").has_validity_mask(),
+         "Catalog::fillna(string, keys) should clear Note mask when fully resolved");
+
+  const auto ts_fill = pluss::moment("2024-01-31T00:00:00Z");
+  const auto ts_filled = mixed_missing.fillna(ts_fill, {"ts_col"});
+  const auto ts_ticks = ts_filled.stream("ts_col").as_timeline().to_epoch_nanos_vector();
+  const auto ts_fill_tick = ts_fill.to_epoch_nanos_vector()[0];
+  expect(ts_ticks[1] == ts_fill_tick && ts_ticks[3] == ts_fill_tick,
+         "Catalog::fillna(Timeline, keys) should replace null Timeline values");
+  expect(!ts_filled.stream("ts_col").has_validity_mask(),
+         "Catalog::fillna(Timeline, keys) should clear Timeline mask when fully resolved");
+
+  const auto ti_fill = pluss::make_timeindex("2024-02-01T00:00:00Z", false);
+  const auto ti_filled = mixed_missing.fillna(ti_fill, {"ti_col"});
+  const auto ti_ticks = ti_filled.stream("ti_col").as_timeindex().timeline().to_epoch_nanos_vector();
+  const auto ti_fill_tick = ti_fill.timeline().to_epoch_nanos_vector()[0];
+  expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
+         "Catalog::fillna(TimeIndex, keys) should replace null TimeIndex values");
+  expect(!ti_filled.stream("ti_col").has_validity_mask(),
+         "Catalog::fillna(TimeIndex, keys) should clear TimeIndex mask when fully resolved");
+
   const auto id_as_note = base.cast_note({"id"});
   const auto ts_as_series = base.cast_series({"timestamp"}, pluss::codem::ScalarType::Int64);
   const auto ts_as_ti = base.cast_timeindex({"timestamp"});
@@ -363,7 +410,46 @@ void test_catalog_mutation_tabelize_io() {
   const auto keyed = Catalog::load_csv_with_key(data_file("bank-full.csv").string(), "job", opts);
   expect(keyed.has("_case"), "load_csv_with_key should materialize _case stream");
 
-  expect_throw([&]() { (void)Catalog::from_json("{}"); }, "from_json should throw (not implemented)");
+  const auto from_json = Catalog::from_json(
+      R"([
+  {"id": 1, "city": "Accra", "when": "2024-01-01T00:00:00Z"},
+  {"id": 2, "city": "Kumasi"},
+  {"id": 3, "city": "Tema", "when": "2024-01-03T00:00:00Z"}
+])");
+  expect(from_json.nstreams() == 3, "Catalog::from_json stream count mismatch");
+  expect(from_json.stream("id").kind() == StreamKind::Series, "Catalog::from_json id kind mismatch");
+  expect(from_json.stream("city").kind() == StreamKind::Note, "Catalog::from_json city kind mismatch");
+  expect(from_json.stream("when").kind() == StreamKind::Timeline, "Catalog::from_json when kind mismatch");
+
+  auto json_path = temp_csv_path("catalog_json");
+  json_path.replace_extension(".json");
+  {
+    std::ofstream out(json_path, std::ios::out | std::ios::trunc | std::ios::binary);
+    expect(out.is_open(), "failed to create catalog json temp file");
+    out << R"({"id":[1,2], "city":["Accra","Tema"]})";
+  }
+  const auto loaded_json = Catalog::load_json(json_path.string());
+  expect(loaded_json.nstreams() == 2, "Catalog::load_json stream count mismatch");
+  expect(loaded_json.count() == 2, "Catalog::load_json row count mismatch");
+  const auto loaded_json_generic = Catalog::load("json", json_path.string());
+  expect(loaded_json_generic.nstreams() == loaded_json.nstreams(),
+         "Catalog::load(json) should match Catalog::load_json");
+
+  auto txt_path = temp_csv_path("catalog_txt");
+  txt_path.replace_extension(".txt");
+  {
+    std::ofstream out(txt_path, std::ios::out | std::ios::trunc | std::ios::binary);
+    expect(out.is_open(), "failed to create catalog txt temp file");
+    out << "id city\n1 Accra\n2 Tema\n";
+  }
+  const auto loaded_txt = Catalog::load_txt(
+      txt_path.string(),
+      pluss::loader::config_from({
+          {"txt_mode", "whitespace"},
+          {"header", true},
+      }));
+  expect(loaded_txt.nstreams() == 2, "Catalog::load_txt stream count mismatch");
+  expect(loaded_txt.count() == 2, "Catalog::load_txt row count mismatch");
 }
 
 void test_archive_to_table_bridge() {

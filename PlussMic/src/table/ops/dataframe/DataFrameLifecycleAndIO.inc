@@ -152,11 +152,17 @@ DataFrame DataFrame::load(std::string_view source_type,
   if (source == "csv") {
     return load_csv(filepath, config);
   }
+  if (source == "txt" || source == "text") {
+    return load_txt(filepath, config);
+  }
   if (source == "excel" || source == "xlsx") {
     return load_excel(filepath, config);
   }
   if (source == "parquet") {
     return load_parquet(filepath, config);
+  }
+  if (source == "json") {
+    return load_json(filepath, config);
   }
   PLUSS_FAIL("DataFrame::load: unsupported source type '" + std::string(source_type) + "'");
 }
@@ -172,8 +178,32 @@ DataFrame DataFrame::load(std::string_view source_type,
                           const pluss::loader::ReadCsvOptions& options) {
   const auto source = lower_copy(owned_name(source_type));
   if (source == "csv") {
-    auto batch = pluss::loader::read_csv_batch(filepath, options);
-    return DataFrame(std::move(batch.features), std::move(batch.cases));
+    return dataframe_from_raw_batch_padded(pluss::loader::read_csv_raw_batch(filepath, options), options);
+  }
+  if (source == "txt" || source == "text") {
+    pluss::loader::Config config;
+    config.emplace("header", options.header);
+    config.emplace("sep", std::string(1, options.sep));
+    if (options.nrows.has_value()) {
+      config.emplace("nrows", static_cast<std::int64_t>(*options.nrows));
+    }
+    if (options.case_col.has_value()) {
+      config.emplace("case", *options.case_col);
+    } else if (options.case_col_idx.has_value()) {
+      config.emplace("caseindex", static_cast<std::int64_t>(*options.case_col_idx));
+    }
+    if (!options.usecols.empty()) {
+      config.emplace("usecols", options.usecols);
+    }
+    if (!options.usecols_idx.empty()) {
+      std::vector<std::string> idx_tokens;
+      idx_tokens.reserve(options.usecols_idx.size());
+      for (const auto idx : options.usecols_idx) {
+        idx_tokens.push_back(std::to_string(idx));
+      }
+      config.emplace("usecolsidx", std::move(idx_tokens));
+    }
+    return dataframe_from_raw_batch_padded(pluss::loader::read_txt_raw_batch(filepath, config), options);
   }
   PLUSS_FAIL("DataFrame::load: unsupported source type '" + std::string(source_type) + "'");
 }
@@ -210,19 +240,17 @@ DataFrame DataFrame::load_csv(std::string_view filepath) {
 }
 
 DataFrame DataFrame::load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options) {
-  auto batch = pluss::loader::read_csv_batch(filepath, options);
-  return DataFrame(std::move(batch.features), std::move(batch.cases));
+  return dataframe_from_raw_batch_padded(pluss::loader::read_csv_raw_batch(filepath, options), options);
 }
 
 DataFrame DataFrame::load_csv(std::string_view filepath, const pluss::loader::Config& config) {
-  auto batch = pluss::loader::read_csv_batch(filepath, config);
-  return DataFrame(std::move(batch.features), std::move(batch.cases));
+  const auto options = pluss::loader::csv_options_from_config(config);
+  return dataframe_from_raw_batch_padded(pluss::loader::read_csv_raw_batch(filepath, options), options);
 }
 
 DataFrame DataFrame::load_csv(std::string_view filepath,
                               std::initializer_list<pluss::loader::ConfigEntry> config_entries) {
-  auto batch = pluss::loader::read_csv_batch(filepath, config_entries);
-  return DataFrame(std::move(batch.features), std::move(batch.cases));
+  return load_csv(filepath, pluss::loader::config_from(config_entries));
 }
 
 DataFrame DataFrame::load_csv(std::string_view filepath,
@@ -230,13 +258,29 @@ DataFrame DataFrame::load_csv(std::string_view filepath,
                               std::string_view case_feature,
                               std::string_view engine,
                               std::optional<std::size_t> ncases) {
-  return pluss::loader::load_csv(filepath, header, case_feature, engine, ncases);
+  pluss::loader::ReadCsvOptions options;
+  options.header = !is_none_token(header);
+  if (!is_none_token(case_feature)) {
+    options.case_col = std::string(case_feature);
+  }
+  if (ncases.has_value()) {
+    options.nrows = *ncases;
+  }
+  const auto eng = lower_copy(owned_name(engine));
+  if (eng == "parallel") {
+    options.engine = pluss::loader::CsvEngine::Parallel;
+  } else if (eng == "serial") {
+    options.engine = pluss::loader::CsvEngine::Serial;
+  } else {
+    options.engine = pluss::loader::CsvEngine::Auto;
+  }
+  return load_csv(filepath, options);
 }
 
 DataFrame DataFrame::load_csv(std::string_view filepath,
                               std::string_view header,
                               std::size_t ncases) {
-  return pluss::loader::load_csv(filepath, header, ncases);
+  return load_csv(filepath, header, "none", "auto", ncases);
 }
 
 DataFrame DataFrame::load_csv(std::string_view filepath,
@@ -263,25 +307,41 @@ DataFrame DataFrame::load_csv(std::string_view filepath,
   return load_csv(filepath, sep, nrows, normalize_name_list(usecols), std::move(case_col), on_bad_lines);
 }
 
+DataFrame DataFrame::load_txt(std::string_view filepath) {
+  return load_txt(filepath, pluss::loader::Config{});
+}
+
+DataFrame DataFrame::load_txt(std::string_view filepath, const pluss::loader::Config& config) {
+  const auto infer_options = pluss::loader::csv_options_from_config(config);
+  return dataframe_from_raw_batch_padded(pluss::loader::read_txt_raw_batch(filepath, config), infer_options);
+}
+
+DataFrame DataFrame::load_txt(std::string_view filepath,
+                              std::initializer_list<pluss::loader::ConfigEntry> config_entries) {
+  return load_txt(filepath, pluss::loader::config_from(config_entries));
+}
+
 DataFrame DataFrame::load_excel(std::string_view filepath) {
   pluss::loader::ReadExcelOptions options;
   return load_excel(filepath, options);
 }
 
 DataFrame DataFrame::load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options) {
-  auto batch = pluss::loader::read_excel_batch(filepath, options);
-  return DataFrame(std::move(batch.features), std::move(batch.cases));
+  pluss::loader::ReadCsvOptions infer_options;
+  infer_options.header = options.header;
+  return dataframe_from_raw_batch_padded(pluss::loader::read_excel_raw_batch(filepath, options), infer_options);
 }
 
 DataFrame DataFrame::load_excel(std::string_view filepath, const pluss::loader::Config& config) {
-  auto batch = pluss::loader::read_excel_batch(filepath, config);
-  return DataFrame(std::move(batch.features), std::move(batch.cases));
+  auto xopts = pluss::loader::excel_options_from_config(config);
+  auto infer_options = pluss::loader::csv_options_from_config(config);
+  infer_options.header = xopts.header;
+  return dataframe_from_raw_batch_padded(pluss::loader::read_excel_raw_batch(filepath, xopts), infer_options);
 }
 
 DataFrame DataFrame::load_excel(std::string_view filepath,
                                 std::initializer_list<pluss::loader::ConfigEntry> config_entries) {
-  auto batch = pluss::loader::read_excel_batch(filepath, config_entries);
-  return DataFrame(std::move(batch.features), std::move(batch.cases));
+  return load_excel(filepath, pluss::loader::config_from(config_entries));
 }
 
 DataFrame DataFrame::load_excel(std::string_view filepath,
@@ -290,13 +350,19 @@ DataFrame DataFrame::load_excel(std::string_view filepath,
   const auto token = lower_copy(owned_name(sheet_name));
   PLUSS_CHECK(token != "none",
               "DataFrame::load_excel(sheet_name=\"none\") is workbook mode; use DataFrame::load_excel(filepath, nullptr, header)");
-  return pluss::loader::load_excel(filepath, sheet_name, header);
+  pluss::loader::ReadExcelOptions options;
+  options.header = header;
+  options.sheet_name = std::string(sheet_name);
+  return load_excel(filepath, options);
 }
 
 DataFrame DataFrame::load_excel(std::string_view filepath,
                                 std::int64_t sheet_index,
                                 bool header) {
-  return pluss::loader::load_excel(filepath, sheet_index, header);
+  pluss::loader::ReadExcelOptions options;
+  options.header = header;
+  options.sheet_index = sheet_index;
+  return load_excel(filepath, options);
 }
 
 pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath, std::nullptr_t all_sheets, bool header) {
@@ -304,12 +370,14 @@ pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath, std::
   pluss::loader::ReadExcelOptions options;
   options.header = header;
   options.all_sheets = true;
-  auto wb_batch = pluss::loader::read_excel_workbook_batch(filepath, options);
+  pluss::loader::ReadCsvOptions infer_options;
+  infer_options.header = header;
+  auto wb_batch = pluss::loader::read_excel_workbook_raw_batch(filepath, options);
   pluss::loader::Workbook wb;
   wb.reserve(wb_batch.size());
   for (auto& [sheet_name, batch] : wb_batch) {
     wb.emplace_back(std::move(sheet_name),
-                    DataFrame(std::move(batch.features), std::move(batch.cases)));
+                    dataframe_from_raw_batch_padded(batch, infer_options));
   }
   return pluss::loader::LoadResult(std::move(wb));
 }
@@ -321,12 +389,14 @@ pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
   options.header = header;
   options.sheet_names = sheet_names;
   options.all_sheets = sheet_names.empty();
-  auto wb_batch = pluss::loader::read_excel_workbook_batch(filepath, options);
+  pluss::loader::ReadCsvOptions infer_options;
+  infer_options.header = header;
+  auto wb_batch = pluss::loader::read_excel_workbook_raw_batch(filepath, options);
   pluss::loader::Workbook wb;
   wb.reserve(wb_batch.size());
   for (auto& [sheet_name, batch] : wb_batch) {
     wb.emplace_back(std::move(sheet_name),
-                    DataFrame(std::move(batch.features), std::move(batch.cases)));
+                    dataframe_from_raw_batch_padded(batch, infer_options));
   }
   return pluss::loader::LoadResult(std::move(wb));
 }
@@ -349,12 +419,14 @@ pluss::loader::LoadResult DataFrame::load_excel(std::string_view filepath,
   options.header = header;
   options.sheet_indices = sheet_indices;
   options.all_sheets = sheet_indices.empty();
-  auto wb_batch = pluss::loader::read_excel_workbook_batch(filepath, options);
+  pluss::loader::ReadCsvOptions infer_options;
+  infer_options.header = header;
+  auto wb_batch = pluss::loader::read_excel_workbook_raw_batch(filepath, options);
   pluss::loader::Workbook wb;
   wb.reserve(wb_batch.size());
   for (auto& [sheet_name, batch] : wb_batch) {
     wb.emplace_back(std::move(sheet_name),
-                    DataFrame(std::move(batch.features), std::move(batch.cases)));
+                    dataframe_from_raw_batch_padded(batch, infer_options));
   }
   return pluss::loader::LoadResult(std::move(wb));
 }
@@ -375,12 +447,27 @@ DataFrame DataFrame::load_parquet(std::string_view filepath) {
 }
 
 DataFrame DataFrame::load_parquet(std::string_view filepath, const pluss::loader::Config& config) {
-  return pluss::loader::load_parquet(filepath, config);
+  auto infer_options = pluss::loader::csv_options_from_config(config);
+  return dataframe_from_raw_batch_padded(pluss::loader::read_parquet_raw_batch(filepath, config), infer_options);
 }
 
 DataFrame DataFrame::load_parquet(std::string_view filepath,
                                   std::initializer_list<pluss::loader::ConfigEntry> config_entries) {
-  return pluss::loader::load_parquet(filepath, config_entries);
+  return load_parquet(filepath, pluss::loader::config_from(config_entries));
+}
+
+DataFrame DataFrame::load_json(std::string_view filepath) {
+  return load_json(filepath, pluss::loader::Config{});
+}
+
+DataFrame DataFrame::load_json(std::string_view filepath, const pluss::loader::Config& config) {
+  const auto infer_options = pluss::loader::csv_options_from_config(config);
+  return dataframe_from_raw_batch_padded(pluss::loader::read_json_raw_batch(filepath, config), infer_options);
+}
+
+DataFrame DataFrame::load_json(std::string_view filepath,
+                               std::initializer_list<pluss::loader::ConfigEntry> config_entries) {
+  return load_json(filepath, pluss::loader::config_from(config_entries));
 }
 
 DataFrame DataFrame::tabelize(const pluss::kindle::Catalog& catalog) {

@@ -106,11 +106,32 @@ struct WriteCsvOptions {
   std::string encoding{"utf-8"};
 };
 
+struct CsvRawColumn {
+  std::string name{};
+  std::size_t source_index{0};
+  std::vector<std::string> values{};
+};
+
+struct CsvRawBatch {
+  std::vector<CsvRawColumn> features{};
+  std::optional<CsvRawColumn> cases{};
+};
+
 // Neutral CSV ingest payload (no DataFrame ownership).
 struct CsvBatch {
   std::vector<std::pair<std::string, pluss::table::Thread>> features{};
   std::optional<pluss::table::Thread> cases{};
 };
+
+CsvRawBatch read_csv_records_raw_batch(const std::vector<std::vector<std::string>>& records,
+                                       const ReadCsvOptions& options = {});
+CsvRawBatch read_csv_raw_batch(const ReadCsvOptions& options);
+CsvRawBatch read_csv_raw_batch(std::string_view filepath, const ReadCsvOptions& options = {});
+
+pluss::table::Thread infer_thread_from_raw_csv_column(std::string_view col_name,
+                                                       std::size_t source_col_index,
+                                                       const std::vector<std::string>& raw_values,
+                                                       const ReadCsvOptions& options);
 
 CsvBatch read_csv_batch(const ReadCsvOptions& options);
 CsvBatch read_csv_batch(std::string_view filepath, const ReadCsvOptions& options = {});

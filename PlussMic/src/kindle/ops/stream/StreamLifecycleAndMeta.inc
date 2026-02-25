@@ -76,6 +76,21 @@ Stream Stream::fillna(double value) const {
   return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillna(value); });
 }
 
+Stream Stream::fillna(std::string_view value) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillna(value); });
+}
+
+Stream Stream::fillna(const pluss::Timeline& value) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillna(value); });
+}
+
+Stream Stream::fillna(const pluss::TimeIndex& value) const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  return unary_stream_same_cases(*this, [&](const pluss::table::Thread& t) { return t.fillna(value); });
+}
+
 Stream Stream::abs() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   return unary_stream_same_cases(*this, [](const pluss::table::Thread& t) { return t.abs(); });
@@ -236,4 +251,3 @@ Stream& Stream::drop_meta_(std::string_view key) {
   mut_impl_().meta_.erase(std::string(key));
   return *this;
 }
-

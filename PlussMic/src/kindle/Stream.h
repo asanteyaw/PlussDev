@@ -60,6 +60,12 @@ public:
 
   // Stream-native transforms (delegates to Thread where applicable).
   Stream fillna(double value) const;
+  Stream fillna(std::string_view value) const;
+  Stream fillna(const char* value) const {
+    return fillna(std::string_view{value != nullptr ? value : ""});
+  }
+  Stream fillna(const pluss::Timeline& value) const;
+  Stream fillna(const pluss::TimeIndex& value) const;
   Stream abs() const;
   Stream clip(double min_value, double max_value) const;
   Stream log() const;

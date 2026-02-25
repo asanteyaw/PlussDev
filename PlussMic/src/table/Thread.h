@@ -97,6 +97,12 @@ public:
 
   // Functional-by-default transforms.
   Thread fillna(double value) const;
+  Thread fillna(std::string_view value) const;
+  Thread fillna(const char* value) const {
+    return fillna(std::string_view{value != nullptr ? value : ""});
+  }
+  Thread fillna(const pluss::Timeline& value) const;
+  Thread fillna(const pluss::TimeIndex& value) const;
   Thread abs() const;
   Thread clip(double min_value, double max_value) const;
   Thread log() const;
@@ -110,6 +116,12 @@ public:
 
   // Explicit mutating transforms (copy-on-write when shared).
   Thread& fillna_(double value);
+  Thread& fillna_(std::string_view value);
+  Thread& fillna_(const char* value) {
+    return fillna_(std::string_view{value != nullptr ? value : ""});
+  }
+  Thread& fillna_(const pluss::Timeline& value);
+  Thread& fillna_(const pluss::TimeIndex& value);
 
   // 1D row-space transforms.
   Thread head(std::int64_t n) const;

@@ -238,6 +238,10 @@ public:
                             std::initializer_list<std::string_view> usecols,
                             std::optional<std::string> case_col = std::nullopt,
                             pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error);
+  static DataFrame load_txt(std::string_view filepath);
+  static DataFrame load_txt(std::string_view filepath, const pluss::loader::Config& config);
+  static DataFrame load_txt(std::string_view filepath,
+                            std::initializer_list<pluss::loader::ConfigEntry> config_entries);
   static DataFrame load_excel(std::string_view filepath);
   static DataFrame load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options);
   static DataFrame load_excel(std::string_view filepath, const pluss::loader::Config& config);
@@ -268,6 +272,10 @@ public:
   static DataFrame load_parquet(std::string_view filepath, const pluss::loader::Config& config);
   static DataFrame load_parquet(std::string_view filepath,
                                 std::initializer_list<pluss::loader::ConfigEntry> config_entries);
+  static DataFrame load_json(std::string_view filepath);
+  static DataFrame load_json(std::string_view filepath, const pluss::loader::Config& config);
+  static DataFrame load_json(std::string_view filepath,
+                             std::initializer_list<pluss::loader::ConfigEntry> config_entries);
   static DataFrame tabelize(const pluss::kindle::Catalog& catalog);
   static DataFrame tabelize(const pluss::kindle::Catalog& catalog,
                             const pluss::kindle::TabelizePolicy& policy);
@@ -500,7 +508,25 @@ public:
 
   DataFrame fillna(double value) const;
   DataFrame fillna(double value, std::initializer_list<std::string_view> features) const;
+  DataFrame fillna(std::string_view value) const;
+  DataFrame fillna(std::string_view value, std::initializer_list<std::string_view> features) const;
+  DataFrame fillna(const char* value) const {
+    return fillna(std::string_view{value != nullptr ? value : ""});
+  }
+  DataFrame fillna(const char* value, std::initializer_list<std::string_view> features) const {
+    return fillna(std::string_view{value != nullptr ? value : ""}, features);
+  }
+  DataFrame fillna(const pluss::Timeline& value) const;
+  DataFrame fillna(const pluss::Timeline& value, std::initializer_list<std::string_view> features) const;
+  DataFrame fillna(const pluss::TimeIndex& value) const;
+  DataFrame fillna(const pluss::TimeIndex& value, std::initializer_list<std::string_view> features) const;
   DataFrame& fillna_(double value);
+  DataFrame& fillna_(std::string_view value);
+  DataFrame& fillna_(const char* value) {
+    return fillna_(std::string_view{value != nullptr ? value : ""});
+  }
+  DataFrame& fillna_(const pluss::Timeline& value);
+  DataFrame& fillna_(const pluss::TimeIndex& value);
   DataFrame dropna() const;
   DataFrame dropna_all(std::initializer_list<std::string_view> features = {}) const;
   DataFrame ffill() const;

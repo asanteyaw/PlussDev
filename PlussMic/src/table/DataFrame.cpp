@@ -90,6 +90,50 @@ std::vector<std::string> normalize_name_list(std::initializer_list<std::string_v
   return out;
 }
 
+bool is_none_token(std::string_view s) {
+  auto t = lower_copy(owned_name(s));
+  std::size_t b = 0;
+  std::size_t e = t.size();
+  while (b < e && std::isspace(static_cast<unsigned char>(t[b])) != 0) ++b;
+  while (e > b && std::isspace(static_cast<unsigned char>(t[e - 1])) != 0) --e;
+  t = t.substr(b, e - b);
+  return t.empty() || t == "none" || t == "null";
+}
+
+Thread infer_padded_thread_from_raw(const pluss::loader::CsvRawColumn& column,
+                                    const pluss::loader::ReadCsvOptions& options,
+                                    std::int64_t target_len) {
+  std::vector<std::string> values = column.values;
+  if (target_len >= 0 && static_cast<std::int64_t>(values.size()) < target_len) {
+    values.resize(static_cast<std::size_t>(target_len));
+  }
+  return pluss::loader::infer_thread_from_raw_csv_column(column.name, column.source_index, values, options);
+}
+
+DataFrame dataframe_from_raw_batch_padded(const pluss::loader::CsvRawBatch& raw,
+                                          const pluss::loader::ReadCsvOptions& options) {
+  std::int64_t target_len = 0;
+  for (const auto& col : raw.features) {
+    target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(col.values.size()));
+  }
+  if (raw.cases.has_value()) {
+    target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(raw.cases->values.size()));
+  }
+
+  std::vector<std::pair<std::string, Thread>> cols;
+  cols.reserve(raw.features.size());
+  for (const auto& col : raw.features) {
+    cols.emplace_back(col.name, infer_padded_thread_from_raw(col, options, target_len));
+  }
+
+  std::optional<Thread> cases = std::nullopt;
+  if (raw.cases.has_value()) {
+    cases = infer_padded_thread_from_raw(*raw.cases, options, target_len);
+  }
+
+  return DataFrame(std::move(cols), std::move(cases));
+}
+
 void validate_bool_mask(const pluss::Series& mask, std::int64_t expected_size, std::string_view where) {
   PLUSS_CHECK(mask.defined(), std::string(where) + ": mask is undefined");
   PLUSS_CHECK(mask.dim() == 1, std::string(where) + ": mask must be 1D");

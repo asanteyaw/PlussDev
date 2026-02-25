@@ -315,6 +315,48 @@ std::string unique_case_feature_name(std::string base, const std::unordered_set<
   return candidate;
 }
 
+Catalog catalog_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
+                               const pluss::loader::ReadCsvOptions& infer_options,
+                               const KindelizePolicy& policy = {}) {
+  std::optional<pluss::table::Thread> case_axis = std::nullopt;
+  if (raw.cases.has_value()) {
+    case_axis = pluss::loader::infer_thread_from_raw_csv_column(
+        raw.cases->name,
+        raw.cases->source_index,
+        raw.cases->values,
+        infer_options);
+  }
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(raw.features.size() + (policy.materialize_case_stream ? 1u : 0u));
+  std::unordered_set<std::string> names;
+  names.reserve(raw.features.size() * 2);
+
+  for (const auto& col : raw.features) {
+    auto feature = pluss::loader::infer_thread_from_raw_csv_column(
+        col.name,
+        col.source_index,
+        col.values,
+        infer_options);
+
+    std::optional<pluss::table::Thread> stream_cases = std::nullopt;
+    if (policy.attach_cases_to_streams && case_axis.has_value() && case_axis->size() == feature.size()) {
+      stream_cases = case_axis;
+    }
+
+    names.insert(col.name);
+    out.emplace_back(col.name, Stream::from_thread(feature, std::move(stream_cases)));
+  }
+
+  if (policy.materialize_case_stream && case_axis.has_value()) {
+    PLUSS_CHECK(names.find(policy.case_stream_name) == names.end(),
+                "Catalog::kindelize: case stream key collides with existing feature '" + policy.case_stream_name + "'");
+    out.emplace_back(policy.case_stream_name, Stream::from_thread(*case_axis));
+  }
+
+  return Catalog(std::move(out));
+}
+
 Catalog catalog_from_batch(pluss::loader::CsvBatch batch, const KindelizePolicy& policy = {}) {
   std::vector<std::pair<std::string, Stream>> out;
   out.reserve(batch.features.size() + (policy.materialize_case_stream ? 1u : 0u));

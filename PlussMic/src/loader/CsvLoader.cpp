@@ -1044,9 +1044,9 @@ std::string escape_csv_cell(std::string_view value, const WriteCsvOptions& optio
   return out;
 }
 
-CsvBatch build_batch_from_records(const std::vector<std::vector<std::string>>& records,
-                                  const ReadCsvOptions& options,
-                                  CsvRecordBuildProfile* profile) {
+CsvRawBatch build_raw_batch_from_records(const std::vector<std::vector<std::string>>& records,
+                                         const ReadCsvOptions& options,
+                                         CsvRecordBuildProfile* profile) {
   const auto t_filter_start = std::chrono::steady_clock::now();
   std::vector<std::size_t> kept_rows;
   kept_rows.reserve(records.size());
@@ -1201,6 +1201,28 @@ CsvBatch build_batch_from_records(const std::vector<std::vector<std::string>>& r
     ::pluss::codem::warn(fmt::format("load_csv: skipped {} malformed rows", bad_lines));
   }
 
+  CsvRawBatch out;
+  out.features.reserve(selected_cols.size());
+  for (std::size_t i = 0; i < selected_cols.size(); ++i) {
+    out.features.push_back(CsvRawColumn{
+        selected_names[i],
+        selected_cols[i],
+        std::move(values_by_col[i]),
+    });
+  }
+  if (case_col.has_value()) {
+    out.cases = CsvRawColumn{
+        names[*case_col],
+        *case_col,
+        std::move(case_values),
+    };
+  }
+  return out;
+}
+
+CsvBatch build_batch_from_raw(const CsvRawBatch& raw,
+                              const ReadCsvOptions& options,
+                              CsvRecordBuildProfile* profile) {
   std::unordered_map<std::string, std::string> dtype_lower;
   dtype_lower.reserve(options.dtype.size());
   for (const auto& kv : options.dtype) {
@@ -1208,10 +1230,10 @@ CsvBatch build_batch_from_records(const std::vector<std::vector<std::string>>& r
   }
 
   const auto t_infer_start = std::chrono::steady_clock::now();
-  std::vector<Thread> inferred(selected_cols.size());
-  const auto max_workers = resolve_column_workers(options, selected_cols.size());
+  std::vector<Thread> inferred(raw.features.size());
+  const auto max_workers = resolve_column_workers(options, raw.features.size());
   const bool allow_parallel = options.engine != CsvEngine::Serial;
-  const bool use_parallel = allow_parallel && max_workers > 1 && selected_cols.size() >= 4;
+  const bool use_parallel = allow_parallel && max_workers > 1 && raw.features.size() >= 4;
 
   if (use_parallel) {
     std::atomic<std::size_t> next_index{0};
@@ -1225,12 +1247,16 @@ CsvBatch build_batch_from_records(const std::vector<std::vector<std::string>>& r
           return;
         }
         const auto i = next_index.fetch_add(1, std::memory_order_relaxed);
-        if (i >= selected_cols.size()) {
+        if (i >= raw.features.size()) {
           return;
         }
         try {
           inferred[i] = infer_column_thread(
-              selected_names[i], selected_cols[i], values_by_col[i], options, dtype_lower);
+              raw.features[i].name,
+              raw.features[i].source_index,
+              raw.features[i].values,
+              options,
+              dtype_lower);
         } catch (...) {
           {
             std::lock_guard<std::mutex> lock(error_mutex);
@@ -1259,9 +1285,13 @@ CsvBatch build_batch_from_records(const std::vector<std::vector<std::string>>& r
       std::rethrow_exception(first_error);
     }
   } else {
-    for (std::size_t i = 0; i < selected_cols.size(); ++i) {
+    for (std::size_t i = 0; i < raw.features.size(); ++i) {
       inferred[i] = infer_column_thread(
-          selected_names[i], selected_cols[i], values_by_col[i], options, dtype_lower);
+          raw.features[i].name,
+          raw.features[i].source_index,
+          raw.features[i].values,
+          options,
+          dtype_lower);
     }
   }
 
@@ -1270,21 +1300,135 @@ CsvBatch build_batch_from_records(const std::vector<std::vector<std::string>>& r
   }
 
   std::vector<std::pair<std::string, Thread>> cols;
-  cols.reserve(selected_cols.size());
-  for (std::size_t i = 0; i < selected_cols.size(); ++i) {
-    cols.emplace_back(selected_names[i], std::move(inferred[i]));
+  cols.reserve(raw.features.size());
+  for (std::size_t i = 0; i < raw.features.size(); ++i) {
+    cols.emplace_back(raw.features[i].name, std::move(inferred[i]));
   }
 
   std::optional<Thread> cases = std::nullopt;
-  if (case_col.has_value()) {
-    const auto case_name = names[*case_col];
-    cases = infer_column_thread(case_name, *case_col, case_values, options, dtype_lower);
+  if (raw.cases.has_value()) {
+    cases = infer_column_thread(
+        raw.cases->name,
+        raw.cases->source_index,
+        raw.cases->values,
+        options,
+        dtype_lower);
   }
 
   return CsvBatch{std::move(cols), std::move(cases)};
 }
 
+CsvBatch build_batch_from_records(const std::vector<std::vector<std::string>>& records,
+                                  const ReadCsvOptions& options,
+                                  CsvRecordBuildProfile* profile) {
+  const auto raw = build_raw_batch_from_records(records, options, profile);
+  return build_batch_from_raw(raw, options, profile);
+}
+
 } // namespace
+
+CsvRawBatch read_csv_records_raw_batch(const std::vector<std::vector<std::string>>& records,
+                                       const ReadCsvOptions& options) {
+  return build_raw_batch_from_records(records, options, nullptr);
+}
+
+CsvRawBatch read_csv_raw_batch(const ReadCsvOptions& options) {
+  PLUSS_CHECK(!options.filepath.empty(), "load_csv: filepath is empty");
+
+  const auto t_total_start = std::chrono::steady_clock::now();
+  CsvLoadProfile profile_stats;
+
+  ReadCsvOptions resolved = options;
+  {
+    const auto t0 = std::chrono::steady_clock::now();
+    resolved.sep = detect_separator(options);
+    profile_stats.detect_sep_ms = elapsed_ms(t0, std::chrono::steady_clock::now());
+  }
+
+  std::vector<std::vector<std::string>> records;
+  auto parse_serial = [&]() {
+    std::ifstream in(resolved.filepath, std::ios::in | std::ios::binary);
+    PLUSS_CHECK(in.is_open(), "load_csv: failed to open file '" + resolved.filepath + "'");
+    std::vector<std::vector<std::string>> out;
+    out.reserve(4096);
+    std::vector<std::string> row;
+    while (parse_record(in, resolved, row)) {
+      out.push_back(row);
+    }
+    return out;
+  };
+
+  std::error_code fs_ec;
+  const auto file_bytes = std::filesystem::file_size(resolved.filepath, fs_ec);
+  const auto known_size = fs_ec ? static_cast<std::size_t>(0) : static_cast<std::size_t>(file_bytes);
+
+  const auto t_parse_start = std::chrono::steady_clock::now();
+  const bool attempt_parallel = ParallelCsvReader::should_use_parallel(known_size, resolved);
+  if (attempt_parallel) {
+    try {
+      records = ParallelCsvReader::read_file(resolved);
+    } catch (const std::exception& e) {
+      if (resolved.engine == CsvEngine::Parallel) {
+        throw;
+      }
+      ::pluss::codem::warn(
+          fmt::format("load_csv: parallel parse fallback to serial for '{}' ({})", resolved.filepath, e.what()));
+      records = parse_serial();
+    }
+  } else {
+    records = parse_serial();
+  }
+  profile_stats.parse_records_ms = elapsed_ms(t_parse_start, std::chrono::steady_clock::now());
+  profile_stats.total_rows = records.size();
+
+  CsvRecordBuildProfile build_profile;
+  const auto t_build_start = std::chrono::steady_clock::now();
+  auto out = build_raw_batch_from_records(records, resolved, &build_profile);
+  profile_stats.build_dataframe_ms = elapsed_ms(t_build_start, std::chrono::steady_clock::now());
+  profile_stats.total_ms = elapsed_ms(t_total_start, std::chrono::steady_clock::now());
+  profile_stats.selected_rows = out.features.empty()
+      ? (out.cases.has_value() ? out.cases->values.size() : 0u)
+      : out.features.front().values.size();
+  profile_stats.columns = out.features.size();
+
+  if (csv_profile_enabled(resolved)) {
+    fmt::print(
+        stderr,
+        "load_csv(raw) profile [{}]: total={:.2f} ms, detect_sep={:.2f} ms, parse_records={:.2f} ms, "
+        "build_batch={:.2f} ms, row_filter={:.2f} ms, scan_cells={:.2f} ms, "
+        "rows(raw/selected)={}/{}, cols={}\n",
+        resolved.filepath,
+        profile_stats.total_ms,
+        profile_stats.detect_sep_ms,
+        profile_stats.parse_records_ms,
+        profile_stats.build_dataframe_ms,
+        build_profile.filter_rows_ms,
+        build_profile.scan_cells_ms,
+        profile_stats.total_rows,
+        profile_stats.selected_rows,
+        profile_stats.columns);
+  }
+
+  return out;
+}
+
+CsvRawBatch read_csv_raw_batch(std::string_view filepath, const ReadCsvOptions& options) {
+  ReadCsvOptions resolved = options;
+  resolved.filepath = std::string(filepath);
+  return read_csv_raw_batch(resolved);
+}
+
+pluss::table::Thread infer_thread_from_raw_csv_column(std::string_view col_name,
+                                                       std::size_t source_col_index,
+                                                       const std::vector<std::string>& raw_values,
+                                                       const ReadCsvOptions& options) {
+  std::unordered_map<std::string, std::string> dtype_lower;
+  dtype_lower.reserve(options.dtype.size());
+  for (const auto& kv : options.dtype) {
+    dtype_lower.emplace(kv.first, lower_copy(kv.second));
+  }
+  return infer_column_thread(std::string(col_name), source_col_index, raw_values, options, dtype_lower);
+}
 
 CsvBatch read_csv_records_batch(const std::vector<std::vector<std::string>>& records,
                                 const ReadCsvOptions& options) {

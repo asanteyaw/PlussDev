@@ -408,6 +408,110 @@ std::vector<std::vector<std::string>> parse_sheet_table(zip_t* archive,
 
 } // namespace
 
+CsvRawBatch read_excel_raw_batch(std::string_view filepath, const ReadExcelOptions& options) {
+#if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
+  PLUSS_CHECK(!filepath.empty(), "read_excel_raw_batch: filepath is empty");
+  PLUSS_CHECK(!options.all_sheets, "read_excel_raw_batch: all_sheets=true requires read_excel_workbook_raw_batch");
+  PLUSS_CHECK(options.sheet_names.empty(), "read_excel_raw_batch: sheet_names requires read_excel_workbook_raw_batch");
+  PLUSS_CHECK(options.sheet_indices.empty(), "read_excel_raw_batch: sheet_indices requires read_excel_workbook_raw_batch");
+  PLUSS_CHECK(!options.n_sheets.has_value(), "read_excel_raw_batch: n_sheets requires read_excel_workbook_raw_batch");
+
+  int err = 0;
+  zip_t* archive = zip_open(std::string(filepath).c_str(), ZIP_RDONLY, &err);
+  PLUSS_CHECK(archive != nullptr, "read_excel_raw_batch: failed to open workbook");
+
+  auto guard = std::unique_ptr<zip_t, decltype(&zip_close)>(archive, &zip_close);
+  const auto shared_strings = parse_shared_strings(archive);
+  const auto sheets = parse_sheet_refs(archive);
+  PLUSS_CHECK(!sheets.empty(), "read_excel_raw_batch: workbook has no sheets");
+
+  SheetRef target = sheets.front();
+  if (options.sheet_name.has_value()) {
+    const auto want = normalize_sheet_name(*options.sheet_name);
+    auto it = std::find_if(sheets.begin(), sheets.end(), [&](const SheetRef& s) {
+      return normalize_sheet_name(s.name) == want;
+    });
+    PLUSS_CHECK(it != sheets.end(), "read_excel_raw_batch: unknown sheet name '" + *options.sheet_name + "'");
+    target = *it;
+  } else if (options.sheet_index.has_value()) {
+    const auto idx = *options.sheet_index;
+    PLUSS_CHECK(idx >= 0 && static_cast<std::size_t>(idx) < sheets.size(),
+                "read_excel_raw_batch: sheet_index out of range");
+    target = sheets[static_cast<std::size_t>(idx)];
+  }
+
+  const auto table = parse_sheet_table(archive, target, shared_strings);
+  ReadCsvOptions csv_opts;
+  csv_opts.header = options.header;
+  return read_csv_records_raw_batch(table, csv_opts);
+#else
+  (void)filepath;
+  (void)options;
+  PLUSS_FAIL("read_excel_raw_batch: Excel support not built (libzip not available)");
+#endif
+}
+
+ExcelRawBatchWorkbook read_excel_workbook_raw_batch(std::string_view filepath,
+                                                    const ReadExcelOptions& options) {
+#if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
+  PLUSS_CHECK(!filepath.empty(), "read_excel_workbook_raw_batch: filepath is empty");
+
+  int err = 0;
+  zip_t* archive = zip_open(std::string(filepath).c_str(), ZIP_RDONLY, &err);
+  PLUSS_CHECK(archive != nullptr, "read_excel_workbook_raw_batch: failed to open workbook");
+
+  auto guard = std::unique_ptr<zip_t, decltype(&zip_close)>(archive, &zip_close);
+  const auto shared_strings = parse_shared_strings(archive);
+  const auto sheets = parse_sheet_refs(archive);
+  PLUSS_CHECK(!sheets.empty(), "read_excel_workbook_raw_batch: workbook has no sheets");
+
+  std::vector<SheetRef> selected_sheets;
+  if (!options.sheet_names.empty()) {
+    selected_sheets.reserve(options.sheet_names.size());
+    for (const auto& wanted_name : options.sheet_names) {
+      const auto wanted = normalize_sheet_name(wanted_name);
+      auto it = std::find_if(sheets.begin(), sheets.end(), [&](const SheetRef& s) {
+        return normalize_sheet_name(s.name) == wanted;
+      });
+      PLUSS_CHECK(it != sheets.end(), "read_excel_workbook_raw_batch: unknown sheet name '" + wanted_name + "'");
+      selected_sheets.push_back(*it);
+    }
+  } else if (!options.sheet_indices.empty()) {
+    selected_sheets.reserve(options.sheet_indices.size());
+    for (const auto idx : options.sheet_indices) {
+      PLUSS_CHECK(idx >= 0 && static_cast<std::size_t>(idx) < sheets.size(),
+                  "read_excel_workbook_raw_batch: sheet index out of range");
+      selected_sheets.push_back(sheets[static_cast<std::size_t>(idx)]);
+    }
+  } else {
+    selected_sheets = sheets;
+  }
+
+  if (options.n_sheets.has_value()) {
+    const auto n = *options.n_sheets;
+    if (n < selected_sheets.size()) {
+      selected_sheets.resize(n);
+    }
+  }
+
+  ExcelRawBatchWorkbook out;
+  out.reserve(selected_sheets.size());
+
+  ReadCsvOptions csv_opts;
+  csv_opts.header = options.header;
+
+  for (const auto& s : selected_sheets) {
+    const auto table = parse_sheet_table(archive, s, shared_strings);
+    out.emplace_back(s.name, read_csv_records_raw_batch(table, csv_opts));
+  }
+  return out;
+#else
+  (void)filepath;
+  (void)options;
+  PLUSS_FAIL("read_excel_workbook_raw_batch: Excel support not built (libzip not available)");
+#endif
+}
+
 CsvBatch read_excel_batch(std::string_view filepath, const ReadExcelOptions& options) {
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
   PLUSS_CHECK(!filepath.empty(), "load_excel: filepath is empty");

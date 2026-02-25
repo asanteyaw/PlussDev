@@ -104,6 +104,11 @@ public:
     return Kind::TimeIndex;
   }
 
+  bool is_series() const noexcept { return kind() == Kind::Series; }
+  bool is_note() const noexcept { return kind() == Kind::Note; }
+  bool is_timeline() const noexcept { return kind() == Kind::Timeline; }
+  bool is_timeindex() const noexcept { return kind() == Kind::TimeIndex; }
+
   std::string_view kind_name() const noexcept { return kind_name(kind()); }
   static constexpr std::string_view kind_name(Kind k) noexcept { return kind_name_impl_(k); }
 

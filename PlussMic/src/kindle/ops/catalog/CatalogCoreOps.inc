@@ -313,6 +313,69 @@ Catalog Catalog::fillna(double value, std::initializer_list<std::string_view> ke
   return Catalog(std::move(out));
 }
 
+Catalog Catalog::fillna(std::string_view value, std::initializer_list<std::string_view> keys) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  const auto key_set = normalize_name_set(keys);
+  if (!key_set.empty()) {
+    for (const auto& k : key_set) {
+      PLUSS_CHECK(has(k), "Catalog::fillna(string): unknown key '" + k + "'");
+    }
+  }
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto& key = impl_ref_().keys_[i];
+    const auto& stream = impl_ref_().streams_[i];
+    const bool selected = key_set.empty() ? (stream.kind() == StreamKind::Note)
+                                          : (key_set.find(key) != key_set.end());
+    out.emplace_back(key, selected ? stream.fillna(value) : stream);
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::fillna(const pluss::Timeline& value, std::initializer_list<std::string_view> keys) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  const auto key_set = normalize_name_set(keys);
+  if (!key_set.empty()) {
+    for (const auto& k : key_set) {
+      PLUSS_CHECK(has(k), "Catalog::fillna(Timeline): unknown key '" + k + "'");
+    }
+  }
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto& key = impl_ref_().keys_[i];
+    const auto& stream = impl_ref_().streams_[i];
+    const bool selected = key_set.empty() ? (stream.kind() == StreamKind::Timeline || stream.kind() == StreamKind::TimeIndex)
+                                          : (key_set.find(key) != key_set.end());
+    out.emplace_back(key, selected ? stream.fillna(value) : stream);
+  }
+  return Catalog(std::move(out));
+}
+
+Catalog Catalog::fillna(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  const auto key_set = normalize_name_set(keys);
+  if (!key_set.empty()) {
+    for (const auto& k : key_set) {
+      PLUSS_CHECK(has(k), "Catalog::fillna(TimeIndex): unknown key '" + k + "'");
+    }
+  }
+
+  std::vector<std::pair<std::string, Stream>> out;
+  out.reserve(static_cast<std::size_t>(nstreams()));
+  for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
+    const auto& key = impl_ref_().keys_[i];
+    const auto& stream = impl_ref_().streams_[i];
+    const bool selected = key_set.empty() ? (stream.kind() == StreamKind::TimeIndex)
+                                          : (key_set.find(key) != key_set.end());
+    out.emplace_back(key, selected ? stream.fillna(value) : stream);
+  }
+  return Catalog(std::move(out));
+}
+
 Catalog Catalog::dropna(std::initializer_list<std::string_view> keys) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto key_set = normalize_name_set(keys);

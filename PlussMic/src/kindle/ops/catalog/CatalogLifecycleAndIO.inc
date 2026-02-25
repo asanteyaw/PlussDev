@@ -46,8 +46,17 @@ Catalog Catalog::load(std::string_view source_type, std::string_view filepath) {
   if (source == "csv") {
     return load_csv(filepath);
   }
+  if (source == "txt" || source == "text") {
+    return load_txt(filepath);
+  }
   if (source == "excel" || source == "xlsx") {
     return load_excel(filepath);
+  }
+  if (source == "parquet") {
+    return load_parquet(filepath);
+  }
+  if (source == "json") {
+    return load_json(filepath);
   }
   return load(source_type, filepath, pluss::loader::Config{});
 }
@@ -57,57 +66,100 @@ Catalog Catalog::load(std::string_view source_type,
                       const pluss::loader::Config& config) {
   const auto source = lowercase_copy(trim_copy(source_type));
   if (source == "csv") {
-    return catalog_from_batch(pluss::loader::read_csv_batch(filepath, config));
+    const auto options = pluss::loader::csv_options_from_config(config);
+    return catalog_from_raw_batch(pluss::loader::read_csv_raw_batch(filepath, options), options);
+  }
+  if (source == "txt" || source == "text") {
+    return load_txt(filepath, config);
   }
   if (source == "excel" || source == "xlsx") {
-    return catalog_from_batch(pluss::loader::read_excel_batch(filepath, config));
+    auto xopts = pluss::loader::excel_options_from_config(config);
+    auto infer_options = pluss::loader::csv_options_from_config(config);
+    infer_options.header = xopts.header;
+    return catalog_from_raw_batch(pluss::loader::read_excel_raw_batch(filepath, xopts), infer_options);
   }
   if (source == "parquet") {
-    return kindelize(pluss::table::DataFrame::load_parquet(filepath, config));
+    return load_parquet(filepath, config);
+  }
+  if (source == "json") {
+    return load_json(filepath, config);
   }
   PLUSS_FAIL("Catalog::load: unsupported source type '" + std::string(source_type) + "'");
 }
 
 Catalog Catalog::load_csv(std::string_view filepath) {
   pluss::loader::ReadCsvOptions options;
-  return catalog_from_batch(pluss::loader::read_csv_batch(filepath, options));
+  return catalog_from_raw_batch(pluss::loader::read_csv_raw_batch(filepath, options), options);
 }
 
 Catalog Catalog::load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options) {
-  return catalog_from_batch(pluss::loader::read_csv_batch(filepath, options));
+  return catalog_from_raw_batch(pluss::loader::read_csv_raw_batch(filepath, options), options);
+}
+
+Catalog Catalog::load_txt(std::string_view filepath) {
+  return load_txt(filepath, pluss::loader::Config{});
+}
+
+Catalog Catalog::load_txt(std::string_view filepath, const pluss::loader::Config& config) {
+  const auto infer_options = pluss::loader::csv_options_from_config(config);
+  return catalog_from_raw_batch(pluss::loader::read_txt_raw_batch(filepath, config), infer_options);
 }
 
 Catalog Catalog::load_excel(std::string_view filepath) {
   pluss::loader::ReadExcelOptions options;
-  return catalog_from_batch(pluss::loader::read_excel_batch(filepath, options));
+  pluss::loader::ReadCsvOptions infer_options;
+  infer_options.header = options.header;
+  return catalog_from_raw_batch(pluss::loader::read_excel_raw_batch(filepath, options), infer_options);
 }
 
 Catalog Catalog::load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options) {
-  return catalog_from_batch(pluss::loader::read_excel_batch(filepath, options));
+  pluss::loader::ReadCsvOptions infer_options;
+  infer_options.header = options.header;
+  return catalog_from_raw_batch(pluss::loader::read_excel_raw_batch(filepath, options), infer_options);
+}
+
+Catalog Catalog::load_parquet(std::string_view filepath) {
+  return load_parquet(filepath, pluss::loader::Config{});
+}
+
+Catalog Catalog::load_parquet(std::string_view filepath, const pluss::loader::Config& config) {
+  auto infer_options = pluss::loader::csv_options_from_config(config);
+  return catalog_from_raw_batch(pluss::loader::read_parquet_raw_batch(filepath, config), infer_options);
+}
+
+Catalog Catalog::load_json(std::string_view filepath) {
+  return load_json(filepath, pluss::loader::Config{});
+}
+
+Catalog Catalog::load_json(std::string_view filepath, const pluss::loader::Config& config) {
+  auto infer_options = pluss::loader::csv_options_from_config(config);
+  return catalog_from_raw_batch(pluss::loader::read_json_raw_batch(filepath, config), infer_options);
 }
 
 Catalog Catalog::load_csv_with_key(std::string_view filepath,
                                    std::string_view key_field,
                                    const pluss::loader::ReadCsvOptions& options) {
-  auto batch = pluss::loader::read_csv_batch(filepath, options);
+  auto raw = pluss::loader::read_csv_raw_batch(filepath, options);
   const auto key = trim_copy(key_field);
   PLUSS_CHECK(!key.empty(), "Catalog::load_csv_with_key: key field cannot be empty");
-  auto it = std::find_if(batch.features.begin(),
-                         batch.features.end(),
-                         [&](const auto& kv) { return kv.first == key; });
-  PLUSS_CHECK(it != batch.features.end(),
+  auto it = std::find_if(raw.features.begin(),
+                         raw.features.end(),
+                         [&](const auto& col) { return col.name == key; });
+  PLUSS_CHECK(it != raw.features.end(),
               "Catalog::load_csv_with_key: key field not found '" + key + "'");
-  batch.cases = it->second;
+  raw.cases = std::move(*it);
+  raw.features.erase(it);
   KindelizePolicy policy;
   policy.attach_cases_to_streams = true;
   policy.materialize_case_stream = true;
   policy.case_stream_name = "_case";
-  return catalog_from_batch(std::move(batch), policy);
+  return catalog_from_raw_batch(raw, options, policy);
 }
 
 Catalog Catalog::from_json(std::string_view json_text) {
-  (void)json_text;
-  PLUSS_FAIL("Catalog::from_json: not implemented yet");
+  const pluss::loader::Config config{};
+  const auto infer_options = pluss::loader::csv_options_from_config(config);
+  return catalog_from_raw_batch(pluss::loader::read_json_raw_text(json_text, config), infer_options);
 }
 
 bool Catalog::defined() const noexcept { return static_cast<bool>(impl_); }

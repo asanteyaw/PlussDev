@@ -14,6 +14,9 @@
 
 #include "MSharp/IntrusivePtr.h"
 #include "bundle/Slot.h"
+#include "loader/Config.h"
+#include "loader/CsvLoader.h"
+#include "loader/ExcelLoader.h"
 
 namespace pluss::kindle {
 class Catalog;
@@ -37,6 +40,23 @@ public:
   Registry& operator=(const Registry& other);
   Registry& operator=(Registry&& other) noexcept;
   ~Registry();
+
+  static Registry load(std::string_view source_type, std::string_view filepath);
+  static Registry load(std::string_view source_type,
+                       std::string_view filepath,
+                       const pluss::loader::Config& config);
+  static Registry load_csv(std::string_view filepath);
+  static Registry load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options);
+  static Registry load_csv(std::string_view filepath, const pluss::loader::Config& config);
+  static Registry load_txt(std::string_view filepath);
+  static Registry load_txt(std::string_view filepath, const pluss::loader::Config& config);
+  static Registry load_excel(std::string_view filepath);
+  static Registry load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options);
+  static Registry load_excel(std::string_view filepath, const pluss::loader::Config& config);
+  static Registry load_parquet(std::string_view filepath);
+  static Registry load_parquet(std::string_view filepath, const pluss::loader::Config& config);
+  static Registry load_json(std::string_view filepath);
+  static Registry load_json(std::string_view filepath, const pluss::loader::Config& config);
 
   bool defined() const noexcept;
   bool unique() const noexcept;

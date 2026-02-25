@@ -119,8 +119,14 @@ public:
                       const pluss::loader::Config& config);
   static Catalog load_csv(std::string_view filepath);
   static Catalog load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options);
+  static Catalog load_txt(std::string_view filepath);
+  static Catalog load_txt(std::string_view filepath, const pluss::loader::Config& config);
   static Catalog load_excel(std::string_view filepath);
   static Catalog load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options);
+  static Catalog load_parquet(std::string_view filepath);
+  static Catalog load_parquet(std::string_view filepath, const pluss::loader::Config& config);
+  static Catalog load_json(std::string_view filepath);
+  static Catalog load_json(std::string_view filepath, const pluss::loader::Config& config);
   static Catalog load_csv_with_key(std::string_view filepath,
                                    std::string_view key_field,
                                    const pluss::loader::ReadCsvOptions& options = {});
@@ -173,6 +179,12 @@ public:
                   const std::vector<bool>& ascending = {}) const;
   std::unordered_map<std::string, Catalog> group_by(std::string_view key_field) const;
   Catalog fillna(double value, std::initializer_list<std::string_view> keys = {}) const;
+  Catalog fillna(std::string_view value, std::initializer_list<std::string_view> keys = {}) const;
+  Catalog fillna(const char* value, std::initializer_list<std::string_view> keys = {}) const {
+    return fillna(std::string_view{value != nullptr ? value : ""}, keys);
+  }
+  Catalog fillna(const pluss::Timeline& value, std::initializer_list<std::string_view> keys = {}) const;
+  Catalog fillna(const pluss::TimeIndex& value, std::initializer_list<std::string_view> keys = {}) const;
   Catalog dropna(std::initializer_list<std::string_view> keys = {}) const;
   Catalog ffill(std::initializer_list<std::string_view> keys = {}) const;
   Catalog bfill(std::initializer_list<std::string_view> keys = {}) const;

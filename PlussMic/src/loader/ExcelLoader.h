@@ -36,6 +36,11 @@ struct WriteExcelOptions {
 
 using Workbook = std::vector<std::pair<std::string, pluss::table::DataFrame>>;
 using ExcelBatchWorkbook = std::vector<std::pair<std::string, CsvBatch>>;
+using ExcelRawBatchWorkbook = std::vector<std::pair<std::string, CsvRawBatch>>;
+
+CsvRawBatch read_excel_raw_batch(std::string_view filepath, const ReadExcelOptions& options = {});
+ExcelRawBatchWorkbook read_excel_workbook_raw_batch(std::string_view filepath,
+                                                    const ReadExcelOptions& options = {});
 
 CsvBatch read_excel_batch(std::string_view filepath, const ReadExcelOptions& options = {});
 ExcelBatchWorkbook read_excel_workbook_batch(std::string_view filepath,

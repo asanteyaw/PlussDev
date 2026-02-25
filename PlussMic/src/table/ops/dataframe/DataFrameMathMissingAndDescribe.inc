@@ -540,10 +540,173 @@ DataFrame DataFrame::fillna(double value, std::initializer_list<std::string_view
   return missing(spec);
 }
 
+DataFrame DataFrame::fillna(std::string_view value) const {
+  return fillna(value, {});
+}
+
+DataFrame DataFrame::fillna(std::string_view value, std::initializer_list<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  std::unordered_set<std::size_t> target_indices;
+
+  if (features.size() == 0) {
+    for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+      if (src.columns_[i].kind() == ThreadKind::Note) {
+        target_indices.insert(i);
+      }
+    }
+  } else {
+    for (const auto& name : normalize_name_list(features)) {
+      const auto it = src.name_to_idx_.find(name);
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillna(string): unknown feature '" + name + "'");
+      target_indices.insert(it->second);
+    }
+  }
+
+  if (target_indices.empty()) {
+    return *this;
+  }
+
+  std::vector<Thread> out_cols = src.columns_;
+  bool changed = false;
+  for (const auto idx : target_indices) {
+    auto& col = out_cols[idx];
+    if (col.kind() == ThreadKind::Note && col.has_validity_mask()) {
+      col = col.fillna(value);
+      changed = true;
+    }
+  }
+
+  if (!changed) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+}
+
+DataFrame DataFrame::fillna(const pluss::Timeline& value) const {
+  return fillna(value, {});
+}
+
+DataFrame DataFrame::fillna(
+    const pluss::Timeline& value,
+    std::initializer_list<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  std::unordered_set<std::size_t> target_indices;
+
+  if (features.size() == 0) {
+    for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+      const auto kind = src.columns_[i].kind();
+      if (kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex) {
+        target_indices.insert(i);
+      }
+    }
+  } else {
+    for (const auto& name : normalize_name_list(features)) {
+      const auto it = src.name_to_idx_.find(name);
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillna(Timeline): unknown feature '" + name + "'");
+      target_indices.insert(it->second);
+    }
+  }
+
+  if (target_indices.empty()) {
+    return *this;
+  }
+
+  std::vector<Thread> out_cols = src.columns_;
+  bool changed = false;
+  for (const auto idx : target_indices) {
+    auto& col = out_cols[idx];
+    const auto kind = col.kind();
+    if ((kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex) && col.has_validity_mask()) {
+      col = col.fillna(value);
+      changed = true;
+    }
+  }
+
+  if (!changed) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+}
+
+DataFrame DataFrame::fillna(const pluss::TimeIndex& value) const {
+  return fillna(value, {});
+}
+
+DataFrame DataFrame::fillna(
+    const pluss::TimeIndex& value,
+    std::initializer_list<std::string_view> features) const {
+  const auto& src = impl_ref_();
+  std::unordered_set<std::size_t> target_indices;
+
+  if (features.size() == 0) {
+    for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+      if (src.columns_[i].kind() == ThreadKind::TimeIndex) {
+        target_indices.insert(i);
+      }
+    }
+  } else {
+    for (const auto& name : normalize_name_list(features)) {
+      const auto it = src.name_to_idx_.find(name);
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillna(TimeIndex): unknown feature '" + name + "'");
+      target_indices.insert(it->second);
+    }
+  }
+
+  if (target_indices.empty()) {
+    return *this;
+  }
+
+  std::vector<Thread> out_cols = src.columns_;
+  bool changed = false;
+  for (const auto idx : target_indices) {
+    auto& col = out_cols[idx];
+    if (col.kind() == ThreadKind::TimeIndex && col.has_validity_mask()) {
+      col = col.fillna(value);
+      changed = true;
+    }
+  }
+
+  if (!changed) {
+    return *this;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
+}
+
 DataFrame& DataFrame::fillna_(double value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
     if (c.kind() == ThreadKind::Series && c.has_validity_mask()) {
+      c.fillna_(value);
+    }
+  }
+  return *this;
+}
+
+DataFrame& DataFrame::fillna_(std::string_view value) {
+  auto& w = mut_impl_();
+  for (auto& c : w.columns_) {
+    if (c.kind() == ThreadKind::Note && c.has_validity_mask()) {
+      c.fillna_(value);
+    }
+  }
+  return *this;
+}
+
+DataFrame& DataFrame::fillna_(const pluss::Timeline& value) {
+  auto& w = mut_impl_();
+  for (auto& c : w.columns_) {
+    const auto kind = c.kind();
+    if ((kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex) && c.has_validity_mask()) {
+      c.fillna_(value);
+    }
+  }
+  return *this;
+}
+
+DataFrame& DataFrame::fillna_(const pluss::TimeIndex& value) {
+  auto& w = mut_impl_();
+  for (auto& c : w.columns_) {
+    if (c.kind() == ThreadKind::TimeIndex && c.has_validity_mask()) {
       c.fillna_(value);
     }
   }

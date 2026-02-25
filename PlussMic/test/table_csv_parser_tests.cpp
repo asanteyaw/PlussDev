@@ -74,6 +74,22 @@ std::filesystem::path write_temp_csv(const std::string& stem, const std::string&
   return path;
 }
 
+std::filesystem::path write_temp_text_file(const std::string& stem,
+                                           const std::string& ext,
+                                           const std::string& contents) {
+  const auto dir = std::filesystem::temp_directory_path() / "plussmic_text_tests";
+  std::filesystem::create_directories(dir);
+  const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
+  const auto filename = fmt::format("{}_{}.{}", stem, stamp, ext);
+  const auto path = dir / filename;
+
+  std::ofstream out(path, std::ios::out | std::ios::trunc | std::ios::binary);
+  expect(out.is_open(), "failed to create temporary text fixture");
+  out << contents;
+  out.close();
+  return path;
+}
+
 std::vector<std::string> split_lines(const std::string& s) {
   std::vector<std::string> out;
   std::stringstream ss(s);
@@ -454,10 +470,10 @@ void test_first_class_loader_entrypoints() {
 
   expect_throw(
       [&]() { (void)pluss::loader::load_parquet("not_implemented.parquet"); },
-      "loader::load_parquet should throw until parquet support is implemented");
+      "loader::load_parquet should throw on invalid parquet path");
   expect_throw(
       [&]() { (void)DataFrame::load_parquet("not_implemented.parquet"); },
-      "DataFrame::load_parquet should throw until parquet support is implemented");
+      "DataFrame::load_parquet should throw on invalid parquet path");
 }
 
 void test_col_names_none_and_save_as_csv() {
@@ -496,6 +512,95 @@ void test_loader_unified_load_result_for_csv() {
   expect(result.is_frame(), "loader::load csv should return DataFrame result");
   const auto& df = result.dataframe();
   expect(df.nrows() == 5, "loader::load csv nrows mismatch");
+}
+
+void test_txt_loader_modes() {
+  const auto whitespace_path = write_temp_text_file(
+      "whitespace",
+      "txt",
+      "id city score when\n"
+      "1 Accra 10.5 2024-01-01T00:00:00Z\n"
+      "2 Kumasi 11.0 2024-01-02T00:00:00Z\n");
+
+  const auto whitespace_df = DataFrame::load_txt(
+      whitespace_path.string(),
+      {
+          {"txt_mode", "whitespace"},
+          {"header", true},
+      });
+  expect(whitespace_df.nrows() == 2, "txt whitespace: nrows mismatch");
+  expect(whitespace_df.ncols() == 4, "txt whitespace: ncols mismatch");
+  expect(whitespace_df.features("id").kind() == ThreadKind::Series, "txt whitespace: id should infer Series");
+  expect(whitespace_df.features("city").kind() == ThreadKind::Note, "txt whitespace: city should infer Note");
+  expect(whitespace_df.features("when").kind() == ThreadKind::Timeline, "txt whitespace: when should infer Timeline");
+
+  const auto fixed_width_path = write_temp_text_file(
+      "fixed_width",
+      "txt",
+      "id  city         score\n"
+      "1   Cape Coast   10.5\n"
+      "2   Tema         12.0\n");
+  const auto fixed_df = DataFrame::load(
+      "txt",
+      fixed_width_path.string(),
+      {
+          {"txt_mode", "fixed_width"},
+          {"header", true},
+      });
+  expect(fixed_df.nrows() == 2, "txt fixed-width: nrows mismatch");
+  expect(fixed_df.ncols() == 3, "txt fixed-width: ncols mismatch");
+  expect(std::string(fixed_df.features("city").as_note().at(0)) == "Cape Coast",
+         "txt fixed-width: city tokenization mismatch");
+
+  const auto auto_path = write_temp_text_file(
+      "auto_tab",
+      "txt",
+      "id\tcity\tflag\n"
+      "1\tAccra\ttrue\n"
+      "2\tTema\tfalse\n");
+  const auto auto_df = DataFrame::load_txt(auto_path.string(), {{"header", true}});
+  expect(auto_df.nrows() == 2, "txt auto: nrows mismatch");
+  expect(auto_df.ncols() == 3, "txt auto: ncols mismatch");
+  expect(auto_df.features("flag").kind() == ThreadKind::Series, "txt auto: bool should infer Series");
+
+  const auto txt_result = pluss::loader::load("txt", auto_path.string(), {{"header", true}});
+  expect(txt_result.is_frame(), "loader::load(txt) should return frame");
+  expect(txt_result.dataframe().ncols() == 3, "loader::load(txt) feature count mismatch");
+}
+
+void test_json_loader_entrypoints() {
+  const auto json_path = write_temp_text_file(
+      "records",
+      "json",
+      R"([
+  {"id": 1, "city": "Accra", "when": "2024-01-01T00:00:00Z", "score": 1.5},
+  {"id": 2, "city": "Kumasi", "score": 2.0},
+  {"id": 3, "city": "Tema", "when": "2024-01-03T00:00:00Z"}
+])");
+
+  const auto df = DataFrame::load_json(json_path.string());
+  expect(df.nrows() == 3, "json loader: nrows mismatch");
+  expect(df.ncols() == 4, "json loader: ncols mismatch");
+  expect(df.features("id").kind() == ThreadKind::Series, "json loader: id should infer Series");
+  expect(df.features("city").kind() == ThreadKind::Note, "json loader: city should infer Note");
+  expect(df.features("when").kind() == ThreadKind::Timeline, "json loader: when should infer Timeline");
+  expect(df.features("score").has_validity_mask(), "json loader: score should carry validity mask");
+
+  const auto two_rows = DataFrame::load("json", json_path.string(), {{"nrows", 2}});
+  expect(two_rows.nrows() == 2, "DataFrame::load(json, nrows) should honor nrows");
+
+  const auto raw = pluss::loader::read_json_raw_batch(
+      json_path.string(),
+      {
+          {"usecols", {"id", "city"}},
+      });
+  expect(raw.features.size() == 2, "read_json_raw_batch(usecols) should project feature count");
+  expect(raw.features[0].name == "id" && raw.features[1].name == "city",
+         "read_json_raw_batch(usecols) should preserve requested order");
+
+  const auto loaded = pluss::loader::load("json", json_path.string());
+  expect(loaded.is_frame(), "loader::load(json) should return frame");
+  expect(loaded.dataframe().nrows() == 3, "loader::load(json) nrows mismatch");
 }
 
 void test_feature_value_cases_values_and_save_defaults() {
@@ -1463,6 +1568,60 @@ void test_versatile_dataframe_families() {
   expect(std::string(miss_filled.features("label").as_note().at(1)) == std::string(miss.features("label").as_note().at(1)),
          "missing(fill) on selected features should not mutate unselected features");
 
+  const auto miss_note_filled = miss.fillna("missing", {"label"});
+  expect(std::string(miss_note_filled.features("label").as_note().at(1)) == "missing",
+         "fillna(string, features) should replace null Note values");
+  expect(!miss_note_filled.features("label").has_validity_mask(),
+         "fillna(string, features) should clear Note validity mask when all nulls are filled");
+
+  auto validity = pluss::Series::zeros({4}, pluss::codem::ScalarType::Bool);
+  auto* valid_ptr = reinterpret_cast<bool*>(validity.raw_data());
+  valid_ptr[0] = true;
+  valid_ptr[1] = false;
+  valid_ptr[2] = true;
+  valid_ptr[3] = false;
+  const std::array<std::int64_t, 1> shape4{4};
+
+  const auto mixed_missing = DataFrame({
+      {"label", pluss::table::Thread(pluss::make_note(std::vector<std::string>{"x", "", "z", ""}, shape4), validity)},
+      {"ts", pluss::table::Thread(
+                 pluss::moment({
+                     "2024-01-01T00:00:00Z",
+                     "2024-01-02T00:00:00Z",
+                     "2024-01-03T00:00:00Z",
+                     "2024-01-04T00:00:00Z",
+                 }),
+                 validity)},
+      {"ti", pluss::table::Thread(
+                 pluss::make_timeindex({
+                     "2024-01-01T00:00:00Z",
+                     "2024-01-02T00:00:00Z",
+                     "2024-01-03T00:00:00Z",
+                     "2024-01-04T00:00:00Z",
+                 }),
+                 validity)},
+  });
+
+  const auto ts_fill = pluss::moment("2024-01-31T00:00:00Z");
+  const auto mixed_ts_filled = mixed_missing.fillna(ts_fill, {"ts"});
+  const auto ts_ticks = mixed_ts_filled.features("ts").as_timeline().to_epoch_nanos_vector();
+  const auto ts_fill_tick = ts_fill.to_epoch_nanos_vector()[0];
+  expect(ts_ticks[1] == ts_fill_tick && ts_ticks[3] == ts_fill_tick,
+         "fillna(Timeline, features) should replace null Timeline values");
+  expect(!mixed_ts_filled.features("ts").has_validity_mask(),
+         "fillna(Timeline, features) should clear Timeline validity mask when all nulls are filled");
+  expect(mixed_ts_filled.features("ti").has_validity_mask(),
+         "fillna(Timeline, features) should not mutate unselected TimeIndex features");
+
+  const auto ti_fill = pluss::make_timeindex("2024-02-01T00:00:00Z", false);
+  const auto mixed_ti_filled = mixed_missing.fillna(ti_fill, {"ti"});
+  const auto ti_ticks = mixed_ti_filled.features("ti").as_timeindex().timeline().to_epoch_nanos_vector();
+  const auto ti_fill_tick = ti_fill.timeline().to_epoch_nanos_vector()[0];
+  expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
+         "fillna(TimeIndex, features) should replace null TimeIndex values");
+  expect(!mixed_ti_filled.features("ti").has_validity_mask(),
+         "fillna(TimeIndex, features) should clear TimeIndex validity mask when all nulls are filled");
+
   const auto miss_ffill = miss.ffill();
   expect(miss_ffill.features("score").as_series().to_vec<std::int64_t>(1) == 10,
          "ffill should propagate previous numeric value");
@@ -1635,6 +1794,8 @@ int main() {
       {"first_class_loader_entrypoints", test_first_class_loader_entrypoints},
       {"col_names_none_and_save_as_csv", test_col_names_none_and_save_as_csv},
       {"loader_unified_load_result_for_csv", test_loader_unified_load_result_for_csv},
+      {"txt_loader_modes", test_txt_loader_modes},
+      {"json_loader_entrypoints", test_json_loader_entrypoints},
       {"feature_value_cases_values_and_save_defaults", test_feature_value_cases_values_and_save_defaults},
       {"transpose_shape_and_axes", test_transpose_shape_and_axes},
       {"squeeze_unsqueeze_bridge", test_squeeze_unsqueeze_bridge},

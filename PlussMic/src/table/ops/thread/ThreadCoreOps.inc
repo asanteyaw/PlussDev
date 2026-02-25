@@ -122,6 +122,49 @@ Thread Thread::fillna(double value) const {
   return Thread(out, std::nullopt);
 }
 
+Thread Thread::fillna(std::string_view value) const {
+  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::fillna(string) is only valid for Note payload");
+  if (!has_validity_mask()) {
+    return *this;
+  }
+  const auto valid = validity_mask()->to_vec<bool>();
+  std::vector<std::string> values;
+  values.reserve(static_cast<std::size_t>(size()));
+  for (std::int64_t i = 0; i < size(); ++i) {
+    const auto idx = static_cast<std::size_t>(i);
+    if (valid[idx]) {
+      values.emplace_back(as_note().at(i));
+    } else {
+      values.emplace_back(value);
+    }
+  }
+  return Thread(rebuild_note_like(as_note(), values), std::nullopt);
+}
+
+Thread Thread::fillna(const pluss::Timeline& value) const {
+  PLUSS_CHECK(kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex,
+              "Thread::fillna(Timeline) is only valid for Timeline/TimeIndex payload");
+  PLUSS_CHECK(value.defined(), "Thread::fillna(Timeline): replacement value is undefined");
+  PLUSS_CHECK(value.numel() == 1, "Thread::fillna(Timeline): replacement value must be scalar (numel == 1)");
+  if (!has_validity_mask()) {
+    return *this;
+  }
+
+  if (kind() == ThreadKind::Timeline) {
+    return Thread(as_timeline().where(*validity_mask(), value), std::nullopt);
+  }
+
+  auto filled = Thread(as_timeindex().timeline(), validity_mask()).fillna(value);
+  return Thread(filled.as_timeline().to_timeindex(false), std::nullopt);
+}
+
+Thread Thread::fillna(const pluss::TimeIndex& value) const {
+  PLUSS_CHECK(kind() == ThreadKind::TimeIndex, "Thread::fillna(TimeIndex) is only valid for TimeIndex payload");
+  PLUSS_CHECK(value.timeline().defined(), "Thread::fillna(TimeIndex): replacement value is undefined");
+  PLUSS_CHECK(value.size() == 1, "Thread::fillna(TimeIndex): replacement value must be scalar (size == 1)");
+  return fillna(value.timeline());
+}
+
 Thread Thread::abs() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::abs is only valid for Series payload");
   return Thread(as_series().abs(), validity_mask());
@@ -187,6 +230,21 @@ Thread& Thread::fillna_(double value) {
   PLUSS_CHECK(s != nullptr, "Thread::fillna_: internal payload mismatch");
   *s = s->where(*w.validity_mask_, value);
   w.validity_mask_.reset();
+  return *this;
+}
+
+Thread& Thread::fillna_(std::string_view value) {
+  *this = fillna(value);
+  return *this;
+}
+
+Thread& Thread::fillna_(const pluss::Timeline& value) {
+  *this = fillna(value);
+  return *this;
+}
+
+Thread& Thread::fillna_(const pluss::TimeIndex& value) {
+  *this = fillna(value);
   return *this;
 }
 

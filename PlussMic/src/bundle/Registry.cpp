@@ -13,6 +13,7 @@
 
 #include "CodeM/core/Errors.h"
 #include "kindle/catalog.h"
+#include "loader/Loader.h"
 #include <fmt/format.h>
 
 namespace pluss::bundle {
@@ -52,6 +53,13 @@ std::string trim_copy(std::string_view in) {
   return std::string(in.substr(start, end - start));
 }
 
+std::string lower_copy(std::string s) {
+  for (auto& ch : s) {
+    ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+  }
+  return s;
+}
+
 std::string json_escape(std::string_view in) {
   std::string out;
   out.reserve(in.size() + 8);
@@ -75,6 +83,89 @@ std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::i
   e = std::clamp<std::int64_t>(e, 0, size);
   if (e < s) e = s;
   return {s, e};
+}
+
+Slot::Value slot_value_from_scalar_thread(const pluss::table::Thread& thread) {
+  switch (thread.kind()) {
+    case pluss::table::ThreadKind::Series:
+      return thread.as_series();
+    case pluss::table::ThreadKind::Note:
+      return thread.as_note();
+    case pluss::table::ThreadKind::Timeline:
+      return thread.as_timeline();
+    case pluss::table::ThreadKind::TimeIndex:
+      return thread.as_timeindex();
+  }
+  return std::monostate{};
+}
+
+Slot::Value infer_slot_value_from_raw_token(std::string_view col_name,
+                                            std::size_t source_col_index,
+                                            std::string_view raw_token,
+                                            const pluss::loader::ReadCsvOptions& options) {
+  std::vector<std::string> one{std::string(raw_token)};
+  const auto inferred = pluss::loader::infer_thread_from_raw_csv_column(
+      col_name,
+      source_col_index,
+      one,
+      options);
+  if (inferred.has_validity_mask()) {
+    const auto valid = inferred.validity_mask()->to_vec<bool>();
+    if (valid.size() == 1 && !valid[0]) {
+      return std::monostate{};
+    }
+  }
+  return slot_value_from_scalar_thread(inferred);
+}
+
+std::string unique_key_name(std::string base, const std::unordered_set<std::string>& taken) {
+  if (taken.find(base) == taken.end()) {
+    return base;
+  }
+  auto candidate = base + "_case";
+  std::int64_t suffix = 1;
+  while (taken.find(candidate) != taken.end()) {
+    candidate = fmt::format("{}_{}", base, suffix++);
+  }
+  return candidate;
+}
+
+Registry registry_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
+                                 const pluss::loader::ReadCsvOptions& infer_options) {
+  std::vector<std::pair<std::string, Slot>> out;
+  out.reserve(raw.features.size() + (raw.cases.has_value() ? 1u : 0u));
+  std::unordered_set<std::string> keys_seen;
+  keys_seen.reserve(raw.features.size() * 2 + 1);
+
+  for (const auto& col : raw.features) {
+    std::vector<Slot::Value> values;
+    values.reserve(col.values.size());
+    for (const auto& token : col.values) {
+      values.push_back(infer_slot_value_from_raw_token(
+          col.name,
+          col.source_index,
+          token,
+          infer_options));
+    }
+    keys_seen.insert(col.name);
+    out.emplace_back(col.name, Slot(std::move(values)));
+  }
+
+  if (raw.cases.has_value()) {
+    const auto case_name = unique_key_name(raw.cases->name, keys_seen);
+    std::vector<Slot::Value> values;
+    values.reserve(raw.cases->values.size());
+    for (const auto& token : raw.cases->values) {
+      values.push_back(infer_slot_value_from_raw_token(
+          case_name,
+          raw.cases->source_index,
+          token,
+          infer_options));
+    }
+    out.emplace_back(case_name, Slot(std::move(values)));
+  }
+
+  return Registry(std::move(out));
 }
 
 } // namespace

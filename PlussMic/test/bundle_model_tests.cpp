@@ -1,6 +1,9 @@
 #include <cctype>
+#include <chrono>
 #include <cstdint>
 #include <exception>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -34,16 +37,44 @@ void expect_throw(Fn&& fn, std::string_view msg) {
   if (!threw) fail(msg);
 }
 
+std::filesystem::path write_temp_csv(const std::string& stem, const std::string& contents) {
+  const auto dir = std::filesystem::temp_directory_path() / "plussmic_bundle_tests";
+  std::filesystem::create_directories(dir);
+  const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
+  const auto path = dir / (stem + "_" + std::to_string(stamp) + ".csv");
+  std::ofstream out(path, std::ios::out | std::ios::trunc | std::ios::binary);
+  expect(out.is_open(), "failed to create temporary csv");
+  out << contents;
+  out.close();
+  return path;
+}
+
+std::filesystem::path write_temp_text_file(const std::string& stem,
+                                           const std::string& ext,
+                                           const std::string& contents) {
+  const auto dir = std::filesystem::temp_directory_path() / "plussmic_bundle_tests";
+  std::filesystem::create_directories(dir);
+  const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
+  const auto path = dir / (stem + "_" + std::to_string(stamp) + "." + ext);
+  std::ofstream out(path, std::ios::out | std::ios::trunc | std::ios::binary);
+  expect(out.is_open(), "failed to create temporary text file");
+  out << contents;
+  out.close();
+  return path;
+}
+
 Slot::Value as_series_i64(std::int64_t v) {
-  return pluss::make_series(v, pluss::codem::ScalarType::Int64);
+  return pluss::make_series(std::vector<std::int64_t>{v}, {1});
 }
 
 Slot::Value as_series_f64(double v) {
-  return pluss::make_series(v, pluss::codem::ScalarType::Float64);
+  return pluss::make_series(std::vector<double>{v}, {1});
 }
 
 Slot::Value as_series_bool(bool v) {
-  return pluss::make_series(v, pluss::codem::ScalarType::Bool);
+  auto s = pluss::Series::zeros({1}, pluss::codem::ScalarType::Bool);
+  reinterpret_cast<bool*>(s.raw_data())[0] = v;
+  return s;
 }
 
 Slot::Value as_note(std::string_view v) {
@@ -56,6 +87,14 @@ bool is_series(const Slot::Value& v) {
 
 bool is_note(const Slot::Value& v) {
   return std::holds_alternative<pluss::Note>(v);
+}
+
+bool is_timeline(const Slot::Value& v) {
+  return std::holds_alternative<pluss::Timeline>(v);
+}
+
+bool is_null_value(const Slot::Value& v) {
+  return std::holds_alternative<std::monostate>(v);
 }
 
 std::int64_t to_i64(const Slot::Value& v) {
@@ -254,6 +293,72 @@ void test_registry_methods() {
   expect_throw([&]() { (void)mixed.to_kindle(); }, "Registry::to_kindle should throw on heterogeneous slot");
 }
 
+void test_registry_loaders() {
+  const auto csv_path = write_temp_csv(
+      "registry_loader",
+      "id,mixed,when,text\n"
+      "1,10,2024-01-01T00:00:00Z,alpha\n"
+      "2,hello,,beta\n"
+      "3,3.5,2024-01-03T00:00:00Z,\n");
+
+  const auto reg_csv = Registry::load_csv(csv_path.string());
+  expect(reg_csv.has("id"), "Registry::load_csv should load id");
+  expect(reg_csv.has("mixed"), "Registry::load_csv should load mixed");
+  expect(reg_csv.has("when"), "Registry::load_csv should load when");
+  expect(reg_csv.has("text"), "Registry::load_csv should load text");
+  expect(reg_csv.slot("mixed").size() == 3, "Registry::load_csv should preserve slot length");
+
+  const auto& mixed0 = reg_csv.slot("mixed").at(0);
+  const auto& mixed1 = reg_csv.slot("mixed").at(1);
+  const auto& mixed2 = reg_csv.slot("mixed").at(2);
+  expect(is_series(mixed0), "mixed[0] should infer as numeric Series scalar");
+  expect(is_note(mixed1), "mixed[1] should infer as Note scalar");
+  expect(is_series(mixed2), "mixed[2] should infer as numeric Series scalar");
+
+  const auto& when1 = reg_csv.slot("when").at(1);
+  expect(is_null_value(when1), "when[1] should infer as null/monostate");
+  expect(is_timeline(reg_csv.slot("when").at(0)), "when[0] should infer as Timeline scalar");
+
+  const auto reg_via_load = Registry::load("csv", csv_path.string());
+  expect(reg_via_load.nslots() == reg_csv.nslots(), "Registry::load(csv) should match Registry::load_csv");
+
+  pluss::loader::Config csv_cfg;
+  csv_cfg.emplace("nrows", 2);
+  const auto reg_cfg = Registry::load_csv(csv_path.string(), csv_cfg);
+  expect(reg_cfg.slot("id").size() == 2, "Registry::load_csv(config) should honor nrows");
+
+  const auto txt_path = write_temp_text_file(
+      "registry_loader_txt",
+      "txt",
+      "id mixed when text\n"
+      "1 10 2024-01-01T00:00:00Z alpha\n"
+      "2 hello  beta\n"
+      "3 3.5 2024-01-03T00:00:00Z \n");
+  const auto reg_txt = Registry::load_txt(
+      txt_path.string(),
+      pluss::loader::config_from({
+          {"txt_mode", "whitespace"},
+          {"header", true},
+      }));
+  expect(reg_txt.has("id"), "Registry::load_txt should load id");
+  expect(reg_txt.slot("id").size() == 3, "Registry::load_txt row count mismatch");
+
+  const auto json_path = write_temp_text_file(
+      "registry_loader_json",
+      "json",
+      R"({"id":[1,2,3], "mixed":[10,"hello",3.5], "when":["2024-01-01T00:00:00Z",null,"2024-01-03T00:00:00Z"]})");
+  const auto reg_json = Registry::load_json(json_path.string());
+  expect(reg_json.has("mixed"), "Registry::load_json should load mixed");
+  expect(reg_json.slot("mixed").size() == 3, "Registry::load_json row count mismatch");
+  expect(is_series(reg_json.slot("mixed").at(0)), "Registry::load_json mixed[0] kind mismatch");
+  expect(is_note(reg_json.slot("mixed").at(1)), "Registry::load_json mixed[1] kind mismatch");
+  expect(is_series(reg_json.slot("mixed").at(2)), "Registry::load_json mixed[2] kind mismatch");
+
+  expect_throw(
+      [&]() { (void)Registry::load_parquet("not_implemented.parquet"); },
+      "Registry::load_parquet should throw on invalid parquet path");
+}
+
 void test_aisle_methods() {
   const auto r0 = Registry({
       {"ids", Slot({as_series_i64(1), as_series_i64(2), as_series_i64(3)})},
@@ -314,6 +419,7 @@ int main() {
   try {
     test_slot_methods();
     test_registry_methods();
+    test_registry_loaders();
     test_aisle_methods();
   } catch (const std::exception& e) {
     std::cerr << "[bundle_model_tests] failure: " << e.what() << "\n";

@@ -52,3 +52,29 @@ if(PLUSSMIC_LIBZIP_INCLUDE_DIR AND PLUSSMIC_LIBZIP_LIBRARY)
 else()
   target_compile_definitions(PlussMic PRIVATE PLUSSMIC_HAS_LIBZIP=0)
 endif()
+
+# Optional native parquet-cpp support (Apache Arrow + Parquet C++).
+set(PLUSSMIC_PARQUET_TARGET "")
+set(PLUSSMIC_ARROW_TARGET "")
+
+find_package(Arrow CONFIG QUIET)
+find_package(Parquet CONFIG QUIET)
+
+if(TARGET Arrow::arrow)
+  set(PLUSSMIC_ARROW_TARGET Arrow::arrow)
+elseif(TARGET Arrow::arrow_shared)
+  set(PLUSSMIC_ARROW_TARGET Arrow::arrow_shared)
+endif()
+
+if(TARGET Parquet::parquet)
+  set(PLUSSMIC_PARQUET_TARGET Parquet::parquet)
+elseif(TARGET Parquet::parquet_shared)
+  set(PLUSSMIC_PARQUET_TARGET Parquet::parquet_shared)
+endif()
+
+if(PLUSSMIC_ARROW_TARGET AND PLUSSMIC_PARQUET_TARGET)
+  target_link_libraries(PlussMic PRIVATE ${PLUSSMIC_ARROW_TARGET} ${PLUSSMIC_PARQUET_TARGET})
+  target_compile_definitions(PlussMic PRIVATE PLUSSMIC_HAS_PARQUET_CPP=1)
+else()
+  target_compile_definitions(PlussMic PRIVATE PLUSSMIC_HAS_PARQUET_CPP=0)
+endif()

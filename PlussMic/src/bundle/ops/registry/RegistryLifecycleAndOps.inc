@@ -11,6 +11,89 @@ Registry::~Registry() = default;
 
 Registry::Registry(pluss::msharp::intrusive_ptr<detail::RegistryImpl> impl) : impl_(std::move(impl)) {}
 
+Registry Registry::load(std::string_view source_type, std::string_view filepath) {
+  return load(source_type, filepath, pluss::loader::Config{});
+}
+
+Registry Registry::load(std::string_view source_type,
+                        std::string_view filepath,
+                        const pluss::loader::Config& config) {
+  const auto source = lower_copy(trim_copy(source_type));
+  if (source == "csv") {
+    return load_csv(filepath, config);
+  }
+  if (source == "txt" || source == "text") {
+    return load_txt(filepath, config);
+  }
+  if (source == "excel" || source == "xlsx") {
+    return load_excel(filepath, config);
+  }
+  if (source == "parquet") {
+    return load_parquet(filepath, config);
+  }
+  if (source == "json") {
+    return load_json(filepath, config);
+  }
+  PLUSS_FAIL("Registry::load: unsupported source type '" + std::string(source_type) + "'");
+}
+
+Registry Registry::load_csv(std::string_view filepath) {
+  return load_csv(filepath, pluss::loader::ReadCsvOptions{});
+}
+
+Registry Registry::load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options) {
+  return registry_from_raw_batch(pluss::loader::read_csv_raw_batch(filepath, options), options);
+}
+
+Registry Registry::load_csv(std::string_view filepath, const pluss::loader::Config& config) {
+  const auto options = pluss::loader::csv_options_from_config(config);
+  return registry_from_raw_batch(pluss::loader::read_csv_raw_batch(filepath, options), options);
+}
+
+Registry Registry::load_txt(std::string_view filepath) {
+  return load_txt(filepath, pluss::loader::Config{});
+}
+
+Registry Registry::load_txt(std::string_view filepath, const pluss::loader::Config& config) {
+  const auto options = pluss::loader::csv_options_from_config(config);
+  return registry_from_raw_batch(pluss::loader::read_txt_raw_batch(filepath, config), options);
+}
+
+Registry Registry::load_excel(std::string_view filepath) {
+  return load_excel(filepath, pluss::loader::ReadExcelOptions{});
+}
+
+Registry Registry::load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options) {
+  pluss::loader::ReadCsvOptions infer_options;
+  infer_options.header = options.header;
+  return registry_from_raw_batch(pluss::loader::read_excel_raw_batch(filepath, options), infer_options);
+}
+
+Registry Registry::load_excel(std::string_view filepath, const pluss::loader::Config& config) {
+  const auto options = pluss::loader::excel_options_from_config(config);
+  pluss::loader::ReadCsvOptions infer_options = pluss::loader::csv_options_from_config(config);
+  infer_options.header = options.header;
+  return registry_from_raw_batch(pluss::loader::read_excel_raw_batch(filepath, options), infer_options);
+}
+
+Registry Registry::load_parquet(std::string_view filepath) {
+  return load_parquet(filepath, pluss::loader::Config{});
+}
+
+Registry Registry::load_parquet(std::string_view filepath, const pluss::loader::Config& config) {
+  const auto infer_options = pluss::loader::csv_options_from_config(config);
+  return registry_from_raw_batch(pluss::loader::read_parquet_raw_batch(filepath, config), infer_options);
+}
+
+Registry Registry::load_json(std::string_view filepath) {
+  return load_json(filepath, pluss::loader::Config{});
+}
+
+Registry Registry::load_json(std::string_view filepath, const pluss::loader::Config& config) {
+  const auto infer_options = pluss::loader::csv_options_from_config(config);
+  return registry_from_raw_batch(pluss::loader::read_json_raw_batch(filepath, config), infer_options);
+}
+
 bool Registry::defined() const noexcept { return static_cast<bool>(impl_); }
 bool Registry::unique() const noexcept { return defined() && impl_.use_count() == 1; }
 
