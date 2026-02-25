@@ -14,6 +14,7 @@
 namespace pluss::kindle {
 class Archive;
 struct KindelizePolicy;
+struct TabelizePolicy;
 }
 
 namespace pluss::table {
@@ -62,6 +63,9 @@ public:
 
   Atlas map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const;
   DataFrame aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const;
+  static Atlas tabelize(const pluss::kindle::Archive& archive);
+  static Atlas tabelize(const pluss::kindle::Archive& archive,
+                        const pluss::kindle::TabelizePolicy& policy);
   pluss::kindle::Archive kindelize() const;
   pluss::kindle::Archive kindelize(const pluss::kindle::KindelizePolicy& policy) const;
 

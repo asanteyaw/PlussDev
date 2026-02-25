@@ -136,9 +136,9 @@ void test_slot_methods() {
   expect(concat.size() == 5, "concat size mismatch");
   expect(counts.at("Series") == 6, "type_counts[Series] mismatch");
 
-  const auto stream = ids.kindelize();
-  expect(stream.size() == ids.size(), "Slot::kindelize size mismatch");
-  expect(stream.kind() == pluss::kindle::StreamKind::Series, "Slot::kindelize kind mismatch");
+  const auto stream = ids.to_kindle();
+  expect(stream.size() == ids.size(), "Slot::to_kindle size mismatch");
+  expect(stream.kind() == pluss::kindle::StreamKind::Series, "Slot::to_kindle kind mismatch");
   const auto roundtrip = Slot::from_kindle(stream);
   expect(roundtrip.size() == ids.size(), "Slot::from_kindle size mismatch");
 
@@ -146,7 +146,7 @@ void test_slot_methods() {
       as_series_i64(1),
       as_note("x"),
   });
-  expect_throw([&]() { (void)hetero.kindelize(); }, "heterogeneous slot kindelize should throw");
+  expect_throw([&]() { (void)hetero.to_kindle(); }, "heterogeneous slot to_kindle should throw");
 }
 
 void test_registry_methods() {
@@ -242,8 +242,8 @@ void test_registry_methods() {
       {"ids", ids},
       {"city", city},
   });
-  const auto cat = clean.kindelize();
-  expect(cat.nstreams() == 2, "Registry::kindelize stream count mismatch");
+  const auto cat = clean.to_kindle();
+  expect(cat.nstreams() == 2, "Registry::to_kindle stream count mismatch");
   const auto from_cat = Registry::from_kindle(cat);
   expect(from_cat.nslots() == 2, "Registry::from_kindle slot count mismatch");
 
@@ -251,7 +251,7 @@ void test_registry_methods() {
       {"ids", ids},
       {"mixed", Slot({as_series_i64(7), as_note("bad")})},
   });
-  expect_throw([&]() { (void)mixed.kindelize(); }, "Registry::kindelize should throw on heterogeneous slot");
+  expect_throw([&]() { (void)mixed.to_kindle(); }, "Registry::to_kindle should throw on heterogeneous slot");
 }
 
 void test_aisle_methods() {
@@ -293,8 +293,8 @@ void test_aisle_methods() {
   expect(concat.labels().has_value(), "concat_depth should keep labels when both inputs labeled");
   expect(concat.labels()->size() == 4, "concat_depth labels size mismatch");
 
-  const auto archive = aisle.kindelize();
-  expect(archive.depth() == 2, "Aisle::kindelize archive depth mismatch");
+  const auto archive = aisle.to_kindle();
+  expect(archive.depth() == 2, "Aisle::to_kindle archive depth mismatch");
   const auto back = Aisle::from_kindle(archive);
   expect(back.depth() == 2, "Aisle::from_kindle depth mismatch");
 

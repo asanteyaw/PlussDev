@@ -110,16 +110,24 @@ Aisle Aisle::concat_depth(const Aisle& other) const {
   return Aisle(std::move(out), std::move(merged_labels));
 }
 
-pluss::kindle::Archive Aisle::kindelize() const {
+pluss::kindle::Archive Aisle::to_kindle() const {
   PLUSS_CHECK(defined(), "Aisle: undefined handle");
   std::vector<pluss::kindle::Catalog> out;
   out.reserve(static_cast<std::size_t>(depth()));
   for (std::int64_t i = 0; i < depth(); ++i) {
-    out.push_back(registry(i).kindelize());
+    out.push_back(registry(i).to_kindle());
   }
   std::optional<pluss::kindle::Stream> depth_labels = std::nullopt;
-  if (labels().has_value()) depth_labels = labels()->kindelize();
+  if (labels().has_value()) depth_labels = labels()->to_kindle();
   return pluss::kindle::Archive(std::move(out), std::move(depth_labels));
+}
+
+pluss::kindle::Archive Aisle::kindelize() const {
+  return to_kindle();
+}
+
+pluss::kindle::Archive Aisle::as_kindle() const {
+  return to_kindle();
 }
 
 Aisle Aisle::from_kindle(const pluss::kindle::Archive& archive) {
@@ -133,4 +141,3 @@ Aisle Aisle::from_kindle(const pluss::kindle::Archive& archive) {
   if (archive.depth_labels().has_value()) labels = Slot::from_kindle(*archive.depth_labels());
   return Aisle(std::move(out), std::move(labels));
 }
-

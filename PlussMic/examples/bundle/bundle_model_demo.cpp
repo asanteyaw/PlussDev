@@ -88,7 +88,7 @@ void demo_slot_methods() {
             << ", concat size: " << concatenated.size() << "\n";
   std::cout << "type_counts[Series]: " << type_counts.at("Series") << "\n";
 
-  const auto stream = ids.kindelize();
+  const auto stream = ids.to_kindle();
   const auto back_slot = Slot::from_kindle(stream);
   std::cout << "slot -> stream -> slot size: " << back_slot.size() << "\n";
 
@@ -97,9 +97,9 @@ void demo_slot_methods() {
       as_note("mixed"),
   });
   try {
-    (void)hetero.kindelize();
+    (void)hetero.to_kindle();
   } catch (const std::exception& e) {
-    std::cout << "expected heterogeneous kindelize failure: " << e.what() << "\n";
+    std::cout << "expected heterogeneous to_kindle failure: " << e.what() << "\n";
   }
 
   std::cout << "slot json:\n" << ids.to_json() << "\n";
@@ -192,7 +192,7 @@ void demo_registry_methods() {
                            {"ids", ids},
                            {"city", cities},
                        })
-                           .kindelize();
+                           .to_kindle();
   const auto from_catalog = Registry::from_kindle(catalog);
   std::cout << "registry -> catalog -> registry nslots: " << from_catalog.nslots() << "\n";
   std::cout << "registry display:\n" << registry << "\n";
@@ -237,7 +237,7 @@ void demo_aisle_methods() {
             << ", applied depth: " << applied_slot.depth()
             << ", concat depth: " << concatenated.depth() << "\n";
 
-  const auto archive = aisle.kindelize();
+  const auto archive = aisle.to_kindle();
   const auto back = Aisle::from_kindle(archive);
   std::cout << "aisle -> archive -> aisle depth: " << back.depth()
             << ", labels: " << (back.labels().has_value() ? "yes" : "no") << "\n";

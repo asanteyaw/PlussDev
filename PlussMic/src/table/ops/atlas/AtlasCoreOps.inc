@@ -178,6 +178,16 @@ DataFrame Atlas::aggregate_over_frames(
   return fn(src.frames_);
 }
 
+Atlas Atlas::tabelize(const pluss::kindle::Archive& archive) {
+  return tabelize(archive, pluss::kindle::TabelizePolicy{});
+}
+
+Atlas Atlas::tabelize(const pluss::kindle::Archive& archive,
+                      const pluss::kindle::TabelizePolicy& policy) {
+  PLUSS_CHECK(archive.defined(), "Atlas::tabelize requires a defined Archive");
+  return archive.tabelize(policy);
+}
+
 pluss::kindle::Archive Atlas::kindelize() const {
   return kindelize(pluss::kindle::KindelizePolicy{});
 }

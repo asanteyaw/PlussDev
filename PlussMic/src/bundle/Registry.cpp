@@ -52,23 +52,6 @@ std::string trim_copy(std::string_view in) {
   return std::string(in.substr(start, end - start));
 }
 
-std::string lowercase_copy(std::string_view in) {
-  std::string out;
-  out.reserve(in.size());
-  for (char c : in) {
-    out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
-  }
-  return out;
-}
-
-Registry bridge_registry_catalog(const Registry& registry,
-                                 std::string_view where,
-                                 const std::function<pluss::kindle::Catalog(const pluss::kindle::Catalog&)>& fn) {
-  registry.ensure_stream_compatible(where);
-  const auto catalog = registry.kindelize();
-  return Registry::from_kindle(fn(catalog));
-}
-
 std::string json_escape(std::string_view in) {
   std::string out;
   out.reserve(in.size() + 8);

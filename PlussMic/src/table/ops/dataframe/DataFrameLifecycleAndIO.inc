@@ -383,6 +383,16 @@ DataFrame DataFrame::load_parquet(std::string_view filepath,
   return pluss::loader::load_parquet(filepath, config_entries);
 }
 
+DataFrame DataFrame::tabelize(const pluss::kindle::Catalog& catalog) {
+  return tabelize(catalog, pluss::kindle::TabelizePolicy{});
+}
+
+DataFrame DataFrame::tabelize(const pluss::kindle::Catalog& catalog,
+                              const pluss::kindle::TabelizePolicy& policy) {
+  PLUSS_CHECK(catalog.defined(), "DataFrame::tabelize requires a defined Catalog");
+  return catalog.tabelize(policy);
+}
+
 pluss::kindle::Catalog DataFrame::kindelize() const {
   return kindelize(pluss::kindle::KindelizePolicy{});
 }

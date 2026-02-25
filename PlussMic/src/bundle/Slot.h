@@ -67,6 +67,10 @@ public:
   std::unordered_map<std::string, std::int64_t> type_counts() const;
 
   // Conversion for bridge paths (throws when slot is not stream-compatible).
+  pluss::kindle::Stream to_kindle() const;
+  // Semantic alias for explicit model switch.
+  pluss::kindle::Stream as_kindle() const;
+  // Backward-compatible alias for older call sites.
   pluss::kindle::Stream kindelize() const;
   static Slot from_kindle(const pluss::kindle::Stream& stream);
 

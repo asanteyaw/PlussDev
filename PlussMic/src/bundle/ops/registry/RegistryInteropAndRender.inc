@@ -1,11 +1,19 @@
-pluss::kindle::Catalog Registry::kindelize() const {
-  ensure_stream_compatible("Registry::kindelize");
+pluss::kindle::Catalog Registry::to_kindle() const {
+  ensure_stream_compatible("Registry::to_kindle");
   std::vector<std::pair<std::string, pluss::kindle::Stream>> out;
   out.reserve(static_cast<std::size_t>(nslots()));
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
-    out.emplace_back(impl_ref_().keys_[i], impl_ref_().slots_[i].kindelize());
+    out.emplace_back(impl_ref_().keys_[i], impl_ref_().slots_[i].to_kindle());
   }
   return pluss::kindle::Catalog(std::move(out));
+}
+
+pluss::kindle::Catalog Registry::kindelize() const {
+  return to_kindle();
+}
+
+pluss::kindle::Catalog Registry::as_kindle() const {
+  return to_kindle();
 }
 
 Registry Registry::from_kindle(const pluss::kindle::Catalog& catalog) {

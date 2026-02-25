@@ -26,6 +26,7 @@ class LoadResult;
 namespace pluss::kindle {
 class Catalog;
 struct KindelizePolicy;
+struct TabelizePolicy;
 }
 
 namespace pluss::table {
@@ -267,6 +268,9 @@ public:
   static DataFrame load_parquet(std::string_view filepath, const pluss::loader::Config& config);
   static DataFrame load_parquet(std::string_view filepath,
                                 std::initializer_list<pluss::loader::ConfigEntry> config_entries);
+  static DataFrame tabelize(const pluss::kindle::Catalog& catalog);
+  static DataFrame tabelize(const pluss::kindle::Catalog& catalog,
+                            const pluss::kindle::TabelizePolicy& policy);
   pluss::kindle::Catalog kindelize() const;
   pluss::kindle::Catalog kindelize(const pluss::kindle::KindelizePolicy& policy) const;
 

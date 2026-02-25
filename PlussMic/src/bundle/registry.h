@@ -118,44 +118,13 @@ public:
   Registry concat_values(std::string_view key, const Slot& other) const;
   Registry& concat_values_(std::string_view key, const Slot& other);
 
-  // Stream-compatible delegated APIs (Slot -> Stream -> Catalog bridge).
-  Registry series() const;
-  Registry note() const;
-  Registry timeline() const;
-  Registry timeindex() const;
-  Registry sort(std::string_view by_field, bool ascending = true) const;
-  Registry sort_by(const std::vector<std::string>& fields,
-                   const std::vector<bool>& ascending = {}) const;
-  std::unordered_map<std::string, Registry> group_by(std::string_view key_field) const;
-  Registry fillna(double value, std::initializer_list<std::string_view> keys = {}) const;
-  Registry dropna(std::initializer_list<std::string_view> keys = {}) const;
-  Registry ffill(std::initializer_list<std::string_view> keys = {}) const;
-  Registry bfill(std::initializer_list<std::string_view> keys = {}) const;
-  Registry isnull(std::initializer_list<std::string_view> keys = {}) const;
-  Registry notnull(std::initializer_list<std::string_view> keys = {}) const;
-  Registry cast_series(std::initializer_list<std::string_view> keys,
-                       std::optional<pluss::codem::ScalarType> dtype = std::nullopt) const;
-  Registry cast_note(std::initializer_list<std::string_view> keys) const;
-  Registry cast_timeline(std::initializer_list<std::string_view> keys) const;
-  Registry cast_timeindex(std::initializer_list<std::string_view> keys) const;
-  Registry astype(std::initializer_list<std::string_view> keys, pluss::codem::ScalarType dtype) const;
-  Slot sum(std::string_view field) const;
-  Slot mean(std::string_view field) const;
-  Slot min(std::string_view field) const;
-  Slot max(std::string_view field) const;
-  std::int64_t count() const;
-  Registry merge(const Registry& other, std::string_view on, std::string_view how = "inner") const;
-  Registry text_preprocess(std::string_view field) const;
-  Registry extract_keywords(std::string_view field, int top_n = 10) const;
-  Registry compute_similarity(std::string_view field1,
-                              std::string_view field2,
-                              std::string_view method = "cosine") const;
-  Registry filter_by_text(std::string_view field, std::string_view pattern) const;
-  Registry add_text_features(std::string_view field) const;
-  Registry aggregate_text_stats(std::string_view field, std::string_view stat_type) const;
-  Registry tfidf(std::string_view field) const;
-
-  // Bridge with kindle model (may throw if slot heterogeneity is not stream-compatible).
+  // Explicit bridge with kindle model.
+  // Use `to_kindle()` to access Catalog-only operations, then convert back with `from_kindle()`.
+  // Conversion may throw when slot heterogeneity is not stream-compatible.
+  pluss::kindle::Catalog to_kindle() const;
+  // Semantic alias for explicit model switch.
+  pluss::kindle::Catalog as_kindle() const;
+  // Backward-compatible alias for older call sites.
   pluss::kindle::Catalog kindelize() const;
   static Registry from_kindle(const pluss::kindle::Catalog& catalog);
 

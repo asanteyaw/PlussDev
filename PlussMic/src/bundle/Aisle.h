@@ -47,6 +47,10 @@ public:
   Aisle apply_slot(std::string_view key, const std::function<Slot(const Slot&)>& fn) const;
   Aisle concat_depth(const Aisle& other) const;
 
+  pluss::kindle::Archive to_kindle() const;
+  // Semantic alias for explicit model switch.
+  pluss::kindle::Archive as_kindle() const;
+  // Backward-compatible alias for older call sites.
   pluss::kindle::Archive kindelize() const;
   static Aisle from_kindle(const pluss::kindle::Archive& archive);
 
