@@ -17,12 +17,24 @@ namespace pluss::loader {
 
 struct ReadExcelOptions {
   bool header{true};
+  std::int64_t header_row{0};
+  std::size_t header_rows{1};
+  bool header_ffill{true};
+  std::string header_joiner{"_"};
   std::optional<std::string> sheet_name{};
   std::optional<std::int64_t> sheet_index{};
   std::vector<std::string> sheet_names{};
   std::vector<std::int64_t> sheet_indices{};
   std::optional<std::size_t> n_sheets{};
   bool all_sheets{false};
+  std::optional<std::int64_t> start_row{};
+  std::optional<std::int64_t> end_row{};
+  std::optional<std::int64_t> start_col{};
+  std::optional<std::int64_t> end_col{};
+  bool trim_outer_empty{true};
+  bool auto_table_block{false};
+  std::size_t auto_min_non_empty_cells{2};
+  std::size_t auto_max_blank_gap{1};
 };
 
 struct WriteExcelOptions {

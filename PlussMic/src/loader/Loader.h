@@ -159,5 +159,35 @@ void save_as(const pluss::table::DataFrame& frame,
              std::string_view target_type,
              std::string_view filepath,
              std::initializer_list<ConfigEntry> config_entries);
+void save_csv(const pluss::table::DataFrame& frame,
+              std::string_view filepath,
+              const Config& config = {});
+void save_csv(const pluss::table::DataFrame& frame,
+              std::string_view filepath,
+              std::initializer_list<ConfigEntry> config_entries);
+void save_excel(const pluss::table::DataFrame& frame,
+                std::string_view filepath,
+                const Config& config = {});
+void save_excel(const pluss::table::DataFrame& frame,
+                std::string_view filepath,
+                std::initializer_list<ConfigEntry> config_entries);
+void save_txt(const pluss::table::DataFrame& frame,
+              std::string_view filepath,
+              const Config& config = {});
+void save_txt(const pluss::table::DataFrame& frame,
+              std::string_view filepath,
+              std::initializer_list<ConfigEntry> config_entries);
+void save_json(const pluss::table::DataFrame& frame,
+               std::string_view filepath,
+               const Config& config = {});
+void save_json(const pluss::table::DataFrame& frame,
+               std::string_view filepath,
+               std::initializer_list<ConfigEntry> config_entries);
+void save_parquet(const pluss::table::DataFrame& frame,
+                  std::string_view filepath,
+                  const Config& config = {});
+void save_parquet(const pluss::table::DataFrame& frame,
+                  std::string_view filepath,
+                  std::initializer_list<ConfigEntry> config_entries);
 
 } // namespace pluss::loader

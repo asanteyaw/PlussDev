@@ -28,6 +28,81 @@ Registry Registry::from_kindle(const pluss::kindle::Catalog& catalog) {
   return Registry(std::move(out));
 }
 
+namespace {
+
+pluss::table::DataFrame registry_to_io_frame(const Registry& registry) {
+  registry.ensure_stream_compatible("Registry::save_as");
+  auto catalog = registry.to_kindle();
+  pluss::kindle::TabelizePolicy policy;
+  policy.align = pluss::kindle::AlignPolicy::Outer;
+  policy.index_mode = pluss::kindle::IndexMode::Positional;
+  policy.fill = pluss::kindle::FillPolicy::Null;
+  policy.dtype = pluss::kindle::DTypePolicy::BestEffort;
+  policy.collision = pluss::kindle::CollisionPolicy::Suffix;
+  policy.include_case_feature = false;
+  return catalog.tabelize(policy);
+}
+
+} // namespace
+
+void Registry::save_csv(std::string_view filepath) const {
+  save_csv(filepath, {});
+}
+
+void Registry::save_csv(std::string_view filepath, const pluss::loader::Config& config) const {
+  registry_to_io_frame(*this).save_csv(filepath, config);
+}
+
+void Registry::save_txt(std::string_view filepath) const {
+  save_txt(filepath, {});
+}
+
+void Registry::save_txt(std::string_view filepath, const pluss::loader::Config& config) const {
+  registry_to_io_frame(*this).save_txt(filepath, config);
+}
+
+void Registry::save_excel(std::string_view filepath) const {
+  save_excel(filepath, {});
+}
+
+void Registry::save_excel(std::string_view filepath, const pluss::loader::Config& config) const {
+  registry_to_io_frame(*this).save_excel(filepath, config);
+}
+
+void Registry::save_json(std::string_view filepath) const {
+  save_json(filepath, {});
+}
+
+void Registry::save_json(std::string_view filepath, const pluss::loader::Config& config) const {
+  if (is_stream_compatible()) {
+    registry_to_io_frame(*this).save_json(filepath, config);
+    return;
+  }
+  (void)config;
+  std::ofstream out(std::string(filepath), std::ios::out | std::ios::trunc | std::ios::binary);
+  PLUSS_CHECK(out.is_open(), "Registry::save_json: failed to open file '" + std::string(filepath) + "'");
+  out << to_json();
+}
+
+void Registry::save_parquet(std::string_view filepath) const {
+  save_parquet(filepath, {});
+}
+
+void Registry::save_parquet(std::string_view filepath, const pluss::loader::Config& config) const {
+  registry_to_io_frame(*this).save_parquet(filepath, config);
+}
+
+void Registry::save_as(std::string_view target_type,
+                       std::string_view filepath,
+                       const pluss::loader::Config& config) const {
+  const auto target = lower_copy(trim_copy(target_type));
+  if (target == "json") {
+    save_json(filepath, config);
+    return;
+  }
+  registry_to_io_frame(*this).save_as(target_type, filepath, config);
+}
+
 std::string Registry::to_string() const {
   if (!defined()) return "{ \"_type\": \"Registry\", \"defined\": false }";
 

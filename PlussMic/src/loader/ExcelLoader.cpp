@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -153,6 +154,363 @@ std::string column_letters(std::int64_t zero_based_col) {
   }
   std::reverse(out.begin(), out.end());
   return out;
+}
+
+using CellTable = std::vector<std::vector<std::string>>;
+
+std::string trim_ascii(std::string_view s) {
+  std::size_t b = 0;
+  std::size_t e = s.size();
+  while (b < e && std::isspace(static_cast<unsigned char>(s[b])) != 0) ++b;
+  while (e > b && std::isspace(static_cast<unsigned char>(s[e - 1])) != 0) --e;
+  return std::string(s.substr(b, e - b));
+}
+
+bool has_non_empty_cell(const std::vector<std::string>& row) {
+  for (const auto& cell : row) {
+    if (!trim_ascii(cell).empty()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool has_non_empty_in_col(const CellTable& table, std::size_t col) {
+  for (const auto& row : table) {
+    if (col < row.size() && !trim_ascii(row[col]).empty()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void make_rectangular(CellTable& table) {
+  std::size_t max_cols = 0;
+  for (const auto& row : table) {
+    max_cols = std::max(max_cols, row.size());
+  }
+  for (auto& row : table) {
+    row.resize(max_cols);
+  }
+}
+
+void trim_outer_empty(CellTable& table) {
+  if (table.empty()) return;
+  make_rectangular(table);
+
+  std::size_t top = 0;
+  while (top < table.size() && !has_non_empty_cell(table[top])) ++top;
+  if (top == table.size()) {
+    table.clear();
+    return;
+  }
+
+  std::size_t bottom = table.size() - 1;
+  while (bottom > top && !has_non_empty_cell(table[bottom])) --bottom;
+
+  const std::size_t ncols = table.front().size();
+  std::size_t left = 0;
+  while (left < ncols && !has_non_empty_in_col(table, left)) ++left;
+  if (left == ncols) {
+    table.clear();
+    return;
+  }
+
+  std::size_t right = ncols - 1;
+  while (right > left && !has_non_empty_in_col(table, right)) --right;
+
+  CellTable out;
+  out.reserve(bottom - top + 1);
+  for (std::size_t r = top; r <= bottom; ++r) {
+    out.emplace_back(table[r].begin() + static_cast<std::ptrdiff_t>(left),
+                     table[r].begin() + static_cast<std::ptrdiff_t>(right + 1));
+  }
+  table = std::move(out);
+}
+
+CellTable crop_table(const CellTable& table,
+                     std::size_t row0,
+                     std::size_t row1,
+                     std::size_t col0,
+                     std::size_t col1) {
+  CellTable out;
+  if (table.empty()) return out;
+  out.reserve(row1 - row0 + 1);
+  for (std::size_t r = row0; r <= row1; ++r) {
+    std::vector<std::string> row;
+    row.reserve(col1 - col0 + 1);
+    for (std::size_t c = col0; c <= col1; ++c) {
+      row.push_back(table[r][c]);
+    }
+    out.push_back(std::move(row));
+  }
+  return out;
+}
+
+std::optional<std::array<std::size_t, 4>> detect_auto_table_bounds(const CellTable& table,
+                                                                    const ReadExcelOptions& options) {
+  if (table.empty()) return std::nullopt;
+
+  const std::size_t rows = table.size();
+  const std::size_t cols = table.front().size();
+  if (rows == 0 || cols == 0) return std::nullopt;
+
+  std::vector<std::size_t> row_non_empty(rows, 0);
+  for (std::size_t r = 0; r < rows; ++r) {
+    for (std::size_t c = 0; c < cols; ++c) {
+      if (!trim_ascii(table[r][c]).empty()) {
+        ++row_non_empty[r];
+      }
+    }
+  }
+
+  const std::size_t min_cells = std::max<std::size_t>(1, options.auto_min_non_empty_cells);
+  const std::size_t max_gap = options.auto_max_blank_gap;
+
+  bool active = false;
+  std::size_t run_start = 0;
+  std::size_t run_last_good = 0;
+  std::size_t run_gap = 0;
+  std::size_t run_score = 0;
+
+  std::size_t best_start = 0;
+  std::size_t best_end = 0;
+  std::size_t best_score = 0;
+  bool best_valid = false;
+
+  auto flush_run = [&]() {
+    if (!active) return;
+    const std::size_t run_end = run_last_good;
+    const std::size_t run_len = run_end >= run_start ? (run_end - run_start + 1) : 0;
+    const std::size_t best_len = best_end >= best_start ? (best_end - best_start + 1) : 0;
+    if (!best_valid || run_score > best_score || (run_score == best_score && run_len > best_len)) {
+      best_valid = true;
+      best_start = run_start;
+      best_end = run_end;
+      best_score = run_score;
+    }
+    active = false;
+    run_start = 0;
+    run_last_good = 0;
+    run_gap = 0;
+    run_score = 0;
+  };
+
+  for (std::size_t r = 0; r < rows; ++r) {
+    const bool good = row_non_empty[r] >= min_cells;
+    if (good) {
+      if (!active) {
+        active = true;
+        run_start = r;
+        run_last_good = r;
+        run_gap = 0;
+        run_score = row_non_empty[r];
+      } else {
+        run_last_good = r;
+        run_gap = 0;
+        run_score += row_non_empty[r];
+      }
+      continue;
+    }
+    if (!active) continue;
+    if (run_gap < max_gap) {
+      ++run_gap;
+      continue;
+    }
+    flush_run();
+  }
+  flush_run();
+
+  if (!best_valid) return std::nullopt;
+
+  std::vector<std::size_t> col_non_empty(cols, 0);
+  for (std::size_t r = best_start; r <= best_end; ++r) {
+    for (std::size_t c = 0; c < cols; ++c) {
+      if (!trim_ascii(table[r][c]).empty()) {
+        ++col_non_empty[c];
+      }
+    }
+  }
+
+  const auto run_rows = best_end - best_start + 1;
+  const std::size_t min_col_non_empty = run_rows >= 2 ? 2 : 1;
+
+  std::size_t left = cols;
+  std::size_t right = 0;
+  for (std::size_t c = 0; c < cols; ++c) {
+    if (col_non_empty[c] >= min_col_non_empty) {
+      left = std::min(left, c);
+      right = std::max(right, c);
+    }
+  }
+
+  if (left == cols) {
+    for (std::size_t c = 0; c < cols; ++c) {
+      if (col_non_empty[c] > 0) {
+        left = std::min(left, c);
+        right = std::max(right, c);
+      }
+    }
+  }
+
+  if (left == cols || right < left) return std::nullopt;
+  return std::array<std::size_t, 4>{best_start, best_end, left, right};
+}
+
+CellTable apply_excel_table_policies(CellTable table, const ReadExcelOptions& options) {
+  if (table.empty()) return table;
+  make_rectangular(table);
+
+  auto clamp = [](std::int64_t v, std::size_t max_inclusive) -> std::size_t {
+    if (v < 0) return 0;
+    const auto uv = static_cast<std::size_t>(v);
+    return std::min(uv, max_inclusive);
+  };
+
+  if (options.start_row.has_value() || options.end_row.has_value() || options.start_col.has_value() ||
+      options.end_col.has_value()) {
+    const std::size_t max_row = table.size() - 1;
+    const std::size_t max_col = table.front().size() - 1;
+    const std::size_t row0 = options.start_row.has_value() ? clamp(*options.start_row, max_row) : 0;
+    const std::size_t row1 = options.end_row.has_value() ? clamp(*options.end_row, max_row) : max_row;
+    const std::size_t col0 = options.start_col.has_value() ? clamp(*options.start_col, max_col) : 0;
+    const std::size_t col1 = options.end_col.has_value() ? clamp(*options.end_col, max_col) : max_col;
+    if (row0 <= row1 && col0 <= col1) {
+      table = crop_table(table, row0, row1, col0, col1);
+    } else {
+      table.clear();
+      return table;
+    }
+  }
+
+  if (options.trim_outer_empty) {
+    trim_outer_empty(table);
+  }
+  if (table.empty()) return table;
+
+  if (options.auto_table_block) {
+    if (const auto bounds = detect_auto_table_bounds(table, options); bounds.has_value()) {
+      table = crop_table(table, (*bounds)[0], (*bounds)[1], (*bounds)[2], (*bounds)[3]);
+      if (options.trim_outer_empty) {
+        trim_outer_empty(table);
+      }
+    }
+  }
+
+  return table;
+}
+
+std::vector<std::string> flattened_header_names(const CellTable& table,
+                                                std::size_t header_row,
+                                                std::size_t header_rows,
+                                                bool header_ffill,
+                                                std::string_view joiner) {
+  PLUSS_CHECK(!table.empty(), "load_excel: cannot infer headers from empty table");
+  const std::size_t nrows = table.size();
+  const std::size_t ncols = table.front().size();
+  PLUSS_CHECK(header_rows > 0, "load_excel: header_rows must be > 0");
+  PLUSS_CHECK(header_row < nrows, "load_excel: header_row out of range");
+  PLUSS_CHECK(header_row + header_rows <= nrows, "load_excel: header_row + header_rows exceeds row count");
+
+  std::vector<std::vector<std::string>> tokens(header_rows, std::vector<std::string>(ncols));
+
+  for (std::size_t r = 0; r < header_rows; ++r) {
+    std::string carry;
+    for (std::size_t c = 0; c < ncols; ++c) {
+      auto token = trim_ascii(table[header_row + r][c]);
+      if (header_ffill && token.empty() && !carry.empty()) {
+        token = carry;
+      }
+      if (!token.empty()) {
+        carry = token;
+      }
+      tokens[r][c] = std::move(token);
+    }
+  }
+
+  if (header_ffill) {
+    for (std::size_t c = 0; c < ncols; ++c) {
+      std::string carry;
+      for (std::size_t r = 0; r < header_rows; ++r) {
+        if (tokens[r][c].empty() && !carry.empty()) {
+          tokens[r][c] = carry;
+        } else if (!tokens[r][c].empty()) {
+          carry = tokens[r][c];
+        }
+      }
+    }
+  }
+
+  std::vector<std::string> names(ncols);
+  for (std::size_t c = 0; c < ncols; ++c) {
+    std::string name;
+    for (std::size_t r = 0; r < header_rows; ++r) {
+      const auto& token = tokens[r][c];
+      if (token.empty()) continue;
+      if (name.empty()) {
+        name = token;
+        continue;
+      }
+      // Drop adjacent duplicates introduced by merged-header fill.
+      if (name.size() >= token.size() && name.compare(name.size() - token.size(), token.size(), token) == 0) {
+        continue;
+      }
+      name += std::string(joiner);
+      name += token;
+    }
+    if (name.empty()) {
+      name = fmt::format("feat_{}", c);
+    }
+    names[c] = std::move(name);
+  }
+
+  // Enforce uniqueness for downstream frame constructors.
+  std::unordered_map<std::string, std::size_t> seen;
+  seen.reserve(names.size());
+  for (std::size_t c = 0; c < names.size(); ++c) {
+    auto base = trim_ascii(names[c]);
+    if (base.empty()) {
+      base = fmt::format("feat_{}", c);
+    }
+    auto [it, inserted] = seen.emplace(base, 1);
+    if (inserted) {
+      names[c] = std::move(base);
+      continue;
+    }
+    const auto nth = ++(it->second);
+    names[c] = fmt::format("{}_{}", base, nth);
+  }
+
+  return names;
+}
+
+CellTable apply_excel_header_policies(CellTable table, const ReadExcelOptions& options) {
+  if (table.empty() || !options.header) {
+    return table;
+  }
+
+  make_rectangular(table);
+
+  PLUSS_CHECK(options.header_row >= 0, "load_excel: header_row must be >= 0");
+  const std::size_t header_row = static_cast<std::size_t>(options.header_row);
+  const std::size_t header_rows = std::max<std::size_t>(1, options.header_rows);
+  if (header_row >= table.size()) {
+    PLUSS_FAIL("load_excel: header_row out of range after table policy application");
+  }
+  if (header_row + header_rows > table.size()) {
+    PLUSS_FAIL("load_excel: header_row + header_rows out of range after table policy application");
+  }
+
+  if (header_rows == 1) {
+    return table;
+  }
+
+  auto names = flattened_header_names(table, header_row, header_rows, options.header_ffill, options.header_joiner);
+  table[header_row] = std::move(names);
+  const auto erase_begin = table.begin() + static_cast<std::ptrdiff_t>(header_row + 1);
+  const auto erase_end = table.begin() + static_cast<std::ptrdiff_t>(header_row + header_rows);
+  table.erase(erase_begin, erase_end);
+  return table;
 }
 
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
@@ -440,9 +798,13 @@ CsvRawBatch read_excel_raw_batch(std::string_view filepath, const ReadExcelOptio
     target = sheets[static_cast<std::size_t>(idx)];
   }
 
-  const auto table = parse_sheet_table(archive, target, shared_strings);
+  auto table = parse_sheet_table(archive, target, shared_strings);
+  table = apply_excel_table_policies(std::move(table), options);
+  table = apply_excel_header_policies(std::move(table), options);
+  PLUSS_CHECK(!table.empty(), "read_excel_raw_batch: no tabular rows after applying Excel policies");
   ReadCsvOptions csv_opts;
   csv_opts.header = options.header;
+  csv_opts.header_row = options.header_row;
   return read_csv_records_raw_batch(table, csv_opts);
 #else
   (void)filepath;
@@ -499,9 +861,14 @@ ExcelRawBatchWorkbook read_excel_workbook_raw_batch(std::string_view filepath,
 
   ReadCsvOptions csv_opts;
   csv_opts.header = options.header;
+  csv_opts.header_row = options.header_row;
 
   for (const auto& s : selected_sheets) {
-    const auto table = parse_sheet_table(archive, s, shared_strings);
+    auto table = parse_sheet_table(archive, s, shared_strings);
+    table = apply_excel_table_policies(std::move(table), options);
+    table = apply_excel_header_policies(std::move(table), options);
+    PLUSS_CHECK(!table.empty(),
+                "read_excel_workbook_raw_batch: sheet '" + s.name + "' has no tabular rows after applying policies");
     out.emplace_back(s.name, read_csv_records_raw_batch(table, csv_opts));
   }
   return out;
@@ -543,9 +910,13 @@ CsvBatch read_excel_batch(std::string_view filepath, const ReadExcelOptions& opt
     target = sheets[static_cast<std::size_t>(idx)];
   }
 
-  const auto table = parse_sheet_table(archive, target, shared_strings);
+  auto table = parse_sheet_table(archive, target, shared_strings);
+  table = apply_excel_table_policies(std::move(table), options);
+  table = apply_excel_header_policies(std::move(table), options);
+  PLUSS_CHECK(!table.empty(), "read_excel_batch: no tabular rows after applying Excel policies");
   ReadCsvOptions csv_opts;
   csv_opts.header = options.header;
+  csv_opts.header_row = options.header_row;
   return read_csv_records_batch(table, csv_opts);
 #else
   (void)filepath;
@@ -603,9 +974,14 @@ ExcelBatchWorkbook read_excel_workbook_batch(
 
   ReadCsvOptions csv_opts;
   csv_opts.header = options.header;
+  csv_opts.header_row = options.header_row;
 
   for (const auto& s : selected_sheets) {
-    const auto table = parse_sheet_table(archive, s, shared_strings);
+    auto table = parse_sheet_table(archive, s, shared_strings);
+    table = apply_excel_table_policies(std::move(table), options);
+    table = apply_excel_header_policies(std::move(table), options);
+    PLUSS_CHECK(!table.empty(),
+                "read_excel_workbook_batch: sheet '" + s.name + "' has no tabular rows after applying policies");
     out.emplace_back(s.name, read_csv_records_batch(table, csv_opts));
   }
   return out;

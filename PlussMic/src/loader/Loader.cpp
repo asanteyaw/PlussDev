@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
@@ -21,6 +22,7 @@
 #include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
+#include "CodeM/core/Half.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/timeline_factory.h"
@@ -35,6 +37,7 @@
 #include <arrow/io/api.h>
 #include <arrow/table.h>
 #include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
 #endif
 
 namespace pluss::loader {
@@ -265,12 +268,38 @@ ReadExcelOptions excel_read_options_from_config(const Config& config) {
     }
   }
 
+  if (const auto* v = find_config(config, {"headerrow", "header_row"})) {
+    if (auto n = parse_int_value(*v); n.has_value()) {
+      PLUSS_CHECK(*n >= 0, "loader::load_excel: header_row must be >= 0");
+      options.header_row = *n;
+    }
+  }
+
+  if (const auto* v = find_config(config, {"headerrows", "header_rows", "headerdepth"})) {
+    if (auto n = parse_int_value(*v); n.has_value()) {
+      PLUSS_CHECK(*n > 0, "loader::load_excel: header_rows must be > 0");
+      options.header_rows = static_cast<std::size_t>(*n);
+    }
+  }
+
+  if (const auto* v = find_config(config, {"headerffill", "header_forward_fill", "ffill_header"})) {
+    if (auto b = parse_bool_value(*v); b.has_value()) {
+      options.header_ffill = *b;
+    }
+  }
+
+  if (const auto* v = find_config(config, {"headerjoiner", "header_joiner", "headersep", "header_sep"})) {
+    if (auto s = parse_string_value(*v); s.has_value()) {
+      options.header_joiner = *s;
+    }
+  }
+
   if (const auto* v = find_config(config, {"sheetname", "sheet", "sheetindex"})) {
     if (v->is_none()) {
       options.all_sheets = true;
     } else if (auto idx = parse_int_value(*v); idx.has_value()) {
       options.sheet_index = *idx;
-    } else if (auto names = parse_string_list_value(*v); names.has_value() && !names->empty()) {
+    } else if (auto names = v->as_string_list(); names.has_value() && !names->empty()) {
       options.sheet_names = std::move(*names);
       options.all_sheets = false;
       options.sheet_name.reset();
@@ -278,8 +307,18 @@ ReadExcelOptions excel_read_options_from_config(const Config& config) {
     } else if (auto s = parse_string_value(*v); s.has_value()) {
       if (is_none_token(*s)) {
         options.all_sheets = true;
+      } else if (s->find(',') != std::string::npos) {
+        if (auto names = parse_string_list_value(*v); names.has_value() && !names->empty()) {
+          options.sheet_names = std::move(*names);
+          options.all_sheets = false;
+          options.sheet_name.reset();
+          options.sheet_index.reset();
+        }
       } else {
         options.sheet_name = *s;
+        options.all_sheets = false;
+        options.sheet_names.clear();
+        options.sheet_index.reset();
       }
     }
   }
@@ -294,6 +333,67 @@ ReadExcelOptions excel_read_options_from_config(const Config& config) {
     if (auto n = parse_int_value(*v); n.has_value() && *n > 0) {
       options.n_sheets = static_cast<std::size_t>(*n);
     }
+  }
+
+  if (const auto* v = find_config(config, {"startrow", "rowstart", "firstrow"})) {
+    if (auto n = parse_int_value(*v); n.has_value()) {
+      PLUSS_CHECK(*n >= 0, "loader::load_excel: start_row must be >= 0");
+      options.start_row = *n;
+    }
+  }
+
+  if (const auto* v = find_config(config, {"endrow", "rowend", "lastrow"})) {
+    if (auto n = parse_int_value(*v); n.has_value()) {
+      PLUSS_CHECK(*n >= 0, "loader::load_excel: end_row must be >= 0");
+      options.end_row = *n;
+    }
+  }
+
+  if (const auto* v = find_config(config, {"startcol", "colstart", "firstcol"})) {
+    if (auto n = parse_int_value(*v); n.has_value()) {
+      PLUSS_CHECK(*n >= 0, "loader::load_excel: start_col must be >= 0");
+      options.start_col = *n;
+    }
+  }
+
+  if (const auto* v = find_config(config, {"endcol", "colend", "lastcol"})) {
+    if (auto n = parse_int_value(*v); n.has_value()) {
+      PLUSS_CHECK(*n >= 0, "loader::load_excel: end_col must be >= 0");
+      options.end_col = *n;
+    }
+  }
+
+  if (const auto* v = find_config(config, {"trimouterempty", "trimempty", "trim"})) {
+    if (auto b = parse_bool_value(*v); b.has_value()) {
+      options.trim_outer_empty = *b;
+    }
+  }
+
+  if (const auto* v = find_config(config, {"autotableblock", "autotable", "infertableblock"})) {
+    if (auto b = parse_bool_value(*v); b.has_value()) {
+      options.auto_table_block = *b;
+    }
+  }
+
+  if (const auto* v = find_config(config, {"autominnonemptycells", "tableminnonemptycells"})) {
+    if (auto n = parse_int_value(*v); n.has_value() && *n > 0) {
+      options.auto_min_non_empty_cells = static_cast<std::size_t>(*n);
+    }
+  }
+
+  if (const auto* v = find_config(config, {"automaxblankgap", "tablemaxblankgap"})) {
+    if (auto n = parse_int_value(*v); n.has_value() && *n >= 0) {
+      options.auto_max_blank_gap = static_cast<std::size_t>(*n);
+    }
+  }
+
+  if (options.start_row.has_value() && options.end_row.has_value()) {
+    PLUSS_CHECK(*options.start_row <= *options.end_row,
+                "loader::load_excel: start_row cannot be greater than end_row");
+  }
+  if (options.start_col.has_value() && options.end_col.has_value()) {
+    PLUSS_CHECK(*options.start_col <= *options.end_col,
+                "loader::load_excel: start_col cannot be greater than end_col");
   }
 
   return options;
@@ -1474,6 +1574,304 @@ std::vector<std::string> raw_strings_from_arrow_array(const std::shared_ptr<arro
   return out;
 }
 
+std::vector<bool> thread_validity(const pluss::table::Thread& thread) {
+  const auto n = static_cast<std::size_t>(thread.size());
+  if (!thread.has_validity_mask()) {
+    return std::vector<bool>(n, true);
+  }
+  auto valid = thread.validity_mask()->to_vec<bool>();
+  PLUSS_CHECK(valid.size() == n, "loader::save_parquet: thread validity mask size mismatch");
+  return valid;
+}
+
+std::shared_ptr<arrow::Array> note_thread_to_arrow_string_array(const pluss::table::Thread& thread) {
+  const auto valid = thread_validity(thread);
+  const auto note = thread.as_note();
+  PLUSS_CHECK(static_cast<std::size_t>(note.numel()) == valid.size(),
+              "loader::save_parquet: Note thread length mismatch");
+  arrow::StringBuilder builder;
+  for (std::int64_t i = 0; i < note.numel(); ++i) {
+    const auto idx = static_cast<std::size_t>(i);
+    auto st = valid[idx] ? builder.Append(std::string(note.at(i))) : builder.AppendNull();
+    PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append Note value: " + st.ToString());
+  }
+  std::shared_ptr<arrow::Array> out;
+  auto st = builder.Finish(&out);
+  PLUSS_CHECK(st.ok() && out != nullptr, "loader::save_parquet: failed to finalize Note arrow array: " + st.ToString());
+  return out;
+}
+
+std::shared_ptr<arrow::Array> series_thread_to_arrow_array(const pluss::table::Thread& thread) {
+  const auto valid = thread_validity(thread);
+  const auto series = thread.as_series();
+  const auto n = static_cast<std::size_t>(series.numel());
+  PLUSS_CHECK(n == valid.size(), "loader::save_parquet: Series thread length mismatch");
+
+  auto finish_or_throw = [](auto& builder, std::string_view what) -> std::shared_ptr<arrow::Array> {
+    std::shared_ptr<arrow::Array> out;
+    auto st = builder.Finish(&out);
+    PLUSS_CHECK(st.ok() && out != nullptr,
+                "loader::save_parquet: failed to finalize " + std::string(what) + " arrow array: " + st.ToString());
+    return out;
+  };
+
+  switch (series.scalar_type()) {
+    case pluss::codem::ScalarType::Bool: {
+      const auto values = series.to_vec<bool>();
+      arrow::BooleanBuilder builder;
+      for (std::size_t i = 0; i < n; ++i) {
+        auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
+        PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append Bool value: " + st.ToString());
+      }
+      return finish_or_throw(builder, "Bool");
+    }
+    case pluss::codem::ScalarType::Int8: {
+      const auto values = series.to_vec<std::int8_t>();
+      arrow::Int8Builder builder;
+      for (std::size_t i = 0; i < n; ++i) {
+        auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
+        PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append Int8 value: " + st.ToString());
+      }
+      return finish_or_throw(builder, "Int8");
+    }
+    case pluss::codem::ScalarType::Int16: {
+      const auto values = series.to_vec<std::int16_t>();
+      arrow::Int16Builder builder;
+      for (std::size_t i = 0; i < n; ++i) {
+        auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
+        PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append Int16 value: " + st.ToString());
+      }
+      return finish_or_throw(builder, "Int16");
+    }
+    case pluss::codem::ScalarType::Int32: {
+      const auto values = series.to_vec<std::int32_t>();
+      arrow::Int32Builder builder;
+      for (std::size_t i = 0; i < n; ++i) {
+        auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
+        PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append Int32 value: " + st.ToString());
+      }
+      return finish_or_throw(builder, "Int32");
+    }
+    case pluss::codem::ScalarType::Int64: {
+      const auto values = series.to_vec<std::int64_t>();
+      arrow::Int64Builder builder;
+      for (std::size_t i = 0; i < n; ++i) {
+        auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
+        PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append Int64 value: " + st.ToString());
+      }
+      return finish_or_throw(builder, "Int64");
+    }
+    case pluss::codem::ScalarType::UInt8: {
+      const auto values = series.to_vec<std::uint8_t>();
+      arrow::UInt8Builder builder;
+      for (std::size_t i = 0; i < n; ++i) {
+        auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
+        PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append UInt8 value: " + st.ToString());
+      }
+      return finish_or_throw(builder, "UInt8");
+    }
+    case pluss::codem::ScalarType::UInt16: {
+      const auto values = series.to_vec<std::uint16_t>();
+      arrow::UInt16Builder builder;
+      for (std::size_t i = 0; i < n; ++i) {
+        auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
+        PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append UInt16 value: " + st.ToString());
+      }
+      return finish_or_throw(builder, "UInt16");
+    }
+    case pluss::codem::ScalarType::UInt32: {
+      const auto values = series.to_vec<std::uint32_t>();
+      arrow::UInt32Builder builder;
+      for (std::size_t i = 0; i < n; ++i) {
+        auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
+        PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append UInt32 value: " + st.ToString());
+      }
+      return finish_or_throw(builder, "UInt32");
+    }
+    case pluss::codem::ScalarType::UInt64: {
+      const auto values = series.to_vec<std::uint64_t>();
+      arrow::UInt64Builder builder;
+      for (std::size_t i = 0; i < n; ++i) {
+        auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
+        PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append UInt64 value: " + st.ToString());
+      }
+      return finish_or_throw(builder, "UInt64");
+    }
+    case pluss::codem::ScalarType::Float16:
+    case pluss::codem::ScalarType::BFloat16:
+    case pluss::codem::ScalarType::Float32: {
+      const auto values = series.to(pluss::codem::ScalarType::Float32).to_vec<float>();
+      arrow::FloatBuilder builder;
+      for (std::size_t i = 0; i < n; ++i) {
+        auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
+        PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append Float32 value: " + st.ToString());
+      }
+      return finish_or_throw(builder, "Float32");
+    }
+    case pluss::codem::ScalarType::Float64: {
+      const auto values = series.to_vec<double>();
+      arrow::DoubleBuilder builder;
+      for (std::size_t i = 0; i < n; ++i) {
+        auto st = valid[i] ? builder.Append(values[i]) : builder.AppendNull();
+        PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append Float64 value: " + st.ToString());
+      }
+      return finish_or_throw(builder, "Float64");
+    }
+    default:
+      return note_thread_to_arrow_string_array(thread.cast(pluss::table::ThreadCastTarget::Note));
+  }
+}
+
+std::shared_ptr<arrow::Array> timeline_thread_to_arrow_array(const pluss::table::Thread& thread) {
+  const auto valid = thread_validity(thread);
+  const auto ticks = thread.as_timeline().to_epoch_nanos_vector();
+  PLUSS_CHECK(ticks.size() == valid.size(), "loader::save_parquet: Timeline thread length mismatch");
+  arrow::TimestampBuilder builder(arrow::timestamp(arrow::TimeUnit::NANO), arrow::default_memory_pool());
+  for (std::size_t i = 0; i < ticks.size(); ++i) {
+    auto st = valid[i] ? builder.Append(ticks[i]) : builder.AppendNull();
+    PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append Timeline value: " + st.ToString());
+  }
+  std::shared_ptr<arrow::Array> out;
+  auto st = builder.Finish(&out);
+  PLUSS_CHECK(st.ok() && out != nullptr, "loader::save_parquet: failed to finalize Timeline arrow array: " + st.ToString());
+  return out;
+}
+
+std::shared_ptr<arrow::Array> timeindex_thread_to_arrow_array(const pluss::table::Thread& thread) {
+  const auto valid = thread_validity(thread);
+  const auto ticks = thread.as_timeindex().timeline().to_epoch_nanos_vector();
+  PLUSS_CHECK(ticks.size() == valid.size(), "loader::save_parquet: TimeIndex thread length mismatch");
+  arrow::TimestampBuilder builder(arrow::timestamp(arrow::TimeUnit::NANO), arrow::default_memory_pool());
+  for (std::size_t i = 0; i < ticks.size(); ++i) {
+    auto st = valid[i] ? builder.Append(ticks[i]) : builder.AppendNull();
+    PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append TimeIndex value: " + st.ToString());
+  }
+  std::shared_ptr<arrow::Array> out;
+  auto st = builder.Finish(&out);
+  PLUSS_CHECK(st.ok() && out != nullptr, "loader::save_parquet: failed to finalize TimeIndex arrow array: " + st.ToString());
+  return out;
+}
+
+std::shared_ptr<arrow::Array> thread_to_arrow_array(const pluss::table::Thread& thread) {
+  switch (thread.kind()) {
+    case pluss::table::ThreadKind::Series:
+      return series_thread_to_arrow_array(thread);
+    case pluss::table::ThreadKind::Note:
+      return note_thread_to_arrow_string_array(thread);
+    case pluss::table::ThreadKind::Timeline:
+      return timeline_thread_to_arrow_array(thread);
+    case pluss::table::ThreadKind::TimeIndex:
+      return timeindex_thread_to_arrow_array(thread);
+    default:
+      return note_thread_to_arrow_string_array(thread.cast(pluss::table::ThreadCastTarget::Note));
+  }
+}
+
+parquet::Compression::type parquet_compression_from_config(const Config& config) {
+  if (const auto* v = find_config(config, {"compression", "parquetcompression", "codec"})) {
+    if (auto s = parse_string_value(*v); s.has_value()) {
+      const auto low = normalize_key(*s);
+      if (low == "none" || low == "off" || low == "uncompressed") {
+        return parquet::Compression::UNCOMPRESSED;
+      }
+      if (low == "gzip") return parquet::Compression::GZIP;
+      if (low == "brotli") return parquet::Compression::BROTLI;
+      if (low == "zstd") return parquet::Compression::ZSTD;
+      if (low == "lz4") return parquet::Compression::LZ4;
+      return parquet::Compression::SNAPPY;
+    }
+  }
+  return parquet::Compression::SNAPPY;
+}
+
+void save_parquet_cpp(const pluss::table::DataFrame& frame,
+                      std::string_view filepath,
+                      const Config& config) {
+  PLUSS_CHECK(frame.defined(), "loader::save_parquet: frame is undefined");
+  PLUSS_CHECK(!trim_ascii(filepath).empty(), "loader::save_parquet: filepath cannot be empty");
+
+  bool add_cases = false;
+  if (const auto* v = find_config(config, {"addcases", "cases", "case", "index"})) {
+    if (auto b = parse_bool_value(*v); b.has_value()) {
+      add_cases = *b;
+    }
+  }
+
+  std::string case_label = "case";
+  if (const auto* v = find_config(config, {"caselabel", "indexlabel", "case_feature"})) {
+    if (auto s = parse_string_value(*v); s.has_value() && !s->empty()) {
+      case_label = *s;
+    }
+  }
+
+  auto names = frame.feature_names();
+  auto columns = frame.features();
+  if (add_cases) {
+    names.insert(names.begin(), case_label);
+    columns.insert(columns.begin(), frame.cases());
+  }
+  PLUSS_CHECK(names.size() == columns.size(), "loader::save_parquet: column metadata size mismatch");
+
+  std::unordered_map<std::string, std::size_t> seen;
+  seen.reserve(names.size());
+  std::vector<std::shared_ptr<arrow::Field>> fields;
+  std::vector<std::shared_ptr<arrow::Array>> arrays;
+  fields.reserve(names.size());
+  arrays.reserve(names.size());
+
+  for (std::size_t i = 0; i < columns.size(); ++i) {
+    auto name = trim_ascii(names[i]);
+    if (name.empty()) {
+      name = fmt::format("feat_{}", i);
+    }
+    auto [it, inserted] = seen.emplace(name, 1);
+    if (!inserted) {
+      const auto nth = ++(it->second);
+      name = fmt::format("{}_{}", name, nth);
+    }
+
+    auto array = thread_to_arrow_array(columns[i]);
+    PLUSS_CHECK(array != nullptr, "loader::save_parquet: failed to build arrow array for column '" + name + "'");
+    fields.emplace_back(arrow::field(name, array->type(), array->null_count() > 0));
+    arrays.emplace_back(std::move(array));
+  }
+
+  const auto schema = arrow::schema(fields);
+  auto table = arrow::Table::Make(schema, arrays, frame.nrows());
+  PLUSS_CHECK(table != nullptr, "loader::save_parquet: failed to assemble arrow table");
+
+  auto maybe_out = arrow::io::FileOutputStream::Open(std::string(filepath));
+  PLUSS_CHECK(maybe_out.ok(),
+              "loader::save_parquet: unable to open output file '" + std::string(filepath) + "': " +
+                  maybe_out.status().ToString());
+  auto outfile = *maybe_out;
+
+  parquet::WriterProperties::Builder writer_builder;
+  writer_builder.compression(parquet_compression_from_config(config));
+  if (const auto* v = find_config(config, {"usedictionary", "dictionary", "parquetdictionary"})) {
+    if (auto b = parse_bool_value(*v); b.has_value()) {
+      if (*b) {
+        writer_builder.enable_dictionary();
+      } else {
+        writer_builder.disable_dictionary();
+      }
+    }
+  }
+  auto writer_props = writer_builder.build();
+
+  std::int64_t row_group_size = std::max<std::int64_t>(1, frame.nrows());
+  if (const auto* v = find_config(config, {"rowgroupsize", "chunksize", "parquetchunksize"})) {
+    if (auto n = parse_int_value(*v); n.has_value() && *n > 0) {
+      row_group_size = *n;
+    }
+  }
+
+  auto st = parquet::arrow::WriteTable(*table, arrow::default_memory_pool(), outfile, row_group_size, writer_props);
+  PLUSS_CHECK(st.ok(), "loader::save_parquet: parquet write failed: " + st.ToString());
+  auto close_status = outfile->Close();
+  PLUSS_CHECK(close_status.ok(), "loader::save_parquet: failed to finalize output file: " + close_status.ToString());
+}
+
 CsvRawBatch read_parquet_raw_batch_cpp(std::string_view filepath, const Config& config) {
   auto maybe_file = arrow::io::ReadableFile::Open(std::string(filepath));
   PLUSS_CHECK(maybe_file.ok(), "loader::read_parquet_raw_batch: unable to open file '" + std::string(filepath) + "'");
@@ -2128,17 +2526,339 @@ LoadResult load(std::string_view source_type,
   return load(source_type, filepath, config_from(config_entries));
 }
 
+std::string json_string_token(std::string_view value) {
+  return "\"" + json_escape_text(value) + "\"";
+}
+
+std::string series_json_scalar_token(const pluss::Series& s, std::int64_t row) {
+  const auto* base = s.raw_data();
+  switch (s.scalar_type()) {
+    case pluss::codem::ScalarType::Bool:
+      return reinterpret_cast<const bool*>(base)[row] ? "true" : "false";
+    case pluss::codem::ScalarType::Int8:
+      return fmt::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
+    case pluss::codem::ScalarType::Int16:
+      return fmt::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
+    case pluss::codem::ScalarType::Int32:
+      return fmt::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
+    case pluss::codem::ScalarType::Int64:
+      return fmt::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
+    case pluss::codem::ScalarType::UInt8:
+      return fmt::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
+    case pluss::codem::ScalarType::UInt16:
+      return fmt::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
+    case pluss::codem::ScalarType::UInt32:
+      return fmt::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
+    case pluss::codem::ScalarType::UInt64:
+      return fmt::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
+    case pluss::codem::ScalarType::Float16: {
+      const auto v = pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]);
+      return std::isfinite(v) ? fmt::format("{:.9g}", v) : std::string("null");
+    }
+    case pluss::codem::ScalarType::BFloat16: {
+      const auto v = pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]);
+      return std::isfinite(v) ? fmt::format("{:.9g}", v) : std::string("null");
+    }
+    case pluss::codem::ScalarType::Float32: {
+      const auto v = reinterpret_cast<const float*>(base)[row];
+      return std::isfinite(v) ? fmt::format("{:.9g}", v) : std::string("null");
+    }
+    case pluss::codem::ScalarType::Float64: {
+      const auto v = reinterpret_cast<const double*>(base)[row];
+      return std::isfinite(v) ? fmt::format("{:.17g}", v) : std::string("null");
+    }
+    case pluss::codem::ScalarType::Complex64: {
+      const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
+      return json_string_token(fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag()));
+    }
+    case pluss::codem::ScalarType::Complex128: {
+      const auto v = reinterpret_cast<const pluss::codem::Complex128*>(base)[row];
+      return json_string_token(fmt::format("({:.12g}{:+.12g}j)", v.real(), v.imag()));
+    }
+    default:
+      return "null";
+  }
+}
+
+std::string thread_json_scalar_token(const pluss::table::Thread& thread,
+                                     const std::optional<std::vector<bool>>& valid_mask,
+                                     const std::optional<pluss::Note>& note_cache,
+                                     std::int64_t row) {
+  if (valid_mask.has_value() && !(*valid_mask)[static_cast<std::size_t>(row)]) {
+    return "null";
+  }
+
+  switch (thread.kind()) {
+    case pluss::table::ThreadKind::Series:
+      return series_json_scalar_token(thread.as_series(), row);
+    case pluss::table::ThreadKind::Note: {
+      const auto* note = note_cache.has_value() ? &(*note_cache) : nullptr;
+      if (note == nullptr) {
+        const auto local = thread.as_note();
+        return json_string_token(local.at(row));
+      }
+      return json_string_token(note->at(row));
+    }
+    case pluss::table::ThreadKind::Timeline:
+    case pluss::table::ThreadKind::TimeIndex: {
+      const auto* note = note_cache.has_value() ? &(*note_cache) : nullptr;
+      if (note == nullptr) {
+        const auto local = thread.cast(pluss::table::ThreadCastTarget::Note).as_note();
+        return json_string_token(local.at(row));
+      }
+      return json_string_token(note->at(row));
+    }
+    default:
+      return "null";
+  }
+}
+
+enum class JsonSaveOrient : std::uint8_t {
+  Records = 0,
+  Columns = 1,
+  Split = 2,
+};
+
+JsonSaveOrient json_orient_from_config(const Config& config) {
+  if (const auto* v = find_config(config, {"orient", "json_orient"})) {
+    if (auto s = parse_string_value(*v); s.has_value()) {
+      const auto low = normalize_key(*s);
+      if (low == "columns" || low == "column") return JsonSaveOrient::Columns;
+      if (low == "split") return JsonSaveOrient::Split;
+    }
+  }
+  return JsonSaveOrient::Records;
+}
+
+bool json_pretty_from_config(const Config& config) {
+  if (const auto* v = find_config(config, {"pretty", "indent"})) {
+    if (auto b = parse_bool_value(*v); b.has_value()) return *b;
+    if (auto i = parse_int_value(*v); i.has_value()) return *i > 0;
+  }
+  return true;
+}
+
+std::string maybe_json_indent(const Config& config) {
+  if (const auto* v = find_config(config, {"indent", "json_indent"})) {
+    if (auto i = parse_int_value(*v); i.has_value() && *i > 0 && *i <= 8) {
+      return std::string(static_cast<std::size_t>(*i), ' ');
+    }
+  }
+  return "  ";
+}
+
+bool save_with_cases_from_config(const Config& config) {
+  if (const auto* v = find_config(config, {"addcases", "cases", "case", "index"})) {
+    if (auto b = parse_bool_value(*v); b.has_value()) return *b;
+  }
+  return false;
+}
+
+std::string save_case_label_from_config(const Config& config) {
+  if (const auto* v = find_config(config, {"caselabel", "indexlabel", "case_feature"})) {
+    if (auto s = parse_string_value(*v); s.has_value() && !s->empty()) return *s;
+  }
+  return "case";
+}
+
+std::vector<std::string> json_column_names_with_cases(const pluss::table::DataFrame& frame,
+                                                      bool add_cases,
+                                                      std::string_view case_label) {
+  auto names = frame.feature_names();
+  if (add_cases) {
+    names.insert(names.begin(), std::string(case_label));
+  }
+  return names;
+}
+
+std::vector<pluss::table::Thread> json_columns_with_cases(const pluss::table::DataFrame& frame,
+                                                          bool add_cases) {
+  auto columns = frame.features();
+  if (add_cases) {
+    columns.insert(columns.begin(), frame.cases());
+  }
+  return columns;
+}
+
+void save_txt(const pluss::table::DataFrame& frame,
+              std::string_view filepath,
+              const Config& config) {
+  auto options = csv_write_options_from_config(config);
+  if (find_config(config, {"sep", "delimiter", "separator"}) == nullptr) {
+    options.sep = '\t';
+  }
+  save_csv(frame, filepath, options);
+}
+
+void save_txt(const pluss::table::DataFrame& frame,
+              std::string_view filepath,
+              std::initializer_list<ConfigEntry> config_entries) {
+  save_txt(frame, filepath, config_from(config_entries));
+}
+
+void save_csv(const pluss::table::DataFrame& frame,
+              std::string_view filepath,
+              const Config& config) {
+  ::pluss::loader::save_csv(frame, filepath, csv_write_options_from_config(config));
+}
+
+void save_csv(const pluss::table::DataFrame& frame,
+              std::string_view filepath,
+              std::initializer_list<ConfigEntry> config_entries) {
+  save_csv(frame, filepath, config_from(config_entries));
+}
+
+void save_excel(const pluss::table::DataFrame& frame,
+                std::string_view filepath,
+                const Config& config) {
+  ::pluss::loader::save_excel(frame, filepath, excel_write_options_from_config(config));
+}
+
+void save_excel(const pluss::table::DataFrame& frame,
+                std::string_view filepath,
+                std::initializer_list<ConfigEntry> config_entries) {
+  save_excel(frame, filepath, config_from(config_entries));
+}
+
+void save_json(const pluss::table::DataFrame& frame,
+               std::string_view filepath,
+               const Config& config) {
+  const auto orient = json_orient_from_config(config);
+  const auto pretty = json_pretty_from_config(config);
+  const auto indent = maybe_json_indent(config);
+  const auto add_cases = save_with_cases_from_config(config);
+  const auto case_label = save_case_label_from_config(config);
+
+  const auto names = json_column_names_with_cases(frame, add_cases, case_label);
+  const auto columns = json_columns_with_cases(frame, add_cases);
+
+  std::vector<std::optional<std::vector<bool>>> valid_masks(columns.size());
+  std::vector<std::optional<pluss::Note>> note_cache(columns.size());
+  for (std::size_t j = 0; j < columns.size(); ++j) {
+    if (columns[j].has_validity_mask()) {
+      valid_masks[j] = columns[j].validity_mask()->to_vec<bool>();
+    }
+    if (columns[j].kind() != pluss::table::ThreadKind::Series) {
+      note_cache[j] = columns[j].cast(pluss::table::ThreadCastTarget::Note).as_note();
+    }
+  }
+
+  std::ofstream out(std::string(filepath), std::ios::out | std::ios::trunc | std::ios::binary);
+  PLUSS_CHECK(out.is_open(), "loader::save_json: failed to open file '" + std::string(filepath) + "'");
+
+  const auto nrows = frame.nrows();
+  const auto newline = pretty ? "\n" : "";
+  const auto i1 = pretty ? indent : "";
+  const auto i2 = pretty ? (indent + indent) : "";
+
+  if (orient == JsonSaveOrient::Columns) {
+    out << "{" << newline;
+    for (std::size_t j = 0; j < columns.size(); ++j) {
+      out << i1 << json_string_token(names[j]) << ":" << (pretty ? " " : "") << "[";
+      for (std::int64_t r = 0; r < nrows; ++r) {
+        if (r != 0) out << ",";
+        if (pretty) out << " ";
+        out << thread_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
+      }
+      out << "]";
+      if (j + 1 < columns.size()) out << ",";
+      out << newline;
+    }
+    out << "}";
+    return;
+  }
+
+  if (orient == JsonSaveOrient::Split) {
+    out << "{" << newline;
+    out << i1 << "\"columns\":" << (pretty ? " " : "") << "[";
+    for (std::size_t j = 0; j < names.size(); ++j) {
+      if (j != 0) out << ",";
+      if (pretty) out << " ";
+      out << json_string_token(names[j]);
+    }
+    out << "]," << newline;
+    out << i1 << "\"data\":" << (pretty ? " " : "") << "[" << newline;
+    for (std::int64_t r = 0; r < nrows; ++r) {
+      out << i2 << "[";
+      for (std::size_t j = 0; j < columns.size(); ++j) {
+        if (j != 0) out << ",";
+        if (pretty) out << " ";
+        out << thread_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
+      }
+      out << "]";
+      if (r + 1 < nrows) out << ",";
+      out << newline;
+    }
+    out << i1 << "]" << newline;
+    out << "}";
+    return;
+  }
+
+  // Records orientation (default).
+  out << "[" << newline;
+  for (std::int64_t r = 0; r < nrows; ++r) {
+    out << i1 << "{" << newline;
+    for (std::size_t j = 0; j < columns.size(); ++j) {
+      out << i2 << json_string_token(names[j]) << ":" << (pretty ? " " : "");
+      out << thread_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
+      if (j + 1 < columns.size()) out << ",";
+      out << newline;
+    }
+    out << i1 << "}";
+    if (r + 1 < nrows) out << ",";
+    out << newline;
+  }
+  out << "]";
+}
+
+void save_json(const pluss::table::DataFrame& frame,
+               std::string_view filepath,
+               std::initializer_list<ConfigEntry> config_entries) {
+  save_json(frame, filepath, config_from(config_entries));
+}
+
+void save_parquet(const pluss::table::DataFrame& frame,
+                  std::string_view filepath,
+                  const Config& config) {
+#if PLUSSMIC_HAS_PARQUET_CPP
+  save_parquet_cpp(frame, filepath, config);
+#else
+  (void)frame;
+  (void)filepath;
+  (void)config;
+  PLUSS_FAIL("loader::save_parquet: built without parquet-cpp support (install Arrow + Parquet C++ and reconfigure)");
+#endif
+}
+
+void save_parquet(const pluss::table::DataFrame& frame,
+                  std::string_view filepath,
+                  std::initializer_list<ConfigEntry> config_entries) {
+  save_parquet(frame, filepath, config_from(config_entries));
+}
+
 void save_as(const pluss::table::DataFrame& frame,
              std::string_view target_type,
              std::string_view filepath,
              const Config& config) {
   const auto target = normalize_key(std::string(target_type));
   if (target == "csv") {
-    save_csv(frame, filepath, csv_write_options_from_config(config));
+    save_csv(frame, filepath, config);
     return;
   }
   if (target == "excel" || target == "xlsx") {
-    save_excel(frame, filepath, excel_write_options_from_config(config));
+    save_excel(frame, filepath, config);
+    return;
+  }
+  if (target == "txt" || target == "text") {
+    save_txt(frame, filepath, config);
+    return;
+  }
+  if (target == "json") {
+    save_json(frame, filepath, config);
+    return;
+  }
+  if (target == "parquet") {
+    save_parquet(frame, filepath, config);
     return;
   }
   PLUSS_FAIL("loader::save_as: unsupported target type '" + std::string(target_type) + "'");

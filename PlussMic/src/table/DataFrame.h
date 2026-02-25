@@ -574,6 +574,18 @@ public:
   void save_excel(std::string_view filepath, const pluss::loader::Config& config) const;
   void save_excel(std::string_view filepath,
                   std::initializer_list<pluss::loader::ConfigEntry> config_entries) const;
+  void save_txt(std::string_view filepath) const;
+  void save_txt(std::string_view filepath, const pluss::loader::Config& config) const;
+  void save_txt(std::string_view filepath,
+                std::initializer_list<pluss::loader::ConfigEntry> config_entries) const;
+  void save_json(std::string_view filepath) const;
+  void save_json(std::string_view filepath, const pluss::loader::Config& config) const;
+  void save_json(std::string_view filepath,
+                 std::initializer_list<pluss::loader::ConfigEntry> config_entries) const;
+  void save_parquet(std::string_view filepath) const;
+  void save_parquet(std::string_view filepath, const pluss::loader::Config& config) const;
+  void save_parquet(std::string_view filepath,
+                    std::initializer_list<pluss::loader::ConfigEntry> config_entries) const;
   void save_as(std::string_view target_type,
                std::string_view filepath,
                const pluss::loader::Config& config = {}) const;

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <exception>
+#include <fstream>
 #include <numeric>
 #include <ostream>
 #include <random>

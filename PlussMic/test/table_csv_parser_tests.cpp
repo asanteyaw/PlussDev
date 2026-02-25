@@ -603,6 +603,62 @@ void test_json_loader_entrypoints() {
   expect(loaded.dataframe().nrows() == 3, "loader::load(json) nrows mismatch");
 }
 
+void test_save_targets_and_save_as_parity() {
+  const auto df = DataFrame::load_csv(
+      fixture_path("bank-full.csv").string(),
+      {
+          {"nrows", 6},
+          {"columns", {"age", "job", "balance"}},
+      });
+  expect(df.nrows() == 6, "save parity fixture nrows mismatch");
+
+  const auto txt_path = write_temp_text_file("save_parity_df", "txt", "");
+  df.save_txt(txt_path.string());
+  const auto txt_back = DataFrame::load_txt(txt_path.string(), {{"header", true}});
+  expect(txt_back.nrows() == df.nrows(), "save_txt -> load_txt row count mismatch");
+  expect(txt_back.ncols() == df.ncols(), "save_txt -> load_txt col count mismatch");
+
+  const auto json_path = write_temp_text_file("save_parity_df", "json", "");
+  df.save_json(json_path.string());
+  const auto json_back = DataFrame::load_json(json_path.string());
+  expect(json_back.nrows() == df.nrows(), "save_json -> load_json row count mismatch");
+  expect(json_back.ncols() == df.ncols(), "save_json -> load_json col count mismatch");
+
+  const auto txt_as_path = write_temp_text_file("save_as_txt_df", "txt", "");
+  df.save_as("txt", txt_as_path.string(), {{"header", true}});
+  const auto txt_as_back = DataFrame::load_txt(txt_as_path.string(), {{"header", true}});
+  expect(txt_as_back.nrows() == df.nrows(), "save_as(txt) row count mismatch");
+
+  const auto json_as_path = write_temp_text_file("save_as_json_df", "json", "");
+  df.save_as("json", json_as_path.string(), {{"orient", "split"}});
+  const auto json_as_back = DataFrame::load_json(json_as_path.string());
+  expect(json_as_back.nrows() == df.nrows(), "save_as(json) row count mismatch");
+}
+
+void test_parquet_save_and_load_parity() {
+  const auto df = DataFrame::load_csv(
+      fixture_path("bank-full.csv").string(),
+      {
+          {"nrows", 6},
+          {"columns", {"age", "job", "balance"}},
+      });
+
+  const auto parquet_path = write_temp_text_file("save_parity_df", "parquet", "");
+  try {
+    df.save_parquet(parquet_path.string());
+  } catch (const std::exception& e) {
+    const std::string msg = e.what();
+    if (msg.find("built without parquet-cpp support") != std::string::npos) {
+      return; // Expected in builds without native parquet support.
+    }
+    throw std::runtime_error("save_parquet failed unexpectedly: " + msg);
+  }
+
+  const auto back = DataFrame::load_parquet(parquet_path.string());
+  expect(back.nrows() == df.nrows(), "save_parquet -> load_parquet row count mismatch");
+  expect(back.ncols() == df.ncols(), "save_parquet -> load_parquet col count mismatch");
+}
+
 void test_feature_value_cases_values_and_save_defaults() {
   ReadCsvOptions options;
   options.sep = ';';
@@ -1796,6 +1852,8 @@ int main() {
       {"loader_unified_load_result_for_csv", test_loader_unified_load_result_for_csv},
       {"txt_loader_modes", test_txt_loader_modes},
       {"json_loader_entrypoints", test_json_loader_entrypoints},
+      {"save_targets_and_save_as_parity", test_save_targets_and_save_as_parity},
+      {"parquet_save_and_load_parity", test_parquet_save_and_load_parity},
       {"feature_value_cases_values_and_save_defaults", test_feature_value_cases_values_and_save_defaults},
       {"transpose_shape_and_axes", test_transpose_shape_and_axes},
       {"squeeze_unsqueeze_bridge", test_squeeze_unsqueeze_bridge},

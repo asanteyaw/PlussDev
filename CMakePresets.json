@@ -52,7 +52,10 @@
       "description": "Convenience preset for the maintainer's cpp_env conda environment.",
       "inherits": "core-dev",
       "cacheVariables": {
-        "PKG_CONFIG_EXECUTABLE": "$env{HOME}/software/miniconda3/envs/cpp_env/bin/pkg-config"
+        "PKG_CONFIG_EXECUTABLE": "$env{CONDA_PREFIX}/bin/pkg-config",
+        "CMAKE_PREFIX_PATH": "$env{CONDA_PREFIX}",
+        "Arrow_DIR": "$env{CONDA_PREFIX}/lib/cmake/Arrow",
+        "Parquet_DIR": "$env{CONDA_PREFIX}/lib/cmake/Parquet"
       }
     }
   ],

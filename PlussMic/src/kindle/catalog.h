@@ -235,6 +235,18 @@ public:
   void display() const;
   void info() const;
   void save_csv(std::string_view filename) const;
+  void save_csv(std::string_view filename, const pluss::loader::Config& config) const;
+  void save_txt(std::string_view filename) const;
+  void save_txt(std::string_view filename, const pluss::loader::Config& config) const;
+  void save_excel(std::string_view filename) const;
+  void save_excel(std::string_view filename, const pluss::loader::Config& config) const;
+  void save_json(std::string_view filename) const;
+  void save_json(std::string_view filename, const pluss::loader::Config& config) const;
+  void save_parquet(std::string_view filename) const;
+  void save_parquet(std::string_view filename, const pluss::loader::Config& config) const;
+  void save_as(std::string_view target_type,
+               std::string_view filename,
+               const pluss::loader::Config& config = {}) const;
   std::string to_string() const;
   std::string to_json() const;
   void show(std::ostream& os) const;

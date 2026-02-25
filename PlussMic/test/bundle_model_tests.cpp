@@ -354,6 +354,46 @@ void test_registry_loaders() {
   expect(is_note(reg_json.slot("mixed").at(1)), "Registry::load_json mixed[1] kind mismatch");
   expect(is_series(reg_json.slot("mixed").at(2)), "Registry::load_json mixed[2] kind mismatch");
 
+  auto reg_save_json = write_temp_text_file("registry_save_json", "json", "");
+  reg_csv.save_json(reg_save_json.string());
+  {
+    std::ifstream in(reg_save_json, std::ios::in | std::ios::binary);
+    expect(in.is_open(), "Registry::save_json should create output file");
+    std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    expect(text.find("\"_type\": \"Registry\"") != std::string::npos,
+           "heterogeneous Registry::save_json should emit native Registry JSON");
+  }
+
+  const auto stream_compatible = Registry({
+      {"id", Slot({as_series_i64(1), as_series_i64(2), as_series_i64(3)})},
+      {"score", Slot({as_series_f64(1.0), as_series_f64(2.0), as_series_f64(3.0)})},
+  });
+  auto reg_json_table = write_temp_text_file("registry_save_json_table", "json", "");
+  stream_compatible.save_json(reg_json_table.string());
+  const auto reg_json_roundtrip = Registry::load_json(reg_json_table.string());
+  expect(reg_json_roundtrip.has("id"), "stream-compatible Registry::save_json roundtrip should preserve id field");
+
+  auto reg_save_txt = write_temp_text_file("registry_save_txt", "txt", "");
+  stream_compatible.save_txt(reg_save_txt.string(), pluss::loader::config_from({{"header", true}}));
+  const auto reg_txt_roundtrip = Registry::load_txt(
+      reg_save_txt.string(),
+      pluss::loader::config_from({{"header", true}, {"txt_mode", "delimited"}}));
+  expect(reg_txt_roundtrip.slot("id").size() == stream_compatible.slot("id").size(),
+         "Registry::save_txt roundtrip row count mismatch");
+
+  auto reg_save_as_json = write_temp_text_file("registry_save_as_json", "json", "");
+  stream_compatible.save_as("json", reg_save_as_json.string(), pluss::loader::config_from({{"orient", "split"}}));
+  const auto reg_save_as_roundtrip = Registry::load_json(reg_save_as_json.string());
+  expect(reg_save_as_roundtrip.slot("id").size() == stream_compatible.slot("id").size(),
+         "Registry::save_as(json) roundtrip row count mismatch");
+
+  const auto hetero = Registry({
+      {"mixed", Slot({as_series_i64(1), as_note("x")})},
+  });
+  auto hetero_json = write_temp_text_file("registry_hetero_json", "json", "");
+  hetero.save_json(hetero_json.string());
+  expect(std::filesystem::exists(hetero_json), "Registry::save_json should work for heterogeneous Registry");
+
   expect_throw(
       [&]() { (void)Registry::load_parquet("not_implemented.parquet"); },
       "Registry::load_parquet should throw on invalid parquet path");

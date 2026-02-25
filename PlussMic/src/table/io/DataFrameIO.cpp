@@ -105,6 +105,45 @@ void DataFrame::save_excel(std::string_view filepath,
   save_as("excel", filepath, config_entries);
 }
 
+void DataFrame::save_txt(std::string_view filepath) const {
+  save_as("txt", filepath, {});
+}
+
+void DataFrame::save_txt(std::string_view filepath, const pluss::loader::Config& config) const {
+  save_as("txt", filepath, config);
+}
+
+void DataFrame::save_txt(std::string_view filepath,
+                         std::initializer_list<pluss::loader::ConfigEntry> config_entries) const {
+  save_as("txt", filepath, config_entries);
+}
+
+void DataFrame::save_json(std::string_view filepath) const {
+  save_as("json", filepath, {});
+}
+
+void DataFrame::save_json(std::string_view filepath, const pluss::loader::Config& config) const {
+  save_as("json", filepath, config);
+}
+
+void DataFrame::save_json(std::string_view filepath,
+                          std::initializer_list<pluss::loader::ConfigEntry> config_entries) const {
+  save_as("json", filepath, config_entries);
+}
+
+void DataFrame::save_parquet(std::string_view filepath) const {
+  save_as("parquet", filepath, {});
+}
+
+void DataFrame::save_parquet(std::string_view filepath, const pluss::loader::Config& config) const {
+  save_as("parquet", filepath, config);
+}
+
+void DataFrame::save_parquet(std::string_view filepath,
+                             std::initializer_list<pluss::loader::ConfigEntry> config_entries) const {
+  save_as("parquet", filepath, config_entries);
+}
+
 void DataFrame::save_as(std::string_view target_type,
                         std::string_view filepath,
                         const pluss::loader::Config& config) const {

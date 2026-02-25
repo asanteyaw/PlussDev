@@ -394,6 +394,24 @@ void test_catalog_mutation_tabelize_io() {
   const auto reloaded = DataFrame::load_csv(out_path.string());
   expect(reloaded.nrows() == 5, "save_csv/load_csv roundtrip rows mismatch");
 
+  auto txt_out = temp_csv_path("catalog_save_txt");
+  txt_out.replace_extension(".txt");
+  base.save_txt(txt_out.string(), pluss::loader::config_from({{"header", true}}));
+  const auto txt_roundtrip = DataFrame::load_txt(txt_out.string(), {{"header", true}});
+  expect(txt_roundtrip.nrows() == 5, "Catalog::save_txt roundtrip rows mismatch");
+
+  auto json_out = temp_csv_path("catalog_save_json");
+  json_out.replace_extension(".json");
+  base.save_json(json_out.string());
+  const auto json_roundtrip = DataFrame::load_json(json_out.string());
+  expect(json_roundtrip.nrows() == 5, "Catalog::save_json roundtrip rows mismatch");
+
+  auto save_as_json_out = temp_csv_path("catalog_save_as_json");
+  save_as_json_out.replace_extension(".json");
+  base.save_as("json", save_as_json_out.string(), pluss::loader::config_from({{"orient", "split"}}));
+  const auto save_as_json_roundtrip = DataFrame::load_json(save_as_json_out.string());
+  expect(save_as_json_roundtrip.nrows() == 5, "Catalog::save_as(json) roundtrip rows mismatch");
+
   const auto loaded_csv = Catalog::load_csv(data_file("messy_data.csv").string());
   expect(loaded_csv.nstreams() > 0, "load_csv should return non-empty catalog");
 
