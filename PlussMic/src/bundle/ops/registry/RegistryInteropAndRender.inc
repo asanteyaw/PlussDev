@@ -1,13 +1,5 @@
-    w.keys_.push_back(name);
-    w.slots_.push_back(value);
-  } else {
-    w.slots_[static_cast<std::size_t>(it->second)] = value;
-  }
-  return *this;
-}
-
 pluss::kindle::Catalog Registry::kindelize() const {
-  PLUSS_CHECK(defined(), "Registry: undefined handle");
+  ensure_stream_compatible("Registry::kindelize");
   std::vector<std::pair<std::string, pluss::kindle::Stream>> out;
   out.reserve(static_cast<std::size_t>(nslots()));
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {

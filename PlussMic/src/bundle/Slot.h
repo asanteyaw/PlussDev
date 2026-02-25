@@ -29,12 +29,9 @@ class SlotImpl;
 
 class Slot {
 public:
+  // Bundle model is built on pluss domain types (not native C++ scalars).
   using Value = std::variant<
       std::monostate,
-      bool,
-      std::int64_t,
-      double,
-      std::string,
       pluss::Series,
       pluss::Note,
       pluss::Timeline,

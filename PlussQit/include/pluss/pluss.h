@@ -29,16 +29,12 @@
 // - pluss::transmit(...) for elementwise map/zip transforms over values/ranges
 // - pluss::transform_axis(...) for NumPy-style apply_along_axis slice transforms
 //
-// Keep this include thin by delegating to module-level umbrellas.
-#include "pluss/codem/series_factory.h"
-#include "pluss/coden/note_factory.h"
-#include "pluss/codeh/timeline_factory.h"
-#include "pluss/codeh/timeindex_factory.h"
-#include "pluss/subsp/math/linalg.h"
-#include "pluss/subsp/math/optim.h"
-#include "pluss/queue.h"
-#include "pluss/dispense.h"
-#include "aux/UseAux.h"
+// Core pluss surface (Series/Note/Timeline/TimeIndex + Queue/Dispense/Aux) lives in PlussQit.
+#include "pluss/core.h"
+
+#if __has_include("pluss/ma.h")
+#include "pluss/ma.h"
+#endif
 
 #if __has_include("pluss/mic.h")
 #include "pluss/mic.h"

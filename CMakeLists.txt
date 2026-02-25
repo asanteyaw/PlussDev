@@ -81,3 +81,21 @@ endif()
 add_subdirectory(PlussPl)
 add_subdirectory(PlussMa)
 add_subdirectory(PlussMic)
+
+# Top-level aggregate target for downstream consumers that want the full stack.
+# Use together with `#include <pluss/pluss.h>`.
+add_library(pluss_sdk INTERFACE)
+add_library(Pluss::SDK ALIAS pluss_sdk)
+
+if(TARGET PlussQit)
+    target_link_libraries(pluss_sdk INTERFACE PlussQit)
+endif()
+if(TARGET PlussPl)
+    target_link_libraries(pluss_sdk INTERFACE PlussPl)
+endif()
+if(TARGET PlussMic)
+    target_link_libraries(pluss_sdk INTERFACE PlussMic)
+endif()
+if(TARGET PlussTiq)
+    target_link_libraries(pluss_sdk INTERFACE PlussTiq)
+endif()

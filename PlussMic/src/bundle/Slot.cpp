@@ -1,7 +1,6 @@
 #include "bundle/Slot.h"
 
 #include <algorithm>
-#include <cmath>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -13,6 +12,8 @@
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/coden/note_factory.h"
+#include "pluss/codeh/timeindex_factory.h"
+#include "pluss/codeh/timeline_factory.h"
 #include "kindle/Stream.h"
 
 namespace pluss::bundle {
@@ -54,14 +55,10 @@ std::string value_to_json(const Slot::Value& value) {
       [](const auto& v) -> std::string {
         using T = std::decay_t<decltype(v)>;
         if constexpr (std::is_same_v<T, std::monostate>) return "null";
-        if constexpr (std::is_same_v<T, bool>) return v ? "true" : "false";
-        if constexpr (std::is_same_v<T, std::int64_t>) return fmt::format("{}", v);
-        if constexpr (std::is_same_v<T, double>) return fmt::format("{}", v);
-        if constexpr (std::is_same_v<T, std::string>) return fmt::format("\"{}\"", json_escape(v));
         if constexpr (std::is_same_v<T, pluss::Series>) return fmt::format("\"Series[{}]\"", v.dtype().name);
-        if constexpr (std::is_same_v<T, pluss::Note>) return "\"Note\"";
-        if constexpr (std::is_same_v<T, pluss::Timeline>) return "\"Timeline\"";
-        if constexpr (std::is_same_v<T, pluss::TimeIndex>) return "\"TimeIndex\"";
+        if constexpr (std::is_same_v<T, pluss::Note>) return fmt::format("\"Note[numel={}]\"", v.numel());
+        if constexpr (std::is_same_v<T, pluss::Timeline>) return fmt::format("\"Timeline[numel={}]\"", v.numel());
+        if constexpr (std::is_same_v<T, pluss::TimeIndex>) return fmt::format("\"TimeIndex[size={}]\"", v.size());
         return "\"unknown\"";
       },
       value);
@@ -72,10 +69,6 @@ std::string value_type_name(const Slot::Value& value) {
       [](const auto& v) -> std::string {
         using T = std::decay_t<decltype(v)>;
         if constexpr (std::is_same_v<T, std::monostate>) return "null";
-        if constexpr (std::is_same_v<T, bool>) return "bool";
-        if constexpr (std::is_same_v<T, std::int64_t>) return "int64";
-        if constexpr (std::is_same_v<T, double>) return "float64";
-        if constexpr (std::is_same_v<T, std::string>) return "string";
         if constexpr (std::is_same_v<T, pluss::Series>) return "Series";
         if constexpr (std::is_same_v<T, pluss::Note>) return "Note";
         if constexpr (std::is_same_v<T, pluss::Timeline>) return "Timeline";

@@ -1,7 +1,11 @@
 #include "bundle/registry.h"
 
 #include <algorithm>
+#include <cctype>
+#include <exception>
+#include <numeric>
 #include <ostream>
+#include <random>
 #include <sstream>
 #include <string>
 #include <unordered_set>
@@ -9,6 +13,7 @@
 
 #include "CodeM/core/Errors.h"
 #include "kindle/catalog.h"
+#include <fmt/format.h>
 
 namespace pluss::bundle {
 
@@ -25,6 +30,43 @@ std::vector<std::string> normalize_names(std::initializer_list<std::string_view>
     out.push_back(std::move(key));
   }
   return out;
+}
+
+std::vector<std::string> normalize_names(const std::vector<std::string>& keys) {
+  std::vector<std::string> out;
+  out.reserve(keys.size());
+  std::unordered_set<std::string> seen;
+  for (const auto& key : keys) {
+    PLUSS_CHECK(!key.empty(), "Registry: key cannot be empty");
+    PLUSS_CHECK(seen.insert(key).second, "Registry: duplicate key '" + key + "'");
+    out.push_back(key);
+  }
+  return out;
+}
+
+std::string trim_copy(std::string_view in) {
+  std::size_t start = 0;
+  std::size_t end = in.size();
+  while (start < end && std::isspace(static_cast<unsigned char>(in[start]))) ++start;
+  while (end > start && std::isspace(static_cast<unsigned char>(in[end - 1]))) --end;
+  return std::string(in.substr(start, end - start));
+}
+
+std::string lowercase_copy(std::string_view in) {
+  std::string out;
+  out.reserve(in.size());
+  for (char c : in) {
+    out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+  }
+  return out;
+}
+
+Registry bridge_registry_catalog(const Registry& registry,
+                                 std::string_view where,
+                                 const std::function<pluss::kindle::Catalog(const pluss::kindle::Catalog&)>& fn) {
+  registry.ensure_stream_compatible(where);
+  const auto catalog = registry.kindelize();
+  return Registry::from_kindle(fn(catalog));
 }
 
 std::string json_escape(std::string_view in) {

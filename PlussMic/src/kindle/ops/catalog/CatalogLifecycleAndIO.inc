@@ -118,6 +118,10 @@ std::int64_t Catalog::nstreams() const {
   return static_cast<std::int64_t>(impl_ref_().streams_.size());
 }
 
+std::int64_t Catalog::nfields() const {
+  return nstreams();
+}
+
 bool Catalog::empty() const { return nstreams() == 0; }
 
 const std::vector<std::string>& Catalog::keys() const {
@@ -130,11 +134,19 @@ bool Catalog::has(std::string_view key) const {
   return impl_ref_().key_to_pos_.find(std::string(key)) != impl_ref_().key_to_pos_.end();
 }
 
+bool Catalog::has_stream(std::string_view key) const {
+  return has(key);
+}
+
 Stream Catalog::stream(std::string_view key) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   auto it = impl_ref_().key_to_pos_.find(std::string(key));
   PLUSS_CHECK(it != impl_ref_().key_to_pos_.end(), "Catalog: key '" + std::string(key) + "' not found");
   return impl_ref_().streams_[static_cast<std::size_t>(it->second)];
+}
+
+Stream Catalog::at(std::string_view key) const {
+  return stream(key);
 }
 
 std::optional<Stream> Catalog::get(std::string_view key) const {
@@ -144,8 +156,11 @@ std::optional<Stream> Catalog::get(std::string_view key) const {
   return impl_ref_().streams_[static_cast<std::size_t>(it->second)];
 }
 
+std::optional<Stream> Catalog::get_stream(std::string_view key) const {
+  return get(key);
+}
+
 std::vector<Stream> Catalog::streams() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   return impl_ref_().streams_;
 }
-

@@ -248,6 +248,14 @@ Catalog& Catalog::set_stream_(std::string_view key, const Stream& value) {
   return *this;
 }
 
+Catalog Catalog::set(std::string_view key, const Stream& value) const {
+  return set_stream(key, value);
+}
+
+Catalog& Catalog::set_(std::string_view key, const Stream& value) {
+  return set_stream_(key, value);
+}
+
 Catalog Catalog::set_streams(std::initializer_list<std::pair<std::string_view, Stream>> items) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   auto out = *this;
@@ -293,4 +301,3 @@ Catalog Catalog::drop(std::initializer_list<std::string_view> keys_drop) const {
   }
   return Catalog(std::move(kept));
 }
-

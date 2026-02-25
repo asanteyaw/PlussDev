@@ -5,7 +5,9 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <span>
@@ -71,7 +73,42 @@ Platform scoped_platform_or_cpu_() noexcept {
   return g_platform_scope_stack.back();
 }
 
+bool parse_bool_env_(const char* name, bool default_value) noexcept {
+  const char* raw = std::getenv(name);
+  if (raw == nullptr || *raw == '\0') {
+    return default_value;
+  }
+  auto eq_lit = [&](const char* lit) noexcept {
+    const char* a = raw;
+    const char* b = lit;
+    while (*a != '\0' && *b != '\0') {
+      if (std::tolower(static_cast<unsigned char>(*a)) !=
+          std::tolower(static_cast<unsigned char>(*b))) {
+        return false;
+      }
+      ++a;
+      ++b;
+    }
+    return *a == '\0' && *b == '\0';
+  };
+  if (eq_lit("1") || eq_lit("true") || eq_lit("yes") || eq_lit("on")) {
+    return true;
+  }
+  if (eq_lit("0") || eq_lit("false") || eq_lit("no") || eq_lit("off")) {
+    return false;
+  }
+  return default_value;
+}
+
+bool mps_cpu_fallback_enabled_() noexcept {
+  static const bool enabled = parse_bool_env_("PLUSS_MPS_ALLOW_CPU_FALLBACK", false);
+  return enabled;
+}
+
 void require_mps_native_dispatch_supported_(std::string_view op) {
+  if (mps_cpu_fallback_enabled_()) {
+    return;
+  }
   throw_error(
       std::string(op) +
       ": no native MPS kernel yet for this dtype/op. "
@@ -92,6 +129,13 @@ void require_backend_dispatch_supported_(Platform platform, std::string_view op)
     default:
       throw_error(std::string(op) + ": unsupported backend platform");
   }
+}
+
+void require_mps_support_or_policy_(bool supported, std::string_view op) {
+  if (supported) {
+    return;
+  }
+  require_mps_native_dispatch_supported_(op);
 }
 
 } // namespace
@@ -154,13 +198,15 @@ static Series binary_op_(native::cpu::BinaryOpId op, const Series& a0, const Ser
       native::mps::binary(op, aa, bb, out);
       return out;
     }
-    PLUSS_CHECK(native::mps::supports_binary(op, ScalarType::Float32),
-                "binary op: MPS path does not yet support this dtype/op combination");
-    const Series aa = a.to(ScalarType::Float32).contiguous();
-    const Series bb = b.to(ScalarType::Float32).contiguous();
-    Series out_f = Series::empty(out_shape, ScalarType::Float32, a.platform());
-    native::mps::binary(op, aa, bb, out_f);
-    return out_f.to(dt);
+    const bool supports_f32 = native::mps::supports_binary(op, ScalarType::Float32);
+    require_mps_support_or_policy_(supports_f32, "binary op");
+    if (supports_f32) {
+      const Series aa = a.to(ScalarType::Float32).contiguous();
+      const Series bb = b.to(ScalarType::Float32).contiguous();
+      Series out_f = Series::empty(out_shape, ScalarType::Float32, a.platform());
+      native::mps::binary(op, aa, bb, out_f);
+      return out_f.to(dt);
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "binary op");
   auto fn = native::cpu::lookup_binary(op, dt);
@@ -183,12 +229,14 @@ static Series cmp_op_(native::cpu::BinaryOpId op, const Series& a0, const Series
       native::mps::binary(op, aa, bb, out);
       return out;
     }
-    PLUSS_CHECK(native::mps::supports_binary(op, ScalarType::Float32),
-                "comparison op: MPS path does not yet support this dtype/op combination");
-    const Series aa = a.to(ScalarType::Float32).contiguous();
-    const Series bb = b.to(ScalarType::Float32).contiguous();
-    native::mps::binary(op, aa, bb, out);
-    return out;
+    const bool supports_f32 = native::mps::supports_binary(op, ScalarType::Float32);
+    require_mps_support_or_policy_(supports_f32, "comparison op");
+    if (supports_f32) {
+      const Series aa = a.to(ScalarType::Float32).contiguous();
+      const Series bb = b.to(ScalarType::Float32).contiguous();
+      native::mps::binary(op, aa, bb, out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "comparison op");
   auto fn = native::cpu::lookup_binary(op, dt);
@@ -205,12 +253,14 @@ static Series unary_op_(native::cpu::UnaryOpId op, const Series& a) {
       native::mps::unary(op, aa, out);
       return out;
     }
-    PLUSS_CHECK(native::mps::supports_unary(op, ScalarType::Float32),
-                "unary op: MPS path does not yet support this dtype/op combination");
-    const Series aa = a.to(ScalarType::Float32).contiguous();
-    Series out_f = Series::empty(a.sizes(), ScalarType::Float32, a.platform());
-    native::mps::unary(op, aa, out_f);
-    return out_f.to(a.scalar_type());
+    const bool supports_f32 = native::mps::supports_unary(op, ScalarType::Float32);
+    require_mps_support_or_policy_(supports_f32, "unary op");
+    if (supports_f32) {
+      const Series aa = a.to(ScalarType::Float32).contiguous();
+      Series out_f = Series::empty(a.sizes(), ScalarType::Float32, a.platform());
+      native::mps::unary(op, aa, out_f);
+      return out_f.to(a.scalar_type());
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "unary op");
   auto fn = native::cpu::lookup_unary(op, a.scalar_type());
@@ -267,6 +317,21 @@ static void maybe_link_binary_op_(
   series_tape::bind_source_link(out, std::move(link));
 }
 
+static void maybe_link_unary_op_(
+    const Series& out,
+    const Series& a,
+    std::function<Series(const Series&)> rule) {
+  if (!series_tape::recording_enabled()) return;
+  if (!series_tape::tracks_slope(a)) return;
+
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->parents = {a};
+  link->propagate = [a, rule = std::move(rule)](const Series& out_sens) {
+    series_tape::accumulate_sensitivity(a, rule(out_sens));
+  };
+  series_tape::bind_source_link(out, std::move(link));
+}
+
 Series add(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
@@ -319,7 +384,17 @@ Series pow(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
   auto bb = (b.scalar_type() == out_dt) ? b : b.to(out_dt);
- return binary_op_(native::cpu::BinaryOpId::Pow, aa, bb); }
+  auto out = binary_op_(native::cpu::BinaryOpId::Pow, aa, bb);
+  maybe_link_binary_op_(
+      out, a, b, "pow",
+      [b, out, a](const Series& g) {
+        return g.mul(b).mul(out).div(a);
+      },
+      [a, out](const Series& g) {
+        return g.mul(out).mul(log(a));
+      });
+  return out;
+}
 
 static Series scalar_like_(const Series& a, double s) {
   const std::array<std::int64_t, 1> one{{1}};
@@ -530,37 +605,64 @@ Series ge(const Series& a, const Series& b) { return cmp_op_(native::cpu::Binary
 Series sqrt(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Sqrt, a.scalar_type()),
-                "sqrt: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Sqrt, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Sqrt, a.scalar_type());
+    require_mps_support_or_policy_(supported, "sqrt");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Sqrt, a.contiguous(), out);
+    } else {
+      require_backend_dispatch_supported_(a.platform(), "sqrt");
+      native::cpu::sqrt(a, out);
+    }
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "sqrt");
+    native::cpu::sqrt(a, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "sqrt");
-  native::cpu::sqrt(a, out);
+  maybe_link_unary_op_(out, a, [out](const Series& g) {
+    return g.mul(0.5).div(out);
+  });
   return out;
 }
 Series exp(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Exp, a.scalar_type()),
-                "exp: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Exp, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Exp, a.scalar_type());
+    require_mps_support_or_policy_(supported, "exp");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Exp, a.contiguous(), out);
+    } else {
+      require_backend_dispatch_supported_(a.platform(), "exp");
+      native::cpu::exp(a, out);
+    }
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "exp");
+    native::cpu::exp(a, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "exp");
-  native::cpu::exp(a, out);
+  maybe_link_unary_op_(out, a, [out](const Series& g) {
+    return g.mul(out);
+  });
   return out;
 }
 Series log(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Log, a.scalar_type()),
-                "log: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Log, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Log, a.scalar_type());
+    require_mps_support_or_policy_(supported, "log");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Log, a.contiguous(), out);
+    } else {
+      require_backend_dispatch_supported_(a.platform(), "log");
+      native::cpu::log(a, out);
+    }
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "log");
+    native::cpu::log(a, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "log");
-  native::cpu::log(a, out);
+  maybe_link_unary_op_(out, a, [a](const Series& g) {
+    return g.div(a);
+  });
   return out;
 }
 
@@ -580,10 +682,13 @@ Series& sqrt_(Series& a) {
 Series floor(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Floor, a.scalar_type()),
-                "floor: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Floor, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Floor, a.scalar_type());
+    require_mps_support_or_policy_(supported, "floor");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Floor, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "floor");
   native::cpu::floor(a, out);
@@ -592,10 +697,13 @@ Series floor(const Series& a) {
 Series ceil(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Ceil, a.scalar_type()),
-                "ceil: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Ceil, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Ceil, a.scalar_type());
+    require_mps_support_or_policy_(supported, "ceil");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Ceil, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "ceil");
   native::cpu::ceil(a, out);
@@ -604,10 +712,13 @@ Series ceil(const Series& a) {
 Series round(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Round, a.scalar_type()),
-                "round: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Round, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Round, a.scalar_type());
+    require_mps_support_or_policy_(supported, "round");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Round, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "round");
   native::cpu::round(a, out);
@@ -616,10 +727,13 @@ Series round(const Series& a) {
 Series trunc(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Trunc, a.scalar_type()),
-                "trunc: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Trunc, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Trunc, a.scalar_type());
+    require_mps_support_or_policy_(supported, "trunc");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Trunc, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "trunc");
   native::cpu::trunc(a, out);
@@ -628,10 +742,13 @@ Series trunc(const Series& a) {
 Series isnan(const Series& a) {
   Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsNan, a.scalar_type()),
-                "isnan: MPS path does not yet support this dtype");
-    native::mps::unary_pred(native::mps::UnaryPredOp::IsNan, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsNan, a.scalar_type());
+    require_mps_support_or_policy_(supported, "isnan");
+    if (supported) {
+      native::mps::unary_pred(native::mps::UnaryPredOp::IsNan, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "isnan");
   native::cpu::isnan(a, out);
@@ -640,10 +757,13 @@ Series isnan(const Series& a) {
 Series isinf(const Series& a) {
   Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsInf, a.scalar_type()),
-                "isinf: MPS path does not yet support this dtype");
-    native::mps::unary_pred(native::mps::UnaryPredOp::IsInf, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsInf, a.scalar_type());
+    require_mps_support_or_policy_(supported, "isinf");
+    if (supported) {
+      native::mps::unary_pred(native::mps::UnaryPredOp::IsInf, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "isinf");
   native::cpu::isinf(a, out);
@@ -653,47 +773,78 @@ Series isinf(const Series& a) {
 Series sin(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Sin, a.scalar_type()),
-                "sin: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Sin, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Sin, a.scalar_type());
+    require_mps_support_or_policy_(supported, "sin");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Sin, a.contiguous(), out);
+    } else {
+      require_backend_dispatch_supported_(a.platform(), "sin");
+      native::cpu::sin(a, out);
+    }
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "sin");
+    native::cpu::sin(a, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "sin");
-  native::cpu::sin(a, out);
+  maybe_link_unary_op_(out, a, [a](const Series& g) {
+    return g.mul(cos(a));
+  });
   return out;
 }
 Series cos(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Cos, a.scalar_type()),
-                "cos: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Cos, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Cos, a.scalar_type());
+    require_mps_support_or_policy_(supported, "cos");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Cos, a.contiguous(), out);
+    } else {
+      require_backend_dispatch_supported_(a.platform(), "cos");
+      native::cpu::cos(a, out);
+    }
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "cos");
+    native::cpu::cos(a, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "cos");
-  native::cpu::cos(a, out);
+  maybe_link_unary_op_(out, a, [a](const Series& g) {
+    return g.mul(sin(a)).neg();
+  });
   return out;
 }
 Series tanh(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Tanh, a.scalar_type()),
-                "tanh: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Tanh, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Tanh, a.scalar_type());
+    require_mps_support_or_policy_(supported, "tanh");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Tanh, a.contiguous(), out);
+    } else {
+      require_backend_dispatch_supported_(a.platform(), "tanh");
+      native::cpu::tanh(a, out);
+    }
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "tanh");
+    native::cpu::tanh(a, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "tanh");
-  native::cpu::tanh(a, out);
+  maybe_link_unary_op_(out, a, [out](const Series& g) {
+    const Series one = scalar_like_(out, 1.0);
+    return g.mul(sub(one, mul(out, out)));
+  });
   return out;
 }
 
 Series tan(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Tan, a.scalar_type()),
-                "tan: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Tan, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Tan, a.scalar_type());
+    require_mps_support_or_policy_(supported, "tan");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Tan, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "tan");
   native::cpu::tan(a, out);
@@ -702,10 +853,13 @@ Series tan(const Series& a) {
 Series asin(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Asin, a.scalar_type()),
-                "asin: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Asin, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Asin, a.scalar_type());
+    require_mps_support_or_policy_(supported, "asin");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Asin, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "asin");
   native::cpu::asin(a, out);
@@ -714,10 +868,13 @@ Series asin(const Series& a) {
 Series acos(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Acos, a.scalar_type()),
-                "acos: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Acos, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Acos, a.scalar_type());
+    require_mps_support_or_policy_(supported, "acos");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Acos, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "acos");
   native::cpu::acos(a, out);
@@ -726,10 +883,13 @@ Series acos(const Series& a) {
 Series atan(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Atan, a.scalar_type()),
-                "atan: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Atan, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Atan, a.scalar_type());
+    require_mps_support_or_policy_(supported, "atan");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Atan, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "atan");
   native::cpu::atan(a, out);
@@ -738,10 +898,13 @@ Series atan(const Series& a) {
 Series sinh(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Sinh, a.scalar_type()),
-                "sinh: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Sinh, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Sinh, a.scalar_type());
+    require_mps_support_or_policy_(supported, "sinh");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Sinh, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "sinh");
   native::cpu::sinh(a, out);
@@ -750,10 +913,13 @@ Series sinh(const Series& a) {
 Series cosh(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Cosh, a.scalar_type()),
-                "cosh: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Cosh, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Cosh, a.scalar_type());
+    require_mps_support_or_policy_(supported, "cosh");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Cosh, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "cosh");
   native::cpu::cosh(a, out);
@@ -765,10 +931,13 @@ Series expm1(const Series& a) { return unary_op_(native::cpu::UnaryOpId::Expm1, 
 Series reciprocal(const Series& a) {
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Reciprocal, a.scalar_type()),
-                "reciprocal: MPS path does not yet support this dtype");
-    native::mps::unary_math(native::mps::UnaryMathOp::Reciprocal, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Reciprocal, a.scalar_type());
+    require_mps_support_or_policy_(supported, "reciprocal");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Reciprocal, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "reciprocal");
   native::cpu::reciprocal(a, out);
@@ -870,10 +1039,13 @@ Series& bitwise_xor_(Series& a, const Series& b) { return a.bitwise_xor_(b); }
 Series isfinite(const Series& a) {
   Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsFinite, a.scalar_type()),
-                "isfinite: MPS path does not yet support this dtype");
-    native::mps::unary_pred(native::mps::UnaryPredOp::IsFinite, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsFinite, a.scalar_type());
+    require_mps_support_or_policy_(supported, "isfinite");
+    if (supported) {
+      native::mps::unary_pred(native::mps::UnaryPredOp::IsFinite, a.contiguous(), out);
+      return out;
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "isfinite");
   native::cpu::isfinite(a, out);
@@ -1482,6 +1654,14 @@ Series where(const Series& cond, const Series& a, const Series& b) {
 Series clamp(const Series& a, double min, double max) {
   Series out = a.clone();
   clamp_(out, min, max);
+  maybe_link_unary_op_(out, a, [a, min, max](const Series& g) {
+    const Series min_s = scalar_like_(a, min);
+    const Series max_s = scalar_like_(a, max);
+    const Series one = scalar_like_(a, 1.0);
+    const Series zero = scalar_like_(a, 0.0);
+    const Series mask = logical_and(ge(a, min_s), le(a, max_s));
+    return mul(g, where(mask, one, zero));
+  });
   return out;
 }
 
@@ -1509,14 +1689,27 @@ Series relu(const Series& a) {
   PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
               "relu: complex dtype not supported");
   if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Relu, a.scalar_type()),
-                "relu: MPS path does not yet support this dtype");
-    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-    native::mps::unary_math(native::mps::UnaryMathOp::Relu, a.contiguous(), out);
-    return out;
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Relu, a.scalar_type());
+    require_mps_support_or_policy_(supported, "relu");
+    if (supported) {
+      Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+      native::mps::unary_math(native::mps::UnaryMathOp::Relu, a.contiguous(), out);
+      maybe_link_unary_op_(out, a, [a](const Series& g) {
+        const Series zero = scalar_like_(a, 0.0);
+        const Series one = scalar_like_(a, 1.0);
+        return mul(g, where(gt(a, zero), one, zero));
+      });
+      return out;
+    }
   }
   Series out = a.clone();
   relu_(out);
+  maybe_link_unary_op_(out, a, [a](const Series& g) {
+    const Series zero = scalar_like_(a, 0.0);
+    const Series one = scalar_like_(a, 1.0);
+    return mul(g, where(gt(a, zero), one, zero));
+  });
   return out;
 }
 
@@ -1540,17 +1733,27 @@ Series& relu_(Series& a) {
 }
 
 Series sigmoid(const Series& a) {
-  if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_unary_math(native::mps::UnaryMathOp::Sigmoid, a.scalar_type()),
-                "sigmoid: MPS path does not yet support this dtype");
-    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-    native::mps::unary_math(native::mps::UnaryMathOp::Sigmoid, a.contiguous(), out);
-    return out;
-  }
-  require_backend_dispatch_supported_(a.platform(), "sigmoid");
   Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  auto aa = a.contiguous();
-  native::cpu::sigmoid(aa, out);
+  if (a.platform() == Platform::MPS) {
+    const bool supported =
+        native::mps::supports_unary_math(native::mps::UnaryMathOp::Sigmoid, a.scalar_type());
+    require_mps_support_or_policy_(supported, "sigmoid");
+    if (supported) {
+      native::mps::unary_math(native::mps::UnaryMathOp::Sigmoid, a.contiguous(), out);
+    } else {
+      require_backend_dispatch_supported_(a.platform(), "sigmoid");
+      auto aa = a.contiguous();
+      native::cpu::sigmoid(aa, out);
+    }
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "sigmoid");
+    auto aa = a.contiguous();
+    native::cpu::sigmoid(aa, out);
+  }
+  maybe_link_unary_op_(out, a, [out](const Series& g) {
+    const Series one = scalar_like_(out, 1.0);
+    return mul(g, mul(out, sub(one, out)));
+  });
   return out;
 }
 Series& sigmoid_(Series& a) {
@@ -1565,6 +1768,7 @@ Series& sigmoid_(Series& a) {
 }
 
 Series softplus(const Series& a, double beta, double threshold) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
     const Series aa = a.contiguous();
     const Series beta_s = scalar_like_(aa, beta);
@@ -1572,12 +1776,22 @@ Series softplus(const Series& a, double beta, double threshold) {
     const Series bz = mul(aa, beta_s);
     const Series use_linear = gt(bz, thresh_s);
     const Series smooth = div(log1p(exp(bz)), beta_s);
-    return where(use_linear, aa, smooth);
+    out = where(use_linear, aa, smooth);
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "softplus");
+    out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+    auto aa = a.contiguous();
+    native::cpu::softplus(aa, out, beta, threshold);
   }
-  require_backend_dispatch_supported_(a.platform(), "softplus");
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  auto aa = a.contiguous();
-  native::cpu::softplus(aa, out, beta, threshold);
+  maybe_link_unary_op_(out, a, [a, beta, threshold](const Series& g) {
+    const Series beta_s = scalar_like_(a, beta);
+    const Series thresh_s = scalar_like_(a, threshold);
+    const Series one = scalar_like_(a, 1.0);
+    const Series bz = mul(a, beta_s);
+    const Series use_linear = gt(bz, thresh_s);
+    const Series smooth_grad = sigmoid(bz);
+    return mul(g, where(use_linear, one, smooth_grad));
+  });
   return out;
 }
 Series& softplus_(Series& a, double beta, double threshold) {
@@ -1718,13 +1932,16 @@ Series scatter(const Series& a, std::int64_t dim, const Series& index, const Ser
       native::mps::scatter_set_(out, dim, idx, src.contiguous());
       return out;
     }
-    PLUSS_CHECK(native::mps::supports_scatter(ScalarType::Float32, idx.scalar_type(), ScalarType::Float32),
-                "scatter: no native MPS kernel yet for this dtype/op.");
-    Series out_f = a.to(ScalarType::Float32).contiguous();
-    Series src_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
-    native::mps::scatter_set_(out_f, dim, idx, src_f);
-    if (a.scalar_type() == ScalarType::Float32) return out_f;
-    return out_f.to(a.scalar_type());
+    const bool supports_f32 =
+        native::mps::supports_scatter(ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
+    require_mps_support_or_policy_(supports_f32, "scatter");
+    if (supports_f32) {
+      Series out_f = a.to(ScalarType::Float32).contiguous();
+      Series src_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
+      native::mps::scatter_set_(out_f, dim, idx, src_f);
+      if (a.scalar_type() == ScalarType::Float32) return out_f;
+      return out_f.to(a.scalar_type());
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "scatter");
   return native::cpu::scatter(a, dim, index, src);
@@ -1768,12 +1985,15 @@ Series scatter_add(const Series& a, std::int64_t dim, const Series& index, const
       native::mps::scatter_reduce_(out, dim, idx, ss, native::mps::ScatterReduceOp::Sum);
       return out;
     }
-    PLUSS_CHECK(native::mps::supports_scatter_reduce(ScalarType::Float32, idx.scalar_type(), ScalarType::Float32),
-                "scatter_add: no native MPS kernel yet for this dtype/op.");
-    Series out_f = a.to(ScalarType::Float32).contiguous();
-    const Series ss_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
-    native::mps::scatter_reduce_(out_f, dim, idx, ss_f, native::mps::ScatterReduceOp::Sum);
-    return out_f.to(out_dt);
+    const bool supports_f32 = native::mps::supports_scatter_reduce(
+        ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
+    require_mps_support_or_policy_(supports_f32, "scatter_add");
+    if (supports_f32) {
+      Series out_f = a.to(ScalarType::Float32).contiguous();
+      const Series ss_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
+      native::mps::scatter_reduce_(out_f, dim, idx, ss_f, native::mps::ScatterReduceOp::Sum);
+      return out_f.to(out_dt);
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "scatter_add");
   return native::cpu::scatter_add(a, dim, index, src);
@@ -1805,14 +2025,19 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
       native::mps::scatter_reduce_(out, dim, idx, ss, rop);
       return out;
     }
-    PLUSS_CHECK(native::mps::supports_scatter_reduce(ScalarType::Float32, idx.scalar_type(), ScalarType::Float32),
-                "scatter_reduce: no native MPS kernel yet for this dtype/op.");
-    Series out_f = include_self
-                     ? a.to(ScalarType::Float32).contiguous()
-                     : Series::full(a.sizes(), scatter_reduce_identity_(reduce), ScalarType::Float32).to(a.platform()).contiguous();
-    const Series ss_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
-    native::mps::scatter_reduce_(out_f, dim, idx, ss_f, rop);
-    return out_f.to(out_dt);
+    const bool supports_f32 = native::mps::supports_scatter_reduce(
+        ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
+    require_mps_support_or_policy_(supports_f32, "scatter_reduce");
+    if (supports_f32) {
+      Series out_f = include_self
+                       ? a.to(ScalarType::Float32).contiguous()
+                       : Series::full(a.sizes(), scatter_reduce_identity_(reduce), ScalarType::Float32)
+                             .to(a.platform())
+                             .contiguous();
+      const Series ss_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
+      native::mps::scatter_reduce_(out_f, dim, idx, ss_f, rop);
+      return out_f.to(out_dt);
+    }
   }
   require_backend_dispatch_supported_(a.platform(), "scatter_reduce");
   return native::cpu::scatter_reduce(a, dim, index, src, reduce, include_self);
@@ -1842,23 +2067,28 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
       native::mps::scatter_reduce_(out, dim, idx, ss, rop);
       return out;
     }
-    PLUSS_CHECK(native::mps::supports_scatter_reduce(ScalarType::Float32, idx.scalar_type(), ScalarType::Float32),
-                "scatter_reduce: no native MPS kernel yet for this dtype/op.");
-    Series out_f = has_initial
-                     ? Series::full(a.sizes(), initial, ScalarType::Float32).to(a.platform()).contiguous()
-                     : (include_self
-                          ? a.to(ScalarType::Float32).contiguous()
-                          : Series::full(a.sizes(), scatter_reduce_identity_(reduce), ScalarType::Float32).to(a.platform()).contiguous());
-    if (has_initial && include_self) {
-      const Series aa_f = a.to(ScalarType::Float32);
-      if (reduce == "sum") out_f = add(out_f, aa_f);
-      else if (reduce == "amax") out_f = maximum(out_f, aa_f);
-      else if (reduce == "amin") out_f = minimum(out_f, aa_f);
-      else throw_error("scatter_reduce: unsupported reduce (expected sum|amax|amin)");
+    const bool supports_f32 = native::mps::supports_scatter_reduce(
+        ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
+    require_mps_support_or_policy_(supports_f32, "scatter_reduce");
+    if (supports_f32) {
+      Series out_f = has_initial
+                       ? Series::full(a.sizes(), initial, ScalarType::Float32).to(a.platform()).contiguous()
+                       : (include_self
+                            ? a.to(ScalarType::Float32).contiguous()
+                            : Series::full(a.sizes(), scatter_reduce_identity_(reduce), ScalarType::Float32)
+                                  .to(a.platform())
+                                  .contiguous());
+      if (has_initial && include_self) {
+        const Series aa_f = a.to(ScalarType::Float32);
+        if (reduce == "sum") out_f = add(out_f, aa_f);
+        else if (reduce == "amax") out_f = maximum(out_f, aa_f);
+        else if (reduce == "amin") out_f = minimum(out_f, aa_f);
+        else throw_error("scatter_reduce: unsupported reduce (expected sum|amax|amin)");
+      }
+      const Series ss_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
+      native::mps::scatter_reduce_(out_f, dim, idx, ss_f, rop);
+      return out_f.to(out_dt);
     }
-    const Series ss_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
-    native::mps::scatter_reduce_(out_f, dim, idx, ss_f, rop);
-    return out_f.to(out_dt);
   }
   require_backend_dispatch_supported_(a.platform(), "scatter_reduce");
   return native::cpu::scatter_reduce(a, dim, index, src, reduce, include_self, has_initial, initial);
@@ -1898,14 +2128,16 @@ Series gather(const Series& input, std::int64_t dim, const Series& index) {
       native::mps::gather(in, dim, idx, out);
       return out;
     }
-    PLUSS_CHECK(native::mps::supports_gather(ScalarType::Float32, idx.scalar_type()),
-                "gather: no native MPS kernel yet for this dtype/op.");
-    Series in_f = in.to(ScalarType::Float32);
-    Series out_f = Series::empty(std::vector<std::int64_t>(idx.sizes().begin(), idx.sizes().end()),
-                                 ScalarType::Float32,
-                                 in.platform());
-    native::mps::gather(in_f, dim, idx, out_f);
-    return out_f.to(input.scalar_type());
+    const bool supports_f32 = native::mps::supports_gather(ScalarType::Float32, idx.scalar_type());
+    require_mps_support_or_policy_(supports_f32, "gather");
+    if (supports_f32) {
+      Series in_f = in.to(ScalarType::Float32);
+      Series out_f = Series::empty(std::vector<std::int64_t>(idx.sizes().begin(), idx.sizes().end()),
+                                   ScalarType::Float32,
+                                   in.platform());
+      native::mps::gather(in_f, dim, idx, out_f);
+      return out_f.to(input.scalar_type());
+    }
   }
   require_backend_dispatch_supported_(input.platform(), "gather");
   return native::cpu::gather(in, dim, idx);
@@ -1997,14 +2229,17 @@ Series remainder(const Series& a, const Series& b) {
 }
 
 Series rsqrt(const Series& a) {
-  if (a.platform() == Platform::MPS) {
-    auto aa = a.contiguous().to(ScalarType::Float32);
-    return reciprocal(sqrt(aa));
+  Series out = (a.platform() == Platform::MPS)
+                   ? reciprocal(sqrt(a.contiguous().to(ScalarType::Float32)))
+                   : Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32), a.platform());
+  if (a.platform() != Platform::MPS) {
+    require_backend_dispatch_supported_(a.platform(), "rsqrt");
+    auto aa = a.contiguous().to(out.scalar_type());
+    native::cpu::rsqrt(aa, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "rsqrt");
-  auto out = Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32), a.platform());
-  auto aa = a.contiguous().to(out.scalar_type());
-  native::cpu::rsqrt(aa, out);
+  maybe_link_unary_op_(out, a, [out](const Series& g) {
+    return g.mul(-0.5).mul(mul(mul(out, out), out));
+  });
   return out;
 }
 Series log2(const Series& a) {
@@ -2056,14 +2291,19 @@ Series cbrt(const Series& a) {
   return out;
 }
 Series square(const Series& a) {
+  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
     auto aa = a.contiguous();
-    return mul(aa, aa);
+    out = mul(aa, aa);
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "square");
+    out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+    auto aa = a.contiguous();
+    native::cpu::square(aa, out);
   }
-  require_backend_dispatch_supported_(a.platform(), "square");
-  auto out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  auto aa = a.contiguous();
-  native::cpu::square(aa, out);
+  maybe_link_unary_op_(out, a, [a](const Series& g) {
+    return g.mul(2.0).mul(a);
+  });
   return out;
 }
 
@@ -3068,10 +3308,12 @@ Series Series::to(ScalarType dst) const {
   const auto n = src.numel();
 
   if (platform() == Platform::MPS) {
-    PLUSS_CHECK(native::mps::supports_cast(src.scalar_type(), dst),
-                "Series::to(dtype): no native MPS cast kernel for this source/destination dtype");
-    native::mps::cast(src, out);
-    return out;
+    const bool supported = native::mps::supports_cast(src.scalar_type(), dst);
+    require_mps_support_or_policy_(supported, "Series::to(dtype)");
+    if (supported) {
+      native::mps::cast(src, out);
+      return out;
+    }
   }
 
   auto store_bool = [&](std::int64_t i, bool v) {

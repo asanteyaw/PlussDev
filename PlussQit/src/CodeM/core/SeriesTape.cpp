@@ -17,8 +17,11 @@ struct TapeState {
   std::shared_ptr<SourceLink> source_link{};
 };
 
-std::mutex g_mu;
-std::unordered_map<const SeriesImpl*, TapeState> g_states;
+// Keep tape globals alive until process exit to avoid static-destruction-order
+// issues when SeriesImpl teardown still calls purge_impl_state.
+std::recursive_mutex& g_mu = *new std::recursive_mutex();
+std::unordered_map<const SeriesImpl*, TapeState>& g_states =
+    *new std::unordered_map<const SeriesImpl*, TapeState>();
 thread_local int g_pause_depth = 0;
 
 const SeriesImpl* key_of_(const Series& s) noexcept {

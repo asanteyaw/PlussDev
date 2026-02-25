@@ -280,34 +280,23 @@ static Series make_expanded_gather_index_(
     Platform target_platform) {
   PLUSS_CHECK(idx_flat_i64.scalar_type() == ScalarType::Int64,
               "index_select: expected flattened int64 index");
-
-  Series idx_cpu = idx_flat_i64;
-  if (idx_cpu.platform() != Platform::CPU) idx_cpu = idx_cpu.to(Platform::CPU);
-  idx_cpu = idx_cpu.contiguous();
-
-  Series expanded_cpu = Series::empty(out_shape, ScalarType::Int64, Platform::CPU);
-  const auto* src = reinterpret_cast<const std::int64_t*>(idx_cpu.raw_data());
-  auto* dst = reinterpret_cast<std::int64_t*>(expanded_cpu.raw_mutable_data());
-
   const auto nd = static_cast<std::int64_t>(out_shape.size());
-  std::vector<std::int64_t> strides(static_cast<std::size_t>(nd), 1);
-  for (std::int64_t d = nd - 2; d >= 0; --d) {
-    strides[static_cast<std::size_t>(d)] =
-        strides[static_cast<std::size_t>(d + 1)] * out_shape[static_cast<std::size_t>(d + 1)];
-  }
+  PLUSS_CHECK(nd >= 1, "index_select: expected at least 1 dimension");
+  PLUSS_CHECK(dim >= 0 && dim < nd, "index_select: dim out of range");
 
-  const auto dim_size = out_shape[static_cast<std::size_t>(dim)];
-  PLUSS_CHECK(idx_cpu.numel() == dim_size, "index_select: internal index shape mismatch");
+  Series idx = idx_flat_i64;
+  if (idx.platform() != target_platform) idx = idx.to(target_platform);
+  idx = idx.contiguous();
 
-  const auto out_numel = expanded_cpu.numel();
-  for (std::int64_t i = 0; i < out_numel; ++i) {
-    const std::int64_t pick = (dim_size == 0)
-                                  ? 0
-                                  : ((i / strides[static_cast<std::size_t>(dim)]) % dim_size);
-    dst[i] = src[pick];
-  }
+  std::vector<std::int64_t> idx_shape(static_cast<std::size_t>(nd), 1);
+  idx_shape[static_cast<std::size_t>(dim)] = idx.numel();
+  PLUSS_CHECK(
+      idx_shape[static_cast<std::size_t>(dim)] == out_shape[static_cast<std::size_t>(dim)],
+      "index_select: internal index shape mismatch");
 
-  return (target_platform == Platform::CPU) ? expanded_cpu : expanded_cpu.to(target_platform);
+  return idx.reshape(std::span<const std::int64_t>(idx_shape.data(), idx_shape.size()))
+      .expand(out_shape, true)
+      .contiguous();
 }
 
 static Series index_select_dispatch_(const Series& self, std::int64_t dim, const Series& index) {
@@ -1101,14 +1090,6 @@ static Series kurtosis_impl(const Series& self, std::optional<std::int64_t> dim 
 }
 
 static Series norm_along_impl(const Series& self, std::int64_t dim, double eps = 1e-12) {
-  if (self.platform() == Platform::MPS) {
-    const Series cpu = self.to(Platform::CPU);
-    Series out_cpu = norm_along_impl(cpu, dim, eps);
-    if (out_cpu.scalar_type() != ScalarType::Float32) {
-      out_cpu = out_cpu.to(ScalarType::Float32);
-    }
-    return out_cpu.contiguous().to(Platform::MPS).contiguous();
-  }
   auto x = self.to(compat_real_dtype_for_(self));
   const auto d = wrap_dim(dim, x.dim(), "normr/normc");
   auto denom = ops_internal::sqrt(ops_internal::sum(ops_internal::square(x), d, /*keepdim=*/true)).contiguous();
@@ -1218,14 +1199,6 @@ static Series hilbert_impl(const Series& self, std::int64_t dim = -1) {
 }
 
 static Series shift_impl(const Series& self, std::span<const std::int64_t> dims, bool inverse) {
-  if (self.platform() == Platform::MPS) {
-    const Series cpu = self.to(Platform::CPU);
-    Series out_cpu = shift_impl(cpu, dims, inverse).contiguous();
-    if (out_cpu.scalar_type() != ScalarType::Float32) {
-      out_cpu = out_cpu.to(ScalarType::Float32);
-    }
-    return out_cpu.to(Platform::MPS).contiguous();
-  }
   Series out = self;
   std::vector<std::int64_t> use_dims;
   if (dims.empty()) {
@@ -2789,6 +2762,9 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "is_complex") return bool_scalar(is_complex_dtype(self.scalar_type()));
     if (op == "is_floating_point") return bool_scalar(is_floating_dtype(self.scalar_type()));
     if (op == "is_signed") return bool_scalar(is_signed_dtype(self.scalar_type()));
+    if (op == "tracks_slope") return bool_scalar(series_tape::tracks_slope(self));
+    if (op == "has_sensitivity") return bool_scalar(series_tape::sensitivity(self).has_value());
+    if (op == "sensitivity") return series_tape::sensitivity_or_zeros(self);
     if (op == "is_leaf") return bool_scalar(series_tape::is_leaf(self));
     if (op == "is_conj" || op == "is_neg" || op == "is_inference" ||
         op == "is_distributed" || op == "is_pinned" || op == "is_coalesced" || op == "is_set_to") {
@@ -3907,6 +3883,10 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       series_tape::set_tracks_slope(self, false);
       series_tape::set_keep_sensitivity(self, false);
       series_tape::clear_source_link(self);
+      series_tape::clear_sensitivity(self);
+      return self;
+    }
+    if (op == "clear_sensitivity") {
       series_tape::clear_sensitivity(self);
       return self;
     }

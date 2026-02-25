@@ -130,12 +130,16 @@ public:
   bool unique() const noexcept;
 
   std::int64_t nstreams() const;
+  std::int64_t nfields() const;
   bool empty() const;
 
   const std::vector<std::string>& keys() const;
   bool has(std::string_view key) const;
+  bool has_stream(std::string_view key) const;
   Stream stream(std::string_view key) const;
+  Stream at(std::string_view key) const;
   std::optional<Stream> get(std::string_view key) const;
+  std::optional<Stream> get_stream(std::string_view key) const;
   std::vector<Stream> streams() const;
 
   // Kind projections.
@@ -148,6 +152,7 @@ public:
   Catalog head(std::int64_t n) const;
   Catalog tail(std::int64_t n) const;
   Catalog slice(std::int64_t start, std::int64_t stop) const;
+  Catalog iloc(std::int64_t row) const;
   Catalog iloc(std::int64_t start, std::int64_t stop) const;
   Catalog take(std::span<const std::int64_t> indices) const;
   Catalog sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;
@@ -155,8 +160,13 @@ public:
   Catalog where(const pluss::Series& condition) const;
   Catalog query(const QueryFn& fn) const;
   Catalog masked_select(const pluss::Series& mask) const;
+  Catalog select(std::initializer_list<std::string_view> field_names) const;
   Catalog select(const std::vector<std::string>& field_names) const;
+  Catalog drop(std::string_view field_name) const;
   Catalog drop(const std::vector<std::string>& field_names) const;
+  Catalog rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) const;
+  Catalog rename(std::string_view from, std::string_view to) const;
+  Catalog& rename_(std::string_view from, std::string_view to);
   Catalog rename(const std::unordered_map<std::string, std::string>& mapping) const;
   Catalog sort(std::string_view by_field, bool ascending = true) const;
   Catalog sort_by(const std::vector<std::string>& fields,
@@ -183,6 +193,8 @@ public:
   Catalog merge(const Catalog& other, std::string_view on, std::string_view how = "inner") const;
   Catalog apply(std::string_view field, const std::function<Stream(const Stream&)>& func) const;
   Catalog& apply_(std::string_view field, const std::function<Stream(const Stream&)>& func);
+  Catalog apply_all(const std::function<Stream(const Stream&)>& fn) const;
+  Catalog& apply_all_(const std::function<Stream(const Stream&)>& fn);
   Catalog transform(const std::function<Stream(const Stream&)>& fn) const;
   Catalog transform(std::string_view field, const std::function<Stream(const Stream&)>& fn) const;
   Catalog text_preprocess(std::string_view field) const;
@@ -197,6 +209,8 @@ public:
 
   Catalog set_stream(std::string_view key, const Stream& value) const;
   Catalog& set_stream_(std::string_view key, const Stream& value);
+  Catalog set(std::string_view key, const Stream& value) const;
+  Catalog& set_(std::string_view key, const Stream& value);
   Catalog set_streams(std::initializer_list<std::pair<std::string_view, Stream>> items) const;
   Catalog& set_streams_(std::initializer_list<std::pair<std::string_view, Stream>> items);
   Catalog set_streams(std::initializer_list<NamedStream> items) const;

@@ -126,42 +126,87 @@ pluss::kindle::Stream Slot::kindelize() const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   if (empty()) return pluss::kindle::Stream(pluss::make_note(std::vector<std::string>{}));
 
-  if (all_type<bool>(values())) {
-    std::vector<bool> b;
-    b.reserve(values().size());
-    for (const auto& v : values()) b.push_back(std::get<bool>(v));
-    const auto n = static_cast<std::int64_t>(b.size());
-    auto s = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
-    auto* p = reinterpret_cast<bool*>(s.raw_data());
-    for (std::int64_t i = 0; i < n; ++i) p[i] = b[static_cast<std::size_t>(i)];
-    return pluss::kindle::Stream(s);
+  if (all_type<pluss::Series>(values())) {
+    if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::Series>(values().front()));
+
+    const auto dtype = std::get<pluss::Series>(values().front()).scalar_type();
+    if (dtype == pluss::codem::ScalarType::Bool) {
+      std::vector<bool> out;
+      out.reserve(values().size());
+      for (const auto& v : values()) {
+        const auto& s = std::get<pluss::Series>(v);
+        PLUSS_CHECK(s.scalar_type() == dtype, "Slot::kindelize: mixed Series dtypes are not stream-compatible");
+        PLUSS_CHECK(s.numel() == 1, "Slot::kindelize: Series values must be scalar-like (numel==1)");
+        out.push_back(s.to_vec<bool>()[0]);
+      }
+      const auto n = static_cast<std::int64_t>(out.size());
+      auto s = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+      auto* p = reinterpret_cast<bool*>(s.raw_data());
+      for (std::int64_t i = 0; i < n; ++i) p[i] = out[static_cast<std::size_t>(i)];
+      return pluss::kindle::Stream(s);
+    }
+    if (dtype == pluss::codem::ScalarType::Int64) {
+      std::vector<std::int64_t> out;
+      out.reserve(values().size());
+      for (const auto& v : values()) {
+        const auto& s = std::get<pluss::Series>(v);
+        PLUSS_CHECK(s.scalar_type() == dtype, "Slot::kindelize: mixed Series dtypes are not stream-compatible");
+        PLUSS_CHECK(s.numel() == 1, "Slot::kindelize: Series values must be scalar-like (numel==1)");
+        out.push_back(s.to_vec<std::int64_t>()[0]);
+      }
+      return pluss::kindle::Stream(pluss::make_series(out, {static_cast<std::int64_t>(out.size())}));
+    }
+
+    std::vector<double> out;
+    out.reserve(values().size());
+    for (const auto& v : values()) {
+      const auto& s = std::get<pluss::Series>(v);
+      PLUSS_CHECK(s.scalar_type() == dtype, "Slot::kindelize: mixed Series dtypes are not stream-compatible");
+      PLUSS_CHECK(s.numel() == 1, "Slot::kindelize: Series values must be scalar-like (numel==1)");
+      out.push_back(s.to(pluss::codem::ScalarType::Float64).to_vec<double>()[0]);
+    }
+    auto merged = pluss::make_series(out, {static_cast<std::int64_t>(out.size())});
+    if (dtype != pluss::codem::ScalarType::Float64) merged = merged.to(dtype);
+    return pluss::kindle::Stream(merged);
   }
-  if (all_type<std::int64_t>(values())) {
-    std::vector<std::int64_t> x;
-    x.reserve(values().size());
-    for (const auto& v : values()) x.push_back(std::get<std::int64_t>(v));
-    return pluss::kindle::Stream(pluss::make_series(x, {static_cast<std::int64_t>(x.size())}));
+
+  if (all_type<pluss::Note>(values())) {
+    if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::Note>(values().front()));
+    std::vector<std::string> out;
+    out.reserve(values().size());
+    for (const auto& v : values()) {
+      const auto& n = std::get<pluss::Note>(v);
+      PLUSS_CHECK(n.numel() == 1, "Slot::kindelize: Note values must be scalar-like (numel==1)");
+      out.emplace_back(n.at(0));
+    }
+    return pluss::kindle::Stream(pluss::make_note(out));
   }
-  if (all_type<double>(values())) {
-    std::vector<double> x;
-    x.reserve(values().size());
-    for (const auto& v : values()) x.push_back(std::get<double>(v));
-    return pluss::kindle::Stream(pluss::make_series(x, {static_cast<std::int64_t>(x.size())}));
+
+  if (all_type<pluss::Timeline>(values())) {
+    if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::Timeline>(values().front()));
+    std::vector<std::int64_t> ticks;
+    ticks.reserve(values().size());
+    for (const auto& v : values()) {
+      const auto& t = std::get<pluss::Timeline>(v);
+      PLUSS_CHECK(t.numel() == 1, "Slot::kindelize: Timeline values must be scalar-like (numel==1)");
+      ticks.push_back(t.to_epoch_nanos_vector()[0]);
+    }
+    return pluss::kindle::Stream(pluss::from_epoch_nanos(
+        ticks,
+        std::vector<std::int64_t>{static_cast<std::int64_t>(ticks.size())}));
   }
-  if (all_type<std::string>(values())) {
-    std::vector<std::string> x;
-    x.reserve(values().size());
-    for (const auto& v : values()) x.push_back(std::get<std::string>(v));
-    return pluss::kindle::Stream(pluss::make_note(x));
-  }
-  if (values().size() == 1) {
-    const auto& v = values().front();
-    if (std::holds_alternative<pluss::Series>(v)) return pluss::kindle::Stream(std::get<pluss::Series>(v));
-    if (std::holds_alternative<pluss::Note>(v)) return pluss::kindle::Stream(std::get<pluss::Note>(v));
-    if (std::holds_alternative<pluss::Timeline>(v)) return pluss::kindle::Stream(std::get<pluss::Timeline>(v));
-    if (std::holds_alternative<pluss::TimeIndex>(v)) return pluss::kindle::Stream(std::get<pluss::TimeIndex>(v));
+
+  if (all_type<pluss::TimeIndex>(values())) {
+    if (values().size() == 1) return pluss::kindle::Stream(std::get<pluss::TimeIndex>(values().front()));
+    std::vector<std::int64_t> ticks;
+    ticks.reserve(values().size());
+    for (const auto& v : values()) {
+      const auto& t = std::get<pluss::TimeIndex>(v);
+      PLUSS_CHECK(t.size() == 1, "Slot::kindelize: TimeIndex values must be scalar-like (size==1)");
+      ticks.push_back(t.timeline().to_epoch_nanos_vector()[0]);
+    }
+    return pluss::kindle::Stream(pluss::make_timeindex(ticks, false));
   }
 
   PLUSS_FAIL("Slot::kindelize: heterogeneous slot is not stream-compatible");
 }
-

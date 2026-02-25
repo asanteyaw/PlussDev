@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <variant>
 #include <vector>
 
 #include "pluss/pluss.h"
@@ -35,23 +34,75 @@ void expect_throw(Fn&& fn, std::string_view msg) {
   if (!threw) fail(msg);
 }
 
+Slot::Value as_series_i64(std::int64_t v) {
+  return pluss::make_series(v, pluss::codem::ScalarType::Int64);
+}
+
+Slot::Value as_series_f64(double v) {
+  return pluss::make_series(v, pluss::codem::ScalarType::Float64);
+}
+
+Slot::Value as_series_bool(bool v) {
+  return pluss::make_series(v, pluss::codem::ScalarType::Bool);
+}
+
+Slot::Value as_note(std::string_view v) {
+  return pluss::content(v);
+}
+
+bool is_series(const Slot::Value& v) {
+  return std::holds_alternative<pluss::Series>(v);
+}
+
+bool is_note(const Slot::Value& v) {
+  return std::holds_alternative<pluss::Note>(v);
+}
+
+std::int64_t to_i64(const Slot::Value& v) {
+  expect(is_series(v), "expected Series value");
+  const auto& s = std::get<pluss::Series>(v);
+  expect(s.numel() == 1, "expected scalar Series");
+  return s.to(pluss::codem::ScalarType::Int64).to_vec<std::int64_t>()[0];
+}
+
+double to_f64(const Slot::Value& v) {
+  expect(is_series(v), "expected Series value");
+  const auto& s = std::get<pluss::Series>(v);
+  expect(s.numel() == 1, "expected scalar Series");
+  return s.to(pluss::codem::ScalarType::Float64).to_vec<double>()[0];
+}
+
+bool to_bool(const Slot::Value& v) {
+  expect(is_series(v), "expected Series value");
+  const auto& s = std::get<pluss::Series>(v);
+  expect(s.numel() == 1, "expected scalar Series");
+  return s.to_vec<bool>()[0];
+}
+
+std::string to_string_value(const Slot::Value& v) {
+  expect(is_note(v), "expected Note value");
+  const auto& n = std::get<pluss::Note>(v);
+  expect(n.numel() == 1, "expected scalar Note");
+  return std::string(n.at(0));
+}
+
 Slot make_ids_slot() {
   return Slot({
-      std::int64_t{1},
-      std::int64_t{2},
-      std::int64_t{3},
-      std::int64_t{4},
-      std::int64_t{5},
+      as_series_i64(1),
+      as_series_i64(2),
+      as_series_i64(3),
+      as_series_i64(4),
+      as_series_i64(5),
   });
 }
 
 Slot make_city_slot() {
   return Slot({
-      std::string("Accra"),
-      std::string("Kumasi"),
-      std::string("Tema"),
-      std::string("Tamale"),
-      std::string("Cape Coast"),
+      as_note("Accra"),
+      as_note("Kumasi"),
+      as_note("Tema"),
+      as_note("Tamale"),
+      as_note("Cape Coast"),
   });
 }
 
@@ -59,7 +110,7 @@ void test_slot_methods() {
   auto ids = make_ids_slot();
   expect(ids.size() == 5, "ids slot size mismatch");
 
-  ids.push_(std::int64_t{6});
+  ids.push_(as_series_i64(6));
   expect(ids.size() == 6, "push_ should append");
 
   const auto head = ids.head(3);
@@ -67,10 +118,10 @@ void test_slot_methods() {
   const auto slice = ids.slice(1, 4);
   const auto take = ids.take(std::vector<std::int64_t>{0, 2, 4});
   const auto filtered = ids.filter([](const Slot::Value& v) {
-    return std::holds_alternative<std::int64_t>(v) && std::get<std::int64_t>(v) >= 4;
+    return is_series(v) && to_i64(v) >= 4;
   });
   const auto transformed = ids.transform([](const Slot::Value& v) -> Slot::Value {
-    if (std::holds_alternative<std::int64_t>(v)) return std::get<std::int64_t>(v) * 2;
+    if (is_series(v)) return as_series_i64(to_i64(v) * 2);
     return v;
   });
   const auto concat = head.concat(tail);
@@ -83,7 +134,7 @@ void test_slot_methods() {
   expect(filtered.size() == 3, "filter size mismatch");
   expect(transformed.size() == ids.size(), "transform size mismatch");
   expect(concat.size() == 5, "concat size mismatch");
-  expect(counts.at("int64") == 6, "type_counts[int64] mismatch");
+  expect(counts.at("Series") == 6, "type_counts[Series] mismatch");
 
   const auto stream = ids.kindelize();
   expect(stream.size() == ids.size(), "Slot::kindelize size mismatch");
@@ -92,8 +143,8 @@ void test_slot_methods() {
   expect(roundtrip.size() == ids.size(), "Slot::from_kindle size mismatch");
 
   const Slot hetero({
-      std::int64_t{1},
-      std::string("x"),
+      as_series_i64(1),
+      as_note("x"),
   });
   expect_throw([&]() { (void)hetero.kindelize(); }, "heterogeneous slot kindelize should throw");
 }
@@ -102,11 +153,11 @@ void test_registry_methods() {
   const auto ids = make_ids_slot();
   const auto city = make_city_slot();
   const auto score = Slot({
-      1.5,
-      2.5,
-      3.5,
-      4.5,
-      5.5,
+      as_series_f64(1.5),
+      as_series_f64(2.5),
+      as_series_f64(3.5),
+      as_series_f64(4.5),
+      as_series_f64(5.5),
   });
 
   auto reg = Registry({
@@ -135,44 +186,44 @@ void test_registry_methods() {
 
   const auto applied = reg.apply("ids", [](const Slot& s) {
     return s.transform([](const Slot::Value& v) -> Slot::Value {
-      if (std::holds_alternative<std::int64_t>(v)) return std::get<std::int64_t>(v) + 10;
+      if (is_series(v)) return as_series_i64(to_i64(v) + 10);
       return v;
     });
   });
-  expect(std::get<std::int64_t>(applied.slot("ids").at(0)) == 11, "Registry::apply transform mismatch");
+  expect(to_i64(applied.slot("ids").at(0)) == 11, "Registry::apply transform mismatch");
 
   reg.apply_("score", [](const Slot& s) {
     return s.transform([](const Slot::Value& v) -> Slot::Value {
-      if (std::holds_alternative<double>(v)) return std::get<double>(v) * 2.0;
+      if (is_series(v)) return as_series_f64(to_f64(v) * 2.0);
       return v;
     });
   });
-  expect(std::get<double>(reg.slot("score").at(0)) == 3.0, "Registry::apply_ mutate mismatch");
+  expect(to_f64(reg.slot("score").at(0)) == 3.0, "Registry::apply_ mutate mismatch");
 
   const auto upper = reg.apply_all([](const Slot& s) {
     return s.transform([](const Slot::Value& v) -> Slot::Value {
-      if (std::holds_alternative<std::string>(v)) {
-        auto out = std::get<std::string>(v);
+      if (is_note(v)) {
+        auto out = to_string_value(v);
         for (auto& ch : out) ch = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
-        return out;
+        return as_note(out);
       }
       return v;
     });
   });
-  expect(std::get<std::string>(upper.slot("city").at(0)) == "ACCRA", "Registry::apply_all mismatch");
+  expect(to_string_value(upper.slot("city").at(0)) == "ACCRA", "Registry::apply_all mismatch");
 
   const auto sizes = reg.slot_sizes();
   expect(sizes.at("ids") == 5, "Registry::slot_sizes mismatch");
 
   const auto other = Registry({
-      {"ids", Slot({std::int64_t{9}})},
-      {"flag", Slot({true})},
+      {"ids", Slot({as_series_i64(9)})},
+      {"flag", Slot({as_series_bool(true)})},
   });
   const auto combined = reg.combine(other, "_rhs");
   expect(combined.nslots() == 5, "Registry::combine slot count mismatch");
   expect(combined.has("ids_rhs"), "Registry::combine should suffix colliding key");
 
-  const auto with_new = reg.set_slot("status", Slot({std::string("ok"), std::string("ok")}));
+  const auto with_new = reg.set_slot("status", Slot({as_note("ok"), as_note("ok")}));
   expect(with_new.has("status"), "Registry::set_slot should add new key");
   reg.set_slot_("city_copy", city);
   expect(reg.has("city_copy"), "Registry::set_slot_ should add new key");
@@ -198,21 +249,21 @@ void test_registry_methods() {
 
   const auto mixed = Registry({
       {"ids", ids},
-      {"mixed", Slot({std::int64_t{7}, std::string("bad")})},
+      {"mixed", Slot({as_series_i64(7), as_note("bad")})},
   });
   expect_throw([&]() { (void)mixed.kindelize(); }, "Registry::kindelize should throw on heterogeneous slot");
 }
 
 void test_aisle_methods() {
   const auto r0 = Registry({
-      {"ids", Slot({std::int64_t{1}, std::int64_t{2}, std::int64_t{3}})},
-      {"city", Slot({std::string("Accra"), std::string("Kumasi"), std::string("Tema")})},
+      {"ids", Slot({as_series_i64(1), as_series_i64(2), as_series_i64(3)})},
+      {"city", Slot({as_note("Accra"), as_note("Kumasi"), as_note("Tema")})},
   });
   const auto r1 = Registry({
-      {"ids", Slot({std::int64_t{10}, std::int64_t{20}, std::int64_t{30}})},
-      {"city", Slot({std::string("Accra"), std::string("Kumasi"), std::string("Tema")})},
+      {"ids", Slot({as_series_i64(10), as_series_i64(20), as_series_i64(30)})},
+      {"city", Slot({as_note("Accra"), as_note("Kumasi"), as_note("Tema")})},
   });
-  const auto labels = Slot({std::string("train"), std::string("test")});
+  const auto labels = Slot({as_note("train"), as_note("test")});
   const auto aisle = Aisle({r0, r1}, labels);
 
   expect(aisle.depth() == 2, "Aisle depth mismatch");
@@ -222,7 +273,7 @@ void test_aisle_methods() {
   expect(aisle.slice(0, 2).depth() == 2, "Aisle::slice depth mismatch");
 
   const auto mapped = aisle.map([](const Registry& reg) {
-    return reg.set_slot("flag", Slot({true, false, true}));
+    return reg.set_slot("flag", Slot({as_series_bool(true), as_series_bool(false), as_series_bool(true)}));
   });
   expect(mapped.registry(0).has("flag"), "Aisle::map should transform registries");
 
@@ -231,11 +282,11 @@ void test_aisle_methods() {
 
   const auto applied = aisle.apply_slot("ids", [](const Slot& s) {
     return s.transform([](const Slot::Value& v) -> Slot::Value {
-      if (std::holds_alternative<std::int64_t>(v)) return std::get<std::int64_t>(v) * 2;
+      if (is_series(v)) return as_series_i64(to_i64(v) * 2);
       return v;
     });
   });
-  expect(std::get<std::int64_t>(applied.registry(0).slot("ids").at(0)) == 2, "Aisle::apply_slot mismatch");
+  expect(to_i64(applied.registry(0).slot("ids").at(0)) == 2, "Aisle::apply_slot mismatch");
 
   const auto concat = aisle.concat_depth(aisle);
   expect(concat.depth() == 4, "Aisle::concat_depth mismatch");
@@ -252,7 +303,7 @@ void test_aisle_methods() {
 
   expect_throw(
       [&]() {
-        (void)Aisle({r0, r1}, Slot({std::string("one_label")}));
+        (void)Aisle({r0, r1}, Slot({as_note("one_label")}));
       },
       "Aisle constructor should enforce label/depth alignment");
 }

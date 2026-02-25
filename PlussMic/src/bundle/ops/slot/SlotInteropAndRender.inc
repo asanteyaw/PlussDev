@@ -8,29 +8,29 @@ Slot Slot::from_kindle(const pluss::kindle::Stream& stream) {
       const auto s = stream.as_series();
       if (s.scalar_type() == pluss::codem::ScalarType::Bool) {
         const auto x = s.to_vec<bool>();
-        for (bool v : x) out.push_back(v);
+        for (bool v : x) out.emplace_back(pluss::make_series(v, pluss::codem::ScalarType::Bool));
       } else if (s.scalar_type() == pluss::codem::ScalarType::Int64) {
         const auto x = s.to_vec<std::int64_t>();
-        for (auto v : x) out.push_back(v);
+        for (auto v : x) out.emplace_back(pluss::make_series(v, s.scalar_type()));
       } else {
         const auto x = s.to(pluss::codem::ScalarType::Float64).to_vec<double>();
-        for (auto v : x) out.push_back(v);
+        for (auto v : x) out.emplace_back(pluss::make_series(v, s.scalar_type()));
       }
       break;
     }
     case pluss::kindle::StreamKind::Note: {
       const auto& nte = stream.as_note();
-      for (std::int64_t i = 0; i < n; ++i) out.push_back(std::string(nte.at(i)));
+      for (std::int64_t i = 0; i < n; ++i) out.emplace_back(pluss::content(nte.at(i)));
       break;
     }
     case pluss::kindle::StreamKind::Timeline: {
       const auto x = stream.as_timeline().to_epoch_nanos_vector();
-      for (auto v : x) out.push_back(v);
+      for (auto v : x) out.emplace_back(pluss::from_epoch_nanos(v));
       break;
     }
     case pluss::kindle::StreamKind::TimeIndex: {
       const auto x = stream.as_timeindex().timeline().to_epoch_nanos_vector();
-      for (auto v : x) out.push_back(v);
+      for (auto v : x) out.emplace_back(pluss::make_timeindex(std::vector<std::int64_t>{v}, false));
       break;
     }
   }
@@ -80,4 +80,3 @@ std::ostream& operator<<(std::ostream& os, const Slot& slot) {
   slot.show(os);
   return os;
 }
-

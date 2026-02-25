@@ -77,6 +77,10 @@ Catalog Catalog::slice(std::int64_t start, std::int64_t stop) const {
   return Catalog(std::move(out));
 }
 
+Catalog Catalog::iloc(std::int64_t row) const {
+  return slice(row, row + 1);
+}
+
 Catalog Catalog::iloc(std::int64_t start, std::int64_t stop) const {
   return slice(start, stop);
 }
@@ -141,6 +145,15 @@ Catalog Catalog::query(const QueryFn& fn) const {
   return filter(mask);
 }
 
+Catalog Catalog::select(std::initializer_list<std::string_view> field_names) const {
+  std::vector<std::string> names;
+  names.reserve(field_names.size());
+  for (const auto name : field_names) {
+    names.emplace_back(name);
+  }
+  return select(names);
+}
+
 Catalog Catalog::select(const std::vector<std::string>& field_names) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   const auto names = normalize_names(field_names);
@@ -151,6 +164,10 @@ Catalog Catalog::select(const std::vector<std::string>& field_names) const {
     out.emplace_back(n, stream(n));
   }
   return Catalog(std::move(out));
+}
+
+Catalog Catalog::drop(std::string_view field_name) const {
+  return drop(std::vector<std::string>{std::string(field_name)});
 }
 
 Catalog Catalog::drop(const std::vector<std::string>& field_names) const {
@@ -166,6 +183,25 @@ Catalog Catalog::drop(const std::vector<std::string>& field_names) const {
     if (drop_set.find(k) == drop_set.end()) kept.emplace_back(k, impl_ref_().streams_[i]);
   }
   return Catalog(std::move(kept));
+}
+
+Catalog Catalog::rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) const {
+  std::unordered_map<std::string, std::string> out;
+  out.reserve(mapping.size());
+  for (const auto& [from, to] : mapping) {
+    const auto inserted = out.emplace(std::string(from), std::string(to)).second;
+    PLUSS_CHECK(inserted, "Catalog::rename: duplicate source key in mapping");
+  }
+  return rename(out);
+}
+
+Catalog Catalog::rename(std::string_view from, std::string_view to) const {
+  return rename({{from, to}});
+}
+
+Catalog& Catalog::rename_(std::string_view from, std::string_view to) {
+  *this = rename(from, to);
+  return *this;
 }
 
 Catalog Catalog::rename(const std::unordered_map<std::string, std::string>& mapping) const {
@@ -527,6 +563,15 @@ Catalog& Catalog::apply_(std::string_view field, const std::function<Stream(cons
   PLUSS_CHECK(dst.size() == src.size(),
               "Catalog::apply_: output stream length must match input stream length");
   return set_stream_(key, dst);
+}
+
+Catalog Catalog::apply_all(const std::function<Stream(const Stream&)>& fn) const {
+  return transform(fn);
+}
+
+Catalog& Catalog::apply_all_(const std::function<Stream(const Stream&)>& fn) {
+  *this = transform(fn);
+  return *this;
 }
 
 Catalog Catalog::transform(const std::function<Stream(const Stream&)>& fn) const {
