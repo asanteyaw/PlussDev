@@ -772,6 +772,102 @@ void test_parallel_engine_matches_serial() {
   expect(s_job.at(last) == p_job.at(last), "parallel engine: last job value mismatch");
 }
 
+void test_dataframe_sql_accessor() {
+  ReadCsvOptions options;
+  options.sep = ';';
+  options.nrows = 80;
+  options.usecols = {"age", "job", "balance"};
+  const auto df = DataFrame::load_csv(fixture_path("bank-full.csv").string(), options);
+
+  const auto filtered = df.sql().execute(
+      "SELECT age, job FROM df WHERE age >= 45 ORDER BY age DESC LIMIT 5");
+  expect(filtered.ncols() == 2, "sql().execute: projected feature count mismatch");
+  expect(filtered.has_feature("age") && filtered.has_feature("job"),
+         "sql().execute: projection should keep requested features");
+  expect(filtered.nrows() <= 5, "sql().execute: LIMIT should cap row count");
+  const auto ages = filtered.features("age").as_series().to_vec<std::int64_t>();
+  for (std::size_t i = 1; i < ages.size(); ++i) {
+    expect(ages[i - 1] >= ages[i], "sql().execute: ORDER BY age DESC mismatch");
+  }
+
+  const auto aliased = df.sql().execute(
+      "SELECT age AS age_years FROM df LIMIT 3");
+  expect(aliased.nrows() == 3, "sql().execute: LIMIT should apply to aliased projections");
+  expect(aliased.ncols() == 1 && aliased.has_feature("age_years"),
+         "sql().execute: SELECT alias should rename output feature");
+
+  const auto with_case = df.sql().execute(
+      "SELECT case, age FROM df ORDER BY age ASC LIMIT 4 OFFSET 2");
+  expect(with_case.nrows() == 4, "sql().execute: LIMIT/OFFSET row count mismatch");
+  expect(with_case.ncols() == 2 && with_case.has_feature("case") && with_case.has_feature("age"),
+         "sql().execute: case projection should materialize as output feature");
+  const auto sorted = df.sort_values({DataFrame::ArrangeSpec{"age", true, true}});
+  const auto expected = sorted.slice(2, 6).features("age").as_series().to_vec<std::int64_t>();
+  const auto actual = with_case.features("age").as_series().to_vec<std::int64_t>();
+  expect(expected == actual, "sql().execute: LIMIT/OFFSET should match native slice over sorted data");
+
+  expect_throw([&]() { (void)df.sql().execute("DELETE FROM df"); },
+               "sql().execute: non-SELECT statements should throw");
+
+  const auto default_limited = df.sql(DataFrame::SqlOptions{
+      .accepted_sources = {"df"},
+      .default_limit = 2,
+      .max_limit = std::nullopt,
+      .allow_select_star = true,
+      .allow_case_projection = true,
+      .clamp_limit_to_max = true,
+  }).execute("SELECT age FROM df ORDER BY age DESC");
+  expect(default_limited.nrows() == 2,
+         "sql(options).execute: default_limit should apply when SQL LIMIT is absent");
+
+  const auto clamped = df.sql(DataFrame::SqlOptions{
+      .accepted_sources = {"df"},
+      .default_limit = std::nullopt,
+      .max_limit = 3,
+      .allow_select_star = true,
+      .allow_case_projection = true,
+      .clamp_limit_to_max = true,
+  }).execute("SELECT age FROM df LIMIT 20");
+  expect(clamped.nrows() == 3,
+         "sql(options).execute: max_limit should clamp SQL LIMIT when clamp_limit_to_max=true");
+
+  expect_throw([&]() {
+                (void)df.sql(DataFrame::SqlOptions{
+                    .accepted_sources = {"frame"},
+                    .default_limit = std::nullopt,
+                    .max_limit = std::nullopt,
+                    .allow_select_star = true,
+                    .allow_case_projection = true,
+                    .clamp_limit_to_max = true,
+                }).execute("SELECT age FROM df");
+              },
+              "sql(options).execute: accepted_sources should validate FROM source");
+
+  expect_throw([&]() {
+                (void)df.sql(DataFrame::SqlOptions{
+                    .accepted_sources = {"df"},
+                    .default_limit = std::nullopt,
+                    .max_limit = std::nullopt,
+                    .allow_select_star = false,
+                    .allow_case_projection = true,
+                    .clamp_limit_to_max = true,
+                }).execute("SELECT * FROM df LIMIT 1");
+              },
+              "sql(options).execute: allow_select_star=false should reject SELECT *");
+
+  expect_throw([&]() {
+                (void)df.sql(DataFrame::SqlOptions{
+                    .accepted_sources = {"df"},
+                    .default_limit = std::nullopt,
+                    .max_limit = std::nullopt,
+                    .allow_select_star = true,
+                    .allow_case_projection = false,
+                    .clamp_limit_to_max = true,
+                }).execute("SELECT case FROM df LIMIT 1");
+              },
+              "sql(options).execute: allow_case_projection=false should reject case projection");
+}
+
 void test_versatile_dataframe_families() {
   ReadCsvOptions options;
   options.sep = ';';
@@ -1858,6 +1954,7 @@ int main() {
       {"transpose_shape_and_axes", test_transpose_shape_and_axes},
       {"squeeze_unsqueeze_bridge", test_squeeze_unsqueeze_bridge},
       {"parallel_engine_matches_serial", test_parallel_engine_matches_serial},
+      {"dataframe_sql_accessor", test_dataframe_sql_accessor},
       {"versatile_dataframe_families", test_versatile_dataframe_families},
   };
 

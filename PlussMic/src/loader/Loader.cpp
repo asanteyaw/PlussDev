@@ -33,6 +33,66 @@
 #endif
 
 #if PLUSSMIC_HAS_PARQUET_CPP
+// Arrow's bytes_view aliases std::basic_string_view<uint8_t>. Some libc++
+// toolchains (notably conda clang/libc++ combos) do not provide
+// std::char_traits<unsigned char>, so provide a local compatibility
+// specialization before including Arrow headers.
+#if defined(_LIBCPP_VERSION)
+namespace std {
+template <>
+struct char_traits<unsigned char> {
+  using char_type = unsigned char;
+  using int_type = unsigned int;
+  using off_type = streamoff;
+  using pos_type = streampos;
+  using state_type = mbstate_t;
+
+  static constexpr void assign(char_type& c1, const char_type& c2) noexcept { c1 = c2; }
+  static constexpr bool eq(char_type c1, char_type c2) noexcept { return c1 == c2; }
+  static constexpr bool lt(char_type c1, char_type c2) noexcept { return c1 < c2; }
+
+  static int compare(const char_type* s1, const char_type* s2, std::size_t n) noexcept {
+    if (n == 0) return 0;
+    return std::memcmp(s1, s2, n);
+  }
+
+  static std::size_t length(const char_type* s) noexcept {
+    std::size_t n = 0;
+    while (s[n] != static_cast<char_type>(0)) ++n;
+    return n;
+  }
+
+  static const char_type* find(const char_type* s, std::size_t n, const char_type& a) noexcept {
+    for (std::size_t i = 0; i < n; ++i) {
+      if (s[i] == a) return s + i;
+    }
+    return nullptr;
+  }
+
+  static char_type* move(char_type* s1, const char_type* s2, std::size_t n) noexcept {
+    if (n == 0) return s1;
+    return static_cast<char_type*>(std::memmove(s1, s2, n));
+  }
+
+  static char_type* copy(char_type* s1, const char_type* s2, std::size_t n) noexcept {
+    if (n == 0) return s1;
+    return static_cast<char_type*>(std::memcpy(s1, s2, n));
+  }
+
+  static char_type* assign(char_type* s, std::size_t n, char_type a) noexcept {
+    for (std::size_t i = 0; i < n; ++i) s[i] = a;
+    return s;
+  }
+
+  static constexpr int_type not_eof(int_type c) noexcept { return eq_int_type(c, eof()) ? ~eof() : c; }
+  static constexpr char_type to_char_type(int_type c) noexcept { return static_cast<char_type>(c); }
+  static constexpr int_type to_int_type(char_type c) noexcept { return static_cast<int_type>(c); }
+  static constexpr bool eq_int_type(int_type c1, int_type c2) noexcept { return c1 == c2; }
+  static constexpr int_type eof() noexcept { return static_cast<int_type>(EOF); }
+};
+}  // namespace std
+#endif  // defined(_LIBCPP_VERSION)
+
 #include <arrow/api.h>
 #include <arrow/io/api.h>
 #include <arrow/table.h>

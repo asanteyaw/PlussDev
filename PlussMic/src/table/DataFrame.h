@@ -36,6 +36,7 @@ class DataFrameImpl;
 }
 class DataFrame;
 class DataFramePlotAccessor;
+class DataFrameSqlAccessor;
 class Atlas;
 
 class ColumnRef {
@@ -176,6 +177,15 @@ public:
     CombineOp op{CombineOp::Features};
     std::string collision_suffix{"_right"};
     bool overwrite{true};
+  };
+
+  struct SqlOptions {
+    std::vector<std::string> accepted_sources{"df"};
+    std::optional<std::int64_t> default_limit{std::nullopt};
+    std::optional<std::int64_t> max_limit{std::nullopt};
+    bool allow_select_star{true};
+    bool allow_case_projection{true};
+    bool clamp_limit_to_max{true};
   };
 
   using QueryFn = std::function<pluss::Series(const DataFrame&)>;
@@ -350,6 +360,8 @@ public:
   DataFrame with_column(std::string name, const Thread& column) const;
   DataFrame& with_column_(std::string name, const Thread& column);
   DataFramePlotAccessor plot() const;
+  DataFrameSqlAccessor sql(SqlOptions options) const;
+  DataFrameSqlAccessor sql() const;
   LetSlot set(std::string_view name);
   LetSlots set(std::initializer_list<std::string_view> names);
   DataFrame set_features(std::string_view name, const Thread& value) const;
@@ -628,3 +640,4 @@ std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
 } // namespace pluss::table
 
 #include "table/plot/DataFramePlot.h"
+#include "table/sql/DataFrameSql.h"

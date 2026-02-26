@@ -1,9 +1,12 @@
 #pragma once
 
+#include <cerrno>
 #include <charconv>
+#include <cmath>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <ranges>
 #include <numeric>
 #include <stdexcept>
@@ -75,10 +78,18 @@ inline bool parse_double(std::string_view text, double& out) {
   if (trimmed.empty()) {
     return false;
   }
-  const char* begin = trimmed.data();
-  const char* end = begin + trimmed.size();
-  const auto [ptr, ec] = std::from_chars(begin, end, out, std::chars_format::general);
-  return ec == std::errc() && ptr == end;
+  std::string token(trimmed);
+  char* end_ptr = nullptr;
+  errno = 0;
+  const double parsed = std::strtod(token.c_str(), &end_ptr);
+  if (end_ptr != token.c_str() + token.size()) {
+    return false;
+  }
+  if (errno == ERANGE || !std::isfinite(parsed)) {
+    return false;
+  }
+  out = parsed;
+  return true;
 }
 
 inline std::vector<double> note_to_plot_vector(const pluss::Note& values, std::string_view where) {
