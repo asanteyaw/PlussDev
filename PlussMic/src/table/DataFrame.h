@@ -9,7 +9,9 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "MSharp/IntrusivePtr.h"
@@ -37,6 +39,7 @@ class DataFrameImpl;
 class DataFrame;
 class DataFramePlotAccessor;
 class DataFrameSqlAccessor;
+class DataFrameSqlPrepared;
 class Atlas;
 
 class ColumnRef {
@@ -180,12 +183,53 @@ public:
   };
 
   struct SqlOptions {
-    std::vector<std::string> accepted_sources{"df"};
-    std::optional<std::int64_t> default_limit{std::nullopt};
-    std::optional<std::int64_t> max_limit{std::nullopt};
-    bool allow_select_star{true};
-    bool allow_case_projection{true};
-    bool clamp_limit_to_max{true};
+    enum class MissingParamPolicy : std::uint8_t {
+      Error = 0,
+      Null = 1,
+    };
+
+    enum class CollisionPolicy : std::uint8_t {
+      Error = 0,
+      Suffix = 1,
+      Overwrite = 2,
+    };
+
+    enum class ResultMode : std::uint8_t {
+      Materialized = 0,
+      Chunked = 1,
+    };
+
+    struct SourceBinding {
+      std::string name{};
+      const DataFrame* frame{nullptr};
+    };
+
+    using SqlParam = std::variant<std::nullptr_t, bool, std::int64_t, double, std::string>;
+
+    // Additional named sources available to JOIN in SQL.
+    std::vector<SourceBinding> sources{};
+    // Template-style parameters used in SQL via `{param_name}` placeholders.
+    std::unordered_map<std::string, SqlParam> params{};
+    // Identifier placeholders via `{@ident_name}`.
+    std::unordered_map<std::string, std::string> identifier_params{};
+    MissingParamPolicy missing_param_policy{MissingParamPolicy::Error};
+    bool reject_unused_params{false};
+    CollisionPolicy collision_policy{CollisionPolicy::Error};
+    std::optional<std::int64_t> max_intermediate_rows{std::nullopt};
+    std::optional<std::int64_t> max_result_rows{std::nullopt};
+    std::optional<std::int64_t> memory_budget_mb{std::nullopt};
+    std::optional<std::int64_t> timeout_ms{std::nullopt};
+    bool diagnostics_explain{false};
+    bool diagnostics_profile{false};
+    bool diagnostics_trace_tokens{false};
+    bool diagnostics_trace_plan{false};
+    bool enable_plan_cache{true};
+    std::size_t plan_cache_capacity{256};
+    ResultMode result_mode{ResultMode::Materialized};
+    std::int64_t chunk_rows{1024};
+    // Names that map to the case axis when projected in SELECT.
+    // Example: case_axis_aliases={"case","idx"} enables `SELECT idx FROM df`.
+    std::vector<std::string> case_axis_aliases{"case"};
   };
 
   using QueryFn = std::function<pluss::Series(const DataFrame&)>;
@@ -362,6 +406,8 @@ public:
   DataFramePlotAccessor plot() const;
   DataFrameSqlAccessor sql(SqlOptions options) const;
   DataFrameSqlAccessor sql() const;
+  DataFrameSqlPrepared prepare_sql(std::string_view statement) const;
+  DataFrameSqlPrepared prepare_sql(std::string_view statement, SqlOptions options) const;
   LetSlot set(std::string_view name);
   LetSlots set(std::initializer_list<std::string_view> names);
   DataFrame set_features(std::string_view name, const Thread& value) const;

@@ -16,4 +16,16 @@ if(TARGET pluss AND TARGET plussqit_codem)
   )
   target_compile_features(plussma_garch11_dfo_demo PRIVATE cxx_std_20)
   target_link_libraries(plussma_garch11_dfo_demo PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_mads_blackbox_demo
+    mads_blackbox_demo.cpp
+  )
+  target_compile_features(plussma_mads_blackbox_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_mads_blackbox_demo PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_mads_blackbox_native_demo
+    mads_blackbox_native_demo.cpp
+  )
+  target_compile_features(plussma_mads_blackbox_native_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_mads_blackbox_native_demo PRIVATE pluss plussqit_codem)
 endif()

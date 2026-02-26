@@ -22,6 +22,11 @@ enum class PopulationSolverDisplay {
   Iter,
 };
 
+enum class PopulationSolverExecutionMode {
+  Vectorized,
+  OptimMasterCompat,
+};
+
 struct PopulationSolverDiagnostics {
   std::int64_t iterations{0};
   std::int64_t evaluations{0};
@@ -36,10 +41,10 @@ struct PopulationSolverOutcome {
 };
 
 struct DifferentialEvolutionConfig {
-  std::int64_t population_size{64};
-  std::int64_t max_generations{800};
+  std::int64_t population_size{200};
+  std::int64_t max_generations{1000};
   std::int64_t max_evaluations{0};
-  std::int64_t check_every{10};
+  std::int64_t check_every{0};
   double relative_improvement_tolerance{1e-8};
 
   double mutation_factor{0.8};
@@ -53,25 +58,27 @@ struct DifferentialEvolutionConfig {
   std::uint64_t rng_seed{5489ULL};
   bool promote_cpu_to_float64{true};
   PopulationSolverDisplay display{PopulationSolverDisplay::None};
+  PopulationSolverExecutionMode execution_mode{PopulationSolverExecutionMode::Vectorized};
 };
 
 struct DifferentialEvolutionPrmmConfig {
-  std::int64_t population_size{96};
-  std::int64_t elite_count{16};
-  std::int64_t max_generations{1200};
-  std::int64_t max_evaluations{0};
-  std::int64_t check_every{10};
-  std::int64_t reduction_passes{2};
+  std::int64_t population_size{200};
+  std::int64_t elite_count{6};
+  std::int64_t max_generations{0};
+  std::int64_t max_evaluations{100000};
+  std::int64_t check_every{0};
+  std::int64_t reduction_passes{3};
+  std::int64_t pmax{4};
   double relative_improvement_tolerance{1e-8};
 
-  double initial_mutation_factor{0.7};
+  double initial_mutation_factor{0.8};
   double initial_crossover_rate{0.9};
   double mutation_lower{0.1};
-  double mutation_upper{0.9};
+  double mutation_upper{1.0};
   double tau_mutation{0.1};
   double tau_crossover{0.1};
   double random_main_strategy_probability{0.75};
-  double diversity_epsilon{1e-2};
+  double diversity_epsilon{0.5};
 
   double initial_radius{0.5};
   Series lower_bounds{Series::undefined()};
@@ -80,26 +87,27 @@ struct DifferentialEvolutionPrmmConfig {
   std::uint64_t rng_seed{5489ULL};
   bool promote_cpu_to_float64{true};
   PopulationSolverDisplay display{PopulationSolverDisplay::None};
+  PopulationSolverExecutionMode execution_mode{PopulationSolverExecutionMode::Vectorized};
 };
 
 struct ParticleSwarmConfig {
-  std::int64_t population_size{72};
+  std::int64_t population_size{200};
   std::int64_t max_generations{1000};
   std::int64_t max_evaluations{0};
-  std::int64_t check_every{10};
+  std::int64_t check_every{0};
   double relative_improvement_tolerance{1e-8};
 
   bool center_particle{true};
   bool linear_inertia_schedule{true};
   bool time_varying_acceleration{false};
-  double inertia{0.72};
-  double inertia_max{0.9};
-  double inertia_min{0.4};
+  double inertia{1.0};
+  double inertia_max{0.99};
+  double inertia_min{0.10};
   double inertia_damp{0.99};
-  double cognitive{1.49};
-  double social{1.49};
+  double cognitive{2.0};
+  double social{2.0};
   double final_cognitive{0.5};
-  double final_social{2.0};
+  double final_social{2.5};
   double velocity_clamp_ratio{0.0};
 
   double initial_radius{0.5};
@@ -109,13 +117,14 @@ struct ParticleSwarmConfig {
   std::uint64_t rng_seed{5489ULL};
   bool promote_cpu_to_float64{true};
   PopulationSolverDisplay display{PopulationSolverDisplay::None};
+  PopulationSolverExecutionMode execution_mode{PopulationSolverExecutionMode::Vectorized};
 };
 
 struct ParticleSwarmDvConfig {
-  std::int64_t population_size{72};
+  std::int64_t population_size{200};
   std::int64_t max_generations{1000};
   std::int64_t max_evaluations{0};
-  std::int64_t check_every{10};
+  std::int64_t check_every{0};
   double relative_improvement_tolerance{1e-8};
 
   double inertia{1.0};
@@ -132,6 +141,7 @@ struct ParticleSwarmDvConfig {
   std::uint64_t rng_seed{5489ULL};
   bool promote_cpu_to_float64{true};
   PopulationSolverDisplay display{PopulationSolverDisplay::None};
+  PopulationSolverExecutionMode execution_mode{PopulationSolverExecutionMode::Vectorized};
 };
 
 PopulationSolverOutcome differential_evolution_minimizer(

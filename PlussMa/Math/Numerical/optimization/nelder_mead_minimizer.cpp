@@ -57,7 +57,7 @@ void maybe_print_iteration(const SimplexState& state, const NelderMeadConfig& co
   std::cout << "iter=" << state.iterations
             << " evals=" << state.evaluations
             << " f=" << scalar_as_f64(state.values.front(), "nelder_mead_minimizer")
-            << " step=" << state.last_step << "\n";
+            << " phase=" << state.last_step << "\n";
 }
 
 SimplexState sort_state(SimplexState state) {
@@ -144,7 +144,7 @@ SimplexState initialize_state(
   }
 
   state.iterations = 1;
-  state.last_step = "initial_simplex";
+  state.last_step = "bootstrap_simplex";
   return sort_state(std::move(state));
 }
 
@@ -208,16 +208,16 @@ SimplexState advance_state(
     if (expanded_scalar < reflected_scalar) {
       next.vertices[static_cast<std::size_t>(n)] = expanded;
       next.values[static_cast<std::size_t>(n)] = expanded_value;
-      next.last_step = "expand";
+      next.last_step = "accept_expansion";
     } else {
       next.vertices[static_cast<std::size_t>(n)] = reflected;
       next.values[static_cast<std::size_t>(n)] = reflected_value;
-      next.last_step = "reflect";
+      next.last_step = "accept_reflection";
     }
   } else if (reflected_scalar < second_worst_scalar) {
     next.vertices[static_cast<std::size_t>(n)] = reflected;
     next.values[static_cast<std::size_t>(n)] = reflected_value;
-    next.last_step = "reflect";
+    next.last_step = "accept_reflection";
   } else {
     bool apply_shrink = false;
 
@@ -232,7 +232,7 @@ SimplexState advance_state(
       if (outside_scalar <= reflected_scalar) {
         next.vertices[static_cast<std::size_t>(n)] = outside;
         next.values[static_cast<std::size_t>(n)] = outside_value;
-        next.last_step = "contract_outside";
+        next.last_step = "accept_outward_pull";
       } else {
         apply_shrink = true;
       }
@@ -245,7 +245,7 @@ SimplexState advance_state(
       if (inside_scalar < worst_scalar) {
         next.vertices[static_cast<std::size_t>(n)] = inside;
         next.values[static_cast<std::size_t>(n)] = inside_value;
-        next.last_step = "contract_inside";
+        next.last_step = "accept_inward_pull";
       } else {
         apply_shrink = true;
       }
@@ -260,7 +260,7 @@ SimplexState advance_state(
         next.values[static_cast<std::size_t>(j)] = evaluate(objective, shrunk, original_shape);
         ++next.evaluations;
       }
-      next.last_step = "shrink";
+      next.last_step = "simplex_reseed";
     }
   }
 

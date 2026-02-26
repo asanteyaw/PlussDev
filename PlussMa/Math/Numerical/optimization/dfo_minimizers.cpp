@@ -8,6 +8,7 @@
 #endif
 #include <iostream>
 #include <limits>
+#include <random>
 #include <span>
 #include <sstream>
 #include <stdexcept>
@@ -23,6 +24,8 @@ struct BoundsPack {
   Series lower{Series::undefined()};
   Series upper{Series::undefined()};
 };
+
+constexpr double kBoxEps = std::numeric_limits<double>::epsilon();
 
 struct CommonSetup {
   std::vector<std::int64_t> original_shape{};
@@ -42,6 +45,12 @@ struct RngState {
     ++counter;
     return seed + phi * counter;
   }
+};
+
+struct HostBoundsPack {
+  bool enabled{false};
+  std::vector<double> lower{};
+  std::vector<double> upper{};
 };
 
 double scalar_as_f64(const Series& x, const char* op) {
@@ -145,29 +154,184 @@ BoundsPack prepare_bounds(
   return bounds;
 }
 
-Series apply_bounds_vector(const Series& x, const BoundsPack& bounds) {
+Series transform_box_matrix(
+    const Series& x,
+    const BoundsPack& bounds,
+    std::int64_t n_pop,
+    std::int64_t n_dim) {
   if (!bounds.enabled) {
     return x;
   }
-  return x.maximum(bounds.lower).minimum(bounds.upper);
-}
-
-Series apply_bounds_matrix(const Series& m, const BoundsPack& bounds, std::int64_t n_pop, std::int64_t n_dim) {
-  if (!bounds.enabled) {
-    return m;
-  }
   const Series lower = bounds.lower.reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim});
   const Series upper = bounds.upper.reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim});
-  return m.maximum(lower).minimum(upper);
+  return x.sub(lower).add(kBoxEps).log()
+      .sub(upper.sub(x).add(kBoxEps).log());
+}
+
+Series inv_transform_box_vector(const Series& z, const BoundsPack& bounds) {
+  if (!bounds.enabled) {
+    return z;
+  }
+  const Series lower = bounds.lower;
+  const Series upper = bounds.upper;
+  const Series span = upper.sub(lower).sub(2.0 * kBoxEps);
+  return lower.add(kBoxEps).add(span.mul(z.sigmoid()));
+}
+
+HostBoundsPack to_host_bounds(
+    const BoundsPack& bounds,
+    std::int64_t n_dim) {
+  HostBoundsPack out;
+  out.enabled = bounds.enabled;
+  if (!out.enabled) {
+    return out;
+  }
+  out.lower = bounds.lower.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  out.upper = bounds.upper.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  if (static_cast<std::int64_t>(out.lower.size()) != n_dim ||
+      static_cast<std::int64_t>(out.upper.size()) != n_dim) {
+    throw std::runtime_error("dfo_minimizers: invalid bounds host conversion");
+  }
+  return out;
+}
+
+inline double inv_transform_scalar(double z, double lb, double ub) {
+  const double z_clamped = std::max(-700.0, std::min(700.0, z));
+  const double sigma = 1.0 / (1.0 + std::exp(-z_clamped));
+  return lb + kBoxEps + (ub - lb - 2.0 * kBoxEps) * sigma;
+}
+
+inline double transform_scalar(double x, double lb, double ub) {
+  const double xc = std::max(lb + kBoxEps, std::min(ub - kBoxEps, x));
+  return std::log(xc - lb + kBoxEps) - std::log(ub - xc + kBoxEps);
+}
+
+std::vector<double> inv_transform_host_vec(
+    const std::vector<double>& z,
+    const HostBoundsPack& bounds) {
+  if (!bounds.enabled) {
+    return z;
+  }
+  std::vector<double> x(z.size());
+  for (std::size_t j = 0; j < z.size(); ++j) {
+    x[j] = inv_transform_scalar(z[j], bounds.lower[j], bounds.upper[j]);
+  }
+  return x;
+}
+
+std::vector<double> transform_host_vec(
+    const std::vector<double>& x,
+    const HostBoundsPack& bounds) {
+  if (!bounds.enabled) {
+    return x;
+  }
+  std::vector<double> z(x.size());
+  for (std::size_t j = 0; j < x.size(); ++j) {
+    z[j] = transform_scalar(x[j], bounds.lower[j], bounds.upper[j]);
+  }
+  return z;
+}
+
+Series host_vector_to_series(
+    const std::vector<double>& x,
+    const Config& cfg) {
+  return pluss::make_series<double>(x, {static_cast<std::int64_t>(x.size())}, cfg)
+      .to(cfg.platform, cfg.dtype);
+}
+
+double eval_host_candidate(
+    const std::function<Series(const Series&)>& objective,
+    const std::vector<double>& candidate,
+    const HostBoundsPack& bounds,
+    const CommonSetup& setup,
+    const char* op) {
+  const std::vector<double> x_eval = inv_transform_host_vec(candidate, bounds);
+  const Series flat = host_vector_to_series(x_eval, setup.work_cfg);
+  const Series shaped = flat.reshape(
+      std::span<const std::int64_t>(setup.original_shape.data(), setup.original_shape.size()));
+  const Series out = objective(shaped);
+  if (!out.defined() || out.numel() != 1 || out.dtype().is_complex()) {
+    throw std::runtime_error(std::string(op) + ": objective must return real scalar Series");
+  }
+  const double val = scalar_as_f64(out, op);
+  return std::isfinite(val) ? val : std::numeric_limits<double>::infinity();
+}
+
+inline double rand_u01(std::mt19937_64* rng) {
+  return std::generate_canonical<double, 53>(*rng);
+}
+
+inline std::int64_t rand_index_inclusive(
+    std::int64_t lo,
+    std::int64_t hi,
+    std::mt19937_64* rng) {
+  std::uniform_int_distribution<std::int64_t> dist(lo, hi);
+  return dist(*rng);
+}
+
+std::int64_t argmin_host(const std::vector<double>& x) {
+  return static_cast<std::int64_t>(
+      std::distance(x.begin(), std::min_element(x.begin(), x.end())));
+}
+
+std::vector<std::vector<double>> sample_population_host(
+    const CommonSetup& setup,
+    const HostBoundsPack& bounds,
+    std::int64_t n_pop,
+    double initial_radius,
+    std::mt19937_64* rng) {
+  const std::int64_t n_dim = setup.dimension;
+  std::vector<double> center =
+      setup.flat_initial.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  if (static_cast<std::int64_t>(center.size()) != n_dim) {
+    throw std::runtime_error("dfo_minimizers: invalid host initial conversion");
+  }
+
+  std::vector<double> lb(n_dim), ub(n_dim);
+  for (std::int64_t j = 0; j < n_dim; ++j) {
+    if (bounds.enabled) {
+      center[static_cast<std::size_t>(j)] = std::max(
+          bounds.lower[static_cast<std::size_t>(j)],
+          std::min(center[static_cast<std::size_t>(j)],
+                   bounds.upper[static_cast<std::size_t>(j)]));
+    }
+    lb[static_cast<std::size_t>(j)] = center[static_cast<std::size_t>(j)] - initial_radius;
+    ub[static_cast<std::size_t>(j)] = center[static_cast<std::size_t>(j)] + initial_radius;
+    if (bounds.enabled) {
+      lb[static_cast<std::size_t>(j)] = std::max(
+          lb[static_cast<std::size_t>(j)], bounds.lower[static_cast<std::size_t>(j)]);
+      ub[static_cast<std::size_t>(j)] = std::min(
+          ub[static_cast<std::size_t>(j)], bounds.upper[static_cast<std::size_t>(j)]);
+    }
+  }
+
+  std::vector<std::vector<double>> pop(
+      static_cast<std::size_t>(n_pop), std::vector<double>(static_cast<std::size_t>(n_dim), 0.0));
+  for (std::int64_t i = 0; i < n_pop; ++i) {
+    auto& row = pop[static_cast<std::size_t>(i)];
+    for (std::int64_t j = 0; j < n_dim; ++j) {
+      const double u = rand_u01(rng);
+      row[static_cast<std::size_t>(j)] =
+          lb[static_cast<std::size_t>(j)] +
+          u * (ub[static_cast<std::size_t>(j)] - lb[static_cast<std::size_t>(j)]);
+    }
+    if (bounds.enabled) {
+      row = transform_host_vec(row, bounds);
+    }
+  }
+
+  return pop;
 }
 
 Series eval_candidate(
     const std::function<Series(const Series&)>& objective,
     const Series& candidate_flat,
+    const BoundsPack& bounds,
     const std::vector<std::int64_t>& original_shape,
     const Config& work_cfg,
     const char* op) {
-  const Series x = candidate_flat.reshape(std::span<const std::int64_t>(original_shape.data(), original_shape.size()));
+  const Series candidate_eval = inv_transform_box_vector(candidate_flat, bounds);
+  const Series x = candidate_eval.reshape(std::span<const std::int64_t>(original_shape.data(), original_shape.size()));
   const Series out = objective(x);
 
   if (!out.defined() || out.numel() != 1) {
@@ -179,15 +343,16 @@ Series eval_candidate(
 
   const double v = scalar_as_f64(out, op);
   if (!std::isfinite(v)) {
-    throw std::runtime_error(std::string(op) + ": objective returned non-finite value");
+    return pluss::full({1}, std::numeric_limits<double>::infinity(), work_cfg);
   }
 
-  return out.to(work_cfg.platform, work_cfg.dtype);
+  return out.to(work_cfg.platform, work_cfg.dtype).reshape({1});
 }
 
 Series eval_population(
     const std::function<Series(const Series&)>& objective,
     const Series& population,
+    const BoundsPack& bounds,
     const std::vector<std::int64_t>& original_shape,
     const Config& work_cfg,
     const Config& idx_cfg,
@@ -198,7 +363,7 @@ Series eval_population(
 
   for (std::int64_t i = 0; i < n_pop; ++i) {
     const Series row = population.select(0, i);
-    const Series val = eval_candidate(objective, row, original_shape, work_cfg, op);
+    const Series val = eval_candidate(objective, row, bounds, original_shape, work_cfg, op);
     const Series idx = pluss::arange(i, i + 1, idx_cfg);
     fit = fit.put(idx, val.reshape({1}), false);
   }
@@ -313,8 +478,13 @@ Series sample_population(
     const Config& work_cfg,
     RngState* rng) {
   const std::int64_t n_dim = flat_initial.numel();
-  Series lb = flat_initial.sub(initial_radius);
-  Series ub = flat_initial.add(initial_radius);
+  Series center = flat_initial;
+  if (bounds.enabled) {
+    center = center.maximum(bounds.lower).minimum(bounds.upper);
+  }
+
+  Series lb = center.sub(initial_radius);
+  Series ub = center.add(initial_radius);
 
   if (bounds.enabled) {
     lb = lb.maximum(bounds.lower);
@@ -324,20 +494,26 @@ Series sample_population(
   const Series width = ub.sub(lb);
   const Series rand_u = pluss::rand({n_pop, n_dim}, work_cfg, rng->next());
 
-  return lb.reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim})
+  Series sampled = lb.reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim})
       .add(rand_u.mul(width.reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim})));
+  if (bounds.enabled) {
+    sampled = transform_box_matrix(sampled, bounds, n_pop, n_dim);
+  }
+  return sampled;
 }
 
 PopulationSolverOutcome build_outcome(
     const Series& flat_best,
     double best_val,
     const CommonSetup& setup,
+    const BoundsPack& bounds,
     std::int64_t iterations,
     std::int64_t evaluations,
     std::string last_step,
     PopulationSolverStatus status) {
+  const Series best_eval = inv_transform_box_vector(flat_best, bounds);
   PopulationSolverOutcome out;
-  out.minimizer = flat_best
+  out.minimizer = best_eval
       .reshape(std::span<const std::int64_t>(setup.original_shape.data(), setup.original_shape.size()))
       .to(setup.flat_initial.platform(), setup.flat_initial.scalar_type());
   out.minimum = best_val;
@@ -372,11 +548,131 @@ PopulationSolverOutcome differential_evolution_minimizer(
     max_evaluations = n_pop * (max_generations + 1);
   }
 
+  if (config.execution_mode == PopulationSolverExecutionMode::OptimMasterCompat) {
+    const HostBoundsPack host_bounds = to_host_bounds(bounds, n_dim);
+    std::mt19937_64 rng(config.rng_seed);
+
+    std::vector<std::vector<double>> pop =
+        sample_population_host(setup, host_bounds, n_pop, config.initial_radius, &rng);
+    std::vector<double> fit(static_cast<std::size_t>(n_pop), std::numeric_limits<double>::infinity());
+    std::int64_t evaluations = 0;
+
+    for (std::int64_t i = 0; i < n_pop; ++i) {
+      fit[static_cast<std::size_t>(i)] =
+          eval_host_candidate(objective, pop[static_cast<std::size_t>(i)], host_bounds, setup, op);
+      ++evaluations;
+      if (evaluations >= max_evaluations) {
+        break;
+      }
+    }
+
+    std::int64_t best_idx = argmin_host(fit);
+    std::vector<double> best = pop[static_cast<std::size_t>(best_idx)];
+    double best_val = fit[static_cast<std::size_t>(best_idx)];
+    double check_best = best_val;
+
+    std::int64_t iterations = 0;
+    std::string last_step = "initial_population";
+    maybe_print_iteration(config.display, iterations, evaluations, best_val, last_step);
+
+    bool converged = false;
+    const bool use_best_mutation = config.best_mix >= 0.5;
+
+    while (iterations < max_generations && evaluations < max_evaluations) {
+      ++iterations;
+      const auto old_pop = pop;
+      const auto old_fit = fit;
+
+      for (std::int64_t i = 0; i < n_pop && evaluations < max_evaluations; ++i) {
+        std::int64_t c1 = 0;
+        std::int64_t c2 = 0;
+        std::int64_t c3 = 0;
+        do {
+          c1 = rand_index_inclusive(0, n_pop - 1, &rng);
+        } while (c1 == i);
+        do {
+          c2 = rand_index_inclusive(0, n_pop - 1, &rng);
+        } while (c2 == i || c2 == c1);
+        do {
+          c3 = rand_index_inclusive(0, n_pop - 1, &rng);
+        } while (c3 == i || c3 == c1 || c3 == c2);
+
+        const std::int64_t rand_ind = rand_index_inclusive(0, n_dim - 1, &rng);
+        std::vector<double> prop(static_cast<std::size_t>(n_dim), 0.0);
+
+        for (std::int64_t k = 0; k < n_dim; ++k) {
+          if (rand_u01(&rng) < config.crossover_rate || k == rand_ind) {
+            if (use_best_mutation) {
+              prop[static_cast<std::size_t>(k)] =
+                  best[static_cast<std::size_t>(k)] +
+                  config.mutation_factor *
+                      (old_pop[static_cast<std::size_t>(c1)][static_cast<std::size_t>(k)] -
+                       old_pop[static_cast<std::size_t>(c2)][static_cast<std::size_t>(k)]);
+            } else {
+              prop[static_cast<std::size_t>(k)] =
+                  old_pop[static_cast<std::size_t>(c3)][static_cast<std::size_t>(k)] +
+                  config.mutation_factor *
+                      (old_pop[static_cast<std::size_t>(c1)][static_cast<std::size_t>(k)] -
+                       old_pop[static_cast<std::size_t>(c2)][static_cast<std::size_t>(k)]);
+            }
+          } else {
+            prop[static_cast<std::size_t>(k)] =
+                old_pop[static_cast<std::size_t>(i)][static_cast<std::size_t>(k)];
+          }
+        }
+
+        const double prop_fit = eval_host_candidate(objective, prop, host_bounds, setup, op);
+        ++evaluations;
+
+        if (prop_fit <= old_fit[static_cast<std::size_t>(i)]) {
+          pop[static_cast<std::size_t>(i)] = std::move(prop);
+          fit[static_cast<std::size_t>(i)] = prop_fit;
+        } else {
+          pop[static_cast<std::size_t>(i)] = old_pop[static_cast<std::size_t>(i)];
+          fit[static_cast<std::size_t>(i)] = old_fit[static_cast<std::size_t>(i)];
+        }
+      }
+
+      best_idx = argmin_host(fit);
+      const double current_best = fit[static_cast<std::size_t>(best_idx)];
+      if (current_best < best_val) {
+        best_val = current_best;
+        best = pop[static_cast<std::size_t>(best_idx)];
+      }
+
+      last_step = "generation";
+      maybe_print_iteration(config.display, iterations, evaluations, best_val, last_step);
+
+      if (converged_by_relative_improvement(
+              iterations, config.check_every, best_val, &check_best,
+              config.relative_improvement_tolerance)) {
+        converged = true;
+        break;
+      }
+    }
+
+    const PopulationSolverStatus status = converged
+        ? PopulationSolverStatus::Converged
+        : ((evaluations >= max_evaluations)
+               ? PopulationSolverStatus::ReachedEvaluationBudget
+               : PopulationSolverStatus::ReachedIterationBudget);
+
+    return build_outcome(
+        host_vector_to_series(best, setup.work_cfg),
+        best_val,
+        setup,
+        bounds,
+        iterations,
+        evaluations,
+        last_step,
+        status);
+  }
+
   RngState rng{config.rng_seed, 0ULL};
 
   Series pop = sample_population(setup.flat_initial, n_pop, config.initial_radius, bounds, setup.work_cfg, &rng);
   std::int64_t evaluations = 0;
-  Series fit = eval_population(objective, pop, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
+  Series fit = eval_population(objective, pop, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
 
   std::int64_t best_idx = argmin_index(fit);
   Series best = row_by_index(pop, best_idx);
@@ -414,9 +710,7 @@ PopulationSolverOutcome differential_evolution_minimizer(
         setup.work_cfg, setup.idx_cfg, setup.bool_cfg, &rng);
 
     Series trial = mutant.where(cross, base);
-    trial = apply_bounds_matrix(trial, bounds, n_pop, n_dim);
-
-    Series trial_fit = eval_population(objective, trial, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
+    Series trial_fit = eval_population(objective, trial, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
 
     const Series improved = trial_fit.le(base_fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
@@ -451,7 +745,7 @@ PopulationSolverOutcome differential_evolution_minimizer(
              ? PopulationSolverStatus::ReachedEvaluationBudget
              : PopulationSolverStatus::ReachedIterationBudget);
 
-  return build_outcome(best, best_val, setup, iterations, evaluations, last_step, status);
+  return build_outcome(best, best_val, setup, bounds, iterations, evaluations, last_step, status);
 }
 
 PopulationSolverOutcome differential_evolution_prmm_minimizer(
@@ -469,18 +763,302 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
 
   std::int64_t n_pop = config.population_size;
   const std::int64_t n_dim = setup.dimension;
-  const std::int64_t max_generations = (config.max_generations > 0) ? config.max_generations : 1200;
+  std::int64_t max_evaluations = (config.max_evaluations > 0) ? config.max_evaluations : 100000;
+  const std::int64_t pmax = std::max<std::int64_t>(1, config.pmax);
 
-  std::int64_t max_evaluations = config.max_evaluations;
-  if (max_evaluations <= 0) {
-    max_evaluations = n_pop * (max_generations + 1);
+  std::int64_t max_generations = config.max_generations;
+  if (max_generations <= 0) {
+    max_generations = static_cast<std::int64_t>(
+        std::ceil(static_cast<double>(max_evaluations) / static_cast<double>(pmax * n_pop)));
+    max_generations = std::max<std::int64_t>(1, max_generations);
+  }
+
+  if (config.execution_mode == PopulationSolverExecutionMode::OptimMasterCompat) {
+    const HostBoundsPack host_bounds = to_host_bounds(bounds, n_dim);
+    std::mt19937_64 rng(config.rng_seed);
+
+    std::vector<std::vector<double>> pop =
+        sample_population_host(setup, host_bounds, n_pop, config.initial_radius, &rng);
+    std::vector<double> fit(static_cast<std::size_t>(n_pop), std::numeric_limits<double>::infinity());
+    std::vector<double> f_vec(
+        static_cast<std::size_t>(n_pop), config.initial_mutation_factor);
+    std::vector<double> cr_vec(
+        static_cast<std::size_t>(n_pop), config.initial_crossover_rate);
+
+    std::int64_t evaluations = 0;
+    for (std::int64_t i = 0; i < n_pop; ++i) {
+      fit[static_cast<std::size_t>(i)] =
+          eval_host_candidate(objective, pop[static_cast<std::size_t>(i)], host_bounds, setup, op);
+      ++evaluations;
+      if (evaluations >= max_evaluations) {
+        break;
+      }
+    }
+
+    std::int64_t best_idx = argmin_host(fit);
+    std::vector<double> best = pop[static_cast<std::size_t>(best_idx)];
+    double best_val = fit[static_cast<std::size_t>(best_idx)];
+    double check_best = best_val;
+
+    std::vector<double> best_main = best;
+    std::vector<double> best_best = best;
+    std::vector<double> xchg_vec = best;
+    double best_main_val = best_val;
+    double best_best_val = best_val;
+
+    std::int64_t iterations = 0;
+    std::string last_step = "initial_population";
+    maybe_print_iteration(config.display, iterations, evaluations, best_val, last_step);
+
+    std::int64_t reductions_done = 0;
+    bool converged = false;
+
+    while (iterations < max_generations + 1 && evaluations < max_evaluations) {
+      ++iterations;
+
+      if (config.reduction_passes > 0 && reductions_done < config.reduction_passes &&
+          iterations == max_generations && n_pop >= 4) {
+        const std::int64_t half = n_pop / 2;
+        for (std::int64_t j = 0; j < half; ++j) {
+          const std::int64_t j2 = j + half;
+          if (fit[static_cast<std::size_t>(j)] > fit[static_cast<std::size_t>(j2)]) {
+            pop[static_cast<std::size_t>(j)] = pop[static_cast<std::size_t>(j2)];
+            fit[static_cast<std::size_t>(j)] = fit[static_cast<std::size_t>(j2)];
+            f_vec[static_cast<std::size_t>(j)] = f_vec[static_cast<std::size_t>(j2)];
+            cr_vec[static_cast<std::size_t>(j)] = cr_vec[static_cast<std::size_t>(j2)];
+          }
+        }
+        pop.resize(static_cast<std::size_t>(half));
+        fit.resize(static_cast<std::size_t>(half));
+        f_vec.resize(static_cast<std::size_t>(half));
+        cr_vec.resize(static_cast<std::size_t>(half));
+        n_pop = half;
+        ++reductions_done;
+        max_generations *= 2;
+        iterations = 1;
+
+        best_idx = argmin_host(fit);
+        best = pop[static_cast<std::size_t>(best_idx)];
+        best_val = fit[static_cast<std::size_t>(best_idx)];
+        check_best = best_val;
+        best_main = best;
+        best_best = best;
+        xchg_vec = best;
+        best_main_val = best_val;
+        best_best_val = best_val;
+
+        last_step = "reduce";
+        maybe_print_iteration(config.display, iterations, evaluations, best_val, last_step);
+        continue;
+      }
+
+      const auto old_pop = pop;
+      const auto old_fit = fit;
+
+      const std::int64_t elite = std::clamp<std::int64_t>(
+          config.elite_count, 1, std::max<std::int64_t>(1, n_pop - 1));
+      const std::int64_t split = std::max<std::int64_t>(1, n_pop - elite);
+
+      for (std::int64_t i = 0; i < split && evaluations < max_evaluations; ++i) {
+        if (rand_u01(&rng) < config.tau_mutation) {
+          f_vec[static_cast<std::size_t>(i)] =
+              config.mutation_lower +
+              (config.mutation_upper - config.mutation_lower) * rand_u01(&rng);
+        }
+        if (rand_u01(&rng) < config.tau_crossover) {
+          cr_vec[static_cast<std::size_t>(i)] = rand_u01(&rng);
+        }
+
+        std::int64_t c1 = 0;
+        std::int64_t c2 = 0;
+        std::int64_t c3 = 0;
+        do {
+          c1 = rand_index_inclusive(0, n_pop - 1, &rng);
+        } while (c1 == i);
+        do {
+          c2 = rand_index_inclusive(0, n_pop - 1, &rng);
+        } while (c2 == i || c2 == c1);
+        do {
+          c3 = rand_index_inclusive(0, n_pop - 1, &rng);
+        } while (c3 == i || c3 == c1 || c3 == c2);
+
+        const std::int64_t rand_ind = rand_index_inclusive(0, n_dim - 1, &rng);
+        std::vector<double> prop(static_cast<std::size_t>(n_dim), 0.0);
+        for (std::int64_t k = 0; k < n_dim; ++k) {
+          if (rand_u01(&rng) < cr_vec[static_cast<std::size_t>(i)] || k == rand_ind) {
+            const double rs = rand_u01(&rng);
+            if (rs < config.random_main_strategy_probability || n_pop >= 100) {
+              prop[static_cast<std::size_t>(k)] =
+                  old_pop[static_cast<std::size_t>(c3)][static_cast<std::size_t>(k)] +
+                  f_vec[static_cast<std::size_t>(i)] *
+                      (old_pop[static_cast<std::size_t>(c1)][static_cast<std::size_t>(k)] -
+                       old_pop[static_cast<std::size_t>(c2)][static_cast<std::size_t>(k)]);
+            } else {
+              prop[static_cast<std::size_t>(k)] =
+                  best_main[static_cast<std::size_t>(k)] +
+                  f_vec[static_cast<std::size_t>(i)] *
+                      (old_pop[static_cast<std::size_t>(c1)][static_cast<std::size_t>(k)] -
+                       old_pop[static_cast<std::size_t>(c2)][static_cast<std::size_t>(k)]);
+            }
+          } else {
+            prop[static_cast<std::size_t>(k)] =
+                old_pop[static_cast<std::size_t>(i)][static_cast<std::size_t>(k)];
+          }
+        }
+
+        const double prop_fit = eval_host_candidate(objective, prop, host_bounds, setup, op);
+        ++evaluations;
+        if (prop_fit <= old_fit[static_cast<std::size_t>(i)]) {
+          pop[static_cast<std::size_t>(i)] = std::move(prop);
+          fit[static_cast<std::size_t>(i)] = prop_fit;
+        } else {
+          pop[static_cast<std::size_t>(i)] = old_pop[static_cast<std::size_t>(i)];
+          fit[static_cast<std::size_t>(i)] = old_fit[static_cast<std::size_t>(i)];
+        }
+      }
+
+      if (split > 0) {
+        std::int64_t i_main = 0;
+        double f_main = fit[0];
+        for (std::int64_t i = 1; i < split; ++i) {
+          if (fit[static_cast<std::size_t>(i)] < f_main) {
+            f_main = fit[static_cast<std::size_t>(i)];
+            i_main = i;
+          }
+        }
+        best_main = pop[static_cast<std::size_t>(i_main)];
+        best_main_val = f_main;
+        if (best_main_val < best_best_val) {
+          xchg_vec = best_main;
+        }
+      }
+
+      for (std::int64_t i = split; i < n_pop && evaluations < max_evaluations; ++i) {
+        if (rand_u01(&rng) < config.tau_mutation) {
+          f_vec[static_cast<std::size_t>(i)] =
+              config.mutation_lower +
+              (config.mutation_upper - config.mutation_lower) * rand_u01(&rng);
+        }
+        if (rand_u01(&rng) < config.tau_crossover) {
+          cr_vec[static_cast<std::size_t>(i)] = rand_u01(&rng);
+        }
+
+        std::int64_t c1 = 0;
+        std::int64_t c2 = 0;
+        do {
+          c1 = rand_index_inclusive(0, n_pop - 1, &rng);
+        } while (c1 == i);
+        do {
+          c2 = rand_index_inclusive(0, n_pop - 1, &rng);
+        } while (c2 == i || c2 == c1);
+
+        const std::int64_t rand_ind = rand_index_inclusive(0, n_dim - 1, &rng);
+        std::vector<double> prop(static_cast<std::size_t>(n_dim), 0.0);
+        for (std::int64_t k = 0; k < n_dim; ++k) {
+          if (rand_u01(&rng) < cr_vec[static_cast<std::size_t>(i)] || k == rand_ind) {
+            prop[static_cast<std::size_t>(k)] =
+                best_best[static_cast<std::size_t>(k)] +
+                f_vec[static_cast<std::size_t>(i)] *
+                    (old_pop[static_cast<std::size_t>(c1)][static_cast<std::size_t>(k)] -
+                     old_pop[static_cast<std::size_t>(c2)][static_cast<std::size_t>(k)]);
+          } else {
+            prop[static_cast<std::size_t>(k)] =
+                old_pop[static_cast<std::size_t>(i)][static_cast<std::size_t>(k)];
+          }
+        }
+
+        const double prop_fit = eval_host_candidate(objective, prop, host_bounds, setup, op);
+        ++evaluations;
+        if (prop_fit <= old_fit[static_cast<std::size_t>(i)]) {
+          pop[static_cast<std::size_t>(i)] = std::move(prop);
+          fit[static_cast<std::size_t>(i)] = prop_fit;
+        } else {
+          pop[static_cast<std::size_t>(i)] = old_pop[static_cast<std::size_t>(i)];
+          fit[static_cast<std::size_t>(i)] = old_fit[static_cast<std::size_t>(i)];
+        }
+      }
+
+      if (split < n_pop) {
+        std::int64_t i_best = split;
+        double f_best = fit[static_cast<std::size_t>(split)];
+        for (std::int64_t i = split + 1; i < n_pop; ++i) {
+          if (fit[static_cast<std::size_t>(i)] < f_best) {
+            f_best = fit[static_cast<std::size_t>(i)];
+            i_best = i;
+          }
+        }
+        best_best = pop[static_cast<std::size_t>(i_best)];
+        best_best_val = f_best;
+
+        if (best_best_val < best_main_val) {
+          double ratio_sum = 0.0;
+          for (std::int64_t j = 0; j < n_dim; ++j) {
+            double min_val = old_pop[0][static_cast<std::size_t>(j)];
+            for (std::int64_t i = 1; i < n_pop; ++i) {
+              min_val = std::min(min_val, old_pop[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)]);
+            }
+            double denom =
+                xchg_vec[static_cast<std::size_t>(j)] - min_val;
+            if (std::abs(denom) < 1e-12) {
+              denom = (denom < 0.0) ? -1e-12 : 1e-12;
+            }
+            ratio_sum +=
+                (best_best[static_cast<std::size_t>(j)] - min_val) / denom;
+          }
+          ratio_sum /= static_cast<double>(n_dim);
+          if (std::abs(ratio_sum - 1.0) > config.diversity_epsilon) {
+            best_main = best_best;
+            best_main_val = best_best_val;
+          } else {
+            best_best = best_main;
+            best_best_val = best_main_val;
+          }
+        } else {
+          best_best = best_main;
+          best_best_val = best_main_val;
+        }
+      }
+
+      best_idx = argmin_host(fit);
+      const double current_best = fit[static_cast<std::size_t>(best_idx)];
+      if (current_best < best_val) {
+        best_val = current_best;
+        best = pop[static_cast<std::size_t>(best_idx)];
+      }
+
+      last_step = "generation";
+      maybe_print_iteration(config.display, iterations, evaluations, best_val, last_step);
+
+      if (converged_by_relative_improvement(
+              iterations, config.check_every, best_val, &check_best,
+              config.relative_improvement_tolerance)) {
+        converged = true;
+        break;
+      }
+    }
+
+    const PopulationSolverStatus status = converged
+        ? PopulationSolverStatus::Converged
+        : ((evaluations >= max_evaluations)
+               ? PopulationSolverStatus::ReachedEvaluationBudget
+               : PopulationSolverStatus::ReachedIterationBudget);
+
+    return build_outcome(
+        host_vector_to_series(best, setup.work_cfg),
+        best_val,
+        setup,
+        bounds,
+        iterations,
+        evaluations,
+        last_step,
+        status);
   }
 
   RngState rng{config.rng_seed, 0ULL};
 
   Series pop = sample_population(setup.flat_initial, n_pop, config.initial_radius, bounds, setup.work_cfg, &rng);
   std::int64_t evaluations = 0;
-  Series fit = eval_population(objective, pop, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
+  Series fit = eval_population(objective, pop, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
 
   Series f_vec = pluss::full({n_pop}, config.initial_mutation_factor, setup.work_cfg);
   Series cr_vec = pluss::full({n_pop}, config.initial_crossover_rate, setup.work_cfg);
@@ -490,60 +1068,67 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
   double best_val = scalar_as_f64(row_by_index(fit.reshape({n_pop, 1}), best_idx), op);
   double check_best = best_val;
 
+  Series best_main = best;
+  Series best_best = best;
+  Series xchg_vec = best;
+  double best_main_val = best_val;
+  double best_best_val = best_val;
+
   std::int64_t iterations = 0;
   std::string last_step = "initial_population";
   maybe_print_iteration(config.display, iterations, evaluations, best_val, last_step);
 
-  const std::int64_t reduction_gap = std::max<std::int64_t>(1, max_generations / (config.reduction_passes + 1));
   std::int64_t reductions_done = 0;
   bool converged = false;
 
-  while (iterations < max_generations && evaluations < max_evaluations) {
+  while (iterations < max_generations + 1 && evaluations < max_evaluations) {
     ++iterations;
 
-    if (config.reduction_passes > 0 &&
-        reductions_done < config.reduction_passes &&
-        iterations % reduction_gap == 0 &&
-        n_pop >= 12) {
-      const Series perm = random_permutation(n_pop, setup.work_cfg, &rng);
-      const Series shuf_pop = pop.index_select(0, perm);
-      const Series shuf_fit = fit.index_select(0, perm);
-      const Series shuf_f = f_vec.index_select(0, perm);
-      const Series shuf_cr = cr_vec.index_select(0, perm);
-
+    if (config.reduction_passes > 0 && reductions_done < config.reduction_passes &&
+        iterations == max_generations && n_pop >= 4) {
       const std::int64_t half = n_pop / 2;
       const Series i_first = pluss::arange(0, half, setup.idx_cfg);
-      const Series i_second = pluss::arange(n_pop - half, n_pop, setup.idx_cfg);
+      const Series i_second = pluss::arange(half, half + half, setup.idx_cfg);
 
-      const Series pop_a = shuf_pop.index_select(0, i_first);
-      const Series pop_b = shuf_pop.index_select(0, i_second);
-      const Series fit_a = shuf_fit.index_select(0, i_first);
-      const Series fit_b = shuf_fit.index_select(0, i_second);
-      const Series f_a = shuf_f.index_select(0, i_first);
-      const Series f_b = shuf_f.index_select(0, i_second);
-      const Series cr_a = shuf_cr.index_select(0, i_first);
-      const Series cr_b = shuf_cr.index_select(0, i_second);
+      const Series pop_a = pop.index_select(0, i_first);
+      const Series pop_b = pop.index_select(0, i_second);
+      const Series fit_a = fit.index_select(0, i_first);
+      const Series fit_b = fit.index_select(0, i_second);
+      const Series f_a = f_vec.index_select(0, i_first);
+      const Series f_b = f_vec.index_select(0, i_second);
+      const Series cr_a = cr_vec.index_select(0, i_first);
+      const Series cr_b = cr_vec.index_select(0, i_second);
 
-      const Series keep_a = fit_a.le(fit_b);
+      const Series keep_a = fit_a.lt(fit_b);
       const Series keep_a_2d = keep_a.reshape({half, 1}).expand(std::vector<std::int64_t>{half, n_dim});
 
-      pop = pop_a.where(keep_a_2d, pop_b);
-      fit = fit_a.where(keep_a, fit_b);
-      f_vec = f_a.where(keep_a, f_b);
-      cr_vec = cr_a.where(keep_a, cr_b);
+      pop = pop_a.where(keep_a_2d, pop_b).contiguous();
+      fit = fit_a.where(keep_a, fit_b).contiguous();
+      f_vec = f_a.where(keep_a, f_b).contiguous();
+      cr_vec = cr_a.where(keep_a, cr_b).contiguous();
       n_pop = half;
       ++reductions_done;
+
+      max_generations *= 2;
+      iterations = 1;
 
       best_idx = argmin_index(fit);
       best = row_by_index(pop, best_idx);
       best_val = scalar_as_f64(row_by_index(fit.reshape({n_pop, 1}), best_idx), op);
       check_best = best_val;
+      best_main = best;
+      best_best = best;
+      xchg_vec = best;
+      best_main_val = best_val;
+      best_best_val = best_val;
 
       last_step = "reduce";
       maybe_print_iteration(config.display, iterations, evaluations, best_val, last_step);
 
       continue;
     }
+
+    const Series pop_old = pop;
 
     const Series adapt_u_f = pluss::rand({n_pop}, setup.work_cfg, rng.next());
     const Series adapt_new_f = pluss::rand({n_pop}, setup.work_cfg, rng.next())
@@ -568,19 +1153,25 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
     const Series r3 = roll_rows(base, 3, setup.idx_cfg);
 
     const Series f_mat = f_base.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
-    const Series best_expand = best.reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim});
+    const Series best_main_expand = best_main.reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim});
+    const Series best_best_expand = best_best.reshape({1, n_dim}).expand(std::vector<std::int64_t>{n_pop, n_dim});
 
     const Series mutant_main_rand = r3.add(f_mat.mul(r1.sub(r2)));
-    const Series mutant_main_best = best_expand.add(f_mat.mul(r1.sub(r2)));
-    const Series main_selector = pluss::rand({n_pop, 1}, setup.work_cfg, rng.next())
-        .lt(config.random_main_strategy_probability)
-        .expand(std::vector<std::int64_t>{n_pop, n_dim});
-    const Series mutant_main = mutant_main_rand.where(main_selector, mutant_main_best);
-    const Series mutant_elite = best_expand.add(f_mat.mul(r1.sub(r2)));
+    const Series mutant_main_best = best_main_expand.add(f_mat.mul(r1.sub(r2)));
+    Series mutant_main = mutant_main_rand;
+    if (n_pop < 100) {
+      const Series main_selector = pluss::rand({n_pop, n_dim}, setup.work_cfg, rng.next())
+          .lt(config.random_main_strategy_probability);
+      mutant_main = mutant_main_rand.where(main_selector, mutant_main_best);
+    }
+    const Series mutant_elite = best_best_expand.add(f_mat.mul(r1.sub(r2)));
 
     const std::int64_t elite = std::clamp<std::int64_t>(config.elite_count, 1, std::max<std::int64_t>(1, n_pop - 1));
     const std::int64_t split = std::max<std::int64_t>(1, n_pop - elite);
-    const Series group_main = pluss::arange(0, n_pop, setup.idx_cfg).lt(split).reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
+    const Series group_main = pluss::arange(0, n_pop, setup.idx_cfg)
+        .lt(split)
+        .reshape({n_pop, 1})
+        .expand(std::vector<std::int64_t>{n_pop, n_dim});
     const Series mutant = mutant_main.where(group_main, mutant_elite);
 
     const Series cross = crossover_mask_per_row_rate(
@@ -588,15 +1179,63 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
         setup.work_cfg, setup.idx_cfg, setup.bool_cfg, &rng);
 
     Series trial = mutant.where(cross, base);
-    trial = apply_bounds_matrix(trial, bounds, n_pop, n_dim);
-
-    const Series trial_fit = eval_population(objective, trial, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
+    const Series trial_fit = eval_population(objective, trial, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
 
     const Series improved = trial_fit.le(base_fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
 
     const Series base_next = trial.where(improved_2d, base);
     const Series fit_next = trial_fit.where(improved, base_fit);
+
+    if (split > 0) {
+      const Series main_idx = pluss::arange(0, split, setup.idx_cfg);
+      const Series fit_main = fit_next.index_select(0, main_idx);
+      const std::int64_t i_main = argmin_index(fit_main);
+      best_main = row_by_index(base_next, i_main);
+      best_main_val = scalar_as_f64(row_by_index(fit_main.reshape({split, 1}), i_main), op);
+
+      if (best_main_val < best_best_val) {
+        xchg_vec = best_main;
+      }
+    }
+
+    const std::int64_t n_pop_best = n_pop - split;
+    if (n_pop_best > 0) {
+      const Series elite_idx = pluss::arange(split, n_pop, setup.idx_cfg);
+      const Series fit_elite = fit_next.index_select(0, elite_idx);
+      const std::int64_t i_best_local = argmin_index(fit_elite);
+      const std::int64_t i_best = split + i_best_local;
+      const Series best_best_candidate = row_by_index(base_next, i_best);
+      best_best_val = scalar_as_f64(row_by_index(fit_elite.reshape({n_pop_best, 1}), i_best_local), op);
+      best_best = best_best_candidate;
+
+      if (best_best_val < best_main_val) {
+        const auto best_best_host = best_best_candidate.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto xchg_host = xchg_vec.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto min_host = pop_old.amin(0, false).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+
+        double ratio_sum = 0.0;
+        for (std::size_t j = 0; j < best_best_host.size(); ++j) {
+          double denom = xchg_host[j] - min_host[j];
+          if (std::abs(denom) < 1e-12) {
+            denom = (denom < 0.0) ? -1e-12 : 1e-12;
+          }
+          ratio_sum += (best_best_host[j] - min_host[j]) / denom;
+        }
+        ratio_sum /= static_cast<double>(best_best_host.size());
+
+        if (std::abs(ratio_sum - 1.0) > config.diversity_epsilon) {
+          best_main = best_best_candidate;
+          best_main_val = best_best_val;
+        } else {
+          best_best = best_main;
+          best_best_val = best_main_val;
+        }
+      } else {
+        best_best = best_main;
+        best_best_val = best_main_val;
+      }
+    }
 
     pop = base_next.index_select(0, inv_perm);
     fit = fit_next.index_select(0, inv_perm);
@@ -605,7 +1244,7 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
 
     best_idx = argmin_index(fit);
     const double current_best = scalar_as_f64(row_by_index(fit.reshape({n_pop, 1}), best_idx), op);
-    if (current_best < best_val - config.diversity_epsilon * std::numeric_limits<double>::epsilon()) {
+    if (current_best < best_val) {
       best_val = current_best;
       best = row_by_index(pop, best_idx);
     }
@@ -627,7 +1266,7 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
              ? PopulationSolverStatus::ReachedEvaluationBudget
              : PopulationSolverStatus::ReachedIterationBudget);
 
-  return build_outcome(best, best_val, setup, iterations, evaluations, last_step, status);
+  return build_outcome(best, best_val, setup, bounds, iterations, evaluations, last_step, status);
 }
 
 PopulationSolverOutcome particle_swarm_minimizer(
@@ -652,13 +1291,197 @@ PopulationSolverOutcome particle_swarm_minimizer(
     max_evaluations = n_pop * (max_generations + 1) + max_generations;
   }
 
+  if (config.execution_mode == PopulationSolverExecutionMode::OptimMasterCompat) {
+    const HostBoundsPack host_bounds = to_host_bounds(bounds, n_dim);
+    std::mt19937_64 rng(config.rng_seed);
+
+    const std::int64_t n_center = config.center_particle ? 1 : 0;
+    std::vector<std::vector<double>> pos =
+        sample_population_host(setup, host_bounds, n_pop, config.initial_radius, &rng);
+    pos.resize(static_cast<std::size_t>(n_pop + n_center),
+               std::vector<double>(static_cast<std::size_t>(n_dim), 0.0));
+    std::vector<double> fit(
+        static_cast<std::size_t>(n_pop + n_center),
+        std::numeric_limits<double>::infinity());
+    std::vector<std::vector<double>> pbest = pos;
+    std::vector<double> pbest_fit = fit;
+    std::vector<std::vector<double>> vel(
+        static_cast<std::size_t>(n_pop),
+        std::vector<double>(static_cast<std::size_t>(n_dim), 0.0));
+
+    std::int64_t evaluations = 0;
+    for (std::int64_t i = 0; i < n_pop; ++i) {
+      fit[static_cast<std::size_t>(i)] =
+          eval_host_candidate(objective, pos[static_cast<std::size_t>(i)], host_bounds, setup, op);
+      ++evaluations;
+      if (evaluations >= max_evaluations) {
+        break;
+      }
+    }
+
+    if (config.center_particle && evaluations < max_evaluations) {
+      std::vector<double> center(static_cast<std::size_t>(n_dim), 0.0);
+      for (std::int64_t i = 0; i < n_pop; ++i) {
+        for (std::int64_t j = 0; j < n_dim; ++j) {
+          center[static_cast<std::size_t>(j)] +=
+              pos[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)];
+        }
+      }
+      for (std::int64_t j = 0; j < n_dim; ++j) {
+        center[static_cast<std::size_t>(j)] /= static_cast<double>(n_pop);
+      }
+      pos[static_cast<std::size_t>(n_pop)] = center;
+      fit[static_cast<std::size_t>(n_pop)] =
+          eval_host_candidate(objective, center, host_bounds, setup, op);
+      ++evaluations;
+    }
+
+    pbest = pos;
+    pbest_fit = fit;
+
+    std::int64_t g_idx = argmin_host(pbest_fit);
+    std::vector<double> gbest = pbest[static_cast<std::size_t>(g_idx)];
+    double gbest_val = pbest_fit[static_cast<std::size_t>(g_idx)];
+    double check_best = gbest_val;
+
+    std::int64_t iterations = 0;
+    std::string last_step = "initial_population";
+    maybe_print_iteration(config.display, iterations, evaluations, gbest_val, last_step);
+
+    bool converged = false;
+    double inertia = config.inertia;
+    while (iterations < max_generations && evaluations < max_evaluations) {
+      ++iterations;
+
+      if (config.linear_inertia_schedule) {
+        inertia = config.inertia_min +
+            (config.inertia_max - config.inertia_min) *
+                static_cast<double>(iterations + 1) /
+                static_cast<double>(std::max<std::int64_t>(1, max_generations));
+      } else {
+        inertia *= config.inertia_damp;
+      }
+
+      double c1 = config.cognitive;
+      double c2 = config.social;
+      if (config.time_varying_acceleration) {
+        c1 = config.cognitive -
+            (config.cognitive - config.final_cognitive) *
+                static_cast<double>(iterations + 1) /
+                static_cast<double>(std::max<std::int64_t>(1, max_generations));
+        c2 = config.social -
+            (config.social - config.final_social) *
+                static_cast<double>(iterations + 1) /
+                static_cast<double>(std::max<std::int64_t>(1, max_generations));
+      }
+
+      std::vector<double> vmax(static_cast<std::size_t>(n_dim), 0.0);
+      bool do_clamp = config.velocity_clamp_ratio > 0.0;
+      if (do_clamp) {
+        for (std::int64_t j = 0; j < n_dim; ++j) {
+          if (bounds.enabled) {
+            vmax[static_cast<std::size_t>(j)] =
+                std::abs(host_bounds.upper[static_cast<std::size_t>(j)] -
+                         host_bounds.lower[static_cast<std::size_t>(j)]) *
+                config.velocity_clamp_ratio;
+          } else {
+            vmax[static_cast<std::size_t>(j)] =
+                config.initial_radius * config.velocity_clamp_ratio;
+          }
+        }
+      }
+
+      for (std::int64_t i = 0; i < n_pop && evaluations < max_evaluations; ++i) {
+        for (std::int64_t j = 0; j < n_dim; ++j) {
+          const double r1 = rand_u01(&rng);
+          const double r2 = rand_u01(&rng);
+          double v = inertia * vel[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] +
+              c1 * r1 *
+                  (pbest[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] -
+                   pos[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)]) +
+              c2 * r2 *
+                  (gbest[static_cast<std::size_t>(j)] -
+                   pos[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)]);
+          if (do_clamp) {
+            const double lim = vmax[static_cast<std::size_t>(j)];
+            v = std::max(-lim, std::min(lim, v));
+          }
+          vel[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] = v;
+          pos[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] += v;
+        }
+
+        fit[static_cast<std::size_t>(i)] =
+            eval_host_candidate(objective, pos[static_cast<std::size_t>(i)], host_bounds, setup, op);
+        ++evaluations;
+        if (fit[static_cast<std::size_t>(i)] < pbest_fit[static_cast<std::size_t>(i)]) {
+          pbest_fit[static_cast<std::size_t>(i)] = fit[static_cast<std::size_t>(i)];
+          pbest[static_cast<std::size_t>(i)] = pos[static_cast<std::size_t>(i)];
+        }
+      }
+
+      if (config.center_particle && evaluations < max_evaluations) {
+        std::vector<double> center(static_cast<std::size_t>(n_dim), 0.0);
+        for (std::int64_t i = 0; i < n_pop; ++i) {
+          for (std::int64_t j = 0; j < n_dim; ++j) {
+            center[static_cast<std::size_t>(j)] +=
+                pos[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)];
+          }
+        }
+        for (std::int64_t j = 0; j < n_dim; ++j) {
+          center[static_cast<std::size_t>(j)] /= static_cast<double>(n_pop);
+        }
+        pos[static_cast<std::size_t>(n_pop)] = center;
+        fit[static_cast<std::size_t>(n_pop)] =
+            eval_host_candidate(objective, center, host_bounds, setup, op);
+        ++evaluations;
+        if (fit[static_cast<std::size_t>(n_pop)] < pbest_fit[static_cast<std::size_t>(n_pop)]) {
+          pbest_fit[static_cast<std::size_t>(n_pop)] = fit[static_cast<std::size_t>(n_pop)];
+          pbest[static_cast<std::size_t>(n_pop)] = center;
+        }
+      }
+
+      g_idx = argmin_host(pbest_fit);
+      const double current_best = pbest_fit[static_cast<std::size_t>(g_idx)];
+      if (current_best < gbest_val) {
+        gbest_val = current_best;
+        gbest = pbest[static_cast<std::size_t>(g_idx)];
+      }
+
+      last_step = "generation";
+      maybe_print_iteration(config.display, iterations, evaluations, gbest_val, last_step);
+
+      if (converged_by_relative_improvement(
+              iterations, config.check_every, gbest_val, &check_best,
+              config.relative_improvement_tolerance)) {
+        converged = true;
+        break;
+      }
+    }
+
+    const PopulationSolverStatus status = converged
+        ? PopulationSolverStatus::Converged
+        : ((evaluations >= max_evaluations)
+               ? PopulationSolverStatus::ReachedEvaluationBudget
+               : PopulationSolverStatus::ReachedIterationBudget);
+
+    return build_outcome(
+        host_vector_to_series(gbest, setup.work_cfg),
+        gbest_val,
+        setup,
+        bounds,
+        iterations,
+        evaluations,
+        last_step,
+        status);
+  }
+
   RngState rng{config.rng_seed, 0ULL};
 
   Series pop = sample_population(setup.flat_initial, n_pop, config.initial_radius, bounds, setup.work_cfg, &rng);
   Series vel = pluss::zeros({n_pop, n_dim}, setup.work_cfg);
 
   std::int64_t evaluations = 0;
-  Series fit = eval_population(objective, pop, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
+  Series fit = eval_population(objective, pop, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
 
   Series pbest = pop;
   Series pbest_fit = fit;
@@ -666,6 +1489,21 @@ PopulationSolverOutcome particle_swarm_minimizer(
   std::int64_t g_idx = argmin_index(pbest_fit);
   Series gbest = row_by_index(pbest, g_idx);
   double gbest_val = scalar_as_f64(row_by_index(pbest_fit.reshape({n_pop, 1}), g_idx), op);
+  Series center_best = pluss::zeros({n_dim}, setup.work_cfg);
+  double center_best_val = std::numeric_limits<double>::infinity();
+
+  if (config.center_particle && evaluations < max_evaluations) {
+    const Series center = pop.mean(0, false);
+    const Series center_val = eval_candidate(objective, center, bounds, setup.original_shape, setup.work_cfg, op);
+    ++evaluations;
+    center_best = center;
+    center_best_val = scalar_as_f64(center_val, op);
+    if (center_best_val < gbest_val) {
+      gbest = center_best;
+      gbest_val = center_best_val;
+    }
+  }
+
   double check_best = gbest_val;
 
   std::int64_t iterations = 0;
@@ -679,8 +1517,9 @@ PopulationSolverOutcome particle_swarm_minimizer(
     ++iterations;
 
     if (config.linear_inertia_schedule) {
-      const double t = static_cast<double>(iterations) / static_cast<double>(std::max<std::int64_t>(1, max_generations));
-      inertia = config.inertia_max - (config.inertia_max - config.inertia_min) * t;
+      const double t = static_cast<double>(iterations + 1)
+          / static_cast<double>(std::max<std::int64_t>(1, max_generations));
+      inertia = config.inertia_min + (config.inertia_max - config.inertia_min) * t;
     } else {
       inertia *= config.inertia_damp;
     }
@@ -711,9 +1550,7 @@ PopulationSolverOutcome particle_swarm_minimizer(
     }
 
     pop = pop.add(vel);
-    pop = apply_bounds_matrix(pop, bounds, n_pop, n_dim);
-
-    fit = eval_population(objective, pop, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
+    fit = eval_population(objective, pop, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
 
     const Series improved = fit.lt(pbest_fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
@@ -722,12 +1559,12 @@ PopulationSolverOutcome particle_swarm_minimizer(
 
     if (config.center_particle && evaluations < max_evaluations) {
       const Series center = pop.mean(0, false);
-      const Series center_val = eval_candidate(objective, center, setup.original_shape, setup.work_cfg, op);
+      const Series center_val = eval_candidate(objective, center, bounds, setup.original_shape, setup.work_cfg, op);
       ++evaluations;
-      const double center_best = scalar_as_f64(center_val, op);
-      if (center_best < gbest_val) {
-        gbest = center;
-        gbest_val = center_best;
+      const double center_val_f = scalar_as_f64(center_val, op);
+      if (center_val_f < center_best_val) {
+        center_best = center;
+        center_best_val = center_val_f;
       }
     }
 
@@ -736,6 +1573,10 @@ PopulationSolverOutcome particle_swarm_minimizer(
     if (current_best < gbest_val) {
       gbest = row_by_index(pbest, g_idx);
       gbest_val = current_best;
+    }
+    if (config.center_particle && center_best_val < gbest_val) {
+      gbest = center_best;
+      gbest_val = center_best_val;
     }
 
     last_step = "generation";
@@ -755,7 +1596,7 @@ PopulationSolverOutcome particle_swarm_minimizer(
              ? PopulationSolverStatus::ReachedEvaluationBudget
              : PopulationSolverStatus::ReachedIterationBudget);
 
-  return build_outcome(gbest, gbest_val, setup, iterations, evaluations, last_step, status);
+  return build_outcome(gbest, gbest_val, setup, bounds, iterations, evaluations, last_step, status);
 }
 
 PopulationSolverOutcome particle_swarm_dv_minimizer(
@@ -780,13 +1621,155 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
     max_evaluations = n_pop * (max_generations + 1);
   }
 
+  if (config.execution_mode == PopulationSolverExecutionMode::OptimMasterCompat) {
+    const HostBoundsPack host_bounds = to_host_bounds(bounds, n_dim);
+    std::mt19937_64 rng(config.rng_seed);
+
+    std::vector<std::vector<double>> pop =
+        sample_population_host(setup, host_bounds, n_pop, config.initial_radius, &rng);
+    std::vector<std::vector<double>> vel(
+        static_cast<std::size_t>(n_pop),
+        std::vector<double>(static_cast<std::size_t>(n_dim), 0.0));
+    std::vector<double> fit(static_cast<std::size_t>(n_pop), std::numeric_limits<double>::infinity());
+    std::vector<std::int64_t> stagnation(static_cast<std::size_t>(n_pop), 0);
+
+    std::int64_t evaluations = 0;
+    for (std::int64_t i = 0; i < n_pop; ++i) {
+      fit[static_cast<std::size_t>(i)] =
+          eval_host_candidate(objective, pop[static_cast<std::size_t>(i)], host_bounds, setup, op);
+      ++evaluations;
+      if (evaluations >= max_evaluations) {
+        break;
+      }
+    }
+
+    std::int64_t best_idx = argmin_host(fit);
+    std::vector<double> best = pop[static_cast<std::size_t>(best_idx)];
+    double best_val = fit[static_cast<std::size_t>(best_idx)];
+    double check_best = best_val;
+
+    std::int64_t iterations = 0;
+    std::string last_step = "initial_population";
+    maybe_print_iteration(config.display, iterations, evaluations, best_val, last_step);
+
+    bool converged = false;
+    double inertia = config.inertia;
+
+    while (iterations < max_generations && evaluations < max_evaluations) {
+      ++iterations;
+
+      std::vector<double> pmax(static_cast<std::size_t>(n_dim), -std::numeric_limits<double>::infinity());
+      std::vector<double> pmin(static_cast<std::size_t>(n_dim), std::numeric_limits<double>::infinity());
+      for (std::int64_t i = 0; i < n_pop; ++i) {
+        for (std::int64_t j = 0; j < n_dim; ++j) {
+          pmax[static_cast<std::size_t>(j)] = std::max(
+              pmax[static_cast<std::size_t>(j)],
+              pop[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)]);
+          pmin[static_cast<std::size_t>(j)] = std::min(
+              pmin[static_cast<std::size_t>(j)],
+              pop[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)]);
+        }
+      }
+
+      bool reseeded = false;
+      for (std::int64_t i = 0; i < n_pop && evaluations < max_evaluations; ++i) {
+        std::int64_t c1 = 0;
+        std::int64_t c2 = 0;
+        do {
+          c1 = rand_index_inclusive(0, n_pop - 1, &rng);
+        } while (c1 == i);
+        do {
+          c2 = rand_index_inclusive(0, n_pop - 1, &rng);
+        } while (c2 == i || c2 == c1);
+
+        std::vector<double> trial = pop[static_cast<std::size_t>(i)];
+        for (std::int64_t j = 0; j < n_dim; ++j) {
+          if (rand_u01(&rng) <= config.crossover_rate) {
+            const double rand_u = rand_u01(&rng);
+            vel[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] =
+                inertia * vel[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] +
+                config.beta *
+                    (pop[static_cast<std::size_t>(c1)][static_cast<std::size_t>(j)] -
+                     pop[static_cast<std::size_t>(c2)][static_cast<std::size_t>(j)]) +
+                config.social * rand_u *
+                    (best[static_cast<std::size_t>(j)] -
+                     pop[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)]);
+          }
+          trial[static_cast<std::size_t>(j)] +=
+              vel[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)];
+        }
+
+        const double trial_fit =
+            eval_host_candidate(objective, trial, host_bounds, setup, op);
+        ++evaluations;
+        if (trial_fit < fit[static_cast<std::size_t>(i)]) {
+          pop[static_cast<std::size_t>(i)] = std::move(trial);
+          fit[static_cast<std::size_t>(i)] = trial_fit;
+          stagnation[static_cast<std::size_t>(i)] = 0;
+        } else {
+          ++stagnation[static_cast<std::size_t>(i)];
+        }
+
+        if (stagnation[static_cast<std::size_t>(i)] >= config.stagnation_limit &&
+            evaluations < max_evaluations) {
+          for (std::int64_t j = 0; j < n_dim; ++j) {
+            pop[static_cast<std::size_t>(i)][static_cast<std::size_t>(j)] =
+                pmin[static_cast<std::size_t>(j)] +
+                rand_u01(&rng) *
+                    (pmax[static_cast<std::size_t>(j)] - pmin[static_cast<std::size_t>(j)]);
+          }
+          stagnation[static_cast<std::size_t>(i)] = 0;
+          fit[static_cast<std::size_t>(i)] =
+              eval_host_candidate(objective, pop[static_cast<std::size_t>(i)], host_bounds, setup, op);
+          ++evaluations;
+          reseeded = true;
+        }
+      }
+
+      inertia *= config.inertia_damp;
+
+      best_idx = argmin_host(fit);
+      const double current_best = fit[static_cast<std::size_t>(best_idx)];
+      if (current_best < best_val) {
+        best_val = current_best;
+        best = pop[static_cast<std::size_t>(best_idx)];
+      }
+
+      last_step = reseeded ? "reseed" : "generation";
+      maybe_print_iteration(config.display, iterations, evaluations, best_val, last_step);
+
+      if (converged_by_relative_improvement(
+              iterations, config.check_every, best_val, &check_best,
+              config.relative_improvement_tolerance)) {
+        converged = true;
+        break;
+      }
+    }
+
+    const PopulationSolverStatus status = converged
+        ? PopulationSolverStatus::Converged
+        : ((evaluations >= max_evaluations)
+               ? PopulationSolverStatus::ReachedEvaluationBudget
+               : PopulationSolverStatus::ReachedIterationBudget);
+
+    return build_outcome(
+        host_vector_to_series(best, setup.work_cfg),
+        best_val,
+        setup,
+        bounds,
+        iterations,
+        evaluations,
+        last_step,
+        status);
+  }
+
   RngState rng{config.rng_seed, 0ULL};
 
   Series pop = sample_population(setup.flat_initial, n_pop, config.initial_radius, bounds, setup.work_cfg, &rng);
   Series vel = pluss::zeros({n_pop, n_dim}, setup.work_cfg);
 
   std::int64_t evaluations = 0;
-  Series fit = eval_population(objective, pop, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
+  Series fit = eval_population(objective, pop, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
 
   std::int64_t best_idx = argmin_index(fit);
   Series best = row_by_index(pop, best_idx);
@@ -823,9 +1806,7 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
     vel = v_prop.where(apply_mask, vel);
 
     Series trial = pop.add(vel);
-    trial = apply_bounds_matrix(trial, bounds, n_pop, n_dim);
-
-    const Series trial_fit = eval_population(objective, trial, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
+    const Series trial_fit = eval_population(objective, trial, bounds, setup.original_shape, setup.work_cfg, setup.idx_cfg, &evaluations, op);
     const Series improved = trial_fit.lt(fit);
     const Series improved_2d = improved.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});
 
@@ -850,7 +1831,7 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
         if (evaluations >= max_evaluations) {
           break;
         }
-        const Series val = eval_candidate(objective, row_by_index(pop, i), setup.original_shape, setup.work_cfg, op);
+        const Series val = eval_candidate(objective, row_by_index(pop, i), bounds, setup.original_shape, setup.work_cfg, op);
         const Series idx = pluss::arange(i, i + 1, setup.idx_cfg);
         fit = fit.put(idx, val.reshape({1}), false);
         ++evaluations;
@@ -885,7 +1866,7 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
              ? PopulationSolverStatus::ReachedEvaluationBudget
              : PopulationSolverStatus::ReachedIterationBudget);
 
-  return build_outcome(best, best_val, setup, iterations, evaluations, last_step, status);
+  return build_outcome(best, best_val, setup, bounds, iterations, evaluations, last_step, status);
 }
 
 } // namespace pluss::subsp::math::optimization

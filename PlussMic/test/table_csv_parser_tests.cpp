@@ -809,63 +809,112 @@ void test_dataframe_sql_accessor() {
   expect_throw([&]() { (void)df.sql().execute("DELETE FROM df"); },
                "sql().execute: non-SELECT statements should throw");
 
-  const auto default_limited = df.sql(DataFrame::SqlOptions{
-      .accepted_sources = {"df"},
-      .default_limit = 2,
-      .max_limit = std::nullopt,
-      .allow_select_star = true,
-      .allow_case_projection = true,
-      .clamp_limit_to_max = true,
-  }).execute("SELECT age FROM df ORDER BY age DESC");
-  expect(default_limited.nrows() == 2,
-         "sql(options).execute: default_limit should apply when SQL LIMIT is absent");
+  const auto star_selected = df.sql().execute("SELECT * FROM df LIMIT 2");
+  expect(star_selected.nrows() == 2,
+         "sql().execute: SQL LIMIT should control result size directly");
+  expect(star_selected.ncols() == df.ncols(),
+         "sql().execute: SELECT * should project all dataframe features");
 
-  const auto clamped = df.sql(DataFrame::SqlOptions{
-      .accepted_sources = {"df"},
-      .default_limit = std::nullopt,
-      .max_limit = 3,
-      .allow_select_star = true,
-      .allow_case_projection = true,
-      .clamp_limit_to_max = true,
-  }).execute("SELECT age FROM df LIMIT 20");
-  expect(clamped.nrows() == 3,
-         "sql(options).execute: max_limit should clamp SQL LIMIT when clamp_limit_to_max=true");
+  const auto aliased_primary = df.sql().execute("SELECT prices.age FROM df AS prices LIMIT 1");
+  expect(aliased_primary.nrows() == 1 && aliased_primary.has_feature("prices.age"),
+         "sql().execute: FROM alias should rename the calling dataframe source");
+
+  expect_throw([&]() { (void)df.sql().execute("SELECT idx, age FROM df LIMIT 1"); },
+               "sql().execute: unknown projection should throw when not a feature/case alias");
+
+  const auto with_case_alias = df.sql(DataFrame::SqlOptions{
+      .case_axis_aliases = {"case", "idx"},
+  }).execute("SELECT idx, age FROM df ORDER BY age DESC LIMIT 3");
+  expect(with_case_alias.ncols() == 2 && with_case_alias.has_feature("idx") && with_case_alias.has_feature("age"),
+         "sql(options).execute: case_axis_aliases should expose case axis via configured alias");
+  expect(with_case_alias.nrows() == 3,
+         "sql(options).execute: SQL LIMIT should still apply with case alias projections");
+
+  const auto with_named_case_alias = df.sql(DataFrame::SqlOptions{
+      .case_axis_aliases = {"row_id"},
+  }).execute("SELECT row_id FROM df LIMIT 1");
+  expect(with_named_case_alias.ncols() == 1 && with_named_case_alias.has_feature("row_id"),
+         "sql(options).execute: case_axis_aliases should support custom case-axis name");
+
+  DataFrame::SqlOptions param_options;
+  param_options.params["min_age"] = std::int64_t{45};
+  param_options.params["limit_n"] = std::int64_t{4};
+  param_options.params["blocked_job"] = std::string{"unknown"};
+  const auto parametrized = df.sql(std::move(param_options)).execute(
+      "SELECT age, job FROM df WHERE age >= {min_age} and job != {blocked_job} ORDER BY age DESC LIMIT {limit_n}");
+  expect(parametrized.nrows() <= 4 && parametrized.has_feature("age") && parametrized.has_feature("job"),
+         "sql(options).execute: params should interpolate scalar placeholders");
+
+  DataFrame::SqlOptions identifier_options;
+  identifier_options.identifier_params["col"] = "age";
+  identifier_options.params["limit_n"] = std::int64_t{2};
+  const auto identifier_selected = df.sql(std::move(identifier_options))
+                                       .execute("SELECT {@col} FROM df LIMIT {limit_n}");
+  expect(identifier_selected.nrows() == 2 && identifier_selected.has_feature("age"),
+         "sql(options).execute: identifier params should bind projected feature names");
+
+  const auto duplicate_projection = "SELECT age as v, balance as v FROM df LIMIT 3";
+  expect_throw([&]() {
+                (void)df.sql().execute(duplicate_projection);
+              },
+              "sql().execute: duplicate projection aliases should error by default");
+  const auto suffix_dups = df.sql(DataFrame::SqlOptions{
+      .collision_policy = DataFrame::SqlOptions::CollisionPolicy::Suffix,
+  }).execute(duplicate_projection);
+  expect(suffix_dups.has_feature("v") && suffix_dups.has_feature("v_2"),
+         "sql(options).execute: CollisionPolicy::Suffix should disambiguate duplicate aliases");
+
+  const auto overwrite_dups = df.sql(DataFrame::SqlOptions{
+      .collision_policy = DataFrame::SqlOptions::CollisionPolicy::Overwrite,
+  }).execute(duplicate_projection);
+  expect(overwrite_dups.ncols() == 1 && overwrite_dups.has_feature("v"),
+         "sql(options).execute: CollisionPolicy::Overwrite should keep one alias");
+
+  const auto metrics = DataFrame({
+      {"age", df.features("age")},
+      {"score", df.features("balance")},
+  });
+  const auto joined = df.sql(DataFrame::SqlOptions{
+      .sources = {{"m", &metrics}},
+  }).execute("SELECT df.age, m.score FROM df JOIN m ON df.age = m.age LIMIT 6");
+  expect(joined.ncols() == 2 && joined.has_feature("df.age") && joined.has_feature("m.score"),
+         "sql(options).execute: JOIN should project columns from bound sources");
+  expect(joined.nrows() > 0 && joined.nrows() <= 6,
+         "sql(options).execute: JOIN result row count should respect LIMIT");
+
+  expect_throw([&]() {
+                (void)df.sql().execute("SELECT age FROM missing_source");
+              },
+              "sql().execute: unknown source should throw");
+
+  expect_throw([&]() {
+                DataFrame::SqlOptions bad_params;
+                bad_params.params["limit_n"] = std::int64_t{2};
+                (void)df.sql(std::move(bad_params)).execute("SELECT age FROM df LIMIT {missing}");
+              },
+              "sql(options).execute: missing params key should throw");
+
+  expect_throw([&]() {
+                DataFrame::SqlOptions strict_params;
+                strict_params.reject_unused_params = true;
+                strict_params.params["unused"] = std::int64_t{1};
+                (void)df.sql(std::move(strict_params)).execute("SELECT age FROM df LIMIT 1");
+              },
+              "sql(options).execute: reject_unused_params should validate unused bindings");
+
+  const auto prepared = df.prepare_sql(
+      "SELECT age FROM df WHERE age >= {min_age} ORDER BY age DESC LIMIT {limit_n}");
+  const auto prepared_out = prepared.execute(
+      {{"min_age", std::int64_t{40}}, {"limit_n", std::int64_t{3}}});
+  expect(prepared_out.nrows() <= 3 && prepared_out.has_feature("age"),
+         "prepare_sql().execute(params): prepared query should execute with late-bound params");
 
   expect_throw([&]() {
                 (void)df.sql(DataFrame::SqlOptions{
-                    .accepted_sources = {"frame"},
-                    .default_limit = std::nullopt,
-                    .max_limit = std::nullopt,
-                    .allow_select_star = true,
-                    .allow_case_projection = true,
-                    .clamp_limit_to_max = true,
-                }).execute("SELECT age FROM df");
+                    .sources = {{"m", &metrics}},
+                }).execute("SELECT m.score FROM m LIMIT 1");
               },
-              "sql(options).execute: accepted_sources should validate FROM source");
-
-  expect_throw([&]() {
-                (void)df.sql(DataFrame::SqlOptions{
-                    .accepted_sources = {"df"},
-                    .default_limit = std::nullopt,
-                    .max_limit = std::nullopt,
-                    .allow_select_star = false,
-                    .allow_case_projection = true,
-                    .clamp_limit_to_max = true,
-                }).execute("SELECT * FROM df LIMIT 1");
-              },
-              "sql(options).execute: allow_select_star=false should reject SELECT *");
-
-  expect_throw([&]() {
-                (void)df.sql(DataFrame::SqlOptions{
-                    .accepted_sources = {"df"},
-                    .default_limit = std::nullopt,
-                    .max_limit = std::nullopt,
-                    .allow_select_star = true,
-                    .allow_case_projection = false,
-                    .clamp_limit_to_max = true,
-                }).execute("SELECT case FROM df LIMIT 1");
-              },
-              "sql(options).execute: allow_case_projection=false should reject case projection");
+              "sql(options).execute: calling dataframe source must be part of FROM/JOIN");
 }
 
 void test_versatile_dataframe_families() {

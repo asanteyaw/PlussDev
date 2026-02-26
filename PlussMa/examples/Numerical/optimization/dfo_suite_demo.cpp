@@ -48,6 +48,19 @@ std::string to_string(pluss::subsp::math::optimization::PopulationSolverStatus s
   return "Unknown";
 }
 
+std::string to_string(pluss::subsp::math::optimization::BlackboxSolverStatus s) {
+  using pluss::subsp::math::optimization::BlackboxSolverStatus;
+  switch (s) {
+    case BlackboxSolverStatus::Converged:
+      return "Converged";
+    case BlackboxSolverStatus::ReachedIterationBudget:
+      return "ReachedIterationBudget";
+    case BlackboxSolverStatus::ReachedEvaluationBudget:
+      return "ReachedEvaluationBudget";
+  }
+  return "Unknown";
+}
+
 void print_outcome(
     const std::string& name,
     const pluss::subsp::math::optimization::PopulationSolverOutcome& out) {
@@ -61,6 +74,22 @@ void print_outcome(
             << " f=" << out.minimum
             << " ||x||=" << as_f64(norm)
             << " step=" << out.diagnostics.last_step
+            << '\n';
+}
+
+void print_outcome(
+    const std::string& name,
+    const pluss::subsp::math::optimization::BlackboxSolverOutcome& out) {
+  const pluss::Series x = out.minimizer.to(pluss::pCPU, pluss::ScalarType::Float64);
+  const pluss::Series norm = x.square().sum().sqrt();
+
+  std::cout << name
+            << " status=" << to_string(out.status)
+            << " iter=" << out.diagnostics.iterations
+            << " evals=" << out.diagnostics.evaluations
+            << " f=" << out.minimum
+            << " ||x||=" << as_f64(norm)
+            << " phase=" << out.diagnostics.last_phase
             << '\n';
 }
 
@@ -125,6 +154,22 @@ int main() {
   pso_dv_cfg.upper_bounds = ub;
   pso_dv_cfg.rng_seed = 20260228ULL;
 
+  MadsBlackboxConfig ortho_cfg;
+  ortho_cfg.max_iterations = 800;
+  ortho_cfg.max_evaluations = 4000;
+  ortho_cfg.check_every = 10;
+  ortho_cfg.search_points = 8;
+  ortho_cfg.relative_improvement_tolerance = 1e-10;
+  ortho_cfg.mesh_tolerance = 1e-7;
+  ortho_cfg.lower_bounds = lb;
+  ortho_cfg.upper_bounds = ub;
+  ortho_cfg.poll_scheme = MadsPollScheme::Ortho2N;
+  ortho_cfg.rng_seed = 20260229ULL;
+
+  MadsBlackboxConfig lt_cfg = ortho_cfg;
+  lt_cfg.poll_scheme = MadsPollScheme::LtMadsRandom2N;
+  lt_cfg.rng_seed = 20260230ULL;
+
   std::cout << std::fixed << std::setprecision(8);
   std::cout << "Ackley minimization in " << dim << "D using Series-based DFO solvers\n";
 
@@ -139,6 +184,12 @@ int main() {
 
   const auto pso_dv_out = particle_swarm_dv_minimizer(ackley, x0, pso_dv_cfg);
   print_outcome("pso_dv", pso_dv_out);
+
+  const auto ortho_out = orthomads_minimizer(ackley, x0, ortho_cfg);
+  print_outcome("orthomads", ortho_out);
+
+  const auto lt_out = ltmads_minimizer(ackley, x0, lt_cfg);
+  print_outcome("ltmads", lt_out);
 
   return 0;
 }

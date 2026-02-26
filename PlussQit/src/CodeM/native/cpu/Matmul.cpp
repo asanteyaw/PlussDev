@@ -1,17 +1,10 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/SeriesSlim.h"
 #include "CodeM/core/ScalarType.h"
-
-#if defined(__APPLE__)
-  #include <Accelerate/Accelerate.h>
-  #define PLUSS_HAS_ACCELERATE 1
-#else
-  #define PLUSS_HAS_ACCELERATE 0
-#endif
+#include "CodeM/native/cpu/BlasGemm.h"
 
 namespace pluss::codem::native::cpu {
 
-#if !PLUSS_HAS_ACCELERATE
 static void naive_matmul_f64(const double* A, const double* B, double* C,
                              std::int64_t M, std::int64_t N, std::int64_t K) {
   for (std::int64_t i=0;i<M;++i) {
@@ -33,7 +26,6 @@ static void naive_matmul_f32(const float* A, const float* B, float* C,
     }
   }
 }
-#endif
 
 Series matmul(const Series& a, const Series& b) {
   if (!a.defined() || !b.defined()) throw_error("matmul: undefined");
@@ -55,14 +47,9 @@ Series matmul(const Series& a, const Series& b) {
     const auto* A = reinterpret_cast<const double*>(a.raw_data());
     const auto* B = reinterpret_cast<const double*>(b.raw_data());
     auto* C = reinterpret_cast<double*>(out.raw_data());
-#if PLUSS_HAS_ACCELERATE
-    // cblas uses column-major by default; use row-major interface
-    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-                (int)M, (int)N, (int)K,
-                1.0, A, (int)K, B, (int)N, 0.0, C, (int)N);
-#else
-    naive_matmul_f64(A, B, C, M, N, K);
-#endif
+    if (!blas::gemm_f64(A, B, C, M, N, K)) {
+      naive_matmul_f64(A, B, C, M, N, K);
+    }
     return out;
   }
 
@@ -70,13 +57,9 @@ Series matmul(const Series& a, const Series& b) {
     const auto* A = reinterpret_cast<const float*>(a.raw_data());
     const auto* B = reinterpret_cast<const float*>(b.raw_data());
     auto* C = reinterpret_cast<float*>(out.raw_data());
-#if PLUSS_HAS_ACCELERATE
-    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-                (int)M, (int)N, (int)K,
-                1.0f, A, (int)K, B, (int)N, 0.0f, C, (int)N);
-#else
-    naive_matmul_f32(A, B, C, M, N, K);
-#endif
+    if (!blas::gemm_f32(A, B, C, M, N, K)) {
+      naive_matmul_f32(A, B, C, M, N, K);
+    }
     return out;
   }
 
