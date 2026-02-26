@@ -28,4 +28,10 @@ if(TARGET pluss AND TARGET plussqit_codem)
   )
   target_compile_features(plussma_mads_blackbox_native_demo PRIVATE cxx_std_20)
   target_link_libraries(plussma_mads_blackbox_native_demo PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_dfo_unified_demo
+    dfo_unified_demo.cpp
+  )
+  target_compile_features(plussma_dfo_unified_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_dfo_unified_demo PRIVATE pluss plussqit_codem)
 endif()

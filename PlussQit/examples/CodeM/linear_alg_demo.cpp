@@ -13,11 +13,13 @@ int main() {
   std::cout << "A:\n" << a << "\n\n";
   std::cout << "B:\n" << b << "\n\n";
   std::cout << "A @ B:\n" << a.matmul(b) << "\n\n";
+  std::cout << "A.linearalg(B).matmul():\n" << a.linearalg(b).matmul() << "\n\n";
 
   let gram = a.transpose(0, 1).matmul(a);
   std::cout << "Gram = A^T A:\n" << gram << "\n\n";
   auto gram_i = gram.add(i3);
   std::cout << "subsp::linalg::det(Gram + I):\n" << pluss::subsp::math::linalg::det(gram_i) << "\n\n";
+  std::cout << "(Gram + I).linearalg.det():\n" << gram_i.linearalg.det() << "\n\n";
   std::cout << "subsp::linalg::inverse(Gram + I):\n" << pluss::subsp::math::linalg::inverse(gram_i) << "\n\n";
   std::cout << "subsp::linalg::matrix_power(Gram + I, 2):\n"
             << pluss::subsp::math::linalg::matrix_power(gram_i, 2) << "\n\n";

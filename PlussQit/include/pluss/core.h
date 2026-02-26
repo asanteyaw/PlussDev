@@ -14,10 +14,22 @@
 #include "pluss/subsp/math/linalg.h"
 #endif
 
+#if __has_include("subsp/linearalg/linearalg.h")
+#include "subsp/linearalg/linearalg.h"
+#elif __has_include("pluss/subsp/linearalg/linearalg.h")
+#include "pluss/subsp/linearalg/linearalg.h"
+#endif
+
 #if __has_include("subsp/math/optim.h")
 #include "subsp/math/optim.h"
 #elif __has_include("pluss/subsp/math/optim.h")
 #include "pluss/subsp/math/optim.h"
+#endif
+
+#if __has_include("subsp/stat/stats.h")
+#include "subsp/stat/stats.h"
+#elif __has_include("pluss/subsp/stat/stats.h")
+#include "pluss/subsp/stat/stats.h"
 #endif
 
 #include "pluss/queue.h"

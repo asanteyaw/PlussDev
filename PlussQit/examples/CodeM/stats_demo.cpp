@@ -9,6 +9,8 @@ int main() {
   std::cout << "x:\n" << x << "\n\n";
 
   std::cout << "mean:\n" << x.mean() << "\n\n";
+  std::cout << "stat().mean:\n" << x.stat().mean() << "\n\n";
+  std::cout << "stat.mean (dot style):\n" << x.stat.mean() << "\n\n";
   std::cout << "var(unbiased=false):\n" << x.var(false) << "\n\n";
   std::cout << "std(unbiased=false):\n" << x.std(false) << "\n\n";
   std::cout << "skewness:\n" << x.skewness() << "\n\n";
@@ -23,10 +25,15 @@ int main() {
   std::cout << "standardize:\n" << x.standardize() << "\n\n";
   std::cout << "center:\n" << x.center() << "\n\n";
 
+  let a = pluss::normal(0.0, 1.0, {8, 3});
+  let b = pluss::normal(0.0, 1.0, {5, 3});
+  std::cout << "stat(peer).cdist:\n" << a.stat(b).cdist() << "\n\n";
+
   const double nan = std::numeric_limits<double>::quiet_NaN();
   let y = pluss::value(std::vector<double>{1.0, nan, 3.0, 5.0, nan, 7.0}, {6});
   std::cout << "y with NaNs:\n" << y << "\n\n";
   std::cout << "nanvar:\n" << y.nanvar() << "\n\n";
+  std::cout << "stat.nanvar:\n" << y.stat.nanvar() << "\n\n";
   std::cout << "nanstd:\n" << y.nanstd() << "\n";
 
   return 0;
