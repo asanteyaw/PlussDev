@@ -30,7 +30,7 @@ int main() {
   std::cout << "stat(peer).cdist:\n" << a.stat(b).cdist() << "\n\n";
 
   const double nan = std::numeric_limits<double>::quiet_NaN();
-  let y = pluss::value(std::vector<double>{1.0, nan, 3.0, 5.0, nan, 7.0}, {6});
+  let y = pluss::make_series(std::vector<double>{1.0, nan, 3.0, 5.0, nan, 7.0}, {6});
   std::cout << "y with NaNs:\n" << y << "\n\n";
   std::cout << "nanvar:\n" << y.nanvar() << "\n\n";
   std::cout << "stat.nanvar:\n" << y.stat.nanvar() << "\n\n";

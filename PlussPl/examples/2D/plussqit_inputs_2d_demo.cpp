@@ -12,8 +12,8 @@
 #include "pluss/plot/plot.h"
 
 int main() {
-  const auto numeric_note = pluss::content({"1.0", "2.5", "3.25", "4.75"});
-  const auto word_note = pluss::content({"alpha", "beta", "gamma", "delta"});
+  const auto numeric_note = pluss::make_note({"1.0", "2.5", "3.25", "4.75"});
+  const auto word_note = pluss::make_note({"alpha", "beta", "gamma", "delta"});
 
   const std::vector<std::int64_t> ticks_ns{
       0LL, 1'000'000'000LL, 2'000'000'000LL, 3'000'000'000LL};

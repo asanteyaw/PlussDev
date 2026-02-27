@@ -3,7 +3,7 @@
 #include <cmath>
 
 TEST_CASE("softmax/log_softmax/logsumexp run", "[softmax]") {
-  auto x = pluss::value(std::vector<float>{0,1,2,  1,2,3}, {2,3});
+  auto x = pluss::make_series(std::vector<float>{0,1,2,  1,2,3}, {2,3});
   auto y = x.softmax(1);
   REQUIRE(y.sizes()[0] == 2);
   REQUIRE(y.sizes()[1] == 3);

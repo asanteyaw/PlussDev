@@ -5,7 +5,7 @@
 #include <vector>
 
 int main() {
-  const auto t2 = pluss::moment({
+  const auto t2 = pluss::make_timeline({
       {"2024-06-01T08:00:00Z", "2024-06-01T09:30:00Z", "2024-06-01T11:00:00Z"},
       {"2024-06-02T08:15:00Z", "2024-06-02T09:45:00Z", "2024-06-02T11:15:00Z"},
   });
@@ -13,7 +13,7 @@ int main() {
   std::cout << "2D timeline (default print):\n";
   std::cout << pluss::print_timeline(t2) << "\n\n";
 
-  const auto t3 = pluss::moment({
+  const auto t3 = pluss::make_timeline({
       {
           {"2024-07-01T00:00:00Z", "2024-07-01T01:00:00Z"},
           {"2024-07-01T02:00:00Z", "2024-07-01T03:00:00Z"},

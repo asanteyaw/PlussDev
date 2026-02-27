@@ -1,13 +1,13 @@
 # Complete Series Method Reference: Signatures + Real Calls
 
 ```cpp
-auto x = pluss::value(std::vector<double>{-3,-2,-1,0,1,2,3}, {7});
-auto y = pluss::value(std::vector<double>{3,2,1,0,-1,-2,-3}, {7});
-auto pos = pluss::value(std::vector<double>{0.2,0.5,1.0,2.0,3.0,4.0,5.0}, {7});
-auto unit = pluss::value(std::vector<double>{-0.9,-0.5,-0.1,0.0,0.1,0.5,0.9}, {7});
-auto m = pluss::value(std::vector<double>{1,2,3,4,5,6}, {2,3});
-auto n = pluss::value(std::vector<double>{6,5,4,3,2,1}, {2,3});
-auto mm = pluss::value(std::vector<double>{1,2,3,4,5,6,7,8,9}, {3,3});
+auto x = pluss::make_series(std::vector<double>{-3,-2,-1,0,1,2,3}, {7});
+auto y = pluss::make_series(std::vector<double>{3,2,1,0,-1,-2,-3}, {7});
+auto pos = pluss::make_series(std::vector<double>{0.2,0.5,1.0,2.0,3.0,4.0,5.0}, {7});
+auto unit = pluss::make_series(std::vector<double>{-0.9,-0.5,-0.1,0.0,0.1,0.5,0.9}, {7});
+auto m = pluss::make_series(std::vector<double>{1,2,3,4,5,6}, {2,3});
+auto n = pluss::make_series(std::vector<double>{6,5,4,3,2,1}, {2,3});
+auto mm = pluss::make_series(std::vector<double>{1,2,3,4,5,6,7,8,9}, {3,3});
 auto cond = x.gt(0.0);
 auto mask = pluss::Series::ones({2,3}, pluss::ScalarType::Bool);
 auto gather_src = pluss::make_series(std::vector<std::int64_t>{10,20,30,40,50,60}, {2,3});

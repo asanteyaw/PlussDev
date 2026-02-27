@@ -2,7 +2,7 @@
 #include <pluss/pluss.h>
 
 TEST_CASE("activation methods exist and run", "[activations]") {
-  auto x = pluss::value(std::vector<float>{-2, -1, 0, 1, 2}, {5});
+  auto x = pluss::make_series(std::vector<float>{-2, -1, 0, 1, 2}, {5});
   auto s = x.sigmoid();
   REQUIRE(s.scalar_type() == pluss::ScalarType::Float32);
 

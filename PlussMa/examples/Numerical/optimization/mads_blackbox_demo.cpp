@@ -21,14 +21,14 @@ double as_f64(const pluss::Series& x) {
 pluss::Series rugged_ackley_blackbox(const pluss::Series& x) {
   const pluss::Series sq_mean = x.square().mean();
   const pluss::Series cos_mean = x.mul(2.0 * 3.14159265358979323846).cos().mean();
-  const pluss::Series ackley = pluss::value(20.0, x.scalar_type())
-      .add(pluss::value(2.71828182845904523536, x.scalar_type()))
+  const pluss::Series ackley = pluss::make_series(20.0, x.scalar_type())
+      .add(pluss::make_series(2.71828182845904523536, x.scalar_type()))
       .sub(sq_mean.sqrt().mul(-0.2).exp().mul(20.0))
       .sub(cos_mean.exp());
 
   // Hidden-constraint-like failure region and deterministic ripple.
   if (x.abs().amax().item<double>() > 4.75) {
-    return pluss::value(std::numeric_limits<double>::infinity());
+    return pluss::make_series(std::numeric_limits<double>::infinity());
   }
   const pluss::Series ripple = x.sum().mul(0.5).sin().abs().mul(0.02);
   return ackley.add(ripple);

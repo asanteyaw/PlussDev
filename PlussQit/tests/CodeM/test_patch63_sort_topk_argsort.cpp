@@ -2,7 +2,7 @@
 #include <pluss/pluss.h>
 
 TEST_CASE("sort/argsort/topk basic parity", "[sort][topk]") {
-  auto x = pluss::value(std::vector<std::int64_t>{3,1,2,0}, {4});
+  auto x = pluss::make_series(std::vector<std::int64_t>{3,1,2,0}, {4});
   auto [vals, idx] = x.sort(/*dim=*/0, /*descending=*/false, /*stable=*/false);
   REQUIRE(vals.to_vec<std::int64_t>() == std::vector<std::int64_t>{0,1,2,3});
   REQUIRE(idx.to_vec<std::int64_t>().size() == 4);

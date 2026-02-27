@@ -139,19 +139,19 @@ inline Series make_series(std::span<const T> data, std::span<const std::int64_t>
   return (src.platform() == cfg.platform) ? src : src.to(cfg.platform);
 }
 
-// Expose external memory without taking ownership (like torch::from_blob).
+// Expose external memory without taking ownership.
 // `deleter` will be invoked when the last Series view is destroyed.
 using BlobDeleter = std::function<void(void*)>;
 
-inline Series from_blob(
+inline Series from_buffer(
     void* data,
     std::span<const std::int64_t> sizes,
     std::span<const std::int64_t> strides,
     BlobDeleter deleter,
     ScalarType dtype = ScalarType::Float32) {
 
-  PLUSS_CHECK(data != nullptr, "from_blob: null data");
-  PLUSS_CHECK(sizes.size() == strides.size(), "from_blob: sizes/strides rank mismatch");
+  PLUSS_CHECK(data != nullptr, "from_buffer: null data");
+  PLUSS_CHECK(sizes.size() == strides.size(), "from_buffer: sizes/strides rank mismatch");
   const auto item = dtype_of(dtype).itemsize;
 
   // conservative byte-size: max offset + 1 element

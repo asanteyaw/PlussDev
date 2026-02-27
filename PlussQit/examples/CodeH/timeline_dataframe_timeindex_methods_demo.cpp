@@ -16,7 +16,7 @@ int main() {
   std::cout << "Inferred frequency: " << idx.freq() << "\n";
   std::cout << "Is monotonic: " << (idx.is_monotonic_increasing() ? "true" : "false") << "\n\n";
 
-  const auto values = pluss::value(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}, {5});
+  const auto values = pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}, {5});
 
   const auto hourly_sum = idx.resample_agg(values, "H", "sum", 1);
   const auto hourly_mean = idx.resample_agg(values, "H", "mean", 1);

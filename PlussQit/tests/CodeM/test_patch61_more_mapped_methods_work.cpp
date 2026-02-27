@@ -12,7 +12,7 @@ TEST_CASE("more generated methods route to real kernels", "[surface][kernels]") 
   auto f = x.isfinite();
   REQUIRE(f.scalar_type() == pluss::ScalarType::Bool);
 
-  auto b = pluss::value(std::vector<std::int64_t>{1,2,3,4}, {2,2});
+  auto b = pluss::make_series(std::vector<std::int64_t>{1,2,3,4}, {2,2});
   auto c = b.bitwise_not();
   REQUIRE(c.numel() == 4);
 

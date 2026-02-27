@@ -33,8 +33,8 @@ bool nearly_equal(double a, double b, double eps = 1e-9) {
 } // namespace
 
 int main() {
-  const auto numeric_note = pluss::content({"1.5", "2.0", "3.25"});
-  const auto text_note = pluss::content({"alpha", "beta", "gamma"});
+  const auto numeric_note = pluss::make_note({"1.5", "2.0", "3.25"});
+  const auto text_note = pluss::make_note({"alpha", "beta", "gamma"});
 
   const std::vector<std::int64_t> ticks_ns{0LL, 1'000'000'000LL, 2'000'000'000LL};
   const std::vector<std::int64_t> shape{static_cast<std::int64_t>(ticks_ns.size())};

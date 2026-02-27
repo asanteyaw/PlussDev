@@ -38,6 +38,9 @@ inline void check_view_invariants(const std::vector<std::int64_t>& sizes,
   if (!is_non_overlapping_and_dense(sizes, strides)) {
     throw_error("View invariants violated: expected non-overlapping & dense layout for this operation");
   }
+#else
+  (void)sizes;
+  (void)strides;
 #endif
 }
 

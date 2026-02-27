@@ -80,7 +80,7 @@ DataFrame make_base_frame() {
   const auto text = pluss::make_note(
       std::vector<std::string>{"Heavy Rain", "Clear day", "Fog near school", "Heavy rain near mall", "storm warning"},
       shape);
-  const auto timeline = pluss::moment({
+  const auto timeline = pluss::make_timeline({
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
       "2024-01-03T00:00:00Z",
@@ -243,7 +243,7 @@ void test_catalog_sort_group_missing() {
        Stream(pluss::make_note(std::vector<std::string>{"a", "", "c", ""}, shape4),
               bool_mask({true, false, true, false}))},
       {"ts_col",
-       Stream(pluss::moment({
+       Stream(pluss::make_timeline({
                   "2024-01-01T00:00:00Z",
                   "2024-01-02T00:00:00Z",
                   "2024-01-03T00:00:00Z",
@@ -266,7 +266,7 @@ void test_catalog_sort_group_missing() {
   expect(!note_filled.stream("note_col").has_validity_mask(),
          "Catalog::fillna(string, keys) should clear Note mask when fully resolved");
 
-  const auto ts_fill = pluss::moment("2024-01-31T00:00:00Z");
+  const auto ts_fill = pluss::make_timeline("2024-01-31T00:00:00Z");
   const auto ts_filled = mixed_missing.fillna(ts_fill, {"ts_col"});
   const auto ts_ticks = ts_filled.stream("ts_col").as_timeline().to_epoch_nanos_vector();
   const auto ts_fill_tick = ts_fill.to_epoch_nanos_vector()[0];

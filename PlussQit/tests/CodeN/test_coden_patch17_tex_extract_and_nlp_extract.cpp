@@ -14,7 +14,7 @@ bool has_token(const pluss::Note& toks, const std::string& needle) {
 } // namespace
 
 TEST_CASE("CodeN TeX extract/token command family is concrete", "[coden][patch17]") {
-  pluss::Note tex = pluss::content(
+  pluss::Note tex = pluss::make_note(
       "\\section{Intro}\n"
       "\\begin{equation} E = mc^2 \\end{equation}\n"
       "See \\ref{eq:1} and \\cite{einstein1905}.\n");
@@ -33,7 +33,7 @@ TEST_CASE("CodeN TeX extract/token command family is concrete", "[coden][patch17
 }
 
 TEST_CASE("CodeN NLP/tokenization extract family is concrete", "[coden][patch17]") {
-  pluss::Note n = pluss::content(
+  pluss::Note n = pluss::make_note(
       "OpenAI shipped GPT in 2025. Visit https://openai.com and email team@openai.com.\n"
       "NASA builds rockets.");
 

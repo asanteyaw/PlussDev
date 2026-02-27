@@ -63,13 +63,13 @@ pluss::Series complex_chain(pluss::Series x,
   const auto p = x.platform();
   const auto dt = pluss::ScalarType::Float32;
 
-  const auto c_add = pluss::value(0.05, dt).to(p);
-  const auto c_mul = pluss::value(0.75, dt).to(p);
-  const auto c_div = pluss::value(1.25, dt).to(p);
-  const auto c_eps = pluss::value(1e-3, dt).to(p);
-  const auto c_shift = pluss::value(0.15, dt).to(p);
+  const auto c_add = pluss::make_series(0.05, dt).to(p);
+  const auto c_mul = pluss::make_series(0.75, dt).to(p);
+  const auto c_div = pluss::make_series(1.25, dt).to(p);
+  const auto c_eps = pluss::make_series(1e-3, dt).to(p);
+  const auto c_shift = pluss::make_series(0.15, dt).to(p);
   const auto n_last = std::max<std::int64_t>(1, x.sizes().empty() ? 1 : x.sizes().back());
-  const auto c_scale = pluss::value(1.0 / std::sqrt(static_cast<double>(n_last)), dt).to(p);
+  const auto c_scale = pluss::make_series(1.0 / std::sqrt(static_cast<double>(n_last)), dt).to(p);
 
   for (int i = 0; i < inner_iters; ++i) {
     x = x.matmul(w1).mul(c_scale);
@@ -297,11 +297,11 @@ void trace_parity_chain(std::int64_t n, int trace_iters, std::uint64_t seed) {
   auto w2_mps = w2_cpu.to(pluss::pMPS);
 
   const auto dt = pluss::ScalarType::Float32;
-  const auto c_add_cpu = pluss::value(0.05, dt).to(pluss::pCPU);
-  const auto c_mul_cpu = pluss::value(0.75, dt).to(pluss::pCPU);
-  const auto c_div_cpu = pluss::value(1.25, dt).to(pluss::pCPU);
-  const auto c_eps_cpu = pluss::value(1e-3, dt).to(pluss::pCPU);
-  const auto c_shift_cpu = pluss::value(0.15, dt).to(pluss::pCPU);
+  const auto c_add_cpu = pluss::make_series(0.05, dt).to(pluss::pCPU);
+  const auto c_mul_cpu = pluss::make_series(0.75, dt).to(pluss::pCPU);
+  const auto c_div_cpu = pluss::make_series(1.25, dt).to(pluss::pCPU);
+  const auto c_eps_cpu = pluss::make_series(1e-3, dt).to(pluss::pCPU);
+  const auto c_shift_cpu = pluss::make_series(0.15, dt).to(pluss::pCPU);
   const auto c_add_mps = c_add_cpu.to(pluss::pMPS);
   const auto c_mul_mps = c_mul_cpu.to(pluss::pMPS);
   const auto c_div_mps = c_div_cpu.to(pluss::pMPS);

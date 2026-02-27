@@ -38,8 +38,8 @@ BlackboxEvaluation constrained_multiobjective_blackbox(const pluss::Series& x) {
   const double c1v = c1.to(pluss::pCPU, pluss::ScalarType::Float64).item<double>();
   const double c2v = c2.to(pluss::pCPU, pluss::ScalarType::Float64).item<double>();
 
-  out.objectives = pluss::value({f1v, f2v}, pluss::Config{}.with_dtype(x.scalar_type()).with_platform(x.platform()));
-  out.constraints = pluss::value({c1v, c2v}, pluss::Config{}.with_dtype(x.scalar_type()).with_platform(x.platform()));
+  out.objectives = pluss::make_series({f1v, f2v}, pluss::Config{}.with_dtype(x.scalar_type()).with_platform(x.platform()));
+  out.constraints = pluss::make_series({c1v, c2v}, pluss::Config{}.with_dtype(x.scalar_type()).with_platform(x.platform()));
 
   if (x.abs().amax().item<double>() > 4.5) {
     out.evaluation_ok = false;
@@ -75,8 +75,8 @@ int main() {
   config.constraint_handling = ConstraintHandling::ProgressiveBarrier;
   config.progressive_barrier_penalty = 80.0;
   config.multiobjective_scalarization = MultiObjectiveScalarization::Chebyshev;
-  config.objective_weights = pluss::value({0.7, 0.3}, cfg);
-  config.objective_reference = pluss::value({0.0, 0.0}, cfg);
+  config.objective_weights = pluss::make_series({0.7, 0.3}, cfg);
+  config.objective_reference = pluss::make_series({0.0, 0.0}, cfg);
   config.enable_cache = true;
   config.cache_max_entries = 100000;
   config.surrogate_mode = SurrogateMode::CandidateOrdering;

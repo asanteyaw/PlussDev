@@ -5,7 +5,7 @@ using pluss::coden::Note;
 using pluss::coden::TokenBatch;
 
 TEST_CASE("Scalar Note basic ops (ASCII)", "[coden][patch03]") {
-  Note a = pluss::content("  HeLLo  ");
+  Note a = pluss::make_note("  HeLLo  ");
   REQUIRE(a.defined());
   REQUIRE(a.dim() == 0);
   REQUIRE(a.strip().at(0) == "HeLLo");

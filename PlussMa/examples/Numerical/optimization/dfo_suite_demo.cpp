@@ -13,7 +13,7 @@ pluss::Config config_like(const pluss::Series& x) {
 }
 
 pluss::Series scalar_like(const pluss::Series& x, double v) {
-  return pluss::value(v, config_like(x));
+  return pluss::make_series(v, config_like(x));
 }
 
 double as_f64(const pluss::Series& x) {

@@ -4,6 +4,8 @@
 #include "CodeM/CodeM.h"
 #include "CodeM/core/Printing.h"
 #include <cstdint>
+#include <functional>
+#include <span>
 
 // Optional: LibTorch interop (enable PLUSS_ENABLE_TORCH)
 #ifdef PLUSS_ENABLE_TORCH
@@ -14,7 +16,14 @@ namespace pluss::codem {
 
 enum class TernaryCompareOp : std::uint8_t { Eq, Ne, Lt, Le, Gt, Ge };
 
+using BlobDeleter = std::function<void(void*)>;
+
 CODEM_API bool mps_backend_available() noexcept;
+Series from_buffer(void* data,
+                   std::span<const std::int64_t> sizes,
+                   std::span<const std::int64_t> strides,
+                   BlobDeleter deleter,
+                   ScalarType dtype);
 
 struct TernaryCompareBuilder {
   const Series& first;

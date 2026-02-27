@@ -10,7 +10,7 @@
 #include "pluss/coden/note_factory.h"
 
 int main() {
-  const auto scalar = pluss::content("hello");
+  const auto scalar = pluss::make_note("hello");
   std::cout << "scalar: " << scalar.scalar() << "\n";
 
   const std::vector<std::string> flat = {"a", "b", "c", "d"};

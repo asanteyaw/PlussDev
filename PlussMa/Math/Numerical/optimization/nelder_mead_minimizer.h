@@ -74,7 +74,7 @@ NelderMeadOutcome nelder_mead_minimizer(
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
-      return pluss::value(static_cast<double>(fn(x)));
+      return pluss::make_series(static_cast<double>(fn(x)));
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series>,
                     "nelder_mead_minimizer objective must return Series or arithmetic scalar");

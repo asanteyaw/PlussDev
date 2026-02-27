@@ -1786,7 +1786,7 @@ void test_versatile_dataframe_families() {
   const auto mixed_missing = DataFrame({
       {"label", pluss::table::Thread(pluss::make_note(std::vector<std::string>{"x", "", "z", ""}, shape4), validity)},
       {"ts", pluss::table::Thread(
-                 pluss::moment({
+                 pluss::make_timeline({
                      "2024-01-01T00:00:00Z",
                      "2024-01-02T00:00:00Z",
                      "2024-01-03T00:00:00Z",
@@ -1803,7 +1803,7 @@ void test_versatile_dataframe_families() {
                  validity)},
   });
 
-  const auto ts_fill = pluss::moment("2024-01-31T00:00:00Z");
+  const auto ts_fill = pluss::make_timeline("2024-01-31T00:00:00Z");
   const auto mixed_ts_filled = mixed_missing.fillna(ts_fill, {"ts"});
   const auto ts_ticks = mixed_ts_filled.features("ts").as_timeline().to_epoch_nanos_vector();
   const auto ts_fill_tick = ts_fill.to_epoch_nanos_vector()[0];

@@ -7,10 +7,10 @@
 #include <vector>
 
 int main() {
-  pluss::Note scalar = pluss::content("hello");
-  pluss::Note one_d = pluss::content({"a", "b", "c"});
-  pluss::Note two_d = pluss::content({{"a", "b"}, {"c", "d"}});
-  pluss::Note three_d = pluss::content({{{"a"}, {"b"}}, {{"c"}, {"d"}}});
+  pluss::Note scalar = pluss::make_note("hello");
+  pluss::Note one_d = pluss::make_note({"a", "b", "c"});
+  pluss::Note two_d = pluss::make_note({{"a", "b"}, {"c", "d"}});
+  pluss::Note three_d = pluss::make_note({{{"a"}, {"b"}}, {{"c"}, {"d"}}});
 
   std::vector<std::string> flat = {"p", "q", "r", "s"};
   const std::array<std::int64_t, 2> sizes{2, 2};

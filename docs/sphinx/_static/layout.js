@@ -103,10 +103,40 @@
     });
 
     if (!methodItems.length) {
-      return;
+      return null;
     }
 
     document.body.classList.add("has-method-sidebar");
+
+    // Hide everything before the API root inside each container so API starts immediately.
+    apiRoots.forEach((root) => {
+      const parent = root.parentElement;
+      if (!parent) {
+        return;
+      }
+      let reachedRoot = false;
+      Array.from(parent.children).forEach((child) => {
+        if (child === root) {
+          reachedRoot = true;
+          return;
+        }
+        if (!reachedRoot) {
+          child.classList.add("pluss-pre-api-hidden");
+        }
+      });
+
+      // Hide API section chrome before first method (title/intro text) so method appears first.
+      let reachedMethod = false;
+      Array.from(root.children).forEach((child) => {
+        if (child.tagName === "SECTION" && child.querySelector(":scope > h3")) {
+          reachedMethod = true;
+          return;
+        }
+        if (!reachedMethod) {
+          child.classList.add("pluss-api-intro-hidden");
+        }
+      });
+    });
 
     const dupCount = new Map();
     methodItems.forEach((m) => {
@@ -154,6 +184,7 @@
     documentRoot.appendChild(sidebar);
 
     let activeIndex = 0;
+    const listeners = [];
     const setActive = (idx, opts = {}) => {
       const { updateHash = true, resetScroll = true } = opts;
       if (idx < 0 || idx >= methodItems.length) {
@@ -180,6 +211,8 @@
       if (resetScroll) {
         bodywrapper.scrollTop = 0;
       }
+
+      listeners.forEach((fn) => fn(activeIndex));
     };
 
     links.forEach((a) => {
@@ -206,9 +239,97 @@
         setActive(idx, { updateHash: false, resetScroll: true });
       }
     });
+
+    return {
+      items: methodItems,
+      getActiveIndex: () => activeIndex,
+      setActive: (idx) => setActive(idx, { updateHash: true, resetScroll: true }),
+      onChange: (fn) => {
+        if (typeof fn === "function") {
+          listeners.push(fn);
+        }
+      },
+    };
   }
 
-  function buildPrevNext() {
+  function buildPrevNext(methodNav) {
+    if (methodNav && methodNav.items && methodNav.items.length) {
+      const bodywrapper = document.querySelector(".bodywrapper");
+      if (!bodywrapper) {
+        return;
+      }
+
+      const wrap = document.createElement("div");
+      wrap.id = "pluss-prev-next";
+
+      const prevLink = document.createElement("a");
+      prevLink.href = "#";
+      const prevLabel = document.createElement("span");
+      prevLabel.className = "label";
+      prevLabel.textContent = "Previous";
+      const prevTitle = document.createElement("span");
+      prevTitle.className = "title";
+      prevLink.appendChild(prevLabel);
+      prevLink.appendChild(prevTitle);
+
+      const nextLink = document.createElement("a");
+      nextLink.href = "#";
+      const nextLabel = document.createElement("span");
+      nextLabel.className = "label";
+      nextLabel.textContent = "Next";
+      const nextTitle = document.createElement("span");
+      nextTitle.className = "title";
+      nextLink.appendChild(nextLabel);
+      nextLink.appendChild(nextTitle);
+
+      wrap.appendChild(prevLink);
+      wrap.appendChild(nextLink);
+      bodywrapper.appendChild(wrap);
+      wrap.classList.add("show");
+
+      const render = () => {
+        const idx = methodNav.getActiveIndex();
+        const prevIdx = idx - 1;
+        const nextIdx = idx + 1;
+
+        if (prevIdx >= 0) {
+          prevLink.style.display = "";
+          prevTitle.textContent = methodNav.items[prevIdx].title;
+          prevLink.href = `#${methodNav.items[prevIdx].id}`;
+        } else {
+          prevLink.style.display = "none";
+        }
+
+        if (nextIdx < methodNav.items.length) {
+          nextLink.style.display = "";
+          nextTitle.textContent = methodNav.items[nextIdx].title;
+          nextLink.href = `#${methodNav.items[nextIdx].id}`;
+        } else {
+          nextLink.style.display = "none";
+        }
+      };
+
+      prevLink.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        const idx = methodNav.getActiveIndex();
+        if (idx > 0) {
+          methodNav.setActive(idx - 1);
+        }
+      });
+
+      nextLink.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        const idx = methodNav.getActiveIndex();
+        if (idx < methodNav.items.length - 1) {
+          methodNav.setActive(idx + 1);
+        }
+      });
+
+      methodNav.onChange(render);
+      render();
+      return;
+    }
+
     const prev = document.querySelector('link[rel="prev"]');
     const next = document.querySelector('link[rel="next"]');
     if (!prev && !next) {
@@ -259,7 +380,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     buildTopbar();
-    buildMethodSidebar();
-    buildPrevNext();
+    const methodNav = buildMethodSidebar();
+    buildPrevNext(methodNav);
   });
 })();

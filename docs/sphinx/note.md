@@ -18,8 +18,8 @@
 ## Setup Once, Reuse Everywhere
 
 ```cpp
-auto note = pluss::content("One. Two!  Email: bob@example.com");
-auto docs = pluss::content({
+auto note = pluss::make_note("One. Two!  Email: bob@example.com");
+auto docs = pluss::make_note({
   "Line A\nLine B",
   "A,b;c and more text"
 });
@@ -29,9 +29,9 @@ auto docs = pluss::content({
 
 ```cpp
 // Scalar / 1D / ND UTF-8
-auto n0 = pluss::content("hello");
-auto n1 = pluss::content({"alpha", "beta", "gamma"});
-auto n2 = pluss::content({{"r1c1", "r1c2"}, {"r2c1", "r2c2"}});
+auto n0 = pluss::make_note("hello");
+auto n1 = pluss::make_note({"alpha", "beta", "gamma"});
+auto n2 = pluss::make_note({{"r1c1", "r1c2"}, {"r2c1", "r2c2"}});
 
 // Flat data + shape
 std::vector<std::string> flat{"a","b","c","d"};
@@ -138,7 +138,7 @@ auto acr  = note.nlp_extract_acronyms();
 ## TeX Family: Convert, Clean, Extract
 
 ```cpp
-auto tex = pluss::content(
+auto tex = pluss::make_note(
   "\\begin{document} Text \\textbf{bold} and $x+y$. \\label{l1} \\ref{l1} \\end{document}");
 
 // Convert TeX to text for downstream NLP.
@@ -163,11 +163,11 @@ Helpful note:
 ## Encoding and Escaping Utilities
 
 ```cpp
-auto codec = pluss::content("Hi!");
+auto codec = pluss::make_note("Hi!");
 
 auto b64 = codec.base64_encode().base64_decode();
 auto hex = codec.hex_encode().hex_decode();
-auto url = pluss::content("a b+c").url_encode().url_decode();
+auto url = pluss::make_note("a b+c").url_encode().url_decode();
 
 auto html = codec.html_escape().html_unescape();
 auto json = codec.json_escape();
@@ -176,7 +176,7 @@ auto json = codec.json_escape();
 ## Shape Ops on Note Tensors
 
 ```cpp
-auto grid = pluss::content({{"a","b","c"}, {"d","e","f"}});
+auto grid = pluss::make_note({{"a","b","c"}, {"d","e","f"}});
 
 auto r = grid.reshape({3,2});
 auto t = grid.transpose(0,1);
@@ -190,8 +190,8 @@ auto c = grid.contiguous();
 ## Compare, Diff, Alignment, and Similarity
 
 ```cpp
-auto d1 = pluss::content("alpha beta gamma");
-auto d2 = pluss::content("alpha theta gamma delta");
+auto d1 = pluss::make_note("alpha beta gamma");
+auto d2 = pluss::make_note("alpha theta gamma delta");
 
 auto diff_words = d1.diff_words(d2);
 auto align_tokens = d1.align_tokens(d2);
@@ -204,7 +204,7 @@ auto ov  = d1.overlap_tokens(d2);  // overlap score note
 ## Ordering and Deduping
 
 ```cpp
-auto arr = pluss::content({"b", "a", "b"});
+auto arr = pluss::make_note({"b", "a", "b"});
 auto sorted = arr.sort();
 auto uniq = sorted.unique();
 auto dedup = arr.deduplicate();
@@ -220,8 +220,8 @@ Signature convention: `self` is the receiver object (the `Note` you call the met
 Use this fixture setup once for the examples below:
 
 ```cpp
-auto note = pluss::content("alpha beta gamma");
-auto other_note = pluss::content("delta epsilon");
+auto note = pluss::make_note("alpha beta gamma");
+auto other_note = pluss::make_note("delta epsilon");
 std::array<std::int64_t, 2> dims_arr{1, 1};
 auto dims_span = std::span<const std::int64_t>(dims_arr.data(), dims_arr.size());
 ```

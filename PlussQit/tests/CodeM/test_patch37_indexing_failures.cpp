@@ -19,8 +19,8 @@ TEST_CASE("bool mask ndim block exceeding rank throws", "[indexing][fail]") {
 
 TEST_CASE("values wrong shape throws", "[indexing][fail]") {
   auto a = pluss::zeros({4,5,6}, pluss::ScalarType::Int64);
-  auto i0 = pluss::value(std::vector<std::int64_t>{0,3}, {2,1});
-  auto i2 = pluss::value(std::vector<std::int64_t>{1,2,4}, {1,3});
+  auto i0 = pluss::make_series(std::vector<std::int64_t>{0,3}, {2,1});
+  auto i2 = pluss::make_series(std::vector<std::int64_t>{1,2,4}, {1,3});
   std::vector<pluss::Series> idx = { i0, pluss::Series{}, i2 };
   auto v_bad = pluss::full({2,3,4}, 7, pluss::ScalarType::Int64); // tail should be 5 not 4
   REQUIRE_THROWS_AS(pluss::index_put(a, idx, v_bad, false), pluss::codem::Error);

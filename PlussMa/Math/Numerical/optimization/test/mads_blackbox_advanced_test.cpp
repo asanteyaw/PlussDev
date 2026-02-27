@@ -42,7 +42,7 @@ BlackboxEvaluation two_objective_tradeoff(const Series& x) {
   const Series f2 = x0.sub(2.0).square();
   const double f1v = f1.to(pCPU, ScalarType::Float64).item<double>();
   const double f2v = f2.to(pCPU, ScalarType::Float64).item<double>();
-  out.objectives = pluss::value({f1v, f2v}, Config{}.with_dtype(x.scalar_type()).with_platform(x.platform()));
+  out.objectives = pluss::make_series({f1v, f2v}, Config{}.with_dtype(x.scalar_type()).with_platform(x.platform()));
   return out;
 }
 
@@ -80,9 +80,9 @@ int main() {
 
   // Extreme barrier should keep solution feasible for c(x)=x<=0 in 1D.
   {
-    const Series x0 = pluss::value({1.5}, cfg);
-    const Series lb = pluss::value({-2.0}, cfg);
-    const Series ub = pluss::value({0.0}, cfg);
+    const Series x0 = pluss::make_series({1.5}, cfg);
+    const Series lb = pluss::make_series({-2.0}, cfg);
+    const Series ub = pluss::make_series({0.0}, cfg);
 
     MadsBlackboxAdvancedConfig c;
     c.max_iterations = 120;
@@ -101,9 +101,9 @@ int main() {
 
   // Multi-objective: ensure objective dimension and Pareto archive are populated.
   {
-    const Series x0 = pluss::value({0.5}, cfg);
-    const Series lb = pluss::value({-1.0}, cfg);
-    const Series ub = pluss::value({3.0}, cfg);
+    const Series x0 = pluss::make_series({0.5}, cfg);
+    const Series lb = pluss::make_series({-1.0}, cfg);
+    const Series ub = pluss::make_series({3.0}, cfg);
 
     MadsBlackboxAdvancedConfig c;
     c.max_iterations = 120;
@@ -113,7 +113,7 @@ int main() {
     c.lower_bounds = lb;
     c.upper_bounds = ub;
     c.multiobjective_scalarization = MultiObjectiveScalarization::WeightedSum;
-    c.objective_weights = pluss::value({0.5, 0.5}, cfg);
+    c.objective_weights = pluss::make_series({0.5, 0.5}, cfg);
     c.pareto_archive_limit = 256;
     c.rng_seed = 403ULL;
 

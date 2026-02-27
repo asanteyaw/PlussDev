@@ -4,7 +4,7 @@
 #include <vector>
 
 int main() {
-  auto x = pluss::value(std::vector<double>{-3, -2, -1, 0, 1, 2, 3}, {7});
+  auto x = pluss::make_series(std::vector<double>{-3, -2, -1, 0, 1, 2, 3}, {7});
   std::cout << "x:\n" << x << "\n\n";
   auto x_7d = pluss::arange(0, 128).reshape({2,2,2,2,2,2,2});
   std::cout << "x_7d:\n" << pluss::print_series(x_7d) << "\n\n";
@@ -24,7 +24,7 @@ int main() {
   std::cout << "angle(h):\n" << h.angle() << "\n\n";
   std::cout << "abs2(h):\n" << h.abs2() << "\n\n";
 
-  auto m = pluss::value(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9}, {3, 3});
+  auto m = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9}, {3, 3});
   std::cout << "fftshift(m):\n" << m.fftshift() << "\n\n";
   std::cout << "ifftshift(fftshift(m)):\n" << m.fftshift().ifftshift() << "\n\n";
   std::cout << "unwrap(x):\n" << x.unwrap() << "\n";

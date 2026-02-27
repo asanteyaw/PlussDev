@@ -3,25 +3,25 @@
 #include <cmath>
 
 TEST_CASE("pluss::value overloads: scalar and nested initializer_list up to 7D", "[factories][value]") {
-  auto a = pluss::value(2); // int -> Int64 scalar
+  auto a = pluss::make_series(2); // int -> Int64 scalar
   REQUIRE(a.dim() == 0);
   REQUIRE(a.scalar_type() == pluss::ScalarType::Int64);
 
-  auto b = pluss::value(2.0); // double -> Float32 scalar (default)
+  auto b = pluss::make_series(2.0); // double -> Float32 scalar (default)
   REQUIRE(b.dim() == 0);
 
-  auto v1 = pluss::value({1,2,3}, pluss::ScalarType::Int64);
+  auto v1 = pluss::make_series({1,2,3}, pluss::ScalarType::Int64);
   REQUIRE(v1.dim() == 1);
   REQUIRE(v1.numel() == 3);
 
-  auto m2 = pluss::value({{1,2},{3,4}}, pluss::ScalarType::Int64);
+  auto m2 = pluss::make_series({{1,2},{3,4}}, pluss::ScalarType::Int64);
   REQUIRE(m2.dim() == 2);
   REQUIRE(m2.sizes()[0] == 2);
   REQUIRE(m2.sizes()[1] == 2);
 }
 
 TEST_CASE("bincount/histc/unique basic", "[count][hist][unique]") {
-  auto x = pluss::value({1,1,2,3,3,3}, pluss::ScalarType::Int64);
+  auto x = pluss::make_series({1,1,2,3,3,3}, pluss::ScalarType::Int64);
   auto bc = x.bincount();
   REQUIRE(bc.numel() >= 4);
 

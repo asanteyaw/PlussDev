@@ -13,8 +13,8 @@ int main() {
   const Series y = x.mul(2.0).sub(0.5);
 
   std::vector<Series> params{
-      pluss::value(0.0).to(ScalarType::Float64),
-      pluss::value(0.0).to(ScalarType::Float64),
+      pluss::make_series(0.0).to(ScalarType::Float64),
+      pluss::make_series(0.0).to(ScalarType::Float64),
   };
 
   AdamState state = adam_state_like(params);
@@ -45,7 +45,7 @@ int main() {
 
   // Nonlinear autograd smoke: exercise recent tape rules in one scalar objective.
   std::vector<Series> probe_params{
-      pluss::value(0.7).to(ScalarType::Float64),
+      pluss::make_series(0.7).to(ScalarType::Float64),
   };
   auto [probe_loss, probe_sens] = value_and_sensitivity(
       [&](const std::vector<Trace>& p) -> Trace {

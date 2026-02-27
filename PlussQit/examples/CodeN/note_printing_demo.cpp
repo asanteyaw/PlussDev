@@ -9,12 +9,12 @@
 
 int main() {
   std::cout << "=== scalar / operator<< ===\n";
-  pluss::Note scalar = pluss::content("Hello, Note printing!\nwith newlines and \"quotes\".");
+  pluss::Note scalar = pluss::make_note("Hello, Note printing!\nwith newlines and \"quotes\".");
   std::cout << scalar << "\n\n";
 
   std::cout << "=== 1D clipped values ===\n";
   const std::array<std::int64_t, 1> v_sizes{6};
-  pluss::Note v = pluss::content(
+  pluss::Note v = pluss::make_note(
       std::vector<std::string>{
           "alpha",
           "beta",
@@ -37,7 +37,7 @@ int main() {
       m_flat.push_back("r" + std::to_string(r) + "_c" + std::to_string(c));
     }
   }
-  pluss::Note matrix = pluss::content(
+  pluss::Note matrix = pluss::make_note(
       std::move(m_flat),
       std::span<const std::int64_t>(m_sizes.data(), m_sizes.size()));
   pluss::NotePrintOptions sum2d;
@@ -50,7 +50,7 @@ int main() {
   std::vector<std::string> t_flat;
   t_flat.reserve(24);
   for (int i = 0; i < 24; ++i) t_flat.push_back("t" + std::to_string(i));
-  pluss::Note cube = pluss::content(
+  pluss::Note cube = pluss::make_note(
       std::move(t_flat),
       std::span<const std::int64_t>(t_sizes.data(), t_sizes.size()));
   pluss::NotePrintOptions sum3d;

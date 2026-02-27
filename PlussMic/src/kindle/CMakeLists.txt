@@ -1,6 +1,6 @@
 # Kindle model (Stream -> Catalog -> Archive)
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.28)
 project(PlussMic_kindle NONE)
 
 target_sources(PlussMic PRIVATE

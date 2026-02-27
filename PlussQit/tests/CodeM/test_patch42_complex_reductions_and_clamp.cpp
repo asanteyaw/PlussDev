@@ -11,7 +11,7 @@ TEST_CASE("complex mean works", "[complex][reduce]") {
 }
 
 TEST_CASE("clamp and relu methods", "[clamp][relu]") {
-  auto x = pluss::value(std::vector<float>{-1, 0.5f, 2.0f, -3.0f}, {2,2});
+  auto x = pluss::make_series(std::vector<float>{-1, 0.5f, 2.0f, -3.0f}, {2,2});
   auto y = x.clamp(0.0, 1.0);
   REQUIRE(y.scalar_type() == pluss::ScalarType::Float32);
   auto z = x.relu();

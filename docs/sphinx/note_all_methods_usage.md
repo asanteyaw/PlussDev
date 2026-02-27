@@ -10,11 +10,11 @@ This page documents all practical construction styles and call patterns for `Not
 
 ```cpp
 // UTF-8 scalar / 1D / ND
-auto n0 = pluss::content("hello");
-auto n1 = pluss::content("A"); // char-like scalar text
+auto n0 = pluss::make_note("hello");
+auto n1 = pluss::make_note("A"); // char-like scalar text
 
-auto n2 = pluss::content({"alpha", "beta", "gamma"});
-auto n3 = pluss::content({{"r1c1", "r1c2"}, {"r2c1", "r2c2"}});
+auto n2 = pluss::make_note({"alpha", "beta", "gamma"});
+auto n3 = pluss::make_note({{"r1c1", "r1c2"}, {"r2c1", "r2c2"}});
 
 std::vector<std::string> flat{"a","b","c","d"};
 auto n4 = pluss::make_note(flat, std::array<std::int64_t,2>{2,2});

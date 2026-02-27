@@ -3,21 +3,22 @@
 #include "pluss/export.h"
 #include "pluss/config.h"
 #include "pluss/codem/codem.h"
+#include "pluss/codem/series_options.h"
+#include "pluss/codem/series_value.h"
+#include "pluss/detail/factory_core.h"
+#include "pluss/detail/factory_containers.h"
+#include "pluss/detail/series_finalize.h"
 #include "CodeM/core/Config.h"
+#include "pluss/detail/data_reader.h"
 
 #include <cstdint>
-#include <algorithm>
 #include <cmath>
 #include <initializer_list>
-#include <numeric>
-#include <random>
 #include <span>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
-#include "pluss/detail/factory_deduction.h"
-#include "pluss/detail/nested_series_literal.h"
+
 
 #ifdef PLUSS_ENABLE_TORCH
 #include <torch/torch.h>
@@ -25,39 +26,9 @@
 #endif
 
 namespace pluss {
-
   // ---- Config builder helpers ----
   using pluss::config; // from pluss/config.h
-  namespace detail {
-    using pluss::detail::make_config;
-
-    inline ScalarType resolve_like_dtype(const Series& like, Config cfg) {
-      // Keep Torch-like policy for *_like: inherit dtype unless user overrides.
-      return (cfg.dtype == ScalarType::Float32) ? like.scalar_type() : cfg.dtype;
-    }
-
-    inline Platform resolve_config_platform(Config cfg) {
-      return cfg.platform;
-    }
-
-    inline Series move_to_config_platform(Series s, Config cfg) {
-      const Platform target = resolve_config_platform(cfg);
-      return (s.platform() == target) ? s : s.to(target);
-    }
-
-    inline std::mt19937_64 make_rng(std::uint64_t seed) {
-      if (seed != 0) {
-        return std::mt19937_64(seed);
-      }
-      std::random_device rd;
-      return std::mt19937_64(((static_cast<std::uint64_t>(rd()) << 32) ^ static_cast<std::uint64_t>(rd())));
-    }
-
-    inline bool same_shape(std::span<const std::int64_t> a, std::span<const std::int64_t> b) {
-      return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin());
-    }
-
-  }
+  using detail::FactoryCore;
 
   // --------------------------------------------------------------------------
   // Factories (create NEW Series). Ops on existing Series live as methods.
@@ -73,11 +44,11 @@ namespace pluss {
   }
   template <class... Opts>
   inline Series empty(std::span<const std::int64_t> sizes, Opts... opts) {
-    return empty(sizes, detail::make_config(opts...));
+    return empty(sizes, FactoryCore::make_config(opts...));
   }
   template <class... Opts>
   inline Series empty(std::initializer_list<std::int64_t> sizes, Opts... opts) {
-    return empty(std::span<const std::int64_t>(sizes.begin(), sizes.size()), detail::make_config(opts...));
+    return empty(std::span<const std::int64_t>(sizes.begin(), sizes.size()), FactoryCore::make_config(opts...));
   }
   template <class T>
   inline Series empty(std::span<const std::int64_t> sizes, std::initializer_list<std::pair<const char*, T>> kv) {
@@ -89,18 +60,18 @@ namespace pluss {
     return zeros(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt);
   }
   inline Series zeros(std::span<const std::int64_t> sizes, Config cfg) {
-    return detail::move_to_config_platform(Series::zeros(sizes, cfg.dtype), cfg);
+    return FactoryCore::move_to_config_platform(Series::zeros(sizes, cfg.dtype), cfg);
   }
   inline Series zeros(std::initializer_list<std::int64_t> sizes, Config cfg) {
     return zeros(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
   }
   template <class... Opts>
   inline Series zeros(std::span<const std::int64_t> sizes, Opts... opts) {
-    return zeros(sizes, detail::make_config(opts...));
+    return zeros(sizes, FactoryCore::make_config(opts...));
   }
   template <class... Opts>
   inline Series zeros(std::initializer_list<std::int64_t> sizes, Opts... opts) {
-    return zeros(std::span<const std::int64_t>(sizes.begin(), sizes.size()), detail::make_config(opts...));
+    return zeros(std::span<const std::int64_t>(sizes.begin(), sizes.size()), FactoryCore::make_config(opts...));
   }
   template <class T>
   inline Series zeros(std::span<const std::int64_t> sizes, std::initializer_list<std::pair<const char*, T>> kv) {
@@ -112,18 +83,18 @@ namespace pluss {
     return ones(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt);
   }
   inline Series ones(std::span<const std::int64_t> sizes, Config cfg) {
-    return detail::move_to_config_platform(Series::ones(sizes, cfg.dtype), cfg);
+    return FactoryCore::move_to_config_platform(Series::ones(sizes, cfg.dtype), cfg);
   }
   inline Series ones(std::initializer_list<std::int64_t> sizes, Config cfg) {
     return ones(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
   }
   template <class... Opts>
   inline Series ones(std::span<const std::int64_t> sizes, Opts... opts) {
-    return ones(sizes, detail::make_config(opts...));
+    return ones(sizes, FactoryCore::make_config(opts...));
   }
   template <class... Opts>
   inline Series ones(std::initializer_list<std::int64_t> sizes, Opts... opts) {
-    return ones(std::span<const std::int64_t>(sizes.begin(), sizes.size()), detail::make_config(opts...));
+    return ones(std::span<const std::int64_t>(sizes.begin(), sizes.size()), FactoryCore::make_config(opts...));
   }
   template <class T>
   inline Series ones(std::span<const std::int64_t> sizes, std::initializer_list<std::pair<const char*, T>> kv) {
@@ -135,18 +106,18 @@ namespace pluss {
     return full(std::span<const std::int64_t>(sizes.begin(), sizes.size()), fill_value, dt);
   }
   inline Series full(std::span<const std::int64_t> sizes, double fill_value, Config cfg) {
-    return detail::move_to_config_platform(Series::full(sizes, fill_value, cfg.dtype), cfg);
+    return FactoryCore::move_to_config_platform(Series::full(sizes, fill_value, cfg.dtype), cfg);
   }
   inline Series full(std::initializer_list<std::int64_t> sizes, double fill_value, Config cfg) {
     return full(std::span<const std::int64_t>(sizes.begin(), sizes.size()), fill_value, cfg);
   }
   template <class... Opts>
   inline Series full(std::span<const std::int64_t> sizes, double fill_value, Opts... opts) {
-    return full(sizes, fill_value, detail::make_config(opts...));
+    return full(sizes, fill_value, FactoryCore::make_config(opts...));
   }
   template <class... Opts>
   inline Series full(std::initializer_list<std::int64_t> sizes, double fill_value, Opts... opts) {
-    return full(std::span<const std::int64_t>(sizes.begin(), sizes.size()), fill_value, detail::make_config(opts...));
+    return full(std::span<const std::int64_t>(sizes.begin(), sizes.size()), fill_value, FactoryCore::make_config(opts...));
   }
   template <class T>
   inline Series full(std::span<const std::int64_t> sizes, double fill_value, std::initializer_list<std::pair<const char*, T>> kv) {
@@ -164,29 +135,29 @@ namespace pluss {
   inline Series arange(std::int64_t start, std::int64_t end, Config cfg) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;
-    return detail::move_to_config_platform(Series::arange(start, end, 1, dt), cfg);
+    return FactoryCore::move_to_config_platform(Series::arange(start, end, 1, dt), cfg);
   }
   inline Series arange(std::int64_t start, std::int64_t end, std::int64_t step, Config cfg) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;
-    return detail::move_to_config_platform(Series::arange(start, end, step, dt), cfg);
+    return FactoryCore::move_to_config_platform(Series::arange(start, end, step, dt), cfg);
   }
   inline Series linspace(double start, double end, std::int64_t steps, ScalarType dt = ScalarType::Float32) { return Series::linspace(start, end, steps, dt); }
   inline Series linspace(double start, double end, std::int64_t steps, Config cfg) {
-    return detail::move_to_config_platform(Series::linspace(start, end, steps, cfg.dtype), cfg);
+    return FactoryCore::move_to_config_platform(Series::linspace(start, end, steps, cfg.dtype), cfg);
   }
   inline Series eye(std::int64_t n, std::int64_t m = -1, ScalarType dt = ScalarType::Float32) { return Series::eye(n, m, dt); }
   inline Series eye(std::int64_t n, Config cfg) {
-    return detail::move_to_config_platform(Series::eye(n, -1, cfg.dtype), cfg);
+    return FactoryCore::move_to_config_platform(Series::eye(n, -1, cfg.dtype), cfg);
   }
   inline Series eye(std::int64_t n, std::int64_t m, Config cfg) {
-    return detail::move_to_config_platform(Series::eye(n, m, cfg.dtype), cfg);
+    return FactoryCore::move_to_config_platform(Series::eye(n, m, cfg.dtype), cfg);
   }
 
   inline Series rand(std::span<const std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return Series::rand(sizes, dt, seed); }
   inline Series rand(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) {return Series::rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt, seed);}
   inline Series rand(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
-    return detail::move_to_config_platform(Series::rand(sizes, cfg.dtype, seed), cfg);
+    return FactoryCore::move_to_config_platform(Series::rand(sizes, cfg.dtype, seed), cfg);
   }
   inline Series rand(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
     return rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
@@ -194,11 +165,11 @@ namespace pluss {
 
   template <class... Opts>
   inline Series rand(std::span<const std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
-    return rand(sizes, detail::make_config(opts...), seed);
+    return rand(sizes, FactoryCore::make_config(opts...), seed);
   }
   template <class... Opts>
   inline Series rand(std::initializer_list<std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
-    const Config cfg = detail::make_config(opts...);
+    const Config cfg = FactoryCore::make_config(opts...);
     return rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
   }
 
@@ -207,18 +178,18 @@ namespace pluss {
     return Series::randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt, seed);
   }
   inline Series randn(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
-    return detail::move_to_config_platform(Series::randn(sizes, cfg.dtype, seed), cfg);
+    return FactoryCore::move_to_config_platform(Series::randn(sizes, cfg.dtype, seed), cfg);
   }
   inline Series randn(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
     return randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
   }
   template <class... Opts>
   inline Series randn(std::span<const std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
-    return randn(sizes, detail::make_config(opts...), seed);
+    return randn(sizes, FactoryCore::make_config(opts...), seed);
   }
   template <class... Opts>
   inline Series randn(std::initializer_list<std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
-    const Config cfg = detail::make_config(opts...);
+    const Config cfg = FactoryCore::make_config(opts...);
     return randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
   }
 
@@ -235,18 +206,18 @@ namespace pluss {
   inline Series randint(std::int64_t lo, std::int64_t hi, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;
-    return detail::move_to_config_platform(randint(lo, hi, sizes, dt, seed), cfg);
+    return FactoryCore::move_to_config_platform(randint(lo, hi, sizes, dt, seed), cfg);
   }
   inline Series randint(std::int64_t lo, std::int64_t hi, std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
     return randint(lo, hi, std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
   }
   template <class... Opts>
   inline Series randint(std::int64_t lo, std::int64_t hi, std::span<const std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
-    return randint(lo, hi, sizes, detail::make_config(opts...), seed);
+    return randint(lo, hi, sizes, FactoryCore::make_config(opts...), seed);
   }
   template <class... Opts>
   inline Series randint(std::int64_t lo, std::int64_t hi, std::initializer_list<std::int64_t> sizes, std::uint64_t seed, Opts... opts) {
-    return randint(lo, hi, std::span<const std::int64_t>(sizes.begin(), sizes.size()), detail::make_config(opts...), seed);
+    return randint(lo, hi, std::span<const std::int64_t>(sizes.begin(), sizes.size()), FactoryCore::make_config(opts...), seed);
   }
 
   inline Series logspace(double start,
@@ -267,7 +238,7 @@ namespace pluss {
     PLUSS_CHECK(n >= 0, "randperm: expected n >= 0");
     std::vector<std::int64_t> v(static_cast<std::size_t>(n));
     std::iota(v.begin(), v.end(), 0);
-    auto rng = detail::make_rng(seed);
+    auto rng = FactoryCore::make_rng(seed);
     std::shuffle(v.begin(), v.end(), rng);
     Series out = codem::make_series<std::int64_t>(
       v,
@@ -279,7 +250,7 @@ namespace pluss {
   inline Series randperm(std::int64_t n, Config cfg, std::uint64_t seed = 0) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;
-    return detail::move_to_config_platform(randperm(n, dt, seed), cfg);
+    return FactoryCore::move_to_config_platform(randperm(n, dt, seed), cfg);
   }
 
   inline Series normal(double mean,
@@ -296,7 +267,7 @@ namespace pluss {
                        Config cfg,
                        std::uint64_t seed = 0) {
     PLUSS_CHECK(std >= 0.0, "normal: expected std >= 0");
-    return detail::move_to_config_platform(Series::randn(sizes, cfg.dtype, seed).mul(std).add(mean), cfg);
+    return FactoryCore::move_to_config_platform(Series::randn(sizes, cfg.dtype, seed).mul(std).add(mean), cfg);
   }
   inline Series normal(double mean,
                        double std,
@@ -324,7 +295,7 @@ namespace pluss {
       n *= s;
     }
     std::vector<std::uint8_t> bits(static_cast<std::size_t>(n), 0);
-    auto rng = detail::make_rng(seed);
+    auto rng = FactoryCore::make_rng(seed);
     std::bernoulli_distribution dist(p);
     for (std::int64_t i = 0; i < n; ++i) {
       bits[static_cast<std::size_t>(i)] = dist(rng) ? 1u : 0u;
@@ -338,7 +309,7 @@ namespace pluss {
                           std::uint64_t seed = 0) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Bool;
-    return detail::move_to_config_platform(bernoulli(sizes, p, dt, seed), cfg);
+    return FactoryCore::move_to_config_platform(bernoulli(sizes, p, dt, seed), cfg);
   }
   inline Series bernoulli(std::initializer_list<std::int64_t> sizes,
                           double p = 0.5,
@@ -375,7 +346,7 @@ namespace pluss {
       PLUSS_CHECK(w >= 0.0, "multinomial: probs must be non-negative");
     }
 
-    auto rng = detail::make_rng(seed);
+    auto rng = FactoryCore::make_rng(seed);
     std::vector<std::int64_t> out(static_cast<std::size_t>(num_samples), 0);
     if (replacement) {
       std::discrete_distribution<std::int64_t> dist(weights.begin(), weights.end());
@@ -408,55 +379,55 @@ namespace pluss {
   // Like-factories
   inline Series empty_like(const Series& like, ScalarType dt) { return empty(like.sizes(), dt); }
   inline Series empty_like(const Series& like, Config cfg = {}) {
-    return detail::move_to_config_platform(empty_like(like, detail::resolve_like_dtype(like, cfg)), cfg);
+    return FactoryCore::move_to_config_platform(empty_like(like, FactoryCore::resolve_like_dtype(like, cfg)), cfg);
   }
   template <class... Opts>
   inline Series empty_like(const Series& like, Opts... opts) {
-    return empty_like(like, detail::make_config(opts...));
+    return empty_like(like, FactoryCore::make_config(opts...));
   }
 
   inline Series zeros_like(const Series& like, ScalarType dt) { return zeros(like.sizes(), dt); }
   inline Series zeros_like(const Series& like, Config cfg = {}) {
-    return detail::move_to_config_platform(zeros_like(like, detail::resolve_like_dtype(like, cfg)), cfg);
+    return FactoryCore::move_to_config_platform(zeros_like(like, FactoryCore::resolve_like_dtype(like, cfg)), cfg);
   }
   template <class... Opts>
   inline Series zeros_like(const Series& like, Opts... opts) {
-    return zeros_like(like, detail::make_config(opts...));
+    return zeros_like(like, FactoryCore::make_config(opts...));
   }
   inline Series zeroes_like(const Series& like, Config cfg = {}) { return zeros_like(like, cfg); }
 
   inline Series ones_like(const Series& like, ScalarType dt) { return ones(like.sizes(), dt); }
   inline Series ones_like(const Series& like, Config cfg = {}) {
-    return detail::move_to_config_platform(ones_like(like, detail::resolve_like_dtype(like, cfg)), cfg);
+    return FactoryCore::move_to_config_platform(ones_like(like, FactoryCore::resolve_like_dtype(like, cfg)), cfg);
   }
   template <class... Opts>
   inline Series ones_like(const Series& like, Opts... opts) {
-    return ones_like(like, detail::make_config(opts...));
+    return ones_like(like, FactoryCore::make_config(opts...));
   }
 
   inline Series full_like(const Series& like, double fill_value, ScalarType dt) {
     return full(like.sizes(), fill_value, dt);
   }
   inline Series full_like(const Series& like, double fill_value, Config cfg = {}) {
-    return detail::move_to_config_platform(full_like(like, fill_value, detail::resolve_like_dtype(like, cfg)), cfg);
+    return FactoryCore::move_to_config_platform(full_like(like, fill_value, FactoryCore::resolve_like_dtype(like, cfg)), cfg);
   }
   template <class... Opts>
   inline Series full_like(const Series& like, double fill_value, Opts... opts) {
-    return full_like(like, fill_value, detail::make_config(opts...));
+    return full_like(like, fill_value, FactoryCore::make_config(opts...));
   }
 
   inline Series rand_like(const Series& like, ScalarType dt, std::uint64_t seed = 0) {
     return pluss::rand(like.sizes(), dt, seed);
   }
   inline Series rand_like(const Series& like, Config cfg = {}, std::uint64_t seed = 0) {
-    return detail::move_to_config_platform(rand_like(like, detail::resolve_like_dtype(like, cfg), seed), cfg);
+    return FactoryCore::move_to_config_platform(rand_like(like, FactoryCore::resolve_like_dtype(like, cfg), seed), cfg);
   }
 
   inline Series randn_like(const Series& like, ScalarType dt, std::uint64_t seed = 0) {
     return pluss::randn(like.sizes(), dt, seed);
   }
   inline Series randn_like(const Series& like, Config cfg = {}, std::uint64_t seed = 0) {
-    return detail::move_to_config_platform(randn_like(like, detail::resolve_like_dtype(like, cfg), seed), cfg);
+    return FactoryCore::move_to_config_platform(randn_like(like, FactoryCore::resolve_like_dtype(like, cfg), seed), cfg);
   }
 
   inline Series randint_like(const Series& like,
@@ -476,14 +447,14 @@ namespace pluss {
                              std::int64_t hi,
                              Config cfg,
                              std::uint64_t seed = 0) {
-    return detail::move_to_config_platform(randint_like(like, hi, detail::resolve_like_dtype(like, cfg), seed), cfg);
+    return FactoryCore::move_to_config_platform(randint_like(like, hi, FactoryCore::resolve_like_dtype(like, cfg), seed), cfg);
   }
   inline Series randint_like(const Series& like,
                              std::int64_t lo,
                              std::int64_t hi,
                              Config cfg,
                              std::uint64_t seed = 0) {
-    return detail::move_to_config_platform(randint_like(like, lo, hi, detail::resolve_like_dtype(like, cfg), seed), cfg);
+    return FactoryCore::move_to_config_platform(randint_like(like, lo, hi, FactoryCore::resolve_like_dtype(like, cfg), seed), cfg);
   }
 
   inline Series eye_like(const Series& like, ScalarType dt = ScalarType::Float32) {
@@ -493,11 +464,11 @@ namespace pluss {
     return pluss::eye(n, m, dt);
   }
   inline Series eye_like(const Series& like, Config cfg) {
-    return detail::move_to_config_platform(eye_like(like, detail::resolve_like_dtype(like, cfg)), cfg);
+    return FactoryCore::move_to_config_platform(eye_like(like, FactoryCore::resolve_like_dtype(like, cfg)), cfg);
   }
   template <class... Opts>
   inline Series eye_like(const Series& like, Opts... opts) {
-    return eye_like(like, detail::make_config(opts...));
+    return eye_like(like, FactoryCore::make_config(opts...));
   }
 
   inline Series complex(const Series& real,
@@ -505,7 +476,7 @@ namespace pluss {
                         ScalarType dt = ScalarType::Complex64) {
     PLUSS_CHECK(dt == ScalarType::Complex64 || dt == ScalarType::Complex128,
                 "complex: dtype must be Complex64 or Complex128");
-    PLUSS_CHECK(detail::same_shape(real.sizes(), imag.sizes()),
+    PLUSS_CHECK(FactoryCore::same_shape(real.sizes(), imag.sizes()),
                 "complex: real and imag must have the same shape");
 
     const ScalarType base_dt = (dt == ScalarType::Complex128) ? ScalarType::Float64 : ScalarType::Float32;
@@ -536,7 +507,7 @@ namespace pluss {
   inline Series polar(const Series& abs,
                       const Series& angle,
                       ScalarType dt = ScalarType::Complex64) {
-    PLUSS_CHECK(detail::same_shape(abs.sizes(), angle.sizes()),
+    PLUSS_CHECK(FactoryCore::same_shape(abs.sizes(), angle.sizes()),
                 "polar: abs and angle must have the same shape");
     PLUSS_CHECK(dt == ScalarType::Complex64 || dt == ScalarType::Complex128,
                 "polar: dtype must be Complex64 or Complex128");
@@ -615,185 +586,24 @@ namespace pluss {
   // --------------------------------------------------------------------------
   // Value / blob / make_series factories (create NEW Series from user data)
   // --------------------------------------------------------------------------
-
-  // Scalars:
-  template <class T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
-  inline Series value(
-      T v,
-      ScalarType dtype = std::is_same_v<std::remove_cv_t<T>, double>
-                              ? ScalarType::Float64
-                              : ScalarType::Float32) {
-    return codem::value(static_cast<double>(v), dtype);
-  }
-  template <class T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
-  inline Series value(T v, Config cfg) {
-    const ScalarType dt =
-        (cfg.dtype == ScalarType::Float32)
-            ? (std::is_same_v<std::remove_cv_t<T>, double> ? ScalarType::Float64 : ScalarType::Float32)
-            : cfg.dtype;
-    return detail::move_to_config_platform(codem::value(static_cast<double>(v), dt), cfg);
-  }
-  template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
-  inline Series value(
-      T v,
-      ScalarType dtype = std::is_same_v<std::remove_cv_t<T>, std::uint8_t>
-                              ? ScalarType::UInt8
-                              : ScalarType::Int64) {
-    return codem::value(v, dtype);
-  }
-  template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
-  inline Series value(T v, Config cfg) {
-    const ScalarType dt =
-        (cfg.dtype == ScalarType::Float32)
-            ? (std::is_same_v<std::remove_cv_t<T>, std::uint8_t> ? ScalarType::UInt8 : ScalarType::Int64)
-            : cfg.dtype;
-    return detail::move_to_config_platform(codem::value(v, dt), cfg);
-  }
-  inline Series value(bool v, ScalarType dtype = ScalarType::Bool) { return codem::value(v, dtype); }
-  inline Series value(bool v, Config cfg) {
-    const ScalarType dt = (cfg.dtype == ScalarType::Float32) ? ScalarType::Bool : cfg.dtype;
-    return detail::move_to_config_platform(codem::value(v, dt), cfg);
+  // Owned-construction entrypoint.
+  // Data forms are parsed by DataReader constructors; options are applied here.
+  template <class... Opts>
+  inline Series make_series(detail::DataReader data,
+                            detail::DataReader::Option first = {},
+                            Opts&&... opts) {
+    return codem::value(
+        data,
+        std::move(first),
+        std::forward<Opts>(opts)...);
   }
 
-  // Nested initializer_list: fast path for homogeneous leaves.
-  template <class T>
-  inline Series value(std::initializer_list<T> list) {
-    constexpr ScalarType dt = pluss::detail::dtype_from_init_list<std::initializer_list<T>>();
-    return codem::value(list, dt);
-  }
-  template <class T>
-  inline Series value(std::initializer_list<T> list, ScalarType dtype) {
-    return codem::value(list, dtype);
-  }
-  template <class T>
-  inline Series value(std::initializer_list<T> list, Config cfg) {
-    const ScalarType dt = (cfg.dtype == ScalarType::Float32)
-                              ? pluss::detail::dtype_from_init_list<std::initializer_list<T>>()
-                              : cfg.dtype;
-    return detail::move_to_config_platform(codem::value(list, dt), cfg);
-  }
-
-  // Mixed nested literals: single fallback path (supports up to 7D).
-  inline Series value(std::initializer_list<detail::NestedSeriesLiteral> list) {
-    return detail::to_series(detail::NestedSeriesLiteral(list));
-  }
-  inline Series value(std::initializer_list<detail::NestedSeriesLiteral> list, ScalarType dtype) {
-    return detail::to_series(detail::NestedSeriesLiteral(list), dtype);
-  }
-  inline Series value(std::initializer_list<detail::NestedSeriesLiteral> list, Config cfg) {
-    Series out = (cfg.dtype == ScalarType::Float32)
-                     ? detail::to_series(detail::NestedSeriesLiteral(list))
-                     : detail::to_series(detail::NestedSeriesLiteral(list), cfg.dtype);
-    return detail::move_to_config_platform(std::move(out), cfg);
-  }
-
-  // make_series overloads for scalar and initializer_list host values.
-  template <class T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
-  inline Series make_series(
-      T v,
-      ScalarType dtype = std::is_same_v<std::remove_cv_t<T>, double>
-                              ? ScalarType::Float64
-                              : ScalarType::Float32) {
-    return codem::value(static_cast<double>(v), dtype);
-  }
-  template <class T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
-  inline Series make_series(T v, Config cfg) {
-    return value(v, cfg);
-  }
-  template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
-  inline Series make_series(
-      T v,
-      ScalarType dtype = std::is_same_v<std::remove_cv_t<T>, std::uint8_t>
-                              ? ScalarType::UInt8
-                              : ScalarType::Int64) {
-    return codem::value(v, dtype);
-  }
-  template <class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
-  inline Series make_series(T v, Config cfg) {
-    return value(v, cfg);
-  }
-  inline Series make_series(bool v, ScalarType dtype = ScalarType::Bool) {
-    return codem::value(v, dtype);
-  }
-  inline Series make_series(bool v, Config cfg) {
-    return value(v, cfg);
-  }
-  template <class T>
-  inline Series make_series(std::initializer_list<T> list) {
-    return codem::value(list, pluss::detail::dtype_from_init_list<std::initializer_list<T>>());
-  }
-  template <class T>
-  inline Series make_series(std::initializer_list<T> list, ScalarType dtype) {
-    return codem::value(list, dtype);
-  }
-  template <class T>
-  inline Series make_series(std::initializer_list<T> list, Config cfg) {
-    return value(list, cfg);
-  }
-  inline Series make_series(std::initializer_list<detail::NestedSeriesLiteral> list) {
-    return value(list);
-  }
-  inline Series make_series(std::initializer_list<detail::NestedSeriesLiteral> list, ScalarType dtype) {
-    return value(list, dtype);
-  }
-  inline Series make_series(std::initializer_list<detail::NestedSeriesLiteral> list, Config cfg) {
-    return value(list, cfg);
-  }
-
-  // Compatibility factory: construct from an existing contiguous host buffer.
-  // Prefer make_series(...) for explicit lvalue semantics.
-  template <class T>
-  inline Series value(const std::vector<T>& data, std::span<const std::int64_t> sizes, Config cfg = {}) {
-    return codem::make_series<T>(data, sizes, cfg);
-  }
-  template <class T>
-  inline Series value(const std::vector<T>& data, std::initializer_list<std::int64_t> sizes, Config cfg = {}) {
-    return codem::make_series<T>(
-      data,
-      std::span<const std::int64_t>(sizes.begin(), sizes.size()),
-      cfg
-    );
-  }
-
-  // make_series(...): construct from an existing lvalue/range of host data.
-  template <class T>
-  inline Series make_series(const std::vector<T>& data, std::span<const std::int64_t> sizes, Config cfg = {}) {
-    return codem::make_series<T>(data, sizes, cfg);
-  }
-  template <class T>
-  inline Series make_series(const std::vector<T>& data, std::initializer_list<std::int64_t> sizes, Config cfg = {}) {
-    return codem::make_series<T>(
-      data,
-      std::span<const std::int64_t>(sizes.begin(), sizes.size()),
-      cfg
-    );
-  }
-  template <class T>
-  inline Series make_series(std::span<const T> data, std::span<const std::int64_t> sizes, Config cfg = {}) {
-    return codem::make_series<T>(data, sizes, cfg);
-  }
-  template <class T>
-  inline Series make_series(std::span<const T> data, std::initializer_list<std::int64_t> sizes, Config cfg = {}) {
-    return codem::make_series<T>(data, sizes, cfg);
-  }
-  template <class Container>
-  inline Series make_series(const Container& data, std::initializer_list<std::int64_t> sizes, Config cfg = {})
-  requires requires(const Container& c) {
-    c.data();
-    c.size();
-    typename Container::value_type;
-  } {
-    using T = std::remove_cv_t<typename Container::value_type>;
-    const auto span = std::span<const T>(data.data(), data.size());
-    return codem::make_series<T>(span, std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
-  }
-
-  inline Series from_blob(void* data,
-                          std::span<const std::int64_t> sizes,
-                          std::span<const std::int64_t> strides,
-                          BlobDeleter deleter,
-                          ScalarType dtype = ScalarType::Float32) {
-    return codem::from_blob(data, sizes, strides, deleter, dtype);
+  inline Series from_buffer(void* data,
+                             std::span<const std::int64_t> sizes,
+                             std::span<const std::int64_t> strides,
+                             BlobDeleter deleter,
+                             ScalarType dtype = ScalarType::Float32) {
+    return codem::from_buffer(data, sizes, strides, deleter, dtype);
   }
 
 } // namespace pluss

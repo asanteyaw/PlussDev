@@ -2,7 +2,7 @@
 #include <pluss/pluss.h>
 
 TEST_CASE("var/std run", "[stats]") {
-  auto x = pluss::value(std::vector<float>{1,2,3,4}, {2,2});
+  auto x = pluss::make_series(std::vector<float>{1,2,3,4}, {2,2});
   auto v = x.var(false);
   REQUIRE(v.numel() == 1);
   auto s = x.std(false);
@@ -18,7 +18,7 @@ TEST_CASE("var/std run", "[stats]") {
 }
 
 TEST_CASE("exp/log/sqrt run", "[unary]") {
-  auto x = pluss::value(std::vector<float>{1.0f, 2.0f, 4.0f}, {3});
+  auto x = pluss::make_series(std::vector<float>{1.0f, 2.0f, 4.0f}, {3});
   auto e = x.exp();
   auto l = x.log();
   auto r = x.sqrt();

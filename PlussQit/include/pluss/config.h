@@ -17,10 +17,14 @@ namespace cfg {
   struct DType { pluss::codem::ScalarType v; };
   struct Pinned { bool v; };
   struct Platform { pluss::codem::Platform v; };
+  struct TracksSlope { bool v; };
+  struct RetainSensitivity { bool v; };
 
   inline DType dtype(pluss::codem::ScalarType v) { return DType{v}; }
   inline Pinned pinned(bool v) { return Pinned{v}; }
   inline Platform platform(pluss::codem::Platform v) { return Platform{v}; }
+  inline TracksSlope tracks_slope(bool v = true) { return TracksSlope{v}; }
+  inline RetainSensitivity retain_sensitivity(bool v = true) { return RetainSensitivity{v}; }
 }
 
 namespace detail {

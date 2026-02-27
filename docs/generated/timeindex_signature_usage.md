@@ -3,8 +3,8 @@
 ```cpp
 auto idx = pluss::make_timeindex({"2024-01-01T00:00:00Z", "2024-01-01T00:15:00Z", "2024-01-01T00:45:00Z"});
 auto other_idx = pluss::make_timeindex({"2024-01-01T00:05:00Z", "2024-01-01T00:35:00Z", "2024-01-01T01:05:00Z"});
-auto key_t = pluss::moment("2024-01-01T00:20:00Z");
-auto values = pluss::value(std::vector<double>{10.0, 20.0, 30.0}, {3});
+auto key_t = pluss::make_timeline("2024-01-01T00:20:00Z");
+auto values = pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {3});
 auto indices = pluss::make_series(std::vector<std::int64_t>{0,2}, {2});
 auto dur = pluss::duration_minutes(30);
 auto tol = pluss::duration_minutes(20);

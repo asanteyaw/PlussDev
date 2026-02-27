@@ -4,19 +4,19 @@
 //
 // For CodeM (Series/Tensor-style API), this exports:
 // - pluss::Series
-// - pluss::value(...)
 // - pluss::make_series(...)
+// - pluss::from_buffer(...)
 // - pluss::zeros/ones/full/rand/... factories
 // - pluss::from_torch(...) / pluss::to_torch(...) (when PLUSS_ENABLE_TORCH=ON)
 //
 // For CodeN (text API), this exports:
 // - pluss::Note
 // - pluss::TokenBatch
-// - pluss::content(...) / pluss::make_note(...)
+// - pluss::make_note(...) / pluss::make_note(...)
 //
 // For CodeH (time API), this exports:
 // - pluss::codeh::Timeline / Duration / TimeIndex
-// - pluss::moment(...) / make_timeline(...) / from_epoch_nanos(...)
+// - pluss::make_timeline(...) / make_timeline(...) / from_epoch_nanos(...)
 // - pluss::duration_* helpers / make_timeindex(...)
 //
 // Dynamic union holder:

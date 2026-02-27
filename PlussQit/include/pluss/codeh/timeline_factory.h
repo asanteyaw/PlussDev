@@ -12,6 +12,8 @@
 #include <vector>
 
 #include "pluss/codeh/codeh.h"
+#include "pluss/codeh/timeline_moment.h"
+#include "pluss/detail/factory_containers.h"
 #include "pluss/detail/nested_timeline_literal.h"
 
 #include "CodeH/compat/Invoke.h"
@@ -20,78 +22,52 @@ namespace pluss {
 
 namespace detail {
 
-inline void check_codeh_rank(std::span<const std::int64_t> sizes, std::string_view where) {
-  CODEM_CHECK(sizes.size() <= 3, std::string(where) + ": Timeline supports ranks up to 3");
+inline void check_codeh_rank(detail::ShapeSpec sizes, std::string_view where) {
+  CODEM_CHECK(sizes.rank() <= 3, std::string(where) + ": Timeline supports ranks up to 3");
 }
 
 } // namespace detail
 
 // ---- Public factories (preferred construction path) ----
 //
-// moment("2026-02-15")                -> scalar Timeline (0D)
-// moment({"2026-02-15","2026-02-16"}) -> 1D Timeline
-// moment({{{...}}})                   -> up to 3D Timeline via nested literal
-// make_timeline(flat, sizes)          -> N-D Timeline (0D..3D)
+// make_timeline("2026-02-15")          -> scalar Timeline (0D)
+// make_timeline({"2026-02-15","2026-02-16"}) -> 1D Timeline
+// make_timeline({{{...}}})             -> up to 3D Timeline via nested literal
+// make_timeline(flat, sizes)           -> N-D Timeline (0D..3D)
 // from_epoch_nanos(...)               -> from int64 epoch nanos
 //
 // Duration factories:
 // duration_seconds(5) -> scalar Duration
 
-inline pluss::codeh::Timeline moment(std::string_view s) {
-  const std::array<std::string_view,1> flat{s};
-  return pluss::codeh::ops_internal::timeline_from_utf8(flat, {});
+inline pluss::codeh::Timeline make_timeline(std::string_view s) { return pluss::codeh::moment(s); }
+inline pluss::codeh::Timeline make_timeline(const char* s) { return pluss::codeh::moment(s); }
+inline pluss::codeh::Timeline make_timeline(detail::TextSpan s1d) { return pluss::codeh::moment(s1d); }
+inline pluss::codeh::Timeline make_timeline(std::span<const std::string_view> s1d) { return pluss::codeh::moment(s1d); }
+inline pluss::codeh::Timeline make_timeline(const std::vector<std::string_view>& s1d) { return pluss::codeh::moment(s1d); }
+inline pluss::codeh::Timeline make_timeline(std::initializer_list<const char*> s1d) { return pluss::codeh::moment(s1d); }
+inline pluss::codeh::Timeline make_timeline(std::initializer_list<detail::NestedTimelineLiteral> nested) {
+  return pluss::codeh::moment(nested);
 }
 
-inline pluss::codeh::Timeline moment(const char* s) {
-  return moment(std::string_view{s ? s : ""});
-}
-
-inline pluss::codeh::Timeline moment(std::span<const std::string_view> s1d) {
-  const std::array<std::int64_t,1> sizes{static_cast<std::int64_t>(s1d.size())};
-  return pluss::codeh::ops_internal::timeline_from_utf8(s1d, sizes);
-}
-
-inline pluss::codeh::Timeline moment(const std::vector<std::string_view>& s1d) {
-  return moment(std::span<const std::string_view>(s1d.data(), s1d.size()));
-}
-
-inline pluss::codeh::Timeline moment(std::initializer_list<const char*> s1d) {
-  std::vector<std::string_view> flat;
-  flat.reserve(s1d.size());
-  std::ranges::transform(s1d, std::back_inserter(flat),
-                         [](const char* p) { return std::string_view{p ? p : ""}; });
-  return moment(flat);
-}
-
-inline pluss::codeh::Timeline moment(
-    std::initializer_list<detail::NestedTimelineLiteral> nested) {
-  auto lit = detail::flatten_timeline_literal(nested, 3, "moment");
-  std::vector<std::string_view> views(lit.flat.size());
-  std::ranges::transform(lit.flat, views.begin(),
-                         [](const std::string& s) { return std::string_view{s}; });
-  return pluss::codeh::ops_internal::timeline_from_utf8(
-      std::span<const std::string_view>(views.data(), views.size()),
-      std::span<const std::int64_t>(lit.sizes.data(), lit.sizes.size()));
+inline pluss::codeh::Timeline make_timeline(detail::TextSpan flat,
+                                            detail::ShapeSpec sizes) {
+  detail::check_codeh_rank(sizes, "make_timeline");
+  return pluss::codeh::ops_internal::timeline_from_utf8(flat.span(), sizes.span());
 }
 
 inline pluss::codeh::Timeline make_timeline(std::span<const std::string_view> flat,
                                            std::span<const std::int64_t> sizes) {
-  detail::check_codeh_rank(sizes, "make_timeline");
-  return pluss::codeh::ops_internal::timeline_from_utf8(flat, sizes);
+  return make_timeline(detail::TextSpan(flat), detail::ShapeSpec(sizes));
 }
 
 inline pluss::codeh::Timeline make_timeline(const std::vector<std::string_view>& flat,
                                             const std::vector<std::int64_t>& sizes) {
-  return make_timeline(std::span<const std::string_view>(flat.data(), flat.size()),
-                       std::span<const std::int64_t>(sizes.data(), sizes.size()));
+  return make_timeline(detail::TextSpan(flat), detail::ShapeSpec(sizes));
 }
 
 inline pluss::codeh::Timeline make_timeline(const std::vector<std::string>& flat,
                                             const std::vector<std::int64_t>& sizes) {
-  std::vector<std::string_view> views(flat.size());
-  std::ranges::transform(flat, views.begin(),
-                         [](const std::string& s) { return std::string_view{s}; });
-  return make_timeline(views, sizes);
+  return make_timeline(detail::TextSpan::from_strings(flat), detail::ShapeSpec(sizes));
 }
 
 inline pluss::codeh::Timeline from_epoch_nanos(std::int64_t scalar) {
@@ -109,8 +85,9 @@ inline pluss::codeh::Timeline from_epoch_nanos(
 
 inline pluss::codeh::Timeline from_epoch_nanos(std::span<const std::int64_t> flat,
                                                std::span<const std::int64_t> sizes) {
-  detail::check_codeh_rank(sizes, "from_epoch_nanos");
-  return pluss::codeh::ops_internal::timeline_from_epoch_nanos(flat, sizes);
+  const detail::ShapeSpec shape(sizes);
+  detail::check_codeh_rank(shape, "from_epoch_nanos");
+  return pluss::codeh::ops_internal::timeline_from_epoch_nanos(flat, shape.span());
 }
 
 inline pluss::codeh::Timeline from_epoch_nanos(const std::vector<std::int64_t>& flat,

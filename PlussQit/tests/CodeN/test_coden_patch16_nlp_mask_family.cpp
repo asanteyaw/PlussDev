@@ -8,7 +8,7 @@
 
 TEST_CASE("CodeN NLP mask family is concrete", "[coden][patch16]") {
   const std::array<std::int64_t, 1> sizes{2};
-  pluss::Note n = pluss::content(
+  pluss::Note n = pluss::make_note(
       std::vector<std::string>{
           "email bob@example.com url https://x.y @alice #topic 2025-01-03 09:30 $12.50 id 42",
           "ping jane@acme.org at 7pm on Jan 2, 2026 for GBP 99"},
@@ -33,7 +33,7 @@ TEST_CASE("CodeN NLP mask family is concrete", "[coden][patch16]") {
 }
 
 TEST_CASE("CodeN nlp_mask_pii flags select subsets", "[coden][patch16]") {
-  pluss::Note n = pluss::content("contact bob@example.com and use code 42");
+  pluss::Note n = pluss::make_note("contact bob@example.com and use code 42");
   auto numbers_only = n.nlp_mask_pii(1);
   const std::string s = numbers_only.at(0);
   REQUIRE(s.find("bob@example.com") != std::string::npos);

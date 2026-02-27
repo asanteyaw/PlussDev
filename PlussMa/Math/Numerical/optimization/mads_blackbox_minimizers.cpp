@@ -258,7 +258,7 @@ Series poll_offsets_ltmads_random_2n(
     }
   }
 
-  return pluss::make_series<double>(offsets, {2 * n_dim, n_dim}, cfg)
+  return pluss::make_series(offsets, {2 * n_dim, n_dim}, cfg)
       .to(cfg.platform, cfg.dtype);
 }
 
@@ -665,7 +665,7 @@ Series subset_from_indices(
   for (std::size_t i = 0; i < indices.size(); ++i) {
     sub[i] = src[static_cast<std::size_t>(indices[i])];
   }
-  return pluss::make_series<double>(
+  return pluss::make_series(
              sub,
              {static_cast<std::int64_t>(indices.size())},
              Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU))
@@ -683,7 +683,7 @@ Series inject_from_indices(
   for (std::size_t i = 0; i < indices.size(); ++i) {
     dst[static_cast<std::size_t>(indices[i])] = src[i];
   }
-  return pluss::make_series<double>(
+  return pluss::make_series(
              dst,
              {static_cast<std::int64_t>(dst.size())},
              Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU))
@@ -851,7 +851,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
       new_vals.push_back(pareto_values[idx]);
     }
     new_points.push_back(point.to(pluss::pCPU, ScalarType::Float64));
-    new_objs.push_back(pluss::make_series<double>(
+    new_objs.push_back(pluss::make_series(
                            obj_values,
                            {static_cast<std::int64_t>(obj_values.size())},
                            Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU)));
@@ -997,13 +997,13 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
             train_x[i][static_cast<std::size_t>(j)];
       }
     }
-    const Series train_points = pluss::make_series<double>(
+    const Series train_points = pluss::make_series(
                                     train_flat,
                                     {static_cast<std::int64_t>(train_x.size()), n_cols},
                                     Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU))
                                     .to(heavy_cfg.platform, heavy_cfg.dtype)
                                     .contiguous();
-    const Series train_merit = pluss::make_series<double>(
+    const Series train_merit = pluss::make_series(
                                    train_y,
                                    {static_cast<std::int64_t>(train_y.size()), 1},
                                    Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU))
@@ -1039,7 +1039,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     }
 
     ++state.surrogate_orderings;
-    return pluss::make_series<double>(out, {n_rows, n_cols}, setup.work_cfg)
+    return pluss::make_series(out, {n_rows, n_cols}, setup.work_cfg)
         .to(setup.work_cfg.platform, setup.work_cfg.dtype);
   };
 
@@ -1221,12 +1221,12 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     for (const auto& v : pareto_values) {
       obj_buf.insert(obj_buf.end(), v.begin(), v.end());
     }
-    out.pareto_points = pluss::make_series<double>(
+    out.pareto_points = pluss::make_series(
                             points_buf,
                             {rows, n_dim},
                             Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU))
                             .to(setup.flat_initial.platform(), setup.flat_initial.scalar_type());
-    out.pareto_objectives = pluss::make_series<double>(
+    out.pareto_objectives = pluss::make_series(
         obj_buf,
         {rows, obj_dim},
         Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));

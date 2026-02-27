@@ -277,6 +277,9 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_series_usage_demo examples/CodeM/series_usage_demo.cpp)
   target_link_libraries(plussqit_codem_series_usage_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_data_reader_parity_demo examples/CodeM/data_reader_parity_demo.cpp)
+  target_link_libraries(plussqit_codem_data_reader_parity_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_aux_let_transmit_demo examples/CodeM/aux_let_transmit_demo.cpp)
   target_link_libraries(plussqit_codem_aux_let_transmit_demo PRIVATE PlussQit::CodeM)
 

@@ -77,13 +77,13 @@ pluss::Series workload_matmul_mix(pluss::Series x,
                                   int inner_iters) {
   const auto p = x.platform();
   const auto dt = pluss::ScalarType::Float32;
-  const auto c_add = pluss::value(0.05, dt).to(p);
-  const auto c_mul = pluss::value(0.75, dt).to(p);
-  const auto c_div = pluss::value(1.25, dt).to(p);
-  const auto c_eps = pluss::value(1e-3, dt).to(p);
-  const auto c_shift = pluss::value(0.15, dt).to(p);
+  const auto c_add = pluss::make_series(0.05, dt).to(p);
+  const auto c_mul = pluss::make_series(0.75, dt).to(p);
+  const auto c_div = pluss::make_series(1.25, dt).to(p);
+  const auto c_eps = pluss::make_series(1e-3, dt).to(p);
+  const auto c_shift = pluss::make_series(0.15, dt).to(p);
   const auto n_last = std::max<std::int64_t>(1, x.sizes().empty() ? 1 : x.sizes().back());
-  const auto c_scale = pluss::value(1.0 / std::sqrt(static_cast<double>(n_last)), dt).to(p);
+  const auto c_scale = pluss::make_series(1.0 / std::sqrt(static_cast<double>(n_last)), dt).to(p);
 
   for (int i = 0; i < inner_iters; ++i) {
     x = x.matmul(a).mul(c_scale);
@@ -104,8 +104,8 @@ pluss::Series workload_unary_mix(pluss::Series x,
                                  int inner_iters) {
   const auto p = x.platform();
   const auto dt = pluss::ScalarType::Float32;
-  const auto c_eps = pluss::value(1e-3, dt).to(p);
-  const auto c_small = pluss::value(0.1, dt).to(p);
+  const auto c_eps = pluss::make_series(1e-3, dt).to(p);
+  const auto c_small = pluss::make_series(0.1, dt).to(p);
 
   for (int i = 0; i < inner_iters; ++i) {
     x = x.mul(c_small);
@@ -127,10 +127,10 @@ pluss::Series workload_binary_mix(pluss::Series x,
                                   int inner_iters) {
   const auto p = x.platform();
   const auto dt = pluss::ScalarType::Float32;
-  const auto c1 = pluss::value(0.5, dt).to(p);
-  const auto c2 = pluss::value(1.25, dt).to(p);
-  const auto c3 = pluss::value(0.125, dt).to(p);
-  const auto eps = pluss::value(1e-3, dt).to(p);
+  const auto c1 = pluss::make_series(0.5, dt).to(p);
+  const auto c2 = pluss::make_series(1.25, dt).to(p);
+  const auto c3 = pluss::make_series(0.125, dt).to(p);
+  const auto eps = pluss::make_series(1e-3, dt).to(p);
 
   for (int i = 0; i < inner_iters; ++i) {
     const auto y = a.mul(c1).add(b.mul(c2));
@@ -148,8 +148,8 @@ pluss::Series workload_predicate_mix(pluss::Series x,
                                      int inner_iters) {
   const auto p = x.platform();
   const auto dt = pluss::ScalarType::Float32;
-  const auto one = pluss::value(1.0, dt).to(p);
-  const auto half = pluss::value(0.5, dt).to(p);
+  const auto one = pluss::make_series(1.0, dt).to(p);
+  const auto half = pluss::make_series(0.5, dt).to(p);
 
   for (int i = 0; i < inner_iters; ++i) {
     const auto z = x.div(x.sub(x));
@@ -168,9 +168,9 @@ pluss::Series workload_activation_mix(pluss::Series x,
                                       int inner_iters) {
   const auto p = x.platform();
   const auto dt = pluss::ScalarType::Float32;
-  const auto c0 = pluss::value(0.0, dt).to(p);
-  const auto c1 = pluss::value(0.1, dt).to(p);
-  const auto c2 = pluss::value(0.9, dt).to(p);
+  const auto c0 = pluss::make_series(0.0, dt).to(p);
+  const auto c1 = pluss::make_series(0.1, dt).to(p);
+  const auto c2 = pluss::make_series(0.9, dt).to(p);
   for (int i = 0; i < inner_iters; ++i) {
     x = x.add(a.mul(c1)).sub(b.mul(c1));
     x = x.relu();
@@ -186,9 +186,9 @@ pluss::Series workload_select_clamp_mix(pluss::Series x,
                                         int inner_iters) {
   const auto p = x.platform();
   const auto dt = pluss::ScalarType::Float32;
-  const auto lo = pluss::value(-0.5, dt).to(p);
-  const auto hi = pluss::value(0.75, dt).to(p);
-  const auto one = pluss::value(1.0, dt).to(p);
+  const auto lo = pluss::make_series(-0.5, dt).to(p);
+  const auto hi = pluss::make_series(0.75, dt).to(p);
+  const auto one = pluss::make_series(1.0, dt).to(p);
   const auto cond_mask = a.ge(b).to(dt);
   const auto inv_mask = one.sub(cond_mask);
   for (int i = 0; i < inner_iters; ++i) {

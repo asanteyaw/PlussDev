@@ -17,7 +17,7 @@ struct Garch11Params {
 };
 
 pluss::Series scalar(double v, const pluss::Config& cfg) {
-  return pluss::value(v, cfg);
+  return pluss::make_series(v, cfg);
 }
 
 pluss::Config scalar_config_like(const pluss::Series& x) {

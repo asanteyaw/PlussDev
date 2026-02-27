@@ -134,13 +134,13 @@ int main() {
   std::cout << "\n";
 
   std::cout << "8) With pluss::Series\n";
-  auto bill = pluss::value(std::vector<double>{42.5, 35.85, 50.03}, {3});
+  auto bill = pluss::make_series(std::vector<double>{42.5, 35.85, 50.03}, {3});
   const auto with_fee = pluss::transmit(add_service_fee, bill);
   print_vec("single Series via transmit(add_service_fee, bill)", with_fee.to_vec<double>());
 
   const std::vector<pluss::Series> batches{
-      pluss::value(std::vector<double>{1.0, 2.0, 3.0}, {3}),
-      pluss::value(std::vector<double>{4.0, 5.0, 6.0}, {3}),
+      pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}),
+      pluss::make_series(std::vector<double>{4.0, 5.0, 6.0}, {3}),
   };
   const auto batch_sums = pluss::transmit([](const pluss::Series& s, std::size_t i) {
     return s.mul(1.0 + static_cast<double>(i)).sum().to_vec<double>(0);

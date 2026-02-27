@@ -1,9 +1,9 @@
 # Patch 64: Factory overload expansion + unique/bincount/histc + masked_scatter + invoke rebuild
 
 ## Factories: `pluss::value` now supports:
-- scalar integral (`pluss::value(2)`) -> Int64 0D series by default
-- scalar bool (`pluss::value(true)`) -> Bool 0D series by default
-- scalar double (`pluss::value(2.0)`) -> Float32 0D series by default
+- scalar integral (`pluss::make_series(2)`) -> Int64 0D series by default
+- scalar bool (`pluss::make_series(true)`) -> Bool 0D series by default
+- scalar double (`pluss::make_series(2.0)`) -> Float32 0D series by default
 - nested `std::initializer_list` up to 7D, e.g.
   - `value({1,2,3})` (1D)
   - `value({{1,2},{3,4}})` (2D)

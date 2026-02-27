@@ -8,7 +8,7 @@
 
 int main() {
   const std::array<std::int64_t, 3> sizes{2, 2, 1};
-  pluss::Note n1 = pluss::content(
+  pluss::Note n1 = pluss::make_note(
       std::vector<std::string>{"Row0 https://a.b", "Row1 dev@example.com",
                                "<b>Row2</b>", "- Row3"},
       std::span<const std::int64_t>(sizes.data(), sizes.size()));

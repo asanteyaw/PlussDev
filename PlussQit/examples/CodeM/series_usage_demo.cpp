@@ -12,7 +12,7 @@ int main() {
   pluss::Platform platform(mps_ready ? pluss::pMPS : pluss::pCPU);
   std::cout << (mps_ready ? "MPS ready. Training on GPU." : "Training on CPU.") << '\n';
 
-  pluss::Series a = pluss::value({1.0, 2.0, 3.0}).to(platform);
+  pluss::Series a = pluss::make_series({1.0, 2.0, 3.0}).to(platform);
   std::cout << "Series a:\n" << a << "\n";
   std::cout << "a dtype: " << a.dtype() << "\n";
   std::cout << "a shape: " << a.sizes() << "\n";
@@ -119,11 +119,11 @@ int main() {
   std::cout << "looking at the to_torch conversion\n" << torch_b << "\n";
 #endif
 
-  let type_prom_2d = pluss::value ({
+  let type_prom_2d = pluss::make_series ({
     {1, 2.5, 3},
     {4.75, 5, 6.125}
       });
-  let type_prom_3d = pluss::value({
+  let type_prom_3d = pluss::make_series({
     {
       {1, 2.5, 3},
       {4.75, 5, 6.125}
@@ -138,7 +138,7 @@ int main() {
   std::cout << "Mixed types 3D\n" << pluss::print_series(type_prom_3d) << "\n";
 
   // 7D demos (rank-7): one rvalue literal path, one lvalue host-buffer path.
-  let seven_d_rvalue = pluss::value({
+  let seven_d_rvalue = pluss::make_series({
     {
       {
         {

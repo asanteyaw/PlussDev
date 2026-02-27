@@ -7,7 +7,7 @@
 namespace pluss::codem::factories {
 
 //------------------------------------------------------------------------------
-// Nested initializer_list utilities (up to 7D) for pluss::value({{...}})
+// Nested initializer_list utilities (up to 7D) for pluss::make_series({{...}})
 //------------------------------------------------------------------------------
 //
 // We support:

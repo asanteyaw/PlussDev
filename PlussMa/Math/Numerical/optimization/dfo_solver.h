@@ -145,7 +145,7 @@ public:
       if constexpr (std::is_same_v<Ret, Series>) {
         return fn(x);
       } else if constexpr (std::is_arithmetic_v<Ret>) {
-        return pluss::value(static_cast<double>(fn(x)));
+        return pluss::make_series(static_cast<double>(fn(x)));
       } else {
         static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series>,
                       "DfoBuilder::with_objective expects Series or arithmetic scalar return");
@@ -161,7 +161,7 @@ public:
       if constexpr (std::is_same_v<Ret, Series>) {
         return fn(x);
       } else if constexpr (std::is_arithmetic_v<Ret>) {
-        return pluss::value(static_cast<double>(fn(x)));
+        return pluss::make_series(static_cast<double>(fn(x)));
       } else {
         static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series>,
                       "DfoBuilder::with_constraints expects Series or arithmetic scalar return");
@@ -182,7 +182,7 @@ public:
         return out;
       } else if constexpr (std::is_arithmetic_v<Ret>) {
         BlackboxEvaluation out;
-        out.objectives = pluss::value(static_cast<double>(fn(x)));
+        out.objectives = pluss::make_series(static_cast<double>(fn(x)));
         return out;
       } else {
         static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series> || std::is_same_v<Ret, BlackboxEvaluation>,
@@ -214,7 +214,7 @@ DfoResult solve_dfo(
     if constexpr (std::is_same_v<Ret, Series>) {
       return fn(x);
     } else if constexpr (std::is_arithmetic_v<Ret>) {
-      return pluss::value(static_cast<double>(fn(x)));
+      return pluss::make_series(static_cast<double>(fn(x)));
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series>,
                     "solve_dfo objective must return Series or arithmetic scalar");

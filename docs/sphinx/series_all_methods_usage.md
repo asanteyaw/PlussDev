@@ -10,10 +10,10 @@ This page is the exhaustive usage companion for `Series`.
 
 ```cpp
 // Scalars and nested literals
-auto s0 = pluss::value(3.14);
-auto s1 = pluss::value(true);
-auto s2 = pluss::value({1.0, 2.0, 3.0});
-auto s3 = pluss::value({{1.0, 2.0}, {3.0, 4.0}});
+auto s0 = pluss::make_series(3.14);
+auto s1 = pluss::make_series(true);
+auto s2 = pluss::make_series({1.0, 2.0, 3.0});
+auto s3 = pluss::make_series({{1.0, 2.0}, {3.0, 4.0}});
 
 // Flat host data + explicit shape
 std::vector<double> flat{1,2,3,4,5,6};

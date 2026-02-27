@@ -1,6 +1,8 @@
 #include <pluss/pluss.h>
 
 #include <any>
+#include <cstdlib>
+#include <cstring>
 #include <cstdint>
 #include <iostream>
 #include <string>
@@ -52,7 +54,7 @@ void test_generated_timeline_surface() {
   using pluss::codeh::Timeline;
   std::cout << "[RUN] codeh:generated_surface\n";
 
-  const Timeline t = pluss::moment("2026-02-15T13:04:05Z");
+  const Timeline t = pluss::make_timeline("2026-02-15T13:04:05Z");
   expect_true(t.defined(), "moment scalar is defined");
   expect_true(t.year().to_vec<std::int32_t>(0) == 2026, "year() generated method");
   expect_true(t.month().to_vec<std::int32_t>(0) == 2, "month() generated method");
@@ -135,7 +137,7 @@ void test_base_static_and_legacy_surface() {
   expect_true(from_time.minute_scalar() == 59, "createFromTimeInts minute");
   expect_true(from_time.second_scalar() == 58, "createFromTimeInts second");
 
-  const auto e = pluss::value(std::vector<std::int64_t>{0, 1'000'000'000LL}, {2});
+  const auto e = pluss::make_series(std::vector<std::int64_t>{0, 1'000'000'000LL}, {2});
   const auto from_series = Timeline::fromSeries(e);
   expect_eq_vec(from_series.to_epoch_nanos_flat(), std::vector<std::int64_t>{0, 1'000'000'000LL},
                 "fromSeries epoch nanos");
@@ -145,12 +147,12 @@ void test_dataframe_datetime_tranche() {
   using pluss::codeh::Timeline;
   std::cout << "[RUN] codeh:datetime_tranche\n";
 
-  const auto years = pluss::value(std::vector<std::int64_t>{2024, 2024, 2024}, {3});
-  const auto months = pluss::value(std::vector<std::int64_t>{1, 1, 1}, {3});
-  const auto days = pluss::value(std::vector<std::int64_t>{2, 3, 4}, {3});
-  const auto hours = pluss::value(std::vector<std::int64_t>{10, 11, 12}, {3});
-  const auto mins = pluss::value(std::vector<std::int64_t>{5, 6, 7}, {3});
-  const auto secs = pluss::value(std::vector<std::int64_t>{8, 9, 10}, {3});
+  const auto years = pluss::make_series(std::vector<std::int64_t>{2024, 2024, 2024}, {3});
+  const auto months = pluss::make_series(std::vector<std::int64_t>{1, 1, 1}, {3});
+  const auto days = pluss::make_series(std::vector<std::int64_t>{2, 3, 4}, {3});
+  const auto hours = pluss::make_series(std::vector<std::int64_t>{10, 11, 12}, {3});
+  const auto mins = pluss::make_series(std::vector<std::int64_t>{5, 6, 7}, {3});
+  const auto secs = pluss::make_series(std::vector<std::int64_t>{8, 9, 10}, {3});
 
   const Timeline ymd = Timeline::from_ymd(years, months, days, "UTC");
   expect_true(ymd.numel() == 3, "from_ymd builds 1D timeline");
@@ -187,7 +189,7 @@ void test_dataframe_datetime_tranche() {
 
   const auto idx = ymdhms.sort().to_timeindex(true);
   expect_true(idx.size() == 3, "to_timeindex bridge");
-  const auto key = pluss::moment("2024-01-03T11:06:09Z");
+  const auto key = pluss::make_timeline("2024-01-03T11:06:09Z");
   const auto pos = idx.searchsorted(key, false);
   expect_true(pos >= 1 && pos <= 2, "TimeIndex searchsorted on Timeline-built index");
 }
@@ -196,7 +198,7 @@ void test_factory_rank_and_printing() {
   using pluss::codeh::Timeline;
   std::cout << "[RUN] codeh:factory_rank_print\n";
 
-  const auto t2 = pluss::moment({
+  const auto t2 = pluss::make_timeline({
       {"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"},
       {"2024-01-02T00:00:00Z", "2024-01-02T01:00:00Z"},
   });
@@ -204,7 +206,7 @@ void test_factory_rank_and_printing() {
   expect_eq_vec(t2.day().to_vec<std::int32_t>(), std::vector<std::int32_t>{1, 1, 2, 2},
                 "moment 2D flatten order");
 
-  const auto t3 = pluss::moment({
+  const auto t3 = pluss::make_timeline({
       {
           {"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"},
           {"2024-01-01T02:00:00Z", "2024-01-01T03:00:00Z"},
@@ -234,6 +236,26 @@ void test_factory_rank_and_printing() {
   expect_true(t_epoch.dim() == 3, "from_epoch_nanos lvalue rank");
   expect_eq_vec(t_epoch.to_epoch_nanos_flat(), epoch_flat,
                 "from_epoch_nanos lvalue preserves data");
+
+  bool timeline_freed = false;
+  {
+    auto* raw = static_cast<std::int64_t*>(std::malloc(sizeof(std::int64_t) * epoch_flat.size()));
+    std::memcpy(raw, epoch_flat.data(), sizeof(std::int64_t) * epoch_flat.size());
+    const std::array<std::int64_t, 3> epoch_strides{6, 3, 1};
+    const auto t_epoch_buf = pluss::codeh::Timeline::from_buffer_epoch_nanos(
+        raw,
+        std::span<const std::int64_t>(epoch_shape.data(), epoch_shape.size()),
+        std::span<const std::int64_t>(epoch_strides.data(), epoch_strides.size()),
+        [&](void* p) {
+          timeline_freed = true;
+          std::free(p);
+        });
+    expect_true(t_epoch_buf.dim() == 3, "Timeline::from_buffer_epoch_nanos rank");
+    expect_eq_vec(t_epoch_buf.to_epoch_nanos_vector(), epoch_flat,
+                  "Timeline::from_buffer_epoch_nanos preserves data");
+  }
+  expect_true(timeline_freed, "Timeline::from_buffer_epoch_nanos deleter called");
+
   const auto t_epoch_nested = pluss::from_epoch_nanos({
       {
           {0LL, 1'000'000'000LL},
@@ -254,6 +276,28 @@ void test_factory_rank_and_printing() {
   });
   expect_true(idx.size() == 3, "make_timeindex 1D literal factory");
 
+  bool timeindex_freed = false;
+  {
+    auto* raw = static_cast<std::int64_t*>(std::malloc(sizeof(std::int64_t) * 3));
+    raw[0] = 0;
+    raw[1] = 1'000'000'000LL;
+    raw[2] = 2'000'000'000LL;
+    const auto idx_buf = pluss::codeh::TimeIndex::from_buffer_epoch_nanos(
+        raw,
+        3,
+        1,
+        [&](void* p) {
+          timeindex_freed = true;
+          std::free(p);
+        },
+        true);
+    expect_true(idx_buf.size() == 3, "TimeIndex::from_buffer_epoch_nanos size");
+    expect_eq_vec(idx_buf.timeline().to_epoch_nanos_vector(),
+                  std::vector<std::int64_t>{0, 1'000'000'000LL, 2'000'000'000LL},
+                  "TimeIndex::from_buffer_epoch_nanos preserves data");
+  }
+  expect_true(timeindex_freed, "TimeIndex::from_buffer_epoch_nanos deleter called");
+
   pluss::codeh::TimelinePrintOptions popt;
   popt.max_rows = 4;
   popt.max_cols = 4;
@@ -267,7 +311,7 @@ void test_factory_rank_and_printing() {
 
   expect_throw(
       [] {
-        (void)pluss::moment({
+        (void)pluss::make_timeline({
             {"2024-01-01T00:00:00Z"},
             {"2024-01-01T01:00:00Z", "2024-01-01T02:00:00Z"},
         });
@@ -287,7 +331,7 @@ void test_generated_timeindex_dataframe_family() {
   using pluss::codeh::Timeline;
   std::cout << "[RUN] codeh:timeindex_generated_df\n";
 
-  const auto t = pluss::moment({
+  const auto t = pluss::make_timeline({
       "2024-01-01T00:00:00Z",
       "2024-01-01T00:30:00Z",
       "2024-01-01T01:00:00Z",
@@ -300,7 +344,7 @@ void test_generated_timeindex_dataframe_family() {
   expect_true(!idx.has_duplicates(), "generated has_duplicates");
   expect_true(idx.freq() == "min", "generated infer_freq alias");
 
-  const auto values = pluss::value(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4});
+  const auto values = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4});
   const auto rs = idx.resample_agg(values, "H", "sum", 1);
   expect_eq_vec(rs.to_vec<double>(), std::vector<double>{3.0, 7.0},
                 "generated resample_agg(sum)");
@@ -317,7 +361,7 @@ void test_generated_timeindex_dataframe_family() {
 void test_3d_non_generated_timeline_support() {
   std::cout << "[RUN] codeh:timeline_3d_non_generated\n";
 
-  const auto t3 = pluss::moment({
+  const auto t3 = pluss::make_timeline({
       {
           {"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"},
           {"2024-01-01T02:00:00Z", "2024-01-01T03:00:00Z"},
@@ -363,7 +407,7 @@ void test_3d_non_generated_timeline_support() {
 void test_queue_dynamic_dispatch() {
   std::cout << "[RUN] codeh:queue_dynamic_dispatch\n";
 
-  pluss::Queue qt = pluss::moment("2024-01-15T10:11:12Z");
+  pluss::Queue qt = pluss::make_timeline("2024-01-15T10:11:12Z");
   expect_true(qt.as_timeline().year().to_vec<std::int32_t>(0) == 2024,
               "Queue.as_timeline() exposes Timeline surface");
 
@@ -381,7 +425,7 @@ void test_queue_dynamic_dispatch() {
   expect_true(qn.kind() == pluss::Queue::Kind::Note, "Queue strftime returns Note");
   expect_true(qn.as<pluss::Note>().at(0) == "2024-01-15", "Queue strftime formatted value");
 
-  pluss::Queue qt1d = pluss::moment({
+  pluss::Queue qt1d = pluss::make_timeline({
       "2024-01-15T10:11:12Z",
       "2024-01-16T10:11:12Z",
   });
@@ -397,17 +441,17 @@ void test_queue_dynamic_dispatch() {
 void test_dynamic_dispense_utility() {
   std::cout << "[RUN] codeh:dynamic_dispense_utility\n";
 
-  auto s = pluss::value({-1.0, 2.0, -3.0});
+  auto s = pluss::make_series({-1.0, 2.0, -3.0});
   const auto s_numel = pluss::dispense(s, &pluss::Series::numel, std::make_tuple());
   expect_true(s_numel == 3,
               "dispense(Series,&Series::numel)");
 
-  auto n = pluss::content({"apple", "banana", "apricot"});
+  auto n = pluss::make_note({"apple", "banana", "apricot"});
   const auto starts_with_a = pluss::dispense(n, &pluss::Note::starts_with, std::make_tuple("a"));
   expect_true(starts_with_a.size() == 3 && starts_with_a[0] == 1 && starts_with_a[1] == 0 && starts_with_a[2] == 1,
               "dispense(Note,&Note::starts_with)");
 
-  auto t = pluss::moment("2024-01-15T10:11:12Z");
+  auto t = pluss::make_timeline("2024-01-15T10:11:12Z");
   const auto floor_d = pluss::dispense(t, &pluss::codeh::Timeline::floor, std::make_tuple("D"));
   expect_true(floor_d.hour().to_vec<std::int32_t>(0) == 0,
               "dispense(Timeline,&Timeline::floor)");

@@ -7,7 +7,7 @@
 #include <vector>
 
 TEST_CASE("invoke routes split/chunk/tensor_split first-slice projection", "[invoke][surface]") {
-  auto x = pluss::value(std::vector<std::int64_t>{0,1,2,3,4,5,6,7,8,9}, {10});
+  auto x = pluss::make_series(std::vector<std::int64_t>{0,1,2,3,4,5,6,7,8,9}, {10});
 
   auto s = pluss::codem::_compat::invoke("split", x, 3LL, 0LL);
   REQUIRE(s.to_vec<std::int64_t>() == std::vector<std::int64_t>{0,1,2});

@@ -7,14 +7,14 @@
 #include <pluss/pluss.h>
 
 TEST_CASE("CodeN replace/remove family has concrete behavior", "[coden][patch13]") {
-  pluss::Note s = pluss::content("alpha beta beta");
+  pluss::Note s = pluss::make_note("alpha beta beta");
   REQUIRE(s.replace_first("beta", "X").at(0) == "alpha X beta");
   REQUIRE(s.replace_last("beta", "X").at(0) == "alpha beta X");
   REQUIRE(s.replace_n("beta", "X", 1).at(0) == "alpha X beta");
   REQUIRE(s.remove("beta").at(0) == "alpha  beta");
   REQUIRE(s.remove_all("beta").at(0) == "alpha  ");
 
-  pluss::Note t = pluss::content("payload");
+  pluss::Note t = pluss::make_note("payload");
   REQUIRE(t.ensure_prefix("pre_").at(0) == "pre_payload");
   REQUIRE(t.ensure_suffix("_suf").at(0) == "payload_suf");
   REQUIRE(t.surround("[", "]").at(0) == "[payload]");
@@ -24,7 +24,7 @@ TEST_CASE("CodeN replace/remove family has concrete behavior", "[coden][patch13]
 
 TEST_CASE("CodeN tokenization families return structured TokenBatch", "[coden][patch13]") {
   const std::array<std::int64_t, 1> sizes{2};
-  pluss::Note n = pluss::content(
+  pluss::Note n = pluss::make_note(
       std::vector<std::string>{"One.\nTwo!", "A,b;c"},
       std::span<const std::int64_t>(sizes.data(), sizes.size()));
 
@@ -52,7 +52,7 @@ TEST_CASE("CodeN tokenization families return structured TokenBatch", "[coden][p
 }
 
 TEST_CASE("CodeN TeX cleanup family has concrete behavior", "[coden][patch13]") {
-  pluss::Note tex = pluss::content(
+  pluss::Note tex = pluss::make_note(
       "\\documentclass{article}\n"
       "% header comment\n"
       "\\begin{document}\n"

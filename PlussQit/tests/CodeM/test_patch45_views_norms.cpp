@@ -22,7 +22,7 @@ TEST_CASE("permute/unsqueeze/squeeze/flatten basics", "[views]") {
 }
 
 TEST_CASE("norm p=1/2", "[norm]") {
-  auto x = pluss::value(std::vector<float>{3,4}, {2});
+  auto x = pluss::make_series(std::vector<float>{3,4}, {2});
   auto n2 = x.norm(2.0);
   REQUIRE(n2.numel() == 1);
   auto n1 = x.norm(1.0);

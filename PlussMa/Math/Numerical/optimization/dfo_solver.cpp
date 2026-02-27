@@ -364,7 +364,7 @@ DfoResult run_nelder_mead(
 
   DfoResult result;
   result.minimizer = out.minimizer;
-  result.objective_vector = pluss::value(out.minimum);
+  result.objective_vector = pluss::make_series(out.minimum);
   result.minimum = out.minimum;
   result.status = from_status(out.status);
   result.diagnostics.iterations = out.diagnostics.iterations;
@@ -383,7 +383,7 @@ DfoResult run_de(
 
   DfoResult result;
   result.minimizer = out.minimizer;
-  result.objective_vector = pluss::value(out.minimum);
+  result.objective_vector = pluss::make_series(out.minimum);
   result.minimum = out.minimum;
   result.status = from_status(out.status);
   result.diagnostics.iterations = out.diagnostics.iterations;
@@ -402,7 +402,7 @@ DfoResult run_de_prmm(
 
   DfoResult result;
   result.minimizer = out.minimizer;
-  result.objective_vector = pluss::value(out.minimum);
+  result.objective_vector = pluss::make_series(out.minimum);
   result.minimum = out.minimum;
   result.status = from_status(out.status);
   result.diagnostics.iterations = out.diagnostics.iterations;
@@ -421,7 +421,7 @@ DfoResult run_pso(
 
   DfoResult result;
   result.minimizer = out.minimizer;
-  result.objective_vector = pluss::value(out.minimum);
+  result.objective_vector = pluss::make_series(out.minimum);
   result.minimum = out.minimum;
   result.status = from_status(out.status);
   result.diagnostics.iterations = out.diagnostics.iterations;
@@ -440,7 +440,7 @@ DfoResult run_pso_dv(
 
   DfoResult result;
   result.minimizer = out.minimizer;
-  result.objective_vector = pluss::value(out.minimum);
+  result.objective_vector = pluss::make_series(out.minimum);
   result.minimum = out.minimum;
   result.status = from_status(out.status);
   result.diagnostics.iterations = out.diagnostics.iterations;

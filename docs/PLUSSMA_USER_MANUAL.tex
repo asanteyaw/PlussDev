@@ -91,17 +91,17 @@ using pluss::Platform;
 \subsection{Construction Cookbook}
 \subsubsection{1) Scalars}
 \begin{lstlisting}[language=C++]
-auto a = pluss::value(3.14);                  // scalar float
-auto b = pluss::value(42);                    // scalar int
-auto c = pluss::value(true);                  // scalar bool
-auto d = pluss::value(3.14, ScalarType::Float64);
+auto a = pluss::make_series(3.14);                  // scalar float
+auto b = pluss::make_series(42);                    // scalar int
+auto c = pluss::make_series(true);                  // scalar bool
+auto d = pluss::make_series(3.14, ScalarType::Float64);
 \end{lstlisting}
 
 \subsubsection{2) 1D/2D/N-D from literals}
 \begin{lstlisting}[language=C++]
-auto v = pluss::value({1.0, 2.0, 3.0});
-auto m = pluss::value({{1.0, 2.0}, {3.0, 4.0}});
-auto t = pluss::value({{{1,2},{3,4}}, {{5,6},{7,8}}});
+auto v = pluss::make_series({1.0, 2.0, 3.0});
+auto m = pluss::make_series({{1.0, 2.0}, {3.0, 4.0}});
+auto t = pluss::make_series({{{1,2},{3,4}}, {{5,6},{7,8}}});
 \end{lstlisting}
 
 \subsubsection{3) From lvalue host buffers}
@@ -146,7 +146,7 @@ auto z2 = pluss::polar(re.abs(), im, ScalarType::Complex64);
 \subsection{Core Usage Patterns}
 \subsubsection{Inspect and move data}
 \begin{lstlisting}[language=C++]
-auto x = pluss::value({1.0,2.0,3.0});
+auto x = pluss::make_series({1.0,2.0,3.0});
 std::cout << x.dtype() << " " << x.sizes() << "\n";
 
 auto cpu_f32 = x.to(pluss::Platform::CPU, pluss::ScalarType::Float32);
@@ -164,7 +164,7 @@ auto s = y.sum();
 
 \subsubsection{Indexing/shape transforms}
 \begin{lstlisting}[language=C++]
-auto m = pluss::value({1,2,3,4,5,6}, {2,3});
+auto m = pluss::make_series({1,2,3,4,5,6}, {2,3});
 auto t = m.transpose(0,1);
 auto r = m.reshape({3,2});
 auto f = m.flatten(0,1);
@@ -172,18 +172,18 @@ auto f = m.flatten(0,1);
 
 \subsubsection{Masking and gather/scatter}
 \begin{lstlisting}[language=C++]
-auto src = pluss::value({10,20,30,40,50,60}, {2,3});
-auto idx = pluss::value({2,1,0,0,1,2}, {2,3});
+auto src = pluss::make_series({10,20,30,40,50,60}, {2,3});
+auto idx = pluss::make_series({2,1,0,0,1,2}, {2,3});
 auto g = src.gather(1, idx);
 
 auto base = pluss::zeros({2,3}, ScalarType::Int64);
-auto val  = pluss::value({1,2,3,4,5,6}, {2,3});
+auto val  = pluss::make_series({1,2,3,4,5,6}, {2,3});
 auto out  = base.scatter_add(1, idx, val);
 \end{lstlisting}
 
 \subsubsection{Signal/statistics utilities}
 \begin{lstlisting}[language=C++]
-auto x = pluss::value(std::vector<double>{-3,-2,-1,0,1,2,3}, {7});
+auto x = pluss::make_series(std::vector<double>{-3,-2,-1,0,1,2,3}, {7});
 auto xdct = x.dct();
 auto xrec = xdct.idct();
 auto h = x.hilbert();
@@ -210,9 +210,9 @@ auto kurt = x.kurtosis();
 #include <pluss/coden/coden.h>
 #include <pluss/coden/note_factory.h>
 
-auto s = pluss::content("hello");
-auto v = pluss::content({"a", "b", "c"});
-auto m = pluss::content({{"a","b"}, {"c","d"}});
+auto s = pluss::make_note("hello");
+auto v = pluss::make_note({"a", "b", "c"});
+auto m = pluss::make_note({{"a","b"}, {"c","d"}});
 \end{lstlisting}
 
 \subsection{Factory Patterns You Will Actually Use}
@@ -233,13 +233,13 @@ auto bytes = pluss::bytes_content({{"\x01","\x02"}, {"\x03","\x04"}});
 \subsection{Common Workflows}
 \subsubsection{Text cleanup + normalization}
 \begin{lstlisting}[language=C++]
-auto docs = pluss::content("One.\nTwo!");
+auto docs = pluss::make_note("One.\nTwo!");
 auto clean = docs.lower().collapse_whitespace().strip();
 \end{lstlisting}
 
 \subsubsection{Tokenization and split}
 \begin{lstlisting}[language=C++]
-auto docs = pluss::content("alpha beta gamma");
+auto docs = pluss::make_note("alpha beta gamma");
 auto words = docs.tokenize_words();
 for (std::int64_t i = 0; i < words.tokens().numel(); ++i) {
   std::cout << words.tokens().at(i) << "\n";
@@ -248,10 +248,10 @@ for (std::int64_t i = 0; i < words.tokens().numel(); ++i) {
 
 \subsubsection{NLP/TeX utilities}
 \begin{lstlisting}[language=C++]
-auto n = pluss::content("Email bob@example.com at 9:30am on 2025-01-03");
+auto n = pluss::make_note("Email bob@example.com at 9:30am on 2025-01-03");
 auto masked = n.nlp_mask_pii();
 
-auto tex = pluss::content("\\textbf{Bold} and $x+y$");
+auto tex = pluss::make_note("\\textbf{Bold} and $x+y$");
 auto txt = tex.tex_to_text();
 \end{lstlisting}
 
@@ -282,9 +282,9 @@ std::cout << pluss::print_note(docs, opt) << "\n";
 #include <pluss/codeh/codeh.h>
 #include <pluss/codeh/timeline_factory.h>
 
-auto t0 = pluss::moment("2024-01-01T00:00:00Z");
-auto t1 = pluss::moment({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
-auto t2 = pluss::moment({{"2024-02-01T00:00:00Z", "2024-02-01T01:00:00Z"}});
+auto t0 = pluss::make_timeline("2024-01-01T00:00:00Z");
+auto t1 = pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
+auto t2 = pluss::make_timeline({{"2024-02-01T00:00:00Z", "2024-02-01T01:00:00Z"}});
 
 auto t3 = pluss::from_epoch_nanos(std::vector<std::int64_t>{0, 1'000'000'000}, std::vector<std::int64_t>{2});
 \end{lstlisting}
@@ -296,14 +296,14 @@ auto d2 = pluss::duration_minutes(5);
 auto d3 = pluss::duration_hours(1);
 auto d4 = pluss::duration_days(1);
 
-auto t = pluss::moment("2024-01-01T00:00:00Z");
+auto t = pluss::make_timeline("2024-01-01T00:00:00Z");
 auto t_plus = t + d2;
 auto diff = t_plus - t;   // Duration
 \end{lstlisting}
 
 \subsection{Datetime field extraction, formatting, timezone}
 \begin{lstlisting}[language=C++]
-auto t = pluss::moment({"2024-01-01T00:00:00Z", "2024-06-15T12:30:00Z"});
+auto t = pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-06-15T12:30:00Z"});
 auto years = t.year();
 auto months = t.month();
 auto weekdays = t.weekday();
@@ -340,7 +340,7 @@ std::cout << idx.is_monotonic_increasing() << "\n";
 
 \subsection{Resample and rolling}
 \begin{lstlisting}[language=C++]
-auto values = pluss::value(std::vector<double>{10,20,30,40}, {4});
+auto values = pluss::make_series(std::vector<double>{10,20,30,40}, {4});
 
 auto hourly_sum = idx.resample_agg(values, "H", "sum", 1);
 auto hourly_mean = idx.resample_agg(values, "H", "mean", 1);
@@ -352,7 +352,7 @@ auto roll_max = idx.rolling_agg(values, win, "max");
 
 \subsection{Slicing, asof, set-like ops}
 \begin{lstlisting}[language=C++]
-auto k = pluss::moment("2024-01-01T00:40:00Z");
+auto k = pluss::make_timeline("2024-01-01T00:40:00Z");
 auto p = idx.searchsorted(k, false);
 auto a = idx.asof(k);
 auto s = idx.slice_time("2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z");

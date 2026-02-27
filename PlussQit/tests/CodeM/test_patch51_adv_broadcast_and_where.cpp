@@ -4,15 +4,15 @@
 TEST_CASE("advanced index broadcast", "[indexing]") {
   auto x = pluss::zeros({3,4,5}, {{"dtype","float32"}});
   // Two advanced indices with broadcastable shapes: (2,1) and (1,3)
-  auto i0 = pluss::value(std::vector<std::int64_t>{0,2}, {2,1});
-  auto i1 = pluss::value(std::vector<std::int64_t>{1,2,3}, {1,3});
+  auto i0 = pluss::make_series(std::vector<std::int64_t>{0,2}, {2,1});
+  auto i1 = pluss::make_series(std::vector<std::int64_t>{1,2,3}, {1,3});
   auto y = x.index({i0, i1, pluss::Series{}});
   REQUIRE(y.dim() == 3);
 }
 
 TEST_CASE("where/clamp basics", "[eltwise]") {
-  auto a = pluss::value(std::vector<float>{-1, 2, -3, 4}, {2,2});
-  auto c = pluss::value(std::vector<bool>{true,false,true,false}, {2,2});
+  auto a = pluss::make_series(std::vector<float>{-1, 2, -3, 4}, {2,2});
+  auto c = pluss::make_series(std::vector<bool>{true,false,true,false}, {2,2});
   auto b = pluss::zeros({2,2}, {{"dtype","float32"}});
   auto w = a.where(c, b);
   REQUIRE(w.numel() == 4);

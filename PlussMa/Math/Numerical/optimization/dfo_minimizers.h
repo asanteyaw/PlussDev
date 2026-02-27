@@ -178,7 +178,7 @@ PopulationSolverOutcome differential_evolution_minimizer(
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
-      return pluss::value(static_cast<double>(fn(x)));
+      return pluss::make_series(static_cast<double>(fn(x)));
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series>,
                     "differential_evolution_minimizer objective must return Series or arithmetic scalar");
@@ -202,7 +202,7 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
-      return pluss::value(static_cast<double>(fn(x)));
+      return pluss::make_series(static_cast<double>(fn(x)));
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series>,
                     "differential_evolution_prmm_minimizer objective must return Series or arithmetic scalar");
@@ -226,7 +226,7 @@ PopulationSolverOutcome particle_swarm_minimizer(
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
-      return pluss::value(static_cast<double>(fn(x)));
+      return pluss::make_series(static_cast<double>(fn(x)));
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series>,
                     "particle_swarm_minimizer objective must return Series or arithmetic scalar");
@@ -250,7 +250,7 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
-      return pluss::value(static_cast<double>(fn(x)));
+      return pluss::make_series(static_cast<double>(fn(x)));
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series>,
                     "particle_swarm_dv_minimizer objective must return Series or arithmetic scalar");

@@ -1,6 +1,6 @@
 # Bundle model (Slot -> Registry -> Aisle)
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.28)
 project(PlussMic_bundle NONE)
 
 target_sources(PlussMic PRIVATE

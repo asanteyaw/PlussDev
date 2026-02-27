@@ -244,7 +244,7 @@ BlackboxSolverOutcome mesh_adaptive_direct_search_minimizer(
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
-      return pluss::value(static_cast<double>(fn(x)));
+      return pluss::make_series(static_cast<double>(fn(x)));
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series>,
                     "mesh_adaptive_direct_search_minimizer objective must return Series or arithmetic scalar");
@@ -268,7 +268,7 @@ BlackboxSolverOutcome orthomads_minimizer(
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
-      return pluss::value(static_cast<double>(fn(x)));
+      return pluss::make_series(static_cast<double>(fn(x)));
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series>,
                     "orthomads_minimizer objective must return Series or arithmetic scalar");
@@ -292,7 +292,7 @@ BlackboxSolverOutcome ltmads_minimizer(
       }
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
-      return pluss::value(static_cast<double>(fn(x)));
+      return pluss::make_series(static_cast<double>(fn(x)));
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series>,
                     "ltmads_minimizer objective must return Series or arithmetic scalar");
@@ -317,7 +317,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
       BlackboxEvaluation out;
-      out.objectives = pluss::value(static_cast<double>(fn(x)));
+      out.objectives = pluss::make_series(static_cast<double>(fn(x)));
       return out;
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series> ||
@@ -344,7 +344,7 @@ BlackboxAdvancedOutcome orthomads_blackbox_minimizer(
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
       BlackboxEvaluation out;
-      out.objectives = pluss::value(static_cast<double>(fn(x)));
+      out.objectives = pluss::make_series(static_cast<double>(fn(x)));
       return out;
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series> ||
@@ -371,7 +371,7 @@ BlackboxAdvancedOutcome ltmads_blackbox_minimizer(
       return out;
     } else if constexpr (std::is_arithmetic_v<Ret>) {
       BlackboxEvaluation out;
-      out.objectives = pluss::value(static_cast<double>(fn(x)));
+      out.objectives = pluss::make_series(static_cast<double>(fn(x)));
       return out;
     } else {
       static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series> ||
@@ -398,7 +398,7 @@ BlackboxAdvancedOutcome coopmads_blackbox_minimizer(
     }
     if constexpr (std::is_arithmetic_v<Ret>) {
       BlackboxEvaluation out;
-      out.objectives = pluss::value(static_cast<double>(fn(x)));
+      out.objectives = pluss::make_series(static_cast<double>(fn(x)));
       return out;
     }
     static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series> || std::is_same_v<Ret, BlackboxEvaluation>,
@@ -423,7 +423,7 @@ BlackboxAdvancedOutcome psdmads_blackbox_minimizer(
     }
     if constexpr (std::is_arithmetic_v<Ret>) {
       BlackboxEvaluation out;
-      out.objectives = pluss::value(static_cast<double>(fn(x)));
+      out.objectives = pluss::make_series(static_cast<double>(fn(x)));
       return out;
     }
     static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series> || std::is_same_v<Ret, BlackboxEvaluation>,
@@ -448,7 +448,7 @@ BlackboxAdvancedOutcome discomads_blackbox_minimizer(
     }
     if constexpr (std::is_arithmetic_v<Ret>) {
       BlackboxEvaluation out;
-      out.objectives = pluss::value(static_cast<double>(fn(x)));
+      out.objectives = pluss::make_series(static_cast<double>(fn(x)));
       return out;
     }
     static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series> || std::is_same_v<Ret, BlackboxEvaluation>,
@@ -473,7 +473,7 @@ BlackboxAdvancedOutcome vnsmads_blackbox_minimizer(
     }
     if constexpr (std::is_arithmetic_v<Ret>) {
       BlackboxEvaluation out;
-      out.objectives = pluss::value(static_cast<double>(fn(x)));
+      out.objectives = pluss::make_series(static_cast<double>(fn(x)));
       return out;
     }
     static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series> || std::is_same_v<Ret, BlackboxEvaluation>,

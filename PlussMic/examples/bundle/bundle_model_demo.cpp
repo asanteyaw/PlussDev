@@ -26,7 +26,7 @@ Slot::Value as_series_bool(bool v) {
 }
 
 Slot::Value as_note(std::string_view v) {
-  return pluss::content(v);
+  return pluss::make_note(v);
 }
 
 bool is_series(const Slot::Value& v) {

@@ -20,7 +20,7 @@ Slot Slot::from_kindle(const pluss::kindle::Stream& stream) {
     }
     case pluss::kindle::StreamKind::Note: {
       const auto& nte = stream.as_note();
-      for (std::int64_t i = 0; i < n; ++i) out.emplace_back(pluss::content(nte.at(i)));
+      for (std::int64_t i = 0; i < n; ++i) out.emplace_back(pluss::make_note(nte.at(i)));
       break;
     }
     case pluss::kindle::StreamKind::Timeline: {

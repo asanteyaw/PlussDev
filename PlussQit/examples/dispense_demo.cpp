@@ -23,18 +23,18 @@ int main() {
   auto r2 = pluss::dispense(foo, &Foo::grok, std::make_tuple(std::string("Jane"), 31, 165));
   std::cout << "return (tuple): " << r2 << "\n";
 
-  auto s = pluss::value({-4.0, 5.0, -6.0});
+  auto s = pluss::make_series({-4.0, 5.0, -6.0});
   auto s_numel = pluss::dispense(s, &pluss::Series::numel, std::make_tuple());
   std::cout << "Series numel: " << s_numel << "\n";
 
-  auto n = pluss::content({"apple", "banana", "apricot"});
+  auto n = pluss::make_note({"apple", "banana", "apricot"});
   auto starts_with_a = pluss::dispense(n, &pluss::Note::starts_with, std::make_tuple("a"));
   std::cout << "Note starts_with(\"a\"): ["
             << static_cast<int>(starts_with_a[0]) << ", "
             << static_cast<int>(starts_with_a[1]) << ", "
             << static_cast<int>(starts_with_a[2]) << "]\n";
 
-  auto t = pluss::moment("2024-01-15T10:11:12Z");
+  auto t = pluss::make_timeline("2024-01-15T10:11:12Z");
   auto t_floor = pluss::dispense(t, &pluss::codeh::Timeline::floor, std::make_tuple("D"));
   std::cout << "Timeline floor(\"D\") hour: "
             << t_floor.hour().to_vec<std::int32_t>(0) << "\n";
@@ -42,9 +42,9 @@ int main() {
   auto t_year = pluss::dispense(t, &pluss::codeh::Timeline::year, std::make_tuple());
   std::cout << "Timeline year: " << t_year.to_vec<std::int32_t>(0) << "\n";
 
-  auto s1 = pluss::value(std::vector<double>{1.0, 2.0, 3.0}, {3});
-  auto s2 = pluss::value(std::vector<double>{10.0, 20.0, 30.0}, {3});
-  auto s3 = pluss::value(std::vector<double>{100.0, 200.0, 300.0}, {3});
+  auto s1 = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3});
+  auto s2 = pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {3});
+  auto s3 = pluss::make_series(std::vector<double>{100.0, 200.0, 300.0}, {3});
   auto piled = pluss::dispense(
       s1,
       &pluss::Series::pile,

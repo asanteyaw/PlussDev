@@ -287,8 +287,8 @@ int main() {
         const std::vector<double> host = to_host_f64_vec(x.reshape({x.numel()}));
         const auto [f, g1, g2, g3] = nomad_example1_eval(host);
         BlackboxEvaluation out;
-        out.objectives = pluss::value(f);
-        out.constraints = pluss::make_series<double>(
+        out.objectives = pluss::make_series(f);
+        out.constraints = pluss::make_series(
             std::vector<double>{g1, g2, g3},
             {3},
             Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU));

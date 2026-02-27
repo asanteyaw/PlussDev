@@ -41,34 +41,34 @@ int main() {
   // --------------------------------------------------------------------------
   // Factory methods: Timeline
   // --------------------------------------------------------------------------
-  const auto t_scalar_sv = pluss::moment(std::string_view{"2024-01-01T00:00:00Z"});
+  const auto t_scalar_sv = pluss::make_timeline(std::string_view{"2024-01-01T00:00:00Z"});
   const char* scalar_c = "2024-01-01T00:00:01Z";
-  const auto t_scalar_c = pluss::moment(scalar_c);
+  const auto t_scalar_c = pluss::make_timeline(scalar_c);
 
   const std::array<std::string_view, 3> flat_sv_arr{
       "2024-01-01T00:00:00Z",
       "2024-01-01T01:00:00Z",
       "2024-01-01T02:00:00Z"};
-  const auto t_1d_span = pluss::moment(std::span<const std::string_view>(flat_sv_arr));
+  const auto t_1d_span = pluss::make_timeline(std::span<const std::string_view>(flat_sv_arr));
 
   const std::vector<std::string_view> flat_sv_vec{
       "2024-01-02T00:00:00Z",
       "2024-01-02T01:00:00Z",
       "2024-01-02T02:00:00Z"};
-  const auto t_1d_vecsv = pluss::moment(flat_sv_vec);
+  const auto t_1d_vecsv = pluss::make_timeline(flat_sv_vec);
 
-  const auto t_1d_init = pluss::moment({
+  const auto t_1d_init = pluss::make_timeline({
       "2024-01-03T00:00:00Z",
       "2024-01-03T01:00:00Z",
       "2024-01-03T02:00:00Z",
   });
 
-  const auto t_2d_nested = pluss::moment({
+  const auto t_2d_nested = pluss::make_timeline({
       {"2024-02-01T00:00:00Z", "2024-02-01T01:00:00Z"},
       {"2024-02-02T00:00:00Z", "2024-02-02T01:00:00Z"},
   });
 
-  const auto t_3d_nested = pluss::moment({
+  const auto t_3d_nested = pluss::make_timeline({
       {
           {"2024-03-01T00:00:00Z", "2024-03-01T01:00:00Z"},
           {"2024-03-01T02:00:00Z", "2024-03-01T03:00:00Z"},
@@ -143,8 +143,8 @@ int main() {
   std::cout << "timedelta_range dim=" << d_range.dim() << " numel=" << d_range.numel() << "\n";
 
   const auto t_date_range_factory = pluss::date_range(
-      pluss::moment("2024-06-01T00:00:00Z"),
-      pluss::moment("2024-06-04T00:00:00Z"),
+      pluss::make_timeline("2024-06-01T00:00:00Z"),
+      pluss::make_timeline("2024-06-04T00:00:00Z"),
       "D",
       1);
   show_timeline("factory date_range(start, end, freq, step)", t_date_range_factory);
@@ -295,12 +295,12 @@ int main() {
   std::cout << "\nTimeline::date_range count=" << t_static_range.size() << "\n";
 
   // Static dataframe-oriented constructors with 3D input.
-  const auto y = pluss::value(std::vector<std::int64_t>{2024, 2024, 2024, 2024}, {1, 2, 2});
-  const auto mo = pluss::value(std::vector<std::int64_t>{1, 1, 1, 1}, {1, 2, 2});
-  const auto d = pluss::value(std::vector<std::int64_t>{10, 11, 12, 13}, {1, 2, 2});
-  const auto h = pluss::value(std::vector<std::int64_t>{8, 9, 10, 11}, {1, 2, 2});
-  const auto mi = pluss::value(std::vector<std::int64_t>{1, 2, 3, 4}, {1, 2, 2});
-  const auto se = pluss::value(std::vector<std::int64_t>{5, 6, 7, 8}, {1, 2, 2});
+  const auto y = pluss::make_series(std::vector<std::int64_t>{2024, 2024, 2024, 2024}, {1, 2, 2});
+  const auto mo = pluss::make_series(std::vector<std::int64_t>{1, 1, 1, 1}, {1, 2, 2});
+  const auto d = pluss::make_series(std::vector<std::int64_t>{10, 11, 12, 13}, {1, 2, 2});
+  const auto h = pluss::make_series(std::vector<std::int64_t>{8, 9, 10, 11}, {1, 2, 2});
+  const auto mi = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4}, {1, 2, 2});
+  const auto se = pluss::make_series(std::vector<std::int64_t>{5, 6, 7, 8}, {1, 2, 2});
   const auto t_from_ymd = Timeline::from_ymd(y, mo, d, "UTC");
   const auto t_from_ymdhms = Timeline::from_ymdhms(y, mo, d, h, mi, se, "UTC");
   show_timeline("Timeline::from_ymd(3D)", t_from_ymd);
@@ -339,14 +339,14 @@ int main() {
   std::cout << "size=" << idx.size() << "\n";
   show_timeline("timeline()", idx.timeline());
 
-  const auto key = pluss::moment("2024-11-01T00:41:00Z");
+  const auto key = pluss::make_timeline("2024-11-01T00:41:00Z");
   std::cout << "searchsorted(left)=" << idx.searchsorted(key, false)
             << " searchsorted(right)=" << idx.searchsorted(key, true) << "\n";
   std::cout << "asof(key)=" << idx.asof(key) << "\n";
 
   show_series("slice(start, end)",
-              idx.slice(pluss::moment("2024-11-01T00:20:00Z"),
-                        pluss::moment("2024-11-01T01:00:00Z")));
+              idx.slice(pluss::make_timeline("2024-11-01T00:20:00Z"),
+                        pluss::make_timeline("2024-11-01T01:00:00Z")));
   show_series("slice_time(start, end)",
               idx.slice_time("2024-11-01T00:20:00Z", "2024-11-01T01:00:00Z"));
 
@@ -355,7 +355,7 @@ int main() {
   show_series("resample_bins.bin_id", bins.bin_id);
   show_series("resample_count", idx.resample_count("H", 1));
 
-  const auto values = pluss::value(std::vector<double>{1, 2, 3, 4, 5}, {5});
+  const auto values = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5}, {5});
   show_series("resample_sum", idx.resample_sum(values, "H", 1));
   show_series("resample_mean", idx.resample_mean(values, "H", 1));
   show_series("resample_min", idx.resample_min(values, "H", 1));

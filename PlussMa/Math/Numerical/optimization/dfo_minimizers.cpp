@@ -235,7 +235,7 @@ std::vector<double> transform_host_vec(
 Series host_vector_to_series(
     const std::vector<double>& x,
     const Config& cfg) {
-  return pluss::make_series<double>(x, {static_cast<std::int64_t>(x.size())}, cfg)
+  return pluss::make_series(x, {static_cast<std::int64_t>(x.size())}, cfg)
       .to(cfg.platform, cfg.dtype);
 }
 

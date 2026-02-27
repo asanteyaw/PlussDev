@@ -7,27 +7,27 @@
 // and returns expected dtype for integral/bool initlists.
 
 TEST_CASE("pluss::value dtype deduction for initializer_list", "[factories][dtype]") {
-  auto a = pluss::value({{1,2},{3,4}}); // all ints -> Int64 by policy
+  auto a = pluss::make_series({{1,2},{3,4}}); // all ints -> Int64 by policy
   REQUIRE(a.scalar_type() == pluss::ScalarType::Int64);
 
-  auto b = pluss::value({true, false, true}); // bools -> Bool
+  auto b = pluss::make_series({true, false, true}); // bools -> Bool
   REQUIRE(b.scalar_type() == pluss::ScalarType::Bool);
 
-  auto c = pluss::value({1.0, 2.0, 3.0}); // doubles -> Float64
+  auto c = pluss::make_series({1.0, 2.0, 3.0}); // doubles -> Float64
   REQUIRE(c.scalar_type() == pluss::ScalarType::Float64);
 
-  auto d = pluss::value({1.0f, 2.0f}); // floats -> Float32
+  auto d = pluss::make_series({1.0f, 2.0f}); // floats -> Float32
   REQUIRE(d.scalar_type() == pluss::ScalarType::Float32);
 
   // explicit override should promote/cast
-  auto e = pluss::value({{1,2},{3,4}}, pluss::ScalarType::Float32);
+  auto e = pluss::make_series({{1,2},{3,4}}, pluss::ScalarType::Float32);
   REQUIRE(e.scalar_type() == pluss::ScalarType::Float32);
 }
 
 TEST_CASE("where/nonzero basic routing", "[where][nonzero]") {
-  auto cond = pluss::value({true,false,true});
-  auto x = pluss::value({1,2,3}, pluss::ScalarType::Int64);
-  auto y = pluss::value({10,20,30}, pluss::ScalarType::Int64);
+  auto cond = pluss::make_series({true,false,true});
+  auto x = pluss::make_series({1,2,3}, pluss::ScalarType::Int64);
+  auto y = pluss::make_series({10,20,30}, pluss::ScalarType::Int64);
   auto out = cond.where(x, y);
   REQUIRE(out.numel() == 3);
 

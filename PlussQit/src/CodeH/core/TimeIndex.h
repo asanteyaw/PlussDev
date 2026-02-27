@@ -1,8 +1,11 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
+#include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "pluss/export.h"
 
@@ -20,6 +23,12 @@ namespace _compat { namespace detail { struct Access; } }
 class CODEH_API TimeIndex {
 public:
   TimeIndex() = delete;
+
+  static TimeIndex from_buffer_epoch_nanos(std::int64_t* data,
+                                           std::int64_t size,
+                                           std::int64_t stride = 1,
+                                           pluss::codem::BlobDeleter deleter = {},
+                                           bool require_sorted = true);
 
 // ---------------------------------------------------------------------------
 // Full op surface (pandas/MATLAB-inspired)
@@ -94,6 +103,23 @@ private:
 
   friend struct ::pluss::codeh::_compat::detail::Access;
 };
+
+inline TimeIndex TimeIndex::from_buffer_epoch_nanos(std::int64_t* data,
+                                                    std::int64_t size,
+                                                    std::int64_t stride,
+                                                    pluss::codem::BlobDeleter deleter,
+                                                    bool require_sorted) {
+  CODEM_CHECK(size >= 0, "TimeIndex::from_buffer_epoch_nanos: size must be non-negative");
+  CODEM_CHECK(stride > 0, "TimeIndex::from_buffer_epoch_nanos: stride must be positive");
+  const std::array<std::int64_t, 1> sizes{size};
+  const std::array<std::int64_t, 1> strides{stride};
+  auto t = Timeline::from_buffer_epoch_nanos(
+      data,
+      std::span<const std::int64_t>(sizes.data(), sizes.size()),
+      std::span<const std::int64_t>(strides.data(), strides.size()),
+      std::move(deleter));
+  return ::pluss::codeh::_compat::invoke<TimeIndex>("make_timeindex", t, require_sorted);
+}
 
 } // namespace pluss::codeh
 

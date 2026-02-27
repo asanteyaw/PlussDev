@@ -14,7 +14,7 @@ bool has_token(const pluss::Note& toks, const std::string& needle) {
 } // namespace
 
 TEST_CASE("CodeN token postprocess split/filter family is concrete", "[coden][patch18]") {
-  pluss::Note n = pluss::content("foo_bar CamelCase baz qux 2025");
+  pluss::Note n = pluss::make_note("foo_bar CamelCase baz qux 2025");
 
   auto len_ge = n.nlp_filter_tokens_len_ge(4);
   REQUIRE(len_ge.tokens().numel() > 0);
@@ -32,7 +32,7 @@ TEST_CASE("CodeN token postprocess split/filter family is concrete", "[coden][pa
 }
 
 TEST_CASE("CodeN TeX alias extraction family is concrete", "[coden][patch18]") {
-  pluss::Note tex = pluss::content(
+  pluss::Note tex = pluss::make_note(
       "\\begin{theorem}A\\end{theorem}\n"
       "\\begin{lemma}B\\end{lemma}\n"
       "\\caption{Figure cap}\n");

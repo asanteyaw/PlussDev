@@ -97,7 +97,7 @@ int main() {
     std::cout << "content.visit -> " << v << "\n";
   });
 
-  let_as(pluss::Series, double, std::string) payload = pluss::value(std::vector<double>{1, 2, 3}, {3});
+  let_as(pluss::Series, double, std::string) payload = pluss::make_series(std::vector<double>{1, 2, 3}, {3});
   payload.visit([](const auto& v) {
     using V = std::decay_t<decltype(v)>;
     if constexpr (std::is_same_v<V, pluss::Series>) {

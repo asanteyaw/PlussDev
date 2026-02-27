@@ -10,9 +10,9 @@ This page shows construction and full call patterns for `Timeline`.
 
 ```cpp
 // Scalar / 1D / ND from timestamp text
-auto t0 = pluss::moment("2024-01-01T00:00:00Z");
-auto t1 = pluss::moment({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
-auto t2 = pluss::moment({{"2024-02-01T00:00:00Z", "2024-02-01T01:00:00Z"}});
+auto t0 = pluss::make_timeline("2024-01-01T00:00:00Z");
+auto t1 = pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
+auto t2 = pluss::make_timeline({{"2024-02-01T00:00:00Z", "2024-02-01T01:00:00Z"}});
 
 // Explicit flat + shape
 std::vector<std::string_view> flat{"2024-03-01T00:00:00Z", "2024-03-01T01:00:00Z"};

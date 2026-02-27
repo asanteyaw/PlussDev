@@ -3,8 +3,8 @@
 Use this fixture setup once for the examples below:
 
 ```cpp
-auto note = pluss::content("alpha beta gamma");
-auto other_note = pluss::content("delta epsilon");
+auto note = pluss::make_note("alpha beta gamma");
+auto other_note = pluss::make_note("delta epsilon");
 std::array<std::int64_t, 2> dims_arr{1, 1};
 auto dims_span = std::span<const std::int64_t>(dims_arr.data(), dims_arr.size());
 ```

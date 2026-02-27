@@ -8,7 +8,7 @@
 
 TEST_CASE("CodeN split limit overloads are concrete", "[coden][patch14]") {
   const std::array<std::int64_t, 1> sizes{2};
-  pluss::Note n = pluss::content(
+  pluss::Note n = pluss::make_note(
       std::vector<std::string>{"a,b,c", "d,e"},
       std::span<const std::int64_t>(sizes.data(), sizes.size()));
 
@@ -19,7 +19,7 @@ TEST_CASE("CodeN split limit overloads are concrete", "[coden][patch14]") {
   REQUIRE(by_comma.tokens().at(2) == "d");
   REQUIRE(by_comma.tokens().at(3) == "e");
 
-  pluss::Note ws = pluss::content(
+  pluss::Note ws = pluss::make_note(
       std::vector<std::string>{"x  y   z", "m n"},
       std::span<const std::int64_t>(sizes.data(), sizes.size()));
   auto by_ws = ws.split_whitespace(1);
@@ -31,7 +31,7 @@ TEST_CASE("CodeN split limit overloads are concrete", "[coden][patch14]") {
 }
 
 TEST_CASE("CodeN TeX remover variants are concrete", "[coden][patch14]") {
-  pluss::Note tex = pluss::content(
+  pluss::Note tex = pluss::make_note(
       "\\usepackage{graphicx}\n"
       "Text \\label{l1} \\ref{l1} \\cite{key}\n"
       "\\includegraphics{img.png}\n"

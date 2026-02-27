@@ -20,9 +20,9 @@
 
 ```cpp
 // Scalar / 1D / ND from ISO-like text
-auto t0 = pluss::moment("2024-01-01T00:00:00Z");
-auto t1 = pluss::moment({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
-auto t2 = pluss::moment({{"2024-02-01T00:00:00Z", "2024-02-01T01:00:00Z"}});
+auto t0 = pluss::make_timeline("2024-01-01T00:00:00Z");
+auto t1 = pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
+auto t2 = pluss::make_timeline({{"2024-02-01T00:00:00Z", "2024-02-01T01:00:00Z"}});
 
 // Explicit flat + shape
 std::vector<std::string_view> flat{"2024-03-01T00:00:00Z", "2024-03-01T01:00:00Z"};
@@ -36,7 +36,7 @@ auto t5 = pluss::from_epoch_nanos(std::vector<std::int64_t>{0, 1'000'000'000}, s
 ## Timeline Arithmetic, Compare, and Field Extraction
 
 ```cpp
-auto base = pluss::moment("2024-01-01T00:00:00Z");
+auto base = pluss::make_timeline("2024-01-01T00:00:00Z");
 auto d5m = pluss::duration_minutes(5);
 
 // arithmetic
@@ -61,7 +61,7 @@ Helpful note:
 ## Timeline Formatting, Timezone, and Rounding
 
 ```cpp
-auto t = pluss::moment({"2024-06-15T12:30:10Z", "2024-12-31T23:59:59Z"});
+auto t = pluss::make_timeline({"2024-06-15T12:30:10Z", "2024-12-31T23:59:59Z"});
 
 // format to Note
 auto fmt = t.strftime("%Y-%m-%d %H:%M:%S");
@@ -100,7 +100,7 @@ auto as_text = s.to_string();
 
 ```cpp
 // from Timeline
-auto axis = pluss::moment({
+auto axis = pluss::make_timeline({
   "2024-01-01T00:00:00Z",
   "2024-01-01T00:15:00Z",
   "2024-01-01T00:45:00Z",
@@ -123,20 +123,20 @@ auto idx2 = pluss::make_timeindex(std::vector<std::int64_t>{0, 900000000000, 180
 ## TimeIndex Search/Slice/Asof
 
 ```cpp
-auto key = pluss::moment("2024-01-01T00:40:00Z");
+auto key = pluss::make_timeline("2024-01-01T00:40:00Z");
 
 auto left_insert = idx1.searchsorted(key, false);
 auto right_insert = idx1.searchsorted(key, true);
 auto asof_ix = idx1.asof(key);
 
 auto by_time = idx1.slice_time("2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z");
-auto by_key = idx1.slice(pluss::moment("2024-01-01T00:00:00Z"), pluss::moment("2024-01-01T01:00:00Z"));
+auto by_key = idx1.slice(pluss::make_timeline("2024-01-01T00:00:00Z"), pluss::make_timeline("2024-01-01T01:00:00Z"));
 ```
 
 ## TimeIndex Resample and Rolling
 
 ```cpp
-auto vals = pluss::value(std::vector<double>{10,20,30,40}, {4});
+auto vals = pluss::make_series(std::vector<double>{10,20,30,40}, {4});
 
 // direct resample ops
 auto c = idx1.resample_count("H", 1);
@@ -198,17 +198,17 @@ Signature convention: `self` is the receiver object for instance methods.
 # Complete Timeline Method Reference: Signatures + Real Calls
 
 ```cpp
-auto t = pluss::moment({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
-auto other_t = pluss::moment({"2024-01-02T00:00:00Z", "2024-01-02T01:00:00Z"});
+auto t = pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
+auto other_t = pluss::make_timeline({"2024-01-02T00:00:00Z", "2024-01-02T01:00:00Z"});
 auto dur = pluss::duration_minutes(5);
 auto mask = pluss::Series::ones({2}, pluss::ScalarType::Bool);
-auto series_vals = pluss::value(std::vector<double>{1.0, 2.0}, {2});
-auto year_col = pluss::value(std::vector<std::int64_t>{2024,2024}, {2});
-auto month_col = pluss::value(std::vector<std::int64_t>{1,1}, {2});
-auto day_col = pluss::value(std::vector<std::int64_t>{10,11}, {2});
-auto hour_col = pluss::value(std::vector<std::int64_t>{8,9}, {2});
-auto minute_col = pluss::value(std::vector<std::int64_t>{30,45}, {2});
-auto second_col = pluss::value(std::vector<std::int64_t>{0,0}, {2});
+auto series_vals = pluss::make_series(std::vector<double>{1.0, 2.0}, {2});
+auto year_col = pluss::make_series(std::vector<std::int64_t>{2024,2024}, {2});
+auto month_col = pluss::make_series(std::vector<std::int64_t>{1,1}, {2});
+auto day_col = pluss::make_series(std::vector<std::int64_t>{10,11}, {2});
+auto hour_col = pluss::make_series(std::vector<std::int64_t>{8,9}, {2});
+auto minute_col = pluss::make_series(std::vector<std::int64_t>{30,45}, {2});
+auto second_col = pluss::make_series(std::vector<std::int64_t>{0,0}, {2});
 std::vector<pluss::codeh::Timeline> others{other_t};
 ```
 
@@ -11480,8 +11480,8 @@ Signature convention: `self` is the receiver object for instance methods.
 ```cpp
 auto idx = pluss::make_timeindex({"2024-01-01T00:00:00Z", "2024-01-01T00:15:00Z", "2024-01-01T00:45:00Z"});
 auto other_idx = pluss::make_timeindex({"2024-01-01T00:05:00Z", "2024-01-01T00:35:00Z", "2024-01-01T01:05:00Z"});
-auto key_t = pluss::moment("2024-01-01T00:20:00Z");
-auto values = pluss::value(std::vector<double>{10.0, 20.0, 30.0}, {3});
+auto key_t = pluss::make_timeline("2024-01-01T00:20:00Z");
+auto values = pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {3});
 auto indices = pluss::make_series(std::vector<std::int64_t>{0,2}, {2});
 auto dur = pluss::duration_minutes(30);
 auto tol = pluss::duration_minutes(20);

@@ -1,17 +1,17 @@
 # Complete Timeline Method Reference: Signatures + Real Calls
 
 ```cpp
-auto t = pluss::moment({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
-auto other_t = pluss::moment({"2024-01-02T00:00:00Z", "2024-01-02T01:00:00Z"});
+auto t = pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"});
+auto other_t = pluss::make_timeline({"2024-01-02T00:00:00Z", "2024-01-02T01:00:00Z"});
 auto dur = pluss::duration_minutes(5);
 auto mask = pluss::Series::ones({2}, pluss::ScalarType::Bool);
-auto series_vals = pluss::value(std::vector<double>{1.0, 2.0}, {2});
-auto year_col = pluss::value(std::vector<std::int64_t>{2024,2024}, {2});
-auto month_col = pluss::value(std::vector<std::int64_t>{1,1}, {2});
-auto day_col = pluss::value(std::vector<std::int64_t>{10,11}, {2});
-auto hour_col = pluss::value(std::vector<std::int64_t>{8,9}, {2});
-auto minute_col = pluss::value(std::vector<std::int64_t>{30,45}, {2});
-auto second_col = pluss::value(std::vector<std::int64_t>{0,0}, {2});
+auto series_vals = pluss::make_series(std::vector<double>{1.0, 2.0}, {2});
+auto year_col = pluss::make_series(std::vector<std::int64_t>{2024,2024}, {2});
+auto month_col = pluss::make_series(std::vector<std::int64_t>{1,1}, {2});
+auto day_col = pluss::make_series(std::vector<std::int64_t>{10,11}, {2});
+auto hour_col = pluss::make_series(std::vector<std::int64_t>{8,9}, {2});
+auto minute_col = pluss::make_series(std::vector<std::int64_t>{30,45}, {2});
+auto second_col = pluss::make_series(std::vector<std::int64_t>{0,0}, {2});
 std::vector<pluss::codeh::Timeline> others{other_t};
 ```
 

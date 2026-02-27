@@ -2,7 +2,7 @@
 #include <pluss/pluss.h>
 
 TEST_CASE("codegen method surface includes unary math ops", "[codegen][unary]") {
-  pluss::Series x = pluss::value(std::vector<float>{0.0f, 1.0f, 2.0f, 3.0f}, {2,2});
+  pluss::Series x = pluss::make_series(std::vector<float>{0.0f, 1.0f, 2.0f, 3.0f}, {2,2});
   auto s = x.sin();
   auto c = x.cos();
   auto t = x.tanh();

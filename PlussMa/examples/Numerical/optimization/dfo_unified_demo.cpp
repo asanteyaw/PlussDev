@@ -17,8 +17,8 @@ double as_f64_scalar(const pluss::Series& x) {
 pluss::Series ackley(const pluss::Series& x) {
   const pluss::Series sq_mean = x.square().mean();
   const pluss::Series cos_mean = x.mul(2.0 * 3.14159265358979323846).cos().mean();
-  const pluss::Series twenty = pluss::value(20.0);
-  const pluss::Series e = pluss::value(2.71828182845904523536);
+  const pluss::Series twenty = pluss::make_series(20.0);
+  const pluss::Series e = pluss::make_series(2.71828182845904523536);
   return twenty.add(e).sub(sq_mean.sqrt().mul(-0.2).exp().mul(20.0)).sub(cos_mean.exp());
 }
 

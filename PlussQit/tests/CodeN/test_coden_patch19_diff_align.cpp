@@ -14,8 +14,8 @@ bool has_token(const pluss::Note& toks, const std::string& needle) {
 } // namespace
 
 TEST_CASE("CodeN diff family uses concrete sequence diff", "[coden][patch19]") {
-  pluss::Note a = pluss::content("alpha beta gamma");
-  pluss::Note b = pluss::content("alpha theta gamma delta");
+  pluss::Note a = pluss::make_note("alpha beta gamma");
+  pluss::Note b = pluss::make_note("alpha theta gamma delta");
 
   auto dw = a.diff_words(b);
   REQUIRE(has_token(dw.tokens(), "-beta"));
@@ -24,8 +24,8 @@ TEST_CASE("CodeN diff family uses concrete sequence diff", "[coden][patch19]") {
 }
 
 TEST_CASE("CodeN align family emits tagged LCS alignment", "[coden][patch19]") {
-  pluss::Note a = pluss::content("One. Two!");
-  pluss::Note b = pluss::content("One. Three! Two!");
+  pluss::Note a = pluss::make_note("One. Two!");
+  pluss::Note b = pluss::make_note("One. Three! Two!");
 
   auto sent = a.align_sentences(b);
   REQUIRE(has_token(sent.tokens(), "=One."));

@@ -19,10 +19,10 @@
 
 ```cpp
 // Reusable fixtures used in examples below.
-auto x = pluss::value(std::vector<double>{-3, -2, -1, 0, 1, 2, 3}, {7});
-auto y = pluss::value(std::vector<double>{ 3,  2,  1, 0,-1,-2,-3}, {7});
-auto m = pluss::value(std::vector<double>{1,2,3,4,5,6}, {2,3});
-auto mm = pluss::value(std::vector<double>{1,2,3,4,5,6,7,8,9}, {3,3});
+auto x = pluss::make_series(std::vector<double>{-3, -2, -1, 0, 1, 2, 3}, {7});
+auto y = pluss::make_series(std::vector<double>{ 3,  2,  1, 0,-1,-2,-3}, {7});
+auto m = pluss::make_series(std::vector<double>{1,2,3,4,5,6}, {2,3});
+auto mm = pluss::make_series(std::vector<double>{1,2,3,4,5,6,7,8,9}, {3,3});
 
 // Index/mask helpers for gather/scatter/masked ops.
 auto idx23 = pluss::make_series(std::vector<std::int64_t>{2,1,0,0,1,2}, {2,3});
@@ -34,10 +34,10 @@ auto mask23 = pluss::Series::ones({2,3}, pluss::ScalarType::Bool);
 
 ```cpp
 // Scalar / literal data
-auto s0 = pluss::value(3.14);
-auto s1 = pluss::value(true);
-auto s2 = pluss::value({1.0, 2.0, 3.0});
-auto s3 = pluss::value({{1.0, 2.0}, {3.0, 4.0}});
+auto s0 = pluss::make_series(3.14);
+auto s1 = pluss::make_series(true);
+auto s2 = pluss::make_series({1.0, 2.0, 3.0});
+auto s3 = pluss::make_series({{1.0, 2.0}, {3.0, 4.0}});
 
 // Flat host data + explicit shape
 std::vector<double> flat{1,2,3,4,5,6};
@@ -259,13 +259,13 @@ Signature convention: `self` is the receiver object (the `Series` you call the m
 # Complete Series Method Reference: Signatures + Real Calls
 
 ```cpp
-auto x = pluss::value(std::vector<double>{-3,-2,-1,0,1,2,3}, {7});
-auto y = pluss::value(std::vector<double>{3,2,1,0,-1,-2,-3}, {7});
-auto pos = pluss::value(std::vector<double>{0.2,0.5,1.0,2.0,3.0,4.0,5.0}, {7});
-auto unit = pluss::value(std::vector<double>{-0.9,-0.5,-0.1,0.0,0.1,0.5,0.9}, {7});
-auto m = pluss::value(std::vector<double>{1,2,3,4,5,6}, {2,3});
-auto n = pluss::value(std::vector<double>{6,5,4,3,2,1}, {2,3});
-auto mm = pluss::value(std::vector<double>{1,2,3,4,5,6,7,8,9}, {3,3});
+auto x = pluss::make_series(std::vector<double>{-3,-2,-1,0,1,2,3}, {7});
+auto y = pluss::make_series(std::vector<double>{3,2,1,0,-1,-2,-3}, {7});
+auto pos = pluss::make_series(std::vector<double>{0.2,0.5,1.0,2.0,3.0,4.0,5.0}, {7});
+auto unit = pluss::make_series(std::vector<double>{-0.9,-0.5,-0.1,0.0,0.1,0.5,0.9}, {7});
+auto m = pluss::make_series(std::vector<double>{1,2,3,4,5,6}, {2,3});
+auto n = pluss::make_series(std::vector<double>{6,5,4,3,2,1}, {2,3});
+auto mm = pluss::make_series(std::vector<double>{1,2,3,4,5,6,7,8,9}, {3,3});
 auto cond = x.gt(0.0);
 auto mask = pluss::Series::ones({2,3}, pluss::ScalarType::Bool);
 auto i = pluss::make_series(std::vector<std::int64_t>{1,2,3,2,1,0,3}, {7});
@@ -5576,7 +5576,7 @@ Changes shape/indexing/view behavior for `self`. Arguments: `const Series& other
 #### Examples
 
 ```cpp
-auto out = pluss::value(std::vector<double>{0,1,2,3,4,5}, {6}).view_as(pluss::Series::ones({3,2}, pluss::ScalarType::Float64));
+auto out = pluss::make_series(std::vector<double>{0,1,2,3,4,5}, {6}).view_as(pluss::Series::ones({3,2}, pluss::ScalarType::Float64));
 ```
 
 ### `vsplit`
@@ -5608,7 +5608,7 @@ Changes shape/indexing/view behavior for `self`. Arguments: `const std::vector<s
 #### Examples
 
 ```cpp
-auto out = pluss::value(std::vector<double>{0,1,2,3,4,5,6,7,8,9,10,11}, {6,2}).vsplit(std::vector<std::int64_t>{2,4});
+auto out = pluss::make_series(std::vector<double>{0,1,2,3,4,5,6,7,8,9,10,11}, {6,2}).vsplit(std::vector<std::int64_t>{2,4});
 ```
 
 ### `vsplit`
@@ -5640,7 +5640,7 @@ Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t sectio
 #### Examples
 
 ```cpp
-auto out = pluss::value(std::vector<double>{0,1,2,3,4,5,6,7,8,9,10,11}, {6,2}).vsplit(2);
+auto out = pluss::make_series(std::vector<double>{0,1,2,3,4,5,6,7,8,9,10,11}, {6,2}).vsplit(2);
 ```
 
 ### `where`

@@ -3,9 +3,9 @@
 
 TEST_CASE("scatter_reduce supports include_self and initial", "[scatter][reduce]") {
   // shape (1,4)
-  pluss::Series self = pluss::value(std::vector<float>{1,2,3,4}, {1,4});
-  pluss::Series idx  = pluss::value(std::vector<std::int64_t>{0,0,1,1}, {1,4});
-  pluss::Series src  = pluss::value(std::vector<float>{10,10,10,10}, {1,4});
+  pluss::Series self = pluss::make_series(std::vector<float>{1,2,3,4}, {1,4});
+  pluss::Series idx  = pluss::make_series(std::vector<std::int64_t>{0,0,1,1}, {1,4});
+  pluss::Series src  = pluss::make_series(std::vector<float>{10,10,10,10}, {1,4});
 
   // include_self=false, initial=5 => base=5 then add src into buckets
   auto out = self.scatter_reduce(1, idx, src, "sum", /*include_self=*/false, /*has_initial=*/true, 5.0);

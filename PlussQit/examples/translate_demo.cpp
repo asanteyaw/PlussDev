@@ -22,7 +22,7 @@ void print_vector(const std::string& label, const std::vector<T>& xs) {
 int main() {
   std::cout << "=== pluss::transform_axis demo ===\n\n";
 
-  auto s2d = pluss::value(std::vector<double>{1.0, 2.0, 3.0, 10.0, 20.0, 30.0}, {2, 3});
+  auto s2d = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 10.0, 20.0, 30.0}, {2, 3});
   auto row_means = pluss::transform_axis(
       [](const pluss::Series& row) {
         return row.mean().to_vec<double>(0);
@@ -31,7 +31,7 @@ int main() {
       1);
   print_vector("Series row means", row_means);
 
-  auto note2d = pluss::content({{"alpha", "beta"}, {"gamma", "delta"}});
+  auto note2d = pluss::make_note({{"alpha", "beta"}, {"gamma", "delta"}});
   auto row_char_counts = pluss::transform_axis(
       [](const pluss::Note& row) {
         std::int64_t total = 0;
@@ -44,7 +44,7 @@ int main() {
       1);
   print_vector("Note row character totals", row_char_counts);
 
-  auto timeline2d = pluss::moment({
+  auto timeline2d = pluss::make_timeline({
       {"2024-01-01T01:00:00Z", "2024-01-02T02:00:00Z"},
       {"2024-01-03T03:00:00Z", "2024-01-04T04:00:00Z"},
   });
@@ -60,7 +60,7 @@ int main() {
   print_vector("Timeline row hour totals", row_hour_totals);
 
   auto idx = pluss::make_timeindex(
-      pluss::moment({
+      pluss::make_timeline({
           "2024-01-01T00:00:00Z",
           "2024-01-02T00:00:00Z",
           "2024-01-03T00:00:00Z",

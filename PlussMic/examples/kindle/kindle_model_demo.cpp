@@ -38,7 +38,7 @@ pluss::table::DataFrame make_base_frame() {
           "Storm warning issued",
       },
       shape);
-  const auto timestamp = pluss::moment({
+  const auto timestamp = pluss::make_timeline({
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
       "2024-01-03T00:00:00Z",

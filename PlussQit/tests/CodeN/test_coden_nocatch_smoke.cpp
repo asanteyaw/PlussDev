@@ -31,7 +31,7 @@ double as_score(const pluss::Note& n, std::int64_t i = 0) {
 
 void test_basic_extracts() {
   std::cout << "[RUN] coden:tex_extract\n";
-  pluss::Note tex = pluss::content(
+  pluss::Note tex = pluss::make_note(
       "\\section{Intro}\n"
       "\\begin{equation}E=mc^2\\end{equation}\n"
       "See \\ref{eq:1}\n");
@@ -44,7 +44,7 @@ void test_basic_extracts() {
 
 void test_nlp_extracts_and_filters() {
   std::cout << "[RUN] coden:nlp_extract\n";
-  pluss::Note n = pluss::content("OpenAI GPT NASA shipped in 2025. Visit https://openai.com");
+  pluss::Note n = pluss::make_note("OpenAI GPT NASA shipped in 2025. Visit https://openai.com");
 
   auto acr = n.nlp_extract_acronyms();
   expect_true(has_token(acr.tokens(), "GPT"), "nlp_extract_acronyms finds GPT");
@@ -59,8 +59,8 @@ void test_nlp_extracts_and_filters() {
 
 void test_diff_align_family() {
   std::cout << "[RUN] coden:diff_align\n";
-  pluss::Note a = pluss::content("alpha beta gamma");
-  pluss::Note b = pluss::content("alpha theta gamma delta");
+  pluss::Note a = pluss::make_note("alpha beta gamma");
+  pluss::Note b = pluss::make_note("alpha theta gamma delta");
 
   auto dw = a.diff_words(b);
   expect_true(has_token(dw.tokens(), "-beta"), "diff_words marks removed tokens");
@@ -71,8 +71,8 @@ void test_diff_align_family() {
   expect_true(has_token(at.tokens(), "=alpha"), "align_tokens keeps equal tokens");
   expect_true(has_token(at.tokens(), "=gamma"), "align_tokens keeps equal suffix");
 
-  pluss::Note l1 = pluss::content("a\nb\nc");
-  pluss::Note l2 = pluss::content("a\nx\nc");
+  pluss::Note l1 = pluss::make_note("a\nb\nc");
+  pluss::Note l2 = pluss::make_note("a\nx\nc");
   auto dl = l1.diff_lines(l2);
   expect_true(has_token(dl.tokens(), "-b"), "diff_lines marks removed line");
   expect_true(has_token(dl.tokens(), "+x"), "diff_lines marks inserted line");
@@ -80,8 +80,8 @@ void test_diff_align_family() {
 
 void test_pairwise_set_ops_and_fast_paths() {
   std::cout << "[RUN] coden:pairwise_setops_fast\n";
-  pluss::Note a = pluss::content("Alpha beta beta delta");
-  pluss::Note b = pluss::content("beta theta DELTA");
+  pluss::Note a = pluss::make_note("Alpha beta beta delta");
+  pluss::Note b = pluss::make_note("beta theta DELTA");
 
   auto inter = a.intersect_tokens(b);
   expect_true(has_token(inter.tokens(), "beta"), "intersect_tokens keeps shared token");
@@ -96,22 +96,22 @@ void test_pairwise_set_ops_and_fast_paths() {
   const double ov_v = as_score(ov);
   expect_true(ov_v > 0.66 && ov_v < 0.67, "overlap_tokens ~= 2/3");
 
-  pluss::Note e = pluss::content("");
+  pluss::Note e = pluss::make_note("");
   expect_true(as_score(e.jaccard_tokens(e)) == 1.0, "jaccard_tokens empty-empty is 1");
   expect_true(as_score(e.overlap_tokens(e)) == 1.0, "overlap_tokens empty-empty is 1");
   expect_true(as_score(e.overlap_tokens(a)) == 0.0, "overlap_tokens empty-vs-nonempty is 0");
 
-  pluss::Note t1 = pluss::content("The quantum method is robust and scalable.");
-  pluss::Note t2 = pluss::content("A scalable quantum pipeline improves method quality.");
+  pluss::Note t1 = pluss::make_note("The quantum method is robust and scalable.");
+  pluss::Note t2 = pluss::make_note("A scalable quantum pipeline improves method quality.");
   auto inter_terms = t1.intersect_terms(t2);
   expect_true(has_token(inter_terms.tokens(), "quantum"), "intersect_terms captures shared term");
   expect_true(has_token(inter_terms.tokens(), "scalable"), "intersect_terms captures second shared term");
 
   const std::array<std::int64_t, 1> sz{2};
-  pluss::Note docs = pluss::content(
+  pluss::Note docs = pluss::make_note(
       std::vector<std::string>{"Alpha beta gamma", "One, two; three!!"},
       std::span<const std::int64_t>(sz.data(), sz.size()));
-  pluss::Note scalar = pluss::content("beta two");
+  pluss::Note scalar = pluss::make_note("beta two");
 
   auto inter_b = docs.intersect_tokens(scalar);
   expect_true(inter_b.offsets().size() == 3, "intersect_tokens broadcast preserves row offsets");
@@ -122,20 +122,20 @@ void test_pairwise_set_ops_and_fast_paths() {
   expect_true(has_token(punct.tokens(), "One"), "split_on_punct extracts first token");
   expect_true(has_token(punct.tokens(), "three"), "split_on_punct extracts trailing token");
 
-  pluss::Note words = pluss::content("foo_bar don't C3PO");
+  pluss::Note words = pluss::make_note("foo_bar don't C3PO");
   auto w = words.tokenize_words();
   expect_true(has_token(w.tokens(), "foo_bar"), "tokenize_words keeps underscore");
   expect_true(has_token(w.tokens(), "don't"), "tokenize_words keeps apostrophe in body");
   expect_true(has_token(w.tokens(), "C3PO"), "tokenize_words keeps alnum word");
 
-  pluss::Note sent = pluss::content("Hello!!! Next one? version2.0 works.");
+  pluss::Note sent = pluss::make_note("Hello!!! Next one? version2.0 works.");
   auto sents = sent.split_sentences();
   expect_true(has_token(sents.tokens(), "Hello!!!"), "split_sentences keeps punctuation runs");
   expect_true(has_token(sents.tokens(), "Next one?"), "split_sentences finds second sentence");
   expect_true(has_token(sents.tokens(), "version2.0 works."), "split_sentences does not split decimal");
 
-  pluss::Note p1 = pluss::content("NASA GPT and [12] use x+y with \\alpha.");
-  pluss::Note p2 = pluss::content("GPT NASA cite [12] and y/x with \\alpha and +.");
+  pluss::Note p1 = pluss::make_note("NASA GPT and [12] use x+y with \\alpha.");
+  pluss::Note p2 = pluss::make_note("GPT NASA cite [12] and y/x with \\alpha and +.");
   auto ia = p1.intersect_acronyms(p2);
   expect_true(has_token(ia.tokens(), "nasa"), "intersect_acronyms captures shared acronym");
   expect_true(has_token(ia.tokens(), "gpt"), "intersect_acronyms captures second acronym");
@@ -154,25 +154,25 @@ void test_pairwise_set_ops_and_fast_paths() {
 
 void test_encoding_and_shape_ops() {
   std::cout << "[RUN] coden:encoding_shape\n";
-  pluss::Note s = pluss::content("Hi!");
+  pluss::Note s = pluss::make_note("Hi!");
   expect_true(s.base64_encode().at(0) == "SGkh", "base64_encode encodes bytes");
   expect_true(s.base64_encode().base64_decode().at(0) == "Hi!", "base64_decode reverses encode");
   expect_true(s.hex_encode().at(0) == "486921", "hex_encode encodes bytes");
   expect_true(s.hex_encode().hex_decode().at(0) == "Hi!", "hex_decode reverses encode");
 
-  pluss::Note u = pluss::content("a b+c");
+  pluss::Note u = pluss::make_note("a b+c");
   expect_true(u.url_encode().at(0) == "a%20b%2Bc", "url_encode encodes reserved chars");
   expect_true(u.url_encode().url_decode().at(0) == "a b+c", "url_decode reverses encode");
 
-  pluss::Note h = pluss::content("<a&\"'>");
+  pluss::Note h = pluss::make_note("<a&\"'>");
   expect_true(h.html_escape().at(0) == "&lt;a&amp;&quot;&#39;&gt;", "html_escape encodes entities");
   expect_true(h.html_escape().html_unescape().at(0) == "<a&\"'>", "html_unescape decodes entities");
 
-  pluss::Note j = pluss::content("a\n\"b\"");
+  pluss::Note j = pluss::make_note("a\n\"b\"");
   expect_true(j.json_escape().at(0) == "a\\n\\\"b\\\"", "json_escape emits escaped control chars");
 
   const std::array<std::int64_t, 1> v_sizes{3};
-  pluss::Note v = pluss::content(
+  pluss::Note v = pluss::make_note(
       std::vector<std::string>{"b", "a", "b"},
       std::span<const std::int64_t>(v_sizes.data(), v_sizes.size()));
   auto sorted = v.sort();
@@ -185,7 +185,7 @@ void test_encoding_and_shape_ops() {
   expect_true(dedup.numel() == 2 && dedup.at(0) == "b" && dedup.at(1) == "a", "deduplicate() preserves first-seen");
 
   const std::array<std::int64_t, 2> m_sizes{2, 2};
-  pluss::Note m = pluss::content(
+  pluss::Note m = pluss::make_note(
       std::vector<std::string>{"x", "y", "z", "w"},
       std::span<const std::int64_t>(m_sizes.data(), m_sizes.size()));
   auto flat = m.flatten();
@@ -207,7 +207,7 @@ void test_encoding_and_shape_ops() {
 
 void test_high_yield_nlp_and_printing() {
   std::cout << "[RUN] coden:high_yield_nlp_print\n";
-  pluss::Note n = pluss::content("I can't believe this GREAT product costs 123 dollars in 2026.");
+  pluss::Note n = pluss::make_note("I can't believe this GREAT product costs 123 dollars in 2026.");
 
   const std::string expanded = std::string(n.nlp_expand_contractions().at(0));
   expect_true(expanded.find("can not") != std::string::npos, "nlp_expand_contractions expands can't");
@@ -222,13 +222,13 @@ void test_high_yield_nlp_and_printing() {
   expect_true(!std::string(n.nlp_readability_level().at(0)).empty(), "nlp_readability_level emits label");
   expect_true(!std::string(n.nlp_script().at(0)).empty(), "nlp_script emits script");
 
-  pluss::Note sw = pluss::content("the robust method is in the pipeline");
+  pluss::Note sw = pluss::make_note("the robust method is in the pipeline");
   const std::string swr = std::string(sw.nlp_remove_stopwords().at(0));
   expect_true(swr.find("the") == std::string::npos, "nlp_remove_stopwords removes english stopwords");
 
-  const std::string tr = std::string(pluss::content("São").transliterate_ascii().at(0));
+  const std::string tr = std::string(pluss::make_note("São").transliterate_ascii().at(0));
   expect_true(tr == "Sao", "transliterate_ascii strips accent");
-  expect_true(!std::string(pluss::content("Robert").phonetic_soundex().at(0)).empty(), "phonetic_soundex emits code");
+  expect_true(!std::string(pluss::make_note("Robert").phonetic_soundex().at(0)).empty(), "phonetic_soundex emits code");
 
   std::string latin1 = "caf\xE9";
   auto decoded = pluss::bytes_content(latin1).from_latin1();
@@ -242,7 +242,7 @@ void test_high_yield_nlp_and_printing() {
   opt.max_elements = 6;
   opt.edge_items = 1;
   const std::array<std::int64_t, 2> sizes{2, 6};
-  pluss::Note m = pluss::content(
+  pluss::Note m = pluss::make_note(
       std::vector<std::string>{
           "alpha", "beta", "gamma", "delta", "epsilon", "zeta",
           "line1\nline2", "emoji 🙂", "quoted \"x\"", "kappa", "lambda", "mu"},
@@ -257,7 +257,7 @@ void test_high_yield_nlp_and_printing() {
   const std::string bytes_print = pluss::print_note(pluss::bytes_content("Hi"), hex_opt);
   expect_true(bytes_print.find("hex[48 69]") != std::string::npos, "print_note hex mode prints byte hex");
 
-  pluss::Note tex = pluss::content(
+  pluss::Note tex = pluss::make_note(
       "\\section{Intro}\r\n\r\n"
       "\\textbf{Bold} and \\emph{emph}.\\n"
       "Math: $x+y$ and \\(z\\).\\n\\n\\n"
@@ -268,13 +268,13 @@ void test_high_yield_nlp_and_printing() {
   const std::string tex_dedup = std::string(tex.tex_dedup_blank_lines().at(0));
   expect_true(tex_dedup.find("\n\n\n") == std::string::npos, "tex_dedup_blank_lines collapses blank runs");
 
-  const std::string escaped = std::string(pluss::content("a_b#%").tex_escape().at(0));
+  const std::string escaped = std::string(pluss::make_note("a_b#%").tex_escape().at(0));
   expect_true(escaped.find("\\_") != std::string::npos, "tex_escape escapes underscore");
-  expect_true(std::string(pluss::content(escaped).tex_unescape().at(0)) == "a_b#%", "tex_unescape reverses escapes");
+  expect_true(std::string(pluss::make_note(escaped).tex_unescape().at(0)) == "a_b#%", "tex_unescape reverses escapes");
 
   const std::string no_delims = std::string(tex.tex_remove_math_delimiters().at(0));
   expect_true(no_delims.find("$") == std::string::npos, "tex_remove_math_delimiters strips dollar delimiters");
-  expect_true(std::string(pluss::content("x+y").tex_add_math_delimiters().at(0)) == "$x+y$",
+  expect_true(std::string(pluss::make_note("x+y").tex_add_math_delimiters().at(0)) == "$x+y$",
               "tex_add_math_delimiters wraps plain expression");
 
   const std::string math_only = std::string(tex.tex_math_only().at(0));
@@ -297,7 +297,7 @@ void test_high_yield_nlp_and_printing() {
 
 void test_tex_canonicalize_and_macros() {
   std::cout << "[RUN] coden:tex_structural\n";
-  pluss::Note t = pluss::content(
+  pluss::Note t = pluss::make_note(
       "\\newcommand{\\RR}{R}\n"
       "Let $x \\in \\RR$ and \\dfrac{a}{b} + \\sqrt{c} + \\pm 1.\n"
       "Vector: \\mathbf{v}. Matrix: \\begin{bmatrix}1\\end{bmatrix}.\n"
@@ -354,38 +354,38 @@ void test_tex_canonicalize_and_macros() {
   const std::string remm = std::string(t.tex_remove_macro("RR").at(0));
   expect_true(remm.find("\\newcommand") == std::string::npos, "tex_remove_macro removes macro decl");
 
-  const std::string wrapped = std::string(pluss::content("x+y").tex_wrap_inline_math("$").at(0));
+  const std::string wrapped = std::string(pluss::make_note("x+y").tex_wrap_inline_math("$").at(0));
   expect_true(wrapped == "$x+y$", "tex_wrap_inline_math wraps inline math");
 
-  const std::string display = std::string(pluss::content("x+y").tex_wrap_display_math("$$").at(0));
+  const std::string display = std::string(pluss::make_note("x+y").tex_wrap_display_math("$$").at(0));
   expect_true(display.find("$$") != std::string::npos, "tex_wrap_display_math wraps display math");
 
-  const std::string bal_br = std::string(pluss::content("{a{b}").tex_balance_braces().at(0));
+  const std::string bal_br = std::string(pluss::make_note("{a{b}").tex_balance_braces().at(0));
   expect_true(bal_br.find("}}") != std::string::npos, "tex_balance_braces closes missing braces");
 
-  const std::string bal_math = std::string(pluss::content("$x+y").tex_balance_math_delims().at(0));
+  const std::string bal_math = std::string(pluss::make_note("$x+y").tex_balance_math_delims().at(0));
   expect_true(!bal_math.empty() && bal_math.back() == '$', "tex_balance_math_delims closes missing $");
 
-  const std::string inc = std::string(pluss::content("\\input{sec1}").tex_expand_inputs().at(0));
+  const std::string inc = std::string(pluss::make_note("\\input{sec1}").tex_expand_inputs().at(0));
   expect_true(inc.find("[include:sec1]") != std::string::npos, "tex_expand_inputs rewrites inputs");
 
-  const std::string gfx = std::string(pluss::content("\\includegraphics{fig}").tex_resolve_graphics().at(0));
+  const std::string gfx = std::string(pluss::make_note("\\includegraphics{fig}").tex_resolve_graphics().at(0));
   expect_true(gfx.find("[graphic:fig]") != std::string::npos, "tex_resolve_graphics rewrites graphics");
 }
 
 void test_note_factory_paths() {
   std::cout << "[RUN] coden:note_factories\n";
 
-  pluss::Note s0 = pluss::content("hi");
+  pluss::Note s0 = pluss::make_note("hi");
   expect_true(s0.dim() == 0, "content(\"hi\") produces scalar note");
 
-  pluss::Note s1 = pluss::content({"a", "b", "c"});
+  pluss::Note s1 = pluss::make_note({"a", "b", "c"});
   expect_true(s1.dim() == 1 && s1.size(0) == 3, "content({\"a\",\"b\",\"c\"}) produces 1D note");
 
-  pluss::Note s2 = pluss::content({{"a", "b"}, {"c", "d"}});
+  pluss::Note s2 = pluss::make_note({{"a", "b"}, {"c", "d"}});
   expect_true(s2.dim() == 2 && s2.sizes() == std::vector<std::int64_t>({2, 2}), "content 2D nested list");
 
-  pluss::Note s3 = pluss::content({{{"a"}, {"b"}}, {{"c"}, {"d"}}});
+  pluss::Note s3 = pluss::make_note({{{"a"}, {"b"}}, {{"c"}, {"d"}}});
   expect_true(s3.dim() == 3 && s3.sizes() == std::vector<std::int64_t>({2, 2, 1}), "content 3D nested list");
 
   pluss::Note m2 = pluss::make_note({{"x", "y"}, {"z", "w"}});
@@ -433,7 +433,7 @@ void test_aux_transmit_translate_and_queue_basics() {
   const auto mapped = pluss::transmit([](int x) { return x * x; }, std::vector<int>{1, 2, 3});
   expect_true(mapped.size() == 3 && mapped[2] == 9, "transmit maps range values");
 
-  pluss::Note n = pluss::content({{"aa", "bbb"}, {"c", "dddd"}});
+  pluss::Note n = pluss::make_note({{"aa", "bbb"}, {"c", "dddd"}});
   const auto per_row_chars = pluss::transform_axis(
       [](const pluss::Note& row) {
         std::int64_t total = 0;
@@ -463,27 +463,27 @@ void test_aux_transmit_translate_and_queue_basics() {
   pluss::Queue qn_lower = qn.invoke("lower");
   expect_true(qn_lower.as<pluss::Note>().at(0) == "aa", "Queue.invoke dispatches Note methods");
 
-  pluss::Queue qs = pluss::value({-1.0, 2.0, -3.0});
+  pluss::Queue qs = pluss::make_series({-1.0, 2.0, -3.0});
   expect_true(qs.as_series().to_vec<double>()[1] == 2.0, "Queue.as_series() exposes Series surface");
   pluss::Queue qs_abs = qs.invoke("abs");
   auto abs_vals = qs_abs.as<pluss::Series>().to_vec<double>();
   expect_true(abs_vals.size() == 3 && abs_vals[0] == 1.0 && abs_vals[2] == 3.0,
               "Queue.invoke dispatches Series methods");
 
-  pluss::Queue qsum = qs + pluss::Queue(pluss::value({1.0, 1.0, 1.0}));
+  pluss::Queue qsum = qs + pluss::Queue(pluss::make_series({1.0, 1.0, 1.0}));
   auto sum_vals = qsum.as<pluss::Series>().to_vec<double>();
   expect_true(sum_vals.size() == 3 && sum_vals[0] == 0.0 && sum_vals[1] == 3.0 && sum_vals[2] == -2.0,
               "Queue binary + delegates to Series");
 
-  pluss::Queue qcmp = qn == pluss::Queue(pluss::content({"aa", "zz"}));
+  pluss::Queue qcmp = qn == pluss::Queue(pluss::make_note({"aa", "zz"}));
   auto cmp_vals = qcmp.as<pluss::Series>().to_vec<bool>();
   expect_true(cmp_vals.size() == 2 && cmp_vals[0] && !cmp_vals[1],
               "Queue Note comparison delegates safely");
 
   pluss::Queue qwhere = pluss::Queue::where(
-      pluss::Queue(pluss::value({true, false, true})),
-      pluss::Queue(pluss::value({10.0, 20.0, 30.0})),
-      pluss::Queue(pluss::value({1.0, 2.0, 3.0})));
+      pluss::Queue(pluss::make_series({true, false, true})),
+      pluss::Queue(pluss::make_series({10.0, 20.0, 30.0})),
+      pluss::Queue(pluss::make_series({1.0, 2.0, 3.0})));
   auto where_vals = qwhere.as<pluss::Series>().to_vec<double>();
   expect_true(where_vals.size() == 3 && where_vals[0] == 10.0 && where_vals[1] == 2.0 && where_vals[2] == 30.0,
               "Queue::where delegates ternary selection for Series");

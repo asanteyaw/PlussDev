@@ -13,7 +13,7 @@
 
 TEST_CASE("CodeN NoteBase inherited convenience methods", "[coden][patch20]") {
   SECTION("scalar/vector/matrix/tensor projections") {
-    auto scalar = pluss::content("alpha");
+    auto scalar = pluss::make_note("alpha");
     REQUIRE(scalar.defined());
     REQUIRE(scalar.is_scalar());
     REQUIRE(scalar.scalar() == "alpha");

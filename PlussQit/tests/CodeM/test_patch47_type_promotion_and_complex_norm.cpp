@@ -3,15 +3,15 @@
 #include <complex>
 
 TEST_CASE("type promotion: int + float -> float", "[promotion]") {
-  auto a = pluss::value(std::vector<std::int64_t>{1,2,3}, {3});
-  auto b = pluss::value(std::vector<float>{1.0f,2.0f,3.0f}, {3});
+  auto a = pluss::make_series(std::vector<std::int64_t>{1,2,3}, {3});
+  auto b = pluss::make_series(std::vector<float>{1.0f,2.0f,3.0f}, {3});
   auto c = a.add(b);
   REQUIRE(c.scalar_type() == pluss::ScalarType::Float32);
 }
 
 TEST_CASE("type promotion: float64 + float32 -> float64", "[promotion]") {
-  auto a = pluss::value(std::vector<double>{1,2,3}, {3});
-  auto b = pluss::value(std::vector<float>{1,2,3}, {3});
+  auto a = pluss::make_series(std::vector<double>{1,2,3}, {3});
+  auto b = pluss::make_series(std::vector<float>{1,2,3}, {3});
   auto c = a.mul(b);
   REQUIRE(c.scalar_type() == pluss::ScalarType::Float64);
 }

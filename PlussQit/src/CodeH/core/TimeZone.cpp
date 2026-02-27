@@ -110,8 +110,9 @@ struct EdmontonRules {
 
 TimeZone TimeZone::load(std::string_view name) {
   const auto n = std::string(name);
-  if (n.empty() || n == "UTC" || n == "utc") return TimeZone("UTC");
-  if (n == "America/Edmonton" || n == "america/edmonton") return TimeZone("America/Edmonton");
+  const auto nl = lower(name);
+  if (n.empty() || nl == "utc") return TimeZone("UTC");
+  if (nl == "america/edmonton") return TimeZone("America/Edmonton");
   CODEM_FAIL("Unknown timezone: " + n + " (currently supported: UTC, America/Edmonton)");
 }
 

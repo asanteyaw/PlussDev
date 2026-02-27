@@ -89,7 +89,7 @@ class ScopedEnvVar final {
 
 void test_factories() {
   std::cout << "[RUN] factories:value\n";
-  auto s1 = pluss::value({1.0, 2.0, 3.0});
+  auto s1 = pluss::make_series({1.0, 2.0, 3.0});
   expect_true(s1.numel() == 3, "value(init_list) works");
   expect_true(s1.platform() == pluss::Platform::CPU, "series.platform() getter reports CPU");
 
@@ -215,11 +215,11 @@ void test_factories() {
   auto zlike = pluss::zeroes_like(s2);
   expect_true(zlike.scalar_type() == s2.scalar_type(), "zeroes_like alias works");
   std::cout << "[RUN] factories:value_literal\n";
-  auto t = pluss::value({1, 2, 3});
+  auto t = pluss::make_series({1, 2, 3});
   expect_true(t.numel() == 3, "value literal works");
 
   std::cout << "[RUN] factories:print_series_default_policy\n";
-  auto pretty_src = pluss::value({{0.24644905, 0.23562264}});
+  auto pretty_src = pluss::make_series({{0.24644905, 0.23562264}});
   const std::string pretty_default = pluss::print_series(pretty_src);
   expect_true(pretty_default.find("0.2464") != std::string::npos,
               "print_series default uses 4dp for normal magnitudes");
@@ -231,17 +231,17 @@ void test_factories() {
   expect_true(pretty_override.find("0.246449") != std::string::npos,
               "print_series allows user precision override");
 
-  auto tiny_round = pluss::value({{0.000076, 1.0}});
+  auto tiny_round = pluss::make_series({{0.000076, 1.0}});
   const std::string tiny_round_s = pluss::print_series(tiny_round);
   expect_true(tiny_round_s.find("0.0001") != std::string::npos && tiny_round_s.find("e-") == std::string::npos,
               "print_series keeps fixed when tiny values still survive rounding");
 
-  auto tiny_scientific = pluss::value({{0.000023, 1.0}});
+  auto tiny_scientific = pluss::make_series({{0.000023, 1.0}});
   const std::string tiny_scientific_s = pluss::print_series(tiny_scientific);
   expect_true(tiny_scientific_s.find("e-") != std::string::npos,
               "print_series switches to scientific when fixed would round nonzero to zero");
 
-  auto wide = pluss::value({{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}});
+  auto wide = pluss::make_series({{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}});
   const std::string wide_default = pluss::print_series(wide);
   expect_true(wide_default.find("5.0000") != std::string::npos &&
                   wide_default.find("6.0000") == std::string::npos &&
@@ -279,7 +279,7 @@ void test_aux_let_transmit() {
   auto la = suppose.as<double>(3).then([](double x) { return x + 0.5; }).value();
   expect_close(la, 3.5, 1e-12, "suppose typed conversion");
 
-  let declared = pluss::value({1.0, 2.0, 3.0});
+  let declared = pluss::make_series({1.0, 2.0, 3.0});
   expect_true(declared.numel() == 3, "let declaration alias to auto");
 
   std::cout << "[RUN] aux:transmit_range\n";
@@ -320,7 +320,7 @@ void test_aux_let_transmit() {
   expect_true(bumped.size() == 3 && bumped[0].v == 6 && bumped[2].v == 8, "transmit callable object");
 
   std::cout << "[RUN] aux:transmit_series\n";
-  auto s = pluss::value(std::vector<double>{1.0, 2.0, 3.0}, {3});
+  auto s = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3});
   auto ss = pluss::transmit([](const pluss::Series& t) { return t.mul(t); }, s);
   expect_eq(ss.to_vec<double>(), std::vector<double>{1.0, 4.0, 9.0}, "transmit single-object apply");
 }
@@ -341,8 +341,8 @@ void test_arithmetic_and_reduce() {
 }
 
 void test_indexing_ops() {
-  auto src = pluss::value(std::vector<std::int64_t>{10, 20, 30, 40}, {2, 2});
-  auto idx = pluss::value(
+  auto src = pluss::make_series(std::vector<std::int64_t>{10, 20, 30, 40}, {2, 2});
+  auto idx = pluss::make_series(
       std::vector<std::int64_t>{1, 0, 0, 1},
       {2, 2},
       pluss::Config{}.with_dtype(pluss::ScalarType::Int64));
@@ -350,11 +350,11 @@ void test_indexing_ops() {
   auto g = src.gather(1, idx);
   expect_eq(g.to_vec<std::int64_t>(), {20, 10, 30, 40}, "gather basic");
 
-  auto dst = pluss::value(std::vector<std::int64_t>{0, 0, 0, 0}, {2, 2});
+  auto dst = pluss::make_series(std::vector<std::int64_t>{0, 0, 0, 0}, {2, 2});
   auto sc = dst.scatter(1, idx, src);
   expect_eq(sc.to_vec<std::int64_t>(), {20, 10, 30, 40}, "scatter basic");
 
-  auto idx_neg = pluss::value(
+  auto idx_neg = pluss::make_series(
       std::vector<std::int64_t>{-1, 0, 0, -1},
       {2, 2},
       pluss::Config{}.with_dtype(pluss::ScalarType::Int64));
@@ -364,7 +364,7 @@ void test_indexing_ops() {
   auto sc_neg = dst.scatter(1, idx_neg, src);
   expect_eq(sc_neg.to_vec<std::int64_t>(), {20, 10, 30, 40}, "scatter negative index");
 
-  auto idx_bad = pluss::value(
+  auto idx_bad = pluss::make_series(
       std::vector<std::int64_t>{2, 0, 0, 1},
       {2, 2},
       pluss::Config{}.with_dtype(pluss::ScalarType::Int64));
@@ -373,7 +373,7 @@ void test_indexing_ops() {
 }
 
 void test_unary_math_and_activations() {
-  auto x = pluss::value(std::vector<float>{-2.0f, -1.0f, 0.0f, 1.0f}, {4});
+  auto x = pluss::make_series(std::vector<float>{-2.0f, -1.0f, 0.0f, 1.0f}, {4});
 
   auto ex = x.exp();
   auto lg = ex.log();
@@ -442,7 +442,7 @@ void test_storage_pool_robustness() {
 
 void test_dispatch_extensions() {
   std::cout << "[RUN] dispatch_extensions:repeat\n";
-  auto x = pluss::value(std::vector<std::int64_t>{1, 2, 3}, {3});
+  auto x = pluss::make_series(std::vector<std::int64_t>{1, 2, 3}, {3});
   auto xr = pluss::codem::_compat::invoke("repeat", x, std::vector<std::int64_t>{2});
   expect_eq(xr.to_vec<std::int64_t>(), {1, 2, 3, 1, 2, 3}, "repeat intlist");
 
@@ -459,7 +459,7 @@ void test_dispatch_extensions() {
   expect_eq(xr1.to_vec<std::int64_t>(), {3, 1, 2}, "roll flat");
 
   std::cout << "[RUN] dispatch_extensions:roll_dim\n";
-  auto m = pluss::value(std::vector<std::int64_t>{1, 2, 3, 4}, {2, 2});
+  auto m = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4}, {2, 2});
   auto mr = pluss::codem::_compat::invoke("roll", m, 1, 1);
   expect_eq(mr.to_vec<std::int64_t>(), {2, 1, 4, 3}, "roll dim");
 
@@ -473,17 +473,17 @@ void test_dispatch_extensions() {
   expect_eq(m2.to_vec<std::int64_t>(), {7, 7, 7, 7}, "masked_fill_ scalar");
 
   std::cout << "[RUN] dispatch_extensions:scatter_reduce\n";
-  auto base = pluss::value(std::vector<std::int64_t>{0, 0, 0, 0}, {4});
-  auto idx = pluss::value(
+  auto base = pluss::make_series(std::vector<std::int64_t>{0, 0, 0, 0}, {4});
+  auto idx = pluss::make_series(
       std::vector<std::int64_t>{1, 1, 2},
       {3},
       pluss::Config{}.with_dtype(pluss::ScalarType::Int64));
-  auto src = pluss::value(std::vector<std::int64_t>{3, 4, 5}, {3});
+  auto src = pluss::make_series(std::vector<std::int64_t>{3, 4, 5}, {3});
   auto sr = pluss::codem::_compat::invoke("scatter_reduce", base, 0, idx, src, "sum", true);
   expect_eq(sr.to_vec<std::int64_t>(), {0, 7, 5, 0}, "scatter_reduce sum");
 
   std::cout << "[RUN] dispatch_extensions:index_add_\n";
-  auto t = pluss::value(std::vector<std::int64_t>{10, 20, 30, 40}, {4});
+  auto t = pluss::make_series(std::vector<std::int64_t>{10, 20, 30, 40}, {4});
   pluss::codem::_compat::invoke_(
       "index_add_",
       t,
@@ -493,29 +493,29 @@ void test_dispatch_extensions() {
   expect_eq(t.to_vec<std::int64_t>(), {10, 23, 30, 40}, "index_add_ 1d dim0");
 
   std::cout << "[RUN] dispatch_extensions:sum_to_size\n";
-  auto s2 = pluss::value(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {2, 3});
+  auto s2 = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {2, 3});
   auto s2r = pluss::codem::_compat::invoke("sum_to_size", s2, std::vector<std::int64_t>{2, 1});
   expect_eq(s2r.to_vec<std::int64_t>(), {6, 15}, "sum_to_size reduce");
 
   std::cout << "[RUN] dispatch_extensions:unflatten_unfold\n";
-  auto u = pluss::value(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {6});
+  auto u = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6}, {6});
   auto uf = pluss::codem::_compat::invoke("unflatten", u, 0, std::vector<std::int64_t>{2, 3});
   expect_true(uf.sizes().size() == 2 && uf.sizes()[0] == 2 && uf.sizes()[1] == 3, "unflatten shape");
   auto uw = pluss::codem::_compat::invoke("unfold", u, 0, 3, 1);
   expect_true(uw.numel() == 12, "unfold numel");
 
   std::cout << "[RUN] dispatch_extensions:inplace_new_routes\n";
-  auto inx = pluss::value(std::vector<double>{0.25, 0.75}, {2});
+  auto inx = pluss::make_series(std::vector<double>{0.25, 0.75}, {2});
   pluss::codem::_compat::invoke_("logit_", inx, 1e-6);
   auto inv = inx.to_vec<double>();
   expect_true(inv[0] < 0.0 && inv[1] > 0.0, "logit_ sign behavior");
 
-  auto nx = pluss::value(std::vector<double>{1.0, 2.0}, {2});
+  auto nx = pluss::make_series(std::vector<double>{1.0, 2.0}, {2});
   pluss::codem::_compat::invoke_("nextafter_", nx, 3.0);
   auto nxv = nx.to_vec<double>();
   expect_true(nxv[0] > 1.0 && nxv[1] > 2.0, "nextafter_ toward scalar");
 
-  auto bx = pluss::value(std::vector<std::int64_t>{1, 2, 3}, {3});
+  auto bx = pluss::make_series(std::vector<std::int64_t>{1, 2, 3}, {3});
   pluss::codem::_compat::invoke_("bitwise_left_shift_", bx, 1);
   expect_eq(bx.to_vec<std::int64_t>(), {2, 4, 6}, "bitwise_left_shift_ scalar");
   pluss::codem::_compat::invoke_("bitwise_right_shift_", bx, 1);
@@ -535,47 +535,47 @@ void test_dispatch_extensions() {
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes\n";
   std::cout << "[RUN] dispatch_extensions:new_math_routes:heaviside\n";
-  auto hx = pluss::value(std::vector<double>{-1.0, 0.0, 2.0}, {3});
+  auto hx = pluss::make_series(std::vector<double>{-1.0, 0.0, 2.0}, {3});
   auto hv = pluss::codem::_compat::invoke("heaviside", hx, 0.25);
   expect_eq(hv.to_vec<double>(), {0.0, 0.25, 1.0}, "heaviside scalar");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:sinc\n";
-  auto sx = pluss::value(std::vector<double>{0.0, 1.0}, {2});
+  auto sx = pluss::make_series(std::vector<double>{0.0, 1.0}, {2});
   auto sv = pluss::codem::_compat::invoke("sinc", sx);
   auto svv = sv.to_vec<double>();
   expect_close(svv[0], 1.0, 1e-12, "sinc(0)");
   expect_true(std::abs(svv[1]) < 1e-9, "sinc(1) near zero");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:gcd_lcm\n";
-  auto gx = pluss::value(std::vector<std::int64_t>{12, 18}, {2});
+  auto gx = pluss::make_series(std::vector<std::int64_t>{12, 18}, {2});
   auto gv = pluss::codem::_compat::invoke("gcd", gx, 6);
   expect_eq(gv.to_vec<std::int64_t>(), {6, 6}, "gcd scalar");
-  auto lv = pluss::codem::_compat::invoke("lcm", gx, pluss::value(std::vector<std::int64_t>{6, 8}, {2}));
+  auto lv = pluss::codem::_compat::invoke("lcm", gx, pluss::make_series(std::vector<std::int64_t>{6, 8}, {2}));
   expect_eq(lv.to_vec<std::int64_t>(), {12, 72}, "lcm tensor");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:hardshrink\n";
-  auto hs = pluss::codem::_compat::invoke("hardshrink", pluss::value(std::vector<double>{-0.2, 0.7}, {2}), 0.5);
+  auto hs = pluss::codem::_compat::invoke("hardshrink", pluss::make_series(std::vector<double>{-0.2, 0.7}, {2}), 0.5);
   expect_eq(hs.to_vec<double>(), {0.0, 0.7}, "hardshrink scalar lambda");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:cross\n";
-  auto c1 = pluss::value(std::vector<double>{1.0, 0.0, 0.0}, {3});
-  auto c2 = pluss::value(std::vector<double>{0.0, 1.0, 0.0}, {3});
+  auto c1 = pluss::make_series(std::vector<double>{1.0, 0.0, 0.0}, {3});
+  auto c2 = pluss::make_series(std::vector<double>{0.0, 1.0, 0.0}, {3});
   auto cv = pluss::codem::_compat::invoke("cross", c1, c2);
   expect_eq(cv.to_vec<double>(), {0.0, 0.0, 1.0}, "cross 3-vector");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:aminmax\n";
-  auto am = pluss::codem::_compat::invoke("aminmax", pluss::value(std::vector<double>{3.0, -1.0, 2.0}, {3}));
+  auto am = pluss::codem::_compat::invoke("aminmax", pluss::make_series(std::vector<double>{3.0, -1.0, 2.0}, {3}));
   expect_eq(am.to_vec<double>(), {-1.0, 3.0}, "aminmax pair");
 
   std::cout << "[RUN] dispatch_extensions:new_math_routes:logcumsumexp\n";
-  auto lce = pluss::codem::_compat::invoke("logcumsumexp", pluss::value(std::vector<double>{0.0, 0.0, 0.0}, {3}));
+  auto lce = pluss::codem::_compat::invoke("logcumsumexp", pluss::make_series(std::vector<double>{0.0, 0.0, 0.0}, {3}));
   auto lcev = lce.to_vec<double>();
   expect_true(lcev[2] > lcev[1] && lcev[1] > lcev[0], "logcumsumexp increasing");
 }
 
 void test_matlab_hybrid_ops() {
   std::cout << "[RUN] matlab_hybrid:dct\n";
-  auto x = pluss::value(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4});
+  auto x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4});
   auto xdct = pluss::codem::_compat::invoke("dct", x);
   auto xidct = pluss::codem::_compat::invoke("idct", xdct);
   expect_true(xidct.numel() == 4, "idct output shape");
@@ -593,7 +593,7 @@ void test_matlab_hybrid_ops() {
   expect_close(xri[3], 4.0, 1e-6, "dst/idst roundtrip[3]");
 
   std::cout << "[RUN] matlab_hybrid:nanstats\n";
-  auto xn = pluss::value(std::vector<double>{1.0, std::nan(""), 3.0, 5.0}, {4});
+  auto xn = pluss::make_series(std::vector<double>{1.0, std::nan(""), 3.0, 5.0}, {4});
   auto nv = pluss::codem::_compat::invoke("nanvar", xn);
   auto ns = pluss::codem::_compat::invoke("nanstd", xn);
   expect_true(nv.numel() == 1, "nanvar scalar");
@@ -604,8 +604,8 @@ void test_matlab_hybrid_ops() {
   expect_true(mv.numel() == 4, "movmean shape");
 
   std::cout << "[RUN] matlab_hybrid:cdist\n";
-  auto a = pluss::value(std::vector<double>{0.0, 0.0, 1.0, 1.0}, {2, 2});
-  auto b = pluss::value(std::vector<double>{0.0, 1.0, 2.0, 2.0}, {2, 2});
+  auto a = pluss::make_series(std::vector<double>{0.0, 0.0, 1.0, 1.0}, {2, 2});
+  auto b = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 2.0}, {2, 2});
   auto cd = pluss::codem::_compat::invoke("cdist", a, b);
   expect_true(cd.numel() == 4, "cdist shape");
   auto cdv = cd.to_vec<double>();
@@ -628,17 +628,17 @@ void test_matlab_hybrid_ops() {
   expect_true(bt.numel() == 4, "beta shape");
 
   std::cout << "[RUN] matlab_hybrid:erfcinv\n";
-  auto ec = pluss::codem::_compat::invoke("erfcinv", pluss::value(std::vector<double>{0.5}, {1}));
+  auto ec = pluss::codem::_compat::invoke("erfcinv", pluss::make_series(std::vector<double>{0.5}, {1}));
   expect_true(ec.numel() == 1, "erfcinv shape");
   auto ecv = ec.to_vec<double>();
   expect_true(std::isfinite(ecv[0]), "erfcinv finite");
 
   std::cout << "[RUN] matlab_hybrid:zeta\n";
-  auto z = pluss::codem::_compat::invoke("zeta", pluss::value(std::vector<double>{2.0}, {1}), 1.0);
+  auto z = pluss::codem::_compat::invoke("zeta", pluss::make_series(std::vector<double>{2.0}, {1}), 1.0);
   expect_close(z.to_vec<double>()[0], 1.6449, 0.1, "zeta(2) approx");
 
   std::cout << "[RUN] matlab_hybrid:unwrap\n";
-  auto ph = pluss::value(std::vector<double>{0.0, 3.5, 7.0}, {3});
+  auto ph = pluss::make_series(std::vector<double>{0.0, 3.5, 7.0}, {3});
   auto uw = pluss::codem::_compat::invoke("unwrap", ph);
   expect_true(uw.numel() == 3, "unwrap shape");
 

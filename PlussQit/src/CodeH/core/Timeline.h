@@ -12,6 +12,7 @@
 #include "CodeH/core/TimelineBase.h"
 #include "CodeH/compat/InvokeFwd.h"
 
+#include "pluss/codem/codem.h"
 #include "pluss/coden/coden.h" // for Note
 
 namespace pluss::codeh {
@@ -75,6 +76,12 @@ public:
   using TimelineBase::weekday_name;
   using TimelineBase::month_name;
 
+  static Timeline from_buffer_epoch_nanos(std::int64_t* data,
+                                          std::span<const std::int64_t> sizes,
+                                          std::span<const std::int64_t> strides,
+                                          pluss::codem::BlobDeleter deleter = {},
+                                          std::string_view tz_name = "UTC");
+
 #if defined(CODEH_ENABLE_TIMELINE_SURFACE) && !defined(CODEH_NO_TIMELINE_SURFACE)
   #include "CodeH/core/TimelineSurface.h"
 #endif
@@ -122,5 +129,20 @@ private:
   explicit Timeline(pluss::codem::Series ticks, std::string tz_name = "UTC")
       : TimelineBase(std::move(ticks), std::move(tz_name)) {}
 };
+
+inline Timeline Timeline::from_buffer_epoch_nanos(std::int64_t* data,
+                                                  std::span<const std::int64_t> sizes,
+                                                  std::span<const std::int64_t> strides,
+                                                  pluss::codem::BlobDeleter deleter,
+                                                  std::string_view tz_name) {
+  CODEM_CHECK(sizes.size() <= 3, "Timeline::from_buffer_epoch_nanos: only supports 0D..3D");
+  auto ticks = pluss::codem::from_buffer(
+      static_cast<void*>(data),
+      sizes,
+      strides,
+      std::move(deleter),
+      pluss::codem::ScalarType::Int64);
+  return Timeline(std::move(ticks), std::string(tz_name));
+}
 
 } // namespace pluss::codeh

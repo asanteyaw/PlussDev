@@ -183,13 +183,13 @@ using pluss::table::Atlas;
 
 // Thread from rvalue payloads
 Thread t_num(pluss::make_series({1.0, 2.0, 3.0}));
-Thread t_txt(pluss::content({"a", "b", "c"}));
-Thread t_dt(pluss::moment({"2026-01-01 08:00:00", "2026-01-01 09:00:00", "2026-01-01 10:00:00"}));
+Thread t_txt(pluss::make_note({"a", "b", "c"}));
+Thread t_dt(pluss::make_timeline({"2026-01-01 08:00:00", "2026-01-01 09:00:00", "2026-01-01 10:00:00"}));
 
 // DataFrame from rvalue feature list
 DataFrame df_r({
     {"x", Thread(pluss::make_series({1, 2, 3}))},
-    {"label", Thread(pluss::content({"u", "v", "w"}))},
+    {"label", Thread(pluss::make_note({"u", "v", "w"}))},
 });
 
 // Atlas from rvalue frame stack

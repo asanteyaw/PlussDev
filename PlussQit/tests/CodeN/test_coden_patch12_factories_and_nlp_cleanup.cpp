@@ -20,7 +20,7 @@ TEST_CASE("CodeN Note factories support 3D lvalue/rvalue construction", "[coden]
   REQUIRE(lvalue_note.at(0) == "a");
   REQUIRE(lvalue_note.at(7) == "h");
 
-  Note rvalue_note = pluss::content(
+  Note rvalue_note = pluss::make_note(
       std::vector<std::string>{"0", "1", "2", "3", "4", "5", "6", "7"},
       std::span<const std::int64_t>(sizes.data(), sizes.size()));
   REQUIRE(rvalue_note.defined());
