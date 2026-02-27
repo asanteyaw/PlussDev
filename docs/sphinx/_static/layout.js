@@ -1,0 +1,265 @@
+(() => {
+  function text(node) {
+    return ((node && node.textContent) || "").trim();
+  }
+
+  function cleanHeadingText(raw) {
+    return (raw || "").replace(/\u00B6/g, "").trim();
+  }
+
+  function buildTopbar() {
+    const sidebarLinks = Array.from(
+      document.querySelectorAll(".sphinxsidebar .toctree-l1 > a.reference.internal")
+    );
+    const unique = new Map();
+
+    const currentPath = window.location.pathname.split("/").pop() || "index.html";
+
+    sidebarLinks.forEach((link) => {
+      let href = (link.getAttribute("href") || "").trim();
+      const title = (link.textContent || "").trim();
+      if (!title) {
+        return;
+      }
+      if (!href || href === "#") {
+        href = currentPath;
+      }
+      if (href.startsWith("#")) {
+        return;
+      }
+      if (!unique.has(href)) {
+        unique.set(href, title);
+      }
+    });
+
+    const topbar = document.createElement("div");
+    topbar.id = "pluss-topbar";
+
+    const brand = document.createElement("a");
+    brand.className = "brand";
+    brand.href = "index.html";
+    brand.textContent = "PlussQit";
+    topbar.appendChild(brand);
+
+    const links = document.createElement("div");
+    links.className = "top-links";
+    topbar.appendChild(links);
+
+    Array.from(unique.entries()).slice(0, 16).forEach(([href, title]) => {
+      const a = document.createElement("a");
+      a.href = href;
+      a.textContent = title;
+      if (href === currentPath || href.endsWith("/" + currentPath)) {
+        a.classList.add("active");
+      }
+      links.appendChild(a);
+    });
+
+    document.body.insertBefore(topbar, document.body.firstChild);
+  }
+
+  function buildMethodSidebar() {
+    const apiRoots = Array.from(document.querySelectorAll("section")).filter((section) => {
+      const h2 = section.querySelector(":scope > h2");
+      return h2 && text(h2).startsWith("API Reference Style");
+    });
+
+    if (!apiRoots.length) {
+      return;
+    }
+
+    const bodywrapper = document.querySelector(".bodywrapper");
+    const documentRoot = document.querySelector("div.document");
+    if (!bodywrapper || !documentRoot) {
+      return;
+    }
+
+    const methodItems = [];
+    apiRoots.forEach((root) => {
+      const groupTitleNode = root.parentElement
+        ? root.parentElement.querySelector(":scope > h1, :scope > h2")
+        : null;
+      const groupTitle = cleanHeadingText(text(groupTitleNode)) || "Methods";
+
+      const methodSections = Array.from(root.children).filter((node) => {
+        return node.tagName === "SECTION" && node.querySelector(":scope > h3");
+      });
+
+      methodSections.forEach((section, index) => {
+        if (!section.id) {
+          section.id = `method-${groupTitle.toLowerCase().replace(/\W+/g, "-")}-${index + 1}`;
+        }
+        const h3 = section.querySelector(":scope > h3");
+        const codeTitle = h3 ? h3.querySelector("code") : null;
+        const title = cleanHeadingText(text(codeTitle) || text(h3));
+        methodItems.push({
+          root,
+          section,
+          id: section.id,
+          title: title || "method",
+          group: groupTitle,
+        });
+      });
+    });
+
+    if (!methodItems.length) {
+      return;
+    }
+
+    document.body.classList.add("has-method-sidebar");
+
+    const dupCount = new Map();
+    methodItems.forEach((m) => {
+      const key = `${m.group}::${m.title}`;
+      dupCount.set(key, (dupCount.get(key) || 0) + 1);
+    });
+    const seen = new Map();
+
+    const sidebar = document.createElement("aside");
+    sidebar.id = "pluss-method-sidebar";
+
+    const title = document.createElement("div");
+    title.className = "sidebar-title";
+    title.textContent = "Method Navigation";
+    sidebar.appendChild(title);
+
+    const nav = document.createElement("nav");
+    nav.className = "method-nav";
+    sidebar.appendChild(nav);
+
+    let currentGroup = "";
+    const links = [];
+    methodItems.forEach((m, idx) => {
+      if (m.group !== currentGroup) {
+        currentGroup = m.group;
+        const groupHeader = document.createElement("div");
+        groupHeader.className = "method-group";
+        groupHeader.textContent = currentGroup;
+        nav.appendChild(groupHeader);
+      }
+
+      const key = `${m.group}::${m.title}`;
+      const n = (seen.get(key) || 0) + 1;
+      seen.set(key, n);
+      const label = dupCount.get(key) > 1 ? `${m.title} (${n})` : m.title;
+
+      const a = document.createElement("a");
+      a.href = `#${m.id}`;
+      a.textContent = label;
+      a.dataset.methodIndex = String(idx);
+      nav.appendChild(a);
+      links.push(a);
+    });
+
+    documentRoot.appendChild(sidebar);
+
+    let activeIndex = 0;
+    const setActive = (idx, opts = {}) => {
+      const { updateHash = true, resetScroll = true } = opts;
+      if (idx < 0 || idx >= methodItems.length) {
+        return;
+      }
+      activeIndex = idx;
+      const active = methodItems[idx];
+
+      apiRoots.forEach((root) => {
+        root.classList.toggle("pluss-api-root-hidden", root !== active.root);
+      });
+
+      methodItems.forEach((item, i) => {
+        item.section.classList.toggle("pluss-method-hidden", i !== idx);
+      });
+
+      links.forEach((a, i) => {
+        a.classList.toggle("active", i === idx);
+      });
+
+      if (updateHash) {
+        history.replaceState(null, "", `#${active.id}`);
+      }
+      if (resetScroll) {
+        bodywrapper.scrollTop = 0;
+      }
+    };
+
+    links.forEach((a) => {
+      a.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        const idx = Number(a.dataset.methodIndex || "0");
+        setActive(idx, { updateHash: true, resetScroll: true });
+      });
+    });
+
+    const fromHash = (() => {
+      const hash = window.location.hash.replace(/^#/, "");
+      if (!hash) {
+        return -1;
+      }
+      return methodItems.findIndex((m) => m.id === hash);
+    })();
+    setActive(fromHash >= 0 ? fromHash : 0, { updateHash: fromHash < 0, resetScroll: false });
+
+    window.addEventListener("hashchange", () => {
+      const hash = window.location.hash.replace(/^#/, "");
+      const idx = methodItems.findIndex((m) => m.id === hash);
+      if (idx >= 0 && idx !== activeIndex) {
+        setActive(idx, { updateHash: false, resetScroll: true });
+      }
+    });
+  }
+
+  function buildPrevNext() {
+    const prev = document.querySelector('link[rel="prev"]');
+    const next = document.querySelector('link[rel="next"]');
+    if (!prev && !next) {
+      return;
+    }
+
+    const bodywrapper = document.querySelector(".bodywrapper");
+    if (!bodywrapper) {
+      return;
+    }
+
+    const wrap = document.createElement("div");
+    wrap.id = "pluss-prev-next";
+
+    const makeLink = (kind, relNode) => {
+      if (!relNode) {
+        return null;
+      }
+      const a = document.createElement("a");
+      a.href = relNode.getAttribute("href");
+
+      const label = document.createElement("span");
+      label.className = "label";
+      label.textContent = kind;
+
+      const title = document.createElement("span");
+      title.className = "title";
+      title.textContent = relNode.getAttribute("title") || relNode.getAttribute("href");
+
+      a.appendChild(label);
+      a.appendChild(title);
+      return a;
+    };
+
+    const prevLink = makeLink("Previous", prev);
+    const nextLink = makeLink("Next", next);
+    if (prevLink) {
+      wrap.appendChild(prevLink);
+    }
+    if (nextLink) {
+      wrap.appendChild(nextLink);
+    }
+
+    bodywrapper.appendChild(wrap);
+
+    wrap.classList.add("show");
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    buildTopbar();
+    buildMethodSidebar();
+    buildPrevNext();
+  });
+})();

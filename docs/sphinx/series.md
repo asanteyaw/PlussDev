@@ -280,1119 +280,5687 @@ auto flat_idx = pluss::make_series(std::vector<std::int64_t>{0,3,5}, {3});
 auto flat_src = pluss::make_series(std::vector<std::int64_t>{99,88,77}, {3});
 ```
 
-- Signature:
-  `Series view(self, std::span<const std::int64_t>)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `std::span<const std::int64_t>`.
-- Example:
-  `auto out = m.view(std::span<const std::int64_t>(shape_3x2.data(), shape_3x2.size()));`
-- Signature:
-  `Series reshape(self, std::span<const std::int64_t>)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `std::span<const std::int64_t>`.
-- Example:
-  `auto out = m.reshape(std::span<const std::int64_t>(shape_3x2.data(), shape_3x2.size()));`
-- Signature:
-  `Series transpose(self, std::int64_t, std::int64_t)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t, std::int64_t`.
-- Example:
-  `auto out = m.transpose(0, 1);`
-- Signature:
-  `Series permute(self, std::span<const std::int64_t>)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `std::span<const std::int64_t>`.
-- Example:
-  `auto out = mm.permute(std::span<const std::int64_t>(perm_10.data(), perm_10.size()));`
-- Signature:
-  `Series unsqueeze(self, std::int64_t)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t`.
-- Example:
-  `auto out = x.unsqueeze(0);`
-- Signature:
-  `Series squeeze(self)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. No additional arguments.
-- Example:
-  `auto out = x.unsqueeze(0).squeeze();`
-- Signature:
-  `Series squeeze(self, std::int64_t)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t`.
-- Example:
-  `auto out = x.unsqueeze(0).squeeze(0);`
-- Signature:
-  `Series flatten(self, std::int64_t, std::int64_t)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t, std::int64_t`.
-- Example:
-  `auto out = mm.flatten(0, 1);`
-- Signature:
-  `Series select(self, std::int64_t, std::int64_t)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t, std::int64_t`.
-- Example:
-  `auto out = mm.select(0, 1);`
-- Signature:
-  `Series take(self, const Series&)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = gather_src.take(flat_idx);`
-- Signature:
-  `Series nonzero(self)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. No additional arguments.
-- Example:
-  `auto out = cond.nonzero();`
-- Signature:
-  `Series add(self, double)`
-- Explanation:
-  Applies `add` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.add(1.5);`
-- Signature:
-  `Series sub(self, double)`
-- Explanation:
-  Applies `sub` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.sub(1.5);`
-- Signature:
-  `Series mul(self, double)`
-- Explanation:
-  Applies `mul` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.mul(2.0);`
-- Signature:
-  `Series div(self, double)`
-- Explanation:
-  Applies `div` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.div(2.0);`
-- Signature:
-  `Series pow(self, double)`
-- Explanation:
-  Applies `pow` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = pos.pow(2.0);`
-- Signature:
-  `Series maximum(self, double)`
-- Explanation:
-  Applies `maximum` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.maximum(0.0);`
-- Signature:
-  `Series minimum(self, double)`
-- Explanation:
-  Applies `minimum` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.minimum(0.0);`
-- Signature:
-  `Series eq(self, double)`
-- Explanation:
-  Applies `eq` to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.eq(0.0);`
-- Signature:
-  `Series ne(self, double)`
-- Explanation:
-  Applies `ne` to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.ne(0.0);`
-- Signature:
-  `Series lt(self, double)`
-- Explanation:
-  Applies `lt` to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.lt(0.0);`
-- Signature:
-  `Series le(self, double)`
-- Explanation:
-  Applies `le` to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.le(0.0);`
-- Signature:
-  `Series gt(self, double)`
-- Explanation:
-  Applies `gt` to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.gt(0.0);`
-- Signature:
-  `Series ge(self, double)`
-- Explanation:
-  Applies `ge` to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.ge(0.0);`
-- Signature:
-  `Series add(self, const Series&)`
-- Explanation:
-  Applies `add` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = x.add(y);`
-- Signature:
-  `Series sub(self, const Series&)`
-- Explanation:
-  Applies `sub` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = x.sub(y);`
-- Signature:
-  `Series mul(self, const Series&)`
-- Explanation:
-  Applies `mul` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = x.mul(y);`
-- Signature:
-  `Series div(self, const Series&)`
-- Explanation:
-  Applies `div` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = pos.div(pos.add(1.0));`
-- Signature:
-  `Series pow(self, const Series&)`
-- Explanation:
-  Applies `pow` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = pos.pow(pos.mul(0.0).add(2.0));`
-- Signature:
-  `Series bitwise_and(self, const Series&)`
-- Explanation:
-  Applies `bitwise_and` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = bi.bitwise_and(bi.add(1));`
-- Signature:
-  `Series bitwise_or(self, const Series&)`
-- Explanation:
-  Applies `bitwise_or` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = bi.bitwise_or(bi.add(1));`
-- Signature:
-  `Series bitwise_xor(self, const Series&)`
-- Explanation:
-  Applies `bitwise_xor` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = bi.bitwise_xor(bi.add(1));`
-- Signature:
-  `Series bitwise_not(self)`
-- Explanation:
-  Applies `bitwise_not` computation to `self`. No additional arguments.
-- Example:
-  `auto out = bi.bitwise_not();`
-- Signature:
-  `Series logical_and(self, const Series&)`
-- Explanation:
-  Applies `logical_and` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = x.gt(0.0).logical_and(x.lt(3.0));`
-- Signature:
-  `Series logical_or(self, const Series&)`
-- Explanation:
-  Applies `logical_or` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = x.gt(0.0).logical_or(x.lt(-2.0));`
-- Signature:
-  `Series logical_xor(self, const Series&)`
-- Explanation:
-  Applies `logical_xor` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = x.gt(0.0).logical_xor(x.lt(0.0));`
-- Signature:
-  `Series logical_not(self)`
-- Explanation:
-  Applies `logical_not` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.gt(0.0).logical_not();`
-- Signature:
-  `Series exp(self)`
-- Explanation:
-  Applies `exp` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.exp();`
-- Signature:
-  `Series log(self)`
-- Explanation:
-  Applies `log` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.log();`
-- Signature:
-  `Series sqrt(self)`
-- Explanation:
-  Applies `sqrt` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.sqrt();`
-- Signature:
-  `Series sin(self)`
-- Explanation:
-  Applies `sin` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.sin();`
-- Signature:
-  `Series cos(self)`
-- Explanation:
-  Applies `cos` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.cos();`
-- Signature:
-  `Series tan(self)`
-- Explanation:
-  Applies `tan` computation to `self`. No additional arguments.
-- Example:
-  `auto out = unit.tan();`
-- Signature:
-  `Series asin(self)`
-- Explanation:
-  Applies `asin` computation to `self`. No additional arguments.
-- Example:
-  `auto out = unit.asin();`
-- Signature:
-  `Series acos(self)`
-- Explanation:
-  Applies `acos` computation to `self`. No additional arguments.
-- Example:
-  `auto out = unit.acos();`
-- Signature:
-  `Series atan(self)`
-- Explanation:
-  Applies `atan` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.atan();`
-- Signature:
-  `Series sinh(self)`
-- Explanation:
-  Applies `sinh` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.sinh();`
-- Signature:
-  `Series cosh(self)`
-- Explanation:
-  Applies `cosh` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.cosh();`
-- Signature:
-  `Series tanh(self)`
-- Explanation:
-  Applies `tanh` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.tanh();`
-- Signature:
-  `Series floor(self)`
-- Explanation:
-  Applies `floor` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.div(2.0).floor();`
-- Signature:
-  `Series ceil(self)`
-- Explanation:
-  Applies `ceil` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.div(2.0).ceil();`
-- Signature:
-  `Series round(self)`
-- Explanation:
-  Applies `round` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.div(2.0).round();`
-- Signature:
-  `Series trunc(self)`
-- Explanation:
-  Applies `trunc` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.div(2.0).trunc();`
-- Signature:
-  `Series reciprocal(self)`
-- Explanation:
-  Applies `reciprocal` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.reciprocal();`
-- Signature:
-  `Series sigmoid(self)`
-- Explanation:
-  Applies `sigmoid` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.sigmoid();`
-- Signature:
-  `Series relu(self)`
-- Explanation:
-  Applies `relu` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.relu();`
-- Signature:
-  `Series log1p(self)`
-- Explanation:
-  Applies `log1p` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.log1p();`
-- Signature:
-  `Series expm1(self)`
-- Explanation:
-  Applies `expm1` computation to `self`. No additional arguments.
-- Example:
-  `auto out = unit.expm1();`
-- Signature:
-  `Series erf(self)`
-- Explanation:
-  Applies `erf` computation to `self`. No additional arguments.
-- Example:
-  `auto out = unit.erf();`
-- Signature:
-  `Series erfc(self)`
-- Explanation:
-  Applies `erfc` computation to `self`. No additional arguments.
-- Example:
-  `auto out = unit.erfc();`
-- Signature:
-  `Series lgamma(self)`
-- Explanation:
-  Applies `lgamma` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.lgamma();`
-- Signature:
-  `Series asinh(self)`
-- Explanation:
-  Applies `asinh` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.asinh();`
-- Signature:
-  `Series acosh(self)`
-- Explanation:
-  Applies `acosh` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.add(1.0).acosh();`
-- Signature:
-  `Series atanh(self)`
-- Explanation:
-  Applies `atanh` computation to `self`. No additional arguments.
-- Example:
-  `auto out = unit.atanh();`
-- Signature:
-  `Series isnan(self)`
-- Explanation:
-  Applies `isnan` to `self`. No additional arguments.
-- Example:
-  `auto out = x.isnan();`
-- Signature:
-  `Series isinf(self)`
-- Explanation:
-  Applies `isinf` to `self`. No additional arguments.
-- Example:
-  `auto out = x.isinf();`
-- Signature:
-  `Series isfinite(self)`
-- Explanation:
-  Applies `isfinite` to `self`. No additional arguments.
-- Example:
-  `auto out = x.isfinite();`
-- Signature:
-  `Series sum(self, std::int64_t, bool)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
-- Example:
-  `auto out = mm.sum(1, false);`
-- Signature:
-  `Series mean(self, std::int64_t, bool)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
-- Example:
-  `auto out = mm.mean(1, true);`
-- Signature:
-  `Series amax(self, std::int64_t, bool)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
-- Example:
-  `auto out = mm.amax(1, false);`
-- Signature:
-  `Series amin(self, std::int64_t, bool)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
-- Example:
-  `auto out = mm.amin(1, false);`
-- Signature:
-  `Series all(self, std::int64_t, bool)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
-- Example:
-  `auto out = mm.gt(0.0).all(1, false);`
-- Signature:
-  `Series any(self, std::int64_t, bool)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
-- Example:
-  `auto out = mm.gt(7.0).any(1, false);`
-- Signature:
-  `Series mean(self)`
-- Explanation:
-  Computes a reduction or summary from `self`. No additional arguments.
-- Example:
-  `auto out = mm.mean();`
-- Signature:
-  `Series norm(self, double)`
-- Explanation:
-  Applies `norm` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.norm(2.0);`
-- Signature:
-  `Series var(self, bool)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `bool`.
-- Example:
-  `auto out = x.var(false);`
-- Signature:
-  `Series std(self, bool)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `bool`.
-- Example:
-  `auto out = x.std(false);`
-- Signature:
-  `Series cumsum(self, std::int64_t, bool)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
-- Example:
-  `auto out = mm.cumsum(1, false);`
-- Signature:
-  `Series cumprod(self, std::int64_t, bool)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
-- Example:
-  `auto out = mm.cumprod(1, false);`
-- Signature:
-  `Series where(self, const Series&, const Series&)`
-- Explanation:
-  Selects values from `self` or fallback inputs based on a boolean condition/mask. Arguments: `const Series&, const Series&`.
-- Example:
-  `auto out = x.where(cond, y);`
-- Signature:
-  `Series where(self, const Series&, double)`
-- Explanation:
-  Selects values from `self` or fallback inputs based on a boolean condition/mask. Arguments: `const Series&, double`.
-- Example:
-  `auto out = x.where(cond, 42.0);`
-- Signature:
-  `Series clamp_min(self, double)`
-- Explanation:
-  Applies `clamp_min` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.clamp_min(0.0);`
-- Signature:
-  `Series clamp_max(self, double)`
-- Explanation:
-  Applies `clamp_max` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = x.clamp_max(0.0);`
-- Signature:
-  `Series clamp_min(self, const Series&)`
-- Explanation:
-  Applies `clamp_min` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = x.clamp_min(y);`
-- Signature:
-  `Series clamp_max(self, const Series&)`
-- Explanation:
-  Applies `clamp_max` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = x.clamp_max(y);`
-- Signature:
-  `Series nan_to_num(self, double, double, double)`
-- Explanation:
-  Applies `nan_to_num` computation to `self`. Arguments: `double, double, double`.
-- Example:
-  `auto out = x.nan_to_num(0.0, 1e9, -1e9);`
-- Signature:
-  `Series masked_select(self, const Series&)`
-- Explanation:
-  Applies `masked_select` to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = m.masked_select(mask);`
-- Signature:
-  `Series masked_scatter(self, const Series&, const Series&)`
-- Explanation:
-  Applies `masked_scatter` to `self`. Arguments: `const Series&, const Series&`.
-- Example:
-  `auto out = m.masked_scatter(mask, n);`
-- Signature:
-  `Series gather(self, std::int64_t, const Series&)`
-- Explanation:
-  Applies `gather` computation to `self`. Arguments: `std::int64_t, const Series&`.
-- Example:
-  `auto out = gather_src.gather(1, gather_idx);`
-- Signature:
-  `Series scatter(self, std::int64_t, const Series&, const Series&)`
-- Explanation:
-  Applies `scatter` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&`.
-- Example:
-  `auto out = scatter_base.scatter(1, gather_idx, scatter_val);`
-- Signature:
-  `Series scatter_add(self, std::int64_t, const Series&, const Series&)`
-- Explanation:
-  Applies `scatter_add` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&`.
-- Example:
-  `auto out = scatter_base.scatter_add(1, gather_idx, scatter_val);`
-- Signature:
-  `Series scatter_reduce_sum(self, std::int64_t, const Series&, const Series&, bool)`
-- Explanation:
-  Applies `scatter_reduce_sum` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool`.
-- Example:
-  `auto out = scatter_base.scatter_reduce_sum(1, gather_idx, scatter_val, true);`
-- Signature:
-  `Series scatter_reduce_sum(self, std::int64_t, const Series&, const Series&, bool, double initial_scalar)`
-- Explanation:
-  Applies `scatter_reduce_sum` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool, double initial_scalar`.
-- Example:
-  `auto out = scatter_base.scatter_reduce_sum(1, gather_idx, scatter_val, true, 0.0);`
-- Signature:
-  `Series scatter_reduce_amax(self, std::int64_t, const Series&, const Series&, bool)`
-- Explanation:
-  Applies `scatter_reduce_amax` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool`.
-- Example:
-  `auto out = scatter_base.scatter_reduce_amax(1, gather_idx, scatter_val, true);`
-- Signature:
-  `Series scatter_reduce_amax(self, std::int64_t, const Series&, const Series&, bool, double initial_scalar)`
-- Explanation:
-  Applies `scatter_reduce_amax` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool, double initial_scalar`.
-- Example:
-  `auto out = scatter_base.scatter_reduce_amax(1, gather_idx, scatter_val, true, -1e9);`
-- Signature:
-  `Series scatter_reduce_amin(self, std::int64_t, const Series&, const Series&, bool)`
-- Explanation:
-  Applies `scatter_reduce_amin` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool`.
-- Example:
-  `auto out = scatter_base.scatter_reduce_amin(1, gather_idx, scatter_val, true);`
-- Signature:
-  `Series scatter_reduce_amin(self, std::int64_t, const Series&, const Series&, bool, double initial_scalar)`
-- Explanation:
-  Applies `scatter_reduce_amin` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool, double initial_scalar`.
-- Example:
-  `auto out = scatter_base.scatter_reduce_amin(1, gather_idx, scatter_val, true, 1e9);`
-- Signature:
-  `Series unique(self, bool)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `bool`.
-- Example:
-  `auto out = i.unique(true);`
-- Signature:
-  `Series bincount(self, std::int64_t minlength)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `std::int64_t minlength`.
-- Example:
-  `auto out = i.sub(1.0).to(ScalarType::Int64).bincount(0);`
-- Signature:
-  `Series histc(self, std::int64_t, double, double)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `std::int64_t, double, double`.
-- Example:
-  `auto out = pos.histc(5, 0.0, 5.0);`
-- Signature:
-  `Series& cumsum_(self, std::int64_t, bool)`
-- Explanation:
-  In-place variant of `cumsum`; it mutates `self` and returns `self`. Arguments: `std::int64_t, bool`.
-- Example:
-  `auto t = x.clone(); t.cumsum_(1, false);`
-- Signature:
-  `Series& cumprod_(self, std::int64_t, bool)`
-- Explanation:
-  In-place variant of `cumprod`; it mutates `self` and returns `self`. Arguments: `std::int64_t, bool`.
-- Example:
-  `auto t = x.clone(); t.cumprod_(1, false);`
-- Signature:
-  `Series& scatter_(self, std::int64_t, const Series&, const Series&)`
-- Explanation:
-  In-place variant of `scatter`; it mutates `self` and returns `self`. Arguments: `std::int64_t, const Series&, const Series&`.
-- Example:
-  `auto t = scatter_base.clone(); t.scatter_(1, gather_idx, scatter_val);`
-- Signature:
-  `Series& scatter_add_(self, std::int64_t, const Series&, const Series&)`
-- Explanation:
-  In-place variant of `scatter_add`; it mutates `self` and returns `self`. Arguments: `std::int64_t, const Series&, const Series&`.
-- Example:
-  `auto t = scatter_base.clone(); t.scatter_add_(1, gather_idx, scatter_val);`
-- Signature:
-  `Series& masked_scatter_(self, const Series&, const Series&)`
-- Explanation:
-  In-place variant of `masked_scatter`; it mutates `self` and returns `self`. Arguments: `const Series&, const Series&`.
-- Example:
-  `auto t = m.clone(); t.masked_scatter_(mask, n);`
-- Signature:
-  `Series& put_(self, const Series&, const Series&, bool)`
-- Explanation:
-  In-place variant of `put`; it mutates `self` and returns `self`. Arguments: `const Series&, const Series&, bool`.
-- Example:
-  `auto t = gather_src.clone(); t.put_(flat_idx, flat_src, false);`
-- Signature:
-  `Series pdf(self)`
-- Explanation:
-  Computes Gaussian probability density values for `self` using the provided mean/stddev parameters. No additional arguments.
-- Example:
-  `auto out = pos.pdf();`
-- Signature:
-  `Series pdf(self, double stddev)`
-- Explanation:
-  Computes Gaussian probability density values for `self` using the provided mean/stddev parameters. Arguments: `double stddev`.
-- Example:
-  `auto out = pos.pdf(1.5);`
-- Signature:
-  `Series pdf(self, double mean, double stddev)`
-- Explanation:
-  Computes Gaussian probability density values for `self` using the provided mean/stddev parameters. Arguments: `double mean, double stddev`.
-- Example:
-  `auto out = pos.pdf(0.0, 1.5);`
-- Signature:
-  `Series cdf(self)`
-- Explanation:
-  Computes Gaussian cumulative distribution values for `self` using the provided mean/stddev parameters. No additional arguments.
-- Example:
-  `auto out = pos.cdf();`
-- Signature:
-  `Series cdf(self, double stddev)`
-- Explanation:
-  Computes Gaussian cumulative distribution values for `self` using the provided mean/stddev parameters. Arguments: `double stddev`.
-- Example:
-  `auto out = pos.cdf(1.5);`
-- Signature:
-  `Series cdf(self, double mean, double stddev)`
-- Explanation:
-  Computes Gaussian cumulative distribution values for `self` using the provided mean/stddev parameters. Arguments: `double mean, double stddev`.
-- Example:
-  `auto out = pos.cdf(0.0, 1.5);`
-- Signature:
-  `Series dct(self)`
-- Explanation:
-  Applies `dct` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.dct();`
-- Signature:
-  `Series dct(self, std::int64_t dim)`
-- Explanation:
-  Applies `dct` computation to `self`. Arguments: `std::int64_t dim`.
-- Example:
-  `auto out = x.dct(0);`
-- Signature:
-  `Series idct(self)`
-- Explanation:
-  Applies `idct` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.dct().idct();`
-- Signature:
-  `Series idct(self, std::int64_t dim)`
-- Explanation:
-  Applies `idct` computation to `self`. Arguments: `std::int64_t dim`.
-- Example:
-  `auto out = x.idct(0);`
-- Signature:
-  `Series dst(self)`
-- Explanation:
-  Applies `dst` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.dst();`
-- Signature:
-  `Series dst(self, std::int64_t dim)`
-- Explanation:
-  Applies `dst` computation to `self`. Arguments: `std::int64_t dim`.
-- Example:
-  `auto out = x.dst(0);`
-- Signature:
-  `Series idst(self)`
-- Explanation:
-  Applies `idst` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.dst().idst();`
-- Signature:
-  `Series idst(self, std::int64_t dim)`
-- Explanation:
-  Applies `idst` computation to `self`. Arguments: `std::int64_t dim`.
-- Example:
-  `auto out = x.idst(0);`
-- Signature:
-  `Series hilbert(self)`
-- Explanation:
-  Applies `hilbert` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.hilbert();`
-- Signature:
-  `Series hilbert(self, std::int64_t dim)`
-- Explanation:
-  Applies `hilbert` computation to `self`. Arguments: `std::int64_t dim`.
-- Example:
-  `auto out = x.hilbert(0);`
-- Signature:
-  `Series histcounts(self, std::int64_t, double, double)`
-- Explanation:
-  Computes a reduction or summary from `self`. Arguments: `std::int64_t, double, double`.
-- Example:
-  `auto out = pos.histcounts(5, 0.0, 5.0);`
-- Signature:
-  `Series skewness(self)`
-- Explanation:
-  Applies `skewness` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.skewness();`
-- Signature:
-  `Series kurtosis(self)`
-- Explanation:
-  Applies `kurtosis` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.kurtosis();`
-- Signature:
-  `Series nanvar(self)`
-- Explanation:
-  Applies `nanvar` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.nanvar();`
-- Signature:
-  `Series nanstd(self)`
-- Explanation:
-  Applies `nanstd` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.nanstd();`
-- Signature:
-  `Series ediff1d(self)`
-- Explanation:
-  Applies `ediff1d` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.ediff1d();`
-- Signature:
-  `Series movsum(self)`
-- Explanation:
-  Computes moving-window sums along a dimension (default is last dimension). No additional arguments.
-- Example:
-  `auto out = x.movsum();`
-- Signature:
-  `Series movsum(self, std::int64_t window)`
-- Explanation:
-  Computes moving-window sums along a dimension (default is last dimension). Arguments: `std::int64_t window`.
-- Example:
-  `auto out = x.movsum(3);`
-- Signature:
-  `Series movsum(self, std::int64_t window, std::int64_t dim)`
-- Explanation:
-  Computes moving-window sums along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
-- Example:
-  `auto out = mm.movsum(2, 1);`
-- Signature:
-  `Series movmean(self)`
-- Explanation:
-  Computes moving-window means along a dimension (default is last dimension). No additional arguments.
-- Example:
-  `auto out = x.movmean();`
-- Signature:
-  `Series movmean(self, std::int64_t window)`
-- Explanation:
-  Computes moving-window means along a dimension (default is last dimension). Arguments: `std::int64_t window`.
-- Example:
-  `auto out = x.movmean(3);`
-- Signature:
-  `Series movmean(self, std::int64_t window, std::int64_t dim)`
-- Explanation:
-  Computes moving-window means along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
-- Example:
-  `auto out = mm.movmean(2, 1);`
-- Signature:
-  `Series movmax(self)`
-- Explanation:
-  Computes moving-window maxima along a dimension (default is last dimension). No additional arguments.
-- Example:
-  `auto out = x.movmax();`
-- Signature:
-  `Series movmax(self, std::int64_t window)`
-- Explanation:
-  Computes moving-window maxima along a dimension (default is last dimension). Arguments: `std::int64_t window`.
-- Example:
-  `auto out = x.movmax(3);`
-- Signature:
-  `Series movmax(self, std::int64_t window, std::int64_t dim)`
-- Explanation:
-  Computes moving-window maxima along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
-- Example:
-  `auto out = mm.movmax(2, 1);`
-- Signature:
-  `Series movmin(self)`
-- Explanation:
-  Computes moving-window minima along a dimension (default is last dimension). No additional arguments.
-- Example:
-  `auto out = x.movmin();`
-- Signature:
-  `Series movmin(self, std::int64_t window)`
-- Explanation:
-  Computes moving-window minima along a dimension (default is last dimension). Arguments: `std::int64_t window`.
-- Example:
-  `auto out = x.movmin(3);`
-- Signature:
-  `Series movmin(self, std::int64_t window, std::int64_t dim)`
-- Explanation:
-  Computes moving-window minima along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
-- Example:
-  `auto out = mm.movmin(2, 1);`
-- Signature:
-  `Series movstd(self)`
-- Explanation:
-  Computes moving-window standard deviation along a dimension (default is last dimension). No additional arguments.
-- Example:
-  `auto out = x.movstd();`
-- Signature:
-  `Series movstd(self, std::int64_t window)`
-- Explanation:
-  Computes moving-window standard deviation along a dimension (default is last dimension). Arguments: `std::int64_t window`.
-- Example:
-  `auto out = x.movstd(3);`
-- Signature:
-  `Series movstd(self, std::int64_t window, std::int64_t dim)`
-- Explanation:
-  Computes moving-window standard deviation along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
-- Example:
-  `auto out = mm.movstd(2, 1);`
-- Signature:
-  `Series movvar(self)`
-- Explanation:
-  Computes moving-window variance along a dimension (default is last dimension). No additional arguments.
-- Example:
-  `auto out = x.movvar();`
-- Signature:
-  `Series movvar(self, std::int64_t window)`
-- Explanation:
-  Computes moving-window variance along a dimension (default is last dimension). Arguments: `std::int64_t window`.
-- Example:
-  `auto out = x.movvar(3);`
-- Signature:
-  `Series movvar(self, std::int64_t window, std::int64_t dim)`
-- Explanation:
-  Computes moving-window variance along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
-- Example:
-  `auto out = mm.movvar(2, 1);`
-- Signature:
-  `Series pdist2(self, const Series&)`
-- Explanation:
-  Applies `pdist2` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = m.pdist2(n);`
-- Signature:
-  `Series cdist(self, const Series&)`
-- Explanation:
-  Applies `cdist` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = m.cdist(n);`
-- Signature:
-  `Series normr(self)`
-- Explanation:
-  Applies `normr` computation to `self`. No additional arguments.
-- Example:
-  `auto out = m.normr();`
-- Signature:
-  `Series normc(self)`
-- Explanation:
-  Applies `normc` computation to `self`. No additional arguments.
-- Example:
-  `auto out = m.normc();`
-- Signature:
-  `Series standardize(self)`
-- Explanation:
-  Applies `standardize` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.standardize();`
-- Signature:
-  `Series center(self)`
-- Explanation:
-  Applies `center` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.center();`
-- Signature:
-  `Series besselj(self)`
-- Explanation:
-  Applies `besselj` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.besselj();`
-- Signature:
-  `Series bessely(self)`
-- Explanation:
-  Applies `bessely` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.bessely();`
-- Signature:
-  `Series besseli(self)`
-- Explanation:
-  Applies `besseli` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.besseli();`
-- Signature:
-  `Series besselk(self)`
-- Explanation:
-  Applies `besselk` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.besselk();`
-- Signature:
-  `Series beta(self, double)`
-- Explanation:
-  Applies `beta` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = pos.beta(2.0);`
-- Signature:
-  `Series betaln(self, double)`
-- Explanation:
-  Applies `betaln` computation to `self`. Arguments: `double`.
-- Example:
-  `auto out = pos.betaln(2.0);`
-- Signature:
-  `Series erfcinv(self)`
-- Explanation:
-  Applies `erfcinv` computation to `self`. No additional arguments.
-- Example:
-  `auto out = unit.abs().erfcinv();`
-- Signature:
-  `Series zeta(self)`
-- Explanation:
-  Computes the Hurwitz zeta-style transform for `self` with scalar/series parameter overloads. No additional arguments.
-- Example:
-  `auto out = pos.zeta();`
-- Signature:
-  `Series zeta(self, double)`
-- Explanation:
-  Computes the Hurwitz zeta-style transform for `self` with scalar/series parameter overloads. Arguments: `double`.
-- Example:
-  `auto out = pos.zeta(1.0);`
-- Signature:
-  `Series zeta(self, const Series&)`
-- Explanation:
-  Computes the Hurwitz zeta-style transform for `self` with scalar/series parameter overloads. Arguments: `const Series&`.
-- Example:
-  `auto out = pos.zeta(y.abs().add(1.0));`
-- Signature:
-  `Series airy(self)`
-- Explanation:
-  Applies `airy` computation to `self`. No additional arguments.
-- Example:
-  `auto out = pos.airy();`
-- Signature:
-  `Series unwrap(self)`
-- Explanation:
-  Applies `unwrap` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.unwrap();`
-- Signature:
-  `Series unwrap(self, double period)`
-- Explanation:
-  Applies `unwrap` computation to `self`. Arguments: `double period`.
-- Example:
-  `auto out = x.unwrap(3.141592653589793);`
-- Signature:
-  `Series unwrap(self, double period, std::int64_t dim)`
-- Explanation:
-  Applies `unwrap` computation to `self`. Arguments: `double period, std::int64_t dim`.
-- Example:
-  `auto out = mm.unwrap(3.141592653589793, 1);`
-- Signature:
-  `Series cplxpair(self)`
-- Explanation:
-  Applies `cplxpair` computation to `self`. No additional arguments.
-- Example:
-  `auto out = x.hilbert().cplxpair();`
-- Signature:
-  `Series vdot(self, const Series&)`
-- Explanation:
-  Applies `vdot` computation to `self`. Arguments: `const Series&`.
-- Example:
-  `auto out = x.vdot(y);`
-- Signature:
-  `Series real(self)`
-- Explanation:
-  Applies `real` to `self`. No additional arguments.
-- Example:
-  `auto out = x.hilbert().real();`
-- Signature:
-  `Series imag(self)`
-- Explanation:
-  Applies `imag` to `self`. No additional arguments.
-- Example:
-  `auto out = x.hilbert().imag();`
-- Signature:
-  `Series angle(self)`
-- Explanation:
-  Applies `angle` to `self`. No additional arguments.
-- Example:
-  `auto out = x.hilbert().angle();`
-- Signature:
-  `Series fftshift(self)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. No additional arguments.
-- Example:
-  `auto out = mm.fftshift();`
-- Signature:
-  `Series fftshift(self, const std::vector<std::int64_t>& dims)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `const std::vector<std::int64_t>& dims`.
-- Example:
-  `auto out = mm.fftshift(std::vector<std::int64_t>{0,1});`
-- Signature:
-  `Series ifftshift(self)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. No additional arguments.
-- Example:
-  `auto out = mm.fftshift().ifftshift();`
-- Signature:
-  `Series ifftshift(self, const std::vector<std::int64_t>& dims)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `const std::vector<std::int64_t>& dims`.
-- Example:
-  `auto out = mm.ifftshift(std::vector<std::int64_t>{0,1});`
-- Signature:
-  `Series abs2(self)`
-- Explanation:
-  Applies `abs2` to `self`. No additional arguments.
-- Example:
-  `auto out = x.hilbert().abs2();`
-- Signature:
-  `Series addbmm(self, const Series& batch1, const Series& batch2)`
-- Explanation:
-  Computes `beta * self + alpha * batch_matmul(batch1, batch2)` using batched matrix products. Arguments: `const Series& batch1, const Series& batch2`.
-- Example:
-  `auto out = pluss::Series::zeros({2,2}, pluss::ScalarType::Float64).addbmm(pluss::Series::ones({3,2,4}, pluss::ScalarType::Float64), pluss::Series::ones({3,4,2}, pluss::ScalarType::Float64));`
-- Signature:
-  `Series addbmm(self, const Series& batch1, const Series& batch2, double beta, double alpha)`
-- Explanation:
-  Computes `beta * self + alpha * batch_matmul(batch1, batch2)` using batched matrix products. Arguments: `const Series& batch1, const Series& batch2, double beta, double alpha`.
-- Example:
-  `auto out = pluss::Series::zeros({2,2}, pluss::ScalarType::Float64).addbmm(pluss::Series::ones({3,2,4}, pluss::ScalarType::Float64), pluss::Series::ones({3,4,2}, pluss::ScalarType::Float64), 0.5, 2.0);`
-- Signature:
-  `Series view_as(self, const Series& other)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `const Series& other`.
-- Example:
-  `auto out = pluss::value(std::vector<double>{0,1,2,3,4,5}, {6}).view_as(pluss::Series::ones({3,2}, pluss::ScalarType::Float64));`
-- Signature:
-  `Series vsplit(self, std::int64_t sections)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t sections`.
-- Example:
-  `auto out = pluss::value(std::vector<double>{0,1,2,3,4,5,6,7,8,9,10,11}, {6,2}).vsplit(2);`
-- Signature:
-  `Series vsplit(self, const std::vector<std::int64_t>& split_points)`
-- Explanation:
-  Changes shape/indexing/view behavior for `self`. Arguments: `const std::vector<std::int64_t>& split_points`.
-- Example:
-  `auto out = pluss::value(std::vector<double>{0,1,2,3,4,5,6,7,8,9,10,11}, {6,2}).vsplit(std::vector<std::int64_t>{2,4});`
-- Signature:
-  `Series xlogy(self, const Series& other)`
-- Explanation:
-  Computes `self * log(other)` with scalar/series overloads. Arguments: `const Series& other`.
-- Example:
-  `auto out = x.abs().xlogy(y.abs().add(1.0));`
-- Signature:
-  `Series xlogy(self, double scalar)`
-- Explanation:
-  Computes `self * log(other)` with scalar/series overloads. Arguments: `double scalar`.
-- Example:
-  `auto out = x.abs().xlogy(2.0);`
-- Signature:
-  `Series& xlogy_(self, const Series& other)`
-- Explanation:
-  In-place form of `xlogy`; mutates `self`. Arguments: `const Series& other`.
-- Example:
-  `auto t = x.abs().clone(); t.xlogy_(y.abs().add(1.0));`
-- Signature:
-  `Series& xlogy_(self, double scalar)`
-- Explanation:
-  In-place form of `xlogy`; mutates `self`. Arguments: `double scalar`.
-- Example:
-  `auto t = x.abs().clone(); t.xlogy_(2.0);`
-- Signature:
-  `Series& zero_(self)`
-- Explanation:
-  In-place reset: fills `self` with zeros and returns `self`. No additional arguments.
-- Example:
-  `auto t = x.clone(); t.zero_();`
+
+## API Reference Style
+
+This section follows a professional reference layout: signatures, parameters, returns, notes, examples, and overload links.
+
+### `abs2`
+
+#### Signature
+
+```cpp
+Series abs2(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `abs2` to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.hilbert().abs2();
+```
+
+### `acos`
+
+#### Signature
+
+```cpp
+Series acos(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `acos` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = unit.acos();
+```
+
+### `acosh`
+
+#### Signature
+
+```cpp
+Series acosh(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `acosh` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.add(1.0).acosh();
+```
+
+### `add`
+
+#### Signature
+
+```cpp
+Series add(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `add` computation to `self`. Arguments: `const Series&`.
+
+#### See also
+
+- `Series add(self, double)`
+
+#### Examples
+
+```cpp
+auto out = x.add(y);
+```
+
+### `add`
+
+#### Signature
+
+```cpp
+Series add(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `add` computation to `self`. Arguments: `double`.
+
+#### See also
+
+- `Series add(self, const Series&)`
+
+#### Examples
+
+```cpp
+auto out = x.add(1.5);
+```
+
+### `addbmm`
+
+#### Signature
+
+```cpp
+Series addbmm(self, const Series& batch1, const Series& batch2)
+```
+
+#### Parameters
+
+`batch1` : `const Series&`
+    Required method argument.
+
+`batch2` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes `beta * self + alpha * batch_matmul(batch1, batch2)` using batched matrix products. Arguments: `const Series& batch1, const Series& batch2`.
+
+#### See also
+
+- `Series addbmm(self, const Series& batch1, const Series& batch2, double beta, double alpha)`
+
+#### Examples
+
+```cpp
+auto out = pluss::Series::zeros({2,2}, pluss::ScalarType::Float64).addbmm(pluss::Series::ones({3,2,4}, pluss::ScalarType::Float64), pluss::Series::ones({3,4,2}, pluss::ScalarType::Float64));
+```
+
+### `addbmm`
+
+#### Signature
+
+```cpp
+Series addbmm(self, const Series& batch1, const Series& batch2, double beta, double alpha)
+```
+
+#### Parameters
+
+`batch1` : `const Series&`
+    Required method argument.
+
+`batch2` : `const Series&`
+    Required method argument.
+
+`beta` : `double`
+    Required method argument.
+
+`alpha` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes `beta * self + alpha * batch_matmul(batch1, batch2)` using batched matrix products. Arguments: `const Series& batch1, const Series& batch2, double beta, double alpha`.
+
+#### See also
+
+- `Series addbmm(self, const Series& batch1, const Series& batch2)`
+
+#### Examples
+
+```cpp
+auto out = pluss::Series::zeros({2,2}, pluss::ScalarType::Float64).addbmm(pluss::Series::ones({3,2,4}, pluss::ScalarType::Float64), pluss::Series::ones({3,4,2}, pluss::ScalarType::Float64), 0.5, 2.0);
+```
+
+### `airy`
+
+#### Signature
+
+```cpp
+Series airy(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `airy` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.airy();
+```
+
+### `all`
+
+#### Signature
+
+```cpp
+Series all(self, std::int64_t, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
+
+#### Examples
+
+```cpp
+auto out = mm.gt(0.0).all(1, false);
+```
+
+### `amax`
+
+#### Signature
+
+```cpp
+Series amax(self, std::int64_t, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
+
+#### Examples
+
+```cpp
+auto out = mm.amax(1, false);
+```
+
+### `amin`
+
+#### Signature
+
+```cpp
+Series amin(self, std::int64_t, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
+
+#### Examples
+
+```cpp
+auto out = mm.amin(1, false);
+```
+
+### `angle`
+
+#### Signature
+
+```cpp
+Series angle(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `angle` to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.hilbert().angle();
+```
+
+### `any`
+
+#### Signature
+
+```cpp
+Series any(self, std::int64_t, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
+
+#### Examples
+
+```cpp
+auto out = mm.gt(7.0).any(1, false);
+```
+
+### `asin`
+
+#### Signature
+
+```cpp
+Series asin(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `asin` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = unit.asin();
+```
+
+### `asinh`
+
+#### Signature
+
+```cpp
+Series asinh(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `asinh` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.asinh();
+```
+
+### `atan`
+
+#### Signature
+
+```cpp
+Series atan(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `atan` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.atan();
+```
+
+### `atanh`
+
+#### Signature
+
+```cpp
+Series atanh(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `atanh` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = unit.atanh();
+```
+
+### `besseli`
+
+#### Signature
+
+```cpp
+Series besseli(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `besseli` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.besseli();
+```
+
+### `besselj`
+
+#### Signature
+
+```cpp
+Series besselj(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `besselj` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.besselj();
+```
+
+### `besselk`
+
+#### Signature
+
+```cpp
+Series besselk(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `besselk` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.besselk();
+```
+
+### `bessely`
+
+#### Signature
+
+```cpp
+Series bessely(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `bessely` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.bessely();
+```
+
+### `beta`
+
+#### Signature
+
+```cpp
+Series beta(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `beta` computation to `self`. Arguments: `double`.
+
+#### Examples
+
+```cpp
+auto out = pos.beta(2.0);
+```
+
+### `betaln`
+
+#### Signature
+
+```cpp
+Series betaln(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `betaln` computation to `self`. Arguments: `double`.
+
+#### Examples
+
+```cpp
+auto out = pos.betaln(2.0);
+```
+
+### `bincount`
+
+#### Signature
+
+```cpp
+Series bincount(self, std::int64_t minlength)
+```
+
+#### Parameters
+
+`minlength` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `std::int64_t minlength`.
+
+#### Examples
+
+```cpp
+auto out = i.sub(1.0).to(ScalarType::Int64).bincount(0);
+```
+
+### `bitwise_and`
+
+#### Signature
+
+```cpp
+Series bitwise_and(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `bitwise_and` computation to `self`. Arguments: `const Series&`.
+
+#### Examples
+
+```cpp
+auto out = bi.bitwise_and(bi.add(1));
+```
+
+### `bitwise_not`
+
+#### Signature
+
+```cpp
+Series bitwise_not(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `bitwise_not` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = bi.bitwise_not();
+```
+
+### `bitwise_or`
+
+#### Signature
+
+```cpp
+Series bitwise_or(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `bitwise_or` computation to `self`. Arguments: `const Series&`.
+
+#### Examples
+
+```cpp
+auto out = bi.bitwise_or(bi.add(1));
+```
+
+### `bitwise_xor`
+
+#### Signature
+
+```cpp
+Series bitwise_xor(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `bitwise_xor` computation to `self`. Arguments: `const Series&`.
+
+#### Examples
+
+```cpp
+auto out = bi.bitwise_xor(bi.add(1));
+```
+
+### `cdf`
+
+#### Signature
+
+```cpp
+Series cdf(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian cumulative distribution values for `self` using the provided mean/stddev parameters. No additional arguments.
+
+#### See also
+
+- `Series cdf(self, double stddev)`
+- `Series cdf(self, double mean, double stddev)`
+
+#### Examples
+
+```cpp
+auto out = pos.cdf();
+```
+
+### `cdf`
+
+#### Signature
+
+```cpp
+Series cdf(self, double mean, double stddev)
+```
+
+#### Parameters
+
+`mean` : `double`
+    Required method argument.
+
+`stddev` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian cumulative distribution values for `self` using the provided mean/stddev parameters. Arguments: `double mean, double stddev`.
+
+#### See also
+
+- `Series cdf(self)`
+- `Series cdf(self, double stddev)`
+
+#### Examples
+
+```cpp
+auto out = pos.cdf(0.0, 1.5);
+```
+
+### `cdf`
+
+#### Signature
+
+```cpp
+Series cdf(self, double stddev)
+```
+
+#### Parameters
+
+`stddev` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian cumulative distribution values for `self` using the provided mean/stddev parameters. Arguments: `double stddev`.
+
+#### See also
+
+- `Series cdf(self)`
+- `Series cdf(self, double mean, double stddev)`
+
+#### Examples
+
+```cpp
+auto out = pos.cdf(1.5);
+```
+
+### `cdist`
+
+#### Signature
+
+```cpp
+Series cdist(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `cdist` computation to `self`. Arguments: `const Series&`.
+
+#### Examples
+
+```cpp
+auto out = m.cdist(n);
+```
+
+### `ceil`
+
+#### Signature
+
+```cpp
+Series ceil(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `ceil` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.div(2.0).ceil();
+```
+
+### `center`
+
+#### Signature
+
+```cpp
+Series center(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `center` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.center();
+```
+
+### `clamp_max`
+
+#### Signature
+
+```cpp
+Series clamp_max(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `clamp_max` computation to `self`. Arguments: `const Series&`.
+
+#### See also
+
+- `Series clamp_max(self, double)`
+
+#### Examples
+
+```cpp
+auto out = x.clamp_max(y);
+```
+
+### `clamp_max`
+
+#### Signature
+
+```cpp
+Series clamp_max(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `clamp_max` computation to `self`. Arguments: `double`.
+
+#### See also
+
+- `Series clamp_max(self, const Series&)`
+
+#### Examples
+
+```cpp
+auto out = x.clamp_max(0.0);
+```
+
+### `clamp_min`
+
+#### Signature
+
+```cpp
+Series clamp_min(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `clamp_min` computation to `self`. Arguments: `const Series&`.
+
+#### See also
+
+- `Series clamp_min(self, double)`
+
+#### Examples
+
+```cpp
+auto out = x.clamp_min(y);
+```
+
+### `clamp_min`
+
+#### Signature
+
+```cpp
+Series clamp_min(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `clamp_min` computation to `self`. Arguments: `double`.
+
+#### See also
+
+- `Series clamp_min(self, const Series&)`
+
+#### Examples
+
+```cpp
+auto out = x.clamp_min(0.0);
+```
+
+### `cos`
+
+#### Signature
+
+```cpp
+Series cos(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `cos` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.cos();
+```
+
+### `cosh`
+
+#### Signature
+
+```cpp
+Series cosh(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `cosh` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.cosh();
+```
+
+### `cplxpair`
+
+#### Signature
+
+```cpp
+Series cplxpair(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `cplxpair` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.hilbert().cplxpair();
+```
+
+### `cumprod`
+
+#### Signature
+
+```cpp
+Series cumprod(self, std::int64_t, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
+
+#### Examples
+
+```cpp
+auto out = mm.cumprod(1, false);
+```
+
+### `cumprod_`
+
+#### Signature
+
+```cpp
+Series& cumprod_(self, std::int64_t, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series&`
+    Return value produced by this method call.
+
+#### Notes
+
+In-place variant of `cumprod`; it mutates `self` and returns `self`. Arguments: `std::int64_t, bool`.
+
+#### Examples
+
+```cpp
+auto t = x.clone(); t.cumprod_(1, false);
+```
+
+### `cumsum`
+
+#### Signature
+
+```cpp
+Series cumsum(self, std::int64_t, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
+
+#### Examples
+
+```cpp
+auto out = mm.cumsum(1, false);
+```
+
+### `cumsum_`
+
+#### Signature
+
+```cpp
+Series& cumsum_(self, std::int64_t, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series&`
+    Return value produced by this method call.
+
+#### Notes
+
+In-place variant of `cumsum`; it mutates `self` and returns `self`. Arguments: `std::int64_t, bool`.
+
+#### Examples
+
+```cpp
+auto t = x.clone(); t.cumsum_(1, false);
+```
+
+### `dct`
+
+#### Signature
+
+```cpp
+Series dct(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `dct` computation to `self`. No additional arguments.
+
+#### See also
+
+- `Series dct(self, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.dct();
+```
+
+### `dct`
+
+#### Signature
+
+```cpp
+Series dct(self, std::int64_t dim)
+```
+
+#### Parameters
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `dct` computation to `self`. Arguments: `std::int64_t dim`.
+
+#### See also
+
+- `Series dct(self)`
+
+#### Examples
+
+```cpp
+auto out = x.dct(0);
+```
+
+### `div`
+
+#### Signature
+
+```cpp
+Series div(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `div` computation to `self`. Arguments: `const Series&`.
+
+#### See also
+
+- `Series div(self, double)`
+
+#### Examples
+
+```cpp
+auto out = pos.div(pos.add(1.0));
+```
+
+### `div`
+
+#### Signature
+
+```cpp
+Series div(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `div` computation to `self`. Arguments: `double`.
+
+#### See also
+
+- `Series div(self, const Series&)`
+
+#### Examples
+
+```cpp
+auto out = x.div(2.0);
+```
+
+### `dst`
+
+#### Signature
+
+```cpp
+Series dst(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `dst` computation to `self`. No additional arguments.
+
+#### See also
+
+- `Series dst(self, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.dst();
+```
+
+### `dst`
+
+#### Signature
+
+```cpp
+Series dst(self, std::int64_t dim)
+```
+
+#### Parameters
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `dst` computation to `self`. Arguments: `std::int64_t dim`.
+
+#### See also
+
+- `Series dst(self)`
+
+#### Examples
+
+```cpp
+auto out = x.dst(0);
+```
+
+### `ediff1d`
+
+#### Signature
+
+```cpp
+Series ediff1d(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `ediff1d` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.ediff1d();
+```
+
+### `eq`
+
+#### Signature
+
+```cpp
+Series eq(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `eq` to `self`. Arguments: `double`.
+
+#### Examples
+
+```cpp
+auto out = x.eq(0.0);
+```
+
+### `erf`
+
+#### Signature
+
+```cpp
+Series erf(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `erf` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = unit.erf();
+```
+
+### `erfc`
+
+#### Signature
+
+```cpp
+Series erfc(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `erfc` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = unit.erfc();
+```
+
+### `erfcinv`
+
+#### Signature
+
+```cpp
+Series erfcinv(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `erfcinv` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = unit.abs().erfcinv();
+```
+
+### `exp`
+
+#### Signature
+
+```cpp
+Series exp(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `exp` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.exp();
+```
+
+### `expm1`
+
+#### Signature
+
+```cpp
+Series expm1(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `expm1` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = unit.expm1();
+```
+
+### `fftshift`
+
+#### Signature
+
+```cpp
+Series fftshift(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. No additional arguments.
+
+#### See also
+
+- `Series fftshift(self, const std::vector<std::int64_t>& dims)`
+
+#### Examples
+
+```cpp
+auto out = mm.fftshift();
+```
+
+### `fftshift`
+
+#### Signature
+
+```cpp
+Series fftshift(self, const std::vector<std::int64_t>& dims)
+```
+
+#### Parameters
+
+`dims` : `const std::vector<std::int64_t>&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `const std::vector<std::int64_t>& dims`.
+
+#### See also
+
+- `Series fftshift(self)`
+
+#### Examples
+
+```cpp
+auto out = mm.fftshift(std::vector<std::int64_t>{0,1});
+```
+
+### `flatten`
+
+#### Signature
+
+```cpp
+Series flatten(self, std::int64_t, std::int64_t)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t, std::int64_t`.
+
+#### Examples
+
+```cpp
+auto out = mm.flatten(0, 1);
+```
+
+### `floor`
+
+#### Signature
+
+```cpp
+Series floor(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `floor` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.div(2.0).floor();
+```
+
+### `gather`
+
+#### Signature
+
+```cpp
+Series gather(self, std::int64_t, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `gather` computation to `self`. Arguments: `std::int64_t, const Series&`.
+
+#### Examples
+
+```cpp
+auto out = gather_src.gather(1, gather_idx);
+```
+
+### `ge`
+
+#### Signature
+
+```cpp
+Series ge(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `ge` to `self`. Arguments: `double`.
+
+#### Examples
+
+```cpp
+auto out = x.ge(0.0);
+```
+
+### `gt`
+
+#### Signature
+
+```cpp
+Series gt(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `gt` to `self`. Arguments: `double`.
+
+#### Examples
+
+```cpp
+auto out = x.gt(0.0);
+```
+
+### `hilbert`
+
+#### Signature
+
+```cpp
+Series hilbert(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `hilbert` computation to `self`. No additional arguments.
+
+#### See also
+
+- `Series hilbert(self, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.hilbert();
+```
+
+### `hilbert`
+
+#### Signature
+
+```cpp
+Series hilbert(self, std::int64_t dim)
+```
+
+#### Parameters
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `hilbert` computation to `self`. Arguments: `std::int64_t dim`.
+
+#### See also
+
+- `Series hilbert(self)`
+
+#### Examples
+
+```cpp
+auto out = x.hilbert(0);
+```
+
+### `histc`
+
+#### Signature
+
+```cpp
+Series histc(self, std::int64_t, double, double)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `double`
+    Required method argument.
+
+`arg3` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `std::int64_t, double, double`.
+
+#### Examples
+
+```cpp
+auto out = pos.histc(5, 0.0, 5.0);
+```
+
+### `histcounts`
+
+#### Signature
+
+```cpp
+Series histcounts(self, std::int64_t, double, double)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `double`
+    Required method argument.
+
+`arg3` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `std::int64_t, double, double`.
+
+#### Examples
+
+```cpp
+auto out = pos.histcounts(5, 0.0, 5.0);
+```
+
+### `idct`
+
+#### Signature
+
+```cpp
+Series idct(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `idct` computation to `self`. No additional arguments.
+
+#### See also
+
+- `Series idct(self, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.dct().idct();
+```
+
+### `idct`
+
+#### Signature
+
+```cpp
+Series idct(self, std::int64_t dim)
+```
+
+#### Parameters
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `idct` computation to `self`. Arguments: `std::int64_t dim`.
+
+#### See also
+
+- `Series idct(self)`
+
+#### Examples
+
+```cpp
+auto out = x.idct(0);
+```
+
+### `idst`
+
+#### Signature
+
+```cpp
+Series idst(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `idst` computation to `self`. No additional arguments.
+
+#### See also
+
+- `Series idst(self, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.dst().idst();
+```
+
+### `idst`
+
+#### Signature
+
+```cpp
+Series idst(self, std::int64_t dim)
+```
+
+#### Parameters
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `idst` computation to `self`. Arguments: `std::int64_t dim`.
+
+#### See also
+
+- `Series idst(self)`
+
+#### Examples
+
+```cpp
+auto out = x.idst(0);
+```
+
+### `ifftshift`
+
+#### Signature
+
+```cpp
+Series ifftshift(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. No additional arguments.
+
+#### See also
+
+- `Series ifftshift(self, const std::vector<std::int64_t>& dims)`
+
+#### Examples
+
+```cpp
+auto out = mm.fftshift().ifftshift();
+```
+
+### `ifftshift`
+
+#### Signature
+
+```cpp
+Series ifftshift(self, const std::vector<std::int64_t>& dims)
+```
+
+#### Parameters
+
+`dims` : `const std::vector<std::int64_t>&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `const std::vector<std::int64_t>& dims`.
+
+#### See also
+
+- `Series ifftshift(self)`
+
+#### Examples
+
+```cpp
+auto out = mm.ifftshift(std::vector<std::int64_t>{0,1});
+```
+
+### `imag`
+
+#### Signature
+
+```cpp
+Series imag(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `imag` to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.hilbert().imag();
+```
+
+### `isfinite`
+
+#### Signature
+
+```cpp
+Series isfinite(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `isfinite` to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.isfinite();
+```
+
+### `isinf`
+
+#### Signature
+
+```cpp
+Series isinf(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `isinf` to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.isinf();
+```
+
+### `isnan`
+
+#### Signature
+
+```cpp
+Series isnan(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `isnan` to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.isnan();
+```
+
+### `kurtosis`
+
+#### Signature
+
+```cpp
+Series kurtosis(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `kurtosis` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.kurtosis();
+```
+
+### `le`
+
+#### Signature
+
+```cpp
+Series le(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `le` to `self`. Arguments: `double`.
+
+#### Examples
+
+```cpp
+auto out = x.le(0.0);
+```
+
+### `lgamma`
+
+#### Signature
+
+```cpp
+Series lgamma(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `lgamma` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.lgamma();
+```
+
+### `log`
+
+#### Signature
+
+```cpp
+Series log(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `log` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.log();
+```
+
+### `log1p`
+
+#### Signature
+
+```cpp
+Series log1p(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `log1p` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.log1p();
+```
+
+### `logical_and`
+
+#### Signature
+
+```cpp
+Series logical_and(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `logical_and` computation to `self`. Arguments: `const Series&`.
+
+#### Examples
+
+```cpp
+auto out = x.gt(0.0).logical_and(x.lt(3.0));
+```
+
+### `logical_not`
+
+#### Signature
+
+```cpp
+Series logical_not(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `logical_not` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.gt(0.0).logical_not();
+```
+
+### `logical_or`
+
+#### Signature
+
+```cpp
+Series logical_or(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `logical_or` computation to `self`. Arguments: `const Series&`.
+
+#### Examples
+
+```cpp
+auto out = x.gt(0.0).logical_or(x.lt(-2.0));
+```
+
+### `logical_xor`
+
+#### Signature
+
+```cpp
+Series logical_xor(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `logical_xor` computation to `self`. Arguments: `const Series&`.
+
+#### Examples
+
+```cpp
+auto out = x.gt(0.0).logical_xor(x.lt(0.0));
+```
+
+### `lt`
+
+#### Signature
+
+```cpp
+Series lt(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `lt` to `self`. Arguments: `double`.
+
+#### Examples
+
+```cpp
+auto out = x.lt(0.0);
+```
+
+### `masked_scatter`
+
+#### Signature
+
+```cpp
+Series masked_scatter(self, const Series&, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `masked_scatter` to `self`. Arguments: `const Series&, const Series&`.
+
+#### Examples
+
+```cpp
+auto out = m.masked_scatter(mask, n);
+```
+
+### `masked_scatter_`
+
+#### Signature
+
+```cpp
+Series& masked_scatter_(self, const Series&, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series&`
+    Return value produced by this method call.
+
+#### Notes
+
+In-place variant of `masked_scatter`; it mutates `self` and returns `self`. Arguments: `const Series&, const Series&`.
+
+#### Examples
+
+```cpp
+auto t = m.clone(); t.masked_scatter_(mask, n);
+```
+
+### `masked_select`
+
+#### Signature
+
+```cpp
+Series masked_select(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `masked_select` to `self`. Arguments: `const Series&`.
+
+#### Examples
+
+```cpp
+auto out = m.masked_select(mask);
+```
+
+### `maximum`
+
+#### Signature
+
+```cpp
+Series maximum(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `maximum` computation to `self`. Arguments: `double`.
+
+#### Examples
+
+```cpp
+auto out = x.maximum(0.0);
+```
+
+### `mean`
+
+#### Signature
+
+```cpp
+Series mean(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. No additional arguments.
+
+#### See also
+
+- `Series mean(self, std::int64_t, bool)`
+
+#### Examples
+
+```cpp
+auto out = mm.mean();
+```
+
+### `mean`
+
+#### Signature
+
+```cpp
+Series mean(self, std::int64_t, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
+
+#### See also
+
+- `Series mean(self)`
+
+#### Examples
+
+```cpp
+auto out = mm.mean(1, true);
+```
+
+### `minimum`
+
+#### Signature
+
+```cpp
+Series minimum(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `minimum` computation to `self`. Arguments: `double`.
+
+#### Examples
+
+```cpp
+auto out = x.minimum(0.0);
+```
+
+### `movmax`
+
+#### Signature
+
+```cpp
+Series movmax(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window maxima along a dimension (default is last dimension). No additional arguments.
+
+#### See also
+
+- `Series movmax(self, std::int64_t window)`
+- `Series movmax(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movmax();
+```
+
+### `movmax`
+
+#### Signature
+
+```cpp
+Series movmax(self, std::int64_t window)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window maxima along a dimension (default is last dimension). Arguments: `std::int64_t window`.
+
+#### See also
+
+- `Series movmax(self)`
+- `Series movmax(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movmax(3);
+```
+
+### `movmax`
+
+#### Signature
+
+```cpp
+Series movmax(self, std::int64_t window, std::int64_t dim)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window maxima along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
+
+#### See also
+
+- `Series movmax(self)`
+- `Series movmax(self, std::int64_t window)`
+
+#### Examples
+
+```cpp
+auto out = mm.movmax(2, 1);
+```
+
+### `movmean`
+
+#### Signature
+
+```cpp
+Series movmean(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window means along a dimension (default is last dimension). No additional arguments.
+
+#### See also
+
+- `Series movmean(self, std::int64_t window)`
+- `Series movmean(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movmean();
+```
+
+### `movmean`
+
+#### Signature
+
+```cpp
+Series movmean(self, std::int64_t window)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window means along a dimension (default is last dimension). Arguments: `std::int64_t window`.
+
+#### See also
+
+- `Series movmean(self)`
+- `Series movmean(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movmean(3);
+```
+
+### `movmean`
+
+#### Signature
+
+```cpp
+Series movmean(self, std::int64_t window, std::int64_t dim)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window means along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
+
+#### See also
+
+- `Series movmean(self)`
+- `Series movmean(self, std::int64_t window)`
+
+#### Examples
+
+```cpp
+auto out = mm.movmean(2, 1);
+```
+
+### `movmin`
+
+#### Signature
+
+```cpp
+Series movmin(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window minima along a dimension (default is last dimension). No additional arguments.
+
+#### See also
+
+- `Series movmin(self, std::int64_t window)`
+- `Series movmin(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movmin();
+```
+
+### `movmin`
+
+#### Signature
+
+```cpp
+Series movmin(self, std::int64_t window)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window minima along a dimension (default is last dimension). Arguments: `std::int64_t window`.
+
+#### See also
+
+- `Series movmin(self)`
+- `Series movmin(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movmin(3);
+```
+
+### `movmin`
+
+#### Signature
+
+```cpp
+Series movmin(self, std::int64_t window, std::int64_t dim)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window minima along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
+
+#### See also
+
+- `Series movmin(self)`
+- `Series movmin(self, std::int64_t window)`
+
+#### Examples
+
+```cpp
+auto out = mm.movmin(2, 1);
+```
+
+### `movstd`
+
+#### Signature
+
+```cpp
+Series movstd(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window standard deviation along a dimension (default is last dimension). No additional arguments.
+
+#### See also
+
+- `Series movstd(self, std::int64_t window)`
+- `Series movstd(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movstd();
+```
+
+### `movstd`
+
+#### Signature
+
+```cpp
+Series movstd(self, std::int64_t window)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window standard deviation along a dimension (default is last dimension). Arguments: `std::int64_t window`.
+
+#### See also
+
+- `Series movstd(self)`
+- `Series movstd(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movstd(3);
+```
+
+### `movstd`
+
+#### Signature
+
+```cpp
+Series movstd(self, std::int64_t window, std::int64_t dim)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window standard deviation along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
+
+#### See also
+
+- `Series movstd(self)`
+- `Series movstd(self, std::int64_t window)`
+
+#### Examples
+
+```cpp
+auto out = mm.movstd(2, 1);
+```
+
+### `movsum`
+
+#### Signature
+
+```cpp
+Series movsum(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window sums along a dimension (default is last dimension). No additional arguments.
+
+#### See also
+
+- `Series movsum(self, std::int64_t window)`
+- `Series movsum(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movsum();
+```
+
+### `movsum`
+
+#### Signature
+
+```cpp
+Series movsum(self, std::int64_t window)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window sums along a dimension (default is last dimension). Arguments: `std::int64_t window`.
+
+#### See also
+
+- `Series movsum(self)`
+- `Series movsum(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movsum(3);
+```
+
+### `movsum`
+
+#### Signature
+
+```cpp
+Series movsum(self, std::int64_t window, std::int64_t dim)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window sums along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
+
+#### See also
+
+- `Series movsum(self)`
+- `Series movsum(self, std::int64_t window)`
+
+#### Examples
+
+```cpp
+auto out = mm.movsum(2, 1);
+```
+
+### `movvar`
+
+#### Signature
+
+```cpp
+Series movvar(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window variance along a dimension (default is last dimension). No additional arguments.
+
+#### See also
+
+- `Series movvar(self, std::int64_t window)`
+- `Series movvar(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movvar();
+```
+
+### `movvar`
+
+#### Signature
+
+```cpp
+Series movvar(self, std::int64_t window)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window variance along a dimension (default is last dimension). Arguments: `std::int64_t window`.
+
+#### See also
+
+- `Series movvar(self)`
+- `Series movvar(self, std::int64_t window, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.movvar(3);
+```
+
+### `movvar`
+
+#### Signature
+
+```cpp
+Series movvar(self, std::int64_t window, std::int64_t dim)
+```
+
+#### Parameters
+
+`window` : `std::int64_t`
+    Required method argument.
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes moving-window variance along a dimension (default is last dimension). Arguments: `std::int64_t window, std::int64_t dim`.
+
+#### See also
+
+- `Series movvar(self)`
+- `Series movvar(self, std::int64_t window)`
+
+#### Examples
+
+```cpp
+auto out = mm.movvar(2, 1);
+```
+
+### `mul`
+
+#### Signature
+
+```cpp
+Series mul(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `mul` computation to `self`. Arguments: `const Series&`.
+
+#### See also
+
+- `Series mul(self, double)`
+
+#### Examples
+
+```cpp
+auto out = x.mul(y);
+```
+
+### `mul`
+
+#### Signature
+
+```cpp
+Series mul(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `mul` computation to `self`. Arguments: `double`.
+
+#### See also
+
+- `Series mul(self, const Series&)`
+
+#### Examples
+
+```cpp
+auto out = x.mul(2.0);
+```
+
+### `nan_to_num`
+
+#### Signature
+
+```cpp
+Series nan_to_num(self, double, double, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+`arg2` : `double`
+    Required method argument.
+
+`arg3` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `nan_to_num` computation to `self`. Arguments: `double, double, double`.
+
+#### Examples
+
+```cpp
+auto out = x.nan_to_num(0.0, 1e9, -1e9);
+```
+
+### `nanstd`
+
+#### Signature
+
+```cpp
+Series nanstd(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `nanstd` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.nanstd();
+```
+
+### `nanvar`
+
+#### Signature
+
+```cpp
+Series nanvar(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `nanvar` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.nanvar();
+```
+
+### `ne`
+
+#### Signature
+
+```cpp
+Series ne(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `ne` to `self`. Arguments: `double`.
+
+#### Examples
+
+```cpp
+auto out = x.ne(0.0);
+```
+
+### `nonzero`
+
+#### Signature
+
+```cpp
+Series nonzero(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = cond.nonzero();
+```
+
+### `norm`
+
+#### Signature
+
+```cpp
+Series norm(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `norm` computation to `self`. Arguments: `double`.
+
+#### Examples
+
+```cpp
+auto out = x.norm(2.0);
+```
+
+### `normc`
+
+#### Signature
+
+```cpp
+Series normc(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `normc` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = m.normc();
+```
+
+### `normr`
+
+#### Signature
+
+```cpp
+Series normr(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `normr` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = m.normr();
+```
+
+### `pdf`
+
+#### Signature
+
+```cpp
+Series pdf(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian probability density values for `self` using the provided mean/stddev parameters. No additional arguments.
+
+#### See also
+
+- `Series pdf(self, double stddev)`
+- `Series pdf(self, double mean, double stddev)`
+
+#### Examples
+
+```cpp
+auto out = pos.pdf();
+```
+
+### `pdf`
+
+#### Signature
+
+```cpp
+Series pdf(self, double mean, double stddev)
+```
+
+#### Parameters
+
+`mean` : `double`
+    Required method argument.
+
+`stddev` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian probability density values for `self` using the provided mean/stddev parameters. Arguments: `double mean, double stddev`.
+
+#### See also
+
+- `Series pdf(self)`
+- `Series pdf(self, double stddev)`
+
+#### Examples
+
+```cpp
+auto out = pos.pdf(0.0, 1.5);
+```
+
+### `pdf`
+
+#### Signature
+
+```cpp
+Series pdf(self, double stddev)
+```
+
+#### Parameters
+
+`stddev` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian probability density values for `self` using the provided mean/stddev parameters. Arguments: `double stddev`.
+
+#### See also
+
+- `Series pdf(self)`
+- `Series pdf(self, double mean, double stddev)`
+
+#### Examples
+
+```cpp
+auto out = pos.pdf(1.5);
+```
+
+### `pdist2`
+
+#### Signature
+
+```cpp
+Series pdist2(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `pdist2` computation to `self`. Arguments: `const Series&`.
+
+#### Examples
+
+```cpp
+auto out = m.pdist2(n);
+```
+
+### `permute`
+
+#### Signature
+
+```cpp
+Series permute(self, std::span<const std::int64_t>)
+```
+
+#### Parameters
+
+`arg1` : `std::span<const std::int64_t>`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `std::span<const std::int64_t>`.
+
+#### Examples
+
+```cpp
+auto out = mm.permute(std::span<const std::int64_t>(perm_10.data(), perm_10.size()));
+```
+
+### `pow`
+
+#### Signature
+
+```cpp
+Series pow(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `pow` computation to `self`. Arguments: `const Series&`.
+
+#### See also
+
+- `Series pow(self, double)`
+
+#### Examples
+
+```cpp
+auto out = pos.pow(pos.mul(0.0).add(2.0));
+```
+
+### `pow`
+
+#### Signature
+
+```cpp
+Series pow(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `pow` computation to `self`. Arguments: `double`.
+
+#### See also
+
+- `Series pow(self, const Series&)`
+
+#### Examples
+
+```cpp
+auto out = pos.pow(2.0);
+```
+
+### `put_`
+
+#### Signature
+
+```cpp
+Series& put_(self, const Series&, const Series&, bool)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+`arg3` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series&`
+    Return value produced by this method call.
+
+#### Notes
+
+In-place variant of `put`; it mutates `self` and returns `self`. Arguments: `const Series&, const Series&, bool`.
+
+#### Examples
+
+```cpp
+auto t = gather_src.clone(); t.put_(flat_idx, flat_src, false);
+```
+
+### `real`
+
+#### Signature
+
+```cpp
+Series real(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `real` to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.hilbert().real();
+```
+
+### `reciprocal`
+
+#### Signature
+
+```cpp
+Series reciprocal(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `reciprocal` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.reciprocal();
+```
+
+### `relu`
+
+#### Signature
+
+```cpp
+Series relu(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `relu` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.relu();
+```
+
+### `reshape`
+
+#### Signature
+
+```cpp
+Series reshape(self, std::span<const std::int64_t>)
+```
+
+#### Parameters
+
+`arg1` : `std::span<const std::int64_t>`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `std::span<const std::int64_t>`.
+
+#### Examples
+
+```cpp
+auto out = m.reshape(std::span<const std::int64_t>(shape_3x2.data(), shape_3x2.size()));
+```
+
+### `round`
+
+#### Signature
+
+```cpp
+Series round(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `round` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.div(2.0).round();
+```
+
+### `scatter`
+
+#### Signature
+
+```cpp
+Series scatter(self, std::int64_t, const Series&, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+`arg3` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `scatter` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&`.
+
+#### Examples
+
+```cpp
+auto out = scatter_base.scatter(1, gather_idx, scatter_val);
+```
+
+### `scatter_`
+
+#### Signature
+
+```cpp
+Series& scatter_(self, std::int64_t, const Series&, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+`arg3` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series&`
+    Return value produced by this method call.
+
+#### Notes
+
+In-place variant of `scatter`; it mutates `self` and returns `self`. Arguments: `std::int64_t, const Series&, const Series&`.
+
+#### Examples
+
+```cpp
+auto t = scatter_base.clone(); t.scatter_(1, gather_idx, scatter_val);
+```
+
+### `scatter_add`
+
+#### Signature
+
+```cpp
+Series scatter_add(self, std::int64_t, const Series&, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+`arg3` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `scatter_add` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&`.
+
+#### Examples
+
+```cpp
+auto out = scatter_base.scatter_add(1, gather_idx, scatter_val);
+```
+
+### `scatter_add_`
+
+#### Signature
+
+```cpp
+Series& scatter_add_(self, std::int64_t, const Series&, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+`arg3` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series&`
+    Return value produced by this method call.
+
+#### Notes
+
+In-place variant of `scatter_add`; it mutates `self` and returns `self`. Arguments: `std::int64_t, const Series&, const Series&`.
+
+#### Examples
+
+```cpp
+auto t = scatter_base.clone(); t.scatter_add_(1, gather_idx, scatter_val);
+```
+
+### `scatter_reduce_amax`
+
+#### Signature
+
+```cpp
+Series scatter_reduce_amax(self, std::int64_t, const Series&, const Series&, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+`arg3` : `const Series&`
+    Required method argument.
+
+`arg4` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `scatter_reduce_amax` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool`.
+
+#### See also
+
+- `Series scatter_reduce_amax(self, std::int64_t, const Series&, const Series&, bool, double initial_scalar)`
+
+#### Examples
+
+```cpp
+auto out = scatter_base.scatter_reduce_amax(1, gather_idx, scatter_val, true);
+```
+
+### `scatter_reduce_amax`
+
+#### Signature
+
+```cpp
+Series scatter_reduce_amax(self, std::int64_t, const Series&, const Series&, bool, double initial_scalar)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+`arg3` : `const Series&`
+    Required method argument.
+
+`arg4` : `bool`
+    Required method argument.
+
+`initial_scalar` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `scatter_reduce_amax` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool, double initial_scalar`.
+
+#### See also
+
+- `Series scatter_reduce_amax(self, std::int64_t, const Series&, const Series&, bool)`
+
+#### Examples
+
+```cpp
+auto out = scatter_base.scatter_reduce_amax(1, gather_idx, scatter_val, true, -1e9);
+```
+
+### `scatter_reduce_amin`
+
+#### Signature
+
+```cpp
+Series scatter_reduce_amin(self, std::int64_t, const Series&, const Series&, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+`arg3` : `const Series&`
+    Required method argument.
+
+`arg4` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `scatter_reduce_amin` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool`.
+
+#### See also
+
+- `Series scatter_reduce_amin(self, std::int64_t, const Series&, const Series&, bool, double initial_scalar)`
+
+#### Examples
+
+```cpp
+auto out = scatter_base.scatter_reduce_amin(1, gather_idx, scatter_val, true);
+```
+
+### `scatter_reduce_amin`
+
+#### Signature
+
+```cpp
+Series scatter_reduce_amin(self, std::int64_t, const Series&, const Series&, bool, double initial_scalar)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+`arg3` : `const Series&`
+    Required method argument.
+
+`arg4` : `bool`
+    Required method argument.
+
+`initial_scalar` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `scatter_reduce_amin` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool, double initial_scalar`.
+
+#### See also
+
+- `Series scatter_reduce_amin(self, std::int64_t, const Series&, const Series&, bool)`
+
+#### Examples
+
+```cpp
+auto out = scatter_base.scatter_reduce_amin(1, gather_idx, scatter_val, true, 1e9);
+```
+
+### `scatter_reduce_sum`
+
+#### Signature
+
+```cpp
+Series scatter_reduce_sum(self, std::int64_t, const Series&, const Series&, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+`arg3` : `const Series&`
+    Required method argument.
+
+`arg4` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `scatter_reduce_sum` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool`.
+
+#### See also
+
+- `Series scatter_reduce_sum(self, std::int64_t, const Series&, const Series&, bool, double initial_scalar)`
+
+#### Examples
+
+```cpp
+auto out = scatter_base.scatter_reduce_sum(1, gather_idx, scatter_val, true);
+```
+
+### `scatter_reduce_sum`
+
+#### Signature
+
+```cpp
+Series scatter_reduce_sum(self, std::int64_t, const Series&, const Series&, bool, double initial_scalar)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+`arg3` : `const Series&`
+    Required method argument.
+
+`arg4` : `bool`
+    Required method argument.
+
+`initial_scalar` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `scatter_reduce_sum` computation to `self`. Arguments: `std::int64_t, const Series&, const Series&, bool, double initial_scalar`.
+
+#### See also
+
+- `Series scatter_reduce_sum(self, std::int64_t, const Series&, const Series&, bool)`
+
+#### Examples
+
+```cpp
+auto out = scatter_base.scatter_reduce_sum(1, gather_idx, scatter_val, true, 0.0);
+```
+
+### `select`
+
+#### Signature
+
+```cpp
+Series select(self, std::int64_t, std::int64_t)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t, std::int64_t`.
+
+#### Examples
+
+```cpp
+auto out = mm.select(0, 1);
+```
+
+### `sigmoid`
+
+#### Signature
+
+```cpp
+Series sigmoid(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `sigmoid` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.sigmoid();
+```
+
+### `sin`
+
+#### Signature
+
+```cpp
+Series sin(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `sin` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.sin();
+```
+
+### `sinh`
+
+#### Signature
+
+```cpp
+Series sinh(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `sinh` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.sinh();
+```
+
+### `skewness`
+
+#### Signature
+
+```cpp
+Series skewness(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `skewness` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.skewness();
+```
+
+### `sqrt`
+
+#### Signature
+
+```cpp
+Series sqrt(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `sqrt` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = pos.sqrt();
+```
+
+### `squeeze`
+
+#### Signature
+
+```cpp
+Series squeeze(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. No additional arguments.
+
+#### See also
+
+- `Series squeeze(self, std::int64_t)`
+
+#### Examples
+
+```cpp
+auto out = x.unsqueeze(0).squeeze();
+```
+
+### `squeeze`
+
+#### Signature
+
+```cpp
+Series squeeze(self, std::int64_t)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t`.
+
+#### See also
+
+- `Series squeeze(self)`
+
+#### Examples
+
+```cpp
+auto out = x.unsqueeze(0).squeeze(0);
+```
+
+### `standardize`
+
+#### Signature
+
+```cpp
+Series standardize(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `standardize` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.standardize();
+```
+
+### `std`
+
+#### Signature
+
+```cpp
+Series std(self, bool)
+```
+
+#### Parameters
+
+`arg1` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `bool`.
+
+#### Examples
+
+```cpp
+auto out = x.std(false);
+```
+
+### `sub`
+
+#### Signature
+
+```cpp
+Series sub(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `sub` computation to `self`. Arguments: `const Series&`.
+
+#### See also
+
+- `Series sub(self, double)`
+
+#### Examples
+
+```cpp
+auto out = x.sub(y);
+```
+
+### `sub`
+
+#### Signature
+
+```cpp
+Series sub(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `sub` computation to `self`. Arguments: `double`.
+
+#### See also
+
+- `Series sub(self, const Series&)`
+
+#### Examples
+
+```cpp
+auto out = x.sub(1.5);
+```
+
+### `sum`
+
+#### Signature
+
+```cpp
+Series sum(self, std::int64_t, bool)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `std::int64_t, bool`.
+
+#### Examples
+
+```cpp
+auto out = mm.sum(1, false);
+```
+
+### `take`
+
+#### Signature
+
+```cpp
+Series take(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `const Series&`.
+
+#### Examples
+
+```cpp
+auto out = gather_src.take(flat_idx);
+```
+
+### `tan`
+
+#### Signature
+
+```cpp
+Series tan(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `tan` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = unit.tan();
+```
+
+### `tanh`
+
+#### Signature
+
+```cpp
+Series tanh(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `tanh` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.tanh();
+```
+
+### `transpose`
+
+#### Signature
+
+```cpp
+Series transpose(self, std::int64_t, std::int64_t)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+`arg2` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t, std::int64_t`.
+
+#### Examples
+
+```cpp
+auto out = m.transpose(0, 1);
+```
+
+### `trunc`
+
+#### Signature
+
+```cpp
+Series trunc(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `trunc` computation to `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto out = x.div(2.0).trunc();
+```
+
+### `unique`
+
+#### Signature
+
+```cpp
+Series unique(self, bool)
+```
+
+#### Parameters
+
+`arg1` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `bool`.
+
+#### Examples
+
+```cpp
+auto out = i.unique(true);
+```
+
+### `unsqueeze`
+
+#### Signature
+
+```cpp
+Series unsqueeze(self, std::int64_t)
+```
+
+#### Parameters
+
+`arg1` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t`.
+
+#### Examples
+
+```cpp
+auto out = x.unsqueeze(0);
+```
+
+### `unwrap`
+
+#### Signature
+
+```cpp
+Series unwrap(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `unwrap` computation to `self`. No additional arguments.
+
+#### See also
+
+- `Series unwrap(self, double period)`
+- `Series unwrap(self, double period, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.unwrap();
+```
+
+### `unwrap`
+
+#### Signature
+
+```cpp
+Series unwrap(self, double period)
+```
+
+#### Parameters
+
+`period` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `unwrap` computation to `self`. Arguments: `double period`.
+
+#### See also
+
+- `Series unwrap(self)`
+- `Series unwrap(self, double period, std::int64_t dim)`
+
+#### Examples
+
+```cpp
+auto out = x.unwrap(3.141592653589793);
+```
+
+### `unwrap`
+
+#### Signature
+
+```cpp
+Series unwrap(self, double period, std::int64_t dim)
+```
+
+#### Parameters
+
+`period` : `double`
+    Required method argument.
+
+`dim` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `unwrap` computation to `self`. Arguments: `double period, std::int64_t dim`.
+
+#### See also
+
+- `Series unwrap(self)`
+- `Series unwrap(self, double period)`
+
+#### Examples
+
+```cpp
+auto out = mm.unwrap(3.141592653589793, 1);
+```
+
+### `var`
+
+#### Signature
+
+```cpp
+Series var(self, bool)
+```
+
+#### Parameters
+
+`arg1` : `bool`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes a reduction or summary from `self`. Arguments: `bool`.
+
+#### Examples
+
+```cpp
+auto out = x.var(false);
+```
+
+### `vdot`
+
+#### Signature
+
+```cpp
+Series vdot(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Applies `vdot` computation to `self`. Arguments: `const Series&`.
+
+#### Examples
+
+```cpp
+auto out = x.vdot(y);
+```
+
+### `view`
+
+#### Signature
+
+```cpp
+Series view(self, std::span<const std::int64_t>)
+```
+
+#### Parameters
+
+`arg1` : `std::span<const std::int64_t>`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `std::span<const std::int64_t>`.
+
+#### Examples
+
+```cpp
+auto out = m.view(std::span<const std::int64_t>(shape_3x2.data(), shape_3x2.size()));
+```
+
+### `view_as`
+
+#### Signature
+
+```cpp
+Series view_as(self, const Series& other)
+```
+
+#### Parameters
+
+`other` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `const Series& other`.
+
+#### Examples
+
+```cpp
+auto out = pluss::value(std::vector<double>{0,1,2,3,4,5}, {6}).view_as(pluss::Series::ones({3,2}, pluss::ScalarType::Float64));
+```
+
+### `vsplit`
+
+#### Signature
+
+```cpp
+Series vsplit(self, const std::vector<std::int64_t>& split_points)
+```
+
+#### Parameters
+
+`split_points` : `const std::vector<std::int64_t>&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `const std::vector<std::int64_t>& split_points`.
+
+#### See also
+
+- `Series vsplit(self, std::int64_t sections)`
+
+#### Examples
+
+```cpp
+auto out = pluss::value(std::vector<double>{0,1,2,3,4,5,6,7,8,9,10,11}, {6,2}).vsplit(std::vector<std::int64_t>{2,4});
+```
+
+### `vsplit`
+
+#### Signature
+
+```cpp
+Series vsplit(self, std::int64_t sections)
+```
+
+#### Parameters
+
+`sections` : `std::int64_t`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Changes shape/indexing/view behavior for `self`. Arguments: `std::int64_t sections`.
+
+#### See also
+
+- `Series vsplit(self, const std::vector<std::int64_t>& split_points)`
+
+#### Examples
+
+```cpp
+auto out = pluss::value(std::vector<double>{0,1,2,3,4,5,6,7,8,9,10,11}, {6,2}).vsplit(2);
+```
+
+### `where`
+
+#### Signature
+
+```cpp
+Series where(self, const Series&, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+`arg2` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Selects values from `self` or fallback inputs based on a boolean condition/mask. Arguments: `const Series&, const Series&`.
+
+#### See also
+
+- `Series where(self, const Series&, double)`
+
+#### Examples
+
+```cpp
+auto out = x.where(cond, y);
+```
+
+### `where`
+
+#### Signature
+
+```cpp
+Series where(self, const Series&, double)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+`arg2` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Selects values from `self` or fallback inputs based on a boolean condition/mask. Arguments: `const Series&, double`.
+
+#### See also
+
+- `Series where(self, const Series&, const Series&)`
+
+#### Examples
+
+```cpp
+auto out = x.where(cond, 42.0);
+```
+
+### `xlogy`
+
+#### Signature
+
+```cpp
+Series xlogy(self, const Series& other)
+```
+
+#### Parameters
+
+`other` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes `self * log(other)` with scalar/series overloads. Arguments: `const Series& other`.
+
+#### See also
+
+- `Series xlogy(self, double scalar)`
+
+#### Examples
+
+```cpp
+auto out = x.abs().xlogy(y.abs().add(1.0));
+```
+
+### `xlogy`
+
+#### Signature
+
+```cpp
+Series xlogy(self, double scalar)
+```
+
+#### Parameters
+
+`scalar` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes `self * log(other)` with scalar/series overloads. Arguments: `double scalar`.
+
+#### See also
+
+- `Series xlogy(self, const Series& other)`
+
+#### Examples
+
+```cpp
+auto out = x.abs().xlogy(2.0);
+```
+
+### `xlogy_`
+
+#### Signature
+
+```cpp
+Series& xlogy_(self, const Series& other)
+```
+
+#### Parameters
+
+`other` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series&`
+    Return value produced by this method call.
+
+#### Notes
+
+In-place form of `xlogy`; mutates `self`. Arguments: `const Series& other`.
+
+#### See also
+
+- `Series& xlogy_(self, double scalar)`
+
+#### Examples
+
+```cpp
+auto t = x.abs().clone(); t.xlogy_(y.abs().add(1.0));
+```
+
+### `xlogy_`
+
+#### Signature
+
+```cpp
+Series& xlogy_(self, double scalar)
+```
+
+#### Parameters
+
+`scalar` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series&`
+    Return value produced by this method call.
+
+#### Notes
+
+In-place form of `xlogy`; mutates `self`. Arguments: `double scalar`.
+
+#### See also
+
+- `Series& xlogy_(self, const Series& other)`
+
+#### Examples
+
+```cpp
+auto t = x.abs().clone(); t.xlogy_(2.0);
+```
+
+### `zero_`
+
+#### Signature
+
+```cpp
+Series& zero_(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series&`
+    Return value produced by this method call.
+
+#### Notes
+
+In-place reset: fills `self` with zeros and returns `self`. No additional arguments.
+
+#### Examples
+
+```cpp
+auto t = x.clone(); t.zero_();
+```
+### `zeta`
+
+#### Signature
+
+```cpp
+Series zeta(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes the Hurwitz zeta-style transform for `self` with scalar/series parameter overloads. No additional arguments.
+
+#### See also
+
+- `Series zeta(self, double)`
+- `Series zeta(self, const Series&)`
+
+#### Examples
+
+```cpp
+auto out = pos.zeta();
+```
+
+### `zeta`
+
+#### Signature
+
+```cpp
+Series zeta(self, const Series&)
+```
+
+#### Parameters
+
+`arg1` : `const Series&`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes the Hurwitz zeta-style transform for `self` with scalar/series parameter overloads. Arguments: `const Series&`.
+
+#### See also
+
+- `Series zeta(self)`
+- `Series zeta(self, double)`
+
+#### Examples
+
+```cpp
+auto out = pos.zeta(y.abs().add(1.0));
+```
+
+### `zeta`
+
+#### Signature
+
+```cpp
+Series zeta(self, double)
+```
+
+#### Parameters
+
+`arg1` : `double`
+    Required method argument.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes the Hurwitz zeta-style transform for `self` with scalar/series parameter overloads. Arguments: `double`.
+
+#### See also
+
+- `Series zeta(self)`
+- `Series zeta(self, const Series&)`
+
+#### Examples
+
+```cpp
+auto out = pos.zeta(1.0);
+```
