@@ -7,6 +7,35 @@
     return (raw || "").replace(/\u00B6/g, "").trim();
   }
 
+  function extractOverloadLabel(section, title) {
+    const sigBlock = section.querySelector(':scope > section > .highlight pre');
+    const sigText = cleanHeadingText(text(sigBlock));
+    if (!sigText) {
+      return title;
+    }
+
+    const match = sigText.match(/\b([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)$/);
+    if (!match) {
+      return title;
+    }
+
+    const rawArgs = (match[2] || "").trim();
+    if (!rawArgs || rawArgs === "self") {
+      return `${title}()`;
+    }
+
+    const args = rawArgs
+      .split(",")
+      .map((part) => part.trim())
+      .filter((part) => part && part !== "self");
+
+    if (!args.length) {
+      return `${title}()`;
+    }
+
+    return `${title}(${args.join(", ")})`;
+  }
+
   function buildTopbar() {
     const sidebarLinks = Array.from(
       document.querySelectorAll(".sphinxsidebar .toctree-l1 > a.reference.internal")
@@ -24,7 +53,7 @@
       if (!href || href === "#") {
         href = currentPath;
       }
-      if (href.startsWith("#")) {
+      if (href.startsWith("#") || href.includes("#")) {
         return;
       }
       if (!unique.has(href)) {
@@ -45,7 +74,7 @@
     links.className = "top-links";
     topbar.appendChild(links);
 
-    Array.from(unique.entries()).slice(0, 16).forEach(([href, title]) => {
+    Array.from(unique.entries()).forEach(([href, title]) => {
       const a = document.createElement("a");
       a.href = href;
       a.textContent = title;
@@ -92,11 +121,13 @@
         const h3 = section.querySelector(":scope > h3");
         const codeTitle = h3 ? h3.querySelector("code") : null;
         const title = cleanHeadingText(text(codeTitle) || text(h3));
+        const overloadLabel = extractOverloadLabel(section, title || "method");
         methodItems.push({
           root,
           section,
           id: section.id,
           title: title || "method",
+          overloadLabel,
           group: groupTitle,
         });
       });
@@ -171,7 +202,7 @@
       const key = `${m.group}::${m.title}`;
       const n = (seen.get(key) || 0) + 1;
       seen.set(key, n);
-      const label = dupCount.get(key) > 1 ? `${m.title} (${n})` : m.title;
+      const label = dupCount.get(key) > 1 ? m.overloadLabel : m.title;
 
       const a = document.createElement("a");
       a.href = `#${m.id}`;
@@ -252,6 +283,102 @@
     };
   }
 
+  function buildSectionSidebar() {
+    const documentRoot = document.querySelector("div.document");
+    const bodywrapper = document.querySelector(".bodywrapper");
+    const pageRoot = document.querySelector("div.body > section");
+    if (!documentRoot || !bodywrapper || !pageRoot) {
+      return null;
+    }
+
+    const sections = Array.from(pageRoot.children).filter((node) => {
+      return node.tagName === "SECTION" && node.querySelector(":scope > h2");
+    });
+    if (!sections.length) {
+      return null;
+    }
+
+    document.body.classList.add("has-method-sidebar");
+
+    const sidebar = document.createElement("aside");
+    sidebar.id = "pluss-method-sidebar";
+
+    const title = document.createElement("div");
+    title.className = "sidebar-title";
+    title.textContent = "Section Navigation";
+    sidebar.appendChild(title);
+
+    const nav = document.createElement("nav");
+    nav.className = "method-nav";
+    sidebar.appendChild(nav);
+
+    const items = [];
+    sections.forEach((section, idx) => {
+      if (!section.id) {
+        section.id = `section-${idx + 1}`;
+      }
+      const h2 = section.querySelector(":scope > h2");
+      const item = {
+        id: section.id,
+        title: cleanHeadingText(text(h2)),
+        section,
+      };
+      items.push(item);
+    });
+
+    const links = [];
+    items.forEach((item, idx) => {
+      const a = document.createElement("a");
+      a.href = `#${item.id}`;
+      a.textContent = item.title;
+      a.dataset.sectionIndex = String(idx);
+      nav.appendChild(a);
+      links.push(a);
+    });
+
+    documentRoot.appendChild(sidebar);
+
+    let activeIndex = 0;
+    const setActive = (idx, opts = {}) => {
+      const { updateHash = true, resetScroll = true } = opts;
+      if (idx < 0 || idx >= items.length) {
+        return;
+      }
+      activeIndex = idx;
+      items.forEach((item, i) => {
+        item.section.classList.toggle("pluss-method-hidden", i !== idx);
+      });
+      links.forEach((a, i) => {
+        a.classList.toggle("active", i === idx);
+      });
+      if (updateHash) {
+        history.replaceState(null, "", `#${items[idx].id}`);
+      }
+      if (resetScroll) {
+        bodywrapper.scrollTop = 0;
+      }
+    };
+
+    links.forEach((a) => {
+      a.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        setActive(Number(a.dataset.sectionIndex || "0"), { updateHash: true, resetScroll: true });
+      });
+    });
+
+    const fromHash = (() => {
+      const hash = window.location.hash.replace(/^#/, "");
+      return items.findIndex((item) => item.id === hash);
+    })();
+    setActive(fromHash >= 0 ? fromHash : 0, { updateHash: fromHash < 0, resetScroll: false });
+
+    return {
+      items,
+      getActiveIndex: () => activeIndex,
+      setActive: (idx) => setActive(idx, { updateHash: true, resetScroll: true }),
+    };
+  }
+
   function buildPrevNext(methodNav) {
     if (methodNav && methodNav.items && methodNav.items.length) {
       const bodywrapper = document.querySelector(".bodywrapper");
@@ -263,6 +390,7 @@
       wrap.id = "pluss-prev-next";
 
       const prevLink = document.createElement("a");
+      prevLink.className = "prev-link";
       prevLink.href = "#";
       const prevLabel = document.createElement("span");
       prevLabel.className = "label";
@@ -273,6 +401,7 @@
       prevLink.appendChild(prevTitle);
 
       const nextLink = document.createElement("a");
+      nextLink.className = "next-link";
       nextLink.href = "#";
       const nextLabel = document.createElement("span");
       nextLabel.className = "label";
@@ -344,12 +473,13 @@
     const wrap = document.createElement("div");
     wrap.id = "pluss-prev-next";
 
-    const makeLink = (kind, relNode) => {
-      if (!relNode) {
-        return null;
-      }
-      const a = document.createElement("a");
-      a.href = relNode.getAttribute("href");
+      const makeLink = (kind, relNode) => {
+        if (!relNode) {
+          return null;
+        }
+        const a = document.createElement("a");
+        a.href = relNode.getAttribute("href");
+        a.className = kind.toLowerCase() + "-link";
 
       const label = document.createElement("span");
       label.className = "label";
@@ -381,6 +511,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     buildTopbar();
     const methodNav = buildMethodSidebar();
-    buildPrevNext(methodNav);
+    const sectionNav = methodNav ? null : buildSectionSidebar();
+    buildPrevNext(methodNav || sectionNav);
   });
 })();

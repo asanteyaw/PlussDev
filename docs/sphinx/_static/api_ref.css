@@ -1,7 +1,9 @@
 :root {
   --pluss-topbar-height: 58px;
-  --pluss-sidebar-width: 300px;
-  --pluss-method-sidebar-width: 320px;
+  --pluss-app-max-width: 1880px;
+  --pluss-sidebar-width: clamp(260px, 18vw, 320px);
+  --pluss-method-sidebar-width: clamp(280px, 20vw, 360px);
+  --pluss-content-max-width: min(1320px, calc(100vw - var(--pluss-method-sidebar-width) - 7rem));
   --pluss-bg: #f3f5f8;
   --pluss-panel: #ffffff;
   --pluss-muted: #e3e8ef;
@@ -18,6 +20,7 @@ body {
 body {
   background: var(--pluss-bg);
   color: var(--pluss-text);
+  font-size: clamp(15px, 0.18vw + 14px, 17px);
   margin: 0;
   overflow: hidden;
 }
@@ -29,11 +32,12 @@ body {
   display: flex;
   gap: 1rem;
   height: var(--pluss-topbar-height);
-  left: 0;
-  padding: 0 1rem;
+  left: 50%;
+  padding: 0 clamp(0.8rem, 1.5vw, 1.35rem);
   position: fixed;
-  right: 0;
   top: 0;
+  transform: translateX(-50%);
+  width: min(100vw, var(--pluss-app-max-width));
   z-index: 1000;
 }
 
@@ -71,13 +75,13 @@ body {
 
 div.document {
   bottom: 0;
-  left: 0;
   margin: 0;
   max-width: none;
   position: fixed;
-  right: 0;
+  left: 50%;
   top: var(--pluss-topbar-height);
-  width: auto;
+  transform: translateX(-50%);
+  width: min(100vw, var(--pluss-app-max-width));
 }
 
 div.sphinxsidebar {
@@ -176,7 +180,7 @@ div.bodywrapper {
   height: 100%;
   margin: 0;
   overflow-y: auto;
-  padding: 1rem 1.6rem 4.5rem;
+  padding: clamp(0.9rem, 1.8vw, 1.6rem) clamp(1rem, 2.2vw, 2.2rem) 4.5rem;
 }
 
 div.body {
@@ -184,8 +188,10 @@ div.body {
   border: 1px solid var(--pluss-border);
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(24, 43, 61, 0.06);
-  max-width: 1160px;
-  padding: 1.1rem 1.3rem 1.8rem;
+  margin: 0 auto;
+  max-width: var(--pluss-content-max-width);
+  padding: clamp(1rem, 1.6vw, 1.35rem) clamp(1rem, 2vw, 1.7rem) clamp(1.5rem, 2.4vw, 2rem);
+  width: min(100%, var(--pluss-content-max-width));
 }
 
 div.footer,
@@ -199,10 +205,12 @@ div.clearer {
   border-radius: 10px;
   box-shadow: 0 8px 18px rgba(30, 50, 70, 0.14);
   display: flex;
-  gap: 0.65rem;
+  gap: 0.75rem;
+  justify-content: space-between;
   margin: 1rem auto 0;
-  max-width: 1160px;
+  max-width: var(--pluss-content-max-width);
   padding: 0.5rem 0.6rem;
+  width: min(100%, var(--pluss-content-max-width));
 }
 
 #pluss-prev-next a {
@@ -211,10 +219,20 @@ div.clearer {
   border-radius: 8px;
   color: #12364f;
   display: block;
-  flex: 1 1 0;
-  min-width: 0;
-  padding: 0.45rem 0.6rem;
+  flex: 0 1 320px;
+  max-width: 320px;
+  min-width: 220px;
+  padding: 0.5rem 0.7rem;
   text-decoration: none;
+}
+
+#pluss-prev-next a.prev-link {
+  margin-right: auto;
+}
+
+#pluss-prev-next a.next-link {
+  margin-left: auto;
+  text-align: right;
 }
 
 #pluss-prev-next a .label {
@@ -276,6 +294,7 @@ section.pluss-api-root-hidden {
   background: #f4f6f9;
   border: 1px solid #d6dce6;
   border-radius: 6px;
+  overflow-x: auto;
   padding: 0.75rem 0.9rem;
 }
 
@@ -302,12 +321,18 @@ section.pluss-api-root-hidden {
   }
 
   #pluss-topbar {
+    left: 0;
     position: sticky;
+    transform: none;
     top: 0;
+    width: 100%;
   }
 
   div.document {
+    left: 0;
     position: static;
+    transform: none;
+    width: 100%;
   }
 
   div.sphinxsidebar {
@@ -331,9 +356,33 @@ section.pluss-api-root-hidden {
 
   div.body {
     max-width: none;
+    width: 100%;
   }
 
   #pluss-prev-next {
     margin: 0.8rem 0 0;
+  }
+
+  #pluss-prev-next a {
+    flex-basis: 46%;
+    max-width: none;
+    min-width: 0;
+  }
+}
+
+@media (min-width: 1800px) {
+  #pluss-topbar .top-links a {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  #pluss-method-sidebar,
+  div.sphinxsidebar {
+    padding-top: 1rem;
+  }
+
+  #pluss-method-sidebar .method-nav a,
+  div.sphinxsidebar a {
+    font-size: 0.95rem;
   }
 }

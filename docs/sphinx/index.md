@@ -12,10 +12,14 @@ This Sphinx set is structured as:
 quickstart
 demo_catalog
 series
+series_api_reference
 series_all_methods_usage
 note
+note_api_reference
 note_all_methods_usage
 timeline_timeindex
+timeline_api_reference
+timeindex_api_reference
 timeline_all_methods_usage
 timeindex_all_methods_usage
 api_indexes

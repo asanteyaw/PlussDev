@@ -1,3 +1,4 @@
+#include "pluss/codem/series_factory.h"
 #include <pluss/pluss.h>
 
 #include <any>

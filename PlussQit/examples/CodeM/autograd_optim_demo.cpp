@@ -1,3 +1,4 @@
+#include "pluss/codem/series_factory.h"
 #include <pluss/pluss.h>
 
 #include <cmath>
@@ -60,7 +61,7 @@ int main() {
         return y1 + y2 + y3 + y4 + y5 + y6;
       },
       probe_params);
-
+ 
   const double probe_loss_v = probe_loss.item<double>();
   const double probe_sens_v = probe_sens[0].item<double>();
   std::cout << "probe loss=" << probe_loss_v << " sensitivity=" << probe_sens_v << '\n';
