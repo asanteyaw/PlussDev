@@ -2,6 +2,10 @@
 #include <pluss/pluss.h>
 #include <complex>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("broadcastable full-tensor bool mask in indices vector", "[indexing]") {
   pluss::Series a = pluss::arange(0, 12, 1, pluss::ScalarType::Int64).view({3,4});
   // mask shape [1,4] broadcast to [3,4]

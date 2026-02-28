@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("masked_select basic", "[indexing]") {
   auto a = Series::zeros({2,3}, ScalarType::Float64);
@@ -13,7 +17,7 @@ TEST_CASE("masked_select basic", "[indexing]") {
   // select elements 2,4,6
   mp[1] = 1; mp[3] = 1; mp[5] = 1;
 
-  auto out = masked_select(a, m);
+  auto out = a.masked_select(m);
   REQUIRE(out.dim() == 1);
   REQUIRE(out.numel() == 3);
   auto* op = reinterpret_cast<const double*>(out.raw_data());

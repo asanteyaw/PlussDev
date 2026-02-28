@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("reductions dim variants work", "[reduce]") {
   auto a = pluss::ones({2,3,4}, pluss::ScalarType::Float32);
   auto s0 = a.sum(0);

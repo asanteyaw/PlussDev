@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("where broadcast + type promotion", "[indexing]") {
   auto cond = Series::zeros({2,1}, ScalarType::Bool);
@@ -59,7 +63,7 @@ TEST_CASE("take/put", "[indexing]") {
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_data());
   ip[0] = 0; ip[1] = 3; ip[2] = -1;
 
-  auto t = take(a, idx);
+  auto t = a.take(idx);
   auto* tp = reinterpret_cast<const double*>(t.raw_data());
   REQUIRE(tp[0] == 1.0);
   REQUIRE(tp[1] == 4.0);
@@ -69,7 +73,7 @@ TEST_CASE("take/put", "[indexing]") {
   auto* sp = reinterpret_cast<double*>(src.raw_data());
   sp[0]=10; sp[1]=20; sp[2]=30;
 
-  auto p = put(a, idx, src, false);
+  auto p = a.put(idx, src, false);
   auto* pp = reinterpret_cast<const double*>(p.raw_data());
   REQUIRE(pp[0] == 10.0);
   REQUIRE(pp[3] == 20.0);

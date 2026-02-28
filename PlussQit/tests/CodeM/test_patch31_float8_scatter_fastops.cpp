@@ -2,6 +2,10 @@
 #include <pluss/pluss.h>
 #include <cmath>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("float8 storage policy + fast ops", "[float8][fast]") {
   Series a = pluss::full({4}, 1.0, ScalarType::Float8E5M2);

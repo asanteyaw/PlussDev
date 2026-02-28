@@ -506,6 +506,23 @@ public:
   // Norm overloads used throughout the codebase.
   Series norm(double p, std::int64_t dim, bool keepdim=false) const;
 
+  // Pluss autodiff entrypoint. This is a named wrapper over the existing
+  // generated `_backward(...)` method so public docs can standardize on
+  // `reverse()` without forking the engine path.
+  void reverse() const { (void)pluss::codem::_compat::invoke("_backward", *this); }
+  void reverse(const Series& sensitivity_output) const {
+    (void)pluss::codem::_compat::invoke("_backward", *this, sensitivity_output);
+  }
+  bool tracks_slope() const { return pluss::codem::_compat::invoke("tracks_slope", *this).item<bool>(); }
+  bool has_sensitivity() const {
+    return pluss::codem::_compat::invoke("has_sensitivity", *this).item<bool>();
+  }
+  Series sensitivity() const { return pluss::codem::_compat::invoke("sensitivity", *this); }
+  void clear_sensitivity() const { (void)pluss::codem::_compat::invoke_("clear_sensitivity", *this); }
+  std::int64_t storage_version() const {
+    return pluss::codem::_compat::invoke("_version", *this).item<std::int64_t>();
+  }
+
   // PlussQit naming deviations (method-first aliases).
   Series pile(const std::vector<Series>& others, std::int64_t dim=0) const;
   Series unite(const std::vector<Series>& others, std::int64_t dim=0) const;

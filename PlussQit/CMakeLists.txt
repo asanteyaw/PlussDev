@@ -587,6 +587,12 @@ if (PLUSSQIT_BUILD_TESTS)
     target_link_libraries(plussqit_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_tests PRIVATE cxx_std_20)
 
+    add_executable(plussqit_codem_autodiff_tests
+      tests/CodeM/test_patch67_autodiff_transforms.cpp
+    )
+    target_link_libraries(plussqit_codem_autodiff_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
+    target_compile_features(plussqit_codem_autodiff_tests PRIVATE cxx_std_20)
+
     # CodeN-only tests (kept separate so CodeN can evolve even when CodeM is mid-refactor).
     add_executable(plussqit_coden_tests ${CODEN_TEST_SOURCES})
     target_link_libraries(plussqit_coden_tests PRIVATE PlussQit::CodeN Catch2::Catch2WithMain)
@@ -601,6 +607,7 @@ if (PLUSSQIT_BUILD_TESTS)
     include(CTest)
     include(Catch)
     catch_discover_tests(plussqit_tests)
+    catch_discover_tests(plussqit_codem_autodiff_tests)
     catch_discover_tests(plussqit_coden_tests)
     if (PLUSSQIT_BUILD_CODEH AND TARGET plussqit_codeh_tests)
       catch_discover_tests(plussqit_codeh_tests)

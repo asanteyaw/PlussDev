@@ -387,11 +387,11 @@ Series pow(const Series& a, const Series& b) {
   auto out = binary_op_(native::cpu::BinaryOpId::Pow, aa, bb);
   maybe_link_binary_op_(
       out, a, b, "pow",
-      [b, out, a](const Series& g) {
-        return g.mul(b).mul(out).div(a);
+      [a, b](const Series& g) {
+        return g.mul(b).mul(pow(a, b)).div(a);
       },
-      [a, out](const Series& g) {
-        return g.mul(out).mul(log(a));
+      [a, b](const Series& g) {
+        return g.mul(pow(a, b)).mul(log(a));
       });
   return out;
 }
@@ -618,8 +618,8 @@ Series sqrt(const Series& a) {
     require_backend_dispatch_supported_(a.platform(), "sqrt");
     native::cpu::sqrt(a, out);
   }
-  maybe_link_unary_op_(out, a, [out](const Series& g) {
-    return g.mul(0.5).div(out);
+  maybe_link_unary_op_(out, a, [a](const Series& g) {
+    return g.mul(0.5).mul(rsqrt(a));
   });
   return out;
 }
@@ -639,8 +639,8 @@ Series exp(const Series& a) {
     require_backend_dispatch_supported_(a.platform(), "exp");
     native::cpu::exp(a, out);
   }
-  maybe_link_unary_op_(out, a, [out](const Series& g) {
-    return g.mul(out);
+  maybe_link_unary_op_(out, a, [a](const Series& g) {
+    return g.mul(exp(a));
   });
   return out;
 }
@@ -828,9 +828,10 @@ Series tanh(const Series& a) {
     require_backend_dispatch_supported_(a.platform(), "tanh");
     native::cpu::tanh(a, out);
   }
-  maybe_link_unary_op_(out, a, [out](const Series& g) {
-    const Series one = scalar_like_(out, 1.0);
-    return g.mul(sub(one, mul(out, out)));
+  maybe_link_unary_op_(out, a, [a](const Series& g) {
+    const Series y = tanh(a);
+    const Series one = scalar_like_(a, 1.0);
+    return g.mul(sub(one, mul(y, y)));
   });
   return out;
 }
@@ -1265,7 +1266,11 @@ static Series maybe_keepdim_(Series out, std::span<const std::int64_t> in_sizes,
 
 Series sum(const Series& a) {
   PLUSS_CHECK(a.defined(), "sum: undefined");
-  if (a.dim() == 0) return a.clone();
+  if (a.dim() == 0) {
+    Series out = a.clone();
+    maybe_link_unary_op_(out, a, [](const Series& g) { return g; });
+    return out;
+  }
   auto aa = a.contiguous();
   if (aa.platform() != Platform::CPU) {
     if (aa.platform() == Platform::MPS && native::mps::supports_sum_dim(aa.scalar_type())) {
@@ -1293,7 +1298,11 @@ Series sum(const Series& a) {
 
 Series sum(const Series& a, std::int64_t dim, bool keepdim) {
   PLUSS_CHECK(a.defined(), "sum: undefined");
-  if (a.dim() == 0) return a.clone();
+  if (a.dim() == 0) {
+    Series out = a.clone();
+    maybe_link_unary_op_(out, a, [](const Series& g) { return g; });
+    return out;
+  }
   auto aa = a.contiguous();
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
@@ -1344,7 +1353,11 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
 
 Series prod(const Series& a) {
   PLUSS_CHECK(a.defined(), "prod: undefined");
-  if (a.dim() == 0) return a.clone();
+  if (a.dim() == 0) {
+    Series out = a.clone();
+    maybe_link_unary_op_(out, a, [](const Series& g) { return g; });
+    return out;
+  }
   Series cur = a.contiguous();
   if (cur.platform() != Platform::CPU) {
     if (cur.platform() == Platform::MPS && native::mps::supports_prod_dim(cur.scalar_type())) {
@@ -1362,7 +1375,11 @@ Series prod(const Series& a) {
 
 Series prod(const Series& a, std::int64_t dim, bool keepdim) {
   PLUSS_CHECK(a.defined(), "prod: undefined");
-  if (a.dim() == 0) return a.clone();
+  if (a.dim() == 0) {
+    Series out = a.clone();
+    maybe_link_unary_op_(out, a, [](const Series& g) { return g; });
+    return out;
+  }
   auto aa = a.contiguous();
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
@@ -1381,7 +1398,11 @@ Series prod(const Series& a, std::int64_t dim, bool keepdim) {
 
 Series mean(const Series& a) {
   PLUSS_CHECK(a.defined(), "mean: undefined");
-  if (a.dim() == 0) return a.clone();
+  if (a.dim() == 0) {
+    Series out = a.clone();
+    maybe_link_unary_op_(out, a, [](const Series& g) { return g; });
+    return out;
+  }
   auto aa = a.contiguous();
   if (aa.platform() != Platform::CPU) {
     if (aa.platform() == Platform::MPS && native::mps::supports_sum_dim(aa.scalar_type())) {
@@ -1413,7 +1434,11 @@ Series mean(const Series& a) {
 
 Series mean(const Series& a, std::int64_t dim, bool keepdim) {
   PLUSS_CHECK(a.defined(), "mean: undefined");
-  if (a.dim() == 0) return a.clone();
+  if (a.dim() == 0) {
+    Series out = a.clone();
+    maybe_link_unary_op_(out, a, [](const Series& g) { return g; });
+    return out;
+  }
   // mean = sum / reduce_n, for float types; for integral, promote to float32
   Series aa = a.contiguous();
   const auto nd = aa.dim();
@@ -1750,9 +1775,10 @@ Series sigmoid(const Series& a) {
     auto aa = a.contiguous();
     native::cpu::sigmoid(aa, out);
   }
-  maybe_link_unary_op_(out, a, [out](const Series& g) {
-    const Series one = scalar_like_(out, 1.0);
-    return mul(g, mul(out, sub(one, out)));
+  maybe_link_unary_op_(out, a, [a](const Series& g) {
+    const Series y = sigmoid(a);
+    const Series one = scalar_like_(a, 1.0);
+    return mul(g, mul(y, sub(one, y)));
   });
   return out;
 }
@@ -2237,8 +2263,9 @@ Series rsqrt(const Series& a) {
     auto aa = a.contiguous().to(out.scalar_type());
     native::cpu::rsqrt(aa, out);
   }
-  maybe_link_unary_op_(out, a, [out](const Series& g) {
-    return g.mul(-0.5).mul(mul(mul(out, out), out));
+  maybe_link_unary_op_(out, a, [a](const Series& g) {
+    const Series y = rsqrt(a);
+    return g.mul(-0.5).mul(mul(mul(y, y), y));
   });
   return out;
 }
@@ -3411,7 +3438,23 @@ static Series expand_to_self_(const Series& rhs, const Series& self) {
   return rhs.expand(self.sizes(), /*implicit=*/true);
 }
 
+static void guard_direct_inplace_value_op_(std::string_view op, const Series& self) {
+  if (!series_tape::recording_enabled()) return;
+  if (!series_tape::tracks_slope(self)) return;
+  throw_error(
+      std::string(op) +
+      ": in-place mutation on autograd-tracked Series is disallowed; mutate a detached/separate Series instead");
+}
+
+static Series& finish_direct_inplace_value_op_(Series& self) {
+  if (self.defined()) {
+    self.storage().bump_version();
+  }
+  return self;
+}
+
 Series& Series::add_(const Series& rhs, double alpha) {
+  guard_direct_inplace_value_op_("add_", *this);
   ensure_writable_(*this);
   require_same_platform(*this, rhs, "add_");
   Series b = expand_to_self_(rhs, *this).to(scalar_type());
@@ -3419,7 +3462,7 @@ Series& Series::add_(const Series& rhs, double alpha) {
     b = b.mul(alpha).to(scalar_type());
   }
   *this = ops_internal::add(*this, b);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series& Series::add_(const Series& other, double alpha, const Series& out) {
@@ -3440,6 +3483,7 @@ Series& Series::add_(double other, double alpha) {
 }
 
 Series& Series::sub_(const Series& rhs, double alpha) {
+  guard_direct_inplace_value_op_("sub_", *this);
   ensure_writable_(*this);
   require_same_platform(*this, rhs, "sub_");
   Series b = expand_to_self_(rhs, *this).to(scalar_type());
@@ -3447,7 +3491,7 @@ Series& Series::sub_(const Series& rhs, double alpha) {
     b = b.mul(alpha).to(scalar_type());
   }
   *this = ops_internal::sub(*this, b);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series& Series::sub_(const Series& other, double alpha, const Series& out) {
@@ -3465,19 +3509,21 @@ Series& Series::sub_(double other, double alpha) {
 }
 
 Series& Series::mul_(const Series& rhs) {
+  guard_direct_inplace_value_op_("mul_", *this);
   ensure_writable_(*this);
   require_same_platform(*this, rhs, "mul_");
   auto b = expand_to_self_(rhs, *this).to(scalar_type());
   *this = ops_internal::mul(*this, b);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series& Series::div_(const Series& rhs) {
+  guard_direct_inplace_value_op_("div_", *this);
   ensure_writable_(*this);
   require_same_platform(*this, rhs, "div_");
   auto b = expand_to_self_(rhs, *this).to(scalar_type());
   *this = ops_internal::div(*this, b);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::arange(double start, double end, double step, ScalarType dtype) {
@@ -3741,12 +3787,12 @@ Series Series::sin() const { return ops_internal::sin(*this); }
 Series Series::cos() const { return ops_internal::cos(*this); }
 Series Series::tanh() const { return ops_internal::tanh(*this); }
 
-Series& Series::exp_() { *this = exp(); return *this; }
-Series& Series::log_() { *this = log(); return *this; }
-Series& Series::sqrt_() { *this = sqrt(); return *this; }
-Series& Series::sin_() { *this = sin(); return *this; }
-Series& Series::cos_() { *this = cos(); return *this; }
-Series& Series::tanh_() { *this = tanh(); return *this; }
+Series& Series::exp_() { guard_direct_inplace_value_op_("exp_", *this); *this = exp(); return finish_direct_inplace_value_op_(*this); }
+Series& Series::log_() { guard_direct_inplace_value_op_("log_", *this); *this = log(); return finish_direct_inplace_value_op_(*this); }
+Series& Series::sqrt_() { guard_direct_inplace_value_op_("sqrt_", *this); *this = sqrt(); return finish_direct_inplace_value_op_(*this); }
+Series& Series::sin_() { guard_direct_inplace_value_op_("sin_", *this); *this = sin(); return finish_direct_inplace_value_op_(*this); }
+Series& Series::cos_() { guard_direct_inplace_value_op_("cos_", *this); *this = cos(); return finish_direct_inplace_value_op_(*this); }
+Series& Series::tanh_() { guard_direct_inplace_value_op_("tanh_", *this); *this = tanh(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::unite(const std::vector<Series>& others, std::int64_t dim) const {
   for (const auto& t : others) {
@@ -3801,7 +3847,9 @@ Series Series::scatter(std::int64_t dim, const Series& index, const Series& src)
 }
 
 Series& Series::scatter_(std::int64_t dim, const Series& index, const Series& src) {
-  return ops_internal::scatter_(*this, dim, index, src);
+  guard_direct_inplace_value_op_("scatter_", *this);
+  ops_internal::scatter_(*this, dim, index, src);
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::scatter_add(std::int64_t dim, const Series& index, const Series& src) const {
@@ -3809,7 +3857,9 @@ Series Series::scatter_add(std::int64_t dim, const Series& index, const Series& 
 }
 
 Series& Series::scatter_add_(std::int64_t dim, const Series& index, const Series& src) {
-  return ops_internal::scatter_add_(*this, dim, index, src);
+  guard_direct_inplace_value_op_("scatter_add_", *this);
+  ops_internal::scatter_add_(*this, dim, index, src);
+  return finish_direct_inplace_value_op_(*this);
 }
 
 static Series scalar_to_series_(double v, ScalarType dt, Platform platform) {
@@ -3847,9 +3897,24 @@ Series& Series::div_(double rhs) {
   Series s = scalar_to_series_(rhs, scalar_type(), platform());
   return (this->*fn)(s);
 }
-Series& Series::pow_(double rhs) { Series out = this->pow(rhs); this->copy_(out); return *this; }
-Series& Series::minimum_(double rhs) { Series out = this->minimum(rhs); this->copy_(out); return *this; }
-Series& Series::maximum_(double rhs) { Series out = this->maximum(rhs); this->copy_(out); return *this; }
+Series& Series::pow_(double rhs) {
+  guard_direct_inplace_value_op_("pow_", *this);
+  Series out = this->pow(rhs);
+  this->copy_(out);
+  return finish_direct_inplace_value_op_(*this);
+}
+Series& Series::minimum_(double rhs) {
+  guard_direct_inplace_value_op_("minimum_", *this);
+  Series out = this->minimum(rhs);
+  this->copy_(out);
+  return finish_direct_inplace_value_op_(*this);
+}
+Series& Series::maximum_(double rhs) {
+  guard_direct_inplace_value_op_("maximum_", *this);
+  Series out = this->maximum(rhs);
+  this->copy_(out);
+  return finish_direct_inplace_value_op_(*this);
+}
 
 Series Series::index(const std::vector<Series>& indices) const {
   for (const auto& idx : indices) {
@@ -3874,6 +3939,7 @@ Series Series::take(const Series& index) const {
   return pluss::codem::native::cpu::take(*this, index);
 }
 Series Series::put_(const Series& index, const Series& source, bool accumulate) {
+  guard_direct_inplace_value_op_("put_", *this);
   require_same_platform(*this, index, "put_");
   require_same_platform(*this, source, "put_");
   if (platform() == Platform::MPS) {
@@ -3883,61 +3949,65 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
     const Series cpu_src = source.to(Platform::CPU);
     const Series cpu_out = pluss::codem::native::cpu::put(cpu_self, cpu_idx, cpu_src, accumulate);
     copy_(cpu_out.to(Platform::MPS));
-    return *this;
+    return finish_direct_inplace_value_op_(*this);
   }
   require_backend_dispatch_supported_(platform(), "put_");
   Series out = pluss::codem::native::cpu::put(*this, index, source, accumulate);
   this->copy_(out);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 Series Series::nonzero() const { return pluss::codem::ops_internal::nonzero(*this); }
 
 Series Series::tan() const { return ops_internal::tan(*this); }
-Series& Series::tan_() { *this = tan(); return *this; }
+Series& Series::tan_() { guard_direct_inplace_value_op_("tan_", *this); *this = tan(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::asin() const { return ops_internal::asin(*this); }
-Series& Series::asin_() { *this = asin(); return *this; }
+Series& Series::asin_() { guard_direct_inplace_value_op_("asin_", *this); *this = asin(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::acos() const { return ops_internal::acos(*this); }
-Series& Series::acos_() { *this = acos(); return *this; }
+Series& Series::acos_() { guard_direct_inplace_value_op_("acos_", *this); *this = acos(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::atan() const { return ops_internal::atan(*this); }
-Series& Series::atan_() { *this = atan(); return *this; }
+Series& Series::atan_() { guard_direct_inplace_value_op_("atan_", *this); *this = atan(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::sinh() const { return ops_internal::sinh(*this); }
-Series& Series::sinh_() { *this = sinh(); return *this; }
+Series& Series::sinh_() { guard_direct_inplace_value_op_("sinh_", *this); *this = sinh(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::cosh() const { return ops_internal::cosh(*this); }
-Series& Series::cosh_() { *this = cosh(); return *this; }
+Series& Series::cosh_() { guard_direct_inplace_value_op_("cosh_", *this); *this = cosh(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::floor() const { return ops_internal::floor(*this); }
-Series& Series::floor_() { *this = floor(); return *this; }
+Series& Series::floor_() { guard_direct_inplace_value_op_("floor_", *this); *this = floor(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::ceil() const { return ops_internal::ceil(*this); }
-Series& Series::ceil_() { *this = ceil(); return *this; }
+Series& Series::ceil_() { guard_direct_inplace_value_op_("ceil_", *this); *this = ceil(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::round() const { return ops_internal::round(*this); }
-Series& Series::round_() { *this = round(); return *this; }
+Series& Series::round_() { guard_direct_inplace_value_op_("round_", *this); *this = round(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::trunc() const { return ops_internal::trunc(*this); }
-Series& Series::trunc_() { *this = trunc(); return *this; }
+Series& Series::trunc_() { guard_direct_inplace_value_op_("trunc_", *this); *this = trunc(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::reciprocal() const { return ops_internal::reciprocal(*this); }
-Series& Series::reciprocal_() { *this = reciprocal(); return *this; }
+Series& Series::reciprocal_() { guard_direct_inplace_value_op_("reciprocal_", *this); *this = reciprocal(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::sigmoid() const { return ops_internal::sigmoid(*this); }
-Series& Series::sigmoid_() { *this = sigmoid(); return *this; }
+Series& Series::sigmoid_() { guard_direct_inplace_value_op_("sigmoid_", *this); *this = sigmoid(); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::relu() const { return ops_internal::relu(*this); }
-Series& Series::relu_() { *this = relu(); return *this; }
+Series& Series::relu_() { guard_direct_inplace_value_op_("relu_", *this); *this = relu(); return finish_direct_inplace_value_op_(*this); }
 
-Series& Series::logical_not_() { *this = ops_internal::logical_not(*this); return *this; }
+Series& Series::logical_not_() { guard_direct_inplace_value_op_("logical_not_", *this); *this = ops_internal::logical_not(*this); return finish_direct_inplace_value_op_(*this); }
 
 Series Series::masked_select(const Series& mask) const {return pluss::codem::ops_internal::masked_select(*this, mask);}
 
 Series Series::masked_scatter(const Series& mask, const Series& src) const {return pluss::codem::ops_internal::masked_scatter(*this, mask, src);}
 
-Series& Series::masked_scatter_(const Series& mask, const Series& src) {return pluss::codem::ops_internal::masked_scatter_(*this, mask, src);}
+Series& Series::masked_scatter_(const Series& mask, const Series& src) {
+  guard_direct_inplace_value_op_("masked_scatter_", *this);
+  pluss::codem::ops_internal::masked_scatter_(*this, mask, src);
+  return finish_direct_inplace_value_op_(*this);
+}
 
 Series Series::unique(bool sorted) const {return pluss::codem::ops_internal::unique(*this, sorted);}
 
@@ -3951,8 +4021,9 @@ Series Series::log1p() const {
 }
 Series& Series::log1p_() {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("log1p_", *this);
   *this = log1p();
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::expm1() const {
@@ -3961,8 +4032,9 @@ Series Series::expm1() const {
 }
 Series& Series::expm1_() {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("expm1_", *this);
   *this = expm1();
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::erf() const {
@@ -3971,8 +4043,9 @@ Series Series::erf() const {
 }
 Series& Series::erf_() {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("erf_", *this);
   *this = erf();
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::erfc() const {
@@ -3981,8 +4054,9 @@ Series Series::erfc() const {
 }
 Series& Series::erfc_() {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("erfc_", *this);
   *this = erfc();
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::lgamma() const {
@@ -3991,8 +4065,9 @@ Series Series::lgamma() const {
 }
 Series& Series::lgamma_() {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("lgamma_", *this);
   *this = lgamma();
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::asinh() const {
@@ -4001,8 +4076,9 @@ Series Series::asinh() const {
 }
 Series& Series::asinh_() {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("asinh_", *this);
   *this = asinh();
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::acosh() const {
@@ -4011,8 +4087,9 @@ Series Series::acosh() const {
 }
 Series& Series::acosh_() {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("acosh_", *this);
   *this = acosh();
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::atanh() const {
@@ -4021,8 +4098,9 @@ Series Series::atanh() const {
 }
 Series& Series::atanh_() {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("atanh_", *this);
   *this = atanh();
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::isnan() const {
@@ -4031,9 +4109,10 @@ Series Series::isnan() const {
 }
 Series& Series::isnan_() {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("isnan_", *this);
   Series out = isnan().to(scalar_type());
   copy_(out);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::isinf() const {
@@ -4042,9 +4121,10 @@ Series Series::isinf() const {
 }
 Series& Series::isinf_() {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("isinf_", *this);
   Series out = isinf().to(scalar_type());
   copy_(out);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::isfinite() const {
@@ -4053,9 +4133,10 @@ Series Series::isfinite() const {
 }
 Series& Series::isfinite_() {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("isfinite_", *this);
   Series out = isfinite().to(scalar_type());
   copy_(out);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::sum(std::int64_t dim, bool keepdim) const {
@@ -4108,10 +4189,11 @@ Series Series::where(const Series& condition, const Series& other) const {
 
 Series& Series::where_(const Series& condition, const Series& other) {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("where_", *this);
   ops_internal::PlatformScope platform_scope{platform()};
   Series out = where(condition, other);
   copy_(out);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::clamp_min(double min) const {
@@ -4122,10 +4204,11 @@ Series Series::clamp_min(double min) const {
 
 Series& Series::clamp_min_(double min) {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("clamp_min_", *this);
   ops_internal::PlatformScope platform_scope{platform()};
   Series out = clamp_min(min);
   copy_(out);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::clamp_max(double max) const {
@@ -4136,10 +4219,11 @@ Series Series::clamp_max(double max) const {
 
 Series& Series::clamp_max_(double max) {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("clamp_max_", *this);
   ops_internal::PlatformScope platform_scope{platform()};
   Series out = clamp_max(max);
   copy_(out);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::nan_to_num(double nan, double posinf, double neginf) const {
@@ -4150,10 +4234,11 @@ Series Series::nan_to_num(double nan, double posinf, double neginf) const {
 
 Series& Series::nan_to_num_(double nan, double posinf, double neginf) {
   PLUSS_CALL_GUARD();
+  guard_direct_inplace_value_op_("nan_to_num_", *this);
   ops_internal::PlatformScope platform_scope{platform()};
   Series out = nan_to_num(nan, posinf, neginf);
   copy_(out);
-  return *this;
+  return finish_direct_inplace_value_op_(*this);
 }
 
 Series Series::cumsum(std::int64_t dim, bool keepdim) const {

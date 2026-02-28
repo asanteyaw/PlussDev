@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("logical_and/or/xor broadcasting", "[logical]") {
   pluss::Series a = pluss::make_series(std::vector<bool>{true,false,true,false}, {2,2});
   pluss::Series b = pluss::make_series(std::vector<bool>{true,true,false,false}, {2,2});

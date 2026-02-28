@@ -2,6 +2,10 @@
 #include "CodeM/core/Storage.h"
 #include "CodeM/compat/Invoke.h"
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -386,6 +390,88 @@ void test_unary_math_and_activations() {
   expect_eq(r.to_vec<float>(), {0.0f, 0.0f, 0.0f, 1.0f}, "relu values");
 }
 
+void test_autodiff_transforms() {
+  using pluss::subsp::math::diff::DualTrace;
+  using pluss::subsp::math::diff::Trace;
+  using pluss::subsp::math::diff::jvp;
+  using pluss::subsp::math::diff::linearize;
+  using pluss::subsp::math::diff::value_and_grad;
+  using pluss::subsp::math::diff::vjp;
+
+  std::cout << "[RUN] autodiff:reverse\n";
+  auto scalar = pluss::make_series(1.25).to(pluss::ScalarType::Float64);
+  scalar.requires_grad_(true);
+  auto scalar_loss = scalar.square().sum();
+  scalar_loss.reverse();
+  expect_close(scalar.sensitivity().item<double>(), 2.5, 1e-12, "reverse scalar sensitivity");
+
+  const auto vector_objective = [](const auto& x) {
+    using pluss::subsp::math::diff::sin;
+    using pluss::subsp::math::diff::square;
+    return sin(x) + square(x);
+  };
+
+  std::cout << "[RUN] autodiff:value_and_grad\n";
+  const auto x = pluss::make_series(std::vector<double>{0.3, -0.2, 0.5}, {3});
+  auto [value, g] = value_and_grad(
+      [&](const Trace& z) -> Trace {
+        using pluss::subsp::math::diff::exp;
+        using pluss::subsp::math::diff::log;
+        using pluss::subsp::math::diff::mean;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        return mean(square(z)) + sum(log(exp(z) + 1.0));
+      },
+      x);
+  expect_true(value.numel() == 1, "value_and_grad scalar output");
+  const auto gv = g.to_vec<double>();
+  const auto xv = x.to_vec<double>();
+  for (std::size_t i = 0; i < xv.size(); ++i) {
+    const double expected = (2.0 * xv[i] / static_cast<double>(xv.size())) + 1.0 / (1.0 + std::exp(-xv[i]));
+    expect_close(gv[i], expected, 1e-9, "value_and_grad analytic component");
+  }
+
+  std::cout << "[RUN] autodiff:vjp\n";
+  const auto cotangent = pluss::make_series(std::vector<double>{1.0, -0.5, 0.25}, {3});
+  auto [vjp_value, pullback] = vjp(
+      [&](const Trace& z) -> Trace { return vector_objective(z); },
+      x);
+  expect_true(vjp_value.numel() == 3, "vjp primal shape");
+  const auto pulled = pullback(cotangent).to_vec<double>();
+  const auto cv = cotangent.to_vec<double>();
+  for (std::size_t i = 0; i < xv.size(); ++i) {
+    const double expected = (std::cos(xv[i]) + 2.0 * xv[i]) * cv[i];
+    expect_close(pulled[i], expected, 1e-12, "vjp analytic pullback");
+  }
+
+  std::cout << "[RUN] autodiff:jvp\n";
+  const auto tangent = pluss::make_series(std::vector<double>{0.1, 0.05, -0.2}, {3});
+  auto [jvp_value, directional] = jvp(
+      [&](const DualTrace& z) -> DualTrace { return vector_objective(z); },
+      x,
+      tangent);
+  expect_true(jvp_value.numel() == 3, "jvp primal shape");
+  const auto tv = tangent.to_vec<double>();
+  const auto dv = directional.to_vec<double>();
+  for (std::size_t i = 0; i < xv.size(); ++i) {
+    const double expected = (std::cos(xv[i]) + 2.0 * xv[i]) * tv[i];
+    expect_close(dv[i], expected, 1e-12, "jvp analytic pushforward");
+  }
+
+  std::cout << "[RUN] autodiff:linearize\n";
+  auto [lin_value, pushforward] = linearize(
+      [&](const DualTrace& z) -> DualTrace { return vector_objective(z); },
+      x);
+  expect_true(lin_value.numel() == 3, "linearize primal shape");
+  const auto tangent_b = pluss::make_series(std::vector<double>{-0.3, 0.2, 0.15}, {3});
+  const auto pb = pushforward(tangent_b).to_vec<double>();
+  const auto tb = tangent_b.to_vec<double>();
+  for (std::size_t i = 0; i < xv.size(); ++i) {
+    const double expected = (std::cos(xv[i]) + 2.0 * xv[i]) * tb[i];
+    expect_close(pb[i], expected, 1e-12, "linearize reusable pushforward");
+  }
+}
+
 void test_storage_pool_robustness() {
   const char* env_key = "PLUSS_CODEM_STORAGE_POOL";
 
@@ -662,6 +748,8 @@ int main() {
     test_indexing_ops();
     std::cout << "[RUN] unary_activations\n";
     test_unary_math_and_activations();
+    std::cout << "[RUN] autodiff\n";
+    test_autodiff_transforms();
     std::cout << "[RUN] storage_pool\n";
     test_storage_pool_robustness();
     std::cout << "[RUN] dispatch_extensions\n";

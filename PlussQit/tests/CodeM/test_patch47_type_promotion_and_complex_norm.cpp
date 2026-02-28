@@ -2,6 +2,10 @@
 #include <pluss/pluss.h>
 #include <complex>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("type promotion: int + float -> float", "[promotion]") {
   auto a = pluss::make_series(std::vector<std::int64_t>{1,2,3}, {3});
   auto b = pluss::make_series(std::vector<float>{1.0f,2.0f,3.0f}, {3});

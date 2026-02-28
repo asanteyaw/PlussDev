@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("mixed bool + int indexing (bool->positions)", "[indexing]") {
   auto x = pluss::make_series(std::vector<int>{0,1,2,3,4,5}, {2,3});
   // mask on dim0 selects row 1 only

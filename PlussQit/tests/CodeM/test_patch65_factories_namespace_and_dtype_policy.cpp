@@ -2,6 +2,10 @@
 #include <pluss/pluss.h>
 #include <type_traits>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 // Ensure factories are in pluss namespace: global ::value should not be found by ADL here.
 // We can't directly test absence of ::value easily, but we can at least ensure pluss::value exists
 // and returns expected dtype for integral/bool initlists.

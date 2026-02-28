@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 #include <complex>
+
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
 TEST_CASE("complex add/mul + exp/log", "[complex]") {
   pluss::Series a = pluss::full({2}, 0.0, pluss::ScalarType::Complex64);
   auto* ap = reinterpret_cast<std::complex<float>*>(a.raw_data());

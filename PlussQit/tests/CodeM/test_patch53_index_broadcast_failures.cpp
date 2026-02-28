@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("advanced index tensors not broadcastable throws", "[indexing][fail]") {
   auto x = pluss::zeros({3,4,5}, {{"dtype","float32"}});
   auto i0 = pluss::make_series(std::vector<std::int64_t>{0,1}, {2,1});   // shape (2,1)

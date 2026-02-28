@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("advanced index broadcast", "[indexing]") {
   auto x = pluss::zeros({3,4,5}, {{"dtype","float32"}});
   // Two advanced indices with broadcastable shapes: (2,1) and (1,3)

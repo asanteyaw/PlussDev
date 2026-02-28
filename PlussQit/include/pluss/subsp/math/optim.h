@@ -1,14 +1,15 @@
 #pragma once
 
-#include "pluss/codem/series_factory.h"
-#include "CodeM/compat/Invoke.h"
+#include "pluss/subsp/math/diff.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -23,18 +24,6 @@ inline bool same_shape_(const Series& a, const Series& b) {
     if (a.sizes()[i] != b.sizes()[i]) return false;
   }
   return true;
-}
-
-inline bool query_bool_(std::string_view op, const Series& s) {
-  return pluss::codem::_compat::invoke(op, s).item<bool>();
-}
-
-inline Series query_series_(std::string_view op, const Series& s) {
-  return pluss::codem::_compat::invoke(op, s);
-}
-
-inline void invoke_inplace_(std::string_view op, Series& s) {
-  pluss::codem::_compat::invoke_(op, s);
 }
 
 inline void require_defined_(const Series& x, const char* op) {
@@ -58,257 +47,334 @@ inline void require_float_dtype_(const Series& x, const char* op) {
 
 } // namespace detail
 
-class Trace {
+// Compatibility re-export: existing callers can continue to use the older
+// optim-facing trace helpers while new derivative-oriented code targets
+// pluss::subsp::math::diff directly.
+using pluss::subsp::math::diff::Trace;
+using pluss::subsp::math::diff::DualTrace;
+using pluss::subsp::math::diff::trace;
+using pluss::subsp::math::diff::fixed;
+using pluss::subsp::math::diff::add;
+using pluss::subsp::math::diff::sub;
+using pluss::subsp::math::diff::mul;
+using pluss::subsp::math::diff::div;
+using pluss::subsp::math::diff::neg;
+using pluss::subsp::math::diff::pow;
+using pluss::subsp::math::diff::exp;
+using pluss::subsp::math::diff::log;
+using pluss::subsp::math::diff::sqrt;
+using pluss::subsp::math::diff::sin;
+using pluss::subsp::math::diff::cos;
+using pluss::subsp::math::diff::tanh;
+using pluss::subsp::math::diff::square;
+using pluss::subsp::math::diff::rsqrt;
+using pluss::subsp::math::diff::relu;
+using pluss::subsp::math::diff::sigmoid;
+using pluss::subsp::math::diff::softplus;
+using pluss::subsp::math::diff::clamp;
+using pluss::subsp::math::diff::sum;
+using pluss::subsp::math::diff::mean;
+using pluss::subsp::math::diff::matmul;
+using pluss::subsp::math::diff::clear_sensitivities;
+using pluss::subsp::math::diff::grad;
+using pluss::subsp::math::diff::hvp;
+using pluss::subsp::math::diff::jvp;
+using pluss::subsp::math::diff::linearize;
+using pluss::subsp::math::diff::vjp;
+using pluss::subsp::math::diff::value_and_grad;
+
+struct ParameterBlockLayout {
+  std::string name;
+  std::vector<std::int64_t> sizes;
+  std::int64_t numel{0};
+  ScalarType scalar_type{ScalarType::Float32};
+  pluss::codem::Platform platform{pluss::codem::Platform::CPU};
+};
+
+class ParameterLayout {
 public:
-  Trace() = default;
-  explicit Trace(const Series& value) : value_(value) {}
-  Trace(const Series& value, bool tracks_slope) : value_(value) {
-    value_->requires_grad_(tracks_slope);
+  ParameterLayout() = default;
+  explicit ParameterLayout(std::vector<ParameterBlockLayout> blocks) : blocks_(std::move(blocks)) {}
+
+  const std::vector<ParameterBlockLayout>& blocks() const noexcept { return blocks_; }
+  std::size_t size() const noexcept { return blocks_.size(); }
+  bool empty() const noexcept { return blocks_.empty(); }
+
+  std::int64_t total_numel() const noexcept {
+    std::int64_t total = 0;
+    for (const auto& block : blocks_) total += block.numel;
+    return total;
   }
 
-  bool defined() const noexcept { return value_.has_value() && value_->defined(); }
-
-  bool tracks_slope() const {
-    if (!defined()) return false;
-    return detail::query_bool_("tracks_slope", *value_);
+  bool contains(std::string_view name) const noexcept {
+    return std::any_of(
+        blocks_.begin(), blocks_.end(), [&](const auto& block) { return block.name == name; });
   }
 
-  bool is_leaf() const {
-    if (!defined()) return true;
-    return detail::query_bool_("is_leaf", *value_);
-  }
-
-  const Series& value() const {
-    if (!defined()) {
-      throw std::runtime_error("subsp::math::optim::Trace::value: undefined trace");
+  const ParameterBlockLayout& at(std::string_view name) const {
+    for (const auto& block : blocks_) {
+      if (block.name == name) return block;
     }
-    return *value_;
-  }
-
-  bool has_sensitivity() const {
-    if (!defined()) return false;
-    return detail::query_bool_("has_sensitivity", *value_);
-  }
-
-  Series sensitivity() const {
-    if (!defined()) {
-      throw std::runtime_error("subsp::math::optim::Trace::sensitivity: undefined trace");
-    }
-    return detail::query_series_("sensitivity", *value_);
-  }
-
-  void keep_sensitivity(bool keep = true) {
-    if (defined()) value_->retain_grad(keep);
-  }
-
-  void clear_sensitivity() {
-    if (defined()) detail::invoke_inplace_("clear_sensitivity", *value_);
-  }
-
-  Trace separate() const {
-    if (!defined()) return Trace();
-    return Trace(value_->detach());
-  }
-
-  void propagate() const {
-    if (!defined()) {
-      throw std::runtime_error("subsp::math::optim::Trace::propagate: undefined trace");
-    }
-    value_->_backward();
-  }
-
-  void propagate(const Series& sensitivity_output) const {
-    if (!defined()) {
-      throw std::runtime_error("subsp::math::optim::Trace::propagate: undefined trace");
-    }
-    value_->_backward(sensitivity_output);
+    throw std::runtime_error("subsp::math::optim::ParameterLayout::at: unknown parameter block");
   }
 
 private:
-  std::optional<Series> value_{};
+  std::vector<ParameterBlockLayout> blocks_{};
 };
-
-inline Trace trace(const Series& value, bool tracks_slope = true) {
-  return Trace(value, tracks_slope);
-}
-
-inline Trace fixed(const Series& value) {
-  return Trace(value, false);
-}
-
-inline Trace make_scalar_like_(const Trace& like, double value) {
-  return fixed(pluss::full_like(like.value(), value, like.value().scalar_type()));
-}
-
-inline Trace add(const Trace& a, const Trace& b) {
-  detail::require_defined_(a.value(), "add");
-  detail::require_defined_(b.value(), "add");
-  detail::require_same_platform_(a.value(), b.value(), "add");
-  return Trace(a.value().add(b.value()));
-}
-
-inline Trace sub(const Trace& a, const Trace& b) {
-  detail::require_defined_(a.value(), "sub");
-  detail::require_defined_(b.value(), "sub");
-  detail::require_same_platform_(a.value(), b.value(), "sub");
-  return Trace(a.value().sub(b.value()));
-}
-
-inline Trace mul(const Trace& a, const Trace& b) {
-  detail::require_defined_(a.value(), "mul");
-  detail::require_defined_(b.value(), "mul");
-  detail::require_same_platform_(a.value(), b.value(), "mul");
-  return Trace(a.value().mul(b.value()));
-}
-
-inline Trace div(const Trace& a, const Trace& b) {
-  detail::require_defined_(a.value(), "div");
-  detail::require_defined_(b.value(), "div");
-  detail::require_same_platform_(a.value(), b.value(), "div");
-  return Trace(a.value().div(b.value()));
-}
-
-inline Trace neg(const Trace& x) {
-  detail::require_defined_(x.value(), "neg");
-  return Trace(x.value().neg());
-}
-
-inline Trace pow(const Trace& a, const Trace& b) {
-  detail::require_defined_(a.value(), "pow");
-  detail::require_defined_(b.value(), "pow");
-  detail::require_same_platform_(a.value(), b.value(), "pow");
-  return Trace(a.value().pow(b.value()));
-}
-
-inline Trace pow(const Trace& a, double s) {
-  detail::require_defined_(a.value(), "pow");
-  return Trace(a.value().pow(s));
-}
-
-inline Trace exp(const Trace& x) {
-  detail::require_defined_(x.value(), "exp");
-  return Trace(x.value().exp());
-}
-
-inline Trace log(const Trace& x) {
-  detail::require_defined_(x.value(), "log");
-  return Trace(x.value().log());
-}
-
-inline Trace sqrt(const Trace& x) {
-  detail::require_defined_(x.value(), "sqrt");
-  return Trace(x.value().sqrt());
-}
-
-inline Trace sin(const Trace& x) {
-  detail::require_defined_(x.value(), "sin");
-  return Trace(x.value().sin());
-}
-
-inline Trace cos(const Trace& x) {
-  detail::require_defined_(x.value(), "cos");
-  return Trace(x.value().cos());
-}
-
-inline Trace tanh(const Trace& x) {
-  detail::require_defined_(x.value(), "tanh");
-  return Trace(x.value().tanh());
-}
-
-inline Trace square(const Trace& x) {
-  detail::require_defined_(x.value(), "square");
-  return Trace(x.value().square());
-}
-
-inline Trace rsqrt(const Trace& x) {
-  detail::require_defined_(x.value(), "rsqrt");
-  return Trace(x.value().rsqrt());
-}
-
-inline Trace relu(const Trace& x) {
-  detail::require_defined_(x.value(), "relu");
-  return Trace(x.value().relu());
-}
-
-inline Trace sigmoid(const Trace& x) {
-  detail::require_defined_(x.value(), "sigmoid");
-  return Trace(x.value().sigmoid());
-}
-
-inline Trace softplus(const Trace& x, double beta = 1.0, double threshold = 20.0) {
-  detail::require_defined_(x.value(), "softplus");
-  return Trace(x.value().softplus(beta, threshold));
-}
-
-inline Trace clamp(const Trace& x, double min, double max) {
-  detail::require_defined_(x.value(), "clamp");
-  return Trace(x.value().clamp(min, max));
-}
-
-inline Trace sum(const Trace& x) {
-  detail::require_defined_(x.value(), "sum");
-  return Trace(x.value().sum());
-}
-
-inline Trace mean(const Trace& x) {
-  detail::require_defined_(x.value(), "mean");
-  return Trace(x.value().mean());
-}
-
-inline Trace matmul(const Trace& a, const Trace& b) {
-  detail::require_defined_(a.value(), "matmul");
-  detail::require_defined_(b.value(), "matmul");
-  detail::require_same_platform_(a.value(), b.value(), "matmul");
-  if (a.value().dim() != 2 || b.value().dim() != 2) {
-    throw std::runtime_error("subsp::math::optim::matmul: expected 2D inputs");
-  }
-  return Trace(a.value().matmul(b.value()));
-}
-
-inline Trace operator+(const Trace& a, const Trace& b) { return add(a, b); }
-inline Trace operator-(const Trace& a, const Trace& b) { return sub(a, b); }
-inline Trace operator*(const Trace& a, const Trace& b) { return mul(a, b); }
-inline Trace operator/(const Trace& a, const Trace& b) { return div(a, b); }
-
-inline Trace operator+(const Trace& a, double s) { return add(a, make_scalar_like_(a, s)); }
-inline Trace operator-(const Trace& a, double s) { return sub(a, make_scalar_like_(a, s)); }
-inline Trace operator*(const Trace& a, double s) { return mul(a, make_scalar_like_(a, s)); }
-inline Trace operator/(const Trace& a, double s) { return div(a, make_scalar_like_(a, s)); }
-
-inline Trace operator+(double s, const Trace& a) { return add(make_scalar_like_(a, s), a); }
-inline Trace operator-(double s, const Trace& a) { return sub(make_scalar_like_(a, s), a); }
-inline Trace operator*(double s, const Trace& a) { return mul(make_scalar_like_(a, s), a); }
-inline Trace operator/(double s, const Trace& a) { return div(make_scalar_like_(a, s), a); }
-
-inline Trace operator-(const Trace& x) { return neg(x); }
-
-inline void clear_sensitivities(std::vector<Trace>& params) {
-  for (auto& p : params) {
-    p.clear_sensitivity();
-  }
-}
 
 template <class Fn>
 std::pair<Series, std::vector<Series>> value_and_sensitivity(Fn&& fn, const std::vector<Series>& params) {
-  std::vector<Trace> vars;
-  vars.reserve(params.size());
-  for (const auto& p : params) {
-    vars.emplace_back(p, true);
+  return pluss::subsp::math::diff::value_and_grad(std::forward<Fn>(fn), params);
+}
+
+template <class T>
+class ParameterPack {
+public:
+  struct Block {
+    std::string name;
+    T value;
+  };
+
+  ParameterPack() = default;
+  explicit ParameterPack(std::vector<Block> blocks) : blocks_(std::move(blocks)) {
+    validate_names_();
   }
 
-  Trace loss = std::forward<Fn>(fn)(vars);
-  if (!loss.defined()) {
-    throw std::runtime_error("subsp::math::optim::value_and_sensitivity: objective returned undefined Trace");
+  std::size_t size() const noexcept { return blocks_.size(); }
+  bool empty() const noexcept { return blocks_.empty(); }
+
+  const Block& operator[](std::size_t index) const { return blocks_.at(index); }
+  Block& operator[](std::size_t index) { return blocks_.at(index); }
+
+  const std::vector<Block>& blocks() const noexcept { return blocks_; }
+  std::int64_t total_numel() const noexcept {
+    std::int64_t total = 0;
+    for (const auto& block : blocks_) total += block.value.numel();
+    return total;
   }
 
-  loss.propagate();
-
-  std::vector<Series> sensitivities;
-  sensitivities.reserve(vars.size());
-  for (const auto& v : vars) {
-    sensitivities.push_back(v.sensitivity());
+  bool contains(std::string_view name) const noexcept {
+    return std::any_of(
+        blocks_.begin(), blocks_.end(), [&](const Block& block) { return block.name == name; });
   }
-  return {loss.value(), sensitivities};
+
+  const T& at(std::string_view name) const {
+    for (const auto& block : blocks_) {
+      if (block.name == name) return block.value;
+    }
+    throw std::runtime_error("subsp::math::optim::ParameterPack::at: unknown parameter block");
+  }
+
+  T& at(std::string_view name) {
+    for (auto& block : blocks_) {
+      if (block.name == name) return block.value;
+    }
+    throw std::runtime_error("subsp::math::optim::ParameterPack::at: unknown parameter block");
+  }
+
+  std::vector<T> values() const {
+    std::vector<T> out;
+    out.reserve(blocks_.size());
+    for (const auto& block : blocks_) {
+      out.push_back(block.value);
+    }
+    return out;
+  }
+
+  template <class U>
+  ParameterPack<U> rebind(std::vector<U> values) const {
+    if (values.size() != blocks_.size()) {
+      throw std::runtime_error("subsp::math::optim::ParameterPack::rebind: size mismatch");
+    }
+
+    std::vector<typename ParameterPack<U>::Block> rebound;
+    rebound.reserve(blocks_.size());
+    for (std::size_t i = 0; i < blocks_.size(); ++i) {
+      rebound.push_back(typename ParameterPack<U>::Block{blocks_[i].name, std::move(values[i])});
+    }
+    return ParameterPack<U>(std::move(rebound));
+  }
+
+  ParameterLayout layout() const requires std::is_same_v<T, Series> {
+    std::vector<ParameterBlockLayout> out;
+    out.reserve(blocks_.size());
+    for (const auto& block : blocks_) {
+      detail::require_defined_(block.value, "ParameterPack::layout");
+      const auto sizes = block.value.sizes();
+      out.push_back(ParameterBlockLayout{
+          block.name,
+          std::vector<std::int64_t>(sizes.begin(), sizes.end()),
+          block.value.numel(),
+          block.value.scalar_type(),
+          block.value.platform()});
+    }
+    return ParameterLayout(std::move(out));
+  }
+
+  bool same_layout(const ParameterPack<Series>& other) const requires std::is_same_v<T, Series> {
+    if (blocks_.size() != other.blocks_.size()) return false;
+    for (std::size_t i = 0; i < blocks_.size(); ++i) {
+      const auto& lhs = blocks_[i];
+      const auto& rhs = other.blocks_[i];
+      if (lhs.name != rhs.name) return false;
+      if (lhs.value.scalar_type() != rhs.value.scalar_type()) return false;
+      if (lhs.value.platform() != rhs.value.platform()) return false;
+      if (!detail::same_shape_(lhs.value, rhs.value)) return false;
+    }
+    return true;
+  }
+
+  Series flatten_values() const requires std::is_same_v<T, Series> {
+    if (blocks_.empty()) {
+      throw std::runtime_error("subsp::math::optim::ParameterPack::flatten_values: empty pack");
+    }
+
+    std::vector<Series> flat;
+    flat.reserve(blocks_.size());
+    const auto platform = blocks_.front().value.platform();
+    const auto scalar_type = blocks_.front().value.scalar_type();
+    for (const auto& block : blocks_) {
+      detail::require_defined_(block.value, "ParameterPack::flatten_values");
+      detail::require_same_platform_(blocks_.front().value, block.value, "ParameterPack::flatten_values");
+      if (block.value.scalar_type() != scalar_type) {
+        throw std::runtime_error(
+            "subsp::math::optim::ParameterPack::flatten_values: expected matching dtypes");
+      }
+      (void)platform;
+      flat.push_back(block.value.reshape({block.value.numel()}));
+    }
+
+    if (flat.size() == 1) return flat.front();
+    return flat.front().unite(std::vector<Series>(flat.begin() + 1, flat.end()), 0);
+  }
+
+  ParameterPack<Series> zeros_like() const requires std::is_same_v<T, Series> {
+    std::vector<typename ParameterPack<Series>::Block> out;
+    out.reserve(blocks_.size());
+    for (const auto& block : blocks_) {
+      detail::require_defined_(block.value, "ParameterPack::zeros_like");
+      out.push_back({block.name, pluss::zeros_like(block.value, block.value.scalar_type())});
+    }
+    return ParameterPack<Series>(std::move(out));
+  }
+
+private:
+  void validate_names_() const {
+    std::unordered_set<std::string> seen;
+    seen.reserve(blocks_.size());
+    for (const auto& block : blocks_) {
+      if (block.name.empty()) {
+        throw std::runtime_error("subsp::math::optim::ParameterPack: block names must be non-empty");
+      }
+      if (!seen.insert(block.name).second) {
+        throw std::runtime_error("subsp::math::optim::ParameterPack: duplicate block name");
+      }
+    }
+  }
+
+  std::vector<Block> blocks_{};
+};
+
+template <class Fn>
+std::pair<Series, ParameterPack<Series>> value_and_grad(Fn&& fn, const ParameterPack<Series>& params) {
+  auto [value, grads] = pluss::subsp::math::diff::value_and_grad(
+      [&](const std::vector<Trace>& xs) -> Trace {
+        return std::forward<Fn>(fn)(params.template rebind<Trace>(xs));
+      },
+      params.values());
+  return {value, params.template rebind<Series>(std::move(grads))};
+}
+
+inline ParameterPack<Series> unflatten_values(const ParameterLayout& layout, const Series& flat_values) {
+  detail::require_defined_(flat_values, "unflatten_values");
+
+  Series flat = flat_values.reshape({flat_values.numel()});
+  if (flat.numel() != layout.total_numel()) {
+    throw std::runtime_error("subsp::math::optim::unflatten_values: flat size mismatch");
+  }
+
+  std::vector<typename ParameterPack<Series>::Block> blocks;
+  blocks.reserve(layout.size());
+
+  std::int64_t offset = 0;
+  for (const auto& block : layout.blocks()) {
+    const Series idx = pluss::arange(offset, offset + block.numel, 1, ScalarType::Int64).to(flat.platform());
+    Series piece = flat.index({idx});
+    if (block.sizes.empty()) {
+      piece = piece.reshape({});
+    } else {
+      piece = piece.reshape(block.sizes);
+    }
+    if (piece.scalar_type() != block.scalar_type) piece = piece.to(block.scalar_type);
+    if (piece.platform() != block.platform) piece = piece.to(block.platform);
+    blocks.push_back({block.name, std::move(piece)});
+    offset += block.numel;
+  }
+
+  return ParameterPack<Series>(std::move(blocks));
+}
+
+template <class Fn>
+ParameterPack<Series> grad(Fn&& fn, const ParameterPack<Series>& params) {
+  return value_and_grad(std::forward<Fn>(fn), params).second;
+}
+
+template <class Fn>
+std::pair<Series, Series> jvp(Fn&& fn,
+                              const ParameterPack<Series>& params,
+                              const ParameterPack<Series>& tangents) {
+  return pluss::subsp::math::diff::jvp(
+      [&](const std::vector<DualTrace>& xs) -> DualTrace {
+        return std::forward<Fn>(fn)(params.template rebind<DualTrace>(xs));
+      },
+      params.values(),
+      tangents.values());
+}
+
+template <class Fn>
+std::pair<Series, ParameterPack<Series>> hvp(Fn&& fn,
+                                             const ParameterPack<Series>& params,
+                                             const ParameterPack<Series>& tangents,
+                                             const pluss::subsp::math::diff::HvpOptions& opt = {}) {
+  using FnType = std::decay_t<Fn>;
+  auto params_values = params.values();
+  auto tangent_values = tangents.values();
+
+  std::pair<Series, std::vector<Series>> raw{};
+  if constexpr (std::is_invocable_v<FnType&, const ParameterPack<DualTrace>&>) {
+    FnType fn_copy(std::forward<Fn>(fn));
+    raw = pluss::subsp::math::diff::hvp(
+        [&](const std::vector<DualTrace>& xs) -> DualTrace {
+          return fn_copy(params.template rebind<DualTrace>(xs));
+        },
+        params_values,
+        tangent_values,
+        opt);
+  } else {
+    raw = pluss::subsp::math::diff::hvp(
+        [&](const std::vector<Trace>& xs) -> Trace {
+          return std::forward<Fn>(fn)(params.template rebind<Trace>(xs));
+        },
+        params_values,
+        tangent_values,
+        opt);
+  }
+  auto& [value, hv] = raw;
+  return {value, params.template rebind<Series>(std::move(hv))};
+}
+
+template <class Fn>
+auto linearize(Fn&& fn, const ParameterPack<Series>& params) {
+  auto [value, pushforward] = pluss::subsp::math::diff::linearize(
+      [&](const std::vector<DualTrace>& xs) -> DualTrace {
+        return std::forward<Fn>(fn)(params.template rebind<DualTrace>(xs));
+      },
+      params.values());
+
+  auto pack_pushforward = [pushforward = std::move(pushforward)](const ParameterPack<Series>& tangents) mutable -> Series {
+    return pushforward(tangents.values());
+  };
+  return std::pair{value, std::move(pack_pushforward)};
 }
 
 struct AdamOptions {

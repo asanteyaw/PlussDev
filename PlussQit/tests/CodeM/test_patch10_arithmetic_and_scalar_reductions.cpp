@@ -1,16 +1,20 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("basic arithmetic broadcast", "[arith]") {
   auto a = Series::full({2,2}, 2.0, ScalarType::Float32);
   auto b = Series::full({1,2}, 3.0, ScalarType::Float32);
-  auto c = add(a,b);
+  auto c = a.add(b);
   auto* cp = reinterpret_cast<const float*>(c.raw_data());
   REQUIRE(cp[0] == 5.0f);
   REQUIRE(cp[3] == 5.0f);
 
-  auto d = mul(c, Series::full({}, 2.0, ScalarType::Float32));
+  auto d = c.mul(Series::full({}, 2.0, ScalarType::Float32));
   auto* dp = reinterpret_cast<const float*>(d.raw_data());
   REQUIRE(dp[1] == 10.0f);
 }
@@ -20,11 +24,11 @@ TEST_CASE("abs/sign/int arithmetic", "[arith]") {
   auto* ap = reinterpret_cast<std::int64_t*>(a.raw_data());
   ap[0] = -3; ap[1] = 0; ap[2] = 5;
 
-  auto b = abs(a);
+  auto b = a.abs();
   auto* bp = reinterpret_cast<const std::int64_t*>(b.raw_data());
   REQUIRE(bp[0] == 3);
 
-  auto s = sign(a);
+  auto s = a.sign();
   auto* sp = reinterpret_cast<const std::int64_t*>(s.raw_data());
   REQUIRE(sp[0] == -1);
   REQUIRE(sp[1] == 0);
@@ -36,23 +40,23 @@ TEST_CASE("scalar reductions sum/all/any", "[reduce]") {
   auto* ap = reinterpret_cast<double*>(a.raw_data());
   ap[0]=1; ap[1]=2; ap[2]=3; ap[3]=4;
 
-  auto s = sum(a);
+  auto s = a.sum();
   REQUIRE(s.dim() == 0);
   REQUIRE(*reinterpret_cast<const double*>(s.raw_data()) == 10.0);
 
   auto m = Series::zeros({3}, ScalarType::Bool);
   auto* mp = reinterpret_cast<std::uint8_t*>(m.raw_data());
   mp[0]=1; mp[1]=1; mp[2]=0;
-  REQUIRE(*reinterpret_cast<const std::uint8_t*>(all(m).raw_data()) == 0);
-  REQUIRE(*reinterpret_cast<const std::uint8_t*>(any(m).raw_data()) == 1);
+  REQUIRE(*reinterpret_cast<const std::uint8_t*>(m.all().raw_data()) == 0);
+  REQUIRE(*reinterpret_cast<const std::uint8_t*>(m.any().raw_data()) == 1);
 }
 
 TEST_CASE("fp16/bf16 arithmetic works (via compute in f32)", "[arith]") {
   auto a = Series::full({2}, 2.0, ScalarType::Float16);
   auto b = Series::full({2}, 3.0, ScalarType::Float16);
-  auto c = add(a,b);
+  auto c = a.add(b);
   REQUIRE(c.scalar_type() == ScalarType::Float16);
 
-  auto d = clamp(c.to(ScalarType::BFloat16), 0.0, 4.0);
+  auto d = c.to(ScalarType::BFloat16).clamp(0.0, 4.0);
   REQUIRE(d.scalar_type() == ScalarType::BFloat16);
 }

@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("type promotion basic lattice", "[dtype]") {
   REQUIRE(promote_types(ScalarType::Float32, ScalarType::Float64) == ScalarType::Float64);

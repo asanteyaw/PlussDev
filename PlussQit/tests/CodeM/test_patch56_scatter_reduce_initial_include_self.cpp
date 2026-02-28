@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("scatter_reduce supports include_self and initial", "[scatter][reduce]") {
   // shape (1,4)
   pluss::Series self = pluss::make_series(std::vector<float>{1,2,3,4}, {1,4});

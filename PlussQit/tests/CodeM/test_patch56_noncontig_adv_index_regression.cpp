@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("non-contiguous advanced indices: moved to front, no permute bug", "[indexing]") {
   auto x = pluss::zeros({2,3,4}, {{"dtype","float32"}});
   auto i0 = pluss::make_series(std::vector<std::int64_t>{0,1}, {2,1}); // adv dim 0

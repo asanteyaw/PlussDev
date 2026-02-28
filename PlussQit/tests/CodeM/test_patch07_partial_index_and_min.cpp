@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("partial index appends remaining dims", "[adv_index]") {
   // a [2,3,2]
@@ -13,7 +17,7 @@ TEST_CASE("partial index appends remaining dims", "[adv_index]") {
   auto* i0p = reinterpret_cast<std::int64_t*>(i0.raw_data());
   i0p[0]=1; i0p[1]=0;
 
-  auto out = index(a, std::vector<Series>{i0});
+  auto out = a.index({i0});
   // out shape = [2] + [3,2] => [2,3,2]
   REQUIRE(out.sizes()[0] == 2);
   REQUIRE(out.sizes()[1] == 3);
@@ -36,7 +40,7 @@ TEST_CASE("index_put supports values head_total and full", "[adv_index]") {
   auto* vp = reinterpret_cast<float*>(v.raw_data());
   vp[0]=1.0f; vp[1]=2.0f;
 
-  auto out = index_put(a, std::vector<Series>{i0}, v, false);
+  auto out = pluss::index_put(a, std::vector<Series>{i0}, v, false);
   auto* op = reinterpret_cast<const float*>(out.raw_data());
   // a[0,:,:] all ones; a[1,:,:] all twos
   REQUIRE(op[0] == 1.0f);
@@ -51,12 +55,12 @@ TEST_CASE("amin/argmin", "[reduction]") {
   // [[3,1,2],[6,4,5]]
   ap[0]=3; ap[1]=1; ap[2]=2; ap[3]=6; ap[4]=4; ap[5]=5;
 
-  auto mn = amin(a, 1, false);
+  auto mn = a.amin(1, false);
   auto* mp = reinterpret_cast<const double*>(mn.raw_data());
   REQUIRE(mp[0] == 1.0);
   REQUIRE(mp[1] == 4.0);
 
-  auto am = argmin(a, 1, false);
+  auto am = a.argmin(1, false);
   auto* ip = reinterpret_cast<const std::int64_t*>(am.raw_data());
   REQUIRE(ip[0] == 1);
   REQUIRE(ip[1] == 1);

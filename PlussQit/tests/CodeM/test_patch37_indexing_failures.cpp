@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("multidim bool mask wrong shape throws", "[indexing][fail]") {
   auto a = pluss::zeros({2,3,4}, pluss::ScalarType::Int64);
   auto m = pluss::full({3,5}, 0, pluss::ScalarType::Bool); // mismatch (3,5) vs (3,4)

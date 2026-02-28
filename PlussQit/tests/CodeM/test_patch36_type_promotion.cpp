@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("type promotion: floats and ints", "[promotion]") {
   REQUIRE(pluss::codem::common_dtype(pluss::ScalarType::Int32, pluss::ScalarType::Float32) == pluss::ScalarType::Float32);
   REQUIRE(pluss::codem::common_dtype(pluss::ScalarType::Float16, pluss::ScalarType::BFloat16) == pluss::ScalarType::Float32);

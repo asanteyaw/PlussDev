@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("where + clamp + cum", "[where][clamp][cum]") {
   Series a = pluss::arange(0, 6, 1, ScalarType::Int64).view({2,3});

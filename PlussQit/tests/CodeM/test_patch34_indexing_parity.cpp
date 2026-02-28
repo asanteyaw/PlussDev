@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("index_put_ multiple advanced tensors broadcast mixed shapes", "[indexing]") {
   pluss::Series a = pluss::zeros({4,5,6}, pluss::ScalarType::Int64);
 

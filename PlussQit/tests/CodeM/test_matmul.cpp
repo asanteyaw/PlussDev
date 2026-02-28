@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("matmul 2D", "[matmul]") {
   auto a = Series::zeros({2,3}, ScalarType::Float64);
@@ -17,7 +21,7 @@ TEST_CASE("matmul 2D", "[matmul]") {
   bp[2]=9; bp[3]=10;
   bp[4]=11; bp[5]=12;
 
-  auto c = matmul(a, b);
+  auto c = a.matmul(b);
   REQUIRE(c.sizes()[0] == 2);
   REQUIRE(c.sizes()[1] == 2);
   auto* cp = reinterpret_cast<const double*>(c.raw_data());

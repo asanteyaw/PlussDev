@@ -5,6 +5,7 @@ This Sphinx set is structured as:
 - practical guides first
 - runnable examples mapped to source demos
 - exhaustive method usage pages for full API surfaces
+- architecture notes for major subsystems when the design must be explicit before implementation
 
 ```{toctree}
 :maxdepth: 2
@@ -12,6 +13,8 @@ This Sphinx set is structured as:
 quickstart
 demo_catalog
 series
+autodiff_architecture
+optimization_diff_contract
 series_api_reference
 series_all_methods_usage
 note

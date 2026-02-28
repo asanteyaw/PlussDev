@@ -16,6 +16,7 @@ namespace pluss::codem::series_tape {
 // - source_link   (was grad_fn)
 struct SourceLink {
   std::vector<Series> parents{};
+  std::vector<std::int64_t> parent_versions{};
   std::function<void(const Series&)> propagate{};
 };
 
@@ -55,4 +56,3 @@ Series separate(const Series& s);
 void purge_impl_state(const SeriesImpl* impl);
 
 } // namespace pluss::codem::series_tape
-

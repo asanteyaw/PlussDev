@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("more generated methods route to real kernels", "[surface][kernels]") {
   auto x = pluss::linspace(0.0, 1.0, 10, {{"dtype","float32"}});
   auto y = x.asin().sin(); // asin then sin

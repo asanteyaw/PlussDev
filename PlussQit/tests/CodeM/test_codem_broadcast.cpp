@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include "CodeM/core/SeriesBody.h"
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("CodeM broadcast add", "[codem]") {
   auto a = Series::empty({2,3}, ScalarType::Float64);

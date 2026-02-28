@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("codegen method surface includes unary math ops", "[codegen][unary]") {
   pluss::Series x = pluss::make_series(std::vector<float>{0.0f, 1.0f, 2.0f, 3.0f}, {2,2});
   auto s = x.sin();

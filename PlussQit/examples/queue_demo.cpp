@@ -79,16 +79,20 @@ int main() {
   auto t = pluss::make_timeline("2024-01-15T10:11:12Z");
   pluss::args floor_args;
   floor_args.emplace_back(std::string_view("D"));
-  auto day_floor = pluss::dispense_as<pluss::codeh::Timeline>(
-      t, &pluss::codeh::Timeline::floor, floor_args);
+  auto day_floor = pluss::dispense_as<pluss::Timeline>(
+      t, &pluss::Timeline::floor, floor_args);
   std::cout << "dispense(Timeline,&Timeline::floor,args{...})->hour: "
             << day_floor.hour().to_vec<std::int32_t>(0) << "\n";
 
   auto year_series = pluss::dispense_as<pluss::Series>(
-      t, &pluss::codeh::Timeline::year, pluss::args{});
+      t, &pluss::Timeline::year, pluss::args{});
   std::cout << "dispense(Timeline,&Timeline::year,args{}) value="
             << year_series.to_vec<std::int32_t>(0) << "\n";
 
   std::cout << "\nDone.\n";
   return 0;
 }
+
+
+// Architecture and subsystem boundaries: autodiff_architecture.md
+// Practical contract for gradient-based optimization implementers: optimization_diff_contract.md

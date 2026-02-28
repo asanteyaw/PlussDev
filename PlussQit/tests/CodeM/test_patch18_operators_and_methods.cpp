@@ -2,6 +2,10 @@
 #include <pluss/pluss.h>
 #include <sstream>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("operators", "[ops]") {
   Series a = pluss::full({4}, 2.0, ScalarType::Float32);

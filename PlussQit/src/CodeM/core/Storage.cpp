@@ -126,7 +126,7 @@ void Storage::AlignedDeleter::operator()(std::byte* p) const noexcept {
 static std::size_t round_up(std::size_t x, std::size_t a) { return (x + (a - 1)) / a * a; }
 
 Storage::Storage(std::size_t nbytes, std::size_t alignment)
-  : nbytes_(nbytes), alignment_(alignment) {
+  : version_state_(std::make_shared<VersionState>()), nbytes_(nbytes), alignment_(alignment) {
   if (nbytes == 0) return;
   if (alignment == 0) alignment = 64;
   alignment_ = alignment;
@@ -139,6 +139,19 @@ Storage::Storage(std::size_t nbytes, std::size_t alignment)
 }
 
 Storage::Storage(std::shared_ptr<std::byte> external, std::size_t nbytes, std::size_t alignment)
-  : data_(std::move(external)), nbytes_(nbytes), alignment_(alignment) {}
+  : data_(std::move(external)),
+    version_state_(std::make_shared<VersionState>()),
+    nbytes_(nbytes),
+    alignment_(alignment) {}
+
+std::int64_t Storage::version() const noexcept {
+  return version_state_ ? version_state_->value.load(std::memory_order_relaxed) : 0;
+}
+
+void Storage::bump_version() const noexcept {
+  if (version_state_) {
+    version_state_->value.fetch_add(1, std::memory_order_relaxed);
+  }
+}
 
 } // namespace pluss::codem

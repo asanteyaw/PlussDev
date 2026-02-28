@@ -2,6 +2,10 @@
 #include <pluss/pluss.h>
 #include <cmath>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("pluss::value overloads: scalar and nested initializer_list up to 7D", "[factories][value]") {
   auto a = pluss::make_series(2); // int -> Int64 scalar
   REQUIRE(a.dim() == 0);

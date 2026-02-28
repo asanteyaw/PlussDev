@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("activation methods exist and run", "[activations]") {
   auto x = pluss::make_series(std::vector<float>{-2, -1, 0, 1, 2}, {5});
   auto s = x.sigmoid();

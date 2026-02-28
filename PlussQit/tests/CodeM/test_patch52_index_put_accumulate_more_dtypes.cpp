@@ -2,6 +2,10 @@
 #include <pluss/pluss.h>
 #include <complex>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("index_put_ accumulate supports float16", "[indexing][accumulate]") {
   auto x = pluss::zeros({4}, {{"dtype","float16"}});
   auto idx = pluss::make_series(std::vector<std::int64_t>{1,1,2}, {3});

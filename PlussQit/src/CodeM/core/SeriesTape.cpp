@@ -141,6 +141,12 @@ bool is_leaf(const Series& s) {
 
 void bind_source_link(const Series& s, std::shared_ptr<SourceLink> link) {
   if (!s.defined()) return;
+  if (link && link->parent_versions.empty()) {
+    link->parent_versions.reserve(link->parents.size());
+    for (const auto& p : link->parents) {
+      link->parent_versions.push_back(p.defined() ? p.storage().version() : 0);
+    }
+  }
   std::scoped_lock lk(g_mu);
   auto& st = ensure_locked_(s);
   st.tracks_slope = true;
@@ -214,6 +220,18 @@ void backpropagate(const Series& loss, const std::optional<Series>& seed) {
     auto link = source_link_copy_(cur);
     if (!sens.has_value() || !link || !link->propagate) {
       continue;
+    }
+    if (!link->parent_versions.empty()) {
+      PLUSS_CHECK(
+          link->parent_versions.size() == link->parents.size(),
+          "series_tape::backpropagate: saved parent version metadata mismatch");
+      for (std::size_t i = 0; i < link->parents.size(); ++i) {
+        const auto& p = link->parents[i];
+        if (!p.defined()) continue;
+        PLUSS_CHECK(
+            p.storage().version() == link->parent_versions[i],
+            "series_tape::backpropagate: saved Series was modified after graph capture");
+      }
     }
     link->propagate(*sens);
 

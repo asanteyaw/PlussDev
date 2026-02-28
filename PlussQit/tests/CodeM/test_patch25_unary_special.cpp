@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("special unary ops implemented", "[unary_special]") {
   Series x = pluss::full({4}, 1.0, ScalarType::Float32);

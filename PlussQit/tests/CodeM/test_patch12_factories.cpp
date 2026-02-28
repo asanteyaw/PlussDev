@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("arange/linspace/eye factories", "[factory]") {
   auto a = arange(0.0, 5.0, 1.0, ScalarType::Int32);

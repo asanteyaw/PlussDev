@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("gather and scatter", "[indexing]") {
   auto x = Series::zeros({2,3}, ScalarType::Float64);
@@ -15,7 +19,7 @@ TEST_CASE("gather and scatter", "[indexing]") {
   ip[0]=2; ip[1]=0;
   ip[2]=2; ip[3]=0;
 
-  auto g = gather(x, 1, idx);
+  auto g = x.gather(1, idx);
   REQUIRE(g.sizes()[0] == 2);
   REQUIRE(g.sizes()[1] == 2);
   auto* gp = reinterpret_cast<const double*>(g.raw_data());
@@ -31,7 +35,7 @@ TEST_CASE("gather and scatter", "[indexing]") {
   i2[0]=1; i2[1]=1;
   i2[2]=1; i2[3]=1;
 
-  auto y = scatter(x, 1, idx2, g);
+  auto y = x.scatter(1, idx2, g);
   auto* yp = reinterpret_cast<const double*>(y.raw_data());
   // col 1 becomes last written value per position; since both map to same col, second write overwrites.
   // row0 col1 overwritten by g[0,1]=1 ; row1 col1 overwritten by g[1,1]=4

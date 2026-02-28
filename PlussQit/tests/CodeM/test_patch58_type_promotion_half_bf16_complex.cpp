@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("type promotion: float16 + bfloat16 => float32", "[promo]") {
   auto a = pluss::zeros({2}, {{"dtype","float16"}});
   auto b = pluss::zeros({2}, {{"dtype","bfloat16"}});

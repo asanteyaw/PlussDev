@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("sum/mean dim reductions", "[reduce]") {
   Series x = pluss::arange(0, 6, 1, ScalarType::Float32).view({2,3});

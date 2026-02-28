@@ -2,6 +2,10 @@
 #include <pluss/pluss.h>
 #include <cmath>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("type promotion + comparisons + NaN", "[promote][cmp][nan]") {
   Series a = pluss::arange(0, 4, 1, ScalarType::Int32);

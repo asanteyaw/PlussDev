@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("rename cat/stack to unite/pile", "[rename]") {
   Series a = pluss::arange(0, 3, 1, ScalarType::Int64);

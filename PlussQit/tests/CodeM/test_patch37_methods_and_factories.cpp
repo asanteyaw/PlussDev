@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("factory Config kv list works", "[factories]") {
   auto x = pluss::zeros({2,3}, {{"dtype","float16"}});
   REQUIRE(x.scalar_type() == pluss::ScalarType::Float16);

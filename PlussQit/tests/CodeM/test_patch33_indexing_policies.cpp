@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("index_put_ non-leading + mixed bool/int", "[indexing]") {
   // a shape [2,3,4]
   pluss::Series a = pluss::arange(0, 24, 1, pluss::ScalarType::Int64).view({2,3,4});

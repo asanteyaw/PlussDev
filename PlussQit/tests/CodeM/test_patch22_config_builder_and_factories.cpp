@@ -2,6 +2,10 @@
 #include <pluss/pluss.h>
 #include <pluss/config.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 #include <vector>
 
 

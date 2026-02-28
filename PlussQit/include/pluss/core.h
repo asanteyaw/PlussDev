@@ -20,6 +20,12 @@
 #include "pluss/subsp/linearalg/linearalg.h"
 #endif
 
+#if __has_include("subsp/math/diff.h")
+#include "subsp/math/diff.h"
+#elif __has_include("pluss/subsp/math/diff.h")
+#include "pluss/subsp/math/diff.h"
+#endif
+
 #if __has_include("subsp/math/optim.h")
 #include "subsp/math/optim.h"
 #elif __has_include("pluss/subsp/math/optim.h")

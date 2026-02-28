@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("linspace and eye factories", "[factories]") {
   auto x = pluss::linspace(0.0, 1.0, 5, {{"dtype","float32"}});
   REQUIRE(x.sizes()[0] == 5);

@@ -22,6 +22,7 @@
 #include <cmath>
 #include <cstring>
 #include <cstdlib>
+#include <exception>
 #include <functional>
 #include <numeric>
 #include <limits>
@@ -2598,6 +2599,44 @@ static std::string_view canonical_inplace_op(std::string_view op) {
   return op;
 }
 
+static bool inplace_op_mutates_value_(std::string_view op) {
+  if (op == "_coalesced_" || op == "sparse_resize_" || op == "resize_as_sparse_" ||
+      op == "detach_" || op == "clear_sensitivity" || op == "requires_grad_" ||
+      op == "rename_" || op == "set_" || op == "squeeze_" || op == "t_" ||
+      op == "transpose_" || op == "swapaxes_" || op == "swapdims_" ||
+      op == "unsqueeze_" || op == "resize_" || op == "resize_as_") {
+    return false;
+  }
+  return true;
+}
+
+static void check_inplace_autograd_write_(std::string_view op, const Series& self) {
+  if (!inplace_op_mutates_value_(op)) return;
+  if (!series_tape::recording_enabled()) return;
+  if (!series_tape::tracks_slope(self)) return;
+  throw_error(
+      std::string(op) +
+      ": in-place mutation on autograd-tracked Series is disallowed; mutate a detached/separate Series instead");
+}
+
+class InplaceVersionGuard final {
+public:
+  InplaceVersionGuard(Series& self, bool enabled)
+      : self_(&self), enabled_(enabled), uncaught_(std::uncaught_exceptions()) {}
+
+  ~InplaceVersionGuard() {
+    if (!enabled_ || self_ == nullptr) return;
+    if (std::uncaught_exceptions() != uncaught_) return;
+    if (!self_->defined()) return;
+    self_->storage().bump_version();
+  }
+
+private:
+  Series* self_{nullptr};
+  bool enabled_{false};
+  int uncaught_{0};
+};
+
 static bool is_outsourced_linalg_op(std::string_view op) {
   return op == "det" || op == "inverse" || op == "logdet" || op == "slogdet" ||
          op == "matrix_exp" || op == "matrix_power" || op == "cholesky" ||
@@ -2621,7 +2660,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
   ops_internal::PlatformScope platform_scope(self.platform());
   validate_series_arg_platforms(op, self, args);
 
-  if (op == "_backward") {
+  if (op == "_backward" || op == "reverse") {
     std::optional<Series> seed;
     if (!args.empty() && std::holds_alternative<const Series*>(args[0].v)) {
       seed = as_series(args[0]);
@@ -2770,7 +2809,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
         op == "is_distributed" || op == "is_pinned" || op == "is_coalesced" || op == "is_set_to") {
       return bool_scalar(false);
     }
-    if (op == "output_nr" || op == "_version") return i64_scalar(0);
+    if (op == "output_nr") return i64_scalar(0);
+    if (op == "_version") return i64_scalar(self.defined() ? self.storage().version() : 0);
     if (op == "size") return i64_vector(self.sizes());
     if (op == "stride") return i64_vector(self.strides());
     if (op == "item") {
@@ -3811,6 +3851,8 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
   op = canonical_inplace_op(op);
   ops_internal::PlatformScope platform_scope(self.platform());
   validate_series_arg_platforms(op, self, args);
+  check_inplace_autograd_write_(op, self);
+  InplaceVersionGuard version_guard(self, inplace_op_mutates_value_(op));
 
   if (args.empty()) {
     if (op == "_coalesced_" || op == "sparse_resize_" || op == "resize_as_sparse_") return self;

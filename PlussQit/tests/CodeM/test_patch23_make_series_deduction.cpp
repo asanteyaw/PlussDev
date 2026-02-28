@@ -2,6 +2,10 @@
 #include <pluss/pluss.h>
 #include <vector>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 
 TEST_CASE("make_series type deduction", "[factory]") {
   std::vector<std::int64_t> v = {1,2,3,4};

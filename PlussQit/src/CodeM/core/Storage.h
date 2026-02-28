@@ -1,5 +1,6 @@
 #pragma once
 #include "pluss/export.h"
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -21,8 +22,14 @@ public:
   std::size_t alignment() const noexcept { return alignment_; }
   bool defined() const noexcept { return static_cast<bool>(data_); }
   std::shared_ptr<std::byte> handle() const noexcept { return data_; }
+  std::int64_t version() const noexcept;
+  void bump_version() const noexcept;
 
 private:
+  struct VersionState {
+    std::atomic<std::int64_t> value{0};
+  };
+
   struct AlignedDeleter {
     std::size_t alloc_size{0};
     std::size_t alignment{0};
@@ -30,6 +37,7 @@ private:
   };
 
   std::shared_ptr<std::byte> data_{nullptr};
+  std::shared_ptr<VersionState> version_state_{nullptr};
   std::size_t nbytes_{0};
   std::size_t alignment_{64};
 };

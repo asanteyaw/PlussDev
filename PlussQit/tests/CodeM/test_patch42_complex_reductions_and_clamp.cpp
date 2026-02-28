@@ -2,6 +2,10 @@
 #include <pluss/pluss.h>
 #include <complex>
 
+using pluss::codem::Series;
+using pluss::codem::ScalarType;
+
+
 TEST_CASE("complex mean works", "[complex][reduce]") {
   using c64 = std::complex<float>;
   std::vector<c64> v = {c64(1,2), c64(3,4), c64(5,6), c64(7,8)};
