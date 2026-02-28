@@ -6,10 +6,10 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("factory Config kv list works", "[factories]") {
-  auto x = pluss::zeros({2,3}, {{"dtype","float16"}});
+  auto x = pluss::zeros({2,3}, pluss::config({{"dtype","float16"}}));
   REQUIRE(x.scalar_type() == pluss::ScalarType::Float16);
 
-  auto y = pluss::full({2,3}, 1.0, {{"dtype","bfloat16"}});
+  auto y = pluss::full({2,3}, 1.0, pluss::config({{"dtype","bfloat16"}}));
   REQUIRE(y.scalar_type() == pluss::ScalarType::BFloat16);
 }
 

@@ -299,7 +299,7 @@ inline ParameterPack<Series> unflatten_values(const ParameterLayout& layout, con
   std::int64_t offset = 0;
   for (const auto& block : layout.blocks()) {
     const Series idx = pluss::arange(offset, offset + block.numel, 1, ScalarType::Int64).to(flat.platform());
-    Series piece = flat.index({idx});
+    Series piece = flat.index({idx}).contiguous();
     if (block.sizes.empty()) {
       piece = piece.reshape({});
     } else {

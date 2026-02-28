@@ -13,7 +13,7 @@ TEST_CASE("mixed bool + int indexing (bool->positions)", "[indexing]") {
   auto idx1 = pluss::make_series(std::vector<std::int64_t>{2,0}, {2});
   // indices list length == dim, non-leading advanced (mask0 is leading) but mixed
   auto y = x.index({mask0, idx1});
-  REQUIRE(y.sizes().size() == 1 || y.sizes().size() == 2);
+  REQUIRE((y.sizes().size() == 1 || y.sizes().size() == 2));
 }
 
 TEST_CASE("non-leading advanced index moves to front", "[indexing]") {
@@ -26,9 +26,9 @@ TEST_CASE("non-leading advanced index moves to front", "[indexing]") {
 }
 
 TEST_CASE("index_put with non-leading advanced index", "[indexing]") {
-  auto x = pluss::zeros({2,2,2}, {{"dtype","float32"}});
+  auto x = pluss::zeros({2,2,2}, pluss::config({{"dtype","float32"}}));
   auto idx = pluss::make_series(std::vector<std::int64_t>{1,0}, {2});
-  auto v = pluss::ones({2,2,2}, {{"dtype","float32"}}).flatten(0,2).reshape({2,2,2});
+  auto v = pluss::ones({2,2,2}, pluss::config({{"dtype","float32"}})).flatten(0,2).reshape({2,2,2});
   auto y = x.index_put({pluss::Series{}, pluss::Series{}, idx}, v, false);
   REQUIRE(y.sizes()[0] == 2);
 }

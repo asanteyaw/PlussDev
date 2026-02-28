@@ -7,7 +7,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("where + clamp + cum", "[where][clamp][cum]") {
-  Series a = pluss::arange(0, 6, 1, ScalarType::Int64).view({2,3});
+  Series a = pluss::arange(0, 6, 1, ScalarType::Int64).view(std::vector<std::int64_t>{2,3});
   Series b = pluss::full({2,3}, 100.0, ScalarType::Int64);
   Series m = pluss::zeros({2,3}, ScalarType::Bool);
   m = m.index_put({pluss::full({1}, 0, ScalarType::Int64), pluss::full({1}, 1, ScalarType::Int64)},

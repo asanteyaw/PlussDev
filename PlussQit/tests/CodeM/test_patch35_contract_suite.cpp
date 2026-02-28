@@ -7,7 +7,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("broadcastable full-tensor bool mask in indices vector", "[indexing]") {
-  pluss::Series a = pluss::arange(0, 12, 1, pluss::ScalarType::Int64).view({3,4});
+  pluss::Series a = pluss::arange(0, 12, 1, pluss::ScalarType::Int64).view(std::vector<std::int64_t>{3,4});
   // mask shape [1,4] broadcast to [3,4]
   pluss::Series m = pluss::full({1,4}, 0, pluss::ScalarType::Bool);
   auto* mp = reinterpret_cast<bool*>(m.raw_data());
@@ -44,7 +44,7 @@ TEST_CASE("scatter_reduce complex sum works, amax throws", "[scatter][complex]")
 }
 
 TEST_CASE("printing is stable for small tensors", "[printing]") {
-  pluss::Series x = pluss::arange(0, 6, 1, pluss::ScalarType::Int64).view({2,3});
+  pluss::Series x = pluss::arange(0, 6, 1, pluss::ScalarType::Int64).view(std::vector<std::int64_t>{2,3});
   auto s = pluss::codem::to_string(x);
   REQUIRE(s.find("Series(shape=[2,3]") != std::string::npos);
   REQUIRE(s.find("[[") != std::string::npos);

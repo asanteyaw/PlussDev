@@ -7,7 +7,7 @@ using pluss::codem::ScalarType;
 
 TEST_CASE("index_put_ non-leading + mixed bool/int", "[indexing]") {
   // a shape [2,3,4]
-  pluss::Series a = pluss::arange(0, 24, 1, pluss::ScalarType::Int64).view({2,3,4});
+  pluss::Series a = pluss::arange(0, 24, 1, pluss::ScalarType::Int64).view(std::vector<std::int64_t>{2,3,4});
   // bool mask on dim 1 (size 3): select rows 0 and 2
   pluss::Series m = pluss::make_series(std::vector<bool>{true,false,true}, {3});
   // int index on dim 2: pick element 1 for all

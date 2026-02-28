@@ -7,7 +7,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("sum/mean dim reductions", "[reduce]") {
-  Series x = pluss::arange(0, 6, 1, ScalarType::Float32).view({2,3});
+  Series x = pluss::arange(0, 6, 1, ScalarType::Float32).view(std::vector<std::int64_t>{2,3});
   auto s0 = x.sum(0);
   REQUIRE(s0.dim() == 1);
   auto* p0 = reinterpret_cast<const float*>(s0.raw_data());

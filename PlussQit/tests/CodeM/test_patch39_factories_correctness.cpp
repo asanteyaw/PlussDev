@@ -6,7 +6,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("linspace values correct", "[factories]") {
-  auto x = pluss::linspace(0.0, 1.0, 5, {{"dtype","float64"}});
+  auto x = pluss::linspace(0.0, 1.0, 5, pluss::config({{"dtype","float64"}}));
   auto xc = x.contiguous();
   const auto* p = reinterpret_cast<const double*>(xc.raw_data());
   REQUIRE(p[0] == 0.0);
@@ -14,7 +14,7 @@ TEST_CASE("linspace values correct", "[factories]") {
 }
 
 TEST_CASE("eye diagonal correct", "[factories]") {
-  auto I = pluss::eye(4, 4, {{"dtype","int32"}});
+  auto I = pluss::eye(4, 4, pluss::config({{"dtype","int32"}}));
   auto Ic = I.contiguous();
   const auto* p = reinterpret_cast<const std::int32_t*>(Ic.raw_data());
   for (int r=0;r<4;++r) {

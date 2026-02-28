@@ -10,6 +10,7 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/SeriesTape.h"
 #include "CodeM/native/cpu/ConcatStackKernels.h"
+#include "CodeM/native/cpu/AdvancedIndexingKernels.h"
 #include "CodeM/native/cpu/GatherScatterKernels.h"
 #include "CodeM/native/cpu/IndexingExtras.h"
 #include "CodeM/native/cpu/SignalDistanceKernels.h"
@@ -49,6 +50,7 @@ static std::string sig(std::string_view op, const Args& args) {
     if (i) os << ", ";
     const auto& v = args[i].v;
     if (std::holds_alternative<const Series*>(v)) os << "Series";
+    else if (std::holds_alternative<const std::vector<Series>*>(v)) os << "Series[]";
     else if (std::holds_alternative<Scalar>(v)) os << "Scalar";
     else if (std::holds_alternative<double>(v)) os << "double";
     else if (std::holds_alternative<std::int64_t>(v)) os << "int64";
@@ -89,9 +91,19 @@ static const Series& as_series(const Arg& a) {
   return *std::get<const Series*>(a.v);
 }
 
+static const std::vector<Series>& as_series_list(const Arg& a) {
+  PLUSS_CHECK(std::holds_alternative<const std::vector<Series>*>(a.v), "Expected Series list");
+  return *std::get<const std::vector<Series>*>(a.v);
+}
+
 static void validate_series_arg_platforms(std::string_view op, const Series& self, const Args& args) {
   for (const auto& arg : args) {
     if (!std::holds_alternative<const Series*>(arg.v)) {
+      if (std::holds_alternative<const std::vector<Series>*>(arg.v)) {
+        for (const auto& other : as_series_list(arg)) {
+          ops_internal::require_same_platform(self, other, op);
+        }
+      }
       continue;
     }
     const Series& other = *std::get<const Series*>(arg.v);
@@ -3133,6 +3145,13 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     }
 
     // bool
+    if (std::holds_alternative<const std::vector<Series>*>(a0)) {
+      const auto& indices = as_series_list(args[0]);
+      if (op == "index") return self.index(indices);
+      return not_impl(op, args, self);
+    }
+
+    // bool
     if (std::holds_alternative<bool>(a0)) {
       const bool b = as_bool(args[0]);
       if (op == "retain_grad") {
@@ -3509,6 +3528,12 @@ if (is_numeric_scalar_arg(args[0]) &&
       return not_impl(op, args, self);
     }
 
+    if (std::holds_alternative<const std::vector<Series>*>(a0)) {
+      const auto& indices = as_series_list(args[0]);
+      if (op == "index") return self.index(indices);
+      return not_impl(op, args, self);
+    }
+
     return not_impl(op, args, self);
   }
 
@@ -3672,6 +3697,15 @@ if (is_numeric_scalar_arg(args[0]) &&
         return put_dispatch_copy_(self, index, src, accumulate);
       }
       if (op == "triangular_solve") return triangular_solve_impl(self, index, /*upper=*/true, /*unitriangular=*/accumulate);
+    }
+
+    if (std::holds_alternative<const std::vector<Series>*>(args[0].v) &&
+        std::holds_alternative<const Series*>(args[1].v) &&
+        std::holds_alternative<bool>(args[2].v)) {
+      const auto& indices = as_series_list(args[0]);
+      const Series& src = as_series(args[1]);
+      const bool accumulate = as_bool(args[2]);
+      if (op == "index_put") return native::cpu::index_put(self, indices, src, accumulate);
     }
 
     if (std::holds_alternative<const Series*>(args[0].v) &&
@@ -4263,6 +4297,18 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       const bool accumulate = as_bool(args[2]);
       if (op == "index_put_") { return put_dispatch_inplace_(self, index, src, accumulate); }
       if (op == "put_") { return put_dispatch_inplace_(self, index, src, accumulate); }
+      return not_impl_inplace(op, args, self);
+    }
+    if (std::holds_alternative<const std::vector<Series>*>(args[0].v) &&
+        std::holds_alternative<const Series*>(args[1].v) &&
+        std::holds_alternative<bool>(args[2].v)) {
+      const auto& indices = as_series_list(args[0]);
+      const Series& src = as_series(args[1]);
+      const bool accumulate = as_bool(args[2]);
+      if (op == "index_put_") {
+        native::cpu::index_put_inplace(self, indices, src, accumulate);
+        return self;
+      }
       return not_impl_inplace(op, args, self);
     }
     if (std::holds_alternative<const Series*>(args[0].v) &&

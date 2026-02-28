@@ -9,7 +9,7 @@ using pluss::codem::ScalarType;
 TEST_CASE("complex mean works", "[complex][reduce]") {
   using c64 = std::complex<float>;
   std::vector<c64> v = {c64(1,2), c64(3,4), c64(5,6), c64(7,8)};
-  auto x = pluss::make_series(v, {2,2}, {{"dtype","complex64"}});
+  auto x = pluss::make_series(v, {2,2}, pluss::config({{"dtype","complex64"}}));
   auto m = x.mean();
   REQUIRE(m.scalar_type() == pluss::ScalarType::Complex64);
 }

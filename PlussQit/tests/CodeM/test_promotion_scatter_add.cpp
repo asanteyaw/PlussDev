@@ -25,7 +25,7 @@ TEST_CASE("scatter_add accumulates", "[indexing]") {
   auto* sp = reinterpret_cast<double*>(src.raw_data());
   sp[0]=1; sp[1]=2; sp[2]=3; sp[3]=4;
 
-  auto y = scatter_add(x, 1, idx, src);
+  auto y = x.scatter_add(1, idx, src);
   auto* yp = reinterpret_cast<const double*>(y.raw_data());
   // row0 col1 = 1+2 = 3 ; row1 col1 = 3+4 = 7
   REQUIRE(yp[1] == 3.0);

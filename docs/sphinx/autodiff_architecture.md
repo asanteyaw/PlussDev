@@ -105,6 +105,31 @@ Therefore:
 
 This architecture is intended to evolve the current codebase, not reset it.
 
+## 5. Backend Realism
+
+Autodiff should not assume that long-term competitive performance will come only from in-house CPU and MPS kernels.
+
+The correct separation is:
+
+- autodiff owns derivative semantics
+- `Series` runtime owns execution and backend dispatch
+- backend libraries own heavy numerical throughput where appropriate
+
+That means Pluss can and should use dedicated compute platforms when they materially improve the system:
+
+- BLAS / LAPACK / Accelerate on CPU
+- Metal / MPS on Apple platforms
+- future CUDA-family backends such as cuBLAS / cuSOLVER / cuDNN where appropriate
+- future compiler / graph backends if Pluss later chooses to stage or fuse workloads
+
+What autodiff must not do is hard-code itself to one backend philosophy such as XLA. JAX uses XLA because that is JAX's execution model. Pluss is `Series`-native and eager first. The differentiation layer should therefore remain backend-independent, while the runtime grows more serious execution backends underneath it.
+
+In short:
+
+- yes, Pluss should use dedicated platforms for heavy computation
+- no, autodiff itself should not become a backend compiler project
+- the right place for that maturity is Layer 0 runtime/backend dispatch
+
 ## Layered Architecture
 
 ## Layer 0: `Series` Runtime
@@ -214,6 +239,66 @@ This gives optimization code:
 - composability
 - better testing
 - less coupling to engine details
+
+### Authoring Rule for Higher-Order AD
+
+If callers want exact higher-order transforms such as:
+
+- `jvp`
+- `jacfwd`
+- `jacrev`
+- `hvp`
+
+they should write objectives generically over the differentiation value type.
+
+Preferred style:
+
+```cpp
+auto f = [](const auto& x) {
+  return sin(x) + x * x;
+};
+```
+
+or for structured parameters:
+
+```cpp
+auto f = [](const auto& params) {
+  return ...;
+};
+```
+
+This lets the same objective run with:
+
+- `Trace`
+- `DualTrace`
+- future differentiation wrappers
+
+If an objective is hard-coded to `Trace` only, first-order reverse-mode can still work, but higher-order and forward-mode transforms may be unavailable or may fall back to compatibility paths.
+
+This is a hard design recommendation and should be treated as part of the public autodiff contract.
+
+### MPS / Backend Adaptation Note
+
+Recent autodiff work has primarily changed:
+
+- the public differentiation surface
+- tape / version safety
+- transform APIs
+
+It has not been aimed at rewriting the MPS backend itself.
+
+Therefore ongoing backend work, including MPS maturity work, should generally adapt by targeting the newer public autodiff surface:
+
+- `Series::reverse()`
+- `diff::grad`
+- `diff::value_and_grad`
+- `diff::vjp`
+- `diff::jvp`
+- `diff::jacrev`
+- `diff::jacfwd`
+- `diff::hvp`
+
+rather than by rewriting backend kernels around old internal differentiation entrypoints.
 
 ### Example Direction
 

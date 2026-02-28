@@ -31,7 +31,7 @@ TEST_CASE("masked_select and masked_fill", "[mask]") {
 }
 
 TEST_CASE("contiguous advanced indices keep position (Torch-ish)", "[indexing]") {
-  auto x = pluss::zeros({2,3,4}, {{"dtype","float32"}});
+  auto x = pluss::zeros({2,3,4}, pluss::config({{"dtype","float32"}}));
   // advanced block on dims 1 and 2 (contiguous), broadcast to (2,3)
   auto i1 = pluss::make_series(std::vector<std::int64_t>{0,1}, {2,1});
   auto i2 = pluss::make_series(std::vector<std::int64_t>{1,2,3}, {1,3});

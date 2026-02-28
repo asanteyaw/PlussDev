@@ -179,14 +179,22 @@ public:
   DualTrace() = default;
 
   DualTrace(const Series& value, const Series& tangent)
-      : value_(value), tangent_(tangent) {
+      : value_(value) {
     detail::require_defined_(value, "DualTrace");
     detail::require_defined_(tangent, "DualTrace");
     detail::require_same_platform_(value, tangent, "DualTrace");
-    detail::require_same_shape_(value, tangent, "DualTrace");
     if (value.scalar_type() != tangent.scalar_type()) {
       throw std::runtime_error("subsp::math::diff::DualTrace: expected matching dtypes");
     }
+
+    Series aligned_tangent = tangent;
+    if (!detail::same_shape_(value, tangent)) {
+      if (value.numel() != tangent.numel()) {
+        throw std::runtime_error("subsp::math::diff::DualTrace: expected matching shapes");
+      }
+      aligned_tangent = tangent.reshape(value.sizes());
+    }
+    tangent_ = std::move(aligned_tangent);
   }
 
   bool defined() const noexcept { return value_.has_value() && tangent_.has_value(); }

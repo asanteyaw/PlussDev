@@ -23,7 +23,7 @@ TEST_CASE("type promotion: float64 + float32 -> float64", "[promotion]") {
 TEST_CASE("complex norm works", "[complex][norm]") {
   using c64 = std::complex<float>;
   std::vector<c64> v = {c64(3,4), c64(0,0)};
-  auto x = pluss::make_series(v, {2}, {{"dtype","complex64"}});
+  auto x = pluss::make_series(v, {2}, pluss::config({{"dtype","complex64"}}));
   auto n = x.norm(2.0);
   REQUIRE(n.scalar_type() == pluss::ScalarType::Float32);
 }

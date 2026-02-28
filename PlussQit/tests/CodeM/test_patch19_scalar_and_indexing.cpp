@@ -8,15 +8,15 @@ using pluss::codem::ScalarType;
 
 TEST_CASE("scalar operators", "[scalar]") {
   Series a = pluss::full({4}, 2.0, ScalarType::Float32);
-  Series b = a + 3.0;
+  Series b = a.add(3.0);
   auto* bp = reinterpret_cast<const float*>(b.raw_data());
   REQUIRE(bp[0] == 5.0f);
 
-  a += 1.0;
+  a.add_(1.0);
   auto* ap = reinterpret_cast<const float*>(a.raw_data());
   REQUIRE(ap[0] == 3.0f);
 
-  Series m = (a > 2.0);
+  Series m = a.gt(2.0);
   REQUIRE(m.scalar_type() == ScalarType::Bool);
 }
 
@@ -37,9 +37,9 @@ TEST_CASE("nonzero/take/put", "[index]") {
   REQUIRE(tp[0] == 7);
   REQUIRE(tp[1] == 9);
 
-  // put_
   Series src = pluss::full({2}, 1.0, ScalarType::Int64);
-  x.put_(idx, src, false);
-  REQUIRE(xp[1] == 1);
-  REQUIRE(xp[3] == 1);
+  x = x.put(idx, src, false);
+  auto* outp = reinterpret_cast<const std::int64_t*>(x.raw_data());
+  REQUIRE(outp[1] == 1);
+  REQUIRE(outp[3] == 1);
 }

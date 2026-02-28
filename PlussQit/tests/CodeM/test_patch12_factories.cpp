@@ -3,6 +3,11 @@
 
 using pluss::codem::Series;
 using pluss::codem::ScalarType;
+using pluss::arange;
+using pluss::eye;
+using pluss::linspace;
+using pluss::rand;
+using pluss::randn;
 
 
 

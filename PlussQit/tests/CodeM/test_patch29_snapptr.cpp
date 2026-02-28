@@ -2,6 +2,9 @@
 #include <pluss/pluss.h>
 #include "MSharp/SnapPtr.h"
 
+using pluss::msharp::make_snap;
+using pluss::msharp::RefCounted;
+using pluss::msharp::SnapPtr;
 
 struct Foo : RefCounted {
   int v;

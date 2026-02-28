@@ -526,6 +526,21 @@ public:
   // PlussQit naming deviations (method-first aliases).
   Series pile(const std::vector<Series>& others, std::int64_t dim=0) const;
   Series unite(const std::vector<Series>& others, std::int64_t dim=0) const;
+  Series index(std::initializer_list<Series> indices) const {
+    return index(std::vector<Series>(indices.begin(), indices.end()));
+  }
+  Series index_put(const std::vector<Series>& indices, const Series& values, bool accumulate) const {
+    return pluss::codem::_compat::invoke("index_put", *this, indices, values, accumulate);
+  }
+  Series index_put(std::initializer_list<Series> indices, const Series& values, bool accumulate) const {
+    return index_put(std::vector<Series>(indices.begin(), indices.end()), values, accumulate);
+  }
+  Series& index_put_(const std::vector<Series>& indices, const Series& values, bool accumulate) const {
+    return pluss::codem::_compat::invoke_("index_put_", *this, indices, values, accumulate);
+  }
+  Series& index_put_(std::initializer_list<Series> indices, const Series& values, bool accumulate) const {
+    return index_put_(std::vector<Series>(indices.begin(), indices.end()), values, accumulate);
+  }
 
   // Statistical accessor:
   // - safe call style: `s.stat().mean()`

@@ -32,6 +32,37 @@ and should **not** depend directly on:
 
 Those details belong to the engine layer and may evolve.
 
+## What Belongs in Autodiff vs Optimization
+
+Autodiff is responsible for reusable derivative transforms.
+
+That includes:
+
+- `grad`
+- `value_and_grad`
+- `vjp`
+- `jvp`
+- `linearize`
+- `jacrev`
+- `jacfwd`
+- `hvp`
+
+Optimization is responsible for solver policy.
+
+That includes:
+
+- constraints
+- merit functions
+- trust region logic
+- line search logic
+- penalty / barrier / augmented Lagrangian logic
+- KKT system handling
+
+So, for example:
+
+- Jacobian computation belongs in autodiff
+- constraint modeling and constraint-Jacobian consumption belong in `math::optim`
+
 ## What Kind of Problems Must Be Supported
 
 The optimization stack should eventually cover at least the following problem families.
@@ -117,6 +148,35 @@ Series f(const std::vector<Series>& xs);
 
 The output must be scalar-valued for reverse-mode gradient extraction unless an explicit seed / transform contract says otherwise.
 
+## Objective Authoring Rule
+
+If solver authors want exact higher-order and forward-mode behavior, they should write objectives generically over the differentiation value type.
+
+Preferred:
+
+```cpp
+auto f = [](const auto& x) {
+  return sin(x) + x * x;
+};
+```
+
+For structured parameters:
+
+```cpp
+auto f = [](const auto& params) {
+  return ...;
+};
+```
+
+Avoid hard-coding objectives to `Trace` only when the objective may later be used with:
+
+- `jvp`
+- `jacfwd`
+- `jacrev`
+- `hvp`
+
+Hard-coded `Trace` objectives are acceptable for first-order reverse-mode only, but they are not the recommended authoring style for solver infrastructure.
+
 ## Objective Gradient
 
 Preferred usage:
@@ -196,6 +256,24 @@ Also important:
 - user-supplied Hessian-vector product
 
 The optimization layer should never force autodiff-only use.
+
+## Backend Policy
+
+Solver authors should assume derivative transforms operate on top of `Series` runtime dispatch.
+
+That means:
+
+- autodiff does not replace backend execution
+- heavy computation should still be delegated to the best available backend under `Series`
+
+Current and future backend seriousness should be pursued in the runtime layer:
+
+- CPU BLAS / LAPACK / Accelerate
+- MPS / Metal
+- future CUDA-family backends
+- future graph / compiler acceleration if adopted later
+
+This is how Pluss becomes a serious industry system: not by embedding solver logic into autodiff, but by keeping solver policy, differentiation semantics, and heavy compute backends properly separated.
 
 ## Parameter Representation
 

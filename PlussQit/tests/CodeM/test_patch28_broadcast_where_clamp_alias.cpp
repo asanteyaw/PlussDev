@@ -7,7 +7,7 @@ using pluss::codem::ScalarType;
 
 
 TEST_CASE("broadcast where + clamp alias", "[where][broadcast][clamp]") {
-  Series a = pluss::arange(0, 6, 1, ScalarType::Int64).view({2,3});
+  Series a = pluss::arange(0, 6, 1, ScalarType::Int64).view(std::vector<std::int64_t>{2,3});
   Series b = pluss::full({1,3}, 100.0, ScalarType::Int64); // broadcast over dim0
   Series m = pluss::zeros({2,1}, ScalarType::Bool);        // broadcast over dim1
   m = m.index_put({pluss::full({1}, 1, ScalarType::Int64), pluss::full({1}, 0, ScalarType::Int64)},

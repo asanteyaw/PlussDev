@@ -16,7 +16,7 @@ TEST_CASE("in-place ops mutate shared storage across views", "[alias]") {
 
 TEST_CASE("index_put_ writes into original storage", "[alias]") {
   auto a = Series::zeros({3,3}, ScalarType::Int64);
-  auto r = a.view({9}); // view
+  auto r = a.view(std::vector<std::int64_t>{9}); // view
   auto idx = Series::arange(0, 9, 2, ScalarType::Int64);
   auto val = Series::full({idx.numel()}, 5.0, ScalarType::Int64);
   r.index_put_({idx}, val, false);

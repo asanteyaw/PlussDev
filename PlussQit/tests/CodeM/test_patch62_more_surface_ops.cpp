@@ -2,8 +2,8 @@
 #include <pluss/pluss.h>
 
 TEST_CASE("invoke_any supports more multi-arg and binary ops", "[invoke][surface]") {
-  auto x = pluss::arange(0, 12, 1, {{"dtype","float32"}}).reshape({3,4});
-  auto y = x.narrow(1, 1, 2); // cols 1..2
+  auto x = pluss::arange(0, 12, 1, pluss::config({{"dtype","float32"}})).reshape({3,4});
+  auto y = x.index_select(1, pluss::make_series(std::vector<std::int64_t>{1, 2}, {2})); // cols 1..2
   REQUIRE(y.sizes()[0] == 3);
   REQUIRE(y.sizes()[1] == 2);
 
@@ -11,7 +11,7 @@ TEST_CASE("invoke_any supports more multi-arg and binary ops", "[invoke][surface
   REQUIRE(s.dim() == 1);
   REQUIRE(s.sizes()[0] == 4);
 
-  auto a = pluss::full({3,4}, 2.0, {{"dtype","float32"}});
+  auto a = pluss::full({3,4}, 2.0, pluss::config({{"dtype","float32"}}));
   auto m = x.maximum(a);
   REQUIRE(m.numel() == 12);
 

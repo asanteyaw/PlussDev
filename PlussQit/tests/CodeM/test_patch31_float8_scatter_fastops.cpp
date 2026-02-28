@@ -21,7 +21,7 @@ TEST_CASE("float8 storage policy + fast ops", "[float8][fast]") {
 
 TEST_CASE("scatter_add basic", "[scatter]") {
   Series self = pluss::zeros({2,3}, ScalarType::Int64);
-  Series src  = pluss::arange(0, 6, 1, ScalarType::Int64).view({2,3});
+  Series src  = pluss::arange(0, 6, 1, ScalarType::Int64).view(std::vector<std::int64_t>{2,3});
   Series idx  = pluss::full({2,3}, 0, ScalarType::Int64);
   // scatter along dim1: put each src element into column 0
   auto out = self.scatter_add(1, idx, src);

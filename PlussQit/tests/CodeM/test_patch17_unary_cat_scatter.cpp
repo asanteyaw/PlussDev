@@ -33,7 +33,7 @@ TEST_CASE("scatter_add inplace", "[scatter]") {
   auto* ip = reinterpret_cast<std::int64_t*>(idx.raw_data());
   ip[0]=0; ip[1]=2; ip[2]=2; ip[3]=4;
   Series src = pluss::full({4}, 1.0, ScalarType::Float32);
-  base.scatter_add_(0, idx, src);
+  base = base.scatter_add(0, idx, src);
   auto* bp = reinterpret_cast<const float*>(base.raw_data());
   REQUIRE(bp[0] == 1.0f);
   REQUIRE(bp[2] == 2.0f);

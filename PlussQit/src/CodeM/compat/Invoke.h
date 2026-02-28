@@ -59,6 +59,7 @@ struct Arg {
   using Storage = std::variant<
       std::monostate,
       const Series*,   // non-owning
+      const std::vector<Series>*,
       Scalar,          // by value (Torch Scalar-like)
       double,
       std::int64_t,
@@ -73,6 +74,7 @@ struct Arg {
 
   // Series
   Arg(const Series& s) : v(&s) {}
+  Arg(const std::vector<Series>& xs) : v(&xs) {}
 
   // Scalar-like
   Arg(const Scalar& s) : v(s) {}
@@ -84,6 +86,8 @@ struct Arg {
   // Integral
   Arg(std::int64_t i) : v(i) {}
   Arg(int i) : v(static_cast<std::int64_t>(i)) {}
+  Arg(unsigned int i) : v(static_cast<std::int64_t>(i)) {}
+  Arg(std::uint64_t i) : v(static_cast<std::int64_t>(i)) {}
 
   // Bool
   Arg(bool b) : v(b) {}

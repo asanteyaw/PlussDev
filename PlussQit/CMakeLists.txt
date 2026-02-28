@@ -304,6 +304,9 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_autograd_optim_demo examples/CodeM/autograd_optim_demo.cpp)
   target_link_libraries(plussqit_codem_autograd_optim_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_autodiff_derivatives_demo examples/CodeM/autodiff_derivatives_demo.cpp)
+  target_link_libraries(plussqit_codem_autodiff_derivatives_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_mps_vs_cpu_demo examples/CodeM/mps_vs_cpu_demo.cpp)
   target_link_libraries(plussqit_codem_mps_vs_cpu_demo PRIVATE PlussQit::CodeM)
 
