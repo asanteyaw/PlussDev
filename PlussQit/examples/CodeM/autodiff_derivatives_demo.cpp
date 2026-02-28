@@ -9,8 +9,8 @@ namespace {
 
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::math::diff::grad;
-using pluss::subsp::math::diff::hvp;
+using pluss::subsp::math::diff::nth_derivative;
+using pluss::subsp::math::diff::trace;
 
 template <class Fn>
 bool report_case(std::string_view name,
@@ -22,15 +22,16 @@ bool report_case(std::string_view name,
                  double tol = 1e-9) {
   try {
     const Series x = pluss::make_series(x0).to(ScalarType::Float64);
-    const Series tangent = pluss::make_series(1.0).to(ScalarType::Float64);
+    auto tracked_x = trace(x, true);
+    auto tracked_y = fn(tracked_x);
+    tracked_y.reverse();
 
-    const auto [value, first] = pluss::subsp::math::diff::value_and_grad(
-        [&](const auto& z) { return fn(z); },
-        x);
-    const auto [_, second] = hvp(
+    const Series value = tracked_y.value();
+    const Series first = tracked_x.sensitivity();
+    const Series second = nth_derivative(
         [&](const auto& z) { return fn(z); },
         x,
-        tangent);
+        2);
 
     const double value_err = std::abs(value.template item<double>() - expected_value);
     const double first_err = std::abs(first.template item<double>() - expected_first);
@@ -39,8 +40,8 @@ bool report_case(std::string_view name,
     std::cout << name
               << " x=" << x0
               << " value=" << value.template item<double>()
-              << " grad=" << first.template item<double>()
-              << " second=" << second.template item<double>()
+              << " reverse_grad=" << first.template item<double>()
+              << " nth_second=" << second.template item<double>()
               << " errs=(" << value_err << "," << first_err << "," << second_err << ")\n";
 
     return value_err <= tol && first_err <= tol && second_err <= tol;

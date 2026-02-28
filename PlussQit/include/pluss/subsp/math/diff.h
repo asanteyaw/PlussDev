@@ -876,6 +876,38 @@ std::pair<Series, Series> hvp(Fn&& fn,
   return {value, hv.front()};
 }
 
+// Scalar-univariate convenience helper built on top of the transform layer.
+// This intentionally does not overload `reverse()` with an order argument,
+// because higher-order derivatives need explicit transform semantics.
+template <class Fn>
+Series nth_derivative(Fn&& fn,
+                      const Series& param,
+                      std::int64_t order,
+                      const HvpOptions& opt = {}) {
+  detail::require_defined_(param, "nth_derivative");
+  if (order < 0) {
+    throw std::runtime_error("subsp::math::diff::nth_derivative: order must be non-negative");
+  }
+  if (param.numel() != 1) {
+    throw std::runtime_error(
+        "subsp::math::diff::nth_derivative: currently requires a scalar input Series");
+  }
+
+  if (order == 0) {
+    return value_and_grad(std::forward<Fn>(fn), param).first;
+  }
+  if (order == 1) {
+    return grad(std::forward<Fn>(fn), param);
+  }
+  if (order == 2) {
+    const Series tangent = detail::ones_like_(param);
+    return hvp(std::forward<Fn>(fn), param, tangent, opt).second;
+  }
+
+  throw std::runtime_error(
+      "subsp::math::diff::nth_derivative: exact orders above 2 are not supported yet");
+}
+
 template <class Fn>
 std::pair<Series, std::function<Series(const Series&)>> vjp(Fn&& fn, const Series& param) {
   std::vector<Series> params{param};

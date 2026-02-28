@@ -20,6 +20,7 @@ using pluss::subsp::math::diff::jacfwd;
 using pluss::subsp::math::diff::jacrev;
 using pluss::subsp::math::diff::jvp;
 using pluss::subsp::math::diff::linearize;
+using pluss::subsp::math::diff::nth_derivative;
 using pluss::subsp::math::diff::trace;
 using pluss::subsp::math::diff::value_and_grad;
 using pluss::subsp::math::diff::vjp;
@@ -213,6 +214,20 @@ TEST_CASE("hvp matches analytic Hessian-vector product for scalar objective", "[
     const double expected = (2.0 - std::sin(xv[i])) * tv[i];
     REQUIRE(hvv[i] == Approx(expected).margin(1e-5));
   }
+}
+
+TEST_CASE("nth_derivative delegates to first and second-order transforms", "[autodiff][nth]") {
+  const Series x = make_series(1.25).to(ScalarType::Float64);
+  const auto poly = [](const auto& z) { return z * z * z - 2.0 * (z * z) + z; };
+
+  const Series value = nth_derivative(poly, x, 0);
+  const Series first = nth_derivative(poly, x, 1);
+  const Series second = nth_derivative(poly, x, 2);
+
+  REQUIRE(value.item<double>() == Approx(0.078125));
+  REQUIRE(first.item<double>() == Approx(0.6875));
+  REQUIRE(second.item<double>() == Approx(3.5));
+  REQUIRE_THROWS(nth_derivative(poly, x, 3));
 }
 
 TEST_CASE("structured parameter packs preserve names and gradients", "[autodiff][params]") {

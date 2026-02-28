@@ -80,6 +80,7 @@ using pluss::subsp::math::diff::grad;
 using pluss::subsp::math::diff::hvp;
 using pluss::subsp::math::diff::jvp;
 using pluss::subsp::math::diff::linearize;
+using pluss::subsp::math::diff::nth_derivative;
 using pluss::subsp::math::diff::vjp;
 using pluss::subsp::math::diff::value_and_grad;
 
