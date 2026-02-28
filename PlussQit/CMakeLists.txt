@@ -36,6 +36,13 @@ set_property(CACHE PLUSSQIT_CPU_BLAS_BACKEND PROPERTY STRINGS
 set(PLUSSQIT_GEN_DIR ${CMAKE_BINARY_DIR}/generated)
 file(MAKE_DIRECTORY ${PLUSSQIT_GEN_DIR})
 
+set(PLUSSMA_INCLUDE_DIR "")
+if (EXISTS "${CMAKE_SOURCE_DIR}/PlussMa/include")
+  set(PLUSSMA_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/PlussMa/include")
+elseif (EXISTS "${CMAKE_SOURCE_DIR}/../PlussMa/include")
+  set(PLUSSMA_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/../PlussMa/include")
+endif()
+
 include(FetchContent)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
@@ -596,6 +603,25 @@ if (PLUSSQIT_BUILD_TESTS)
     target_link_libraries(plussqit_codem_autodiff_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_autodiff_tests PRIVATE cxx_std_20)
 
+    add_executable(plussqit_codem_optim_tests
+      tests/CodeM/test_patch67_autodiff_transforms.cpp
+      tests/CodeM/test_patch68_constrained_optim_phase1.cpp
+      tests/CodeM/test_patch69_sequential_qp_phase2.cpp
+      tests/CodeM/test_patch70_interior_point_phase3.cpp
+      tests/CodeM/test_patch71_optima_dispatch.cpp
+      tests/CodeM/test_patch72_optima_recovery.cpp
+      tests/CodeM/test_patch73_optima_validation.cpp
+      tests/CodeM/test_patch74_optima_derivative_audit.cpp
+      tests/CodeM/test_patch75_optima_progress_hook.cpp
+      tests/CodeM/test_patch76_optima_exit_behavior.cpp
+      tests/CodeM/test_patch77_optima_garch_objective.cpp
+    )
+    target_link_libraries(plussqit_codem_optim_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
+    target_compile_features(plussqit_codem_optim_tests PRIVATE cxx_std_20)
+    if (PLUSSMA_INCLUDE_DIR)
+      target_include_directories(plussqit_codem_optim_tests PRIVATE ${PLUSSMA_INCLUDE_DIR})
+    endif()
+
     # CodeN-only tests (kept separate so CodeN can evolve even when CodeM is mid-refactor).
     add_executable(plussqit_coden_tests ${CODEN_TEST_SOURCES})
     target_link_libraries(plussqit_coden_tests PRIVATE PlussQit::CodeN Catch2::Catch2WithMain)
@@ -611,6 +637,7 @@ if (PLUSSQIT_BUILD_TESTS)
     include(Catch)
     catch_discover_tests(plussqit_tests)
     catch_discover_tests(plussqit_codem_autodiff_tests)
+    catch_discover_tests(plussqit_codem_optim_tests)
     catch_discover_tests(plussqit_coden_tests)
     if (PLUSSQIT_BUILD_CODEH AND TARGET plussqit_codeh_tests)
       catch_discover_tests(plussqit_codeh_tests)
