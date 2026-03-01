@@ -12,7 +12,7 @@
 
 ```cpp
 auto df = pluss::table::DataFrame::load_csv(
-    "PlussMic/data/messy_data.csv",
+    "path/to/data.csv",
     {{"nrows", 16}});
 
 std::cout << df << "\n";
@@ -40,7 +40,7 @@ sales.head();
 
 ```cpp
 auto accidents = pluss::table::DataFrame::load_csv(
-    "PlussMic/data/messy_data.csv",
+    "path/to/data.csv",
     {{"nrows", 64}})
     .fillna(0.0, {"Lifecycle Cost", "Cost Variance (%)"})
     .query("isnotnull(Agency Name)")
@@ -53,7 +53,7 @@ accidents.show();
 ## Convert Between Models
 
 ```cpp
-auto df = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 8}});
+auto df = pluss::table::DataFrame::load_csv("path/to/data.csv", {{"nrows", 8}});
 auto catalog = df.kindelize();
 auto roundtrip_df = catalog.tabelize();
 
@@ -64,9 +64,9 @@ auto back_catalog = registry.to_kindle();
 ## Save Results
 
 ```cpp
-auto out = pluss::table::DataFrame::load_json("PlussMic/data/weather.json", {{"nrows", 12}});
+auto out = pluss::table::DataFrame::load_json("path/to/data.json", {{"nrows", 12}});
 
-out.save_csv("/tmp/weather_demo.csv");
-out.save_excel("/tmp/weather_demo.xlsx");
-out.save_json("/tmp/weather_demo.json");
+out.save_csv("path/to/output.csv");
+out.save_excel("path/to/output.xlsx");
+out.save_json("path/to/output.json");
 ```

@@ -17,9 +17,9 @@ Reference sources used for this plan:
 - `/Users/yawasante/Documents/Doctrate/Thesis/C++/second_paper/with_returns/DFO/saveFminconSolution.m`
 
 Current rough maturity estimate:
-- `SequentialQP`: 84%
-- `InteriorPoint`: 89%
-- combined near-parity progress: 87%
+- `SequentialQP`: 91%
+- `InteriorPoint`: 94%
+- combined near-parity progress: 93%
 
 ## Completed So Far
 
@@ -186,7 +186,7 @@ Acceptance:
 - user-facing diagnostics are good enough for solver triage without reading internals
 
 Status:
-- in progress
+- completed
 
 ## Workstream 8: Parity Benchmarks and Pathological Cases
 
@@ -210,15 +210,15 @@ Acceptance:
 - near-parity claim is backed by a benchmark table and regression suite
 
 Status:
-- in progress
+- completed
 
 ## Patch Queue
 
 Estimated remaining focused patches to near-parity:
-1. richer outputs/messages/multipliers
-2. parity benchmarks and hardening
+- none: the original near-parity queue is complete
 
 Important note:
 - these are not cosmetic patches
 - the last 20% is mostly robustness and pathological-case handling
 - after near-parity, a separate phase can pursue clone-level behavioral matching if needed
+- clone-parity tracking now lives in `PlussMa/docs/optima_clone_parity_todo.md`

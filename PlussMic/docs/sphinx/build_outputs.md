@@ -3,8 +3,8 @@
 ## HTML
 
 ```bash
-cd /Users/yawasante/software/cxx/PlussDev/PlussMic/docs/sphinx
-PATH=/Users/yawasante/software/miniconda3/envs/cpp_env/bin:$PATH make html
+cd docs/sphinx
+make html
 ```
 
 Expected output:
@@ -14,8 +14,8 @@ Expected output:
 ## PDF
 
 ```bash
-cd /Users/yawasante/software/cxx/PlussDev/PlussMic/docs/sphinx
-PATH=/Users/yawasante/software/miniconda3/envs/cpp_env/bin:$PATH make pdf
+cd docs/sphinx
+make pdf
 ```
 
 Expected output:
@@ -26,4 +26,5 @@ Expected output:
 
 - HTML uses the same custom left-sidebar/top-bar shell as the PlussQit docs.
 - PDF is built through `latex` plus `latexmk`.
+- Run the commands from an environment where Sphinx and the PDF toolchain are already available.
 - If HTML looks stale after a rebuild, hard refresh the browser once.

@@ -17,7 +17,7 @@ Registry apply(self, std::initializer_list<std::string_view> keys, const std::fu
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 `fn` : `const std::function<Slot(const Slot&)>&`
     See the signature for the supported argument form.
@@ -29,7 +29,7 @@ Registry apply(self, std::initializer_list<std::string_view> keys, const std::fu
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies a function to one or more named slots and returns the updated registry.
 
 #### See also
 
@@ -38,17 +38,22 @@ This mutates or derives structure while keeping the surrounding object model int
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.apply({"ids"}, [](const pluss::bundle::Slot& slot) { return slot; });
+auto out = rg.apply({"ids"}, [](const pluss::bundle::Slot& slot) { return slot; });
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -64,7 +69,7 @@ Registry apply(self, std::string_view key, const std::function<Slot(const Slot&)
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `fn` : `const std::function<Slot(const Slot&)>&`
     See the signature for the supported argument form.
@@ -76,7 +81,7 @@ Registry apply(self, std::string_view key, const std::function<Slot(const Slot&)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies a function to one or more named slots and returns the updated registry.
 
 #### See also
 
@@ -85,17 +90,22 @@ This mutates or derives structure while keeping the surrounding object model int
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.apply("ids", [](const pluss::bundle::Slot& slot) { return slot; });
+auto out = rg.apply("ids", [](const pluss::bundle::Slot& slot) { return slot; });
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -111,7 +121,7 @@ Registry& apply_(self, std::initializer_list<std::string_view> keys, const std::
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 `fn` : `const std::function<Slot(const Slot&)>&`
     See the signature for the supported argument form.
@@ -123,7 +133,7 @@ Registry& apply_(self, std::initializer_list<std::string_view> keys, const std::
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies a function to one or more named slots in place.
 
 #### See also
 
@@ -132,12 +142,12 @@ This mutates or derives structure while keeping the surrounding object model int
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.apply_({"ids"}, [](const pluss::bundle::Slot& slot) { return slot; });
+rg.apply_({"ids"}, [](const pluss::bundle::Slot& slot) { return slot; });
 ```
 
 ### `apply_`
@@ -151,7 +161,7 @@ Registry& apply_(self, std::string_view key, const std::function<Slot(const Slot
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `fn` : `const std::function<Slot(const Slot&)>&`
     See the signature for the supported argument form.
@@ -163,7 +173,7 @@ Registry& apply_(self, std::string_view key, const std::function<Slot(const Slot
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies a function to one or more named slots in place.
 
 #### See also
 
@@ -172,12 +182,12 @@ This mutates or derives structure while keeping the surrounding object model int
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.apply_("ids", [](const pluss::bundle::Slot& slot) { return slot; });
+rg.apply_("ids", [](const pluss::bundle::Slot& slot) { return slot; });
 ```
 
 ### `apply_all`
@@ -200,22 +210,27 @@ Registry apply_all(self, const std::function<Slot(const Slot&)>& fn) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies the same function to every slot and returns the updated registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.apply_all([](const pluss::bundle::Slot& slot) { return slot; });
+auto out = rg.apply_all([](const pluss::bundle::Slot& slot) { return slot; });
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -244,12 +259,12 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.as_kindle();
+auto out = rg.as_kindle();
 ```
 
 #### Output
@@ -271,7 +286,7 @@ Slot at(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -280,17 +295,17 @@ Slot at(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.at("ids");
+auto out = rg.at("ids");
 ```
 
 #### Output
@@ -318,17 +333,17 @@ const_iterator begin(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Exposes iterator boundaries so the object can be traversed with a range-based loop or manual iteration.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-for (const auto& key : registry) {
+for (const auto& key : rg) {
   (void)key;
 }
 ```
@@ -352,22 +367,27 @@ Registry clear(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Removes all slots and returns an empty registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.clear();
+auto out = rg.clear();
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -391,17 +411,17 @@ Registry& clear_(self)
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Removes all slots in place.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.clear_();
+rg.clear_();
 ```
 
 ### `combine`
@@ -427,23 +447,28 @@ Registry combine(self, const Registry& other, std::string suffix = "_other") con
 
 #### Notes
 
-Use this when you need to merge compatible objects or extend the current one with another input.
+Merges slots from another registry into this one, applying the collision suffix when keys overlap.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 auto other = pluss::bundle::Registry({{"flag", pluss::bundle::Slot({pluss::make_series(true, pluss::codem::ScalarType::Bool), pluss::make_series(false, pluss::codem::ScalarType::Bool), pluss::make_series(true, pluss::codem::ScalarType::Bool)})}});
-auto out = registry.combine(other, "_rhs");
+auto out = rg.combine(other, "_rhs");
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -459,7 +484,7 @@ Registry concat_values(self, std::string_view key, const Slot& other) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `other` : `const Slot&`
     See the signature for the supported argument form.
@@ -471,23 +496,28 @@ Registry concat_values(self, std::string_view key, const Slot& other) const
 
 #### Notes
 
-Use this when you need to merge compatible objects or extend the current one with another input.
+Appends extra values onto one named slot and returns the updated registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 auto extra = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});
-auto out = registry.concat_values("ids", extra);
+auto out = rg.concat_values("ids", extra);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -503,7 +533,7 @@ Registry& concat_values_(self, std::string_view key, const Slot& other)
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `other` : `const Slot&`
     See the signature for the supported argument form.
@@ -515,18 +545,18 @@ Registry& concat_values_(self, std::string_view key, const Slot& other)
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Appends extra values onto one named slot in place.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 auto extra = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});
-registry.concat_values_("ids", extra);
+rg.concat_values_("ids", extra);
 ```
 
 ### `defined`
@@ -548,17 +578,17 @@ bool defined(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.defined();
+auto out = rg.defined();
 ```
 
 #### Output
@@ -578,7 +608,7 @@ Registry drop(self, const std::vector<std::string>& keys) const
 #### Parameters
 
 `keys` : `const std::vector<std::string>&`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -587,7 +617,7 @@ Registry drop(self, const std::vector<std::string>& keys) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Removes the named slots and keeps the remaining registry structure intact.
 
 #### See also
 
@@ -597,18 +627,23 @@ Use this to reduce the current object to the rows or fields that matter for the 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 std::vector<std::string> names{"city"};
-auto out = registry.drop(names);
+auto out = rg.drop(names);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -624,7 +659,7 @@ Registry drop(self, std::initializer_list<std::string_view> keys) const
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -633,7 +668,7 @@ Registry drop(self, std::initializer_list<std::string_view> keys) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Removes the named slots and keeps the remaining registry structure intact.
 
 #### See also
 
@@ -643,17 +678,22 @@ Use this to reduce the current object to the rows or fields that matter for the 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.drop({"city"});
+auto out = rg.drop({"city"});
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -669,7 +709,7 @@ Registry drop(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -678,7 +718,7 @@ Registry drop(self, std::string_view key) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Removes the named slots and keeps the remaining registry structure intact.
 
 #### See also
 
@@ -688,17 +728,22 @@ Use this to reduce the current object to the rows or fields that matter for the 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.drop("city");
+auto out = rg.drop("city");
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -722,22 +767,27 @@ Registry drop_empty_slots(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Removes slots whose payload is empty and returns the reduced registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.drop_empty_slots();
+auto out = rg.drop_empty_slots();
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -761,17 +811,17 @@ Registry& drop_empty_slots_(self)
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Removes empty slots in place.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.drop_empty_slots_();
+rg.drop_empty_slots_();
 ```
 
 ### `empty`
@@ -793,17 +843,17 @@ bool empty(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Reports whether the current object has no rows, entries, slots, or depth items.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.empty();
+auto out = rg.empty();
 ```
 
 #### Output
@@ -831,17 +881,17 @@ const_iterator end(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Exposes iterator boundaries so the object can be traversed with a range-based loop or manual iteration.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-for (const auto& key : registry) {
+for (const auto& key : rg) {
   (void)key;
 }
 ```
@@ -866,17 +916,17 @@ void ensure_stream_compatible(self, std::string_view where = "Registry") const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Validates that the registry can be converted to a Kindle catalog without incompatible slot contents.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.ensure_stream_compatible("demo");
+rg.ensure_stream_compatible("demo");
 ```
 
 #### Output
@@ -904,17 +954,17 @@ const std::vector<std::string>& field_names(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Returns the current labels used to address fields, slots, rows, or depth items.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.field_names();
+auto out = rg.field_names();
 ```
 
 #### Output
@@ -934,7 +984,7 @@ Registry filter_values(self, std::string_view key, const std::function<bool(cons
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `predicate` : `const std::function<bool(const Slot::Value&)>&`
     See the signature for the supported argument form.
@@ -946,22 +996,27 @@ Registry filter_values(self, std::string_view key, const std::function<bool(cons
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the values in one named slot that satisfy the supplied predicate.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.filter_values("ids", [](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });
+auto out = rg.filter_values("ids", [](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -977,7 +1032,7 @@ Registry& filter_values_(self, std::string_view key, const std::function<bool(co
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `predicate` : `const std::function<bool(const Slot::Value&)>&`
     See the signature for the supported argument form.
@@ -989,17 +1044,17 @@ Registry& filter_values_(self, std::string_view key, const std::function<bool(co
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Filters the values in one named slot in place.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.filter_values_("ids", [](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });
+rg.filter_values_("ids", [](const pluss::bundle::Slot::Value& value) { return std::holds_alternative<pluss::Series>(value); });
 ```
 
 ### `from_kindle`
@@ -1029,7 +1084,7 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
@@ -1041,6 +1096,7 @@ auto out = pluss::bundle::Registry::from_kindle(catalog);
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1056,7 +1112,7 @@ std::optional<Slot> get(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -1065,17 +1121,17 @@ std::optional<Slot> get(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.get("ids");
+auto out = rg.get("ids");
 ```
 
 #### Output
@@ -1095,7 +1151,7 @@ std::optional<Slot> get_slot(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -1104,17 +1160,17 @@ std::optional<Slot> get_slot(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Returns one named slot from the registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.get_slot("ids");
+auto out = rg.get_slot("ids");
 ```
 
 #### Output
@@ -1134,7 +1190,7 @@ bool has(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -1143,17 +1199,17 @@ bool has(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Checks whether a named slot exists.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.has("ids");
+auto out = rg.has("ids");
 ```
 
 #### Output
@@ -1173,7 +1229,7 @@ bool has_all(self, std::initializer_list<std::string_view> keys) const
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -1182,17 +1238,17 @@ bool has_all(self, std::initializer_list<std::string_view> keys) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Checks whether every requested slot name exists.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.has_all({"ids", "city"});
+auto out = rg.has_all({"ids", "city"});
 ```
 
 #### Output
@@ -1212,7 +1268,7 @@ bool has_any(self, std::initializer_list<std::string_view> keys) const
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -1221,17 +1277,17 @@ bool has_any(self, std::initializer_list<std::string_view> keys) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Checks whether at least one requested slot name exists.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.has_any({"ids", "city"});
+auto out = rg.has_any({"ids", "city"});
 ```
 
 #### Output
@@ -1251,7 +1307,7 @@ bool has_slot(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -1260,17 +1316,17 @@ bool has_slot(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Checks whether a named slot exists.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.has_slot("ids");
+auto out = rg.has_slot("ids");
 ```
 
 #### Output
@@ -1290,7 +1346,7 @@ Registry head(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -1299,22 +1355,27 @@ Registry head(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the first `n` values from every slot in the registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.head(2);
+auto out = rg.head(2);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1339,7 +1400,7 @@ Registry iloc(self, std::int64_t row) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -1348,17 +1409,22 @@ Use this to narrow the current object to the rows or depth range you want to ins
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.iloc(1);
+auto out = rg.iloc(1);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1374,10 +1440,10 @@ Registry iloc(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -1386,7 +1452,7 @@ Registry iloc(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -1395,17 +1461,22 @@ Use this to narrow the current object to the rows or depth range you want to ins
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.iloc(0, 2);
+auto out = rg.iloc(0, 2);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1429,17 +1500,17 @@ bool is_stream_compatible(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Reports whether the registry can be converted to a Kindle catalog without incompatible slot contents.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.is_stream_compatible();
+auto out = rg.is_stream_compatible();
 ```
 
 #### Output
@@ -1467,17 +1538,17 @@ const std::vector<std::string>& keys(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Returns the current labels used to address fields, slots, rows, or depth items.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.keys();
+auto out = rg.keys();
 ```
 
 #### Output
@@ -1510,12 +1581,12 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.kindelize();
+auto out = rg.kindelize();
 ```
 
 #### Output
@@ -1537,10 +1608,10 @@ static Registry load(std::string_view source_type, std::string_view filepath)
 #### Parameters
 
 `source_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -1558,12 +1629,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load("csv", "PlussMic/data/messy_data.csv");
+auto out = pluss::bundle::Registry::load("csv", "path/to/data.csv");
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1579,10 +1651,10 @@ static Registry load(std::string_view source_type, std::string_view filepath, co
 #### Parameters
 
 `source_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -1603,12 +1675,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load("csv", "PlussMic/data/messy_data.csv");
+auto out = pluss::bundle::Registry::load("csv", "path/to/data.csv");
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1624,7 +1697,7 @@ static Registry load_csv(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -1643,12 +1716,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load_csv("PlussMic/data/messy_data.csv");
+auto out = pluss::bundle::Registry::load_csv("path/to/data.csv");
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1664,7 +1738,7 @@ static Registry load_csv(std::string_view filepath, const pluss::loader::Config&
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -1686,12 +1760,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load_csv("PlussMic/data/messy_data.csv", {"nrows", 16});
+auto out = pluss::bundle::Registry::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1707,7 +1782,7 @@ static Registry load_csv(std::string_view filepath, const pluss::loader::ReadCsv
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadCsvOptions&`
     See the signature for the supported argument form.
@@ -1730,12 +1805,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 ```cpp
 pluss::loader::ReadCsvOptions options;
-auto out = pluss::bundle::Registry::load_csv("PlussMic/data/messy_data.csv", options);
+auto out = pluss::bundle::Registry::load_csv("path/to/data.csv", options);
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1751,7 +1827,7 @@ static Registry load_excel(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -1770,12 +1846,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load_excel("PlussMic/data/messy_data.csv");
+auto out = pluss::bundle::Registry::load_excel("path/to/data.xlsx");
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1791,7 +1868,7 @@ static Registry load_excel(std::string_view filepath, const pluss::loader::Confi
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -1813,12 +1890,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load_excel("PlussMic/data/messy_data.csv", {"nrows", 16});
+auto out = pluss::bundle::Registry::load_excel("path/to/data.xlsx", {"nrows", 16});
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1834,7 +1912,7 @@ static Registry load_excel(std::string_view filepath, const pluss::loader::ReadE
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadExcelOptions&`
     See the signature for the supported argument form.
@@ -1857,12 +1935,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 ```cpp
 pluss::loader::ReadExcelOptions options;
-auto out = pluss::bundle::Registry::load_excel("PlussMic/data/report.xlsx", options);
+auto out = pluss::bundle::Registry::load_excel("path/to/data.xlsx", options);
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1878,7 +1957,7 @@ static Registry load_json(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -1896,12 +1975,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load_json("PlussMic/data/messy_data.csv");
+auto out = pluss::bundle::Registry::load_json("path/to/data.json");
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1917,7 +1997,7 @@ static Registry load_json(std::string_view filepath, const pluss::loader::Config
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -1938,12 +2018,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load_json("PlussMic/data/messy_data.csv", {"nrows", 16});
+auto out = pluss::bundle::Registry::load_json("path/to/data.json", {"nrows", 16});
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1959,7 +2040,7 @@ static Registry load_parquet(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -1977,12 +2058,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load_parquet("PlussMic/data/messy_data.csv");
+auto out = pluss::bundle::Registry::load_parquet("path/to/data.parquet");
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -1998,7 +2080,7 @@ static Registry load_parquet(std::string_view filepath, const pluss::loader::Con
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -2019,12 +2101,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load_parquet("PlussMic/data/messy_data.csv", {"nrows", 16});
+auto out = pluss::bundle::Registry::load_parquet("path/to/data.parquet", {"nrows", 16});
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -2040,7 +2123,7 @@ static Registry load_txt(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -2058,12 +2141,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load_txt("PlussMic/data/messy_data.csv");
+auto out = pluss::bundle::Registry::load_txt("path/to/data.txt");
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -2079,7 +2163,7 @@ static Registry load_txt(std::string_view filepath, const pluss::loader::Config&
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -2100,12 +2184,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::bundle::Registry::load_txt("PlussMic/data/messy_data.csv", {"nrows", 16});
+auto out = pluss::bundle::Registry::load_txt("path/to/data.txt", {"nrows", 16});
 ```
 
 #### Output
 
 ```text
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -2130,22 +2215,27 @@ Registry map(self, const std::function<Slot(const Slot&)>& fn) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Transforms every slot with the same function and returns the updated registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.map([](const pluss::bundle::Slot& slot) { return slot; });
+auto out = rg.map([](const pluss::bundle::Slot& slot) { return slot; });
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -2170,17 +2260,17 @@ Registry& map_(self, const std::function<Slot(const Slot&)>& fn)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Transforms every slot in place with the same function.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.map_([](const pluss::bundle::Slot& slot) { return slot; });
+rg.map_([](const pluss::bundle::Slot& slot) { return slot; });
 ```
 
 ### `nfields`
@@ -2202,17 +2292,17 @@ std::int64_t nfields(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.nfields();
+auto out = rg.nfields();
 ```
 
 #### Output
@@ -2240,17 +2330,17 @@ std::int64_t nslots(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.nslots();
+auto out = rg.nslots();
 ```
 
 #### Output
@@ -2270,7 +2360,7 @@ Registry push(self, std::string_view key, const Slot::Value& value) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `value` : `const Slot::Value&`
     See the signature for the supported argument form.
@@ -2282,22 +2372,27 @@ Registry push(self, std::string_view key, const Slot::Value& value) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Appends one new value to a named slot and returns the updated registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.push("ids", pluss::make_series(4));
+auto out = rg.push("ids", pluss::make_series(4));
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -2313,7 +2408,7 @@ Registry& push_(self, std::string_view key, const Slot::Value& value)
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `value` : `const Slot::Value&`
     See the signature for the supported argument form.
@@ -2325,17 +2420,17 @@ Registry& push_(self, std::string_view key, const Slot::Value& value)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Appends one new value to a named slot in place.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.push_("ids", pluss::make_series(4));
+rg.push_("ids", pluss::make_series(4));
 ```
 
 ### `push_all`
@@ -2358,22 +2453,27 @@ Registry push_all(self, const Slot::Value& value) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Appends the same new value to every slot and returns the updated registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.push_all(pluss::make_note("ok"));
+auto out = rg.push_all(pluss::make_note("ok"));
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -2398,17 +2498,17 @@ Registry& push_all_(self, const Slot::Value& value)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Appends the same new value to every slot in place.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.push_all_(pluss::make_note("ok"));
+rg.push_all_(pluss::make_note("ok"));
 ```
 
 ### `rename`
@@ -2431,7 +2531,7 @@ Registry rename(self, const std::unordered_map<std::string, std::string>& mappin
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Renames one or more slots without changing their stored values.
 
 #### See also
 
@@ -2441,18 +2541,23 @@ This adjusts labels without changing the underlying payload values.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 std::unordered_map<std::string, std::string> renames{{"ids", "ids_new"}};
-auto out = registry.rename(renames);
+auto out = rg.rename(renames);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -2477,7 +2582,7 @@ Registry rename(self, std::initializer_list<std::pair<std::string_view, std::str
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Renames one or more slots without changing their stored values.
 
 #### See also
 
@@ -2487,17 +2592,22 @@ This adjusts labels without changing the underlying payload values.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.rename({{"ids", "ids_new"}});
+auto out = rg.rename({{"ids", "ids_new"}});
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -2525,7 +2635,7 @@ Registry rename(self, std::string_view from, std::string_view to) const
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Renames one or more slots without changing their stored values.
 
 #### See also
 
@@ -2535,17 +2645,22 @@ This adjusts labels without changing the underlying payload values.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.rename("ids", "ids_new");
+auto out = rg.rename("ids", "ids_new");
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -2573,17 +2688,17 @@ Registry& rename_(self, std::string_view from, std::string_view to)
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Renames one or more slots in place without changing their stored values.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.rename_("ids", "ids_new");
+rg.rename_("ids", "ids_new");
 ```
 
 ### `sample`
@@ -2597,7 +2712,7 @@ Registry sample(self, std::int64_t n, std::optional<std::uint64_t> random_state 
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 `random_state` : `std::optional<std::uint64_t>`
     See the signature for the supported argument form.
@@ -2609,22 +2724,27 @@ Registry sample(self, std::int64_t n, std::optional<std::uint64_t> random_state 
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a random sample of positions across every slot.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.sample(2, 7);
+auto out = rg.sample(2, 7);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -2643,7 +2763,7 @@ void save_as(self, std::string_view target_type, std::string_view filepath, cons
     See the signature for the supported argument form.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -2655,17 +2775,17 @@ void save_as(self, std::string_view target_type, std::string_view filepath, cons
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the registry using the explicitly supplied output format selector.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.save_as("json", "out.json");
+rg.save_as("json", "path/to/output.json");
 ```
 
 #### Output
@@ -2685,7 +2805,7 @@ void save_csv(self, std::string_view filepath) const
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -2694,7 +2814,7 @@ void save_csv(self, std::string_view filepath) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the registry to CSV after materializing each slot into a tabular export form.
 
 #### See also
 
@@ -2703,12 +2823,12 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.save_csv("out.csv");
+rg.save_csv("path/to/output.csv");
 ```
 
 #### Output
@@ -2728,7 +2848,7 @@ void save_csv(self, std::string_view filepath, const pluss::loader::Config& conf
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -2740,7 +2860,7 @@ void save_csv(self, std::string_view filepath, const pluss::loader::Config& conf
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the registry to CSV after materializing each slot into a tabular export form.
 
 #### See also
 
@@ -2749,12 +2869,12 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.save_csv("out.csv");
+rg.save_csv("path/to/output.csv");
 ```
 
 #### Output
@@ -2774,7 +2894,7 @@ void save_excel(self, std::string_view filepath) const
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -2783,7 +2903,7 @@ void save_excel(self, std::string_view filepath) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the registry to an Excel workbook after materializing each slot into a tabular export form.
 
 #### See also
 
@@ -2792,12 +2912,12 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.save_excel("out.xlsx");
+rg.save_excel("path/to/output.xlsx");
 ```
 
 #### Output
@@ -2817,7 +2937,7 @@ void save_excel(self, std::string_view filepath, const pluss::loader::Config& co
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -2829,7 +2949,7 @@ void save_excel(self, std::string_view filepath, const pluss::loader::Config& co
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the registry to an Excel workbook after materializing each slot into a tabular export form.
 
 #### See also
 
@@ -2838,12 +2958,12 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.save_excel("out.xlsx");
+rg.save_excel("path/to/output.xlsx");
 ```
 
 #### Output
@@ -2863,7 +2983,7 @@ void save_json(self, std::string_view filepath) const
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -2872,7 +2992,7 @@ void save_json(self, std::string_view filepath) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the registry to JSON for interchange or later reload.
 
 #### See also
 
@@ -2881,12 +3001,12 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.save_json("out.json");
+rg.save_json("path/to/output.json");
 ```
 
 #### Output
@@ -2906,7 +3026,7 @@ void save_json(self, std::string_view filepath, const pluss::loader::Config& con
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -2918,7 +3038,7 @@ void save_json(self, std::string_view filepath, const pluss::loader::Config& con
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the registry to JSON for interchange or later reload.
 
 #### See also
 
@@ -2927,12 +3047,12 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.save_json("out.json");
+rg.save_json("path/to/output.json");
 ```
 
 #### Output
@@ -2952,7 +3072,7 @@ void save_parquet(self, std::string_view filepath) const
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -2961,7 +3081,7 @@ void save_parquet(self, std::string_view filepath) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the registry to Parquet for compact typed storage.
 
 #### See also
 
@@ -2970,12 +3090,12 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.save_parquet("out.parquet");
+rg.save_parquet("path/to/output.parquet");
 ```
 
 #### Output
@@ -2995,7 +3115,7 @@ void save_parquet(self, std::string_view filepath, const pluss::loader::Config& 
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -3007,7 +3127,7 @@ void save_parquet(self, std::string_view filepath, const pluss::loader::Config& 
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the registry to Parquet for compact typed storage.
 
 #### See also
 
@@ -3016,12 +3136,12 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.save_parquet("out.parquet");
+rg.save_parquet("path/to/output.parquet");
 ```
 
 #### Output
@@ -3041,7 +3161,7 @@ void save_txt(self, std::string_view filepath) const
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -3050,7 +3170,7 @@ void save_txt(self, std::string_view filepath) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes a text rendering of the registry for inspection or logging.
 
 #### See also
 
@@ -3059,12 +3179,12 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.save_txt("out.txt");
+rg.save_txt("path/to/output.txt");
 ```
 
 #### Output
@@ -3084,7 +3204,7 @@ void save_txt(self, std::string_view filepath, const pluss::loader::Config& conf
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -3096,7 +3216,7 @@ void save_txt(self, std::string_view filepath, const pluss::loader::Config& conf
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes a text rendering of the registry for inspection or logging.
 
 #### See also
 
@@ -3105,12 +3225,12 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.save_txt("out.txt");
+rg.save_txt("path/to/output.txt");
 ```
 
 #### Output
@@ -3130,7 +3250,7 @@ Registry select(self, const std::vector<std::string>& keys) const
 #### Parameters
 
 `keys` : `const std::vector<std::string>&`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -3139,7 +3259,7 @@ Registry select(self, const std::vector<std::string>& keys) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the named slots and preserves their shared positional alignment.
 
 #### See also
 
@@ -3149,18 +3269,23 @@ Use this to reduce the current object to the rows or fields that matter for the 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 std::vector<std::string> names{"ids"};
-auto out = registry.select(names);
+auto out = rg.select(names);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3176,7 +3301,7 @@ Registry select(self, std::initializer_list<std::string_view> keys) const
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -3185,7 +3310,7 @@ Registry select(self, std::initializer_list<std::string_view> keys) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the named slots and preserves their shared positional alignment.
 
 #### See also
 
@@ -3195,17 +3320,22 @@ Use this to reduce the current object to the rows or fields that matter for the 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.select({"ids"});
+auto out = rg.select({"ids"});
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3221,7 +3351,7 @@ Registry select(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -3230,7 +3360,7 @@ Registry select(self, std::string_view key) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the named slots and preserves their shared positional alignment.
 
 #### See also
 
@@ -3240,17 +3370,22 @@ Use this to reduce the current object to the rows or fields that matter for the 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.select("ids");
+auto out = rg.select("ids");
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3266,7 +3401,7 @@ Registry set_slot(self, std::string_view key, const Slot& value) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `value` : `const Slot&`
     See the signature for the supported argument form.
@@ -3278,22 +3413,27 @@ Registry set_slot(self, std::string_view key, const Slot& value) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces one named slot and returns the updated registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.set_slot("score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));
+auto out = rg.set_slot("score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3309,7 +3449,7 @@ Registry& set_slot_(self, std::string_view key, const Slot& value)
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `value` : `const Slot&`
     See the signature for the supported argument form.
@@ -3321,17 +3461,17 @@ Registry& set_slot_(self, std::string_view key, const Slot& value)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces one named slot in place.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.set_slot_("score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));
+rg.set_slot_("score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)}));
 ```
 
 ### `set_slots`
@@ -3354,7 +3494,7 @@ Registry set_slots(self, std::initializer_list<std::pair<std::string, Slot>> ite
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces several named slots in one call and returns the updated registry.
 
 #### See also
 
@@ -3363,12 +3503,12 @@ This mutates or derives structure while keeping the surrounding object model int
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.set_slots({
+auto out = rg.set_slots({
     {"score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},
 });
 ```
@@ -3376,6 +3516,11 @@ auto out = registry.set_slots({
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3400,7 +3545,7 @@ Registry set_slots(self, std::initializer_list<std::pair<std::string_view, Slot>
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces several named slots in one call and returns the updated registry.
 
 #### See also
 
@@ -3409,12 +3554,12 @@ This mutates or derives structure while keeping the surrounding object model int
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.set_slots({
+auto out = rg.set_slots({
     {"score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},
 });
 ```
@@ -3422,6 +3567,11 @@ auto out = registry.set_slots({
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3446,7 +3596,7 @@ Registry& set_slots_(self, std::initializer_list<std::pair<std::string, Slot>> i
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces several named slots in place.
 
 #### See also
 
@@ -3455,12 +3605,12 @@ This mutates or derives structure while keeping the surrounding object model int
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.set_slots_({
+rg.set_slots_({
     {"score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},
 });
 ```
@@ -3485,7 +3635,7 @@ Registry& set_slots_(self, std::initializer_list<std::pair<std::string_view, Slo
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces several named slots in place.
 
 #### See also
 
@@ -3494,12 +3644,12 @@ This mutates or derives structure while keeping the surrounding object model int
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.set_slots_({
+rg.set_slots_({
     {"score", pluss::bundle::Slot({pluss::make_series(0.9), pluss::make_series(0.7), pluss::make_series(0.8)})},
 });
 ```
@@ -3529,17 +3679,18 @@ This renders a human-readable view for inspection instead of creating a new anal
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.show(std::cout);
+rg.show(std::cout);
 ```
 
 #### Output
 
 ```text
+rg.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3555,10 +3706,10 @@ Registry slice(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -3567,22 +3718,27 @@ Registry slice(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a contiguous positional slice `[start, stop)` across every slot.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.slice(0, 2);
+auto out = rg.slice(0, 2);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3598,7 +3754,7 @@ Slot slot(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -3607,17 +3763,17 @@ Slot slot(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.slot("ids");
+auto out = rg.slot("ids");
 ```
 
 #### Output
@@ -3645,17 +3801,17 @@ std::unordered_map<std::string, std::int64_t> slot_sizes(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the current length of each slot.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.slot_sizes();
+auto out = rg.slot_sizes();
 ```
 
 #### Output
@@ -3683,17 +3839,17 @@ std::vector<Slot> slots(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.slots();
+auto out = rg.slots();
 ```
 
 #### Output
@@ -3713,7 +3869,7 @@ Registry tail(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -3722,22 +3878,27 @@ Registry tail(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the last `n` values from every slot in the registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.tail(2);
+auto out = rg.tail(2);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3762,7 +3923,7 @@ Registry take(self, const std::vector<std::int64_t>& indices) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the values at the requested integer positions across every slot.
 
 #### See also
 
@@ -3771,18 +3932,23 @@ Use this to narrow the current object to the rows or depth range you want to ins
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 std::vector<std::int64_t> picks{0, 2};
-auto out = registry.take(picks);
+auto out = rg.take(picks);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3807,7 +3973,7 @@ Registry take(self, std::span<const std::int64_t> indices) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the values at the requested integer positions across every slot.
 
 #### See also
 
@@ -3816,18 +3982,23 @@ Use this to narrow the current object to the rows or depth range you want to ins
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 std::vector<std::int64_t> picks{0, 2};
-auto out = registry.take(picks);
+auto out = rg.take(picks);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3843,7 +4014,7 @@ Registry take_values(self, std::string_view key, std::span<const std::int64_t> i
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `indices` : `std::span<const std::int64_t>`
     See the signature for the supported argument form.
@@ -3855,23 +4026,28 @@ Registry take_values(self, std::string_view key, std::span<const std::int64_t> i
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Selects values from one named slot by integer position and returns the updated registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 std::vector<std::int64_t> picks{0, 2};
-auto out = registry.take_values("ids", picks);
+auto out = rg.take_values("ids", picks);
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3887,7 +4063,7 @@ Registry& take_values_(self, std::string_view key, std::span<const std::int64_t>
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `indices` : `std::span<const std::int64_t>`
     See the signature for the supported argument form.
@@ -3899,18 +4075,18 @@ Registry& take_values_(self, std::string_view key, std::span<const std::int64_t>
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Selects values from one named slot by integer position in place.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
 std::vector<std::int64_t> picks{0, 2};
-registry.take_values_("ids", picks);
+rg.take_values_("ids", picks);
 ```
 
 ### `to_json`
@@ -3932,22 +4108,23 @@ std::string to_json(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.to_json();
+auto out = rg.to_json();
 ```
 
 #### Output
 
 ```text
+rg.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -3976,12 +4153,12 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.to_kindle();
+auto out = rg.to_kindle();
 ```
 
 #### Output
@@ -4011,22 +4188,23 @@ std::string to_string(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.to_string();
+auto out = rg.to_string();
 ```
 
 #### Output
 
 ```text
+rg.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -4042,7 +4220,7 @@ Registry transform_values(self, std::string_view key, const std::function<Slot::
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `fn` : `const std::function<Slot::Value(const Slot::Value&)>&`
     See the signature for the supported argument form.
@@ -4054,22 +4232,27 @@ Registry transform_values(self, std::string_view key, const std::function<Slot::
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Rewrites the values inside one named slot with a user function and returns the updated registry.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.transform_values("ids", [](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });
+auto out = rg.transform_values("ids", [](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });
 ```
 
 #### Output
 
 ```text
+rg.head():
+ids  -> Slot([Series(1), Series(2), Series(3)])
+city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
+
+out.head():
 ids  -> Slot([Series(1), Series(2), Series(3)])
 city -> Slot([Note("Accra"), Note("Tema"), Note("Kumasi")])
 ```
@@ -4085,7 +4268,7 @@ Registry& transform_values_(self, std::string_view key, const std::function<Slot
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `fn` : `const std::function<Slot::Value(const Slot::Value&)>&`
     See the signature for the supported argument form.
@@ -4097,17 +4280,17 @@ Registry& transform_values_(self, std::string_view key, const std::function<Slot
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Rewrites the values inside one named slot in place.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-registry.transform_values_("ids", [](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });
+rg.transform_values_("ids", [](const pluss::bundle::Slot::Value& value) -> pluss::bundle::Slot::Value { if (std::holds_alternative<pluss::Series>(value)) return std::get<pluss::Series>(value).add(10); return value; });
 ```
 
 ### `type_profiles`
@@ -4129,17 +4312,17 @@ std::unordered_map<std::string, std::unordered_map<std::string, std::int64_t>> t
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Summarizes the value types stored inside each slot.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.type_profiles();
+auto out = rg.type_profiles();
 ```
 
 #### Output
@@ -4167,17 +4350,17 @@ bool unique(self) const
 
 #### Notes
 
-This call is part of the public `Registry` API and is documented here using a concrete usage example.
+Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
 #### Examples
 
 ```cpp
-auto registry = pluss::bundle::Registry({
+auto rg = pluss::bundle::Registry({
     {"ids", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {"city", pluss::bundle::Slot({pluss::make_note("Accra"), pluss::make_note("Tema"), pluss::make_note("Kumasi")})},
 });
 
-auto out = registry.unique();
+auto out = rg.unique();
 ```
 
 #### Output

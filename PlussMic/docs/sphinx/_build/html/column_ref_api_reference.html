@@ -54,7 +54,7 @@
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Number of rows, entries, or depth items to keep in the preview.</p>
 </section>
 <section id="returns">
 <h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h4>
@@ -63,7 +63,7 @@ Value produced by this call.</p>
 </section>
 <section id="notes">
 <h4>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Returns the first <code class="docutils literal notranslate"><span class="pre">n</span></code> values from the referenced column as a thread.</p>
 </section>
 <section id="examples">
 <h4>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h4>
@@ -104,7 +104,7 @@ Value produced by this call.</p>
 </section>
 <section id="id4">
 <h4>Notes<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
-<p>Use this when you want a summary view instead of carrying the full input forward unchanged.</p>
+<p>Computes the mean of the referenced numeric column.</p>
 </section>
 <section id="id5">
 <h4>Examples<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
@@ -145,7 +145,7 @@ Value produced by this call.</p>
 </section>
 <section id="id10">
 <h4>Notes<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">ColumnRef</span></code> API and is documented here using a concrete usage example.</p>
+<p>Returns the feature name associated with this column reference.</p>
 </section>
 <section id="id11">
 <h4>Examples<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h4>
@@ -186,7 +186,7 @@ Value produced by this call.</p>
 </section>
 <section id="id16">
 <h4>Notes<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">ColumnRef</span></code> API and is documented here using a concrete usage example.</p>
+<p>Returns the referenced column as a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> object.</p>
 </section>
 <section id="id17">
 <h4>Examples<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h4>
@@ -227,7 +227,7 @@ Value produced by this call.</p>
 </section>
 <section id="id22">
 <h4>Notes<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">ColumnRef</span></code> API and is documented here using a concrete usage example.</p>
+<p>Fetches one value, member, or slice from the current object without changing the source object.</p>
 </section>
 <section id="id23">
 <h4>Examples<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h4>
@@ -268,7 +268,7 @@ Value produced by this call.</p>
 </section>
 <section id="id28">
 <h4>Notes<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">ColumnRef</span></code> API and is documented here using a concrete usage example.</p>
+<p>Materializes the current members as a collection you can inspect or reuse elsewhere.</p>
 </section>
 <section id="id29">
 <h4>Examples<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h4>

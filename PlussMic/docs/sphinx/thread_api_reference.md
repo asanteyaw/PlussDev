@@ -25,7 +25,7 @@ Thread abs(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Returns a numeric thread whose values are the absolute values of the current numeric payload.
 
 #### Examples
 
@@ -60,7 +60,7 @@ const pluss::Note& as_note(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Interprets or converts the current payload as a note/text thread.
 
 #### Examples
 
@@ -95,7 +95,7 @@ const pluss::Series& as_series(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Interprets or converts the current payload as a numeric series thread.
 
 #### Examples
 
@@ -130,7 +130,7 @@ const pluss::TimeIndex& as_timeindex(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Interprets or converts the current payload as a time-index thread.
 
 #### Examples
 
@@ -165,7 +165,7 @@ const pluss::Timeline& as_timeline(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Interprets or converts the current payload as a timeline thread.
 
 #### Examples
 
@@ -310,7 +310,7 @@ Thread clear_validity_mask(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Returns a thread with the validity mask removed, so all entries are treated as valid again.
 
 #### Examples
 
@@ -340,7 +340,7 @@ Thread& clear_validity_mask_(self)
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Removes the validity mask in place, so all entries are treated as valid again.
 
 #### Examples
 
@@ -374,7 +374,7 @@ Thread clip(self, scalar min_value, scalar max_value) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Clamps numeric values to the supplied lower and upper bounds.
 
 #### Examples
 
@@ -503,7 +503,7 @@ int compare_rows(self, std::int64_t lhs_row, std::int64_t rhs_row, bool nulls_la
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Compares two positions inside the same thread and returns the comparison result.
 
 #### Examples
 
@@ -609,7 +609,7 @@ bool defined(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
 #### Examples
 
@@ -679,7 +679,7 @@ std::string dtype_name(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Returns the scalar dtype name used by the current numeric payload.
 
 #### Examples
 
@@ -714,7 +714,7 @@ Thread exp(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Applies the elementwise exponential to a numeric thread.
 
 #### Examples
 
@@ -1215,7 +1215,7 @@ Thread filter(self, const pluss::Series& bool_mask) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the entries where the supplied boolean mask is true.
 
 #### Examples
 
@@ -1251,7 +1251,7 @@ bool has_validity_mask(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Reports whether the thread currently carries a validity mask.
 
 #### Examples
 
@@ -1272,7 +1272,7 @@ Thread head(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -1281,7 +1281,7 @@ Thread head(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the first `n` entries of the thread.
 
 #### Examples
 
@@ -1352,7 +1352,7 @@ bool is_valid(self, std::int64_t row) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Checks whether the value at one position is marked valid by the thread validity mask.
 
 #### Examples
 
@@ -1492,7 +1492,7 @@ ThreadKind kind(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Returns which payload kind this thread currently stores, such as Series, Note, Timeline, or TimeIndex.
 
 #### Examples
 
@@ -1527,7 +1527,7 @@ Thread log(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Applies the elementwise natural logarithm to a numeric thread.
 
 #### Examples
 
@@ -1597,7 +1597,7 @@ pluss::Series max(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the maximum value of a numeric thread.
 
 #### Examples
 
@@ -1632,7 +1632,7 @@ pluss::Series mean(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the mean value of a numeric thread.
 
 #### Examples
 
@@ -1667,7 +1667,7 @@ pluss::Series min(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the minimum value of a numeric thread.
 
 #### Examples
 
@@ -1737,7 +1737,7 @@ const pluss::Note& note(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Returns the current payload as a note/text object.
 
 #### Examples
 
@@ -1935,7 +1935,7 @@ const pluss::Series& series(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Returns the current payload as a numeric series object.
 
 #### Examples
 
@@ -2053,7 +2053,7 @@ std::int64_t size(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -2080,10 +2080,10 @@ Thread slice(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -2092,7 +2092,7 @@ Thread slice(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a contiguous slice `[start, stop)` of the thread.
 
 #### Examples
 
@@ -2128,7 +2128,7 @@ pluss::Series std(self, bool unbiased = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the standard deviation of a numeric thread.
 
 #### Examples
 
@@ -2163,7 +2163,7 @@ pluss::Series sum(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the sum of a numeric thread.
 
 #### Examples
 
@@ -2190,7 +2190,7 @@ Thread tail(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -2199,7 +2199,7 @@ Thread tail(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the last `n` entries of the thread.
 
 #### Examples
 
@@ -2235,7 +2235,7 @@ Thread take(self, std::span<const std::int64_t> indices) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the entries at the requested integer positions.
 
 #### Examples
 
@@ -2271,7 +2271,7 @@ const pluss::TimeIndex& timeindex(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Returns the current payload as a time-index object.
 
 #### Examples
 
@@ -2306,7 +2306,7 @@ const pluss::Timeline& timeline(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Returns the current payload as a timeline object.
 
 #### Examples
 
@@ -2377,7 +2377,7 @@ std::string to_string(self, const display::DisplayOptions& options =
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
@@ -2412,7 +2412,7 @@ bool unique(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
 #### Examples
 
@@ -2447,7 +2447,7 @@ const std::optional<pluss::Series>& validity_mask(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Returns the current validity mask as a boolean series.
 
 #### Examples
 
@@ -2476,7 +2476,7 @@ ThreadValue value(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -2511,7 +2511,7 @@ const Thread& values(self) const
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### Examples
 
@@ -2547,7 +2547,7 @@ pluss::Series var(self, bool unbiased = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the variance of a numeric thread.
 
 #### Examples
 
@@ -2589,7 +2589,7 @@ Thread window(self, std::int64_t window, ThreadWindowOp op, std::int64_t min_per
 
 #### Notes
 
-This call is part of the public `Thread` API and is documented here using a concrete usage example.
+Computes a window-based transformation such as a rolling mean over the thread values.
 
 #### Examples
 
@@ -2625,7 +2625,7 @@ Thread with_validity_mask(self, const pluss::Series& validity_mask) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Returns a new thread with the supplied validity mask attached.
 
 #### Examples
 
@@ -2656,7 +2656,7 @@ Thread& with_validity_mask_(self, const pluss::Series& validity_mask)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Attaches the supplied validity mask in place.
 
 #### Examples
 

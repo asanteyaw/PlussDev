@@ -54,7 +54,7 @@
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">key</span></code> : <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-See the signature for the supported argument form.</p>
+Name of the target slot or stream.</p>
 <p><code class="docutils literal notranslate"><span class="pre">fn</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Slot(const</span> <span class="pre">Slot&amp;)&gt;&amp;</span></code>
 See the signature for the supported argument form.</p>
 </section>
@@ -65,7 +65,7 @@ Value produced by this call.</p>
 </section>
 <section id="notes">
 <h4>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h4>
-<p>This mutates or derives structure while keeping the surrounding object model intact.</p>
+<p>Applies a slot transform to one named key inside every registry and returns the updated aisle.</p>
 </section>
 <section id="examples">
 <h4>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h4>
@@ -152,7 +152,7 @@ Value produced by this call.</p>
 </section>
 <section id="id10">
 <h4>Notes<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h4>
-<p>Use this when you need to merge compatible objects or extend the current one with another input.</p>
+<p>Appends the registries from another aisle onto the current depth axis.</p>
 </section>
 <section id="id11">
 <h4>Examples<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h4>
@@ -195,7 +195,7 @@ Boolean status or membership result.</p>
 </section>
 <section id="id16">
 <h4>Notes<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Aisle</span></code> API and is documented here using a concrete usage example.</p>
+<p>Reports whether the current object owns a concrete payload that can be used safely in later operations.</p>
 </section>
 <section id="id17">
 <h4>Examples<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h4>
@@ -237,7 +237,7 @@ Integer count, size, or positional result.</p>
 </section>
 <section id="id22">
 <h4>Notes<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Aisle</span></code> API and is documented here using a concrete usage example.</p>
+<p>Returns a size/count summary for the current object without changing it.</p>
 </section>
 <section id="id23">
 <h4>Examples<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h4>
@@ -279,7 +279,7 @@ Boolean status or membership result.</p>
 </section>
 <section id="id28">
 <h4>Notes<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Aisle</span></code> API and is documented here using a concrete usage example.</p>
+<p>Reports whether the current object has no rows, entries, slots, or depth items.</p>
 </section>
 <section id="id29">
 <h4>Examples<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h4>
@@ -359,7 +359,7 @@ depth1 -&gt; Registry(ids -&gt; Slot([Series(3), Series(4)]))
 <section id="id38">
 <h4>Parameters<a class="headerlink" href="#id38" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Number of rows, entries, or depth items to keep in the preview.</p>
 </section>
 <section id="id39">
 <h4>Returns<a class="headerlink" href="#id39" title="Link to this heading">¶</a></h4>
@@ -368,7 +368,7 @@ Value produced by this call.</p>
 </section>
 <section id="id40">
 <h4>Notes<a class="headerlink" href="#id40" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Returns the first <code class="docutils literal notranslate"><span class="pre">n</span></code> registries from the aisle depth axis.</p>
 </section>
 <section id="id41">
 <h4>Examples<a class="headerlink" href="#id41" title="Link to this heading">¶</a></h4>
@@ -454,7 +454,7 @@ Value produced by this call.</p>
 </section>
 <section id="id52">
 <h4>Notes<a class="headerlink" href="#id52" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Aisle</span></code> API and is documented here using a concrete usage example.</p>
+<p>Returns the current labels used to address fields, slots, rows, or depth items.</p>
 </section>
 <section id="id53">
 <h4>Examples<a class="headerlink" href="#id53" title="Link to this heading">¶</a></h4>
@@ -497,7 +497,7 @@ Value produced by this call.</p>
 </section>
 <section id="id58">
 <h4>Notes<a class="headerlink" href="#id58" title="Link to this heading">¶</a></h4>
-<p>This mutates or derives structure while keeping the surrounding object model intact.</p>
+<p>Applies the same function to each registry and returns the transformed aisle.</p>
 </section>
 <section id="id59">
 <h4>Examples<a class="headerlink" href="#id59" title="Link to this heading">¶</a></h4>
@@ -540,7 +540,7 @@ Borrowed collection of registries.</p>
 </section>
 <section id="id64">
 <h4>Notes<a class="headerlink" href="#id64" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Aisle</span></code> API and is documented here using a concrete usage example.</p>
+<p>Materializes the current members as a collection you can inspect or reuse elsewhere.</p>
 </section>
 <section id="id65">
 <h4>Examples<a class="headerlink" href="#id65" title="Link to this heading">¶</a></h4>
@@ -583,7 +583,7 @@ Value produced by this call.</p>
 </section>
 <section id="id70">
 <h4>Notes<a class="headerlink" href="#id70" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Aisle</span></code> API and is documented here using a concrete usage example.</p>
+<p>Fetches one value, member, or slice from the current object without changing the source object.</p>
 </section>
 <section id="id71">
 <h4>Examples<a class="headerlink" href="#id71" title="Link to this heading">¶</a></h4>
@@ -618,7 +618,7 @@ city -&gt; Slot([Note(&quot;Accra&quot;), Note(&quot;Tema&quot;), Note(&quot;Kum
 <section id="id74">
 <h4>Parameters<a class="headerlink" href="#id74" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">keys</span></code> : <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>
-See the signature for the supported argument form.</p>
+Collection of slot or stream names to keep, drop, or rewrite together.</p>
 </section>
 <section id="id75">
 <h4>Returns<a class="headerlink" href="#id75" title="Link to this heading">¶</a></h4>
@@ -627,7 +627,7 @@ Value produced by this call.</p>
 </section>
 <section id="id76">
 <h4>Notes<a class="headerlink" href="#id76" title="Link to this heading">¶</a></h4>
-<p>Use this to reduce the current object to the rows or fields that matter for the next step.</p>
+<p>Keeps only the named keys inside every registry in the aisle.</p>
 </section>
 <section id="id77">
 <h4>Examples<a class="headerlink" href="#id77" title="Link to this heading">¶</a></h4>
@@ -706,9 +706,9 @@ depth1 -&gt; Registry(ids -&gt; Slot([Series(3), Series(4)]))
 <section id="id86">
 <h4>Parameters<a class="headerlink" href="#id86" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">start</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Inclusive starting position of the slice.</p>
 <p><code class="docutils literal notranslate"><span class="pre">stop</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Exclusive ending position of the slice.</p>
 </section>
 <section id="id87">
 <h4>Returns<a class="headerlink" href="#id87" title="Link to this heading">¶</a></h4>
@@ -717,7 +717,7 @@ Value produced by this call.</p>
 </section>
 <section id="id88">
 <h4>Notes<a class="headerlink" href="#id88" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Returns a contiguous depth slice <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">stop)</span></code> from the aisle.</p>
 </section>
 <section id="id89">
 <h4>Examples<a class="headerlink" href="#id89" title="Link to this heading">¶</a></h4>
@@ -752,7 +752,7 @@ depth1 -&gt; Registry(ids -&gt; Slot([Series(3), Series(4)]))
 <section id="id92">
 <h4>Parameters<a class="headerlink" href="#id92" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Number of rows, entries, or depth items to keep in the preview.</p>
 </section>
 <section id="id93">
 <h4>Returns<a class="headerlink" href="#id93" title="Link to this heading">¶</a></h4>
@@ -761,7 +761,7 @@ Value produced by this call.</p>
 </section>
 <section id="id94">
 <h4>Notes<a class="headerlink" href="#id94" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Returns the last <code class="docutils literal notranslate"><span class="pre">n</span></code> registries from the aisle depth axis.</p>
 </section>
 <section id="id95">
 <h4>Examples<a class="headerlink" href="#id95" title="Link to this heading">¶</a></h4>
@@ -804,7 +804,7 @@ Rendered string result.</p>
 </section>
 <section id="id100">
 <h4>Notes<a class="headerlink" href="#id100" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Aisle</span></code> API and is documented here using a concrete usage example.</p>
+<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
 </section>
 <section id="id101">
 <h4>Examples<a class="headerlink" href="#id101" title="Link to this heading">¶</a></h4>
@@ -890,7 +890,7 @@ Rendered string result.</p>
 </section>
 <section id="id112">
 <h4>Notes<a class="headerlink" href="#id112" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Aisle</span></code> API and is documented here using a concrete usage example.</p>
+<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
 </section>
 <section id="id113">
 <h4>Examples<a class="headerlink" href="#id113" title="Link to this heading">¶</a></h4>
@@ -933,7 +933,7 @@ Boolean status or membership result.</p>
 </section>
 <section id="id118">
 <h4>Notes<a class="headerlink" href="#id118" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Aisle</span></code> API and is documented here using a concrete usage example.</p>
+<p>Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.</p>
 </section>
 <section id="id119">
 <h4>Examples<a class="headerlink" href="#id119" title="Link to this heading">¶</a></h4>

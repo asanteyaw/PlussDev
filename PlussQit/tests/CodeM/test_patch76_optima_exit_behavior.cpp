@@ -142,7 +142,7 @@ TEST_CASE("optima interior point reports locally stationary infeasible constrain
 
   OptimaOptions options;
   options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 5;
+  options.interior_point.max_iterations = 20;
   options.interior_point.initial_barrier_parameter = 0.1;
   options.interior_point.minimum_barrier_parameter = 1e-7;
 

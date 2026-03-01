@@ -25,7 +25,7 @@ pluss::Note as_note(self) const
 
 #### Notes
 
-This call is part of the public `ThreadValue` API and is documented here using a concrete usage example.
+Converts the wrapped scalar-like value into a `pluss::Note`.
 
 #### Examples
 
@@ -61,7 +61,7 @@ pluss::Series as_series(self) const
 
 #### Notes
 
-This call is part of the public `ThreadValue` API and is documented here using a concrete usage example.
+Converts the wrapped scalar-like value into a `pluss::Series`.
 
 #### Examples
 
@@ -97,7 +97,7 @@ pluss::TimeIndex as_timeindex(self) const
 
 #### Notes
 
-This call is part of the public `ThreadValue` API and is documented here using a concrete usage example.
+Converts the wrapped scalar-like value into a `pluss::TimeIndex`.
 
 #### Examples
 
@@ -133,7 +133,7 @@ pluss::Timeline as_timeline(self) const
 
 #### Notes
 
-This call is part of the public `ThreadValue` API and is documented here using a concrete usage example.
+Converts the wrapped scalar-like value into a `pluss::Timeline`.
 
 #### Examples
 
@@ -169,7 +169,7 @@ bool defined(self) const
 
 #### Notes
 
-This call is part of the public `ThreadValue` API and is documented here using a concrete usage example.
+Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
 #### Examples
 
@@ -205,7 +205,7 @@ ThreadKind kind(self) const
 
 #### Notes
 
-This call is part of the public `ThreadValue` API and is documented here using a concrete usage example.
+Returns the underlying thread kind carried by this value wrapper.
 
 #### Examples
 
@@ -241,7 +241,7 @@ operator pluss::Note(self) const
 
 #### Notes
 
-This call is part of the public `ThreadValue` API and is documented here using a concrete usage example.
+Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Note`.
 
 #### Examples
 
@@ -271,7 +271,7 @@ operator pluss::Series(self) const
 
 #### Notes
 
-This call is part of the public `ThreadValue` API and is documented here using a concrete usage example.
+Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Series`.
 
 #### Examples
 
@@ -301,7 +301,7 @@ operator pluss::TimeIndex(self) const
 
 #### Notes
 
-This call is part of the public `ThreadValue` API and is documented here using a concrete usage example.
+Uses the implicit conversion operator to materialize the wrapped value as a `pluss::TimeIndex`.
 
 #### Examples
 
@@ -331,7 +331,7 @@ operator pluss::Timeline(self) const
 
 #### Notes
 
-This call is part of the public `ThreadValue` API and is documented here using a concrete usage example.
+Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Timeline`.
 
 #### Examples
 
@@ -361,7 +361,7 @@ const Thread& thread(self) const
 
 #### Notes
 
-This call is part of the public `ThreadValue` API and is documented here using a concrete usage example.
+Returns the wrapped single-value `Thread` object.
 
 #### Examples
 

@@ -48,7 +48,7 @@
 <section id="load-a-table-fast">
 <h2>Load A Table Fast<a class="headerlink" href="#load-a-table-fast" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_csv</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;PlussMic/data/messy_data.csv&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;path/to/data.csv&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="p">{{</span><span class="s">&quot;nrows&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">}});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -76,7 +76,7 @@
 <section id="typical-dataframe-workflow">
 <h2>Typical DataFrame Workflow<a class="headerlink" href="#typical-dataframe-workflow" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">accidents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_csv</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;PlussMic/data/messy_data.csv&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;path/to/data.csv&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="p">{{</span><span class="s">&quot;nrows&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">64</span><span class="p">}})</span>
 <span class="w">    </span><span class="p">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;Lifecycle Cost&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cost Variance (%)&quot;</span><span class="p">})</span>
 <span class="w">    </span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;isnotnull(Agency Name)&quot;</span><span class="p">)</span>
@@ -89,7 +89,7 @@
 </section>
 <section id="convert-between-models">
 <h2>Convert Between Models<a class="headerlink" href="#convert-between-models" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_csv</span><span class="p">(</span><span class="s">&quot;PlussMic/data/messy_data.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;nrows&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">}});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_csv</span><span class="p">(</span><span class="s">&quot;path/to/data.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;nrows&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">}});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">roundtrip_df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">tabelize</span><span class="p">();</span>
 
@@ -100,11 +100,11 @@
 </section>
 <section id="save-results">
 <h2>Save Results<a class="headerlink" href="#save-results" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_json</span><span class="p">(</span><span class="s">&quot;PlussMic/data/weather.json&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;nrows&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">}});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_json</span><span class="p">(</span><span class="s">&quot;path/to/data.json&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;nrows&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">}});</span>
 
-<span class="n">out</span><span class="p">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/weather_demo.csv&quot;</span><span class="p">);</span>
-<span class="n">out</span><span class="p">.</span><span class="n">save_excel</span><span class="p">(</span><span class="s">&quot;/tmp/weather_demo.xlsx&quot;</span><span class="p">);</span>
-<span class="n">out</span><span class="p">.</span><span class="n">save_json</span><span class="p">(</span><span class="s">&quot;/tmp/weather_demo.json&quot;</span><span class="p">);</span>
+<span class="n">out</span><span class="p">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;path/to/output.csv&quot;</span><span class="p">);</span>
+<span class="n">out</span><span class="p">.</span><span class="n">save_excel</span><span class="p">(</span><span class="s">&quot;path/to/output.xlsx&quot;</span><span class="p">);</span>
+<span class="n">out</span><span class="p">.</span><span class="n">save_json</span><span class="p">(</span><span class="s">&quot;path/to/output.json&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -150,9 +150,19 @@
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_plot_api_reference.html#practical-dataframeplotaccessor-api-reference">Practical DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_accessor_api_reference.html">DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_accessor_api_reference.html#practical-dataframesqlaccessor-api-reference">Practical DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_prepared_api_reference.html">DataFrameSqlPrepared API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_prepared_api_reference.html#practical-dataframesqlprepared-api-reference">Practical DataFrameSqlPrepared API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thread_atlas.html">Thread And Atlas Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thread_api_reference.html">Thread API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thread_api_reference.html#practical-thread-api-reference">Practical Thread API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thread_value_api_reference.html">ThreadValue API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thread_value_api_reference.html#practical-threadvalue-api-reference">Practical ThreadValue API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="atlas_api_reference.html">Atlas API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="atlas_api_reference.html#practical-atlas-api-reference">Practical Atlas API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>

@@ -63,7 +63,7 @@ Value produced by this call.</p>
 </section>
 <section id="notes">
 <h4>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h4>
-<p>Use this when you want a summary view instead of carrying the full input forward unchanged.</p>
+<p>Reduces the full catalog stack to one output by applying an aggregation function across the contained catalogs.</p>
 </section>
 <section id="examples">
 <h4>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h4>
@@ -110,7 +110,7 @@ Value produced by this call.</p>
 </section>
 <section id="id4">
 <h4>Notes<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Archive</span></code> API and is documented here using a concrete usage example.</p>
+<p>Reorders catalogs so their depth labels match the supplied label order.</p>
 </section>
 <section id="id5">
 <h4>Examples<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
@@ -157,7 +157,7 @@ Value produced by this call.</p>
 </section>
 <section id="id10">
 <h4>Notes<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Archive</span></code> API and is documented here using a concrete usage example.</p>
+<p>Fetches one value, member, or slice from the current object without changing the source object.</p>
 </section>
 <section id="id11">
 <h4>Examples<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h4>
@@ -203,7 +203,7 @@ Borrowed collection of catalogs.</p>
 </section>
 <section id="id16">
 <h4>Notes<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Archive</span></code> API and is documented here using a concrete usage example.</p>
+<p>Materializes the current members as a collection you can inspect or reuse elsewhere.</p>
 </section>
 <section id="id17">
 <h4>Examples<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h4>
@@ -247,7 +247,7 @@ Boolean status or membership result.</p>
 </section>
 <section id="id22">
 <h4>Notes<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Archive</span></code> API and is documented here using a concrete usage example.</p>
+<p>Reports whether the current object owns a concrete payload that can be used safely in later operations.</p>
 </section>
 <section id="id23">
 <h4>Examples<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h4>
@@ -291,7 +291,7 @@ Integer count, size, or positional result.</p>
 </section>
 <section id="id28">
 <h4>Notes<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Archive</span></code> API and is documented here using a concrete usage example.</p>
+<p>Returns a size/count summary for the current object without changing it.</p>
 </section>
 <section id="id29">
 <h4>Examples<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h4>
@@ -335,7 +335,7 @@ Value produced by this call.</p>
 </section>
 <section id="id34">
 <h4>Notes<a class="headerlink" href="#id34" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Archive</span></code> API and is documented here using a concrete usage example.</p>
+<p>Returns the current labels used to address fields, slots, rows, or depth items.</p>
 </section>
 <section id="id35">
 <h4>Examples<a class="headerlink" href="#id35" title="Link to this heading">¶</a></h4>
@@ -379,7 +379,7 @@ Boolean status or membership result.</p>
 </section>
 <section id="id40">
 <h4>Notes<a class="headerlink" href="#id40" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Archive</span></code> API and is documented here using a concrete usage example.</p>
+<p>Reports whether the current object has no rows, entries, slots, or depth items.</p>
 </section>
 <section id="id41">
 <h4>Examples<a class="headerlink" href="#id41" title="Link to this heading">¶</a></h4>
@@ -415,7 +415,7 @@ Boolean status or membership result.</p>
 <section id="id44">
 <h4>Parameters<a class="headerlink" href="#id44" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Number of rows, entries, or depth items to keep in the preview.</p>
 </section>
 <section id="id45">
 <h4>Returns<a class="headerlink" href="#id45" title="Link to this heading">¶</a></h4>
@@ -424,7 +424,7 @@ Value produced by this call.</p>
 </section>
 <section id="id46">
 <h4>Notes<a class="headerlink" href="#id46" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Returns the first <code class="docutils literal notranslate"><span class="pre">n</span></code> catalogs from the archive depth axis.</p>
 </section>
 <section id="id47">
 <h4>Examples<a class="headerlink" href="#id47" title="Link to this heading">¶</a></h4>
@@ -470,7 +470,7 @@ Value produced by this call.</p>
 </section>
 <section id="id52">
 <h4>Notes<a class="headerlink" href="#id52" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Fetches one value, member, or slice from the current object without changing the source object.</p>
 </section>
 <section id="id53">
 <h4>Examples<a class="headerlink" href="#id53" title="Link to this heading">¶</a></h4>
@@ -563,7 +563,7 @@ Value produced by this call.</p>
 </section>
 <section id="id64">
 <h4>Notes<a class="headerlink" href="#id64" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Fetches one value, member, or slice from the current object without changing the source object.</p>
 </section>
 <section id="see-also">
 <h4>See also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h4>
@@ -617,7 +617,7 @@ Value produced by this call.</p>
 </section>
 <section id="id71">
 <h4>Notes<a class="headerlink" href="#id71" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Fetches one value, member, or slice from the current object without changing the source object.</p>
 </section>
 <section id="id72">
 <h4>See also<a class="headerlink" href="#id72" title="Link to this heading">¶</a></h4>
@@ -671,7 +671,7 @@ Value produced by this call.</p>
 </section>
 <section id="id79">
 <h4>Notes<a class="headerlink" href="#id79" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Fetches one value, member, or slice from the current object without changing the source object.</p>
 </section>
 <section id="id80">
 <h4>See also<a class="headerlink" href="#id80" title="Link to this heading">¶</a></h4>
@@ -725,7 +725,7 @@ Value produced by this call.</p>
 </section>
 <section id="id86">
 <h4>Notes<a class="headerlink" href="#id86" title="Link to this heading">¶</a></h4>
-<p>This mutates or derives structure while keeping the surrounding object model intact.</p>
+<p>Applies the same function to each catalog and returns the transformed archive.</p>
 </section>
 <section id="id87">
 <h4>Examples<a class="headerlink" href="#id87" title="Link to this heading">¶</a></h4>
@@ -771,7 +771,7 @@ Value produced by this call.</p>
 </section>
 <section id="id92">
 <h4>Notes<a class="headerlink" href="#id92" title="Link to this heading">¶</a></h4>
-<p>This adjusts labels without changing the underlying payload values.</p>
+<p>Replaces the depth-label axis with the supplied labels while keeping catalog contents unchanged.</p>
 </section>
 <section id="id93">
 <h4>Examples<a class="headerlink" href="#id93" title="Link to this heading">¶</a></h4>
@@ -855,9 +855,9 @@ test  -&gt; Catalog(metric -&gt; Series([30.0, 40.0]))
 <section id="id102">
 <h4>Parameters<a class="headerlink" href="#id102" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">start</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Inclusive starting position of the slice.</p>
 <p><code class="docutils literal notranslate"><span class="pre">stop</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Exclusive ending position of the slice.</p>
 </section>
 <section id="id103">
 <h4>Returns<a class="headerlink" href="#id103" title="Link to this heading">¶</a></h4>
@@ -866,7 +866,7 @@ Value produced by this call.</p>
 </section>
 <section id="id104">
 <h4>Notes<a class="headerlink" href="#id104" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Returns a contiguous depth slice <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">stop)</span></code> from the archive.</p>
 </section>
 <section id="id105">
 <h4>Examples<a class="headerlink" href="#id105" title="Link to this heading">¶</a></h4>
@@ -914,7 +914,7 @@ Value produced by this call.</p>
 </section>
 <section id="id110">
 <h4>Notes<a class="headerlink" href="#id110" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Archive</span></code> API and is documented here using a concrete usage example.</p>
+<p>Sorts catalogs by their current depth labels.</p>
 </section>
 <section id="id111">
 <h4>Examples<a class="headerlink" href="#id111" title="Link to this heading">¶</a></h4>
@@ -1006,7 +1006,7 @@ sales
 <section id="id120">
 <h4>Parameters<a class="headerlink" href="#id120" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Number of rows, entries, or depth items to keep in the preview.</p>
 </section>
 <section id="id121">
 <h4>Returns<a class="headerlink" href="#id121" title="Link to this heading">¶</a></h4>
@@ -1015,7 +1015,7 @@ Value produced by this call.</p>
 </section>
 <section id="id122">
 <h4>Notes<a class="headerlink" href="#id122" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Returns the last <code class="docutils literal notranslate"><span class="pre">n</span></code> catalogs from the archive depth axis.</p>
 </section>
 <section id="id123">
 <h4>Examples<a class="headerlink" href="#id123" title="Link to this heading">¶</a></h4>
@@ -1060,7 +1060,7 @@ Rendered string result.</p>
 </section>
 <section id="id128">
 <h4>Notes<a class="headerlink" href="#id128" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Archive</span></code> API and is documented here using a concrete usage example.</p>
+<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
 </section>
 <section id="id129">
 <h4>Examples<a class="headerlink" href="#id129" title="Link to this heading">¶</a></h4>
@@ -1160,7 +1160,7 @@ Boolean status or membership result.</p>
 </section>
 <section id="id140">
 <h4>Notes<a class="headerlink" href="#id140" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Archive</span></code> API and is documented here using a concrete usage example.</p>
+<p>Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.</p>
 </section>
 <section id="id141">
 <h4>Examples<a class="headerlink" href="#id141" title="Link to this heading">¶</a></h4>

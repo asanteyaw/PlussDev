@@ -7,6 +7,16 @@ from typing import Callable
 
 ROOT = pathlib.Path('/Users/yawasante/software/cxx/PlussDev')
 DOCS = ROOT / 'PlussMic/docs/sphinx'
+GENERIC_CSV_PATH = "path/to/data.csv"
+GENERIC_XLSX_PATH = "path/to/data.xlsx"
+GENERIC_JSON_PATH = "path/to/data.json"
+GENERIC_PARQUET_PATH = "path/to/data.parquet"
+GENERIC_TXT_PATH = "path/to/data.txt"
+GENERIC_OUTPUT_CSV_PATH = "path/to/output.csv"
+GENERIC_OUTPUT_XLSX_PATH = "path/to/output.xlsx"
+GENERIC_OUTPUT_JSON_PATH = "path/to/output.json"
+GENERIC_OUTPUT_PARQUET_PATH = "path/to/output.parquet"
+GENERIC_OUTPUT_TXT_PATH = "path/to/output.txt"
 
 @dataclass
 class Method:
@@ -321,22 +331,400 @@ def returns_doc(ret: str) -> str:
 def params_doc(params: list[tuple[str, str]]) -> str:
     if not params:
         return '`None`'
+    param_notes = {
+        'filepath': 'File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.',
+        'source_type': 'Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.',
+        'sheet_name': 'Worksheet name to read from or write to inside an Excel workbook.',
+        'sheet_index': 'Zero-based worksheet position inside an Excel workbook.',
+        'header': 'Controls whether feature names are written to, or expected from, the file header row.',
+        'add_cases': 'When `true`, the current case axis is exported as its own column so row labels can be reconstructed when the file is loaded again.',
+        'case_label': 'Optional column label to use for the exported case axis when `add_cases=true`.',
+        'na_rep': 'String written anywhere a null or missing value must be serialized.',
+        'float_format': 'Optional numeric formatting string used when floating-point values are written to text output.',
+        'sep': 'Column separator used for delimited text files such as CSV.',
+        'quotechar': 'Quote character used when writing delimited text output.',
+        'doublequote': 'When `true`, embedded quote characters are escaped by doubling them in CSV-style output.',
+        'line_terminator': 'Line ending written between serialized rows in text-based export.',
+        'decimal': 'Decimal marker used when formatting floating-point output.',
+        'encoding': 'Text encoding used when reading or writing text-based files.',
+        'new_cases': 'Replacement case labels in the exact order you want the rows to follow.',
+        'cases': 'Case-label thread to attach to the current object.',
+        'drop_feature': 'When `true`, the feature promoted to cases is removed from the ordinary feature columns.',
+        'feature_name': 'Name of the target feature to read, rewrite, sort by, or promote to cases.',
+        'field': 'Name of the target stream in the catalog.',
+        'key': 'Name of the target slot or stream.',
+        'keys': 'Collection of slot or stream names to keep, drop, or rewrite together.',
+        'names': 'Collection of feature, slot, or stream names supplied in positional order.',
+        'n': 'Number of rows, entries, or depth items to keep in the preview.',
+        'start': 'Inclusive starting position of the slice.',
+        'stop': 'Exclusive ending position of the slice.',
+    }
     lines = []
     for name, typ in params:
         label_type = typ.replace('double', 'scalar')
-        lines.append(f'`{name}` : `{label_type}`\n    See the signature for the supported argument form.')
+        note = param_notes.get(name, 'See the signature for the supported argument form.')
+        lines.append(f'`{name}` : `{label_type}`\n    {note}')
     return '\n\n'.join(lines)
 
 
 def generic_note(class_name: str, method: Method) -> str:
     name = method.name
-    sig = method.signature
+    method_notes = {
+        'DataFrame': {
+            'aggregate': 'Builds a compact summary frame from one or more aggregation specs, so you can inspect computed metrics instead of the full row set.',
+            'bottom': 'Returns the rows with the smallest values in the selected feature.',
+            'cases_series': 'Returns the current case axis as a `Series`, which is useful when you need the row labels as data.',
+            'combine': 'Combines this frame with another frame according to the supplied combine policy, such as feature-wise update or join-like alignment.',
+            'copy': 'Returns a detached copy of the frame so later edits to the result do not affect the source object.',
+            'count_by': 'Groups by one feature and returns per-group row counts.',
+            'count_null_rows': 'Counts how many rows contain at least one null value.',
+            'describe': 'Returns descriptive summary statistics for the selected numeric features.',
+            'drop': 'Removes one or more features and returns the remaining frame.',
+            'equals': 'Checks whether two frames have the same structure, labels, and values.',
+            'group_by': 'Groups rows by one or more key features and computes the requested aggregations for each group.',
+            'has_column': 'Checks whether a feature name exists in the frame.',
+            'has_feature': 'Checks whether a feature name exists in the frame.',
+            'head': 'Returns the first `n` rows of the frame.',
+            'with_cases': 'Replaces the current case axis with the supplied thread. The row values stay in the same order, but later case-aware operations now use the new labels.',
+            'with_cases_': 'Replaces the current case axis in place. The row values stay in the same order, but later case-aware operations now use the new labels.',
+            'insert': 'Inserts a new feature at the requested position and shifts the later features to the right.',
+            'join': 'Adds compatible features from another frame, aligning rows by the shared case axis.',
+            'set_cases': 'Promotes one feature to become the case axis. With the default `drop_feature=true`, that feature stops being a normal column and becomes the row labels instead.',
+            'reset_cases': 'Materializes the current case axis as a normal feature, then restores the default positional cases `0..n-1`.',
+            'align_cases': 'Reorders rows so their case labels match the supplied `new_cases` order. Every requested case must already exist, and the output case axis is rewritten to that order.',
+            'sort_cases': 'Sorts rows by the current case axis rather than by a data feature.',
+            'add_prefix': 'Prepends the supplied text to every feature name. Row values, row order, and case labels stay unchanged.',
+            'add_suffix': 'Appends the supplied text to every feature name. Row values, row order, and case labels stay unchanged.',
+            'max': 'Computes per-feature maxima for the selected numeric features.',
+            'mean': 'Computes per-feature means for the selected numeric features.',
+            'mean_by': 'Groups by one feature and returns the mean of another feature within each group.',
+            'min': 'Computes per-feature minima for the selected numeric features.',
+            'note_features': 'Returns only the note-backed features.',
+            'nunique': 'Counts distinct values for each selected feature.',
+            'pivot': 'Reshapes long-form rows into a wider table indexed by one feature and expanded by another.',
+            'pivot_table': 'Builds a pivoted summary table using an aggregation function when multiple rows map to the same cell.',
+            'relabel_features': 'Replaces the full feature label set with the supplied names in positional order.',
+            'rename': 'Renames one feature without changing its values.',
+            'rename_': 'Renames one feature in place without changing its values.',
+            'rename_features': 'Renames several features in one call.',
+            'reorder': 'Reorders the feature columns without changing any row values.',
+            'repeated_cases': 'Returns the rows whose current case labels are duplicates of an earlier row.',
+            'rolling': 'Computes rolling-window features and returns them as a derived frame.',
+            'sample': 'Returns a random sample of rows.',
+            'save_csv': 'Writes the frame to CSV. Set `add_cases=true` when you want the current case axis exported as a regular column so row labels survive the round trip.',
+            'save_excel': 'Writes the frame to an Excel sheet. Set `add_cases=true` when you want the current case axis exported as a regular column.',
+            'save_json': 'Writes the frame to JSON using the table export route for later reload or interchange.',
+            'save_parquet': 'Writes the frame to Parquet for compact typed storage.',
+            'save_txt': 'Writes the frame to a plain-text table preview suitable for inspection or lightweight logging.',
+            'save_as': 'Writes the frame using the explicitly supplied output format selector rather than a dedicated saver overload.',
+            'series_features': 'Returns only the numeric series-backed features.',
+            'assign': 'Adds or replaces derived features computed from the current frame. Use this when the new column depends on one or more existing columns.',
+            'set': 'Opens an assignment helper so you can write `df.set(...) = ...` and replace or create features declaratively.',
+            'set_axis': 'Replaces the full feature label set with the supplied names in positional order.',
+            'set_feature_axis': 'Replaces the full feature label set with the supplied names in positional order.',
+            'set_features': 'Adds or replaces one or more features and returns the updated frame.',
+            'set_features_': 'Adds or replaces one or more features in place.',
+            'slice': 'Returns a contiguous row slice `[start, stop)` from the frame.',
+            'sort_values': 'Reorders rows using one or more feature values as sort keys.',
+            'std': 'Computes per-feature standard deviations for the selected numeric features.',
+            'stitch_on': 'Matches rows from two frames using key features and appends the matched features from the right-hand frame.',
+            'sum': 'Computes per-feature sums for the selected numeric features.',
+            'tail': 'Returns the last `n` rows of the frame.',
+            'take': 'Returns the rows at the requested integer positions.',
+            'tally': 'Counts how many rows fall into each distinct value of the grouping feature.',
+            'timeline_features': 'Returns only the timeline-backed features.',
+            'top': 'Returns the rows with the largest values in the selected feature.',
+            'transform': 'Rewrites one feature, several features, or all features by applying a user function to each targeted thread.',
+            'transpose': 'Swaps rows and features so former feature names become row labels.',
+            'unique_cases': 'Keeps only the first occurrence of each case label and drops later duplicates.',
+            'unsqueeze': 'Promotes the frame into a depth-1 `Atlas` so it can participate in multi-frame workflows.',
+            'query': 'Keeps only the rows that satisfy the supplied filter expression or mask-producing query.',
+            'where': 'Keeps only the rows where the supplied boolean mask is true.',
+            'filter': 'Keeps only the rows where the supplied boolean mask is true.',
+            'reindex_cases': 'Builds a new case axis from the supplied labels and aligns rows onto that case order.',
+            'reindex_like': 'Realigns this frame so its cases match another frame.',
+            'conform_to': 'Reorders and aligns this frame so it is compatible with another frame for downstream joins or arithmetic.',
+            'update': 'Overlays matching features from another frame onto this frame using aligned cases.',
+            'var': 'Computes per-feature variances for the selected numeric features.',
+            'view': 'Returns a lightweight row view of the requested slice.',
+            'window': 'Computes one or more window-based features such as rolling means over selected columns.',
+            'with_column': 'Returns a new frame with one added or replaced feature.',
+            'with_column_': 'Adds or replaces one feature in place.',
+        },
+        'Catalog': {
+            'apply': 'Applies a function to one named stream and returns the updated catalog.',
+            'apply_': 'Applies a function to one named stream in place.',
+            'apply_all': 'Applies the same function to every stream and returns the updated catalog.',
+            'apply_all_': 'Applies the same function to every stream in place.',
+            'filter': 'Keeps only the rows where the supplied mask stream is true.',
+            'from_json': 'Builds a catalog from JSON input using the PlussMic JSON loader route.',
+            'get_stream': 'Returns one named stream from the catalog.',
+            'has': 'Checks whether a named stream exists.',
+            'has_stream': 'Checks whether a named stream exists.',
+            'head': 'Returns the first `n` rows across every stream in the catalog.',
+            'masked_select': 'Keeps only the rows where the supplied mask stream is true.',
+            'max': 'Computes the maximum value of one named numeric stream.',
+            'mean': 'Computes the mean value of one named numeric stream.',
+            'min': 'Computes the minimum value of one named numeric stream.',
+            'note': 'Returns one named stream interpreted as a note/text stream.',
+            'query': 'Keeps only the rows selected by the supplied row-wise query function or expression.',
+            'rename_': 'Renames one or more streams in place without changing their values.',
+            'sample': 'Returns a random sample of rows across all streams.',
+            'series': 'Returns one named stream interpreted as a numeric series stream.',
+            'set': 'Adds or replaces one named stream and returns the updated catalog.',
+            'set_': 'Adds or replaces one named stream in place.',
+            'set_stream': 'Adds or replaces one named stream and returns the updated catalog.',
+            'set_stream_': 'Adds or replaces one named stream in place.',
+            'set_streams': 'Adds or replaces several named streams and returns the updated catalog.',
+            'set_streams_': 'Adds or replaces several named streams in place.',
+            'slice': 'Returns a contiguous row slice `[start, stop)` across every stream.',
+            'sum': 'Computes the sum of one named numeric stream.',
+            'tail': 'Returns the last `n` rows across every stream in the catalog.',
+            'take': 'Returns the rows at the requested integer positions across every stream.',
+            'timeindex': 'Returns one named stream interpreted as a time-index stream.',
+            'timeline': 'Returns one named stream interpreted as a timeline stream.',
+            'transform': 'Rewrites one stream, several streams, or all streams by applying a user function.',
+            'select': 'Keeps only the named streams and preserves their shared row alignment.',
+            'drop': 'Removes the named streams and keeps the remaining catalog structure intact.',
+            'rename': 'Renames one or more streams without changing their values.',
+            'sort': 'Reorders rows using one stream as the sort key, while keeping the other streams aligned to the same row order.',
+            'sort_by': 'Reorders rows using multiple sort keys, while keeping all streams aligned.',
+            'group_by': 'Splits the catalog into sub-catalogs keyed by the distinct values in the grouping stream.',
+            'merge': 'Combines two catalogs by matching rows on a key stream.',
+            'save_csv': 'Writes the catalog to CSV after aligning its streams into a table-like representation.',
+            'save_excel': 'Writes the catalog to an Excel workbook after aligning its streams into a table-like representation.',
+            'save_json': 'Writes the catalog to JSON for interchange or later reload.',
+            'save_parquet': 'Writes the catalog to Parquet for compact typed storage.',
+            'save_txt': 'Writes a text rendering of the catalog for inspection or logging.',
+            'save_as': 'Writes the catalog using the explicitly supplied output format selector.',
+            'where': 'Keeps only the rows where the supplied mask stream is true.',
+        },
+        'Registry': {
+            'apply': 'Applies a function to one or more named slots and returns the updated registry.',
+            'apply_': 'Applies a function to one or more named slots in place.',
+            'apply_all': 'Applies the same function to every slot and returns the updated registry.',
+            'clear': 'Removes all slots and returns an empty registry.',
+            'clear_': 'Removes all slots in place.',
+            'concat_values': 'Appends extra values onto one named slot and returns the updated registry.',
+            'concat_values_': 'Appends extra values onto one named slot in place.',
+            'drop_empty_slots': 'Removes slots whose payload is empty and returns the reduced registry.',
+            'drop_empty_slots_': 'Removes empty slots in place.',
+            'ensure_stream_compatible': 'Validates that the registry can be converted to a Kindle catalog without incompatible slot contents.',
+            'filter_values': 'Keeps only the values in one named slot that satisfy the supplied predicate.',
+            'filter_values_': 'Filters the values in one named slot in place.',
+            'get_slot': 'Returns one named slot from the registry.',
+            'has': 'Checks whether a named slot exists.',
+            'has_all': 'Checks whether every requested slot name exists.',
+            'has_any': 'Checks whether at least one requested slot name exists.',
+            'has_slot': 'Checks whether a named slot exists.',
+            'head': 'Returns the first `n` values from every slot in the registry.',
+            'is_stream_compatible': 'Reports whether the registry can be converted to a Kindle catalog without incompatible slot contents.',
+            'map': 'Transforms every slot with the same function and returns the updated registry.',
+            'map_': 'Transforms every slot in place with the same function.',
+            'push': 'Appends one new value to a named slot and returns the updated registry.',
+            'push_': 'Appends one new value to a named slot in place.',
+            'push_all': 'Appends the same new value to every slot and returns the updated registry.',
+            'push_all_': 'Appends the same new value to every slot in place.',
+            'rename_': 'Renames one or more slots in place without changing their stored values.',
+            'sample': 'Returns a random sample of positions across every slot.',
+            'set_slot_': 'Adds or replaces one named slot in place.',
+            'set_slots_': 'Adds or replaces several named slots in place.',
+            'slice': 'Returns a contiguous positional slice `[start, stop)` across every slot.',
+            'slot_sizes': 'Returns the current length of each slot.',
+            'take': 'Returns the values at the requested integer positions across every slot.',
+            'take_values': 'Selects values from one named slot by integer position and returns the updated registry.',
+            'take_values_': 'Selects values from one named slot by integer position in place.',
+            'transform_values': 'Rewrites the values inside one named slot with a user function and returns the updated registry.',
+            'transform_values_': 'Rewrites the values inside one named slot in place.',
+            'type_profiles': 'Summarizes the value types stored inside each slot.',
+            'tail': 'Returns the last `n` values from every slot in the registry.',
+            'select': 'Keeps only the named slots and preserves their shared positional alignment.',
+            'drop': 'Removes the named slots and keeps the remaining registry structure intact.',
+            'rename': 'Renames one or more slots without changing their stored values.',
+            'combine': 'Merges slots from another registry into this one, applying the collision suffix when keys overlap.',
+            'save_csv': 'Writes the registry to CSV after materializing each slot into a tabular export form.',
+            'save_excel': 'Writes the registry to an Excel workbook after materializing each slot into a tabular export form.',
+            'save_json': 'Writes the registry to JSON for interchange or later reload.',
+            'save_parquet': 'Writes the registry to Parquet for compact typed storage.',
+            'save_txt': 'Writes a text rendering of the registry for inspection or logging.',
+            'save_as': 'Writes the registry using the explicitly supplied output format selector.',
+            'set_slot': 'Adds or replaces one named slot and returns the updated registry.',
+            'set_slots': 'Adds or replaces several named slots in one call and returns the updated registry.',
+        },
+        'Thread': {
+            'abs': 'Returns a numeric thread whose values are the absolute values of the current numeric payload.',
+            'as_note': 'Interprets or converts the current payload as a note/text thread.',
+            'as_series': 'Interprets or converts the current payload as a numeric series thread.',
+            'as_timeindex': 'Interprets or converts the current payload as a time-index thread.',
+            'as_timeline': 'Interprets or converts the current payload as a timeline thread.',
+            'clear_validity_mask': 'Returns a thread with the validity mask removed, so all entries are treated as valid again.',
+            'clear_validity_mask_': 'Removes the validity mask in place, so all entries are treated as valid again.',
+            'clip': 'Clamps numeric values to the supplied lower and upper bounds.',
+            'compare_rows': 'Compares two positions inside the same thread and returns the comparison result.',
+            'dtype_name': 'Returns the scalar dtype name used by the current numeric payload.',
+            'exp': 'Applies the elementwise exponential to a numeric thread.',
+            'filter': 'Keeps only the entries where the supplied boolean mask is true.',
+            'has_validity_mask': 'Reports whether the thread currently carries a validity mask.',
+            'head': 'Returns the first `n` entries of the thread.',
+            'is_valid': 'Checks whether the value at one position is marked valid by the thread validity mask.',
+            'kind': 'Returns which payload kind this thread currently stores, such as Series, Note, Timeline, or TimeIndex.',
+            'log': 'Applies the elementwise natural logarithm to a numeric thread.',
+            'max': 'Returns the maximum value of a numeric thread.',
+            'mean': 'Returns the mean value of a numeric thread.',
+            'min': 'Returns the minimum value of a numeric thread.',
+            'note': 'Returns the current payload as a note/text object.',
+            'series': 'Returns the current payload as a numeric series object.',
+            'slice': 'Returns a contiguous slice `[start, stop)` of the thread.',
+            'std': 'Returns the standard deviation of a numeric thread.',
+            'sum': 'Returns the sum of a numeric thread.',
+            'tail': 'Returns the last `n` entries of the thread.',
+            'take': 'Returns the entries at the requested integer positions.',
+            'timeindex': 'Returns the current payload as a time-index object.',
+            'timeline': 'Returns the current payload as a timeline object.',
+            'validity_mask': 'Returns the current validity mask as a boolean series.',
+            'var': 'Returns the variance of a numeric thread.',
+            'window': 'Computes a window-based transformation such as a rolling mean over the thread values.',
+            'with_validity_mask': 'Returns a new thread with the supplied validity mask attached.',
+            'with_validity_mask_': 'Attaches the supplied validity mask in place.',
+        },
+        'Stream': {
+            'abs': 'Returns a numeric stream whose values are the absolute values of the current numeric payload.',
+            'as_note': 'Interprets or converts the current payload as a note/text stream.',
+            'as_series': 'Interprets or converts the current payload as a numeric series stream.',
+            'as_timeindex': 'Interprets or converts the current payload as a time-index stream.',
+            'as_timeline': 'Interprets or converts the current payload as a timeline stream.',
+            'clear_cases': 'Returns a stream with its case labels removed.',
+            'clear_cases_': 'Removes the stream case labels in place.',
+            'clear_validity_mask': 'Returns a stream with the validity mask removed, so all entries are treated as valid again.',
+            'clear_validity_mask_': 'Removes the validity mask in place, so all entries are treated as valid again.',
+            'clip': 'Clamps numeric stream values to the supplied lower and upper bounds.',
+            'drop_meta': 'Returns a stream with one metadata key removed.',
+            'drop_meta_': 'Removes one metadata key in place.',
+            'dtype_name': 'Returns the scalar dtype name used by the current numeric payload.',
+            'exp': 'Applies the elementwise exponential to a numeric stream.',
+            'filter': 'Keeps only the entries where the supplied boolean mask is true.',
+            'from_thread': 'Builds a Kindle stream from a table thread.',
+            'has_cases': 'Reports whether the stream currently carries explicit case labels.',
+            'has_meta': 'Reports whether a metadata key exists on the stream.',
+            'has_validity_mask': 'Reports whether the stream currently carries a validity mask.',
+            'head': 'Returns the first `n` entries of the stream.',
+            'kind': 'Returns which payload kind this stream currently stores, such as Series, Note, Timeline, or TimeIndex.',
+            'log': 'Applies the elementwise natural logarithm to a numeric stream.',
+            'max': 'Returns the maximum value of a numeric stream.',
+            'mean': 'Returns the mean value of a numeric stream.',
+            'meta': 'Returns the value stored under one metadata key.',
+            'min': 'Returns the minimum value of a numeric stream.',
+            'slice': 'Returns a contiguous slice `[start, stop)` of the stream.',
+            'std': 'Returns the standard deviation of a numeric stream.',
+            'sum': 'Returns the sum of a numeric stream.',
+            'tail': 'Returns the last `n` entries of the stream.',
+            'take': 'Returns the entries at the requested integer positions.',
+            'validity_mask': 'Returns the current validity mask as a boolean series.',
+            'var': 'Returns the variance of a numeric stream.',
+            'with_cases': 'Returns a new stream with the supplied case labels attached.',
+            'with_cases_': 'Attaches the supplied case labels in place.',
+            'with_meta': 'Returns a new stream with one metadata key/value attached.',
+            'with_meta_': 'Adds or updates one metadata key/value in place.',
+            'with_validity_mask': 'Returns a new stream with the supplied validity mask attached.',
+            'with_validity_mask_': 'Attaches the supplied validity mask in place.',
+        },
+        'Atlas': {
+            'aggregate_over_frames': 'Reduces the full frame stack to one output by applying an aggregation function across the contained frames.',
+            'align_depth': 'Reorders frames so their depth labels match the supplied label order.',
+            'head': 'Returns the first `n` frames from the atlas depth axis.',
+            'map_frames': 'Applies the same function to each frame and returns the transformed atlas.',
+            'relabel_depth': 'Replaces the depth-label axis with the supplied labels while keeping frame contents unchanged.',
+            'slice_frames': 'Returns a contiguous depth slice `[start, stop)` from the atlas.',
+            'sort_depth': 'Sorts frames by their current depth labels.',
+            'squeeze': 'Collapses a depth-1 atlas back into a single `DataFrame`.',
+            'tail': 'Returns the last `n` frames from the atlas depth axis.',
+        },
+        'Archive': {
+            'aggregate_over_catalogs': 'Reduces the full catalog stack to one output by applying an aggregation function across the contained catalogs.',
+            'align_depth': 'Reorders catalogs so their depth labels match the supplied label order.',
+            'head': 'Returns the first `n` catalogs from the archive depth axis.',
+            'map_catalogs': 'Applies the same function to each catalog and returns the transformed archive.',
+            'relabel_depth': 'Replaces the depth-label axis with the supplied labels while keeping catalog contents unchanged.',
+            'slice_depth': 'Returns a contiguous depth slice `[start, stop)` from the archive.',
+            'sort_depth': 'Sorts catalogs by their current depth labels.',
+            'tail': 'Returns the last `n` catalogs from the archive depth axis.',
+        },
+        'Aisle': {
+            'apply_slot': 'Applies a slot transform to one named key inside every registry and returns the updated aisle.',
+            'concat_depth': 'Appends the registries from another aisle onto the current depth axis.',
+            'head': 'Returns the first `n` registries from the aisle depth axis.',
+            'map': 'Applies the same function to each registry and returns the transformed aisle.',
+            'select': 'Keeps only the named keys inside every registry in the aisle.',
+            'slice': 'Returns a contiguous depth slice `[start, stop)` from the aisle.',
+            'tail': 'Returns the last `n` registries from the aisle depth axis.',
+        },
+        'Slot': {
+            'concat': 'Appends the values from another slot and returns the combined slot.',
+            'filter': 'Keeps only the slot values that satisfy the supplied predicate.',
+            'head': 'Returns the first `n` values from the slot.',
+            'push': 'Returns a new slot with one additional value appended.',
+            'push_': 'Appends one additional value to the slot in place.',
+            'slice': 'Returns a contiguous positional slice `[start, stop)` from the slot.',
+            'tail': 'Returns the last `n` values from the slot.',
+            'take': 'Returns the values at the requested integer positions.',
+            'transform': 'Applies a value-wise transform to each slot entry and returns the updated slot.',
+            'type_counts': 'Counts how many slot entries belong to each stored pluss type.',
+        },
+        'ColumnRef': {
+            'head': 'Returns the first `n` values from the referenced column as a thread.',
+            'mean': 'Computes the mean of the referenced numeric column.',
+            'name': 'Returns the feature name associated with this column reference.',
+            'thread': 'Returns the referenced column as a `Thread` object.',
+        },
+        'ThreadValue': {
+            'as_note': 'Converts the wrapped scalar-like value into a `pluss::Note`.',
+            'as_series': 'Converts the wrapped scalar-like value into a `pluss::Series`.',
+            'as_timeindex': 'Converts the wrapped scalar-like value into a `pluss::TimeIndex`.',
+            'as_timeline': 'Converts the wrapped scalar-like value into a `pluss::Timeline`.',
+            'kind': 'Returns the underlying thread kind carried by this value wrapper.',
+            'pluss::Note': 'Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Note`.',
+            'pluss::Series': 'Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Series`.',
+            'pluss::TimeIndex': 'Uses the implicit conversion operator to materialize the wrapped value as a `pluss::TimeIndex`.',
+            'pluss::Timeline': 'Uses the implicit conversion operator to materialize the wrapped value as a `pluss::Timeline`.',
+            'thread': 'Returns the wrapped single-value `Thread` object.',
+        },
+        'DataFramePlotAccessor': {
+            'bar': 'Builds a bar chart from one feature, optionally using another feature as the x-axis.',
+            'hist': 'Builds a histogram for one feature using the requested number of bins.',
+            'line': 'Builds a line chart for one or more y-features, optionally against a chosen x-feature.',
+            'scatter': 'Builds a scatter plot using one feature for x and another for y.',
+        },
+        'DataFrameSqlAccessor': {
+            'execute': 'Runs a SQL query against the current frame and returns the result as a new `DataFrame`.',
+            'prepare': 'Compiles a parameterized SQL statement that can be executed repeatedly with different bindings.',
+        },
+        'DataFrameSqlPrepared': {
+            'execute': 'Runs the prepared SQL statement with the supplied parameters and returns the result as a new `DataFrame`.',
+        },
+    }
+    specific = method_notes.get(class_name, {}).get(name)
+    if specific:
+        return specific
     if name.startswith('load'):
         return 'Loads the object from disk using the corresponding PlussMic loader route.'
     if name.startswith('save'):
         return 'Writes the current object to disk using the corresponding PlussMic saver route.'
+    if name == 'defined':
+        return 'Reports whether the current object owns a concrete payload that can be used safely in later operations.'
+    if name == 'unique':
+        return 'Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.'
+    if name == 'empty':
+        return 'Reports whether the current object has no rows, entries, slots, or depth items.'
+    if name in {'nrows', 'ncols', 'nfeatures', 'nstreams', 'nfields', 'nslots', 'depth', 'size', 'count'}:
+        return 'Returns a size/count summary for the current object without changing it.'
+    if name in {'column_names', 'feature_names', 'field_names', 'keys', 'labels', 'axis0_labels', 'depth_labels'}:
+        return 'Returns the current labels used to address fields, slots, rows, or depth items.'
+    if name in {'columns', 'values', 'features', 'streams', 'slots', 'frames', 'catalogs', 'registries'}:
+        return 'Materializes the current members as a collection you can inspect or reuse elsewhere.'
+    if name in {'get', 'column', 'column_ref', 'feature_ref', 'stream', 'slot', 'frame', 'catalog', 'registry', 'at', 'iat', 'iloc', 'loc', 'value', 'cases'}:
+        return 'Fetches one value, member, or slice from the current object without changing the source object.'
     if name in {'head', 'tail', 'slice', 'slice_depth', 'slice_frames', 'take', 'sample', 'iloc', 'loc', 'view'}:
-        return 'Use this to narrow the current object to the rows or depth range you want to inspect next.'
+        return 'Returns a smaller preview cut from the current object so you can inspect rows or depth items without carrying the full payload forward.'
     if name in {'fillna', 'fillna_', 'dropna', 'dropna_all', 'ffill', 'bfill', 'isna', 'isnull', 'notna', 'notnull', 'isnan', 'isfinite'}:
         return 'This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.'
     if name in {'add', 'sub', 'subtract', 'mul', 'multiply', 'div', 'divide', 'truediv', 'floordiv', 'mod', 'pow', 'radd', 'rsub', 'rmul', 'rdiv', 'rtruediv', 'rfloordiv', 'rmod', 'rpow', 'numeric_binary'}:
@@ -352,22 +740,26 @@ def generic_note(class_name: str, method: Method) -> str:
     if name in {'query', 'where', 'filter', 'filter_values', 'masked_select', 'select', 'drop', 'select_features'}:
         return 'Use this to reduce the current object to the rows or fields that matter for the next step.'
     if name in {'rename', 'rename_', 'rename_features', 'relabel_features', 'relabel_depth', 'set_axis', 'set_feature_axis', 'add_prefix', 'add_suffix'}:
-        return 'This adjusts labels without changing the underlying payload values.'
+        return 'Changes names or labels only. The underlying payload values, row order, and aligned structure stay the same.'
     if name in {'join', 'update', 'combine', 'merge', 'stitch_on', 'combine_values', 'concat', 'concat_values', 'concat_depth'}:
         return 'Use this when you need to merge compatible objects or extend the current one with another input.'
-    if name in {'assign', 'transform', 'apply', 'apply_', 'apply_all', 'apply_all_', 'map', 'map_', 'map_frames', 'map_catalogs', 'apply_slot', 'set_stream', 'set_stream_', 'set_streams', 'set_streams_', 'set_slot', 'set_slot_', 'set_slots', 'set_slots_', 'set_features', 'set_features_', 'with_column', 'with_column_', 'with_cases', 'with_cases_', 'with_validity_mask', 'with_validity_mask_', 'with_meta', 'with_meta_', 'push', 'push_', 'push_all', 'push_all_'}:
-        return 'This mutates or derives structure while keeping the surrounding object model intact.'
+    if name in {'assign', 'transform', 'apply', 'apply_', 'apply_all', 'apply_all_', 'map', 'map_', 'map_frames', 'map_catalogs', 'apply_slot', 'set', 'set_', 'set_stream', 'set_stream_', 'set_streams', 'set_streams_', 'set_slot', 'set_slot_', 'set_slots', 'set_slots_', 'set_features', 'set_features_', 'with_column', 'with_column_', 'with_cases', 'with_cases_', 'with_validity_mask', 'with_validity_mask_', 'with_meta', 'with_meta_', 'push', 'push_', 'push_all', 'push_all_', 'clear', 'clear_', 'drop_empty_slots', 'drop_empty_slots_', 'filter_values', 'filter_values_', 'transform_values', 'transform_values_', 'take_values', 'take_values_', 'concat_values', 'concat_values_'}:
+        return 'Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.'
     if name in {'sql', 'prepare_sql'}:
         return 'Use this when the transformation is easier to express as SQL than as a chained sequence of table verbs.'
     if name in {'plot'}:
         return 'This opens the plotting accessor for the current data object.'
     if name in {'display', 'info', 'show'}:
         return 'This renders a human-readable view for inspection instead of creating a new analytic object.'
+    if name in {'to_string', 'to_json', 'info_string'}:
+        return 'Serializes or renders the current object into a text form you can inspect, log, or export.'
+    if name in {'begin', 'end'}:
+        return 'Exposes iterator boundaries so the object can be traversed with a range-based loop or manual iteration.'
     if name in {'text_preprocess', 'extract_keywords', 'compute_similarity', 'filter_by_text', 'add_text_features', 'aggregate_text_stats', 'tfidf', 'lower', 'replace', 'contains'}:
         return 'This is part of the text-processing surface for note-backed or text-oriented data.'
     if name in {'year', 'month', 'day', 'hour', 'to_note_weekday', 'tz_convert', 'tz_localize', 'to_utc', 'shift_time', 'floor_time', 'ceil_time', 'round_time', 'resample'}:
         return 'This is part of the time-aware surface and expects timeline or time-index semantics.'
-    return f'This call is part of the public `{class_name}` API and is documented here using a concrete usage example.'
+    return f'Applies `{name}` to the current `{class_name}` object. Use the example and output together to see which part of the object changes and which structure is preserved.'
 
 
 STRUCTURED_TYPES = {
@@ -396,12 +788,22 @@ def source_var_for(class_name: str) -> str:
         'ThreadValue': 'value',
         'Atlas': 'atlas',
         'Stream': 'stream',
-        'Catalog': 'catalog',
+        'Catalog': 'ct',
         'Archive': 'archive',
         'Slot': 'slot',
-        'Registry': 'registry',
+        'Registry': 'rg',
         'Aisle': 'aisle',
     }[class_name]
+
+
+def normalize_user_names(class_name: str, text: str) -> str:
+    replacements = {
+        'Catalog': {'catalog': 'ct'},
+        'Registry': {'registry': 'rg'},
+    }.get(class_name, {})
+    for old, new in replacements.items():
+        text = re.sub(rf'\b{re.escape(old)}\b', new, text)
+    return text
 
 
 def inspect_code_for_type(type_name: str, var_name: str) -> str:
@@ -516,6 +918,57 @@ DF_SUFFIX_OUT = """id_2024  sales_2024  city_2024
 2        120.0       Tema
 3         90.0       Kumasi"""
 
+DF_WITH_CASES_OUT = """df.cases():
+[0, 1, 2]
+
+out.cases():
+["cs0", "cs1", "cs2"]
+
+out.head():
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi"""
+
+DF_SET_CASES_OUT = """df.head():
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+
+out.cases():
+["Accra", "Tema", "Kumasi"]
+
+out.head():
+id  sales
+1   100.0
+2   120.0
+3    90.0"""
+
+DF_RESET_CASES_OUT = """with_cases.cases():
+["Accra", "Tema", "Kumasi"]
+
+out.cases():
+[0, 1, 2]
+
+out.head():
+id  sales  case
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi"""
+
+DF_ALIGN_CASES_OUT = """df.cases():
+["cs0", "cs1", "cs2"]
+
+out.cases():
+["cs1", "cs0", "cs2"]
+
+out.head():
+id  sales  city
+2   120.0  Tema
+1   100.0  Accra
+3    90.0  Kumasi"""
+
 DF_PLUS10_OUT = """id  sales  city
 11  110.0  Accra
 12  130.0  Tema
@@ -592,6 +1045,10 @@ depth1 -> Registry(ids -> Slot([Series(3), Series(4)]))"""
 SLOT_BASE_OUT = "Slot([Series(1), Series(2), Series(3)])"
 
 
+def labeled_pair(source_label: str, source_body: str, out_body: str, out_label: str = 'out.head()') -> str:
+    return f"{source_label}:\n{source_body}\n\n{out_label}:\n{out_body}"
+
+
 def output_for(class_name: str, method: Method) -> str:
     n = method.name
     ret = method.return_type.strip()
@@ -613,6 +1070,17 @@ def output_for(class_name: str, method: Method) -> str:
             return 'Thread([100.0, 120.0, 90.0])'
         if n in {'has_column', 'has_feature', 'equals'}:
             return 'true'
+        if n in {'with_cases'}:
+            return DF_WITH_CASES_OUT
+        if n in {'with_cases_'}:
+            return """df.cases():
+["cs0", "cs1", "cs2"]
+
+df.head():
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi"""
         if n in {'add_prefix'}:
             return f"df.head():\n{DF_BASE_OUT}\n\nout.head():\n{DF_PREFIX_OUT}"
         if n in {'add_suffix'}:
@@ -630,7 +1098,13 @@ def output_for(class_name: str, method: Method) -> str:
 3    90.0  Kumasi  30.0"""
         if n in {'head', 'tail', 'slice', 'take', 'sample', 'where', 'filter', 'query', 'top', 'bottom', 'unique_cases'}:
             return DF_FILTER_OUT if n in {'where', 'filter', 'query', 'take'} else DF_BASE_OUT
-        if n in {'sort_values', 'sort_cases', 'align_cases', 'reindex_like', 'reindex_cases', 'conform_to'}:
+        if n in {'set_cases'}:
+            return DF_SET_CASES_OUT
+        if n in {'reset_cases'}:
+            return DF_RESET_CASES_OUT
+        if n in {'align_cases'}:
+            return DF_ALIGN_CASES_OUT
+        if n in {'sort_values', 'sort_cases', 'reindex_like', 'reindex_cases', 'conform_to'}:
             return DF_BASE_OUT
         if n in {'join', 'update', 'combine', 'stitch_on'}:
             return """id  sales  cost
@@ -833,7 +1307,7 @@ sales    310.0"""
         if n in {'stream', 'at', 'get', 'get_stream'}:
             return 'Series([10.0, 20.0, 30.0])'
         if n in {'series', 'note', 'timeline', 'timeindex', 'head', 'tail', 'slice', 'iloc', 'take', 'sample', 'filter', 'where', 'query', 'masked_select', 'select', 'drop', 'rename', 'sort', 'sort_by', 'fillna', 'dropna', 'ffill', 'bfill', 'isnull', 'notnull', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex', 'astype', 'merge', 'apply', 'apply_all', 'transform', 'text_preprocess', 'extract_keywords', 'compute_similarity', 'filter_by_text', 'add_text_features', 'aggregate_text_stats', 'tfidf', 'set_stream', 'set', 'set_streams'}:
-            return CATALOG_BASE_OUT
+            return labeled_pair('ct.head()', CATALOG_BASE_OUT, CATALOG_BASE_OUT)
         if n in {'sum', 'mean', 'min', 'max'}:
             return 'Series([20.0])'
         if n in {'group_by'}:
@@ -843,9 +1317,9 @@ sales    310.0"""
         if n.startswith('save_') or n == 'save_as':
             return 'saved: out.*'
         if n in {'to_string', 'to_json', 'display', 'info'}:
-            return CATALOG_BASE_OUT
+            return f"ct.head():\n{CATALOG_BASE_OUT}"
         if n in {'from_json', 'kindelize'} or n.startswith('load'):
-            return CATALOG_BASE_OUT
+            return f"out.head():\n{CATALOG_BASE_OUT}"
         return ''
 
     if class_name == 'Archive':
@@ -908,7 +1382,7 @@ sales    310.0"""
         if n in {'slot', 'at', 'get', 'get_slot'}:
             return SLOT_BASE_OUT
         if n in {'head', 'tail', 'slice', 'iloc', 'take', 'sample', 'select', 'drop', 'rename', 'apply', 'apply_all', 'map', 'combine', 'clear', 'drop_empty_slots', 'set_slot', 'set_slots', 'push', 'push_all', 'filter_values', 'transform_values', 'take_values', 'concat_values'}:
-            return REGISTRY_BASE_OUT
+            return labeled_pair('rg.head()', REGISTRY_BASE_OUT, REGISTRY_BASE_OUT)
         if n in {'slot_sizes'}:
             return '{"ids": 3, "city": 3}'
         if n in {'type_profiles'}:
@@ -916,11 +1390,11 @@ sales    310.0"""
         if n in {'to_kindle', 'as_kindle', 'kindelize'}:
             return CATALOG_BASE_OUT
         if n in {'from_kindle'} or n.startswith('load'):
-            return REGISTRY_BASE_OUT
+            return f"out.head():\n{REGISTRY_BASE_OUT}"
         if n.startswith('save_') or n == 'save_as':
             return 'saved: out.*'
         if n in {'to_string', 'to_json', 'show'}:
-            return REGISTRY_BASE_OUT
+            return f"rg.head():\n{REGISTRY_BASE_OUT}"
         if n == 'ensure_stream_compatible':
             return 'no error'
         return ''
@@ -1021,7 +1495,7 @@ def stream_time() -> str:
 def catalog_base() -> str:
     return """using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     \"id\"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     \"metric\"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     \"city\"_k = pluss::kindle::Stream(pluss::make_note({\"Accra\", \"Tema\", \"Kumasi\"})),
@@ -1058,7 +1532,7 @@ def slot_mixed() -> str:
 
 
 def registry_base() -> str:
-    return """auto registry = pluss::bundle::Registry({
+    return """auto rg = pluss::bundle::Registry({
     {\"ids\", pluss::bundle::Slot({pluss::make_series(1), pluss::make_series(2), pluss::make_series(3)})},
     {\"city\", pluss::bundle::Slot({pluss::make_note(\"Accra\"), pluss::make_note(\"Tema\"), pluss::make_note(\"Kumasi\")})},
 });"""
@@ -1119,22 +1593,31 @@ def example_for(class_name: str, method: Method) -> str:
     if class_name == 'DataFrame':
         if n.startswith('load'):
             if 'nullptr_t' in sig:
-                return 'auto out = pluss::table::DataFrame::load_excel("PlussMic/data/report.xlsx", nullptr, true);'
+                return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", nullptr, true);'
             if 'sheet_name' in sig:
-                return 'auto out = pluss::table::DataFrame::load_excel("PlussMic/data/report.xlsx", "Sheet1", true);'
+                return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", "Sheet1", true);'
             if 'sheet_index' in sig or 'sheet_index,' in sig:
-                return 'auto out = pluss::table::DataFrame::load_excel("PlussMic/data/report.xlsx", 0, true);'
+                return f'auto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", 0, true);'
             if 'ReadExcelOptions' in sig:
-                return 'pluss::loader::ReadExcelOptions options;\nauto out = pluss::table::DataFrame::load_excel("PlussMic/data/report.xlsx", options);'
+                return f'pluss::loader::ReadExcelOptions options;\nauto out = pluss::table::DataFrame::load_excel("{GENERIC_XLSX_PATH}", options);'
             if 'ReadCsvOptions' in sig:
-                return 'pluss::loader::ReadCsvOptions options;\nauto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", options);'
+                return f'pluss::loader::ReadCsvOptions options;\nauto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", options);'
             if 'Config' in sig or 'ConfigEntry' in sig:
-                return 'auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});'
+                return f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", {{"nrows", 16}});'
             if 'char sep' in sig and 'usecols' in sig:
-                return 'auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", \',\', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);'
+                return f'auto out = pluss::table::DataFrame::load_csv("{GENERIC_CSV_PATH}", \',\', 16, std::vector<std::string>{{"Agency Name"}}, std::nullopt);'
             if 'source_type' in sig:
-                return 'auto out = pluss::table::DataFrame::load("csv", "PlussMic/data/messy_data.csv");'
-            return f'auto out = pluss::table::DataFrame::{n}("PlussMic/data/messy_data.csv");'
+                return f'auto out = pluss::table::DataFrame::load("csv", "{GENERIC_CSV_PATH}");'
+            path = GENERIC_CSV_PATH
+            if 'excel' in n:
+                path = GENERIC_XLSX_PATH
+            elif 'json' in n:
+                path = GENERIC_JSON_PATH
+            elif 'parquet' in n:
+                path = GENERIC_PARQUET_PATH
+            elif 'txt' in n:
+                path = GENERIC_TXT_PATH
+            return f'auto out = pluss::table::DataFrame::{n}("{path}");'
         if n == 'tabelize':
             return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))});\nauto out = pluss::table::DataFrame::tabelize(catalog);'
         if n == 'kindelize':
@@ -1162,9 +1645,11 @@ def example_for(class_name: str, method: Method) -> str:
             if 'string_view' in sig:
                 return df_base() + '\n\nauto out = df.features("sales");'
             return df_base() + '\n\nauto out = df.features();'
-        if n in {'series_features','note_features','timeline_features','with_cases','cast_series','cast_note','cast_timeline','cast_timeindex'}:
+        if n in {'series_features','note_features','timeline_features','with_cases','with_cases_','cast_series','cast_note','cast_timeline','cast_timeindex'}:
             if n == 'with_cases':
                 return df_base() + '\n\nauto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));\nauto out = df.with_cases(cases);'
+            if n == 'with_cases_':
+                return df_base() + '\n\nauto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));\ndf.with_cases_(cases);'
             if n == 'cast_series':
                 return 'auto df = pluss::table::DataFrame({{"sales", pluss::table::Thread(pluss::make_note({"100.0", "120.0", "90.0"}))}});\n\nauto out = df.cast_series({"sales"}, pluss::codem::ScalarType::Float64);'
             if n == 'cast_timeline':
@@ -1210,11 +1695,11 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'unique_cases':
                 return df_base() + '\n\nauto out = df.unique_cases();'
             if n == 'set_cases':
-                return df_base() + '\n\nauto out = df.set_cases("city", false);'
+                return df_base() + '\n\nauto out = df.set_cases("city");'
             if n == 'reset_cases':
                 return df_base() + '\n\nauto with_cases = df.set_cases("city", true);\nauto out = with_cases.reset_cases("case");'
             if n == 'align_cases':
-                return df_base() + '\n\nauto cases = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.align_cases(cases);'
+                return df_base() + '\n\ndf = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));\nauto new_cases = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));\nauto out = df.align_cases(new_cases);'
         if n in {'join','update','conform_to','reindex_like','reindex_cases','stitch_on','combine'}:
             if n == 'conform_to' or n == 'reindex_like':
                 return df_two() + f'\n\nauto out = left.{n}(right);'
@@ -1363,8 +1848,8 @@ def example_for(class_name: str, method: Method) -> str:
                 return df_base() + '\n\ndf.info();'
             if n.startswith('save_') or n == 'save_as':
                 target = {
-                    'save_csv': '"out.csv"', 'save_excel': '"out.xlsx"', 'save_txt': '"out.txt"',
-                    'save_json': '"out.json"', 'save_parquet': '"out.parquet"', 'save_as': '"json", "out.json"'
+                    'save_csv': f'"{GENERIC_OUTPUT_CSV_PATH}"', 'save_excel': f'"{GENERIC_OUTPUT_XLSX_PATH}"', 'save_txt': f'"{GENERIC_OUTPUT_TXT_PATH}"',
+                    'save_json': f'"{GENERIC_OUTPUT_JSON_PATH}"', 'save_parquet': f'"{GENERIC_OUTPUT_PARQUET_PATH}"', 'save_as': f'"json", "{GENERIC_OUTPUT_JSON_PATH}"'
                 }[n]
                 return df_base() + f'\n\ndf.{n}({target});'
         if n in {'defined','unique'}:
@@ -1558,18 +2043,36 @@ def example_for(class_name: str, method: Method) -> str:
         base = catalog_base()
         if n.startswith('load') or n == 'from_json':
             if n == 'load':
-                return 'auto out = pluss::kindle::Catalog::load("csv", "PlussMic/data/messy_data.csv");'
+                return f'auto out = pluss::kindle::Catalog::load("csv", "{GENERIC_CSV_PATH}");'
             if n == 'load_csv_with_key':
-                return 'auto out = pluss::kindle::Catalog::load_csv_with_key("PlussMic/data/messy_data.csv", "id");'
+                return f'auto out = pluss::kindle::Catalog::load_csv_with_key("{GENERIC_CSV_PATH}", "id");'
             if n == 'from_json':
                 return 'auto out = pluss::kindle::Catalog::from_json(R"([{"id":1,"city":"Accra"},{"id":2,"city":"Tema"}])");'
             if 'ReadCsvOptions' in sig:
-                return 'pluss::loader::ReadCsvOptions options;\nauto out = pluss::kindle::Catalog::load_csv("PlussMic/data/messy_data.csv", options);'
+                return f'pluss::loader::ReadCsvOptions options;\nauto out = pluss::kindle::Catalog::load_csv("{GENERIC_CSV_PATH}", options);'
             if 'ReadExcelOptions' in sig:
-                return 'pluss::loader::ReadExcelOptions options;\nauto out = pluss::kindle::Catalog::load_excel("PlussMic/data/report.xlsx", options);'
+                return f'pluss::loader::ReadExcelOptions options;\nauto out = pluss::kindle::Catalog::load_excel("{GENERIC_XLSX_PATH}", options);'
             if 'Config' in sig:
-                return f'auto out = pluss::kindle::Catalog::{n}("PlussMic/data/messy_data.csv", {{"nrows", 16}});'
-            return f'auto out = pluss::kindle::Catalog::{n}("PlussMic/data/messy_data.csv");'
+                path = GENERIC_CSV_PATH
+                if 'excel' in n:
+                    path = GENERIC_XLSX_PATH
+                elif 'json' in n:
+                    path = GENERIC_JSON_PATH
+                elif 'parquet' in n:
+                    path = GENERIC_PARQUET_PATH
+                elif 'txt' in n:
+                    path = GENERIC_TXT_PATH
+                return f'auto out = pluss::kindle::Catalog::{n}("{path}", {{"nrows", 16}});'
+            path = GENERIC_CSV_PATH
+            if 'excel' in n:
+                path = GENERIC_XLSX_PATH
+            elif 'json' in n:
+                path = GENERIC_JSON_PATH
+            elif 'parquet' in n:
+                path = GENERIC_PARQUET_PATH
+            elif 'txt' in n:
+                path = GENERIC_TXT_PATH
+            return f'auto out = pluss::kindle::Catalog::{n}("{path}");'
         if n == 'kindelize':
             return df_base() + '\n\nauto out = pluss::kindle::Catalog::kindelize(df);'
         if n in {'defined','unique','nstreams','nfields','empty','keys','streams','count','to_string','to_json'}:
@@ -1664,7 +2167,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'tabelize' or n == 'to_table':
                 return base + f'\n\npluss::kindle::TabelizePolicy policy;\npolicy.align = pluss::kindle::AlignPolicy::Inner;\nauto out = catalog.{n}(policy' + (', true' if n == 'to_table' else '') + ');'
             if n.startswith('save_') or n == 'save_as':
-                target = {'save_csv':'"out.csv"','save_txt':'"out.txt"','save_excel':'"out.xlsx"','save_json':'"out.json"','save_parquet':'"out.parquet"','save_as':'"json", "out.json"'}[n]
+                target = {'save_csv':f'"{GENERIC_OUTPUT_CSV_PATH}"','save_txt':f'"{GENERIC_OUTPUT_TXT_PATH}"','save_excel':f'"{GENERIC_OUTPUT_XLSX_PATH}"','save_json':f'"{GENERIC_OUTPUT_JSON_PATH}"','save_parquet':f'"{GENERIC_OUTPUT_PARQUET_PATH}"','save_as':f'"json", "{GENERIC_OUTPUT_JSON_PATH}"'}[n]
                 return base + f'\n\ncatalog.{n}({target});'
             if n in {'begin','end'}:
                 return base + '\n\nfor (const auto& key : catalog) {\n  (void)key;\n}'
@@ -1716,11 +2219,30 @@ def example_for(class_name: str, method: Method) -> str:
     if class_name == 'Registry':
         base = registry_base()
         if n.startswith('load'):
-            if n == 'load': return 'auto out = pluss::bundle::Registry::load("csv", "PlussMic/data/messy_data.csv");'
-            if 'ReadCsvOptions' in sig: return 'pluss::loader::ReadCsvOptions options;\nauto out = pluss::bundle::Registry::load_csv("PlussMic/data/messy_data.csv", options);'
-            if 'ReadExcelOptions' in sig: return 'pluss::loader::ReadExcelOptions options;\nauto out = pluss::bundle::Registry::load_excel("PlussMic/data/report.xlsx", options);'
-            if 'Config' in sig: return f'auto out = pluss::bundle::Registry::{n}("PlussMic/data/messy_data.csv", {{"nrows", 16}});'
-            return f'auto out = pluss::bundle::Registry::{n}("PlussMic/data/messy_data.csv");'
+            if n == 'load': return f'auto out = pluss::bundle::Registry::load("csv", "{GENERIC_CSV_PATH}");'
+            if 'ReadCsvOptions' in sig: return f'pluss::loader::ReadCsvOptions options;\nauto out = pluss::bundle::Registry::load_csv("{GENERIC_CSV_PATH}", options);'
+            if 'ReadExcelOptions' in sig: return f'pluss::loader::ReadExcelOptions options;\nauto out = pluss::bundle::Registry::load_excel("{GENERIC_XLSX_PATH}", options);'
+            if 'Config' in sig:
+                path = GENERIC_CSV_PATH
+                if 'excel' in n:
+                    path = GENERIC_XLSX_PATH
+                elif 'json' in n:
+                    path = GENERIC_JSON_PATH
+                elif 'parquet' in n:
+                    path = GENERIC_PARQUET_PATH
+                elif 'txt' in n:
+                    path = GENERIC_TXT_PATH
+                return f'auto out = pluss::bundle::Registry::{n}("{path}", {{"nrows", 16}});'
+            path = GENERIC_CSV_PATH
+            if 'excel' in n:
+                path = GENERIC_XLSX_PATH
+            elif 'json' in n:
+                path = GENERIC_JSON_PATH
+            elif 'parquet' in n:
+                path = GENERIC_PARQUET_PATH
+            elif 'txt' in n:
+                path = GENERIC_TXT_PATH
+            return f'auto out = pluss::bundle::Registry::{n}("{path}");'
         if n in {'defined','unique','nslots','nfields','empty','keys','field_names','slots','is_stream_compatible','slot_sizes','type_profiles','to_string','to_json'}:
             return base + f'\n\nauto out = registry.{n}();'
         if n in {'has','has_slot','slot','at','get','get_slot','select','drop','head','tail','slice','iloc','take','sample','rename','rename_','apply','apply_','apply_all','map','map_','combine','clear','clear_','drop_empty_slots','drop_empty_slots_','set_slot','set_slot_','set_slots','set_slots_','push','push_','push_all','push_all_','filter_values','filter_values_','transform_values','transform_values_','take_values','take_values_','concat_values','concat_values_','to_kindle','as_kindle','kindelize','save_csv','save_txt','save_excel','save_json','save_parquet','save_as','show','begin','end'}:
@@ -1771,7 +2293,7 @@ def example_for(class_name: str, method: Method) -> str:
             if n in {'concat_values','concat_values_'}: return base + ('\n\nauto extra = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});\nauto out = registry.concat_values("ids", extra);' if not n.endswith('_') else '\n\nauto extra = pluss::bundle::Slot({pluss::make_series(4), pluss::make_series(5)});\nregistry.concat_values_("ids", extra);')
             if n in {'to_kindle','as_kindle','kindelize'}: return base + f'\n\nauto out = registry.{n}();'
             if n.startswith('save_') or n == 'save_as':
-                target = {'save_csv':'"out.csv"','save_txt':'"out.txt"','save_excel':'"out.xlsx"','save_json':'"out.json"','save_parquet':'"out.parquet"','save_as':'"json", "out.json"'}[n]
+                target = {'save_csv':f'"{GENERIC_OUTPUT_CSV_PATH}"','save_txt':f'"{GENERIC_OUTPUT_TXT_PATH}"','save_excel':f'"{GENERIC_OUTPUT_XLSX_PATH}"','save_json':f'"{GENERIC_OUTPUT_JSON_PATH}"','save_parquet':f'"{GENERIC_OUTPUT_PARQUET_PATH}"','save_as':f'"json", "{GENERIC_OUTPUT_JSON_PATH}"'}[n]
                 return base + f'\n\nregistry.{n}({target});'
             if n == 'show': return base + '\n\nregistry.show(std::cout);'
             if n in {'begin','end'}: return base + '\n\nfor (const auto& key : registry) {\n  (void)key;\n}'
@@ -1852,9 +2374,9 @@ def build_page(class_name: str, methods: list[Method]) -> str:
         lines.append('#### Examples')
         lines.append('')
         lines.append('```cpp')
-        lines.append(example_for(class_name, method))
+        lines.append(normalize_user_names(class_name, example_for(class_name, method)))
         lines.append('```')
-        preview = output_for(class_name, method)
+        preview = normalize_user_names(class_name, output_for(class_name, method))
         if preview:
             lines.append('')
             lines.append('#### Output')

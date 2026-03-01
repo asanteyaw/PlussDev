@@ -26,7 +26,7 @@ DataFrame execute(self, std::string_view statement) const
 
 #### Notes
 
-This call is part of the public `DataFrameSqlAccessor` API and is documented here using a concrete usage example.
+Runs a SQL query against the current frame and returns the result as a new `DataFrame`.
 
 #### Examples
 
@@ -69,7 +69,7 @@ DataFrameSqlPrepared prepare(self, std::string_view statement) const
 
 #### Notes
 
-This call is part of the public `DataFrameSqlAccessor` API and is documented here using a concrete usage example.
+Compiles a parameterized SQL statement that can be executed repeatedly with different bindings.
 
 #### Examples
 

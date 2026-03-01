@@ -26,7 +26,7 @@ DataFrame aggregate_over_frames(self, const std::function<DataFrame(const std::v
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Reduces the full frame stack to one output by applying an aggregation function across the contained frames.
 
 #### Examples
 
@@ -70,7 +70,7 @@ Atlas align_depth(self, const Thread& labels) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Reorders frames so their depth labels match the supplied label order.
 
 #### Examples
 
@@ -120,7 +120,7 @@ const std::optional<Thread>& axis0_labels(self) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Returns the current labels used to address fields, slots, rows, or depth items.
 
 #### Examples
 
@@ -161,7 +161,7 @@ const std::vector<std::string>& column_names(self) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Returns the current labels used to address fields, slots, rows, or depth items.
 
 #### Examples
 
@@ -202,7 +202,7 @@ bool defined(self) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
 #### Examples
 
@@ -243,7 +243,7 @@ std::int64_t depth(self) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -284,7 +284,7 @@ bool empty(self) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Reports whether the current object has no rows, entries, slots, or depth items.
 
 #### Examples
 
@@ -326,7 +326,7 @@ DataFrame frame(self, std::int64_t index) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -369,7 +369,7 @@ const std::vector<DataFrame>& frames(self) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### Examples
 
@@ -402,7 +402,7 @@ Atlas head(self, std::int64_t n = 5) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -411,7 +411,7 @@ Atlas head(self, std::int64_t n = 5) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the first `n` frames from the atlas depth axis.
 
 #### Examples
 
@@ -461,7 +461,7 @@ DataFrame iloc(self, std::int64_t index) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -598,7 +598,7 @@ DataFrame loc(self, const pluss::Timeline& label) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -648,7 +648,7 @@ DataFrame loc(self, std::int64_t label) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -698,7 +698,7 @@ DataFrame loc(self, std::string_view label) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -748,7 +748,7 @@ Atlas map_frames(self, const std::function<DataFrame(const DataFrame&)>& fn) con
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies the same function to each frame and returns the transformed atlas.
 
 #### Examples
 
@@ -797,7 +797,7 @@ std::int64_t ncols(self) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -838,7 +838,7 @@ std::int64_t nrows(self) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -922,7 +922,7 @@ Atlas relabel_depth(self, const Thread& labels) const
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Replaces the depth-label axis with the supplied labels while keeping frame contents unchanged.
 
 #### Examples
 
@@ -1075,10 +1075,10 @@ Atlas slice_frames(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -1087,7 +1087,7 @@ Atlas slice_frames(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a contiguous depth slice `[start, stop)` from the atlas.
 
 #### Examples
 
@@ -1140,7 +1140,7 @@ Atlas sort_depth(self, bool ascending = true, bool nulls_last = true) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Sorts frames by their current depth labels.
 
 #### Examples
 
@@ -1190,7 +1190,7 @@ DataFrame squeeze(self) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Collapses a depth-1 atlas back into a single `DataFrame`.
 
 #### Examples
 
@@ -1328,7 +1328,7 @@ Atlas tail(self, std::int64_t n = 5) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -1337,7 +1337,7 @@ Atlas tail(self, std::int64_t n = 5) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the last `n` frames from the atlas depth axis.
 
 #### Examples
 
@@ -1387,7 +1387,7 @@ std::string to_string(self, const display::DisplayOptions& options =
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
@@ -1436,7 +1436,7 @@ bool unique(self) const
 
 #### Notes
 
-This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
 #### Examples
 

@@ -17,7 +17,7 @@ Catalog add_text_features(self, std::string_view field) const
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 #### Returns
 
@@ -33,7 +33,7 @@ This is part of the text-processing surface for note-backed or text-oriented dat
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "text"_k = pluss::kindle::Stream(pluss::make_note({
         "heavy rain on road",
         "clear weather downtown",
@@ -41,12 +41,18 @@ auto catalog = pluss::kindle::Catalog({
     })),
 });
 
-auto out = catalog.add_text_features("text");
+auto out = ct.add_text_features("text");
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -63,7 +69,7 @@ Catalog aggregate_text_stats(self, std::string_view field, std::string_view stat
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 `stat_type` : `std::string_view`
     See the signature for the supported argument form.
@@ -82,7 +88,7 @@ This is part of the text-processing surface for note-backed or text-oriented dat
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "text"_k = pluss::kindle::Stream(pluss::make_note({
         "heavy rain on road",
         "clear weather downtown",
@@ -90,12 +96,18 @@ auto catalog = pluss::kindle::Catalog({
     })),
 });
 
-auto out = catalog.aggregate_text_stats("text", "mean");
+auto out = ct.aggregate_text_stats("text", "mean");
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -112,7 +124,7 @@ Catalog apply(self, std::string_view field, const std::function<Stream(const Str
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 `func` : `const std::function<Stream(const Stream&)>&`
     See the signature for the supported argument form.
@@ -124,25 +136,31 @@ Catalog apply(self, std::string_view field, const std::function<Stream(const Str
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies a function to one named stream and returns the updated catalog.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.apply("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });
+auto out = ct.apply("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -159,7 +177,7 @@ Catalog& apply_(self, std::string_view field, const std::function<Stream(const S
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 `func` : `const std::function<Stream(const Stream&)>&`
     See the signature for the supported argument form.
@@ -171,20 +189,20 @@ Catalog& apply_(self, std::string_view field, const std::function<Stream(const S
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies a function to one named stream in place.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.apply_("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });
+ct.apply_("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });
 ```
 
 ### `apply_all`
@@ -207,25 +225,31 @@ Catalog apply_all(self, const std::function<Stream(const Stream&)>& fn) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies the same function to every stream and returns the updated catalog.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.apply_all([](const pluss::kindle::Stream& s) { return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; });
+auto out = ct.apply_all([](const pluss::kindle::Stream& s) { return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; });
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -251,20 +275,20 @@ Catalog& apply_all_(self, const std::function<Stream(const Stream&)>& fn)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies the same function to every stream in place.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.apply_all_([](const pluss::kindle::Stream& s) { return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; });
+ct.apply_all_([](const pluss::kindle::Stream& s) { return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; });
 ```
 
 ### `astype`
@@ -278,7 +302,7 @@ Catalog astype(self, std::initializer_list<std::string_view> keys, pluss::codem:
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 `dtype` : `pluss::codem::ScalarType`
     See the signature for the supported argument form.
@@ -297,18 +321,24 @@ This changes the semantic or numeric type so later operations route through the 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.astype({"metric"}, pluss::codem::ScalarType::Float64);
+auto out = ct.astype({"metric"}, pluss::codem::ScalarType::Float64);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -325,7 +355,7 @@ Stream at(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -334,20 +364,20 @@ Stream at(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.at("metric");
+auto out = ct.at("metric");
 ```
 
 #### Output
@@ -375,20 +405,20 @@ const_iterator begin(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Exposes iterator boundaries so the object can be traversed with a range-based loop or manual iteration.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-for (const auto& key : catalog) {
+for (const auto& key : ct) {
   (void)key;
 }
 ```
@@ -404,7 +434,7 @@ Catalog bfill(self, std::initializer_list<std::string_view> keys =
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -420,18 +450,24 @@ This is part of the missing-data cleanup path and is usually applied before summ
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.bfill();
+auto out = ct.bfill();
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -448,7 +484,7 @@ Catalog cast_note(self, std::initializer_list<std::string_view> keys) const
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -464,18 +500,24 @@ This changes the semantic or numeric type so later operations route through the 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.cast_note({"metric"});
+auto out = ct.cast_note({"metric"});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -492,7 +534,7 @@ Catalog cast_series(self, std::initializer_list<std::string_view> keys, std::opt
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 `dtype` : `std::optional<pluss::codem::ScalarType>`
     See the signature for the supported argument form.
@@ -510,14 +552,20 @@ This changes the semantic or numeric type so later operations route through the 
 
 ```cpp
 using namespace pluss::kindle::literals;
-auto catalog = pluss::kindle::Catalog({"metric"_k = pluss::kindle::Stream(pluss::make_note({"10.0", "20.0", "30.0"}))});
+auto ct = pluss::kindle::Catalog({"metric"_k = pluss::kindle::Stream(pluss::make_note({"10.0", "20.0", "30.0"}))});
 
-auto out = catalog.cast_series({"metric"}, pluss::codem::ScalarType::Float64);
+auto out = ct.cast_series({"metric"}, pluss::codem::ScalarType::Float64);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -534,7 +582,7 @@ Catalog cast_timeindex(self, std::initializer_list<std::string_view> keys) const
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -550,18 +598,24 @@ This changes the semantic or numeric type so later operations route through the 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.cast_timeindex({"metric"});
+auto out = ct.cast_timeindex({"metric"});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -578,7 +632,7 @@ Catalog cast_timeline(self, std::initializer_list<std::string_view> keys) const
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -594,18 +648,24 @@ This changes the semantic or numeric type so later operations route through the 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.cast_timeline({"metric"});
+auto out = ct.cast_timeline({"metric"});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -644,7 +704,7 @@ This is part of the text-processing surface for note-backed or text-oriented dat
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "text"_k = pluss::kindle::Stream(pluss::make_note({
         "heavy rain on road",
         "clear weather downtown",
@@ -652,12 +712,18 @@ auto catalog = pluss::kindle::Catalog({
     })),
 });
 
-auto out = catalog.compute_similarity("text", "text", "cosine");
+auto out = ct.compute_similarity("text", "text", "cosine");
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -682,20 +748,20 @@ std::int64_t count(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.count();
+auto out = ct.count();
 ```
 
 #### Output
@@ -723,20 +789,20 @@ bool defined(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.defined();
+auto out = ct.defined();
 ```
 
 #### Output
@@ -771,18 +837,19 @@ This renders a human-readable view for inspection instead of creating a new anal
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.display();
+ct.display();
 ```
 
 #### Output
 
 ```text
+ct.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -808,7 +875,7 @@ Catalog drop(self, const std::vector<std::string>& field_names) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Removes the named streams and keeps the remaining catalog structure intact.
 
 #### See also
 
@@ -820,19 +887,25 @@ Use this to reduce the current object to the rows or fields that matter for the 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
 std::vector<std::string> names{"city"};
-auto out = catalog.drop(names);
+auto out = ct.drop(names);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -849,7 +922,7 @@ Catalog drop(self, std::initializer_list<std::string_view> keys) const
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -858,7 +931,7 @@ Catalog drop(self, std::initializer_list<std::string_view> keys) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Removes the named streams and keeps the remaining catalog structure intact.
 
 #### See also
 
@@ -870,18 +943,24 @@ Use this to reduce the current object to the rows or fields that matter for the 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.drop({"city"});
+auto out = ct.drop({"city"});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -907,7 +986,7 @@ Catalog drop(self, std::string_view field_name) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Removes the named streams and keeps the remaining catalog structure intact.
 
 #### See also
 
@@ -919,18 +998,24 @@ Use this to reduce the current object to the rows or fields that matter for the 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.drop("city");
+auto out = ct.drop("city");
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -947,7 +1032,7 @@ Catalog dropna(self, std::initializer_list<std::string_view> keys =
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -963,18 +1048,24 @@ This is part of the missing-data cleanup path and is usually applied before summ
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.dropna();
+auto out = ct.dropna();
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -999,20 +1090,20 @@ bool empty(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Reports whether the current object has no rows, entries, slots, or depth items.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.empty();
+auto out = ct.empty();
 ```
 
 #### Output
@@ -1040,20 +1131,20 @@ const_iterator end(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Exposes iterator boundaries so the object can be traversed with a range-based loop or manual iteration.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-for (const auto& key : catalog) {
+for (const auto& key : ct) {
   (void)key;
 }
 ```
@@ -1069,7 +1160,7 @@ Catalog extract_keywords(self, std::string_view field, int top_n = 10) const
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 `top_n` : `int`
     See the signature for the supported argument form.
@@ -1088,7 +1179,7 @@ This is part of the text-processing surface for note-backed or text-oriented dat
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "text"_k = pluss::kindle::Stream(pluss::make_note({
         "heavy rain on road",
         "clear weather downtown",
@@ -1096,12 +1187,18 @@ auto catalog = pluss::kindle::Catalog({
     })),
 });
 
-auto out = catalog.extract_keywords("text", 5);
+auto out = ct.extract_keywords("text", 5);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1118,7 +1215,7 @@ Catalog ffill(self, std::initializer_list<std::string_view> keys =
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -1134,18 +1231,24 @@ This is part of the missing-data cleanup path and is usually applied before summ
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.ffill();
+auto out = ct.ffill();
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1165,7 +1268,7 @@ Catalog fillna(self, const char* value, std::initializer_list<std::string_view> 
     See the signature for the supported argument form.
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -1187,14 +1290,20 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 using namespace pluss::kindle::literals;
-auto catalog = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
+auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
 
-auto out = catalog.fillna("Unknown", {"city"});
+auto out = ct.fillna("Unknown", {"city"});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1214,7 +1323,7 @@ Catalog fillna(self, const pluss::TimeIndex& value, std::initializer_list<std::s
     See the signature for the supported argument form.
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -1236,14 +1345,20 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 using namespace pluss::kindle::literals;
-auto catalog = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
+auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
 
-auto out = catalog.fillna("Unknown", {"city"});
+auto out = ct.fillna("Unknown", {"city"});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1263,7 +1378,7 @@ Catalog fillna(self, const pluss::Timeline& value, std::initializer_list<std::st
     See the signature for the supported argument form.
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -1285,14 +1400,20 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 using namespace pluss::kindle::literals;
-auto catalog = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
+auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
 
-auto out = catalog.fillna("Unknown", {"city"});
+auto out = ct.fillna("Unknown", {"city"});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1312,7 +1433,7 @@ Catalog fillna(self, scalar value, std::initializer_list<std::string_view> keys 
     See the signature for the supported argument form.
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -1334,14 +1455,20 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 using namespace pluss::kindle::literals;
-auto catalog = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
+auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
 
-auto out = catalog.fillna("Unknown", {"city"});
+auto out = ct.fillna("Unknown", {"city"});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1361,7 +1488,7 @@ Catalog fillna(self, std::string_view value, std::initializer_list<std::string_v
     See the signature for the supported argument form.
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -1383,14 +1510,20 @@ This is part of the missing-data cleanup path and is usually applied before summ
 
 ```cpp
 using namespace pluss::kindle::literals;
-auto catalog = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
+auto ct = pluss::kindle::Catalog({"city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}))});
 
-auto out = catalog.fillna("Unknown", {"city"});
+auto out = ct.fillna("Unknown", {"city"});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1416,26 +1549,32 @@ Catalog filter(self, const pluss::Series& condition) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the rows where the supplied mask stream is true.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
 auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
-auto out = catalog.filter(mask);
+auto out = ct.filter(mask);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1452,7 +1591,7 @@ Catalog filter_by_text(self, std::string_view field, std::string_view pattern) c
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 `pattern` : `std::string_view`
     See the signature for the supported argument form.
@@ -1471,7 +1610,7 @@ This is part of the text-processing surface for note-backed or text-oriented dat
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "text"_k = pluss::kindle::Stream(pluss::make_note({
         "heavy rain on road",
         "clear weather downtown",
@@ -1479,12 +1618,18 @@ auto catalog = pluss::kindle::Catalog({
     })),
 });
 
-auto out = catalog.filter_by_text("text", "rain");
+auto out = ct.filter_by_text("text", "rain");
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1510,7 +1655,7 @@ static Catalog from_json(std::string_view json_text)
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Builds a catalog from JSON input using the PlussMic JSON loader route.
 
 #### Examples
 
@@ -1521,6 +1666,7 @@ auto out = pluss::kindle::Catalog::from_json(R"([{"id":1,"city":"Accra"},{"id":2
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1537,7 +1683,7 @@ std::optional<Stream> get(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -1546,20 +1692,20 @@ std::optional<Stream> get(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.get("metric");
+auto out = ct.get("metric");
 ```
 
 #### Output
@@ -1579,7 +1725,7 @@ std::optional<Stream> get_stream(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -1588,20 +1734,20 @@ std::optional<Stream> get_stream(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Returns one named stream from the catalog.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.get_stream("metric");
+auto out = ct.get_stream("metric");
 ```
 
 #### Output
@@ -1630,20 +1776,20 @@ std::unordered_map<std::string, Catalog> group_by(self, std::string_view key_fie
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Splits the catalog into sub-catalogs keyed by the distinct values in the grouping stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.group_by("city");
+auto out = ct.group_by("city");
 ```
 
 #### Output
@@ -1663,7 +1809,7 @@ bool has(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -1672,20 +1818,20 @@ bool has(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Checks whether a named stream exists.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.has("metric");
+auto out = ct.has("metric");
 ```
 
 #### Output
@@ -1705,7 +1851,7 @@ bool has_stream(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -1714,20 +1860,20 @@ bool has_stream(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Checks whether a named stream exists.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.has_stream("metric");
+auto out = ct.has_stream("metric");
 ```
 
 #### Output
@@ -1747,7 +1893,7 @@ Catalog head(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -1756,25 +1902,31 @@ Catalog head(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the first `n` rows across every stream in the catalog.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.head(2);
+auto out = ct.head(2);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1800,7 +1952,7 @@ Catalog iloc(self, std::int64_t row) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -1811,18 +1963,24 @@ Use this to narrow the current object to the rows or depth range you want to ins
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.iloc(1);
+auto out = ct.iloc(1);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1839,10 +1997,10 @@ Catalog iloc(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -1851,7 +2009,7 @@ Catalog iloc(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -1862,18 +2020,24 @@ Use this to narrow the current object to the rows or depth range you want to ins
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.iloc(0, 2);
+auto out = ct.iloc(0, 2);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1905,18 +2069,19 @@ This renders a human-readable view for inspection instead of creating a new anal
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.info();
+ct.info();
 ```
 
 #### Output
 
 ```text
+ct.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1933,7 +2098,7 @@ Catalog isnull(self, std::initializer_list<std::string_view> keys =
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -1949,18 +2114,24 @@ This is part of the missing-data cleanup path and is usually applied before summ
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.isnull();
+auto out = ct.isnull();
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -1985,20 +2156,20 @@ const std::vector<std::string>& keys(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Returns the current labels used to address fields, slots, rows, or depth items.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.keys();
+auto out = ct.keys();
 ```
 
 #### Output
@@ -2047,6 +2218,7 @@ auto out = pluss::kindle::Catalog::kindelize(df);
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2063,10 +2235,10 @@ static Catalog load(std::string_view source_type, std::string_view filepath)
 #### Parameters
 
 `source_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -2084,12 +2256,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::kindle::Catalog::load("csv", "PlussMic/data/messy_data.csv");
+auto out = pluss::kindle::Catalog::load("csv", "path/to/data.csv");
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2106,10 +2279,10 @@ static Catalog load(std::string_view source_type, std::string_view filepath, con
 #### Parameters
 
 `source_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -2130,12 +2303,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::kindle::Catalog::load("csv", "PlussMic/data/messy_data.csv");
+auto out = pluss::kindle::Catalog::load("csv", "path/to/data.csv");
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2152,7 +2326,7 @@ static Catalog load_csv(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -2170,12 +2344,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::kindle::Catalog::load_csv("PlussMic/data/messy_data.csv");
+auto out = pluss::kindle::Catalog::load_csv("path/to/data.csv");
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2192,7 +2367,7 @@ static Catalog load_csv(std::string_view filepath, const pluss::loader::ReadCsvO
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadCsvOptions&`
     See the signature for the supported argument form.
@@ -2214,12 +2389,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 ```cpp
 pluss::loader::ReadCsvOptions options;
-auto out = pluss::kindle::Catalog::load_csv("PlussMic/data/messy_data.csv", options);
+auto out = pluss::kindle::Catalog::load_csv("path/to/data.csv", options);
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2236,7 +2412,7 @@ static Catalog load_csv_with_key(std::string_view filepath, std::string_view key
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `key_field` : `std::string_view`
     See the signature for the supported argument form.
@@ -2256,12 +2432,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::kindle::Catalog::load_csv_with_key("PlussMic/data/messy_data.csv", "id");
+auto out = pluss::kindle::Catalog::load_csv_with_key("path/to/data.csv", "id");
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2278,7 +2455,7 @@ static Catalog load_excel(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -2296,12 +2473,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::kindle::Catalog::load_excel("PlussMic/data/messy_data.csv");
+auto out = pluss::kindle::Catalog::load_excel("path/to/data.xlsx");
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2318,7 +2496,7 @@ static Catalog load_excel(std::string_view filepath, const pluss::loader::ReadEx
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadExcelOptions&`
     See the signature for the supported argument form.
@@ -2340,12 +2518,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 ```cpp
 pluss::loader::ReadExcelOptions options;
-auto out = pluss::kindle::Catalog::load_excel("PlussMic/data/report.xlsx", options);
+auto out = pluss::kindle::Catalog::load_excel("path/to/data.xlsx", options);
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2362,7 +2541,7 @@ static Catalog load_json(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -2380,12 +2559,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::kindle::Catalog::load_json("PlussMic/data/messy_data.csv");
+auto out = pluss::kindle::Catalog::load_json("path/to/data.json");
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2402,7 +2582,7 @@ static Catalog load_json(std::string_view filepath, const pluss::loader::Config&
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -2423,12 +2603,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::kindle::Catalog::load_json("PlussMic/data/messy_data.csv", {"nrows", 16});
+auto out = pluss::kindle::Catalog::load_json("path/to/data.json", {"nrows", 16});
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2445,7 +2626,7 @@ static Catalog load_parquet(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -2463,12 +2644,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::kindle::Catalog::load_parquet("PlussMic/data/messy_data.csv");
+auto out = pluss::kindle::Catalog::load_parquet("path/to/data.parquet");
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2485,7 +2667,7 @@ static Catalog load_parquet(std::string_view filepath, const pluss::loader::Conf
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -2506,12 +2688,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::kindle::Catalog::load_parquet("PlussMic/data/messy_data.csv", {"nrows", 16});
+auto out = pluss::kindle::Catalog::load_parquet("path/to/data.parquet", {"nrows", 16});
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2528,7 +2711,7 @@ static Catalog load_txt(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -2546,12 +2729,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::kindle::Catalog::load_txt("PlussMic/data/messy_data.csv");
+auto out = pluss::kindle::Catalog::load_txt("path/to/data.txt");
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2568,7 +2752,7 @@ static Catalog load_txt(std::string_view filepath, const pluss::loader::Config& 
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -2589,12 +2773,13 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::kindle::Catalog::load_txt("PlussMic/data/messy_data.csv", {"nrows", 16});
+auto out = pluss::kindle::Catalog::load_txt("path/to/data.txt", {"nrows", 16});
 ```
 
 #### Output
 
 ```text
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2620,26 +2805,32 @@ Catalog masked_select(self, const pluss::Series& mask) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the rows where the supplied mask stream is true.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
 auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
-auto out = catalog.masked_select(mask);
+auto out = ct.masked_select(mask);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2656,7 +2847,7 @@ Stream max(self, std::string_view field) const
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 #### Returns
 
@@ -2665,20 +2856,20 @@ Stream max(self, std::string_view field) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Computes the maximum value of one named numeric stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.max("metric");
+auto out = ct.max("metric");
 ```
 
 #### Output
@@ -2698,7 +2889,7 @@ Stream mean(self, std::string_view field) const
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 #### Returns
 
@@ -2707,20 +2898,20 @@ Stream mean(self, std::string_view field) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Computes the mean value of one named numeric stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.mean("metric");
+auto out = ct.mean("metric");
 ```
 
 #### Output
@@ -2755,14 +2946,14 @@ Catalog merge(self, const Catalog& other, std::string_view on, std::string_view 
 
 #### Notes
 
-Use this when you need to merge compatible objects or extend the current one with another input.
+Combines two catalogs by matching rows on a key stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
@@ -2770,12 +2961,18 @@ auto catalog = pluss::kindle::Catalog({
 
 using namespace pluss::kindle::literals;
 auto right = pluss::kindle::Catalog({"id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})), "score"_k = pluss::kindle::Stream(pluss::make_series({0.9, 0.7, 0.8}))});
-auto out = catalog.merge(right, "id", "inner");
+auto out = ct.merge(right, "id", "inner");
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2792,7 +2989,7 @@ Stream min(self, std::string_view field) const
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 #### Returns
 
@@ -2801,20 +2998,20 @@ Stream min(self, std::string_view field) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Computes the minimum value of one named numeric stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.min("metric");
+auto out = ct.min("metric");
 ```
 
 #### Output
@@ -2842,20 +3039,20 @@ std::int64_t nfields(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.nfields();
+auto out = ct.nfields();
 ```
 
 #### Output
@@ -2883,25 +3080,31 @@ Catalog note(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Returns one named stream interpreted as a note/text stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.note();
+auto out = ct.note();
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2918,7 +3121,7 @@ Catalog notnull(self, std::initializer_list<std::string_view> keys =
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -2934,18 +3137,24 @@ This is part of the missing-data cleanup path and is usually applied before summ
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.notnull();
+auto out = ct.notnull();
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -2970,20 +3179,20 @@ std::int64_t nstreams(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.nstreams();
+auto out = ct.nstreams();
 ```
 
 #### Output
@@ -3012,25 +3221,31 @@ Catalog query(self, const QueryFn& fn) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the rows selected by the supplied row-wise query function or expression.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.query([](const pluss::kindle::Catalog& c) { return c.stream("metric").as_series().gt(15.0); });
+auto out = ct.query([](const pluss::kindle::Catalog& c) { return c.stream("metric").as_series().gt(15.0); });
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -3056,7 +3271,7 @@ Catalog rename(self, const std::unordered_map<std::string, std::string>& mapping
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Renames one or more streams without changing their values.
 
 #### See also
 
@@ -3068,19 +3283,25 @@ This adjusts labels without changing the underlying payload values.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
 std::unordered_map<std::string, std::string> renames{{"metric", "distance_km"}};
-auto out = catalog.rename(renames);
+auto out = ct.rename(renames);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -3106,7 +3327,7 @@ Catalog rename(self, std::initializer_list<std::pair<std::string_view, std::stri
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Renames one or more streams without changing their values.
 
 #### See also
 
@@ -3118,18 +3339,24 @@ This adjusts labels without changing the underlying payload values.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.rename({{"metric", "distance_km"}});
+auto out = ct.rename({{"metric", "distance_km"}});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -3158,7 +3385,7 @@ Catalog rename(self, std::string_view from, std::string_view to) const
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Renames one or more streams without changing their values.
 
 #### See also
 
@@ -3170,18 +3397,24 @@ This adjusts labels without changing the underlying payload values.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.rename("metric", "distance_km");
+auto out = ct.rename("metric", "distance_km");
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -3210,20 +3443,20 @@ Catalog& rename_(self, std::string_view from, std::string_view to)
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Renames one or more streams in place without changing their values.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.rename_("metric", "distance_km");
+ct.rename_("metric", "distance_km");
 ```
 
 ### `sample`
@@ -3237,7 +3470,7 @@ Catalog sample(self, std::int64_t n, std::optional<std::uint64_t> random_state =
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 `random_state` : `std::optional<std::uint64_t>`
     See the signature for the supported argument form.
@@ -3249,25 +3482,31 @@ Catalog sample(self, std::int64_t n, std::optional<std::uint64_t> random_state =
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a random sample of rows across all streams.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.sample(2, 7);
+auto out = ct.sample(2, 7);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -3299,20 +3538,20 @@ void save_as(self, std::string_view target_type, std::string_view filename, cons
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the catalog using the explicitly supplied output format selector.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.save_as("json", "out.json");
+ct.save_as("json", "path/to/output.json");
 ```
 
 #### Output
@@ -3341,7 +3580,7 @@ void save_csv(self, std::string_view filename) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the catalog to CSV after aligning its streams into a table-like representation.
 
 #### See also
 
@@ -3352,13 +3591,13 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.save_csv("out.csv");
+ct.save_csv("path/to/output.csv");
 ```
 
 #### Output
@@ -3390,7 +3629,7 @@ void save_csv(self, std::string_view filename, const pluss::loader::Config& conf
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the catalog to CSV after aligning its streams into a table-like representation.
 
 #### See also
 
@@ -3401,13 +3640,13 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.save_csv("out.csv");
+ct.save_csv("path/to/output.csv");
 ```
 
 #### Output
@@ -3436,7 +3675,7 @@ void save_excel(self, std::string_view filename) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the catalog to an Excel workbook after aligning its streams into a table-like representation.
 
 #### See also
 
@@ -3447,13 +3686,13 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.save_excel("out.xlsx");
+ct.save_excel("path/to/output.xlsx");
 ```
 
 #### Output
@@ -3485,7 +3724,7 @@ void save_excel(self, std::string_view filename, const pluss::loader::Config& co
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the catalog to an Excel workbook after aligning its streams into a table-like representation.
 
 #### See also
 
@@ -3496,13 +3735,13 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.save_excel("out.xlsx");
+ct.save_excel("path/to/output.xlsx");
 ```
 
 #### Output
@@ -3531,7 +3770,7 @@ void save_json(self, std::string_view filename) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the catalog to JSON for interchange or later reload.
 
 #### See also
 
@@ -3542,13 +3781,13 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.save_json("out.json");
+ct.save_json("path/to/output.json");
 ```
 
 #### Output
@@ -3580,7 +3819,7 @@ void save_json(self, std::string_view filename, const pluss::loader::Config& con
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the catalog to JSON for interchange or later reload.
 
 #### See also
 
@@ -3591,13 +3830,13 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.save_json("out.json");
+ct.save_json("path/to/output.json");
 ```
 
 #### Output
@@ -3626,7 +3865,7 @@ void save_parquet(self, std::string_view filename) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the catalog to Parquet for compact typed storage.
 
 #### See also
 
@@ -3637,13 +3876,13 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.save_parquet("out.parquet");
+ct.save_parquet("path/to/output.parquet");
 ```
 
 #### Output
@@ -3675,7 +3914,7 @@ void save_parquet(self, std::string_view filename, const pluss::loader::Config& 
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the catalog to Parquet for compact typed storage.
 
 #### See also
 
@@ -3686,13 +3925,13 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.save_parquet("out.parquet");
+ct.save_parquet("path/to/output.parquet");
 ```
 
 #### Output
@@ -3721,7 +3960,7 @@ void save_txt(self, std::string_view filename) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes a text rendering of the catalog for inspection or logging.
 
 #### See also
 
@@ -3732,13 +3971,13 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.save_txt("out.txt");
+ct.save_txt("path/to/output.txt");
 ```
 
 #### Output
@@ -3770,7 +4009,7 @@ void save_txt(self, std::string_view filename, const pluss::loader::Config& conf
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes a text rendering of the catalog for inspection or logging.
 
 #### See also
 
@@ -3781,13 +4020,13 @@ Writes the current object to disk using the corresponding PlussMic saver route.
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.save_txt("out.txt");
+ct.save_txt("path/to/output.txt");
 ```
 
 #### Output
@@ -3816,7 +4055,7 @@ Catalog select(self, const std::vector<std::string>& field_names) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the named streams and preserves their shared row alignment.
 
 #### See also
 
@@ -3827,19 +4066,25 @@ Use this to reduce the current object to the rows or fields that matter for the 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
 std::vector<std::string> names{"id", "metric"};
-auto out = catalog.select(names);
+auto out = ct.select(names);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -3865,7 +4110,7 @@ Catalog select(self, std::initializer_list<std::string_view> field_names) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the named streams and preserves their shared row alignment.
 
 #### See also
 
@@ -3876,18 +4121,24 @@ Use this to reduce the current object to the rows or fields that matter for the 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.select({"id", "metric"});
+auto out = ct.select({"id", "metric"});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -3912,25 +4163,31 @@ Catalog series(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Returns one named stream interpreted as a numeric series stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.series();
+auto out = ct.series();
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -3947,7 +4204,7 @@ Catalog set(self, std::string_view key, const Stream& value) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `value` : `const Stream&`
     See the signature for the supported argument form.
@@ -3959,25 +4216,31 @@ Catalog set(self, std::string_view key, const Stream& value) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Adds or replaces one named stream and returns the updated catalog.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.set_stream("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
+auto out = ct.set_stream("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -3994,7 +4257,7 @@ Catalog& set_(self, std::string_view key, const Stream& value)
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `value` : `const Stream&`
     See the signature for the supported argument form.
@@ -4006,20 +4269,20 @@ Catalog& set_(self, std::string_view key, const Stream& value)
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Adds or replaces one named stream in place.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.set_stream_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
+ct.set_stream_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
 ```
 
 ### `set_stream`
@@ -4033,7 +4296,7 @@ Catalog set_stream(self, std::string_view key, const Stream& value) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `value` : `const Stream&`
     See the signature for the supported argument form.
@@ -4045,25 +4308,31 @@ Catalog set_stream(self, std::string_view key, const Stream& value) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces one named stream and returns the updated catalog.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.set_stream("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
+auto out = ct.set_stream("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4080,7 +4349,7 @@ Catalog& set_stream_(self, std::string_view key, const Stream& value)
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `value` : `const Stream&`
     See the signature for the supported argument form.
@@ -4092,20 +4361,20 @@ Catalog& set_stream_(self, std::string_view key, const Stream& value)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces one named stream in place.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.set_stream_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
+ct.set_stream_("flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1})));
 ```
 
 ### `set_streams`
@@ -4128,7 +4397,7 @@ Catalog set_streams(self, std::initializer_list<NamedStream> items) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces several named streams and returns the updated catalog.
 
 #### See also
 
@@ -4139,14 +4408,14 @@ This mutates or derives structure while keeping the surrounding object model int
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
 using namespace pluss::kindle::literals;
-auto out = catalog.set_streams({
+auto out = ct.set_streams({
     "flag"_k = pluss::kindle::Stream(pluss::make_series({1, 0, 1})),
 });
 ```
@@ -4154,6 +4423,12 @@ auto out = catalog.set_streams({
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4179,7 +4454,7 @@ Catalog set_streams(self, std::initializer_list<std::pair<std::string_view, Stre
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces several named streams and returns the updated catalog.
 
 #### See also
 
@@ -4190,13 +4465,13 @@ This mutates or derives structure while keeping the surrounding object model int
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.set_streams({
+auto out = ct.set_streams({
     {"flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1}))},
 });
 ```
@@ -4204,6 +4479,12 @@ auto out = catalog.set_streams({
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4229,7 +4510,7 @@ Catalog& set_streams_(self, std::initializer_list<NamedStream> items)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces several named streams in place.
 
 #### See also
 
@@ -4240,14 +4521,14 @@ This mutates or derives structure while keeping the surrounding object model int
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
 using namespace pluss::kindle::literals;
-catalog.set_streams_({
+ct.set_streams_({
     "flag"_k = pluss::kindle::Stream(pluss::make_series({1, 0, 1})),
 });
 ```
@@ -4272,7 +4553,7 @@ Catalog& set_streams_(self, std::initializer_list<std::pair<std::string_view, St
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces several named streams in place.
 
 #### See also
 
@@ -4283,13 +4564,13 @@ This mutates or derives structure while keeping the surrounding object model int
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-catalog.set_streams_({
+ct.set_streams_({
     {"flag", pluss::kindle::Stream(pluss::make_series({1, 0, 1}))},
 });
 ```
@@ -4321,13 +4602,13 @@ This renders a human-readable view for inspection instead of creating a new anal
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.show();
+auto out = ct.show();
 ```
 
 ### `slice`
@@ -4341,10 +4622,10 @@ Catalog slice(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -4353,25 +4634,31 @@ Catalog slice(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a contiguous row slice `[start, stop)` across every stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.slice(0, 2);
+auto out = ct.slice(0, 2);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4400,25 +4687,31 @@ Catalog sort(self, std::string_view by_field, bool ascending = true) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Reorders rows using one stream as the sort key, while keeping the other streams aligned to the same row order.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.sort("metric", false);
+auto out = ct.sort("metric", false);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4447,25 +4740,31 @@ Catalog sort_by(self, const std::vector<std::string>& fields, const std::vector<
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Reorders rows using multiple sort keys, while keeping all streams aligned.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.sort_by({"city", "id"}, {true, false});
+auto out = ct.sort_by({"city", "id"}, {true, false});
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4482,7 +4781,7 @@ Stream stream(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -4491,20 +4790,20 @@ Stream stream(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.stream("metric");
+auto out = ct.stream("metric");
 ```
 
 #### Output
@@ -4532,20 +4831,20 @@ std::vector<Stream> streams(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.streams();
+auto out = ct.streams();
 ```
 
 #### Output
@@ -4565,7 +4864,7 @@ Stream sum(self, std::string_view field) const
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 #### Returns
 
@@ -4574,20 +4873,20 @@ Stream sum(self, std::string_view field) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Computes the sum of one named numeric stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.sum("metric");
+auto out = ct.sum("metric");
 ```
 
 #### Output
@@ -4623,7 +4922,7 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
@@ -4631,7 +4930,7 @@ auto catalog = pluss::kindle::Catalog({
 
 pluss::kindle::TabelizePolicy policy;
 policy.align = pluss::kindle::AlignPolicy::Inner;
-auto out = catalog.tabelize(policy);
+auto out = ct.tabelize(policy);
 ```
 
 #### Output
@@ -4654,7 +4953,7 @@ Catalog tail(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -4663,25 +4962,31 @@ Catalog tail(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the last `n` rows across every stream in the catalog.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.tail(2);
+auto out = ct.tail(2);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4707,26 +5012,32 @@ Catalog take(self, std::span<const std::int64_t> indices) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the rows at the requested integer positions across every stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
 std::vector<std::int64_t> picks{0, 2};
-auto out = catalog.take(picks);
+auto out = ct.take(picks);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4743,7 +5054,7 @@ Catalog text_preprocess(self, std::string_view field) const
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 #### Returns
 
@@ -4759,7 +5070,7 @@ This is part of the text-processing surface for note-backed or text-oriented dat
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "text"_k = pluss::kindle::Stream(pluss::make_note({
         "heavy rain on road",
         "clear weather downtown",
@@ -4767,12 +5078,18 @@ auto catalog = pluss::kindle::Catalog({
     })),
 });
 
-auto out = catalog.text_preprocess("text");
+auto out = ct.text_preprocess("text");
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4789,7 +5106,7 @@ Catalog tfidf(self, std::string_view field) const
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 #### Returns
 
@@ -4805,7 +5122,7 @@ This is part of the text-processing surface for note-backed or text-oriented dat
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "text"_k = pluss::kindle::Stream(pluss::make_note({
         "heavy rain on road",
         "clear weather downtown",
@@ -4813,12 +5130,18 @@ auto catalog = pluss::kindle::Catalog({
     })),
 });
 
-auto out = catalog.tfidf("text");
+auto out = ct.tfidf("text");
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4843,25 +5166,31 @@ Catalog timeindex(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Returns one named stream interpreted as a time-index stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.timeindex();
+auto out = ct.timeindex();
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4886,25 +5215,31 @@ Catalog timeline(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Returns one named stream interpreted as a timeline stream.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.timeline();
+auto out = ct.timeline();
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4929,25 +5264,26 @@ std::string to_json(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.to_json();
+auto out = ct.to_json();
 ```
 
 #### Output
 
 ```text
+ct.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -4972,25 +5308,26 @@ std::string to_string(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.to_string();
+auto out = ct.to_string();
 ```
 
 #### Output
 
 ```text
+ct.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -5023,7 +5360,7 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
@@ -5031,7 +5368,7 @@ auto catalog = pluss::kindle::Catalog({
 
 pluss::kindle::TabelizePolicy policy;
 policy.align = pluss::kindle::AlignPolicy::Inner;
-auto out = catalog.to_table(policy, true);
+auto out = ct.to_table(policy, true);
 ```
 
 #### Output
@@ -5063,7 +5400,7 @@ Catalog transform(self, const std::function<Stream(const Stream&)>& fn) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Rewrites one stream, several streams, or all streams by applying a user function.
 
 #### See also
 
@@ -5074,18 +5411,24 @@ This mutates or derives structure while keeping the surrounding object model int
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.transform([](const pluss::kindle::Stream& s) { return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; });
+auto out = ct.transform([](const pluss::kindle::Stream& s) { return s.kind() == pluss::kindle::StreamKind::Series ? s.clip(0.0, 25.0) : s; });
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -5102,7 +5445,7 @@ Catalog transform(self, std::string_view field, const std::function<Stream(const
 #### Parameters
 
 `field` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target stream in the catalog.
 
 `fn` : `const std::function<Stream(const Stream&)>&`
     See the signature for the supported argument form.
@@ -5114,7 +5457,7 @@ Catalog transform(self, std::string_view field, const std::function<Stream(const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Rewrites one stream, several streams, or all streams by applying a user function.
 
 #### See also
 
@@ -5125,18 +5468,24 @@ This mutates or derives structure while keeping the surrounding object model int
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.transform("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });
+auto out = ct.transform("metric", [](const pluss::kindle::Stream& s) { return s.clip(0.0, 25.0); });
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])
@@ -5161,20 +5510,20 @@ bool unique(self) const
 
 #### Notes
 
-This call is part of the public `Catalog` API and is documented here using a concrete usage example.
+Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
-auto out = catalog.unique();
+auto out = ct.unique();
 ```
 
 #### Output
@@ -5203,26 +5552,32 @@ Catalog where(self, const pluss::Series& condition) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the rows where the supplied mask stream is true.
 
 #### Examples
 
 ```cpp
 using namespace pluss::kindle::literals;
 
-auto catalog = pluss::kindle::Catalog({
+auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1, 2, 3})),
     "metric"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0})),
     "city"_k = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"})),
 });
 
 auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
-auto out = catalog.where(mask);
+auto out = ct.where(mask);
 ```
 
 #### Output
 
 ```text
+ct.head():
+id     -> Series([1, 2, 3])
+metric -> Series([10.0, 20.0, 30.0])
+city   -> Note(["Accra", "Tema", "Kumasi"])
+
+out.head():
 id     -> Series([1, 2, 3])
 metric -> Series([10.0, 20.0, 30.0])
 city   -> Note(["Accra", "Tema", "Kumasi"])

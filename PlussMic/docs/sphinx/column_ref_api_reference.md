@@ -17,7 +17,7 @@ Thread head(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -26,7 +26,7 @@ Thread head(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the first `n` values from the referenced column as a thread.
 
 #### Examples
 
@@ -66,7 +66,7 @@ pluss::Series mean(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Computes the mean of the referenced numeric column.
 
 #### Examples
 
@@ -106,7 +106,7 @@ const std::string& name(self) const
 
 #### Notes
 
-This call is part of the public `ColumnRef` API and is documented here using a concrete usage example.
+Returns the feature name associated with this column reference.
 
 #### Examples
 
@@ -146,7 +146,7 @@ const Thread& thread(self) const
 
 #### Notes
 
-This call is part of the public `ColumnRef` API and is documented here using a concrete usage example.
+Returns the referenced column as a `Thread` object.
 
 #### Examples
 
@@ -186,7 +186,7 @@ ThreadValue value(self) const
 
 #### Notes
 
-This call is part of the public `ColumnRef` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -226,7 +226,7 @@ Thread values(self) const
 
 #### Notes
 
-This call is part of the public `ColumnRef` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### Examples
 

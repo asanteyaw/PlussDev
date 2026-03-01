@@ -25,7 +25,7 @@ Stream abs(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Returns a numeric stream whose values are the absolute values of the current numeric payload.
 
 #### Examples
 
@@ -60,7 +60,7 @@ const pluss::Note& as_note(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Interprets or converts the current payload as a note/text stream.
 
 #### Examples
 
@@ -95,7 +95,7 @@ const pluss::Series& as_series(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Interprets or converts the current payload as a numeric series stream.
 
 #### Examples
 
@@ -130,7 +130,7 @@ const pluss::TimeIndex& as_timeindex(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Interprets or converts the current payload as a time-index stream.
 
 #### Examples
 
@@ -165,7 +165,7 @@ const pluss::Timeline& as_timeline(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Interprets or converts the current payload as a timeline stream.
 
 #### Examples
 
@@ -271,7 +271,7 @@ const std::optional<pluss::table::Thread>& cases(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -345,7 +345,7 @@ Stream clear_cases(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Returns a stream with its case labels removed.
 
 #### Examples
 
@@ -380,7 +380,7 @@ Stream& clear_cases_(self)
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Removes the stream case labels in place.
 
 #### Examples
 
@@ -409,7 +409,7 @@ Stream clear_validity_mask(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Returns a stream with the validity mask removed, so all entries are treated as valid again.
 
 #### Examples
 
@@ -444,7 +444,7 @@ Stream& clear_validity_mask_(self)
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Removes the validity mask in place, so all entries are treated as valid again.
 
 #### Examples
 
@@ -477,7 +477,7 @@ Stream clip(self, scalar min_value, scalar max_value) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Clamps numeric stream values to the supplied lower and upper bounds.
 
 #### Examples
 
@@ -512,7 +512,7 @@ bool defined(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
 #### Examples
 
@@ -539,7 +539,7 @@ Stream drop_meta(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -548,7 +548,7 @@ Stream drop_meta(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Returns a stream with one metadata key removed.
 
 #### Examples
 
@@ -576,7 +576,7 @@ Stream& drop_meta_(self, std::string_view key)
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -585,7 +585,7 @@ Stream& drop_meta_(self, std::string_view key)
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Removes one metadata key in place.
 
 #### Examples
 
@@ -650,7 +650,7 @@ std::string dtype_name(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Returns the scalar dtype name used by the current numeric payload.
 
 #### Examples
 
@@ -685,7 +685,7 @@ Stream exp(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Applies the elementwise exponential to a numeric stream.
 
 #### Examples
 
@@ -971,7 +971,7 @@ Stream filter(self, const pluss::Series& bool_mask) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the entries where the supplied boolean mask is true.
 
 #### Examples
 
@@ -1002,7 +1002,7 @@ static Stream from_thread(const pluss::table::Thread& thread, std::optional<plus
     See the signature for the supported argument form.
 
 `cases` : `std::optional<pluss::table::Thread>`
-    See the signature for the supported argument form.
+    Case-label thread to attach to the current object.
 
 #### Returns
 
@@ -1011,7 +1011,7 @@ static Stream from_thread(const pluss::table::Thread& thread, std::optional<plus
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Builds a Kindle stream from a table thread.
 
 #### Examples
 
@@ -1046,7 +1046,7 @@ bool has_cases(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Reports whether the stream currently carries explicit case labels.
 
 #### Examples
 
@@ -1073,7 +1073,7 @@ bool has_meta(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -1082,7 +1082,7 @@ bool has_meta(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Reports whether a metadata key exists on the stream.
 
 #### Examples
 
@@ -1118,7 +1118,7 @@ bool has_validity_mask(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Reports whether the stream currently carries a validity mask.
 
 #### Examples
 
@@ -1145,7 +1145,7 @@ Stream head(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -1154,7 +1154,7 @@ Stream head(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the first `n` entries of the stream.
 
 #### Examples
 
@@ -1224,7 +1224,7 @@ StreamKind kind(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Returns which payload kind this stream currently stores, such as Series, Note, Timeline, or TimeIndex.
 
 #### Examples
 
@@ -1259,7 +1259,7 @@ Stream log(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Applies the elementwise natural logarithm to a numeric stream.
 
 #### Examples
 
@@ -1294,7 +1294,7 @@ Stream max(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the maximum value of a numeric stream.
 
 #### Examples
 
@@ -1329,7 +1329,7 @@ Stream mean(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the mean value of a numeric stream.
 
 #### Examples
 
@@ -1364,7 +1364,7 @@ const std::unordered_map<std::string, std::string>& meta(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Returns the value stored under one metadata key.
 
 #### See also
 
@@ -1396,7 +1396,7 @@ std::optional<std::string> meta(self, std::string_view key) const
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 #### Returns
 
@@ -1405,7 +1405,7 @@ std::optional<std::string> meta(self, std::string_view key) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Returns the value stored under one metadata key.
 
 #### See also
 
@@ -1445,7 +1445,7 @@ Stream min(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the minimum value of a numeric stream.
 
 #### Examples
 
@@ -1551,7 +1551,7 @@ std::int64_t size(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -1578,10 +1578,10 @@ Stream slice(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -1590,7 +1590,7 @@ Stream slice(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a contiguous slice `[start, stop)` of the stream.
 
 #### Examples
 
@@ -1626,7 +1626,7 @@ Stream std(self, bool unbiased = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the standard deviation of a numeric stream.
 
 #### Examples
 
@@ -1661,7 +1661,7 @@ Stream sum(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the sum of a numeric stream.
 
 #### Examples
 
@@ -1688,7 +1688,7 @@ Stream tail(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -1697,7 +1697,7 @@ Stream tail(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the last `n` entries of the stream.
 
 #### Examples
 
@@ -1733,7 +1733,7 @@ Stream take(self, std::span<const std::int64_t> indices) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the entries at the requested integer positions.
 
 #### Examples
 
@@ -1769,7 +1769,7 @@ std::string to_json(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
@@ -1804,7 +1804,7 @@ std::string to_string(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
@@ -1870,10 +1870,10 @@ pluss::table::Thread to_thread(self, std::int64_t start, std::int64_t stop) cons
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -1921,7 +1921,7 @@ bool unique(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
 #### Examples
 
@@ -1956,7 +1956,7 @@ const std::optional<pluss::Series>& validity_mask(self) const
 
 #### Notes
 
-This call is part of the public `Stream` API and is documented here using a concrete usage example.
+Returns the current validity mask as a boolean series.
 
 #### Examples
 
@@ -1992,7 +1992,7 @@ Stream var(self, bool unbiased = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns the variance of a numeric stream.
 
 #### Examples
 
@@ -2019,7 +2019,7 @@ Stream with_cases(self, const pluss::table::Thread& cases) const
 #### Parameters
 
 `cases` : `const pluss::table::Thread&`
-    See the signature for the supported argument form.
+    Case-label thread to attach to the current object.
 
 #### Returns
 
@@ -2028,7 +2028,7 @@ Stream with_cases(self, const pluss::table::Thread& cases) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Returns a new stream with the supplied case labels attached.
 
 #### Examples
 
@@ -2056,7 +2056,7 @@ Stream& with_cases_(self, const pluss::table::Thread& cases)
 #### Parameters
 
 `cases` : `const pluss::table::Thread&`
-    See the signature for the supported argument form.
+    Case-label thread to attach to the current object.
 
 #### Returns
 
@@ -2065,7 +2065,7 @@ Stream& with_cases_(self, const pluss::table::Thread& cases)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Attaches the supplied case labels in place.
 
 #### Examples
 
@@ -2096,7 +2096,7 @@ Stream with_meta(self, std::initializer_list<std::pair<std::string_view, std::st
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Returns a new stream with one metadata key/value attached.
 
 #### See also
 
@@ -2127,7 +2127,7 @@ Stream with_meta(self, std::string key, std::string value) const
 #### Parameters
 
 `key` : `std::string`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `value` : `std::string`
     See the signature for the supported argument form.
@@ -2139,7 +2139,7 @@ Stream with_meta(self, std::string key, std::string value) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Returns a new stream with one metadata key/value attached.
 
 #### See also
 
@@ -2179,7 +2179,7 @@ Stream& with_meta_(self, std::initializer_list<std::pair<std::string_view, std::
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or updates one metadata key/value in place.
 
 #### See also
 
@@ -2204,7 +2204,7 @@ Stream& with_meta_(self, std::string key, std::string value)
 #### Parameters
 
 `key` : `std::string`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `value` : `std::string`
     See the signature for the supported argument form.
@@ -2216,7 +2216,7 @@ Stream& with_meta_(self, std::string key, std::string value)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or updates one metadata key/value in place.
 
 #### See also
 
@@ -2250,7 +2250,7 @@ Stream with_validity_mask(self, const pluss::Series& mask) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Returns a new stream with the supplied validity mask attached.
 
 #### Examples
 
@@ -2287,7 +2287,7 @@ Stream& with_validity_mask_(self, const pluss::Series& mask)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Attaches the supplied validity mask in place.
 
 #### Examples
 

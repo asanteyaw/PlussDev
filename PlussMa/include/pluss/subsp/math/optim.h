@@ -9,6 +9,7 @@
 #include <functional>
 #include <limits>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -585,6 +586,48 @@ enum class OptimaProgressStage : std::uint8_t {
   Done,
 };
 
+enum class OptimaStallCategory : std::uint8_t {
+  None = 0,
+  UserStop,
+  InvalidCallbackContract,
+  NonFiniteCallbackRegion,
+  SearchDirectionCollapse,
+  BoundaryLimited,
+  InfeasibleStationary,
+  ComplementarityStagnation,
+  FeasibilityFailure,
+  RecoveryFailure,
+  IterationLimit,
+};
+
+inline std::string_view optima_stall_category_name(OptimaStallCategory category) {
+  switch (category) {
+    case OptimaStallCategory::None:
+      return "none";
+    case OptimaStallCategory::UserStop:
+      return "user-stop";
+    case OptimaStallCategory::InvalidCallbackContract:
+      return "invalid-callback-contract";
+    case OptimaStallCategory::NonFiniteCallbackRegion:
+      return "nonfinite-callback-region";
+    case OptimaStallCategory::SearchDirectionCollapse:
+      return "search-direction-collapse";
+    case OptimaStallCategory::BoundaryLimited:
+      return "boundary-limited";
+    case OptimaStallCategory::InfeasibleStationary:
+      return "infeasible-stationary";
+    case OptimaStallCategory::ComplementarityStagnation:
+      return "complementarity-stagnation";
+    case OptimaStallCategory::FeasibilityFailure:
+      return "feasibility-failure";
+    case OptimaStallCategory::RecoveryFailure:
+      return "recovery-failure";
+    case OptimaStallCategory::IterationLimit:
+      return "iteration-limit";
+  }
+  return "none";
+}
+
 struct OptimaProgressSnapshot {
   OptimaProgressStage stage{OptimaProgressStage::Start};
   std::string algorithm{};
@@ -595,7 +638,12 @@ struct OptimaProgressSnapshot {
   double step_size{0.0};
   double backend_parameter{0.0};
   double stationarity{0.0};
+  double complementarity{0.0};
+  std::int64_t krylov_iterations{0};
   std::string message{};
+  OptimaStallCategory stall_category{OptimaStallCategory::None};
+  double stall_measure{0.0};
+  double stall_reference{0.0};
   std::optional<BestFeasiblePoint> best_feasible{};
 };
 
@@ -720,6 +768,7 @@ struct InteriorPointOptions {
   double barrier_decay{0.2};
   double equality_penalty{10.0};
   double centrality_fraction{0.1};
+  double dual_recentering_fraction{0.99};
   double feasibility_activation_factor{10.0};
   double constraint_tolerance{1e-6};
   double optimality_tolerance{1e-6};
@@ -800,7 +849,16 @@ struct OptimaOutput {
   double complementarity{0.0};
   std::int64_t krylov_iterations{0};
   bool best_feasible_available{false};
+  bool returned_best_feasible{false};
+  double best_feasible_value{std::numeric_limits<double>::infinity()};
+  double best_feasible_constraint_violation{std::numeric_limits<double>::infinity()};
+  double best_feasible_first_order_optimality{std::numeric_limits<double>::infinity()};
+  double multiplier_max_norm{0.0};
+  std::int64_t active_multiplier_count{0};
   std::string detail_message{};
+  OptimaStallCategory stall_category{OptimaStallCategory::None};
+  double stall_measure{0.0};
+  double stall_reference{0.0};
 };
 
 struct OptimaOptions {
@@ -946,6 +1004,16 @@ inline double max_positive_scalar_(const Series& x) {
   double best = 0.0;
   for (double v : vals) best = std::max(best, v);
   return best;
+}
+
+inline std::int64_t count_active_entries_(const Series& x, double tolerance = 1e-10) {
+  if (!x.defined() || x.numel() == 0) return 0;
+  const auto vals = x.to(ScalarType::Float64).abs().reshape({x.numel()}).to_vec<double>();
+  std::int64_t count = 0;
+  for (double v : vals) {
+    if (v > tolerance) ++count;
+  }
+  return count;
 }
 
 inline ParameterPack<Series> zero_jacobian_pack_(const ParameterPack<Series>& params,
@@ -1902,6 +1970,49 @@ inline bool use_iterative_subproblem_solver_(OptimaLinearSystemSolver solver,
   return dimension >= threshold;
 }
 
+inline Series project_direction_from_active_bounds_(const ConstrainedProblem& problem,
+                                                    const ParameterPack<Series>& params,
+                                                    const Series& direction,
+                                                    double tolerance = 1e-10) {
+  if (!direction.defined() || !problem.bounds.lower.has_value() && !problem.bounds.upper.has_value()) {
+    return direction;
+  }
+  const auto layout = params.layout();
+  auto direction_pack = unflatten_values(layout, direction.to(ScalarType::Float64));
+  std::vector<typename ParameterPack<Series>::Block> out_blocks;
+  out_blocks.reserve(direction_pack.size());
+
+  for (const auto& block : direction_pack.blocks()) {
+    auto host_dir = block.value.to(ScalarType::Float64).reshape({block.value.numel()}).to_vec<double>();
+    const auto host_value = params.at(block.name).to(ScalarType::Float64).reshape({block.value.numel()}).to_vec<double>();
+    const auto host_lower =
+        problem.bounds.lower.has_value()
+            ? problem.bounds.lower->at(block.name).to(ScalarType::Float64).reshape({block.value.numel()}).to_vec<double>()
+            : std::vector<double>{};
+    const auto host_upper =
+        problem.bounds.upper.has_value()
+            ? problem.bounds.upper->at(block.name).to(ScalarType::Float64).reshape({block.value.numel()}).to_vec<double>()
+            : std::vector<double>{};
+
+    for (std::size_t i = 0; i < host_dir.size(); ++i) {
+      if (!host_lower.empty() && host_value[i] <= host_lower[i] + tolerance && host_dir[i] < 0.0) {
+        host_dir[i] = 0.0;
+      }
+      if (!host_upper.empty() && host_value[i] >= host_upper[i] - tolerance && host_dir[i] > 0.0) {
+        host_dir[i] = 0.0;
+      }
+    }
+
+    out_blocks.push_back(
+        {block.name,
+         pluss::make_series(std::move(host_dir), {block.value.numel()})
+             .to(ScalarType::Float64)
+             .to(block.value.platform())
+             .reshape(block.value.sizes())});
+  }
+  return flatten_values(ParameterPack<Series>(std::move(out_blocks))).to(ScalarType::Float64).to(direction.platform());
+}
+
 inline Series stack_rows_series_(const std::vector<Series>& rows,
                                  std::int64_t ncols,
                                  pluss::codem::Platform platform) {
@@ -2299,8 +2410,17 @@ inline Series solve_second_order_correction_(const std::vector<FlatConstraintRow
   return A.transpose(0, 1).matmul(lambda.reshape({lambda.numel(), 1})).reshape({n});
 }
 
-inline void maybe_update_best_feasible_(SequentialQPState& state) {
-  if (!state.evaluation.feasible) return;
+inline bool feasible_with_tolerance_(const ProblemEvaluation& evaluation, double constraint_tolerance) {
+  return evaluation.status == EvalStatus::Ok &&
+         evaluation.max_constraint_violation <= std::max(0.0, constraint_tolerance);
+}
+
+inline void maybe_update_best_feasible_(SequentialQPState& state,
+                                        double constraint_tolerance = 0.0) {
+  if (!feasible_with_tolerance_(state.evaluation, constraint_tolerance) ||
+      !state.evaluation.value.defined() || state.evaluation.value.numel() != 1) {
+    return;
+  }
   if (!state.best_feasible.has_value() ||
       state.evaluation.value.item<double>() <= state.best_feasible->value.item<double>()) {
     state.best_feasible = BestFeasiblePoint{
@@ -2399,6 +2519,43 @@ inline Series inequality_dual_(const Series& slack,
   return slack.reciprocal().mul(std::max(barrier_parameter, 1e-12));
 }
 
+inline Series positive_series_(const Series& x,
+                               double floor = 1e-12) {
+  if (!x.defined() || x.numel() == 0) return x;
+  return x.maximum(floor);
+}
+
+inline Series current_or_barrier_dual_(const Series& current_dual,
+                                       const Series& slack,
+                                       double barrier_parameter) {
+  if (slack.numel() == 0) return slack;
+  if (current_dual.defined() && current_dual.numel() == slack.numel()) {
+    return positive_series_(current_dual.to(ScalarType::Float64).to(slack.platform()));
+  }
+  return inequality_dual_(slack, barrier_parameter);
+}
+
+inline Series update_dual_step_(const Series& dual,
+                                const Series& dual_step,
+                                double step_size) {
+  if (!dual.defined() || dual.numel() == 0) return dual;
+  if (!dual_step.defined() || dual_step.numel() != dual.numel()) return positive_series_(dual);
+  return positive_series_(dual.add(dual_step.mul(step_size)));
+}
+
+inline Series blend_dual_toward_centrality_(const Series& dual,
+                                            const Series& slack,
+                                            double barrier_parameter,
+                                            double blend_fraction) {
+  if (!dual.defined() || dual.numel() == 0 || !slack.defined() || slack.numel() != dual.numel()) {
+    return dual;
+  }
+  const double eta = std::clamp(blend_fraction, 0.0, 1.0);
+  if (!(eta > 0.0)) return positive_series_(dual);
+  const Series central_dual = inequality_dual_(slack, barrier_parameter);
+  return positive_series_(dual.mul(1.0 - eta).add(central_dual.mul(eta)));
+}
+
 inline double complementarity_residual_(const Series& slack,
                                         const Series& dual,
                                         double barrier_parameter) {
@@ -2413,6 +2570,67 @@ inline Series stack_inequality_jacobian_(const FlatConstraintSystem& system,
   rows.reserve(system.inequalities.size());
   for (const auto& row : system.inequalities) rows.push_back(row.jacobian.to(platform));
   return stack_rows_series_(rows, ncols, platform);
+}
+
+inline Series quadratic_rows_matvec_(const std::vector<FlatConstraintRow>& rows,
+                                     const std::vector<double>& weights,
+                                     const Series& direction,
+                                     std::int64_t n,
+                                     pluss::codem::Platform platform) {
+  Series out = zeros_series_(n, platform);
+  for (std::size_t i = 0; i < rows.size() && i < weights.size(); ++i) {
+    const double weight = weights[i];
+    if (!(weight > 0.0) || !std::isfinite(weight)) continue;
+    const Series jac = rows[i].jacobian.to(ScalarType::Float64).to(platform).reshape({n});
+    const double coeff = weight * series_dot_(jac, direction);
+    if (std::abs(coeff) <= 0.0) continue;
+    out = out.add(jac.mul(coeff));
+  }
+  return out;
+}
+
+inline Series quadratic_rows_diagonal_(const std::vector<FlatConstraintRow>& rows,
+                                       const std::vector<double>& weights,
+                                       std::int64_t n,
+                                       pluss::codem::Platform platform) {
+  std::vector<double> diag(static_cast<std::size_t>(n), 0.0);
+  for (std::size_t i = 0; i < rows.size() && i < weights.size(); ++i) {
+    const double weight = weights[i];
+    if (!(weight > 0.0) || !std::isfinite(weight)) continue;
+    const auto host_jac = rows[i].jacobian.to(ScalarType::Float64).reshape({n}).to_vec<double>();
+    for (std::int64_t j = 0; j < n; ++j) {
+      const double v = host_jac[static_cast<std::size_t>(j)];
+      diag[static_cast<std::size_t>(j)] += weight * v * v;
+    }
+  }
+  return pluss::make_series(std::move(diag), {n}).to(ScalarType::Float64).to(platform);
+}
+
+inline std::vector<double> equality_quadratic_weights_(const FlatConstraintSystem& system,
+                                                       double equality_penalty,
+                                                       const OptimaNormalizationStats& normalization) {
+  std::vector<double> weights(system.equalities.size(), std::max(0.0, equality_penalty));
+  const auto eq_scales = normalization.equality_row_scale.defined()
+                             ? normalization.equality_row_scale.to(ScalarType::Float64).to_vec<double>()
+                             : std::vector<double>{};
+  for (std::size_t i = 0; i < weights.size(); ++i) {
+    const double scale = i < eq_scales.size() ? eq_scales[i] : 1.0;
+    weights[i] *= scale * scale;
+  }
+  return weights;
+}
+
+inline std::vector<double> inequality_quadratic_weights_(const Series& slack,
+                                                         const Series& dual) {
+  const auto host_slack = slack.defined() ? slack.to(ScalarType::Float64).to_vec<double>() : std::vector<double>{};
+  const auto host_dual = dual.defined() ? dual.to(ScalarType::Float64).to_vec<double>() : std::vector<double>{};
+  std::vector<double> weights(std::min(host_slack.size(), host_dual.size()), 0.0);
+  for (std::size_t i = 0; i < weights.size(); ++i) {
+    const double si = std::max(host_slack[i], 1e-12);
+    const double zi = std::max(host_dual[i], 0.0);
+    weights[i] = zi / si;
+  }
+  return weights;
 }
 
 inline Series primal_dual_stationarity_flat_(const ProblemEvaluation& evaluation,
@@ -2457,7 +2675,7 @@ inline void update_primal_dual_metrics_(InteriorPointState& state,
   const auto platform =
       state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform();
   state.inequality_slack = inequality_slack_(system, platform);
-  state.inequality_dual = inequality_dual_(state.inequality_slack, barrier_parameter);
+  state.inequality_dual = current_or_barrier_dual_(state.inequality_dual, state.inequality_slack, barrier_parameter);
   state.primal_residual = std::max(
       equality_residual_norm_(system),
       state.inequality_slack.defined() && state.inequality_slack.numel() > 0
@@ -2478,7 +2696,7 @@ inline void update_primal_dual_metrics_(InteriorPointState& state,
   const auto platform =
       state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform();
   state.inequality_slack = inequality_slack_(system, platform);
-  state.inequality_dual = inequality_dual_(state.inequality_slack, barrier_parameter);
+  state.inequality_dual = current_or_barrier_dual_(state.inequality_dual, state.inequality_slack, barrier_parameter);
   state.primal_residual = std::max(
       equality_residual_norm_(system),
       state.inequality_slack.defined() && state.inequality_slack.numel() > 0
@@ -2605,8 +2823,12 @@ inline ParameterPack<Series> make_strictly_interior_(const ConstrainedProblem& p
   return params;
 }
 
-inline void maybe_update_best_feasible_(InteriorPointState& state) {
-  if (!state.evaluation.feasible) return;
+inline void maybe_update_best_feasible_(InteriorPointState& state,
+                                        double constraint_tolerance = 0.0) {
+  if (!feasible_with_tolerance_(state.evaluation, constraint_tolerance) ||
+      !state.evaluation.value.defined() || state.evaluation.value.numel() != 1) {
+    return;
+  }
   if (!state.best_feasible.has_value() ||
       state.evaluation.value.item<double>() <= state.best_feasible->value.item<double>()) {
     state.best_feasible = BestFeasiblePoint{
@@ -2615,6 +2837,50 @@ inline void maybe_update_best_feasible_(InteriorPointState& state) {
         state.evaluation.max_constraint_violation,
         state.evaluation.first_order_opt};
   }
+}
+
+inline bool should_enter_feasibility_phase_(const InteriorPointState& state,
+                                            const InteriorPointOptions& options);
+
+inline void reduce_barrier_state_(InteriorPointState& state,
+                                  const FlatConstraintSystem& system,
+                                  const InteriorPointOptions& options) {
+  if (!(state.barrier_parameter > options.minimum_barrier_parameter)) return;
+
+  state.barrier_parameter = std::max(options.minimum_barrier_parameter,
+                                     state.barrier_parameter * options.barrier_decay);
+  state.hessian = identity_matrix_(
+      state.params.total_numel(),
+      state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform());
+  state.lbfgs_s_history.clear();
+  state.lbfgs_y_history.clear();
+  state.krylov_iterations = 0;
+  state.inequality_dual = blend_dual_toward_centrality_(
+      current_or_barrier_dual_(state.inequality_dual, state.inequality_slack, state.barrier_parameter),
+      state.inequality_slack,
+      state.barrier_parameter,
+      1.0);
+  state.barrier_value = barrier_value_(
+      state.evaluation,
+      system,
+      state.barrier_parameter,
+      options.equality_penalty,
+      state.normalization);
+  const auto reduced_gradient = barrier_gradient_flat_(
+      state.evaluation,
+      system,
+      state.barrier_parameter,
+      options.equality_penalty,
+      state.normalization);
+  state.barrier_gradient_norm = inf_norm_(reduced_gradient);
+  update_primal_dual_metrics_(
+      state,
+      system,
+      state.barrier_parameter,
+      options.equality_penalty,
+      state.normalization);
+  state.in_feasibility_phase = should_enter_feasibility_phase_(state, options);
+  state.message = "barrier reduced";
 }
 
 inline Series bfgs_hessian_update_(const Series& hessian,
@@ -2728,17 +2994,35 @@ inline std::pair<Series, Series> solve_sqp_kkt_(
     const std::vector<FlatConstraintRow>& active_constraints,
     double regularization,
     OptimaLinearSystemSolver linear_system_solver,
+    std::int64_t max_krylov_iterations,
+    double krylov_tolerance,
+    double krylov_absolute_tolerance,
     double pivot_threshold,
+    std::int64_t& krylov_iterations,
     bool& ok) {
   const std::int64_t n = gradient.numel();
   const std::int64_t m = static_cast<std::int64_t>(active_constraints.size());
   const auto platform = gradient.platform();
   const Series Hreg = hessian.add(identity_matrix_(n, platform).mul(regularization));
+  krylov_iterations = 0;
 
   if (m == 0) {
-    const Series step =
-        solve_dense_system_series_(
-            Hreg, gradient.mul(-1.0), regularization, linear_system_solver, pivot_threshold, ok);
+    Series step;
+    if (linear_system_solver == OptimaLinearSystemSolver::ConjugateGradient) {
+      step = solve_spd_system_cg_series_(
+          Hreg,
+          gradient.mul(-1.0),
+          regularization,
+          max_krylov_iterations,
+          krylov_tolerance,
+          krylov_absolute_tolerance,
+          ok,
+          krylov_iterations);
+    } else {
+      step =
+          solve_dense_system_series_(
+              Hreg, gradient.mul(-1.0), regularization, linear_system_solver, pivot_threshold, ok);
+    }
     return {step, zeros_series_(0, platform)};
   }
 
@@ -2756,8 +3040,27 @@ inline std::pair<Series, Series> solve_sqp_kkt_(
       {pluss::make_series(std::move(rhs_tail), {m}).to(ScalarType::Float64).to(platform)},
       0);
 
-  const Series solution =
-      solve_dense_system_series_(KKT, rhs, regularization, linear_system_solver, pivot_threshold, ok);
+  Series solution;
+  if (linear_system_solver == OptimaLinearSystemSolver::ConjugateGradient) {
+    const Series normal_rhs = dense_transpose_matvec_(KKT, rhs);
+    const Series normal_diag =
+        KKT.abs().sum(0).reshape({n + m}).maximum(1e-8).square().add(std::max(regularization, 1e-8));
+    auto normal_matvec = [&](const Series& direction) -> Series {
+      return dense_transpose_matvec_(KKT, dense_matvec_(KKT, direction)).add(direction.mul(std::max(regularization, 1e-8)));
+    };
+    solution = solve_spd_system_cg_operator_(
+        normal_matvec,
+        normal_rhs,
+        normal_diag,
+        max_krylov_iterations,
+        krylov_tolerance,
+        krylov_absolute_tolerance,
+        ok,
+        krylov_iterations);
+  } else {
+    solution =
+        solve_dense_system_series_(KKT, rhs, regularization, linear_system_solver, pivot_threshold, ok);
+  }
   if (!ok) {
     return {zeros_series_(n, platform), zeros_series_(m, platform)};
   }
@@ -2804,6 +3107,10 @@ inline ConstraintMultipliers zero_constraint_multipliers_(const ConstrainedProbl
       sized_multiplier_series_(problem.bounds.upper.has_value() ? n_flat : 0, platform)};
 }
 
+inline std::vector<double> series_to_vec_or_empty_(const Series& x) {
+  return (x.defined() && x.numel() > 0) ? x.to_vec<double>() : std::vector<double>{};
+}
+
 inline ConstraintMultipliers gather_constraint_multipliers_(
     const ConstrainedProblem& problem,
     const ParameterPack<Series>& params,
@@ -2813,12 +3120,12 @@ inline ConstraintMultipliers gather_constraint_multipliers_(
   ConstraintMultipliers out = zero_constraint_multipliers_(problem, params, evaluation);
   if (!active_multipliers.defined() || active_multipliers.numel() == 0) return out;
 
-  auto linear_eq = out.linear_equalities.to_vec<double>();
-  auto nonlinear_eq = out.nonlinear_equalities.to_vec<double>();
-  auto linear_ineq = out.linear_inequalities.to_vec<double>();
-  auto nonlinear_ineq = out.nonlinear_inequalities.to_vec<double>();
-  auto lower = out.lower_bounds.to_vec<double>();
-  auto upper = out.upper_bounds.to_vec<double>();
+  auto linear_eq = series_to_vec_or_empty_(out.linear_equalities);
+  auto nonlinear_eq = series_to_vec_or_empty_(out.nonlinear_equalities);
+  auto linear_ineq = series_to_vec_or_empty_(out.linear_inequalities);
+  auto nonlinear_ineq = series_to_vec_or_empty_(out.nonlinear_inequalities);
+  auto lower = series_to_vec_or_empty_(out.lower_bounds);
+  auto upper = series_to_vec_or_empty_(out.upper_bounds);
   const auto lambda = active_multipliers.to_vec<double>();
 
   for (std::size_t i = 0; i < active_constraints.size() && i < lambda.size(); ++i) {
@@ -2892,10 +3199,10 @@ inline ConstraintMultipliers estimate_barrier_multipliers_(
   ConstraintMultipliers out = zero_constraint_multipliers_(problem, params, evaluation);
   const auto platform =
       params.empty() ? pluss::codem::Platform::CPU : params[0].value.platform();
-  auto linear_ineq = out.linear_inequalities.to_vec<double>();
-  auto nonlinear_ineq = out.nonlinear_inequalities.to_vec<double>();
-  auto lower = out.lower_bounds.to_vec<double>();
-  auto upper = out.upper_bounds.to_vec<double>();
+  auto linear_ineq = series_to_vec_or_empty_(out.linear_inequalities);
+  auto nonlinear_ineq = series_to_vec_or_empty_(out.nonlinear_inequalities);
+  auto lower = series_to_vec_or_empty_(out.lower_bounds);
+  auto upper = series_to_vec_or_empty_(out.upper_bounds);
 
   for (const auto& row : system.inequalities) {
     if (!(row.residual < 0.0)) continue;
@@ -2953,10 +3260,10 @@ inline ConstraintMultipliers gather_primal_dual_inequality_multipliers_(
   if (!inequality_dual.defined() || inequality_dual.numel() == 0) return out;
   const auto platform =
       params.empty() ? pluss::codem::Platform::CPU : params[0].value.platform();
-  auto linear_ineq = out.linear_inequalities.to_vec<double>();
-  auto nonlinear_ineq = out.nonlinear_inequalities.to_vec<double>();
-  auto lower = out.lower_bounds.to_vec<double>();
-  auto upper = out.upper_bounds.to_vec<double>();
+  auto linear_ineq = series_to_vec_or_empty_(out.linear_inequalities);
+  auto nonlinear_ineq = series_to_vec_or_empty_(out.nonlinear_inequalities);
+  auto lower = series_to_vec_or_empty_(out.lower_bounds);
+  auto upper = series_to_vec_or_empty_(out.upper_bounds);
   const auto dual = inequality_dual.to_vec<double>();
 
   for (std::size_t i = 0; i < system.inequalities.size() && i < dual.size(); ++i) {
@@ -3065,9 +3372,88 @@ inline bool feasible_objective_target_met_(const ProblemEvaluation& evaluation, 
   return std::isfinite(value) && value <= objective_limit;
 }
 
+struct OptimaStallDiagnostic {
+  OptimaStallCategory category{OptimaStallCategory::None};
+  double measure{0.0};
+  double reference{0.0};
+};
+
+inline OptimaStallDiagnostic classify_stall_(OptimaAlgorithm algorithm,
+                                             EvalStatus status,
+                                             const std::string& message,
+                                             double step_size,
+                                             double stationarity,
+                                             double complementarity) {
+  auto make = [](OptimaStallCategory category, double measure, double reference) {
+    return OptimaStallDiagnostic{category, measure, reference};
+  };
+
+  if (status == EvalStatus::InvalidProblem) {
+    return make(OptimaStallCategory::InvalidCallbackContract, 0.0, 0.0);
+  }
+  if (status == EvalStatus::NonFiniteObjective || status == EvalStatus::NonFiniteGradient ||
+      status == EvalStatus::NonFiniteConstraint || status == EvalStatus::NonFiniteJacobian) {
+    return make(OptimaStallCategory::NonFiniteCallbackRegion, 0.0, 0.0);
+  }
+  if (message.find("progress hook") != std::string::npos) {
+    return make(OptimaStallCategory::UserStop, 0.0, 0.0);
+  }
+  if (message.find("constraint violation locally stationary") != std::string::npos) {
+    return make(OptimaStallCategory::InfeasibleStationary, stationarity, 0.0);
+  }
+  if (message.find("feasibility phase failed") != std::string::npos ||
+      message.find("feasibility phase reached a stationary violation point") != std::string::npos) {
+    return make(OptimaStallCategory::FeasibilityFailure, stationarity, 0.0);
+  }
+  if (message.find("restoration failed") != std::string::npos ||
+      message.find("barrier recovery failed") != std::string::npos ||
+      message.find("recovery requires") != std::string::npos ||
+      message.find("line search failed to produce an acceptable SQP step after restoration") != std::string::npos ||
+      message.find("line search failed to produce an acceptable interior-point step after recovery") !=
+          std::string::npos) {
+    return make(OptimaStallCategory::RecoveryFailure, step_size, 0.0);
+  }
+  if (message.find("bound-feasible region") != std::string::npos ||
+      message.find("step hit the boundary") != std::string::npos) {
+    return make(OptimaStallCategory::BoundaryLimited, std::abs(step_size), 0.0);
+  }
+  if (message.find("line search failed") != std::string::npos) {
+    return make(OptimaStallCategory::SearchDirectionCollapse, std::abs(step_size), 0.0);
+  }
+  if (message.find("maximum iterations reached") != std::string::npos) {
+    if (algorithm == OptimaAlgorithm::InteriorPoint &&
+        complementarity > std::max(1e-3, 1e-2 * std::max(stationarity, 1e-12))) {
+      return make(OptimaStallCategory::ComplementarityStagnation, complementarity,
+                  std::max(stationarity, 1e-12));
+    }
+    return make(OptimaStallCategory::IterationLimit, stationarity, std::abs(step_size));
+  }
+  return {};
+}
+
+inline std::string append_stall_detail_(std::string detail_message,
+                                        const OptimaStallDiagnostic& diagnostic) {
+  if (diagnostic.category == OptimaStallCategory::None) return detail_message;
+
+  std::ostringstream oss;
+  oss.setf(std::ios::scientific);
+  oss.precision(3);
+  oss << " diagnostic=" << optima_stall_category_name(diagnostic.category)
+      << " measure=" << diagnostic.measure
+      << " reference=" << diagnostic.reference << ".";
+  const std::string suffix = oss.str();
+  if (detail_message.find(suffix) != std::string::npos) return detail_message;
+  if (detail_message.empty()) return suffix.substr(1);
+  detail_message += suffix;
+  return detail_message;
+}
+
 inline OptimaProgressSnapshot make_progress_snapshot_(OptimaAlgorithm algorithm,
                                                       OptimaProgressStage stage,
                                                       const PenaltyMethodState& state) {
+  const auto diagnostic =
+      classify_stall_(algorithm, state.evaluation.status, state.message, state.last_step_size,
+                      pack_inf_norm_(state.evaluation.gradient), 0.0);
   return OptimaProgressSnapshot{
       stage,
       algorithm_name_(algorithm),
@@ -3078,13 +3464,21 @@ inline OptimaProgressSnapshot make_progress_snapshot_(OptimaAlgorithm algorithm,
       state.last_step_size,
       state.current_penalty,
       pack_inf_norm_(state.evaluation.gradient),
+      0.0,
+      0,
       state.message,
+      diagnostic.category,
+      diagnostic.measure,
+      diagnostic.reference,
       state.best_feasible};
 }
 
 inline OptimaProgressSnapshot make_progress_snapshot_(OptimaAlgorithm algorithm,
                                                       OptimaProgressStage stage,
                                                       const SequentialQPState& state) {
+  const auto diagnostic =
+      classify_stall_(algorithm, state.evaluation.status, state.message, state.last_step_size,
+                      state.kkt_residual, 0.0);
   return OptimaProgressSnapshot{
       stage,
       algorithm_name_(algorithm),
@@ -3095,13 +3489,21 @@ inline OptimaProgressSnapshot make_progress_snapshot_(OptimaAlgorithm algorithm,
       state.last_step_size,
       state.current_penalty,
       state.kkt_residual,
+      0.0,
+      state.krylov_iterations,
       state.message,
+      diagnostic.category,
+      diagnostic.measure,
+      diagnostic.reference,
       state.best_feasible};
 }
 
 inline OptimaProgressSnapshot make_progress_snapshot_(OptimaAlgorithm algorithm,
                                                       OptimaProgressStage stage,
                                                       const InteriorPointState& state) {
+  const auto diagnostic =
+      classify_stall_(algorithm, state.evaluation.status, state.message, state.last_step_size,
+                      state.barrier_gradient_norm, state.complementarity_residual);
   return OptimaProgressSnapshot{
       stage,
       algorithm_name_(algorithm),
@@ -3112,7 +3514,12 @@ inline OptimaProgressSnapshot make_progress_snapshot_(OptimaAlgorithm algorithm,
       state.last_step_size,
       state.barrier_parameter,
       state.barrier_gradient_norm,
+      state.complementarity_residual,
+      state.krylov_iterations,
       state.message,
+      diagnostic.category,
+      diagnostic.measure,
+      diagnostic.reference,
       state.best_feasible};
 }
 
@@ -3153,8 +3560,17 @@ inline OptimaExitFlag exit_flag_from_state_(bool converged,
     if (message.find("failed to initialize a strict interior point") != std::string::npos) {
       return OptimaExitFlag::NoFeasiblePoint;
     }
+    if (message.find("restoration failed") != std::string::npos ||
+        message.find("barrier recovery failed") != std::string::npos ||
+        message.find("recovery requires") != std::string::npos ||
+        message.find("feasibility phase failed") != std::string::npos ||
+        message.find("feasibility phase reached a stationary violation point") != std::string::npos) {
+      return OptimaExitFlag::NoProgress;
+    }
     if (message.find("line search failed") != std::string::npos ||
-        message.find("step hit the boundary") != std::string::npos) {
+        message.find("step hit the boundary") != std::string::npos ||
+        message.find("bound-feasible region") != std::string::npos ||
+        message.find("no progress") != std::string::npos) {
       return OptimaExitFlag::NoProgress;
     }
     return OptimaExitFlag::Converged;
@@ -3162,7 +3578,57 @@ inline OptimaExitFlag exit_flag_from_state_(bool converged,
   return OptimaExitFlag::Stopped;
 }
 
+inline double multiplier_max_norm_(const ConstraintMultipliers& multipliers) {
+  return std::max({max_abs_scalar_(multipliers.linear_equalities),
+                   max_abs_scalar_(multipliers.nonlinear_equalities),
+                   max_abs_scalar_(multipliers.linear_inequalities),
+                   max_abs_scalar_(multipliers.nonlinear_inequalities),
+                   max_abs_scalar_(multipliers.lower_bounds),
+                   max_abs_scalar_(multipliers.upper_bounds)});
+}
+
+inline std::int64_t active_multiplier_count_(const ConstraintMultipliers& multipliers,
+                                             double tolerance = 1e-10) {
+  return count_active_entries_(multipliers.linear_equalities, tolerance) +
+         count_active_entries_(multipliers.nonlinear_equalities, tolerance) +
+         count_active_entries_(multipliers.linear_inequalities, tolerance) +
+         count_active_entries_(multipliers.nonlinear_inequalities, tolerance) +
+         count_active_entries_(multipliers.lower_bounds, tolerance) +
+         count_active_entries_(multipliers.upper_bounds, tolerance);
+}
+
+inline bool returned_best_feasible_(const ProblemEvaluation& evaluation,
+                                    const std::optional<BestFeasiblePoint>& best_feasible,
+                                    double value_tolerance = 1e-9,
+                                    double violation_tolerance = 1e-12) {
+  if (!best_feasible.has_value() || evaluation.status != EvalStatus::Ok || !evaluation.value.defined() ||
+      evaluation.value.numel() != 1) {
+    return false;
+  }
+  const double current_value = evaluation.value.item<double>();
+  return std::abs(current_value - best_feasible->value.item<double>()) <= value_tolerance &&
+         evaluation.max_constraint_violation <= best_feasible->max_constraint_violation + violation_tolerance &&
+         std::abs(evaluation.max_constraint_violation - best_feasible->max_constraint_violation) <=
+             std::max(violation_tolerance, 1e-9);
+}
+
+inline std::string augment_detail_message_(std::string detail_message,
+                                           const ProblemEvaluation& evaluation,
+                                           const std::optional<BestFeasiblePoint>& best_feasible,
+                                           bool returned_best_feasible) {
+  if (!best_feasible.has_value()) return detail_message;
+  if (returned_best_feasible) return detail_message;
+
+  const std::string suffix =
+      " best feasible point retained separately from the returned iterate.";
+  if (detail_message.find(suffix) != std::string::npos) return detail_message;
+  if (detail_message.empty()) return "best feasible point retained separately from the returned iterate.";
+  detail_message += suffix;
+  return detail_message;
+}
+
 inline OptimaOutput make_output_(OptimaAlgorithm algorithm,
+                                 OptimaExitFlag exit_flag,
                                  const ProblemEvaluation& evaluation,
                                  std::int64_t iteration,
                                  std::int64_t function_evaluations,
@@ -3170,9 +3636,18 @@ inline OptimaOutput make_output_(OptimaAlgorithm algorithm,
                                  double backend_parameter,
                                  double stationarity,
                                  double complementarity,
+                                 const ConstraintMultipliers& multipliers,
                                  const std::optional<BestFeasiblePoint>& best_feasible,
                                  const std::string& detail_message,
                                  std::int64_t krylov_iterations = 0) {
+  const bool returned_best_feasible = returned_best_feasible_(evaluation, best_feasible);
+  const auto diagnostic =
+      classify_stall_(algorithm, evaluation.status, detail_message, last_step_size, stationarity, complementarity);
+  std::string public_detail_message =
+      augment_detail_message_(detail_message, evaluation, best_feasible, returned_best_feasible);
+  if (exit_flag != OptimaExitFlag::Converged && exit_flag != OptimaExitFlag::ObjectiveTargetReached) {
+    public_detail_message = append_stall_detail_(std::move(public_detail_message), diagnostic);
+  }
   return OptimaOutput{
       algorithm_name_(algorithm),
       iteration,
@@ -3185,7 +3660,17 @@ inline OptimaOutput make_output_(OptimaAlgorithm algorithm,
       complementarity,
       krylov_iterations,
       best_feasible.has_value(),
-      detail_message};
+      returned_best_feasible,
+      best_feasible.has_value() ? best_feasible->value.item<double>() : std::numeric_limits<double>::infinity(),
+      best_feasible.has_value() ? best_feasible->max_constraint_violation
+                                : std::numeric_limits<double>::infinity(),
+      best_feasible.has_value() ? best_feasible->first_order_opt : std::numeric_limits<double>::infinity(),
+      multiplier_max_norm_(multipliers),
+      active_multiplier_count_(multipliers),
+      public_detail_message,
+      diagnostic.category,
+      diagnostic.measure,
+      diagnostic.reference};
 }
 
 inline ParameterPack<Series> project_bounds_(const ParameterPack<Series>& params, const Bounds& bounds) {
@@ -3292,8 +3777,12 @@ inline double penalized_value_(const ProblemEvaluation& eval,
   return base + penalty * (eq_term + ineq_term);
 }
 
-inline void maybe_update_best_feasible_(PenaltyMethodState& state) {
-  if (!state.evaluation.feasible) return;
+inline void maybe_update_best_feasible_(PenaltyMethodState& state,
+                                        double constraint_tolerance = 0.0) {
+  if (!feasible_with_tolerance_(state.evaluation, constraint_tolerance) ||
+      !state.evaluation.value.defined() || state.evaluation.value.numel() != 1) {
+    return;
+  }
   if (!state.best_feasible.has_value() ||
       state.evaluation.value.item<double>() <= state.best_feasible->value.item<double>()) {
     state.best_feasible = BestFeasiblePoint{
@@ -4079,7 +4568,7 @@ inline PenaltyMethodState init_penalty_method_state(const ConstrainedProblem& pr
                               : std::numeric_limits<double>::infinity();
   state.converged = state.evaluation.status != EvalStatus::Ok;
   state.message = state.converged ? state.evaluation.message : "initialized";
-  detail::maybe_update_best_feasible_(state);
+  detail::maybe_update_best_feasible_(state, options.constraint_tolerance);
   return state;
 }
 
@@ -4128,7 +4617,7 @@ inline PenaltyMethodState penalty_method_step(const ConstrainedProblem& problem,
         }
         next.penalized_value = detail::penalized_value_(next.evaluation, next.current_penalty);
         next.message = "step accepted";
-        detail::maybe_update_best_feasible_(next);
+        detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
         if (next.iteration >= options.max_iterations) {
           next.converged = true;
           next.message = "maximum iterations reached";
@@ -4220,7 +4709,7 @@ inline SequentialQPState init_sequential_qp_state(const ConstrainedProblem& prob
     state.kkt_residual = std::numeric_limits<double>::infinity();
   }
   state.krylov_iterations = 0;
-  detail::maybe_update_best_feasible_(state);
+  detail::maybe_update_best_feasible_(state, options.constraint_tolerance);
   if (!state.converged && detail::feasible_objective_target_met_(state.evaluation, options.objective_limit)) {
     state.converged = true;
     state.message = "objective limit reached at a feasible point";
@@ -4245,6 +4734,23 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
   bool kkt_ok = false;
   Series step_direction;
   Series multipliers;
+  std::int64_t krylov_iterations = 0;
+  const OptimaLinearSystemSolver sqp_linear_solver =
+      detail::use_iterative_subproblem_solver_(
+          options.linear_system_solver,
+          options.system_structure,
+          flat_gradient.numel() + static_cast<std::int64_t>(active_constraints.size()),
+          options.iterative_dimension_threshold)
+          ? OptimaLinearSystemSolver::ConjugateGradient
+          : options.linear_system_solver;
+  const double sqp_krylov_tolerance =
+      sqp_linear_solver == OptimaLinearSystemSolver::ConjugateGradient
+          ? std::min(options.krylov_tolerance, 1e-8)
+          : options.krylov_tolerance;
+  const double sqp_krylov_absolute_tolerance =
+      sqp_linear_solver == OptimaLinearSystemSolver::ConjugateGradient
+          ? std::min(options.krylov_absolute_tolerance, 1e-12)
+          : options.krylov_absolute_tolerance;
   for (std::size_t attempt = 0; attempt <= active_constraints.size(); ++attempt) {
     const Series active_row_scale =
         detail::active_constraint_row_scales_(constraint_system, active_constraints, state.normalization, flat_gradient.platform());
@@ -4254,8 +4760,12 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
         detail::scale_gradient_(flat_gradient.mul(state.normalization.objective_scale), variable_scale),
         scaled_constraints,
         options.regularization,
-        options.linear_system_solver,
+        sqp_linear_solver,
+        options.max_krylov_iterations,
+        sqp_krylov_tolerance,
+        sqp_krylov_absolute_tolerance,
         options.pivot_threshold,
+        krylov_iterations,
         kkt_ok);
     step_direction = detail::unscale_step_(step_direction, variable_scale);
     if (!kkt_ok) break;
@@ -4295,6 +4805,7 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
       flat_gradient.mul(state.normalization.objective_scale),
       detail::scale_constraint_rows_(active_constraints, Series{}, accepted_active_row_scale),
       multipliers);
+  next.krylov_iterations = sqp_linear_solver == OptimaLinearSystemSolver::ConjugateGradient ? krylov_iterations : 0;
   if (step_inf_norm <= options.optimality_tolerance) {
     next.converged = true;
     next.message = state.evaluation.max_constraint_violation <= options.constraint_tolerance
@@ -4318,11 +4829,32 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
   if (!(directional_derivative < 0.0)) {
     directional_derivative = -std::max(1.0, detail::series_dot_(step_direction, step_direction));
   }
-  const double base_armijo = base_merit + options.armijo * directional_derivative;
   if (!(step_size > 0.0) || !std::isfinite(step_size)) {
-    next.converged = true;
-    next.message = "step hit the bound-feasible region";
-    return next;
+    const Series fallback_direction =
+        detail::project_direction_from_active_bounds_(problem, state.params, step_direction, 1e-10);
+    if (detail::series_inf_norm_(fallback_direction) > options.optimality_tolerance &&
+        detail::series_dot_(merit_gradient, fallback_direction) < 0.0) {
+      step_direction = fallback_direction;
+      step_size = options.initial_step_size;
+      step_size = std::min(step_size,
+                           detail::max_step_to_bounds_(
+                               problem, state.params, step_direction, options.fraction_to_boundary));
+      step_size = std::min(step_size,
+                           detail::max_step_to_linearized_inequalities_(
+                               constraint_system,
+                               step_direction,
+                               options.active_set_tolerance,
+                               options.fraction_to_boundary));
+      directional_derivative = detail::series_dot_(merit_gradient, step_direction);
+      if (!(directional_derivative < 0.0)) {
+        directional_derivative = -std::max(1.0, detail::series_dot_(step_direction, step_direction));
+      }
+    }
+    if (!(step_size > 0.0) || !std::isfinite(step_size)) {
+      next.converged = true;
+      next.message = "no progress in the bound-feasible region";
+      return next;
+    }
   }
 
   for (std::int64_t ls_iter = 0; ls_iter < options.max_line_search_iterations; ++ls_iter) {
@@ -4396,7 +4928,7 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
         next.variable_scale = state.variable_scale;
         next.normalization = state.normalization;
 
-        detail::maybe_update_best_feasible_(next);
+        detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
         if (next.iteration >= options.max_iterations) {
           next.converged = true;
           next.message = "maximum iterations reached";
@@ -4517,7 +5049,7 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
               next.multipliers);
           next.variable_scale = state.variable_scale;
           next.normalization = state.normalization;
-          detail::maybe_update_best_feasible_(next);
+          detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
           if (next.iteration >= options.max_iterations) {
             next.converged = true;
             next.message = "maximum iterations reached";
@@ -4571,7 +5103,7 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
       next.message = "restoration step accepted";
       next.variable_scale = state.variable_scale;
       next.normalization = state.normalization;
-      detail::maybe_update_best_feasible_(next);
+      detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
       if (next.iteration >= options.max_iterations) {
         next.converged = true;
         next.message = "maximum iterations reached";
@@ -4587,6 +5119,11 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
       }
       return next;
     }
+    next.message = recovery.message.empty()
+                       ? "line search failed to produce an acceptable SQP step after restoration"
+                       : recovery.message;
+    next.converged = true;
+    return next;
   }
 
   next.converged = true;
@@ -4693,7 +5230,7 @@ inline InteriorPointState init_interior_point_state(const ConstrainedProblem& pr
   state.lbfgs_s_history.clear();
   state.lbfgs_y_history.clear();
   state.in_feasibility_phase = detail::should_enter_feasibility_phase_(state, options);
-  detail::maybe_update_best_feasible_(state);
+  detail::maybe_update_best_feasible_(state, options.constraint_tolerance);
   if (!state.converged && detail::feasible_objective_target_met_(state.evaluation, options.objective_limit)) {
     state.converged = true;
     state.message = "objective limit reached at a feasible point";
@@ -4737,7 +5274,7 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
           options.equality_penalty,
           next.normalization);
       next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
-      detail::maybe_update_best_feasible_(next);
+      detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
       if (next.iteration >= options.max_iterations) {
         next.converged = true;
         next.message = "maximum iterations reached";
@@ -4751,7 +5288,7 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
 
   const auto system = detail::assemble_constraint_system_(problem, state.params, state.evaluation);
   const Series slack = detail::inequality_slack_(system, state.hessian.platform());
-  const Series dual = detail::inequality_dual_(slack, state.barrier_parameter);
+  const Series dual = detail::current_or_barrier_dual_(state.inequality_dual, slack, state.barrier_parameter);
   const Series primal_dual_gradient = detail::primal_dual_stationarity_flat_(
       state.evaluation,
       system,
@@ -4768,11 +5305,35 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
 
   if (barrier_grad_norm <= options.optimality_tolerance &&
       complementarity <= std::max(options.optimality_tolerance, state.barrier_parameter)) {
+    if (state.evaluation.max_constraint_violation <= options.constraint_tolerance &&
+        state.barrier_parameter <= options.minimum_barrier_parameter) {
+      next.converged = true;
+      next.message = "barrier optimality and feasibility tolerances satisfied";
+      return next;
+    }
+    if (state.barrier_parameter > options.minimum_barrier_parameter) {
+      next.iteration += 1;
+      detail::reduce_barrier_state_(next, system, options);
+      detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
+      if (next.iteration >= options.max_iterations) {
+        next.converged = true;
+        next.message = "maximum iterations reached";
+      }
+      return next;
+    }
+    if (options.enable_feasibility_phase &&
+        state.evaluation.max_constraint_violation > options.constraint_tolerance) {
+      next.iteration += 1;
+      next.in_feasibility_phase = true;
+      next.message = "switching to feasibility phase";
+      if (next.iteration >= options.max_iterations) {
+        next.converged = true;
+        next.message = "maximum iterations reached";
+      }
+      return next;
+    }
     next.converged = true;
-    next.message = (state.evaluation.max_constraint_violation <= options.constraint_tolerance &&
-                    state.barrier_parameter <= options.minimum_barrier_parameter)
-                       ? "barrier optimality and feasibility tolerances satisfied"
-                       : "constraint violation locally stationary";
+    next.message = "constraint violation locally stationary";
     return next;
   }
 
@@ -4785,7 +5346,11 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
   const bool use_exact_curvature =
       options.hessian_approximation == OptimaHessianApproximation::Exact ||
       options.hessian_approximation == OptimaHessianApproximation::HessianVector;
-  Series reduced_hessian = state.hessian.to(ScalarType::Float64).to(state.hessian.platform());
+  const Series base_hessian = state.hessian.to(ScalarType::Float64).to(state.hessian.platform());
+  Series reduced_hessian = base_hessian;
+  const auto equality_weights =
+      detail::equality_quadratic_weights_(system, options.equality_penalty, state.normalization);
+  const auto inequality_weights = detail::inequality_quadratic_weights_(slack, dual);
   bool exact_hessian_ok = false;
   if (options.hessian_approximation == OptimaHessianApproximation::Exact) {
     reduced_hessian = detail::assemble_hessian_from_hvp_(
@@ -4797,21 +5362,24 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
         options.hvp_options,
         exact_hessian_ok);
     if (!exact_hessian_ok) {
-      reduced_hessian = state.hessian.to(ScalarType::Float64).to(state.hessian.platform());
+      reduced_hessian = base_hessian;
     }
   } else if (!use_exact_curvature) {
-    if (slack.defined() && slack.numel() > 0) {
-      for (std::int64_t i = 0; i < slack.numel(); ++i) {
-        const double si = std::max(slack.select(0, i).item<double>(), 1e-12);
-        const double zi = std::max(dual.select(0, i).item<double>(), 1e-12);
-        reduced_hessian = reduced_hessian.add(
-            detail::series_outer_(system.inequalities[static_cast<std::size_t>(i)].jacobian,
-                                  system.inequalities[static_cast<std::size_t>(i)].jacobian)
-                .mul(zi / si));
-      }
+    for (std::size_t i = 0; i < system.equalities.size() && i < equality_weights.size(); ++i) {
+      const double weight = equality_weights[i];
+      if (!(weight > 0.0) || !std::isfinite(weight)) continue;
+      reduced_hessian = reduced_hessian.add(
+          detail::series_outer_(system.equalities[i].jacobian, system.equalities[i].jacobian).mul(weight));
+    }
+    for (std::size_t i = 0; i < system.inequalities.size() && i < inequality_weights.size(); ++i) {
+      const double weight = inequality_weights[i];
+      if (!(weight > 0.0) || !std::isfinite(weight)) continue;
+      reduced_hessian = reduced_hessian.add(
+          detail::series_outer_(system.inequalities[i].jacobian, system.inequalities[i].jacobian).mul(weight));
     }
   }
   const Series scaled_hessian = detail::scale_hessian_(reduced_hessian, variable_scale);
+  const Series scaled_base_hessian = detail::scale_hessian_(base_hessian, variable_scale);
   Series scaled_rhs;
   if (!use_exact_curvature && slack.defined() && slack.numel() > 0) {
     Series centering = dual.mul(1.0 - options.centrality_fraction);
@@ -4859,6 +5427,35 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
       } catch (...) {
         return scaled_direction;
       }
+    };
+    step_direction = detail::solve_spd_system_cg_operator_(
+        scaled_matvec,
+        scaled_rhs,
+        preconditioner,
+        options.max_krylov_iterations,
+        options.krylov_tolerance,
+        options.krylov_absolute_tolerance,
+        solve_ok,
+        krylov_iterations);
+  } else if (!use_exact_curvature &&
+             options.hessian_approximation != OptimaHessianApproximation::Lbfgs &&
+             detail::use_iterative_subproblem_solver_(
+                 options.linear_system_solver,
+                 options.system_structure,
+                 n,
+                 options.iterative_dimension_threshold) &&
+             options.system_structure == OptimaLinearSystemStructure::Sparse) {
+    const auto scaled_eq_rows = detail::scale_constraint_rows_(system.equalities, variable_scale);
+    const auto scaled_ineq_rows = detail::scale_constraint_rows_(system.inequalities, variable_scale);
+    const Series base_diag = scaled_base_hessian.diagonal(0, 0, 1).reshape({n}).abs().maximum(1e-12);
+    const Series preconditioner =
+        base_diag.add(detail::quadratic_rows_diagonal_(scaled_eq_rows, equality_weights, n, state.hessian.platform()))
+            .add(detail::quadratic_rows_diagonal_(scaled_ineq_rows, inequality_weights, n, state.hessian.platform()))
+            .maximum(1e-12);
+    auto scaled_matvec = [&](const Series& direction) -> Series {
+      return detail::dense_matvec_(scaled_base_hessian, direction)
+          .add(detail::quadratic_rows_matvec_(scaled_eq_rows, equality_weights, direction, n, state.hessian.platform()))
+          .add(detail::quadratic_rows_matvec_(scaled_ineq_rows, inequality_weights, direction, n, state.hessian.platform()));
     };
     step_direction = detail::solve_spd_system_cg_operator_(
         scaled_matvec,
@@ -4981,6 +5578,14 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
         const Series x_next = flatten_values(next.params).to(ScalarType::Float64);
         const Series s = x_next.sub(x_prev);
         const auto next_system = detail::assemble_constraint_system_(problem, next.params, next.evaluation);
+        next.inequality_slack = detail::inequality_slack_(
+            next_system,
+            next.params.empty() ? pluss::codem::Platform::CPU : next.params[0].value.platform());
+        next.inequality_dual = detail::blend_dual_toward_centrality_(
+            detail::update_dual_step_(dual, dual_step, step_size),
+            next.inequality_slack,
+            next.barrier_parameter,
+            options.dual_recentering_fraction);
         const auto next_barrier_gradient = detail::barrier_gradient_flat_(
             next.evaluation,
             next_system,
@@ -5044,37 +5649,10 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
             next.complementarity_residual <=
                 std::max(options.optimality_tolerance, 10.0 * next.barrier_parameter) &&
             next.barrier_parameter > options.minimum_barrier_parameter) {
-          next.barrier_parameter =
-              std::max(options.minimum_barrier_parameter, next.barrier_parameter * options.barrier_decay);
-          next.hessian = detail::identity_matrix_(
-              next.params.total_numel(),
-              next.params[0].value.platform());
-          next.lbfgs_s_history.clear();
-          next.lbfgs_y_history.clear();
-          const auto reduced_gradient = detail::barrier_gradient_flat_(
-              next.evaluation,
-              next_system,
-              next.barrier_parameter,
-              options.equality_penalty,
-              state.normalization);
-          next.barrier_value = detail::barrier_value_(
-              next.evaluation,
-              next_system,
-              next.barrier_parameter,
-              options.equality_penalty,
-              state.normalization);
-          next.barrier_gradient_norm = detail::inf_norm_(reduced_gradient);
-          detail::update_primal_dual_metrics_(
-              next,
-              next_system,
-              next.barrier_parameter,
-              options.equality_penalty,
-              state.normalization);
-          next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
-          next.message = "barrier reduced";
+          detail::reduce_barrier_state_(next, next_system, options);
         }
 
-        detail::maybe_update_best_feasible_(next);
+        detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
         if (next.iteration >= options.max_iterations) {
           next.converged = true;
           next.message = "maximum iterations reached";
@@ -5133,6 +5711,11 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
       next.krylov_iterations = 0;
       next.lbfgs_s_history.clear();
       next.lbfgs_y_history.clear();
+      next.inequality_dual = detail::blend_dual_toward_centrality_(
+          detail::current_or_barrier_dual_(next.inequality_dual, next.inequality_slack, next.barrier_parameter),
+          next.inequality_slack,
+          next.barrier_parameter,
+          1.0);
       detail::update_primal_dual_metrics_(
           next,
           next_system,
@@ -5140,7 +5723,7 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
           options.equality_penalty,
           state.normalization);
       next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
-      detail::maybe_update_best_feasible_(next);
+      detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
       if (next.iteration >= options.max_iterations) {
         next.converged = true;
         next.message = "maximum iterations reached";
@@ -5157,6 +5740,17 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
       }
       return next;
     }
+    if (options.enable_feasibility_phase) {
+      next.in_feasibility_phase = true;
+      next.message = recovery.message.empty() ? "barrier recovery failed; switching to feasibility phase"
+                                              : recovery.message + "; switching to feasibility phase";
+      return next;
+    }
+    next.message = recovery.message.empty()
+                       ? "line search failed to produce an acceptable interior-point step after recovery"
+                       : recovery.message;
+    next.converged = true;
+    return next;
   }
 
   if (options.enable_feasibility_phase) {
@@ -5199,6 +5793,28 @@ inline InteriorPointState solve_interior_point(const ConstrainedProblem& problem
       break;
     }
   }
+  if (!state.converged && state.best_feasible.has_value()) {
+    auto best_evaluation = evaluate_problem(problem, state.best_feasible->params);
+    ++state.function_evaluations;
+    if (best_evaluation.status == EvalStatus::Ok) {
+      const auto best_system = detail::assemble_constraint_system_(problem, state.best_feasible->params, best_evaluation);
+      InteriorPointState best_state = state;
+      best_state.params = state.best_feasible->params;
+      best_state.evaluation = std::move(best_evaluation);
+      detail::update_primal_dual_metrics_(
+          best_state,
+          best_system,
+          best_state.barrier_parameter,
+          options.equality_penalty,
+          best_state.normalization);
+      if (best_state.evaluation.max_constraint_violation <= options.constraint_tolerance &&
+          best_state.barrier_gradient_norm <= options.optimality_tolerance) {
+        best_state.converged = true;
+        best_state.message = "returned best feasible point satisfying tolerances";
+        state = std::move(best_state);
+      }
+    }
+  }
   detail::run_progress_hook_(
       options.progress_hook,
       detail::make_progress_snapshot_(OptimaAlgorithm::InteriorPoint, OptimaProgressStage::Done, state));
@@ -5223,6 +5839,7 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Pena
       state.best_feasible};
   out.output = detail::make_output_(
       out.algorithm,
+      out.exit_flag,
       out.evaluation,
       out.iteration,
       out.function_evaluations,
@@ -5230,8 +5847,10 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Pena
       out.backend_parameter,
       out.stationarity,
       0.0,
+      out.multipliers,
       out.best_feasible,
       out.message);
+  out.message = out.output.detail_message;
   return out;
 }
 
@@ -5264,6 +5883,7 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Sequ
   }
   out.output = detail::make_output_(
       out.algorithm,
+      out.exit_flag,
       out.evaluation,
       out.iteration,
       out.function_evaluations,
@@ -5271,8 +5891,10 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Sequ
       out.backend_parameter,
       out.stationarity,
       0.0,
+      out.multipliers,
       out.best_feasible,
       out.message);
+  out.message = out.output.detail_message;
   return out;
 }
 
@@ -5304,6 +5926,7 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Inte
   }
   out.output = detail::make_output_(
       out.algorithm,
+      out.exit_flag,
       out.evaluation,
       out.iteration,
       out.function_evaluations,
@@ -5311,9 +5934,11 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Inte
       out.backend_parameter,
       out.stationarity,
       state.complementarity_residual,
+      out.multipliers,
       out.best_feasible,
       out.message,
       state.krylov_iterations);
+  out.message = out.output.detail_message;
   return out;
 }
 

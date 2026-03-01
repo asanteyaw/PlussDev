@@ -29,6 +29,24 @@ if(TARGET pluss AND TARGET plussqit_codem)
   target_compile_features(plussma_garch11_optima_demo PRIVATE cxx_std_20)
   target_link_libraries(plussma_garch11_optima_demo PRIVATE pluss plussqit_codem)
 
+  add_executable(plussma_optima_clone_parity_bench
+    optima_clone_parity_bench.cpp
+  )
+  target_compile_features(plussma_optima_clone_parity_bench PRIVATE cxx_std_20)
+  target_link_libraries(plussma_optima_clone_parity_bench PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_optima_structured_clone_parity_bench
+    optima_structured_clone_parity_bench.cpp
+  )
+  target_compile_features(plussma_optima_structured_clone_parity_bench PRIVATE cxx_std_20)
+  target_link_libraries(plussma_optima_structured_clone_parity_bench PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_optima_pathology_clone_parity_bench
+    optima_pathology_clone_parity_bench.cpp
+  )
+  target_compile_features(plussma_optima_pathology_clone_parity_bench PRIVATE cxx_std_20)
+  target_link_libraries(plussma_optima_pathology_clone_parity_bench PRIVATE pluss plussqit_codem)
+
   add_executable(plussma_garch11_nelder_mead_demo
     garch11_nelder_mead_demo.cpp
   )

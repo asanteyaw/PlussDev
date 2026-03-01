@@ -26,7 +26,7 @@ Catalog aggregate_over_catalogs(self, const std::function<Catalog(const std::vec
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Reduces the full catalog stack to one output by applying an aggregation function across the contained catalogs.
 
 #### Examples
 
@@ -72,7 +72,7 @@ Archive align_depth(self, const Stream& labels) const
 
 #### Notes
 
-This call is part of the public `Archive` API and is documented here using a concrete usage example.
+Reorders catalogs so their depth labels match the supplied label order.
 
 #### Examples
 
@@ -118,7 +118,7 @@ Catalog catalog(self, std::int64_t i) const
 
 #### Notes
 
-This call is part of the public `Archive` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -163,7 +163,7 @@ const std::vector<Catalog>& catalogs(self) const
 
 #### Notes
 
-This call is part of the public `Archive` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### Examples
 
@@ -206,7 +206,7 @@ bool defined(self) const
 
 #### Notes
 
-This call is part of the public `Archive` API and is documented here using a concrete usage example.
+Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
 #### Examples
 
@@ -249,7 +249,7 @@ std::int64_t depth(self) const
 
 #### Notes
 
-This call is part of the public `Archive` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -292,7 +292,7 @@ const std::optional<Stream>& depth_labels(self) const
 
 #### Notes
 
-This call is part of the public `Archive` API and is documented here using a concrete usage example.
+Returns the current labels used to address fields, slots, rows, or depth items.
 
 #### Examples
 
@@ -335,7 +335,7 @@ bool empty(self) const
 
 #### Notes
 
-This call is part of the public `Archive` API and is documented here using a concrete usage example.
+Reports whether the current object has no rows, entries, slots, or depth items.
 
 #### Examples
 
@@ -370,7 +370,7 @@ Archive head(self, std::int64_t n = 5) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -379,7 +379,7 @@ Archive head(self, std::int64_t n = 5) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the first `n` catalogs from the archive depth axis.
 
 #### Examples
 
@@ -424,7 +424,7 @@ Catalog iloc(self, std::int64_t i) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -516,7 +516,7 @@ Catalog loc(self, const pluss::Timeline& label) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -567,7 +567,7 @@ Catalog loc(self, std::int64_t label) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -618,7 +618,7 @@ Catalog loc(self, std::string_view label) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -669,7 +669,7 @@ Archive map_catalogs(self, const std::function<Catalog(const Catalog&)>& fn) con
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies the same function to each catalog and returns the transformed archive.
 
 #### Examples
 
@@ -714,7 +714,7 @@ Archive relabel_depth(self, const Stream& labels) const
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Replaces the depth-label axis with the supplied labels while keeping catalog contents unchanged.
 
 #### Examples
 
@@ -796,10 +796,10 @@ Archive slice_depth(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -808,7 +808,7 @@ Archive slice_depth(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a contiguous depth slice `[start, stop)` from the archive.
 
 #### Examples
 
@@ -856,7 +856,7 @@ Archive sort_depth(self, bool ascending = true, bool nulls_last = true) const
 
 #### Notes
 
-This call is part of the public `Archive` API and is documented here using a concrete usage example.
+Sorts catalogs by their current depth labels.
 
 #### Examples
 
@@ -946,7 +946,7 @@ Archive tail(self, std::int64_t n = 5) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -955,7 +955,7 @@ Archive tail(self, std::int64_t n = 5) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the last `n` catalogs from the archive depth axis.
 
 #### Examples
 
@@ -999,7 +999,7 @@ std::string to_string(self) const
 
 #### Notes
 
-This call is part of the public `Archive` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
@@ -1097,7 +1097,7 @@ bool unique(self) const
 
 #### Notes
 
-This call is part of the public `Archive` API and is documented here using a concrete usage example.
+Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
 #### Examples
 

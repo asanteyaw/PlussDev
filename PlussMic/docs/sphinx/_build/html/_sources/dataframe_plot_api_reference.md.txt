@@ -29,7 +29,7 @@ pluss::plotism::Figure bar(self, std::string_view y_feature, std::optional<std::
 
 #### Notes
 
-This call is part of the public `DataFramePlotAccessor` API and is documented here using a concrete usage example.
+Builds a bar chart from one feature, optionally using another feature as the x-axis.
 
 #### Examples
 
@@ -73,7 +73,7 @@ pluss::plotism::Figure hist(self, std::string_view feature, std::int64_t bins = 
 
 #### Notes
 
-This call is part of the public `DataFramePlotAccessor` API and is documented here using a concrete usage example.
+Builds a histogram for one feature using the requested number of bins.
 
 #### Examples
 
@@ -117,7 +117,7 @@ pluss::plotism::Figure line(self, std::initializer_list<std::string_view> y_feat
 
 #### Notes
 
-This call is part of the public `DataFramePlotAccessor` API and is documented here using a concrete usage example.
+Builds a line chart for one or more y-features, optionally against a chosen x-feature.
 
 #### See also
 
@@ -165,7 +165,7 @@ pluss::plotism::Figure line(self, std::string_view y_feature, std::optional<std:
 
 #### Notes
 
-This call is part of the public `DataFramePlotAccessor` API and is documented here using a concrete usage example.
+Builds a line chart for one or more y-features, optionally against a chosen x-feature.
 
 #### See also
 
@@ -213,7 +213,7 @@ pluss::plotism::Figure scatter(self, std::string_view x_feature, std::string_vie
 
 #### Notes
 
-This call is part of the public `DataFramePlotAccessor` API and is documented here using a concrete usage example.
+Builds a scatter plot using one feature for x and another for y.
 
 #### Examples
 

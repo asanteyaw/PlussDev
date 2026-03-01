@@ -99,7 +99,7 @@ Value produced by this call.</p>
 </section>
 <section id="id4">
 <h4>Notes<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+<p>Fetches one value, member, or slice from the current object without changing the source object.</p>
 </section>
 <section id="id5">
 <h4>Examples<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
@@ -136,7 +136,7 @@ Value produced by this call.</p>
 </section>
 <section id="id10">
 <h4>Notes<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h4>
-<p>Use this when you need to merge compatible objects or extend the current one with another input.</p>
+<p>Appends the values from another slot and returns the combined slot.</p>
 </section>
 <section id="id11">
 <h4>Examples<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h4>
@@ -173,7 +173,7 @@ Boolean status or membership result.</p>
 </section>
 <section id="id16">
 <h4>Notes<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+<p>Reports whether the current object owns a concrete payload that can be used safely in later operations.</p>
 </section>
 <section id="id17">
 <h4>Examples<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h4>
@@ -209,7 +209,7 @@ Boolean status or membership result.</p>
 </section>
 <section id="id22">
 <h4>Notes<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+<p>Reports whether the current object has no rows, entries, slots, or depth items.</p>
 </section>
 <section id="id23">
 <h4>Examples<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h4>
@@ -246,7 +246,7 @@ Value produced by this call.</p>
 </section>
 <section id="id28">
 <h4>Notes<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h4>
-<p>Use this to reduce the current object to the rows or fields that matter for the next step.</p>
+<p>Keeps only the slot values that satisfy the supplied predicate.</p>
 </section>
 <section id="id29">
 <h4>Examples<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h4>
@@ -311,7 +311,7 @@ Value produced by this call.</p>
 <section id="id38">
 <h4>Parameters<a class="headerlink" href="#id38" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Number of rows, entries, or depth items to keep in the preview.</p>
 </section>
 <section id="id39">
 <h4>Returns<a class="headerlink" href="#id39" title="Link to this heading">¶</a></h4>
@@ -320,7 +320,7 @@ Value produced by this call.</p>
 </section>
 <section id="id40">
 <h4>Notes<a class="headerlink" href="#id40" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Returns the first <code class="docutils literal notranslate"><span class="pre">n</span></code> values from the slot.</p>
 </section>
 <section id="id41">
 <h4>Examples<a class="headerlink" href="#id41" title="Link to this heading">¶</a></h4>
@@ -393,7 +393,7 @@ Value produced by this call.</p>
 </section>
 <section id="id52">
 <h4>Notes<a class="headerlink" href="#id52" title="Link to this heading">¶</a></h4>
-<p>This mutates or derives structure while keeping the surrounding object model intact.</p>
+<p>Returns a new slot with one additional value appended.</p>
 </section>
 <section id="id53">
 <h4>Examples<a class="headerlink" href="#id53" title="Link to this heading">¶</a></h4>
@@ -430,7 +430,7 @@ Value produced by this call.</p>
 </section>
 <section id="id59">
 <h4>Notes<a class="headerlink" href="#id59" title="Link to this heading">¶</a></h4>
-<p>This mutates or derives structure while keeping the surrounding object model intact.</p>
+<p>Appends one additional value to the slot in place.</p>
 </section>
 <section id="id60">
 <h4>Examples<a class="headerlink" href="#id60" title="Link to this heading">¶</a></h4>
@@ -503,7 +503,7 @@ Integer count, size, or positional result.</p>
 </section>
 <section id="id71">
 <h4>Notes<a class="headerlink" href="#id71" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+<p>Returns a size/count summary for the current object without changing it.</p>
 </section>
 <section id="id72">
 <h4>Examples<a class="headerlink" href="#id72" title="Link to this heading">¶</a></h4>
@@ -531,9 +531,9 @@ Integer count, size, or positional result.</p>
 <section id="id75">
 <h4>Parameters<a class="headerlink" href="#id75" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">start</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Inclusive starting position of the slice.</p>
 <p><code class="docutils literal notranslate"><span class="pre">stop</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Exclusive ending position of the slice.</p>
 </section>
 <section id="id76">
 <h4>Returns<a class="headerlink" href="#id76" title="Link to this heading">¶</a></h4>
@@ -542,7 +542,7 @@ Value produced by this call.</p>
 </section>
 <section id="id77">
 <h4>Notes<a class="headerlink" href="#id77" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Returns a contiguous positional slice <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">stop)</span></code> from the slot.</p>
 </section>
 <section id="id78">
 <h4>Examples<a class="headerlink" href="#id78" title="Link to this heading">¶</a></h4>
@@ -570,7 +570,7 @@ Value produced by this call.</p>
 <section id="id81">
 <h4>Parameters<a class="headerlink" href="#id81" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
-See the signature for the supported argument form.</p>
+Number of rows, entries, or depth items to keep in the preview.</p>
 </section>
 <section id="id82">
 <h4>Returns<a class="headerlink" href="#id82" title="Link to this heading">¶</a></h4>
@@ -579,7 +579,7 @@ Value produced by this call.</p>
 </section>
 <section id="id83">
 <h4>Notes<a class="headerlink" href="#id83" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Returns the last <code class="docutils literal notranslate"><span class="pre">n</span></code> values from the slot.</p>
 </section>
 <section id="id84">
 <h4>Examples<a class="headerlink" href="#id84" title="Link to this heading">¶</a></h4>
@@ -616,7 +616,7 @@ Value produced by this call.</p>
 </section>
 <section id="id89">
 <h4>Notes<a class="headerlink" href="#id89" title="Link to this heading">¶</a></h4>
-<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+<p>Returns the values at the requested integer positions.</p>
 </section>
 <section id="id90">
 <h4>Examples<a class="headerlink" href="#id90" title="Link to this heading">¶</a></h4>
@@ -653,7 +653,7 @@ Rendered string result.</p>
 </section>
 <section id="id95">
 <h4>Notes<a class="headerlink" href="#id95" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
 </section>
 <section id="id96">
 <h4>Examples<a class="headerlink" href="#id96" title="Link to this heading">¶</a></h4>
@@ -725,7 +725,7 @@ Rendered string result.</p>
 </section>
 <section id="id107">
 <h4>Notes<a class="headerlink" href="#id107" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+<p>Serializes or renders the current object into a text form you can inspect, log, or export.</p>
 </section>
 <section id="id108">
 <h4>Examples<a class="headerlink" href="#id108" title="Link to this heading">¶</a></h4>
@@ -762,7 +762,7 @@ Value produced by this call.</p>
 </section>
 <section id="id113">
 <h4>Notes<a class="headerlink" href="#id113" title="Link to this heading">¶</a></h4>
-<p>This mutates or derives structure while keeping the surrounding object model intact.</p>
+<p>Applies a value-wise transform to each slot entry and returns the updated slot.</p>
 </section>
 <section id="id114">
 <h4>Examples<a class="headerlink" href="#id114" title="Link to this heading">¶</a></h4>
@@ -798,7 +798,7 @@ Value produced by this call.</p>
 </section>
 <section id="id119">
 <h4>Notes<a class="headerlink" href="#id119" title="Link to this heading">¶</a></h4>
-<p>Use this when you want a summary view instead of carrying the full input forward unchanged.</p>
+<p>Counts how many slot entries belong to each stored pluss type.</p>
 </section>
 <section id="id120">
 <h4>Examples<a class="headerlink" href="#id120" title="Link to this heading">¶</a></h4>
@@ -834,7 +834,7 @@ Boolean status or membership result.</p>
 </section>
 <section id="id125">
 <h4>Notes<a class="headerlink" href="#id125" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+<p>Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.</p>
 </section>
 <section id="id126">
 <h4>Examples<a class="headerlink" href="#id126" title="Link to this heading">¶</a></h4>
@@ -870,7 +870,7 @@ Value produced by this call.</p>
 </section>
 <section id="id131">
 <h4>Notes<a class="headerlink" href="#id131" title="Link to this heading">¶</a></h4>
-<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+<p>Materializes the current members as a collection you can inspect or reuse elsewhere.</p>
 </section>
 <section id="id132">
 <h4>Examples<a class="headerlink" href="#id132" title="Link to this heading">¶</a></h4>

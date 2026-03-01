@@ -123,7 +123,7 @@ DataFrame add_prefix(self, std::string_view prefix) const
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Prepends the supplied text to every feature name. Row values, row order, and case labels stay unchanged.
 
 #### Examples
 
@@ -173,7 +173,7 @@ DataFrame add_suffix(self, std::string_view suffix) const
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Appends the supplied text to every feature name. Row values, row order, and case labels stay unchanged.
 
 #### Examples
 
@@ -226,7 +226,7 @@ DataFrame aggregate(self, std::initializer_list<SummarySpec> specs, bool render 
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Builds a compact summary frame from one or more aggregation specs, so you can inspect computed metrics instead of the full row set.
 
 #### Examples
 
@@ -258,7 +258,7 @@ DataFrame align_cases(self, const Thread& new_cases) const
 #### Parameters
 
 `new_cases` : `const Thread&`
-    See the signature for the supported argument form.
+    Replacement case labels in the exact order you want the rows to follow.
 
 #### Returns
 
@@ -267,7 +267,7 @@ DataFrame align_cases(self, const Thread& new_cases) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Reorders rows so their case labels match the supplied `new_cases` order. Every requested case must already exist, and the output case axis is rewritten to that order.
 
 #### Examples
 
@@ -278,16 +278,24 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto cases = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));
-auto out = df.align_cases(cases);
+df = df.with_cases(pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));
+auto new_cases = pluss::table::Thread(pluss::make_note({"cs1", "cs0", "cs2"}));
+auto out = df.align_cases(new_cases);
 ```
 
 #### Output
 
 ```text
+df.cases():
+["cs0", "cs1", "cs2"]
+
+out.cases():
+["cs1", "cs0", "cs2"]
+
+out.head():
 id  sales  city
-1   100.0  Accra
 2   120.0  Tema
+1   100.0  Accra
 3    90.0  Kumasi
 ```
 
@@ -311,7 +319,7 @@ DataFrame assign(self, std::initializer_list<DeriveSpec> specs) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces derived features computed from the current frame. Use this when the new column depends on one or more existing columns.
 
 #### See also
 
@@ -358,7 +366,7 @@ DataFrame assign(self, std::initializer_list<std::pair<std::string, Thread>> ass
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces derived features computed from the current frame. Use this when the new column depends on one or more existing columns.
 
 #### See also
 
@@ -492,7 +500,7 @@ std::string at(self, std::int64_t row, std::string_view feature_name) const
     See the signature for the supported argument form.
 
 `feature_name` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target feature to read, rewrite, sort by, or promote to cases.
 
 #### Returns
 
@@ -501,7 +509,7 @@ std::string at(self, std::int64_t row, std::string_view feature_name) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -577,7 +585,7 @@ DataFrame bottom(self, std::string_view feature, std::int64_t n) const
     See the signature for the supported argument form.
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -586,7 +594,7 @@ DataFrame bottom(self, std::string_view feature, std::int64_t n) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns the rows with the smallest values in the selected feature.
 
 #### Examples
 
@@ -628,7 +636,7 @@ const Thread& cases(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -669,7 +677,7 @@ DataFrame cases(self, std::int64_t row) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -719,7 +727,7 @@ DataFrame cases(self, std::pair<std::int64_t, std::int64_t> row_span) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -772,7 +780,7 @@ std::string cases(self, std::int64_t row, std::size_t feature_idx) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -813,7 +821,7 @@ std::string cases(self, std::int64_t row, std::string_view feature_name) const
     See the signature for the supported argument form.
 
 `feature_name` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target feature to read, rewrite, sort by, or promote to cases.
 
 #### Returns
 
@@ -822,7 +830,7 @@ std::string cases(self, std::int64_t row, std::string_view feature_name) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -868,7 +876,7 @@ pluss::Series cases_series(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns the current case axis as a `Series`, which is useful when you need the row labels as data.
 
 #### Examples
 
@@ -1209,7 +1217,7 @@ Thread column(self, std::string_view name) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -1248,7 +1256,7 @@ const std::vector<std::string>& column_names(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns the current labels used to address fields, slots, rows, or depth items.
 
 #### Examples
 
@@ -1288,7 +1296,7 @@ ColumnRef column_ref(self, std::string_view name) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -1321,7 +1329,7 @@ std::vector<Thread> columns(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### Examples
 
@@ -1361,7 +1369,7 @@ DataFrame combine(self, const DataFrame& other) const
 
 #### Notes
 
-Use this when you need to merge compatible objects or extend the current one with another input.
+Combines this frame with another frame according to the supplied combine policy, such as feature-wise update or join-like alignment.
 
 #### See also
 
@@ -1414,7 +1422,7 @@ DataFrame combine(self, const DataFrame& other, const CombineSpec& spec) const
 
 #### Notes
 
-Use this when you need to merge compatible objects or extend the current one with another input.
+Combines this frame with another frame according to the supplied combine policy, such as feature-wise update or join-like alignment.
 
 #### See also
 
@@ -1563,7 +1571,7 @@ DataFrame conform_to(self, const DataFrame& other) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Reorders and aligns this frame so it is compatible with another frame for downstream joins or arithmetic.
 
 #### Examples
 
@@ -1608,7 +1616,7 @@ DataFrame copy(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns a detached copy of the frame so later edits to the result do not affect the source object.
 
 #### Examples
 
@@ -1651,7 +1659,7 @@ DataFrame count(self, bool render = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -1701,7 +1709,7 @@ DataFrame count_by(self, std::string_view feature, std::int64_t top_n = 0, bool 
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Groups by one feature and returns per-group row counts.
 
 #### Examples
 
@@ -1742,7 +1750,7 @@ std::int64_t count_null_rows(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Counts how many rows contain at least one null value.
 
 #### Examples
 
@@ -1781,7 +1789,7 @@ bool defined(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
 #### Examples
 
@@ -1821,7 +1829,7 @@ DataFrame describe(self, bool render = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Returns descriptive summary statistics for the selected numeric features.
 
 #### Examples
 
@@ -2047,7 +2055,7 @@ DataFrame drop(self, std::initializer_list<std::string_view> names) const
 #### Parameters
 
 `names` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of feature, slot, or stream names supplied in positional order.
 
 #### Returns
 
@@ -2056,7 +2064,7 @@ DataFrame drop(self, std::initializer_list<std::string_view> names) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Removes one or more features and returns the remaining frame.
 
 #### Examples
 
@@ -2281,7 +2289,7 @@ bool equals(self, const DataFrame& other) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Checks whether two frames have the same structure, labels, and values.
 
 #### Examples
 
@@ -2323,7 +2331,7 @@ const std::vector<std::string>& feature_names(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns the current labels used to address fields, slots, rows, or depth items.
 
 #### Examples
 
@@ -2363,7 +2371,7 @@ ColumnRef feature_ref(self, std::string_view name) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -2388,7 +2396,7 @@ DataFrame features(self, std::initializer_list<std::string_view> names)
 #### Parameters
 
 `names` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of feature, slot, or stream names supplied in positional order.
 
 #### Returns
 
@@ -2397,7 +2405,7 @@ DataFrame features(self, std::initializer_list<std::string_view> names)
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### See also
 
@@ -2435,7 +2443,7 @@ DataFrame features(self, std::initializer_list<std::string_view> names) const
 #### Parameters
 
 `names` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of feature, slot, or stream names supplied in positional order.
 
 #### Returns
 
@@ -2444,7 +2452,7 @@ DataFrame features(self, std::initializer_list<std::string_view> names) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### See also
 
@@ -2490,7 +2498,7 @@ std::vector<Thread> features(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### See also
 
@@ -2537,7 +2545,7 @@ Thread features(self, std::string_view name)
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### See also
 
@@ -2584,7 +2592,7 @@ Thread features(self, std::string_view name) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### See also
 
@@ -3436,7 +3444,7 @@ DataFrame filter(self, const pluss::Series& bool_mask) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the rows where the supplied boolean mask is true.
 
 #### Examples
 
@@ -3712,7 +3720,7 @@ std::optional<Thread> get(self, std::string_view feature_name) const
 #### Parameters
 
 `feature_name` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target feature to read, rewrite, sort by, or promote to cases.
 
 #### Returns
 
@@ -3721,7 +3729,7 @@ std::optional<Thread> get(self, std::string_view feature_name) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -3752,7 +3760,7 @@ DataFrame group_by(self, std::initializer_list<std::string_view> keys, std::init
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 `specs` : `std::initializer_list<GroupSpec>`
     See the signature for the supported argument form.
@@ -3770,7 +3778,7 @@ DataFrame group_by(self, std::initializer_list<std::string_view> keys, std::init
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Groups rows by one or more key features and computes the requested aggregations for each group.
 
 #### Examples
 
@@ -3909,7 +3917,7 @@ bool has_column(self, std::string_view name) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Checks whether a feature name exists in the frame.
 
 #### Examples
 
@@ -3949,7 +3957,7 @@ bool has_feature(self, std::string_view name) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Checks whether a feature name exists in the frame.
 
 #### Examples
 
@@ -3980,7 +3988,7 @@ DataFrame head(self, std::int64_t n = 5, bool render = true) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 `render` : `bool`
     See the signature for the supported argument form.
@@ -3992,7 +4000,7 @@ DataFrame head(self, std::int64_t n = 5, bool render = true) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the first `n` rows of the frame.
 
 #### Examples
 
@@ -4038,7 +4046,7 @@ std::string iat(self, std::int64_t row, std::size_t feature_idx) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -4078,7 +4086,7 @@ DataFrame iloc(self, std::int64_t row) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -4116,10 +4124,10 @@ DataFrame iloc(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -4128,7 +4136,7 @@ DataFrame iloc(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### See also
 
@@ -4272,7 +4280,7 @@ std::string info_string(self, const display::DisplayOptions& options =
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
@@ -4321,7 +4329,7 @@ DataFrame insert(self, std::int64_t feature_index, std::string name, const Threa
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Inserts a new feature at the requested position and shifts the later features to the right.
 
 #### Examples
 
@@ -4453,7 +4461,7 @@ DataFrame join(self, const DataFrame& other, std::string collision_suffix = "_ri
 
 #### Notes
 
-Use this when you need to merge compatible objects or extend the current one with another input.
+Adds compatible features from another frame, aligning rows by the shared case axis.
 
 #### Examples
 
@@ -4662,10 +4670,10 @@ static DataFrame load(std::string_view source_type, std::string_view filepath)
 #### Parameters
 
 `source_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -4687,7 +4695,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load("csv", "PlussMic/data/messy_data.csv");
+auto out = pluss::table::DataFrame::load("csv", "path/to/data.csv");
 ```
 
 #### Output
@@ -4710,13 +4718,13 @@ static DataFrame load(std::string_view source_type, std::string_view filepath, c
 #### Parameters
 
 `source_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `sep` : `char`
-    See the signature for the supported argument form.
+    Column separator used for delimited text files such as CSV.
 
 `nrows` : `std::optional<std::size_t>`
     See the signature for the supported argument form.
@@ -4744,7 +4752,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
 ```
 
 #### Output
@@ -4767,13 +4775,13 @@ static DataFrame load(std::string_view source_type, std::string_view filepath, c
 #### Parameters
 
 `source_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `sep` : `char`
-    See the signature for the supported argument form.
+    Column separator used for delimited text files such as CSV.
 
 `nrows` : `std::optional<std::size_t>`
     See the signature for the supported argument form.
@@ -4807,7 +4815,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
 ```
 
 #### Output
@@ -4830,10 +4838,10 @@ static DataFrame load(std::string_view source_type, std::string_view filepath, c
 #### Parameters
 
 `source_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -4858,7 +4866,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -4881,10 +4889,10 @@ static DataFrame load(std::string_view source_type, std::string_view filepath, c
 #### Parameters
 
 `source_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadCsvOptions&`
     See the signature for the supported argument form.
@@ -4910,7 +4918,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 ```cpp
 pluss::loader::ReadCsvOptions options;
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", options);
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", options);
 ```
 
 #### Output
@@ -4933,10 +4941,10 @@ static DataFrame load(std::string_view source_type, std::string_view filepath, s
 #### Parameters
 
 `source_type` : `std::string_view`
-    See the signature for the supported argument form.
+    Storage format selector such as `"csv"`, `"xlsx"`, `"json"`, or `"parquet"`.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -4961,7 +4969,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -4984,7 +4992,7 @@ static DataFrame load_csv(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -5008,7 +5016,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv");
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv");
 ```
 
 #### Output
@@ -5031,10 +5039,10 @@ static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `sep` : `char`
-    See the signature for the supported argument form.
+    Column separator used for delimited text files such as CSV.
 
 `nrows` : `std::optional<std::size_t>`
     See the signature for the supported argument form.
@@ -5064,7 +5072,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
 ```
 
 #### Output
@@ -5087,10 +5095,10 @@ static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `sep` : `char`
-    See the signature for the supported argument form.
+    Column separator used for delimited text files such as CSV.
 
 `nrows` : `std::optional<std::size_t>`
     See the signature for the supported argument form.
@@ -5126,7 +5134,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
 ```
 
 #### Output
@@ -5149,7 +5157,7 @@ static DataFrame load_csv(std::string_view filepath, const pluss::loader::Config
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -5176,7 +5184,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -5199,7 +5207,7 @@ static DataFrame load_csv(std::string_view filepath, const pluss::loader::ReadCs
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadCsvOptions&`
     See the signature for the supported argument form.
@@ -5227,7 +5235,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 ```cpp
 pluss::loader::ReadCsvOptions options;
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", options);
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", options);
 ```
 
 #### Output
@@ -5250,7 +5258,7 @@ static DataFrame load_csv(std::string_view filepath, std::initializer_list<pluss
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -5277,7 +5285,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -5300,10 +5308,10 @@ static DataFrame load_csv(std::string_view filepath, std::string_view header, st
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `header` : `std::string_view`
-    See the signature for the supported argument form.
+    Controls whether feature names are written to, or expected from, the file header row.
 
 `ncases` : `std::size_t`
     See the signature for the supported argument form.
@@ -5330,7 +5338,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv");
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv");
 ```
 
 #### Output
@@ -5353,10 +5361,10 @@ static DataFrame load_csv(std::string_view filepath, std::string_view header, st
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `header` : `std::string_view`
-    See the signature for the supported argument form.
+    Controls whether feature names are written to, or expected from, the file header row.
 
 `case_feature` : `std::string_view`
     See the signature for the supported argument form.
@@ -5389,7 +5397,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv");
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv");
 ```
 
 #### Output
@@ -5412,7 +5420,7 @@ static DataFrame load_excel(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -5439,7 +5447,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_excel("PlussMic/data/messy_data.csv");
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx");
 ```
 
 #### Output
@@ -5462,7 +5470,7 @@ static DataFrame load_excel(std::string_view filepath, const pluss::loader::Conf
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -5492,7 +5500,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -5515,7 +5523,7 @@ static DataFrame load_excel(std::string_view filepath, const pluss::loader::Read
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::ReadExcelOptions&`
     See the signature for the supported argument form.
@@ -5546,7 +5554,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 
 ```cpp
 pluss::loader::ReadExcelOptions options;
-auto out = pluss::table::DataFrame::load_excel("PlussMic/data/report.xlsx", options);
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", options);
 ```
 
 #### Output
@@ -5569,7 +5577,7 @@ static DataFrame load_excel(std::string_view filepath, std::initializer_list<plu
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -5599,7 +5607,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -5622,13 +5630,13 @@ static DataFrame load_excel(std::string_view filepath, std::int64_t sheet_index,
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `sheet_index` : `std::int64_t`
-    See the signature for the supported argument form.
+    Zero-based worksheet position inside an Excel workbook.
 
 `header` : `bool`
-    See the signature for the supported argument form.
+    Controls whether feature names are written to, or expected from, the file header row.
 
 #### Returns
 
@@ -5655,7 +5663,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_excel("PlussMic/data/report.xlsx", 0, true);
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", 0, true);
 ```
 
 #### Output
@@ -5678,13 +5686,13 @@ static DataFrame load_excel(std::string_view filepath, std::string_view sheet_na
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `sheet_name` : `std::string_view`
-    See the signature for the supported argument form.
+    Worksheet name to read from or write to inside an Excel workbook.
 
 `header` : `bool`
-    See the signature for the supported argument form.
+    Controls whether feature names are written to, or expected from, the file header row.
 
 #### Returns
 
@@ -5711,7 +5719,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_excel("PlussMic/data/report.xlsx", "Sheet1", true);
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", "Sheet1", true);
 ```
 
 #### Output
@@ -5734,13 +5742,13 @@ static pluss::loader::LoadResult load_excel(std::string_view filepath, const std
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `sheet_indices` : `const std::vector<std::int64_t>&`
     See the signature for the supported argument form.
 
 `header` : `bool`
-    See the signature for the supported argument form.
+    Controls whether feature names are written to, or expected from, the file header row.
 
 #### Returns
 
@@ -5767,7 +5775,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_excel("PlussMic/data/messy_data.csv");
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx");
 ```
 
 ### `load_excel`
@@ -5781,13 +5789,13 @@ static pluss::loader::LoadResult load_excel(std::string_view filepath, const std
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `sheet_names` : `const std::vector<std::string>&`
     See the signature for the supported argument form.
 
 `header` : `bool`
-    See the signature for the supported argument form.
+    Controls whether feature names are written to, or expected from, the file header row.
 
 #### Returns
 
@@ -5814,7 +5822,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_excel("PlussMic/data/report.xlsx", "Sheet1", true);
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", "Sheet1", true);
 ```
 
 ### `load_excel`
@@ -5828,13 +5836,13 @@ static pluss::loader::LoadResult load_excel(std::string_view filepath, std::init
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `sheet_indices` : `std::initializer_list<std::int64_t>`
     See the signature for the supported argument form.
 
 `header` : `bool`
-    See the signature for the supported argument form.
+    Controls whether feature names are written to, or expected from, the file header row.
 
 #### Returns
 
@@ -5861,7 +5869,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_excel("PlussMic/data/messy_data.csv");
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx");
 ```
 
 ### `load_excel`
@@ -5875,13 +5883,13 @@ static pluss::loader::LoadResult load_excel(std::string_view filepath, std::init
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `sheet_names` : `std::initializer_list<std::string_view>`
     See the signature for the supported argument form.
 
 `header` : `bool`
-    See the signature for the supported argument form.
+    Controls whether feature names are written to, or expected from, the file header row.
 
 #### Returns
 
@@ -5908,7 +5916,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_excel("PlussMic/data/report.xlsx", "Sheet1", true);
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", "Sheet1", true);
 ```
 
 ### `load_excel`
@@ -5922,13 +5930,13 @@ static pluss::loader::LoadResult load_excel(std::string_view filepath, std::null
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `arg2` : `std::nullptr_t`
     See the signature for the supported argument form.
 
 `header` : `bool`
-    See the signature for the supported argument form.
+    Controls whether feature names are written to, or expected from, the file header row.
 
 #### Returns
 
@@ -5955,7 +5963,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_excel("PlussMic/data/report.xlsx", nullptr, true);
+auto out = pluss::table::DataFrame::load_excel("path/to/data.xlsx", nullptr, true);
 ```
 
 ### `load_json`
@@ -5969,7 +5977,7 @@ static DataFrame load_json(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -5988,7 +5996,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_json("PlussMic/data/messy_data.csv");
+auto out = pluss::table::DataFrame::load_json("path/to/data.json");
 ```
 
 #### Output
@@ -6011,7 +6019,7 @@ static DataFrame load_json(std::string_view filepath, const pluss::loader::Confi
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -6033,7 +6041,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -6056,7 +6064,7 @@ static DataFrame load_json(std::string_view filepath, std::initializer_list<plus
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -6078,7 +6086,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -6101,7 +6109,7 @@ static DataFrame load_parquet(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -6120,7 +6128,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_parquet("PlussMic/data/messy_data.csv");
+auto out = pluss::table::DataFrame::load_parquet("path/to/data.parquet");
 ```
 
 #### Output
@@ -6143,7 +6151,7 @@ static DataFrame load_parquet(std::string_view filepath, const pluss::loader::Co
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -6165,7 +6173,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -6188,7 +6196,7 @@ static DataFrame load_parquet(std::string_view filepath, std::initializer_list<p
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -6210,7 +6218,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -6233,7 +6241,7 @@ static DataFrame load_txt(std::string_view filepath)
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -6252,7 +6260,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_txt("PlussMic/data/messy_data.csv");
+auto out = pluss::table::DataFrame::load_txt("path/to/data.txt");
 ```
 
 #### Output
@@ -6275,7 +6283,7 @@ static DataFrame load_txt(std::string_view filepath, const pluss::loader::Config
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -6297,7 +6305,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -6320,7 +6328,7 @@ static DataFrame load_txt(std::string_view filepath, std::initializer_list<pluss
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -6342,7 +6350,7 @@ Loads the object from disk using the corresponding PlussMic loader route.
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("PlussMic/data/messy_data.csv", {{"nrows", 16}});
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", {"nrows", 16});
 ```
 
 #### Output
@@ -6471,7 +6479,7 @@ DataFrame max(self, bool render = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Computes per-feature maxima for the selected numeric features.
 
 #### Examples
 
@@ -6512,7 +6520,7 @@ DataFrame mean(self, bool render = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Computes per-feature means for the selected numeric features.
 
 #### Examples
 
@@ -6568,7 +6576,7 @@ DataFrame mean_by(self, std::string_view group_feature, std::string_view value_f
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Groups by one feature and returns the mean of another feature within each group.
 
 #### Examples
 
@@ -6610,7 +6618,7 @@ DataFrame min(self, bool render = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Computes per-feature minima for the selected numeric features.
 
 #### Examples
 
@@ -6941,7 +6949,7 @@ std::int64_t ncols(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -7077,7 +7085,7 @@ std::int64_t nfeatures(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -7116,7 +7124,7 @@ DataFrame note_features(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns only the note-backed features.
 
 #### Examples
 
@@ -7244,7 +7252,7 @@ std::int64_t nrows(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -7284,7 +7292,7 @@ DataFrame nunique(self, bool render = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Counts distinct values for each selected feature.
 
 #### Examples
 
@@ -7337,7 +7345,7 @@ DataFrame pivot(self, std::string_view case_feature, std::string_view feature_fe
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Reshapes long-form rows into a wider table indexed by one feature and expanded by another.
 
 #### Examples
 
@@ -7394,7 +7402,7 @@ DataFrame pivot_table(self, std::string_view case_feature, std::string_view feat
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Builds a pivoted summary table using an aggregation function when multiple rows map to the same cell.
 
 #### Examples
 
@@ -7663,7 +7671,7 @@ DataFrame query(self, std::string_view expression) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the rows that satisfy the supplied filter expression or mask-producing query.
 
 #### Examples
 
@@ -7782,7 +7790,7 @@ DataFrame reindex_cases(self, const Thread& new_cases) const
 #### Parameters
 
 `new_cases` : `const Thread&`
-    See the signature for the supported argument form.
+    Replacement case labels in the exact order you want the rows to follow.
 
 #### Returns
 
@@ -7791,7 +7799,7 @@ DataFrame reindex_cases(self, const Thread& new_cases) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Builds a new case axis from the supplied labels and aligns rows onto that case order.
 
 #### Examples
 
@@ -7835,7 +7843,7 @@ DataFrame reindex_like(self, const DataFrame& other) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Realigns this frame so its cases match another frame.
 
 #### Examples
 
@@ -7881,7 +7889,7 @@ DataFrame relabel_features(self, std::initializer_list<std::string_view> feature
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Replaces the full feature label set with the supplied names in positional order.
 
 #### Examples
 
@@ -7927,7 +7935,7 @@ DataFrame rename(self, std::string_view old_name, std::string new_name) const
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Renames one feature without changing its values.
 
 #### Examples
 
@@ -7973,7 +7981,7 @@ DataFrame& rename_(self, std::string_view old_name, std::string new_name)
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Renames one feature in place without changing its values.
 
 #### Examples
 
@@ -8016,7 +8024,7 @@ DataFrame rename_features(self,  std::initializer_list<std::pair<std::string_vie
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Renames several features in one call.
 
 #### Examples
 
@@ -8050,7 +8058,7 @@ DataFrame reorder(self, std::initializer_list<std::string_view> names) const
 #### Parameters
 
 `names` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of feature, slot, or stream names supplied in positional order.
 
 #### Returns
 
@@ -8059,7 +8067,7 @@ DataFrame reorder(self, std::initializer_list<std::string_view> names) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Reorders the feature columns without changing any row values.
 
 #### Examples
 
@@ -8102,7 +8110,7 @@ pluss::Series repeated_cases(self, std::initializer_list<std::string_view> featu
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns the rows whose current case labels are duplicates of an earlier row.
 
 #### Examples
 
@@ -8196,7 +8204,7 @@ DataFrame reset_cases(self, std::string case_feature = "case") const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Materializes the current case axis as a normal feature, then restores the default positional cases `0..n-1`.
 
 #### Examples
 
@@ -8214,7 +8222,14 @@ auto out = with_cases.reset_cases("case");
 #### Output
 
 ```text
-id  sales  city
+with_cases.cases():
+["Accra", "Tema", "Kumasi"]
+
+out.cases():
+[0, 1, 2]
+
+out.head():
+id  sales  case
 1   100.0  Accra
 2   120.0  Tema
 3    90.0  Kumasi
@@ -8372,7 +8387,7 @@ DataFrame rolling(self, std::initializer_list<WindowSpec> specs, bool keep_input
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Computes rolling-window features and returns them as a derived frame.
 
 #### Examples
 
@@ -8583,7 +8598,7 @@ DataFrame sample(self, std::int64_t n, std::optional<std::uint64_t> random_state
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 `random_state` : `std::optional<std::uint64_t>`
     See the signature for the supported argument form.
@@ -8595,7 +8610,7 @@ DataFrame sample(self, std::int64_t n, std::optional<std::uint64_t> random_state
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a random sample of rows.
 
 #### Examples
 
@@ -8632,7 +8647,7 @@ void save_as(self, std::string_view target_type, std::string_view filepath, cons
     See the signature for the supported argument form.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -8644,7 +8659,7 @@ void save_as(self, std::string_view target_type, std::string_view filepath, cons
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame using the explicitly supplied output format selector rather than a dedicated saver overload.
 
 #### See also
 
@@ -8659,7 +8674,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_as("json", "out.json");
+df.save_as("json", "path/to/output.json");
 ```
 
 #### Output
@@ -8682,7 +8697,7 @@ void save_as(self, std::string_view target_type, std::string_view filepath, std:
     See the signature for the supported argument form.
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -8694,7 +8709,7 @@ void save_as(self, std::string_view target_type, std::string_view filepath, std:
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame using the explicitly supplied output format selector rather than a dedicated saver overload.
 
 #### See also
 
@@ -8709,7 +8724,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_as("json", "out.json");
+df.save_as("json", "path/to/output.json");
 ```
 
 #### Output
@@ -8729,7 +8744,7 @@ void save_csv(self, std::string_view filepath) const
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -8738,7 +8753,7 @@ void save_csv(self, std::string_view filepath) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to CSV. Set `add_cases=true` when you want the current case axis exported as a regular column so row labels survive the round trip.
 
 #### See also
 
@@ -8756,7 +8771,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_csv("out.csv");
+df.save_csv("path/to/output.csv");
 ```
 
 #### Output
@@ -8776,43 +8791,43 @@ void save_csv(self, std::string_view filepath, bool add_cases, bool header = tru
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `add_cases` : `bool`
-    See the signature for the supported argument form.
+    When `true`, the current case axis is exported as its own column so row labels can be reconstructed when the file is loaded again.
 
 `header` : `bool`
-    See the signature for the supported argument form.
+    Controls whether feature names are written to, or expected from, the file header row.
 
 `sep` : `char`
-    See the signature for the supported argument form.
+    Column separator used for delimited text files such as CSV.
 
 `arg5` : `'`
     See the signature for the supported argument form.
 
 `na_rep` : `std::string`
-    See the signature for the supported argument form.
+    String written anywhere a null or missing value must be serialized.
 
 `case_label` : `std::optional<std::string>`
-    See the signature for the supported argument form.
+    Optional column label to use for the exported case axis when `add_cases=true`.
 
 `float_format` : `std::optional<std::string>`
-    See the signature for the supported argument form.
+    Optional numeric formatting string used when floating-point values are written to text output.
 
 `quotechar` : `char`
-    See the signature for the supported argument form.
+    Quote character used when writing delimited text output.
 
 `doublequote` : `bool`
-    See the signature for the supported argument form.
+    When `true`, embedded quote characters are escaped by doubling them in CSV-style output.
 
 `line_terminator` : `std::string`
-    See the signature for the supported argument form.
+    Line ending written between serialized rows in text-based export.
 
 `decimal` : `char`
-    See the signature for the supported argument form.
+    Decimal marker used when formatting floating-point output.
 
 `encoding` : `std::string`
-    See the signature for the supported argument form.
+    Text encoding used when reading or writing text-based files.
 
 #### Returns
 
@@ -8821,7 +8836,7 @@ void save_csv(self, std::string_view filepath, bool add_cases, bool header = tru
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to CSV. Set `add_cases=true` when you want the current case axis exported as a regular column so row labels survive the round trip.
 
 #### See also
 
@@ -8839,7 +8854,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_csv("out.csv");
+df.save_csv("path/to/output.csv");
 ```
 
 #### Output
@@ -8859,7 +8874,7 @@ void save_csv(self, std::string_view filepath, const pluss::loader::Config& conf
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -8871,7 +8886,7 @@ void save_csv(self, std::string_view filepath, const pluss::loader::Config& conf
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to CSV. Set `add_cases=true` when you want the current case axis exported as a regular column so row labels survive the round trip.
 
 #### See also
 
@@ -8889,7 +8904,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_csv("out.csv");
+df.save_csv("path/to/output.csv");
 ```
 
 #### Output
@@ -8909,7 +8924,7 @@ void save_csv(self, std::string_view filepath, const pluss::loader::WriteCsvOpti
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::WriteCsvOptions&`
     See the signature for the supported argument form.
@@ -8921,7 +8936,7 @@ void save_csv(self, std::string_view filepath, const pluss::loader::WriteCsvOpti
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to CSV. Set `add_cases=true` when you want the current case axis exported as a regular column so row labels survive the round trip.
 
 #### See also
 
@@ -8939,7 +8954,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_csv("out.csv");
+df.save_csv("path/to/output.csv");
 ```
 
 #### Output
@@ -8959,7 +8974,7 @@ void save_csv(self, std::string_view filepath, std::initializer_list<pluss::load
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -8971,7 +8986,7 @@ void save_csv(self, std::string_view filepath, std::initializer_list<pluss::load
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to CSV. Set `add_cases=true` when you want the current case axis exported as a regular column so row labels survive the round trip.
 
 #### See also
 
@@ -8989,7 +9004,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_csv("out.csv");
+df.save_csv("path/to/output.csv");
 ```
 
 #### Output
@@ -9009,7 +9024,7 @@ void save_excel(self, std::string_view filepath) const
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -9018,7 +9033,7 @@ void save_excel(self, std::string_view filepath) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to an Excel sheet. Set `add_cases=true` when you want the current case axis exported as a regular column.
 
 #### See also
 
@@ -9036,7 +9051,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_excel("out.xlsx");
+df.save_excel("path/to/output.xlsx");
 ```
 
 #### Output
@@ -9056,7 +9071,7 @@ void save_excel(self, std::string_view filepath, const pluss::loader::Config& co
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -9068,7 +9083,7 @@ void save_excel(self, std::string_view filepath, const pluss::loader::Config& co
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to an Excel sheet. Set `add_cases=true` when you want the current case axis exported as a regular column.
 
 #### See also
 
@@ -9086,7 +9101,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_excel("out.xlsx");
+df.save_excel("path/to/output.xlsx");
 ```
 
 #### Output
@@ -9106,7 +9121,7 @@ void save_excel(self, std::string_view filepath, const pluss::loader::WriteExcel
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `options` : `const pluss::loader::WriteExcelOptions&`
     See the signature for the supported argument form.
@@ -9118,7 +9133,7 @@ void save_excel(self, std::string_view filepath, const pluss::loader::WriteExcel
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to an Excel sheet. Set `add_cases=true` when you want the current case axis exported as a regular column.
 
 #### See also
 
@@ -9136,7 +9151,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_excel("out.xlsx");
+df.save_excel("path/to/output.xlsx");
 ```
 
 #### Output
@@ -9156,7 +9171,7 @@ void save_excel(self, std::string_view filepath, std::initializer_list<pluss::lo
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -9168,7 +9183,7 @@ void save_excel(self, std::string_view filepath, std::initializer_list<pluss::lo
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to an Excel sheet. Set `add_cases=true` when you want the current case axis exported as a regular column.
 
 #### See also
 
@@ -9186,7 +9201,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_excel("out.xlsx");
+df.save_excel("path/to/output.xlsx");
 ```
 
 #### Output
@@ -9206,22 +9221,22 @@ void save_excel(self, std::string_view filepath, std::string sheet_name, bool ad
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `sheet_name` : `std::string`
-    See the signature for the supported argument form.
+    Worksheet name to read from or write to inside an Excel workbook.
 
 `add_cases` : `bool`
-    See the signature for the supported argument form.
+    When `true`, the current case axis is exported as its own column so row labels can be reconstructed when the file is loaded again.
 
 `header` : `bool`
-    See the signature for the supported argument form.
+    Controls whether feature names are written to, or expected from, the file header row.
 
 `na_rep` : `std::string`
-    See the signature for the supported argument form.
+    String written anywhere a null or missing value must be serialized.
 
 `case_label` : `std::optional<std::string>`
-    See the signature for the supported argument form.
+    Optional column label to use for the exported case axis when `add_cases=true`.
 
 #### Returns
 
@@ -9230,7 +9245,7 @@ void save_excel(self, std::string_view filepath, std::string sheet_name, bool ad
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to an Excel sheet. Set `add_cases=true` when you want the current case axis exported as a regular column.
 
 #### See also
 
@@ -9248,7 +9263,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_excel("out.xlsx");
+df.save_excel("path/to/output.xlsx");
 ```
 
 #### Output
@@ -9268,7 +9283,7 @@ void save_json(self, std::string_view filepath) const
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -9277,7 +9292,7 @@ void save_json(self, std::string_view filepath) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to JSON using the table export route for later reload or interchange.
 
 #### See also
 
@@ -9293,7 +9308,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_json("out.json");
+df.save_json("path/to/output.json");
 ```
 
 #### Output
@@ -9313,7 +9328,7 @@ void save_json(self, std::string_view filepath, const pluss::loader::Config& con
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -9325,7 +9340,7 @@ void save_json(self, std::string_view filepath, const pluss::loader::Config& con
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to JSON using the table export route for later reload or interchange.
 
 #### See also
 
@@ -9341,7 +9356,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_json("out.json");
+df.save_json("path/to/output.json");
 ```
 
 #### Output
@@ -9361,7 +9376,7 @@ void save_json(self, std::string_view filepath, std::initializer_list<pluss::loa
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -9373,7 +9388,7 @@ void save_json(self, std::string_view filepath, std::initializer_list<pluss::loa
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to JSON using the table export route for later reload or interchange.
 
 #### See also
 
@@ -9389,7 +9404,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_json("out.json");
+df.save_json("path/to/output.json");
 ```
 
 #### Output
@@ -9409,7 +9424,7 @@ void save_parquet(self, std::string_view filepath) const
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -9418,7 +9433,7 @@ void save_parquet(self, std::string_view filepath) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to Parquet for compact typed storage.
 
 #### See also
 
@@ -9434,7 +9449,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_parquet("out.parquet");
+df.save_parquet("path/to/output.parquet");
 ```
 
 #### Output
@@ -9454,7 +9469,7 @@ void save_parquet(self, std::string_view filepath, const pluss::loader::Config& 
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -9466,7 +9481,7 @@ void save_parquet(self, std::string_view filepath, const pluss::loader::Config& 
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to Parquet for compact typed storage.
 
 #### See also
 
@@ -9482,7 +9497,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_parquet("out.parquet");
+df.save_parquet("path/to/output.parquet");
 ```
 
 #### Output
@@ -9502,7 +9517,7 @@ void save_parquet(self, std::string_view filepath, std::initializer_list<pluss::
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -9514,7 +9529,7 @@ void save_parquet(self, std::string_view filepath, std::initializer_list<pluss::
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to Parquet for compact typed storage.
 
 #### See also
 
@@ -9530,7 +9545,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_parquet("out.parquet");
+df.save_parquet("path/to/output.parquet");
 ```
 
 #### Output
@@ -9550,7 +9565,7 @@ void save_txt(self, std::string_view filepath) const
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 #### Returns
 
@@ -9559,7 +9574,7 @@ void save_txt(self, std::string_view filepath) const
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to a plain-text table preview suitable for inspection or lightweight logging.
 
 #### See also
 
@@ -9575,7 +9590,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_txt("out.txt");
+df.save_txt("path/to/output.txt");
 ```
 
 #### Output
@@ -9595,7 +9610,7 @@ void save_txt(self, std::string_view filepath, const pluss::loader::Config& conf
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config` : `const pluss::loader::Config&`
     See the signature for the supported argument form.
@@ -9607,7 +9622,7 @@ void save_txt(self, std::string_view filepath, const pluss::loader::Config& conf
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to a plain-text table preview suitable for inspection or lightweight logging.
 
 #### See also
 
@@ -9623,7 +9638,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_txt("out.txt");
+df.save_txt("path/to/output.txt");
 ```
 
 #### Output
@@ -9643,7 +9658,7 @@ void save_txt(self, std::string_view filepath, std::initializer_list<pluss::load
 #### Parameters
 
 `filepath` : `std::string_view`
-    See the signature for the supported argument form.
+    File location to read from or write to. Use a neutral project path such as `path/to/data.csv`.
 
 `config_entries` : `std::initializer_list<pluss::loader::ConfigEntry>`
     See the signature for the supported argument form.
@@ -9655,7 +9670,7 @@ void save_txt(self, std::string_view filepath, std::initializer_list<pluss::load
 
 #### Notes
 
-Writes the current object to disk using the corresponding PlussMic saver route.
+Writes the frame to a plain-text table preview suitable for inspection or lightweight logging.
 
 #### See also
 
@@ -9671,7 +9686,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.save_txt("out.txt");
+df.save_txt("path/to/output.txt");
 ```
 
 #### Output
@@ -9699,7 +9714,7 @@ DataFrame series_features(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns only the numeric series-backed features.
 
 #### Examples
 
@@ -9742,7 +9757,7 @@ LetSlot set(self, std::string_view name)
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Opens an assignment helper so you can write `df.set(...) = ...` and replace or create features declaratively.
 
 #### See also
 
@@ -9771,7 +9786,7 @@ LetSlots set(self, std::initializer_list<std::string_view> names)
 #### Parameters
 
 `names` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of feature, slot, or stream names supplied in positional order.
 
 #### Returns
 
@@ -9780,7 +9795,7 @@ LetSlots set(self, std::initializer_list<std::string_view> names)
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Opens an assignment helper so you can write `df.set(...) = ...` and replace or create features declaratively.
 
 #### See also
 
@@ -9818,7 +9833,7 @@ DataFrame set_axis(self, std::initializer_list<std::string_view> feature_names) 
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Replaces the full feature label set with the supplied names in positional order.
 
 #### Examples
 
@@ -9852,10 +9867,10 @@ DataFrame set_cases(self, std::string_view feature_name, bool drop_feature = tru
 #### Parameters
 
 `feature_name` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target feature to read, rewrite, sort by, or promote to cases.
 
 `drop_feature` : `bool`
-    See the signature for the supported argument form.
+    When `true`, the feature promoted to cases is removed from the ordinary feature columns.
 
 #### Returns
 
@@ -9864,7 +9879,7 @@ DataFrame set_cases(self, std::string_view feature_name, bool drop_feature = tru
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Promotes one feature to become the case axis. With the default `drop_feature=true`, that feature stops being a normal column and becomes the row labels instead.
 
 #### Examples
 
@@ -9875,16 +9890,26 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.set_cases("city", false);
+auto out = df.set_cases("city");
 ```
 
 #### Output
 
 ```text
+df.head():
 id  sales  city
 1   100.0  Accra
 2   120.0  Tema
 3    90.0  Kumasi
+
+out.cases():
+["Accra", "Tema", "Kumasi"]
+
+out.head():
+id  sales
+1   100.0
+2   120.0
+3    90.0
 ```
 
 ### `set_feature_axis`
@@ -9907,7 +9932,7 @@ DataFrame set_feature_axis(self, std::initializer_list<std::string_view> feature
 
 #### Notes
 
-This adjusts labels without changing the underlying payload values.
+Replaces the full feature label set with the supplied names in positional order.
 
 #### Examples
 
@@ -9941,7 +9966,7 @@ DataFrame set_features(self, std::initializer_list<std::string_view> names, std:
 #### Parameters
 
 `names` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of feature, slot, or stream names supplied in positional order.
 
 `values` : `std::initializer_list<Thread>`
     See the signature for the supported argument form.
@@ -9953,7 +9978,7 @@ DataFrame set_features(self, std::initializer_list<std::string_view> names, std:
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces one or more features and returns the updated frame.
 
 #### See also
 
@@ -10008,7 +10033,7 @@ DataFrame set_features(self, std::string_view name, const Thread& value) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces one or more features and returns the updated frame.
 
 #### See also
 
@@ -10046,7 +10071,7 @@ DataFrame& set_features_(self, std::initializer_list<std::string_view> names, st
 #### Parameters
 
 `names` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of feature, slot, or stream names supplied in positional order.
 
 `values` : `std::initializer_list<Thread>`
     See the signature for the supported argument form.
@@ -10058,7 +10083,7 @@ DataFrame& set_features_(self, std::initializer_list<std::string_view> names, st
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces one or more features in place.
 
 #### See also
 
@@ -10113,7 +10138,7 @@ DataFrame& set_features_(self, std::string_view name, const Thread& value)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces one or more features in place.
 
 #### See also
 
@@ -10202,10 +10227,10 @@ DataFrame slice(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -10214,7 +10239,7 @@ DataFrame slice(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a contiguous row slice `[start, stop)` from the frame.
 
 #### Examples
 
@@ -10260,7 +10285,7 @@ DataFrame sort_cases(self, bool ascending = true, bool nulls_last = true) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Sorts rows by the current case axis rather than by a data feature.
 
 #### Examples
 
@@ -10304,7 +10329,7 @@ DataFrame sort_values(self, std::initializer_list<ArrangeSpec> specs) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Reorders rows using one or more feature values as sort keys.
 
 #### See also
 
@@ -10357,7 +10382,7 @@ DataFrame sort_values(self, std::initializer_list<std::string_view> features, bo
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Reorders rows using one or more feature values as sort keys.
 
 #### See also
 
@@ -10491,7 +10516,7 @@ DataFrame std(self, bool render = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Computes per-feature standard deviations for the selected numeric features.
 
 #### Examples
 
@@ -10538,7 +10563,7 @@ DataFrame stitch_on(self, std::initializer_list<std::string_view> left_features,
 
 #### Notes
 
-Use this when you need to merge compatible objects or extend the current one with another input.
+Matches rows from two frames using key features and appends the matched features from the right-hand frame.
 
 #### See also
 
@@ -10597,7 +10622,7 @@ DataFrame stitch_on(self, std::string_view left_feature, const DataFrame& right,
 
 #### Notes
 
-Use this when you need to merge compatible objects or extend the current one with another input.
+Matches rows from two frames using key features and appends the matched features from the right-hand frame.
 
 #### See also
 
@@ -10841,7 +10866,7 @@ DataFrame sum(self, bool render = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Computes per-feature sums for the selected numeric features.
 
 #### Examples
 
@@ -10962,7 +10987,7 @@ DataFrame tail(self, std::int64_t n = 5, bool render = true) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 `render` : `bool`
     See the signature for the supported argument form.
@@ -10974,7 +10999,7 @@ DataFrame tail(self, std::int64_t n = 5, bool render = true) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the last `n` rows of the frame.
 
 #### Examples
 
@@ -11017,7 +11042,7 @@ DataFrame take(self, std::span<const std::int64_t> indices) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the rows at the requested integer positions.
 
 #### Examples
 
@@ -11069,7 +11094,7 @@ DataFrame tally(self, std::string_view feature, std::int64_t top_n = 0, bool dro
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Counts how many rows fall into each distinct value of the grouping feature.
 
 #### Examples
 
@@ -11110,7 +11135,7 @@ DataFrame timeline_features(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns only the timeline-backed features.
 
 #### Examples
 
@@ -11153,7 +11178,7 @@ std::string to_string(self, const display::DisplayOptions& options =
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
@@ -11235,7 +11260,7 @@ DataFrame top(self, std::string_view feature, std::int64_t n) const
     See the signature for the supported argument form.
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -11244,7 +11269,7 @@ DataFrame top(self, std::string_view feature, std::int64_t n) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Returns the rows with the largest values in the selected feature.
 
 #### Examples
 
@@ -11287,7 +11312,7 @@ DataFrame transform(self, const std::function<Thread(const Thread&)>& fn) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Rewrites one feature, several features, or all features by applying a user function to each targeted thread.
 
 #### See also
 
@@ -11335,7 +11360,7 @@ DataFrame transform(self, std::initializer_list<TransformSpec> specs) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Rewrites one feature, several features, or all features by applying a user function to each targeted thread.
 
 #### See also
 
@@ -11386,7 +11411,7 @@ DataFrame transform(self, std::string_view feature, const std::function<Thread(c
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Rewrites one feature, several features, or all features by applying a user function to each targeted thread.
 
 #### See also
 
@@ -11434,7 +11459,7 @@ DataFrame transpose(self, bool render = false) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Swaps rows and features so former feature names become row labels.
 
 #### Examples
 
@@ -11674,7 +11699,7 @@ bool unique(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
 #### Examples
 
@@ -11714,7 +11739,7 @@ DataFrame unique_cases(self, std::initializer_list<std::string_view> features =
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Keeps only the first occurrence of each case label and drops later duplicates.
 
 #### Examples
 
@@ -11756,7 +11781,7 @@ Atlas unsqueeze(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Promotes the frame into a depth-1 `Atlas` so it can participate in multi-frame workflows.
 
 #### See also
 
@@ -11808,7 +11833,7 @@ Atlas unsqueeze(self, const Thread& depth_labels) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Promotes the frame into a depth-1 `Atlas` so it can participate in multi-frame workflows.
 
 #### See also
 
@@ -11864,7 +11889,7 @@ DataFrame update(self, const DataFrame& other, bool overwrite = true) const
 
 #### Notes
 
-Use this when you need to merge compatible objects or extend the current one with another input.
+Overlays matching features from another frame onto this frame using aligned cases.
 
 #### Examples
 
@@ -11909,7 +11934,7 @@ std::vector<Thread> values(self) const
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### Examples
 
@@ -11949,7 +11974,7 @@ DataFrame var(self, bool render = true) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Computes per-feature variances for the selected numeric features.
 
 #### Examples
 
@@ -11981,10 +12006,10 @@ DataFrame view(self, std::int64_t start, std::int64_t stop, bool render = true) 
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 `render` : `bool`
     See the signature for the supported argument form.
@@ -11996,7 +12021,7 @@ DataFrame view(self, std::int64_t start, std::int64_t stop, bool render = true) 
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a lightweight row view of the requested slice.
 
 #### Examples
 
@@ -12039,7 +12064,7 @@ DataFrame where(self, const pluss::Series& bool_mask) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the rows where the supplied boolean mask is true.
 
 #### Examples
 
@@ -12085,7 +12110,7 @@ DataFrame window(self, std::initializer_list<WindowSpec> specs, bool keep_input 
 
 #### Notes
 
-This call is part of the public `DataFrame` API and is documented here using a concrete usage example.
+Computes one or more window-based features such as rolling means over selected columns.
 
 #### Examples
 
@@ -12119,7 +12144,7 @@ DataFrame with_cases(self, const Thread& cases) const
 #### Parameters
 
 `cases` : `const Thread&`
-    See the signature for the supported argument form.
+    Case-label thread to attach to the current object.
 
 #### Returns
 
@@ -12128,7 +12153,7 @@ DataFrame with_cases(self, const Thread& cases) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Replaces the current case axis with the supplied thread. The row values stay in the same order, but later case-aware operations now use the new labels.
 
 #### Examples
 
@@ -12146,6 +12171,13 @@ auto out = df.with_cases(cases);
 #### Output
 
 ```text
+df.cases():
+[0, 1, 2]
+
+out.cases():
+["cs0", "cs1", "cs2"]
+
+out.head():
 id  sales  city
 1   100.0  Accra
 2   120.0  Tema
@@ -12163,7 +12195,7 @@ DataFrame& with_cases_(self, const Thread& cases)
 #### Parameters
 
 `cases` : `const Thread&`
-    See the signature for the supported argument form.
+    Case-label thread to attach to the current object.
 
 #### Returns
 
@@ -12172,7 +12204,7 @@ DataFrame& with_cases_(self, const Thread& cases)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Replaces the current case axis in place. The row values stay in the same order, but later case-aware operations now use the new labels.
 
 #### Examples
 
@@ -12183,12 +12215,17 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.with_cases_();
+auto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));
+df.with_cases_(cases);
 ```
 
 #### Output
 
 ```text
+df.cases():
+["cs0", "cs1", "cs2"]
+
+df.head():
 id  sales  city
 1   100.0  Accra
 2   120.0  Tema
@@ -12218,7 +12255,7 @@ DataFrame with_column(self, std::string name, const Thread& column) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Returns a new frame with one added or replaced feature.
 
 #### Examples
 
@@ -12264,7 +12301,7 @@ DataFrame& with_column_(self, std::string name, const Thread& column)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Adds or replaces one feature in place.
 
 #### Examples
 

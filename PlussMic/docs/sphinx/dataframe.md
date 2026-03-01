@@ -24,15 +24,15 @@ auto df = pluss::table::DataFrame({
 });
 
 auto csv_df = pluss::table::DataFrame::load_csv(
-    "PlussMic/data/messy_data.csv",
+    "path/to/data.csv",
     {{"nrows", 32}});
 
 auto excel_df = pluss::table::DataFrame::load_excel(
-    "PlussMic/data/report.xlsx",
+    "path/to/data.xlsx",
     {{"sheetindex", 0}, {"header", true}});
 
 auto json_df = pluss::table::DataFrame::load_json(
-    "PlussMic/data/weather.json",
+    "path/to/data.json",
     {{"nrows", 24}});
 ```
 
@@ -166,7 +166,7 @@ auto utc = schedule.to_utc({"ts"});
 ```cpp
 auto result = df.sql().query("SELECT city, sales FROM self ORDER BY sales DESC");
 
-result.save_csv("/tmp/plussmic_sales.csv");
-result.save_excel("/tmp/plussmic_sales.xlsx");
-result.save_json("/tmp/plussmic_sales.json");
+result.save_csv("path/to/output.csv");
+result.save_excel("path/to/output.xlsx");
+result.save_json("path/to/output.json");
 ```

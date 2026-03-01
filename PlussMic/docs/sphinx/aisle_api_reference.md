@@ -17,7 +17,7 @@ Aisle apply_slot(self, std::string_view key, const std::function<Slot(const Slot
 #### Parameters
 
 `key` : `std::string_view`
-    See the signature for the supported argument form.
+    Name of the target slot or stream.
 
 `fn` : `const std::function<Slot(const Slot&)>&`
     See the signature for the supported argument form.
@@ -29,7 +29,7 @@ Aisle apply_slot(self, std::string_view key, const std::function<Slot(const Slot
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies a slot transform to one named key inside every registry and returns the updated aisle.
 
 #### Examples
 
@@ -114,7 +114,7 @@ Aisle concat_depth(self, const Aisle& other) const
 
 #### Notes
 
-Use this when you need to merge compatible objects or extend the current one with another input.
+Appends the registries from another aisle onto the current depth axis.
 
 #### Examples
 
@@ -156,7 +156,7 @@ bool defined(self) const
 
 #### Notes
 
-This call is part of the public `Aisle` API and is documented here using a concrete usage example.
+Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
 #### Examples
 
@@ -197,7 +197,7 @@ std::int64_t depth(self) const
 
 #### Notes
 
-This call is part of the public `Aisle` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -238,7 +238,7 @@ bool empty(self) const
 
 #### Notes
 
-This call is part of the public `Aisle` API and is documented here using a concrete usage example.
+Reports whether the current object has no rows, entries, slots, or depth items.
 
 #### Examples
 
@@ -316,7 +316,7 @@ Aisle head(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -325,7 +325,7 @@ Aisle head(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the first `n` registries from the aisle depth axis.
 
 #### Examples
 
@@ -409,7 +409,7 @@ const std::optional<Slot>& labels(self) const
 
 #### Notes
 
-This call is part of the public `Aisle` API and is documented here using a concrete usage example.
+Returns the current labels used to address fields, slots, rows, or depth items.
 
 #### Examples
 
@@ -451,7 +451,7 @@ Aisle map(self, const std::function<Registry(const Registry&)>& fn) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies the same function to each registry and returns the transformed aisle.
 
 #### Examples
 
@@ -493,7 +493,7 @@ const std::vector<Registry>& registries(self) const
 
 #### Notes
 
-This call is part of the public `Aisle` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### Examples
 
@@ -535,7 +535,7 @@ Registry registry(self, std::int64_t i) const
 
 #### Notes
 
-This call is part of the public `Aisle` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -569,7 +569,7 @@ Aisle select(self, std::initializer_list<std::string_view> keys) const
 #### Parameters
 
 `keys` : `std::initializer_list<std::string_view>`
-    See the signature for the supported argument form.
+    Collection of slot or stream names to keep, drop, or rewrite together.
 
 #### Returns
 
@@ -578,7 +578,7 @@ Aisle select(self, std::initializer_list<std::string_view> keys) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the named keys inside every registry in the aisle.
 
 #### Examples
 
@@ -655,10 +655,10 @@ Aisle slice(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -667,7 +667,7 @@ Aisle slice(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a contiguous depth slice `[start, stop)` from the aisle.
 
 #### Examples
 
@@ -701,7 +701,7 @@ Aisle tail(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -710,7 +710,7 @@ Aisle tail(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the last `n` registries from the aisle depth axis.
 
 #### Examples
 
@@ -752,7 +752,7 @@ std::string to_json(self) const
 
 #### Notes
 
-This call is part of the public `Aisle` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
@@ -836,7 +836,7 @@ std::string to_string(self) const
 
 #### Notes
 
-This call is part of the public `Aisle` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
@@ -878,7 +878,7 @@ bool unique(self) const
 
 #### Notes
 
-This call is part of the public `Aisle` API and is documented here using a concrete usage example.
+Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
 #### Examples
 

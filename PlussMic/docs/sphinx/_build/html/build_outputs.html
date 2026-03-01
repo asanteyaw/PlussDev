@@ -38,8 +38,8 @@
 <h1>Build Outputs<a class="headerlink" href="#build-outputs" title="Link to this heading">¶</a></h1>
 <section id="html">
 <h2>HTML<a class="headerlink" href="#html" title="Link to this heading">¶</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/Users/yawasante/software/cxx/PlussDev/PlussMic/docs/sphinx
-<span class="nv">PATH</span><span class="o">=</span>/Users/yawasante/software/miniconda3/envs/cpp_env/bin:<span class="nv">$PATH</span><span class="w"> </span>make<span class="w"> </span>html
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>docs/sphinx
+make<span class="w"> </span>html
 </pre></div>
 </div>
 <p>Expected output:</p>
@@ -49,8 +49,8 @@
 </section>
 <section id="pdf">
 <h2>PDF<a class="headerlink" href="#pdf" title="Link to this heading">¶</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/Users/yawasante/software/cxx/PlussDev/PlussMic/docs/sphinx
-<span class="nv">PATH</span><span class="o">=</span>/Users/yawasante/software/miniconda3/envs/cpp_env/bin:<span class="nv">$PATH</span><span class="w"> </span>make<span class="w"> </span>pdf
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>docs/sphinx
+make<span class="w"> </span>pdf
 </pre></div>
 </div>
 <p>Expected output:</p>
@@ -63,6 +63,7 @@
 <ul class="simple">
 <li><p>HTML uses the same custom left-sidebar/top-bar shell as the PlussQit docs.</p></li>
 <li><p>PDF is built through <code class="docutils literal notranslate"><span class="pre">latex</span></code> plus <code class="docutils literal notranslate"><span class="pre">latexmk</span></code>.</p></li>
+<li><p>Run the commands from an environment where Sphinx and the PDF toolchain are already available.</p></li>
 <li><p>If HTML looks stale after a rebuild, hard refresh the browser once.</p></li>
 </ul>
 </section>
@@ -100,9 +101,19 @@
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_plot_api_reference.html#practical-dataframeplotaccessor-api-reference">Practical DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_accessor_api_reference.html">DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_accessor_api_reference.html#practical-dataframesqlaccessor-api-reference">Practical DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_prepared_api_reference.html">DataFrameSqlPrepared API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_prepared_api_reference.html#practical-dataframesqlprepared-api-reference">Practical DataFrameSqlPrepared API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thread_atlas.html">Thread And Atlas Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thread_api_reference.html">Thread API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thread_api_reference.html#practical-thread-api-reference">Practical Thread API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thread_value_api_reference.html">ThreadValue API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thread_value_api_reference.html#practical-threadvalue-api-reference">Practical ThreadValue API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="atlas_api_reference.html">Atlas API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="atlas_api_reference.html#practical-atlas-api-reference">Practical Atlas API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>

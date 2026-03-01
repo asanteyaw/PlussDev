@@ -624,6 +624,11 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch84_optima_sqp_soc.cpp
       tests/CodeM/test_patch85_optima_linear_policy.cpp
       tests/CodeM/test_patch86_optima_normalization.cpp
+      tests/CodeM/test_patch87_optima_output_parity.cpp
+      tests/CodeM/test_patch88_optima_parity_suite.cpp
+      tests/CodeM/test_patch89_optima_sqp_structured.cpp
+      tests/CodeM/test_patch90_optima_stall_diagnostics.cpp
+      tests/CodeM/test_patch91_optima_pathology_suite.cpp
     )
     target_link_libraries(plussqit_codem_optim_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_optim_tests PRIVATE cxx_std_20)

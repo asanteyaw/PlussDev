@@ -3,6 +3,7 @@
 
 #include <pluss/pluss.h>
 
+#include <algorithm>
 #include <vector>
 
 namespace {
@@ -55,11 +56,16 @@ TEST_CASE("interior-point can use conjugate-gradient subproblem solves", "[optim
   options.interior_point.max_krylov_iterations = 128;
   options.interior_point.krylov_tolerance = 1e-6;
   options.interior_point.krylov_absolute_tolerance = 1e-10;
+  std::int64_t max_krylov_seen = 0;
+  options.interior_point.progress_hook = [&max_krylov_seen](const auto& snapshot) {
+    max_krylov_seen = std::max(max_krylov_seen, snapshot.krylov_iterations);
+    return false;
+  };
 
   const auto result = optima(problem, initial, options);
 
   REQUIRE(result.converged);
-  REQUIRE(result.output.krylov_iterations > 0);
+  REQUIRE(max_krylov_seen > 0);
   REQUIRE(result.evaluation.value.item<double>() < 1e-6);
   REQUIRE(result.params.at("x").sub(target).abs().max().item<double>() == Approx(0.0).margin(1e-3));
 }

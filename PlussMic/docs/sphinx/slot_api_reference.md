@@ -61,7 +61,7 @@ const Value& at(self, std::int64_t i) const
 
 #### Notes
 
-This call is part of the public `Slot` API and is documented here using a concrete usage example.
+Fetches one value, member, or slice from the current object without changing the source object.
 
 #### Examples
 
@@ -97,7 +97,7 @@ Slot concat(self, const Slot& other) const
 
 #### Notes
 
-Use this when you need to merge compatible objects or extend the current one with another input.
+Appends the values from another slot and returns the combined slot.
 
 #### Examples
 
@@ -133,7 +133,7 @@ bool defined(self) const
 
 #### Notes
 
-This call is part of the public `Slot` API and is documented here using a concrete usage example.
+Reports whether the current object owns a concrete payload that can be used safely in later operations.
 
 #### Examples
 
@@ -168,7 +168,7 @@ bool empty(self) const
 
 #### Notes
 
-This call is part of the public `Slot` API and is documented here using a concrete usage example.
+Reports whether the current object has no rows, entries, slots, or depth items.
 
 #### Examples
 
@@ -204,7 +204,7 @@ Slot filter(self, const std::function<bool(const Value&)>& predicate) const
 
 #### Notes
 
-Use this to reduce the current object to the rows or fields that matter for the next step.
+Keeps only the slot values that satisfy the supplied predicate.
 
 #### Examples
 
@@ -267,7 +267,7 @@ Slot head(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -276,7 +276,7 @@ Slot head(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the first `n` values from the slot.
 
 #### Examples
 
@@ -347,7 +347,7 @@ Slot push(self, const Value& value) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Returns a new slot with one additional value appended.
 
 #### Examples
 
@@ -383,7 +383,7 @@ Slot& push_(self, const Value& value)
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Appends one additional value to the slot in place.
 
 #### Examples
 
@@ -454,7 +454,7 @@ std::int64_t size(self) const
 
 #### Notes
 
-This call is part of the public `Slot` API and is documented here using a concrete usage example.
+Returns a size/count summary for the current object without changing it.
 
 #### Examples
 
@@ -481,10 +481,10 @@ Slot slice(self, std::int64_t start, std::int64_t stop) const
 #### Parameters
 
 `start` : `std::int64_t`
-    See the signature for the supported argument form.
+    Inclusive starting position of the slice.
 
 `stop` : `std::int64_t`
-    See the signature for the supported argument form.
+    Exclusive ending position of the slice.
 
 #### Returns
 
@@ -493,7 +493,7 @@ Slot slice(self, std::int64_t start, std::int64_t stop) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns a contiguous positional slice `[start, stop)` from the slot.
 
 #### Examples
 
@@ -520,7 +520,7 @@ Slot tail(self, std::int64_t n) const
 #### Parameters
 
 `n` : `std::int64_t`
-    See the signature for the supported argument form.
+    Number of rows, entries, or depth items to keep in the preview.
 
 #### Returns
 
@@ -529,7 +529,7 @@ Slot tail(self, std::int64_t n) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the last `n` values from the slot.
 
 #### Examples
 
@@ -565,7 +565,7 @@ Slot take(self, std::span<const std::int64_t> indices) const
 
 #### Notes
 
-Use this to narrow the current object to the rows or depth range you want to inspect next.
+Returns the values at the requested integer positions.
 
 #### Examples
 
@@ -601,7 +601,7 @@ std::string to_json(self) const
 
 #### Notes
 
-This call is part of the public `Slot` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
@@ -671,7 +671,7 @@ std::string to_string(self) const
 
 #### Notes
 
-This call is part of the public `Slot` API and is documented here using a concrete usage example.
+Serializes or renders the current object into a text form you can inspect, log, or export.
 
 #### Examples
 
@@ -707,7 +707,7 @@ Slot transform(self, const std::function<Value(const Value&)>& fn) const
 
 #### Notes
 
-This mutates or derives structure while keeping the surrounding object model intact.
+Applies a value-wise transform to each slot entry and returns the updated slot.
 
 #### Examples
 
@@ -742,7 +742,7 @@ std::unordered_map<std::string, std::int64_t> type_counts(self) const
 
 #### Notes
 
-Use this when you want a summary view instead of carrying the full input forward unchanged.
+Counts how many slot entries belong to each stored pluss type.
 
 #### Examples
 
@@ -777,7 +777,7 @@ bool unique(self) const
 
 #### Notes
 
-This call is part of the public `Slot` API and is documented here using a concrete usage example.
+Reports whether the object satisfies the uniqueness constraint expected by its model, such as distinct labels or keys.
 
 #### Examples
 
@@ -812,7 +812,7 @@ const std::vector<Value>& values(self) const
 
 #### Notes
 
-This call is part of the public `Slot` API and is documented here using a concrete usage example.
+Materializes the current members as a collection you can inspect or reuse elsewhere.
 
 #### Examples
 

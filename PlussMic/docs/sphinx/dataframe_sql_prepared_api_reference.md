@@ -25,7 +25,7 @@ DataFrame execute(self) const
 
 #### Notes
 
-This call is part of the public `DataFrameSqlPrepared` API and is documented here using a concrete usage example.
+Runs the prepared SQL statement with the supplied parameters and returns the result as a new `DataFrame`.
 
 #### See also
 
@@ -73,7 +73,7 @@ DataFrame execute(self, std::unordered_map<std::string, DataFrame::SqlOptions::S
 
 #### Notes
 
-This call is part of the public `DataFrameSqlPrepared` API and is documented here using a concrete usage example.
+Runs the prepared SQL statement with the supplied parameters and returns the result as a new `DataFrame`.
 
 #### See also
 
@@ -124,7 +124,7 @@ DataFrame execute(self, std::unordered_map<std::string, DataFrame::SqlOptions::S
 
 #### Notes
 
-This call is part of the public `DataFrameSqlPrepared` API and is documented here using a concrete usage example.
+Runs the prepared SQL statement with the supplied parameters and returns the result as a new `DataFrame`.
 
 #### See also
 

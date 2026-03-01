@@ -61,15 +61,15 @@ Use it when you want:</p>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">csv_df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_csv</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;PlussMic/data/messy_data.csv&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;path/to/data.csv&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="p">{{</span><span class="s">&quot;nrows&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">}});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">excel_df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_excel</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;PlussMic/data/report.xlsx&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;path/to/data.xlsx&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="p">{{</span><span class="s">&quot;sheetindex&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;header&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">json_df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_json</span><span class="p">(</span>
-<span class="w">    </span><span class="s">&quot;PlussMic/data/weather.json&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;path/to/data.json&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="p">{{</span><span class="s">&quot;nrows&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">24</span><span class="p">}});</span>
 </pre></div>
 </div>
@@ -203,9 +203,9 @@ Use it when you want:</p>
 <h2>SQL And IO<a class="headerlink" href="#sql-and-io" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">sql</span><span class="p">().</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;SELECT city, sales FROM self ORDER BY sales DESC&quot;</span><span class="p">);</span>
 
-<span class="n">result</span><span class="p">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/plussmic_sales.csv&quot;</span><span class="p">);</span>
-<span class="n">result</span><span class="p">.</span><span class="n">save_excel</span><span class="p">(</span><span class="s">&quot;/tmp/plussmic_sales.xlsx&quot;</span><span class="p">);</span>
-<span class="n">result</span><span class="p">.</span><span class="n">save_json</span><span class="p">(</span><span class="s">&quot;/tmp/plussmic_sales.json&quot;</span><span class="p">);</span>
+<span class="n">result</span><span class="p">.</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;path/to/output.csv&quot;</span><span class="p">);</span>
+<span class="n">result</span><span class="p">.</span><span class="n">save_excel</span><span class="p">(</span><span class="s">&quot;path/to/output.xlsx&quot;</span><span class="p">);</span>
+<span class="n">result</span><span class="p">.</span><span class="n">save_json</span><span class="p">(</span><span class="s">&quot;path/to/output.json&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -255,9 +255,19 @@ Use it when you want:</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_plot_api_reference.html#practical-dataframeplotaccessor-api-reference">Practical DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_accessor_api_reference.html">DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_accessor_api_reference.html#practical-dataframesqlaccessor-api-reference">Practical DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_prepared_api_reference.html">DataFrameSqlPrepared API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_prepared_api_reference.html#practical-dataframesqlprepared-api-reference">Practical DataFrameSqlPrepared API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thread_atlas.html">Thread And Atlas Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thread_api_reference.html">Thread API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thread_api_reference.html#practical-thread-api-reference">Practical Thread API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thread_value_api_reference.html">ThreadValue API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thread_value_api_reference.html#practical-threadvalue-api-reference">Practical ThreadValue API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="atlas_api_reference.html">Atlas API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="atlas_api_reference.html#practical-atlas-api-reference">Practical Atlas API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
