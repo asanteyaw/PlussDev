@@ -11,6 +11,11 @@ enum class LegendLocation : std::uint8_t {
   TopRight = 2,
   BottomLeft = 3,
   BottomRight = 4,
+  OutsideRight = 5,
+};
+
+enum class ColorbarLocation : std::uint8_t {
+  Right = 0,
 };
 
 struct Style {
@@ -19,11 +24,19 @@ struct Style {
   std::string marker{"none"};
   double line_width{1.5};
   double alpha{1.0};
+  std::string theme{};
+  std::string font_family{};
 };
 
 struct Legend {
   bool visible{true};
   LegendLocation location{LegendLocation::Best};
+  std::string title{};
+};
+
+struct Colorbar {
+  bool visible{true};
+  ColorbarLocation location{ColorbarLocation::Right};
   std::string title{};
 };
 

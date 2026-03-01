@@ -22,6 +22,56 @@
 #include "plot/modules/trace.h"
 
 namespace pluss::plotism {
+namespace detail {
+
+struct HeatmapData2D {
+  std::vector<double> values{};
+  std::int64_t rows{0};
+  std::int64_t cols{0};
+};
+
+inline HeatmapData2D flatten_heatmap_rows(const std::vector<std::vector<double>>& rows, std::string_view where) {
+  if (rows.empty() || rows.front().empty()) {
+    throw std::invalid_argument(fmt::format("plotism::{}: heatmap values must be non-empty", where));
+  }
+  const std::size_t cols = rows.front().size();
+  HeatmapData2D out;
+  out.rows = static_cast<std::int64_t>(rows.size());
+  out.cols = static_cast<std::int64_t>(cols);
+  out.values.reserve(rows.size() * cols);
+  for (const auto& row : rows) {
+    if (row.size() != cols) {
+      throw std::invalid_argument(fmt::format("plotism::{}: heatmap rows must have equal length", where));
+    }
+    out.values.insert(out.values.end(), row.begin(), row.end());
+  }
+  return out;
+}
+
+inline HeatmapData2D flatten_heatmap_series(const pluss::Series& values, std::string_view where) {
+  if (!values.defined()) {
+    throw std::invalid_argument(fmt::format("plotism::{}: Series is undefined", where));
+  }
+  if (values.dim() != 2) {
+    throw std::invalid_argument(fmt::format("plotism::{}: heatmap Series must be 2D", where));
+  }
+  const auto shape = values.sizes();
+  if (shape.size() != 2 || shape[0] <= 0 || shape[1] <= 0) {
+    throw std::invalid_argument(fmt::format("plotism::{}: heatmap Series has invalid shape", where));
+  }
+  return HeatmapData2D{
+      .values = values.to_vec<double>(),
+      .rows = shape[0],
+      .cols = shape[1],
+  };
+}
+
+inline std::vector<double> make_constant_axis(std::size_t size, double value) {
+  return std::vector<double>(size, value);
+}
+
+} // namespace detail
+
 class Figure2D {
 public:
   Figure2D(std::int32_t rows = 1, std::int32_t cols = 1)
@@ -30,6 +80,9 @@ public:
       throw std::invalid_argument("plotism::Figure2D: rows/cols must be > 0");
     }
     subplots_.resize(static_cast<std::size_t>(rows_ * cols_));
+    for (auto& subplot : subplots_) {
+      apply_figure_style_defaults_(subplot);
+    }
   }
 
   std::int32_t rows() const noexcept { return rows_; }
@@ -57,6 +110,9 @@ public:
       cols_ = cols;
       subplots_.clear();
       subplots_.resize(static_cast<std::size_t>(rows_ * cols_));
+      for (auto& subplot : subplots_) {
+        apply_figure_style_defaults_(subplot);
+      }
     }
     active_ = index;
     return *this;
@@ -125,8 +181,35 @@ public:
     return *this;
   }
 
+  Figure2D& colorbar(const Colorbar& c) {
+    current_().colorbar = c;
+    return *this;
+  }
+
+  Figure2D& theme(std::string name) {
+    figure_style_.theme = name;
+    for (auto& subplot : subplots_) {
+      subplot.style.theme = name;
+    }
+    return *this;
+  }
+
+  Figure2D& font_family(std::string family) {
+    figure_style_.font_family = family;
+    for (auto& subplot : subplots_) {
+      subplot.style.font_family = family;
+    }
+    return *this;
+  }
+
   Figure2D& style(const Style& s) {
     current_().style = s;
+    if (current_().style.theme.empty()) {
+      current_().style.theme = figure_style_.theme;
+    }
+    if (current_().style.font_family.empty()) {
+      current_().style.font_family = figure_style_.font_family;
+    }
     return *this;
   }
 
@@ -410,6 +493,283 @@ public:
                     style);
   }
 
+  Figure2D& add_step(const std::vector<double>& y, std::string name = "") {
+    std::vector<double> x = detail::make_index_axis(y.size());
+    return add_step(x, y, std::move(name));
+  }
+
+  Figure2D& add_step(const pluss::Series& y, std::string name = "") {
+    return add_step(detail::to_plot_vector(y, "Figure2D::add_step"), std::move(name));
+  }
+
+  template <typename YInput>
+    requires detail::PlotInput<YInput>
+  Figure2D& add_step(const YInput& y, std::string name = "") {
+    return add_step(detail::to_plot_vector(y, "Figure2D::add_step"), std::move(name));
+  }
+
+  Figure2D& add_step(const std::vector<double>& x,
+                     const std::vector<double>& y,
+                     std::string name = "",
+                     std::vector<std::string> x_labels = {},
+                     std::optional<Style> style = std::nullopt) {
+    detail::ensure_same_size(x, y, "Figure2D::add_step");
+    if (!x_labels.empty() && x_labels.size() != x.size()) {
+      throw std::invalid_argument("plotism::Figure2D::add_step: x_labels size mismatch");
+    }
+    Trace2D t;
+    t.kind = Trace2DKind::Step;
+    t.name = std::move(name);
+    t.x = x;
+    t.y = y;
+    t.x_labels = std::move(x_labels);
+    t.style = style.value_or(current_().style);
+    current_().traces.push_back(std::move(t));
+    return *this;
+  }
+
+  Figure2D& add_step(const pluss::Series& x,
+                     const pluss::Series& y,
+                     std::string name = "",
+                     std::vector<std::string> x_labels = {},
+                     std::optional<Style> style = std::nullopt) {
+    return add_step(detail::to_plot_vector(x, "Figure2D::add_step"),
+                    detail::to_plot_vector(y, "Figure2D::add_step"),
+                    std::move(name),
+                    std::move(x_labels),
+                    style);
+  }
+
+  template <typename XInput, typename YInput>
+    requires detail::PlotInput<XInput> && detail::PlotInput<YInput>
+  Figure2D& add_step(const XInput& x,
+                     const YInput& y,
+                     std::string name = "",
+                     std::vector<std::string> x_labels = {},
+                     std::optional<Style> style = std::nullopt) {
+    return add_step(detail::to_plot_vector(x, "Figure2D::add_step"),
+                    detail::to_plot_vector(y, "Figure2D::add_step"),
+                    std::move(name),
+                    std::move(x_labels),
+                    style);
+  }
+
+  Figure2D& add_area(const std::vector<double>& y, std::string name = "", std::optional<Style> style = std::nullopt) {
+    std::vector<double> x = detail::make_index_axis(y.size());
+    return add_area(x, y, std::move(name), style);
+  }
+
+  Figure2D& add_area(const pluss::Series& y, std::string name = "", std::optional<Style> style = std::nullopt) {
+    return add_area(detail::to_plot_vector(y, "Figure2D::add_area"), std::move(name), style);
+  }
+
+  template <typename YInput>
+    requires detail::PlotInput<YInput>
+  Figure2D& add_area(const YInput& y, std::string name = "", std::optional<Style> style = std::nullopt) {
+    return add_area(detail::to_plot_vector(y, "Figure2D::add_area"), std::move(name), style);
+  }
+
+  Figure2D& add_area(const std::vector<double>& x,
+                     const std::vector<double>& y,
+                     std::string name = "",
+                     std::optional<Style> style = std::nullopt) {
+    detail::ensure_same_size(x, y, "Figure2D::add_area");
+    Trace2D t;
+    t.kind = Trace2DKind::Area;
+    t.name = std::move(name);
+    t.x = x;
+    t.y = y;
+    t.y2 = detail::make_constant_axis(y.size(), 0.0);
+    t.style = style.value_or(current_().style);
+    current_().traces.push_back(std::move(t));
+    return *this;
+  }
+
+  Figure2D& add_area(const pluss::Series& x,
+                     const pluss::Series& y,
+                     std::string name = "",
+                     std::optional<Style> style = std::nullopt) {
+    return add_area(detail::to_plot_vector(x, "Figure2D::add_area"),
+                    detail::to_plot_vector(y, "Figure2D::add_area"),
+                    std::move(name),
+                    style);
+  }
+
+  template <typename XInput, typename YInput>
+    requires detail::PlotInput<XInput> && detail::PlotInput<YInput>
+  Figure2D& add_area(const XInput& x,
+                     const YInput& y,
+                     std::string name = "",
+                     std::optional<Style> style = std::nullopt) {
+    return add_area(detail::to_plot_vector(x, "Figure2D::add_area"),
+                    detail::to_plot_vector(y, "Figure2D::add_area"),
+                    std::move(name),
+                    style);
+  }
+
+  Figure2D& add_band(const std::vector<double>& lower,
+                     const std::vector<double>& upper,
+                     std::string name = "",
+                     std::optional<Style> style = std::nullopt) {
+    std::vector<double> x = detail::make_index_axis(lower.size());
+    return add_band(x, lower, upper, std::move(name), style);
+  }
+
+  Figure2D& add_band(const std::vector<double>& x,
+                     const std::vector<double>& lower,
+                     const std::vector<double>& upper,
+                     std::string name = "",
+                     std::optional<Style> style = std::nullopt) {
+    detail::ensure_same_size(x, lower, "Figure2D::add_band");
+    detail::ensure_same_size(x, upper, "Figure2D::add_band");
+    Trace2D t;
+    t.kind = Trace2DKind::Band;
+    t.name = std::move(name);
+    t.x = x;
+    t.y = lower;
+    t.y2 = upper;
+    t.style = style.value_or(current_().style);
+    current_().traces.push_back(std::move(t));
+    return *this;
+  }
+
+  Figure2D& add_band(const pluss::Series& x,
+                     const pluss::Series& lower,
+                     const pluss::Series& upper,
+                     std::string name = "",
+                     std::optional<Style> style = std::nullopt) {
+    return add_band(detail::to_plot_vector(x, "Figure2D::add_band"),
+                    detail::to_plot_vector(lower, "Figure2D::add_band"),
+                    detail::to_plot_vector(upper, "Figure2D::add_band"),
+                    std::move(name),
+                    style);
+  }
+
+  template <typename XInput, typename LowerInput, typename UpperInput>
+    requires detail::PlotInput<XInput> && detail::PlotInput<LowerInput> && detail::PlotInput<UpperInput>
+  Figure2D& add_band(const XInput& x,
+                     const LowerInput& lower,
+                     const UpperInput& upper,
+                     std::string name = "",
+                     std::optional<Style> style = std::nullopt) {
+    return add_band(detail::to_plot_vector(x, "Figure2D::add_band"),
+                    detail::to_plot_vector(lower, "Figure2D::add_band"),
+                    detail::to_plot_vector(upper, "Figure2D::add_band"),
+                    std::move(name),
+                    style);
+  }
+
+  Figure2D& add_errorbar(const std::vector<double>& y,
+                         const std::vector<double>& yerr,
+                         std::string name = "",
+                         std::optional<Style> style = std::nullopt) {
+    std::vector<double> x = detail::make_index_axis(y.size());
+    return add_errorbar(x, y, yerr, std::move(name), style);
+  }
+
+  Figure2D& add_errorbar(const std::vector<double>& x,
+                         const std::vector<double>& y,
+                         const std::vector<double>& yerr,
+                         std::string name = "",
+                         std::optional<Style> style = std::nullopt) {
+    detail::ensure_same_size(x, y, "Figure2D::add_errorbar");
+    detail::ensure_same_size(x, yerr, "Figure2D::add_errorbar");
+    Trace2D t;
+    t.kind = Trace2DKind::ErrorBar;
+    t.name = std::move(name);
+    t.x = x;
+    t.y = y;
+    t.y2 = yerr;
+    t.style = style.value_or(current_().style);
+    current_().traces.push_back(std::move(t));
+    return *this;
+  }
+
+  Figure2D& add_errorbar(const pluss::Series& x,
+                         const pluss::Series& y,
+                         const pluss::Series& yerr,
+                         std::string name = "",
+                         std::optional<Style> style = std::nullopt) {
+    return add_errorbar(detail::to_plot_vector(x, "Figure2D::add_errorbar"),
+                        detail::to_plot_vector(y, "Figure2D::add_errorbar"),
+                        detail::to_plot_vector(yerr, "Figure2D::add_errorbar"),
+                        std::move(name),
+                        style);
+  }
+
+  template <typename XInput, typename YInput, typename ErrInput>
+    requires detail::PlotInput<XInput> && detail::PlotInput<YInput> && detail::PlotInput<ErrInput>
+  Figure2D& add_errorbar(const XInput& x,
+                         const YInput& y,
+                         const ErrInput& yerr,
+                         std::string name = "",
+                         std::optional<Style> style = std::nullopt) {
+    return add_errorbar(detail::to_plot_vector(x, "Figure2D::add_errorbar"),
+                        detail::to_plot_vector(y, "Figure2D::add_errorbar"),
+                        detail::to_plot_vector(yerr, "Figure2D::add_errorbar"),
+                        std::move(name),
+                        style);
+  }
+
+  Figure2D& fill_between(const std::vector<double>& x,
+                         const std::vector<double>& lower,
+                         const std::vector<double>& upper,
+                         std::string name = "",
+                         std::optional<Style> style = std::nullopt) {
+    return add_band(x, lower, upper, std::move(name), style);
+  }
+
+  Figure2D& add_heatmap(const std::vector<std::vector<double>>& values,
+                        std::string name = "",
+                        std::vector<std::string> x_labels = {},
+                        std::vector<std::string> y_labels = {},
+                        std::optional<Style> style = std::nullopt) {
+    const auto data = detail::flatten_heatmap_rows(values, "Figure2D::add_heatmap");
+    return add_heatmap_(data, std::move(name), std::move(x_labels), std::move(y_labels), style);
+  }
+
+  Figure2D& add_heatmap(const pluss::Series& values,
+                        std::string name = "",
+                        std::vector<std::string> x_labels = {},
+                        std::vector<std::string> y_labels = {},
+                        std::optional<Style> style = std::nullopt) {
+    const auto data = detail::flatten_heatmap_series(values, "Figure2D::add_heatmap");
+    return add_heatmap_(data, std::move(name), std::move(x_labels), std::move(y_labels), style);
+  }
+
+  Figure2D& annotate(std::string text, double x, double y, std::optional<Style> style = std::nullopt) {
+    Trace2D t;
+    t.kind = Trace2DKind::Annotation;
+    t.text = std::move(text);
+    t.x = {x};
+    t.y = {y};
+    t.style = style.value_or(current_().style);
+    current_().traces.push_back(std::move(t));
+    return *this;
+  }
+
+  Figure2D& annotate(std::string text,
+                     double x,
+                     double y,
+                     double x_text,
+                     double y_text,
+                     std::optional<Style> style = std::nullopt) {
+    Trace2D t;
+    t.kind = Trace2DKind::Annotation;
+    t.text = std::move(text);
+    t.x = {x};
+    t.y = {y};
+    t.x2 = {x_text};
+    t.y2 = {y_text};
+    t.style = style.value_or(current_().style);
+    current_().traces.push_back(std::move(t));
+    return *this;
+  }
+
+  Figure2D& label(std::string text, double x, double y, std::optional<Style> style = std::nullopt) {
+    return annotate(std::move(text), x, y, style);
+  }
+
   std::string to_string() const {
     std::string out = fmt::format("Figure2D(subplots={}", subplots_.size());
     if (!figure_title_.empty()) {
@@ -439,6 +799,10 @@ public:
       os << "\"title\":\"" << detail::escape_json(s.title) << "\"";
       os << ",\"x_label\":\"" << detail::escape_json(s.x_axis.label) << "\"";
       os << ",\"y_label\":\"" << detail::escape_json(s.y_axis.label) << "\"";
+      if (s.colorbar.has_value()) {
+        os << ",\"colorbar\":{\"visible\":" << (s.colorbar->visible ? "true" : "false")
+           << ",\"title\":\"" << detail::escape_json(s.colorbar->title) << "\"}";
+      }
       os << ",\"traces\":[";
       for (std::size_t j = 0; j < s.traces.size(); ++j) {
         if (j > 0) {
@@ -534,6 +898,12 @@ private:
       case Trace2DKind::Scatter: return "scatter";
       case Trace2DKind::Bar: return "bar";
       case Trace2DKind::Hist: return "hist";
+      case Trace2DKind::Step: return "step";
+      case Trace2DKind::Area: return "area";
+      case Trace2DKind::Band: return "band";
+      case Trace2DKind::Heatmap: return "heatmap";
+      case Trace2DKind::Annotation: return "annotation";
+      case Trace2DKind::ErrorBar: return "errorbar";
       default: return "trace";
     }
   }
@@ -556,10 +926,51 @@ private:
     return subplots_[static_cast<std::size_t>(active_)];
   }
 
+  void apply_figure_style_defaults_(Subplot2D& subplot) const {
+    if (subplot.style.theme.empty()) {
+      subplot.style.theme = figure_style_.theme;
+    }
+    if (subplot.style.font_family.empty()) {
+      subplot.style.font_family = figure_style_.font_family;
+    }
+  }
+
+  Figure2D& add_heatmap_(const detail::HeatmapData2D& data,
+                         std::string name,
+                         std::vector<std::string> x_labels,
+                         std::vector<std::string> y_labels,
+                         std::optional<Style> style) {
+    if (!x_labels.empty() && static_cast<std::int64_t>(x_labels.size()) != data.cols) {
+      throw std::invalid_argument("plotism::Figure2D::add_heatmap: x_labels size mismatch");
+    }
+    if (!y_labels.empty() && static_cast<std::int64_t>(y_labels.size()) != data.rows) {
+      throw std::invalid_argument("plotism::Figure2D::add_heatmap: y_labels size mismatch");
+    }
+    Trace2D t;
+    t.kind = Trace2DKind::Heatmap;
+    t.name = std::move(name);
+    t.x = detail::make_index_axis(static_cast<std::size_t>(data.cols));
+    t.y2 = detail::make_index_axis(static_cast<std::size_t>(data.rows));
+    t.values = data.values;
+    t.rows = data.rows;
+    t.cols = data.cols;
+    t.x_labels = std::move(x_labels);
+    t.y_labels = std::move(y_labels);
+    t.style = style.value_or(current_().style);
+    if (!current_().colorbar.has_value()) {
+      current_().colorbar = Colorbar{.visible = true, .location = ColorbarLocation::Right, .title = t.name};
+    } else if (current_().colorbar->title.empty() && !t.name.empty()) {
+      current_().colorbar->title = t.name;
+    }
+    current_().traces.push_back(std::move(t));
+    return *this;
+  }
+
   std::int32_t rows_{1};
   std::int32_t cols_{1};
   std::int32_t active_{0};
   std::string figure_title_{};
+  Style figure_style_{};
   std::vector<Subplot2D> subplots_{};
   mutable std::shared_ptr<const IBackend> backend_{};
 };

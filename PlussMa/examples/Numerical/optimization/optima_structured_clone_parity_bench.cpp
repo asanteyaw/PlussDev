@@ -274,7 +274,7 @@ int main() {
     ip_options.interior_point.max_krylov_iterations = 2 * (n - 1);
 
     rows.push_back(run_structured_case(n, "SequentialQP", problem, initial, target, sqp_options));
-    rows.push_back(run_structured_case(n, "InteriorPoint", problem, initial, target, ip_options));
+    rows.push_back(run_structured_case(n, "InternalProtocol", problem, initial, target, ip_options));
   }
 
   print_table(rows);

@@ -11,6 +11,9 @@ namespace pluss::table {
 
 namespace {
 
+constexpr std::string_view kDefaultPlotTheme = "paper";
+constexpr std::string_view kDefaultPlotFont = "IBM Plex Sans";
+
 std::vector<double> positional_plot_x(std::int64_t nrows) {
   std::vector<double> out(static_cast<std::size_t>(nrows), 0.0);
   for (std::int64_t i = 0; i < nrows; ++i) {
@@ -74,6 +77,56 @@ void require_plot_size(const std::vector<double>& values, std::int64_t expected,
               "DataFrame::plot: feature '" + std::string(feature_name) + "' length mismatch with cases");
 }
 
+void require_plot_size(const std::vector<std::string>& values,
+                       std::int64_t expected,
+                       std::string_view feature_name,
+                       std::string_view where) {
+  PLUSS_CHECK(static_cast<std::int64_t>(values.size()) == expected,
+              std::string(where) + ": feature '" + std::string(feature_name) + "' length mismatch with cases");
+}
+
+bool thread_prefers_labeled_axis(const Thread& t) {
+  return t.kind() == ThreadKind::Note || t.kind() == ThreadKind::Timeline || t.kind() == ThreadKind::TimeIndex;
+}
+
+struct ResolvedPlotAxis {
+  std::vector<double> values{};
+  std::vector<std::string> labels{};
+  std::string label{"case"};
+};
+
+ResolvedPlotAxis resolve_plot_axis(const DataFrame& frame,
+                                   std::optional<std::string_view> x_feature,
+                                   std::string_view where) {
+  const auto nrows = frame.nrows();
+  const auto axis_name = x_feature.has_value() ? std::string(*x_feature) : std::string("case");
+  const auto axis_thread = x_feature.has_value() ? frame.features(*x_feature) : frame.cases();
+
+  ResolvedPlotAxis axis;
+  axis.label = axis_name;
+  if (thread_prefers_labeled_axis(axis_thread)) {
+    axis.values = positional_plot_x(nrows);
+    axis.labels = thread_to_plot_labels(axis_thread);
+    require_plot_size(axis.labels, nrows, axis_name, where);
+    return axis;
+  }
+
+  axis.values = thread_to_plot_numeric_values(axis_thread);
+  require_plot_size(axis.values, nrows, axis_name);
+  return axis;
+}
+
+pluss::plotism::Figure make_dataframe_figure(bool show_legend, std::string legend_title = {}) {
+  pluss::plotism::Figure fig;
+  fig.theme(std::string(kDefaultPlotTheme)).font_family(std::string(kDefaultPlotFont));
+  fig.legend(pluss::plotism::Legend{
+      .visible = show_legend,
+      .location = show_legend ? pluss::plotism::LegendLocation::OutsideRight : pluss::plotism::LegendLocation::Best,
+      .title = std::move(legend_title),
+  });
+  return fig;
+}
+
 } // namespace
 
 DataFramePlotAccessor::DataFramePlotAccessor(DataFrame frame) : frame_(std::move(frame)) {}
@@ -90,30 +143,14 @@ pluss::plotism::Figure DataFramePlotAccessor::line(
   PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().line: at least one y feature is required");
 
   const auto nrows = frame_.nrows();
-  auto x_values = positional_plot_x(nrows);
-  std::vector<std::string> x_labels{};
-  std::string x_label = "case";
-
-  if (x_feature.has_value()) {
-    const auto x_thread = frame_.features(*x_feature);
-    if (x_thread.kind() == ThreadKind::Note) {
-      x_labels = thread_to_plot_labels(x_thread);
-      PLUSS_CHECK(static_cast<std::int64_t>(x_labels.size()) == nrows,
-                  "DataFrame::plot().line: x label feature length mismatch with cases");
-    } else {
-      x_values = thread_to_plot_numeric_values(x_thread);
-      require_plot_size(x_values, nrows, *x_feature);
-    }
-    x_label = std::string(*x_feature);
-  }
-
-  pluss::plotism::Figure fig;
-  fig.x_label(x_label);
+  const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().line");
+  auto fig = make_dataframe_figure(y_features.size() > 1, y_features.size() > 1 ? "feature" : "");
+  fig.x_label(axis.label);
   for (const auto y_name : y_features) {
     const auto y_thread = frame_.features(y_name);
     auto y_values = thread_to_plot_numeric_values(y_thread);
     require_plot_size(y_values, nrows, y_name);
-    fig.add_line(x_values, y_values, std::string(y_name), x_labels);
+    fig.add_line(axis.values, y_values, std::string(y_name), axis.labels);
   }
   if (y_features.size() == 1) {
     fig.y_label(std::string(*y_features.begin()));
@@ -125,13 +162,13 @@ pluss::plotism::Figure DataFramePlotAccessor::line(
 
 pluss::plotism::Figure DataFramePlotAccessor::scatter(std::string_view x_feature,
                                                       std::string_view y_feature) const {
-  const auto x_values = thread_to_plot_numeric_values(frame_.features(x_feature));
+  const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().scatter");
   const auto y_values = thread_to_plot_numeric_values(frame_.features(y_feature));
-  require_plot_size(x_values, frame_.nrows(), x_feature);
   require_plot_size(y_values, frame_.nrows(), y_feature);
 
-  auto fig = pluss::plotism::scatter(x_values, y_values, std::string(y_feature));
-  fig.x_label(std::string(x_feature)).y_label(std::string(y_feature));
+  auto fig = make_dataframe_figure(false);
+  fig.add_scatter(axis.values, y_values, std::string(y_feature), axis.labels);
+  fig.x_label(axis.label).y_label(std::string(y_feature));
   return fig;
 }
 
@@ -142,32 +179,16 @@ pluss::plotism::Figure DataFramePlotAccessor::bar(
   const auto y_values = thread_to_plot_numeric_values(frame_.features(y_feature));
   require_plot_size(y_values, nrows, y_feature);
 
-  auto x_values = positional_plot_x(nrows);
-  std::vector<std::string> x_labels{};
-  std::string x_label = "case";
-  if (x_feature.has_value()) {
-    const auto x_thread = frame_.features(*x_feature);
-    if (x_thread.kind() == ThreadKind::Note) {
-      x_labels = thread_to_plot_labels(x_thread);
-      PLUSS_CHECK(static_cast<std::int64_t>(x_labels.size()) == nrows,
-                  "DataFrame::plot().bar: x label feature length mismatch with cases");
-    } else {
-      x_values = thread_to_plot_numeric_values(x_thread);
-      require_plot_size(x_values, nrows, *x_feature);
-    }
-    x_label = std::string(*x_feature);
-  }
-
-  pluss::plotism::Figure fig;
-  fig.add_bar(x_values, y_values, std::string(y_feature), std::move(x_labels));
-  fig.x_label(x_label).y_label(std::string(y_feature));
+  const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().bar");
+  auto fig = make_dataframe_figure(false);
+  fig.add_bar(axis.values, y_values, std::string(y_feature), axis.labels);
+  fig.x_label(axis.label).y_label(std::string(y_feature));
   return fig;
 }
 
 pluss::plotism::Figure DataFramePlotAccessor::hist(std::string_view feature, std::int64_t bins) const {
-  auto fig = pluss::plotism::hist(thread_to_plot_numeric_values(frame_.features(feature)),
-                                  bins,
-                                  std::string(feature));
+  auto fig = make_dataframe_figure(false);
+  fig.add_hist(thread_to_plot_numeric_values(frame_.features(feature)), bins, std::string(feature));
   fig.x_label(std::string(feature)).y_label("count");
   return fig;
 }

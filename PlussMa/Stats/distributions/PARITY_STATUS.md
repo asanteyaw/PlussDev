@@ -1,9 +1,13 @@
 # randraw.m Parity Status
 
-This file tracks replacement status for `PlussMa/Stats/distributions/randraw.m`.
+This file tracks the retired replacement surface for the legacy `randraw.m`.
 
 ## Implemented in `pluss::subsp::stat::distr`
 
+- `alpha`
+- `anglit`
+- `arcsin`
+- `bessel`
 - `normal`, `gaussian`, `gauss`, `norm`
 - `lognorm`, `lognormal`, `cobbdouglas`, `antilognormal`
 - `uniform`, `unif`
@@ -11,27 +15,51 @@ This file tracks replacement status for `PlussMa/Stats/distributions/randraw.m`.
 - `bernoulli`, `bern`
 - `beta`, `powerfunction`, `powerfunc`
 - `binom`, `binomial`
+- `bradford`
+- `burr`, `fisk`
 - `cauchy`, `lorentz`, `caushy`
+- `chi`
 - `chisquare`, `chisq`, `chi2`
+- `chisqnc`, `chisqnoncentral`, `chisqnoncentr`, `chi2noncentral`
+- `cosine`
+- `erlang`
+- `extrval`, `extremevalue`, `extrvalue`, `gumbel`
+- `f`, `fdistribution`, `fdistrib`, `fdistr`, `fdist`, `fdis`
+- `fnc`, `fnoncentral`, `fnoncentr`
 - `laplace`, `doubleexponential`, `doubleexp`, `bilateralexponential`, `bilateralexp`
 - `logistic`
 - `geometric`, `geom`, `furry`
 - `gamma`
 - `gig`
 - `gh`
+- `gompertz`
+- `halfcosine`, `hcosine`, `hcos`
+- `hyperbolicsecant`, `hsecant`, `hsec`
 - `hypergeom`, `hypergeometric`
 - `ig`, `inversegauss`, `invgauss`
+- `maxwell`
+- `nakagamim`, `nakagami-m`, `nakagami`
+- `negativebinomial`, `negbinomial`, `negbinom`, `pascal`
 - `normaltrunc`, `normaltruncated`, `gausstrunc`
 - `nig`
 - `pareto`
 - `pareto2`, `lomax`
+- `planck`
 - `poisson`, `po`
+- `quadratic`, `quad`, `quadr`
+- `rademacher`
 - `rayl`, `rayleigh`
+- `rice`, `rician`
+- `semicirc`, `semicircle`, `wigner`
 - `skellam`
 - `studentst`, `t`
 - `tri`, `triangular`
+- `tukeylambda`
+- `u`, `ushape`
+- `vonmises`
 - `wald`
-- `weibull`, `wbl`
+- `weibull`, `wbl`, `frechet`
+- `yule`, `yulesimon`
 - `zeta`, `zipf`
 
 ## Added beyond `randraw.m`
@@ -40,43 +68,7 @@ This file tracks replacement status for `PlussMa/Stats/distributions/randraw.m`.
 - `pluss::sobol(...)`
 - `pluss::sobol_normal(...)`
 
-## Still missing from `randraw.m` parity
-
-The following `randraw.m` families are still Matlab-only:
-
-- `alpha`
-- `anglit`
-- `arcsin`
-- `bessel`
-- `bradford`
-- `burr`, `fisk`
-- `chi`
-- `chisqnc`, `chisqnoncentral`, `chisqnoncentr`, `chi2noncentral`
-- `cosine`
-- `erlang`
-- `extrval`, `extremevalue`, `extrvalue`, `gumbel`
-- `f`, `fdistribution`, `fdistrib`, `fdistr`, `fdist`, `fdis`
-- `fnc`, `fnoncentral`, `fnoncentr`
-- `gompertz`
-- `halfcosine`, `hcosine`, `hcos`
-- `hyperbolicsecant`, `hsecant`, `hsec`
-- `maxwell`
-- `nakagamim`, `nakagami-m`, `nakagami`
-- `negativebinomial`, `negbinomial`, `negbinom`, `pascal`
-- `planck`
-- `quadratic`, `quad`, `quadr`
-- `rademacher`
-- `rice`, `rician`
-- `semicirc`, `semicircle`, `wigner`
-- `tukeylambda`
-- `u`, `ushape`
-- `vonmises`
-- `frechet`
-- `yule`, `yulesimon`
-
 ## Notes
 
-- This C++ surface now covers the three planned parity batches: high-value core families, transform-based continuous families, and the heavy-tail/special-function batch (`hypergeom`, `skellam`, `zipf`/`zeta`, `gig`, `gh`, `nig`).
-- Full replacement is still not complete. `randraw.m` should not be deleted until the remaining Matlab-only families above are implemented or intentionally dropped.
-- Current `weibull` support is still not parameter-parity complete with the legacy Matlab implementation.
-- `frechet` remains missing because `randraw.m` aliases it through a location-parameter Weibull form that is not yet mirrored here.
+- `randraw.m` can be retired. The C++ distribution surface now covers the full legacy catalog.
+- The C++ surface now mirrors the legacy location-parameter Weibull form, so the `frechet` alias is covered.

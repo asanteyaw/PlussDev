@@ -13,21 +13,20 @@ namespace {
 
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::math::optim::ConstrainedProblem;
-using pluss::subsp::math::optim::ConstraintMultipliers;
-using pluss::subsp::math::optim::InteriorPointOptions;
-using pluss::subsp::math::optim::OptimaAlgorithm;
-using pluss::subsp::math::optim::OptimaExitFlag;
-using pluss::subsp::math::optim::OptimaHessianApproximation;
-using pluss::subsp::math::optim::OptimaLinearSystemSolver;
-using pluss::subsp::math::optim::OptimaLinearSystemStructure;
-using pluss::subsp::math::optim::OptimaProgressSnapshot;
-using pluss::subsp::math::optim::OptimaProgressStage;
-using pluss::subsp::math::optim::OptimaProblemScaling;
-using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
-using pluss::subsp::math::optim::optima;
-using pluss::subsp::math::optim::optima_stall_category_name;
+using pluss::optim::ConstrainedProblem;
+using pluss::optim::ConstraintMultipliers;
+using pluss::optim::OptimaAlgorithm;
+using pluss::optim::OptimaExitFlag;
+using pluss::optim::OptimaHessianApproximation;
+using pluss::optim::OptimaLinearSystemSolver;
+using pluss::optim::OptimaLinearSystemStructure;
+using pluss::optim::OptimaProgressSnapshot;
+using pluss::optim::OptimaProgressStage;
+using pluss::optim::OptimaProblemScaling;
+using pluss::optim::ParameterPack;
+using pluss::optim::Trace;
+using pluss::optim::optima;
+using pluss::optim::optima_stall_category_name;
 
 struct Garch11Params {
   Series omega{Series::undefined()};
@@ -68,6 +67,27 @@ Series simulate_garch11(const Garch11Params& p, std::int64_t n, std::uint64_t se
   }
 
   return returns;
+}
+
+Series garch11_negloglik(const Series& returns, const Garch11Params& p) {
+  const auto cfg = scalar_config_like(returns);
+  const Series one = scalar(1.0, cfg);
+  Series variance = p.omega.div(one.sub(p.alpha).sub(p.beta).maximum(1e-8));
+  Series nll = scalar(0.0, cfg);
+
+  const std::int64_t n = returns.numel();
+  for (std::int64_t t = 0; t < n; ++t) {
+    if (t > 0) {
+      const Series prev = returns.select(0, t - 1);
+      variance = p.omega.add(p.alpha.mul(prev.mul(prev))).add(p.beta.mul(variance));
+    }
+
+    const Series var_clamped = variance.maximum(1e-12);
+    const Series r = returns.select(0, t);
+    nll = nll.add(var_clamped.log().add(r.mul(r).div(var_clamped)).mul(0.5));
+  }
+
+  return nll;
 }
 
 double as_f64(const Series& x) {
@@ -145,8 +165,8 @@ std::string_view to_string(OptimaProgressStage stage) {
   return "iter";
 }
 
-void print_ip_options(const InteriorPointOptions& opt) {
-  std::cout << "InteriorPoint options\n";
+void print_ip_options(const pluss::optim::InteriorPointOptions& opt) {
+  std::cout << "InternalProtocol options\n";
   std::cout << "  max_iterations=" << opt.max_iterations << '\n';
   std::cout << "  max_line_search_iterations=" << opt.max_line_search_iterations << '\n';
   std::cout << "  max_restoration_iterations=" << opt.max_restoration_iterations << '\n';
@@ -194,7 +214,7 @@ void print_multiplier_summary(const ConstraintMultipliers& multipliers) {
 } // namespace
 
 int main() {
-  using namespace pluss::subsp::math::optim;
+  using namespace pluss::optim;
 
   const pluss::Config cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
@@ -204,14 +224,14 @@ int main() {
       scalar(0.90, cfg),
   };
 
-  const Series returns = simulate_garch11(truth, 50, 20260225ULL, cfg);
+  const Series returns = simulate_garch11(truth, 200, 20260225ULL, cfg);
   const Series variance_guess = returns.var(false).maximum(1e-12);
   const Series omega_guess = variance_guess.mul(0.05).maximum(1e-6);
   const Series alpha_guess = scalar(0.15, cfg);
   const Series beta_guess = scalar(0.70, cfg);
 
-  ConstrainedProblem problem;
-  problem.objective.autodiff = [returns, cfg](const ParameterPack<Trace>& p) -> Trace {
+  const ConstrainedProblem problem = pluss::optim::problem()
+      .objective([returns, cfg](const ParameterPack<Trace>& p) -> Trace {
     const Trace omega = clamp(p.at("omega"), 1e-12, 1e12);
     const Trace alpha = clamp(p.at("alpha"), 1e-12, 0.999);
     const Trace beta = clamp(p.at("beta"), 1e-12, 0.999);
@@ -224,66 +244,42 @@ int main() {
         const Trace prev = trace(returns.select(0, t_idx - 1), false);
         variance = omega + alpha * prev * prev + beta * variance;
       }
-      const Trace var_clamped = clamp(variance, 1e-12, 1e12);
-      const Trace r = trace(returns.select(0, t_idx), false);
-      nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
-    }
-    return nll;
-  };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) -> Trace {
-    return p.at("alpha") + p.at("beta") - 0.999;
-  };
-  problem.bounds.lower = ParameterPack<Series>({
-      {"omega", scalar(1e-6, cfg).reshape({1})},
-      {"alpha", scalar(1e-6, cfg).reshape({1})},
-      {"beta", scalar(1e-6, cfg).reshape({1})},
-  });
-  problem.bounds.upper = ParameterPack<Series>({
-      {"omega", scalar(1.0, cfg).reshape({1})},
-      {"alpha", scalar(0.999, cfg).reshape({1})},
-      {"beta", scalar(0.999, cfg).reshape({1})},
+    const Trace var_clamped = clamp(variance, 1e-12, 1e12);
+    const Trace r = trace(returns.select(0, t_idx), false);
+    nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
+  }
+  return nll;
+      })
+      .nonlinear_inequality([](const ParameterPack<Trace>& p) -> Trace {
+        return p.at("alpha") + p.at("beta") - 0.999;
+      })
+      .lower_bounds(pluss::optim::pack_scalars({
+          {"omega", scalar(1e-6, cfg)},
+          {"alpha", scalar(1e-6, cfg)},
+          {"beta", scalar(1e-6, cfg)},
+      }))
+      .upper_bounds(pluss::optim::pack_scalars({
+          {"omega", scalar(1.0, cfg)},
+          {"alpha", scalar(0.999, cfg)},
+          {"beta", scalar(0.999, cfg)},
+      }))
+      .build();
+
+  const ParameterPack<Series> initial = pluss::optim::pack_scalars({
+      {"omega", omega_guess},
+      {"alpha", alpha_guess},
+      {"beta", beta_guess},
   });
 
-  const ParameterPack<Series> initial({
-      {"omega", omega_guess.reshape({1})},
-      {"alpha", alpha_guess.reshape({1})},
-      {"beta", beta_guess.reshape({1})},
-  });
-
-  OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 120;
+  OptimaOptions options = pluss::optim::presets::robust_internal_protocol();
   options.interior_point.max_line_search_iterations = 20;
-  options.interior_point.max_restoration_iterations = 10;
-  options.interior_point.max_restoration_line_search_iterations = 20;
-  options.interior_point.initial_step_size = 1.0;
-  options.interior_point.backtracking = 0.5;
-  options.interior_point.armijo = 1e-4;
-  options.interior_point.initial_barrier_parameter = 1e-1;
-  options.interior_point.minimum_barrier_parameter = 1e-8;
-  options.interior_point.barrier_decay = 0.2;
-  options.interior_point.equality_penalty = 10.0;
-  options.interior_point.centrality_fraction = 0.1;
-  options.interior_point.dual_recentering_fraction = 0.99;
-  options.interior_point.feasibility_activation_factor = 10.0;
-  options.interior_point.constraint_tolerance = 1e-8;
-  options.interior_point.optimality_tolerance = 1e-6;
-  options.interior_point.fraction_to_boundary = 0.99;
-  options.interior_point.pivot_threshold = 1e-12;
-  options.interior_point.initialization_margin = 1e-4;
-  options.interior_point.bfgs_curvature_tolerance = 1e-8;
-  options.interior_point.lbfgs_memory = 10;
   options.interior_point.max_krylov_iterations = 25;
   options.interior_point.iterative_dimension_threshold = 16;
   options.interior_point.krylov_tolerance = 1e-3;
   options.interior_point.krylov_absolute_tolerance = 1e-10;
-  options.interior_point.enable_feasibility_phase = true;
-  options.interior_point.project_bounds = true;
-  options.interior_point.enable_restoration = true;
-  options.interior_point.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
-  options.interior_point.system_structure = OptimaLinearSystemStructure::Dense;
-  options.interior_point.linear_system_solver = OptimaLinearSystemSolver::PivotedDirect;
-  options.interior_point.hessian_approximation = OptimaHessianApproximation::Lbfgs;
+  options.interior_point.pivot_threshold = 1e-12;
+  options.interior_point.initialization_margin = 1e-4;
+  options.interior_point.lbfgs_memory = 10;
 
   options.interior_point.progress_hook = [](const OptimaProgressSnapshot& snapshot) {
     std::cout << std::fixed << std::setprecision(6)
@@ -305,7 +301,7 @@ int main() {
   };
 
   std::cout << std::fixed << std::setprecision(6);
-  std::cout << "GARCH(1,1) InteriorPoint demo\n";
+  std::cout << "GARCH(1,1) InternalProtocol demo\n";
   std::cout << "true    omega=" << as_f64(truth.omega)
             << " alpha=" << as_f64(truth.alpha)
             << " beta=" << as_f64(truth.beta)
@@ -315,6 +311,9 @@ int main() {
 
   const auto result = optima(problem, initial, options);
   const Garch11Params est = decode_params(result.params);
+  const Series truth_value = garch11_negloglik(returns, truth);
+  const Garch11Params initial_guess{omega_guess, alpha_guess, beta_guess};
+  const Series initial_value = garch11_negloglik(returns, initial_guess);
 
   std::cout << "\nFinal report\n";
   std::cout << "  exit=" << to_string(result.exit_flag) << '\n';
@@ -336,6 +335,13 @@ int main() {
   std::cout << "  returned_best_feasible=" << (result.output.returned_best_feasible ? "true" : "false") << '\n';
   std::cout << "  detail_message=" << result.output.detail_message << "\n\n";
 
+  std::cout << "Likelihood checkpoints\n";
+  std::cout << "  truth_objective=" << as_f64(truth_value) << '\n';
+  std::cout << "  initial_objective=" << as_f64(initial_value) << "\n\n";
+
+  std::cout << "Compact summary\n  ";
+  pluss::optim::print_summary(std::cout, result) << "\n\n";
+
   std::cout << "Estimated parameters\n";
   std::cout << "  omega=" << as_f64(est.omega) << '\n';
   std::cout << "  alpha=" << as_f64(est.alpha) << '\n';
@@ -346,6 +352,18 @@ int main() {
   std::cout << "  omega=" << std::abs(as_f64(est.omega.sub(truth.omega))) << '\n';
   std::cout << "  alpha=" << std::abs(as_f64(est.alpha.sub(truth.alpha))) << '\n';
   std::cout << "  beta=" << std::abs(as_f64(est.beta.sub(truth.beta))) << "\n\n";
+
+  if (result.best_feasible.has_value()) {
+    const Garch11Params best = decode_params(result.best_feasible->params);
+    std::cout << "Best feasible parameters\n";
+    std::cout << "  objective=" << result.best_feasible->value.item<double>() << '\n';
+    std::cout << "  first_order_opt=" << result.best_feasible->first_order_opt << '\n';
+    std::cout << "  constraint_violation=" << result.best_feasible->max_constraint_violation << '\n';
+    std::cout << "  omega=" << as_f64(best.omega) << '\n';
+    std::cout << "  alpha=" << as_f64(best.alpha) << '\n';
+    std::cout << "  beta=" << as_f64(best.beta) << '\n';
+    std::cout << "  persistence=" << as_f64(best.alpha.add(best.beta)) << "\n\n";
+  }
 
   print_multiplier_summary(result.multipliers);
   return 0;

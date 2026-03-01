@@ -1,0 +1,37 @@
+:root {
+  --pluss-bg: #f3f5f8;
+  --pluss-panel: #ffffff;
+  --pluss-text: #1d2735;
+  --pluss-border: #d2dbe6;
+  --pluss-accent: #0a7ca7;
+}
+
+body {
+  background: var(--pluss-bg);
+  color: var(--pluss-text);
+}
+
+div.document {
+  max-width: 1180px;
+}
+
+div.body {
+  background: var(--pluss-panel);
+  border: 1px solid var(--pluss-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(24, 43, 61, 0.06);
+  padding: 1.25rem 1.5rem;
+}
+
+div.sphinxsidebar {
+  background: var(--pluss-panel);
+  border-right: 1px solid var(--pluss-border);
+}
+
+a {
+  color: var(--pluss-accent);
+}
+
+code {
+  font-size: 0.95em;
+}

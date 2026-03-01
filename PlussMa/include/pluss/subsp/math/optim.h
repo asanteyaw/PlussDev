@@ -7,8 +7,10 @@
 #include <cmath>
 #include <cstdint>
 #include <functional>
+#include <initializer_list>
 #include <limits>
 #include <optional>
+#include <ostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -520,6 +522,90 @@ struct ConstrainedProblem {
   Bounds bounds{};
 };
 
+inline ParameterPack<Series> pack_scalars(std::initializer_list<std::pair<std::string, Series>> blocks) {
+  std::vector<typename ParameterPack<Series>::Block> out;
+  out.reserve(blocks.size());
+  for (const auto& [name, value] : blocks) {
+    detail::require_defined_(value, "pack_scalars");
+    out.push_back({name, value.reshape({1})});
+  }
+  return ParameterPack<Series>(std::move(out));
+}
+
+class ProblemBuilder {
+public:
+  ProblemBuilder() = default;
+
+  template <class Fn>
+  ProblemBuilder& objective(Fn&& fn) {
+    problem_.objective.autodiff = std::forward<Fn>(fn);
+    return *this;
+  }
+
+  template <class Fn>
+  ProblemBuilder& objective_dual(Fn&& fn) {
+    problem_.objective.autodiff_dual = std::forward<Fn>(fn);
+    return *this;
+  }
+
+  ProblemBuilder& objective_analytic(
+      std::function<std::pair<Series, ParameterPack<Series>>(const ParameterPack<Series>&)> fn) {
+    problem_.objective.analytic = std::move(fn);
+    return *this;
+  }
+
+  template <class Fn>
+  ProblemBuilder& nonlinear_equality(Fn&& fn) {
+    problem_.nonlinear.equality = std::forward<Fn>(fn);
+    return *this;
+  }
+
+  template <class Fn>
+  ProblemBuilder& nonlinear_inequality(Fn&& fn) {
+    problem_.nonlinear.inequality = std::forward<Fn>(fn);
+    return *this;
+  }
+
+  ProblemBuilder& nonlinear_analytic(
+      std::function<NonlinearConstraintEvaluation(const ParameterPack<Series>&)> fn) {
+    problem_.nonlinear.analytic = std::move(fn);
+    return *this;
+  }
+
+  ProblemBuilder& lower_bounds(const ParameterPack<Series>& lower) {
+    problem_.bounds.lower = lower;
+    return *this;
+  }
+
+  ProblemBuilder& upper_bounds(const ParameterPack<Series>& upper) {
+    problem_.bounds.upper = upper;
+    return *this;
+  }
+
+  ProblemBuilder& linear_equalities(const Series& Aeq, const Series& beq) {
+    problem_.linear.Aeq = Aeq;
+    problem_.linear.beq = beq;
+    return *this;
+  }
+
+  ProblemBuilder& linear_inequalities(const Series& Aineq, const Series& bineq) {
+    problem_.linear.Aineq = Aineq;
+    problem_.linear.bineq = bineq;
+    return *this;
+  }
+
+  ConstrainedProblem build() const { return problem_; }
+
+  operator ConstrainedProblem() const { return build(); }
+
+private:
+  ConstrainedProblem problem_{};
+};
+
+inline ProblemBuilder problem() {
+  return ProblemBuilder{};
+}
+
 struct ProblemEvaluation {
   EvalStatus status{EvalStatus::Ok};
   std::string message{};
@@ -770,6 +856,8 @@ struct WorkingSetOptions : SequentialQPOptions {
   double drop_multiplier_tolerance{1e-8};
   double feasibility_priority_ratio{0.8};
   std::int64_t max_stalled_iterations{8};
+  double multiplier_smoothing{0.5};
+  double multiplier_retention_tolerance{1e-6};
 };
 
 struct WorkingSetState : SequentialQPState {
@@ -909,6 +997,68 @@ struct OptimaState {
   ConstraintMultipliers multipliers{};
   std::optional<BestFeasiblePoint> best_feasible{};
 };
+
+namespace presets {
+
+inline OptimaOptions sequential_qp() {
+  OptimaOptions options;
+  options.algorithm = OptimaAlgorithm::SequentialQP;
+  options.sequential_qp.max_iterations = 100;
+  options.sequential_qp.max_line_search_iterations = 20;
+  options.sequential_qp.constraint_tolerance = 1e-8;
+  options.sequential_qp.optimality_tolerance = 1e-6;
+  options.sequential_qp.problem_scaling = OptimaProblemScaling::InitialPoint;
+  return options;
+}
+
+inline OptimaOptions internal_protocol() {
+  OptimaOptions options;
+  options.algorithm = OptimaAlgorithm::InteriorPoint;
+  options.interior_point.max_iterations = 100;
+  options.interior_point.initial_barrier_parameter = 1e-2;
+  options.interior_point.minimum_barrier_parameter = 1e-8;
+  options.interior_point.barrier_decay = 0.2;
+  options.interior_point.constraint_tolerance = 1e-8;
+  options.interior_point.optimality_tolerance = 1e-6;
+  options.interior_point.max_line_search_iterations = 16;
+  options.interior_point.problem_scaling = OptimaProblemScaling::InitialPoint;
+  return options;
+}
+
+inline OptimaOptions robust_internal_protocol() {
+  OptimaOptions options = internal_protocol();
+  options.interior_point.max_iterations = 160;
+  options.interior_point.max_restoration_iterations = 10;
+  options.interior_point.max_restoration_line_search_iterations = 20;
+  options.interior_point.enable_restoration = true;
+  options.interior_point.enable_feasibility_phase = false;
+  options.interior_point.hessian_approximation = OptimaHessianApproximation::Bfgs;
+  options.interior_point.linear_system_solver = OptimaLinearSystemSolver::Auto;
+  options.interior_point.system_structure = OptimaLinearSystemStructure::Auto;
+  return options;
+}
+
+} // namespace presets
+
+inline std::ostream& print_summary(std::ostream& os, const OptimaState& result) {
+  os << "algorithm=" << result.output.algorithm
+     << " exit=" << static_cast<int>(result.exit_flag)
+     << " iterations=" << result.iteration
+     << " evaluations=" << result.function_evaluations
+     << " objective=";
+  if (result.evaluation.value.defined() && result.evaluation.value.numel() == 1) {
+    os << result.evaluation.value.item<double>();
+  } else {
+    os << "nan";
+  }
+  os << " violation=" << result.evaluation.max_constraint_violation
+     << " first_order=" << result.output.first_order_optimality
+     << " backend_parameter=" << result.backend_parameter
+     << " complementarity=" << result.output.complementarity
+     << " stall=" << optima_stall_category_name(result.output.stall_category)
+     << " message=" << result.message;
+  return os;
+}
 
 inline ProblemEvaluation evaluate_problem(const ConstrainedProblem& problem,
                                           const ParameterPack<Series>& params);
@@ -2327,6 +2477,55 @@ inline bool contains_constraint_(const std::vector<WorkingSetConstraintKey>& key
          }) != keys.end();
 }
 
+inline bool same_working_set_keys_(const std::vector<WorkingSetConstraintKey>& lhs,
+                                   const std::vector<WorkingSetConstraintKey>& rhs) {
+  if (lhs.size() != rhs.size()) return false;
+  for (std::size_t i = 0; i < lhs.size(); ++i) {
+    if (!same_constraint_(lhs[i], rhs[i])) return false;
+  }
+  return true;
+}
+
+inline double multiplier_for_constraint_key_(const std::vector<WorkingSetConstraintKey>& keys,
+                                             const std::vector<double>& multipliers,
+                                             const FlatConstraintRow& row) {
+  const auto key = constraint_key_(row);
+  for (std::size_t i = 0; i < keys.size() && i < multipliers.size(); ++i) {
+    if (same_constraint_(keys[i], key)) return multipliers[i];
+  }
+  return 0.0;
+}
+
+inline std::vector<double> aligned_working_set_multipliers_(
+    const std::vector<FlatConstraintRow>& active_constraints,
+    const std::vector<WorkingSetConstraintKey>& previous_keys,
+    const Series& previous_multipliers) {
+  std::vector<double> aligned(active_constraints.size(), 0.0);
+  if (!previous_multipliers.defined() || previous_multipliers.numel() == 0 || previous_keys.empty()) return aligned;
+  const auto lambda = previous_multipliers.to_vec<double>();
+  for (std::size_t i = 0; i < active_constraints.size(); ++i) {
+    aligned[i] = multiplier_for_constraint_key_(previous_keys, lambda, active_constraints[i]);
+  }
+  return aligned;
+}
+
+inline Series smooth_working_set_multipliers_(const std::vector<FlatConstraintRow>& active_constraints,
+                                              const Series& multipliers,
+                                              const std::vector<double>& previous_aligned,
+                                              double smoothing) {
+  if (!multipliers.defined() || multipliers.numel() == 0 || previous_aligned.empty()) return multipliers;
+  auto lambda = multipliers.to_vec<double>();
+  const double mix = std::clamp(smoothing, 0.0, 1.0);
+  for (std::size_t i = 0; i < active_constraints.size() && i < lambda.size() && i < previous_aligned.size(); ++i) {
+    if (active_constraints[i].equality) continue;
+    if (std::abs(previous_aligned[i]) <= 0.0) continue;
+    lambda[i] = (1.0 - mix) * lambda[i] + mix * previous_aligned[i];
+  }
+  return pluss::make_series(std::move(lambda), {multipliers.numel()})
+      .to(ScalarType::Float64)
+      .to(multipliers.platform());
+}
+
 inline std::vector<FlatConstraintRow> working_set_constraints_(const FlatConstraintSystem& system,
                                                                double active_set_tolerance,
                                                                double add_constraint_tolerance,
@@ -2396,21 +2595,30 @@ inline std::vector<WorkingSetConstraintKey> update_working_set_keys_(
     const FlatConstraintSystem& system,
     const std::vector<FlatConstraintRow>& active_constraints,
     const Series& multipliers,
+    const std::vector<WorkingSetConstraintKey>& previous_keys,
+    const Series& previous_multipliers,
     double active_set_tolerance,
     double add_constraint_tolerance,
     double drop_multiplier_tolerance,
+    double multiplier_retention_tolerance,
     std::int64_t max_working_set_violations) {
   std::vector<WorkingSetConstraintKey> keys;
   keys.reserve(system.equalities.size() + system.inequalities.size());
   for (const auto& row : system.equalities) keys.push_back(constraint_key_(row));
 
   const auto lambda = multipliers.defined() ? multipliers.to_vec<double>() : std::vector<double>{};
+  const auto previous_lambda =
+      previous_multipliers.defined() ? previous_multipliers.to_vec<double>() : std::vector<double>{};
+  const double near_active_threshold = std::max(active_set_tolerance, add_constraint_tolerance);
   for (std::size_t i = 0; i < active_constraints.size(); ++i) {
     const auto& row = active_constraints[i];
     if (row.equality) continue;
     const double multiplier = i < lambda.size() ? lambda[i] : 0.0;
+    const double persistent_multiplier = multiplier_for_constraint_key_(previous_keys, previous_lambda, row);
     if (multiplier >= -drop_multiplier_tolerance || row.residual > 0.0 ||
-        row.residual >= -std::max(active_set_tolerance, add_constraint_tolerance)) {
+        row.residual >= -near_active_threshold ||
+        (persistent_multiplier > multiplier_retention_tolerance &&
+         row.residual >= -4.0 * near_active_threshold)) {
       keys.push_back(constraint_key_(row));
     }
   }
@@ -2419,23 +2627,34 @@ inline std::vector<WorkingSetConstraintKey> update_working_set_keys_(
     if (row.residual > 0.0 && !contains_constraint_(keys, row)) keys.push_back(constraint_key_(row));
   }
 
-  std::vector<FlatConstraintRow> near_active;
+  struct RankedWorkingSetRow {
+    FlatConstraintRow row{};
+    double persistent_multiplier{0.0};
+  };
+  std::vector<RankedWorkingSetRow> near_active;
   near_active.reserve(system.inequalities.size());
   for (const auto& row : system.inequalities) {
+    const double persistent_multiplier = multiplier_for_constraint_key_(previous_keys, previous_lambda, row);
     if (row.residual <= 0.0 &&
-        row.residual >= -std::max(active_set_tolerance, add_constraint_tolerance) &&
+        (row.residual >= -near_active_threshold ||
+         persistent_multiplier > multiplier_retention_tolerance) &&
         !contains_constraint_(keys, row)) {
-      near_active.push_back(row);
+      near_active.push_back({row, persistent_multiplier});
     }
   }
-  std::sort(near_active.begin(), near_active.end(), [](const FlatConstraintRow& lhs, const FlatConstraintRow& rhs) {
-    return lhs.residual > rhs.residual;
+  std::sort(near_active.begin(), near_active.end(), [multiplier_retention_tolerance](const RankedWorkingSetRow& lhs,
+                                                                                      const RankedWorkingSetRow& rhs) {
+    const bool lhs_retained = lhs.persistent_multiplier > multiplier_retention_tolerance;
+    const bool rhs_retained = rhs.persistent_multiplier > multiplier_retention_tolerance;
+    if (lhs_retained != rhs_retained) return lhs_retained > rhs_retained;
+    if (lhs.row.residual != rhs.row.residual) return lhs.row.residual > rhs.row.residual;
+    return lhs.persistent_multiplier > rhs.persistent_multiplier;
   });
   const std::int64_t near_active_budget =
       max_working_set_violations > 0 ? max_working_set_violations : static_cast<std::int64_t>(near_active.size());
   for (std::int64_t i = 0; i < std::min<std::int64_t>(near_active_budget, static_cast<std::int64_t>(near_active.size()));
        ++i) {
-    keys.push_back(constraint_key_(near_active[static_cast<std::size_t>(i)]));
+    keys.push_back(constraint_key_(near_active[static_cast<std::size_t>(i)].row));
   }
 
   std::vector<WorkingSetConstraintKey> unique_keys;
@@ -3619,7 +3838,7 @@ inline const char* algorithm_name_(OptimaAlgorithm algorithm) {
     case OptimaAlgorithm::WorkingSet:
       return "working-set";
     case OptimaAlgorithm::InteriorPoint:
-      return "interior-point";
+      return "internal-protocol";
   }
   return "unknown";
 }
@@ -5462,6 +5681,8 @@ inline WorkingSetState working_set_step(const ConstrainedProblem& problem,
       options.active_set_tolerance,
       options.add_constraint_tolerance,
       options.max_working_set_violations);
+  const auto previous_multiplier_hint =
+      detail::aligned_working_set_multipliers_(active_constraints, state.active_set, state.multipliers);
   const Series flat_gradient = flatten_values(state.evaluation.gradient).to(ScalarType::Float64);
   const Series variable_scale = state.variable_scale.defined()
                                     ? state.variable_scale.to(ScalarType::Float64).to(flat_gradient.platform())
@@ -5507,6 +5728,8 @@ inline WorkingSetState working_set_step(const ConstrainedProblem& problem,
     step_direction = detail::unscale_step_(step_direction, variable_scale);
     if (!kkt_ok) break;
 
+    multipliers = detail::smooth_working_set_multipliers_(
+        active_constraints, multipliers, previous_multiplier_hint, options.multiplier_smoothing);
     detail::cleanup_working_set_multipliers_(active_constraints, options.drop_multiplier_tolerance, &multipliers);
     double most_negative = 0.0;
     std::size_t most_negative_index = active_constraints.size();
@@ -5673,21 +5896,37 @@ inline WorkingSetState working_set_step(const ConstrainedProblem& problem,
             next_constraints,
             next_active,
             next.multipliers,
+            state.active_set,
+            state.multipliers,
             options.active_set_tolerance,
             options.add_constraint_tolerance,
             options.drop_multiplier_tolerance,
+            options.multiplier_retention_tolerance,
             options.max_working_set_violations);
         const double objective_change =
             (state.evaluation.value.defined() && state.evaluation.value.numel() == 1 &&
              next.evaluation.value.defined() && next.evaluation.value.numel() == 1)
                 ? std::abs(next.evaluation.value.item<double>() - state.evaluation.value.item<double>())
                 : std::numeric_limits<double>::infinity();
+        const bool stable_active_set = detail::same_working_set_keys_(next.active_set, state.active_set);
+        const double relative_objective_change =
+            objective_change /
+            std::max(1.0, std::abs(state.evaluation.value.defined() && state.evaluation.value.numel() == 1
+                                       ? state.evaluation.value.item<double>()
+                                       : 1.0));
+        const bool feasible_but_stalling =
+            next.evaluation.max_constraint_violation <= options.constraint_tolerance &&
+            stable_active_set &&
+            next.kkt_residual > 10.0 * options.optimality_tolerance &&
+            relative_objective_change <= 1e-3 &&
+            next.iteration >= std::max<std::int64_t>(8, next.params.total_numel() / 4);
         const bool weak_progress =
             next.evaluation.max_constraint_violation >=
                 std::max(0.0, 0.95 * state.evaluation.max_constraint_violation) &&
             next.kkt_residual >= 0.9 * state.kkt_residual &&
             objective_change <= options.value_progress_tolerance;
-        next.stalled_iterations = weak_progress ? (state.stalled_iterations + 1) : 0;
+        const bool stalled_progress = weak_progress || feasible_but_stalling;
+        next.stalled_iterations = stalled_progress ? (state.stalled_iterations + 1) : 0;
 
         detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
         if (next.iteration >= options.max_iterations) {
@@ -5775,9 +6014,12 @@ inline WorkingSetState working_set_step(const ConstrainedProblem& problem,
           next_constraints,
           next_active,
           next.multipliers,
+          state.active_set,
+          state.multipliers,
           options.active_set_tolerance,
           options.add_constraint_tolerance,
           options.drop_multiplier_tolerance,
+          options.multiplier_retention_tolerance,
           options.max_working_set_violations);
       next.stalled_iterations = 0;
       detail::maybe_update_best_feasible_(next, options.constraint_tolerance);

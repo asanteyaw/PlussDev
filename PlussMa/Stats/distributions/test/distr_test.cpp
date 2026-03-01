@@ -49,6 +49,9 @@ int main() {
   expect(supports("chisq"), "supports(chisq) should be true", &failures);
   expect(supports("gig"), "supports(gig) should be true", &failures);
   expect(supports("nig"), "supports(nig) should be true", &failures);
+  expect(pluss::distr::supports("alpha"), "pluss::distr alias should expose alpha", &failures);
+  expect(pluss::distr::supports("planck"), "pluss::distr alias should expose planck", &failures);
+  expect(pluss::distr::supports("vonmises"), "pluss::distr alias should expose vonmises", &failures);
 
   const Series zero = pluss::make_series(0.0, f64);
   expect(
@@ -135,6 +138,16 @@ int main() {
   expect(std::isfinite(as_f64_scalar(logpdf("gig", one, {1.0, 2.0, 3.0}))), "gig logpdf finite", &failures);
   expect(std::isfinite(as_f64_scalar(logpdf("gh", zero, {1.0, 2.0, 0.5, 0.0, 1.0}))), "gh logpdf finite", &failures);
   expect(std::isfinite(as_f64_scalar(logpdf("nig", zero, {2.0, 0.5, 0.0, 1.0}))), "nig logpdf finite", &failures);
+  expect(approx(as_f64_scalar(cdf("u", zero, {})), 0.5, 1e-12), "u cdf at 0", &failures);
+  expect(approx(as_f64_scalar(pdf("rademacher", pluss::make_series(1.0, f64), {})), 0.5, 1e-12),
+         "rademacher pdf at 1",
+         &failures);
+  expect(std::isfinite(as_f64_scalar(logpdf("vonmises", zero, {0.0, 2.0}))), "vonmises logpdf finite", &failures);
+  expect(approx(as_f64_scalar(pdf("frechet", pluss::make_series(2.0, f64), {0.0, 2.0, 1.0})),
+                4.0 * std::exp(-4.0),
+                1e-12),
+         "frechet alias uses location weibull form",
+         &failures);
 
   const Series normal_draws = sample("normal", {1.5, 2.0}, {4, 3}, f64, 20260301ULL);
   expect(normal_draws.scalar_type() == ScalarType::Float64, "normal sample dtype", &failures);
@@ -149,8 +162,13 @@ int main() {
          &failures);
   expect(sample("gig", {1.0, 2.0, 3.0}, {5}, f64, 13ULL).numel() == 5, "gig sample shape", &failures);
   expect(sample("nig", {2.0, 0.5, 0.0, 1.0}, {5}, f64, 17ULL).numel() == 5, "nig sample shape", &failures);
+  expect(sample("vonmises", {0.0, 2.0}, {5}, f64, 19ULL).numel() == 5, "vonmises sample shape", &failures);
+  expect(pluss::distr::sample("arcsin", {5}, f64, 23ULL).numel() == 5, "sample overload without params", &failures);
 
   const Series like = pluss::zeros({2, 5}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
+  expect(pluss::distr::sample_like("rademacher", like, 29ULL).numel() == like.numel(),
+         "sample_like overload without params",
+         &failures);
   const Series weibull_like = sample_like("weibull", {1.5, 2.0}, like, 7ULL);
   expect(weibull_like.scalar_type() == ScalarType::Float32, "sample_like preserves dtype", &failures);
   expect(weibull_like.sizes().size() == 2 && weibull_like.sizes()[0] == 2 && weibull_like.sizes()[1] == 5,

@@ -54,16 +54,15 @@ All current backends reuse the same evaluation layer and diagnostics:
 - scaling and normalization
 - dense and iterative linear-system policies
 
-The main backends currently exposed through `OptimaAlgorithm` are:
+The mature constrained backends currently exposed through `OptimaAlgorithm` are:
 
 - `SequentialQP`
-- `WorkingSet`
-- `InteriorPoint`
+- `InternalProtocol`
 
-This document focuses on the mature constrained backends:
+This document focuses on:
 
 - [Sequential QP](optima_sequential_qp.md)
-- [Interior Point](optima_interior_point.md)
+- [Internal Protocol](optima_internal_protocol.md)
 
 ## Common Outputs
 
@@ -154,8 +153,6 @@ Returning `true` requests an orderly stop.
 - `recovery-failure`
 - `iteration-limit`
 
-These categories are intended to make solver behavior inspectable during development and benchmark work, especially on hard constrained problems.
-
 ## Example Demos
 
 Current demos relevant to these backends:
@@ -164,4 +161,3 @@ Current demos relevant to these backends:
 - `PlussMa/examples/Numerical/optimization/optima_interior_point_demo.cpp`
 - `PlussMa/examples/Numerical/optimization/garch11_optima_demo.cpp`
 - `PlussMa/examples/Numerical/optimization/garch11_interior_point_demo.cpp`
-

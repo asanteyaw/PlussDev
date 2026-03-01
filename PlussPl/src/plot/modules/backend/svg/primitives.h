@@ -164,7 +164,8 @@ public:
             << "\" y=\"" << format_double(y, 6)
             << "\" text-anchor=\"" << anchor_name_(style.anchor)
             << "\" font-size=\"" << format_double(style.size, 6)
-            << "\" font-family=\"sans-serif\" fill=\"" << style.color
+            << "\" font-family=\"" << escape_xml(style.font_family.empty() ? std::string("sans-serif") : style.font_family)
+            << "\" fill=\"" << style.color
             << "\" fill-opacity=\"" << style.alpha << "\"";
     if (style.bold) {
       stream_ << " font-weight=\"600\"";

@@ -44,12 +44,23 @@ int main() {
   fig_scatter.show();
 
   auto top_agencies = df.tally("Agency Name", /*top_n=*/8, /*dropna=*/true, /*render=*/false);
-  auto fig_bar = top_agencies.plot().bar("count", "Agency Name").with_title("Top Agencies by count");
+  auto ranked_agencies = top_agencies.set_cases("Agency Name", /*drop_feature=*/false);
+  auto fig_bar = ranked_agencies.plot().bar("count").with_title("Top Agencies by count");
   fig_bar.show();
 
   auto fig_hist = df.plot().hist("Lifecycle Cost", /*bins=*/12).with_title("Lifecycle Cost histogram");
   fig_hist.show();
   fig_hist.save_svg("plot_df_hist.svg");
+
+  auto monthly = pluss::table::DataFrame({
+      {"sales", pluss::table::Thread(pluss::make_series({120.0, 135.0, 128.0, 150.0, 162.0, 171.0}))},
+      {"forecast", pluss::table::Thread(pluss::make_series({118.0, 130.0, 132.0, 147.0, 158.0, 168.0}))},
+      {"month", pluss::table::Thread(pluss::make_note({"Jan", "Feb", "Mar", "Apr", "May", "Jun"}))},
+  }).set_cases("month", /*drop_feature=*/false);
+
+  auto fig_monthly = monthly.plot().line({"sales", "forecast"}).with_title("Sales vs forecast by month");
+  fig_monthly.show();
+  fig_monthly.save_svg("plot_df_monthly.svg");
 
   auto a0 = df.head(20, /*render=*/false);
   auto a1 = df.tail(20, /*render=*/false);

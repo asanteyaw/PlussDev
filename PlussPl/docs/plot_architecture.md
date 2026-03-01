@@ -194,6 +194,13 @@ Serious 3D means:
 - Colormaps and scalar mapping
 - Reuse of 2D export/layout/text infrastructure
 
+For `PlussPl`, this explicitly includes:
+
+- Implied volatility surfaces
+- Option price surfaces
+- MATLAB-style simulation trajectories on top of surfaces
+- Export quality suitable for research and quant reporting
+
 ### Credible 4D
 
 Credible 4D means:

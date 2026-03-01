@@ -8,3 +8,10 @@
 #include "../../Math/Numerical/optimization/nelder_mead_minimizer.h"
 #include "pluss/ma/stats.h"
 #include "pluss/ma/linearalg.h"
+
+namespace pluss {
+
+// Short public alias for derivative-based constrained optimization.
+namespace optim = ::pluss::subsp::math::optim;
+
+} // namespace pluss

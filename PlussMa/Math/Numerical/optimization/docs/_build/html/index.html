@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Optima Documentation &#8212; Optima User Docs  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Optima Algorithms" href="optima_algorithms.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="optima-documentation">
+<h1>Optima Documentation<a class="headerlink" href="#optima-documentation" title="Link to this heading">¶</a></h1>
+<p>This Sphinx set is for optimization algorithms owned by <code class="docutils literal notranslate"><span class="pre">PlussMa</span></code>.</p>
+<p>Module boundary:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussQit</span></code> owns <code class="docutils literal notranslate"><span class="pre">Series</span></code>, autodiff, and backend compute</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussMa</span></code> owns numerical optimization logic</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optima(...)</span></code> is the public constrained-optimization entry point</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="optima_algorithms.html">Optima Algorithms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="optima_algorithms.html#public-entry-point">Public Entry Point</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_algorithms.html#problem-model">Problem Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_algorithms.html#shared-runtime-contract">Shared Runtime Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_algorithms.html#common-outputs">Common Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_algorithms.html#progress-hooks">Progress Hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_algorithms.html#stall-taxonomy">Stall Taxonomy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_algorithms.html#example-demos">Example Demos</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="optima_sequential_qp.html">Optima Sequential QP</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#mathematical-problem">Mathematical Problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#solver-shape">Solver Shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#local-quadratic-subproblem">Local Quadratic Subproblem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#main-state">Main State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#option-surface">Option Surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#hessian-handling">Hessian Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#linear-system-policy">Linear-System Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#step-acceptance">Step Acceptance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#second-order-correction">Second-Order Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#restoration">Restoration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#outputs">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#example-trace">Example Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_sequential_qp.html#reading-the-iteration-trace">Reading the Iteration Trace</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="optima_internal_protocol.html">Optima Internal Protocol</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#mathematical-problem">Mathematical Problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#solver-shape">Solver Shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#primal-dual-system">Primal-Dual System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#main-state">Main State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#barrier-objective-view">Barrier Objective View</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#option-surface">Option Surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#hessian-modes">Hessian Modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#linear-system-policy">Linear-System Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#barrier-and-complementarity-trace">Barrier and Complementarity Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#feasibility-phase-and-recovery">Feasibility Phase and Recovery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#outputs">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#example-trace">Example Trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optima_internal_protocol.html#dedicated-demo">Dedicated Demo</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">Optima User Docs</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="optima_algorithms.html">Optima Algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optima_sequential_qp.html">Optima Sequential QP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optima_internal_protocol.html">Optima Internal Protocol</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="optima_algorithms.html" title="next chapter">Optima Algorithms</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/index.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Quickstart &#8212; PlussMa Distribution Docs  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=5acd37b1" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/layout.js?v=e38fcceb"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api_reference.html" />
+    <link rel="prev" title="PlussMa Distribution Documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">¶</a></h1>
+<section id="include-path">
+<h2>Include Path<a class="headerlink" href="#include-path" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/pluss.h&gt;</span>
+</pre></div>
+</div>
+<p>The distribution layer is exposed as <code class="docutils literal notranslate"><span class="pre">pluss::distr</span></code>. No extra include is needed when PlussMa is part of the build.</p>
+</section>
+<section id="sample-in-one-line">
+<h2>Sample In One Line<a class="headerlink" href="#sample-in-one-line" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="s">&quot;normal&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1024</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="s">&quot;arcsin&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">1024</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="s">&quot;vonmises&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1024</span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="keep-shape-and-dtype">
+<h2>Keep Shape And Dtype<a class="headerlink" href="#keep-shape-and-dtype" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">like</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float32</span><span class="p">));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">gamma_like</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">sample_like</span><span class="p">(</span><span class="s">&quot;gamma&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="n">like</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">signs_like</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">sample_like</span><span class="p">(</span><span class="s">&quot;rademacher&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">like</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="evaluate-densities-and-cdfs">
+<h2>Evaluate Densities And CDFs<a class="headerlink" href="#evaluate-densities-and-cdfs" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">normal_pdf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">pdf</span><span class="p">(</span><span class="s">&quot;normal&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">grid</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">t_cdf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">cdf</span><span class="p">(</span><span class="s">&quot;t&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">grid</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">5.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nig_logpdf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">logpdf</span><span class="p">(</span><span class="s">&quot;nig&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">grid</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="gaussian-mixture">
+<h2>Gaussian Mixture<a class="headerlink" href="#gaussian-mixture" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">weights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">0.65</span><span class="p">,</span><span class="w"> </span><span class="mf">0.35</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">means</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">stddevs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.25</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">mix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">mixture_normal</span><span class="p">(</span>
+<span class="w">    </span><span class="n">weights</span><span class="p">,</span>
+<span class="w">    </span><span class="n">means</span><span class="p">,</span>
+<span class="w">    </span><span class="n">stddevs</span><span class="p">,</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">4096</span><span class="p">},</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">),</span>
+<span class="w">    </span><span class="mi">23ULL</span><span class="p">,</span>
+<span class="w">    </span><span class="nb">true</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The last argument switches the base normal generator from pseudo-random draws to Sobol-driven Gaussian draws.</p>
+</section>
+<section id="intended-style">
+<h2>Intended Style<a class="headerlink" href="#intended-style" title="Link to this heading">¶</a></h2>
+<p>The user-facing model is:</p>
+<ul class="simple">
+<li><p>keep everything under <code class="docutils literal notranslate"><span class="pre">pluss::distr</span></code></p></li>
+<li><p>pass the distribution name plus a short parameter list</p></li>
+<li><p>let <code class="docutils literal notranslate"><span class="pre">sample_like</span></code> carry shape and dtype when you already have a target tensor</p></li>
+<li><p>stay on <code class="docutils literal notranslate"><span class="pre">Series</span></code> throughout instead of bouncing between helper wrappers</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussMa Distribution Docs</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#include-path">Include Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sample-in-one-line">Sample In One Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#keep-shape-and-dtype">Keep Shape And Dtype</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#evaluate-densities-and-cdfs">Evaluate Densities And CDFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gaussian-mixture">Gaussian Mixture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#intended-style">Intended Style</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="distribution_catalog.html">Distribution Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">PlussMa Distribution Documentation</a></li>
+      <li>Next: <a href="api_reference.html" title="next chapter">API Reference</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/quickstart.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -167,7 +167,7 @@ Expand 2D plotting beyond line/scatter/bar/hist into serious analytical graphics
 
 ### Status
 
-- `pending`
+- `completed`
 
 ## Patch 7: Style And Theme System
 
@@ -189,7 +189,7 @@ Centralize palette, marker, line-style, and font decisions.
 
 ### Status
 
-- `pending`
+- `completed`
 
 ## Patch 8: Legend And Colorbar System
 
@@ -212,11 +212,17 @@ Make legends and colorbars serious first-class layout objects.
 
 ### Status
 
-- `pending`
+- `completed`
 
 ## Milestone: Serious Static 2D
 
 After patch 8, `PlussPl` should be a serious static 2D plotting library.
+
+### Follow-Up Quality Pass
+
+- Categorical bar/layout auto-padding landed.
+- Default annotation placement now biases inward instead of clipping against plot edges.
+- Dense categorical labels get slightly tighter default typography.
 
 ## Patch 9: Projector3D
 
@@ -238,7 +244,7 @@ Create a real delegated 3D projector and camera model.
 
 ### Status
 
-- `pending`
+- `completed`
 
 ## Patch 10: Artist3D
 
@@ -251,7 +257,6 @@ Move 3D rendering into delegated spatial artists that hand screen-space work to 
 - `Line3Artist`
 - `Scatter3Artist`
 - `SurfaceArtist`
-- `MeshArtist`
 
 ### Dependencies
 
@@ -260,7 +265,7 @@ Move 3D rendering into delegated spatial artists that hand screen-space work to 
 
 ### Status
 
-- `pending`
+- `completed`
 
 ## Patch 11: Depth And Occlusion
 
@@ -382,6 +387,6 @@ Make 4D usable instead of merely possible.
 
 ## Immediate Next Work
 
-1. Start patch 6 so `PlussPl` can move beyond line/scatter/bar/hist into heatmaps, fills, bands, steps, and annotations.
-2. Keep patch 5’s raster backend honest by ensuring new 2D features render through both vector and PNG paths.
-3. Use patch 6 to make the demos unmistakably heavier and more publication-grade, not just architecturally cleaner.
+1. Start patch 10 so line, scatter, surface, and mesh behavior moves out of `render_3d_shared.h` and into delegated `Artist3D` objects.
+2. Keep the quant target explicit: implied-vol surfaces, option-price surfaces, and simulation overlays should remain first-class examples while the artist system is extracted.
+3. Use patch 10 to make 3D behavior easier to extend without turning the shared renderer into another god-object.

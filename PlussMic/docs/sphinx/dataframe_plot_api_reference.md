@@ -6,6 +6,11 @@
 
 This page documents the public plotting accessor returned by `DataFrame::plot()` and `Atlas::plot()`.
 
+`DataFrame::plot()` is intended to be a smart front end over `PlussPl`, not a raw vector escape hatch.
+When `x_feature` is omitted, plots now use the DataFrame case axis automatically.
+If that axis is note-like or time-like, the accessor delegates a labeled categorical axis to `PlussPl`.
+Figures also inherit stronger `PlussPl` defaults, including the `paper` theme, `IBM Plex Sans`, and outside legends for multi-series line plots.
+
 ### `bar`
 
 #### Signature
@@ -30,6 +35,7 @@ pluss::plotism::Figure bar(self, std::string_view y_feature, std::optional<std::
 #### Notes
 
 Builds a bar chart from one feature, optionally using another feature as the x-axis.
+If `x_feature` is omitted, the DataFrame case axis is used.
 
 #### Examples
 
@@ -39,9 +45,10 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto plot = df.plot();
+auto indexed = df.set_cases("city", false);
+auto plot = indexed.plot();
 
-auto fig = plot.bar("sales", std::nullopt);
+auto fig = plot.bar("sales");
 ```
 
 #### Output
@@ -118,6 +125,7 @@ pluss::plotism::Figure line(self, std::initializer_list<std::string_view> y_feat
 #### Notes
 
 Builds a line chart for one or more y-features, optionally against a chosen x-feature.
+If `x_feature` is omitted, the DataFrame case axis is used and multi-series plots get an outside legend by default.
 
 #### See also
 
@@ -131,7 +139,8 @@ auto df = pluss::table::DataFrame({
     {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
-auto plot = df.plot();
+auto indexed = df.set_cases("city", false);
+auto plot = indexed.plot();
 
 auto fig = plot.line({"sales"}, std::nullopt);
 ```
@@ -166,6 +175,7 @@ pluss::plotism::Figure line(self, std::string_view y_feature, std::optional<std:
 #### Notes
 
 Builds a line chart for one or more y-features, optionally against a chosen x-feature.
+If `x_feature` is omitted, the DataFrame case axis is used.
 
 #### See also
 
@@ -214,6 +224,7 @@ pluss::plotism::Figure scatter(self, std::string_view x_feature, std::string_vie
 #### Notes
 
 Builds a scatter plot using one feature for x and another for y.
+If the selected x feature is note-like or time-like, the accessor delegates labeled positions to `PlussPl` automatically.
 
 #### Examples
 

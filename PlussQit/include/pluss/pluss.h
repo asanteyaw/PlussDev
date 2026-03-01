@@ -7,6 +7,7 @@
 // - pluss::make_series(...)
 // - pluss::from_buffer(...)
 // - pluss::zeros/ones/full/rand/... factories
+// - pluss::distr::{sample,sample_like,pdf,logpdf,cdf,mixture_normal} when PlussMa is available
 // - pluss::from_torch(...) / pluss::to_torch(...) (when PLUSS_ENABLE_TORCH=ON)
 //
 // For CodeN (text API), this exports:

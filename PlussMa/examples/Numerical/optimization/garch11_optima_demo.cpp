@@ -355,7 +355,7 @@ int main() {
   const auto de_out = differential_evolution_prmm_minimizer(objective, x0, de_options);
 
   print_report("SequentialQP", sqp_options, problem, initial, truth);
-  print_report("InteriorPoint", ip_options, problem, initial, truth);
+  print_report("InternalProtocol", ip_options, problem, initial, truth);
   print_report("NelderMead", nm_out, truth);
   print_report("DE_PRMM", de_out, truth);
 

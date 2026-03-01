@@ -14,6 +14,7 @@
 #include <fmt/format.h>
 
 #include "plot/modules/backend/default_backend.h"
+#include "plot/modules/camera_3d.h"
 #include "plot/modules/core.h"
 #include "plot/modules/detail/show_helpers.h"
 #include "plot/modules/trace.h"
@@ -47,6 +48,32 @@ public:
 
   Figure3D& z_label(std::string label) {
     z_axis_.set_label(std::move(label));
+    return *this;
+  }
+
+  Figure3D& view(double azimuth_deg, double elevation_deg) {
+    camera_.azimuth_deg = azimuth_deg;
+    camera_.elevation_deg = elevation_deg;
+    return *this;
+  }
+
+  Figure3D& azimuth(double degrees) {
+    camera_.azimuth_deg = degrees;
+    return *this;
+  }
+
+  Figure3D& elevation(double degrees) {
+    camera_.elevation_deg = degrees;
+    return *this;
+  }
+
+  Figure3D& camera_distance(double distance) {
+    camera_.distance = std::max(1.0, distance);
+    return *this;
+  }
+
+  Figure3D& projection(ProjectionMode mode) {
+    camera_.projection = mode;
     return *this;
   }
 
@@ -97,6 +124,16 @@ public:
 
   Figure3D& legend(const Legend& l) {
     legend_ = l;
+    return *this;
+  }
+
+  Figure3D& theme(std::string name) {
+    style_.theme = std::move(name);
+    return *this;
+  }
+
+  Figure3D& font_family(std::string family) {
+    style_.font_family = std::move(family);
     return *this;
   }
 
@@ -164,6 +201,47 @@ public:
         .x = x,
         .y = y,
         .z = z,
+        .style = style.value_or(style_),
+    });
+    return *this;
+  }
+
+  Figure3D& add_surface(const std::vector<double>& x_axis,
+                        const std::vector<double>& y_axis,
+                        const std::vector<std::vector<double>>& z_rows,
+                        std::string name = "",
+                        std::optional<Style> style = std::nullopt) {
+    if (x_axis.empty() || y_axis.empty() || z_rows.empty() || z_rows.front().empty()) {
+      throw std::invalid_argument("plotism::Figure3D::add_surface: grid axes and z rows must be non-empty");
+    }
+    if (z_rows.size() != y_axis.size()) {
+      throw std::invalid_argument("plotism::Figure3D::add_surface: y-axis size must match z row count");
+    }
+    const std::size_t cols = x_axis.size();
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<double> z;
+    x.reserve(y_axis.size() * cols);
+    y.reserve(y_axis.size() * cols);
+    z.reserve(y_axis.size() * cols);
+    for (std::size_t row = 0; row < z_rows.size(); ++row) {
+      if (z_rows[row].size() != cols) {
+        throw std::invalid_argument("plotism::Figure3D::add_surface: all z rows must match x-axis size");
+      }
+      for (std::size_t col = 0; col < cols; ++col) {
+        x.push_back(x_axis[col]);
+        y.push_back(y_axis[row]);
+        z.push_back(z_rows[row][col]);
+      }
+    }
+    traces_.push_back(Trace3D{
+        .kind = Trace3DKind::Surface,
+        .name = std::move(name),
+        .x = std::move(x),
+        .y = std::move(y),
+        .z = std::move(z),
+        .rows = static_cast<std::int64_t>(y_axis.size()),
+        .cols = static_cast<std::int64_t>(cols),
         .style = style.value_or(style_),
     });
     return *this;
@@ -283,6 +361,7 @@ private:
         .x_axis = x_axis_,
         .y_axis = y_axis_,
         .z_axis = z_axis_,
+        .camera = camera_,
         .legend = legend_,
         .style = style_,
         .traces = traces_,
@@ -300,6 +379,7 @@ private:
   XAxis x_axis_{};
   YAxis y_axis_{};
   ZAxis z_axis_{};
+  Camera3D camera_{};
   Legend legend_{};
   Style style_{};
   std::vector<Trace3D> traces_{};

@@ -264,7 +264,7 @@ BenchmarkRow run_interior_point(const ConstrainedProblem& problem,
   const auto stop = std::chrono::steady_clock::now();
 
   BenchmarkRow row;
-  row.solver = "InteriorPoint";
+  row.solver = "InternalProtocol";
   row.backend_family = "Optima";
   row.exit = to_string(result.exit_flag);
   row.iterations = result.iteration;

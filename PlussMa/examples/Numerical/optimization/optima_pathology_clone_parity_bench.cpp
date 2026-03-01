@@ -242,7 +242,7 @@ int main() {
     options.interior_point.initial_barrier_parameter = 0.1;
     const auto problem = make_nonfinite_region_problem();
     const ParameterPack<Series> initial({{"x", scalar(-0.5)}});
-    rows.push_back(run_case("NonFiniteInitial", "InteriorPoint", problem, initial, options));
+    rows.push_back(run_case("NonFiniteInitial", "InternalProtocol", problem, initial, options));
   }
 
   {
@@ -289,7 +289,7 @@ int main() {
     options.interior_point.minimum_barrier_parameter = 1e-6;
     const auto problem = make_feasibility_phase_problem();
     const ParameterPack<Series> initial({{"x", scalar(1.0)}});
-    rows.push_back(run_case("FeasibilityFailure", "InteriorPoint", problem, initial, options));
+    rows.push_back(run_case("FeasibilityFailure", "InternalProtocol", problem, initial, options));
   }
 
   {
@@ -305,7 +305,7 @@ int main() {
     const ParameterPack<Series> initial({
         {"x", make_vec2(0.7, 0.7)},
     });
-    rows.push_back(run_case("ComplementarityProbe", "InteriorPoint", problem, initial, options));
+    rows.push_back(run_case("ComplementarityProbe", "InternalProtocol", problem, initial, options));
   }
 
   print_table(rows);

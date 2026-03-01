@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "plot/modules/axes.h"
+#include "plot/modules/camera_3d.h"
 #include "plot/modules/style.h"
 #include "plot/modules/trace.h"
 
@@ -37,6 +38,7 @@ struct Figure3DView {
   const XAxis& x_axis;
   const YAxis& y_axis;
   const ZAxis& z_axis;
+  const Camera3D& camera;
   const Legend& legend;
   const Style& style;
   const std::vector<Trace3D>& traces;

@@ -50,6 +50,7 @@ struct TextStyle2D {
   bool bold{false};
   TextAnchor2D anchor{TextAnchor2D::Left};
   TextOrientation2D orientation{TextOrientation2D::Horizontal};
+  std::string font_family{"sans-serif"};
 };
 
 class RenderSurface2D {
@@ -105,6 +106,8 @@ inline std::pair<double, double> map_legend_anchor_2d(LegendLocation location,
       return {left + margin, bottom - legend_height - margin};
     case LegendLocation::BottomRight:
       return {right - legend_width - margin, bottom - legend_height - margin};
+    case LegendLocation::OutsideRight:
+      return {right + margin, top + margin};
     case LegendLocation::Best:
     case LegendLocation::TopRight:
     default:

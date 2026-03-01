@@ -65,4 +65,23 @@ inline Figure3D surface(const std::vector<double>& x,
   return fig;
 }
 
+inline Figure3D surface(const std::vector<double>& x_axis,
+                        const std::vector<double>& y_axis,
+                        const std::vector<std::vector<double>>& z_rows,
+                        std::string name = "") {
+  Figure3D fig;
+  fig.add_surface(x_axis, y_axis, z_rows, std::move(name));
+  return fig;
+}
+
+inline Figure3D surface(const std::vector<double>& x_axis,
+                        const std::vector<double>& y_axis,
+                        const std::vector<std::vector<double>>& z_rows,
+                        std::string name,
+                        const Style& style) {
+  Figure3D fig;
+  fig.add_surface(x_axis, y_axis, z_rows, std::move(name), style);
+  return fig;
+}
+
 } // namespace pluss::plotism

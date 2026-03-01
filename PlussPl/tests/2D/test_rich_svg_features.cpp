@@ -42,34 +42,46 @@ int main() {
   }
 
   pluss::plotism::Figure2D fig;
-  fig.with_title("rich2d")
-      .title("Styled 2D subplot")
+  fig.theme("paper").font_family("IBM Plex Sans");
+  fig.subplot(1, 2, 0)
+      .with_title("rich2d")
+      .title("Area, band, step")
       .x_label("quarter")
       .y_label("value")
-      .legend(pluss::plotism::Legend{true, pluss::plotism::LegendLocation::TopLeft, "Signals"});
+      .legend(pluss::plotism::Legend{true, pluss::plotism::LegendLocation::OutsideRight, "Signals"})
+      .add_area(x, y1, "area")
+      .add_band(x, y1, y2, "band")
+      .add_step(x, y2, "step", {"Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8"})
+      .add_errorbar({1.0, 3.0, 5.0}, {1.6, 2.1, 1.8}, {0.12, 0.18, 0.15}, "err")
+      .annotate("crest", 5.0, y2[5]);
 
-  pluss::plotism::Style dashed;
-  dashed.color = "#0f766e";
-  dashed.line_style = "dashdot";
-  dashed.marker = "diamond";
-  dashed.line_width = 2.2;
-
-  pluss::plotism::Style scatter_style;
-  scatter_style.color = "#c2410c";
-  scatter_style.marker = "square";
-
-  fig.add_line(x, y1, "series-a", {"Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8"}, dashed);
-  fig.add_scatter(x, y2, "series-b", {}, scatter_style);
+  fig.subplot(1, 2, 1)
+      .title("Heatmap")
+      .x_label("quarter")
+      .y_label("desk")
+      .colorbar(pluss::plotism::Colorbar{true, pluss::plotism::ColorbarLocation::Right, "Intensity"})
+      .add_heatmap({{0.1, 0.4, 0.8},
+                    {0.2, 0.5, 0.9},
+                    {-0.1, 0.3, 0.7}},
+                   "load",
+                   {"Q1", "Q2", "Q3"},
+                   {"A", "B", "C"});
 
   const std::string svg = unique_path("plusspl_test_rich_2d", ".svg");
   fig.save_svg(svg, 980, 640);
 
   const std::string content = read_text(svg);
-  require(content.find("stroke-dasharray") != std::string::npos, "expected dashed line styling in svg");
+  require(content.find("crest") != std::string::npos, "expected annotation label in svg");
   require(content.find("Signals") != std::string::npos, "expected legend title in svg");
+  require(content.find("Intensity") != std::string::npos, "expected colorbar title in svg");
   require(content.find("Q4") != std::string::npos, "expected categorical x label in svg");
-  require(content.find("polygon") != std::string::npos || content.find("<rect") != std::string::npos,
-          "expected marker geometry in svg");
+  require(content.find("desk") != std::string::npos, "expected subplot axis label in svg");
+  require(content.find("font-family=\"IBM Plex Sans\"") != std::string::npos, "expected custom font family in svg");
+  require(content.find("fill=\"#f4efe6\"") != std::string::npos, "expected paper theme page background in svg");
+  require(content.find("fill=\"#c44536\"") != std::string::npos || content.find("fill=\"#0b3c5d\"") != std::string::npos,
+          "expected heatmap cells in svg");
+  require(content.find("polygon") != std::string::npos,
+          "expected filled area or band geometry in svg");
 
   return 0;
 }

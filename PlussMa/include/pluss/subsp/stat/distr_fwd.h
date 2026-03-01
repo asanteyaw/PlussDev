@@ -28,6 +28,14 @@ CODEM_API pluss::codem::Series sample(std::string_view name,
                                       std::initializer_list<std::int64_t> sizes,
                                       pluss::codem::Config cfg = {},
                                       std::uint64_t seed = 0);
+CODEM_API pluss::codem::Series sample(std::string_view name,
+                                      std::span<const std::int64_t> sizes,
+                                      pluss::codem::Config cfg = {},
+                                      std::uint64_t seed = 0);
+CODEM_API pluss::codem::Series sample(std::string_view name,
+                                      std::initializer_list<std::int64_t> sizes,
+                                      pluss::codem::Config cfg = {},
+                                      std::uint64_t seed = 0);
 
 CODEM_API pluss::codem::Series sample_like(std::string_view name,
                                            std::span<const double> params,
@@ -35,6 +43,9 @@ CODEM_API pluss::codem::Series sample_like(std::string_view name,
                                            std::uint64_t seed = 0);
 CODEM_API pluss::codem::Series sample_like(std::string_view name,
                                            std::initializer_list<double> params,
+                                           const pluss::codem::Series& like,
+                                           std::uint64_t seed = 0);
+CODEM_API pluss::codem::Series sample_like(std::string_view name,
                                            const pluss::codem::Series& like,
                                            std::uint64_t seed = 0);
 
