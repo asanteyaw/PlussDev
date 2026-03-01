@@ -1,0 +1,1459 @@
+# Atlas API Reference
+
+# Practical Atlas API Reference
+
+## API Reference Style
+
+This page documents the full public `Atlas` surface for frame-stack workflows.
+
+### `aggregate_over_frames`
+
+#### Signature
+
+```cpp
+DataFrame aggregate_over_frames(self, const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const
+```
+
+#### Parameters
+
+`fn` : `const std::function<DataFrame(const std::vector<DataFrame>&)>&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.aggregate_over_frames([](const std::vector<pluss::table::DataFrame>& frames) { return frames.front(); });
+```
+
+#### Output
+
+```text
+sales
+10.0
+20.0
+```
+
+### `align_depth`
+
+#### Signature
+
+```cpp
+Atlas align_depth(self, const Thread& labels) const
+```
+
+#### Parameters
+
+`labels` : `const Thread&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Atlas`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto labels = pluss::table::Thread(pluss::make_note({"baseline", "stress"}));
+auto out = atlas.align_depth(labels);
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `axis0_labels`
+
+#### Signature
+
+```cpp
+const std::optional<Thread>& axis0_labels(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`const std::optional<Thread>&`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.axis0_labels();
+```
+
+#### Output
+
+```text
+["train", "test"]
+```
+
+### `column_names`
+
+#### Signature
+
+```cpp
+const std::vector<std::string>& column_names(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`const std::vector<std::string>&`
+    Borrowed list of names.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.column_names();
+```
+
+#### Output
+
+```text
+["sales"]
+```
+
+### `defined`
+
+#### Signature
+
+```cpp
+bool defined(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.defined();
+```
+
+#### Output
+
+```text
+true
+```
+
+### `depth`
+
+#### Signature
+
+```cpp
+std::int64_t depth(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.depth();
+```
+
+#### Output
+
+```text
+2
+```
+
+### `empty`
+
+#### Signature
+
+```cpp
+bool empty(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.empty();
+```
+
+#### Output
+
+```text
+false
+```
+
+### `frame`
+
+#### Signature
+
+```cpp
+DataFrame frame(self, std::int64_t index) const
+```
+
+#### Parameters
+
+`index` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.frame(0);
+```
+
+#### Output
+
+```text
+sales
+10.0
+20.0
+```
+
+### `frames`
+
+#### Signature
+
+```cpp
+const std::vector<DataFrame>& frames(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`const std::vector<DataFrame>&`
+    Borrowed collection of frames.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.frames();
+```
+
+#### Output
+
+```text
+[frame0, frame1]
+```
+
+### `head`
+
+#### Signature
+
+```cpp
+Atlas head(self, std::int64_t n = 5) const
+```
+
+#### Parameters
+
+`n` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Atlas`
+    Value produced by this call.
+
+#### Notes
+
+Use this to narrow the current object to the rows or depth range you want to inspect next.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.head(1);
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `iloc`
+
+#### Signature
+
+```cpp
+DataFrame iloc(self, std::int64_t index) const
+```
+
+#### Parameters
+
+`index` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Use this to narrow the current object to the rows or depth range you want to inspect next.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.iloc(0);
+```
+
+#### Output
+
+```text
+sales
+10.0
+20.0
+```
+
+### `kindelize`
+
+#### Signature
+
+```cpp
+pluss::kindle::Archive kindelize(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`pluss::kindle::Archive`
+    Value produced by this call.
+
+#### Notes
+
+This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### See also
+
+- `pluss::kindle::Archive kindelize(self, const pluss::kindle::KindelizePolicy& policy) const`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.kindelize();
+```
+
+#### Output
+
+```text
+train -> Catalog(metric -> Series([10.0, 20.0]))
+test  -> Catalog(metric -> Series([30.0, 40.0]))
+```
+
+### `kindelize`
+
+#### Signature
+
+```cpp
+pluss::kindle::Archive kindelize(self, const pluss::kindle::KindelizePolicy& policy) const
+```
+
+#### Parameters
+
+`policy` : `const pluss::kindle::KindelizePolicy&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`pluss::kindle::Archive`
+    Value produced by this call.
+
+#### Notes
+
+This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### See also
+
+- `pluss::kindle::Archive kindelize(self) const`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.kindelize();
+```
+
+#### Output
+
+```text
+train -> Catalog(metric -> Series([10.0, 20.0]))
+test  -> Catalog(metric -> Series([30.0, 40.0]))
+```
+
+### `loc`
+
+#### Signature
+
+```cpp
+DataFrame loc(self, const pluss::Timeline& label) const
+```
+
+#### Parameters
+
+`label` : `const pluss::Timeline&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Use this to narrow the current object to the rows or depth range you want to inspect next.
+
+#### See also
+
+- `DataFrame loc(self, std::string_view label) const`
+- `DataFrame loc(self, std::int64_t label) const`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"train", "test"})));
+auto out = labeled.loc("test");
+```
+
+#### Output
+
+```text
+sales
+10.0
+20.0
+```
+
+### `loc`
+
+#### Signature
+
+```cpp
+DataFrame loc(self, std::int64_t label) const
+```
+
+#### Parameters
+
+`label` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Use this to narrow the current object to the rows or depth range you want to inspect next.
+
+#### See also
+
+- `DataFrame loc(self, std::string_view label) const`
+- `DataFrame loc(self, const pluss::Timeline& label) const`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"train", "test"})));
+auto out = labeled.loc("test");
+```
+
+#### Output
+
+```text
+sales
+10.0
+20.0
+```
+
+### `loc`
+
+#### Signature
+
+```cpp
+DataFrame loc(self, std::string_view label) const
+```
+
+#### Parameters
+
+`label` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Use this to narrow the current object to the rows or depth range you want to inspect next.
+
+#### See also
+
+- `DataFrame loc(self, std::int64_t label) const`
+- `DataFrame loc(self, const pluss::Timeline& label) const`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"train", "test"})));
+auto out = labeled.loc("test");
+```
+
+#### Output
+
+```text
+sales
+10.0
+20.0
+```
+
+### `map_frames`
+
+#### Signature
+
+```cpp
+Atlas map_frames(self, const std::function<DataFrame(const DataFrame&)>& fn) const
+```
+
+#### Parameters
+
+`fn` : `const std::function<DataFrame(const DataFrame&)>&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Atlas`
+    Value produced by this call.
+
+#### Notes
+
+This mutates or derives structure while keeping the surrounding object model intact.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.map_frames([](const pluss::table::DataFrame& frame) { return frame.head(1, false); });
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `ncols`
+
+#### Signature
+
+```cpp
+std::int64_t ncols(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.ncols();
+```
+
+#### Output
+
+```text
+2
+```
+
+### `nrows`
+
+#### Signature
+
+```cpp
+std::int64_t nrows(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.nrows();
+```
+
+#### Output
+
+```text
+2
+```
+
+### `plot`
+
+#### Signature
+
+```cpp
+DataFramePlotAccessor plot(self, std::int64_t frame_index = 0) const
+```
+
+#### Parameters
+
+`frame_index` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFramePlotAccessor`
+    Value produced by this call.
+
+#### Notes
+
+This opens the plotting accessor for the current data object.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto fig = atlas.plot(0).line("sales");
+```
+
+#### Output
+
+```text
+Figure(line)
+```
+
+### `relabel_depth`
+
+#### Signature
+
+```cpp
+Atlas relabel_depth(self, const Thread& labels) const
+```
+
+#### Parameters
+
+`labels` : `const Thread&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Atlas`
+    Value produced by this call.
+
+#### Notes
+
+This adjusts labels without changing the underlying payload values.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto labels = pluss::table::Thread(pluss::make_note({"baseline", "stress"}));
+auto out = atlas.relabel_depth(labels);
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `show`
+
+#### Signature
+
+```cpp
+void show(self, const display::DisplayOptions& options =
+```
+
+#### Parameters
+
+`options` : `const display::DisplayOptions&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`void`
+    Performs the side effect and returns no value.
+
+#### Notes
+
+This renders a human-readable view for inspection instead of creating a new analytic object.
+
+#### See also
+
+- `void show(self, std::ostream& os, const display::DisplayOptions& options =`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+atlas.show();
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `show`
+
+#### Signature
+
+```cpp
+void show(self, std::ostream& os, const display::DisplayOptions& options =
+```
+
+#### Parameters
+
+`os` : `std::ostream&`
+    See the signature for the supported argument form.
+
+`options` : `const display::DisplayOptions&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`void`
+    Performs the side effect and returns no value.
+
+#### Notes
+
+This renders a human-readable view for inspection instead of creating a new analytic object.
+
+#### See also
+
+- `void show(self, const display::DisplayOptions& options =`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+atlas.show();
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `slice_frames`
+
+#### Signature
+
+```cpp
+Atlas slice_frames(self, std::int64_t start, std::int64_t stop) const
+```
+
+#### Parameters
+
+`start` : `std::int64_t`
+    See the signature for the supported argument form.
+
+`stop` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Atlas`
+    Value produced by this call.
+
+#### Notes
+
+Use this to narrow the current object to the rows or depth range you want to inspect next.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.slice_frames(0, 1);
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `sort_depth`
+
+#### Signature
+
+```cpp
+Atlas sort_depth(self, bool ascending = true, bool nulls_last = true) const
+```
+
+#### Parameters
+
+`ascending` : `bool`
+    See the signature for the supported argument form.
+
+`nulls_last` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Atlas`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto labeled = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"test", "train"})));
+auto out = labeled.sort_depth(true, true);
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `squeeze`
+
+#### Signature
+
+```cpp
+DataFrame squeeze(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.squeeze();
+```
+
+#### Output
+
+```text
+sales
+10.0
+20.0
+```
+
+### `tabelize`
+
+#### Signature
+
+```cpp
+static Atlas tabelize(const pluss::kindle::Archive& archive)
+```
+
+#### Parameters
+
+`archive` : `const pluss::kindle::Archive&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Atlas`
+    Value produced by this call.
+
+#### Notes
+
+This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### See also
+
+- `static Atlas tabelize(const pluss::kindle::Archive& archive, const pluss::kindle::TabelizePolicy& policy)`
+
+#### Examples
+
+```cpp
+using namespace pluss::kindle::literals;
+auto c0 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0}))});
+auto c1 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0}))});
+auto archive = pluss::kindle::Archive({c0, c1});
+auto out = pluss::table::Atlas::tabelize(archive);
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `tabelize`
+
+#### Signature
+
+```cpp
+static Atlas tabelize(const pluss::kindle::Archive& archive, const pluss::kindle::TabelizePolicy& policy)
+```
+
+#### Parameters
+
+`archive` : `const pluss::kindle::Archive&`
+    See the signature for the supported argument form.
+
+`policy` : `const pluss::kindle::TabelizePolicy&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Atlas`
+    Value produced by this call.
+
+#### Notes
+
+This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### See also
+
+- `static Atlas tabelize(const pluss::kindle::Archive& archive)`
+
+#### Examples
+
+```cpp
+using namespace pluss::kindle::literals;
+auto c0 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0}))});
+auto c1 = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({30.0, 40.0}))});
+auto archive = pluss::kindle::Archive({c0, c1});
+auto out = pluss::table::Atlas::tabelize(archive);
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `tail`
+
+#### Signature
+
+```cpp
+Atlas tail(self, std::int64_t n = 5) const
+```
+
+#### Parameters
+
+`n` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Atlas`
+    Value produced by this call.
+
+#### Notes
+
+Use this to narrow the current object to the rows or depth range you want to inspect next.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.tail(1);
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `to_string`
+
+#### Signature
+
+```cpp
+std::string to_string(self, const display::DisplayOptions& options =
+```
+
+#### Parameters
+
+`options` : `const display::DisplayOptions&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`std::string`
+    Rendered string result.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.to_string();
+```
+
+#### Output
+
+```text
+frame0:
+sales
+10.0
+20.0
+
+frame1:
+sales
+30.0
+40.0
+```
+
+### `unique`
+
+#### Signature
+
+```cpp
+bool unique(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Notes
+
+This call is part of the public `Atlas` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto out = atlas.unique();
+```
+
+#### Output
+
+```text
+true
+```

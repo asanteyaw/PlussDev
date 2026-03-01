@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Slot API Reference &#8212; PlussMic User Docs  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=4d4ed828" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/layout.js?v=15cb0ccd"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Registry API Reference" href="registry_api_reference.html" />
+    <link rel="prev" title="Bundle Model Guide" href="bundle.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="slot-api-reference">
+<h1>Slot API Reference<a class="headerlink" href="#slot-api-reference" title="Link to this heading">¶</a></h1>
+</section>
+<section id="practical-slot-api-reference">
+<h1>Practical Slot API Reference<a class="headerlink" href="#practical-slot-api-reference" title="Link to this heading">¶</a></h1>
+<section id="api-reference-style">
+<h2>API Reference Style<a class="headerlink" href="#api-reference-style" title="Link to this heading">¶</a></h2>
+<p>This page documents the full public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> surface for one-dimensional heterogeneous bundles.</p>
+<section id="as-kindle">
+<h3><code class="docutils literal notranslate"><span class="pre">as_kindle</span></code><a class="headerlink" href="#as-kindle" title="Link to this heading">¶</a></h3>
+<section id="signature">
+<h4>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="w"> </span><span class="n">as_kindle</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::kindle::Stream</span></code>
+Value produced by this call.</p>
+</section>
+<section id="notes">
+<h4>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h4>
+<p>This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.</p>
+</section>
+<section id="examples">
+<h4>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">as_kindle</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h4>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series([10.0, 20.0, 30.0])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="at">
+<h3><code class="docutils literal notranslate"><span class="pre">at</span></code><a class="headerlink" href="#at" title="Link to this heading">¶</a></h3>
+<section id="id1">
+<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">Value</span><span class="o">&amp;</span><span class="w"> </span><span class="n">at</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h4>Parameters<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">i</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id3">
+<h4>Returns<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Value&amp;</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id4">
+<h4>Notes<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
+<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+</section>
+<section id="id5">
+<h4>Examples<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h4>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(1)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="concat">
+<h3><code class="docutils literal notranslate"><span class="pre">concat</span></code><a class="headerlink" href="#concat" title="Link to this heading">¶</a></h3>
+<section id="id7">
+<h4>Signature<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="w"> </span><span class="n">concat</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Slot</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">other</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slot&amp;</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id9">
+<h4>Returns<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id10">
+<h4>Notes<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h4>
+<p>Use this when you need to merge compatible objects or extend the current one with another input.</p>
+</section>
+<section id="id11">
+<h4>Examples<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">5</span><span class="p">)});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">concat</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id12">
+<h4>Output<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="defined">
+<h3><code class="docutils literal notranslate"><span class="pre">defined</span></code><a class="headerlink" href="#defined" title="Link to this heading">¶</a></h3>
+<section id="id13">
+<h4>Signature<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">defined</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id14">
+<h4>Parameters<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id15">
+<h4>Returns<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
+Boolean status or membership result.</p>
+</section>
+<section id="id16">
+<h4>Notes<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h4>
+<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+</section>
+<section id="id17">
+<h4>Examples<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">defined</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id18">
+<h4>Output<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
+</section>
+</section>
+<section id="empty">
+<h3><code class="docutils literal notranslate"><span class="pre">empty</span></code><a class="headerlink" href="#empty" title="Link to this heading">¶</a></h3>
+<section id="id19">
+<h4>Signature<a class="headerlink" href="#id19" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">empty</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id20">
+<h4>Parameters<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id21">
+<h4>Returns<a class="headerlink" href="#id21" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
+Boolean status or membership result.</p>
+</section>
+<section id="id22">
+<h4>Notes<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h4>
+<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+</section>
+<section id="id23">
+<h4>Examples<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">empty</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id24">
+<h4>Output<a class="headerlink" href="#id24" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+</section>
+</section>
+<section id="filter">
+<h3><code class="docutils literal notranslate"><span class="pre">filter</span></code><a class="headerlink" href="#filter" title="Link to this heading">¶</a></h3>
+<section id="id25">
+<h4>Signature<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="w"> </span><span class="n">filter</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">bool</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Value</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">predicate</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id26">
+<h4>Parameters<a class="headerlink" href="#id26" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">predicate</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;bool(const</span> <span class="pre">Value&amp;)&gt;&amp;</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id27">
+<h4>Returns<a class="headerlink" href="#id27" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id28">
+<h4>Notes<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h4>
+<p>Use this to reduce the current object to the rows or fields that matter for the next step.</p>
+</section>
+<section id="id29">
+<h4>Examples<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;ok&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">filter</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">holds_alternative</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">value</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id30">
+<h4>Output<a class="headerlink" href="#id30" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="from-kindle">
+<h3><code class="docutils literal notranslate"><span class="pre">from_kindle</span></code><a class="headerlink" href="#from-kindle" title="Link to this heading">¶</a></h3>
+<section id="id31">
+<h4>Signature<a class="headerlink" href="#id31" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Slot</span><span class="w"> </span><span class="n">from_kindle</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">stream</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id32">
+<h4>Parameters<a class="headerlink" href="#id32" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">stream</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::kindle::Stream&amp;</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id33">
+<h4>Returns<a class="headerlink" href="#id33" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id34">
+<h4>Notes<a class="headerlink" href="#id34" title="Link to this heading">¶</a></h4>
+<p>This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.</p>
+</section>
+<section id="id35">
+<h4>Examples<a class="headerlink" href="#id35" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">from_kindle</span><span class="p">(</span><span class="n">stream</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id36">
+<h4>Output<a class="headerlink" href="#id36" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="head">
+<h3><code class="docutils literal notranslate"><span class="pre">head</span></code><a class="headerlink" href="#head" title="Link to this heading">¶</a></h3>
+<section id="id37">
+<h4>Signature<a class="headerlink" href="#id37" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="w"> </span><span class="n">head</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id38">
+<h4>Parameters<a class="headerlink" href="#id38" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id39">
+<h4>Returns<a class="headerlink" href="#id39" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id40">
+<h4>Notes<a class="headerlink" href="#id40" title="Link to this heading">¶</a></h4>
+<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+</section>
+<section id="id41">
+<h4>Examples<a class="headerlink" href="#id41" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id42">
+<h4>Output<a class="headerlink" href="#id42" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="kindelize">
+<h3><code class="docutils literal notranslate"><span class="pre">kindelize</span></code><a class="headerlink" href="#kindelize" title="Link to this heading">¶</a></h3>
+<section id="id43">
+<h4>Signature<a class="headerlink" href="#id43" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="w"> </span><span class="n">kindelize</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id44">
+<h4>Parameters<a class="headerlink" href="#id44" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id45">
+<h4>Returns<a class="headerlink" href="#id45" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::kindle::Stream</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id46">
+<h4>Notes<a class="headerlink" href="#id46" title="Link to this heading">¶</a></h4>
+<p>This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.</p>
+</section>
+<section id="id47">
+<h4>Examples<a class="headerlink" href="#id47" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">kindelize</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id48">
+<h4>Output<a class="headerlink" href="#id48" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series([10.0, 20.0, 30.0])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="push">
+<h3><code class="docutils literal notranslate"><span class="pre">push</span></code><a class="headerlink" href="#push" title="Link to this heading">¶</a></h3>
+<section id="id49">
+<h4>Signature<a class="headerlink" href="#id49" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="w"> </span><span class="n">push</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Value</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id50">
+<h4>Parameters<a class="headerlink" href="#id50" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">value</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Value&amp;</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id51">
+<h4>Returns<a class="headerlink" href="#id51" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id52">
+<h4>Notes<a class="headerlink" href="#id52" title="Link to this heading">¶</a></h4>
+<p>This mutates or derives structure while keeping the surrounding object model intact.</p>
+</section>
+<section id="id53">
+<h4>Examples<a class="headerlink" href="#id53" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;tail&quot;</span><span class="p">));</span>
+</pre></div>
+</div>
+</section>
+<section id="id54">
+<h4>Output<a class="headerlink" href="#id54" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id55">
+<h3><code class="docutils literal notranslate"><span class="pre">push_</span></code><a class="headerlink" href="#id55" title="Link to this heading">¶</a></h3>
+<section id="id56">
+<h4>Signature<a class="headerlink" href="#id56" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="o">&amp;</span><span class="w"> </span><span class="n">push_</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Value</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id57">
+<h4>Parameters<a class="headerlink" href="#id57" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">value</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Value&amp;</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id58">
+<h4>Returns<a class="headerlink" href="#id58" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Slot&amp;</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id59">
+<h4>Notes<a class="headerlink" href="#id59" title="Link to this heading">¶</a></h4>
+<p>This mutates or derives structure while keeping the surrounding object model intact.</p>
+</section>
+<section id="id60">
+<h4>Examples<a class="headerlink" href="#id60" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="n">slot</span><span class="p">.</span><span class="n">push_</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;tail&quot;</span><span class="p">));</span>
+</pre></div>
+</div>
+</section>
+<section id="id61">
+<h4>Output<a class="headerlink" href="#id61" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="show">
+<h3><code class="docutils literal notranslate"><span class="pre">show</span></code><a class="headerlink" href="#show" title="Link to this heading">¶</a></h3>
+<section id="id62">
+<h4>Signature<a class="headerlink" href="#id62" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">show</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id63">
+<h4>Parameters<a class="headerlink" href="#id63" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">os</span></code> : <code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id64">
+<h4>Returns<a class="headerlink" href="#id64" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">void</span></code>
+Performs the side effect and returns no value.</p>
+</section>
+<section id="id65">
+<h4>Notes<a class="headerlink" href="#id65" title="Link to this heading">¶</a></h4>
+<p>This renders a human-readable view for inspection instead of creating a new analytic object.</p>
+</section>
+<section id="id66">
+<h4>Examples<a class="headerlink" href="#id66" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="n">slot</span><span class="p">.</span><span class="n">show</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id67">
+<h4>Output<a class="headerlink" href="#id67" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="size">
+<h3><code class="docutils literal notranslate"><span class="pre">size</span></code><a class="headerlink" href="#size" title="Link to this heading">¶</a></h3>
+<section id="id68">
+<h4>Signature<a class="headerlink" href="#id68" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">size</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id69">
+<h4>Parameters<a class="headerlink" href="#id69" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id70">
+<h4>Returns<a class="headerlink" href="#id70" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+Integer count, size, or positional result.</p>
+</section>
+<section id="id71">
+<h4>Notes<a class="headerlink" href="#id71" title="Link to this heading">¶</a></h4>
+<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+</section>
+<section id="id72">
+<h4>Examples<a class="headerlink" href="#id72" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id73">
+<h4>Output<a class="headerlink" href="#id73" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>3
+</pre></div>
+</div>
+</section>
+</section>
+<section id="slice">
+<h3><code class="docutils literal notranslate"><span class="pre">slice</span></code><a class="headerlink" href="#slice" title="Link to this heading">¶</a></h3>
+<section id="id74">
+<h4>Signature<a class="headerlink" href="#id74" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="w"> </span><span class="n">slice</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">stop</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id75">
+<h4>Parameters<a class="headerlink" href="#id75" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">start</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+See the signature for the supported argument form.</p>
+<p><code class="docutils literal notranslate"><span class="pre">stop</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id76">
+<h4>Returns<a class="headerlink" href="#id76" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id77">
+<h4>Notes<a class="headerlink" href="#id77" title="Link to this heading">¶</a></h4>
+<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+</section>
+<section id="id78">
+<h4>Examples<a class="headerlink" href="#id78" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id79">
+<h4>Output<a class="headerlink" href="#id79" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="tail">
+<h3><code class="docutils literal notranslate"><span class="pre">tail</span></code><a class="headerlink" href="#tail" title="Link to this heading">¶</a></h3>
+<section id="id80">
+<h4>Signature<a class="headerlink" href="#id80" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="w"> </span><span class="n">tail</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id81">
+<h4>Parameters<a class="headerlink" href="#id81" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">n</span></code> : <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id82">
+<h4>Returns<a class="headerlink" href="#id82" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id83">
+<h4>Notes<a class="headerlink" href="#id83" title="Link to this heading">¶</a></h4>
+<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+</section>
+<section id="id84">
+<h4>Examples<a class="headerlink" href="#id84" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id85">
+<h4>Output<a class="headerlink" href="#id85" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="take">
+<h3><code class="docutils literal notranslate"><span class="pre">take</span></code><a class="headerlink" href="#take" title="Link to this heading">¶</a></h3>
+<section id="id86">
+<h4>Signature<a class="headerlink" href="#id86" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="w"> </span><span class="n">take</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id87">
+<h4>Parameters<a class="headerlink" href="#id87" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">indices</span></code> : <code class="docutils literal notranslate"><span class="pre">std::span&lt;const</span> <span class="pre">std::int64_t&gt;</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id88">
+<h4>Returns<a class="headerlink" href="#id88" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id89">
+<h4>Notes<a class="headerlink" href="#id89" title="Link to this heading">¶</a></h4>
+<p>Use this to narrow the current object to the rows or depth range you want to inspect next.</p>
+</section>
+<section id="id90">
+<h4>Examples<a class="headerlink" href="#id90" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">picks</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">picks</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id91">
+<h4>Output<a class="headerlink" href="#id91" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="to-json">
+<h3><code class="docutils literal notranslate"><span class="pre">to_json</span></code><a class="headerlink" href="#to-json" title="Link to this heading">¶</a></h3>
+<section id="id92">
+<h4>Signature<a class="headerlink" href="#id92" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">to_json</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id93">
+<h4>Parameters<a class="headerlink" href="#id93" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id94">
+<h4>Returns<a class="headerlink" href="#id94" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
+Rendered string result.</p>
+</section>
+<section id="id95">
+<h4>Notes<a class="headerlink" href="#id95" title="Link to this heading">¶</a></h4>
+<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+</section>
+<section id="id96">
+<h4>Examples<a class="headerlink" href="#id96" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">to_json</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id97">
+<h4>Output<a class="headerlink" href="#id97" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="to-kindle">
+<h3><code class="docutils literal notranslate"><span class="pre">to_kindle</span></code><a class="headerlink" href="#to-kindle" title="Link to this heading">¶</a></h3>
+<section id="id98">
+<h4>Signature<a class="headerlink" href="#id98" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="w"> </span><span class="n">to_kindle</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id99">
+<h4>Parameters<a class="headerlink" href="#id99" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id100">
+<h4>Returns<a class="headerlink" href="#id100" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::kindle::Stream</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id101">
+<h4>Notes<a class="headerlink" href="#id101" title="Link to this heading">¶</a></h4>
+<p>This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.</p>
+</section>
+<section id="id102">
+<h4>Examples<a class="headerlink" href="#id102" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">to_kindle</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id103">
+<h4>Output<a class="headerlink" href="#id103" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series([10.0, 20.0, 30.0])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="to-string">
+<h3><code class="docutils literal notranslate"><span class="pre">to_string</span></code><a class="headerlink" href="#to-string" title="Link to this heading">¶</a></h3>
+<section id="id104">
+<h4>Signature<a class="headerlink" href="#id104" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">to_string</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id105">
+<h4>Parameters<a class="headerlink" href="#id105" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id106">
+<h4>Returns<a class="headerlink" href="#id106" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
+Rendered string result.</p>
+</section>
+<section id="id107">
+<h4>Notes<a class="headerlink" href="#id107" title="Link to this heading">¶</a></h4>
+<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+</section>
+<section id="id108">
+<h4>Examples<a class="headerlink" href="#id108" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">to_string</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id109">
+<h4>Output<a class="headerlink" href="#id109" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="transform">
+<h3><code class="docutils literal notranslate"><span class="pre">transform</span></code><a class="headerlink" href="#transform" title="Link to this heading">¶</a></h3>
+<section id="id110">
+<h4>Signature<a class="headerlink" href="#id110" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slot</span><span class="w"> </span><span class="n">transform</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Value</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Value</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id111">
+<h4>Parameters<a class="headerlink" href="#id111" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">fn</span></code> : <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Value(const</span> <span class="pre">Value&amp;)&gt;&amp;</span></code>
+See the signature for the supported argument form.</p>
+</section>
+<section id="id112">
+<h4>Returns<a class="headerlink" href="#id112" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Slot</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id113">
+<h4>Notes<a class="headerlink" href="#id113" title="Link to this heading">¶</a></h4>
+<p>This mutates or derives structure while keeping the surrounding object model intact.</p>
+</section>
+<section id="id114">
+<h4>Examples<a class="headerlink" href="#id114" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">transform</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="o">::</span><span class="n">Value</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">holds_alternative</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">value</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">(</span><span class="n">value</span><span class="p">).</span><span class="n">add</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">value</span><span class="p">;</span><span class="w"> </span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="id115">
+<h4>Output<a class="headerlink" href="#id115" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+<section id="type-counts">
+<h3><code class="docutils literal notranslate"><span class="pre">type_counts</span></code><a class="headerlink" href="#type-counts" title="Link to this heading">¶</a></h3>
+<section id="id116">
+<h4>Signature<a class="headerlink" href="#id116" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">unordered_map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">type_counts</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id117">
+<h4>Parameters<a class="headerlink" href="#id117" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id118">
+<h4>Returns<a class="headerlink" href="#id118" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">std::unordered_map&lt;std::string,</span> <span class="pre">std::int64_t&gt;</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id119">
+<h4>Notes<a class="headerlink" href="#id119" title="Link to this heading">¶</a></h4>
+<p>Use this when you want a summary view instead of carrying the full input forward unchanged.</p>
+</section>
+<section id="id120">
+<h4>Examples<a class="headerlink" href="#id120" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;ok&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">type_counts</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id121">
+<h4>Output<a class="headerlink" href="#id121" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{&quot;Series&quot;: 2, &quot;Note&quot;: 1}
+</pre></div>
+</div>
+</section>
+</section>
+<section id="unique">
+<h3><code class="docutils literal notranslate"><span class="pre">unique</span></code><a class="headerlink" href="#unique" title="Link to this heading">¶</a></h3>
+<section id="id122">
+<h4>Signature<a class="headerlink" href="#id122" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">unique</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id123">
+<h4>Parameters<a class="headerlink" href="#id123" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id124">
+<h4>Returns<a class="headerlink" href="#id124" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
+Boolean status or membership result.</p>
+</section>
+<section id="id125">
+<h4>Notes<a class="headerlink" href="#id125" title="Link to this heading">¶</a></h4>
+<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+</section>
+<section id="id126">
+<h4>Examples<a class="headerlink" href="#id126" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">unique</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id127">
+<h4>Output<a class="headerlink" href="#id127" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
+</section>
+</section>
+<section id="values">
+<h3><code class="docutils literal notranslate"><span class="pre">values</span></code><a class="headerlink" href="#values" title="Link to this heading">¶</a></h3>
+<section id="id128">
+<h4>Signature<a class="headerlink" href="#id128" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Value</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="id129">
+<h4>Parameters<a class="headerlink" href="#id129" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id130">
+<h4>Returns<a class="headerlink" href="#id130" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;Value&gt;&amp;</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id131">
+<h4>Notes<a class="headerlink" href="#id131" title="Link to this heading">¶</a></h4>
+<p>This call is part of the public <code class="docutils literal notranslate"><span class="pre">Slot</span></code> API and is documented here using a concrete usage example.</p>
+</section>
+<section id="id132">
+<h4>Examples<a class="headerlink" href="#id132" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">slot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">bundle</span><span class="o">::</span><span class="n">Slot</span><span class="p">({</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mi">3</span><span class="p">)});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slot</span><span class="p">.</span><span class="n">values</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id133">
+<h4>Output<a class="headerlink" href="#id133" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slot([Series(1), Series(2), Series(3)])
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussMic User Docs</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_plot_api_reference.html#practical-dataframeplotaccessor-api-reference">Practical DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_accessor_api_reference.html">DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_accessor_api_reference.html#practical-dataframesqlaccessor-api-reference">Practical DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_prepared_api_reference.html">DataFrameSqlPrepared API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_sql_prepared_api_reference.html#practical-dataframesqlprepared-api-reference">Practical DataFrameSqlPrepared API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thread_atlas.html">Thread And Atlas Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thread_api_reference.html">Thread API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thread_api_reference.html#practical-thread-api-reference">Practical Thread API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thread_value_api_reference.html">ThreadValue API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thread_value_api_reference.html#practical-threadvalue-api-reference">Practical ThreadValue API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="atlas_api_reference.html">Atlas API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="atlas_api_reference.html#practical-atlas-api-reference">Practical Atlas API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream_api_reference.html">Stream API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stream_api_reference.html#practical-stream-api-reference">Practical Stream API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="catalog_api_reference.html">Catalog API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="catalog_api_reference.html#practical-catalog-api-reference">Practical Catalog API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="archive_api_reference.html">Archive API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="archive_api_reference.html#practical-archive-api-reference">Practical Archive API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Slot API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#practical-slot-api-reference">Practical Slot API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#api-reference-style">API Reference Style</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="registry_api_reference.html">Registry API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry_api_reference.html#practical-registry-api-reference">Practical Registry API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aisle_api_reference.html">Aisle API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aisle_api_reference.html#practical-aisle-api-reference">Practical Aisle API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="bundle.html" title="previous chapter">Bundle Model Guide</a></li>
+      <li>Next: <a href="registry_api_reference.html" title="next chapter">Registry API Reference</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/slot_api_reference.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

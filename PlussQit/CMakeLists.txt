@@ -615,6 +615,15 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch75_optima_progress_hook.cpp
       tests/CodeM/test_patch76_optima_exit_behavior.cpp
       tests/CodeM/test_patch77_optima_garch_objective.cpp
+      tests/CodeM/test_patch78_optima_scaling.cpp
+      tests/CodeM/test_patch79_optima_cg.cpp
+      tests/CodeM/test_patch80_optima_lbfgs.cpp
+      tests/CodeM/test_patch81_optima_primal_dual_ip.cpp
+      tests/CodeM/test_patch82_optima_feasibility_phase.cpp
+      tests/CodeM/test_patch83_optima_exact_curvature.cpp
+      tests/CodeM/test_patch84_optima_sqp_soc.cpp
+      tests/CodeM/test_patch85_optima_linear_policy.cpp
+      tests/CodeM/test_patch86_optima_normalization.cpp
     )
     target_link_libraries(plussqit_codem_optim_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_optim_tests PRIVATE cxx_std_20)

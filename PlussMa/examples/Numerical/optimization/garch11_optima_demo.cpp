@@ -309,22 +309,24 @@ int main() {
 
   OptimaOptions sqp_options;
   sqp_options.algorithm = OptimaAlgorithm::SequentialQP;
-  sqp_options.sequential_qp.max_iterations = 15;
+  sqp_options.sequential_qp.max_iterations = 30;
   sqp_options.sequential_qp.constraint_tolerance = 1e-8;
   sqp_options.sequential_qp.optimality_tolerance = 1e-6;
   sqp_options.sequential_qp.active_set_tolerance = 1e-6;
   sqp_options.sequential_qp.regularization = 1e-8;
   sqp_options.sequential_qp.max_line_search_iterations = 12;
+  sqp_options.sequential_qp.problem_scaling = pluss::subsp::math::optim::OptimaProblemScaling::InitialPoint;
 
   OptimaOptions ip_options;
   ip_options.algorithm = OptimaAlgorithm::InteriorPoint;
-  ip_options.interior_point.max_iterations = 20;
+  ip_options.interior_point.max_iterations = 35;
   ip_options.interior_point.initial_barrier_parameter = 1e-2;
   ip_options.interior_point.minimum_barrier_parameter = 1e-8;
   ip_options.interior_point.barrier_decay = 0.2;
   ip_options.interior_point.constraint_tolerance = 1e-8;
   ip_options.interior_point.optimality_tolerance = 1e-6;
   ip_options.interior_point.max_line_search_iterations = 16;
+  ip_options.interior_point.problem_scaling = pluss::subsp::math::optim::OptimaProblemScaling::InitialPoint;
 
   NelderMeadConfig nm_options;
   nm_options.position_tolerance = 1e-7;

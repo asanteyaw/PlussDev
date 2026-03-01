@@ -324,6 +324,53 @@ inline Series flatten_values(const ParameterPack<Series>& params) {
   return params.flatten_values();
 }
 
+inline Trace flatten_values(const ParameterPack<Trace>& params) {
+  if (params.empty()) {
+    throw std::runtime_error("subsp::math::optim::flatten_values<Trace>: empty pack");
+  }
+  std::vector<Series> flat;
+  flat.reserve(params.size());
+  for (const auto& block : params.blocks()) {
+    flat.push_back(block.value.value().reshape({block.value.value().numel()}));
+  }
+  Series out = flat.size() == 1 ? flat.front() : flat.front().unite(std::vector<Series>(flat.begin() + 1, flat.end()), 0);
+  return Trace(out);
+}
+
+inline DualTrace flatten_values(const ParameterPack<DualTrace>& params) {
+  if (params.empty()) {
+    throw std::runtime_error("subsp::math::optim::flatten_values<DualTrace>: empty pack");
+  }
+  std::vector<Series> values;
+  std::vector<Series> tangents;
+  values.reserve(params.size());
+  tangents.reserve(params.size());
+  for (const auto& block : params.blocks()) {
+    values.push_back(block.value.value().reshape({block.value.value().numel()}));
+    tangents.push_back(block.value.tangent().reshape({block.value.tangent().numel()}));
+  }
+  Series value = values.size() == 1 ? values.front() : values.front().unite(std::vector<Series>(values.begin() + 1, values.end()), 0);
+  Series tangent =
+      tangents.size() == 1 ? tangents.front() : tangents.front().unite(std::vector<Series>(tangents.begin() + 1, tangents.end()), 0);
+  return DualTrace(value, tangent);
+}
+
+inline Trace reshape_autodiff_(const Trace& value, const std::vector<std::int64_t>& sizes) {
+  return Trace(value.value().reshape(sizes));
+}
+
+inline DualTrace reshape_autodiff_(const DualTrace& value, const std::vector<std::int64_t>& sizes) {
+  return DualTrace(value.value().reshape(sizes), value.tangent().reshape(sizes));
+}
+
+inline Trace constant_autodiff_(const Trace& like, const Series& value) {
+  return pluss::subsp::math::diff::constant_like(like, value.to(like.value().platform()));
+}
+
+inline DualTrace constant_autodiff_(const DualTrace& like, const Series& value) {
+  return pluss::subsp::math::diff::constant_like(like, value.to(like.value().platform()));
+}
+
 template <class Fn>
 ParameterPack<Series> grad(Fn&& fn, const ParameterPack<Series>& params) {
   return value_and_grad(std::forward<Fn>(fn), params).second;
@@ -443,20 +490,24 @@ struct NonlinearConstraintEvaluation {
 
 struct ObjectiveDefinition {
   std::function<Trace(const ParameterPack<Trace>&)> autodiff{};
+  std::function<DualTrace(const ParameterPack<DualTrace>&)> autodiff_dual{};
   std::function<std::pair<Series, ParameterPack<Series>>(const ParameterPack<Series>&)> analytic{};
 
   bool defined() const noexcept {
-    return static_cast<bool>(autodiff) || static_cast<bool>(analytic);
+    return static_cast<bool>(autodiff) || static_cast<bool>(autodiff_dual) || static_cast<bool>(analytic);
   }
 };
 
 struct NonlinearConstraints {
   std::function<Trace(const ParameterPack<Trace>&)> equality{};
   std::function<Trace(const ParameterPack<Trace>&)> inequality{};
+  std::function<DualTrace(const ParameterPack<DualTrace>&)> equality_dual{};
+  std::function<DualTrace(const ParameterPack<DualTrace>&)> inequality_dual{};
   std::function<NonlinearConstraintEvaluation(const ParameterPack<Series>&)> analytic{};
 
   bool empty() const noexcept {
     return !static_cast<bool>(equality) && !static_cast<bool>(inequality) &&
+           !static_cast<bool>(equality_dual) && !static_cast<bool>(inequality_dual) &&
            !static_cast<bool>(analytic);
   }
 };
@@ -573,18 +624,42 @@ struct PenaltyMethodState {
 enum class OptimaLinearSystemSolver : std::uint8_t {
   Auto = 0,
   Cholesky,
+  PivotedDirect,
   Inverse,
   PseudoInverse,
+  ConjugateGradient,
+};
+
+enum class OptimaLinearSystemStructure : std::uint8_t {
+  Auto = 0,
+  Dense,
+  Sparse,
 };
 
 enum class OptimaHessianApproximation : std::uint8_t {
   Bfgs = 0,
   Identity,
+  Lbfgs,
+  Exact,
+  HessianVector,
+};
+
+enum class OptimaProblemScaling : std::uint8_t {
+  None = 0,
+  InitialPoint,
+  ObjectiveAndConstraints,
+};
+
+struct OptimaNormalizationStats {
+  double objective_scale{1.0};
+  Series equality_row_scale{};
+  Series inequality_row_scale{};
 };
 
 struct SequentialQPOptions {
   std::int64_t max_iterations{100};
   std::int64_t max_line_search_iterations{20};
+  std::int64_t max_second_order_corrections{2};
   std::int64_t max_restoration_iterations{8};
   std::int64_t max_restoration_line_search_iterations{20};
   double initial_step_size{1.0};
@@ -596,11 +671,20 @@ struct SequentialQPOptions {
   double active_set_tolerance{1e-4};
   double regularization{1e-6};
   double bfgs_curvature_tolerance{1e-8};
+  double second_order_correction_tolerance{1e-4};
+  double fraction_to_boundary{0.995};
+  double pivot_threshold{1e-12};
+  std::int64_t max_krylov_iterations{0};
+  std::int64_t iterative_dimension_threshold{16};
+  double krylov_tolerance{1e-2};
+  double krylov_absolute_tolerance{1e-10};
   double objective_limit{-std::numeric_limits<double>::infinity()};
   bool project_bounds{true};
   bool enable_restoration{true};
+  OptimaLinearSystemStructure system_structure{OptimaLinearSystemStructure::Auto};
   OptimaLinearSystemSolver linear_system_solver{OptimaLinearSystemSolver::Auto};
   OptimaHessianApproximation hessian_approximation{OptimaHessianApproximation::Bfgs};
+  OptimaProblemScaling problem_scaling{OptimaProblemScaling::None};
   std::function<bool(const OptimaProgressSnapshot&)> progress_hook{};
 };
 
@@ -618,6 +702,9 @@ struct SequentialQPState {
   std::optional<BestFeasiblePoint> best_feasible{};
   Series hessian{};
   Series multipliers{};
+  Series variable_scale{};
+  OptimaNormalizationStats normalization{};
+  std::int64_t krylov_iterations{0};
 };
 
 struct InteriorPointOptions {
@@ -632,16 +719,28 @@ struct InteriorPointOptions {
   double minimum_barrier_parameter{1e-8};
   double barrier_decay{0.2};
   double equality_penalty{10.0};
+  double centrality_fraction{0.1};
+  double feasibility_activation_factor{10.0};
   double constraint_tolerance{1e-6};
   double optimality_tolerance{1e-6};
   double fraction_to_boundary{0.99};
+  double pivot_threshold{1e-12};
   double initialization_margin{1e-4};
   double bfgs_curvature_tolerance{1e-8};
+  std::int64_t lbfgs_memory{10};
+  std::int64_t max_krylov_iterations{0};
+  std::int64_t iterative_dimension_threshold{16};
+  double krylov_tolerance{1e-2};
+  double krylov_absolute_tolerance{1e-10};
+  pluss::subsp::math::diff::HvpOptions hvp_options{};
   double objective_limit{-std::numeric_limits<double>::infinity()};
   bool project_bounds{true};
   bool enable_restoration{true};
+  bool enable_feasibility_phase{false};
+  OptimaLinearSystemStructure system_structure{OptimaLinearSystemStructure::Auto};
   OptimaLinearSystemSolver linear_system_solver{OptimaLinearSystemSolver::Auto};
   OptimaHessianApproximation hessian_approximation{OptimaHessianApproximation::Bfgs};
+  OptimaProblemScaling problem_scaling{OptimaProblemScaling::None};
   std::function<bool(const OptimaProgressSnapshot&)> progress_hook{};
 };
 
@@ -658,6 +757,17 @@ struct InteriorPointState {
   std::string message{};
   std::optional<BestFeasiblePoint> best_feasible{};
   Series hessian{};
+  Series variable_scale{};
+  OptimaNormalizationStats normalization{};
+  std::int64_t krylov_iterations{0};
+  std::vector<Series> lbfgs_s_history{};
+  std::vector<Series> lbfgs_y_history{};
+  Series inequality_slack{};
+  Series inequality_dual{};
+  double primal_residual{0.0};
+  double complementarity_residual{0.0};
+  bool in_feasibility_phase{false};
+  double feasibility_metric{0.0};
 };
 
 enum class OptimaAlgorithm : std::uint8_t {
@@ -687,6 +797,7 @@ struct OptimaOutput {
   double step_size{0.0};
   double line_search_fraction{0.0};
   double backend_parameter{0.0};
+  double complementarity{0.0};
   std::int64_t krylov_iterations{0};
   bool best_feasible_available{false};
   std::string detail_message{};
@@ -1010,6 +1121,199 @@ inline Series evaluate_upper_bound_residual_(const Bounds& bounds, const Paramet
   return concat_flat_(residuals, params);
 }
 
+inline Series identity_matrix_(std::int64_t n,
+                               pluss::codem::Platform platform);
+
+inline Series stack_cols_series_(const std::vector<Series>& cols,
+                                 std::int64_t nrows,
+                                 pluss::codem::Platform platform);
+
+template <class AD>
+AD dense_matvec_autodiff_(const Series& matrix, const AD& vector) {
+  require_defined_(matrix, "dense_matvec_autodiff");
+  if (matrix.sizes().size() != 2) {
+    throw std::runtime_error("subsp::math::optim::dense_matvec_autodiff_: expected a rank-2 matrix");
+  }
+  const std::int64_t rows = matrix.sizes()[0];
+  const std::int64_t cols = matrix.sizes()[1];
+  if (vector.value().numel() != cols) {
+    throw std::runtime_error("subsp::math::optim::dense_matvec_autodiff_: matrix/vector shape mismatch");
+  }
+  const Series aligned =
+      matrix.to(ScalarType::Float64).to(vector.value().platform()).reshape({rows, cols});
+  if constexpr (std::is_same_v<AD, Trace>) {
+    return Trace(aligned.matmul(vector.value().reshape({cols, 1})).reshape({rows}));
+  } else {
+    return DualTrace(
+        aligned.matmul(vector.value().reshape({cols, 1})).reshape({rows}),
+        aligned.matmul(vector.tangent().reshape({cols, 1})).reshape({rows}));
+  }
+}
+
+template <class AD>
+AD call_objective_autodiff_(const ConstrainedProblem& problem, const ParameterPack<AD>& params) {
+  if constexpr (std::is_same_v<AD, Trace>) {
+    if (problem.objective.autodiff) return problem.objective.autodiff(params);
+  } else {
+    if (problem.objective.autodiff_dual) return problem.objective.autodiff_dual(params);
+  }
+  throw std::runtime_error(
+      "subsp::math::optim::call_objective_autodiff_: requested curvature mode requires autodiff callback support");
+}
+
+template <class AD>
+std::optional<AD> call_nonlinear_equality_autodiff_(const ConstrainedProblem& problem,
+                                                    const ParameterPack<AD>& params) {
+  if constexpr (std::is_same_v<AD, Trace>) {
+    if (problem.nonlinear.equality) return problem.nonlinear.equality(params);
+  } else {
+    if (problem.nonlinear.equality_dual) return problem.nonlinear.equality_dual(params);
+  }
+  return std::nullopt;
+}
+
+template <class AD>
+std::optional<AD> call_nonlinear_inequality_autodiff_(const ConstrainedProblem& problem,
+                                                      const ParameterPack<AD>& params) {
+  if constexpr (std::is_same_v<AD, Trace>) {
+    if (problem.nonlinear.inequality) return problem.nonlinear.inequality(params);
+  } else {
+    if (problem.nonlinear.inequality_dual) return problem.nonlinear.inequality_dual(params);
+  }
+  return std::nullopt;
+}
+
+inline bool requires_dual_nonlinear_callbacks_(const ConstrainedProblem& problem) {
+  return static_cast<bool>(problem.nonlinear.analytic) ||
+         static_cast<bool>(problem.nonlinear.equality) ||
+         static_cast<bool>(problem.nonlinear.inequality);
+}
+
+inline bool supports_exact_curvature_(const ConstrainedProblem& problem,
+                                      OptimaHessianApproximation approximation) {
+  if (!(approximation == OptimaHessianApproximation::Exact ||
+        approximation == OptimaHessianApproximation::HessianVector)) {
+    return true;
+  }
+  if (!problem.objective.autodiff_dual) return false;
+  if (requires_dual_nonlinear_callbacks_(problem) &&
+      (!problem.nonlinear.equality_dual && !problem.nonlinear.inequality_dual)) {
+    return false;
+  }
+  if (problem.nonlinear.equality && !problem.nonlinear.equality_dual) return false;
+  if (problem.nonlinear.inequality && !problem.nonlinear.inequality_dual) return false;
+  if (problem.nonlinear.analytic &&
+      (!problem.nonlinear.equality_dual || !problem.nonlinear.inequality_dual)) {
+    return false;
+  }
+  return true;
+}
+
+inline Series slice_series_(const Series& x, std::int64_t offset, std::int64_t length);
+
+template <class AD>
+AD barrier_objective_autodiff_(const ConstrainedProblem& problem,
+                               const ParameterPack<AD>& params,
+                               double barrier_parameter,
+                               double equality_penalty,
+                               const OptimaNormalizationStats* normalization = nullptr) {
+  using pluss::subsp::math::diff::log;
+  using pluss::subsp::math::diff::square;
+  using pluss::subsp::math::diff::sum;
+
+  if constexpr (std::is_same_v<AD, DualTrace>) {
+    if (!supports_exact_curvature_(problem, OptimaHessianApproximation::Exact)) {
+      throw std::runtime_error(
+          "subsp::math::optim::barrier_objective_autodiff_: exact interior-point curvature requires objective.autodiff_dual and dual nonlinear callbacks");
+    }
+  }
+
+  const double objective_scale = normalization ? normalization->objective_scale : 1.0;
+  AD total = call_objective_autodiff_(problem, params) * objective_scale;
+  const AD flat = flatten_values(params);
+  const std::int64_t n_linear_eq = problem.linear.Aeq.has_value() ? problem.linear.Aeq->sizes()[0] : 0;
+
+  if (problem.linear.Aeq.has_value()) {
+    AD linear_eq = dense_matvec_autodiff_(*problem.linear.Aeq, flat);
+    if (problem.linear.beq.has_value()) {
+      linear_eq = linear_eq - constant_autodiff_(linear_eq, problem.linear.beq->reshape({problem.linear.beq->numel()}));
+    }
+    if (normalization && normalization->equality_row_scale.defined() && n_linear_eq > 0) {
+      linear_eq = linear_eq * constant_autodiff_(
+                                  linear_eq,
+                                  slice_series_(normalization->equality_row_scale, 0, n_linear_eq));
+    }
+    total = total + 0.5 * equality_penalty * sum(square(linear_eq));
+  }
+
+  if (problem.linear.Aineq.has_value()) {
+    AD linear_ineq = dense_matvec_autodiff_(*problem.linear.Aineq, flat);
+    if (problem.linear.bineq.has_value()) {
+      linear_ineq = linear_ineq - constant_autodiff_(linear_ineq, problem.linear.bineq->reshape({problem.linear.bineq->numel()}));
+    }
+    total = total - barrier_parameter * sum(log(-1.0 * linear_ineq));
+  }
+
+  if (problem.bounds.lower.has_value()) {
+    const Series lower = flatten_values(*problem.bounds.lower).reshape({flat.value().numel()});
+    total = total - barrier_parameter * sum(log(flat - constant_autodiff_(flat, lower)));
+  }
+
+  if (problem.bounds.upper.has_value()) {
+    const Series upper = flatten_values(*problem.bounds.upper).reshape({flat.value().numel()});
+    total = total - barrier_parameter * sum(log(constant_autodiff_(flat, upper) - flat));
+  }
+
+  if (const auto equality = call_nonlinear_equality_autodiff_(problem, params); equality.has_value()) {
+    AD eq = *equality;
+    if (normalization && normalization->equality_row_scale.defined() && eq.value().numel() > 0) {
+      eq = eq * constant_autodiff_(
+                    eq,
+                    slice_series_(normalization->equality_row_scale, n_linear_eq, eq.value().numel()));
+    }
+    total = total + 0.5 * equality_penalty * sum(square(eq));
+  }
+
+  if (const auto inequality = call_nonlinear_inequality_autodiff_(problem, params); inequality.has_value()) {
+    total = total - barrier_parameter * sum(log(-1.0 * (*inequality)));
+  }
+
+  return total;
+}
+
+inline Series assemble_hessian_from_hvp_(const ConstrainedProblem& problem,
+                                         const ParameterPack<Series>& params,
+                                         double barrier_parameter,
+                                         double equality_penalty,
+                                         const OptimaNormalizationStats& normalization,
+                                         const pluss::subsp::math::diff::HvpOptions& hvp_options,
+                                         bool& ok) {
+  ok = false;
+  const std::int64_t n = params.total_numel();
+  const auto platform = params.empty() ? pluss::codem::Platform::CPU : params[0].value.platform();
+  std::vector<Series> cols;
+  cols.reserve(static_cast<std::size_t>(n));
+  try {
+    for (std::int64_t i = 0; i < n; ++i) {
+      const Series basis = pluss::subsp::math::diff::detail::flat_basis_like_(
+          flatten_values(params).to(ScalarType::Float64).to(platform), i);
+      const auto tangent = unflatten_values(params.layout(), basis);
+      auto [_, hv] = hvp(
+          [&](const ParameterPack<DualTrace>& p) -> DualTrace {
+            return barrier_objective_autodiff_(problem, p, barrier_parameter, equality_penalty, &normalization);
+          },
+          params,
+          tangent,
+          hvp_options);
+      cols.push_back(flatten_values(hv).to(ScalarType::Float64).to(platform).reshape({n, 1}));
+    }
+  } catch (...) {
+    return identity_matrix_(n, platform);
+  }
+  ok = static_cast<std::int64_t>(cols.size()) == n;
+  return stack_cols_series_(cols, n, platform);
+}
+
 inline ParameterPack<Series> lift_flat_gradient_(const ParameterPack<Series>& params, const Series& flat_grad) {
   return unflatten_values(params.layout(), flat_grad.reshape({flat_grad.numel()}));
 }
@@ -1143,12 +1447,28 @@ inline Series zeros_series_(std::int64_t n,
   return pluss::zeros({n}, ScalarType::Float64).to(platform);
 }
 
+inline Series ones_series_(std::int64_t n,
+                           pluss::codem::Platform platform = pluss::codem::Platform::CPU) {
+  return pluss::ones({n}, ScalarType::Float64).to(platform);
+}
+
 inline Series identity_matrix_(std::int64_t n,
                                pluss::codem::Platform platform = pluss::codem::Platform::CPU) {
   std::vector<double> out(static_cast<std::size_t>(n * n), 0.0);
   for (std::int64_t i = 0; i < n; ++i) out[static_cast<std::size_t>(i * n + i)] = 1.0;
   return pluss::make_series(std::move(out), {n, n}).to(ScalarType::Float64).to(platform);
 }
+
+inline std::vector<double> solve_linear_system_(std::vector<double> matrix,
+                                                std::vector<double> rhs,
+                                                std::size_t n,
+                                                double pivot_threshold,
+                                                bool& ok);
+
+inline Series slice_series_(const Series& x, std::int64_t offset, std::int64_t length);
+
+inline double constraint_violation_value_(const ProblemEvaluation& evaluation,
+                                          const OptimaNormalizationStats& normalization);
 
 inline double dot_(const std::vector<double>& a, const std::vector<double>& b) {
   if (a.size() != b.size()) {
@@ -1185,10 +1505,159 @@ inline Series series_outer_(const Series& a, const Series& b) {
   return a.reshape({a.numel(), 1}).matmul(b.reshape({1, b.numel()}));
 }
 
+inline Series compute_variable_scale_(const ParameterPack<Series>& params,
+                                      const Bounds& bounds,
+                                      OptimaProblemScaling scaling) {
+  const std::int64_t n = params.total_numel();
+  const auto platform = params.empty() ? pluss::codem::Platform::CPU : params[0].value.platform();
+  if (n == 0 || scaling == OptimaProblemScaling::None) {
+    return ones_series_(n, platform);
+  }
+
+  Series scale = flatten_values(params).to(ScalarType::Float64).to(platform).abs().maximum(1.0);
+  if (bounds.lower.has_value()) {
+    scale = scale.maximum(flatten_values(*bounds.lower).to(ScalarType::Float64).to(platform).abs());
+  }
+  if (bounds.upper.has_value()) {
+    scale = scale.maximum(flatten_values(*bounds.upper).to(ScalarType::Float64).to(platform).abs());
+  }
+  return scale.maximum(1.0);
+}
+
+inline bool normalize_objective_constraints_(OptimaProblemScaling scaling) {
+  return scaling == OptimaProblemScaling::ObjectiveAndConstraints;
+}
+
+inline Series slice_series_(const Series& x, std::int64_t offset, std::int64_t length) {
+  if (!x.defined() || x.numel() == 0 || length <= 0) {
+    return pluss::empty({0}, ScalarType::Float64).to(x.defined() ? x.platform() : pluss::codem::Platform::CPU);
+  }
+  return x.index({pluss::arange(offset, offset + length, 1, ScalarType::Int64).to(x.platform())}).reshape({length});
+}
+
+inline Series row_scale_series_(const std::vector<FlatConstraintRow>& rows,
+                                pluss::codem::Platform platform) {
+  if (rows.empty()) return pluss::empty({0}, ScalarType::Float64).to(platform);
+  std::vector<double> scales;
+  scales.reserve(rows.size());
+  for (const auto& row : rows) {
+    const double jac_norm = series_inf_norm_(row.jacobian);
+    const double denom = std::clamp(std::max(std::abs(row.residual), jac_norm), 1e-6, 1e6);
+    scales.push_back(1.0 / denom);
+  }
+  return pluss::make_series(std::move(scales), {static_cast<std::int64_t>(rows.size())})
+      .to(ScalarType::Float64)
+      .to(platform);
+}
+
+inline OptimaNormalizationStats compute_problem_normalization_(const ProblemEvaluation& evaluation,
+                                                               const FlatConstraintSystem& system,
+                                                               OptimaProblemScaling scaling,
+                                                               pluss::codem::Platform platform) {
+  OptimaNormalizationStats out;
+  if (!normalize_objective_constraints_(scaling)) {
+    out.equality_row_scale = pluss::ones({static_cast<std::int64_t>(system.equalities.size())}, ScalarType::Float64).to(platform);
+    out.inequality_row_scale = pluss::ones({static_cast<std::int64_t>(system.inequalities.size())}, ScalarType::Float64).to(platform);
+    return out;
+  }
+  const auto bounded_norm = [](double value) {
+    return std::clamp(value, 1e-6, 1e6);
+  };
+  out.objective_scale =
+      1.0 / bounded_norm(std::max(std::abs(evaluation.value.item<double>()), pack_inf_norm_(evaluation.gradient)));
+  out.equality_row_scale = row_scale_series_(system.equalities, platform);
+  out.inequality_row_scale = row_scale_series_(system.inequalities, platform);
+  return out;
+}
+
+inline std::vector<FlatConstraintRow> scale_constraint_rows_(const std::vector<FlatConstraintRow>& rows,
+                                                             const Series& variable_scale,
+                                                             const Series& row_scale) {
+  if ((!variable_scale.defined() || variable_scale.numel() == 0) &&
+      (!row_scale.defined() || row_scale.numel() == 0)) {
+    return rows;
+  }
+  std::vector<FlatConstraintRow> scaled;
+  scaled.reserve(rows.size());
+  const Series var = variable_scale.defined() ? variable_scale.to(ScalarType::Float64) : Series();
+  const auto weights = row_scale.defined() ? row_scale.to(ScalarType::Float64).to_vec<double>() : std::vector<double>{};
+  for (std::size_t i = 0; i < rows.size(); ++i) {
+    const double w = i < weights.size() ? weights[i] : 1.0;
+    Series jac = rows[i].jacobian.to(ScalarType::Float64);
+    if (var.defined() && var.numel() > 0) jac = jac.to(var.platform()).mul(var);
+    jac = jac.mul(w);
+    scaled.push_back(FlatConstraintRow{
+        std::move(jac),
+        rows[i].residual * w,
+        rows[i].equality,
+        rows[i].source,
+        rows[i].index});
+  }
+  return scaled;
+}
+
+inline Series active_constraint_row_scales_(const FlatConstraintSystem& system,
+                                            const std::vector<FlatConstraintRow>& active_constraints,
+                                            const OptimaNormalizationStats& normalization,
+                                            pluss::codem::Platform platform) {
+  if (active_constraints.empty()) return pluss::empty({0}, ScalarType::Float64).to(platform);
+  const auto eq = normalization.equality_row_scale.defined()
+                      ? normalization.equality_row_scale.to(ScalarType::Float64).to_vec<double>()
+                      : std::vector<double>{};
+  const auto ineq = normalization.inequality_row_scale.defined()
+                        ? normalization.inequality_row_scale.to(ScalarType::Float64).to_vec<double>()
+                        : std::vector<double>{};
+  std::vector<double> weights;
+  weights.reserve(active_constraints.size());
+  for (const auto& row : active_constraints) {
+    const auto& source_rows = row.equality ? system.equalities : system.inequalities;
+    const auto& scale_rows = row.equality ? eq : ineq;
+    double w = 1.0;
+    for (std::size_t i = 0; i < source_rows.size() && i < scale_rows.size(); ++i) {
+      if (source_rows[i].source == row.source && source_rows[i].index == row.index) {
+        w = scale_rows[i];
+        break;
+      }
+    }
+    weights.push_back(w);
+  }
+  return pluss::make_series(std::move(weights), {static_cast<std::int64_t>(active_constraints.size())})
+      .to(ScalarType::Float64)
+      .to(platform);
+}
+
+inline Series scale_gradient_(const Series& gradient, const Series& variable_scale) {
+  if (!gradient.defined()) return gradient;
+  if (!variable_scale.defined() || variable_scale.numel() == 0) return gradient.to(ScalarType::Float64);
+  return gradient.to(ScalarType::Float64).mul(variable_scale.to(ScalarType::Float64).to(gradient.platform()));
+}
+
+inline Series unscale_step_(const Series& scaled_step, const Series& variable_scale) {
+  if (!scaled_step.defined()) return scaled_step;
+  if (!variable_scale.defined() || variable_scale.numel() == 0) return scaled_step.to(ScalarType::Float64);
+  return scaled_step.to(ScalarType::Float64).mul(variable_scale.to(ScalarType::Float64).to(scaled_step.platform()));
+}
+
+inline Series scale_hessian_(const Series& hessian, const Series& variable_scale) {
+  if (!hessian.defined() || !variable_scale.defined() || variable_scale.numel() == 0) {
+    return hessian.to(ScalarType::Float64);
+  }
+  const Series scale = variable_scale.to(ScalarType::Float64).to(hessian.platform());
+  return hessian.to(ScalarType::Float64)
+      .mul(scale.reshape({scale.numel(), 1}))
+      .mul(scale.reshape({1, scale.numel()}));
+}
+
+inline std::vector<FlatConstraintRow> scale_constraint_rows_(const std::vector<FlatConstraintRow>& rows,
+                                                             const Series& variable_scale) {
+  return scale_constraint_rows_(rows, variable_scale, Series{});
+}
+
 inline Series solve_dense_system_series_(const Series& matrix,
                                          const Series& rhs,
                                          double regularization,
                                          OptimaLinearSystemSolver linear_system_solver,
+                                         double pivot_threshold,
                                          bool& ok) {
   ok = false;
   require_defined_(matrix, "solve_dense_system_series");
@@ -1229,6 +1698,20 @@ inline Series solve_dense_system_series_(const Series& matrix,
       return false;
     }
   };
+  auto try_pivoted_direct = [&](const Series& candidate, const Series& rhs_col, Series& solution) -> bool {
+    try {
+      if (n > 256) return false;
+      auto coeff = candidate.to(ScalarType::Float64).reshape({n * n}).to_vec<double>();
+      auto rhs_host = rhs_col.reshape({n}).to(ScalarType::Float64).to_vec<double>();
+      bool host_ok = false;
+      auto x = solve_linear_system_(std::move(coeff), std::move(rhs_host), static_cast<std::size_t>(n), pivot_threshold, host_ok);
+      if (!host_ok) return false;
+      solution = pluss::make_series(std::move(x), {n}).to(ScalarType::Float64).to(platform);
+      return is_finite_series_(solution);
+    } catch (...) {
+      return false;
+    }
+  };
 
   for (double scale : regularization_scales) {
     const double shift = std::max(1e-12, base_regularization * scale);
@@ -1239,6 +1722,7 @@ inline Series solve_dense_system_series_(const Series& matrix,
     switch (linear_system_solver) {
       case OptimaLinearSystemSolver::Auto:
         if (try_cholesky(symmetric_reg, rhs2d, solution) ||
+            try_pivoted_direct(reg, rhs2d, solution) ||
             try_inverse(reg, rhs2d, solution) ||
             try_pinverse(reg, rhs2d, solution)) {
           ok = true;
@@ -1247,6 +1731,12 @@ inline Series solve_dense_system_series_(const Series& matrix,
         break;
       case OptimaLinearSystemSolver::Cholesky:
         if (try_cholesky(symmetric_reg, rhs2d, solution)) {
+          ok = true;
+          return solution;
+        }
+        break;
+      case OptimaLinearSystemSolver::PivotedDirect:
+        if (try_pivoted_direct(reg, rhs2d, solution)) {
           ok = true;
           return solution;
         }
@@ -1263,6 +1753,8 @@ inline Series solve_dense_system_series_(const Series& matrix,
           return solution;
         }
         break;
+      case OptimaLinearSystemSolver::ConjugateGradient:
+        break;
     }
   }
 
@@ -1274,6 +1766,140 @@ inline Series solve_dense_system_series_(const Series& matrix,
     }
   }
   return zeros_series_(n, platform);
+}
+
+inline Series solve_spd_system_cg_series_(const Series& matrix,
+                                          const Series& rhs,
+                                          double regularization,
+                                          std::int64_t max_iterations,
+                                          double relative_tolerance,
+                                          double absolute_tolerance,
+                                          bool& ok,
+                                          std::int64_t& iterations) {
+  ok = false;
+  iterations = 0;
+  require_defined_(matrix, "solve_spd_system_cg_series");
+  require_defined_(rhs, "solve_spd_system_cg_series");
+  if (matrix.sizes().size() != 2 || matrix.sizes()[0] != matrix.sizes()[1]) {
+    throw std::runtime_error("subsp::math::optim::solve_spd_system_cg_series_: expected square matrix");
+  }
+  const std::int64_t n = matrix.sizes()[0];
+  const auto platform = matrix.platform();
+  const Series base = matrix.to(ScalarType::Float64).to(platform);
+  const Series b = rhs.to(ScalarType::Float64).to(platform).reshape({n});
+  const Series identity = identity_matrix_(n, platform);
+  const Series A = base.add(identity.mul(std::max(regularization, 1e-12)));
+
+  Series x = zeros_series_(n, platform);
+  Series r = b;
+  const Series diag = A.diagonal(0, 0, 1).reshape({n}).abs().maximum(1e-12);
+  const Series inv_diag = diag.reciprocal();
+  Series z = r.mul(inv_diag);
+  Series p = z;
+  double rz = series_dot_(r, z);
+  const double initial_residual = series_inf_norm_(r);
+  const double tolerance = std::max(absolute_tolerance, relative_tolerance * initial_residual);
+  if (initial_residual <= tolerance) {
+    ok = true;
+    return x;
+  }
+
+  const std::int64_t iter_budget = max_iterations > 0 ? max_iterations : std::max<std::int64_t>(10, 2 * n);
+  for (std::int64_t iter = 0; iter < iter_budget; ++iter) {
+    const Series Ap = dense_matvec_(A, p);
+    const double curvature = series_dot_(p, Ap);
+    if (!(curvature > 1e-18) || !std::isfinite(curvature)) {
+      return x;
+    }
+    const double alpha = rz / curvature;
+    x = x.add(p.mul(alpha));
+    r = r.sub(Ap.mul(alpha));
+    iterations = iter + 1;
+    if (series_inf_norm_(r) <= tolerance) {
+      ok = true;
+      return x;
+    }
+    z = r.mul(inv_diag);
+    const double new_rz = series_dot_(r, z);
+    if (!(new_rz > 0.0) || !std::isfinite(new_rz)) {
+      return x;
+    }
+    const double beta = new_rz / std::max(rz, 1e-18);
+    p = z.add(p.mul(beta));
+    rz = new_rz;
+  }
+  ok = series_inf_norm_(r) <= tolerance;
+  return x;
+}
+
+template <class MatVecFn>
+inline Series solve_spd_system_cg_operator_(MatVecFn&& matvec,
+                                            const Series& rhs,
+                                            const Series& diagonal_preconditioner,
+                                            std::int64_t max_iterations,
+                                            double relative_tolerance,
+                                            double absolute_tolerance,
+                                            bool& ok,
+                                            std::int64_t& iterations) {
+  ok = false;
+  iterations = 0;
+  require_defined_(rhs, "solve_spd_system_cg_operator");
+  require_defined_(diagonal_preconditioner, "solve_spd_system_cg_operator");
+  const std::int64_t n = rhs.numel();
+  const auto platform = rhs.platform();
+  const Series b = rhs.to(ScalarType::Float64).to(platform).reshape({n});
+  const Series inv_diag = diagonal_preconditioner.to(ScalarType::Float64).to(platform).abs().maximum(1e-12).reciprocal();
+
+  Series x = zeros_series_(n, platform);
+  Series r = b;
+  Series z = r.mul(inv_diag);
+  Series p = z;
+  double rz = series_dot_(r, z);
+  const double initial_residual = series_inf_norm_(r);
+  const double tolerance = std::max(absolute_tolerance, relative_tolerance * initial_residual);
+  if (initial_residual <= tolerance) {
+    ok = true;
+    return x;
+  }
+
+  const std::int64_t iter_budget = max_iterations > 0 ? max_iterations : std::max<std::int64_t>(10, 2 * n);
+  for (std::int64_t iter = 0; iter < iter_budget; ++iter) {
+    const Series Ap = std::forward<MatVecFn>(matvec)(p);
+    const double curvature = series_dot_(p, Ap);
+    if (!(curvature > 1e-18) || !std::isfinite(curvature)) {
+      return x;
+    }
+    const double alpha = rz / curvature;
+    x = x.add(p.mul(alpha));
+    r = r.sub(Ap.mul(alpha));
+    iterations = iter + 1;
+    if (series_inf_norm_(r) <= tolerance) {
+      ok = true;
+      return x;
+    }
+    z = r.mul(inv_diag);
+    const double new_rz = series_dot_(r, z);
+    if (!(new_rz > 0.0) || !std::isfinite(new_rz)) {
+      return x;
+    }
+    const double beta = new_rz / std::max(rz, 1e-18);
+    p = z.add(p.mul(beta));
+    rz = new_rz;
+  }
+  ok = series_inf_norm_(r) <= tolerance;
+  return x;
+}
+
+inline bool use_iterative_subproblem_solver_(OptimaLinearSystemSolver solver,
+                                             OptimaLinearSystemStructure structure,
+                                             std::int64_t dimension,
+                                             std::int64_t iterative_dimension_threshold) {
+  if (solver == OptimaLinearSystemSolver::ConjugateGradient) return true;
+  if (solver != OptimaLinearSystemSolver::Auto) return false;
+  if (structure == OptimaLinearSystemStructure::Sparse) return true;
+  const std::int64_t threshold =
+      iterative_dimension_threshold > 0 ? iterative_dimension_threshold : 16;
+  return dimension >= threshold;
 }
 
 inline Series stack_rows_series_(const std::vector<Series>& rows,
@@ -1289,6 +1915,21 @@ inline Series stack_rows_series_(const std::vector<Series>& rows,
         return rest;
       }(),
       0);
+}
+
+inline Series stack_cols_series_(const std::vector<Series>& cols,
+                                 std::int64_t nrows,
+                                 pluss::codem::Platform platform) {
+  if (cols.empty()) return pluss::empty({nrows, 0}, ScalarType::Float64).to(platform);
+  if (cols.size() == 1) return cols.front().reshape({nrows, 1});
+  return cols.front().reshape({nrows, 1}).unite(
+      [&]() {
+        std::vector<Series> rest;
+        rest.reserve(cols.size() - 1);
+        for (std::size_t i = 1; i < cols.size(); ++i) rest.push_back(cols[i].reshape({nrows, 1}));
+        return rest;
+      }(),
+      1);
 }
 
 inline double l2_norm_(const std::vector<double>& x) {
@@ -1333,6 +1974,7 @@ inline std::vector<double> matvec_(const std::vector<double>& matrix,
 inline std::vector<double> solve_linear_system_(std::vector<double> matrix,
                                                 std::vector<double> rhs,
                                                 std::size_t n,
+                                                double pivot_threshold,
                                                 bool& ok) {
   ok = false;
   if (matrix.size() != n * n || rhs.size() != n) {
@@ -1349,7 +1991,7 @@ inline std::vector<double> solve_linear_system_(std::vector<double> matrix,
         pivot_abs = cand;
       }
     }
-    if (pivot_abs <= 1e-14) {
+    if (pivot_abs <= std::max(pivot_threshold, 1e-14)) {
       return std::vector<double>(n, 0.0);
     }
     if (pivot != k) {
@@ -1378,7 +2020,7 @@ inline std::vector<double> solve_linear_system_(std::vector<double> matrix,
       acc -= matrix[i * n + col] * x[col];
     }
     const double diag = matrix[i * n + i];
-    if (std::abs(diag) <= 1e-14) {
+    if (std::abs(diag) <= std::max(pivot_threshold, 1e-14)) {
       return std::vector<double>(n, 0.0);
     }
     x[i] = acc / diag;
@@ -1530,6 +2172,133 @@ inline std::vector<FlatConstraintRow> active_constraints_(const FlatConstraintSy
   return active;
 }
 
+inline double max_step_to_bounds_(const ConstrainedProblem& problem,
+                                  const ParameterPack<Series>& params,
+                                  const Series& step_direction,
+                                  double fraction_to_boundary) {
+  if ((!problem.bounds.lower.has_value() && !problem.bounds.upper.has_value()) ||
+      !step_direction.defined() || step_direction.numel() == 0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  const auto x = flat_pack_to_std_(params);
+  const auto d = flat_series_to_std_(step_direction);
+  std::vector<double> lower;
+  std::vector<double> upper;
+  if (problem.bounds.lower.has_value()) lower = flat_pack_to_std_(*problem.bounds.lower);
+  if (problem.bounds.upper.has_value()) upper = flat_pack_to_std_(*problem.bounds.upper);
+  double max_step = std::numeric_limits<double>::infinity();
+  for (std::size_t i = 0; i < x.size() && i < d.size(); ++i) {
+    if (problem.bounds.lower.has_value() && d[i] < 0.0) {
+      max_step = std::min(max_step, fraction_to_boundary * (x[i] - lower[i]) / (-d[i]));
+    }
+    if (problem.bounds.upper.has_value() && d[i] > 0.0) {
+      max_step = std::min(max_step, fraction_to_boundary * (upper[i] - x[i]) / d[i]);
+    }
+  }
+  return max_step;
+}
+
+inline double max_step_to_linearized_inequalities_(const FlatConstraintSystem& system,
+                                                   const Series& step_direction,
+                                                   double active_set_tolerance,
+                                                   double fraction_to_boundary) {
+  if (!step_direction.defined() || step_direction.numel() == 0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  double max_step = std::numeric_limits<double>::infinity();
+  for (const auto& row : system.inequalities) {
+    if (row.residual > active_set_tolerance) continue;
+    const double directional = series_dot_(row.jacobian.to(step_direction.platform()), step_direction);
+    if (directional > 0.0) {
+      max_step = std::min(max_step, fraction_to_boundary * (-row.residual) / directional);
+    }
+  }
+  return max_step;
+}
+
+inline bool accept_sqp_trial_(const ProblemEvaluation& base_evaluation,
+                              double base_merit,
+                              const ProblemEvaluation& trial_evaluation,
+                              double trial_merit,
+                              double step_size,
+                              double armijo_rhs,
+                              double constraint_tolerance) {
+  if (!std::isfinite(trial_merit) || trial_merit > armijo_rhs) return false;
+  if (base_evaluation.max_constraint_violation <= constraint_tolerance) return true;
+  if (trial_evaluation.max_constraint_violation <= constraint_tolerance) return true;
+  const double target_violation = std::max(
+      constraint_tolerance,
+      base_evaluation.max_constraint_violation *
+          std::max(0.1, 1.0 - 0.25 * std::max(step_size, 0.0)));
+  return trial_evaluation.max_constraint_violation <= target_violation ||
+         trial_merit + 1e-12 < base_merit;
+}
+
+inline std::vector<FlatConstraintRow> second_order_correction_rows_(const FlatConstraintSystem& base_system,
+                                                                    const FlatConstraintSystem& trial_system,
+                                                                    double active_set_tolerance) {
+  std::vector<FlatConstraintRow> rows = active_constraints_(base_system, active_set_tolerance);
+  const std::size_t eq_count = base_system.equalities.size();
+  const std::size_t ineq_count = std::min(base_system.inequalities.size(), trial_system.inequalities.size());
+  for (std::size_t i = 0; i < ineq_count; ++i) {
+    if (trial_system.inequalities[i].residual >= -active_set_tolerance) {
+      const auto already_active = std::any_of(
+          rows.begin() + static_cast<std::ptrdiff_t>(eq_count),
+          rows.end(),
+          [&](const FlatConstraintRow& row) {
+            return row.source == trial_system.inequalities[i].source &&
+                   row.index == trial_system.inequalities[i].index;
+          });
+      if (!already_active) rows.push_back(base_system.inequalities[i]);
+    }
+  }
+  return rows;
+}
+
+inline Series solve_second_order_correction_(const std::vector<FlatConstraintRow>& rows,
+                                             const FlatConstraintSystem& trial_system,
+                                             std::int64_t n,
+                                             pluss::codem::Platform platform,
+                                             double regularization,
+                                             OptimaLinearSystemSolver linear_system_solver,
+                                             double pivot_threshold,
+                                             bool& ok) {
+  ok = false;
+  if (rows.empty()) return zeros_series_(n, platform);
+  std::vector<Series> jac_rows;
+  std::vector<double> rhs;
+  jac_rows.reserve(rows.size());
+  rhs.reserve(rows.size());
+  for (const auto& row : rows) {
+    jac_rows.push_back(row.jacobian.to(platform));
+    double residual = row.residual;
+    const auto& source_rows = row.equality ? trial_system.equalities : trial_system.inequalities;
+    for (const auto& trial_row : source_rows) {
+      if (trial_row.source == row.source && trial_row.index == row.index) {
+        residual = trial_row.residual;
+        break;
+      }
+    }
+    rhs.push_back(-residual);
+  }
+  const Series A = stack_rows_series_(jac_rows, n, platform);
+  const Series AAt = A.matmul(A.transpose(0, 1));
+  const Series rhs_series = pluss::make_series(std::move(rhs), {static_cast<std::int64_t>(jac_rows.size())})
+                                .to(ScalarType::Float64)
+                                .to(platform);
+  const Series lambda = solve_dense_system_series_(
+      AAt,
+      rhs_series,
+      regularization,
+      linear_system_solver == OptimaLinearSystemSolver::ConjugateGradient
+          ? OptimaLinearSystemSolver::Auto
+          : linear_system_solver,
+      pivot_threshold,
+      ok);
+  if (!ok) return zeros_series_(n, platform);
+  return A.transpose(0, 1).matmul(lambda.reshape({lambda.numel(), 1})).reshape({n});
+}
+
 inline void maybe_update_best_feasible_(SequentialQPState& state) {
   if (!state.evaluation.feasible) return;
   if (!state.best_feasible.has_value() ||
@@ -1577,6 +2346,151 @@ inline double barrier_value_(const ProblemEvaluation& evaluation,
   return value;
 }
 
+inline double barrier_value_(const ProblemEvaluation& evaluation,
+                             const FlatConstraintSystem& system,
+                             double barrier_parameter,
+                             double equality_penalty,
+                             const OptimaNormalizationStats& normalization) {
+  if (!(barrier_parameter > 0.0) || !std::isfinite(barrier_parameter)) {
+    throw std::runtime_error("subsp::math::optim::barrier_value_: barrier parameter must be positive");
+  }
+  double value = normalization.objective_scale * evaluation.value.item<double>();
+  const auto eq_scales = normalization.equality_row_scale.defined()
+                             ? normalization.equality_row_scale.to_vec<double>()
+                             : std::vector<double>{};
+  for (std::size_t i = 0; i < system.equalities.size(); ++i) {
+    const double scale = i < eq_scales.size() ? eq_scales[i] : 1.0;
+    value += 0.5 * equality_penalty * std::pow(scale * system.equalities[i].residual, 2);
+  }
+  for (const auto& row : system.inequalities) {
+    if (!(row.residual < 0.0)) return std::numeric_limits<double>::infinity();
+    value -= barrier_parameter * std::log(-row.residual);
+  }
+  return value;
+}
+
+inline Series inequality_slack_(const FlatConstraintSystem& system,
+                                pluss::codem::Platform platform) {
+  if (system.inequalities.empty()) return pluss::empty({0}, ScalarType::Float64).to(platform);
+  std::vector<double> slack(system.inequalities.size(), 0.0);
+  for (std::size_t i = 0; i < system.inequalities.size(); ++i) {
+    slack[i] = std::max(-system.inequalities[i].residual, 1e-12);
+  }
+  return pluss::make_series(std::move(slack), {static_cast<std::int64_t>(system.inequalities.size())})
+      .to(ScalarType::Float64)
+      .to(platform);
+}
+
+inline Series inequality_residual_series_(const FlatConstraintSystem& system,
+                                          pluss::codem::Platform platform) {
+  if (system.inequalities.empty()) return pluss::empty({0}, ScalarType::Float64).to(platform);
+  std::vector<double> residuals(system.inequalities.size(), 0.0);
+  for (std::size_t i = 0; i < system.inequalities.size(); ++i) {
+    residuals[i] = system.inequalities[i].residual;
+  }
+  return pluss::make_series(std::move(residuals), {static_cast<std::int64_t>(system.inequalities.size())})
+      .to(ScalarType::Float64)
+      .to(platform);
+}
+
+inline Series inequality_dual_(const Series& slack,
+                               double barrier_parameter) {
+  if (!slack.defined() || slack.numel() == 0) return slack;
+  return slack.reciprocal().mul(std::max(barrier_parameter, 1e-12));
+}
+
+inline double complementarity_residual_(const Series& slack,
+                                        const Series& dual,
+                                        double barrier_parameter) {
+  if (!slack.defined() || slack.numel() == 0 || !dual.defined() || dual.numel() == 0) return 0.0;
+  return slack.mul(dual).sub(std::max(barrier_parameter, 0.0)).abs().max().item<double>();
+}
+
+inline Series stack_inequality_jacobian_(const FlatConstraintSystem& system,
+                                         std::int64_t ncols,
+                                         pluss::codem::Platform platform) {
+  std::vector<Series> rows;
+  rows.reserve(system.inequalities.size());
+  for (const auto& row : system.inequalities) rows.push_back(row.jacobian.to(platform));
+  return stack_rows_series_(rows, ncols, platform);
+}
+
+inline Series primal_dual_stationarity_flat_(const ProblemEvaluation& evaluation,
+                                             const FlatConstraintSystem& system,
+                                             const Series& inequality_dual,
+                                             double equality_penalty) {
+  Series grad = flatten_values(evaluation.gradient).to(ScalarType::Float64);
+  for (const auto& row : system.equalities) {
+    grad = grad.add(row.jacobian.mul(equality_penalty * row.residual));
+  }
+  const auto lambda = inequality_dual.defined() ? inequality_dual.to_vec<double>() : std::vector<double>{};
+  for (std::size_t i = 0; i < system.inequalities.size() && i < lambda.size(); ++i) {
+    grad = grad.add(system.inequalities[i].jacobian.mul(lambda[i]));
+  }
+  return grad;
+}
+
+inline Series primal_dual_stationarity_flat_(const ProblemEvaluation& evaluation,
+                                             const FlatConstraintSystem& system,
+                                             const Series& inequality_dual,
+                                             double equality_penalty,
+                                             const OptimaNormalizationStats& normalization) {
+  Series grad = flatten_values(evaluation.gradient).to(ScalarType::Float64).mul(normalization.objective_scale);
+  const auto eq_scales = normalization.equality_row_scale.defined()
+                             ? normalization.equality_row_scale.to_vec<double>()
+                             : std::vector<double>{};
+  for (std::size_t i = 0; i < system.equalities.size(); ++i) {
+    const double scale = i < eq_scales.size() ? eq_scales[i] : 1.0;
+    grad = grad.add(system.equalities[i].jacobian.mul(equality_penalty * scale * scale * system.equalities[i].residual));
+  }
+  const auto lambda = inequality_dual.defined() ? inequality_dual.to_vec<double>() : std::vector<double>{};
+  for (std::size_t i = 0; i < system.inequalities.size() && i < lambda.size(); ++i) {
+    grad = grad.add(system.inequalities[i].jacobian.mul(lambda[i]));
+  }
+  return grad;
+}
+
+inline void update_primal_dual_metrics_(InteriorPointState& state,
+                                        const FlatConstraintSystem& system,
+                                        double barrier_parameter,
+                                        double equality_penalty) {
+  const auto platform =
+      state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform();
+  state.inequality_slack = inequality_slack_(system, platform);
+  state.inequality_dual = inequality_dual_(state.inequality_slack, barrier_parameter);
+  state.primal_residual = std::max(
+      equality_residual_norm_(system),
+      state.inequality_slack.defined() && state.inequality_slack.numel() > 0
+          ? state.inequality_slack.add(inequality_residual_series_(system, platform)).abs().max().item<double>()
+          : 0.0);
+  state.complementarity_residual =
+      complementarity_residual_(state.inequality_slack, state.inequality_dual, barrier_parameter);
+  state.barrier_gradient_norm = series_inf_norm_(
+      primal_dual_stationarity_flat_(state.evaluation, system, state.inequality_dual, equality_penalty));
+  state.feasibility_metric = state.evaluation.max_constraint_violation;
+}
+
+inline void update_primal_dual_metrics_(InteriorPointState& state,
+                                        const FlatConstraintSystem& system,
+                                        double barrier_parameter,
+                                        double equality_penalty,
+                                        const OptimaNormalizationStats& normalization) {
+  const auto platform =
+      state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform();
+  state.inequality_slack = inequality_slack_(system, platform);
+  state.inequality_dual = inequality_dual_(state.inequality_slack, barrier_parameter);
+  state.primal_residual = std::max(
+      equality_residual_norm_(system),
+      state.inequality_slack.defined() && state.inequality_slack.numel() > 0
+          ? state.inequality_slack.add(inequality_residual_series_(system, platform)).abs().max().item<double>()
+          : 0.0);
+  state.complementarity_residual =
+      complementarity_residual_(state.inequality_slack, state.inequality_dual, barrier_parameter);
+  state.barrier_gradient_norm = series_inf_norm_(
+      primal_dual_stationarity_flat_(state.evaluation, system, state.inequality_dual, equality_penalty, normalization));
+  state.feasibility_metric = constraint_violation_value_(state.evaluation, normalization);
+}
+
 inline std::vector<double> barrier_gradient_flat_(const ProblemEvaluation& evaluation,
                                                   const FlatConstraintSystem& system,
                                                   double barrier_parameter,
@@ -1592,6 +2506,29 @@ inline std::vector<double> barrier_gradient_flat_(const ProblemEvaluation& evalu
     }
     const double coeff = -barrier_parameter / row.residual;
     grad = grad.add(row.jacobian.mul(coeff));
+  }
+  return grad.to_vec<double>();
+}
+
+inline std::vector<double> barrier_gradient_flat_(const ProblemEvaluation& evaluation,
+                                                  const FlatConstraintSystem& system,
+                                                  double barrier_parameter,
+                                                  double equality_penalty,
+                                                  const OptimaNormalizationStats& normalization) {
+  Series grad = flatten_values(evaluation.gradient).to(ScalarType::Float64).mul(normalization.objective_scale);
+  const auto eq_scales = normalization.equality_row_scale.defined()
+                             ? normalization.equality_row_scale.to_vec<double>()
+                             : std::vector<double>{};
+  for (std::size_t i = 0; i < system.equalities.size(); ++i) {
+    const double scale = i < eq_scales.size() ? eq_scales[i] : 1.0;
+    grad = grad.add(system.equalities[i].jacobian.mul(equality_penalty * scale * scale * system.equalities[i].residual));
+  }
+  for (const auto& row : system.inequalities) {
+    if (!(row.residual < 0.0)) {
+      return std::vector<double>(
+          static_cast<std::size_t>(grad.numel()), std::numeric_limits<double>::quiet_NaN());
+    }
+    grad = grad.add(row.jacobian.mul(-barrier_parameter / row.residual));
   }
   return grad.to_vec<double>();
 }
@@ -1705,6 +2642,64 @@ inline Series bfgs_hessian_update_(const Series& hessian,
   return hessian.sub(series_outer_(Bs, Bs).div(sBs)).add(series_outer_(y, y).div(sy));
 }
 
+inline bool lbfgs_curvature_ok_(const Series& s,
+                                const Series& y,
+                                double curvature_tolerance) {
+  const double sy = series_dot_(s, y);
+  const double s_norm = s.to(ScalarType::Float64).square().sum().sqrt().item<double>();
+  const double y_norm = y.to(ScalarType::Float64).square().sum().sqrt().item<double>();
+  return sy > curvature_tolerance * std::max(1.0, s_norm * y_norm);
+}
+
+inline void update_lbfgs_history_(std::vector<Series>& s_history,
+                                  std::vector<Series>& y_history,
+                                  const Series& s,
+                                  const Series& y,
+                                  std::int64_t memory,
+                                  double curvature_tolerance) {
+  if (memory <= 0) return;
+  if (!lbfgs_curvature_ok_(s, y, curvature_tolerance)) return;
+  if (static_cast<std::int64_t>(s_history.size()) >= memory) {
+    s_history.erase(s_history.begin());
+    y_history.erase(y_history.begin());
+  }
+  s_history.push_back(s.to(ScalarType::Float64));
+  y_history.push_back(y.to(ScalarType::Float64));
+}
+
+inline Series lbfgs_direction_(const Series& gradient,
+                               const std::vector<Series>& s_history,
+                               const std::vector<Series>& y_history) {
+  Series q = gradient.to(ScalarType::Float64);
+  if (s_history.empty() || y_history.empty()) {
+    return q.mul(-1.0);
+  }
+
+  const std::size_t m = std::min(s_history.size(), y_history.size());
+  std::vector<double> alpha(m, 0.0);
+  std::vector<double> rho(m, 0.0);
+
+  for (std::size_t k = m; k-- > 0;) {
+    const double sy = std::max(series_dot_(s_history[k], y_history[k]), 1e-18);
+    rho[k] = 1.0 / sy;
+    alpha[k] = rho[k] * series_dot_(s_history[k], q);
+    q = q.sub(y_history[k].mul(alpha[k]));
+  }
+
+  const Series& s_last = s_history.back();
+  const Series& y_last = y_history.back();
+  const double yy = std::max(series_dot_(y_last, y_last), 1e-18);
+  const double sy = std::max(series_dot_(s_last, y_last), 1e-18);
+  Series r = q.mul(sy / yy);
+
+  for (std::size_t k = 0; k < m; ++k) {
+    const double beta = rho[k] * series_dot_(y_history[k], r);
+    r = r.add(s_history[k].mul(alpha[k] - beta));
+  }
+
+  return r.mul(-1.0);
+}
+
 inline Series update_hessian_(
     const Series& current_hessian,
     const Series& s,
@@ -1718,6 +2713,11 @@ inline Series update_hessian_(
       return bfgs_hessian_update_(current_hessian, s, y, curvature_tolerance);
     case OptimaHessianApproximation::Identity:
       return identity_matrix_(n, platform);
+    case OptimaHessianApproximation::Lbfgs:
+      return current_hessian.defined() ? current_hessian : identity_matrix_(n, platform);
+    case OptimaHessianApproximation::Exact:
+    case OptimaHessianApproximation::HessianVector:
+      return current_hessian.defined() ? current_hessian : identity_matrix_(n, platform);
   }
   return identity_matrix_(n, platform);
 }
@@ -1728,6 +2728,7 @@ inline std::pair<Series, Series> solve_sqp_kkt_(
     const std::vector<FlatConstraintRow>& active_constraints,
     double regularization,
     OptimaLinearSystemSolver linear_system_solver,
+    double pivot_threshold,
     bool& ok) {
   const std::int64_t n = gradient.numel();
   const std::int64_t m = static_cast<std::int64_t>(active_constraints.size());
@@ -1736,7 +2737,8 @@ inline std::pair<Series, Series> solve_sqp_kkt_(
 
   if (m == 0) {
     const Series step =
-        solve_dense_system_series_(Hreg, gradient.mul(-1.0), regularization, linear_system_solver, ok);
+        solve_dense_system_series_(
+            Hreg, gradient.mul(-1.0), regularization, linear_system_solver, pivot_threshold, ok);
     return {step, zeros_series_(0, platform)};
   }
 
@@ -1754,7 +2756,8 @@ inline std::pair<Series, Series> solve_sqp_kkt_(
       {pluss::make_series(std::move(rhs_tail), {m}).to(ScalarType::Float64).to(platform)},
       0);
 
-  const Series solution = solve_dense_system_series_(KKT, rhs, regularization, linear_system_solver, ok);
+  const Series solution =
+      solve_dense_system_series_(KKT, rhs, regularization, linear_system_solver, pivot_threshold, ok);
   if (!ok) {
     return {zeros_series_(n, platform), zeros_series_(m, platform)};
   }
@@ -1940,6 +2943,68 @@ inline ConstraintMultipliers estimate_barrier_multipliers_(
   return out;
 }
 
+inline ConstraintMultipliers gather_primal_dual_inequality_multipliers_(
+    const ConstrainedProblem& problem,
+    const ParameterPack<Series>& params,
+    const ProblemEvaluation& evaluation,
+    const FlatConstraintSystem& system,
+    const Series& inequality_dual) {
+  ConstraintMultipliers out = zero_constraint_multipliers_(problem, params, evaluation);
+  if (!inequality_dual.defined() || inequality_dual.numel() == 0) return out;
+  const auto platform =
+      params.empty() ? pluss::codem::Platform::CPU : params[0].value.platform();
+  auto linear_ineq = out.linear_inequalities.to_vec<double>();
+  auto nonlinear_ineq = out.nonlinear_inequalities.to_vec<double>();
+  auto lower = out.lower_bounds.to_vec<double>();
+  auto upper = out.upper_bounds.to_vec<double>();
+  const auto dual = inequality_dual.to_vec<double>();
+
+  for (std::size_t i = 0; i < system.inequalities.size() && i < dual.size(); ++i) {
+    const auto& row = system.inequalities[i];
+    const double value = std::max(0.0, dual[i]);
+    switch (row.source) {
+      case ConstraintSource::LinearInequality:
+        if (row.index >= 0 && static_cast<std::size_t>(row.index) < linear_ineq.size()) {
+          linear_ineq[static_cast<std::size_t>(row.index)] = value;
+        }
+        break;
+      case ConstraintSource::NonlinearInequality:
+        if (row.index >= 0 && static_cast<std::size_t>(row.index) < nonlinear_ineq.size()) {
+          nonlinear_ineq[static_cast<std::size_t>(row.index)] = value;
+        }
+        break;
+      case ConstraintSource::LowerBound:
+        if (row.index >= 0 && static_cast<std::size_t>(row.index) < lower.size()) {
+          lower[static_cast<std::size_t>(row.index)] = value;
+        }
+        break;
+      case ConstraintSource::UpperBound:
+        if (row.index >= 0 && static_cast<std::size_t>(row.index) < upper.size()) {
+          upper[static_cast<std::size_t>(row.index)] = value;
+        }
+        break;
+      case ConstraintSource::LinearEquality:
+      case ConstraintSource::NonlinearEquality:
+        break;
+    }
+  }
+
+  out.linear_inequalities = pluss::make_series(std::move(linear_ineq), {out.linear_inequalities.numel()})
+                                .to(ScalarType::Float64)
+                                .to(platform);
+  out.nonlinear_inequalities =
+      pluss::make_series(std::move(nonlinear_ineq), {out.nonlinear_inequalities.numel()})
+          .to(ScalarType::Float64)
+          .to(platform);
+  out.lower_bounds = pluss::make_series(std::move(lower), {out.lower_bounds.numel()})
+                         .to(ScalarType::Float64)
+                         .to(platform);
+  out.upper_bounds = pluss::make_series(std::move(upper), {out.upper_bounds.numel()})
+                         .to(ScalarType::Float64)
+                         .to(platform);
+  return out;
+}
+
 inline Series estimate_kkt_multipliers_(const Series& gradient,
                                         const std::vector<FlatConstraintRow>& active_constraints) {
   const auto platform = gradient.platform();
@@ -1959,6 +3024,7 @@ inline Series estimate_kkt_multipliers_(const Series& gradient,
       rhs,
       1e-8,
       OptimaLinearSystemSolver::Auto,
+      1e-12,
       ok);
   if (!ok) return sized_multiplier_series_(m, platform);
   return lambda;
@@ -2103,6 +3169,7 @@ inline OptimaOutput make_output_(OptimaAlgorithm algorithm,
                                  double last_step_size,
                                  double backend_parameter,
                                  double stationarity,
+                                 double complementarity,
                                  const std::optional<BestFeasiblePoint>& best_feasible,
                                  const std::string& detail_message,
                                  std::int64_t krylov_iterations = 0) {
@@ -2115,6 +3182,7 @@ inline OptimaOutput make_output_(OptimaAlgorithm algorithm,
       last_step_size,
       last_step_size,
       backend_parameter,
+      complementarity,
       krylov_iterations,
       best_feasible.has_value(),
       detail_message};
@@ -2201,6 +3269,26 @@ inline double penalized_value_(const ProblemEvaluation& eval, double penalty) {
                               ? eval.inequality_residual
                               : eval.inequality_residual.clamp_min(0.0);
   const double ineq_term = 0.5 * squared_l2_(ineq_pos);
+  return base + penalty * (eq_term + ineq_term);
+}
+
+inline double penalized_value_(const ProblemEvaluation& eval,
+                               double penalty,
+                               const OptimaNormalizationStats& normalization) {
+  const double base = normalization.objective_scale * eval.value.item<double>();
+  const Series eq_scaled =
+      eval.equality_residual.numel() == 0 || !normalization.equality_row_scale.defined()
+          ? eval.equality_residual
+          : eval.equality_residual.to(ScalarType::Float64).mul(normalization.equality_row_scale.to(eval.equality_residual.platform()));
+  const Series ineq_pos = eval.inequality_residual.numel() == 0
+                              ? eval.inequality_residual
+                              : eval.inequality_residual.clamp_min(0.0);
+  const Series ineq_scaled =
+      ineq_pos.numel() == 0 || !normalization.inequality_row_scale.defined()
+          ? ineq_pos
+          : ineq_pos.to(ScalarType::Float64).mul(normalization.inequality_row_scale.to(ineq_pos.platform()));
+  const double eq_term = 0.5 * squared_l2_(eq_scaled);
+  const double ineq_term = 0.5 * squared_l2_(ineq_scaled);
   return base + penalty * (eq_term + ineq_term);
 }
 
@@ -2565,6 +3653,85 @@ inline ParameterPack<Series> penalty_gradient(const ConstrainedProblem& problem,
   return total;
 }
 
+inline ParameterPack<Series> normalized_penalty_gradient_(const ConstrainedProblem& problem,
+                                                          const ParameterPack<Series>& params,
+                                                          const ProblemEvaluation& evaluation,
+                                                          double penalty,
+                                                          const OptimaNormalizationStats& normalization) {
+  auto total = detail::scaled_pack_(evaluation.gradient, normalization.objective_scale);
+
+  const Series flat_params = flatten_values(params);
+  const Series linear_eq = detail::evaluate_linear_eq_(problem.linear, flat_params);
+  const Series linear_ineq = detail::evaluate_linear_ineq_(problem.linear, flat_params);
+  const Series lower_ineq = detail::evaluate_lower_bound_residual_(problem.bounds, params);
+  const Series upper_ineq = detail::evaluate_upper_bound_residual_(problem.bounds, params);
+
+  const std::int64_t n_linear_eq = problem.linear.Aeq.has_value() ? problem.linear.Aeq->sizes()[0] : 0;
+  const std::int64_t n_linear_ineq = problem.linear.Aineq.has_value() ? problem.linear.Aineq->sizes()[0] : 0;
+  const std::int64_t n_lower = problem.bounds.lower.has_value() ? params.total_numel() : 0;
+  const std::int64_t n_upper = problem.bounds.upper.has_value() ? params.total_numel() : 0;
+
+  const Series eq_scale = normalization.equality_row_scale.defined()
+                              ? normalization.equality_row_scale.to(flat_params.platform())
+                              : pluss::ones({evaluation.equality_residual.numel()}, ScalarType::Float64).to(flat_params.platform());
+  const Series ineq_scale = normalization.inequality_row_scale.defined()
+                                ? normalization.inequality_row_scale.to(flat_params.platform())
+                                : pluss::ones({evaluation.inequality_residual.numel()}, ScalarType::Float64).to(flat_params.platform());
+
+  const Series linear_eq_weight =
+      linear_eq.numel() == 0 ? linear_eq
+                             : linear_eq.to(ScalarType::Float64)
+                                   .mul(detail::slice_series_(eq_scale, 0, n_linear_eq).square());
+  const Series nonlinear_eq_weight =
+      evaluation.nonlinear_equality_residual.numel() == 0
+          ? evaluation.nonlinear_equality_residual
+          : evaluation.nonlinear_equality_residual.to(ScalarType::Float64)
+                .mul(detail::slice_series_(eq_scale, n_linear_eq, evaluation.nonlinear_equality_residual.numel()).square());
+
+  const Series linear_ineq_weight =
+      linear_ineq.numel() == 0 ? linear_ineq
+                               : linear_ineq.clamp_min(0.0).to(ScalarType::Float64)
+                                     .mul(detail::slice_series_(ineq_scale, 0, n_linear_ineq).square());
+  const Series lower_weight =
+      lower_ineq.numel() == 0 ? lower_ineq
+                              : lower_ineq.clamp_min(0.0).to(ScalarType::Float64)
+                                    .mul(detail::slice_series_(ineq_scale, n_linear_ineq, n_lower).square());
+  const Series upper_weight =
+      upper_ineq.numel() == 0 ? upper_ineq
+                              : upper_ineq.clamp_min(0.0).to(ScalarType::Float64)
+                                    .mul(detail::slice_series_(ineq_scale, n_linear_ineq + n_lower, n_upper).square());
+  const Series nonlinear_ineq_weight =
+      evaluation.nonlinear_inequality_residual.numel() == 0
+          ? evaluation.nonlinear_inequality_residual
+          : evaluation.nonlinear_inequality_residual.clamp_min(0.0).to(ScalarType::Float64)
+                .mul(detail::slice_series_(ineq_scale,
+                                           n_linear_ineq + n_lower + n_upper,
+                                           evaluation.nonlinear_inequality_residual.numel()).square());
+
+  Series linear_eq_grad_flat =
+      problem.linear.Aeq.has_value() && linear_eq_weight.numel() > 0
+          ? detail::dense_transpose_matvec_(*problem.linear.Aeq, linear_eq_weight)
+          : pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+  Series linear_ineq_grad_flat =
+      problem.linear.Aineq.has_value() && linear_ineq_weight.numel() > 0
+          ? detail::dense_transpose_matvec_(*problem.linear.Aineq, linear_ineq_weight)
+          : pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+  Series bound_grad_flat = pluss::zeros({flat_params.numel()}, ScalarType::Float64).to(flat_params.platform());
+  if (lower_weight.numel() > 0) bound_grad_flat = bound_grad_flat.sub(lower_weight);
+  if (upper_weight.numel() > 0) bound_grad_flat = bound_grad_flat.add(upper_weight);
+
+  auto penalty_pack = detail::add_pack_(
+      detail::add_pack_(
+          detail::lift_flat_gradient_(params, linear_eq_grad_flat),
+          detail::lift_flat_gradient_(params, linear_ineq_grad_flat.add(bound_grad_flat))),
+      detail::add_pack_(
+          detail::combine_constraint_gradient_(params, evaluation.equality_jacobian, nonlinear_eq_weight, true),
+          detail::combine_constraint_gradient_(params, evaluation.inequality_jacobian, nonlinear_ineq_weight, false)));
+
+  total = detail::add_pack_(total, detail::scaled_pack_(penalty_pack, penalty));
+  return total;
+}
+
 namespace detail {
 
 struct RecoveryResult {
@@ -2587,6 +3754,22 @@ inline double constraint_violation_value_(const ProblemEvaluation& evaluation) {
   return eq_term + ineq_term;
 }
 
+inline double constraint_violation_value_(const ProblemEvaluation& evaluation,
+                                          const OptimaNormalizationStats& normalization) {
+  const Series eq_scaled =
+      evaluation.equality_residual.numel() == 0 || !normalization.equality_row_scale.defined()
+          ? evaluation.equality_residual
+          : evaluation.equality_residual.to(ScalarType::Float64).mul(normalization.equality_row_scale.to(evaluation.equality_residual.platform()));
+  const Series ineq_pos = evaluation.inequality_residual.numel() == 0
+                              ? evaluation.inequality_residual
+                              : evaluation.inequality_residual.clamp_min(0.0);
+  const Series ineq_scaled =
+      ineq_pos.numel() == 0 || !normalization.inequality_row_scale.defined()
+          ? ineq_pos
+          : ineq_pos.to(ScalarType::Float64).mul(normalization.inequality_row_scale.to(ineq_pos.platform()));
+  return 0.5 * squared_l2_(eq_scaled) + 0.5 * squared_l2_(ineq_scaled);
+}
+
 inline ParameterPack<Series> constraint_violation_gradient_(const ConstrainedProblem& problem,
                                                             const ParameterPack<Series>& params,
                                                             const ProblemEvaluation& evaluation) {
@@ -2595,14 +3778,24 @@ inline ParameterPack<Series> constraint_violation_gradient_(const ConstrainedPro
       scaled_pack_(evaluation.gradient, -1.0));
 }
 
+inline ParameterPack<Series> constraint_violation_gradient_(const ConstrainedProblem& problem,
+                                                            const ParameterPack<Series>& params,
+                                                            const ProblemEvaluation& evaluation,
+                                                            const OptimaNormalizationStats& normalization) {
+  return add_pack_(
+      normalized_penalty_gradient_(problem, params, evaluation, 1.0, normalization),
+      scaled_pack_(evaluation.gradient, -normalization.objective_scale));
+}
+
 inline RecoveryResult restore_feasibility_(const ConstrainedProblem& problem,
                                            const ParameterPack<Series>& start_params,
                                            const ProblemEvaluation& start_evaluation,
+                                           const OptimaNormalizationStats& normalization,
                                            const SequentialQPOptions& options) {
   RecoveryResult result;
   result.params = start_params;
   result.evaluation = start_evaluation;
-  result.objective_value = constraint_violation_value_(start_evaluation);
+  result.objective_value = constraint_violation_value_(start_evaluation, normalization);
   result.message = "restoration failed to reduce constraint violation";
 
   if (start_evaluation.status != EvalStatus::Ok) {
@@ -2616,7 +3809,7 @@ inline RecoveryResult restore_feasibility_(const ConstrainedProblem& problem,
   const double start_violation = start_evaluation.max_constraint_violation;
 
   for (std::int64_t iter = 0; iter < options.max_restoration_iterations; ++iter) {
-    const auto grad_pack = constraint_violation_gradient_(problem, current_params, current_evaluation);
+    const auto grad_pack = constraint_violation_gradient_(problem, current_params, current_evaluation, normalization);
     const Series gradient = flatten_values(grad_pack).to(ScalarType::Float64);
     if (series_inf_norm_(gradient) <= 1e-12) break;
 
@@ -2637,7 +3830,7 @@ inline RecoveryResult restore_feasibility_(const ConstrainedProblem& problem,
       auto trial_evaluation = evaluate_problem(problem, trial);
       ++result.function_evaluations;
       if (trial_evaluation.status == EvalStatus::Ok) {
-        const double trial_value = constraint_violation_value_(trial_evaluation);
+        const double trial_value = constraint_violation_value_(trial_evaluation, normalization);
         if (std::isfinite(trial_value) &&
             trial_value <= current_value + options.armijo * step_size * directional_derivative) {
           current_params = std::move(trial);
@@ -2661,7 +3854,7 @@ inline RecoveryResult restore_feasibility_(const ConstrainedProblem& problem,
   result.objective_value = current_value;
   result.success =
       result.evaluation.max_constraint_violation + 1e-10 < start_violation ||
-      result.objective_value + 1e-12 < constraint_violation_value_(start_evaluation) ||
+      result.objective_value + 1e-12 < constraint_violation_value_(start_evaluation, normalization) ||
       result.evaluation.max_constraint_violation <= options.constraint_tolerance;
   if (result.success) {
     result.message = "restoration reduced constraint violation";
@@ -2672,6 +3865,7 @@ inline RecoveryResult restore_feasibility_(const ConstrainedProblem& problem,
 inline RecoveryResult recover_barrier_descent_(const ConstrainedProblem& problem,
                                                const ParameterPack<Series>& start_params,
                                                const ProblemEvaluation& start_evaluation,
+                                               const OptimaNormalizationStats& normalization,
                                                double barrier_parameter,
                                                const InteriorPointOptions& options) {
   RecoveryResult result;
@@ -2692,14 +3886,14 @@ inline RecoveryResult recover_barrier_descent_(const ConstrainedProblem& problem
   }
 
   double current_value =
-      barrier_value_(current_evaluation, current_system, barrier_parameter, options.equality_penalty);
+      barrier_value_(current_evaluation, current_system, barrier_parameter, options.equality_penalty, normalization);
   result.objective_value = current_value;
   result.message = "barrier recovery failed to reduce the barrier objective";
   if (!std::isfinite(current_value)) return result;
 
   for (std::int64_t iter = 0; iter < options.max_restoration_iterations; ++iter) {
     const auto barrier_gradient =
-        barrier_gradient_flat_(current_evaluation, current_system, barrier_parameter, options.equality_penalty);
+        barrier_gradient_flat_(current_evaluation, current_system, barrier_parameter, options.equality_penalty, normalization);
     const std::int64_t n = current_params.total_numel();
     Series gradient =
         pluss::make_series(barrier_gradient, {n}).to(ScalarType::Float64).to(current_params[0].value.platform());
@@ -2739,7 +3933,8 @@ inline RecoveryResult recover_barrier_descent_(const ConstrainedProblem& problem
               trial_evaluation,
               trial_system,
               barrier_parameter,
-              options.equality_penalty);
+              options.equality_penalty,
+              normalization);
           if (std::isfinite(trial_value) &&
               trial_value <= current_value + options.armijo * step_size * directional_derivative) {
             current_params = std::move(trial);
@@ -2768,9 +3963,103 @@ inline RecoveryResult recover_barrier_descent_(const ConstrainedProblem& problem
                                                           assemble_constraint_system_(
                                                               problem, start_params, start_evaluation),
                                                           barrier_parameter,
-                                                          options.equality_penalty);
+                                                          options.equality_penalty,
+                                                          normalization);
   if (result.success) {
     result.message = "barrier recovery reduced the barrier objective";
+  }
+  return result;
+}
+
+inline bool should_enter_feasibility_phase_(const InteriorPointState& state,
+                                            const InteriorPointOptions& options) {
+  if (!options.enable_feasibility_phase) return false;
+  if (state.evaluation.status != EvalStatus::Ok) return false;
+  const double threshold =
+      std::max(options.constraint_tolerance, options.feasibility_activation_factor * state.barrier_parameter);
+  return state.evaluation.max_constraint_violation > threshold;
+}
+
+inline RecoveryResult advance_feasibility_phase_(const ConstrainedProblem& problem,
+                                                 const ParameterPack<Series>& start_params,
+                                                 const ProblemEvaluation& start_evaluation,
+                                                 const OptimaNormalizationStats& normalization,
+                                                 const InteriorPointOptions& options) {
+  RecoveryResult result;
+  result.params = start_params;
+  result.evaluation = start_evaluation;
+  result.objective_value = constraint_violation_value_(start_evaluation, normalization);
+  result.message = "feasibility phase failed to reduce constraint violation";
+
+  if (start_evaluation.status != EvalStatus::Ok) {
+    result.message = "feasibility phase requires a valid starting evaluation";
+    return result;
+  }
+
+  const double start_violation = start_evaluation.max_constraint_violation;
+  auto current_params = start_params;
+  auto current_evaluation = start_evaluation;
+  double current_value = result.objective_value;
+
+  for (std::int64_t iter = 0; iter < options.max_restoration_iterations; ++iter) {
+    const auto grad_pack = constraint_violation_gradient_(problem, current_params, current_evaluation, normalization);
+    const Series gradient = flatten_values(grad_pack).to(ScalarType::Float64);
+    if (series_inf_norm_(gradient) <= 1e-12) {
+      result.message = "feasibility phase reached a stationary violation point";
+      break;
+    }
+
+    const Series direction = gradient.mul(-1.0);
+    double directional_derivative = series_dot_(gradient, direction);
+    if (!(directional_derivative < 0.0)) {
+      directional_derivative = -std::max(1.0, series_dot_(direction, direction));
+    }
+
+    double step_size = options.initial_step_size;
+    bool accepted = false;
+    for (std::int64_t ls = 0; ls < options.max_restoration_line_search_iterations; ++ls) {
+      auto trial = unflatten_values(
+          current_params.layout(),
+          flatten_values(current_params).to(ScalarType::Float64).add(direction.mul(step_size)));
+      if (options.project_bounds) trial = project_bounds_(trial, problem.bounds);
+
+      auto trial_evaluation = evaluate_problem(problem, trial);
+      ++result.function_evaluations;
+      if (trial_evaluation.status == EvalStatus::Ok) {
+        const double trial_value = constraint_violation_value_(trial_evaluation, normalization);
+        if (std::isfinite(trial_value) &&
+            trial_value <= current_value + options.armijo * step_size * directional_derivative) {
+          current_params = std::move(trial);
+          current_evaluation = std::move(trial_evaluation);
+          current_value = trial_value;
+          result.last_step_size = step_size;
+          ++result.iterations;
+          accepted = true;
+          break;
+        }
+      }
+      step_size *= options.backtracking;
+    }
+
+    if (!accepted) break;
+
+    if (current_evaluation.max_constraint_violation <=
+        std::max(options.constraint_tolerance, 0.5 * start_violation)) {
+      result.success = true;
+      result.params = current_params;
+      result.evaluation = current_evaluation;
+      result.objective_value = current_value;
+      result.message = "feasibility phase reduced constraint violation";
+      return result;
+    }
+  }
+
+  if (current_evaluation.max_constraint_violation + 1e-12 < start_violation) {
+    result.success = true;
+    result.params = current_params;
+    result.evaluation = current_evaluation;
+    result.objective_value = current_value;
+    result.message = "feasibility phase improved constraint violation";
   }
   return result;
 }
@@ -2903,17 +4192,34 @@ inline SequentialQPState init_sequential_qp_state(const ConstrainedProblem& prob
   state.evaluation = evaluate_problem(problem, state.params);
   state.function_evaluations = 1;
   state.current_penalty = std::max(options.initial_penalty, 1e-8);
-  state.merit_value = state.evaluation.status == EvalStatus::Ok
-                          ? detail::penalized_value_(state.evaluation, state.current_penalty)
-                          : std::numeric_limits<double>::infinity();
-  state.kkt_residual = state.evaluation.status == EvalStatus::Ok
-                           ? detail::pack_inf_norm_(state.evaluation.gradient)
-                           : std::numeric_limits<double>::infinity();
   state.converged = state.evaluation.status != EvalStatus::Ok;
   state.message = state.converged ? state.evaluation.message : "initialized";
   state.hessian = detail::identity_matrix_(
       state.params.total_numel(),
       state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform());
+  state.variable_scale = detail::compute_variable_scale_(state.params, problem.bounds, options.problem_scaling);
+  if (state.evaluation.status == EvalStatus::Ok) {
+    const auto system = detail::assemble_constraint_system_(problem, state.params, state.evaluation);
+    state.normalization = detail::compute_problem_normalization_(
+        state.evaluation,
+        system,
+        options.problem_scaling,
+        state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform());
+    state.merit_value = detail::penalized_value_(state.evaluation, state.current_penalty, state.normalization);
+    const auto active = detail::active_constraints_(system, options.active_set_tolerance);
+    const auto normalized_active = detail::scale_constraint_rows_(
+        active,
+        Series{},
+        detail::active_constraint_row_scales_(system, active, state.normalization, state.params[0].value.platform()));
+    state.kkt_residual = detail::kkt_residual_(
+        flatten_values(state.evaluation.gradient).to(ScalarType::Float64).mul(state.normalization.objective_scale),
+        normalized_active,
+        state.multipliers);
+  } else {
+    state.merit_value = std::numeric_limits<double>::infinity();
+    state.kkt_residual = std::numeric_limits<double>::infinity();
+  }
+  state.krylov_iterations = 0;
   detail::maybe_update_best_feasible_(state);
   if (!state.converged && detail::feasible_objective_target_met_(state.evaluation, options.objective_limit)) {
     state.converged = true;
@@ -2932,18 +4238,26 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
   auto active_constraints =
       detail::active_constraints_(constraint_system, options.active_set_tolerance);
   const Series flat_gradient = flatten_values(state.evaluation.gradient).to(ScalarType::Float64);
+  const Series variable_scale = state.variable_scale.defined()
+                                    ? state.variable_scale.to(ScalarType::Float64).to(flat_gradient.platform())
+                                    : detail::ones_series_(flat_gradient.numel(), flat_gradient.platform());
 
   bool kkt_ok = false;
   Series step_direction;
   Series multipliers;
   for (std::size_t attempt = 0; attempt <= active_constraints.size(); ++attempt) {
+    const Series active_row_scale =
+        detail::active_constraint_row_scales_(constraint_system, active_constraints, state.normalization, flat_gradient.platform());
+    const auto scaled_constraints = detail::scale_constraint_rows_(active_constraints, variable_scale, active_row_scale);
     std::tie(step_direction, multipliers) = detail::solve_sqp_kkt_(
-        state.hessian,
-        flat_gradient,
-        active_constraints,
+        detail::scale_hessian_(state.hessian, variable_scale),
+        detail::scale_gradient_(flat_gradient.mul(state.normalization.objective_scale), variable_scale),
+        scaled_constraints,
         options.regularization,
         options.linear_system_solver,
+        options.pivot_threshold,
         kkt_ok);
+    step_direction = detail::unscale_step_(step_direction, variable_scale);
     if (!kkt_ok) break;
 
     double most_negative = 0.0;
@@ -2963,18 +4277,24 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
   }
 
   const auto merit_gradient_pack =
-      penalty_gradient(problem, state.params, state.evaluation, state.current_penalty);
+      normalized_penalty_gradient_(problem, state.params, state.evaluation, state.current_penalty, state.normalization);
   const Series merit_gradient = flatten_values(merit_gradient_pack).to(ScalarType::Float64);
+  const Series scaled_merit_gradient = detail::scale_gradient_(merit_gradient, variable_scale);
 
   if (!kkt_ok || detail::series_dot_(merit_gradient, step_direction) >= 0.0) {
-    step_direction = merit_gradient.mul(-1.0);
+    step_direction = detail::unscale_step_(scaled_merit_gradient.mul(-1.0), variable_scale);
     multipliers = detail::zeros_series_(
         static_cast<std::int64_t>(active_constraints.size()),
         merit_gradient.platform());
   }
 
   const double step_inf_norm = detail::series_inf_norm_(step_direction);
-  next.kkt_residual = detail::kkt_residual_(flat_gradient, active_constraints, multipliers);
+  const Series accepted_active_row_scale =
+      detail::active_constraint_row_scales_(constraint_system, active_constraints, state.normalization, flat_gradient.platform());
+  next.kkt_residual = detail::kkt_residual_(
+      flat_gradient.mul(state.normalization.objective_scale),
+      detail::scale_constraint_rows_(active_constraints, Series{}, accepted_active_row_scale),
+      multipliers);
   if (step_inf_norm <= options.optimality_tolerance) {
     next.converged = true;
     next.message = state.evaluation.max_constraint_violation <= options.constraint_tolerance
@@ -2984,10 +4304,25 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
   }
 
   double step_size = options.initial_step_size;
+  step_size = std::min(step_size,
+                       detail::max_step_to_bounds_(
+                           problem, state.params, step_direction, options.fraction_to_boundary));
+  step_size = std::min(step_size,
+                       detail::max_step_to_linearized_inequalities_(
+                           constraint_system,
+                           step_direction,
+                           options.active_set_tolerance,
+                           options.fraction_to_boundary));
   const double base_merit = state.merit_value;
   double directional_derivative = detail::series_dot_(merit_gradient, step_direction);
   if (!(directional_derivative < 0.0)) {
     directional_derivative = -std::max(1.0, detail::series_dot_(step_direction, step_direction));
+  }
+  const double base_armijo = base_merit + options.armijo * directional_derivative;
+  if (!(step_size > 0.0) || !std::isfinite(step_size)) {
+    next.converged = true;
+    next.message = "step hit the bound-feasible region";
+    return next;
   }
 
   for (std::int64_t ls_iter = 0; ls_iter < options.max_line_search_iterations; ++ls_iter) {
@@ -3004,9 +4339,16 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
           std::max(options.constraint_tolerance, 0.9 * state.evaluation.max_constraint_violation)) {
         trial_penalty *= 2.0;
       }
-      const double trial_merit = detail::penalized_value_(trial_eval, trial_penalty);
-      if (std::isfinite(trial_merit) &&
-          trial_merit <= base_merit + options.armijo * step_size * directional_derivative) {
+      const double trial_merit = detail::penalized_value_(trial_eval, trial_penalty, state.normalization);
+      const double armijo_rhs = base_merit + options.armijo * step_size * directional_derivative;
+      if (detail::accept_sqp_trial_(
+              state.evaluation,
+              base_merit,
+              trial_eval,
+              trial_merit,
+              step_size,
+              armijo_rhs,
+              options.constraint_tolerance)) {
         next.params = std::move(trial);
         next.evaluation = std::move(trial_eval);
         next.iteration += 1;
@@ -3021,7 +4363,8 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
         const Series s = x_next.sub(x_prev);
         if (state.current_penalty == next.current_penalty) {
           const Series next_merit_gradient =
-              flatten_values(penalty_gradient(problem, next.params, next.evaluation, next.current_penalty))
+              flatten_values(
+                  normalized_penalty_gradient_(problem, next.params, next.evaluation, next.current_penalty, state.normalization))
                   .to(ScalarType::Float64);
           const Series y = next_merit_gradient.sub(merit_gradient);
           next.hessian = detail::update_hessian_(
@@ -3043,7 +4386,15 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
         const auto next_active =
             detail::active_constraints_(next_constraints, options.active_set_tolerance);
         const Series next_flat_gradient = flatten_values(next.evaluation.gradient).to(ScalarType::Float64);
-        next.kkt_residual = detail::kkt_residual_(next_flat_gradient, next_active, next.multipliers);
+        next.kkt_residual = detail::kkt_residual_(
+            next_flat_gradient.mul(state.normalization.objective_scale),
+            detail::scale_constraint_rows_(
+                next_active,
+                Series{},
+                detail::active_constraint_row_scales_(next_constraints, next_active, state.normalization, next_flat_gradient.platform())),
+            next.multipliers);
+        next.variable_scale = state.variable_scale;
+        next.normalization = state.normalization;
 
         detail::maybe_update_best_feasible_(next);
         if (next.iteration >= options.max_iterations) {
@@ -3061,12 +4412,134 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
         }
         return next;
       }
+
+      if (options.max_second_order_corrections > 0 &&
+          trial_eval.status == EvalStatus::Ok &&
+          trial_eval.max_constraint_violation >
+              std::max(options.constraint_tolerance,
+                       state.evaluation.max_constraint_violation + options.second_order_correction_tolerance)) {
+        const auto trial_system = detail::assemble_constraint_system_(problem, trial, trial_eval);
+        const auto soc_rows = detail::second_order_correction_rows_(
+            constraint_system,
+            trial_system,
+            options.active_set_tolerance);
+        Series corrected_direction = step_direction;
+        bool soc_ok = false;
+        for (std::int64_t soc_iter = 0; soc_iter < options.max_second_order_corrections; ++soc_iter) {
+          const Series soc = detail::solve_second_order_correction_(
+              soc_rows,
+              trial_system,
+              flat_gradient.numel(),
+              flat_gradient.platform(),
+              options.regularization,
+              options.linear_system_solver,
+              options.pivot_threshold,
+              soc_ok);
+          if (!soc_ok || detail::series_inf_norm_(soc) <= options.second_order_correction_tolerance) break;
+          corrected_direction = step_direction.add(soc);
+          const double corrected_step =
+              std::min(step_size,
+                       std::min(detail::max_step_to_bounds_(
+                                    problem, state.params, corrected_direction, options.fraction_to_boundary),
+                                detail::max_step_to_linearized_inequalities_(
+                                    constraint_system,
+                                    corrected_direction,
+                                    options.active_set_tolerance,
+                                    options.fraction_to_boundary)));
+          if (!(corrected_step > 0.0) || !std::isfinite(corrected_step)) break;
+          auto corrected_trial = unflatten_values(
+              state.params.layout(),
+              flatten_values(state.params).to(ScalarType::Float64).add(corrected_direction.mul(corrected_step)));
+          if (options.project_bounds) corrected_trial = detail::project_bounds_(corrected_trial, problem.bounds);
+
+          auto corrected_eval = evaluate_problem(problem, corrected_trial);
+          next.function_evaluations += 1;
+          if (corrected_eval.status != EvalStatus::Ok) break;
+          double corrected_penalty = state.current_penalty;
+          if (corrected_eval.max_constraint_violation >
+              std::max(options.constraint_tolerance, 0.9 * state.evaluation.max_constraint_violation)) {
+            corrected_penalty *= 2.0;
+          }
+          const double corrected_merit = detail::penalized_value_(corrected_eval, corrected_penalty, state.normalization);
+          const double corrected_rhs = base_merit + options.armijo * corrected_step * directional_derivative;
+          if (!detail::accept_sqp_trial_(
+                  state.evaluation,
+                  base_merit,
+                  corrected_eval,
+                  corrected_merit,
+                  corrected_step,
+                  corrected_rhs,
+                  options.constraint_tolerance)) {
+            break;
+          }
+
+          next.params = std::move(corrected_trial);
+          next.evaluation = std::move(corrected_eval);
+          next.iteration += 1;
+          next.last_step_size = corrected_step;
+          next.current_penalty = corrected_penalty;
+          next.merit_value = corrected_merit;
+          next.multipliers = std::move(multipliers);
+          next.message = "second-order correction accepted";
+
+          const Series x_prev = flatten_values(state.params).to(ScalarType::Float64);
+          const Series x_next = flatten_values(next.params).to(ScalarType::Float64);
+          const Series s = x_next.sub(x_prev);
+          if (state.current_penalty == next.current_penalty) {
+            const Series next_merit_gradient =
+                flatten_values(
+                    normalized_penalty_gradient_(problem, next.params, next.evaluation, next.current_penalty, state.normalization))
+                    .to(ScalarType::Float64);
+            const Series y = next_merit_gradient.sub(merit_gradient);
+            next.hessian = detail::update_hessian_(
+                state.hessian,
+                s,
+                y,
+                options.bfgs_curvature_tolerance,
+                options.hessian_approximation,
+                next.params.total_numel(),
+                next.params[0].value.platform());
+          } else {
+            next.hessian = detail::identity_matrix_(
+                next.params.total_numel(),
+                next.params[0].value.platform());
+          }
+
+          const auto next_constraints = detail::assemble_constraint_system_(problem, next.params, next.evaluation);
+          const auto next_active =
+              detail::active_constraints_(next_constraints, options.active_set_tolerance);
+          next.kkt_residual = detail::kkt_residual_(
+              flatten_values(next.evaluation.gradient).to(ScalarType::Float64).mul(state.normalization.objective_scale),
+              detail::scale_constraint_rows_(
+                  next_active,
+                  Series{},
+                  detail::active_constraint_row_scales_(next_constraints, next_active, state.normalization, flat_gradient.platform())),
+              next.multipliers);
+          next.variable_scale = state.variable_scale;
+          next.normalization = state.normalization;
+          detail::maybe_update_best_feasible_(next);
+          if (next.iteration >= options.max_iterations) {
+            next.converged = true;
+            next.message = "maximum iterations reached";
+          }
+          if (next.kkt_residual <= options.optimality_tolerance &&
+              next.evaluation.max_constraint_violation <= options.constraint_tolerance) {
+            next.converged = true;
+            next.message = "optimality and feasibility tolerances satisfied";
+          }
+          if (detail::feasible_objective_target_met_(next.evaluation, options.objective_limit)) {
+            next.converged = true;
+            next.message = "objective limit reached at a feasible point";
+          }
+          return next;
+        }
+      }
     }
     step_size *= options.backtracking;
   }
 
   if (options.enable_restoration) {
-    const auto recovery = detail::restore_feasibility_(problem, state.params, state.evaluation, options);
+    const auto recovery = detail::restore_feasibility_(problem, state.params, state.evaluation, state.normalization, options);
     next.function_evaluations += recovery.function_evaluations;
     if (recovery.success) {
       next.params = recovery.params;
@@ -3078,7 +4551,7 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
           std::max(options.constraint_tolerance, 0.5 * state.evaluation.max_constraint_violation)) {
         next.current_penalty *= 2.0;
       }
-      next.merit_value = detail::penalized_value_(next.evaluation, next.current_penalty);
+      next.merit_value = detail::penalized_value_(next.evaluation, next.current_penalty, state.normalization);
       next.hessian = detail::identity_matrix_(
           next.params.total_numel(),
           next.params.empty() ? pluss::codem::Platform::CPU : next.params[0].value.platform());
@@ -3089,10 +4562,15 @@ inline SequentialQPState sequential_qp_step(const ConstrainedProblem& problem,
       const auto next_active =
           detail::active_constraints_(next_constraints, options.active_set_tolerance);
       next.kkt_residual = detail::kkt_residual_(
-          flatten_values(next.evaluation.gradient).to(ScalarType::Float64),
-          next_active,
+          flatten_values(next.evaluation.gradient).to(ScalarType::Float64).mul(state.normalization.objective_scale),
+          detail::scale_constraint_rows_(
+              next_active,
+              Series{},
+              detail::active_constraint_row_scales_(next_constraints, next_active, state.normalization, flat_gradient.platform())),
           next.multipliers);
       next.message = "restoration step accepted";
+      next.variable_scale = state.variable_scale;
+      next.normalization = state.normalization;
       detail::maybe_update_best_feasible_(next);
       if (next.iteration >= options.max_iterations) {
         next.converged = true;
@@ -3155,6 +4633,14 @@ inline InteriorPointState init_interior_point_state(const ConstrainedProblem& pr
                                                     const ParameterPack<Series>& initial_params,
                                                     const InteriorPointOptions& options = {}) {
   InteriorPointState state;
+  if (!detail::supports_exact_curvature_(problem, options.hessian_approximation)) {
+    state.params = initial_params;
+    state.evaluation.status = EvalStatus::InvalidProblem;
+    state.converged = true;
+    state.message =
+        "exact interior-point curvature requires objective.autodiff_dual and dual nonlinear callbacks";
+    return state;
+  }
   std::int64_t eval_count = 0;
   bool init_ok = true;
   state.params = detail::make_strictly_interior_(
@@ -3170,19 +4656,31 @@ inline InteriorPointState init_interior_point_state(const ConstrainedProblem& pr
   state.barrier_parameter = std::max(options.initial_barrier_parameter, options.minimum_barrier_parameter);
   if (state.evaluation.status == EvalStatus::Ok) {
     const auto system = detail::assemble_constraint_system_(problem, state.params, state.evaluation);
+    state.normalization = detail::compute_problem_normalization_(
+        state.evaluation,
+        system,
+        options.problem_scaling,
+        state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform());
     state.barrier_value = detail::barrier_value_(
         state.evaluation,
         system,
         state.barrier_parameter,
-        options.equality_penalty);
-    state.barrier_gradient_norm = detail::inf_norm_(detail::barrier_gradient_flat_(
-        state.evaluation,
+        options.equality_penalty,
+        state.normalization);
+    detail::update_primal_dual_metrics_(
+        state,
         system,
         state.barrier_parameter,
-        options.equality_penalty));
+        options.equality_penalty,
+        state.normalization);
   } else {
     state.barrier_value = std::numeric_limits<double>::infinity();
     state.barrier_gradient_norm = std::numeric_limits<double>::infinity();
+    state.inequality_slack = pluss::empty({0}, ScalarType::Float64).to(
+        state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform());
+    state.inequality_dual = state.inequality_slack;
+    state.primal_residual = std::numeric_limits<double>::infinity();
+    state.complementarity_residual = std::numeric_limits<double>::infinity();
   }
   state.converged = !init_ok || state.evaluation.status != EvalStatus::Ok || !std::isfinite(state.barrier_value);
   state.message = state.converged ? "failed to initialize a strict interior point" : "initialized";
@@ -3190,6 +4688,11 @@ inline InteriorPointState init_interior_point_state(const ConstrainedProblem& pr
   state.hessian = detail::identity_matrix_(
       state.params.total_numel(),
       state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform());
+  state.variable_scale = detail::compute_variable_scale_(state.params, problem.bounds, options.problem_scaling);
+  state.krylov_iterations = 0;
+  state.lbfgs_s_history.clear();
+  state.lbfgs_y_history.clear();
+  state.in_feasibility_phase = detail::should_enter_feasibility_phase_(state, options);
   detail::maybe_update_best_feasible_(state);
   if (!state.converged && detail::feasible_objective_target_met_(state.evaluation, options.objective_limit)) {
     state.converged = true;
@@ -3204,16 +4707,67 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
   InteriorPointState next = state;
   if (state.converged || state.evaluation.status != EvalStatus::Ok) return next;
 
+  if (state.in_feasibility_phase) {
+    const auto phase = detail::advance_feasibility_phase_(
+        problem, state.params, state.evaluation, state.normalization, options);
+    next.function_evaluations += phase.function_evaluations;
+    if (phase.success) {
+      next.params = phase.params;
+      next.evaluation = phase.evaluation;
+      next.iteration += std::max<std::int64_t>(phase.iterations, 1);
+      next.last_step_size = phase.last_step_size;
+      next.message = phase.message;
+      next.hessian = detail::identity_matrix_(
+          next.params.total_numel(),
+          next.params.empty() ? pluss::codem::Platform::CPU : next.params[0].value.platform());
+      next.krylov_iterations = 0;
+      next.lbfgs_s_history.clear();
+      next.lbfgs_y_history.clear();
+      const auto next_system = detail::assemble_constraint_system_(problem, next.params, next.evaluation);
+      next.barrier_value = detail::barrier_value_(
+          next.evaluation,
+          next_system,
+          next.barrier_parameter,
+          options.equality_penalty,
+          next.normalization);
+      detail::update_primal_dual_metrics_(
+          next,
+          next_system,
+          next.barrier_parameter,
+          options.equality_penalty,
+          next.normalization);
+      next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
+      detail::maybe_update_best_feasible_(next);
+      if (next.iteration >= options.max_iterations) {
+        next.converged = true;
+        next.message = "maximum iterations reached";
+      }
+      return next;
+    }
+    next.converged = true;
+    next.message = phase.message;
+    return next;
+  }
+
   const auto system = detail::assemble_constraint_system_(problem, state.params, state.evaluation);
-  const auto barrier_gradient = detail::barrier_gradient_flat_(
+  const Series slack = detail::inequality_slack_(system, state.hessian.platform());
+  const Series dual = detail::inequality_dual_(slack, state.barrier_parameter);
+  const Series primal_dual_gradient = detail::primal_dual_stationarity_flat_(
       state.evaluation,
       system,
-      state.barrier_parameter,
-      options.equality_penalty);
-  const double barrier_grad_norm = detail::inf_norm_(barrier_gradient);
+      dual,
+      options.equality_penalty,
+      state.normalization);
+  const double barrier_grad_norm = detail::series_inf_norm_(primal_dual_gradient);
+  const double complementarity = detail::complementarity_residual_(slack, dual, state.barrier_parameter);
+  next.inequality_slack = slack;
+  next.inequality_dual = dual;
+  next.primal_residual = std::max(detail::equality_residual_norm_(system), 0.0);
+  next.complementarity_residual = complementarity;
   next.barrier_gradient_norm = barrier_grad_norm;
 
-  if (barrier_grad_norm <= options.optimality_tolerance) {
+  if (barrier_grad_norm <= options.optimality_tolerance &&
+      complementarity <= std::max(options.optimality_tolerance, state.barrier_parameter)) {
     next.converged = true;
     next.message = (state.evaluation.max_constraint_violation <= options.constraint_tolerance &&
                     state.barrier_parameter <= options.minimum_barrier_parameter)
@@ -3223,27 +4777,165 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
   }
 
   bool solve_ok = false;
+  std::int64_t krylov_iterations = 0;
   const std::int64_t n = state.params.total_numel();
-  Series barrier_gradient_series =
-      pluss::make_series(barrier_gradient, {n}).to(ScalarType::Float64).to(state.hessian.platform());
-  Series step_direction = detail::solve_dense_system_series_(
-      state.hessian,
-      barrier_gradient_series.mul(-1.0),
-      1e-8,
-      options.linear_system_solver,
-      solve_ok);
-  if (!solve_ok) {
-    step_direction = barrier_gradient_series.mul(-1.0);
+  const Series variable_scale = state.variable_scale.defined()
+                                    ? state.variable_scale.to(ScalarType::Float64).to(state.hessian.platform())
+                                    : detail::ones_series_(n, state.hessian.platform());
+  const bool use_exact_curvature =
+      options.hessian_approximation == OptimaHessianApproximation::Exact ||
+      options.hessian_approximation == OptimaHessianApproximation::HessianVector;
+  Series reduced_hessian = state.hessian.to(ScalarType::Float64).to(state.hessian.platform());
+  bool exact_hessian_ok = false;
+  if (options.hessian_approximation == OptimaHessianApproximation::Exact) {
+    reduced_hessian = detail::assemble_hessian_from_hvp_(
+        problem,
+        state.params,
+        state.barrier_parameter,
+        options.equality_penalty,
+        state.normalization,
+        options.hvp_options,
+        exact_hessian_ok);
+    if (!exact_hessian_ok) {
+      reduced_hessian = state.hessian.to(ScalarType::Float64).to(state.hessian.platform());
+    }
+  } else if (!use_exact_curvature) {
+    if (slack.defined() && slack.numel() > 0) {
+      for (std::int64_t i = 0; i < slack.numel(); ++i) {
+        const double si = std::max(slack.select(0, i).item<double>(), 1e-12);
+        const double zi = std::max(dual.select(0, i).item<double>(), 1e-12);
+        reduced_hessian = reduced_hessian.add(
+            detail::series_outer_(system.inequalities[static_cast<std::size_t>(i)].jacobian,
+                                  system.inequalities[static_cast<std::size_t>(i)].jacobian)
+                .mul(zi / si));
+      }
+    }
   }
-  if (detail::series_dot_(barrier_gradient_series, step_direction) >= 0.0) {
-    step_direction = barrier_gradient_series.mul(-1.0);
+  const Series scaled_hessian = detail::scale_hessian_(reduced_hessian, variable_scale);
+  Series scaled_rhs;
+  if (!use_exact_curvature && slack.defined() && slack.numel() > 0) {
+    Series centering = dual.mul(1.0 - options.centrality_fraction);
+    Series rhs = primal_dual_gradient.mul(-1.0);
+    for (std::int64_t i = 0; i < centering.numel(); ++i) {
+      rhs = rhs.add(system.inequalities[static_cast<std::size_t>(i)].jacobian.mul(
+          centering.select(0, i).item<double>()));
+    }
+    scaled_rhs = detail::scale_gradient_(rhs, variable_scale);
+  } else {
+    scaled_rhs = detail::scale_gradient_(primal_dual_gradient.mul(-1.0), variable_scale);
+  }
+  Series step_direction;
+  if (options.hessian_approximation == OptimaHessianApproximation::Lbfgs) {
+    step_direction = detail::unscale_step_(
+        detail::lbfgs_direction_(
+            detail::scale_gradient_(primal_dual_gradient, variable_scale),
+            state.lbfgs_s_history,
+            state.lbfgs_y_history),
+        variable_scale);
+    solve_ok = detail::series_dot_(primal_dual_gradient, step_direction) < 0.0;
+    krylov_iterations = 0;
+  } else if (options.hessian_approximation == OptimaHessianApproximation::HessianVector &&
+             (options.linear_system_solver == OptimaLinearSystemSolver::ConjugateGradient ||
+              (options.linear_system_solver == OptimaLinearSystemSolver::Auto && n >= 16))) {
+    const Series preconditioner = scaled_hessian.defined() && scaled_hessian.numel() == n * n
+                                      ? scaled_hessian.diagonal(0, 0, 1).reshape({n})
+                                      : detail::ones_series_(n, state.hessian.platform());
+    auto scaled_matvec = [&](const Series& scaled_direction) -> Series {
+      try {
+        const auto tangent = unflatten_values(
+            state.params.layout(),
+            detail::unscale_step_(scaled_direction, variable_scale).to(ScalarType::Float64));
+        auto [_, hv] = hvp(
+            [&](const ParameterPack<DualTrace>& p) -> DualTrace {
+              return detail::barrier_objective_autodiff_(
+                  problem, p, state.barrier_parameter, options.equality_penalty, &state.normalization);
+            },
+            state.params,
+            tangent,
+            options.hvp_options);
+        return detail::scale_gradient_(
+            flatten_values(hv).to(ScalarType::Float64).to(state.hessian.platform()),
+            variable_scale);
+      } catch (...) {
+        return scaled_direction;
+      }
+    };
+    step_direction = detail::solve_spd_system_cg_operator_(
+        scaled_matvec,
+        scaled_rhs,
+        preconditioner,
+        options.max_krylov_iterations,
+        options.krylov_tolerance,
+        options.krylov_absolute_tolerance,
+        solve_ok,
+        krylov_iterations);
+  } else if (detail::use_iterative_subproblem_solver_(
+                 options.linear_system_solver,
+                 options.system_structure,
+                 n,
+                 options.iterative_dimension_threshold)) {
+    step_direction = detail::solve_spd_system_cg_series_(
+        scaled_hessian,
+        scaled_rhs,
+        1e-8,
+        options.max_krylov_iterations,
+        options.krylov_tolerance,
+        options.krylov_absolute_tolerance,
+        solve_ok,
+        krylov_iterations);
+  } else {
+    step_direction = detail::solve_dense_system_series_(
+        scaled_hessian,
+        scaled_rhs,
+        1e-8,
+        options.linear_system_solver,
+        options.pivot_threshold,
+        solve_ok);
+  }
+  step_direction = detail::unscale_step_(step_direction, variable_scale);
+  next.krylov_iterations = krylov_iterations;
+  if (!solve_ok) {
+    step_direction = detail::unscale_step_(detail::scale_gradient_(primal_dual_gradient, variable_scale).mul(-1.0),
+                                           variable_scale);
+    next.krylov_iterations = 0;
+  }
+  if (detail::series_dot_(primal_dual_gradient, step_direction) >= 0.0) {
+    step_direction = detail::unscale_step_(detail::scale_gradient_(primal_dual_gradient, variable_scale).mul(-1.0),
+                                           variable_scale);
   }
 
   double max_step = options.initial_step_size;
-  for (const auto& row : system.inequalities) {
-    const double directional = detail::series_dot_(row.jacobian.to(step_direction.platform()), step_direction);
-    if (directional > 0.0) {
-      max_step = std::min(max_step, options.fraction_to_boundary * (-row.residual) / directional);
+  Series slack_step = pluss::empty({0}, ScalarType::Float64).to(step_direction.platform());
+  Series dual_step = pluss::empty({0}, ScalarType::Float64).to(step_direction.platform());
+  const Series inequality_residual = detail::inequality_residual_series_(system, state.hessian.platform());
+  if (slack.defined() && slack.numel() > 0) {
+    const Series Jdx = detail::stack_inequality_jacobian_(system, n, step_direction.platform())
+                           .matmul(step_direction.reshape({n, 1}))
+                           .reshape({slack.numel()});
+    const Series primal_resid = inequality_residual.add(slack);
+    slack_step = primal_resid.add(Jdx).mul(-1.0);
+    const Series centering_resid =
+        slack.mul(dual).sub(state.barrier_parameter * options.centrality_fraction);
+    dual_step = centering_resid.add(dual.mul(slack_step)).div(slack).mul(-1.0);
+
+    for (std::int64_t i = 0; i < slack.numel(); ++i) {
+      const double si = slack.select(0, i).item<double>();
+      const double dsi = slack_step.select(0, i).item<double>();
+      if (dsi < 0.0) {
+        max_step = std::min(max_step, options.fraction_to_boundary * (-si / dsi));
+      }
+      const double zi = dual.select(0, i).item<double>();
+      const double dzi = dual_step.select(0, i).item<double>();
+      if (dzi < 0.0) {
+        max_step = std::min(max_step, options.fraction_to_boundary * (-zi / dzi));
+      }
+    }
+  } else {
+    for (const auto& row : system.inequalities) {
+      const double directional = detail::series_dot_(row.jacobian.to(step_direction.platform()), step_direction);
+      if (directional > 0.0) {
+        max_step = std::min(max_step, options.fraction_to_boundary * (-row.residual) / directional);
+      }
     }
   }
   if (!(max_step > 0.0) || !std::isfinite(max_step)) {
@@ -3254,7 +4946,7 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
 
   double step_size = max_step;
   const double base_value = state.barrier_value;
-  double directional_derivative = detail::series_dot_(barrier_gradient_series, step_direction);
+  double directional_derivative = detail::series_dot_(primal_dual_gradient, step_direction);
   if (!(directional_derivative < 0.0)) {
     directional_derivative = -std::max(1.0, detail::series_dot_(step_direction, step_direction));
   }
@@ -3273,7 +4965,8 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
           trial_eval,
           trial_system,
           state.barrier_parameter,
-          options.equality_penalty);
+          options.equality_penalty,
+          state.normalization);
       if (std::isfinite(trial_barrier) &&
           trial_barrier <= base_value + options.armijo * step_size * directional_derivative) {
         next.params = std::move(trial);
@@ -3292,40 +4985,92 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
             next.evaluation,
             next_system,
             next.barrier_parameter,
-            options.equality_penalty);
+            options.equality_penalty,
+            state.normalization);
         const Series next_barrier_gradient_series =
             pluss::make_series(next_barrier_gradient, {n}).to(ScalarType::Float64).to(state.hessian.platform());
-        const Series y = next_barrier_gradient_series.sub(barrier_gradient_series);
-        next.hessian = detail::update_hessian_(
-            state.hessian,
-            s,
-            y,
-            options.bfgs_curvature_tolerance,
-            options.hessian_approximation,
-            next.params.total_numel(),
-            next.params[0].value.platform());
+        if (use_exact_curvature) {
+          next.hessian = reduced_hessian.defined() ? reduced_hessian : state.hessian;
+          next.lbfgs_s_history.clear();
+          next.lbfgs_y_history.clear();
+        } else {
+          const Series y = next_barrier_gradient_series.sub(primal_dual_gradient.to(state.hessian.platform()));
+          next.hessian = detail::update_hessian_(
+              state.hessian,
+              s,
+              y,
+              options.bfgs_curvature_tolerance,
+              options.hessian_approximation,
+              next.params.total_numel(),
+              next.params[0].value.platform());
+        }
+        if (options.hessian_approximation == OptimaHessianApproximation::Lbfgs) {
+          const Series y = next_barrier_gradient_series.sub(primal_dual_gradient.to(state.hessian.platform()));
+          next.hessian = state.hessian;
+          next.lbfgs_s_history = state.lbfgs_s_history;
+          next.lbfgs_y_history = state.lbfgs_y_history;
+          detail::update_lbfgs_history_(
+              next.lbfgs_s_history,
+              next.lbfgs_y_history,
+              s,
+              y,
+              options.lbfgs_memory,
+              options.bfgs_curvature_tolerance);
+        } else if (!use_exact_curvature) {
+          next.lbfgs_s_history = state.lbfgs_s_history;
+          next.lbfgs_y_history = state.lbfgs_y_history;
+        }
         next.barrier_gradient_norm = detail::series_inf_norm_(next_barrier_gradient_series);
+        if (!detail::use_iterative_subproblem_solver_(
+                options.linear_system_solver,
+                options.system_structure,
+                n,
+                options.iterative_dimension_threshold)) {
+          next.krylov_iterations = 0;
+        }
+        next.variable_scale = state.variable_scale;
+        next.normalization = state.normalization;
+        detail::update_primal_dual_metrics_(
+            next,
+            next_system,
+            next.barrier_parameter,
+            options.equality_penalty,
+            state.normalization);
+        next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
 
         if (next.barrier_gradient_norm <= std::max(10.0 * options.optimality_tolerance, next.barrier_parameter) &&
             next.evaluation.max_constraint_violation <=
                 std::max(options.constraint_tolerance, 10.0 * next.barrier_parameter) &&
+            next.complementarity_residual <=
+                std::max(options.optimality_tolerance, 10.0 * next.barrier_parameter) &&
             next.barrier_parameter > options.minimum_barrier_parameter) {
           next.barrier_parameter =
               std::max(options.minimum_barrier_parameter, next.barrier_parameter * options.barrier_decay);
           next.hessian = detail::identity_matrix_(
               next.params.total_numel(),
               next.params[0].value.platform());
+          next.lbfgs_s_history.clear();
+          next.lbfgs_y_history.clear();
           const auto reduced_gradient = detail::barrier_gradient_flat_(
               next.evaluation,
               next_system,
               next.barrier_parameter,
-              options.equality_penalty);
+              options.equality_penalty,
+              state.normalization);
           next.barrier_value = detail::barrier_value_(
               next.evaluation,
               next_system,
               next.barrier_parameter,
-              options.equality_penalty);
+              options.equality_penalty,
+              state.normalization);
           next.barrier_gradient_norm = detail::inf_norm_(reduced_gradient);
+          detail::update_primal_dual_metrics_(
+              next,
+              next_system,
+              next.barrier_parameter,
+              options.equality_penalty,
+              state.normalization);
+          next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
           next.message = "barrier reduced";
         }
 
@@ -3355,6 +5100,7 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
         problem,
         state.params,
         state.evaluation,
+        state.normalization,
         state.barrier_parameter,
         options);
     next.function_evaluations += recovery.function_evaluations;
@@ -3369,17 +5115,31 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
           next.evaluation,
           next_system,
           next.barrier_parameter,
-          options.equality_penalty);
+          options.equality_penalty,
+          state.normalization);
       const auto next_barrier_gradient = detail::barrier_gradient_flat_(
           next.evaluation,
           next_system,
           next.barrier_parameter,
-          options.equality_penalty);
+          options.equality_penalty,
+          state.normalization);
       next.barrier_gradient_norm = detail::inf_norm_(next_barrier_gradient);
       next.hessian = detail::identity_matrix_(
           next.params.total_numel(),
           next.params.empty() ? pluss::codem::Platform::CPU : next.params[0].value.platform());
       next.message = "recovery step accepted";
+      next.variable_scale = state.variable_scale;
+      next.normalization = state.normalization;
+      next.krylov_iterations = 0;
+      next.lbfgs_s_history.clear();
+      next.lbfgs_y_history.clear();
+      detail::update_primal_dual_metrics_(
+          next,
+          next_system,
+          next.barrier_parameter,
+          options.equality_penalty,
+          state.normalization);
+      next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
       detail::maybe_update_best_feasible_(next);
       if (next.iteration >= options.max_iterations) {
         next.converged = true;
@@ -3397,6 +5157,12 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
       }
       return next;
     }
+  }
+
+  if (options.enable_feasibility_phase) {
+    next.in_feasibility_phase = true;
+    next.message = "switching to feasibility phase";
+    return next;
   }
 
   next.converged = true;
@@ -3463,6 +5229,7 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Pena
       out.last_step_size,
       out.backend_parameter,
       out.stationarity,
+      0.0,
       out.best_feasible,
       out.message);
   return out;
@@ -3503,6 +5270,7 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Sequ
       out.last_step_size,
       out.backend_parameter,
       out.stationarity,
+      0.0,
       out.best_feasible,
       out.message);
   return out;
@@ -3526,8 +5294,11 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Inte
       state.best_feasible};
   if (state.evaluation.status == EvalStatus::Ok) {
     const auto system = detail::assemble_constraint_system_(problem, state.params, state.evaluation);
-    out.multipliers = detail::estimate_barrier_multipliers_(
-        problem, state.params, state.evaluation, system, state.barrier_parameter);
+    out.multipliers = state.inequality_dual.defined() && state.inequality_dual.numel() == static_cast<std::int64_t>(system.inequalities.size())
+                          ? detail::gather_primal_dual_inequality_multipliers_(
+                                problem, state.params, state.evaluation, system, state.inequality_dual)
+                          : detail::estimate_barrier_multipliers_(
+                                problem, state.params, state.evaluation, system, state.barrier_parameter);
   } else {
     out.multipliers = detail::zero_constraint_multipliers_(problem, state.params, state.evaluation);
   }
@@ -3539,9 +5310,10 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Inte
       out.last_step_size,
       out.backend_parameter,
       out.stationarity,
+      state.complementarity_residual,
       out.best_feasible,
       out.message,
-      0);
+      state.krylov_iterations);
   return out;
 }
 

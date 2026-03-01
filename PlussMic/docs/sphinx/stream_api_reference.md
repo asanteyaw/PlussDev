@@ -1,0 +1,2299 @@
+# Stream API Reference
+
+# Practical Stream API Reference
+
+## API Reference Style
+
+This page documents the full public `Stream` surface for the Kindle model.
+
+### `abs`
+
+#### Signature
+
+```cpp
+Stream abs(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.abs();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `as_note`
+
+#### Signature
+
+```cpp
+const pluss::Note& as_note(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`const pluss::Note&`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = stream.as_note();
+```
+
+#### Output
+
+```text
+Note(["Accra", "Tema", "Kumasi"])
+```
+
+### `as_series`
+
+#### Signature
+
+```cpp
+const pluss::Series& as_series(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`const pluss::Series&`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.as_series();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `as_timeindex`
+
+#### Signature
+
+```cpp
+const pluss::TimeIndex& as_timeindex(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`const pluss::TimeIndex&`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));
+
+auto out = stream.as_timeindex();
+```
+
+#### Output
+
+```text
+Timeline([...])
+```
+
+### `as_timeline`
+
+#### Signature
+
+```cpp
+const pluss::Timeline& as_timeline(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`const pluss::Timeline&`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z", "2024-01-01T10:05:00Z"}));
+
+auto out = stream.as_timeline();
+```
+
+#### Output
+
+```text
+Timeline([...])
+```
+
+### `astype`
+
+#### Signature
+
+```cpp
+Stream astype(self, pluss::codem::ScalarType dtype) const
+```
+
+#### Parameters
+
+`dtype` : `pluss::codem::ScalarType`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This changes the semantic or numeric type so later operations route through the correct implementation path.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.astype(pluss::codem::ScalarType::Float64);
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `bfill`
+
+#### Signature
+
+```cpp
+Stream bfill(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.bfill();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `cases`
+
+#### Signature
+
+```cpp
+const std::optional<pluss::table::Thread>& cases(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`const std::optional<pluss::table::Thread>&`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.cases();
+```
+
+#### Output
+
+```text
+["cs0", "cs1", "cs2"]
+```
+
+### `cast`
+
+#### Signature
+
+```cpp
+Stream cast(self, pluss::table::ThreadCastTarget target, std::optional<pluss::codem::ScalarType> series_dtype = std::nullopt) const
+```
+
+#### Parameters
+
+`target` : `pluss::table::ThreadCastTarget`
+    See the signature for the supported argument form.
+
+`series_dtype` : `std::optional<pluss::codem::ScalarType>`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This changes the semantic or numeric type so later operations route through the correct implementation path.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_note({"1.0", "2.0", "3.0"}));
+
+auto out = stream.cast(pluss::table::ThreadCastTarget::Series, pluss::codem::ScalarType::Float64);
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `clear_cases`
+
+#### Signature
+
+```cpp
+Stream clear_cases(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.clear_cases();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `clear_cases_`
+
+#### Signature
+
+```cpp
+Stream& clear_cases_(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream&`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+stream.clear_cases_();
+```
+
+### `clear_validity_mask`
+
+#### Signature
+
+```cpp
+Stream clear_validity_mask(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.clear_validity_mask();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `clear_validity_mask_`
+
+#### Signature
+
+```cpp
+Stream& clear_validity_mask_(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream&`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+stream.clear_validity_mask_();
+```
+
+### `clip`
+
+#### Signature
+
+```cpp
+Stream clip(self, scalar min_value, scalar max_value) const
+```
+
+#### Parameters
+
+`min_value` : `scalar`
+    See the signature for the supported argument form.
+
+`max_value` : `scalar`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.clip(0.0, 25.0);
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `defined`
+
+#### Signature
+
+```cpp
+bool defined(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.defined();
+```
+
+#### Output
+
+```text
+true
+```
+
+### `drop_meta`
+
+#### Signature
+
+```cpp
+Stream drop_meta(self, std::string_view key) const
+```
+
+#### Parameters
+
+`key` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+stream = stream.with_meta("unit", "km");
+
+auto out = stream.drop_meta("unit");
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `drop_meta_`
+
+#### Signature
+
+```cpp
+Stream& drop_meta_(self, std::string_view key)
+```
+
+#### Parameters
+
+`key` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream&`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+stream = stream.with_meta("unit", "km");
+
+stream.drop_meta_("unit");
+```
+
+### `dropna`
+
+#### Signature
+
+```cpp
+Stream dropna(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.dropna();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `dtype_name`
+
+#### Signature
+
+```cpp
+std::string dtype_name(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::string`
+    Rendered string result.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.dtype_name();
+```
+
+#### Output
+
+```text
+Float64
+```
+
+### `exp`
+
+#### Signature
+
+```cpp
+Stream exp(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.exp();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `ffill`
+
+#### Signature
+
+```cpp
+Stream ffill(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.ffill();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `fillna`
+
+#### Signature
+
+```cpp
+Stream fillna(self, const char* value) const
+```
+
+#### Parameters
+
+`value` : `const char*`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### See also
+
+- `Stream fillna(self, scalar value) const`
+- `Stream fillna(self, std::string_view value) const`
+- `Stream fillna(self, const pluss::Timeline& value) const`
+- `Stream fillna(self, const pluss::TimeIndex& value) const`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = stream.fillna("Unknown");
+```
+
+#### Output
+
+```text
+Note(["Accra", "Tema", "Kumasi"])
+```
+
+### `fillna`
+
+#### Signature
+
+```cpp
+Stream fillna(self, const pluss::TimeIndex& value) const
+```
+
+#### Parameters
+
+`value` : `const pluss::TimeIndex&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### See also
+
+- `Stream fillna(self, scalar value) const`
+- `Stream fillna(self, std::string_view value) const`
+- `Stream fillna(self, const char* value) const`
+- `Stream fillna(self, const pluss::Timeline& value) const`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));
+
+auto out = stream.fillna(pluss::make_timeindex("2024-01-01T00:00:00Z"));
+```
+
+#### Output
+
+```text
+Note(["Accra", "Tema", "Kumasi"])
+```
+
+### `fillna`
+
+#### Signature
+
+```cpp
+Stream fillna(self, const pluss::Timeline& value) const
+```
+
+#### Parameters
+
+`value` : `const pluss::Timeline&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### See also
+
+- `Stream fillna(self, scalar value) const`
+- `Stream fillna(self, std::string_view value) const`
+- `Stream fillna(self, const char* value) const`
+- `Stream fillna(self, const pluss::TimeIndex& value) const`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z", "2024-01-01T10:05:00Z"}));
+
+auto out = stream.fillna(pluss::make_timeline("2024-01-01T00:00:00Z"));
+```
+
+#### Output
+
+```text
+Note(["Accra", "Tema", "Kumasi"])
+```
+
+### `fillna`
+
+#### Signature
+
+```cpp
+Stream fillna(self, scalar value) const
+```
+
+#### Parameters
+
+`value` : `scalar`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### See also
+
+- `Stream fillna(self, std::string_view value) const`
+- `Stream fillna(self, const char* value) const`
+- `Stream fillna(self, const pluss::Timeline& value) const`
+- `Stream fillna(self, const pluss::TimeIndex& value) const`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.fillna(0.0);
+```
+
+#### Output
+
+```text
+Note(["Accra", "Tema", "Kumasi"])
+```
+
+### `fillna`
+
+#### Signature
+
+```cpp
+Stream fillna(self, std::string_view value) const
+```
+
+#### Parameters
+
+`value` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### See also
+
+- `Stream fillna(self, scalar value) const`
+- `Stream fillna(self, const char* value) const`
+- `Stream fillna(self, const pluss::Timeline& value) const`
+- `Stream fillna(self, const pluss::TimeIndex& value) const`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_note({"Accra", "Tema", "Kumasi"}));
+
+auto out = stream.fillna("Unknown");
+```
+
+#### Output
+
+```text
+Note(["Accra", "Tema", "Kumasi"])
+```
+
+### `filter`
+
+#### Signature
+
+```cpp
+Stream filter(self, const pluss::Series& bool_mask) const
+```
+
+#### Parameters
+
+`bool_mask` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+Use this to reduce the current object to the rows or fields that matter for the next step.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto out = stream.filter(mask);
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `from_thread`
+
+#### Signature
+
+```cpp
+static Stream from_thread(const pluss::table::Thread& thread, std::optional<pluss::table::Thread> cases = std::nullopt)
+```
+
+#### Parameters
+
+`thread` : `const pluss::table::Thread&`
+    See the signature for the supported argument form.
+
+`cases` : `std::optional<pluss::table::Thread>`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = pluss::kindle::Stream::from_thread(thread);
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `has_cases`
+
+#### Signature
+
+```cpp
+bool has_cases(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.has_cases();
+```
+
+#### Output
+
+```text
+true
+```
+
+### `has_meta`
+
+#### Signature
+
+```cpp
+bool has_meta(self, std::string_view key) const
+```
+
+#### Parameters
+
+`key` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+stream = stream.with_meta("unit", "km");
+auto out = stream.has_meta("unit");
+```
+
+#### Output
+
+```text
+true
+```
+
+### `has_validity_mask`
+
+#### Signature
+
+```cpp
+bool has_validity_mask(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.has_validity_mask();
+```
+
+#### Output
+
+```text
+true
+```
+
+### `head`
+
+#### Signature
+
+```cpp
+Stream head(self, std::int64_t n) const
+```
+
+#### Parameters
+
+`n` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+Use this to narrow the current object to the rows or depth range you want to inspect next.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.head();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `isnull`
+
+#### Signature
+
+```cpp
+Stream isnull(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.isnull();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `kind`
+
+#### Signature
+
+```cpp
+StreamKind kind(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`StreamKind`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.kind();
+```
+
+#### Output
+
+```text
+Series
+```
+
+### `log`
+
+#### Signature
+
+```cpp
+Stream log(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.log();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `max`
+
+#### Signature
+
+```cpp
+Stream max(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.max();
+```
+
+#### Output
+
+```text
+Series([20.0])
+```
+
+### `mean`
+
+#### Signature
+
+```cpp
+Stream mean(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.mean();
+```
+
+#### Output
+
+```text
+Series([20.0])
+```
+
+### `meta`
+
+#### Signature
+
+```cpp
+const std::unordered_map<std::string, std::string>& meta(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`const std::unordered_map<std::string, std::string>&`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### See also
+
+- `std::optional<std::string> meta(self, std::string_view key) const`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+stream = stream.with_meta("unit", "km");
+auto out = stream.meta("unit");
+```
+
+#### Output
+
+```text
+km
+```
+
+### `meta`
+
+#### Signature
+
+```cpp
+std::optional<std::string> meta(self, std::string_view key) const
+```
+
+#### Parameters
+
+`key` : `std::string_view`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`std::optional<std::string>`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### See also
+
+- `const std::unordered_map<std::string, std::string>& meta(self) const`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+stream = stream.with_meta("unit", "km");
+auto out = stream.meta("unit");
+```
+
+#### Output
+
+```text
+km
+```
+
+### `min`
+
+#### Signature
+
+```cpp
+Stream min(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.min();
+```
+
+#### Output
+
+```text
+Series([20.0])
+```
+
+### `notnull`
+
+#### Signature
+
+```cpp
+Stream notnull(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This is part of the missing-data cleanup path and is usually applied before summaries, grouping, or export.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.notnull();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `show`
+
+#### Signature
+
+```cpp
+void show(self, std::ostream& os) const
+```
+
+#### Parameters
+
+`os` : `std::ostream&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`void`
+    Performs the side effect and returns no value.
+
+#### Notes
+
+This renders a human-readable view for inspection instead of creating a new analytic object.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+stream.show(std::cout);
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `size`
+
+#### Signature
+
+```cpp
+std::int64_t size(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.size();
+```
+
+#### Output
+
+```text
+3
+```
+
+### `slice`
+
+#### Signature
+
+```cpp
+Stream slice(self, std::int64_t start, std::int64_t stop) const
+```
+
+#### Parameters
+
+`start` : `std::int64_t`
+    See the signature for the supported argument form.
+
+`stop` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+Use this to narrow the current object to the rows or depth range you want to inspect next.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.slice(0, 2);
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `std`
+
+#### Signature
+
+```cpp
+Stream std(self, bool unbiased = true) const
+```
+
+#### Parameters
+
+`unbiased` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.std(true);
+```
+
+#### Output
+
+```text
+Series([20.0])
+```
+
+### `sum`
+
+#### Signature
+
+```cpp
+Stream sum(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.sum();
+```
+
+#### Output
+
+```text
+Series([20.0])
+```
+
+### `tail`
+
+#### Signature
+
+```cpp
+Stream tail(self, std::int64_t n) const
+```
+
+#### Parameters
+
+`n` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+Use this to narrow the current object to the rows or depth range you want to inspect next.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.tail();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `take`
+
+#### Signature
+
+```cpp
+Stream take(self, std::span<const std::int64_t> indices) const
+```
+
+#### Parameters
+
+`indices` : `std::span<const std::int64_t>`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+Use this to narrow the current object to the rows or depth range you want to inspect next.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+std::vector<std::int64_t> picks{0, 2};
+auto out = stream.take(picks);
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `to_json`
+
+#### Signature
+
+```cpp
+std::string to_json(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::string`
+    Rendered string result.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.to_json();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `to_string`
+
+#### Signature
+
+```cpp
+std::string to_string(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::string`
+    Rendered string result.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.to_string();
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `to_thread`
+
+#### Signature
+
+```cpp
+pluss::table::Thread to_thread(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`pluss::table::Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### See also
+
+- `pluss::table::Thread to_thread(self, std::int64_t start, std::int64_t stop) const`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.to_thread();
+```
+
+#### Output
+
+```text
+[10.0, 20.0, 30.0]
+```
+
+### `to_thread`
+
+#### Signature
+
+```cpp
+pluss::table::Thread to_thread(self, std::int64_t start, std::int64_t stop) const
+```
+
+#### Parameters
+
+`start` : `std::int64_t`
+    See the signature for the supported argument form.
+
+`stop` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`pluss::table::Thread`
+    Value produced by this call.
+
+#### Notes
+
+This is an explicit bridge between PlussMic models so you can switch to the representation that fits the next task.
+
+#### See also
+
+- `pluss::table::Thread to_thread(self) const`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.to_thread(0, 2);
+```
+
+#### Output
+
+```text
+[10.0, 20.0, 30.0]
+```
+
+### `unique`
+
+#### Signature
+
+```cpp
+bool unique(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`bool`
+    Boolean status or membership result.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.unique();
+```
+
+#### Output
+
+```text
+true
+```
+
+### `validity_mask`
+
+#### Signature
+
+```cpp
+const std::optional<pluss::Series>& validity_mask(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`const std::optional<pluss::Series>&`
+    Value produced by this call.
+
+#### Notes
+
+This call is part of the public `Stream` API and is documented here using a concrete usage example.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.validity_mask();
+```
+
+#### Output
+
+```text
+[true, false, true]
+```
+
+### `var`
+
+#### Signature
+
+```cpp
+Stream var(self, bool unbiased = true) const
+```
+
+#### Parameters
+
+`unbiased` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+Use this when you want a summary view instead of carrying the full input forward unchanged.
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.var(true);
+```
+
+#### Output
+
+```text
+Series([20.0])
+```
+
+### `with_cases`
+
+#### Signature
+
+```cpp
+Stream with_cases(self, const pluss::table::Thread& cases) const
+```
+
+#### Parameters
+
+`cases` : `const pluss::table::Thread&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This mutates or derives structure while keeping the surrounding object model intact.
+
+#### Examples
+
+```cpp
+auto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.with_cases(cases);
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `with_cases_`
+
+#### Signature
+
+```cpp
+Stream& with_cases_(self, const pluss::table::Thread& cases)
+```
+
+#### Parameters
+
+`cases` : `const pluss::table::Thread&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream&`
+    Value produced by this call.
+
+#### Notes
+
+This mutates or derives structure while keeping the surrounding object model intact.
+
+#### Examples
+
+```cpp
+auto cases = pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"}));
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+stream.with_cases_(cases);
+```
+
+### `with_meta`
+
+#### Signature
+
+```cpp
+Stream with_meta(self, std::initializer_list<std::pair<std::string_view, std::string_view>> items) const
+```
+
+#### Parameters
+
+`items` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This mutates or derives structure while keeping the surrounding object model intact.
+
+#### See also
+
+- `Stream with_meta(self, std::string key, std::string value) const`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.with_meta("unit", "km");
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `with_meta`
+
+#### Signature
+
+```cpp
+Stream with_meta(self, std::string key, std::string value) const
+```
+
+#### Parameters
+
+`key` : `std::string`
+    See the signature for the supported argument form.
+
+`value` : `std::string`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This mutates or derives structure while keeping the surrounding object model intact.
+
+#### See also
+
+- `Stream with_meta(self, std::initializer_list<std::pair<std::string_view, std::string_view>> items) const`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.with_meta("unit", "km");
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `with_meta_`
+
+#### Signature
+
+```cpp
+Stream& with_meta_(self, std::initializer_list<std::pair<std::string_view, std::string_view>> items)
+```
+
+#### Parameters
+
+`items` : `std::initializer_list<std::pair<std::string_view, std::string_view>>`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream&`
+    Value produced by this call.
+
+#### Notes
+
+This mutates or derives structure while keeping the surrounding object model intact.
+
+#### See also
+
+- `Stream& with_meta_(self, std::string key, std::string value)`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+stream.with_meta_("unit", "km");
+```
+
+### `with_meta_`
+
+#### Signature
+
+```cpp
+Stream& with_meta_(self, std::string key, std::string value)
+```
+
+#### Parameters
+
+`key` : `std::string`
+    See the signature for the supported argument form.
+
+`value` : `std::string`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream&`
+    Value produced by this call.
+
+#### Notes
+
+This mutates or derives structure while keeping the surrounding object model intact.
+
+#### See also
+
+- `Stream& with_meta_(self, std::initializer_list<std::pair<std::string_view, std::string_view>> items)`
+
+#### Examples
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+stream.with_meta_("unit", "km");
+```
+
+### `with_validity_mask`
+
+#### Signature
+
+```cpp
+Stream with_validity_mask(self, const pluss::Series& mask) const
+```
+
+#### Parameters
+
+`mask` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream`
+    Value produced by this call.
+
+#### Notes
+
+This mutates or derives structure while keeping the surrounding object model intact.
+
+#### Examples
+
+```cpp
+auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = stream.with_validity_mask(mask);
+```
+
+#### Output
+
+```text
+Series([10.0, 20.0, 30.0])
+```
+
+### `with_validity_mask_`
+
+#### Signature
+
+```cpp
+Stream& with_validity_mask_(self, const pluss::Series& mask)
+```
+
+#### Parameters
+
+`mask` : `const pluss::Series&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Stream&`
+    Value produced by this call.
+
+#### Notes
+
+This mutates or derives structure while keeping the surrounding object model intact.
+
+#### Examples
+
+```cpp
+auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
+
+stream.with_validity_mask_(mask);
+```
