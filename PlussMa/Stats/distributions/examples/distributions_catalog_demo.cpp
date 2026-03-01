@@ -53,7 +53,8 @@ std::string preview(const Series& x, std::size_t limit = 4) {
 
 void run_case(const DemoCase& c, const Config& cfg, std::uint64_t seed) {
   const Series probe = scalar_series(c.probe, cfg);
-  const std::span<const std::int64_t> sizes = std::array<std::int64_t, 1>{5};
+  const std::array<std::int64_t, 1> sizes_buf{5};
+  const std::span<const std::int64_t> sizes = sizes_buf;
   const std::span<const double> params = params_span(c.params);
 
   const Series sample = c.params.empty()

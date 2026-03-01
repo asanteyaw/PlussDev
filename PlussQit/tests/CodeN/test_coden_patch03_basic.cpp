@@ -17,7 +17,8 @@ TEST_CASE("Scalar Note basic ops (ASCII)", "[coden][patch03]") {
 
 TEST_CASE("Note split_whitespace TokenBatch offsets", "[coden][patch03]") {
   std::vector<std::string_view> flat = {"a bb", "   c", ""};
-  Note n = pluss::make_note(flat, std::span<const std::int64_t>({3}));
+  const std::array<std::int64_t, 1> shape{3};
+  Note n = pluss::make_note(flat, std::span<const std::int64_t>(shape));
   auto tb = n.split_whitespace();
   // offsets length = numel+1
   REQUIRE(tb.offsets().size() == 4);
