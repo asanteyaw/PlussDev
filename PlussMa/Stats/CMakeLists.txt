@@ -1,4 +1,5 @@
 add_subdirectory(bayesian)
+add_subdirectory(distributions)
 add_subdirectory(estimation)
 add_subdirectory(inference)
 add_subdirectory(nonparametric)

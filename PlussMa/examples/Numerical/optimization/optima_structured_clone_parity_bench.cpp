@@ -250,7 +250,7 @@ int main() {
 
     OptimaOptions sqp_options;
     sqp_options.algorithm = OptimaAlgorithm::SequentialQP;
-    sqp_options.sequential_qp.max_iterations = 120;
+    sqp_options.sequential_qp.max_iterations = 400;
     sqp_options.sequential_qp.constraint_tolerance = 1e-8;
     sqp_options.sequential_qp.optimality_tolerance = 1e-6;
     sqp_options.sequential_qp.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
@@ -260,7 +260,7 @@ int main() {
 
     OptimaOptions ip_options;
     ip_options.algorithm = OptimaAlgorithm::InteriorPoint;
-    ip_options.interior_point.max_iterations = 200;
+    ip_options.interior_point.max_iterations = 400;
     ip_options.interior_point.constraint_tolerance = 1e-8;
     ip_options.interior_point.optimality_tolerance = 1e-6;
     ip_options.interior_point.initial_barrier_parameter = 1e-2;

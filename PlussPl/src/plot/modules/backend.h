@@ -51,6 +51,7 @@ public:
 
 std::shared_ptr<const IBackend> make_svg_backend();
 std::shared_ptr<const IBackend> make_pdf_backend();
+std::shared_ptr<const IBackend> make_raster_backend();
 std::shared_ptr<const IBackend> make_default_backend();
 
 } // namespace pluss::plotism

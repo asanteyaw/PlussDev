@@ -24,21 +24,20 @@ Why this family matters:
 
 | Family | n | Solver | Exit | Stall | Iter | Eval | Objective | Constr viol | First-order | Complementarity | Max \|x-target\| | Time ms | Best feasible |
 |---|---:|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| BandedProfile | 16 | SequentialQP | MaxIterations | iteration-limit | 120 | 1619 | 0.002774 | 0.000000 | 0.000033 | 0.000000 | 0.006053 | 9092.993542 | yes |
-| BandedProfile | 16 | InteriorPoint | Converged | none | 126 | 443 | 0.002774 | 0.000000 | 0.000000 | 0.000000 | 0.005960 | 3672.357500 | yes |
-| BandedProfile | 32 | SequentialQP | Converged | none | 79 | 485 | 0.001356 | 0.000000 | 0.000001 | 0.000000 | 0.002896 | 6327.803875 | yes |
-| BandedProfile | 32 | InteriorPoint | MaxIterations | iteration-limit | 200 | 509 | 0.001356 | 0.000001 | 0.000025 | 0.000000 | 0.002918 | 9904.350750 | yes |
+| BandedProfile | 16 | SequentialQP | Converged | none | 14 | 15 | 0.002778 | 0.000000 | 0.000323 | 0.000000 | 0.006869 | 211.358667 | yes |
+| BandedProfile | 16 | InteriorPoint | Converged | none | 126 | 443 | 0.002774 | 0.000000 | 0.000000 | 0.000000 | 0.005960 | 3533.626042 | yes |
+| BandedProfile | 32 | SequentialQP | Converged | none | 30 | 53 | 0.001375 | 0.000000 | 0.000267 | 0.000000 | 0.004377 | 1130.025833 | yes |
+| BandedProfile | 32 | InteriorPoint | Converged | none | 352 | 1675 | 0.001356 | 0.000000 | 0.000000 | 0.000000 | 0.002891 | 24866.150750 | yes |
 
 ## Assessment
 
 - `SequentialQP` improved materially on this family after the structured routing and boundary-stall fixes.
-- `SequentialQP` now reaches high-quality solutions on both sizes, but `n = 16` still needs too many evaluations and hits the iteration cap.
+- `SequentialQP` now converges on both sizes under the current benchmark tolerances.
+- the SQP parity gap on `n = 16` was closed by adding a mature feasible-point stop based on tiny predicted improvement, instead of forcing repeated nearly-null steps.
 - `InteriorPoint` now converges on `n = 16` and keeps best-feasible reporting on both sizes.
-- `InteriorPoint` is still accurate on this family, but it remains slow and still hits the iteration cap at `n = 32`.
+- `InteriorPoint` now converges on `n = 32` as well under the MATLAB-scale benchmark budget.
 - the new stall diagnostics show these remaining exits are generic iteration-limit stalls, not complementarity stalls or boundary stalls.
 
 ## Open Gaps Exposed By This Family
 
-- `SequentialQP` still needs better iteration efficiency on the structured family.
-- `InteriorPoint` needs better large-scale structure exploitation and/or better Krylov behavior.
 - This family is the right benchmark to use while implementing sparse routing and stall taxonomy.

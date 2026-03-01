@@ -2,20 +2,15 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <cstdint>
 #include <iomanip>
-#include <limits>
-#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
-#include "plot/modules/backend.h"
-#include "plot/modules/core.h"
+#include "plot/modules/backend/render_surface_2d.h"
 
 namespace pluss::plotism {
 
@@ -49,10 +44,11 @@ inline PdfRgb pdf_parse_color(std::string_view color) {
     const int b1 = pdf_hex_digit(color[5]);
     const int b2 = pdf_hex_digit(color[6]);
     if (r1 >= 0 && r2 >= 0 && g1 >= 0 && g2 >= 0 && b1 >= 0 && b2 >= 0) {
-      const double r = static_cast<double>(r1 * 16 + r2) / 255.0;
-      const double g = static_cast<double>(g1 * 16 + g2) / 255.0;
-      const double b = static_cast<double>(b1 * 16 + b2) / 255.0;
-      return PdfRgb{r, g, b};
+      return PdfRgb{
+          .r = static_cast<double>(r1 * 16 + r2) / 255.0,
+          .g = static_cast<double>(g1 * 16 + g2) / 255.0,
+          .b = static_cast<double>(b1 * 16 + b2) / 255.0,
+      };
     }
   }
 
@@ -87,51 +83,59 @@ inline std::string pdf_escape_text(std::string_view text) {
 }
 
 inline double pdf_axis_transform(double value, const Axis& axis) {
-  if (!std::isfinite(value)) {
-    return std::numeric_limits<double>::quiet_NaN();
-  }
-  if (axis.scale == AxisScale::Log) {
-    if (value <= 0.0) {
-      return std::numeric_limits<double>::quiet_NaN();
-    }
-    return std::log10(value);
-  }
-  return value;
+  return axis_transform_2d(value, axis);
 }
 
 inline std::pair<double, double> pdf_ensure_limits(double lo, double hi) {
-  if (!std::isfinite(lo) || !std::isfinite(hi)) {
-    return {0.0, 1.0};
-  }
-  if (lo == hi) {
-    return {lo - 0.5, hi + 0.5};
-  }
-  if (lo > hi) {
-    std::swap(lo, hi);
-  }
-  return {lo, hi};
+  return ensure_limits_2d(lo, hi);
 }
 
 inline std::pair<double, double> pdf_map_legend_anchor(LegendLocation location,
-                                                        double left,
-                                                        double right,
-                                                        double top,
-                                                        double bottom,
-                                                        double legend_width,
-                                                        double legend_height) {
-  const double margin = 6.0;
-  switch (location) {
-    case LegendLocation::TopLeft:
-      return {left + margin, top + margin};
-    case LegendLocation::BottomLeft:
-      return {left + margin, bottom - legend_height - margin};
-    case LegendLocation::BottomRight:
-      return {right - legend_width - margin, bottom - legend_height - margin};
-    case LegendLocation::Best:
-    case LegendLocation::TopRight:
-    default:
-      return {right - legend_width - margin, top + margin};
+                                                       double left,
+                                                       double right,
+                                                       double top,
+                                                       double bottom,
+                                                       double legend_width,
+                                                       double legend_height) {
+  return map_legend_anchor_2d(location, left, right, top, bottom, legend_width, legend_height);
+}
+
+inline double pdf_nice_tick_step(double lo, double hi, int approx_tick_count = 5) {
+  return nice_tick_step_2d(lo, hi, approx_tick_count);
+}
+
+inline std::vector<double> pdf_make_ticks(double lo, double hi, int approx_tick_count = 5) {
+  return make_ticks_2d(lo, hi, approx_tick_count);
+}
+
+inline std::string pdf_format_tick_label(double transformed_value, const Axis& axis) {
+  return format_tick_label_2d(transformed_value, axis);
+}
+
+inline std::string pdf_normalized_marker(std::string_view marker, bool scatter_like) {
+  return canonical_marker_name(marker, scatter_like);
+}
+
+inline std::vector<double> pdf_dash_pattern(std::string_view line_style, double line_width) {
+  const double base = std::max(1.0, line_width);
+  if (line_style == "dashed" || line_style == "dash" || line_style == "--") {
+    return {base * 5.0, base * 3.0};
   }
+  if (line_style == "dotted" || line_style == "dot" || line_style == ":") {
+    return {base, base * 2.2};
+  }
+  if (line_style == "dashdot" || line_style == "-.") {
+    return {base * 5.0, base * 2.2, base, base * 2.2};
+  }
+  return {};
+}
+
+inline double pdf_legend_width_hint(std::size_t entry_count, std::size_t longest_label, bool has_title) {
+  return legend_width_hint_2d(entry_count, longest_label, has_title);
+}
+
+inline double pdf_legend_height_hint(std::size_t entry_count, bool has_title) {
+  return legend_height_hint_2d(entry_count, has_title);
 }
 
 class PdfPainter {
@@ -157,30 +161,52 @@ public:
       return;
     }
     set_stroke_color(color);
+    reset_dash_();
     stream_ << f(line_width) << " w\n";
     const double py = y_to_pdf(y) - h;
     stream_ << f(x) << " " << f(py) << " " << f(w) << " " << f(h) << " re S\n";
   }
 
-  void stroke_line(double x1, double y1, double x2, double y2, const PdfRgb& color, double line_width = 1.0) {
+  void stroke_line(double x1,
+                   double y1,
+                   double x2,
+                   double y2,
+                   const PdfRgb& color,
+                   double line_width = 1.0,
+                   const std::vector<double>& dash_pattern = {}) {
     set_stroke_color(color);
+    set_dash_(dash_pattern);
     stream_ << f(line_width) << " w\n";
     stream_ << f(x1) << " " << f(y_to_pdf(y1)) << " m " << f(x2) << " " << f(y_to_pdf(y2)) << " l S\n";
   }
 
   void stroke_polyline(const std::vector<std::pair<double, double>>& points,
                        const PdfRgb& color,
-                       double line_width = 1.0) {
+                       double line_width = 1.0,
+                       const std::vector<double>& dash_pattern = {}) {
     if (points.size() < 2) {
       return;
     }
     set_stroke_color(color);
+    set_dash_(dash_pattern);
     stream_ << f(line_width) << " w\n";
     stream_ << f(points[0].first) << " " << f(y_to_pdf(points[0].second)) << " m ";
     for (std::size_t i = 1; i < points.size(); ++i) {
       stream_ << f(points[i].first) << " " << f(y_to_pdf(points[i].second)) << " l ";
     }
     stream_ << "S\n";
+  }
+
+  void fill_polygon(const std::vector<std::pair<double, double>>& points, const PdfRgb& color) {
+    if (points.size() < 3) {
+      return;
+    }
+    set_fill_color(color);
+    stream_ << f(points[0].first) << " " << f(y_to_pdf(points[0].second)) << " m ";
+    for (std::size_t i = 1; i < points.size(); ++i) {
+      stream_ << f(points[i].first) << " " << f(y_to_pdf(points[i].second)) << " l ";
+    }
+    stream_ << "h f\n";
   }
 
   void fill_circle(double cx, double cy, double r, const PdfRgb& color) {
@@ -218,8 +244,11 @@ public:
   }
 
   void text_center(double x, double y, double size, std::string_view text, const PdfRgb& color) {
-    const double w = text_width_estimate(size, text);
-    text_left(x - 0.5 * w, y, size, text, color);
+    text_left(x - 0.5 * text_width_estimate(size, text), y, size, text, color);
+  }
+
+  void text_right(double x, double y, double size, std::string_view text, const PdfRgb& color) {
+    text_left(x - text_width_estimate(size, text), y, size, text, color);
   }
 
   void text_vertical_ccw(double x, double y, double size, std::string_view text, const PdfRgb& color) {
@@ -238,7 +267,9 @@ private:
     return size * 0.55 * static_cast<double>(text.size());
   }
 
-  static std::string f(double v) { return detail::format_double(v, 6); }
+  static std::string f(double value) {
+    return detail::format_double(value, 6);
+  }
 
   double y_to_pdf(double y) const {
     return static_cast<double>(height_) - y;
@@ -252,10 +283,140 @@ private:
     stream_ << f(color.r) << " " << f(color.g) << " " << f(color.b) << " RG\n";
   }
 
+  void reset_dash_() {
+    stream_ << "[] 0 d\n";
+  }
+
+  void set_dash_(const std::vector<double>& pattern) {
+    if (pattern.empty()) {
+      reset_dash_();
+      return;
+    }
+    stream_ << "[";
+    for (std::size_t i = 0; i < pattern.size(); ++i) {
+      if (i > 0) {
+        stream_ << " ";
+      }
+      stream_ << f(pattern[i]);
+    }
+    stream_ << "] 0 d\n";
+  }
+
   std::int32_t width_{0};
   std::int32_t height_{0};
   std::ostringstream stream_{};
 };
+
+class PdfRenderSurface2D final : public RenderSurface2D {
+public:
+  PdfRenderSurface2D(std::int32_t width, std::int32_t height) : painter_(width, height) {}
+
+  void fill_rect(double x, double y, double w, double h, const FillStyle2D& style, double corner_radius = 0.0) override {
+    (void)corner_radius;
+    painter_.fill_rect(x, y, w, h, pdf_parse_color(style.color));
+  }
+
+  void stroke_rect(double x,
+                   double y,
+                   double w,
+                   double h,
+                   const StrokeStyle2D& style,
+                   double corner_radius = 0.0) override {
+    (void)corner_radius;
+    painter_.stroke_rect(x, y, w, h, pdf_parse_color(style.color), style.line_width);
+  }
+
+  void stroke_line(double x1, double y1, double x2, double y2, const StrokeStyle2D& style) override {
+    painter_.stroke_line(x1, y1, x2, y2, pdf_parse_color(style.color), style.line_width,
+                         pdf_dash_pattern(style.line_style, style.line_width));
+  }
+
+  void stroke_polyline(const std::vector<Point2D>& points, const StrokeStyle2D& style) override {
+    std::vector<std::pair<double, double>> pdf_points;
+    pdf_points.reserve(points.size());
+    for (const auto& point : points) {
+      pdf_points.push_back({point.x, point.y});
+    }
+    painter_.stroke_polyline(pdf_points, pdf_parse_color(style.color), style.line_width,
+                             pdf_dash_pattern(style.line_style, style.line_width));
+  }
+
+  void fill_circle(double cx, double cy, double r, const FillStyle2D& style) override {
+    painter_.fill_circle(cx, cy, r, pdf_parse_color(style.color));
+  }
+
+  void fill_polygon(const std::vector<Point2D>& points, const FillStyle2D& style) override {
+    std::vector<std::pair<double, double>> pdf_points;
+    pdf_points.reserve(points.size());
+    for (const auto& point : points) {
+      pdf_points.push_back({point.x, point.y});
+    }
+    painter_.fill_polygon(pdf_points, pdf_parse_color(style.color));
+  }
+
+  void text(double x, double y, std::string_view text, const TextStyle2D& style) override {
+    const PdfRgb color = pdf_parse_color(style.color);
+    if (style.orientation == TextOrientation2D::VerticalCcw) {
+      painter_.text_vertical_ccw(x, y, style.size, text, color);
+      return;
+    }
+    switch (style.anchor) {
+      case TextAnchor2D::Center:
+        painter_.text_center(x, y, style.size, text, color);
+        return;
+      case TextAnchor2D::Right:
+        painter_.text_right(x, y, style.size, text, color);
+        return;
+      case TextAnchor2D::Left:
+      default:
+        painter_.text_left(x, y, style.size, text, color);
+        return;
+    }
+  }
+
+  std::string finish() const override { return painter_.finish(); }
+
+private:
+  PdfPainter painter_;
+};
+
+inline void draw_pdf_marker(PdfPainter& painter,
+                            double x,
+                            double y,
+                            std::string_view marker,
+                            double size,
+                            const PdfRgb& color) {
+  const std::string kind = pdf_normalized_marker(marker, true);
+  if (kind == "none") {
+    return;
+  }
+  const double half = std::max(2.0, size);
+  if (kind == "circle") {
+    painter.fill_circle(x, y, half, color);
+    return;
+  }
+  if (kind == "square") {
+    painter.fill_rect(x - half, y - half, half * 2.0, half * 2.0, color);
+    return;
+  }
+  if (kind == "triangle") {
+    painter.fill_polygon({{x, y - half}, {x + half, y + half}, {x - half, y + half}}, color);
+    return;
+  }
+  if (kind == "diamond") {
+    painter.fill_polygon({{x, y - half}, {x + half, y}, {x, y + half}, {x - half, y}}, color);
+    return;
+  }
+  if (kind == "x") {
+    painter.stroke_line(x - half, y - half, x + half, y + half, color, 1.4);
+    painter.stroke_line(x - half, y + half, x + half, y - half, color, 1.4);
+    return;
+  }
+  if (kind == "plus") {
+    painter.stroke_line(x - half, y, x + half, y, color, 1.4);
+    painter.stroke_line(x, y - half, x, y + half, color, 1.4);
+  }
+}
 
 inline std::string build_pdf_document(std::int32_t width, std::int32_t height, const std::string& content_stream) {
   std::ostringstream out;

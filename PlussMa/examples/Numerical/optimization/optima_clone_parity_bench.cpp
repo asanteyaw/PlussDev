@@ -413,7 +413,7 @@ int main() {
 
   OptimaOptions sqp_options;
   sqp_options.algorithm = OptimaAlgorithm::SequentialQP;
-  sqp_options.sequential_qp.max_iterations = 50;
+  sqp_options.sequential_qp.max_iterations = 400;
   sqp_options.sequential_qp.constraint_tolerance = 1e-8;
   sqp_options.sequential_qp.optimality_tolerance = 1e-6;
   sqp_options.sequential_qp.active_set_tolerance = 1e-6;

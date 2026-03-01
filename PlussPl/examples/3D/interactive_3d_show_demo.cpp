@@ -21,8 +21,15 @@ int main() {
     z.push_back(0.12 * t);
   }
 
-  auto fig = pluss::plotism::line3(x, y, z, "helix").with_title("PlussPl 3D Interactive Show Demo");
+  pluss::plotism::Style helix_style;
+  helix_style.color = "#7c3aed";
+  helix_style.line_style = "dashed";
+  helix_style.marker = "circle";
+  helix_style.line_width = 2.0;
+
+  auto fig = pluss::plotism::line3(x, y, z, "helix", helix_style).with_title("PlussPl 3D Interactive Show Demo");
   fig.x_label("x").y_label("y").z_label("z");
+  fig.legend(pluss::plotism::Legend{true, pluss::plotism::LegendLocation::TopRight, "3D traces"});
 
   const auto cwd = std::filesystem::current_path();
   const auto svg = (cwd / "plusspl_interactive_3d.svg").string();

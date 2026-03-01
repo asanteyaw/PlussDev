@@ -29,12 +29,11 @@ Reference anchors:
 
 ## Remaining Clone-Parity Focus
 
-- richer large-scale sparse structure exploitation
-- broader real-world benchmark table with recorded metrics
-- pathological benchmark suite tied to the new stall taxonomy
-- current structured benchmark still exposes slow `InteriorPoint` convergence at `n = 32`
-- `SequentialQP` still needs better iteration efficiency on the standing GARCH slice and the `n = 16` structured family
-- the earlier premature SQP exits on the structured family were materially improved by the structured routing and boundary-stall fixes
+- tracked clone-parity suite is now closed for `SequentialQP` and `InteriorPoint`
+- next-phase work is no longer clone closure; it is extension:
+  - richer large-scale sparse structure exploitation
+  - broader real-world benchmark table with recorded metrics
+  - new backends such as trust-region and active-set
 
 ## Regression Discipline
 

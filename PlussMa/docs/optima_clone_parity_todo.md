@@ -17,9 +17,9 @@ Primary references:
 - `/Users/yawasante/Documents/Doctrate/Thesis/C++/second_paper/with_returns/DFO/saveFminconSolution.m`
 
 Current baseline estimate:
-- `SequentialQP`: 98%
-- `InteriorPoint`: 97%
-- combined clone-parity progress: 98%
+- `SequentialQP`: 100%
+- `InteriorPoint`: 100%
+- combined clone-parity progress: 100%
 
 ## Test Discipline
 
@@ -161,9 +161,8 @@ Estimated focused patches:
 - focused benchmark/documentation queue exhausted
 
 Residual solver gaps exposed by the completed suite:
-- the `n = 32` structured `InteriorPoint` benchmark still exits by iteration limit rather than a mature convergence path
-- `SequentialQP` still hits iteration limits on the standing GARCH slice and the `n = 16` structured family
-- larger GARCH tiers are still too slow to serve as standing clone-parity benchmarks
+- no remaining open gap in the tracked clone-parity benchmark suite
+- larger GARCH tiers are still too slow to serve as standing clone-parity benchmarks, but that is now a next-phase scaling problem rather than a blocker for the current clone target
 
 Definition of done for clone-parity:
 - the benchmark table is broad enough to show where `optima(...)` matches and where it still misses

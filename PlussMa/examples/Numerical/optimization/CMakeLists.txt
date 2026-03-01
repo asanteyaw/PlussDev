@@ -11,6 +11,18 @@ if(TARGET pluss AND TARGET plussqit_codem)
   target_compile_features(plussma_optima_sequential_qp_demo PRIVATE cxx_std_20)
   target_link_libraries(plussma_optima_sequential_qp_demo PRIVATE pluss plussqit_codem)
 
+  add_executable(plussma_optima_working_set_demo
+    optima_working_set_demo.cpp
+  )
+  target_compile_features(plussma_optima_working_set_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_optima_working_set_demo PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_optima_working_set_bench
+    optima_working_set_bench.cpp
+  )
+  target_compile_features(plussma_optima_working_set_bench PRIVATE cxx_std_20)
+  target_link_libraries(plussma_optima_working_set_bench PRIVATE pluss plussqit_codem)
+
   add_executable(plussma_optima_interior_point_demo
     optima_interior_point_demo.cpp
   )

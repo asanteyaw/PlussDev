@@ -50,3 +50,4 @@ cmake --build build -j4
 
 - Library targets are compiled with C++20 (`target_compile_features(... cxx_std_20)`).
 - `fmt` is used in internal core/rendering formatting paths; demos/tests stay standard C++ usage.
+- Architecture and backlog docs live in `docs/plot_architecture.md` and `docs/engineering_backlog.md`.

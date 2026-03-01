@@ -99,6 +99,33 @@ TEST_CASE("optima dispatch routes interior point correctly", "[optim][optima][di
   REQUIRE(x[1] == Approx(1.25).margin(7e-2));
 }
 
+TEST_CASE("optima dispatch routes working set correctly", "[optim][optima][dispatch][working-set]") {
+  const auto problem = make_problem();
+  const ParameterPack<Series> initial({
+      {"x", make_vec2(1.0, 1.0)},
+  });
+
+  OptimaOptions options;
+  options.algorithm = OptimaAlgorithm::WorkingSet;
+  options.working_set.max_iterations = 40;
+  options.working_set.constraint_tolerance = 1e-6;
+  options.working_set.optimality_tolerance = 1e-5;
+
+  const auto result = optima(problem, initial, options);
+  const auto x = result.params.at("x").to_vec<double>();
+
+  REQUIRE(result.algorithm == OptimaAlgorithm::WorkingSet);
+  REQUIRE(result.output.algorithm == "working-set");
+  REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
+  REQUIRE(result.evaluation.value.item<double>() == Approx(1.125).margin(5e-2));
+  REQUIRE(result.output.line_search_fraction == Approx(result.last_step_size));
+  REQUIRE_FALSE(result.output.detail_message.empty());
+  REQUIRE(result.multipliers.nonlinear_inequalities.numel() == 1);
+  REQUIRE(result.multipliers.nonlinear_inequalities.item<double>() > 0.0);
+  REQUIRE(x[0] == Approx(0.25).margin(5e-2));
+  REQUIRE(x[1] == Approx(1.25).margin(5e-2));
+}
+
 TEST_CASE("optima sequential qp supports explicit inverse solve and identity Hessian mode",
           "[optim][optima][dispatch][sqp][modes]") {
   const auto problem = make_problem();
