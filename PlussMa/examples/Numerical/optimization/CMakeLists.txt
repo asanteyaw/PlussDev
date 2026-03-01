@@ -41,6 +41,12 @@ if(TARGET pluss AND TARGET plussqit_codem)
   target_compile_features(plussma_garch11_optima_demo PRIVATE cxx_std_20)
   target_link_libraries(plussma_garch11_optima_demo PRIVATE pluss plussqit_codem)
 
+  add_executable(plussma_garch11_interior_point_demo
+    garch11_interior_point_demo.cpp
+  )
+  target_compile_features(plussma_garch11_interior_point_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_garch11_interior_point_demo PRIVATE pluss plussqit_codem)
+
   add_executable(plussma_optima_clone_parity_bench
     optima_clone_parity_bench.cpp
   )

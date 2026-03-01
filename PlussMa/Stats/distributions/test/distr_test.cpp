@@ -46,7 +46,9 @@ int main() {
   expect(supports("antilognormal"), "supports(antilognormal) should be true", &failures);
   expect(supports("doubleexp"), "supports(doubleexp) should be true", &failures);
   expect(supports("furry"), "supports(furry) should be true", &failures);
-  expect(!supports("chisq"), "supports(chisq) should be false in current surface", &failures);
+  expect(supports("chisq"), "supports(chisq) should be true", &failures);
+  expect(supports("gig"), "supports(gig) should be true", &failures);
+  expect(supports("nig"), "supports(nig) should be true", &failures);
 
   const Series zero = pluss::make_series(0.0, f64);
   expect(
@@ -78,6 +80,62 @@ int main() {
   expect(approx(geom_cdf.at(2), 0.75), "geometric cdf at 2", &failures);
   expect(approx(geom_cdf.at(3), 0.875), "geometric cdf at 3", &failures);
 
+  const Series half = pluss::make_series(0.5, f64);
+  expect(approx(as_f64_scalar(pdf("beta", half, {2.0, 2.0})), 1.5, 1e-12), "beta pdf at 0.5", &failures);
+
+  const Series one = pluss::make_series(1.0, f64);
+  expect(approx(as_f64_scalar(pdf("gamma", one, {2.0})), std::exp(-1.0), 1e-12), "gamma pdf at 1", &failures);
+  expect(approx(as_f64_scalar(cdf("t", zero, {5.0})), 0.5, 1e-12), "student t cdf at 0", &failures);
+
+  const Series x_count = pluss::make_series(1.0, f64);
+  expect(approx(as_f64_scalar(pdf("binom", x_count, {4.0, 0.25})),
+                4.0 * 0.25 * std::pow(0.75, 3.0),
+                1e-12),
+         "binomial pdf at 1",
+         &failures);
+  expect(approx(as_f64_scalar(cdf("poisson", x_count, {2.0})),
+                std::exp(-2.0) * 3.0,
+                1e-12),
+         "poisson cdf at 1",
+         &failures);
+  expect(approx(as_f64_scalar(pdf("chisq", pluss::make_series(2.0, f64), {2.0})),
+                0.5 * std::exp(-1.0),
+                1e-12),
+         "chisq pdf at 2",
+         &failures);
+
+  expect(approx(as_f64_scalar(cdf("triangular", half, {0.0, 0.5, 1.0})), 0.5, 1e-12),
+         "triangular cdf at mode",
+         &failures);
+  expect(approx(as_f64_scalar(pdf("pareto", pluss::make_series(2.0, f64), {1.0, 3.0})),
+                3.0 / 16.0,
+                1e-12),
+         "pareto pdf at 2",
+         &failures);
+  expect(approx(as_f64_scalar(cdf("lomax", one, {2.0, 3.0})),
+                19.0 / 27.0,
+                1e-12),
+         "lomax cdf at 1",
+         &failures);
+  expect(approx(as_f64_scalar(cdf("normaltrunc", pluss::make_series(-1.0, f64), {-1.0, 1.0, 0.0, 1.0})),
+                0.0,
+                1e-12),
+         "normaltrunc cdf at lower bound",
+         &failures);
+  expect(approx(as_f64_scalar(pdf("hypergeom", x_count, {10.0, 4.0, 3.0})), 0.5, 1e-12),
+         "hypergeom pdf at 1",
+         &failures);
+
+  expect(approx(as_f64_scalar(pdf("zeta", one, {2.0})),
+                6.0 / (std::numbers::pi_v<double> * std::numbers::pi_v<double>),
+                1e-6),
+         "zeta pdf at 1",
+         &failures);
+  expect(std::isfinite(as_f64_scalar(logpdf("skellam", zero, {1.0, 1.0}))), "skellam logpdf finite", &failures);
+  expect(std::isfinite(as_f64_scalar(logpdf("gig", one, {1.0, 2.0, 3.0}))), "gig logpdf finite", &failures);
+  expect(std::isfinite(as_f64_scalar(logpdf("gh", zero, {1.0, 2.0, 0.5, 0.0, 1.0}))), "gh logpdf finite", &failures);
+  expect(std::isfinite(as_f64_scalar(logpdf("nig", zero, {2.0, 0.5, 0.0, 1.0}))), "nig logpdf finite", &failures);
+
   const Series normal_draws = sample("normal", {1.5, 2.0}, {4, 3}, f64, 20260301ULL);
   expect(normal_draws.scalar_type() == ScalarType::Float64, "normal sample dtype", &failures);
   expect(normal_draws.sizes().size() == 2 && normal_draws.sizes()[0] == 4 && normal_draws.sizes()[1] == 3,
@@ -86,6 +144,11 @@ int main() {
 
   const Series bern_draws = sample("bern", {0.4}, {8}, Config{}.with_platform(pluss::pCPU), 20260301ULL);
   expect(bern_draws.scalar_type() == ScalarType::Bool, "bernoulli sample natural dtype", &failures);
+  expect(sample("poisson", {2.0}, {6}, Config{}.with_platform(pluss::pCPU), 11ULL).scalar_type() == ScalarType::Int64,
+         "poisson sample natural dtype",
+         &failures);
+  expect(sample("gig", {1.0, 2.0, 3.0}, {5}, f64, 13ULL).numel() == 5, "gig sample shape", &failures);
+  expect(sample("nig", {2.0, 0.5, 0.0, 1.0}, {5}, f64, 17ULL).numel() == 5, "nig sample shape", &failures);
 
   const Series like = pluss::zeros({2, 5}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
   const Series weibull_like = sample_like("weibull", {1.5, 2.0}, like, 7ULL);

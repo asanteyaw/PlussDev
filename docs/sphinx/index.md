@@ -15,6 +15,9 @@ demo_catalog
 series
 autodiff_architecture
 optimization_diff_contract
+optima_algorithms
+optima_sequential_qp
+optima_interior_point
 series_api_reference
 series_all_methods_usage
 note

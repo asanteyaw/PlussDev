@@ -9,12 +9,30 @@ This file tracks replacement status for `PlussMa/Stats/distributions/randraw.m`.
 - `uniform`, `unif`
 - `exp`, `exponential`
 - `bernoulli`, `bern`
+- `beta`, `powerfunction`, `powerfunc`
+- `binom`, `binomial`
 - `cauchy`, `lorentz`, `caushy`
+- `chisquare`, `chisq`, `chi2`
 - `laplace`, `doubleexponential`, `doubleexp`, `bilateralexponential`, `bilateralexp`
 - `logistic`
 - `geometric`, `geom`, `furry`
+- `gamma`
+- `gig`
+- `gh`
+- `hypergeom`, `hypergeometric`
+- `ig`, `inversegauss`, `invgauss`
+- `normaltrunc`, `normaltruncated`, `gausstrunc`
+- `nig`
+- `pareto`
+- `pareto2`, `lomax`
+- `poisson`, `po`
 - `rayl`, `rayleigh`
+- `skellam`
+- `studentst`, `t`
+- `tri`, `triangular`
+- `wald`
 - `weibull`, `wbl`
+- `zeta`, `zipf`
 
 ## Added beyond `randraw.m`
 
@@ -22,59 +40,43 @@ This file tracks replacement status for `PlussMa/Stats/distributions/randraw.m`.
 - `pluss::sobol(...)`
 - `pluss::sobol_normal(...)`
 
-## Not yet at full `randraw.m` parity
+## Still missing from `randraw.m` parity
 
-The following `randraw.m` families are still missing from the C++ replacement:
+The following `randraw.m` families are still Matlab-only:
 
 - `alpha`
 - `anglit`
 - `arcsin`
-- `beta`, `powerfunction`, `powerfunc`
 - `bessel`
-- `binom`, `binomial`
 - `bradford`
 - `burr`, `fisk`
 - `chi`
-- `chisquare`, `chisq`, `chi2`
 - `chisqnc`, `chisqnoncentral`, `chisqnoncentr`, `chi2noncentral`
 - `cosine`
 - `erlang`
 - `extrval`, `extremevalue`, `extrvalue`, `gumbel`
 - `f`, `fdistribution`, `fdistrib`, `fdistr`, `fdist`, `fdis`
 - `fnc`, `fnoncentral`, `fnoncentr`
-- `gamma`
-- `gig`
-- `gh`
 - `gompertz`
 - `halfcosine`, `hcosine`, `hcos`
 - `hyperbolicsecant`, `hsecant`, `hsec`
-- `hypergeom`, `hypergeometric`
-- `ig`, `inversegauss`, `invgauss`
 - `maxwell`
 - `nakagamim`, `nakagami-m`, `nakagami`
 - `negativebinomial`, `negbinomial`, `negbinom`, `pascal`
-- `normaltrunc`, `normaltruncated`, `gausstrunc`
-- `nig`
-- `pareto`
-- `pareto2`, `lomax`
 - `planck`
-- `poisson`, `po`
 - `quadratic`, `quad`, `quadr`
 - `rademacher`
 - `rice`, `rician`
 - `semicirc`, `semicircle`, `wigner`
-- `skellam`
-- `studentst`, `t`
-- `tri`, `triangular`
 - `tukeylambda`
 - `u`, `ushape`
 - `vonmises`
-- `wald`
 - `frechet`
 - `yule`, `yulesimon`
-- `zeta`, `zipf`
 
 ## Notes
 
-- Current `weibull` support is not yet parameter-parity complete with the legacy Matlab implementation.
-- `frechet` is intentionally still listed as missing because `randraw.m` aliases it through a location-parameter Weibull form that is not yet mirrored here.
+- This C++ surface now covers the three planned parity batches: high-value core families, transform-based continuous families, and the heavy-tail/special-function batch (`hypergeom`, `skellam`, `zipf`/`zeta`, `gig`, `gh`, `nig`).
+- Full replacement is still not complete. `randraw.m` should not be deleted until the remaining Matlab-only families above are implemented or intentionally dropped.
+- Current `weibull` support is still not parameter-parity complete with the legacy Matlab implementation.
+- `frechet` remains missing because `randraw.m` aliases it through a location-parameter Weibull form that is not yet mirrored here.
