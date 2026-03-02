@@ -1,3 +1,4 @@
+#include "pluss/subsp/stat/distr_fwd.h"
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -152,11 +153,12 @@ int main() {
   const Series like = pluss::zeros({2, 4}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
   const Series like_gamma = pluss::distr::sample_like("gamma", {2.0}, like, 77ULL);
   const Series like_sign = pluss::distr::sample_like("rademacher", like, 79ULL);
+  const Series nig = pluss::distr::sample("nig", {2.0, 0.5, 0.0, 1.0}, {2, 4}, f64, 83ULL);
   std::cout << "sample_like(gamma) preview=" << preview(like_gamma)
             << " dtype=" << static_cast<int>(like_gamma.scalar_type()) << '\n';
   std::cout << "sample_like(rademacher) preview=" << preview(like_sign)
             << " dtype=" << static_cast<int>(like_sign.scalar_type()) << '\n';
-
+  std::cout << "sample(nig) preview=" << preview(nig) << " dtype=" << static_cast<int>(nig.scalar_type()) << '\n';
   const Series weights = pluss::make_series(std::vector<double>{0.65, 0.35}, {2}, f64);
   const Series means = pluss::make_series(std::vector<double>{-1.0, 2.0}, {2}, f64);
   const Series stddevs = pluss::make_series(std::vector<double>{0.5, 1.25}, {2}, f64);
