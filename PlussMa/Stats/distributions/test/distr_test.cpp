@@ -200,6 +200,39 @@ int main() {
     expect(approx(v, 3.0), "mixture_normal deterministic Sobol component selection", &failures);
   }
 
+  const Series mix_pdf_x = pluss::make_series(std::vector<double>{0.0}, {1}, f64);
+  const Series mix_pdf_weights = pluss::make_series(std::vector<double>{1.0, 0.0}, {2}, f64);
+  const Series mix_pdf_means = pluss::make_series(std::vector<double>{0.0, 5.0}, {2}, f64);
+  const Series mix_pdf_stds = pluss::make_series(std::vector<double>{1.0, 2.0}, {2}, f64);
+  expect(approx(mixture_normal_pdf(mix_pdf_x, mix_pdf_weights, mix_pdf_means, mix_pdf_stds).item<double>(),
+                0.3989422804014327),
+         "mixture_normal_pdf one-component parity", &failures);
+  expect(approx(mixture_normal_cdf(mix_pdf_x, mix_pdf_weights, mix_pdf_means, mix_pdf_stds).item<double>(), 0.5),
+         "mixture_normal_cdf one-component parity", &failures);
+  expect(approx(mixture_normal_logpdf(mix_pdf_x, mix_pdf_weights, mix_pdf_means, mix_pdf_stds).item<double>(),
+                std::log(0.3989422804014327)),
+         "mixture_normal_logpdf one-component parity", &failures);
+
+  const Series deg_weights = pluss::make_series(std::vector<double>{1.0}, {1}, f64);
+  const Series deg_means = pluss::make_series(std::vector<double>{3.0}, {1}, f64);
+  const Series deg_stds = pluss::make_series(std::vector<double>{0.0}, {1}, f64);
+  const auto deg_cdf = mixture_normal_cdf(
+                           pluss::make_series(std::vector<double>{2.0, 3.0, 4.0}, {3}, f64),
+                           deg_weights,
+                           deg_means,
+                           deg_stds)
+                           .to_vec<double>();
+  expect(approx(deg_cdf[0], 0.0) && approx(deg_cdf[1], 1.0) && approx(deg_cdf[2], 1.0),
+         "mixture_normal_cdf degenerate component step", &failures);
+  const auto deg_pdf = mixture_normal_pdf(
+                           pluss::make_series(std::vector<double>{2.0, 3.0, 4.0}, {3}, f64),
+                           deg_weights,
+                           deg_means,
+                           deg_stds)
+                           .to_vec<double>();
+  expect(approx(deg_pdf[0], 0.0) && std::isinf(deg_pdf[1]) && approx(deg_pdf[2], 0.0),
+         "mixture_normal_pdf degenerate component mass", &failures);
+
   if (failures != 0) {
     std::cerr << "distr_test: " << failures << " failure(s)\n";
     return 1;

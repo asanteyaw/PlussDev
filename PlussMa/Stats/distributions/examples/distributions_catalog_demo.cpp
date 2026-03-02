@@ -164,9 +164,14 @@ int main() {
   const Series stddevs = pluss::make_series(std::vector<double>{0.5, 1.25}, {2}, f64);
   const Series pseudo_mix = pluss::distr::mixture_normal(weights, means, stddevs, {8}, f64, 101ULL, false);
   const Series sobol_mix = pluss::distr::mixture_normal(weights, means, stddevs, {8}, f64, 103ULL, true);
+  const Series mix_x = pluss::make_series(std::vector<double>{-2.0, -0.5, 1.0, 3.0}, {4}, f64);
+  const Series mix_pdf = pluss::distr::mixture_normal_pdf(mix_x, weights, means, stddevs);
+  const Series mix_cdf = pluss::distr::mixture_normal_cdf(mix_x, weights, means, stddevs);
 
   std::cout << "mixture_normal pseudo=" << preview(pseudo_mix) << '\n';
   std::cout << "mixture_normal sobol =" << preview(sobol_mix) << '\n';
+  std::cout << "mixture_normal pdf   =" << preview(mix_pdf) << '\n';
+  std::cout << "mixture_normal cdf   =" << preview(mix_cdf) << '\n';
 
   return 0;
 }

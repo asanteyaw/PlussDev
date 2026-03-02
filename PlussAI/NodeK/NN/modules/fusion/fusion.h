@@ -1,47 +1,64 @@
-#include "fusion/Fusion.h"
+#pragma once
 
-// This file implements the Fusion module, which applies a linear transformation to the input data.
-// It is to be used in a neural network architecture, not to be confused with pluss::fusion(...) which is a the functional-like version for users.
-// It's usage will be pluss::nn::Fusion fc (args) as instantiation. It delegates to the functional pluss::fusion(...) in its implementation of the forward method.
-// Example usage:
-// pluss::nn::Fusion fc(pluss::nn::FusionOptions(input.size(1), input.size(1)));
-// Series output = fc->forward(input);
+#include "../Module.h"
+#include <pluss/ai/fusion.h>
 
-namespace pluss::ai::nn { 
-// implementation of the Fusion module
+#include <cmath>
+#include <utility>
 
-// aliases for convenience
-class FusionOptions {
-public:
-    int64_t in_features;
-    int64_t out_features;
-    bool bias;
-      FusionOptions(int64_t in_features, int64_t out_features, bool bias = true)
-         : in_features(in_features), out_features(out_features), bias(bias) {}
+namespace pluss::ai::nn {
+
+struct FusionOptions {
+  std::int64_t in_features = 1;
+  std::int64_t out_features = 1;
+  bool bias = true;
+  Config cfg = ::pluss::detail::nn::default_cfg_();
+  std::uint64_t seed = 0;
 };
 
-class Fusion {
+class PLUSS_API FusionImpl final : public Module {
 public:
-    Fusion(const FusionOptions& options) : module_(options.in_features, options.out_features, options.bias) {}
-      Fusion(int64_t in_features, int64_t out_features, bool bias = true) : module_(in_features, out_features, bias) {}
+  explicit FusionImpl(FusionOptions options) : Module(true), options_(std::move(options)) {
+    register_parameters_();
+    reset_parameters();
+  }
+  FusionImpl(std::int64_t in_features, std::int64_t out_features, bool bias = true, Config cfg = ::pluss::detail::nn::default_cfg_(), std::uint64_t seed = 0)
+      : FusionImpl(FusionOptions{in_features, out_features, bias, cfg, seed}) {}
 
-    
-    Series forward(const Series& input) const {
-        return pluss::fusion(input, module_.weight(), module_.with_bias() ? module_.bias() : Series());
-    }
-    
-    const Series& weight() const {
-        return module_.weight();
-    }
-    
-    const Series& bias() const {
-        return module_.bias();
-    }
+  void reset_parameters() {
+    const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
+    const double bound = 1.0 / std::sqrt(static_cast<double>(options_.in_features));
+    weight_ = ::pluss::detail::nn::uniform_({options_.out_features, options_.in_features}, -bound, bound, cfg, options_.seed);
+    bias_ = options_.bias ? ::pluss::detail::nn::uniform_({options_.out_features}, -bound, bound, cfg, options_.seed + 1ULL) : Series();
+  }
 
+  Series forward(const Series& input) const { return pluss::ai::ff(input, weight_, bias_); }
+  Series operator()(const Series& input) const { return forward(input); }
+  FusionImpl* operator->() noexcept { return this; }
+  const FusionImpl* operator->() const noexcept { return this; }
+
+  Series& weight() noexcept { return weight_; }
+  const Series& weight() const noexcept { return weight_; }
+  Series& bias() noexcept { return bias_; }
+  const Series& bias() const noexcept { return bias_; }
+  FusionOptions& options() noexcept { return options_; }
+  const FusionOptions& options() const noexcept { return options_; }
+
+private:
+  void register_parameters_() {
+    this->clear_parameter_records_();
+    this->parameter_record("weight", weight_);
+    this->parameter_record("bias", bias_);
+  }
+
+  void on_platform_changed_(Platform platform) override { options_.cfg = options_.cfg.with_platform(platform); }
+  void on_dtype_changed_(ScalarType dtype) override { options_.cfg = options_.cfg.with_dtype(dtype); }
+
+  FusionOptions options_;
+  Series weight_;
+  Series bias_;
 };
-}  // namespace pluss::ai::nn  
 
-namespace pluss::nn {
-using Fusion = pluss::ai::nn::Fusion; // for convenience
-using FusionOptions = pluss::ai::nn::FusionOptions;
-}
+PLUSS_MODULE_IMPL(Fusion, FusionImpl);
+
+} // namespace pluss::ai::nn

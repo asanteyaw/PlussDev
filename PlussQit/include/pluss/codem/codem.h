@@ -14,6 +14,14 @@
 
 namespace pluss::codem {
 
+template <class T>
+concept SeriesScalar =
+    std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>;
+
+inline Series make_scalar_like(const Series& like, double value) {
+  return Series::full({}, value, like.scalar_type()).to(like.platform());
+}
+
 enum class TernaryCompareOp : std::uint8_t { Eq, Ne, Lt, Le, Gt, Ge };
 
 using BlobDeleter = std::function<void(void*)>;
@@ -93,6 +101,56 @@ inline Series operator>(const TernaryCompareChain& chain, const Series& rhs) {
 }
 inline Series operator>=(const TernaryCompareChain& chain, const Series& rhs) {
   return ternary_compare_finish(chain, rhs, TernaryCompareOp::Ge);
+}
+
+template <SeriesScalar T>
+inline Series operator+(T lhs, const Series& rhs) {
+  return make_scalar_like(rhs, static_cast<double>(lhs)).add(rhs);
+}
+
+template <SeriesScalar T>
+inline Series operator-(T lhs, const Series& rhs) {
+  return make_scalar_like(rhs, static_cast<double>(lhs)).sub(rhs);
+}
+
+template <SeriesScalar T>
+inline Series operator*(T lhs, const Series& rhs) {
+  return make_scalar_like(rhs, static_cast<double>(lhs)).mul(rhs);
+}
+
+template <SeriesScalar T>
+inline Series operator/(T lhs, const Series& rhs) {
+  return make_scalar_like(rhs, static_cast<double>(lhs)).div(rhs);
+}
+
+template <SeriesScalar T>
+inline Series operator==(T lhs, const Series& rhs) {
+  return make_scalar_like(rhs, static_cast<double>(lhs)).eq(rhs);
+}
+
+template <SeriesScalar T>
+inline Series operator!=(T lhs, const Series& rhs) {
+  return make_scalar_like(rhs, static_cast<double>(lhs)).ne(rhs);
+}
+
+template <SeriesScalar T>
+inline Series operator<(T lhs, const Series& rhs) {
+  return make_scalar_like(rhs, static_cast<double>(lhs)).lt(rhs);
+}
+
+template <SeriesScalar T>
+inline Series operator<=(T lhs, const Series& rhs) {
+  return make_scalar_like(rhs, static_cast<double>(lhs)).le(rhs);
+}
+
+template <SeriesScalar T>
+inline Series operator>(T lhs, const Series& rhs) {
+  return make_scalar_like(rhs, static_cast<double>(lhs)).gt(rhs);
+}
+
+template <SeriesScalar T>
+inline Series operator>=(T lhs, const Series& rhs) {
+  return make_scalar_like(rhs, static_cast<double>(lhs)).ge(rhs);
 }
 
 inline bool platform_available(Platform p) noexcept {

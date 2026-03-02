@@ -78,6 +78,11 @@ endif()
 if(NOT TARGET plussqit_codeh)
     message(FATAL_ERROR "plussqit_codeh (CodeH) must be built for PlussMa.")
 endif()
+target_link_libraries(pluss PUBLIC
+    plussqit_codem
+    plussqit_coden
+    plussqit_codeh
+)
 add_subdirectory(PlussPl)
 add_subdirectory(PlussMa)
 add_subdirectory(PlussMic)

@@ -1,6 +1,7 @@
 #include "pluss/subsp/stat/distr.h"
 
 #include "CodeM/core/Errors.h"
+#include "pluss/codem/codem.h"
 #include "pluss/codem/quasirandom_factory.h"
 #include "pluss/codem/series_factory.h"
 
@@ -478,7 +479,21 @@ double normal_pdf_scalar_(double x, double mean, double stddev) {
 }
 
 double normal_cdf_scalar_(double x, double mean, double stddev) {
-  return 0.5 * (1.0 + std::erf((x - mean) / (stddev * kSqrt2)));
+  const double z = (x - mean) / stddev;
+  if (z <= -8.0) return 0.0;
+  if (z >= 8.0) return 1.0;
+  double s = z;
+  double t = std::numeric_limits<double>::infinity();
+  double b = z;
+  const double q = z * z;
+  double i = 1.0;
+  while (s != t) {
+    t = s;
+    i += 2.0;
+    b *= q / i;
+    s += b;
+  }
+  return 0.5 + s * std::exp(-0.5 * q - 0.91893853320467274178);
 }
 
 double inverse_gaussian_pdf_scalar_(double y, double theta, double chi) {
@@ -577,10 +592,34 @@ Series normal_logpdf_(const Series& x, double mean, double stddev) {
   return z.square().mul(-0.5).sub(std::log(stddev)).sub(0.5 * kLog2Pi);
 }
 
+Series norm_cdf_(const Series& X) {
+  const Series xx = as_f64_(X, "cdf");
+  const Series zero = zeros_like_f64_(xx);
+  const Series one = ones_like_f64_(xx);
+  const Series lower = xx.lt(-8.0);
+  const Series upper = xx.gt(8.0);
+  const Series central = lower.logical_or(upper).logical_not();
+
+  Series s = xx.where(central, zero);
+  Series t = full_like_f64_(xx, std::numeric_limits<double>::infinity());
+  Series b = s.clone();
+  const Series q = s.square();
+  Series i = one;
+
+  while (s.ne(t).any().item<bool>()) {
+    t = s;
+    i = i.add(2.0);
+    b = b.mul(q.div(i));
+    s = s.add(b);
+  }
+
+  const Series central_result = s.mul(q.mul(-0.5).sub(0.91893853320467274178).exp()).add(0.5);
+  return one.where(upper, central_result.where(central, zero));
+}
+
 Series normal_cdf_(const Series& x, double mean, double stddev) {
   PLUSS_CHECK(stddev > 0.0, "subsp::stat::distr::normal cdf: std must be > 0");
-  const Series xx = as_f64_(x, "cdf");
-  return xx.sub(mean).div(stddev * kSqrt2).erf().add(1.0).mul(0.5);
+  return norm_cdf_(as_f64_(x, "cdf").sub(mean).div(stddev));
 }
 
 Series normal_sample_(double mean,
@@ -615,7 +654,7 @@ Series lognormal_cdf_(const Series& x, double mu, double sigma) {
   PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::lognormal cdf: sigma must be > 0");
   const Series xx = as_f64_(x, "cdf");
   const Series safe_x = xx.clamp_min(kEps);
-  const Series core = safe_x.log().sub(mu).div(sigma * kSqrt2).erf().add(1.0).mul(0.5);
+  const Series core = norm_cdf_(safe_x.log().sub(mu).div(sigma));
   return core.where(xx.gt(0.0), zeros_like_f64_(xx));
 }
 
@@ -2845,13 +2884,20 @@ Series sample_like(std::string_view name, const Series& like, std::uint64_t seed
   return sample_like(name, std::span<const double>{}, like, seed);
 }
 
-Series mixture_normal(const Series& weights,
-                      const Series& means,
-                      const Series& stddevs,
-                      std::span<const std::int64_t> sizes,
-                      Config cfg,
-                      std::uint64_t seed,
-                      bool use_sobol) {
+struct MixtureNormalParams {
+  Series weights_cpu;
+  Series weights;
+  Series means;
+  Series stddevs;
+  std::int64_t num_components = 0;
+};
+
+MixtureNormalParams mixture_normal_params_(const Series& weights,
+                                          const Series& means,
+                                          const Series& stddevs,
+                                          Config cfg,
+                                          const char* op,
+                                          bool allow_zero_stddev) {
   PLUSS_CHECK(weights.defined(), "subsp::stat::distr::mixture_normal: weights must be defined");
   PLUSS_CHECK(means.defined(), "subsp::stat::distr::mixture_normal: means must be defined");
   PLUSS_CHECK(stddevs.defined(), "subsp::stat::distr::mixture_normal: stddevs must be defined");
@@ -2859,21 +2905,70 @@ Series mixture_normal(const Series& weights,
   const Series w = weights.to(pluss::pCPU, ScalarType::Float64).reshape({weights.numel()});
   const Series m_cpu = means.to(pluss::pCPU, ScalarType::Float64).reshape({means.numel()});
   const Series s_cpu = stddevs.to(pluss::pCPU, ScalarType::Float64).reshape({stddevs.numel()});
-  const Series m = m_cpu.to(cfg.platform, ScalarType::Float64);
-  const Series s = s_cpu.to(cfg.platform, ScalarType::Float64);
 
   PLUSS_CHECK(
-      w.numel() == m.numel() && w.numel() == s.numel(),
-      "subsp::stat::distr::mixture_normal: weights, means, stddevs must have same numel");
-  PLUSS_CHECK(w.numel() > 0, "subsp::stat::distr::mixture_normal: expected at least one component");
-  PLUSS_CHECK(s_cpu.amin(0, false).item<double>() >= 0.0,
-              "subsp::stat::distr::mixture_normal: stddevs must be >= 0");
+      w.numel() == m_cpu.numel() && w.numel() == s_cpu.numel(),
+      std::string("subsp::stat::distr::") + op + ": weights, means, stddevs must have same numel");
+  PLUSS_CHECK(w.numel() > 0, std::string("subsp::stat::distr::") + op + ": expected at least one component");
+  PLUSS_CHECK(s_cpu.amin(0, false).item<double>() >= (allow_zero_stddev ? 0.0 : std::numeric_limits<double>::min()),
+              std::string("subsp::stat::distr::") + op + (allow_zero_stddev ? ": stddevs must be >= 0"
+                                                                              : ": stddevs must be > 0"));
 
   const double total_weight = w.sum().item<double>();
-  PLUSS_CHECK(total_weight > 0.0, "subsp::stat::distr::mixture_normal: weights must sum to > 0");
+  PLUSS_CHECK(total_weight > 0.0, std::string("subsp::stat::distr::") + op + ": weights must sum to > 0");
+  const Series probs_cpu = w.div(total_weight);
 
-  const std::vector<double> probs = w.div(total_weight).to_vec<double>();
-  const std::int64_t k = w.numel();
+  return MixtureNormalParams{
+      .weights_cpu = probs_cpu,
+      .weights = probs_cpu.to(cfg.platform, ScalarType::Float64),
+      .means = m_cpu.to(cfg.platform, ScalarType::Float64),
+      .stddevs = s_cpu.to(cfg.platform, ScalarType::Float64),
+      .num_components = w.numel(),
+  };
+}
+
+Series mixture_normal_component_pdf_(const Series& x,
+                                     const Series& means,
+                                     const Series& stddevs,
+                                     const Series& zero,
+                                     const Series& one) {
+  const Series safe_std = stddevs.where(stddevs.gt(0.0), one);
+  const Series z = x.sub(means).div(safe_std);
+  Series out = z.square().mul(-0.5).exp().div(safe_std.mul(std::sqrt(2.0 * std::numbers::pi_v<double>)));
+  const Series degenerate = stddevs.eq(0.0);
+  if (degenerate.any().item<bool>()) {
+    const Series point_mass = full_like_f64_(x, std::numeric_limits<double>::infinity()).where(x.eq(means), zero);
+    out = point_mass.where(degenerate, out);
+  }
+  return out;
+}
+
+Series mixture_normal_component_cdf_(const Series& x,
+                                     const Series& means,
+                                     const Series& stddevs,
+                                     const Series& zero,
+                                     const Series& one) {
+  const Series safe_std = stddevs.where(stddevs.gt(0.0), one);
+  Series out = norm_cdf_(x.sub(means).div(safe_std));
+  const Series degenerate = stddevs.eq(0.0);
+  if (degenerate.any().item<bool>()) {
+    const Series step = one.where(x.ge(means), zero);
+    out = step.where(degenerate, out);
+  }
+  return out;
+}
+
+Series mixture_normal(const Series& weights,
+                      const Series& means,
+                      const Series& stddevs,
+                      std::span<const std::int64_t> sizes,
+                      Config cfg,
+                      std::uint64_t seed,
+                      bool use_sobol) {
+  const MixtureNormalParams params = mixture_normal_params_(weights, means, stddevs, cfg, "mixture_normal", true);
+
+  const std::vector<double> probs = params.weights_cpu.to_vec<double>();
+  const std::int64_t k = params.num_components;
   const std::int64_t total = numel_from_sizes_(sizes);
 
   const Series selectors = pluss::multinomial(probs, total, true, seed)
@@ -2886,7 +2981,7 @@ Series mixture_normal(const Series& weights,
   const Series base = (use_sobol
                            ? pluss::sobol_normal({total, k}, Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform), seed)
                            : pluss::randn({total, k}, Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform), seed));
-  const Series components = m.reshape({1, k}).add(s.reshape({1, k}).mul(base));
+  const Series components = params.means.reshape({1, k}).add(params.stddevs.reshape({1, k}).mul(base));
   return selector_mask.mul(components).sum(1, false).reshape(sizes).to(cfg.dtype);
 }
 
@@ -2905,6 +3000,56 @@ Series mixture_normal(const Series& weights,
       cfg,
       seed,
       use_sobol);
+}
+
+Series mixture_normal_pdf(const Series& x,
+                          const Series& weights,
+                          const Series& means,
+                          const Series& stddevs) {
+  const Series xx = as_f64_(x, "mixture_normal_pdf");
+  const Config cfg = float64_cfg_like_(xx);
+  const MixtureNormalParams params = mixture_normal_params_(weights, means, stddevs, cfg, "mixture_normal_pdf", true);
+  const std::int64_t total = xx.numel();
+  const std::int64_t k = params.num_components;
+  const Series flat_x = xx.reshape({total, 1});
+  const Series means_2d = params.means.reshape({1, k});
+  const Series stddevs_2d = params.stddevs.reshape({1, k});
+  const Series weights_2d = params.weights.reshape({1, k});
+  const Series zero = flat_x.mul(0.0).add(means_2d.mul(0.0));
+  const Series one = zero.add(1.0);
+  return mixture_normal_component_pdf_(flat_x, means_2d, stddevs_2d, zero, one)
+      .mul(weights_2d)
+      .sum(1, false)
+      .reshape(xx.sizes());
+}
+
+Series mixture_normal_logpdf(const Series& x,
+                             const Series& weights,
+                             const Series& means,
+                             const Series& stddevs) {
+  const Series probs = mixture_normal_pdf(x, weights, means, stddevs);
+  return probs.log().where(probs.gt(0.0), full_like_f64_(probs, -std::numeric_limits<double>::infinity()));
+}
+
+Series mixture_normal_cdf(const Series& x,
+                          const Series& weights,
+                          const Series& means,
+                          const Series& stddevs) {
+  const Series xx = as_f64_(x, "mixture_normal_cdf");
+  const Config cfg = float64_cfg_like_(xx);
+  const MixtureNormalParams params = mixture_normal_params_(weights, means, stddevs, cfg, "mixture_normal_cdf", true);
+  const std::int64_t total = xx.numel();
+  const std::int64_t k = params.num_components;
+  const Series flat_x = xx.reshape({total, 1});
+  const Series means_2d = params.means.reshape({1, k});
+  const Series stddevs_2d = params.stddevs.reshape({1, k});
+  const Series weights_2d = params.weights.reshape({1, k});
+  const Series zero = flat_x.mul(0.0).add(means_2d.mul(0.0));
+  const Series one = zero.add(1.0);
+  return mixture_normal_component_cdf_(flat_x, means_2d, stddevs_2d, zero, one)
+      .mul(weights_2d)
+      .sum(1, false)
+      .reshape(xx.sizes());
 }
 
 Series pdf(std::string_view name, const Series& x, std::span<const double> params) {

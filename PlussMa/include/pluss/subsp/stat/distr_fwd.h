@@ -63,6 +63,18 @@ CODEM_API pluss::codem::Series mixture_normal(const pluss::codem::Series& weight
                                               pluss::codem::Config cfg = {},
                                               std::uint64_t seed = 0,
                                               bool use_sobol = false);
+CODEM_API pluss::codem::Series mixture_normal_pdf(const pluss::codem::Series& x,
+                                                  const pluss::codem::Series& weights,
+                                                  const pluss::codem::Series& means,
+                                                  const pluss::codem::Series& stddevs);
+CODEM_API pluss::codem::Series mixture_normal_logpdf(const pluss::codem::Series& x,
+                                                     const pluss::codem::Series& weights,
+                                                     const pluss::codem::Series& means,
+                                                     const pluss::codem::Series& stddevs);
+CODEM_API pluss::codem::Series mixture_normal_cdf(const pluss::codem::Series& x,
+                                                  const pluss::codem::Series& weights,
+                                                  const pluss::codem::Series& means,
+                                                  const pluss::codem::Series& stddevs);
 
 CODEM_API pluss::codem::Series pdf(std::string_view name,
                                    const pluss::codem::Series& x,

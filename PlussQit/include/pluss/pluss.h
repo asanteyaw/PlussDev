@@ -33,6 +33,12 @@
 // Core pluss surface (Series/Note/Timeline/TimeIndex + Queue/Dispense/Aux) lives in PlussQit.
 #include "pluss/core.h"
 
+#if __has_include("pluss/nn.h")
+#include "pluss/nn.h"
+#elif __has_include("pluss/ai.h")
+#include "pluss/ai.h"
+#endif
+
 #if __has_include("pluss/ma.h")
 #include "pluss/ma.h"
 #endif

@@ -16,20 +16,44 @@
 
 // ---- C++ convenience operators (ergonomic sugar) ----
 // Thin wrappers around the generated method surface.
-// NOTE: We only provide Series-vs-Series operators here. Scalar operators
-// can be added later once CodeM scalar semantics are finalized.
+// Scalar rhs operators forward to the generated scalar-aware method surface.
+// Matching lhs scalar overloads are provided as free functions in codem.h.
 
 // Out-of-place arithmetic
 Series operator+(const Series& other) const { return add(other); }
 Series operator-(const Series& other) const { return sub(other); }
 Series operator*(const Series& other) const { return mul(other); }
 Series operator/(const Series& other) const { return div(other); }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series operator+(T scalar) const { return add(static_cast<double>(scalar)); }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series operator-(T scalar) const { return sub(static_cast<double>(scalar)); }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series operator*(T scalar) const { return mul(static_cast<double>(scalar)); }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series operator/(T scalar) const { return div(static_cast<double>(scalar)); }
 
 // In-place arithmetic
 Series& operator+=(const Series& other) { add_(other); return *this; }
 Series& operator-=(const Series& other) { sub_(other); return *this; }
 Series& operator*=(const Series& other) { mul_(other); return *this; }
 Series& operator/=(const Series& other) { div_(other); return *this; }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series& operator+=(T scalar) { add_(static_cast<double>(scalar)); return *this; }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series& operator-=(T scalar) { sub_(static_cast<double>(scalar)); return *this; }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series& operator*=(T scalar) { mul_(static_cast<double>(scalar)); return *this; }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series& operator/=(T scalar) { div_(static_cast<double>(scalar)); return *this; }
 
 // In-place bitwise
 Series& operator&=(const Series& other) { bitwise_and_(other); return *this; }
@@ -43,3 +67,21 @@ Series operator<(const Series& other) const { return lt(other); }
 Series operator<=(const Series& other) const { return le(other); }
 Series operator>(const Series& other) const { return gt(other); }
 Series operator>=(const Series& other) const { return ge(other); }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series operator==(T scalar) const { return eq(static_cast<double>(scalar)); }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series operator!=(T scalar) const { return ne(static_cast<double>(scalar)); }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series operator<(T scalar) const { return lt(static_cast<double>(scalar)); }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series operator<=(T scalar) const { return le(static_cast<double>(scalar)); }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series operator>(T scalar) const { return gt(static_cast<double>(scalar)); }
+template <class T>
+requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
+Series operator>=(T scalar) const { return ge(static_cast<double>(scalar)); }

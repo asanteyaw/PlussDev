@@ -3,6 +3,7 @@
 #include "pluss/export.h"
 #include "pluss/config.h"
 #include "pluss/codem/codem.h"
+#include "pluss/codem/stack_array.h"
 #include "pluss/codem/series_options.h"
 #include "pluss/codem/series_value.h"
 #include "pluss/detail/factory_core.h"
@@ -13,7 +14,6 @@
 
 #include <cstdint>
 #include <cmath>
-#include <initializer_list>
 #include <span>
 #include <type_traits>
 #include <vector>
@@ -604,6 +604,14 @@ namespace pluss {
                              BlobDeleter deleter,
                              ScalarType dtype = ScalarType::Float32) {
     return codem::from_buffer(data, sizes, strides, deleter, dtype);
+  }
+
+  inline pluss::Series pile(StackArray<Series> values, std::int64_t dim = 0) {
+    return pile(values.data(), dim);
+  }
+
+  inline pluss::Series unite(StackArray<Series> values, std::int64_t dim = 0) {
+    return unite(values.data(), dim);
   }
 
 } // namespace pluss

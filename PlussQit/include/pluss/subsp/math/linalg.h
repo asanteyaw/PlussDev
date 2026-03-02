@@ -272,26 +272,13 @@ inline std::vector<double> matrix_exp_(const std::vector<double>& in, std::int64
   return out;
 }
 
-#if defined(__APPLE__)
-extern "C" {
-void dgetrf_(const int* m, const int* n, double* a, const int* lda, int* ipiv, int* info);
-void dgetri_(const int* n, double* a, const int* lda, const int* ipiv, double* work, const int* lwork, int* info);
-void dpotrf_(const char* uplo, const int* n, double* a, const int* lda, int* info);
-void dgeqrf_(const int* m, const int* n, double* a, const int* lda, double* tau, double* work, const int* lwork, int* info);
-void dorgqr_(const int* m, const int* n, const int* k, double* a, const int* lda, const double* tau, double* work,
-             const int* lwork, int* info);
-void dgesvd_(const char* jobu, const char* jobvt, const int* m, const int* n, double* a, const int* lda, double* s,
-             double* u, const int* ldu, double* vt, const int* ldvt, double* work, const int* lwork, int* info);
-}
-#endif
-
 } // namespace detail
 
 inline Series det(const Series& a) {
   detail::require_square_(a, "subsp::math::linalg::det");
   const auto n64 = a.sizes()[0];
 #if defined(__APPLE__)
-  const int n = static_cast<int>(n64);
+  int n = static_cast<int>(n64);
   auto row = detail::to_row_major_f64_(a);
   auto col = detail::row_to_col_major_(row, n, n);
   std::vector<int> ipiv(static_cast<std::size_t>(n));
@@ -316,7 +303,7 @@ inline Series inverse(const Series& a) {
   detail::require_square_(a, "subsp::math::linalg::inverse");
   const auto n64 = a.sizes()[0];
 #if defined(__APPLE__)
-  const int n = static_cast<int>(n64);
+  int n = static_cast<int>(n64);
   auto row = detail::to_row_major_f64_(a);
   auto col = detail::row_to_col_major_(row, n, n);
   std::vector<int> ipiv(static_cast<std::size_t>(n));
@@ -342,10 +329,10 @@ inline Series cholesky(const Series& a, bool upper = false) {
   detail::require_square_(a, "subsp::math::linalg::cholesky");
   const auto n64 = a.sizes()[0];
 #if defined(__APPLE__)
-  const int n = static_cast<int>(n64);
+  int n = static_cast<int>(n64);
   auto row = detail::to_row_major_f64_(a);
   auto col = detail::row_to_col_major_(row, n, n);
-  const char uplo = upper ? 'U' : 'L';
+  char uplo = upper ? 'U' : 'L';
   int info = 0;
   dpotrf_(&uplo, &n, col.data(), &n, &info);
   if (info != 0) throw std::runtime_error("subsp::math::linalg::cholesky: matrix is not SPD");
@@ -472,9 +459,9 @@ inline Series lu_solve(const Series& b, const Series& lu) {
 inline QRResult qr(const Series& a, bool reduced = true) {
   detail::require_2d_(a, "subsp::math::linalg::qr");
 #if defined(__APPLE__)
-  const int m = static_cast<int>(a.sizes()[0]);
-  const int n = static_cast<int>(a.sizes()[1]);
-  const int k = std::min(m, n);
+  int m = static_cast<int>(a.sizes()[0]);
+  int n = static_cast<int>(a.sizes()[1]);
+  int k = std::min(m, n);
 
   auto row = detail::to_row_major_f64_(a);
   auto col = detail::row_to_col_major_(row, m, n);
@@ -490,7 +477,7 @@ inline QRResult qr(const Series& a, bool reduced = true) {
   dgeqrf_(&m, &n, col.data(), &m, tau.data(), work.data(), &lwork, &info);
   if (info != 0) throw std::runtime_error("subsp::math::linalg::qr: geqrf failed");
 
-  const int q_cols = reduced ? k : m;
+  int q_cols = reduced ? k : m;
   std::vector<double> qcol(static_cast<std::size_t>(m * q_cols), 0.0);
   for (int c = 0; c < q_cols; ++c) {
     for (int r = 0; r < m; ++r) {
@@ -507,7 +494,7 @@ inline QRResult qr(const Series& a, bool reduced = true) {
   dorgqr_(&m, &q_cols, &k, qcol.data(), &m, tau.data(), work.data(), &lwork, &info);
   if (info != 0) throw std::runtime_error("subsp::math::linalg::qr: orgqr failed");
 
-  const int r_rows = reduced ? k : m;
+  int r_rows = reduced ? k : m;
   std::vector<double> rrow(static_cast<std::size_t>(r_rows * n), 0.0);
   for (int r = 0; r < r_rows; ++r) {
     for (int c = r; c < n; ++c) {
@@ -525,17 +512,17 @@ inline QRResult qr(const Series& a, bool reduced = true) {
 inline SVDResult svd(const Series& a, bool full_matrices = true) {
   detail::require_2d_(a, "subsp::math::linalg::svd");
 #if defined(__APPLE__)
-  const int m = static_cast<int>(a.sizes()[0]);
-  const int n = static_cast<int>(a.sizes()[1]);
-  const int k = std::min(m, n);
-  const char job = full_matrices ? 'A' : 'S';
+  int m = static_cast<int>(a.sizes()[0]);
+  int n = static_cast<int>(a.sizes()[1]);
+  int k = std::min(m, n);
+  char job = full_matrices ? 'A' : 'S';
 
   auto row = detail::to_row_major_f64_(a);
   auto col = detail::row_to_col_major_(row, m, n);
 
   std::vector<double> s(static_cast<std::size_t>(k), 0.0);
-  const int u_cols = (job == 'A') ? m : k;
-  const int vt_rows = (job == 'A') ? n : k;
+  int u_cols = (job == 'A') ? m : k;
+  int vt_rows = (job == 'A') ? n : k;
   std::vector<double> ucol(static_cast<std::size_t>(m * u_cols), 0.0);
   std::vector<double> vtcol(static_cast<std::size_t>(n * vt_rows), 0.0);
   int info = 0;

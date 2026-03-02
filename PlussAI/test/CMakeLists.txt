@@ -1,5 +1,7 @@
 # AI module tests
 
+find_package(Catch2 3 QUIET)
+
 file(GLOB AI_TEST_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/*_test.cpp
 )
@@ -10,6 +12,11 @@ foreach(test_src ${AI_TEST_SOURCES})
     add_executable(${test_name} ${test_src})
 
     target_link_libraries(${test_name} PRIVATE pluss)
+    if(Catch2_FOUND)
+        target_link_libraries(${test_name} PRIVATE Catch2::Catch2WithMain)
+        target_compile_definitions(${test_name} PRIVATE PLUSS_AI_HAS_CATCH2=1)
+    endif()
+    target_compile_features(${test_name} PRIVATE cxx_std_20)
 
     target_include_directories(${test_name} PRIVATE
         ${PROJECT_SOURCE_DIR}/include
