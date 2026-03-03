@@ -363,6 +363,9 @@ public:
 
   DataFrame with_cases(const Thread& cases) const;
   DataFrame& with_cases_(const Thread& cases);
+  std::string title() const;
+  DataFrame title(std::string title) const;
+  DataFrame& title_(std::string title);
 
   bool has_column(std::string_view name) const;
   Thread column(std::string_view name) const;
@@ -690,7 +693,10 @@ std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
 class DataFrameView final : public DataFrame {
 public:
   DataFrameView();
-  explicit DataFrameView(DataFrame frame, bool auto_render_terminal = false);
+  explicit DataFrameView(DataFrame frame,
+                         bool auto_render_terminal = false,
+                         std::string operation = {},
+                         std::string source_title = {});
   DataFrameView(const DataFrameView& other);
   DataFrameView(DataFrameView&& other) noexcept;
   DataFrameView& operator=(const DataFrameView& other);
@@ -706,6 +712,7 @@ private:
 
   void consume_pending_display_() const;
   void maybe_autorender_() const;
+  std::string resolved_window_title_() const;
 
   friend std::ostream& operator<<(std::ostream& os, const DataFrameView& frame);
 };

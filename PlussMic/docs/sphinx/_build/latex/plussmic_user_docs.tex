@@ -64,7 +64,7 @@
 
 
 \title{PlussMic User Documentation}
-\date{Mar 01, 2026}
+\date{Mar 03, 2026}
 \release{}
 \author{PlussMa Contributors}
 \newcommand{\sphinxlogo}{\vbox{}}
@@ -166,6 +166,33 @@ use \sphinxcode{\sphinxupquote{Registry}} and \sphinxcode{\sphinxupquote{Aisle}}
 
 \PYG{n}{sales}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
 \end{sphinxVerbatim}
+
+
+\section{Terminal vs Popup Preview}
+\label{\detokenize{quickstart:terminal-vs-popup-preview}}
+\sphinxAtStartPar
+Table preview methods such as \sphinxcode{\sphinxupquote{head}}, \sphinxcode{\sphinxupquote{tail}}, \sphinxcode{\sphinxupquote{view}}, \sphinxcode{\sphinxupquote{describe}}, \sphinxcode{\sphinxupquote{aggregate}}, and \sphinxcode{\sphinxupquote{group\_by}}
+return a lightweight \sphinxcode{\sphinxupquote{DataFrameView}}.
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{          }\PYG{c+c1}{// terminal preview}
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{   }\PYG{c+c1}{// popup if GTK/WebKit is available, else terminal preview}
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{describe}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{preview}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{  }\PYG{c+c1}{// preview is a DataFrameView}
+\PYG{n}{preview}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{              }\PYG{c+c1}{// explicit popup/terminal fallback}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+If you need a plain \sphinxcode{\sphinxupquote{DataFrame}}, disable the deferred preview:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{table}\PYG{o}{:}\PYG{o}{:}\PYG{n}{DataFrame}\PYG{+w}{ }\PYG{n}{materialized}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{false}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+For the full popup viewer guide, OS support matrix, dependency setup, and \sphinxcode{\sphinxupquote{title(...)}} naming rules,
+see \sphinxcode{\sphinxupquote{dataframe\_display.md}}.
 
 
 \section{Typical DataFrame Workflow}
@@ -365,6 +392,40 @@ Notes:
 \end{itemize}
 
 
+\subsection{Display Views}
+\label{\detokenize{dataframe:display-views}}
+\sphinxAtStartPar
+The table\sphinxhyphen{}style preview verbs return a \sphinxcode{\sphinxupquote{DataFrameView}}, not a plain \sphinxcode{\sphinxupquote{DataFrame}}.
+That is what makes this pattern work:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{          }\PYG{c+c1}{// terminal preview}
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{   }\PYG{c+c1}{// popup if GTK/WebKit exists, else terminal preview}
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{view}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{20}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{describe}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+If you keep the result, the stored type is still the preview wrapper:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{preview}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}\PYG{p}{;}
+\PYG{n}{preview}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\PYG{n}{std}\PYG{o}{:}\PYG{o}{:}\PYG{n}{cout}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n}{preview}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+If you explicitly want a materialized \sphinxcode{\sphinxupquote{DataFrame}}, use \sphinxcode{\sphinxupquote{render=false}}:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{table}\PYG{o}{:}\PYG{o}{:}\PYG{n}{DataFrame}\PYG{+w}{ }\PYG{n}{head\PYGZus{}df}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{false}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+For OS support, popup backends, \sphinxcode{\sphinxupquote{DisplayOptions}}, and \sphinxcode{\sphinxupquote{title(...)}} / \sphinxcode{\sphinxupquote{title\_(...)}},
+see \sphinxcode{\sphinxupquote{dataframe\_display.md}}.
+
+
 \section{Cast And Derive Features}
 \label{\detokenize{dataframe:cast-and-derive-features}}
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
@@ -494,6 +555,727 @@ use \sphinxcode{\sphinxupquote{query("...")}} when the filter is easier to read 
 \PYG{n}{result}\PYG{p}{.}\PYG{n}{save\PYGZus{}excel}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{path/to/output.xlsx}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}
 \PYG{n}{result}\PYG{p}{.}\PYG{n}{save\PYGZus{}json}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{path/to/output.json}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}
 \end{sphinxVerbatim}
+
+\sphinxstepscope
+
+
+\chapter{DataFrame Display And Popup Viewer}
+\label{\detokenize{dataframe_display:dataframe-display-and-popup-viewer}}\label{\detokenize{dataframe_display::doc}}
+
+\section{Overview}
+\label{\detokenize{dataframe_display:overview}}
+\sphinxAtStartPar
+PlussMic supports two display paths for table\sphinxhyphen{}style inspection:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+terminal rendering
+
+\item {} 
+\sphinxAtStartPar
+popup rendering through \sphinxcode{\sphinxupquote{.show()}}
+
+\end{itemize}
+
+\sphinxAtStartPar
+The popup viewer is opt\sphinxhyphen{}in.
+Nothing opens automatically unless the user explicitly calls \sphinxcode{\sphinxupquote{.show()}}.
+
+
+\section{Which Methods Support \sphinxstyleliteralintitle{\sphinxupquote{.show()}}}
+\label{\detokenize{dataframe_display:which-methods-support-show}}
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{.show()}} is available on methods that return \sphinxcode{\sphinxupquote{pluss::table::DataFrameView}}.
+Those are the table\sphinxhyphen{}rendering methods.
+
+\sphinxAtStartPar
+Current examples include:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{head()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{tail()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{view()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{describe()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{transpose()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{aggregate()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{group\_by()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{pivot()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{pivot\_table()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{count\_by()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{mean\_by()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{tally()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{resample()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{sum()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{mean()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{min()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{max()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{std()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{var()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{count()}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{nunique()}}
+
+\end{itemize}
+
+\sphinxAtStartPar
+Examples:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{               }\PYG{c+c1}{// terminal preview}
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{        }\PYG{c+c1}{// popup if available, else terminal fallback}
+
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{describe}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{           }\PYG{c+c1}{// terminal preview}
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{describe}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{    }\PYG{c+c1}{// popup if available, else terminal fallback}
+
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{group\PYGZus{}by}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{city}\PYG{l+s}{\PYGZdq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{avg\PYGZus{}sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{table}\PYG{o}{:}\PYG{o}{:}\PYG{n}{DataFrame}\PYG{o}{:}\PYG{o}{:}\PYG{n}{GroupOp}\PYG{o}{:}\PYG{o}{:}\PYG{n}{Mean}\PYG{p}{\PYGZcb{}}\PYG{p}{\PYGZcb{}}\PYG{p}{)}
+\PYG{+w}{  }\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+If a method returns a plain \sphinxcode{\sphinxupquote{DataFrame}} instead of \sphinxcode{\sphinxupquote{DataFrameView}}, then it does not participate in this deferred popup\sphinxhyphen{}preview flow.
+
+
+\section{How The Display Policy Works}
+\label{\detokenize{dataframe_display:how-the-display-policy-works}}
+\sphinxAtStartPar
+The behavior is:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{          }\PYG{c+c1}{// prints in the terminal}
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{   }\PYG{c+c1}{// suppresses terminal auto\PYGZhy{}preview and requests popup instead}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+This works because \sphinxcode{\sphinxupquote{head()}}, \sphinxcode{\sphinxupquote{describe()}}, and the other preview verbs return a lightweight \sphinxcode{\sphinxupquote{DataFrameView}}.
+That wrapper delays the terminal render until the expression ends.
+If \sphinxcode{\sphinxupquote{.show()}} is called first, the pending terminal render is consumed and the popup path is used instead.
+
+
+\section{What \sphinxstyleliteralintitle{\sphinxupquote{.show()}} Takes}
+\label{\detokenize{dataframe_display:what-show-takes}}
+\sphinxAtStartPar
+The primary overload is:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{view}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+There is also an overload that accepts \sphinxcode{\sphinxupquote{DisplayOptions}}:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{table}\PYG{o}{:}\PYG{o}{:}\PYG{n}{display}\PYG{o}{:}\PYG{o}{:}\PYG{n}{DisplayOptions}\PYG{+w}{ }\PYG{n}{opts}\PYG{p}{;}
+\PYG{n}{view}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{n}{opts}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+There is also a stream\sphinxhyphen{}oriented overload:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{view}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{n}{std}\PYG{o}{:}\PYG{o}{:}\PYG{n}{cout}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{opts}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+In practice, the appropriate argument for \sphinxcode{\sphinxupquote{.show()}} is \sphinxcode{\sphinxupquote{DisplayOptions}}.
+
+
+\section{Useful \sphinxstyleliteralintitle{\sphinxupquote{DisplayOptions}}}
+\label{\detokenize{dataframe_display:useful-displayoptions}}
+\sphinxAtStartPar
+The most relevant display options for popup/table preview are:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{backend}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{viewer\_width}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{viewer\_height}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{window\_title}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{html\_sortable}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{html\_search}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{html\_copy\_button}}
+
+\end{itemize}
+
+\sphinxAtStartPar
+Example:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{table}\PYG{o}{:}\PYG{o}{:}\PYG{n}{display}\PYG{o}{:}\PYG{o}{:}\PYG{n}{DisplayOptions}\PYG{+w}{ }\PYG{n}{opts}\PYG{p}{;}
+\PYG{n}{opts}\PYG{p}{.}\PYG{n}{viewer\PYGZus{}width}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{1440}\PYG{p}{;}
+\PYG{n}{opts}\PYG{p}{.}\PYG{n}{viewer\PYGZus{}height}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{900}\PYG{p}{;}
+\PYG{n}{opts}\PYG{p}{.}\PYG{n}{html\PYGZus{}search}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{true}\PYG{p}{;}
+\PYG{n}{opts}\PYG{p}{.}\PYG{n}{html\PYGZus{}sortable}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{true}\PYG{p}{;}
+
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{describe}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{n}{opts}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+Notes:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{backend = DisplayBackend::Terminal}} forces terminal rendering
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{backend = DisplayBackend::GtkWebKit}} requests the GUI path when a GUI backend exists
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{window\_title}} is available, but for most users the better pattern is to name the frame with \sphinxcode{\sphinxupquote{title(...)}} or \sphinxcode{\sphinxupquote{title\_(...)}}
+
+\end{itemize}
+
+
+\section{DataFrame Titles}
+\label{\detokenize{dataframe_display:dataframe-titles}}
+\sphinxAtStartPar
+Frames can carry display metadata:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{prices}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{title}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{prices}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{n}{prices}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\PYG{n}{prices}\PYG{p}{.}\PYG{n}{describe}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+Or mutate in place:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{title\PYGZus{}}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{prices}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+Behavior:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+untitled frame: \sphinxcode{\sphinxupquote{DataFrame \sphinxhyphen{} head}}
+
+\item {} 
+\sphinxAtStartPar
+untitled frame: \sphinxcode{\sphinxupquote{DataFrame \sphinxhyphen{} describe}}
+
+\item {} 
+\sphinxAtStartPar
+titled frame: \sphinxcode{\sphinxupquote{prices \sphinxhyphen{} head}}
+
+\item {} 
+\sphinxAtStartPar
+titled frame: \sphinxcode{\sphinxupquote{prices \sphinxhyphen{} describe}}
+
+\end{itemize}
+
+\sphinxAtStartPar
+The title is replaceable metadata.
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{title\PYGZus{}}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{some title}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{title\PYGZus{}}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{some other title}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+Immutable behavior:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{prices}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{title}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{prices}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{   }\PYG{c+c1}{// df unchanged}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{other}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{prices}\PYG{p}{.}\PYG{n}{title}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{derived}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{ }\PYG{c+c1}{// prices unchanged}
+\end{sphinxVerbatim}
+
+
+\section{OS Support}
+\label{\detokenize{dataframe_display:os-support}}
+\sphinxAtStartPar
+Current popup support is:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+macOS: supported
+
+\item {} 
+\sphinxAtStartPar
+Linux: supported
+
+\item {} 
+\sphinxAtStartPar
+Windows: supported when WebView2 support is compiled in and the WebView2 Runtime is installed
+
+\end{itemize}
+
+\sphinxAtStartPar
+If the popup backend is unavailable, \sphinxcode{\sphinxupquote{.show()}} falls back to the normal terminal rendering path.
+
+
+\section{macOS Backend}
+\label{\detokenize{dataframe_display:macos-backend}}
+\sphinxAtStartPar
+On macOS, the popup viewer uses native Apple frameworks:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{Cocoa}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{WebKit}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{QuartzCore}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{UniformTypeIdentifiers}}
+
+\end{itemize}
+
+\sphinxAtStartPar
+That means the current macOS popup path does not depend on Conda GUI packages.
+It uses OS\sphinxhyphen{}provided frameworks.
+
+\sphinxAtStartPar
+Practical consequence:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+a Conda environment is fine for the compiler/toolchain
+
+\item {} 
+\sphinxAtStartPar
+the popup viewer itself is not coming from Conda on macOS
+
+\end{itemize}
+
+
+\section{Linux Backend}
+\label{\detokenize{dataframe_display:linux-backend}}
+\sphinxAtStartPar
+On Linux, the popup viewer uses:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{gtk+\sphinxhyphen{}3.0}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{webkit2gtk\sphinxhyphen{}4.1}}
+
+\item {} 
+\sphinxAtStartPar
+fallback to \sphinxcode{\sphinxupquote{webkit2gtk\sphinxhyphen{}4.0}}
+
+\end{itemize}
+
+\sphinxAtStartPar
+Those are discovered through \sphinxcode{\sphinxupquote{pkg\sphinxhyphen{}config}}.
+
+\sphinxAtStartPar
+Typical system packages:
+
+\sphinxAtStartPar
+Ubuntu:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+sudo\PYG{+w}{ }apt\PYG{+w}{ }install\PYG{+w}{ }pkg\PYGZhy{}config\PYG{+w}{ }libgtk\PYGZhy{}3\PYGZhy{}dev\PYG{+w}{ }libwebkit2gtk\PYGZhy{}4.1\PYGZhy{}dev
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+Fedora:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+sudo\PYG{+w}{ }dnf\PYG{+w}{ }install\PYG{+w}{ }pkgconf\PYGZhy{}pkg\PYGZhy{}config\PYG{+w}{ }gtk3\PYGZhy{}devel\PYG{+w}{ }webkit2gtk4.1\PYGZhy{}devel
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+Linux Conda environments can often provide the GTK/WebKit pieces, but the most reliable path is still the system packages plus \sphinxcode{\sphinxupquote{pkg\sphinxhyphen{}config}}.
+
+
+\section{Windows Status}
+\label{\detokenize{dataframe_display:windows-status}}
+\sphinxAtStartPar
+On Windows, the popup viewer uses:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+native Win32 windowing
+
+\item {} 
+\sphinxAtStartPar
+Microsoft Edge WebView2 for the embedded HTML table
+
+\end{itemize}
+
+\sphinxAtStartPar
+That means the host window is native Windows UI, and the table itself is still rendered from the same HTML/CSS/JavaScript payload used on the other platforms.
+
+\sphinxAtStartPar
+There are two separate Windows requirements:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+build\sphinxhyphen{}time requirement: the WebView2 SDK headers and loader library must be available when compiling PlussMic from source
+
+\item {} 
+\sphinxAtStartPar
+runtime requirement: the Microsoft Edge WebView2 Runtime must be installed on the target machine
+
+\end{itemize}
+
+\sphinxAtStartPar
+If either one is missing, \sphinxcode{\sphinxupquote{.show()}} falls back to terminal rendering.
+
+
+\section{Windows Build Setup}
+\label{\detokenize{dataframe_display:windows-build-setup}}
+\sphinxAtStartPar
+The Windows viewer backend is enabled when CMake can find the WebView2 SDK.
+
+\sphinxAtStartPar
+PlussMic looks for:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+cache variable: \sphinxcode{\sphinxupquote{PLUSSMIC\_WEBVIEW2\_SDK\_DIR}}
+
+\item {} 
+\sphinxAtStartPar
+environment variable: \sphinxcode{\sphinxupquote{WEBVIEW2\_SDK\_DIR}}
+
+\item {} 
+\sphinxAtStartPar
+common NuGet cache location under the user profile
+
+\end{itemize}
+
+\sphinxAtStartPar
+Typical configure command:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+cmake\PYG{+w}{ }\PYGZhy{}S\PYG{+w}{ }.\PYG{+w}{ }\PYGZhy{}B\PYG{+w}{ }build\PYG{+w}{ }\PYGZca{}
+\PYG{+w}{  }\PYGZhy{}DPLUSSMIC\PYGZus{}WEBVIEW2\PYGZus{}SDK\PYGZus{}DIR\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}C:/path/to/Microsoft.Web.WebView2.\PYGZlt{}version\PYGZgt{}\PYGZdq{}}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+If you want to disable Windows popup support explicitly:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+cmake\PYG{+w}{ }\PYGZhy{}S\PYG{+w}{ }.\PYG{+w}{ }\PYGZhy{}B\PYG{+w}{ }build\PYG{+w}{ }\PYGZhy{}DPLUSSMIC\PYGZus{}ENABLE\PYGZus{}WINDOWS\PYGZus{}WEBVIEW2\PYG{o}{=}OFF
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+What the SDK directory should contain:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{build/native/include/WebView2.h}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{build/native/x64/WebView2LoaderStatic.lib}}
+or the equivalent \sphinxcode{\sphinxupquote{x86}} / \sphinxcode{\sphinxupquote{arm64}} loader library for the target architecture
+
+\end{itemize}
+
+
+\section{Windows Runtime Setup}
+\label{\detokenize{dataframe_display:windows-runtime-setup}}
+\sphinxAtStartPar
+Even if PlussMic builds with WebView2 support, the target machine still needs the WebView2 Runtime.
+
+\sphinxAtStartPar
+That runtime is often already present on modern Windows systems, but it should still be treated as a requirement for popup viewing.
+
+\sphinxAtStartPar
+If the runtime is missing:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{.show()}} does not crash
+
+\item {} 
+\sphinxAtStartPar
+it simply falls back to terminal rendering
+
+\end{itemize}
+
+
+\section{Conda On Windows}
+\label{\detokenize{dataframe_display:conda-on-windows}}
+\sphinxAtStartPar
+Conda is not the source of the Windows popup backend.
+
+\sphinxAtStartPar
+On Windows:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+your Conda environment can still provide the compiler toolchain and normal build environment
+
+\item {} 
+\sphinxAtStartPar
+the popup viewer itself comes from Windows + WebView2
+
+\item {} 
+\sphinxAtStartPar
+users should not expect a Conda package to supply the full native popup stack
+
+\end{itemize}
+
+\sphinxAtStartPar
+So the practical rule is:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+Conda can help with building
+
+\item {} 
+\sphinxAtStartPar
+WebView2 SDK and Runtime are the Windows viewer requirements
+
+\end{itemize}
+
+
+\section{Are The Popup Windows Native}
+\label{\detokenize{dataframe_display:are-the-popup-windows-native}}
+\sphinxAtStartPar
+Partly.
+
+\sphinxAtStartPar
+The host window is native to the platform backend:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+macOS: native Cocoa window
+
+\item {} 
+\sphinxAtStartPar
+Linux: GTK window
+
+\item {} 
+\sphinxAtStartPar
+Windows: native Win32 window with embedded WebView2
+
+\end{itemize}
+
+\sphinxAtStartPar
+The table content itself is rendered as HTML/CSS/JavaScript inside the embedded web view.
+
+\sphinxAtStartPar
+So the actual behavior is:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+window chrome feels native to the OS/toolkit
+
+\item {} 
+\sphinxAtStartPar
+table content stays visually consistent across platforms because it is HTML\sphinxhyphen{}driven
+
+\end{itemize}
+
+
+\section{Conda Notes}
+\label{\detokenize{dataframe_display:conda-notes}}
+\sphinxAtStartPar
+Conda support differs by platform.
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+macOS:
+no GTK/WebKitGTK package is needed for the current implementation
+
+\item {} 
+\sphinxAtStartPar
+Linux:
+Conda may provide the needed GTK/WebKit packages, but system packages are usually simpler and more reliable
+
+\item {} 
+\sphinxAtStartPar
+Windows:
+Conda does not provide the native viewer stack; use WebView2 SDK + Runtime
+
+\end{itemize}
+
+
+\section{Recommended User Guidance}
+\label{\detokenize{dataframe_display:recommended-user-guidance}}
+\sphinxAtStartPar
+The simplest explanation for users is:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{          }\PYG{c+c1}{// terminal}
+\PYG{n}{df}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{   }\PYG{c+c1}{// popup if supported, else terminal}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+If they want better popup titles:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{prices}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{title}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{prices}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{n}{prices}\PYG{p}{.}\PYG{n}{head}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{      }\PYG{c+c1}{// prices \PYGZhy{} head}
+\PYG{n}{prices}\PYG{p}{.}\PYG{n}{describe}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{show}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}\PYG{+w}{  }\PYG{c+c1}{// prices \PYGZhy{} describe}
+\end{sphinxVerbatim}
+
+
+\section{Demo}
+\label{\detokenize{dataframe_display:demo}}
+\sphinxAtStartPar
+See:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{PlussMic/examples/table/display\_policy\_demo.cpp}}
+
+\end{itemize}
+
+\sphinxAtStartPar
+That demo shows:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+terminal preview
+
+\item {} 
+\sphinxAtStartPar
+popup preview with \sphinxcode{\sphinxupquote{.show()}}
+
+\item {} 
+\sphinxAtStartPar
+explicit frame titles with \sphinxcode{\sphinxupquote{title("prices")}}
+
+\end{itemize}
+
+
+\section{External Setup References}
+\label{\detokenize{dataframe_display:external-setup-references}}
+\sphinxAtStartPar
+Official references that are useful when setting up popup support:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+WebView2 overview and installation:
+https://learn.microsoft.com/en\sphinxhyphen{}us/microsoft\sphinxhyphen{}edge/webview2/
+
+\item {} 
+\sphinxAtStartPar
+WebView2 Runtime distribution:
+https://developer.microsoft.com/en\sphinxhyphen{}us/microsoft\sphinxhyphen{}edge/webview2/
+
+\item {} 
+\sphinxAtStartPar
+WebView2 SDK package:
+https://www.nuget.org/packages/Microsoft.Web.WebView2
+
+\item {} 
+\sphinxAtStartPar
+Conda GTK3 package:
+https://anaconda.org/conda\sphinxhyphen{}forge/gtk3
+
+\item {} 
+\sphinxAtStartPar
+Conda WebKitGTK package:
+https://anaconda.org/conda\sphinxhyphen{}forge/webkit2gtk4.1
+
+\item {} 
+\sphinxAtStartPar
+Ubuntu \sphinxcode{\sphinxupquote{libwebkit2gtk\sphinxhyphen{}4.1\sphinxhyphen{}dev}}:
+https://packages.ubuntu.com/noble/libwebkit2gtk\sphinxhyphen{}4.1\sphinxhyphen{}dev
+
+\item {} 
+\sphinxAtStartPar
+Ubuntu \sphinxcode{\sphinxupquote{libgtk\sphinxhyphen{}3\sphinxhyphen{}dev}}:
+https://packages.ubuntu.com/noble/libgtk\sphinxhyphen{}3\sphinxhyphen{}dev
+
+\item {} 
+\sphinxAtStartPar
+Fedora \sphinxcode{\sphinxupquote{webkit2gtk4.1\sphinxhyphen{}devel}}:
+https://packages.fedoraproject.org/pkgs/webkitgtk/webkit2gtk4.1\sphinxhyphen{}devel
+
+\item {} 
+\sphinxAtStartPar
+Fedora \sphinxcode{\sphinxupquote{gtk3\sphinxhyphen{}devel}}:
+https://packages.fedoraproject.org/pkgs/gtk3/gtk3\sphinxhyphen{}devel
+
+\end{itemize}
 
 \sphinxstepscope
 
@@ -17735,6 +18517,30 @@ Materializes the current members as a collection you can inspect or reuse elsewh
 \sphinxAtStartPar
 This page documents the public plotting accessor returned by \sphinxcode{\sphinxupquote{DataFrame::plot()}} and \sphinxcode{\sphinxupquote{Atlas::plot()}}.
 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{DataFrame::plot()}} is intended to be a smart front end over \sphinxcode{\sphinxupquote{PlussPl}}, not a raw vector escape hatch.
+When \sphinxcode{\sphinxupquote{x\_feature}} is omitted, plots now use the DataFrame case axis automatically.
+If that axis is note\sphinxhyphen{}like or time\sphinxhyphen{}like, the accessor delegates a labeled categorical axis to \sphinxcode{\sphinxupquote{PlussPl}}.
+Figures also inherit stronger \sphinxcode{\sphinxupquote{PlussPl}} defaults, including the \sphinxcode{\sphinxupquote{paper}} theme, \sphinxcode{\sphinxupquote{IBM Plex Sans}}, and outside legends for multi\sphinxhyphen{}series line plots.
+
+\sphinxAtStartPar
+The accessor also exposes richer verbs directly over the same delegation model:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}step}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{step}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}area}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{area}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{forecast}\PYG{l+s}{\PYGZdq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}area\PYGZus{}stacked}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{area\PYGZus{}stacked}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{forecast}\PYG{l+s}{\PYGZdq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}bar}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{bar}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{forecast}\PYG{l+s}{\PYGZdq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}stacked}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{bar\PYGZus{}stacked}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{forecast}\PYG{l+s}{\PYGZdq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}box}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{box}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}hue}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{scatter}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{ret}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{vol}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{desk}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}heatmap}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{heatmap}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{forecast}\PYG{l+s}{\PYGZdq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}corr}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{corr\PYGZus{}heatmap}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{forecast}\PYG{l+s}{\PYGZdq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}matrix}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{scatter\PYGZus{}matrix}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}auto}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{auto\PYGZus{}plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig\PYGZus{}pivot}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n}{heatmap}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{maturity}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{delta\PYGZus{}bucket}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{implied\PYGZus{}vol}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}
+\end{sphinxVerbatim}
+
 
 \subsection{\sphinxstyleliteralintitle{\sphinxupquote{bar}}}
 \label{\detokenize{dataframe_plot_api_reference:bar}}
@@ -17768,6 +18574,7 @@ Value produced by this call.
 \label{\detokenize{dataframe_plot_api_reference:notes}}
 \sphinxAtStartPar
 Builds a bar chart from one feature, optionally using another feature as the x\sphinxhyphen{}axis.
+If \sphinxcode{\sphinxupquote{x\_feature}} is omitted, the DataFrame case axis is used.
 
 
 \subsubsection{Examples}
@@ -17778,9 +18585,10 @@ Builds a bar chart from one feature, optionally using another feature as the x\s
 \PYG{+w}{    }\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{table}\PYG{o}{:}\PYG{o}{:}\PYG{n}{Thread}\PYG{p}{(}\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{make\PYGZus{}series}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+m+mf}{100.0}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{120.0}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{90.0}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{)}\PYG{p}{\PYGZcb{}}\PYG{p}{,}
 \PYG{+w}{    }\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{city}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{table}\PYG{o}{:}\PYG{o}{:}\PYG{n}{Thread}\PYG{p}{(}\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{make\PYGZus{}note}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{Accra}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{Tema}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{Kumasi}\PYG{l+s}{\PYGZdq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{)}\PYG{p}{\PYGZcb{}}\PYG{p}{,}
 \PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
-\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{plot}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{indexed}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{set\PYGZus{}cases}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{city}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{false}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{plot}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{indexed}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
 
-\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{plot}\PYG{p}{.}\PYG{n}{bar}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{std}\PYG{o}{:}\PYG{o}{:}\PYG{n}{nullopt}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{plot}\PYG{p}{.}\PYG{n}{bar}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}\PYG{p}{;}
 \end{sphinxVerbatim}
 
 
@@ -17878,6 +18686,7 @@ Value produced by this call.
 \label{\detokenize{dataframe_plot_api_reference:id10}}
 \sphinxAtStartPar
 Builds a line chart for one or more y\sphinxhyphen{}features, optionally against a chosen x\sphinxhyphen{}feature.
+If \sphinxcode{\sphinxupquote{x\_feature}} is omitted, the DataFrame case axis is used and multi\sphinxhyphen{}series plots get an outside legend by default.
 
 
 \subsubsection{See also}
@@ -17897,7 +18706,8 @@ Builds a line chart for one or more y\sphinxhyphen{}features, optionally against
 \PYG{+w}{    }\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{table}\PYG{o}{:}\PYG{o}{:}\PYG{n}{Thread}\PYG{p}{(}\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{make\PYGZus{}series}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+m+mf}{100.0}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{120.0}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{90.0}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{)}\PYG{p}{\PYGZcb{}}\PYG{p}{,}
 \PYG{+w}{    }\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{city}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{table}\PYG{o}{:}\PYG{o}{:}\PYG{n}{Thread}\PYG{p}{(}\PYG{n}{pluss}\PYG{o}{:}\PYG{o}{:}\PYG{n}{make\PYGZus{}note}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{Accra}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{Tema}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{Kumasi}\PYG{l+s}{\PYGZdq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{)}\PYG{p}{\PYGZcb{}}\PYG{p}{,}
 \PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
-\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{plot}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{indexed}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{df}\PYG{p}{.}\PYG{n}{set\PYGZus{}cases}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{city}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{false}\PYG{p}{)}\PYG{p}{;}
+\PYG{k}{auto}\PYG{+w}{ }\PYG{n}{plot}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{indexed}\PYG{p}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
 
 \PYG{k}{auto}\PYG{+w}{ }\PYG{n}{fig}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{plot}\PYG{p}{.}\PYG{n}{line}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{sales}\PYG{l+s}{\PYGZdq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{std}\PYG{o}{:}\PYG{o}{:}\PYG{n}{nullopt}\PYG{p}{)}\PYG{p}{;}
 \end{sphinxVerbatim}
@@ -17942,6 +18752,7 @@ Value produced by this call.
 \label{\detokenize{dataframe_plot_api_reference:id17}}
 \sphinxAtStartPar
 Builds a line chart for one or more y\sphinxhyphen{}features, optionally against a chosen x\sphinxhyphen{}feature.
+If \sphinxcode{\sphinxupquote{x\_feature}} is omitted, the DataFrame case axis is used.
 
 
 \subsubsection{See also}
@@ -18006,6 +18817,7 @@ Value produced by this call.
 \label{\detokenize{dataframe_plot_api_reference:id24}}
 \sphinxAtStartPar
 Builds a scatter plot using one feature for x and another for y.
+If the selected x feature is note\sphinxhyphen{}like or time\sphinxhyphen{}like, the accessor delegates labeled positions to \sphinxcode{\sphinxupquote{PlussPl}} automatically.
 
 
 \subsubsection{Examples}

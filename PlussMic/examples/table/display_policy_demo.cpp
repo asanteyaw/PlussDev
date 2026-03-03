@@ -36,6 +36,12 @@ int main() {
   df.head(8).show();
   df.describe().show();
 
+  std::cout << "\n=== Explicit DataFrame titles ===\n";
+  auto prices = df.title("prices");
+  std::cout << "Untitled views use 'DataFrame - <op>'; titled views use '<title> - <op>'.\n";
+  prices.head(8).show();
+  prices.describe().show();
+
   std::cout << "\n=== Stored preview object ===\n";
   auto preview = df.view(4, 12);
   preview.show();

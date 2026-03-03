@@ -296,6 +296,7 @@ void test_html_display_renderers_and_backend_config() {
   });
 
   pluss::table::display::DisplayOptions opts;
+  opts.window_title = "prices - describe";
 
   const auto html = pluss::table::display::render_html(df, opts);
   expect(html.find("<table id=\"plussmic-table\"") != std::string::npos, "html display should render a table");
@@ -303,11 +304,17 @@ void test_html_display_renderers_and_backend_config() {
   expect(html.find("Copy visible") != std::string::npos, "html display should include copy control");
   expect(html.find("sortable") != std::string::npos, "html display should mark sortable headers");
   expect(html.find("Edmonton") != std::string::npos, "html display should include cell values");
+  expect(html.find("prices - describe") != std::string::npos,
+         "html display should surface the resolved view title in the document");
+  expect(html.find("PlussMic DataFrame") == std::string::npos,
+         "html display should not keep the old hard-coded header title");
 
   const auto info_html = pluss::table::display::render_info_html(df, opts);
   expect(info_html.find("Feature inventory") != std::string::npos, "info html should include feature inventory");
   expect(info_html.find("Null Case Rows") != std::string::npos, "info html should include summary cards");
   expect(info_html.find("pluss::table::DataFrame") != std::string::npos, "info html should include class name");
+  expect(info_html.find("prices - describe") != std::string::npos,
+         "info html should honor the resolved display title");
 
   expect(pluss::table::display::default_backend() == pluss::table::display::DisplayBackend::Auto,
          "display backend should default to smart auto mode");
@@ -446,6 +453,31 @@ void test_render_then_stream_suppression_once() {
   std::ostringstream os_normal;
   os_normal << df.head(2, false);
   expect(!os_normal.str().empty(), "head(render=false) should stream normally");
+}
+
+void test_dataframe_titles_mutable_and_immutable() {
+  const auto path = write_temp_csv(
+      "titles",
+      "x,y\n"
+      "1,10\n"
+      "2,20\n"
+      "3,30\n");
+  const auto df = DataFrame::load_csv(path.string());
+
+  expect(df.title().empty(), "untitled DataFrame should start with an empty title");
+
+  const auto prices = df.title("prices");
+  expect(df.title().empty(), "immutable title() should not mutate the source frame");
+  expect(prices.title() == "prices", "immutable title() should stamp the returned frame");
+
+  auto mutable_prices = prices;
+  mutable_prices.title_("features");
+  expect(prices.title() == "prices", "title_() should not mutate sibling copies");
+  expect(mutable_prices.title() == "features", "title_() should overwrite the current frame title");
+
+  const auto renamed = mutable_prices.title("derived");
+  expect(mutable_prices.title() == "features", "immutable title() should preserve the current frame");
+  expect(renamed.title() == "derived", "immutable title() should support chaining from a titled frame");
 }
 
 void test_simple_load_config_api_and_auto_sep() {
@@ -2014,6 +2046,7 @@ int main() {
       {"describe_numeric_summary", test_describe_numeric_summary},
       {"view_windowing", test_view_windowing},
       {"render_then_stream_suppression_once", test_render_then_stream_suppression_once},
+      {"dataframe_titles_mutable_and_immutable", test_dataframe_titles_mutable_and_immutable},
       {"simple_load_config_api_and_auto_sep", test_simple_load_config_api_and_auto_sep},
       {"first_class_loader_entrypoints", test_first_class_loader_entrypoints},
       {"col_names_none_and_save_as_csv", test_col_names_none_and_save_as_csv},

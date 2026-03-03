@@ -34,7 +34,7 @@ DataFrame DataFrame::summarize(std::initializer_list<SummarySpec> specs, bool re
 }
 
 DataFrameView DataFrame::aggregate(std::initializer_list<SummarySpec> specs, bool render) const {
-  return DataFrameView(summarize(specs, false), render);
+  return DataFrameView(summarize(specs, false), render, "aggregate", title());
 }
 
 DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
@@ -270,7 +270,7 @@ DataFrameView DataFrame::group_by(std::initializer_list<std::string_view> keys,
                                   std::initializer_list<GroupSpec> specs,
                                   bool dropna_keys,
                                   bool render) const {
-  return DataFrameView(group(keys, specs, dropna_keys, false), render);
+  return DataFrameView(group(keys, specs, dropna_keys, false), render, "group_by", title());
 }
 
 DataFrameView DataFrame::pivot(std::string_view case_feature,
@@ -287,7 +287,8 @@ DataFrameView DataFrame::pivot(std::string_view case_feature,
   const bool has_duplicate = std::any_of(counts.begin(), counts.end(), [](std::int64_t v) { return v > 1; });
   PLUSS_CHECK(!has_duplicate,
               "DataFrame::pivot: duplicate case/feature pairs found; use pivot_table with an aggregation op");
-  return pivot_table(case_feature, feature_feature, value_feature, GroupOp::Max, dropna_keys, render);
+  auto out = pivot_table(case_feature, feature_feature, value_feature, GroupOp::Max, dropna_keys, false);
+  return DataFrameView(static_cast<DataFrame>(out), render, "pivot", title());
 }
 
 DataFrameView DataFrame::pivot_table(std::string_view case_feature,
@@ -431,7 +432,7 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
   }
 
   auto out = DataFrame(std::move(out_cols), make_note_thread(case_labels));
-  return DataFrameView(std::move(out), render);
+  return DataFrameView(std::move(out), render, "pivot_table", title());
 }
 
 DataFrame DataFrame::combine(const DataFrame& other) const {
@@ -557,7 +558,7 @@ DataFrameView DataFrame::count_by(std::string_view feature_name,
       {owned_name(feature_name), make_note_thread(keys)},
       {"count", make_i64_thread(vals)},
   });
-  return DataFrameView(std::move(out), render);
+  return DataFrameView(std::move(out), render, "count_by", title());
 }
 
 DataFrameView DataFrame::mean_by(std::string_view group_feature_name,
@@ -627,5 +628,5 @@ DataFrameView DataFrame::mean_by(std::string_view group_feature_name,
       {fmt::format("mean_{}", value_feature_name), make_f64_thread(out_means)},
       {"count", make_i64_thread(out_counts)},
   });
-  return DataFrameView(std::move(out), render);
+  return DataFrameView(std::move(out), render, "mean_by", title());
 }

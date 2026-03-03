@@ -88,13 +88,13 @@ std::vector<std::size_t> resolve_resample_value_indices_(
 DataFrameView DataFrame::head(std::int64_t n, bool render) const {
   const auto clipped = std::clamp<std::int64_t>(n, 0, nrows());
   auto out = slice(0, clipped);
-  return DataFrameView(std::move(out), render);
+  return DataFrameView(std::move(out), render, "head", title());
 }
 
 DataFrameView DataFrame::tail(std::int64_t n, bool render) const {
   const auto clipped = std::clamp<std::int64_t>(n, 0, nrows());
   auto out = slice(nrows() - clipped, nrows());
-  return DataFrameView(std::move(out), render);
+  return DataFrameView(std::move(out), render, "tail", title());
 }
 
 DataFrame DataFrame::sample(std::int64_t n, std::optional<std::uint64_t> random_state) const {
@@ -412,5 +412,5 @@ DataFrameView DataFrame::resample(std::string_view time_feature,
   auto bins = ti.resample_bins(freq_key, step);
   auto out = DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       std::move(out_names), std::move(out_cols), Thread(bins.labels)));
-  return DataFrameView(std::move(out), render);
+  return DataFrameView(std::move(out), render, "resample", title());
 }

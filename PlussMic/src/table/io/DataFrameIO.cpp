@@ -15,6 +15,8 @@ namespace pluss::table {
 struct DataFrameView::State {
   bool auto_render_terminal{false};
   mutable bool consumed{false};
+  std::string operation{};
+  std::string source_title{};
 };
 
 std::string DataFrame::to_string(const display::DisplayOptions& options) const {
@@ -26,7 +28,11 @@ std::string DataFrame::info_string(const display::DisplayOptions& options) const
 }
 
 void DataFrame::show(const display::DisplayOptions& options) const {
-  display::show(*this, options);
+  auto effective = options;
+  if (effective.window_title.empty()) {
+    effective.window_title = title().empty() ? "DataFrame" : title();
+  }
+  display::show(*this, effective);
 }
 
 void DataFrame::show(std::ostream& os, const display::DisplayOptions& options) const {
@@ -43,9 +49,17 @@ void DataFrame::info(std::ostream& os, const display::DisplayOptions& options) c
 
 DataFrameView::DataFrameView() : DataFrame(), state_(std::make_shared<State>()) {}
 
-DataFrameView::DataFrameView(DataFrame frame, bool auto_render_terminal)
+DataFrameView::DataFrameView(DataFrame frame,
+                             bool auto_render_terminal,
+                             std::string operation,
+                             std::string source_title)
     : DataFrame(std::move(frame)), state_(std::make_shared<State>()) {
   state_->auto_render_terminal = auto_render_terminal;
+  state_->operation = std::move(operation);
+  state_->source_title = std::move(source_title);
+  if (state_->source_title.empty()) {
+    state_->source_title = DataFrame::title();
+  }
 }
 
 DataFrameView::DataFrameView(const DataFrameView& other) : DataFrame(other), state_(other.state_) {}
@@ -91,12 +105,28 @@ void DataFrameView::maybe_autorender_() const {
 
 void DataFrameView::show(const display::DisplayOptions& options) const {
   consume_pending_display_();
-  DataFrame::show(options);
+  auto effective = options;
+  if (effective.window_title.empty()) {
+    effective.window_title = resolved_window_title_();
+  }
+  DataFrame::show(effective);
 }
 
 void DataFrameView::show(std::ostream& os, const display::DisplayOptions& options) const {
   consume_pending_display_();
-  DataFrame::show(os, options);
+  auto effective = options;
+  if (effective.window_title.empty()) {
+    effective.window_title = resolved_window_title_();
+  }
+  DataFrame::show(os, effective);
+}
+
+std::string DataFrameView::resolved_window_title_() const {
+  const auto base = (!state_ || state_->source_title.empty()) ? std::string("DataFrame") : state_->source_title;
+  if (!state_ || state_->operation.empty()) {
+    return base;
+  }
+  return base + " - " + state_->operation;
 }
 
 void DataFrame::save_csv(std::string_view filepath) const {

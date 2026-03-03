@@ -56,6 +56,9 @@ If you need a plain `DataFrame`, disable the deferred preview:
 pluss::table::DataFrame materialized = df.head(10, false);
 ```
 
+For the full popup viewer guide, OS support matrix, dependency setup, and `title(...)` naming rules,
+see `dataframe_display.md`.
+
 ## Typical DataFrame Workflow
 
 ```cpp

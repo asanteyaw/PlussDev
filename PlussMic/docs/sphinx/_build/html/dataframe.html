@@ -16,7 +16,7 @@
     <script src="_static/layout.js?v=15cb0ccd"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="DataFrame API Reference" href="dataframe_api_reference.html" />
+    <link rel="next" title="DataFrame Display And Popup Viewer" href="dataframe_display.html" />
     <link rel="prev" title="Demo Catalog" href="demo_catalog.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -95,6 +95,29 @@ Use it when you want:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">cases()</span></code> is the row axis, not just a display index</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">describe()</span></code> is the fastest way to check whether numeric casts and missing values look right</p></li>
 </ul>
+<section id="display-views">
+<h3>Display Views<a class="headerlink" href="#display-views" title="Link to this heading">¶</a></h3>
+<p>The table-style preview verbs return a <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>, not a plain <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.
+That is what makes this pattern work:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">();</span><span class="w">          </span><span class="c1">// terminal preview</span>
+<span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">().</span><span class="n">show</span><span class="p">();</span><span class="w">   </span><span class="c1">// popup if GTK/WebKit exists, else terminal preview</span>
+<span class="n">df</span><span class="p">.</span><span class="n">view</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">).</span><span class="n">show</span><span class="p">();</span>
+<span class="n">df</span><span class="p">.</span><span class="n">describe</span><span class="p">().</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>If you keep the result, the stored type is still the preview wrapper:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">preview</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+<span class="n">preview</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">preview</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>If you explicitly want a materialized <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, use <code class="docutils literal notranslate"><span class="pre">render=false</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">head_df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>For OS support, popup backends, <code class="docutils literal notranslate"><span class="pre">DisplayOptions</span></code>, and <code class="docutils literal notranslate"><span class="pre">title(...)</span></code> / <code class="docutils literal notranslate"><span class="pre">title_(...)</span></code>,
+see <code class="docutils literal notranslate"><span class="pre">dataframe_display.md</span></code>.</p>
+</section>
 </section>
 <section id="cast-and-derive-features">
 <h2>Cast And Derive Features<a class="headerlink" href="#cast-and-derive-features" title="Link to this heading">¶</a></h2>
@@ -253,6 +276,7 @@ Use it when you want:</p>
 <li class="toctree-l2"><a class="reference internal" href="#sql-and-io">SQL And IO</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>
@@ -292,7 +316,7 @@ Use it when you want:</p>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="demo_catalog.html" title="previous chapter">Demo Catalog</a></li>
-      <li>Next: <a href="dataframe_api_reference.html" title="next chapter">DataFrame API Reference</a></li>
+      <li>Next: <a href="dataframe_display.html" title="next chapter">DataFrame Display And Popup Viewer</a></li>
   </ul></li>
 </ul>
 </div>

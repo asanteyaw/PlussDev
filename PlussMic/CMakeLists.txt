@@ -6,6 +6,8 @@ option(PLUSSMIC_ENABLE_GTK_VIEWER "Enable GTK3/WebKit DataFrame viewer when depe
 add_library(PlussMic STATIC)
 
 set(PLUSSMIC_HAVE_GTK_WEBKIT_VALUE 0)
+set(PLUSSMIC_HAVE_MAC_WEBKIT_VALUE 0)
+set(PLUSSMIC_HAVE_WIN_WEBVIEW2_VALUE 0)
 
 target_include_directories(PlussMic PUBLIC
     ${PROJECT_SOURCE_DIR}
@@ -69,6 +71,65 @@ if(PLUSSMIC_ENABLE_GTK_VIEWER AND PkgConfig_FOUND)
 endif()
 
 target_compile_definitions(PlussMic PUBLIC PLUSSMIC_HAVE_GTK_WEBKIT=${PLUSSMIC_HAVE_GTK_WEBKIT_VALUE})
+if(APPLE)
+    enable_language(OBJCXX)
+    set(PLUSSMIC_HAVE_MAC_WEBKIT_VALUE 1)
+    target_link_libraries(PlussMic PRIVATE
+        "-framework Cocoa"
+        "-framework UniformTypeIdentifiers"
+        "-framework WebKit"
+        "-framework QuartzCore"
+    )
+endif()
+target_compile_definitions(PlussMic PUBLIC PLUSSMIC_HAVE_MAC_WEBKIT=${PLUSSMIC_HAVE_MAC_WEBKIT_VALUE})
+
+if(WIN32)
+    option(PLUSSMIC_ENABLE_WINDOWS_WEBVIEW2 "Enable WebView2 DataFrame viewer on Windows when the SDK is available" ON)
+    set(PLUSSMIC_WEBVIEW2_SDK_DIR "" CACHE PATH "Path to the Microsoft.Web.WebView2 SDK root")
+
+    if(PLUSSMIC_ENABLE_WINDOWS_WEBVIEW2)
+        set(PLUSSMIC_WEBVIEW2_HINTS ${PLUSSMIC_WEBVIEW2_SDK_DIR})
+        if(DEFINED ENV{WEBVIEW2_SDK_DIR} AND NOT "$ENV{WEBVIEW2_SDK_DIR}" STREQUAL "")
+            list(APPEND PLUSSMIC_WEBVIEW2_HINTS "$ENV{WEBVIEW2_SDK_DIR}")
+        endif()
+
+        if(DEFINED ENV{USERPROFILE} AND NOT "$ENV{USERPROFILE}" STREQUAL "")
+            file(GLOB PLUSSMIC_WEBVIEW2_NUGET_DIRS
+                 "$ENV{USERPROFILE}/.nuget/packages/microsoft.web.webview2/*")
+            list(REVERSE PLUSSMIC_WEBVIEW2_NUGET_DIRS)
+            list(APPEND PLUSSMIC_WEBVIEW2_HINTS ${PLUSSMIC_WEBVIEW2_NUGET_DIRS})
+        endif()
+
+        find_path(PLUSSMIC_WEBVIEW2_INCLUDE_DIR
+                  NAMES WebView2.h
+                  HINTS ${PLUSSMIC_WEBVIEW2_HINTS}
+                  PATH_SUFFIXES build/native/include include)
+
+        set(PLUSSMIC_WEBVIEW2_ARCH_HINTS x64)
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "^[Aa][Rr][Mm]64$")
+            set(PLUSSMIC_WEBVIEW2_ARCH_HINTS arm64 x64)
+        elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+            set(PLUSSMIC_WEBVIEW2_ARCH_HINTS x86)
+        endif()
+
+        unset(PLUSSMIC_WEBVIEW2_LOADER CACHE)
+        foreach(PLUSSMIC_WEBVIEW2_ARCH IN LISTS PLUSSMIC_WEBVIEW2_ARCH_HINTS)
+            if(NOT PLUSSMIC_WEBVIEW2_LOADER)
+                find_library(PLUSSMIC_WEBVIEW2_LOADER
+                             NAMES WebView2LoaderStatic WebView2Loader
+                             HINTS ${PLUSSMIC_WEBVIEW2_HINTS}
+                             PATH_SUFFIXES build/native/${PLUSSMIC_WEBVIEW2_ARCH} ${PLUSSMIC_WEBVIEW2_ARCH} lib)
+            endif()
+        endforeach()
+
+        if(PLUSSMIC_WEBVIEW2_INCLUDE_DIR AND PLUSSMIC_WEBVIEW2_LOADER)
+            set(PLUSSMIC_HAVE_WIN_WEBVIEW2_VALUE 1)
+            target_include_directories(PlussMic SYSTEM PRIVATE ${PLUSSMIC_WEBVIEW2_INCLUDE_DIR})
+            target_link_libraries(PlussMic PRIVATE ${PLUSSMIC_WEBVIEW2_LOADER} ole32 comdlg32 shlwapi)
+        endif()
+    endif()
+endif()
+target_compile_definitions(PlussMic PUBLIC PLUSSMIC_HAVE_WIN_WEBVIEW2=${PLUSSMIC_HAVE_WIN_WEBVIEW2_VALUE})
 
 target_sources(PlussMic PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/converters.cpp

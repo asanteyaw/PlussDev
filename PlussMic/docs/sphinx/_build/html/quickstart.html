@@ -73,6 +73,25 @@
 </pre></div>
 </div>
 </section>
+<section id="terminal-vs-popup-preview">
+<h2>Terminal vs Popup Preview<a class="headerlink" href="#terminal-vs-popup-preview" title="Link to this heading">¶</a></h2>
+<p>Table preview methods such as <code class="docutils literal notranslate"><span class="pre">head</span></code>, <code class="docutils literal notranslate"><span class="pre">tail</span></code>, <code class="docutils literal notranslate"><span class="pre">view</span></code>, <code class="docutils literal notranslate"><span class="pre">describe</span></code>, <code class="docutils literal notranslate"><span class="pre">aggregate</span></code>, and <code class="docutils literal notranslate"><span class="pre">group_by</span></code>
+return a lightweight <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">();</span><span class="w">          </span><span class="c1">// terminal preview</span>
+<span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">().</span><span class="n">show</span><span class="p">();</span><span class="w">   </span><span class="c1">// popup if GTK/WebKit is available, else terminal preview</span>
+<span class="n">df</span><span class="p">.</span><span class="n">describe</span><span class="p">().</span><span class="n">show</span><span class="p">();</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">preview</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="w">  </span><span class="c1">// preview is a DataFrameView</span>
+<span class="n">preview</span><span class="p">.</span><span class="n">show</span><span class="p">();</span><span class="w">              </span><span class="c1">// explicit popup/terminal fallback</span>
+</pre></div>
+</div>
+<p>If you need a plain <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, disable the deferred preview:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="w"> </span><span class="n">materialized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>For the full popup viewer guide, OS support matrix, dependency setup, and <code class="docutils literal notranslate"><span class="pre">title(...)</span></code> naming rules,
+see <code class="docutils literal notranslate"><span class="pre">dataframe_display.md</span></code>.</p>
+</section>
 <section id="typical-dataframe-workflow">
 <h2>Typical DataFrame Workflow<a class="headerlink" href="#typical-dataframe-workflow" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">accidents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_csv</span><span class="p">(</span>
@@ -141,6 +160,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#include-paths">Include Paths</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#load-a-table-fast">Load A Table Fast</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#start-with-a-small-in-memory-frame">Start With A Small In-Memory Frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#terminal-vs-popup-preview">Terminal vs Popup Preview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#typical-dataframe-workflow">Typical DataFrame Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#convert-between-models">Convert Between Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#save-results">Save Results</a></li>
@@ -148,6 +168,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>

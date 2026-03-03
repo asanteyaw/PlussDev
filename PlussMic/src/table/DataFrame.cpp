@@ -38,7 +38,8 @@ class DataFrameImpl final : public pluss::msharp::RefCounted {
 public:
   DataFrameImpl(std::vector<std::string> names,
                 std::vector<Thread> columns,
-                std::optional<Thread> cases = std::nullopt);
+                std::optional<Thread> cases = std::nullopt,
+                std::string title = {});
   void validate_and_reindex_();
 
   std::vector<std::string> names_;
@@ -46,6 +47,7 @@ public:
   std::unordered_map<std::string, std::size_t> name_to_idx_;
   std::int64_t nrows_{0};
   Thread cases_{};
+  std::string title_{};
   mutable bool suppress_next_stream_{false};
 };
 
@@ -1438,8 +1440,9 @@ std::int64_t normalize_view_stop(std::int64_t stop, std::int64_t nrows) {
 
 detail::DataFrameImpl::DataFrameImpl(std::vector<std::string> names,
                                      std::vector<Thread> columns,
-                                     std::optional<Thread> cases)
-    : names_(std::move(names)), columns_(std::move(columns)) {
+                                     std::optional<Thread> cases,
+                                     std::string title)
+    : names_(std::move(names)), columns_(std::move(columns)), title_(std::move(title)) {
   if (cases.has_value()) {
     cases_ = *cases;
   }
@@ -1490,7 +1493,7 @@ void detail::DataFrameImpl::validate_and_reindex_() {
 namespace {
 
 pluss::msharp::intrusive_ptr<detail::DataFrameImpl> clone_impl(const detail::DataFrameImpl& src) {
-  return pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, src.columns_, src.cases_);
+  return pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, src.columns_, src.cases_, src.title_);
 }
 
 } // namespace

@@ -38,6 +38,7 @@
 #include "table/Atlas.h"
 #include "table/DataFrame.h"
 #include "table/Thread.h"
+#include "table/display/PlatformHtmlViewer.h"
 
 namespace pluss::table::display {
 
@@ -682,13 +683,17 @@ std::string logical_dtype_name(const Thread& t) {
 bool compiled_with_gui_backend_() {
 #if defined(PLUSSMIC_HAVE_GTK_WEBKIT) && PLUSSMIC_HAVE_GTK_WEBKIT
   return true;
+#elif defined(PLUSSMIC_HAVE_WIN_WEBVIEW2) && PLUSSMIC_HAVE_WIN_WEBVIEW2
+  return true;
+#elif defined(PLUSSMIC_HAVE_MAC_WEBKIT) && PLUSSMIC_HAVE_MAC_WEBKIT
+  return true;
 #else
   return false;
 #endif
 }
 
 bool runtime_gui_env_available_() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(__APPLE__)
   return true;
 #else
   return std::getenv("DISPLAY") != nullptr || std::getenv("WAYLAND_DISPLAY") != nullptr;
@@ -736,10 +741,14 @@ std::string escape_html_(std::string_view text) {
   return out;
 }
 
-std::string window_title_(std::string_view fallback, const DisplayOptions& options) {
+std::string document_title_(std::string_view fallback, const DisplayOptions& options) {
   if (!options.window_title.empty()) {
     return options.window_title;
   }
+  return std::string(fallback);
+}
+
+std::string native_window_title_(std::string_view fallback) {
   return std::string(fallback);
 }
 
@@ -1217,7 +1226,7 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
   }
 
   body += "</tbody></table></div>";
-  return html_shell_("PlussMic DataFrame Info",
+  return html_shell_(document_title_("DataFrame Info", options),
                      fmt::format("{} cases, {} features", frame.nrows(), frame.ncols()),
                      body,
                      options);
@@ -1237,7 +1246,7 @@ bool show_html_window_(const std::string& html, const DisplayOptions& options, s
   }
 
   GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(window), window_title_(title, options).c_str());
+  gtk_window_set_title(GTK_WINDOW(window), native_window_title_(title).c_str());
   gtk_window_set_default_size(GTK_WINDOW(window),
                               static_cast<int>(std::max<std::int64_t>(640, options.viewer_width)),
                               static_cast<int>(std::max<std::int64_t>(420, options.viewer_height)));
@@ -1322,6 +1331,22 @@ bool show_html_window_(const std::string& html, const DisplayOptions& options, s
   gtk_widget_show_all(window);
   gtk_main();
   return true;
+#elif defined(PLUSSMIC_HAVE_MAC_WEBKIT) && PLUSSMIC_HAVE_MAC_WEBKIT
+  if (!detail::mac_html_viewer_available()) {
+    return false;
+  }
+  return detail::show_macos_html_window(native_window_title_(title),
+                                        html,
+                                        std::max<std::int64_t>(640, options.viewer_width),
+                                        std::max<std::int64_t>(420, options.viewer_height));
+#elif defined(PLUSSMIC_HAVE_WIN_WEBVIEW2) && PLUSSMIC_HAVE_WIN_WEBVIEW2
+  if (!detail::windows_html_viewer_available()) {
+    return false;
+  }
+  return detail::show_windows_html_window(native_window_title_(title),
+                                          html,
+                                          std::max<std::int64_t>(640, options.viewer_width),
+                                          std::max<std::int64_t>(420, options.viewer_height));
 #else
   (void)html;
   (void)options;
@@ -1420,10 +1445,11 @@ std::string render(const Thread& thread, const DisplayOptions& options) {
 }
 
 std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
-  return render_html_table_(frame,
-                            "PlussMic DataFrame",
-                            fmt::format("{} cases, {} features", frame.nrows(), frame.ncols()),
-                            options);
+  return render_html_table_(
+      frame,
+      document_title_("DataFrame", options),
+      fmt::format("{} cases, {} features", frame.nrows(), frame.ncols()),
+      options);
 }
 
 std::string render_html(const Thread& thread, const DisplayOptions& options) {
@@ -1562,7 +1588,7 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
 void show(const DataFrame& frame, const DisplayOptions& options) {
   if (resolve_backend_(options) == DisplayBackend::GtkWebKit) {
     const auto html = render_html(frame, options);
-    if (show_html_window_(html, options, "PlussMic DataFrame")) {
+    if (show_html_window_(html, options, "Pluss DataFrame")) {
       return;
     }
   }
@@ -1593,7 +1619,7 @@ void show(const Atlas& atlas, const DisplayOptions& options) {
 void show_info(const DataFrame& frame, const DisplayOptions& options) {
   if (resolve_backend_(options) == DisplayBackend::GtkWebKit) {
     const auto html = render_info_html(frame, options);
-    if (show_html_window_(html, options, "PlussMic DataFrame Info")) {
+    if (show_html_window_(html, options, "Pluss DataFrame")) {
       return;
     }
   }

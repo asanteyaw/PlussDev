@@ -138,7 +138,7 @@ DataFrameView DataFrame::transpose(bool render) const {
 
   Thread out_cases(note_from_strings(feature_names()));
   auto out = DataFrame(std::move(out_cols), std::move(out_cases));
-  return DataFrameView(std::move(out), render);
+  return DataFrameView(std::move(out), render, "transpose", title());
 }
 
 } // namespace pluss::table

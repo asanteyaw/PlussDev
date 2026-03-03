@@ -84,6 +84,9 @@ If you explicitly want a materialized `DataFrame`, use `render=false`:
 pluss::table::DataFrame head_df = df.head(5, false);
 ```
 
+For OS support, popup backends, `DisplayOptions`, and `title(...)` / `title_(...)`,
+see `dataframe_display.md`.
+
 ## Cast And Derive Features
 
 ```cpp

@@ -111,6 +111,24 @@ DataFrame& DataFrame::with_cases_(const Thread& case_idx) {
   return *this;
 }
 
+std::string DataFrame::title() const {
+  if (!defined()) {
+    return {};
+  }
+  return impl_ref_().title_;
+}
+
+DataFrame DataFrame::title(std::string title) const {
+  auto out = *this;
+  out.title_(std::move(title));
+  return out;
+}
+
+DataFrame& DataFrame::title_(std::string title) {
+  mut_impl_().title_ = std::move(title);
+  return *this;
+}
+
 bool DataFrame::has_column(std::string_view name) const {
   const auto& src = impl_ref_();
   return src.name_to_idx_.find(owned_name(name)) != src.name_to_idx_.end();

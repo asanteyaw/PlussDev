@@ -185,7 +185,7 @@ DataFrameView DataFrame::sum(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::sum: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render);
+  return DataFrameView(summarize_specs(specs, false), render, "sum", title());
 }
 
 DataFrameView DataFrame::mean(bool render) const {
@@ -199,7 +199,7 @@ DataFrameView DataFrame::mean(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::mean: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render);
+  return DataFrameView(summarize_specs(specs, false), render, "mean", title());
 }
 
 DataFrameView DataFrame::min(bool render) const {
@@ -213,7 +213,7 @@ DataFrameView DataFrame::min(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::min: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render);
+  return DataFrameView(summarize_specs(specs, false), render, "min", title());
 }
 
 DataFrameView DataFrame::max(bool render) const {
@@ -227,7 +227,7 @@ DataFrameView DataFrame::max(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::max: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render);
+  return DataFrameView(summarize_specs(specs, false), render, "max", title());
 }
 
 DataFrameView DataFrame::std(bool render) const {
@@ -241,7 +241,7 @@ DataFrameView DataFrame::std(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::std: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render);
+  return DataFrameView(summarize_specs(specs, false), render, "std", title());
 }
 
 DataFrameView DataFrame::var(bool render) const {
@@ -255,7 +255,7 @@ DataFrameView DataFrame::var(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::var: no numeric features");
-  return DataFrameView(summarize_specs(specs, false), render);
+  return DataFrameView(summarize_specs(specs, false), render, "var", title());
 }
 
 DataFrameView DataFrame::count(bool render) const {
@@ -266,7 +266,7 @@ DataFrameView DataFrame::count(bool render) const {
     specs.push_back(SummarySpec{name, name, SummaryOp::Count});
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::count: no features");
-  return DataFrameView(summarize_specs(specs, false), render);
+  return DataFrameView(summarize_specs(specs, false), render, "count", title());
 }
 
 DataFrameView DataFrame::nunique(bool render) const {
@@ -277,7 +277,7 @@ DataFrameView DataFrame::nunique(bool render) const {
     specs.push_back(SummarySpec{name, name, SummaryOp::Nunique});
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::nunique: no features");
-  return DataFrameView(summarize_specs(specs, false), render);
+  return DataFrameView(summarize_specs(specs, false), render, "nunique", title());
 }
 
 DataFrame DataFrame::missing(const MissingSpec& spec) const {
@@ -832,14 +832,15 @@ DataFrameView DataFrame::describe(bool render) const {
   auto out = DataFrame(
       std::move(out_cols),
       make_note_thread({"count", "mean", "std", "min", "25%", "50%", "75%", "max"}));
-  return DataFrameView(std::move(out), render);
+  return DataFrameView(std::move(out), render, "describe", title());
 }
 
 DataFrameView DataFrame::tally(std::string_view feature_name,
                                std::int64_t top_n,
                                bool dropna,
                                bool render) const {
-  return count_by(feature_name, top_n, dropna, render);
+  auto out = count_by(feature_name, top_n, dropna, false);
+  return DataFrameView(static_cast<DataFrame>(out), render, "tally", title());
 }
 
 DataFrameView DataFrame::view(std::int64_t start, std::int64_t stop, bool render) const {
@@ -859,7 +860,7 @@ DataFrameView DataFrame::view(std::int64_t start, std::int64_t stop, bool render
     out = after_start.head(e - s, false);
   }
 
-  return DataFrameView(std::move(out), render);
+  return DataFrameView(std::move(out), render, "view", title());
 }
 
 DataFrame DataFrame::copy() const {

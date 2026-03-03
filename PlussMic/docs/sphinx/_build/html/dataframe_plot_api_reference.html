@@ -43,6 +43,25 @@
 <section id="api-reference-style">
 <h2>API Reference Style<a class="headerlink" href="#api-reference-style" title="Link to this heading">¶</a></h2>
 <p>This page documents the public plotting accessor returned by <code class="docutils literal notranslate"><span class="pre">DataFrame::plot()</span></code> and <code class="docutils literal notranslate"><span class="pre">Atlas::plot()</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame::plot()</span></code> is intended to be a smart front end over <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>, not a raw vector escape hatch.
+When <code class="docutils literal notranslate"><span class="pre">x_feature</span></code> is omitted, plots now use the DataFrame case axis automatically.
+If that axis is note-like or time-like, the accessor delegates a labeled categorical axis to <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>.
+Figures also inherit stronger <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code> defaults, including the <code class="docutils literal notranslate"><span class="pre">paper</span></code> theme, <code class="docutils literal notranslate"><span class="pre">IBM</span> <span class="pre">Plex</span> <span class="pre">Sans</span></code>, and outside legends for multi-series line plots.</p>
+<p>The accessor also exposes richer verbs directly over the same delegation model:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">fig_step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">step</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig_area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">area</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;forecast&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig_area_stacked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">area_stacked</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;forecast&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig_bar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">bar</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;forecast&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig_stacked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">bar_stacked</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;forecast&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig_box</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">box</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig_hue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;ret&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;vol&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;desk&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig_heatmap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">heatmap</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;forecast&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig_corr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">corr_heatmap</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;forecast&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig_matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">scatter_matrix</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig_auto</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig_pivot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">heatmap</span><span class="p">(</span><span class="s">&quot;maturity&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;delta_bucket&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;implied_vol&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
 <section id="bar">
 <h3><code class="docutils literal notranslate"><span class="pre">bar</span></code><a class="headerlink" href="#bar" title="Link to this heading">¶</a></h3>
 <section id="signature">
@@ -65,7 +84,8 @@ Value produced by this call.</p>
 </section>
 <section id="notes">
 <h4>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h4>
-<p>Builds a bar chart from one feature, optionally using another feature as the x-axis.</p>
+<p>Builds a bar chart from one feature, optionally using another feature as the x-axis.
+If <code class="docutils literal notranslate"><span class="pre">x_feature</span></code> is omitted, the DataFrame case axis is used.</p>
 </section>
 <section id="examples">
 <h4>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h4>
@@ -74,9 +94,10 @@ Value produced by this call.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">plot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">plot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">plot</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plot</span><span class="p">.</span><span class="n">bar</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plot</span><span class="p">.</span><span class="n">bar</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -153,7 +174,8 @@ Value produced by this call.</p>
 </section>
 <section id="id10">
 <h4>Notes<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h4>
-<p>Builds a line chart for one or more y-features, optionally against a chosen x-feature.</p>
+<p>Builds a line chart for one or more y-features, optionally against a chosen x-feature.
+If <code class="docutils literal notranslate"><span class="pre">x_feature</span></code> is omitted, the DataFrame case axis is used and multi-series plots get an outside legend by default.</p>
 </section>
 <section id="see-also">
 <h4>See also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h4>
@@ -168,7 +190,8 @@ Value produced by this call.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">plot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">set_cases</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">plot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">plot</span><span class="p">();</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plot</span><span class="p">.</span><span class="n">line</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">);</span>
 </pre></div>
@@ -203,7 +226,8 @@ Value produced by this call.</p>
 </section>
 <section id="id17">
 <h4>Notes<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h4>
-<p>Builds a line chart for one or more y-features, optionally against a chosen x-feature.</p>
+<p>Builds a line chart for one or more y-features, optionally against a chosen x-feature.
+If <code class="docutils literal notranslate"><span class="pre">x_feature</span></code> is omitted, the DataFrame case axis is used.</p>
 </section>
 <section id="id18">
 <h4>See also<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h4>
@@ -253,7 +277,8 @@ Value produced by this call.</p>
 </section>
 <section id="id24">
 <h4>Notes<a class="headerlink" href="#id24" title="Link to this heading">¶</a></h4>
-<p>Builds a scatter plot using one feature for x and another for y.</p>
+<p>Builds a scatter plot using one feature for x and another for y.
+If the selected x feature is note-like or time-like, the accessor delegates labeled positions to <code class="docutils literal notranslate"><span class="pre">PlussPl</span></code> automatically.</p>
 </section>
 <section id="id25">
 <h4>Examples<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h4>
@@ -308,6 +333,7 @@ Value produced by this call.</p>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html">DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="column_ref_api_reference.html">ColumnRef API Reference</a></li>
