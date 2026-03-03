@@ -36,6 +36,26 @@ auto sales = pluss::table::DataFrame({
 sales.head();
 ```
 
+## Terminal vs Popup Preview
+
+Table preview methods such as `head`, `tail`, `view`, `describe`, `aggregate`, and `group_by`
+return a lightweight `DataFrameView`.
+
+```cpp
+df.head();          // terminal preview
+df.head().show();   // popup if GTK/WebKit is available, else terminal preview
+df.describe().show();
+
+auto preview = df.head(10);  // preview is a DataFrameView
+preview.show();              // explicit popup/terminal fallback
+```
+
+If you need a plain `DataFrame`, disable the deferred preview:
+
+```cpp
+pluss::table::DataFrame materialized = df.head(10, false);
+```
+
 ## Typical DataFrame Workflow
 
 ```cpp

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+<rect x="0" y="0" width="1200" height="800" fill="#f4efe6" fill-opacity="1"/>
+<text x="600" y="28" text-anchor="middle" font-size="22" font-family="IBM Plex Sans" fill="#1f1a17" fill-opacity="1" font-weight="600">Monthly sales step plot</text>
+<rect x="20" y="72" width="1160" height="708" rx="12" fill="#fffdf8" fill-opacity="1"/>
+<rect x="20" y="72" width="1160" height="708" rx="12" fill="none" stroke="#ddd2c3" stroke-opacity="1" stroke-width="1"/>
+<rect x="92" y="96" width="1070" height="630" fill="#fffaf2" fill-opacity="1"/>
+<rect x="92" y="96" width="1070" height="630" fill="none" stroke="#eee4d8" stroke-opacity="1" stroke-width="1"/>
+<text x="600" y="766" text-anchor="middle" font-size="12" font-family="IBM Plex Sans" fill="#3e352d" fill-opacity="1">case</text>
+<text x="38" y="426" text-anchor="middle" font-size="12" font-family="IBM Plex Sans" fill="#3e352d" fill-opacity="1" transform="rotate(-90 38 426)">sales</text>
+<line x1="92" y1="726" x2="1162" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="726" x2="92" y2="726" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="729.5" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">120</text>
+<line x1="92" y1="602.471" x2="1162" y2="602.471" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="602.471" x2="92" y2="602.471" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="605.971" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">130</text>
+<line x1="92" y1="478.941" x2="1162" y2="478.941" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="478.941" x2="92" y2="478.941" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="482.441" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">140</text>
+<line x1="92" y1="355.412" x2="1162" y2="355.412" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="355.412" x2="92" y2="355.412" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="358.912" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">150</text>
+<line x1="92" y1="231.882" x2="1162" y2="231.882" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="231.882" x2="92" y2="231.882" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="235.382" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">160</text>
+<line x1="92" y1="108.353" x2="1162" y2="108.353" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="108.353" x2="92" y2="108.353" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="111.853" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">170</text>
+<line x1="181.167" y1="96" x2="181.167" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="181.167" y1="726" x2="181.167" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="181.167" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">Jan</text>
+<line x1="359.5" y1="96" x2="359.5" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="359.5" y1="726" x2="359.5" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="359.5" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">Feb</text>
+<line x1="537.833" y1="96" x2="537.833" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="537.833" y1="726" x2="537.833" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="537.833" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">Mar</text>
+<line x1="716.167" y1="96" x2="716.167" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="716.167" y1="726" x2="716.167" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="716.167" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">Apr</text>
+<line x1="894.5" y1="96" x2="894.5" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="894.5" y1="726" x2="894.5" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="894.5" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">May</text>
+<line x1="1072.83" y1="96" x2="1072.83" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="1072.83" y1="726" x2="1072.83" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1072.83" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">Jun</text>
+<line x1="92" y1="726" x2="1162" y2="726" stroke="#2f2924" stroke-opacity="1" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="92" y1="96" x2="92" y2="726" stroke="#2f2924" stroke-opacity="1" stroke-width="1.2" stroke-linecap="round"/>
+<polyline fill="none" stroke="#0f766e" stroke-opacity="1" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="181.167,726 359.5,726 359.5,540.706 537.833,540.706 537.833,627.176 716.167,627.176 716.167,355.412 894.5,355.412 894.5,207.176 1072.83,207.176 1072.83,96 "/>
+</svg>

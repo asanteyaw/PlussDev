@@ -5,6 +5,7 @@
 #include <functional>
 #include <initializer_list>
 #include <iosfwd>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -37,6 +38,7 @@ namespace detail {
 class DataFrameImpl;
 }
 class DataFrame;
+class DataFrameView;
 class DataFramePlotAccessor;
 class DataFrameSqlAccessor;
 class DataFrameSqlPrepared;
@@ -436,8 +438,8 @@ public:
                       std::initializer_list<std::string_view> right_features = {},
                       std::string right_suffix = "_right") const;
 
-  DataFrame head(std::int64_t n = 5, bool render = true) const;
-  DataFrame tail(std::int64_t n = 5, bool render = true) const;
+  DataFrameView head(std::int64_t n = 5, bool render = true) const;
+  DataFrameView tail(std::int64_t n = 5, bool render = true) const;
   DataFrame sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;
   DataFrame slice(std::int64_t start, std::int64_t stop) const;
   DataFrame take(std::span<const std::int64_t> indices) const;
@@ -464,42 +466,42 @@ public:
                       std::string_view unit) const;
   DataFrame round_time(std::initializer_list<std::string_view> features,
                        std::string_view unit) const;
-  DataFrame resample(std::string_view time_feature,
-                     std::initializer_list<std::string_view> value_features,
-                     std::string_view freq,
-                     std::string_view op = "mean",
-                     std::int64_t step = 1,
-                     bool render = true) const;
-  DataFrame aggregate(std::initializer_list<SummarySpec> specs, bool render = true) const;
-  DataFrame group_by(std::initializer_list<std::string_view> keys,
-                     std::initializer_list<GroupSpec> specs,
-                     bool dropna_keys = true,
-                     bool render = true) const;
-  DataFrame pivot(std::string_view case_feature,
-                  std::string_view feature_feature,
-                  std::string_view value_feature,
-                  bool dropna_keys = true,
-                  bool render = true) const;
-  DataFrame pivot_table(std::string_view case_feature,
-                        std::string_view feature_feature,
-                        std::string_view value_feature,
-                        GroupOp op = GroupOp::Mean,
-                        bool dropna_keys = true,
-                        bool render = true) const;
+  DataFrameView resample(std::string_view time_feature,
+                         std::initializer_list<std::string_view> value_features,
+                         std::string_view freq,
+                         std::string_view op = "mean",
+                         std::int64_t step = 1,
+                         bool render = true) const;
+  DataFrameView aggregate(std::initializer_list<SummarySpec> specs, bool render = true) const;
+  DataFrameView group_by(std::initializer_list<std::string_view> keys,
+                         std::initializer_list<GroupSpec> specs,
+                         bool dropna_keys = true,
+                         bool render = true) const;
+  DataFrameView pivot(std::string_view case_feature,
+                      std::string_view feature_feature,
+                      std::string_view value_feature,
+                      bool dropna_keys = true,
+                      bool render = true) const;
+  DataFrameView pivot_table(std::string_view case_feature,
+                            std::string_view feature_feature,
+                            std::string_view value_feature,
+                            GroupOp op = GroupOp::Mean,
+                            bool dropna_keys = true,
+                            bool render = true) const;
   DataFrame combine(const DataFrame& other) const;
   DataFrame combine(const DataFrame& other, const CombineSpec& spec) const;
   Atlas unsqueeze() const;
   Atlas unsqueeze(const Thread& depth_labels) const;
-  DataFrame count_by(std::string_view feature,
-                     std::int64_t top_n = 0,
-                     bool dropna = true,
-                     bool render = true) const;
-  DataFrame mean_by(std::string_view group_feature,
-                    std::string_view value_feature,
-                    std::int64_t top_n = 0,
-                    std::int64_t min_count = 1,
-                    bool dropna_group = true,
-                    bool render = true) const;
+  DataFrameView count_by(std::string_view feature,
+                         std::int64_t top_n = 0,
+                         bool dropna = true,
+                         bool render = true) const;
+  DataFrameView mean_by(std::string_view group_feature,
+                        std::string_view value_feature,
+                        std::int64_t top_n = 0,
+                        std::int64_t min_count = 1,
+                        bool dropna_group = true,
+                        bool render = true) const;
   DataFrame add(double other) const;
   DataFrame add(const DataFrame& other) const;
   DataFrame sub(double other) const;
@@ -544,14 +546,14 @@ public:
   DataFrame ge(const DataFrame& other) const;
   DataFrame compare(double other) const;
   DataFrame compare(const DataFrame& other) const;
-  DataFrame sum(bool render = true) const;
-  DataFrame mean(bool render = true) const;
-  DataFrame min(bool render = true) const;
-  DataFrame max(bool render = true) const;
-  DataFrame std(bool render = true) const;
-  DataFrame var(bool render = true) const;
-  DataFrame count(bool render = true) const;
-  DataFrame nunique(bool render = true) const;
+  DataFrameView sum(bool render = true) const;
+  DataFrameView mean(bool render = true) const;
+  DataFrameView min(bool render = true) const;
+  DataFrameView max(bool render = true) const;
+  DataFrameView std(bool render = true) const;
+  DataFrameView var(bool render = true) const;
+  DataFrameView count(bool render = true) const;
+  DataFrameView nunique(bool render = true) const;
   DataFrame isna(std::initializer_list<std::string_view> features = {}) const;
   DataFrame isnull(std::initializer_list<std::string_view> features = {}) const;
   DataFrame notna(std::initializer_list<std::string_view> features = {}) const;
@@ -590,18 +592,20 @@ public:
   DataFrame ffill() const;
   DataFrame bfill() const;
   std::int64_t count_null_rows() const;
-  DataFrame describe(bool render = true) const;
-  DataFrame transpose(bool render = false) const;
-  DataFrame tally(std::string_view feature,
-                  std::int64_t top_n = 0,
-                  bool dropna = true,
-                  bool render = true) const;
-  DataFrame view(std::int64_t start, std::int64_t stop, bool render = true) const;
+  DataFrameView describe(bool render = true) const;
+  DataFrameView transpose(bool render = false) const;
+  DataFrameView tally(std::string_view feature,
+                      std::int64_t top_n = 0,
+                      bool dropna = true,
+                      bool render = true) const;
+  DataFrameView view(std::int64_t start, std::int64_t stop, bool render = true) const;
   DataFrame copy() const;
   bool equals(const DataFrame& other) const;
 
   std::string to_string(const display::DisplayOptions& options = {}) const;
   std::string info_string(const display::DisplayOptions& options = {}) const;
+  void show(const display::DisplayOptions& options = {}) const;
+  void show(std::ostream& os, const display::DisplayOptions& options = {}) const;
   void info(const display::DisplayOptions& options = {}) const;
   void info(std::ostream& os, const display::DisplayOptions& options = {}) const;
   void save_csv(std::string_view filepath) const;
@@ -682,6 +686,31 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
+
+class DataFrameView final : public DataFrame {
+public:
+  DataFrameView();
+  explicit DataFrameView(DataFrame frame, bool auto_render_terminal = false);
+  DataFrameView(const DataFrameView& other);
+  DataFrameView(DataFrameView&& other) noexcept;
+  DataFrameView& operator=(const DataFrameView& other);
+  DataFrameView& operator=(DataFrameView&& other) noexcept;
+  ~DataFrameView();
+
+  void show(const display::DisplayOptions& options = {}) const;
+  void show(std::ostream& os, const display::DisplayOptions& options = {}) const;
+
+private:
+  struct State;
+  std::shared_ptr<State> state_{};
+
+  void consume_pending_display_() const;
+  void maybe_autorender_() const;
+
+  friend std::ostream& operator<<(std::ostream& os, const DataFrameView& frame);
+};
+
+std::ostream& operator<<(std::ostream& os, const DataFrameView& frame);
 
 } // namespace pluss::table
 

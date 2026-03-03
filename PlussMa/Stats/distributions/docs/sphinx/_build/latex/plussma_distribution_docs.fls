@@ -1322,12 +1322,12 @@ INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam7
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam5.tfm
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm7.tfm
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm5.tfm
-OUTPUT plussma_distribution_docs.toc
 INPUT /usr/local/texlive/2022/texmf-dist/tex/latex/txfonts/t1txtt.fd
 INPUT /usr/local/texlive/2022/texmf-dist/tex/latex/txfonts/t1txtt.fd
 INPUT /usr/local/texlive/2022/texmf-dist/tex/latex/txfonts/t1txtt.fd
 INPUT /usr/local/texlive/2022/texmf-dist/tex/latex/txfonts/t1txtt.fd
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/txfonts/t1xtt.tfm
+OUTPUT plussma_distribution_docs.toc
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/txfonts/t1xtt.tfm
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/txfonts/t1xttsl.tfm
 INPUT /usr/local/texlive/2022/texmf-dist/tex/latex/tex-gyre/ts1qtm.fd
@@ -1336,10 +1336,10 @@ INPUT /usr/local/texlive/2022/texmf-dist/tex/latex/tex-gyre/ts1qtm.fd
 INPUT /usr/local/texlive/2022/texmf-dist/tex/latex/tex-gyre/ts1qtm.fd
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/tex-gyre/ts1-qtmr.tfm
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/txfonts/t1xbtt.tfm
-INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/tex-gyre/ec-qtmr.tfm
+INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/txfonts/t1xbtt.tfm
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/tex-gyre/ec-qtmr.tfm
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/tex-gyre/ec-qhvr.tfm
-INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/txfonts/t1xbtt.tfm
+INPUT /usr/local/texlive/2022/texmf-dist/fonts/tfm/public/tex-gyre/ec-qtmr.tfm
 INPUT ./plussma_distribution_docs.ind
 INPUT plussma_distribution_docs.ind
 INPUT ./plussma_distribution_docs.ind
@@ -1349,6 +1349,8 @@ INPUT ./plussma_distribution_docs.out
 INPUT ./plussma_distribution_docs.out
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/tex-gyre/q-ts1.enc
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/tex-gyre/q-ec.enc
+INPUT /usr/local/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb
+INPUT /usr/local/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/type1/public/tex-gyre/qhvb.pfb
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/type1/public/tex-gyre/qtmb.pfb
 INPUT /usr/local/texlive/2022/texmf-dist/fonts/type1/public/tex-gyre/qtmr.pfb

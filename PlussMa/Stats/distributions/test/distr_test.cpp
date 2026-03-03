@@ -165,12 +165,18 @@ int main() {
   expect(sample("vonmises", {0.0, 2.0}, {5}, f64, 19ULL).numel() == 5, "vonmises sample shape", &failures);
   expect(pluss::distr::sample("arcsin", {5}, f64, 23ULL).numel() == 5, "sample overload without params", &failures);
 
-  const Series like = pluss::zeros({2, 5}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
+  const Series like = pluss::zeros(
+      {2, 5},
+      Config{}
+          .with_dtype(ScalarType::Float32)
+          .with_platform(pluss::pCPU)
+          .with_pinned(true));
   expect(pluss::distr::sample_like("rademacher", like, 29ULL).numel() == like.numel(),
          "sample_like overload without params",
          &failures);
   const Series weibull_like = sample_like("weibull", {1.5, 2.0}, like, 7ULL);
   expect(weibull_like.scalar_type() == ScalarType::Float32, "sample_like preserves dtype", &failures);
+  expect(weibull_like.platform() == pluss::pCPU, "sample_like preserves platform", &failures);
   expect(weibull_like.sizes().size() == 2 && weibull_like.sizes()[0] == 2 && weibull_like.sizes()[1] == 5,
          "sample_like preserves shape",
          &failures);

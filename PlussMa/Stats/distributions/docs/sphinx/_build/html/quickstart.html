@@ -55,12 +55,16 @@
 <section id="keep-shape-and-dtype">
 <h2>Keep Shape And Dtype<a class="headerlink" href="#keep-shape-and-dtype" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">like</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float32</span><span class="p">));</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}</span>
+<span class="w">        </span><span class="p">.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float32</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">with_platform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">with_pinned</span><span class="p">(</span><span class="nb">true</span><span class="p">));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">gamma_like</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">sample_like</span><span class="p">(</span><span class="s">&quot;gamma&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="n">like</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">signs_like</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">sample_like</span><span class="p">(</span><span class="s">&quot;rademacher&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">like</span><span class="p">);</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">sample_like(...)</span></code> preserves the visible tensor contract from <code class="docutils literal notranslate"><span class="pre">like</span></code>: shape, dtype, and platform. It also forwards the pinned flag into the sampling config, but the current runtime does not surface pinned-memory state through <code class="docutils literal notranslate"><span class="pre">is_pinned()</span></code> yet.</p>
 </section>
 <section id="evaluate-densities-and-cdfs">
 <h2>Evaluate Densities And CDFs<a class="headerlink" href="#evaluate-densities-and-cdfs" title="Link to this heading">¶</a></h2>

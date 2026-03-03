@@ -85,24 +85,16 @@ std::vector<std::size_t> resolve_resample_value_indices_(
 
 } // namespace
 
-DataFrame DataFrame::head(std::int64_t n, bool render) const {
+DataFrameView DataFrame::head(std::int64_t n, bool render) const {
   const auto clipped = std::clamp<std::int64_t>(n, 0, nrows());
   auto out = slice(0, clipped);
-  if (render) {
-    display::print(std::cout, out);
-    out.suppress_next_stream_();
-  }
-  return out;
+  return DataFrameView(std::move(out), render);
 }
 
-DataFrame DataFrame::tail(std::int64_t n, bool render) const {
+DataFrameView DataFrame::tail(std::int64_t n, bool render) const {
   const auto clipped = std::clamp<std::int64_t>(n, 0, nrows());
   auto out = slice(nrows() - clipped, nrows());
-  if (render) {
-    display::print(std::cout, out);
-    out.suppress_next_stream_();
-  }
-  return out;
+  return DataFrameView(std::move(out), render);
 }
 
 DataFrame DataFrame::sample(std::int64_t n, std::optional<std::uint64_t> random_state) const {
@@ -371,12 +363,12 @@ DataFrame DataFrame::round_time(std::initializer_list<std::string_view> features
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
-DataFrame DataFrame::resample(std::string_view time_feature,
-                              std::initializer_list<std::string_view> value_features,
-                              std::string_view freq,
-                              std::string_view op,
-                              std::int64_t step,
-                              bool render) const {
+DataFrameView DataFrame::resample(std::string_view time_feature,
+                                  std::initializer_list<std::string_view> value_features,
+                                  std::string_view freq,
+                                  std::string_view op,
+                                  std::int64_t step,
+                                  bool render) const {
   const auto axis_feature = owned_name(time_feature);
   const auto freq_key = owned_name(freq);
   auto op_key = lower_copy(owned_name(op));
@@ -420,9 +412,5 @@ DataFrame DataFrame::resample(std::string_view time_feature,
   auto bins = ti.resample_bins(freq_key, step);
   auto out = DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       std::move(out_names), std::move(out_cols), Thread(bins.labels)));
-  if (render) {
-    display::print(std::cout, out);
-    out.suppress_next_stream_();
-  }
-  return out;
+  return DataFrameView(std::move(out), render);
 }

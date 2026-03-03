@@ -101,7 +101,7 @@ std::string case_label_from_axis(const Thread& axis, std::int64_t row) {
 
 } // namespace
 
-DataFrame DataFrame::transpose(bool render) const {
+DataFrameView DataFrame::transpose(bool render) const {
   const auto rows = nrows();
   const auto cols = ncols();
 
@@ -138,10 +138,7 @@ DataFrame DataFrame::transpose(bool render) const {
 
   Thread out_cases(note_from_strings(feature_names()));
   auto out = DataFrame(std::move(out_cols), std::move(out_cases));
-  if (render) {
-    display::print(std::cout, out, {});
-  }
-  return out;
+  return DataFrameView(std::move(out), render);
 }
 
 } // namespace pluss::table

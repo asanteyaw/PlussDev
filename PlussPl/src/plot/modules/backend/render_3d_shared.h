@@ -3,9 +3,11 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
+#include "plot/modules/artists/artist_2d.h"
 #include "plot/modules/artists/artist_3d.h"
 #include "plot/modules/backend/render_surface_2d.h"
 #include "plot/modules/projector_3d.h"
@@ -48,9 +50,22 @@ inline void render_3d_scene(RenderSurface2D& surface, const Figure3DView& fig, c
     legend_height = legend_height_hint_2d(fig.traces.size(), has_title);
   }
   const bool outside_legend = fig.legend.location == LegendLocation::OutsideRight && legend_width > 0.0;
+  const Trace3D* surface_for_colorbar = nullptr;
+  if (fig.colorbar.has_value() && fig.colorbar->visible) {
+    auto it = std::find_if(fig.traces.begin(), fig.traces.end(), [](const Trace3D& trace) {
+      return trace.kind == Trace3DKind::Surface && !trace.z.empty();
+    });
+    if (it != fig.traces.end()) {
+      surface_for_colorbar = &(*it);
+    }
+  }
+  const bool show_colorbar = surface_for_colorbar != nullptr;
+  const double colorbar_width = show_colorbar ? 64.0 : 0.0;
+  const double aux_gap = (show_colorbar && outside_legend) ? 12.0 : 0.0;
 
   const double left = 110.0;
-  const double right = static_cast<double>(target.width - 90) - (outside_legend ? (legend_width + 16.0) : 0.0);
+  const double right = static_cast<double>(target.width - 90) - (outside_legend ? (legend_width + 16.0) : 0.0) -
+                       (show_colorbar ? (colorbar_width + 16.0 + aux_gap) : 0.0);
   const double top = 84.0;
   const double bottom = static_cast<double>(target.height - 96);
   const double pw = std::max(1.0, right - left);
@@ -256,16 +271,37 @@ inline void render_3d_scene(RenderSurface2D& surface, const Figure3DView& fig, c
                  });
   }
 
+  DepthSorter3D depth_sorter{};
   for (std::size_t ti = 0; ti < fig.traces.size(); ++ti) {
     Trace3D styled_trace = fig.traces[ti];
     detail::apply_trace_style_defaults(styled_trace, theme, ti);
-    artist_for_trace_3d(styled_trace.kind).draw(surface, styled_trace, transform, theme);
+    artist_for_trace_3d(styled_trace.kind).emit(depth_sorter, styled_trace, transform, theme);
+  }
+  depth_sorter.paint(surface);
+
+  if (show_colorbar) {
+    Trace2D scalar_trace;
+    scalar_trace.kind = Trace2DKind::Heatmap;
+    scalar_trace.name = surface_for_colorbar->name;
+    scalar_trace.values = surface_for_colorbar->z;
+    scalar_trace.style = surface_for_colorbar->style;
+
+    Colorbar colorbar = *fig.colorbar;
+    if (colorbar.title.empty()) {
+      colorbar.title = !surface_for_colorbar->name.empty() ? surface_for_colorbar->name : fig.z_axis.label;
+    }
+
+    const double colorbar_x = right + 14.0;
+    const double colorbar_y = top + 6.0;
+    const double colorbar_h = std::max(60.0, ph - 12.0);
+    const ColorbarArtist2D colorbar_artist{};
+    colorbar_artist.draw(surface, colorbar_x, colorbar_y, colorbar_width, colorbar_h, scalar_trace, colorbar, theme);
   }
 
   if (fig.legend.visible && !fig.traces.empty()) {
     const bool has_title = !fig.legend.title.empty();
     const auto [lx, ly] = outside_legend
-                              ? std::pair<double, double>{right + 14.0, top + 4.0}
+                              ? std::pair<double, double>{right + 14.0 + (show_colorbar ? (colorbar_width + 16.0 + aux_gap) : 0.0), top + 4.0}
                               : map_legend_anchor_2d(fig.legend.location, left, right, top, bottom, legend_width, legend_height);
 
     surface.fill_rect(lx, ly, legend_width, legend_height,

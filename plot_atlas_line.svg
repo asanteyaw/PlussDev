@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+<rect x="0" y="0" width="1200" height="800" fill="#f4efe6" fill-opacity="1"/>
+<text x="600" y="28" text-anchor="middle" font-size="22" font-family="IBM Plex Sans" fill="#1f1a17" fill-opacity="1" font-weight="600">Atlas frame(1): Agency Code</text>
+<rect x="20" y="72" width="1160" height="708" rx="12" fill="#fffdf8" fill-opacity="1"/>
+<rect x="20" y="72" width="1160" height="708" rx="12" fill="none" stroke="#ddd2c3" stroke-opacity="1" stroke-width="1"/>
+<rect x="92" y="96" width="1070" height="630" fill="#fffaf2" fill-opacity="1"/>
+<rect x="92" y="96" width="1070" height="630" fill="none" stroke="#eee4d8" stroke-opacity="1" stroke-width="1"/>
+<text x="600" y="766" text-anchor="middle" font-size="12" font-family="IBM Plex Sans" fill="#3e352d" fill-opacity="1">case</text>
+<text x="38" y="426" text-anchor="middle" font-size="12" font-family="IBM Plex Sans" fill="#3e352d" fill-opacity="1" transform="rotate(-90 38 426)">Agency Code</text>
+<line x1="92" y1="726" x2="1162" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="726" x2="92" y2="726" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="729.5" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">5</text>
+<line x1="92" y1="600" x2="1162" y2="600" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="600" x2="92" y2="600" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="603.5" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">5.2</text>
+<line x1="92" y1="474" x2="1162" y2="474" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="474" x2="92" y2="474" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="477.5" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">5.4</text>
+<line x1="92" y1="348" x2="1162" y2="348" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="348" x2="92" y2="348" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="351.5" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">5.6</text>
+<line x1="92" y1="222" x2="1162" y2="222" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="222" x2="92" y2="222" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="225.5" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">5.8</text>
+<line x1="92" y1="96" x2="1162" y2="96" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="87" y1="96" x2="92" y2="96" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="83" y="99.5" text-anchor="end" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">6</text>
+<line x1="92" y1="96" x2="92" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="92" y1="726" x2="92" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="92" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">44</text>
+<line x1="204.632" y1="96" x2="204.632" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="204.632" y1="726" x2="204.632" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="204.632" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">46</text>
+<line x1="317.263" y1="96" x2="317.263" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="317.263" y1="726" x2="317.263" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="317.263" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">48</text>
+<line x1="429.895" y1="96" x2="429.895" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="429.895" y1="726" x2="429.895" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="429.895" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">50</text>
+<line x1="542.526" y1="96" x2="542.526" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="542.526" y1="726" x2="542.526" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="542.526" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">52</text>
+<line x1="655.158" y1="96" x2="655.158" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="655.158" y1="726" x2="655.158" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="655.158" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">54</text>
+<line x1="767.789" y1="96" x2="767.789" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="767.789" y1="726" x2="767.789" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="767.789" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">56</text>
+<line x1="880.421" y1="96" x2="880.421" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="880.421" y1="726" x2="880.421" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="880.421" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">58</text>
+<line x1="993.053" y1="96" x2="993.053" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="993.053" y1="726" x2="993.053" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="993.053" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">60</text>
+<line x1="1105.68" y1="96" x2="1105.68" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="1105.68" y1="726" x2="1105.68" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1105.68" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">62</text>
+<line x1="1218.32" y1="96" x2="1218.32" y2="726" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="1218.32" y1="726" x2="1218.32" y2="731" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1218.32" y="744" text-anchor="middle" font-size="10" font-family="IBM Plex Sans" fill="#6a5f54" fill-opacity="1">64</text>
+<line x1="92" y1="726" x2="1162" y2="726" stroke="#2f2924" stroke-opacity="1" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="92" y1="96" x2="92" y2="726" stroke="#2f2924" stroke-opacity="1" stroke-width="1.2" stroke-linecap="round"/>
+<polyline fill="none" stroke="#0f766e" stroke-opacity="1" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="92,726 148.316,726 204.632,726 260.947,726 317.263,726 373.579,726 429.895,96 486.211,726 542.526,726 598.842,726 655.158,726 711.474,726 767.789,726 824.105,726 880.421,726 936.737,726 993.053,726 1049.37,726 1105.68,726 1162,726 "/>
+</svg>

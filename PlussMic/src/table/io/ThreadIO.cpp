@@ -12,7 +12,7 @@ std::string Thread::to_string(const display::DisplayOptions& options) const {
 }
 
 void Thread::show(const display::DisplayOptions& options) const {
-  display::print(std::cout, *this, options);
+  display::show(*this, options);
 }
 
 void Thread::show(std::ostream& os, const display::DisplayOptions& options) const {

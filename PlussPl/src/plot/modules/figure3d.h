@@ -127,6 +127,11 @@ public:
     return *this;
   }
 
+  Figure3D& colorbar(const Colorbar& c) {
+    colorbar_ = c;
+    return *this;
+  }
+
   Figure3D& theme(std::string name) {
     style_.theme = std::move(name);
     return *this;
@@ -203,6 +208,18 @@ public:
         .z = z,
         .style = style.value_or(style_),
     });
+    return *this;
+  }
+
+  Figure3D& surface_wireframe(bool enabled = true) {
+    current_surface_("Figure3D::surface_wireframe").wireframe = enabled;
+    return *this;
+  }
+
+  Figure3D& surface_contours(bool enabled = true, std::int32_t stride = 3) {
+    auto& surface = current_surface_("Figure3D::surface_contours");
+    surface.contours = enabled;
+    surface.contour_stride = std::max<std::int32_t>(1, stride);
     return *this;
   }
 
@@ -363,9 +380,20 @@ private:
         .z_axis = z_axis_,
         .camera = camera_,
         .legend = legend_,
+        .colorbar = colorbar_,
         .style = style_,
         .traces = traces_,
     };
+  }
+
+  Trace3D& current_surface_(std::string_view where) {
+    auto it = std::find_if(traces_.rbegin(), traces_.rend(), [](const Trace3D& trace) {
+      return trace.kind == Trace3DKind::Surface;
+    });
+    if (it == traces_.rend()) {
+      throw std::invalid_argument(fmt::format("{}: no surface trace available", where));
+    }
+    return *it;
   }
 
   const IBackend& ensure_backend_() const {
@@ -381,6 +409,7 @@ private:
   ZAxis z_axis_{};
   Camera3D camera_{};
   Legend legend_{};
+  std::optional<Colorbar> colorbar_{};
   Style style_{};
   std::vector<Trace3D> traces_{};
   mutable std::shared_ptr<const IBackend> backend_{};

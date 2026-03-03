@@ -13,6 +13,9 @@ This Sphinx set is structured as:
 quickstart
 demo_catalog
 series
+aux
+autograd
+autograd_api_reference
 autodiff_architecture
 optimization_diff_contract
 series_api_reference

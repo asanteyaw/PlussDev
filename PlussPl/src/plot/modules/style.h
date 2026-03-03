@@ -22,6 +22,7 @@ struct Style {
   std::string color{};
   std::string line_style{"solid"};
   std::string marker{"none"};
+  double marker_size{0.0};
   double line_width{1.5};
   double alpha{1.0};
   std::string theme{};

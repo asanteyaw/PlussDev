@@ -12,7 +12,7 @@ std::string Atlas::to_string(const display::DisplayOptions& options) const {
 }
 
 void Atlas::show(const display::DisplayOptions& options) const {
-  display::print(std::cout, *this, options);
+  display::show(*this, options);
 }
 
 void Atlas::show(std::ostream& os, const display::DisplayOptions& options) const {

@@ -30,5 +30,15 @@ int main() {
   narrow.terminal_width = 60;
   std::cout << df.to_string(narrow) << '\n';
 
+  std::cout << "\n=== Smart .show() viewer (falls back to terminal if unavailable) ===\n";
+  std::cout << "head()/describe() return a DataFrameView.\n";
+  std::cout << "Leave it alone for terminal preview, or call .show() to request the popup.\n";
+  df.head(8).show();
+  df.describe().show();
+
+  std::cout << "\n=== Stored preview object ===\n";
+  auto preview = df.view(4, 12);
+  preview.show();
+
   return 0;
 }

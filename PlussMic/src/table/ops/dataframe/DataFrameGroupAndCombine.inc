@@ -25,20 +25,16 @@ DataFrame DataFrame::summarize_specs(const std::vector<SummarySpec>& specs, bool
     out_cols.emplace_back(out_name, make_f64_thread({numeric_reduce_value(feature_value, spec.op)}));
   }
 
-  auto out = DataFrame(std::move(out_cols), make_note_thread({"summary"}));
-  if (render) {
-    display::print(std::cout, out);
-    out.suppress_next_stream_();
-  }
-  return out;
+  (void)render;
+  return DataFrame(std::move(out_cols), make_note_thread({"summary"}));
 }
 
 DataFrame DataFrame::summarize(std::initializer_list<SummarySpec> specs, bool render) const {
   return summarize_specs(std::vector<SummarySpec>(specs.begin(), specs.end()), render);
 }
 
-DataFrame DataFrame::aggregate(std::initializer_list<SummarySpec> specs, bool render) const {
-  return summarize(specs, render);
+DataFrameView DataFrame::aggregate(std::initializer_list<SummarySpec> specs, bool render) const {
+  return DataFrameView(summarize(specs, false), render);
 }
 
 DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
@@ -266,26 +262,22 @@ DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
     out_cols.emplace_back(spec.out_name, make_f64_thread(col));
   }
 
-  auto out = DataFrame(std::move(out_cols));
-  if (render) {
-    display::print(std::cout, out);
-    out.suppress_next_stream_();
-  }
-  return out;
+  (void)render;
+  return DataFrame(std::move(out_cols));
 }
 
-DataFrame DataFrame::group_by(std::initializer_list<std::string_view> keys,
-                              std::initializer_list<GroupSpec> specs,
-                              bool dropna_keys,
-                              bool render) const {
-  return group(keys, specs, dropna_keys, render);
+DataFrameView DataFrame::group_by(std::initializer_list<std::string_view> keys,
+                                  std::initializer_list<GroupSpec> specs,
+                                  bool dropna_keys,
+                                  bool render) const {
+  return DataFrameView(group(keys, specs, dropna_keys, false), render);
 }
 
-DataFrame DataFrame::pivot(std::string_view case_feature,
-                           std::string_view feature_feature,
-                           std::string_view value_feature,
-                           bool dropna_keys,
-                           bool render) const {
+DataFrameView DataFrame::pivot(std::string_view case_feature,
+                               std::string_view feature_feature,
+                               std::string_view value_feature,
+                               bool dropna_keys,
+                               bool render) const {
   const auto dup = group(
       {case_feature, feature_feature},
       {GroupSpec{"__pivot_cell_count__", "", GroupOp::Count}},
@@ -298,12 +290,12 @@ DataFrame DataFrame::pivot(std::string_view case_feature,
   return pivot_table(case_feature, feature_feature, value_feature, GroupOp::Max, dropna_keys, render);
 }
 
-DataFrame DataFrame::pivot_table(std::string_view case_feature,
-                                 std::string_view feature_feature,
-                                 std::string_view value_feature,
-                                 GroupOp op,
-                                 bool dropna_keys,
-                                 bool render) const {
+DataFrameView DataFrame::pivot_table(std::string_view case_feature,
+                                     std::string_view feature_feature,
+                                     std::string_view value_feature,
+                                     GroupOp op,
+                                     bool dropna_keys,
+                                     bool render) const {
   PLUSS_CHECK(op == GroupOp::Count || op == GroupOp::Nunique || op == GroupOp::Sum || op == GroupOp::Mean ||
                   op == GroupOp::Min || op == GroupOp::Max,
               "DataFrame::pivot_table: unsupported aggregation op");
@@ -439,11 +431,7 @@ DataFrame DataFrame::pivot_table(std::string_view case_feature,
   }
 
   auto out = DataFrame(std::move(out_cols), make_note_thread(case_labels));
-  if (render) {
-    display::print(std::cout, out);
-    out.suppress_next_stream_();
-  }
-  return out;
+  return DataFrameView(std::move(out), render);
 }
 
 DataFrame DataFrame::combine(const DataFrame& other) const {
@@ -531,10 +519,10 @@ Atlas DataFrame::unsqueeze(const Thread& depth_labels) const {
   return Atlas({*this}, depth_labels);
 }
 
-DataFrame DataFrame::count_by(std::string_view feature_name,
-                              std::int64_t top_n,
-                              bool dropna,
-                              bool render) const {
+DataFrameView DataFrame::count_by(std::string_view feature_name,
+                                  std::int64_t top_n,
+                                  bool dropna,
+                                  bool render) const {
   auto grouped = group({feature_name}, {GroupSpec{"count", "", GroupOp::Count}}, dropna, false);
   const auto keys_note = grouped.features(feature_name).as_note();
   const auto counts = grouped.features("count").as_series().to_vec<std::int64_t>();
@@ -569,19 +557,15 @@ DataFrame DataFrame::count_by(std::string_view feature_name,
       {owned_name(feature_name), make_note_thread(keys)},
       {"count", make_i64_thread(vals)},
   });
-  if (render) {
-    display::print(std::cout, out);
-    out.suppress_next_stream_();
-  }
-  return out;
+  return DataFrameView(std::move(out), render);
 }
 
-DataFrame DataFrame::mean_by(std::string_view group_feature_name,
-                             std::string_view value_feature_name,
-                             std::int64_t top_n,
-                             std::int64_t min_count,
-                             bool dropna_group,
-                             bool render) const {
+DataFrameView DataFrame::mean_by(std::string_view group_feature_name,
+                                 std::string_view value_feature_name,
+                                 std::int64_t top_n,
+                                 std::int64_t min_count,
+                                 bool dropna_group,
+                                 bool render) const {
   PLUSS_CHECK(min_count >= 1, "DataFrame::mean_by: min_count must be >= 1");
   const auto mean_name = fmt::format("mean_{}", value_feature_name);
   auto grouped = group(
@@ -643,9 +627,5 @@ DataFrame DataFrame::mean_by(std::string_view group_feature_name,
       {fmt::format("mean_{}", value_feature_name), make_f64_thread(out_means)},
       {"count", make_i64_thread(out_counts)},
   });
-  if (render) {
-    display::print(std::cout, out);
-    out.suppress_next_stream_();
-  }
-  return out;
+  return DataFrameView(std::move(out), render);
 }

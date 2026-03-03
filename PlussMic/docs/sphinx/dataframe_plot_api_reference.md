@@ -11,6 +11,23 @@ When `x_feature` is omitted, plots now use the DataFrame case axis automatically
 If that axis is note-like or time-like, the accessor delegates a labeled categorical axis to `PlussPl`.
 Figures also inherit stronger `PlussPl` defaults, including the `paper` theme, `IBM Plex Sans`, and outside legends for multi-series line plots.
 
+The accessor also exposes richer verbs directly over the same delegation model:
+
+```cpp
+auto fig_step = df.plot().step("sales");
+auto fig_area = df.plot().area({"sales", "forecast"});
+auto fig_area_stacked = df.plot().area_stacked({"sales", "forecast"});
+auto fig_bar = df.plot().bar({"sales", "forecast"});
+auto fig_stacked = df.plot().bar_stacked({"sales", "forecast"});
+auto fig_box = df.plot().box();
+auto fig_hue = df.plot().scatter("ret", "vol", "desk");
+auto fig_heatmap = df.plot().heatmap({"sales", "forecast"});
+auto fig_corr = df.plot().corr_heatmap({"sales", "forecast"});
+auto fig_matrix = df.plot().scatter_matrix();
+auto fig_auto = df.plot().auto_plot();
+auto fig_pivot = df.plot().heatmap("maturity", "delta_bucket", "implied_vol");
+```
+
 ### `bar`
 
 #### Signature

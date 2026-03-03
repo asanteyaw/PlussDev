@@ -65,6 +65,24 @@ struct Trace3D {
   std::vector<double> z{};
   std::int64_t rows{0};
   std::int64_t cols{0};
+  bool wireframe{true};
+  bool contours{false};
+  std::int32_t contour_stride{3};
+  Style style{};
+};
+
+enum class Trace4DKind : std::uint8_t {
+  Line4 = 0,
+  Scatter4 = 1,
+};
+
+struct Trace4D {
+  Trace4DKind kind{Trace4DKind::Scatter4};
+  std::string name{};
+  std::vector<double> x{};
+  std::vector<double> y{};
+  std::vector<double> z{};
+  std::vector<double> w{};
   Style style{};
 };
 

@@ -139,7 +139,8 @@ inline void render_2d_scene(RenderSurface2D& surface, const Figure2DView& fig, c
         const std::size_t n = std::min(t.x.size(), t.y.size());
         if (!t.x_labels.empty() && t.x_labels.size() == t.x.size()) {
           for (std::size_t i = 0; i < t.x.size(); ++i) {
-            const auto [lo, hi] = cell_bounds_2d(t.x, i);
+            const auto [lo, hi] = (t.kind == Trace2DKind::Bar || t.kind == Trace2DKind::Hist) ? bar_bounds_2d(t, i)
+                                                                                               : cell_bounds_2d(t.x, i);
             const double tlo = axis_transform_2d(lo, sub.x_axis);
             const double thi = axis_transform_2d(hi, sub.x_axis);
             if (std::isfinite(tlo)) xmin = std::min(xmin, tlo);
@@ -149,7 +150,7 @@ inline void render_2d_scene(RenderSurface2D& surface, const Figure2DView& fig, c
         if (t.kind == Trace2DKind::Bar || t.kind == Trace2DKind::Hist) {
           has_bar_like = true;
           for (std::size_t i = 0; i < n; ++i) {
-            const auto [lo, hi] = cell_bounds_2d(t.x, i);
+            const auto [lo, hi] = bar_bounds_2d(t, i);
             const double tlo = axis_transform_2d(lo, sub.x_axis);
             const double thi = axis_transform_2d(hi, sub.x_axis);
             if (std::isfinite(tlo)) xmin = std::min(xmin, tlo);
@@ -168,11 +169,13 @@ inline void render_2d_scene(RenderSurface2D& surface, const Figure2DView& fig, c
             ymax = std::max(ymax, ty);
           }
         }
-        for (double extra_x : t.x2) {
-          const double tx = axis_transform_2d(extra_x, sub.x_axis);
-          if (std::isfinite(tx)) {
-            xmin = std::min(xmin, tx);
-            xmax = std::max(xmax, tx);
+        if (t.kind != Trace2DKind::Bar) {
+          for (double extra_x : t.x2) {
+            const double tx = axis_transform_2d(extra_x, sub.x_axis);
+            if (std::isfinite(tx)) {
+              xmin = std::min(xmin, tx);
+              xmax = std::max(xmax, tx);
+            }
           }
         }
         if (t.kind == Trace2DKind::ErrorBar) {
@@ -239,13 +242,24 @@ inline void render_2d_scene(RenderSurface2D& surface, const Figure2DView& fig, c
         return bottom - yn * plot_h;
       };
 
-      const Trace2D* categorical_trace = nullptr;
+      std::vector<double> categorical_x_positions{};
+      std::vector<std::string> categorical_x_labels{};
+      std::size_t categorical_x_count = 0;
       const Trace2D* categorical_y_trace = nullptr;
       std::size_t longest_x_label = 0;
       std::size_t longest_y_label = 0;
       for (const auto& t : sub.traces) {
         if (!t.x_labels.empty() && t.x_labels.size() == t.x.size() && t.x_labels.size() <= 12) {
-          categorical_trace = &t;
+          if (categorical_x_labels.empty()) {
+            categorical_x_labels = t.x_labels;
+            categorical_x_positions = t.x;
+            categorical_x_count = 1;
+          } else if (t.x_labels == categorical_x_labels && t.x.size() == categorical_x_positions.size()) {
+            for (std::size_t i = 0; i < t.x.size(); ++i) {
+              categorical_x_positions[i] += t.x[i];
+            }
+            ++categorical_x_count;
+          }
           for (const auto& label : t.x_labels) {
             longest_x_label = std::max(longest_x_label, label.size());
           }
@@ -256,8 +270,13 @@ inline void render_2d_scene(RenderSurface2D& surface, const Figure2DView& fig, c
             longest_y_label = std::max(longest_y_label, label.size());
           }
         }
-        if (categorical_trace && categorical_y_trace) {
+        if (!categorical_x_labels.empty() && categorical_y_trace) {
           break;
+        }
+      }
+      if (categorical_x_count > 1) {
+        for (auto& position : categorical_x_positions) {
+          position /= static_cast<double>(categorical_x_count);
         }
       }
       const double x_tick_size = longest_x_label > 6 ? 9.0 : 10.0;
@@ -330,8 +349,8 @@ inline void render_2d_scene(RenderSurface2D& surface, const Figure2DView& fig, c
         }
       }
 
-      if (categorical_trace) {
-        const auto x_ticks = resolve_ticks_2d(sub.x_axis, xmin, xmax, &categorical_trace->x, &categorical_trace->x_labels);
+      if (!categorical_x_labels.empty()) {
+        const auto x_ticks = resolve_ticks_2d(sub.x_axis, xmin, xmax, &categorical_x_positions, &categorical_x_labels);
         for (const auto& tick : x_ticks) {
           const double px = sx(tick.position);
           if (!std::isfinite(px)) {

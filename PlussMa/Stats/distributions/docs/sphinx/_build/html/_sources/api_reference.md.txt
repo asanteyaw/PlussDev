@@ -1,26 +1,28 @@
 # API Reference
 
-## Entry Point
+## `supports`
 
-All distribution functionality is available from:
-
-```cpp
-pluss::distr
-```
-
-That alias resolves to `pluss::subsp::stat::distr`, but user code should generally prefer the shorter public path.
-
-## Core Functions
-
-### `supports`
+### Signature
 
 ```cpp
 bool pluss::distr::supports(std::string_view name) noexcept;
 ```
 
-Returns whether a distribution name or alias is recognized.
+### Notes
 
-### `sample`
+Checks whether the runtime resolver recognizes a family name or alias before you call `sample`, `pdf`, `logpdf`, or `cdf`.
+
+### Examples
+
+```cpp
+std::cout << pluss::distr::supports("gauss") << "\n";
+std::cout << pluss::distr::supports("zipf") << "\n";
+std::cout << pluss::distr::supports("not-a-dist") << "\n";
+```
+
+## `sample`
+
+### Signature
 
 ```cpp
 pluss::Series pluss::distr::sample(
@@ -31,13 +33,23 @@ pluss::Series pluss::distr::sample(
     std::uint64_t seed = 0);
 ```
 
-Convenience overloads also exist for:
+### Notes
 
-- `initializer_list<double>` parameters
-- `initializer_list<std::int64_t>` sizes
-- zero-parameter distributions via `sample(name, sizes, cfg, seed)`
+Samples a new `Series` from the chosen family. Use the parameter list required by that distribution, pass the output shape through `sizes`, and use `cfg` when you need to control dtype or platform.
 
-### `sample_like`
+### Examples
+
+```cpp
+auto cfg = pluss::Config{}
+    .with_dtype(pluss::ScalarType::Float64)
+    .with_platform(pluss::pCPU);
+
+auto draws = pluss::distr::sample("normal", {0.0, 1.0}, {2, 3}, cfg, 20260301ULL);
+```
+
+## `sample_like`
+
+### Signature
 
 ```cpp
 pluss::Series pluss::distr::sample_like(
@@ -47,14 +59,25 @@ pluss::Series pluss::distr::sample_like(
     std::uint64_t seed = 0);
 ```
 
-Convenience overloads also exist for:
+### Notes
 
-- `initializer_list<double>` parameters
-- zero-parameter distributions via `sample_like(name, like, seed)`
+Uses the same distribution parameters as `sample(...)`, but takes shape, dtype, and platform from `like`. This is the right helper when another `Series` already defines the tensor contract you want.
 
-`sample_like` preserves the shape, platform, and dtype of `like`.
+### Examples
 
-### `pdf`
+```cpp
+auto like = pluss::zeros(
+    {2, 4},
+    pluss::Config{}
+        .with_dtype(pluss::ScalarType::Float32)
+        .with_platform(pluss::pCPU));
+
+auto out = pluss::distr::sample_like("gamma", {2.0}, like, 77ULL);
+```
+
+## `pdf`
+
+### Signature
 
 ```cpp
 pluss::Series pluss::distr::pdf(
@@ -63,7 +86,20 @@ pluss::Series pluss::distr::pdf(
     std::span<const double> params = {});
 ```
 
-### `logpdf`
+### Notes
+
+Evaluates the probability density function for continuous families or the mass function for discrete families at every point in `x`.
+
+### Examples
+
+```cpp
+auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
+auto dens = pluss::distr::pdf("normal", x, {0.0, 1.0});
+```
+
+## `logpdf`
+
+### Signature
 
 ```cpp
 pluss::Series pluss::distr::logpdf(
@@ -72,7 +108,20 @@ pluss::Series pluss::distr::logpdf(
     std::span<const double> params = {});
 ```
 
-### `cdf`
+### Notes
+
+Evaluates the natural log of the density or mass function. Use it when you are building log-likelihood objectives or want to avoid manually taking `log(pdf(...))`.
+
+### Examples
+
+```cpp
+auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
+auto logdens = pluss::distr::logpdf("nig", x, {2.0, 0.5, 0.0, 1.0});
+```
+
+## `cdf`
+
+### Signature
 
 ```cpp
 pluss::Series pluss::distr::cdf(
@@ -81,7 +130,20 @@ pluss::Series pluss::distr::cdf(
     std::span<const double> params = {});
 ```
 
-### `mixture_normal`
+### Notes
+
+Evaluates the cumulative distribution function at every point in `x`. Use it when your downstream logic is expressed in tail probabilities or threshold probabilities rather than densities.
+
+### Examples
+
+```cpp
+auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
+auto dist = pluss::distr::cdf("t", x, {5.0});
+```
+
+## `mixture_normal`
+
+### Signature
 
 ```cpp
 pluss::Series pluss::distr::mixture_normal(
@@ -94,14 +156,98 @@ pluss::Series pluss::distr::mixture_normal(
     bool use_sobol = false);
 ```
 
-This samples from an `n`-component Gaussian mixture.
+### Notes
 
-- `weights`, `means`, and `stddevs` must have the same length
-- `weights` are normalized internally
-- `use_sobol=true` uses Sobol-driven Gaussian draws
+Samples from a Gaussian mixture defined by component weights, means, and standard deviations. Set `use_sobol=true` when you want Sobol-driven quasi-random normal draws instead of pseudo-random draws.
 
-## Notes On Dtypes
+### Examples
 
-- density-style functions return floating-point `Series`
-- discrete samplers use natural integral output where appropriate
-- `sample_like` is the shortest path when you want the result to match an existing tensor contract
+```cpp
+auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+auto weights = pluss::make_series({0.65, 0.35}, cfg);
+auto means = pluss::make_series({-1.0, 2.0}, cfg);
+auto stddevs = pluss::make_series({0.5, 1.25}, cfg);
+
+auto mix = pluss::distr::mixture_normal(weights, means, stddevs, {8}, cfg, 101ULL, true);
+```
+
+## `mixture_normal_pdf`
+
+### Signature
+
+```cpp
+pluss::Series pluss::distr::mixture_normal_pdf(
+    const pluss::Series& x,
+    const pluss::Series& weights,
+    const pluss::Series& means,
+    const pluss::Series& stddevs);
+```
+
+### Notes
+
+Evaluates the density of a Gaussian mixture that you have already parameterized as component `Series` values.
+
+### Examples
+
+```cpp
+auto x = pluss::make_series({-2.0, -0.5, 1.0, 3.0}).to(pluss::ScalarType::Float64);
+auto weights = pluss::make_series({0.65, 0.35}).to(pluss::ScalarType::Float64);
+auto means = pluss::make_series({-1.0, 2.0}).to(pluss::ScalarType::Float64);
+auto stddevs = pluss::make_series({0.5, 1.25}).to(pluss::ScalarType::Float64);
+
+auto dens = pluss::distr::mixture_normal_pdf(x, weights, means, stddevs);
+```
+
+## `mixture_normal_logpdf`
+
+### Signature
+
+```cpp
+pluss::Series pluss::distr::mixture_normal_logpdf(
+    const pluss::Series& x,
+    const pluss::Series& weights,
+    const pluss::Series& means,
+    const pluss::Series& stddevs);
+```
+
+### Notes
+
+Evaluates the log-density of the same Gaussian mixture parameterization used by `mixture_normal_pdf(...)`.
+
+### Examples
+
+```cpp
+auto x = pluss::make_series({-2.0, -0.5, 1.0, 3.0}).to(pluss::ScalarType::Float64);
+auto weights = pluss::make_series({0.65, 0.35}).to(pluss::ScalarType::Float64);
+auto means = pluss::make_series({-1.0, 2.0}).to(pluss::ScalarType::Float64);
+auto stddevs = pluss::make_series({0.5, 1.25}).to(pluss::ScalarType::Float64);
+
+auto logdens = pluss::distr::mixture_normal_logpdf(x, weights, means, stddevs);
+```
+
+## `mixture_normal_cdf`
+
+### Signature
+
+```cpp
+pluss::Series pluss::distr::mixture_normal_cdf(
+    const pluss::Series& x,
+    const pluss::Series& weights,
+    const pluss::Series& means,
+    const pluss::Series& stddevs);
+```
+
+### Notes
+
+Evaluates the mixture CDF using the same component parameterization as the other Gaussian-mixture helpers.
+
+### Examples
+
+```cpp
+auto x = pluss::make_series({-2.0, -0.5, 1.0, 3.0}).to(pluss::ScalarType::Float64);
+auto weights = pluss::make_series({0.65, 0.35}).to(pluss::ScalarType::Float64);
+auto means = pluss::make_series({-1.0, 2.0}).to(pluss::ScalarType::Float64);
+auto stddevs = pluss::make_series({0.5, 1.25}).to(pluss::ScalarType::Float64);
+
+auto dist = pluss::distr::mixture_normal_cdf(x, weights, means, stddevs);
+```

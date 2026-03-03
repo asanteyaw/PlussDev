@@ -40,6 +40,7 @@ struct Figure3DView {
   const ZAxis& z_axis;
   const Camera3D& camera;
   const Legend& legend;
+  const std::optional<Colorbar>& colorbar;
   const Style& style;
   const std::vector<Trace3D>& traces;
 };

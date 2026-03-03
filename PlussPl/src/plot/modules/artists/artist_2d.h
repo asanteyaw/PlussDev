@@ -65,6 +65,7 @@ struct ArtistStyle2D {
   double alpha{1.0};
   std::string line_style{"solid"};
   std::string marker{"none"};
+  double marker_size{0.0};
 };
 
 inline ArtistStyle2D resolve_artist_style_2d(const Trace2D& trace, const std::string& fallback_color) {
@@ -74,7 +75,12 @@ inline ArtistStyle2D resolve_artist_style_2d(const Trace2D& trace, const std::st
       .alpha = trace.style.alpha,
       .line_style = trace.style.line_style,
       .marker = trace.style.marker,
+      .marker_size = trace.style.marker_size,
   };
+}
+
+inline double effective_marker_size_2d(const ArtistStyle2D& style, double fallback) {
+  return style.marker_size > 0.0 ? style.marker_size : fallback;
 }
 
 inline double default_fill_alpha_2d(const Trace2D& trace) {
@@ -97,6 +103,14 @@ inline std::pair<double, double> cell_bounds_2d(const std::vector<double>& coord
   const double hi = (index + 1 == coords.size()) ? center + 0.5 * (center - coords[index - 1])
                                                  : 0.5 * (center + coords[index + 1]);
   return {lo, hi};
+}
+
+inline std::pair<double, double> bar_bounds_2d(const Trace2D& trace, std::size_t index) {
+  if (index < trace.x.size() && trace.x2.size() == trace.x.size() && std::isfinite(trace.x2[index]) && trace.x2[index] > 0.0) {
+    const double half_width = 0.5 * trace.x2[index];
+    return {trace.x[index] - half_width, trace.x[index] + half_width};
+  }
+  return cell_bounds_2d(trace.x, index);
 }
 
 inline std::vector<Point2D> make_step_points_2d(const Trace2D& trace, const PlotTransform2D& transform) {
@@ -196,7 +210,13 @@ public:
         (trace.kind == Trace2DKind::Scatter) ? detail::canonical_marker_name(trace.style.marker, true)
                                              : detail::canonical_marker_name(trace.style.marker, false);
     if (marker != "none") {
-      detail::draw_marker(surface, (x1 + x2) * 0.5, y, marker, 2.7, color, trace.style.alpha);
+      detail::draw_marker(surface,
+                          (x1 + x2) * 0.5,
+                          y,
+                          marker,
+                          trace.style.marker_size > 0.0 ? trace.style.marker_size : 2.7,
+                          color,
+                          trace.style.alpha);
     }
   }
 };
@@ -310,7 +330,13 @@ public:
                             });
     if (detail::canonical_marker_name(style.marker, false) != "none") {
       for (const auto& point : points) {
-        detail::draw_marker(surface, point.x, point.y, style.marker, 3.2, style.color, style.alpha);
+        detail::draw_marker(surface,
+                            point.x,
+                            point.y,
+                            style.marker,
+                            effective_marker_size_2d(style, 3.2),
+                            style.color,
+                            style.alpha);
       }
     }
   }
@@ -328,7 +354,7 @@ public:
       if (!std::isfinite(px) || !std::isfinite(py)) {
         continue;
       }
-      detail::draw_marker(surface, px, py, marker, 3.4, style.color, style.alpha);
+      detail::draw_marker(surface, px, py, marker, effective_marker_size_2d(style, 3.4), style.color, style.alpha);
     }
   }
 };
@@ -353,7 +379,13 @@ public:
         if (!std::isfinite(px) || !std::isfinite(py)) {
           continue;
         }
-        detail::draw_marker(surface, px, py, style.marker, 3.0, style.color, style.alpha);
+        detail::draw_marker(surface,
+                            px,
+                            py,
+                            style.marker,
+                            effective_marker_size_2d(style, 3.0),
+                            style.color,
+                            style.alpha);
       }
     }
   }
@@ -365,25 +397,27 @@ public:
     const std::size_t n = std::min(trace.x.size(), trace.y.size());
     const auto style = resolve_artist_style_2d(trace, "#1f77b4");
     const bool linear_y = transform.y_axis && transform.y_axis->scale == AxisScale::Linear;
-    const double baseline_screen = linear_y ? transform.sy(0.0) : transform.bottom;
     constexpr double bar_fill_fraction = 0.78;
+    const bool explicit_widths = trace.x2.size() == trace.x.size();
 
     for (std::size_t i = 0; i < n; ++i) {
-      const auto [x_lo, x_hi] = cell_bounds_2d(trace.x, i);
+      const auto [x_lo, x_hi] = bar_bounds_2d(trace, i);
       const double px_lo = transform.sx(x_lo);
       const double px_hi = transform.sx(x_hi);
       if (!std::isfinite(px_lo) || !std::isfinite(px_hi)) {
         continue;
       }
       const double py = transform.sy(trace.y[i]);
+      const double baseline_value = (trace.y2.size() == trace.y.size()) ? trace.y2[i] : 0.0;
+      const double baseline_screen = linear_y ? transform.sy(baseline_value) : transform.bottom;
       if (!std::isfinite(py) || !std::isfinite(baseline_screen)) {
         continue;
       }
       const double slot_left = std::min(px_lo, px_hi);
       const double slot_width = std::abs(px_hi - px_lo);
-      const double inset = slot_width * (1.0 - bar_fill_fraction) * 0.5;
+      const double inset = explicit_widths ? 0.0 : slot_width * (1.0 - bar_fill_fraction) * 0.5;
       const double rect_x = slot_left + inset;
-      const double barw = std::max(2.0, slot_width - 2.0 * inset);
+      const double barw = explicit_widths ? std::max(2.0, slot_width) : std::max(2.0, slot_width - 2.0 * inset);
       const double ytop = std::min(py, baseline_screen);
       const double h = std::max(1.0, std::abs(baseline_screen - py));
       surface.fill_rect(rect_x, ytop, barw, h, FillStyle2D{.color = style.color, .alpha = style.alpha}, 2.0);
@@ -633,7 +667,13 @@ public:
                               .alpha = style.alpha,
                               .line_style = "solid",
                           });
-      detail::draw_marker(surface, px, py, style.marker == "none" ? "circle" : style.marker, 2.8, style.color, style.alpha);
+      detail::draw_marker(surface,
+                          px,
+                          py,
+                          style.marker == "none" ? "circle" : style.marker,
+                          effective_marker_size_2d(style, 2.8),
+                          style.color,
+                          style.alpha);
     }
   }
 };

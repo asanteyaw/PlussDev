@@ -1,0 +1,505 @@
+# Autograd Guide
+
+## Includes
+
+```cpp
+#include <pluss/pluss.h>
+```
+
+For the transform APIs documented below, the public namespace is:
+
+```cpp
+using namespace pluss::subsp::math::diff;
+```
+
+## What the public surface looks like
+
+PlussQit exposes autodiff in two layers:
+
+- **direct `Series` autograd controls** for eager reverse-mode workflows
+- **transform-style APIs** in `pluss::subsp::math::diff` for gradients, Jacobians, vector products, and Hessian-vector products
+
+The direct layer is useful when you already have a scalar loss `Series` and want to call `reverse()`.
+The transform layer is what you should prefer for reusable optimization code.
+
+## Reverse-mode on plain `Series`
+
+### Signature
+
+```cpp
+x.requires_grad_(true);
+loss.reverse();
+auto g = x.sensitivity();
+```
+
+### Explanation
+
+This is the lowest-level public autodiff path.
+You mark a leaf `Series` as tracked, build a scalar loss from it, call `reverse()`, and then read back the sensitivity accumulated on the leaf.
+
+Use this when:
+
+- you are debugging the tape directly
+- you want a PyTorch-like eager workflow
+- the objective already exists as raw `Series` code
+
+### Example
+
+```cpp
+auto x = pluss::make_series(1.25).to(pluss::ScalarType::Float64);
+x.requires_grad_(true);
+
+auto loss = x.square().sum();
+loss.reverse();
+
+auto grad = x.sensitivity();
+std::cout << grad.item<double>() << "\n";   // 2.5
+```
+
+## Opt into tracking at construction time
+
+### Signature
+
+```cpp
+pluss::series_options()
+    .with_dtype(...)
+    .with_platform(...)
+    .with_tracks_slope(true)
+    .with_retain_sensitivity(true);
+```
+
+### Explanation
+
+If you want storage and autodiff options set together, use `SeriesOptions`.
+This is the clean way to say “create the value on this backend, with this dtype, and track slope from the start”.
+
+### Example
+
+```cpp
+auto x = pluss::make_series(
+    {0.2, 0.4, 0.6},
+    pluss::series_options()
+        .with_dtype(pluss::ScalarType::Float64)
+        .with_tracks_slope(true)
+        .with_retain_sensitivity(true));
+
+auto loss = x.square().mean();
+loss.reverse();
+
+std::cout << x.has_sensitivity() << "\n";
+std::cout << x.sensitivity() << "\n";
+```
+
+## `Trace`: the reverse-mode transform value
+
+### Signature
+
+```cpp
+Trace trace(const Series& value, bool tracks_slope = true);
+Trace fixed(const Series& value);
+```
+
+### Explanation
+
+`Trace` is the reverse-mode wrapper used by transform APIs such as `value_and_grad`, `grad`, `jacrev`, and `vjp`.
+
+Use `trace(x)` for values that should participate in differentiation.
+Use `fixed(x)` for values that should flow through the computation without receiving gradients.
+
+### Example
+
+```cpp
+using namespace pluss::subsp::math::diff;
+
+auto x = pluss::make_series({0.3, -0.2, 0.5}).to(pluss::ScalarType::Float64);
+auto y = pluss::make_series({1.0,  2.0, 3.0}).to(pluss::ScalarType::Float64);
+
+auto tracked = trace(x, true);
+auto constant = fixed(y);
+auto out = square(tracked) + constant;
+
+out.reverse();
+std::cout << tracked.sensitivity() << "\n";
+```
+
+## `DualTrace`: the forward-mode transform value
+
+### Signature
+
+```cpp
+DualTrace trace(const Series& value, const Series& tangent);
+DualTrace fixed(const Series& value, const Series& tangent_like);
+```
+
+### Explanation
+
+`DualTrace` carries both the primal value and the tangent.
+It powers `jvp`, `jacfwd`, `linearize`, and the exact forward-over-reverse branch of `hvp`.
+
+The `value` and `tangent` must match in dtype, platform, and shape (or be reshape-compatible by total element count).
+
+### Example
+
+```cpp
+using namespace pluss::subsp::math::diff;
+
+auto x = pluss::make_series({0.3, -0.2, 0.5}).to(pluss::ScalarType::Float64);
+auto v = pluss::make_series({0.1,  0.05, -0.2}).to(pluss::ScalarType::Float64);
+
+auto dual = trace(x, v);
+auto out = sin(dual) + square(dual);
+
+std::cout << out.value() << "\n";
+std::cout << out.tangent() << "\n";
+```
+
+## `value_and_grad`
+
+### Signature
+
+```cpp
+auto [value, grads] = value_and_grad(fn, std::vector<Series>{...});
+auto [value, grad]  = value_and_grad(fn, param);
+```
+
+### Explanation
+
+`value_and_grad` is the main entry point for gradient-based optimization.
+It evaluates the objective once and returns both the primal value and the gradient with respect to each parameter.
+
+Use the single-parameter overload for one trainable `Series`.
+Use the vector overload when your objective depends on several parameters.
+
+### Example
+
+```cpp
+using namespace pluss::subsp::math::diff;
+
+auto x = pluss::linspace(-1.0, 1.0, 8, pluss::ScalarType::Float64);
+auto y = x.mul(2.0).sub(0.5);
+
+auto w = pluss::make_series(0.0).to(pluss::ScalarType::Float64);
+auto b = pluss::make_series(0.0).to(pluss::ScalarType::Float64);
+
+auto [loss, grads] = value_and_grad(
+    [&](const std::vector<Trace>& p) -> Trace {
+      const Trace pred = p[0] * trace(x, false) + p[1];
+      const Trace err = pred - trace(y, false);
+      return mean(err * err);
+    },
+    std::vector<pluss::Series>{w, b});
+
+std::cout << loss.item<double>() << "\n";
+std::cout << grads[0].item<double>() << ", " << grads[1].item<double>() << "\n";
+```
+
+## `grad`
+
+### Signature
+
+```cpp
+auto grads = grad(fn, std::vector<Series>{...});
+auto grad  = grad(fn, param);
+```
+
+### Explanation
+
+`grad` is the same transform as `value_and_grad`, but returns only the gradient part.
+Use it when the primal objective value is irrelevant to the caller.
+
+### Example
+
+```cpp
+using namespace pluss::subsp::math::diff;
+
+auto x = pluss::make_series(1.25).to(pluss::ScalarType::Float64);
+
+auto g = grad(
+    [](const Trace& z) -> Trace {
+      return square(z) - 4.0 * z + 1.0;
+    },
+    x);
+
+std::cout << g.item<double>() << "\n";
+```
+
+## `jvp`
+
+### Signature
+
+```cpp
+auto [value, directional] = jvp(fn, param, tangent);
+auto [value, directional] = jvp(fn, params, tangents);
+```
+
+### Explanation
+
+`jvp` computes a Jacobian-vector product.
+It tells you how the output changes in one chosen tangent direction without materializing the full Jacobian.
+
+### Example
+
+```cpp
+using namespace pluss::subsp::math::diff;
+
+auto x = pluss::make_series({0.3, -0.2, 0.5}).to(pluss::ScalarType::Float64);
+auto v = pluss::make_series({0.1,  0.05, -0.2}).to(pluss::ScalarType::Float64);
+
+auto [value, directional] = jvp(
+    [](const auto& z) {
+      return sin(z) + square(z);
+    },
+    x,
+    v);
+
+std::cout << value << "\n";
+std::cout << directional << "\n";
+```
+
+## `vjp`
+
+### Signature
+
+```cpp
+auto [value, pullback] = vjp(fn, param);
+auto [value, pullback] = vjp(fn, params);
+```
+
+### Explanation
+
+`vjp` computes a vector-Jacobian product closure.
+It first returns the primal output, then gives you a pullback function that maps a cotangent on the output space back into cotangents on the input space.
+
+Use it when the cotangent is not known at the time you evaluate the primal function.
+
+### Example
+
+```cpp
+using namespace pluss::subsp::math::diff;
+
+auto x = pluss::make_series({0.3, -0.2, 0.5}).to(pluss::ScalarType::Float64);
+auto cotangent = pluss::make_series({1.0, -0.5, 0.25}).to(pluss::ScalarType::Float64);
+
+auto [value, pullback] = vjp(
+    [](const Trace& z) -> Trace {
+      return sin(z) + square(z);
+    },
+    x);
+
+auto pulled = pullback(cotangent);
+std::cout << value << "\n";
+std::cout << pulled << "\n";
+```
+
+## `jacrev` and `jacfwd`
+
+### Signature
+
+```cpp
+auto [value, jacobian] = jacrev(fn, param);
+auto [value, jacobian] = jacfwd(fn, param);
+```
+
+### Explanation
+
+Both transforms materialize the full Jacobian.
+
+- `jacrev` builds it row-by-row with reverse-mode pullbacks
+- `jacfwd` builds it column-by-column with forward-mode pushforwards
+
+For small vector-output functions, either is fine.
+Choose based on the input/output dimensions you expect in the real workload.
+
+### Example
+
+```cpp
+using namespace pluss::subsp::math::diff;
+
+auto x = pluss::make_series({0.3, -0.2, 0.5}).to(pluss::ScalarType::Float64);
+
+auto [rev_value, rev_jac] = jacrev(
+    [](const auto& z) {
+      return sin(z) + square(z);
+    },
+    x);
+
+auto [fwd_value, fwd_jac] = jacfwd(
+    [](const auto& z) {
+      return sin(z) + square(z);
+    },
+    x);
+
+std::cout << rev_jac << "\n";
+std::cout << fwd_jac << "\n";
+```
+
+## `linearize`
+
+### Signature
+
+```cpp
+auto [value, pushforward] = linearize(fn, param);
+auto [value, pushforward] = linearize(fn, params);
+```
+
+### Explanation
+
+`linearize` evaluates the primal function once and returns a reusable pushforward closure.
+This is useful when you want to apply many tangents to the same local linearization without re-running the primal setup each time.
+
+### Example
+
+```cpp
+using namespace pluss::subsp::math::diff;
+
+auto x = pluss::make_series({0.3, -0.2, 0.5}).to(pluss::ScalarType::Float64);
+auto v1 = pluss::make_series({0.1, 0.05, -0.2}).to(pluss::ScalarType::Float64);
+auto v2 = pluss::make_series({-0.3, 0.2, 0.15}).to(pluss::ScalarType::Float64);
+
+auto [value, pushforward] = linearize(
+    [](const auto& z) {
+      return sin(z) + square(z);
+    },
+    x);
+
+auto d1 = pushforward(v1);
+auto d2 = pushforward(v2);
+
+std::cout << value << "\n";
+std::cout << d1 << "\n";
+std::cout << d2 << "\n";
+```
+
+## `hvp`
+
+### Signature
+
+```cpp
+auto [value, hv] = hvp(fn, param, tangent, HvpOptions{});
+auto [value, hv] = hvp(fn, params, tangents, HvpOptions{});
+```
+
+### Explanation
+
+`hvp` computes a Hessian-vector product for scalar-valued objectives.
+
+Two public execution modes exist:
+
+- exact forward-over-reverse when your callable is written against `DualTrace`
+- finite-difference-over-grad fallback when the callable is written only against `Trace`
+
+Set `HvpOptions::epsilon` when you need to tune the finite-difference step in the fallback path.
+
+### Example
+
+```cpp
+using namespace pluss::subsp::math::diff;
+
+auto x = pluss::make_series({0.3, -0.2, 0.5}).to(pluss::ScalarType::Float64);
+auto v = pluss::make_series({0.1,  0.05, -0.2}).to(pluss::ScalarType::Float64);
+
+HvpOptions opt;
+opt.epsilon = 1e-6;
+
+auto [value, hv] = hvp(
+    [](const auto& z) {
+      return sum(sin(z) + square(z));
+    },
+    x,
+    v,
+    opt);
+
+std::cout << value.item<double>() << "\n";
+std::cout << hv << "\n";
+```
+
+## `nth_derivative`
+
+### Signature
+
+```cpp
+Series nth_derivative(fn, param, std::int64_t order, HvpOptions opt = {});
+```
+
+### Explanation
+
+`nth_derivative` is the scalar single-input convenience helper.
+It currently supports exact orders `0`, `1`, and `2`.
+Orders above `2` are rejected.
+
+Use it when you want a direct scalar derivative helper without calling `grad(...)` or `hvp(...)` yourself.
+
+### Example
+
+```cpp
+using namespace pluss::subsp::math::diff;
+
+auto x = pluss::make_series(1.25).to(pluss::ScalarType::Float64);
+
+auto second = nth_derivative(
+    [](const auto& z) {
+      return z * z - 4.0 * z + 1.0;
+    },
+    x,
+    2);
+
+std::cout << second.item<double>() << "\n";
+```
+
+## Retaining or clearing sensitivities
+
+### Signature
+
+```cpp
+x.retain_grad(true);
+x.retains_grad();
+x.clear_sensitivity();
+```
+
+### Explanation
+
+Use these on raw `Series` when you need to keep or clear accumulated sensitivities manually.
+They matter most in long-running eager workflows where you do not want stale sensitivities from the previous reverse pass to leak into the next one.
+
+### Example
+
+```cpp
+auto x = pluss::make_series(2.0).to(pluss::ScalarType::Float64);
+x.requires_grad_(true);
+x.retain_grad(true);
+
+auto loss = x.square();
+loss.reverse();
+std::cout << x.retains_grad().item<bool>() << "\n";
+std::cout << x.sensitivity().item<double>() << "\n";
+
+x.clear_sensitivity();
+std::cout << x.has_sensitivity() << "\n";
+```
+
+## Mutation safety and version counters
+
+Tracked in-place mutation is intentionally restricted.
+Pluss bumps a storage version on in-place writes and blocks certain mutations on tracked values.
+That protects the reverse pass from silently reading stale saved state.
+
+```cpp
+auto x = pluss::make_series(1.0).to(pluss::ScalarType::Float64);
+auto before = x.storage_version();
+x.relu_();
+auto after = x.storage_version();
+std::cout << before << " -> " << after << "\n";
+
+auto tracked = pluss::make_series(0.25).to(pluss::ScalarType::Float64);
+tracked.requires_grad_(true);
+
+try {
+  tracked.add_(1.0);
+} catch (const std::exception& ex) {
+  std::cout << ex.what() << "\n";
+}
+```
+
+## Next page
+
+Use the `Autograd API Reference` tab when you want the direct signature-by-signature surface.

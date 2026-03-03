@@ -20,11 +20,16 @@ auto z = pluss::distr::sample("vonmises", {0.0, 3.0}, {1024});
 
 ```cpp
 auto like = pluss::zeros({2, 4},
-    pluss::Config{}.with_dtype(pluss::ScalarType::Float32));
+    pluss::Config{}
+        .with_dtype(pluss::ScalarType::Float32)
+        .with_platform(pluss::pCPU)
+        .with_pinned(true));
 
 auto gamma_like = pluss::distr::sample_like("gamma", {2.0}, like);
 auto signs_like = pluss::distr::sample_like("rademacher", like);
 ```
+
+`sample_like(...)` preserves the visible tensor contract from `like`: shape, dtype, and platform. It also forwards the pinned flag into the sampling config, but the current runtime does not surface pinned-memory state through `is_pinned()` yet.
 
 ## Evaluate Densities And CDFs
 

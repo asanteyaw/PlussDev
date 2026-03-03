@@ -286,7 +286,7 @@ Add real scene ordering for static exports.
 
 ### Status
 
-- `pending`
+- `completed`
 
 ## Patch 12: Serious 3D Core
 
@@ -309,7 +309,7 @@ Get from toy 3D to serious exportable 3D.
 
 ### Status
 
-- `pending`
+- `completed`
 
 ## Milestone: Serious Static 3D
 
@@ -336,7 +336,20 @@ Define the official 4D semantics for the library.
 
 ### Status
 
-- `pending`
+- `completed`
+
+### Progress
+
+- Landed:
+  - `Trace4D`
+  - `Encoding4D`
+  - `Figure4D`
+  - `w -> color`
+  - `w -> size`
+  - `w -> slice`
+  - `w -> frame`
+  - `w -> facet`
+  - 4D example and regression coverage
 
 ## Patch 14: View4D
 

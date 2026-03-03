@@ -174,7 +174,7 @@ DataFrame DataFrame::compare(const DataFrame& other) const {
   return ne(other);
 }
 
-DataFrame DataFrame::sum(bool render) const {
+DataFrameView DataFrame::sum(bool render) const {
   const auto& src = impl_ref_();
   std::vector<SummarySpec> specs;
   specs.reserve(src.names_.size());
@@ -185,10 +185,10 @@ DataFrame DataFrame::sum(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::sum: no numeric features");
-  return summarize_specs(specs, render);
+  return DataFrameView(summarize_specs(specs, false), render);
 }
 
-DataFrame DataFrame::mean(bool render) const {
+DataFrameView DataFrame::mean(bool render) const {
   const auto& src = impl_ref_();
   std::vector<SummarySpec> specs;
   specs.reserve(src.names_.size());
@@ -199,10 +199,10 @@ DataFrame DataFrame::mean(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::mean: no numeric features");
-  return summarize_specs(specs, render);
+  return DataFrameView(summarize_specs(specs, false), render);
 }
 
-DataFrame DataFrame::min(bool render) const {
+DataFrameView DataFrame::min(bool render) const {
   const auto& src = impl_ref_();
   std::vector<SummarySpec> specs;
   specs.reserve(src.names_.size());
@@ -213,10 +213,10 @@ DataFrame DataFrame::min(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::min: no numeric features");
-  return summarize_specs(specs, render);
+  return DataFrameView(summarize_specs(specs, false), render);
 }
 
-DataFrame DataFrame::max(bool render) const {
+DataFrameView DataFrame::max(bool render) const {
   const auto& src = impl_ref_();
   std::vector<SummarySpec> specs;
   specs.reserve(src.names_.size());
@@ -227,10 +227,10 @@ DataFrame DataFrame::max(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::max: no numeric features");
-  return summarize_specs(specs, render);
+  return DataFrameView(summarize_specs(specs, false), render);
 }
 
-DataFrame DataFrame::std(bool render) const {
+DataFrameView DataFrame::std(bool render) const {
   const auto& src = impl_ref_();
   std::vector<SummarySpec> specs;
   specs.reserve(src.names_.size());
@@ -241,10 +241,10 @@ DataFrame DataFrame::std(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::std: no numeric features");
-  return summarize_specs(specs, render);
+  return DataFrameView(summarize_specs(specs, false), render);
 }
 
-DataFrame DataFrame::var(bool render) const {
+DataFrameView DataFrame::var(bool render) const {
   const auto& src = impl_ref_();
   std::vector<SummarySpec> specs;
   specs.reserve(src.names_.size());
@@ -255,10 +255,10 @@ DataFrame DataFrame::var(bool render) const {
     }
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::var: no numeric features");
-  return summarize_specs(specs, render);
+  return DataFrameView(summarize_specs(specs, false), render);
 }
 
-DataFrame DataFrame::count(bool render) const {
+DataFrameView DataFrame::count(bool render) const {
   const auto& src = impl_ref_();
   std::vector<SummarySpec> specs;
   specs.reserve(src.names_.size());
@@ -266,10 +266,10 @@ DataFrame DataFrame::count(bool render) const {
     specs.push_back(SummarySpec{name, name, SummaryOp::Count});
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::count: no features");
-  return summarize_specs(specs, render);
+  return DataFrameView(summarize_specs(specs, false), render);
 }
 
-DataFrame DataFrame::nunique(bool render) const {
+DataFrameView DataFrame::nunique(bool render) const {
   const auto& src = impl_ref_();
   std::vector<SummarySpec> specs;
   specs.reserve(src.names_.size());
@@ -277,7 +277,7 @@ DataFrame DataFrame::nunique(bool render) const {
     specs.push_back(SummarySpec{name, name, SummaryOp::Nunique});
   }
   PLUSS_CHECK(!specs.empty(), "DataFrame::nunique: no features");
-  return summarize_specs(specs, render);
+  return DataFrameView(summarize_specs(specs, false), render);
 }
 
 DataFrame DataFrame::missing(const MissingSpec& spec) const {
@@ -757,7 +757,7 @@ DataFrame DataFrame::bfill() const {
   return missing(MissingOp::BackwardFill);
 }
 
-DataFrame DataFrame::describe(bool render) const {
+DataFrameView DataFrame::describe(bool render) const {
   const auto& src = impl_ref_();
   std::vector<std::pair<std::string, Thread>> out_cols;
   out_cols.reserve(src.columns_.size());
@@ -832,21 +832,17 @@ DataFrame DataFrame::describe(bool render) const {
   auto out = DataFrame(
       std::move(out_cols),
       make_note_thread({"count", "mean", "std", "min", "25%", "50%", "75%", "max"}));
-  if (render) {
-    display::print(std::cout, out);
-    out.suppress_next_stream_();
-  }
-  return out;
+  return DataFrameView(std::move(out), render);
 }
 
-DataFrame DataFrame::tally(std::string_view feature_name,
-                           std::int64_t top_n,
-                           bool dropna,
-                           bool render) const {
+DataFrameView DataFrame::tally(std::string_view feature_name,
+                               std::int64_t top_n,
+                               bool dropna,
+                               bool render) const {
   return count_by(feature_name, top_n, dropna, render);
 }
 
-DataFrame DataFrame::view(std::int64_t start, std::int64_t stop, bool render) const {
+DataFrameView DataFrame::view(std::int64_t start, std::int64_t stop, bool render) const {
   const auto n = nrows();
   const auto s = normalize_view_start(start, n);
   const auto e = normalize_view_stop(stop, n);
@@ -863,11 +859,7 @@ DataFrame DataFrame::view(std::int64_t start, std::int64_t stop, bool render) co
     out = after_start.head(e - s, false);
   }
 
-  if (render) {
-    display::print(std::cout, out);
-    out.suppress_next_stream_();
-  }
-  return out;
+  return DataFrameView(std::move(out), render);
 }
 
 DataFrame DataFrame::copy() const {

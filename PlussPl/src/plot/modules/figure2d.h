@@ -374,15 +374,33 @@ public:
                     std::string name = "",
                     std::vector<std::string> x_labels = {},
                     std::optional<Style> style = std::nullopt) {
+    return add_bar(x, y, std::move(name), std::move(x_labels), {}, {}, style);
+  }
+
+  Figure2D& add_bar(const std::vector<double>& x,
+                    const std::vector<double>& y,
+                    std::string name,
+                    std::vector<std::string> x_labels,
+                    std::vector<double> widths,
+                    std::vector<double> baselines = {},
+                    std::optional<Style> style = std::nullopt) {
     detail::ensure_same_size(x, y, "Figure2D::add_bar");
     if (!x_labels.empty() && x_labels.size() != x.size()) {
       throw std::invalid_argument("plotism::Figure2D::add_bar: x_labels size mismatch");
+    }
+    if (!widths.empty() && widths.size() != x.size()) {
+      throw std::invalid_argument("plotism::Figure2D::add_bar: widths size mismatch");
+    }
+    if (!baselines.empty() && baselines.size() != x.size()) {
+      throw std::invalid_argument("plotism::Figure2D::add_bar: baselines size mismatch");
     }
     Trace2D t;
     t.kind = Trace2DKind::Bar;
     t.name = std::move(name);
     t.x = x;
+    t.x2 = std::move(widths);
     t.y = y;
+    t.y2 = std::move(baselines);
     t.x_labels = std::move(x_labels);
     t.style = style.value_or(current_().style);
     current_().traces.push_back(std::move(t));

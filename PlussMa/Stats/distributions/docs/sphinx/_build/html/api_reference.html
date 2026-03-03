@@ -37,25 +37,31 @@
             
   <section id="api-reference">
 <h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading">¶</a></h1>
-<section id="entry-point">
-<h2>Entry Point<a class="headerlink" href="#entry-point" title="Link to this heading">¶</a></h2>
-<p>All distribution functionality is available from:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span>
-</pre></div>
-</div>
-<p>That alias resolves to <code class="docutils literal notranslate"><span class="pre">pluss::subsp::stat::distr</span></code>, but user code should generally prefer the shorter public path.</p>
-</section>
-<section id="core-functions">
-<h2>Core Functions<a class="headerlink" href="#core-functions" title="Link to this heading">¶</a></h2>
 <section id="supports">
-<h3><code class="docutils literal notranslate"><span class="pre">supports</span></code><a class="headerlink" href="#supports" title="Link to this heading">¶</a></h3>
+<h2><code class="docutils literal notranslate"><span class="pre">supports</span></code><a class="headerlink" href="#supports" title="Link to this heading">¶</a></h2>
+<section id="signature">
+<h3>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="nf">pluss::distr::supports</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="k">noexcept</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>Returns whether a distribution name or alias is recognized.</p>
+</section>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h3>
+<p>Checks whether the runtime resolver recognizes a family name or alias before you call <code class="docutils literal notranslate"><span class="pre">sample</span></code>, <code class="docutils literal notranslate"><span class="pre">pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">logpdf</span></code>, or <code class="docutils literal notranslate"><span class="pre">cdf</span></code>.</p>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">supports</span><span class="p">(</span><span class="s">&quot;gauss&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">supports</span><span class="p">(</span><span class="s">&quot;zipf&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">supports</span><span class="p">(</span><span class="s">&quot;not-a-dist&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="sample">
-<h3><code class="docutils literal notranslate"><span class="pre">sample</span></code><a class="headerlink" href="#sample" title="Link to this heading">¶</a></h3>
+<h2><code class="docutils literal notranslate"><span class="pre">sample</span></code><a class="headerlink" href="#sample" title="Link to this heading">¶</a></h2>
+<section id="id1">
+<h3>Signature<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">pluss::distr::sample</span><span class="p">(</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">params</span><span class="p">,</span>
@@ -64,15 +70,26 @@
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>Convenience overloads also exist for:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">initializer_list&lt;double&gt;</span></code> parameters</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">initializer_list&lt;std::int64_t&gt;</span></code> sizes</p></li>
-<li><p>zero-parameter distributions via <code class="docutils literal notranslate"><span class="pre">sample(name,</span> <span class="pre">sizes,</span> <span class="pre">cfg,</span> <span class="pre">seed)</span></code></p></li>
-</ul>
+</section>
+<section id="id2">
+<h3>Notes<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<p>Samples a new <code class="docutils literal notranslate"><span class="pre">Series</span></code> from the chosen family. Use the parameter list required by that distribution, pass the output shape through <code class="docutils literal notranslate"><span class="pre">sizes</span></code>, and use <code class="docutils literal notranslate"><span class="pre">cfg</span></code> when you need to control dtype or platform.</p>
+</section>
+<section id="id3">
+<h3>Examples<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}</span>
+<span class="w">    </span><span class="p">.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">with_platform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">draws</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">sample</span><span class="p">(</span><span class="s">&quot;normal&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">cfg</span><span class="p">,</span><span class="w"> </span><span class="mi">20260301ULL</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="sample-like">
-<h3><code class="docutils literal notranslate"><span class="pre">sample_like</span></code><a class="headerlink" href="#sample-like" title="Link to this heading">¶</a></h3>
+<h2><code class="docutils literal notranslate"><span class="pre">sample_like</span></code><a class="headerlink" href="#sample-like" title="Link to this heading">¶</a></h2>
+<section id="id4">
+<h3>Signature<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">pluss::distr::sample_like</span><span class="p">(</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">params</span><span class="p">,</span>
@@ -80,15 +97,28 @@
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>Convenience overloads also exist for:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">initializer_list&lt;double&gt;</span></code> parameters</p></li>
-<li><p>zero-parameter distributions via <code class="docutils literal notranslate"><span class="pre">sample_like(name,</span> <span class="pre">like,</span> <span class="pre">seed)</span></code></p></li>
-</ul>
-<p><code class="docutils literal notranslate"><span class="pre">sample_like</span></code> preserves the shape, platform, and dtype of <code class="docutils literal notranslate"><span class="pre">like</span></code>.</p>
+</section>
+<section id="id5">
+<h3>Notes<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<p>Uses the same distribution parameters as <code class="docutils literal notranslate"><span class="pre">sample(...)</span></code>, but takes shape, dtype, and platform from <code class="docutils literal notranslate"><span class="pre">like</span></code>. This is the right helper when another <code class="docutils literal notranslate"><span class="pre">Series</span></code> already defines the tensor contract you want.</p>
+</section>
+<section id="id6">
+<h3>Examples<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">like</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">zeros</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}</span>
+<span class="w">        </span><span class="p">.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float32</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">with_platform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">sample_like</span><span class="p">(</span><span class="s">&quot;gamma&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="n">like</span><span class="p">,</span><span class="w"> </span><span class="mi">77ULL</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="pdf">
-<h3><code class="docutils literal notranslate"><span class="pre">pdf</span></code><a class="headerlink" href="#pdf" title="Link to this heading">¶</a></h3>
+<h2><code class="docutils literal notranslate"><span class="pre">pdf</span></code><a class="headerlink" href="#pdf" title="Link to this heading">¶</a></h2>
+<section id="id7">
+<h3>Signature<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">pluss::distr::pdf</span><span class="p">(</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span>
@@ -96,8 +126,22 @@
 </pre></div>
 </div>
 </section>
+<section id="id8">
+<h3>Notes<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<p>Evaluates the probability density function for continuous families or the mass function for discrete families at every point in <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+</section>
+<section id="id9">
+<h3>Examples<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">dens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">pdf</span><span class="p">(</span><span class="s">&quot;normal&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+</section>
 <section id="logpdf">
-<h3><code class="docutils literal notranslate"><span class="pre">logpdf</span></code><a class="headerlink" href="#logpdf" title="Link to this heading">¶</a></h3>
+<h2><code class="docutils literal notranslate"><span class="pre">logpdf</span></code><a class="headerlink" href="#logpdf" title="Link to this heading">¶</a></h2>
+<section id="id10">
+<h3>Signature<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">pluss::distr::logpdf</span><span class="p">(</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span>
@@ -105,8 +149,22 @@
 </pre></div>
 </div>
 </section>
+<section id="id11">
+<h3>Notes<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h3>
+<p>Evaluates the natural log of the density or mass function. Use it when you are building log-likelihood objectives or want to avoid manually taking <code class="docutils literal notranslate"><span class="pre">log(pdf(...))</span></code>.</p>
+</section>
+<section id="id12">
+<h3>Examples<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">logdens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">logpdf</span><span class="p">(</span><span class="s">&quot;nig&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+</section>
 <section id="cdf">
-<h3><code class="docutils literal notranslate"><span class="pre">cdf</span></code><a class="headerlink" href="#cdf" title="Link to this heading">¶</a></h3>
+<h2><code class="docutils literal notranslate"><span class="pre">cdf</span></code><a class="headerlink" href="#cdf" title="Link to this heading">¶</a></h2>
+<section id="id13">
+<h3>Signature<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">pluss::distr::cdf</span><span class="p">(</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span>
@@ -114,8 +172,22 @@
 </pre></div>
 </div>
 </section>
+<section id="id14">
+<h3>Notes<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h3>
+<p>Evaluates the cumulative distribution function at every point in <code class="docutils literal notranslate"><span class="pre">x</span></code>. Use it when your downstream logic is expressed in tail probabilities or threshold probabilities rather than densities.</p>
+</section>
+<section id="id15">
+<h3>Examples<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">cdf</span><span class="p">(</span><span class="s">&quot;t&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">5.0</span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+</section>
 <section id="mixture-normal">
-<h3><code class="docutils literal notranslate"><span class="pre">mixture_normal</span></code><a class="headerlink" href="#mixture-normal" title="Link to this heading">¶</a></h3>
+<h2><code class="docutils literal notranslate"><span class="pre">mixture_normal</span></code><a class="headerlink" href="#mixture-normal" title="Link to this heading">¶</a></h2>
+<section id="id16">
+<h3>Signature<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">pluss::distr::mixture_normal</span><span class="p">(</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">weights</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">means</span><span class="p">,</span>
@@ -126,21 +198,106 @@
 <span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">use_sobol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>This samples from an <code class="docutils literal notranslate"><span class="pre">n</span></code>-component Gaussian mixture.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">weights</span></code>, <code class="docutils literal notranslate"><span class="pre">means</span></code>, and <code class="docutils literal notranslate"><span class="pre">stddevs</span></code> must have the same length</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">weights</span></code> are normalized internally</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">use_sobol=true</span></code> uses Sobol-driven Gaussian draws</p></li>
-</ul>
+</section>
+<section id="id17">
+<h3>Notes<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h3>
+<p>Samples from a Gaussian mixture defined by component weights, means, and standard deviations. Set <code class="docutils literal notranslate"><span class="pre">use_sobol=true</span></code> when you want Sobol-driven quasi-random normal draws instead of pseudo-random draws.</p>
+</section>
+<section id="id18">
+<h3>Examples<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Config</span><span class="p">{}.</span><span class="n">with_dtype</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">).</span><span class="n">with_platform</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">pCPU</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">weights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.65</span><span class="p">,</span><span class="w"> </span><span class="mf">0.35</span><span class="p">},</span><span class="w"> </span><span class="n">cfg</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">means</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="n">cfg</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">stddevs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.25</span><span class="p">},</span><span class="w"> </span><span class="n">cfg</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">mix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">mixture_normal</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span><span class="w"> </span><span class="n">means</span><span class="p">,</span><span class="w"> </span><span class="n">stddevs</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">8</span><span class="p">},</span><span class="w"> </span><span class="n">cfg</span><span class="p">,</span><span class="w"> </span><span class="mi">101ULL</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+</pre></div>
+</div>
 </section>
 </section>
-<section id="notes-on-dtypes">
-<h2>Notes On Dtypes<a class="headerlink" href="#notes-on-dtypes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>density-style functions return floating-point <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
-<li><p>discrete samplers use natural integral output where appropriate</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sample_like</span></code> is the shortest path when you want the result to match an existing tensor contract</p></li>
-</ul>
+<section id="mixture-normal-pdf">
+<h2><code class="docutils literal notranslate"><span class="pre">mixture_normal_pdf</span></code><a class="headerlink" href="#mixture-normal-pdf" title="Link to this heading">¶</a></h2>
+<section id="id19">
+<h3>Signature<a class="headerlink" href="#id19" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">pluss::distr::mixture_normal_pdf</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">weights</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">means</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">stddevs</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id20">
+<h3>Notes<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h3>
+<p>Evaluates the density of a Gaussian mixture that you have already parameterized as component <code class="docutils literal notranslate"><span class="pre">Series</span></code> values.</p>
+</section>
+<section id="id21">
+<h3>Examples<a class="headerlink" href="#id21" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">weights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.65</span><span class="p">,</span><span class="w"> </span><span class="mf">0.35</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">means</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">stddevs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.25</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">dens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">mixture_normal_pdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">weights</span><span class="p">,</span><span class="w"> </span><span class="n">means</span><span class="p">,</span><span class="w"> </span><span class="n">stddevs</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="mixture-normal-logpdf">
+<h2><code class="docutils literal notranslate"><span class="pre">mixture_normal_logpdf</span></code><a class="headerlink" href="#mixture-normal-logpdf" title="Link to this heading">¶</a></h2>
+<section id="id22">
+<h3>Signature<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">pluss::distr::mixture_normal_logpdf</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">weights</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">means</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">stddevs</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id23">
+<h3>Notes<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h3>
+<p>Evaluates the log-density of the same Gaussian mixture parameterization used by <code class="docutils literal notranslate"><span class="pre">mixture_normal_pdf(...)</span></code>.</p>
+</section>
+<section id="id24">
+<h3>Examples<a class="headerlink" href="#id24" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">weights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.65</span><span class="p">,</span><span class="w"> </span><span class="mf">0.35</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">means</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">stddevs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.25</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">logdens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">mixture_normal_logpdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">weights</span><span class="p">,</span><span class="w"> </span><span class="n">means</span><span class="p">,</span><span class="w"> </span><span class="n">stddevs</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="mixture-normal-cdf">
+<h2><code class="docutils literal notranslate"><span class="pre">mixture_normal_cdf</span></code><a class="headerlink" href="#mixture-normal-cdf" title="Link to this heading">¶</a></h2>
+<section id="id25">
+<h3>Signature<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="nf">pluss::distr::mixture_normal_cdf</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">weights</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">means</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">stddevs</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id26">
+<h3>Notes<a class="headerlink" href="#id26" title="Link to this heading">¶</a></h3>
+<p>Evaluates the mixture CDF using the same component parameterization as the other Gaussian-mixture helpers.</p>
+</section>
+<section id="id27">
+<h3>Examples<a class="headerlink" href="#id27" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">weights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.65</span><span class="p">,</span><span class="w"> </span><span class="mf">0.35</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">means</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">stddevs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.25</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">distr</span><span class="o">::</span><span class="n">mixture_normal_cdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">weights</span><span class="p">,</span><span class="w"> </span><span class="n">means</span><span class="p">,</span><span class="w"> </span><span class="n">stddevs</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
 </section>
 </section>
 
@@ -173,9 +330,16 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#entry-point">Entry Point</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#core-functions">Core Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#notes-on-dtypes">Notes On Dtypes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supports"><code class="docutils literal notranslate"><span class="pre">supports</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sample"><code class="docutils literal notranslate"><span class="pre">sample</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sample-like"><code class="docutils literal notranslate"><span class="pre">sample_like</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pdf"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logpdf"><code class="docutils literal notranslate"><span class="pre">logpdf</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cdf"><code class="docutils literal notranslate"><span class="pre">cdf</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mixture-normal"><code class="docutils literal notranslate"><span class="pre">mixture_normal</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mixture-normal-pdf"><code class="docutils literal notranslate"><span class="pre">mixture_normal_pdf</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mixture-normal-logpdf"><code class="docutils literal notranslate"><span class="pre">mixture_normal_logpdf</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mixture-normal-cdf"><code class="docutils literal notranslate"><span class="pre">mixture_normal_cdf</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="distribution_catalog.html">Distribution Catalog</a></li>

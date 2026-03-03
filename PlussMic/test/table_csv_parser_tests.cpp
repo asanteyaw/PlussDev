@@ -289,6 +289,30 @@ void test_display_engine_width_truncation_and_info() {
   expect(info.find("Memory") != std::string::npos, "info output missing memory field");
 }
 
+void test_html_display_renderers_and_backend_config() {
+  const auto df = DataFrame({
+      {"city", pluss::table::Thread(pluss::make_note({"Edmonton", "Calgary", "Banff"}))},
+      {"count", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{12, 8, 3}))},
+  });
+
+  pluss::table::display::DisplayOptions opts;
+
+  const auto html = pluss::table::display::render_html(df, opts);
+  expect(html.find("<table id=\"plussmic-table\"") != std::string::npos, "html display should render a table");
+  expect(html.find("Search visible rows") != std::string::npos, "html display should include search control");
+  expect(html.find("Copy visible") != std::string::npos, "html display should include copy control");
+  expect(html.find("sortable") != std::string::npos, "html display should mark sortable headers");
+  expect(html.find("Edmonton") != std::string::npos, "html display should include cell values");
+
+  const auto info_html = pluss::table::display::render_info_html(df, opts);
+  expect(info_html.find("Feature inventory") != std::string::npos, "info html should include feature inventory");
+  expect(info_html.find("Null Case Rows") != std::string::npos, "info html should include summary cards");
+  expect(info_html.find("pluss::table::DataFrame") != std::string::npos, "info html should include class name");
+
+  expect(pluss::table::display::default_backend() == pluss::table::display::DisplayBackend::Auto,
+         "display backend should default to smart auto mode");
+}
+
 void test_describe_numeric_summary() {
   ReadCsvOptions options;
   options.sep = ';';
@@ -382,47 +406,45 @@ void test_render_then_stream_suppression_once() {
     ~CoutCapture() { std::cout.rdbuf(old); }
   };
 
-  DataFrame h;
-  DataFrame t;
-  DataFrame v;
-  DataFrame d;
-  DataFrame s;
   {
     CoutCapture capture;
-    h = df.head(2, true);
-    t = df.tail(2, true);
-    v = df.view(0, 2, true);
-    d = df.describe(true);
-    s = df.aggregate({{"rows", "x", DataFrame::SummaryOp::Count}}, true);
-    expect(!capture.sink.str().empty(), "render=true methods should print to cout");
+    df.head(2);
+    df.tail(2);
+    df.view(0, 2);
+    df.describe();
+    df.aggregate({{"rows", "x", DataFrame::SummaryOp::Count}});
+    expect(!capture.sink.str().empty(), "default display methods should render to cout");
   }
 
-  std::ostringstream os_h;
-  os_h << h;
-  expect(os_h.str().empty(), "head(render=true) followed by stream should be suppressed once");
-  std::ostringstream os_h2;
-  os_h2 << h;
-  expect(!os_h2.str().empty(), "suppression should be single-use and allow subsequent streaming");
+  const auto head_text = df.head(2, false).to_string() + "\n";
+  const auto view_text = df.view(0, 2, false).to_string() + "\n";
 
-  std::ostringstream os_t;
-  os_t << t;
-  expect(os_t.str().empty(), "tail(render=true) followed by stream should be suppressed once");
+  {
+    CoutCapture capture;
+    std::ostringstream os;
+    os << df.head(2);
+    expect(capture.sink.str().empty(), "streaming a view should consume pending auto-render");
+    expect(os.str() == head_text.substr(0, head_text.size() - 1), "streamed head view mismatch");
+  }
 
-  std::ostringstream os_v;
-  os_v << v;
-  expect(os_v.str().empty(), "view(render=true) followed by stream should be suppressed once");
+  {
+    CoutCapture capture;
+    pluss::table::display::DisplayOptions opts;
+    opts.backend = pluss::table::display::DisplayBackend::Terminal;
+    df.head(2).show(opts);
+    expect(capture.sink.str() == head_text, "head().show(terminal) should print exactly once");
+  }
 
-  std::ostringstream os_d;
-  os_d << d;
-  expect(os_d.str().empty(), "describe(render=true) followed by stream should be suppressed once");
+  {
+    CoutCapture capture;
+    pluss::table::display::DisplayOptions opts;
+    opts.backend = pluss::table::display::DisplayBackend::Terminal;
+    df.view(0, 2).show(opts);
+    expect(capture.sink.str() == view_text, "view().show(terminal) should print exactly once");
+  }
 
-  std::ostringstream os_s;
-  os_s << s;
-  expect(os_s.str().empty(), "summarize(render=true) followed by stream should be suppressed once");
-
-  const auto h_no_render = df.head(2, false);
   std::ostringstream os_normal;
-  os_normal << h_no_render;
+  os_normal << df.head(2, false);
   expect(!os_normal.str().empty(), "head(render=false) should stream normally");
 }
 
@@ -1988,6 +2010,7 @@ int main() {
       {"bad_line_policy_and_locale_numeric_parsing", test_bad_line_policy_and_locale_numeric_parsing},
       {"usecols_nrows_skipfooter_and_invalid_source", test_usecols_nrows_skipfooter_and_invalid_source},
       {"display_engine_width_truncation_and_info", test_display_engine_width_truncation_and_info},
+      {"html_display_renderers_and_backend_config", test_html_display_renderers_and_backend_config},
       {"describe_numeric_summary", test_describe_numeric_summary},
       {"view_windowing", test_view_windowing},
       {"render_then_stream_suppression_once", test_render_then_stream_suppression_once},

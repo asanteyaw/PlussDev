@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+<rect x="0" y="0" width="1200" height="900" fill="#f4efe6" fill-opacity="1"/>
+<text x="600" y="28" text-anchor="middle" font-size="22" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#1f1a17" fill-opacity="1" font-weight="600">PlussPl 3D line</text>
+<rect x="110" y="84" width="1000" height="720" rx="14" fill="#fffdf8" fill-opacity="1"/>
+<rect x="110" y="84" width="1000" height="720" rx="14" fill="none" stroke="#ddd2c3" stroke-opacity="1" stroke-width="1"/>
+<line x1="1278.4" y1="744.462" x2="610" y2="536.842" stroke="#2f2924" stroke-opacity="1" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="610" y1="536.842" x2="-58.4003" y2="744.462" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="-58.4003" y1="744.462" x2="610" y2="883.67" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="610" y1="883.67" x2="1278.4" y2="744.462" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="1192.07" y1="182.347" x2="610" y2="-109.474" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="610" y1="-109.474" x2="27.932" y2="182.347" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="27.932" y1="182.347" x2="610" y2="388.611" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="610" y1="388.611" x2="1192.07" y2="182.347" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="1278.4" y1="744.462" x2="1192.07" y2="182.347" stroke="#2f2924" stroke-opacity="1" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="610" y1="536.842" x2="610" y2="-109.474" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="-58.4003" y1="744.462" x2="27.932" y2="182.347" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="610" y1="883.67" x2="610" y2="388.611" stroke="#ece2d5" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<line x1="1278.4" y1="744.462" x2="1278.4" y2="750.462" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1278.4" y="764.462" text-anchor="middle" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">0</text>
+<line x1="1209.63" y1="723.102" x2="1209.63" y2="729.102" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1209.63" y="743.102" text-anchor="middle" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">0.5</text>
+<line x1="1137.3" y1="700.634" x2="1137.3" y2="706.634" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1137.3" y="720.634" text-anchor="middle" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">1</text>
+<line x1="1061.12" y1="676.969" x2="1061.12" y2="682.969" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1061.12" y="696.969" text-anchor="middle" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">1.5</text>
+<line x1="980.766" y1="652.01" x2="980.766" y2="658.01" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="980.766" y="672.01" text-anchor="middle" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">2</text>
+<line x1="895.895" y1="625.647" x2="895.895" y2="631.647" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="895.895" y="645.647" text-anchor="middle" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">2.5</text>
+<line x1="806.112" y1="597.759" x2="806.112" y2="603.759" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="806.112" y="617.759" text-anchor="middle" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">3</text>
+<line x1="710.978" y1="568.208" x2="710.978" y2="574.208" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="710.978" y="588.208" text-anchor="middle" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">3.5</text>
+<line x1="610" y1="536.842" x2="610" y2="542.842" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="610" y="556.842" text-anchor="middle" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">4</text>
+<line x1="1272.4" y1="744.462" x2="1278.4" y2="744.462" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1268.4" y="747.962" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">1</text>
+<line x1="1193.92" y1="760.806" x2="1199.92" y2="760.806" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1189.92" y="764.306" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">1.2</text>
+<line x1="1118.43" y1="776.53" x2="1124.43" y2="776.53" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1114.43" y="780.03" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">1.4</text>
+<line x1="1045.74" y1="791.668" x2="1051.74" y2="791.668" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1041.74" y="795.168" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">1.6</text>
+<line x1="975.713" y1="806.253" x2="981.713" y2="806.253" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="971.713" y="809.753" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">1.8</text>
+<line x1="908.199" y1="820.314" x2="914.199" y2="820.314" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="904.199" y="823.814" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">2</text>
+<line x1="843.067" y1="833.88" x2="849.067" y2="833.88" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="839.067" y="837.38" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">2.2</text>
+<line x1="780.193" y1="846.974" x2="786.193" y2="846.974" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="776.193" y="850.474" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">2.4</text>
+<line x1="719.461" y1="859.623" x2="725.461" y2="859.623" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="715.461" y="863.123" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">2.6</text>
+<line x1="660.763" y1="871.848" x2="666.763" y2="871.848" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="656.763" y="875.348" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">2.8</text>
+<line x1="604" y1="883.67" x2="610" y2="883.67" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="600" y="887.17" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">3</text>
+<line x1="1273.4" y1="748.462" x2="1278.4" y2="744.462" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1270.4" y="738.462" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">0.1</text>
+<line x1="1259.53" y1="658.162" x2="1264.53" y2="654.162" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1256.53" y="648.162" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">0.2</text>
+<line x1="1246.23" y1="571.534" x2="1251.23" y2="567.534" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1243.23" y="561.534" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">0.3</text>
+<line x1="1233.45" y1="488.358" x2="1238.45" y2="484.358" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1230.45" y="478.358" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">0.4</text>
+<line x1="1221.18" y1="408.431" x2="1226.18" y2="404.431" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1218.18" y="398.431" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">0.5</text>
+<line x1="1209.37" y1="331.566" x2="1214.37" y2="327.566" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1206.37" y="321.566" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">0.6</text>
+<line x1="1198.01" y1="257.591" x2="1203.01" y2="253.591" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1195.01" y="247.591" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">0.7</text>
+<line x1="1187.07" y1="186.347" x2="1192.07" y2="182.347" stroke="#8a7d6f" stroke-opacity="1" stroke-width="1" stroke-linecap="round"/>
+<text x="1184.07" y="176.347" text-anchor="end" font-size="10" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#6a5f54" fill-opacity="1">0.8</text>
+<text x="624" y="558.842" text-anchor="start" font-size="12" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#3e352d" fill-opacity="1">x</text>
+<text x="592" y="871.67" text-anchor="end" font-size="12" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#3e352d" fill-opacity="1">y</text>
+<text x="1184.07" y="168.347" text-anchor="end" font-size="12" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#3e352d" fill-opacity="1">z</text>
+<line x1="191.424" y1="240.282" x2="219.52" y2="230.628" stroke="#0f766e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="round"/>
+<line x1="785.767" y1="700.634" x2="191.424" y2="240.282" stroke="#0f766e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="round"/>
+<line x1="1264.53" y1="654.162" x2="760.151" y2="533.324" stroke="#0f766e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="round"/>
+<line x1="760.151" y1="533.324" x2="785.767" y2="700.634" stroke="#0f766e" stroke-opacity="1" stroke-width="1.5" stroke-linecap="round"/>
+<rect x="994" y="90" width="110" height="24" rx="8" fill="#fffaf2" fill-opacity="0.92"/>
+<rect x="994" y="90" width="110" height="24" rx="8" fill="none" stroke="#d9cdbd" stroke-opacity="1" stroke-width="1"/>
+<line x1="1002" y1="104" x2="1020" y2="104" stroke="#0f766e" stroke-opacity="1" stroke-width="2" stroke-linecap="round"/>
+<text x="1026" y="108" text-anchor="start" font-size="11" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" fill="#4a4138" fill-opacity="1">line3</text>
+</svg>

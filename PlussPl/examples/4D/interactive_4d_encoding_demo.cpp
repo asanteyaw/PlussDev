@@ -1,0 +1,71 @@
+#include <cmath>
+#include <filesystem>
+#include <iostream>
+#include <vector>
+
+#include "pluss/plot/plot.h"
+
+int main() {
+  std::vector<double> strike;
+  std::vector<double> maturity;
+  std::vector<double> value;
+  std::vector<double> regime;
+
+  for (std::size_t j = 0; j < 12; ++j) {
+    const double t = 0.15 + static_cast<double>(j) * 0.18;
+    for (std::size_t i = 0; i < 14; ++i) {
+      const double k = 75.0 + static_cast<double>(i) * 4.0;
+      const double smile = (k - 100.0) / 28.0;
+      strike.push_back(k);
+      maturity.push_back(t);
+      value.push_back(0.16 + 0.09 * smile * smile + 0.03 * std::sqrt(t) + 0.008 * std::sin(2.0 * t + smile));
+      regime.push_back(0.6 + 0.3 * std::cos(1.8 * t) + 0.25 * smile);
+    }
+  }
+
+  auto fig4 = pluss::plotism::scatter4(strike, maturity, value, regime, "IV points")
+                  .with_title("PlussPl 4D Encoding Demo")
+                  .x_label("strike")
+                  .y_label("expiry")
+                  .z_label("implied vol")
+                  .w_label("regime")
+                  .theme("slate")
+                  .font_family("IBM Plex Sans")
+                  .encode_color("regime", 6);
+
+  auto color_fig = fig4.realize_color_figure();
+  color_fig.view(130.0, 24.0).camera_distance(3.7);
+
+  const auto cwd = std::filesystem::current_path();
+  const auto svg = (cwd / "plusspl_interactive_4d_color.svg").string();
+  const auto pdf = (cwd / "plusspl_interactive_4d_color.pdf").string();
+  color_fig.save_svg(svg, 1200, 900);
+  color_fig.save_pdf(pdf, 1200, 900);
+
+  auto size_fig = fig4.encode_size("regime", 6).realize_size_figure();
+  size_fig.view(130.0, 24.0).camera_distance(3.7);
+  const auto size_pdf = (cwd / "plusspl_interactive_4d_size.pdf").string();
+  size_fig.save_pdf(size_pdf, 1200, 900);
+
+  auto frame_figs = fig4.encode_frame("regime", 4).realize_frame_figures();
+  for (std::size_t i = 0; i < frame_figs.size(); ++i) {
+    const auto path = (cwd / ("plusspl_interactive_4d_frame_" + std::to_string(i + 1) + ".pdf")).string();
+    frame_figs[i].view(130.0, 24.0).camera_distance(3.7);
+    frame_figs[i].save_pdf(path, 1000, 760);
+  }
+
+  auto facet_figs = fig4.encode_facet("regime", 4).realize_facet_figures();
+  for (std::size_t i = 0; i < facet_figs.size(); ++i) {
+    const auto path = (cwd / ("plusspl_interactive_4d_facet_" + std::to_string(i + 1) + ".pdf")).string();
+    facet_figs[i].view(130.0, 24.0).camera_distance(3.7);
+    facet_figs[i].save_pdf(path, 1000, 760);
+  }
+
+  std::cout << "Saved SVG: " << svg << "\n";
+  std::cout << "Saved PDF: " << pdf << "\n";
+  std::cout << "Saved size PDF: " << size_pdf << "\n";
+  std::cout << "Saved frame PDFs: " << frame_figs.size() << "\n";
+  std::cout << "Saved facet PDFs: " << facet_figs.size() << "\n";
+  color_fig.show();
+  return 0;
+}

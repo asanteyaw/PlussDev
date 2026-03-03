@@ -71,11 +71,13 @@ int main() {
   pluss::plotism::Figure3D fig;
   fig.with_title("rich3d")
       .add_surface(strike, expiry, price_surface, "option surface")
+      .surface_contours(true, 2)
       .add_line3(path_x, path_y, path_z, "simulation path", path_style);
   fig.theme("slate").font_family("IBM Plex Sans");
   fig.view(132.0, 24.0).camera_distance(3.6).projection(pluss::plotism::ProjectionMode::Perspective);
   fig.x_label("strike").y_label("expiry").z_label("price");
   fig.legend(pluss::plotism::Legend{true, pluss::plotism::LegendLocation::OutsideRight, "3D traces"});
+  fig.colorbar(pluss::plotism::Colorbar{true, pluss::plotism::ColorbarLocation::Right, "surface value"});
 
   const std::string svg = unique_path("plusspl_test_rich_3d", ".svg");
   fig.save_svg(svg, 980, 720);
@@ -88,6 +90,7 @@ int main() {
   require(content.find("font-family=\"IBM Plex Sans\"") != std::string::npos, "expected custom font family in 3d svg");
   require(content.find("fill=\"#eef3f8\"") != std::string::npos, "expected slate theme page background in 3d svg");
   require(content.find("polygon") != std::string::npos, "expected surface polygons in 3d svg");
+  require(content.find("surface value") != std::string::npos, "expected colorbar title in 3d svg");
 
   return 0;
 }

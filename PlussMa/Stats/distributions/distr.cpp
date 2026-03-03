@@ -622,6 +622,12 @@ Series normal_cdf_(const Series& x, double mean, double stddev) {
   return norm_cdf_(as_f64_(x, "cdf").sub(mean).div(stddev));
 }
 
+// Series normal_cdf_(const Series& x, double mean, double stddev) {
+//   PLUSS_CHECK(stddev > 0.0, "subsp::stat::distr::normal cdf: std must be > 0");
+//   const Series xx = as_f64_(x, "cdf");
+//   return xx.sub(mean).div(stddev * kSqrt2).erf().add(1.0).mul(0.5);
+// }
+
 Series normal_sample_(double mean,
                       double stddev,
                       std::span<const std::int64_t> sizes,
@@ -2869,7 +2875,10 @@ Series sample_like(std::string_view name,
                    const Series& like,
                    std::uint64_t seed) {
   PLUSS_CHECK(like.defined(), "subsp::stat::distr::sample_like: expected defined Series");
-  const Config cfg = Config{}.with_dtype(like.scalar_type()).with_platform(like.platform());
+  const Config cfg = Config{}
+                         .with_dtype(like.scalar_type())
+                         .with_platform(like.platform())
+                         .with_pinned(like.is_pinned().item<bool>());
   return sample(name, params, like.sizes(), cfg, seed);
 }
 

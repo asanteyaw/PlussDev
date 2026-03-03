@@ -1,5 +1,6 @@
 #include "table/DataFrame.h"
 
+#include <exception>
 #include <iostream>
 #include <ostream>
 #include <string>
@@ -11,6 +12,11 @@
 
 namespace pluss::table {
 
+struct DataFrameView::State {
+  bool auto_render_terminal{false};
+  mutable bool consumed{false};
+};
+
 std::string DataFrame::to_string(const display::DisplayOptions& options) const {
   return display::render(*this, options);
 }
@@ -19,12 +25,78 @@ std::string DataFrame::info_string(const display::DisplayOptions& options) const
   return display::render_info(*this, options);
 }
 
+void DataFrame::show(const display::DisplayOptions& options) const {
+  display::show(*this, options);
+}
+
+void DataFrame::show(std::ostream& os, const display::DisplayOptions& options) const {
+  display::print(os, *this, options);
+}
+
 void DataFrame::info(const display::DisplayOptions& options) const {
   display::print_info(std::cout, *this, options);
 }
 
 void DataFrame::info(std::ostream& os, const display::DisplayOptions& options) const {
   display::print_info(os, *this, options);
+}
+
+DataFrameView::DataFrameView() : DataFrame(), state_(std::make_shared<State>()) {}
+
+DataFrameView::DataFrameView(DataFrame frame, bool auto_render_terminal)
+    : DataFrame(std::move(frame)), state_(std::make_shared<State>()) {
+  state_->auto_render_terminal = auto_render_terminal;
+}
+
+DataFrameView::DataFrameView(const DataFrameView& other) : DataFrame(other), state_(other.state_) {}
+
+DataFrameView::DataFrameView(DataFrameView&& other) noexcept : DataFrame(std::move(other)), state_(std::move(other.state_)) {}
+
+DataFrameView& DataFrameView::operator=(const DataFrameView& other) {
+  if (this == &other) {
+    return *this;
+  }
+  DataFrame::operator=(other);
+  state_ = other.state_;
+  return *this;
+}
+
+DataFrameView& DataFrameView::operator=(DataFrameView&& other) noexcept {
+  if (this == &other) {
+    return *this;
+  }
+  DataFrame::operator=(std::move(other));
+  state_ = std::move(other.state_);
+  return *this;
+}
+
+DataFrameView::~DataFrameView() {
+  maybe_autorender_();
+}
+
+void DataFrameView::consume_pending_display_() const {
+  if (!state_) {
+    return;
+  }
+  state_->consumed = true;
+}
+
+void DataFrameView::maybe_autorender_() const {
+  if (!state_ || !state_->auto_render_terminal || state_->consumed || std::uncaught_exceptions() > 0) {
+    return;
+  }
+  state_->consumed = true;
+  display::print(std::cout, static_cast<const DataFrame&>(*this));
+}
+
+void DataFrameView::show(const display::DisplayOptions& options) const {
+  consume_pending_display_();
+  DataFrame::show(options);
+}
+
+void DataFrameView::show(std::ostream& os, const display::DisplayOptions& options) const {
+  consume_pending_display_();
+  DataFrame::show(os, options);
 }
 
 void DataFrame::save_csv(std::string_view filepath) const {
@@ -161,6 +233,12 @@ std::ostream& operator<<(std::ostream& os, const DataFrame& frame) {
     return os;
   }
   os << frame.to_string();
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const DataFrameView& frame) {
+  frame.consume_pending_display_();
+  os << static_cast<const DataFrame&>(frame);
   return os;
 }
 

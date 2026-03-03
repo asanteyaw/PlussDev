@@ -52,11 +52,13 @@ int main() {
   pluss::plotism::Figure3D fig;
   fig.with_title("PlussPl 3D Interactive Show Demo")
       .add_surface(strike, maturity, iv_surface, "IV surface")
+      .surface_contours(true, 2)
       .add_line3(sim_x, sim_y, sim_z, "simulation path", path_style);
   fig.theme("slate").font_family("IBM Plex Sans");
   fig.view(128.0, 26.0).camera_distance(3.7).projection(pluss::plotism::ProjectionMode::Perspective);
   fig.x_label("strike").y_label("expiry").z_label("implied vol");
   fig.legend(pluss::plotism::Legend{true, pluss::plotism::LegendLocation::OutsideRight, "3D traces"});
+  fig.colorbar(pluss::plotism::Colorbar{true, pluss::plotism::ColorbarLocation::Right, "implied vol"});
 
   const auto cwd = std::filesystem::current_path();
   const auto svg = (cwd / "plusspl_interactive_3d.svg").string();

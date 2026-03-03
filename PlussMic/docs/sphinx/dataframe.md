@@ -58,6 +58,32 @@ Notes:
 - `cases()` is the row axis, not just a display index
 - `describe()` is the fastest way to check whether numeric casts and missing values look right
 
+### Display Views
+
+The table-style preview verbs return a `DataFrameView`, not a plain `DataFrame`.
+That is what makes this pattern work:
+
+```cpp
+df.head();          // terminal preview
+df.head().show();   // popup if GTK/WebKit exists, else terminal preview
+df.view(10, 20).show();
+df.describe().show();
+```
+
+If you keep the result, the stored type is still the preview wrapper:
+
+```cpp
+auto preview = df.head(5);
+preview.show();
+std::cout << preview << "\n";
+```
+
+If you explicitly want a materialized `DataFrame`, use `render=false`:
+
+```cpp
+pluss::table::DataFrame head_df = df.head(5, false);
+```
+
 ## Cast And Derive Features
 
 ```cpp

@@ -2,15 +2,18 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -20,6 +23,13 @@
 #if !defined(_WIN32)
 #include <sys/ioctl.h>
 #include <unistd.h>
+#endif
+
+#if defined(PLUSSMIC_HAVE_GTK_WEBKIT) && PLUSSMIC_HAVE_GTK_WEBKIT
+#include <cairo.h>
+#include <gdk/gdkkeysyms.h>
+#include <gtk/gtk.h>
+#include <webkit2/webkit2.h>
 #endif
 
 #include "CodeM/core/Complex.h"
@@ -77,6 +87,8 @@ struct EffectiveDisplayOptions {
   bool show_case_index{true};
   bool color{false};
 };
+
+std::atomic<DisplayBackend> g_default_backend{DisplayBackend::Auto};
 
 std::string clip_cell(std::string s, std::int64_t maxw) {
   if (maxw <= 0) {
@@ -667,6 +679,657 @@ std::string logical_dtype_name(const Thread& t) {
   }
 }
 
+bool compiled_with_gui_backend_() {
+#if defined(PLUSSMIC_HAVE_GTK_WEBKIT) && PLUSSMIC_HAVE_GTK_WEBKIT
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool runtime_gui_env_available_() {
+#if defined(_WIN32)
+  return true;
+#else
+  return std::getenv("DISPLAY") != nullptr || std::getenv("WAYLAND_DISPLAY") != nullptr;
+#endif
+}
+
+DisplayBackend resolve_backend_(const DisplayOptions& options) {
+  const auto configured =
+      options.backend == DisplayBackend::Auto ? g_default_backend.load(std::memory_order_relaxed) : options.backend;
+  if (configured == DisplayBackend::Auto) {
+    return (compiled_with_gui_backend_() && runtime_gui_env_available_()) ? DisplayBackend::GtkWebKit
+                                                                           : DisplayBackend::Terminal;
+  }
+  if (configured == DisplayBackend::GtkWebKit && (!compiled_with_gui_backend_() || !runtime_gui_env_available_())) {
+    return DisplayBackend::Terminal;
+  }
+  return configured;
+}
+
+std::string escape_html_(std::string_view text) {
+  std::string out;
+  out.reserve(text.size() + 16);
+  for (const auto ch : text) {
+    switch (ch) {
+      case '&':
+        out += "&amp;";
+        break;
+      case '<':
+        out += "&lt;";
+        break;
+      case '>':
+        out += "&gt;";
+        break;
+      case '"':
+        out += "&quot;";
+        break;
+      case '\'':
+        out += "&#39;";
+        break;
+      default:
+        out.push_back(ch);
+        break;
+    }
+  }
+  return out;
+}
+
+std::string window_title_(std::string_view fallback, const DisplayOptions& options) {
+  if (!options.window_title.empty()) {
+    return options.window_title;
+  }
+  return std::string(fallback);
+}
+
+std::string html_shell_(std::string_view title,
+                        std::string_view subtitle,
+                        std::string_view body,
+                        const DisplayOptions& options) {
+  const auto sortable = options.html_sortable ? "true" : "false";
+  const auto search = options.html_search ? "true" : "false";
+  const auto copy = options.html_copy_button ? "true" : "false";
+
+  return fmt::format(R"HTML(<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{0}</title>
+  <style>
+    :root {{
+      --paper: #f7f3ea;
+      --ink: #17212b;
+      --muted: #56606d;
+      --grid: #d6cfc3;
+      --line: #c4b9a8;
+      --accent: #0f766e;
+      --accent-2: #c2410c;
+      --panel: rgba(255,255,255,0.82);
+      --shadow: 0 22px 70px rgba(23, 33, 43, 0.18);
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      color: var(--ink);
+      font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(194, 65, 12, 0.10), transparent 26rem),
+        radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 28rem),
+        linear-gradient(180deg, #f4efe4 0%, #ece5d7 100%);
+    }}
+    .shell {{
+      min-height: 100vh;
+      padding: 22px;
+    }}
+    .frame {{
+      max-width: 1440px;
+      margin: 0 auto;
+      background: var(--panel);
+      border: 1px solid rgba(196, 185, 168, 0.9);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }}
+    .hero {{
+      padding: 22px 24px 16px;
+      border-bottom: 1px solid rgba(196, 185, 168, 0.7);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.88), rgba(249,245,238,0.7)),
+        linear-gradient(90deg, rgba(15, 118, 110, 0.08), rgba(194, 65, 12, 0.08));
+      display: flex;
+      gap: 18px;
+      align-items: end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }}
+    .hero h1 {{
+      margin: 0;
+      font-family: "IBM Plex Serif", Georgia, serif;
+      font-size: 1.65rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }}
+    .hero p {{
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }}
+    .tools {{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }}
+    .tools input {{
+      min-width: 240px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(86, 96, 109, 0.22);
+      background: rgba(255,255,255,0.86);
+      color: var(--ink);
+      font: inherit;
+    }}
+    .tools button {{
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 0;
+      background: linear-gradient(135deg, var(--accent), #155e75);
+      color: white;
+      font: inherit;
+      cursor: pointer;
+    }}
+    .tools button.secondary {{
+      background: linear-gradient(135deg, var(--accent-2), #9a3412);
+    }}
+    .content {{
+      padding: 0 18px 18px;
+    }}
+    .summary-grid {{
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      padding: 18px 6px 8px;
+    }}
+    .summary-card {{
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(196, 185, 168, 0.7);
+      background: rgba(255,255,255,0.76);
+    }}
+    .summary-card .label {{
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }}
+    .summary-card .value {{
+      margin-top: 6px;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }}
+    .table-wrap {{
+      overflow: auto;
+      margin-top: 10px;
+      border: 1px solid rgba(196, 185, 168, 0.8);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.88);
+    }}
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }}
+    thead th {{
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #f7efe2;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      white-space: nowrap;
+    }}
+    th, td {{
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(214, 207, 195, 0.75);
+      vertical-align: top;
+    }}
+    tbody tr:nth-child(even) {{
+      background: rgba(247, 243, 234, 0.55);
+    }}
+    tbody tr:hover {{
+      background: rgba(15, 118, 110, 0.08);
+    }}
+    th.sortable {{
+      cursor: pointer;
+      user-select: none;
+    }}
+    th.sortable::after {{
+      content: "  ↕";
+      color: rgba(86, 96, 109, 0.8);
+      font-size: 0.85em;
+    }}
+    .sticky-left {{
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: inherit;
+    }}
+    thead .sticky-left {{
+      z-index: 3;
+      background: #f7efe2;
+    }}
+    .num {{
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }}
+    .muted {{
+      color: var(--muted);
+    }}
+    .hidden {{
+      display: none;
+    }}
+    .pill {{
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(15, 118, 110, 0.10);
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }}
+    @media (max-width: 720px) {{
+      .shell {{
+        padding: 10px;
+      }}
+      .hero {{
+        padding: 18px 16px 14px;
+      }}
+      .content {{
+        padding: 0 10px 10px;
+      }}
+      .tools input {{
+        min-width: 0;
+        width: 100%;
+      }}
+    }}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="frame">
+      <header class="hero">
+        <div>
+          <h1>{0}</h1>
+          <p>{1}</p>
+        </div>
+        <div class="tools">
+          <input id="table-search" type="search" placeholder="Search visible rows" />
+          <button id="copy-visible" class="secondary" type="button">Copy visible</button>
+        </div>
+      </header>
+      <main class="content">
+        {2}
+      </main>
+    </div>
+  </div>
+  <script>
+    const enableSort = {3};
+    const enableSearch = {4};
+    const enableCopy = {5};
+    const table = document.getElementById('plussmic-table');
+    const detailTables = document.querySelectorAll('table[data-filterable="true"]');
+    const searchInput = document.getElementById('table-search');
+    const copyButton = document.getElementById('copy-visible');
+
+    if (!enableSearch) {{
+      searchInput.classList.add('hidden');
+    }}
+    if (!enableCopy) {{
+      copyButton.classList.add('hidden');
+    }}
+
+    function filterTables(query) {{
+      const needle = query.trim().toLowerCase();
+      detailTables.forEach((tbl) => {{
+        Array.from(tbl.tBodies).forEach((tbody) => {{
+          Array.from(tbody.rows).forEach((row) => {{
+            const haystack = row.innerText.toLowerCase();
+            row.classList.toggle('hidden', needle.length > 0 && !haystack.includes(needle));
+          }});
+        }});
+      }});
+    }}
+
+    function sortTable(tbl, columnIndex, numeric) {{
+      const tbody = tbl.tBodies[0];
+      if (!tbody) return;
+      const rows = Array.from(tbody.rows);
+      const current = tbl.dataset.sortDir === 'asc' ? 'asc' : 'desc';
+      const next = current === 'asc' ? 'desc' : 'asc';
+      rows.sort((a, b) => {{
+        const av = a.cells[columnIndex]?.dataset.sortValue ?? a.cells[columnIndex]?.innerText ?? '';
+        const bv = b.cells[columnIndex]?.dataset.sortValue ?? b.cells[columnIndex]?.innerText ?? '';
+        if (numeric) {{
+          const an = Number(av);
+          const bn = Number(bv);
+          if (Number.isFinite(an) && Number.isFinite(bn)) {{
+            return next === 'asc' ? an - bn : bn - an;
+          }}
+        }}
+        return next === 'asc'
+          ? av.localeCompare(bv, undefined, {{ numeric: true, sensitivity: 'base' }})
+          : bv.localeCompare(av, undefined, {{ numeric: true, sensitivity: 'base' }});
+      }});
+      rows.forEach((row) => tbody.appendChild(row));
+      tbl.dataset.sortDir = next;
+    }}
+
+    if (enableSort) {{
+      document.querySelectorAll('th.sortable').forEach((th) => {{
+        th.addEventListener('click', () => {{
+          const tbl = th.closest('table');
+          const columnIndex = Number(th.dataset.columnIndex || '0');
+          const numeric = th.dataset.kind === 'numeric';
+          sortTable(tbl, columnIndex, numeric);
+        }});
+      }});
+    }}
+
+    if (enableSearch) {{
+      searchInput.addEventListener('input', (event) => filterTables(event.target.value));
+    }}
+
+    async function copyVisibleTable() {{
+      const blocks = [];
+      detailTables.forEach((tbl) => {{
+        const header = Array.from(tbl.tHead?.rows[0]?.cells ?? []).map((cell) => cell.innerText.trim()).join('\t');
+        const lines = [header];
+        Array.from(tbl.tBodies[0]?.rows ?? []).forEach((row) => {{
+          if (row.classList.contains('hidden')) return;
+          lines.push(Array.from(row.cells).map((cell) => cell.innerText.trim()).join('\t'));
+        }});
+        blocks.push(lines.join('\n'));
+      }});
+      const payload = blocks.join('\n\n');
+      try {{
+        await navigator.clipboard.writeText(payload);
+      }} catch (err) {{
+        const area = document.createElement('textarea');
+        area.value = payload;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand('copy');
+        area.remove();
+      }}
+    }}
+
+    if (enableCopy) {{
+      copyButton.addEventListener('click', copyVisibleTable);
+    }}
+  </script>
+</body>
+</html>)HTML",
+                     escape_html_(title),
+                     escape_html_(subtitle),
+                     body,
+                     sortable,
+                     search,
+                     copy);
+}
+
+std::string render_html_pre_(std::string_view title,
+                             std::string_view subtitle,
+                             const std::string& content,
+                             const DisplayOptions& options) {
+  const auto body = fmt::format(
+      R"HTML(<div class="table-wrap"><pre style="margin:0; padding:16px; font-family:'IBM Plex Mono', 'SFMono-Regular', monospace; white-space:pre-wrap;">{}</pre></div>)HTML",
+      escape_html_(content));
+  return html_shell_(title, subtitle, body, options);
+}
+
+std::string render_html_table_(const DataFrame& frame,
+                               std::string_view title,
+                               std::string_view subtitle,
+                               const DisplayOptions& options) {
+  const auto cols = frame.columns();
+  const auto names = frame.column_names();
+
+  std::string body;
+  body += "<div class=\"summary-grid\">";
+  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
+                      frame.nrows());
+  body +=
+      fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
+                  frame.ncols());
+  body += fmt::format(
+      "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div class=\"value\">{}</div></div>",
+      escape_html_(logical_dtype_name(frame.cases())));
+  body += "</div>";
+
+  body += "<div class=\"table-wrap\">";
+  body += "<table id=\"plussmic-table\" data-filterable=\"true\"><thead><tr>";
+
+  std::size_t column_index = 0;
+  if (options.show_case_index) {
+    const auto case_numeric = is_numeric_thread(frame.cases());
+    body += fmt::format(
+        "<th class=\"sortable sticky-left{}\" data-column-index=\"{}\" data-kind=\"{}\">case</th>",
+        case_numeric ? " num" : "",
+        column_index++,
+        case_numeric ? "numeric" : "text");
+  }
+
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    const auto numeric = is_numeric_thread(cols[i]);
+    body += fmt::format("<th class=\"sortable{}\" data-column-index=\"{}\" data-kind=\"{}\">{}</th>",
+                        numeric ? " num" : "",
+                        column_index++,
+                        numeric ? "numeric" : "text",
+                        escape_html_(names[i]));
+  }
+  body += "</tr></thead><tbody>";
+
+  for (std::int64_t row = 0; row < frame.nrows(); ++row) {
+    body += "<tr>";
+    if (options.show_case_index) {
+      const auto case_value = thread_value_at(frame.cases(), row);
+      const auto case_numeric = is_numeric_thread(frame.cases());
+      body += fmt::format("<td class=\"sticky-left{}\" data-sort-value=\"{}\">{}</td>",
+                          case_numeric ? " num" : "",
+                          escape_html_(case_value),
+                          escape_html_(case_value));
+    }
+    for (std::size_t col = 0; col < cols.size(); ++col) {
+      const auto value = thread_value_at(cols[col], row);
+      const auto numeric = is_numeric_thread(cols[col]);
+      body += fmt::format("<td class=\"{}\" data-sort-value=\"{}\">{}</td>",
+                          numeric ? "num" : "",
+                          escape_html_(value),
+                          escape_html_(value));
+    }
+    body += "</tr>";
+  }
+
+  body += "</tbody></table></div>";
+  return html_shell_(title, subtitle, body, options);
+}
+
+std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& options) {
+  const auto cols = frame.columns();
+  const auto names = frame.column_names();
+
+  std::unordered_map<std::string, std::int64_t> dtype_counts;
+  std::uint64_t memory_bytes = estimate_bytes(frame.cases());
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    const auto dtype = logical_dtype_name(cols[i]);
+    dtype_counts[dtype] += 1;
+    memory_bytes += estimate_bytes(cols[i]);
+  }
+
+  const auto first_case = frame.nrows() > 0 ? thread_value_at(frame.cases(), 0) : std::string("NA");
+  const auto last_case = frame.nrows() > 0 ? thread_value_at(frame.cases(), frame.nrows() - 1) : std::string("NA");
+
+  std::string body;
+  body += "<div class=\"summary-grid\">";
+  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Class</div><div class=\"value\">{}</div></div>",
+                      "pluss::table::DataFrame");
+  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
+                      frame.nrows());
+  body +=
+      fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
+                  frame.ncols());
+  body += fmt::format(
+      "<div class=\"summary-card\"><div class=\"label\">Case Range</div><div class=\"value\">{} <span class=\"muted\">to</span> {}</div></div>",
+      escape_html_(first_case),
+      escape_html_(last_case));
+  body += fmt::format(
+      "<div class=\"summary-card\"><div class=\"label\">Null Case Rows</div><div class=\"value\">{}</div></div>",
+      frame.count_null_rows());
+  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Dtypes</div><div class=\"value\">{}</div></div>",
+                      escape_html_(dtype_summary_line(dtype_counts)));
+  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Memory</div><div class=\"value\">{}</div></div>",
+                      escape_html_(human_bytes(memory_bytes)));
+  body += "</div>";
+
+  body +=
+      "<div style=\"padding:8px 6px 0;\"><span class=\"pill\">Feature inventory</span></div><div class=\"table-wrap\">";
+  body += "<table id=\"plussmic-table\" data-filterable=\"true\"><thead><tr>";
+  body += "<th class=\"sortable\" data-column-index=\"0\" data-kind=\"numeric\">#</th>";
+  body += "<th class=\"sortable sticky-left\" data-column-index=\"1\" data-kind=\"text\">Feature</th>";
+  body += "<th class=\"sortable\" data-column-index=\"2\" data-kind=\"numeric\">Non-Null Cases</th>";
+  body += "<th class=\"sortable\" data-column-index=\"3\" data-kind=\"text\">Dtype</th>";
+  body += "</tr></thead><tbody>";
+
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    const auto nn = non_null_count(cols[i]);
+    const auto dtype = logical_dtype_name(cols[i]);
+    body += fmt::format(
+        "<tr><td class=\"num\" data-sort-value=\"{0}\">{0}</td><td class=\"sticky-left\" data-sort-value=\"{1}\">{2}</td><td class=\"num\" data-sort-value=\"{3}\">{3}</td><td data-sort-value=\"{4}\">{5}</td></tr>",
+        i,
+        escape_html_(names[i]),
+        escape_html_(names[i]),
+        nn,
+        escape_html_(dtype),
+        escape_html_(dtype));
+  }
+
+  body += "</tbody></table></div>";
+  return html_shell_("PlussMic DataFrame Info",
+                     fmt::format("{} cases, {} features", frame.nrows(), frame.ncols()),
+                     body,
+                     options);
+}
+
+bool show_html_window_(const std::string& html, const DisplayOptions& options, std::string_view title) {
+#if defined(PLUSSMIC_HAVE_GTK_WEBKIT) && PLUSSMIC_HAVE_GTK_WEBKIT
+  struct SnapshotRequest {
+    std::string path;
+  };
+
+  if (!runtime_gui_env_available_()) {
+    return false;
+  }
+  if (!gtk_init_check(nullptr, nullptr)) {
+    return false;
+  }
+
+  GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(window), window_title_(title, options).c_str());
+  gtk_window_set_default_size(GTK_WINDOW(window),
+                              static_cast<int>(std::max<std::int64_t>(640, options.viewer_width)),
+                              static_cast<int>(std::max<std::int64_t>(420, options.viewer_height)));
+
+  g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), nullptr);
+  g_signal_connect(window,
+                   "key-press-event",
+                   G_CALLBACK(+[](GtkWidget*, GdkEventKey* event, gpointer) -> gboolean {
+                     if (event->keyval == GDK_KEY_Escape) {
+                       gtk_main_quit();
+                       return TRUE;
+                     }
+                     return FALSE;
+                   }),
+                   nullptr);
+
+  GtkWidget* root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_container_add(GTK_CONTAINER(window), root);
+
+  GtkWidget* toolbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+  gtk_widget_set_margin_top(toolbar, 10);
+  gtk_widget_set_margin_bottom(toolbar, 6);
+  gtk_widget_set_margin_start(toolbar, 12);
+  gtk_widget_set_margin_end(toolbar, 12);
+  gtk_box_pack_start(GTK_BOX(root), toolbar, FALSE, FALSE, 0);
+
+  GtkWidget* save_button = gtk_button_new_with_label("Save PNG");
+  gtk_box_pack_end(GTK_BOX(toolbar), save_button, FALSE, FALSE, 0);
+
+  GtkWidget* scroller = gtk_scrolled_window_new(nullptr, nullptr);
+  gtk_box_pack_start(GTK_BOX(root), scroller, TRUE, TRUE, 0);
+
+  WebKitWebView* webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
+  webkit_web_view_load_html(webview, html.c_str(), "file:///");
+  gtk_container_add(GTK_CONTAINER(scroller), GTK_WIDGET(webview));
+
+  g_signal_connect(
+      save_button,
+      "clicked",
+      G_CALLBACK(+[](GtkButton*, gpointer user_data) {
+        auto* webview = WEBKIT_WEB_VIEW(user_data);
+        GtkWidget* dialog = gtk_file_chooser_dialog_new("Save Table Snapshot",
+                                                        nullptr,
+                                                        GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                        "_Cancel",
+                                                        GTK_RESPONSE_CANCEL,
+                                                        "_Save",
+                                                        GTK_RESPONSE_ACCEPT,
+                                                        nullptr);
+        gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), "table-view.png");
+        if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+          char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+          auto* request = new SnapshotRequest{filename != nullptr ? filename : "table-view.png"};
+          if (filename != nullptr) {
+            g_free(filename);
+          }
+          webkit_web_view_get_snapshot(
+              webview,
+              WEBKIT_SNAPSHOT_REGION_FULL_DOCUMENT,
+              WEBKIT_SNAPSHOT_OPTIONS_NONE,
+              nullptr,
+              +[](GObject* source, GAsyncResult* result, gpointer user_data) {
+                std::unique_ptr<SnapshotRequest> request(static_cast<SnapshotRequest*>(user_data));
+                GError* error = nullptr;
+                cairo_surface_t* surface =
+                    webkit_web_view_get_snapshot_finish(WEBKIT_WEB_VIEW(source), result, &error);
+                if (error != nullptr) {
+                  g_error_free(error);
+                  return;
+                }
+                if (surface != nullptr) {
+                  cairo_surface_write_to_png(surface, request->path.c_str());
+                  cairo_surface_destroy(surface);
+                }
+              },
+              request);
+        }
+        gtk_widget_destroy(dialog);
+      }),
+      webview);
+
+  gtk_widget_show_all(window);
+  gtk_main();
+  return true;
+#else
+  (void)html;
+  (void)options;
+  (void)title;
+  return false;
+#endif
+}
+
 } // namespace
 
 TerminalInfo detect_terminal() {
@@ -690,6 +1353,18 @@ TerminalInfo detect_terminal() {
     if (n > 0) out.rows = n;
   }
   return out;
+}
+
+DisplayBackend default_backend() {
+  return g_default_backend.load(std::memory_order_relaxed);
+}
+
+void set_default_backend(DisplayBackend backend) {
+  g_default_backend.store(backend, std::memory_order_relaxed);
+}
+
+bool gui_backend_available() {
+  return compiled_with_gui_backend_() && runtime_gui_env_available_();
 }
 
 std::string render(const DataFrame& frame, const DisplayOptions& options) {
@@ -742,6 +1417,18 @@ std::string render(const DataFrame& frame, const DisplayOptions& options) {
 std::string render(const Thread& thread, const DisplayOptions& options) {
   DataFrame tmp({{"value", thread}});
   return render(tmp, options);
+}
+
+std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
+  return render_html_table_(frame,
+                            "PlussMic DataFrame",
+                            fmt::format("{} cases, {} features", frame.nrows(), frame.ncols()),
+                            options);
+}
+
+std::string render_html(const Thread& thread, const DisplayOptions& options) {
+  DataFrame tmp({{"value", thread}});
+  return render_html(tmp, options);
 }
 
 std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
@@ -812,6 +1499,10 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   return out;
 }
 
+std::string render_info_html(const DataFrame& frame, const DisplayOptions& options) {
+  return render_html_info_doc_(frame, options);
+}
+
 std::string render(const Atlas& atlas, const DisplayOptions& options) {
   const auto term = detect_terminal();
   const auto effective = resolve_effective_options(options, term, false);
@@ -866,6 +1557,47 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
     out += lines[i];
   }
   return out;
+}
+
+void show(const DataFrame& frame, const DisplayOptions& options) {
+  if (resolve_backend_(options) == DisplayBackend::GtkWebKit) {
+    const auto html = render_html(frame, options);
+    if (show_html_window_(html, options, "PlussMic DataFrame")) {
+      return;
+    }
+  }
+  print(std::cout, frame, options);
+}
+
+void show(const Thread& thread, const DisplayOptions& options) {
+  if (resolve_backend_(options) == DisplayBackend::GtkWebKit) {
+    const auto html = render_html(thread, options);
+    if (show_html_window_(html, options, "PlussMic Thread")) {
+      return;
+    }
+  }
+  print(std::cout, thread, options);
+}
+
+void show(const Atlas& atlas, const DisplayOptions& options) {
+  if (resolve_backend_(options) == DisplayBackend::GtkWebKit) {
+    const auto html =
+        render_html_pre_("PlussMic Atlas", fmt::format("{} frames", atlas.depth()), render(atlas, options), options);
+    if (show_html_window_(html, options, "PlussMic Atlas")) {
+      return;
+    }
+  }
+  print(std::cout, atlas, options);
+}
+
+void show_info(const DataFrame& frame, const DisplayOptions& options) {
+  if (resolve_backend_(options) == DisplayBackend::GtkWebKit) {
+    const auto html = render_info_html(frame, options);
+    if (show_html_window_(html, options, "PlussMic DataFrame Info")) {
+      return;
+    }
+  }
+  print_info(std::cout, frame, options);
 }
 
 void print(std::ostream& os, const Thread& thread, const DisplayOptions& options) {
