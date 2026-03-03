@@ -10,6 +10,7 @@
 
 #include "plot/modules/encoding_4d.h"
 #include "plot/modules/figure3d.h"
+#include "plot/modules/view4d.h"
 
 namespace pluss::plotism {
 
@@ -40,6 +41,32 @@ public:
     if (encoding_.title == "w") {
       encoding_.title = w_label_;
     }
+    return *this;
+  }
+
+  Figure4D& view(double azimuth_deg, double elevation_deg) {
+    camera_.azimuth_deg = azimuth_deg;
+    camera_.elevation_deg = elevation_deg;
+    return *this;
+  }
+
+  Figure4D& azimuth(double degrees) {
+    camera_.azimuth_deg = degrees;
+    return *this;
+  }
+
+  Figure4D& elevation(double degrees) {
+    camera_.elevation_deg = degrees;
+    return *this;
+  }
+
+  Figure4D& camera_distance(double distance) {
+    camera_.distance = std::max(1.0, distance);
+    return *this;
+  }
+
+  Figure4D& projection(ProjectionMode mode) {
+    camera_.projection = mode;
     return *this;
   }
 
@@ -134,6 +161,7 @@ public:
     fig.with_title(title_);
     fig.x_label(x_label_).y_label(y_label_).z_label(z_label_);
     fig.theme(style_.theme).font_family(style_.font_family);
+    fig.view(camera_.azimuth_deg, camera_.elevation_deg).camera_distance(camera_.distance).projection(camera_.projection);
     fig.legend(Legend{.visible = true, .location = LegendLocation::OutsideRight, .title = encoding_.title});
     fig.colorbar(Colorbar{.visible = true, .location = ColorbarLocation::Right, .title = encoding_.title});
 
@@ -152,6 +180,7 @@ public:
     fig.with_title(title_);
     fig.x_label(x_label_).y_label(y_label_).z_label(z_label_);
     fig.theme(style_.theme).font_family(style_.font_family);
+    fig.view(camera_.azimuth_deg, camera_.elevation_deg).camera_distance(camera_.distance).projection(camera_.projection);
     fig.legend(Legend{.visible = true, .location = LegendLocation::OutsideRight, .title = encoding_.title});
 
     for (auto trace3 : detail::encode_size_4d(traces_, encoding_)) {
@@ -176,9 +205,64 @@ public:
     return realize_binned_figures_();
   }
 
+  View4D realize_view() const {
+    switch (encoding_.strategy) {
+      case Encoding4DStrategy::Color:
+        return View4D{title_, style_, View4DLayout::Single, {{.scene = realize_color_figure(), .title = title_}}};
+      case Encoding4DStrategy::Size:
+        return View4D{title_, style_, View4DLayout::Single, {{.scene = realize_size_figure(), .title = title_}}};
+      case Encoding4DStrategy::Slice:
+        return realize_binned_view_("slice");
+      case Encoding4DStrategy::Frame:
+        return realize_binned_view_("frame");
+      case Encoding4DStrategy::Facet:
+        return realize_binned_view_("facet");
+      default:
+        return View4D{};
+    }
+  }
+
+  View4D realize_slice_view() const {
+    return realize_binned_view_("slice");
+  }
+
+  View4D realize_frame_view() const {
+    return realize_binned_view_("frame");
+  }
+
+  View4D realize_facet_view() const {
+    return realize_binned_view_("facet");
+  }
+
 private:
   std::vector<Figure3D> realize_binned_figures_() const {
     std::vector<Figure3D> figures;
+    for (auto panel : make_binned_panels_()) {
+      panel.scene.legend(Legend{.visible = true, .location = LegendLocation::OutsideRight, .title = encoding_.title});
+      figures.push_back(std::move(panel.scene));
+    }
+    return figures;
+  }
+
+  View4D realize_binned_view_(std::string_view mode) const {
+    auto panels = make_binned_panels_();
+    if (panels.empty()) {
+      return View4D{fmt::format("{} {}", title_, mode), style_, View4DLayout::Grid, {}};
+    }
+    for (auto& panel : panels) {
+      panel.scene.legend(Legend{.visible = false});
+      panel.scene.colorbar(Colorbar{.visible = false});
+    }
+    return View4D{
+        fmt::format("{} {} view", title_, mode),
+        style_,
+        panels.size() == 1 ? View4DLayout::Single : View4DLayout::Grid,
+        std::move(panels),
+    };
+  }
+
+  std::vector<View4DPanel> make_binned_panels_() const {
+    std::vector<View4DPanel> panels;
     const auto slices = detail::encode_slices_4d(traces_, encoding_);
     const auto w_values = detail::collect_w_values_4d(traces_);
     const auto [wmin, wmax] = detail::finite_minmax_4d(w_values);
@@ -196,7 +280,7 @@ private:
       fig.with_title(fmt::format("{} {} [{:.3g}, {:.3g}]", title_, encoding_.prefix, lo, hi));
       fig.x_label(x_label_).y_label(y_label_).z_label(z_label_);
       fig.theme(style_.theme).font_family(style_.font_family);
-      fig.legend(Legend{.visible = true, .location = LegendLocation::OutsideRight, .title = encoding_.title});
+      fig.view(camera_.azimuth_deg, camera_.elevation_deg).camera_distance(camera_.distance).projection(camera_.projection);
       for (const auto& trace : traces) {
         if (trace.kind == Trace3DKind::Line3) {
           fig.add_line3(trace.x, trace.y, trace.z, trace.name, trace.style);
@@ -204,9 +288,12 @@ private:
           fig.add_scatter3(trace.x, trace.y, trace.z, trace.name, trace.style);
         }
       }
-      figures.push_back(std::move(fig));
+      panels.push_back(View4DPanel{
+          .scene = std::move(fig),
+          .title = fmt::format("{} [{:.3g}, {:.3g}]", encoding_.title, lo, hi),
+      });
     }
-    return figures;
+    return panels;
   }
   std::string title_{};
   std::string x_label_{"x"};
@@ -215,6 +302,7 @@ private:
   std::string w_label_{"w"};
   Style style_{};
   Encoding4D encoding_{};
+  Camera3D camera_{};
   std::vector<Trace4D> traces_{};
 };
 

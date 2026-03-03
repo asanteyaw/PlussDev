@@ -349,6 +349,8 @@ Define the official 4D semantics for the library.
   - `w -> slice`
   - `w -> frame`
   - `w -> facet`
+  - `View4D`
+  - Composed 4D frame/facet exports
   - 4D example and regression coverage
 
 ## Patch 14: View4D
@@ -369,7 +371,7 @@ Generate realizable 3D scenes or 2D projections from 4D data.
 
 ### Status
 
-- `pending`
+- `completed`
 
 ## Patch 15: 4D UX
 

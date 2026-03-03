@@ -320,6 +320,33 @@ void test_html_display_renderers_and_backend_config() {
          "display backend should default to smart auto mode");
 }
 
+void test_atlas_html_display_renderer() {
+  const auto atlas = pluss::table::Atlas(
+      {
+          DataFrame({
+              {"city", pluss::table::Thread(pluss::make_note({"Edmonton", "Calgary"}))},
+              {"count", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{12, 8}))},
+          }),
+          DataFrame({
+              {"city", pluss::table::Thread(pluss::make_note({"Banff", "Jasper"}))},
+              {"count", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{3, 2}))},
+          }),
+      },
+      pluss::table::Thread(pluss::make_note({"weekdays", "weekends"})));
+
+  pluss::table::display::DisplayOptions opts;
+  const auto html = pluss::table::display::render_html(atlas, opts);
+
+  expect(html.find("Frames") != std::string::npos, "atlas html should include frame navigation label");
+  expect(html.find("atlas-tab active") != std::string::npos, "atlas html should mark the initial frame tab active");
+  expect(html.find("weekdays") != std::string::npos, "atlas html should surface depth labels");
+  expect(html.find("weekends") != std::string::npos, "atlas html should include all frame selectors");
+  expect(html.find("atlas-panel active") != std::string::npos, "atlas html should include a visible frame panel");
+  expect(html.find("plussmic-table-0") != std::string::npos, "atlas html should embed per-frame tables");
+  expect(html.find("Edmonton") != std::string::npos, "atlas html should include the first frame contents");
+  expect(html.find("Banff") != std::string::npos, "atlas html should include the second frame contents");
+}
+
 void test_describe_numeric_summary() {
   ReadCsvOptions options;
   options.sep = ';';
@@ -2043,6 +2070,7 @@ int main() {
       {"usecols_nrows_skipfooter_and_invalid_source", test_usecols_nrows_skipfooter_and_invalid_source},
       {"display_engine_width_truncation_and_info", test_display_engine_width_truncation_and_info},
       {"html_display_renderers_and_backend_config", test_html_display_renderers_and_backend_config},
+      {"atlas_html_display_renderer", test_atlas_html_display_renderer},
       {"describe_numeric_summary", test_describe_numeric_summary},
       {"view_windowing", test_view_windowing},
       {"render_then_stream_suppression_once", test_render_then_stream_suppression_once},

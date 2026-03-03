@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 
+#include "../output_paths.h"
 #include "pluss/plot/plot.h"
 
 int main() {
@@ -60,9 +61,8 @@ int main() {
   fig.legend(pluss::plotism::Legend{true, pluss::plotism::LegendLocation::OutsideRight, "3D traces"});
   fig.colorbar(pluss::plotism::Colorbar{true, pluss::plotism::ColorbarLocation::Right, "implied vol"});
 
-  const auto cwd = std::filesystem::current_path();
-  const auto svg = (cwd / "plusspl_interactive_3d.svg").string();
-  const auto pdf = (cwd / "plusspl_interactive_3d.pdf").string();
+  const auto svg = plusspl::examples::output_path(__FILE__, "plusspl_interactive_3d.svg");
+  const auto pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_3d.pdf");
   fig.save_svg(svg, 1200, 900);
   fig.save_pdf(pdf, 1200, 900);
 

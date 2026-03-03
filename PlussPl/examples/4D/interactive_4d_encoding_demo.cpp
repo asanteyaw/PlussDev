@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 
+#include "../output_paths.h"
 #include "pluss/plot/plot.h"
 
 int main() {
@@ -31,41 +32,40 @@ int main() {
                   .w_label("regime")
                   .theme("slate")
                   .font_family("IBM Plex Sans")
+                  .view(130.0, 24.0)
+                  .camera_distance(4.8)
                   .encode_color("regime", 6);
 
   auto color_fig = fig4.realize_color_figure();
-  color_fig.view(130.0, 24.0).camera_distance(3.7);
 
-  const auto cwd = std::filesystem::current_path();
-  const auto svg = (cwd / "plusspl_interactive_4d_color.svg").string();
-  const auto pdf = (cwd / "plusspl_interactive_4d_color.pdf").string();
+  const auto svg = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_color.svg");
+  const auto pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_color.pdf");
   color_fig.save_svg(svg, 1200, 900);
   color_fig.save_pdf(pdf, 1200, 900);
 
   auto size_fig = fig4.encode_size("regime", 6).realize_size_figure();
-  size_fig.view(130.0, 24.0).camera_distance(3.7);
-  const auto size_pdf = (cwd / "plusspl_interactive_4d_size.pdf").string();
+  const auto size_pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_size.pdf");
   size_fig.save_pdf(size_pdf, 1200, 900);
 
-  auto frame_figs = fig4.encode_frame("regime", 4).realize_frame_figures();
-  for (std::size_t i = 0; i < frame_figs.size(); ++i) {
-    const auto path = (cwd / ("plusspl_interactive_4d_frame_" + std::to_string(i + 1) + ".pdf")).string();
-    frame_figs[i].view(130.0, 24.0).camera_distance(3.7);
-    frame_figs[i].save_pdf(path, 1000, 760);
-  }
+  auto frame_view = fig4.encode_frame("regime", 4).realize_frame_view();
+  const auto frame_pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_frame_view.pdf");
+  const auto frame_svg = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_frame_view.svg");
+  frame_view.save_pdf(frame_pdf, 1400, 960);
+  frame_view.save_svg(frame_svg, 1400, 960);
 
-  auto facet_figs = fig4.encode_facet("regime", 4).realize_facet_figures();
-  for (std::size_t i = 0; i < facet_figs.size(); ++i) {
-    const auto path = (cwd / ("plusspl_interactive_4d_facet_" + std::to_string(i + 1) + ".pdf")).string();
-    facet_figs[i].view(130.0, 24.0).camera_distance(3.7);
-    facet_figs[i].save_pdf(path, 1000, 760);
-  }
+  auto facet_view = fig4.encode_facet("regime", 4).realize_facet_view();
+  const auto facet_pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_facet_view.pdf");
+  const auto facet_svg = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_facet_view.svg");
+  facet_view.save_pdf(facet_pdf, 1400, 960);
+  facet_view.save_svg(facet_svg, 1400, 960);
 
   std::cout << "Saved SVG: " << svg << "\n";
   std::cout << "Saved PDF: " << pdf << "\n";
   std::cout << "Saved size PDF: " << size_pdf << "\n";
-  std::cout << "Saved frame PDFs: " << frame_figs.size() << "\n";
-  std::cout << "Saved facet PDFs: " << facet_figs.size() << "\n";
+  std::cout << "Saved frame view PDF: " << frame_pdf << "\n";
+  std::cout << "Saved frame view SVG: " << frame_svg << "\n";
+  std::cout << "Saved facet view PDF: " << facet_pdf << "\n";
+  std::cout << "Saved facet view SVG: " << facet_svg << "\n";
   color_fig.show();
   return 0;
 }

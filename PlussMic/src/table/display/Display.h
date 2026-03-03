@@ -57,6 +57,7 @@ std::string render(const Atlas& atlas, const DisplayOptions& options = {});
 std::string render_info(const DataFrame& frame, const DisplayOptions& options = {});
 std::string render_html(const Thread& thread, const DisplayOptions& options = {});
 std::string render_html(const DataFrame& frame, const DisplayOptions& options = {});
+std::string render_html(const Atlas& atlas, const DisplayOptions& options = {});
 std::string render_info_html(const DataFrame& frame, const DisplayOptions& options = {});
 
 void print(std::ostream& os, const Thread& thread, const DisplayOptions& options = {});

@@ -47,10 +47,18 @@ auto f1 = pluss::table::DataFrame({
 auto labels = pluss::table::Thread(pluss::make_note({"train", "test"}));
 auto atlas = pluss::table::Atlas({f0, f1}, labels);
 
+atlas.show();
 atlas.head(1).show();
 auto sorted = atlas.sort_depth();
 auto first = atlas.frame(0);
 ```
+
+Popup behavior:
+
+- `atlas.show()` opens an atlas viewer when a GUI backend is available
+- the atlas popup shows atlas-level summary cards plus a frame selector
+- the main panel renders one selected `DataFrame` slice at a time
+- if no GUI backend is available, `atlas.show()` falls back to terminal rendering
 
 ## Atlas To Kindle
 

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <limits>
@@ -80,6 +81,10 @@ inline void ensure_same_size(const std::vector<double>& a,
 }
 
 inline void write_text_file(std::string_view path, const std::string& contents) {
+  const std::filesystem::path output_path(path);
+  if (output_path.has_parent_path()) {
+    std::filesystem::create_directories(output_path.parent_path());
+  }
   std::ofstream out(std::string(path), std::ios::binary);
   if (!out) {
     throw std::runtime_error("plotism: unable to open output file: " + std::string(path));

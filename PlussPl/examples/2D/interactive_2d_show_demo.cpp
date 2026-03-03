@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <iostream>
 
+#include "../output_paths.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/plot/plot.h"
 
@@ -53,10 +54,9 @@ int main() {
       .add_bar({2.0, 3.5, 1.8, 4.2}, "bars", {"one", "two", "three", "four"})
       .annotate("best", 3.0, 4.2);
 
-  const auto cwd = std::filesystem::current_path();
-  const auto svg = (cwd / "plusspl_interactive_2d.svg").string();
-  const auto png = (cwd / "plusspl_interactive_2d.png").string();
-  const auto pdf = (cwd / "plusspl_interactive_2d.pdf").string();
+  const auto svg = plusspl::examples::output_path(__FILE__, "plusspl_interactive_2d.svg");
+  const auto png = plusspl::examples::output_path(__FILE__, "plusspl_interactive_2d.png");
+  const auto pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_2d.pdf");
   fig.save_svg(svg, 1200, 800);
   fig.save_png(png, 1200, 800);
   fig.save_pdf(pdf, 1200, 800);

@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../output_paths.h"
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/timeindex_factory.h"
 #include "pluss/codeh/timeline_factory.h"
@@ -35,9 +36,8 @@ int main() {
       .add_scatter(timeindex, native_y, "TimeIndex x + std::array y")
       .add_hist(std::vector<int>{1, 1, 2, 3, 5, 8, 13, 21}, 6, "std::vector<int> hist");
 
-  const auto cwd = std::filesystem::current_path();
-  const auto svg = (cwd / "plusspl_inputs_2d_demo.svg").string();
-  const auto pdf = (cwd / "plusspl_inputs_2d_demo.pdf").string();
+  const auto svg = plusspl::examples::output_path(__FILE__, "plusspl_inputs_2d_demo.svg");
+  const auto pdf = plusspl::examples::output_path(__FILE__, "plusspl_inputs_2d_demo.pdf");
   fig.save_svg(svg, 1200, 800);
   fig.save_pdf(pdf, 1200, 800);
 

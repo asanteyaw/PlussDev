@@ -949,6 +949,58 @@ std::string html_shell_(std::string_view title,
       font-size: 0.85rem;
       font-weight: 600;
     }}
+    .section-label {{
+      display: inline-block;
+      margin: 10px 0 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }}
+    .atlas-nav {{
+      display: flex;
+      gap: 10px;
+      overflow: auto;
+      padding: 10px 6px 6px;
+      margin-bottom: 8px;
+    }}
+    .atlas-tab {{
+      padding: 10px 14px;
+      border: 1px solid rgba(196, 185, 168, 0.85);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.84);
+      color: var(--ink);
+      cursor: pointer;
+      white-space: nowrap;
+      font: inherit;
+    }}
+    .atlas-tab.active {{
+      background: linear-gradient(135deg, rgba(15,118,110,0.16), rgba(194,65,12,0.12));
+      border-color: rgba(15, 118, 110, 0.38);
+      color: var(--ink);
+      font-weight: 600;
+    }}
+    .atlas-panel {{
+      display: none;
+    }}
+    .atlas-panel.active {{
+      display: block;
+    }}
+    .atlas-frame-head {{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      padding: 8px 6px 0;
+    }}
+    .atlas-frame-title {{
+      margin: 0;
+      font-family: "IBM Plex Serif", Georgia, serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }}
     @media (max-width: 720px) {{
       .shell {{
         padding: 10px;
@@ -1003,6 +1055,7 @@ std::string html_shell_(std::string_view title,
     function filterTables(query) {{
       const needle = query.trim().toLowerCase();
       detailTables.forEach((tbl) => {{
+        if (tbl.offsetParent === null) return;
         Array.from(tbl.tBodies).forEach((tbody) => {{
           Array.from(tbody.rows).forEach((row) => {{
             const haystack = row.innerText.toLowerCase();
@@ -1054,6 +1107,7 @@ std::string html_shell_(std::string_view title,
     async function copyVisibleTable() {{
       const blocks = [];
       detailTables.forEach((tbl) => {{
+        if (tbl.offsetParent === null) return;
         const header = Array.from(tbl.tHead?.rows[0]?.cells ?? []).map((cell) => cell.innerText.trim()).join('\t');
         const lines = [header];
         Array.from(tbl.tBodies[0]?.rows ?? []).forEach((row) => {{
@@ -1078,6 +1132,21 @@ std::string html_shell_(std::string_view title,
     if (enableCopy) {{
       copyButton.addEventListener('click', copyVisibleTable);
     }}
+
+    document.querySelectorAll('.atlas-tab').forEach((button) => {{
+      button.addEventListener('click', () => {{
+        const index = button.dataset.frameIndex;
+        document.querySelectorAll('.atlas-tab').forEach((candidate) => {{
+          candidate.classList.toggle('active', candidate === button);
+        }});
+        document.querySelectorAll('.atlas-panel').forEach((panel) => {{
+          panel.classList.toggle('active', panel.dataset.frameIndex === index);
+        }});
+        if (enableSearch) {{
+          filterTables(searchInput.value || '');
+        }}
+      }});
+    }});
   </script>
 </body>
 </html>)HTML",
@@ -1099,10 +1168,9 @@ std::string render_html_pre_(std::string_view title,
   return html_shell_(title, subtitle, body, options);
 }
 
-std::string render_html_table_(const DataFrame& frame,
-                               std::string_view title,
-                               std::string_view subtitle,
-                               const DisplayOptions& options) {
+std::string render_html_table_body_(const DataFrame& frame,
+                                    const DisplayOptions& options,
+                                    std::string_view table_id) {
   const auto cols = frame.columns();
   const auto names = frame.column_names();
 
@@ -1119,7 +1187,7 @@ std::string render_html_table_(const DataFrame& frame,
   body += "</div>";
 
   body += "<div class=\"table-wrap\">";
-  body += "<table id=\"plussmic-table\" data-filterable=\"true\"><thead><tr>";
+  body += fmt::format("<table id=\"{}\" data-filterable=\"true\"><thead><tr>", escape_html_(table_id));
 
   std::size_t column_index = 0;
   if (options.show_case_index) {
@@ -1163,7 +1231,74 @@ std::string render_html_table_(const DataFrame& frame,
   }
 
   body += "</tbody></table></div>";
+  return body;
+}
+
+std::string render_html_table_(const DataFrame& frame,
+                               std::string_view title,
+                               std::string_view subtitle,
+                               const DisplayOptions& options) {
+  const auto body = render_html_table_body_(frame, options, "plussmic-table");
   return html_shell_(title, subtitle, body, options);
+}
+
+std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options) {
+  std::string body;
+  body += "<div class=\"summary-grid\">";
+  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Depth</div><div class=\"value\">{}</div></div>",
+                      atlas.depth());
+  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
+                      atlas.nrows());
+  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
+                      atlas.ncols());
+  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Depth Labels</div><div class=\"value\">{}</div></div>",
+                      atlas.axis0_labels().has_value() ? escape_html_(logical_dtype_name(*atlas.axis0_labels()))
+                                                       : "None");
+  body += "</div>";
+
+  if (atlas.depth() == 0) {
+    body += "<div class=\"table-wrap\"><div style=\"padding:18px;\" class=\"muted\">Atlas is empty.</div></div>";
+    return html_shell_(document_title_("Atlas", options),
+                       "0 frames",
+                       body,
+                       options);
+  }
+
+  body += "<div class=\"section-label\">Frames</div>";
+  body += "<div class=\"atlas-nav\">";
+  for (std::int64_t i = 0; i < atlas.depth(); ++i) {
+    std::string label = fmt::format("Frame {}", i);
+    if (atlas.axis0_labels().has_value()) {
+      label = thread_value_at(*atlas.axis0_labels(), i);
+    }
+    body += fmt::format("<button type=\"button\" class=\"atlas-tab{}\" data-frame-index=\"{}\">{}</button>",
+                        i == 0 ? " active" : "",
+                        i,
+                        escape_html_(label));
+  }
+  body += "</div>";
+
+  for (std::int64_t i = 0; i < atlas.depth(); ++i) {
+    std::string label = fmt::format("Frame {}", i);
+    if (atlas.axis0_labels().has_value()) {
+      label = thread_value_at(*atlas.axis0_labels(), i);
+    }
+    const auto frame = atlas.frame(i);
+    body += fmt::format("<section class=\"atlas-panel{}\" data-frame-index=\"{}\">",
+                        i == 0 ? " active" : "",
+                        i);
+    body += "<div class=\"atlas-frame-head\">";
+    body += fmt::format("<h2 class=\"atlas-frame-title\">{}</h2>", escape_html_(label));
+    body += fmt::format("<span class=\"pill\">frame {}</span>", i);
+    body += "</div>";
+    body += render_html_table_body_(frame, options, fmt::format("plussmic-table-{}", i));
+    body += "</section>";
+  }
+
+  return html_shell_(document_title_("Atlas", options),
+                     fmt::format("{} frames, {} cases, {} features", atlas.depth(), atlas.nrows(), atlas.ncols()),
+                     body,
+                     options);
 }
 
 std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& options) {
@@ -1457,6 +1592,10 @@ std::string render_html(const Thread& thread, const DisplayOptions& options) {
   return render_html(tmp, options);
 }
 
+std::string render_html(const Atlas& atlas, const DisplayOptions& options) {
+  return render_html_atlas_(atlas, options);
+}
+
 std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   const auto term = detect_terminal();
   const auto effective = resolve_effective_options(options, term, true);
@@ -1607,9 +1746,8 @@ void show(const Thread& thread, const DisplayOptions& options) {
 
 void show(const Atlas& atlas, const DisplayOptions& options) {
   if (resolve_backend_(options) == DisplayBackend::GtkWebKit) {
-    const auto html =
-        render_html_pre_("PlussMic Atlas", fmt::format("{} frames", atlas.depth()), render(atlas, options), options);
-    if (show_html_window_(html, options, "PlussMic Atlas")) {
+    const auto html = render_html(atlas, options);
+    if (show_html_window_(html, options, "Pluss Atlas")) {
       return;
     }
   }

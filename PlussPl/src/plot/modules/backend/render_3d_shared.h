@@ -2,9 +2,12 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <limits>
 #include <optional>
 #include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "plot/modules/artists/artist_2d.h"
@@ -17,19 +20,200 @@
 namespace pluss::plotism {
 namespace detail {
 
-inline void render_3d_scene(RenderSurface2D& surface, const Figure3DView& fig, const RenderTarget& target) {
+struct SceneViewport3D {
+  double left{0.0};
+  double top{0.0};
+  double width{0.0};
+  double height{0.0};
+};
+
+struct SceneRender3DOptions {
+  std::optional<SceneViewport3D> viewport{};
+  bool clear_background{true};
+  bool show_title{true};
+  bool show_legend{true};
+  bool show_colorbar{true};
+  double title_font_size{22.0};
+  std::optional<std::string> title_override{};
+};
+
+struct Vector2D {
+  double x{0.0};
+  double y{0.0};
+};
+
+inline Vector2D operator+(const Vector2D& lhs, const Vector2D& rhs) {
+  return Vector2D{lhs.x + rhs.x, lhs.y + rhs.y};
+}
+
+inline Vector2D operator-(const Vector2D& lhs, const Vector2D& rhs) {
+  return Vector2D{lhs.x - rhs.x, lhs.y - rhs.y};
+}
+
+inline Vector2D operator*(const Vector2D& lhs, double scale) {
+  return Vector2D{lhs.x * scale, lhs.y * scale};
+}
+
+inline double length_2d(const Vector2D& v) {
+  return std::sqrt(v.x * v.x + v.y * v.y);
+}
+
+inline Vector2D normalize_2d(const Vector2D& v) {
+  const double len = length_2d(v);
+  if (len <= 1e-9) {
+    return Vector2D{0.0, -1.0};
+  }
+  return Vector2D{v.x / len, v.y / len};
+}
+
+inline Vector2D projected_delta_2d(const detail::ProjectedPoint3D& from, const detail::ProjectedPoint3D& to) {
+  return Vector2D{to.x - from.x, to.y - from.y};
+}
+
+inline TextAnchor2D anchor_for_direction_3d(const Vector2D& direction) {
+  if (direction.x >= 0.35) {
+    return TextAnchor2D::Left;
+  }
+  if (direction.x <= -0.35) {
+    return TextAnchor2D::Right;
+  }
+  return TextAnchor2D::Center;
+}
+
+inline double axis_display_coord_3d(double normalized, const Axis& axis) {
+  return axis.inverted ? (1.0 - normalized) : normalized;
+}
+
+inline std::array<double, 3> corner_bits_3d(int corner) {
+  return {
+      (corner & 1) != 0 ? 1.0 : 0.0,
+      (corner & 2) != 0 ? 1.0 : 0.0,
+      (corner & 4) != 0 ? 1.0 : 0.0,
+  };
+}
+
+inline int anchor_corner_3d(const std::array<detail::ProjectedPoint3D, 8>& projected) {
+  int best = 0;
+  for (int i = 1; i < static_cast<int>(projected.size()); ++i) {
+    if (projected[i].depth > projected[best].depth + 1e-9) {
+      best = i;
+      continue;
+    }
+    if (std::abs(projected[i].depth - projected[best].depth) <= 1e-9 && projected[i].y > projected[best].y) {
+      best = i;
+    }
+  }
+  return best;
+}
+
+inline detail::ProjectedPoint3D axis_edge_point_3d(const PlotTransform3D& transform,
+                                                   AxisKind axis_kind,
+                                                   double normalized,
+                                                   int anchor_corner) {
+  const auto anchor = corner_bits_3d(anchor_corner);
+  switch (axis_kind) {
+    case AxisKind::X:
+      return transform.project_normalized(normalized, anchor[1], anchor[2]);
+    case AxisKind::Y:
+      return transform.project_normalized(anchor[0], normalized, anchor[2]);
+    case AxisKind::Z:
+      return transform.project_normalized(anchor[0], anchor[1], normalized);
+    default:
+      return transform.project_normalized(normalized, normalized, normalized);
+  }
+}
+
+inline Vector2D axis_tick_direction_3d(const PlotTransform3D& transform,
+                                       AxisKind axis_kind,
+                                       double normalized,
+                                       int anchor_corner,
+                                       const detail::ProjectedPoint3D& plot_center) {
+  const auto anchor = corner_bits_3d(anchor_corner);
+  const auto point = axis_edge_point_3d(transform, axis_kind, normalized, anchor_corner);
+  Vector2D inward{};
+  switch (axis_kind) {
+    case AxisKind::X: {
+      const auto py = transform.project_normalized(normalized, 1.0 - anchor[1], anchor[2]);
+      const auto pz = transform.project_normalized(normalized, anchor[1], 1.0 - anchor[2]);
+      inward = projected_delta_2d(point, py) + projected_delta_2d(point, pz);
+      break;
+    }
+    case AxisKind::Y: {
+      const auto px = transform.project_normalized(1.0 - anchor[0], normalized, anchor[2]);
+      const auto pz = transform.project_normalized(anchor[0], normalized, 1.0 - anchor[2]);
+      inward = projected_delta_2d(point, px) + projected_delta_2d(point, pz);
+      break;
+    }
+    case AxisKind::Z: {
+      const auto px = transform.project_normalized(1.0 - anchor[0], anchor[1], normalized);
+      const auto py = transform.project_normalized(anchor[0], 1.0 - anchor[1], normalized);
+      inward = projected_delta_2d(point, px) + projected_delta_2d(point, py);
+      break;
+    }
+    default:
+      break;
+  }
+  Vector2D outward = normalize_2d(inward * -1.0);
+  if (length_2d(outward) <= 1e-9) {
+    outward = normalize_2d(projected_delta_2d(plot_center, point));
+  }
+  return outward;
+}
+
+inline std::vector<std::array<Point2D, 4>> visible_panes_3d(const PlotTransform3D& transform, int anchor_corner) {
+  const auto anchor = corner_bits_3d(anchor_corner);
+  return {
+      {{
+          {transform.project_normalized(anchor[0], 0.0, 0.0).x, transform.project_normalized(anchor[0], 0.0, 0.0).y},
+          {transform.project_normalized(anchor[0], 1.0, 0.0).x, transform.project_normalized(anchor[0], 1.0, 0.0).y},
+          {transform.project_normalized(anchor[0], 1.0, 1.0).x, transform.project_normalized(anchor[0], 1.0, 1.0).y},
+          {transform.project_normalized(anchor[0], 0.0, 1.0).x, transform.project_normalized(anchor[0], 0.0, 1.0).y},
+      }},
+      {{
+          {transform.project_normalized(0.0, anchor[1], 0.0).x, transform.project_normalized(0.0, anchor[1], 0.0).y},
+          {transform.project_normalized(1.0, anchor[1], 0.0).x, transform.project_normalized(1.0, anchor[1], 0.0).y},
+          {transform.project_normalized(1.0, anchor[1], 1.0).x, transform.project_normalized(1.0, anchor[1], 1.0).y},
+          {transform.project_normalized(0.0, anchor[1], 1.0).x, transform.project_normalized(0.0, anchor[1], 1.0).y},
+      }},
+      {{
+          {transform.project_normalized(0.0, 0.0, anchor[2]).x, transform.project_normalized(0.0, 0.0, anchor[2]).y},
+          {transform.project_normalized(1.0, 0.0, anchor[2]).x, transform.project_normalized(1.0, 0.0, anchor[2]).y},
+          {transform.project_normalized(1.0, 1.0, anchor[2]).x, transform.project_normalized(1.0, 1.0, anchor[2]).y},
+          {transform.project_normalized(0.0, 1.0, anchor[2]).x, transform.project_normalized(0.0, 1.0, anchor[2]).y},
+      }},
+  };
+}
+
+inline void render_3d_scene_with_options(RenderSurface2D& surface,
+                                         const Figure3DView& fig,
+                                         const RenderTarget& target,
+                                         const SceneRender3DOptions& options) {
   if (target.width <= 100 || target.height <= 100) {
     throw std::invalid_argument("plotism::Figure3D::save: width/height too small");
   }
 
   const ResolvedTheme theme = detail::resolve_theme(fig.style);
-  surface.fill_rect(0.0, 0.0, static_cast<double>(target.width), static_cast<double>(target.height),
-                    FillStyle2D{.color = theme.page_background, .alpha = 1.0});
-  if (!fig.title.empty()) {
-    surface.text(static_cast<double>(target.width) * 0.5, 28.0, fig.title,
+  const SceneViewport3D viewport = options.viewport.value_or(SceneViewport3D{
+      .left = 0.0,
+      .top = 0.0,
+      .width = static_cast<double>(target.width),
+      .height = static_cast<double>(target.height),
+  });
+  const bool constrained_view = options.viewport.has_value();
+
+  if (options.clear_background) {
+    surface.fill_rect(0.0, 0.0, static_cast<double>(target.width), static_cast<double>(target.height),
+                      FillStyle2D{.color = theme.page_background, .alpha = 1.0});
+  }
+
+  const std::string title = options.title_override.value_or(fig.title);
+  if (options.show_title && !title.empty()) {
+    surface.text(viewport.left + viewport.width * 0.5,
+                 viewport.top + std::clamp(viewport.height * 0.065, 20.0, 30.0),
+                 title,
                  TextStyle2D{
                      .color = theme.title_color,
-                     .size = 22.0,
+                     .size = options.title_font_size,
                      .alpha = 1.0,
                      .bold = true,
                      .anchor = TextAnchor2D::Center,
@@ -40,7 +224,7 @@ inline void render_3d_scene(RenderSurface2D& surface, const Figure3DView& fig, c
 
   double legend_width = 0.0;
   double legend_height = 0.0;
-  if (fig.legend.visible && !fig.traces.empty()) {
+  if (options.show_legend && fig.legend.visible && !fig.traces.empty()) {
     std::size_t longest = fig.legend.title.size();
     for (const auto& trace : fig.traces) {
       longest = std::max(longest, trace.name.empty() ? std::size_t{5} : trace.name.size());
@@ -49,9 +233,10 @@ inline void render_3d_scene(RenderSurface2D& surface, const Figure3DView& fig, c
     legend_width = legend_width_hint_2d(fig.traces.size(), longest, has_title);
     legend_height = legend_height_hint_2d(fig.traces.size(), has_title);
   }
-  const bool outside_legend = fig.legend.location == LegendLocation::OutsideRight && legend_width > 0.0;
+  const bool outside_legend = options.show_legend && fig.legend.location == LegendLocation::OutsideRight && legend_width > 0.0;
+
   const Trace3D* surface_for_colorbar = nullptr;
-  if (fig.colorbar.has_value() && fig.colorbar->visible) {
+  if (options.show_colorbar && fig.colorbar.has_value() && fig.colorbar->visible) {
     auto it = std::find_if(fig.traces.begin(), fig.traces.end(), [](const Trace3D& trace) {
       return trace.kind == Trace3DKind::Surface && !trace.z.empty();
     });
@@ -60,14 +245,23 @@ inline void render_3d_scene(RenderSurface2D& surface, const Figure3DView& fig, c
     }
   }
   const bool show_colorbar = surface_for_colorbar != nullptr;
-  const double colorbar_width = show_colorbar ? 64.0 : 0.0;
+  const double colorbar_width = show_colorbar ? std::clamp(viewport.width * 0.06, 44.0, 64.0) : 0.0;
   const double aux_gap = (show_colorbar && outside_legend) ? 12.0 : 0.0;
 
-  const double left = 110.0;
-  const double right = static_cast<double>(target.width - 90) - (outside_legend ? (legend_width + 16.0) : 0.0) -
+  const double left_margin = constrained_view ? std::clamp(viewport.width * 0.19, 96.0, 150.0)
+                                              : std::clamp(viewport.width * 0.14, 56.0, 110.0);
+  const double right_margin = constrained_view ? std::clamp(viewport.width * 0.13, 72.0, 120.0)
+                                               : std::clamp(viewport.width * 0.08, 44.0, 90.0);
+  const double top_margin = constrained_view ? std::clamp(viewport.height * (options.show_title ? 0.19 : 0.11), 54.0, 102.0)
+                                             : std::clamp(viewport.height * (options.show_title ? 0.16 : 0.08), 40.0, 84.0);
+  const double bottom_margin = constrained_view ? std::clamp(viewport.height * 0.14, 64.0, 112.0)
+                                                : std::clamp(viewport.height * 0.10, 52.0, 96.0);
+
+  const double left = viewport.left + left_margin;
+  const double right = viewport.left + viewport.width - right_margin - (outside_legend ? (legend_width + 16.0) : 0.0) -
                        (show_colorbar ? (colorbar_width + 16.0 + aux_gap) : 0.0);
-  const double top = 84.0;
-  const double bottom = static_cast<double>(target.height - 96);
+  const double top = viewport.top + top_margin;
+  const double bottom = viewport.top + viewport.height - bottom_margin;
   const double pw = std::max(1.0, right - left);
   const double ph = std::max(1.0, bottom - top);
 
@@ -152,16 +346,39 @@ inline void render_3d_scene(RenderSurface2D& surface, const Figure3DView& fig, c
       {0, 4}, {1, 5}, {2, 6}, {3, 7},
   }};
 
+  std::array<detail::ProjectedPoint3D, 8> projected_corners{};
+  for (std::size_t i = 0; i < corners.size(); ++i) {
+    projected_corners[i] = transform.project_normalized(corners[i][0], corners[i][1], corners[i][2]);
+  }
+  const int anchor_corner = anchor_corner_3d(projected_corners);
+
+  struct Pane3D {
+    double depth{0.0};
+    std::array<Point2D, 4> polygon{};
+  };
+  std::vector<Pane3D> panes;
+  for (const auto& pane : visible_panes_3d(transform, anchor_corner)) {
+    double depth = 0.0;
+    for (const auto& point : pane) {
+      depth += point.y;
+    }
+    panes.push_back(Pane3D{.depth = depth, .polygon = pane});
+  }
+  std::sort(panes.begin(), panes.end(), [](const Pane3D& lhs, const Pane3D& rhs) { return lhs.depth < rhs.depth; });
+  for (const auto& pane : panes) {
+    surface.fill_polygon(std::vector<Point2D>(pane.polygon.begin(), pane.polygon.end()),
+                         FillStyle2D{.color = theme.plot_background, .alpha = 0.72});
+  }
+
   for (const auto& edge : edges) {
-    const auto p1 = transform.project_normalized(corners[edge.first][0], corners[edge.first][1], corners[edge.first][2]);
-    const auto p2 = transform.project_normalized(corners[edge.second][0], corners[edge.second][1], corners[edge.second][2]);
-    const bool primary = edge == std::pair<int, int>{0, 1} || edge == std::pair<int, int>{0, 3} ||
-                         edge == std::pair<int, int>{0, 4};
+    const auto& p1 = projected_corners[static_cast<std::size_t>(edge.first)];
+    const auto& p2 = projected_corners[static_cast<std::size_t>(edge.second)];
+    const bool primary = edge.first == anchor_corner || edge.second == anchor_corner;
     surface.stroke_line(p1.x, p1.y, p2.x, p2.y,
                         StrokeStyle2D{
                             .color = primary ? theme.axis_color : theme.grid_color,
-                            .line_width = primary ? 1.6 : 1.0,
-                            .alpha = 1.0,
+                            .line_width = primary ? 1.8 : 1.0,
+                            .alpha = primary ? 1.0 : 0.95,
                             .line_style = "solid",
                         });
   }
@@ -169,107 +386,78 @@ inline void render_3d_scene(RenderSurface2D& surface, const Figure3DView& fig, c
   const auto x_ticks = resolve_ticks_2d(fig.x_axis, xmin, xmax);
   const auto y_ticks = resolve_ticks_2d(fig.y_axis, ymin, ymax);
   const auto z_ticks = resolve_ticks_2d(fig.z_axis, zmin, zmax);
+  const auto plot_center = transform.project_normalized(0.5, 0.5, 0.5);
+  const auto clamp_t = [](double value) {
+    if (!std::isfinite(value)) {
+      return 0.5;
+    }
+    return std::clamp(value, 0.0, 1.0);
+  };
 
-  for (const auto& tick : x_ticks) {
-    const auto p = transform.project_normalized((tick.position - xmin) / (xmax - xmin), 0.0, 0.0);
-    surface.stroke_line(p.x, p.y, p.x, p.y + 6.0,
-                        StrokeStyle2D{
-                            .color = theme.tick_color,
-                            .line_width = 1.0,
-                            .alpha = 1.0,
-                            .line_style = "solid",
-                        });
-    surface.text(p.x, p.y + 20.0, tick.label,
-                 TextStyle2D{
-                     .color = theme.tick_label_color,
-                     .size = 10.0,
-                     .alpha = 1.0,
-                     .bold = false,
-                     .anchor = TextAnchor2D::Center,
-                     .orientation = TextOrientation2D::Horizontal,
-                     .font_family = theme.font_family,
-                 });
-  }
-  for (const auto& tick : y_ticks) {
-    const auto p = transform.project_normalized(0.0, (tick.position - ymin) / (ymax - ymin), 0.0);
-    surface.stroke_line(p.x - 6.0, p.y, p.x, p.y,
-                        StrokeStyle2D{
-                            .color = theme.tick_color,
-                            .line_width = 1.0,
-                            .alpha = 1.0,
-                            .line_style = "solid",
-                        });
-    surface.text(p.x - 10.0, p.y + 3.5, tick.label,
-                 TextStyle2D{
-                     .color = theme.tick_label_color,
-                     .size = 10.0,
-                     .alpha = 1.0,
-                     .bold = false,
-                     .anchor = TextAnchor2D::Right,
-                     .orientation = TextOrientation2D::Horizontal,
-                     .font_family = theme.font_family,
-                 });
-  }
-  for (const auto& tick : z_ticks) {
-    const auto p = transform.project_normalized(0.0, 0.0, (tick.position - zmin) / (zmax - zmin));
-    surface.stroke_line(p.x - 5.0, p.y + 4.0, p.x, p.y,
-                        StrokeStyle2D{
-                            .color = theme.tick_color,
-                            .line_width = 1.0,
-                            .alpha = 1.0,
-                            .line_style = "solid",
-                        });
-    surface.text(p.x - 8.0, p.y - 6.0, tick.label,
-                 TextStyle2D{
-                     .color = theme.tick_label_color,
-                     .size = 10.0,
-                     .alpha = 1.0,
-                     .bold = false,
-                     .anchor = TextAnchor2D::Right,
-                     .orientation = TextOrientation2D::Horizontal,
-                     .font_family = theme.font_family,
-                 });
-  }
+  const auto draw_ticks = [&](const Axis& axis,
+                              const std::vector<ResolvedTick>& ticks,
+                              AxisKind axis_kind,
+                              double lo,
+                              double hi) {
+    const double span = std::max(1e-12, hi - lo);
+    const double tick_len = std::clamp(std::min(pw, ph) * 0.012, 6.0, 10.0);
+    const double label_len = tick_len + 10.0;
+    for (const auto& tick : ticks) {
+      const double base_t = clamp_t((tick.position - lo) / span);
+      const double axis_t = axis_display_coord_3d(base_t, axis);
+      const auto point = axis_edge_point_3d(transform, axis_kind, axis_t, anchor_corner);
+      const auto direction = axis_tick_direction_3d(transform, axis_kind, axis_t, anchor_corner, plot_center);
+      surface.stroke_line(point.x, point.y, point.x + direction.x * tick_len, point.y + direction.y * tick_len,
+                          StrokeStyle2D{
+                              .color = theme.tick_color,
+                              .line_width = 1.0,
+                              .alpha = 1.0,
+                              .line_style = "solid",
+                          });
+      const auto text_anchor = anchor_for_direction_3d(direction);
+      surface.text(point.x + direction.x * label_len,
+                   point.y + direction.y * label_len + 3.0,
+                   tick.label,
+                   TextStyle2D{
+                       .color = theme.tick_label_color,
+                       .size = 10.0,
+                       .alpha = 1.0,
+                       .bold = false,
+                       .anchor = text_anchor,
+                       .orientation = TextOrientation2D::Horizontal,
+                       .font_family = theme.font_family,
+                   });
+    }
+  };
 
-  if (!fig.x_axis.label.empty()) {
-    const auto p = transform.project_normalized(1.0, 0.0, 0.0);
-    surface.text(p.x + 14.0, p.y + 22.0, fig.x_axis.label,
+  draw_ticks(fig.x_axis, x_ticks, AxisKind::X, xmin, xmax);
+  draw_ticks(fig.y_axis, y_ticks, AxisKind::Y, ymin, ymax);
+  draw_ticks(fig.z_axis, z_ticks, AxisKind::Z, zmin, zmax);
+
+  const auto draw_axis_label = [&](const Axis& axis, AxisKind axis_kind) {
+    if (axis.label.empty()) {
+      return;
+    }
+    const double label_t = axis.inverted ? 0.0 : 1.0;
+    const auto point = axis_edge_point_3d(transform, axis_kind, label_t, anchor_corner);
+    const auto direction = axis_tick_direction_3d(transform, axis_kind, label_t, anchor_corner, plot_center);
+    surface.text(point.x + direction.x * 26.0,
+                 point.y + direction.y * 26.0,
+                 axis.label,
                  TextStyle2D{
                      .color = theme.axis_label_color,
                      .size = 12.0,
                      .alpha = 1.0,
                      .bold = false,
-                     .anchor = TextAnchor2D::Left,
+                     .anchor = anchor_for_direction_3d(direction),
                      .orientation = TextOrientation2D::Horizontal,
                      .font_family = theme.font_family,
                  });
-  }
-  if (!fig.y_axis.label.empty()) {
-    const auto p = transform.project_normalized(0.0, 1.0, 0.0);
-    surface.text(p.x - 18.0, p.y - 12.0, fig.y_axis.label,
-                 TextStyle2D{
-                     .color = theme.axis_label_color,
-                     .size = 12.0,
-                     .alpha = 1.0,
-                     .bold = false,
-                     .anchor = TextAnchor2D::Right,
-                     .orientation = TextOrientation2D::Horizontal,
-                     .font_family = theme.font_family,
-                 });
-  }
-  if (!fig.z_axis.label.empty()) {
-    const auto p = transform.project_normalized(0.0, 0.0, 1.0);
-    surface.text(p.x - 8.0, p.y - 14.0, fig.z_axis.label,
-                 TextStyle2D{
-                     .color = theme.axis_label_color,
-                     .size = 12.0,
-                     .alpha = 1.0,
-                     .bold = false,
-                     .anchor = TextAnchor2D::Right,
-                     .orientation = TextOrientation2D::Horizontal,
-                     .font_family = theme.font_family,
-                 });
-  }
+  };
+
+  draw_axis_label(fig.x_axis, AxisKind::X);
+  draw_axis_label(fig.y_axis, AxisKind::Y);
+  draw_axis_label(fig.z_axis, AxisKind::Z);
 
   DepthSorter3D depth_sorter{};
   for (std::size_t ti = 0; ti < fig.traces.size(); ++ti) {
@@ -298,7 +486,7 @@ inline void render_3d_scene(RenderSurface2D& surface, const Figure3DView& fig, c
     colorbar_artist.draw(surface, colorbar_x, colorbar_y, colorbar_width, colorbar_h, scalar_trace, colorbar, theme);
   }
 
-  if (fig.legend.visible && !fig.traces.empty()) {
+  if (options.show_legend && fig.legend.visible && !fig.traces.empty()) {
     const bool has_title = !fig.legend.title.empty();
     const auto [lx, ly] = outside_legend
                               ? std::pair<double, double>{right + 14.0 + (show_colorbar ? (colorbar_width + 16.0 + aux_gap) : 0.0), top + 4.0}
@@ -347,6 +535,10 @@ inline void render_3d_scene(RenderSurface2D& surface, const Figure3DView& fig, c
                    });
     }
   }
+}
+
+inline void render_3d_scene(RenderSurface2D& surface, const Figure3DView& fig, const RenderTarget& target) {
+  render_3d_scene_with_options(surface, fig, target, SceneRender3DOptions{});
 }
 
 } // namespace detail

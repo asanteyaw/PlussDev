@@ -362,6 +362,8 @@ public:
                            RenderTarget{.path = filepath, .width = width, .height = height, .format = OutputFormat::Pdf});
   }
 
+  Figure3DView view_data() const { return make_view_(); }
+
 private:
   static const char* trace_kind_name_(Trace3DKind k) noexcept {
     switch (k) {

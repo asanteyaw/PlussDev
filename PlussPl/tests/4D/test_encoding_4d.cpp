@@ -79,9 +79,21 @@ int main() {
 
   auto frames = fig4.encode_frame("regime", 4).realize_frame_figures();
   require(!frames.empty(), "expected at least one 4d frame figure");
+  auto frame_view = fig4.encode_frame("regime", 4).realize_frame_view();
+  require(frame_view.panel_count() == frames.size(), "expected frame view to preserve frame bin count");
+  const auto frame_svg = unique_path("plusspl_test_4d_frame_view", ".svg");
+  frame_view.save_svg(frame_svg, 1280, 920);
+  const auto frame_content = read_text(frame_svg);
+  require(frame_content.find("regime [") != std::string::npos, "expected frame view svg to include panel titles");
 
   auto facets = fig4.encode_facet("regime", 4).realize_facet_figures();
   require(!facets.empty(), "expected at least one 4d facet figure");
+  auto facet_view = fig4.encode_facet("regime", 4).realize_facet_view();
+  require(facet_view.panel_count() == facets.size(), "expected facet view to preserve facet bin count");
+  const auto facet_pdf = unique_path("plusspl_test_4d_facet_view", ".pdf");
+  facet_view.save_pdf(facet_pdf, 1280, 920);
+  require(std::filesystem::exists(facet_pdf), "expected 4d facet view pdf to exist");
+  require(std::filesystem::file_size(facet_pdf) > 0, "expected 4d facet view pdf to be non-empty");
 
   return 0;
 }
