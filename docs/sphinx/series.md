@@ -251,6 +251,8 @@ auto hst = x.histcounts(8, -3.0, 3.0);
 
 // distribution/stat helpers
 auto pdf = x.abs().pdf(0.0, 1.5);
+auto logpdf = x.abs().logpdf(0.0, 1.5);
+auto logcdf = x.abs().logcdf(0.0, 1.5);
 auto cdf = x.abs().cdf(0.0, 1.5);
 auto sk = x.skewness();
 auto ku = x.kurtosis();

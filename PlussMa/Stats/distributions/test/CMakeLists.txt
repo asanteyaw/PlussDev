@@ -10,3 +10,13 @@ foreach(test_src ${DISTRIBUTIONS_TESTS})
 
     add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
+
+find_package(Catch2 3 QUIET)
+if(TARGET Catch2::Catch2WithMain)
+    add_executable(distr_objects_catch2
+        distr_objects_catch2.cpp
+    )
+    target_link_libraries(distr_objects_catch2 PRIVATE pluss plussqit_codem Catch2::Catch2WithMain)
+    target_compile_features(distr_objects_catch2 PRIVATE cxx_std_20)
+    add_test(NAME distr_objects_catch2 COMMAND distr_objects_catch2)
+endif()

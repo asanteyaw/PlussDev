@@ -41,6 +41,19 @@ auto t_cdf = pluss::distr::cdf("t", grid, {5.0});
 auto nig_logpdf = pluss::distr::logpdf("nig", grid, {2.0, 0.5, 0.0, 1.0});
 ```
 
+## Typed Wrapper For Common Cases
+
+```cpp
+pluss::distr::Normal normal{0.0, 1.0};
+pluss::distr::Bernoulli bernoulli{0.35};
+pluss::distr::Gamma gamma{2.0, 1.0, 0.0};
+
+auto normal_logpdf = normal.logpdf(grid);
+auto draws = normal.sample({1024});
+auto bern_logcdf = bernoulli.logcdf(pluss::make_series({0.0, 1.0}));
+auto gamma_cgf = gamma.cgf(pluss::make_series({0.0, 0.5}));
+```
+
 ## Gaussian Mixture
 
 ```cpp
@@ -66,5 +79,6 @@ The user-facing model is:
 
 - keep everything under `pluss::distr`
 - pass the distribution name plus a short parameter list
+- use typed wrappers like `pluss::distr::Normal`, `Bernoulli`, `Binomial`, `Gamma`, `Uniform`, and `Exponential` when a bound object is clearer
 - let `sample_like` carry shape and dtype when you already have a target tensor
 - stay on `Series` throughout instead of bouncing between helper wrappers

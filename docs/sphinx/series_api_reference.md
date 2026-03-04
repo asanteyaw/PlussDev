@@ -4212,6 +4212,220 @@ auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
 auto out = pos.pdf(1.5);
 ```
 
+### `logpdf`
+
+#### Signature
+
+```cpp
+Series logpdf(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian log-density values for `self` using the provided mean/stddev parameters. No additional arguments.
+
+#### See also
+
+- `Series logpdf(self, scalar stddev)`
+- `Series logpdf(self, scalar mean, scalar stddev)`
+
+#### Examples
+
+```cpp
+auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
+
+auto out = pos.logpdf();
+```
+
+### `logpdf`
+
+#### Signature
+
+```cpp
+Series logpdf(self, scalar mean, scalar stddev)
+```
+
+#### Parameters
+
+`mean` : `scalar`
+    Numeric scalar argument. The current C++ overload takes `double`; integer literals like `1` are accepted via implicit conversion.
+
+`stddev` : `scalar`
+    Numeric scalar argument. The current C++ overload takes `double`; integer literals like `1` are accepted via implicit conversion.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian log-density values for `self` using the provided mean/stddev parameters. Arguments: `scalar mean, scalar stddev`.
+
+#### See also
+
+- `Series logpdf(self)`
+- `Series logpdf(self, scalar stddev)`
+
+#### Examples
+
+```cpp
+auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
+
+auto out = pos.logpdf(0.0, 1.5);
+```
+
+### `logpdf`
+
+#### Signature
+
+```cpp
+Series logpdf(self, scalar stddev)
+```
+
+#### Parameters
+
+`stddev` : `scalar`
+    Numeric scalar argument. The current C++ overload takes `double`; integer literals like `1` are accepted via implicit conversion.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian log-density values for `self` using the provided mean/stddev parameters. Arguments: `scalar stddev`.
+
+#### See also
+
+- `Series logpdf(self)`
+- `Series logpdf(self, scalar mean, scalar stddev)`
+
+#### Examples
+
+```cpp
+auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
+
+auto out = pos.logpdf(1.5);
+```
+
+### `logcdf`
+
+#### Signature
+
+```cpp
+Series logcdf(self)
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian log-CDF values for `self` using the provided mean/stddev parameters. No additional arguments.
+
+#### See also
+
+- `Series logcdf(self, scalar stddev)`
+- `Series logcdf(self, scalar mean, scalar stddev)`
+
+#### Examples
+
+```cpp
+auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
+
+auto out = pos.logcdf();
+```
+
+### `logcdf`
+
+#### Signature
+
+```cpp
+Series logcdf(self, scalar mean, scalar stddev)
+```
+
+#### Parameters
+
+`mean` : `scalar`
+    Numeric scalar argument. The current C++ overload takes `double`; integer literals like `1` are accepted via implicit conversion.
+
+`stddev` : `scalar`
+    Numeric scalar argument. The current C++ overload takes `double`; integer literals like `1` are accepted via implicit conversion.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian log-CDF values for `self` using the provided mean/stddev parameters. Arguments: `scalar mean, scalar stddev`.
+
+#### See also
+
+- `Series logcdf(self)`
+- `Series logcdf(self, scalar stddev)`
+
+#### Examples
+
+```cpp
+auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
+
+auto out = pos.logcdf(0.0, 1.5);
+```
+
+### `logcdf`
+
+#### Signature
+
+```cpp
+Series logcdf(self, scalar stddev)
+```
+
+#### Parameters
+
+`stddev` : `scalar`
+    Numeric scalar argument. The current C++ overload takes `double`; integer literals like `1` are accepted via implicit conversion.
+
+#### Returns
+
+`Series`
+    Return value produced by this method call.
+
+#### Notes
+
+Computes Gaussian log-CDF values for `self` using the provided mean/stddev parameters. Arguments: `scalar stddev`.
+
+#### See also
+
+- `Series logcdf(self)`
+- `Series logcdf(self, scalar mean, scalar stddev)`
+
+#### Examples
+
+```cpp
+auto pos = pluss::make_series({0.2,0.5,1.0,2.0,3.0,4.0,5.0});
+
+auto out = pos.logcdf(1.5);
+```
+
 ### `pdist2`
 
 #### Signature

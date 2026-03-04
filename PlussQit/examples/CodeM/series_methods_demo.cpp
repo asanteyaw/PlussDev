@@ -226,8 +226,10 @@ int main(int argc, char** argv) {
   add_case("put_", [&]{ auto t = gather_src.clone(); pluss::codem::_compat::invoke_("put_", t, flat_idx, flat_src, false); return t; });
 
   // Torch+MATLAB-hybrid routed methods (from SeriesMethodsGen wrappers)
-  add_case("pdf(norm)", [&]{ return pos.pdf("norm"); });
-  add_case("cdf(norm)", [&]{ return pos.cdf("norm"); });
+  add_case("pdf()", [&]{ return pos.pdf(); });
+  add_case("logpdf()", [&]{ return pos.logpdf(); });
+  add_case("logcdf()", [&]{ return pos.logcdf(); });
+  add_case("cdf()", [&]{ return pos.cdf(); });
   add_case("dct", [&]{ return x.dct(); });
   add_case("idct", [&]{ return x.dct().idct(); });
   add_case("dst", [&]{ return x.dst(); });

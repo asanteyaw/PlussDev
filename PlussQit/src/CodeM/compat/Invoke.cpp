@@ -972,11 +972,41 @@ static Series pdf_impl(const Series& self, double mean, double std) {
   });
 }
 
+static Series logpdf_impl(const Series& self, double mean, double std) {
+  PLUSS_CHECK(std > 0.0, "logpdf: std must be > 0");
+  const double log_norm = -std::log(std) - 0.5 * std::log(2.0 * kPi);
+  return unary_f64_impl(self, [mean, std, log_norm](double x) {
+    const double z = (x - mean) / std;
+    return log_norm - 0.5 * z * z;
+  });
+}
+
 static Series cdf_impl(const Series& self, double mean, double std) {
   PLUSS_CHECK(std > 0.0, "cdf: std must be > 0");
   const double den = std * std::sqrt(2.0);
   return unary_f64_impl(self, [mean, den](double x) {
     return 0.5 * (1.0 + std::erf((x - mean) / den));
+  });
+}
+
+static Series logcdf_impl(const Series& self, double mean, double std) {
+  PLUSS_CHECK(std > 0.0, "logcdf: std must be > 0");
+  const double sqrt2 = std::sqrt(2.0);
+  const double log2pi = std::log(2.0 * kPi);
+  return unary_f64_impl(self, [mean, std, sqrt2, log2pi](double x) {
+    const double z = (x - mean) / std;
+    if (std::isnan(z)) return z;
+    if (z < -10.0) {
+      const double inv = 1.0 / z;
+      const double inv2 = inv * inv;
+      const double corr = 1.0 - inv2 + 3.0 * inv2 * inv2 - 15.0 * inv2 * inv2 * inv2;
+      return -0.5 * z * z - std::log(-z) - 0.5 * log2pi + std::log(std::max(corr, 1e-12));
+    }
+    if (z > 8.0) {
+      const double tail = 0.5 * std::erfc(z / sqrt2);
+      return std::log1p(-tail);
+    }
+    return std::log(0.5 * std::erfc(-z / sqrt2));
   });
 }
 
@@ -2890,6 +2920,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "center") return centered_impl(self);
     if (op == "standardize") return standardize_impl(self);
     if (op == "pdf") return pdf_impl(self, /*mean=*/0.0, /*std=*/1.0);
+    if (op == "logpdf") return logpdf_impl(self, /*mean=*/0.0, /*std=*/1.0);
+    if (op == "logcdf") return logcdf_impl(self, /*mean=*/0.0, /*std=*/1.0);
     if (op == "cdf") return cdf_impl(self, /*mean=*/0.0, /*std=*/1.0);
     if (op == "det") return det_impl(self);
     if (op == "inverse") return inverse_impl(self);
@@ -3112,6 +3144,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "besseli") return bessel_impl(self, s, "i");
       if (op == "besselk") return bessel_impl(self, s, "k");
       if (op == "pdf") return pdf_impl(self, 0.0, s);
+      if (op == "logpdf") return logpdf_impl(self, 0.0, s);
+      if (op == "logcdf") return logcdf_impl(self, 0.0, s);
       if (op == "cdf") return cdf_impl(self, 0.0, s);
       if (op == "zeta") return zeta_impl(self, scalar_like(self, s));
       if (op == "unwrap") return unwrap_impl(self, s, -1);
@@ -3162,17 +3196,6 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "cholesky") return cholesky_impl(self, b);
       if (op == "cholesky_inverse") return cholesky_inverse_impl(self, b);
       if (op == "multinomial") return multinomial_impl(self, /*num_samples=*/1, b);
-      return not_impl(op, args, self);
-    }
-
-    // string
-    if (std::holds_alternative<std::string>(a0)) {
-      const auto dist = as_string(args[0]);
-      if (op == "pdf" || op == "cdf") {
-        PLUSS_CHECK(dist == "norm" || dist == "normal" || dist == "gaussian",
-                    std::string(op) + ": unsupported distribution '" + std::string(dist) + "'");
-        return (op == "pdf") ? pdf_impl(self, 0.0, 1.0) : cdf_impl(self, 0.0, 1.0);
-      }
       return not_impl(op, args, self);
     }
 
@@ -3370,6 +3393,8 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "movstd") return mov_impl(self, (std::int64_t)x, (std::int64_t)y, MovKind::Std);
       if (op == "movvar") return mov_impl(self, (std::int64_t)x, (std::int64_t)y, MovKind::Var);
       if (op == "pdf") return pdf_impl(self, x, y);
+      if (op == "logpdf") return logpdf_impl(self, x, y);
+      if (op == "logcdf") return logcdf_impl(self, x, y);
       if (op == "cdf") return cdf_impl(self, x, y);
       if (op == "unwrap") return unwrap_impl(self, x, (std::int64_t)y);
       if (op == "roll") {

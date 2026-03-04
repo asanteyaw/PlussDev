@@ -147,8 +147,10 @@ Each bullet is an actual call body used in the demo.
 - `scatter_add_`: `auto t = scatter_base.clone(); pluss::codem::_compat::invoke_("scatter_add_", t, 1LL, gather_idx, scatter_val); return t;`
 - `masked_scatter_`: `auto t = m.clone(); pluss::codem::_compat::invoke_("masked_scatter_", t, mask, n); return t;`
 - `put_`: `auto t = gather_src.clone(); pluss::codem::_compat::invoke_("put_", t, flat_idx, flat_src, false); return t;`
-- `pdf(norm)`: `return pos.pdf("norm");`
-- `cdf(norm)`: `return pos.cdf("norm");`
+- `pdf()`: `return pos.pdf();`
+- `logpdf()`: `return pos.logpdf();`
+- `logcdf()`: `return pos.logcdf();`
+- `cdf()`: `return pos.cdf();`
 - `dct`: `return x.dct();`
 - `idct`: `return x.dct().idct();`
 - `dst`: `return x.dst();`

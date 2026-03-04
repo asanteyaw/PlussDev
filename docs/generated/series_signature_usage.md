@@ -224,10 +224,14 @@ auto flat_src = pluss::make_series(std::vector<std::int64_t>{99,88,77}, {3});
   Example: `auto t = x.clone(); pluss::codem::_compat::invoke_("masked_scatter_", t, mask, n);`
 - Signature: `Series& put_(const Series&, const Series&, bool)`
   Example: `auto t = x.clone(); pluss::codem::_compat::invoke_("put_", t, flat_idx, flat_src, false);`
-- Signature: `Series pdf(std::string_view)`
-  Example: `auto out = pos.pdf("norm");`
-- Signature: `Series cdf(std::string_view)`
-  Example: `auto out = pos.cdf("norm");`
+- Signature: `Series pdf()`
+  Example: `auto out = pos.pdf();`
+- Signature: `Series logpdf()`
+  Example: `auto out = pos.logpdf();`
+- Signature: `Series logcdf()`
+  Example: `auto out = pos.logcdf();`
+- Signature: `Series cdf()`
+  Example: `auto out = pos.cdf();`
 - Signature: `Series dct()`
   Example: `auto out = x.dct();`
 - Signature: `Series idct()`

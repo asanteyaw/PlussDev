@@ -19,6 +19,12 @@ struct ProjectedPoint3D {
   double depth{std::numeric_limits<double>::quiet_NaN()};
 };
 
+struct NormalizedProjection3D {
+  double x{0.0};
+  double y{0.0};
+  double depth{0.0};
+};
+
 inline double scalar_color_component_3d(double a, double b, double t) {
   return a + (b - a) * std::clamp(t, 0.0, 1.0);
 }
@@ -89,23 +95,61 @@ inline std::array<double, 3> rotate_camera_3d(double xn, double yn, double zn, c
   return {x2, y2, z2};
 }
 
-inline ProjectedPoint3D project_normalized_3d(double xn,
-                                              double yn,
-                                              double zn,
-                                              const Camera3D& camera,
-                                              double left,
-                                              double top,
-                                              double width,
-                                              double height) {
+inline NormalizedProjection3D project_normalized_components_3d(double xn,
+                                                               double yn,
+                                                               double zn,
+                                                               const Camera3D& camera) {
   const auto rotated = rotate_camera_3d(xn, yn, zn, camera);
   double scale = 1.0;
   if (camera.projection == ProjectionMode::Perspective) {
     scale = camera.distance / std::max(0.6, camera.distance - rotated[1]);
   }
-  const double extent = 0.88;
-  const double px = left + width * (0.5 + rotated[0] * scale * extent);
-  const double py = top + height * (0.5 - rotated[2] * scale * extent);
-  return ProjectedPoint3D{.x = px, .y = py, .depth = rotated[1]};
+  return NormalizedProjection3D{
+      .x = rotated[0] * scale,
+      .y = rotated[2] * scale,
+      .depth = rotated[1],
+  };
+}
+
+inline double fitted_projection_extent_3d(const Camera3D& camera) {
+  static constexpr std::array<std::array<double, 3>, 8> corners{{
+      {0.0, 0.0, 0.0},
+      {1.0, 0.0, 0.0},
+      {1.0, 1.0, 0.0},
+      {0.0, 1.0, 0.0},
+      {0.0, 0.0, 1.0},
+      {1.0, 0.0, 1.0},
+      {1.0, 1.0, 1.0},
+      {0.0, 1.0, 1.0},
+  }};
+
+  double max_abs_x = 0.0;
+  double max_abs_y = 0.0;
+  for (const auto& corner : corners) {
+    const auto projected = project_normalized_components_3d(corner[0], corner[1], corner[2], camera);
+    max_abs_x = std::max(max_abs_x, std::abs(projected.x));
+    max_abs_y = std::max(max_abs_y, std::abs(projected.y));
+  }
+
+  const double usable_half_span = 0.46;
+  const double fit_x = usable_half_span / std::max(1e-9, max_abs_x);
+  const double fit_y = usable_half_span / std::max(1e-9, max_abs_y);
+  return std::clamp(std::min(fit_x, fit_y), 0.2, 0.94);
+}
+
+inline ProjectedPoint3D project_normalized_3d(double xn,
+                                              double yn,
+                                              double zn,
+                                              const Camera3D& camera,
+                                              double extent,
+                                              double left,
+                                              double top,
+                                              double width,
+                                              double height) {
+  const auto projected = project_normalized_components_3d(xn, yn, zn, camera);
+  const double px = left + width * (0.5 + projected.x * extent);
+  const double py = top + height * (0.5 - projected.y * extent);
+  return ProjectedPoint3D{.x = px, .y = py, .depth = projected.depth};
 }
 
 inline ProjectedPoint3D project_value_3d(double x,
@@ -121,6 +165,7 @@ inline ProjectedPoint3D project_value_3d(double x,
                                          double zmin,
                                          double zmax,
                                          const Camera3D& camera,
+                                         double extent,
                                          double left,
                                          double top,
                                          double width,
@@ -137,7 +182,7 @@ inline ProjectedPoint3D project_value_3d(double x,
   if (x_axis.inverted) xn = 1.0 - xn;
   if (y_axis.inverted) yn = 1.0 - yn;
   if (z_axis.inverted) zn = 1.0 - zn;
-  return project_normalized_3d(xn, yn, zn, camera, left, top, width, height);
+  return project_normalized_3d(xn, yn, zn, camera, extent, left, top, width, height);
 }
 
 } // namespace detail

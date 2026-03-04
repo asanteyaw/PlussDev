@@ -141,6 +141,34 @@ auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto dist = pluss::distr::cdf("t", x, {5.0});
 ```
 
+## `Normal`
+
+### Signature
+
+```cpp
+struct pluss::distr::Normal {
+  double mean = 0.0;
+  double stddev = 1.0;
+};
+```
+
+### Notes
+
+Typed wrappers bind parameters once and delegate to the same functional distribution engine. Start here when you want torch-like ergonomics for common distributions without giving up the catalog-style API.
+
+### Examples
+
+```cpp
+pluss::distr::Normal normal{0.0, 1.0};
+
+auto draws = normal.sample({8});
+auto logdens = normal.logpdf(pluss::make_series({-1.0, 0.0, 1.0}));
+auto logtail = normal.logcdf(pluss::make_series({-1.0, 0.0, 1.0}));
+auto cgf = normal.cgf(pluss::make_series({0.0, 1.0}));
+```
+
+The same pattern now exists for `pluss::distr::Bernoulli`, `Binomial`, `Gamma`, `Uniform`, and `Exponential`.
+
 ## `mixture_normal`
 
 ### Signature

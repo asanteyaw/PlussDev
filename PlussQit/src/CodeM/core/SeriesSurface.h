@@ -14,6 +14,35 @@
 // Generated Torch-style templated wrappers (collect args and dispatch via _compat::invoke).
 #include "CodeM/generated/SeriesMethodsGen.h"
 
+// Normal-distribution shortcuts live directly on Series.
+Series pdf() const { return pluss::codem::_compat::invoke("pdf", *this); }
+Series pdf(double stddev) const { return pluss::codem::_compat::invoke("pdf", *this, stddev); }
+Series pdf(double mean, double stddev) const { return pluss::codem::_compat::invoke("pdf", *this, mean, stddev); }
+Series pdf(std::string_view) const = delete;
+Series pdf(const std::string&) const = delete;
+Series pdf(const char*) const = delete;
+
+Series logpdf() const { return pluss::codem::_compat::invoke("logpdf", *this); }
+Series logpdf(double stddev) const { return pluss::codem::_compat::invoke("logpdf", *this, stddev); }
+Series logpdf(double mean, double stddev) const { return pluss::codem::_compat::invoke("logpdf", *this, mean, stddev); }
+Series logpdf(std::string_view) const = delete;
+Series logpdf(const std::string&) const = delete;
+Series logpdf(const char*) const = delete;
+
+Series logcdf() const { return pluss::codem::_compat::invoke("logcdf", *this); }
+Series logcdf(double stddev) const { return pluss::codem::_compat::invoke("logcdf", *this, stddev); }
+Series logcdf(double mean, double stddev) const { return pluss::codem::_compat::invoke("logcdf", *this, mean, stddev); }
+Series logcdf(std::string_view) const = delete;
+Series logcdf(const std::string&) const = delete;
+Series logcdf(const char*) const = delete;
+
+Series cdf() const { return pluss::codem::_compat::invoke("cdf", *this); }
+Series cdf(double stddev) const { return pluss::codem::_compat::invoke("cdf", *this, stddev); }
+Series cdf(double mean, double stddev) const { return pluss::codem::_compat::invoke("cdf", *this, mean, stddev); }
+Series cdf(std::string_view) const = delete;
+Series cdf(const std::string&) const = delete;
+Series cdf(const char*) const = delete;
+
 // ---- C++ convenience operators (ergonomic sugar) ----
 // Thin wrappers around the generated method surface.
 // Scalar rhs operators forward to the generated scalar-aware method surface.

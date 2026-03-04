@@ -496,6 +496,22 @@ double normal_cdf_scalar_(double x, double mean, double stddev) {
   return 0.5 + s * std::exp(-0.5 * q - 0.91893853320467274178);
 }
 
+double normal_logcdf_scalar_(double x, double mean, double stddev) {
+  const double z = (x - mean) / stddev;
+  if (std::isnan(z)) return z;
+  if (z < -10.0) {
+    const double inv = 1.0 / z;
+    const double inv2 = inv * inv;
+    const double corr = 1.0 - inv2 + 3.0 * inv2 * inv2 - 15.0 * inv2 * inv2 * inv2;
+    return -0.5 * z * z - std::log(-z) - 0.5 * kLog2Pi + std::log(std::max(corr, kEps));
+  }
+  if (z > 8.0) {
+    const double tail = 0.5 * std::erfc(z / kSqrt2);
+    return std::log1p(-tail);
+  }
+  return std::log(0.5 * std::erfc(-z / kSqrt2));
+}
+
 double inverse_gaussian_pdf_scalar_(double y, double theta, double chi) {
   if (y <= 0.0) return 0.0;
   return std::sqrt(chi / (2.0 * std::numbers::pi_v<double> * y * y * y)) *
@@ -507,6 +523,12 @@ double inverse_gaussian_cdf_scalar_(double y, double theta, double chi) {
   const double root = std::sqrt(chi / y);
   return normal_cdf_scalar_(root * (y / theta - 1.0), 0.0, 1.0) +
          std::exp(2.0 * chi / theta) * normal_cdf_scalar_(root * (-y / theta - 1.0), 0.0, 1.0);
+}
+
+double logsubexp_scalar_(double a, double b) {
+  if (b == -std::numeric_limits<double>::infinity()) return a;
+  PLUSS_CHECK(a >= b, "subsp::stat::distr::logsubexp: expected a >= b");
+  return a + std::log1p(-std::exp(b - a));
 }
 
 double sample_inverse_gaussian_scalar_(double theta, double chi, std::mt19937_64& rng) {
@@ -617,9 +639,20 @@ Series norm_cdf_(const Series& X) {
   return one.where(upper, central_result.where(central, zero));
 }
 
+Series norm_logcdf_(const Series& x) {
+  return map_series_f64_(as_f64_(x, "logcdf"), [](double xv) {
+    return normal_logcdf_scalar_(xv, 0.0, 1.0);
+  });
+}
+
 Series normal_cdf_(const Series& x, double mean, double stddev) {
   PLUSS_CHECK(stddev > 0.0, "subsp::stat::distr::normal cdf: std must be > 0");
   return norm_cdf_(as_f64_(x, "cdf").sub(mean).div(stddev));
+}
+
+Series normal_logcdf_(const Series& x, double mean, double stddev) {
+  PLUSS_CHECK(stddev > 0.0, "subsp::stat::distr::normal logcdf: std must be > 0");
+  return norm_logcdf_(as_f64_(x, "logcdf").sub(mean).div(stddev));
 }
 
 // Series normal_cdf_(const Series& x, double mean, double stddev) {
@@ -664,6 +697,14 @@ Series lognormal_cdf_(const Series& x, double mu, double sigma) {
   return core.where(xx.gt(0.0), zeros_like_f64_(xx));
 }
 
+Series lognormal_logcdf_(const Series& x, double mu, double sigma) {
+  PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::lognormal logcdf: sigma must be > 0");
+  const Series xx = as_f64_(x, "logcdf");
+  const Series safe_x = xx.clamp_min(kEps);
+  const Series core = normal_logcdf_(safe_x.log(), mu, sigma);
+  return core.where(xx.gt(0.0), full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+}
+
 Series lognormal_sample_(double mu,
                          double sigma,
                          std::span<const std::int64_t> sizes,
@@ -691,6 +732,17 @@ Series uniform_cdf_(const Series& x, double lo, double hi) {
   PLUSS_CHECK(hi > lo, "subsp::stat::distr::uniform cdf: expected hi > lo");
   const Series xx = as_f64_(x, "cdf");
   return xx.sub(lo).div(hi - lo).clamp_min(0.0).clamp_max(1.0);
+}
+
+Series uniform_logcdf_(const Series& x, double lo, double hi) {
+  PLUSS_CHECK(hi > lo, "subsp::stat::distr::uniform logcdf: expected hi > lo");
+  const Series xx = as_f64_(x, "logcdf");
+  const Series below = xx.le(lo);
+  const Series above = xx.ge(hi);
+  const Series central = below.logical_or(above).logical_not();
+  const Series core = xx.sub(lo).div(hi - lo).log();
+  const Series neg_inf = full_like_f64_(xx, -std::numeric_limits<double>::infinity());
+  return neg_inf.where(below, full_like_f64_(xx, 0.0).where(above, core.where(central, neg_inf)));
 }
 
 Series uniform_sample_(double lo,
@@ -781,6 +833,11 @@ Series cauchy_cdf_(const Series& x, double location, double scale) {
   return xx.sub(location).div(scale).atan().div(std::numbers::pi_v<double>).add(0.5);
 }
 
+Series cauchy_logcdf_(const Series& x, double location, double scale) {
+  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::cauchy logcdf: scale must be > 0");
+  return cauchy_cdf_(x, location, scale).log();
+}
+
 Series cauchy_sample_(double location,
                       double scale,
                       std::span<const std::int64_t> sizes,
@@ -809,6 +866,14 @@ Series laplace_cdf_(const Series& x, double location, double scale) {
   const Series left = centered.div(scale).exp().mul(0.5);
   const Series right = centered.div(scale).mul(-1.0).exp().mul(-0.5).add(1.0);
   return left.where(centered.lt(0.0), right);
+}
+
+Series laplace_logcdf_(const Series& x, double location, double scale) {
+  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::laplace logcdf: scale must be > 0");
+  return map_series_f64_(x, [=](double xv) {
+    if (xv < location) return -std::log(2.0) + (xv - location) / scale;
+    return std::log1p(-0.5 * std::exp((location - xv) / scale));
+  });
 }
 
 Series laplace_sample_(double location,
@@ -842,6 +907,15 @@ Series logistic_logpdf_(const Series& x, double location, double scale) {
 Series logistic_cdf_(const Series& x, double location, double scale) {
   PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::logistic cdf: scale must be > 0");
   return as_f64_(x, "cdf").sub(location).div(scale).sigmoid();
+}
+
+Series logistic_logcdf_(const Series& x, double location, double scale) {
+  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::logistic logcdf: scale must be > 0");
+  return map_series_f64_(x, [=](double xv) {
+    const double z = (xv - location) / scale;
+    if (z >= 0.0) return -std::log1p(std::exp(-z));
+    return z - std::log1p(std::exp(z));
+  });
 }
 
 Series logistic_sample_(double location,
@@ -918,6 +992,14 @@ Series rayleigh_cdf_(const Series& x, double sigma) {
   const double sigma2 = sigma * sigma;
   const Series core = xx.square().div(2.0 * sigma2).mul(-1.0).exp().mul(-1.0).add(1.0);
   return core.where(xx.ge(0.0), zeros_like_f64_(xx));
+}
+
+Series rayleigh_logcdf_(const Series& x, double sigma) {
+  PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::rayleigh logcdf: sigma must be > 0");
+  return map_series_f64_(x, [=](double xv) {
+    if (xv < 0.0) return -std::numeric_limits<double>::infinity();
+    return std::log1p(-std::exp(-(xv * xv) / (2.0 * sigma * sigma)));
+  });
 }
 
 Series rayleigh_sample_(double sigma,
@@ -1340,6 +1422,18 @@ Series normaltrunc_cdf_(const Series& x, double a, double b, double mu, double s
     if (xv <= a) return 0.0;
     if (xv >= b) return 1.0;
     return (normal_cdf_scalar_(xv, mu, sigma) - left) / denom;
+  });
+}
+
+Series normaltrunc_logcdf_(const Series& x, double a, double b, double mu, double sigma) {
+  PLUSS_CHECK(b >= a && sigma > 0.0, "subsp::stat::distr::normaltrunc logcdf: invalid parameters");
+  const double log_left = normal_logcdf_scalar_(a, mu, sigma);
+  const double log_right = normal_logcdf_scalar_(b, mu, sigma);
+  const double log_denom = logsubexp_scalar_(log_right, log_left);
+  return map_series_f64_(x, [=](double xv) {
+    if (xv <= a) return -std::numeric_limits<double>::infinity();
+    if (xv >= b) return 0.0;
+    return logsubexp_scalar_(normal_logcdf_scalar_(xv, mu, sigma), log_left) - log_denom;
   });
 }
 
@@ -2967,6 +3061,21 @@ Series mixture_normal_component_cdf_(const Series& x,
   return out;
 }
 
+Series mixture_normal_component_logcdf_(const Series& x,
+                                        const Series& means,
+                                        const Series& stddevs,
+                                        const Series& zero,
+                                        const Series& one) {
+  const Series safe_std = stddevs.where(stddevs.gt(0.0), one);
+  Series out = norm_logcdf_(x.sub(means).div(safe_std));
+  const Series degenerate = stddevs.eq(0.0);
+  if (degenerate.any().item<bool>()) {
+    const Series step_log = full_like_f64_(x, 0.0).where(x.ge(means), full_like_f64_(x, -std::numeric_limits<double>::infinity()));
+    out = step_log.where(degenerate, out);
+  }
+  return out;
+}
+
 Series mixture_normal(const Series& weights,
                       const Series& means,
                       const Series& stddevs,
@@ -3058,6 +3167,28 @@ Series mixture_normal_cdf(const Series& x,
   return mixture_normal_component_cdf_(flat_x, means_2d, stddevs_2d, zero, one)
       .mul(weights_2d)
       .sum(1, false)
+      .reshape(xx.sizes());
+}
+
+Series mixture_normal_logcdf(const Series& x,
+                             const Series& weights,
+                             const Series& means,
+                             const Series& stddevs) {
+  const Series xx = as_f64_(x, "mixture_normal_logcdf");
+  const Config cfg = float64_cfg_like_(xx);
+  const MixtureNormalParams params = mixture_normal_params_(weights, means, stddevs, cfg, "mixture_normal_logcdf", true);
+  const std::int64_t total = xx.numel();
+  const std::int64_t k = params.num_components;
+  const Series flat_x = xx.reshape({total, 1});
+  const Series means_2d = params.means.reshape({1, k});
+  const Series stddevs_2d = params.stddevs.reshape({1, k});
+  const Series weights_2d = params.weights.reshape({1, k});
+  const Series zero = flat_x.mul(0.0).add(means_2d.mul(0.0));
+  const Series one = zero.add(1.0);
+  const Series log_weights = weights_2d.log().where(weights_2d.gt(0.0), full_like_f64_(weights_2d, -std::numeric_limits<double>::infinity()));
+  return mixture_normal_component_logcdf_(flat_x, means_2d, stddevs_2d, zero, one)
+      .add(log_weights)
+      .logsumexp(1, false)
       .reshape(xx.sizes());
 }
 
@@ -3611,6 +3742,50 @@ Series cdf(std::string_view name, const Series& x, std::span<const double> param
 
 Series cdf(std::string_view name, const Series& x, std::initializer_list<double> params) {
   return cdf(name, x, std::span<const double>(params.begin(), params.size()));
+}
+
+Series logcdf(std::string_view name, const Series& x, std::span<const double> params) {
+  switch (resolve_(name)) {
+    case Family::Normal:
+      expect_param_count_("normal logcdf", params, {0, 2});
+      return normal_logcdf_(x, param_or_(params, 0, 0.0), param_or_(params, 1, 1.0));
+    case Family::Lognormal:
+      expect_param_count_("lognormal logcdf", params, {0, 2});
+      return lognormal_logcdf_(x, param_or_(params, 0, 0.0), param_or_(params, 1, 1.0));
+    case Family::Uniform:
+      expect_param_count_("uniform logcdf", params, {2});
+      return uniform_logcdf_(x, params[0], params[1]);
+    case Family::Cauchy:
+      expect_param_count_("cauchy logcdf", params, {0, 2});
+      return cauchy_logcdf_(x, param_or_(params, 0, 0.0), param_or_(params, 1, 1.0));
+    case Family::Laplace:
+      expect_param_count_("laplace logcdf", params, {0, 2});
+      return laplace_logcdf_(x, param_or_(params, 0, 0.0), param_or_(params, 1, 1.0));
+    case Family::Logistic:
+      expect_param_count_("logistic logcdf", params, {0, 2});
+      return logistic_logcdf_(x, param_or_(params, 0, 0.0), param_or_(params, 1, 1.0));
+    case Family::Exponential: {
+      expect_param_count_("exponential logcdf", params, {0, 1});
+      const double rate = param_or_(params, 0, 1.0);
+      PLUSS_CHECK(rate > 0.0, "subsp::stat::distr::exponential logcdf: rate must be > 0");
+      const Series xx = as_f64_(x, "logcdf");
+      const Series pos = xx.gt(0.0);
+      const Series core = xx.mul(-rate).exp().neg().log1p();
+      return core.where(pos, full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
+    }
+    case Family::Rayleigh:
+      expect_param_count_("rayleigh logcdf", params, {0, 1});
+      return rayleigh_logcdf_(x, param_or_(params, 0, 1.0));
+    case Family::NormalTrunc:
+      expect_param_count_("normaltrunc logcdf", params, {4});
+      return normaltrunc_logcdf_(x, params[0], params[1], params[2], params[3]);
+    default:
+      return cdf(name, x, params).log();
+  }
+}
+
+Series logcdf(std::string_view name, const Series& x, std::initializer_list<double> params) {
+  return logcdf(name, x, std::span<const double>(params.begin(), params.size()));
 }
 
 } // namespace pluss::subsp::stat::distr

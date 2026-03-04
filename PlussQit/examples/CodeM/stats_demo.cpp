@@ -17,8 +17,10 @@ int main() {
   std::cout << "kurtosis:\n" << x.kurtosis() << "\n\n";
   std::cout << "histcounts(8 bins, [-3, 3]):\n" << x.histcounts(8, -3.0, 3.0) << "\n\n";
 
-  std::cout << "pdf(norm):\n" << x.pdf("norm") << "\n\n";
-  std::cout << "cdf(norm):\n" << x.cdf("norm") << "\n\n";
+  std::cout << "pdf():\n" << x.pdf() << "\n\n";
+  std::cout << "logpdf():\n" << x.logpdf() << "\n\n";
+  std::cout << "logcdf():\n" << x.logcdf() << "\n\n";
+  std::cout << "cdf():\n" << x.cdf() << "\n\n";
 
   std::cout << "movmean(window=4):\n" << x.movmean(4) << "\n\n";
   std::cout << "movstd(window=4):\n" << x.movstd(4) << "\n\n";
