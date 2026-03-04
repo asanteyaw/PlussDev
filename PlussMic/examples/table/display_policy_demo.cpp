@@ -42,9 +42,26 @@ int main() {
   prices.head(8).show();
   prices.describe().show();
 
+  std::cout << "\n=== Full df ===\n";
+  df.show();
+
+  std::cout << "\n=== Full titled df ===\n";
+  df.title("Equities").show();
+
   std::cout << "\n=== Stored preview object ===\n";
   auto preview = df.view(4, 12);
   preview.show();
+
+  std::cout << "\n=== Atlas popup viewer ===\n";
+  auto baseline = df.head(8, false).title("baseline");
+  auto stress = baseline
+                    .transform("Lifecycle Cost", [](const pluss::table::Thread& t) { return t + 250.0; })
+                    .transform("Schedule Variance (%)", [](const pluss::table::Thread& t) { return t - 5.0; })
+                    .title("stress");
+  auto atlas = pluss::table::Atlas(
+      {baseline, stress},
+      pluss::table::Thread(pluss::make_note({"baseline", "stress"})));
+  atlas.show();
 
   return 0;
 }

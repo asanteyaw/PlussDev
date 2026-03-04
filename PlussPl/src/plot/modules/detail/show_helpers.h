@@ -15,6 +15,17 @@
 
 namespace pluss::plotism::detail {
 
+bool popup_plot_viewer_available();
+bool show_plot_popup_window(const std::string& title,
+                            const std::string& svg_path,
+                            std::int64_t width,
+                            std::int64_t height);
+bool open_plot_viewer(std::string_view title,
+                      std::string_view path,
+                      bool block,
+                      std::int64_t width,
+                      std::int64_t height);
+
 inline AxisScale parse_axis_scale(std::string_view scale, std::string_view where) {
   if (scale == "linear") {
     return AxisScale::Linear;

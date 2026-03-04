@@ -878,13 +878,19 @@ public:
     const std::string path = detail::make_temp_plot_path("plusspl_2d", detail::output_extension(format));
     ensure_backend_().save(make_view_(),
                            RenderTarget{.path = path, .width = width, .height = height, .format = format});
-    return detail::open_in_default_viewer(path, block);
+    return detail::open_plot_viewer(figure_title_, path, block, width, height);
+  }
+
+  bool show_popup(OutputFormat format = OutputFormat::Svg,
+                  std::int32_t width = 1200,
+                  std::int32_t height = 800) const {
+    return show_window(true, format, width, height);
   }
 
   void show() const {
 #if PLUSSPL_ENABLE_INTERACTIVE_SHOW
     try {
-      if (show_window(false, OutputFormat::Svg)) {
+      if (show_window(detail::popup_plot_viewer_available(), OutputFormat::Svg)) {
         return;
       }
     } catch (...) {

@@ -77,6 +77,15 @@ public:
   }
 
   void show() const {
+#if PLUSSPL_ENABLE_INTERACTIVE_SHOW
+    try {
+      if (show_window(detail::popup_plot_viewer_available(), OutputFormat::Svg)) {
+        return;
+      }
+    } catch (...) {
+      // Fallback to textual preview.
+    }
+#endif
     show(std::cout);
   }
 
@@ -86,7 +95,13 @@ public:
                    std::int32_t height = 960) const {
     const std::string path = detail::make_temp_plot_path("plusspl_4d", detail::output_extension(format));
     save_(path, width, height, format);
-    return detail::open_in_default_viewer(path, block);
+    return detail::open_plot_viewer(title_, path, block, width, height);
+  }
+
+  bool show_popup(OutputFormat format = OutputFormat::Svg,
+                  std::int32_t width = 1400,
+                  std::int32_t height = 960) const {
+    return show_window(true, format, width, height);
   }
 
   void save_svg(std::string_view filepath, std::int32_t width = 1400, std::int32_t height = 960) const {
@@ -213,7 +228,7 @@ inline void render_4d_view(RenderSurface2D& surface, const View4D& view, const R
 
   const auto [rows, cols] = grid_shape_4d(view.panels().size());
   const double outer_margin = 26.0;
-  const double gap = 18.0;
+  const double gap = 22.0;
   const double usable_width = static_cast<double>(target.width) - outer_margin * 2.0 - gap * static_cast<double>(cols - 1);
   const double usable_height =
       static_cast<double>(target.height) - title_band - outer_margin - gap * static_cast<double>(rows - 1);
@@ -235,8 +250,15 @@ inline void render_4d_view(RenderSurface2D& surface, const View4D& view, const R
     options.clear_background = false;
     options.show_legend = false;
     options.show_colorbar = false;
-    options.title_font_size = 14.0;
+    options.title_font_size = 13.0;
+    options.max_ticks_per_axis = 4;
     const auto& panel = view.panels()[index];
+    const bool bottom_row = row + 1 == rows;
+    const bool left_col = col == 0;
+    const bool right_col = col + 1 == cols || index + 1 == view.panels().size();
+    options.show_x_axis_label = bottom_row;
+    options.show_y_axis_label = left_col;
+    options.show_z_axis_label = right_col;
     options.title_override = panel.title.empty() ? std::optional<std::string>{panel.scene.view_data().title}
                                                  : std::optional<std::string>{panel.title};
     render_3d_scene_with_options(surface, panel.scene.view_data(), target, options);

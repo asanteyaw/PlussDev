@@ -33,6 +33,10 @@ struct SceneRender3DOptions {
   bool show_title{true};
   bool show_legend{true};
   bool show_colorbar{true};
+  bool show_x_axis_label{true};
+  bool show_y_axis_label{true};
+  bool show_z_axis_label{true};
+  int max_ticks_per_axis{0};
   double title_font_size{22.0};
   std::optional<std::string> title_override{};
 };
@@ -184,6 +188,33 @@ inline std::vector<std::array<Point2D, 4>> visible_panes_3d(const PlotTransform3
   };
 }
 
+inline std::vector<ResolvedTick> limit_ticks_3d(std::vector<ResolvedTick> ticks, int max_ticks) {
+  if (max_ticks <= 0 || ticks.size() <= static_cast<std::size_t>(max_ticks)) {
+    return ticks;
+  }
+  if (max_ticks == 1) {
+    return {ticks[ticks.size() / 2]};
+  }
+
+  std::vector<ResolvedTick> trimmed;
+  trimmed.reserve(static_cast<std::size_t>(max_ticks));
+  const double stride = static_cast<double>(ticks.size() - 1) / static_cast<double>(max_ticks - 1);
+  std::size_t last_index = std::numeric_limits<std::size_t>::max();
+  for (int i = 0; i < max_ticks; ++i) {
+    std::size_t index = static_cast<std::size_t>(std::llround(static_cast<double>(i) * stride));
+    index = std::min(index, ticks.size() - 1);
+    if (index == last_index) {
+      continue;
+    }
+    trimmed.push_back(ticks[index]);
+    last_index = index;
+  }
+  if (trimmed.back().position != ticks.back().position || trimmed.back().label != ticks.back().label) {
+    trimmed.back() = ticks.back();
+  }
+  return trimmed;
+}
+
 inline void render_3d_scene_with_options(RenderSurface2D& surface,
                                          const Figure3DView& fig,
                                          const RenderTarget& target,
@@ -248,13 +279,13 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
   const double colorbar_width = show_colorbar ? std::clamp(viewport.width * 0.06, 44.0, 64.0) : 0.0;
   const double aux_gap = (show_colorbar && outside_legend) ? 12.0 : 0.0;
 
-  const double left_margin = constrained_view ? std::clamp(viewport.width * 0.19, 96.0, 150.0)
+  const double left_margin = constrained_view ? std::clamp(viewport.width * 0.145, 64.0, 108.0)
                                               : std::clamp(viewport.width * 0.14, 56.0, 110.0);
-  const double right_margin = constrained_view ? std::clamp(viewport.width * 0.13, 72.0, 120.0)
+  const double right_margin = constrained_view ? std::clamp(viewport.width * 0.085, 36.0, 72.0)
                                                : std::clamp(viewport.width * 0.08, 44.0, 90.0);
-  const double top_margin = constrained_view ? std::clamp(viewport.height * (options.show_title ? 0.19 : 0.11), 54.0, 102.0)
+  const double top_margin = constrained_view ? std::clamp(viewport.height * (options.show_title ? 0.145 : 0.08), 34.0, 70.0)
                                              : std::clamp(viewport.height * (options.show_title ? 0.16 : 0.08), 40.0, 84.0);
-  const double bottom_margin = constrained_view ? std::clamp(viewport.height * 0.14, 64.0, 112.0)
+  const double bottom_margin = constrained_view ? std::clamp(viewport.height * 0.095, 42.0, 78.0)
                                                 : std::clamp(viewport.height * 0.10, 52.0, 96.0);
 
   const double left = viewport.left + left_margin;
@@ -265,7 +296,8 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
   const double pw = std::max(1.0, right - left);
   const double ph = std::max(1.0, bottom - top);
 
-  surface.fill_rect(left, top, pw, ph, FillStyle2D{.color = theme.panel_background, .alpha = 1.0}, 14.0);
+  const double panel_radius = constrained_view ? 10.0 : 14.0;
+  surface.fill_rect(left, top, pw, ph, FillStyle2D{.color = theme.panel_background, .alpha = 1.0}, panel_radius);
   surface.stroke_rect(left, top, pw, ph,
                       StrokeStyle2D{
                           .color = theme.panel_border,
@@ -273,7 +305,7 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
                           .alpha = 1.0,
                           .line_style = "solid",
                       },
-                      14.0);
+                      panel_radius);
 
   double xmin = std::numeric_limits<double>::infinity();
   double xmax = -std::numeric_limits<double>::infinity();
@@ -383,16 +415,60 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
                         });
   }
 
-  const auto x_ticks = resolve_ticks_2d(fig.x_axis, xmin, xmax);
-  const auto y_ticks = resolve_ticks_2d(fig.y_axis, ymin, ymax);
-  const auto z_ticks = resolve_ticks_2d(fig.z_axis, zmin, zmax);
+  const auto x_ticks = limit_ticks_3d(resolve_ticks_2d(fig.x_axis, xmin, xmax), options.max_ticks_per_axis);
+  const auto y_ticks = limit_ticks_3d(resolve_ticks_2d(fig.y_axis, ymin, ymax), options.max_ticks_per_axis);
+  const auto z_ticks = limit_ticks_3d(resolve_ticks_2d(fig.z_axis, zmin, zmax), options.max_ticks_per_axis);
   const auto plot_center = transform.project_normalized(0.5, 0.5, 0.5);
+  const auto anchor = corner_bits_3d(anchor_corner);
   const auto clamp_t = [](double value) {
     if (!std::isfinite(value)) {
       return 0.5;
     }
     return std::clamp(value, 0.0, 1.0);
   };
+  const auto should_draw_inner_grid = [](double t) {
+    return t > 1e-6 && t < 1.0 - 1e-6;
+  };
+  const auto stroke_gridline = [&](const detail::ProjectedPoint3D& p1, const detail::ProjectedPoint3D& p2) {
+    surface.stroke_line(p1.x, p1.y, p2.x, p2.y,
+                        StrokeStyle2D{
+                            .color = theme.grid_color,
+                            .line_width = 0.9,
+                            .alpha = 0.78,
+                            .line_style = "solid",
+                        });
+  };
+
+  for (const auto& tick : x_ticks) {
+    const double t = axis_display_coord_3d(clamp_t((tick.position - xmin) / std::max(1e-12, xmax - xmin)), fig.x_axis);
+    if (!should_draw_inner_grid(t)) {
+      continue;
+    }
+    stroke_gridline(transform.project_normalized(t, 0.0, anchor[2]),
+                    transform.project_normalized(t, 1.0, anchor[2]));
+    stroke_gridline(transform.project_normalized(t, anchor[1], 0.0),
+                    transform.project_normalized(t, anchor[1], 1.0));
+  }
+  for (const auto& tick : y_ticks) {
+    const double t = axis_display_coord_3d(clamp_t((tick.position - ymin) / std::max(1e-12, ymax - ymin)), fig.y_axis);
+    if (!should_draw_inner_grid(t)) {
+      continue;
+    }
+    stroke_gridline(transform.project_normalized(0.0, t, anchor[2]),
+                    transform.project_normalized(1.0, t, anchor[2]));
+    stroke_gridline(transform.project_normalized(anchor[0], t, 0.0),
+                    transform.project_normalized(anchor[0], t, 1.0));
+  }
+  for (const auto& tick : z_ticks) {
+    const double t = axis_display_coord_3d(clamp_t((tick.position - zmin) / std::max(1e-12, zmax - zmin)), fig.z_axis);
+    if (!should_draw_inner_grid(t)) {
+      continue;
+    }
+    stroke_gridline(transform.project_normalized(anchor[0], 0.0, t),
+                    transform.project_normalized(anchor[0], 1.0, t));
+    stroke_gridline(transform.project_normalized(0.0, anchor[1], t),
+                    transform.project_normalized(1.0, anchor[1], t));
+  }
 
   const auto draw_ticks = [&](const Axis& axis,
                               const std::vector<ResolvedTick>& ticks,
@@ -402,6 +478,7 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
     const double span = std::max(1e-12, hi - lo);
     const double tick_len = std::clamp(std::min(pw, ph) * 0.012, 6.0, 10.0);
     const double label_len = tick_len + 10.0;
+    const double tick_font_size = constrained_view ? 9.0 : 10.0;
     for (const auto& tick : ticks) {
       const double base_t = clamp_t((tick.position - lo) / span);
       const double axis_t = axis_display_coord_3d(base_t, axis);
@@ -420,7 +497,7 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
                    tick.label,
                    TextStyle2D{
                        .color = theme.tick_label_color,
-                       .size = 10.0,
+                       .size = tick_font_size,
                        .alpha = 1.0,
                        .bold = false,
                        .anchor = text_anchor,
@@ -434,19 +511,24 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
   draw_ticks(fig.y_axis, y_ticks, AxisKind::Y, ymin, ymax);
   draw_ticks(fig.z_axis, z_ticks, AxisKind::Z, zmin, zmax);
 
-  const auto draw_axis_label = [&](const Axis& axis, AxisKind axis_kind) {
+  const auto draw_axis_label = [&](const Axis& axis, AxisKind axis_kind, bool visible) {
+    if (!visible) {
+      return;
+    }
     if (axis.label.empty()) {
       return;
     }
+    const double axis_label_offset = constrained_view ? 20.0 : 26.0;
+    const double axis_label_size = constrained_view ? 11.0 : 12.0;
     const double label_t = axis.inverted ? 0.0 : 1.0;
     const auto point = axis_edge_point_3d(transform, axis_kind, label_t, anchor_corner);
     const auto direction = axis_tick_direction_3d(transform, axis_kind, label_t, anchor_corner, plot_center);
-    surface.text(point.x + direction.x * 26.0,
-                 point.y + direction.y * 26.0,
+    surface.text(point.x + direction.x * axis_label_offset,
+                 point.y + direction.y * axis_label_offset,
                  axis.label,
                  TextStyle2D{
                      .color = theme.axis_label_color,
-                     .size = 12.0,
+                     .size = axis_label_size,
                      .alpha = 1.0,
                      .bold = false,
                      .anchor = anchor_for_direction_3d(direction),
@@ -455,9 +537,9 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
                  });
   };
 
-  draw_axis_label(fig.x_axis, AxisKind::X);
-  draw_axis_label(fig.y_axis, AxisKind::Y);
-  draw_axis_label(fig.z_axis, AxisKind::Z);
+  draw_axis_label(fig.x_axis, AxisKind::X, options.show_x_axis_label);
+  draw_axis_label(fig.y_axis, AxisKind::Y, options.show_y_axis_label);
+  draw_axis_label(fig.z_axis, AxisKind::Z, options.show_z_axis_label);
 
   DepthSorter3D depth_sorter{};
   for (std::size_t ti = 0; ti < fig.traces.size(); ++ti) {
