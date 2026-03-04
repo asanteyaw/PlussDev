@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280.0000" height="820.0000" viewBox="0 0 1280.0000 820.0000">
+<rect x="0" y="0" width="1280.0000" height="820.0000" fill="rgb(255,252,248)" fill-opacity="1.0000"/>
+<path d="M 0.0000 0.0000 L 1280.0000 0.0000 L 1280.0000 820.0000 L 0.0000 820.0000 Z" stroke="none" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="640.0000" y="32.0000" font-family="Helvetica, Arial, sans-serif" font-size="18.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">Implied vol surface heatmap</text>
+<path d="M 28.0000 58.0000 L 1252.0000 58.0000 L 1252.0000 792.0000 L 28.0000 792.0000 Z" stroke="rgb(28,27,25)" stroke-opacity="1.0000" stroke-width="1.0000" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 275.6667 96.0000 L 275.6667 736.0000 " stroke="rgb(224,229,236)" stroke-opacity="1.0000" stroke-width="0.8000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="275.6667" y="752.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">25P</text>
+<path d="M 655.0000 96.0000 L 655.0000 736.0000 " stroke="rgb(224,229,236)" stroke-opacity="1.0000" stroke-width="0.8000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="655.0000" y="752.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">ATM</text>
+<path d="M 1034.3333 96.0000 L 1034.3333 736.0000 " stroke="rgb(224,229,236)" stroke-opacity="1.0000" stroke-width="0.8000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1034.3333" y="752.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">25C</text>
+<path d="M 86.0000 629.3333 L 1224.0000 629.3333 " stroke="rgb(224,229,236)" stroke-opacity="1.0000" stroke-width="0.8000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="78.0000" y="633.3333" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">1M</text>
+<path d="M 86.0000 416.0000 L 1224.0000 416.0000 " stroke="rgb(224,229,236)" stroke-opacity="1.0000" stroke-width="0.8000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="78.0000" y="420.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">3M</text>
+<path d="M 86.0000 202.6667 L 1224.0000 202.6667 " stroke="rgb(224,229,236)" stroke-opacity="1.0000" stroke-width="0.8000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="78.0000" y="206.6667" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">6M</text>
+<path d="M 86.0000 96.0000 L 1224.0000 96.0000 L 1224.0000 736.0000 L 86.0000 736.0000 Z" stroke="rgb(28,27,25)" stroke-opacity="1.0000" stroke-width="1.0000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="655.0000" y="778.0000" font-family="Helvetica, Arial, sans-serif" font-size="11.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">delta_bucket</text>
+<text x="34.0000" y="88.0000" font-family="Helvetica, Arial, sans-serif" font-size="11.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="start">maturity</text>
+<path d="M 86.0000 736.0000 L 465.3333 736.0000 L 465.3333 522.6667 L 86.0000 522.6667 Z" stroke="rgb(63,97,76)" stroke-opacity="1.0000" stroke-width="0.4000" fill="rgb(115,176,137)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 465.3333 736.0000 L 844.6667 736.0000 L 844.6667 522.6667 L 465.3333 522.6667 Z" stroke="rgb(18,42,78)" stroke-opacity="1.0000" stroke-width="0.4000" fill="rgb(32,76,141)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 844.6667 736.0000 L 1224.0000 736.0000 L 1224.0000 522.6667 L 844.6667 522.6667 Z" stroke="rgb(12,24,45)" stroke-opacity="1.0000" stroke-width="0.4000" fill="rgb(21,43,81)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 86.0000 522.6667 L 465.3333 522.6667 L 465.3333 309.3333 L 86.0000 309.3333 Z" stroke="rgb(136,108,40)" stroke-opacity="1.0000" stroke-width="0.4000" fill="rgb(248,196,72)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 465.3333 522.6667 L 844.6667 522.6667 L 844.6667 309.3333 L 465.3333 309.3333 Z" stroke="rgb(23,65,94)" stroke-opacity="1.0000" stroke-width="0.4000" fill="rgb(41,117,171)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 844.6667 522.6667 L 1224.0000 522.6667 L 1224.0000 309.3333 L 844.6667 309.3333 Z" stroke="rgb(18,42,78)" stroke-opacity="1.0000" stroke-width="0.4000" fill="rgb(32,76,141)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 86.0000 309.3333 L 465.3333 309.3333 L 465.3333 96.0000 L 86.0000 96.0000 Z" stroke="rgb(118,48,29)" stroke-opacity="1.0000" stroke-width="0.4000" fill="rgb(214,88,52)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 465.3333 309.3333 L 844.6667 309.3333 L 844.6667 96.0000 L 465.3333 96.0000 Z" stroke="rgb(63,97,76)" stroke-opacity="1.0000" stroke-width="0.4000" fill="rgb(115,176,137)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 844.6667 309.3333 L 1224.0000 309.3333 L 1224.0000 96.0000 L 844.6667 96.0000 Z" stroke="rgb(25,78,94)" stroke-opacity="1.0000" stroke-width="0.4000" fill="rgb(45,142,170)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

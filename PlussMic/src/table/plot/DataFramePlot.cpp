@@ -1,6 +1,7 @@
 #include "table/plot/DataFramePlot.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
@@ -16,22 +17,51 @@ namespace pluss::table {
 
 namespace {
 
-constexpr std::string_view kDefaultPlotTheme = "paper";
-constexpr std::string_view kDefaultPlotFont = "IBM Plex Sans";
+using Studio = pluss::pl::Studio;
+using Pane = pluss::pl::Pane;
+using Trace = pluss::pl::Trace;
+using Rgba = pluss::pl::Rgba;
 
-pluss::plotism::Style dataframe_series_style(std::size_t index,
-                                             std::string marker = "none",
-                                             double alpha = 1.0,
-                                             double line_width = 1.5) {
-  static const std::vector<std::string> palette{
-      "#0f766e", "#c2410c", "#1d4ed8", "#b91c1c", "#4d7c0f",
-      "#0369a1", "#b45309", "#0f172a", "#be123c", "#57534e"};
-  pluss::plotism::Style style;
-  style.color = palette[index % palette.size()];
-  style.marker = std::move(marker);
-  style.alpha = alpha;
-  style.line_width = line_width;
-  return style;
+constexpr std::string_view kDefaultPlotName = "dataframe";
+
+void setup_pane(Pane& pane, bool show_legend) {
+  pane.grid(pluss::pl::GridStyle::Major);
+  pane.key(show_legend ? pluss::pl::KeyPlace::OutsideEast : pluss::pl::KeyPlace::None);
+}
+
+Studio make_studio() {
+  auto fig = pluss::pl::studio(std::string(kDefaultPlotName));
+  fig.theme(pluss::pl::themes::paper());
+  return fig;
+}
+
+Rgba color_for_index(std::size_t index) {
+  static const std::array<Rgba, 10> palette{{
+      Rgba::from_u8(15, 118, 110),
+      Rgba::from_u8(194, 65, 12),
+      Rgba::from_u8(29, 78, 216),
+      Rgba::from_u8(185, 28, 28),
+      Rgba::from_u8(77, 124, 15),
+      Rgba::from_u8(3, 105, 161),
+      Rgba::from_u8(180, 83, 9),
+      Rgba::from_u8(15, 23, 42),
+      Rgba::from_u8(190, 18, 60),
+      Rgba::from_u8(87, 83, 78),
+  }};
+  return palette[index % palette.size()];
+}
+
+void style_trace(Trace& trace,
+                 std::size_t index,
+                 double alpha = 1.0,
+                 double line_width = 1.5) {
+  auto color = color_for_index(index);
+  color.alpha = std::clamp(alpha, 0.05, 1.0);
+  trace.stroke(color);
+  trace.width(static_cast<float>(line_width));
+  if (color.alpha < 0.999) {
+    trace.transparent(true);
+  }
 }
 
 std::vector<double> positional_plot_x(std::int64_t nrows) {
@@ -69,10 +99,10 @@ std::vector<double> thread_to_plot_numeric_values(const Thread& t) {
       const auto& note = t.as_note();
       out.reserve(static_cast<std::size_t>(note.numel()));
       note.for_each_flat([&](std::string_view s) {
-        std::string v(s);
+        std::string value(s);
         char* end = nullptr;
-        const double parsed = std::strtod(v.c_str(), &end);
-        const bool valid = (end != nullptr) && (end != v.c_str()) && (*end == '\0');
+        const double parsed = std::strtod(value.c_str(), &end);
+        const bool valid = (end != nullptr) && (end != value.c_str()) && (*end == '\0');
         out.push_back(valid ? parsed : std::numeric_limits<double>::quiet_NaN());
       });
       break;
@@ -150,15 +180,11 @@ ResolvedPlotAxis resolve_plot_axis(const DataFrame& frame,
   return axis;
 }
 
-pluss::plotism::Figure make_dataframe_figure(bool show_legend, std::string legend_title = {}) {
-  pluss::plotism::Figure fig;
-  fig.theme(std::string(kDefaultPlotTheme)).font_family(std::string(kDefaultPlotFont));
-  fig.legend(pluss::plotism::Legend{
-      .visible = show_legend,
-      .location = show_legend ? pluss::plotism::LegendLocation::OutsideRight : pluss::plotism::LegendLocation::Best,
-      .title = std::move(legend_title),
-  });
-  return fig;
+void apply_axis(Pane& pane, const ResolvedPlotAxis& axis) {
+  pane.x_label(axis.label);
+  if (!axis.labels.empty()) {
+    pane.x_ticks(axis.values, axis.labels);
+  }
 }
 
 std::vector<std::string> labels_for_cases(const DataFrame& frame, std::string_view where) {
@@ -339,7 +365,56 @@ bool prefer_index_plot(const DataFrame& frame) {
   return thread_prefers_labeled_axis(frame.cases()) || frame.nrows() > 24;
 }
 
-pluss::plotism::Figure corr_heatmap_from_names(const DataFrame& frame, const std::vector<std::string>& names) {
+void add_heatmap(Pane& pane, const std::vector<std::vector<double>>& matrix, std::string label) {
+  const std::int64_t rows = static_cast<std::int64_t>(matrix.size());
+  const std::int64_t cols = rows == 0 ? 0 : static_cast<std::int64_t>(matrix.front().size());
+  std::vector<double> z_values(static_cast<std::size_t>(std::max<std::int64_t>(0, rows * cols)),
+                               std::numeric_limits<double>::quiet_NaN());
+  for (std::int64_t r = 0; r < rows; ++r) {
+    const auto& row = matrix[static_cast<std::size_t>(r)];
+    for (std::int64_t c = 0; c < cols && c < static_cast<std::int64_t>(row.size()); ++c) {
+      z_values[static_cast<std::size_t>(r * cols + c)] = row[static_cast<std::size_t>(c)];
+    }
+  }
+
+  std::vector<double> x(static_cast<std::size_t>(std::max<std::int64_t>(0, cols)), 0.0);
+  std::vector<double> y(static_cast<std::size_t>(std::max<std::int64_t>(0, rows)), 0.0);
+  for (std::int64_t c = 0; c < cols; ++c) {
+    x[static_cast<std::size_t>(c)] = static_cast<double>(c);
+  }
+  for (std::int64_t r = 0; r < rows; ++r) {
+    y[static_cast<std::size_t>(r)] = static_cast<double>(r);
+  }
+
+  auto z = pluss::make_series(z_values, {rows * cols});
+  z = z.reshape({rows, cols});
+  auto& trace = pane.fieldmap(x, y, z);
+  trace.label(std::move(label));
+  trace.shade(pluss::pl::ShadeMode::Smooth);
+}
+
+std::pair<std::vector<double>, std::vector<double>> make_step_xy(const std::vector<double>& x,
+                                                                  const std::vector<double>& y) {
+  const std::size_t n = std::min(x.size(), y.size());
+  std::vector<double> sx;
+  std::vector<double> sy;
+  if (n == 0) {
+    return {std::move(sx), std::move(sy)};
+  }
+  sx.reserve(n * 2 - 1);
+  sy.reserve(n * 2 - 1);
+  for (std::size_t i = 0; i < n; ++i) {
+    sx.push_back(x[i]);
+    sy.push_back(y[i]);
+    if (i + 1 < n) {
+      sx.push_back(x[i + 1]);
+      sy.push_back(y[i]);
+    }
+  }
+  return {std::move(sx), std::move(sy)};
+}
+
+Studio corr_heatmap_from_names(const DataFrame& frame, const std::vector<std::string>& names) {
   std::vector<std::vector<double>> columns;
   columns.reserve(names.size());
   for (const auto& name : names) {
@@ -355,18 +430,18 @@ pluss::plotism::Figure corr_heatmap_from_names(const DataFrame& frame, const std
     }
   }
 
-  auto fig = make_dataframe_figure(false);
-  fig.add_heatmap(matrix, "corr", names, names);
-  fig.x_label("feature").y_label("feature");
-  fig.colorbar(pluss::plotism::Colorbar{
-      .visible = true,
-      .location = pluss::plotism::ColorbarLocation::Right,
-      .title = "corr",
-  });
+  auto fig = make_studio();
+  auto& pane = fig.pane2();
+  setup_pane(pane, false);
+  add_heatmap(pane, matrix, "corr");
+
+  const auto tick_pos = positional_plot_x(static_cast<std::int64_t>(names.size()));
+  pane.x_ticks(tick_pos, names).y_ticks(tick_pos, names);
+  pane.x_label("feature").y_label("feature");
   return fig;
 }
 
-pluss::plotism::Figure scatter_matrix_from_names(const DataFrame& frame, const std::vector<std::string>& names) {
+Studio scatter_matrix_from_names(const DataFrame& frame, const std::vector<std::string>& names) {
   PLUSS_CHECK(names.size() >= 2, "DataFrame::plot().scatter_matrix: need at least two numeric features");
 
   std::vector<std::vector<double>> columns;
@@ -377,111 +452,88 @@ pluss::plotism::Figure scatter_matrix_from_names(const DataFrame& frame, const s
     columns.push_back(std::move(values));
   }
 
-  const auto dims = static_cast<std::int32_t>(names.size());
-  auto fig = make_dataframe_figure(false);
-  for (std::int32_t row = 0; row < dims; ++row) {
-    for (std::int32_t col = 0; col < dims; ++col) {
-      fig.subplot(dims, dims, row * dims + col);
+  const auto dims = static_cast<std::int64_t>(names.size());
+  auto fig = make_studio();
+  fig.mosaic(dims, dims, 12.0, 12.0);
+  for (std::int64_t row = 0; row < dims; ++row) {
+    for (std::int64_t col = 0; col < dims; ++col) {
+      auto& pane = fig.pane2();
+      pane.place(row, col);
+      setup_pane(pane, false);
       if (row == col) {
-        fig.add_hist(columns[static_cast<std::size_t>(col)], 12, names[static_cast<std::size_t>(col)]);
-        fig.title(names[static_cast<std::size_t>(col)]);
+        auto& trace = pane.bucket(columns[static_cast<std::size_t>(col)], 12);
+        trace.label(names[static_cast<std::size_t>(col)]);
+        style_trace(trace, static_cast<std::size_t>(col), 0.9, 1.0);
       } else {
-        fig.add_scatter(columns[static_cast<std::size_t>(col)],
-                        columns[static_cast<std::size_t>(row)],
-                        names[static_cast<std::size_t>(row)] + " vs " + names[static_cast<std::size_t>(col)]);
+        auto& trace = pane.cloud(columns[static_cast<std::size_t>(col)],
+                                 columns[static_cast<std::size_t>(row)]);
+        trace.label(names[static_cast<std::size_t>(row)] + " vs " + names[static_cast<std::size_t>(col)]);
+        style_trace(trace, static_cast<std::size_t>(row + col), 0.92, 1.2);
       }
-      fig.x_label(row + 1 == dims ? names[static_cast<std::size_t>(col)] : "");
-      fig.y_label(col == 0 ? names[static_cast<std::size_t>(row)] : "");
+      pane.x_label(row + 1 == dims ? names[static_cast<std::size_t>(col)] : "");
+      pane.y_label(col == 0 ? names[static_cast<std::size_t>(row)] : "");
     }
   }
   return fig;
 }
 
-pluss::plotism::Figure box_from_names(const DataFrame& frame, const std::vector<std::string>& names) {
+Studio box_from_names(const DataFrame& frame, const std::vector<std::string>& names) {
   PLUSS_CHECK(!names.empty(), "DataFrame::plot().box: at least one numeric feature is required");
 
-  auto fig = make_dataframe_figure(false);
-  std::vector<double> centers;
-  std::vector<double> hidden_y;
-  std::vector<std::string> labels;
-  centers.reserve(names.size());
-  hidden_y.reserve(names.size());
-  labels.reserve(names.size());
-  for (std::size_t i = 0; i < names.size(); ++i) {
-    centers.push_back(static_cast<double>(i));
-    hidden_y.push_back(std::numeric_limits<double>::quiet_NaN());
-    labels.push_back(names[i]);
-  }
-  auto hidden_style = dataframe_series_style(0, "none", 0.0, 0.0);
-  fig.add_line(centers, hidden_y, "", labels, hidden_style);
+  std::vector<double> group_id;
+  std::vector<double> merged_values;
+  group_id.reserve(static_cast<std::size_t>(frame.nrows()) * names.size());
+  merged_values.reserve(static_cast<std::size_t>(frame.nrows()) * names.size());
 
-  constexpr double half_box_width = 0.28;
   for (std::size_t i = 0; i < names.size(); ++i) {
     auto values = thread_to_plot_numeric_values(frame.features(names[i]));
     require_plot_size(values, frame.nrows(), names[i]);
     const auto summary = summarize_boxplot(values);
-    const double center = static_cast<double>(i);
-
-    auto style = dataframe_series_style(i, "circle", 1.0, 1.4);
-    fig.add_band({center - half_box_width, center + half_box_width},
-                 {summary.q1, summary.q1},
-                 {summary.q3, summary.q3},
-                 names[i],
-                 style);
-    fig.add_line({center - half_box_width, center + half_box_width},
-                 {summary.median, summary.median},
-                 "",
-                 {},
-                 dataframe_series_style(i, "none", 1.0, 2.0));
-    fig.add_line({center, center},
-                 {summary.whisker_low, summary.q1},
-                 "",
-                 {},
-                 dataframe_series_style(i, "none", 0.85, 1.2));
-    fig.add_line({center, center},
-                 {summary.q3, summary.whisker_high},
-                 "",
-                 {},
-                 dataframe_series_style(i, "none", 0.85, 1.2));
-    fig.add_line({center - 0.12, center + 0.12},
-                 {summary.whisker_low, summary.whisker_low},
-                 "",
-                 {},
-                 dataframe_series_style(i, "none", 0.85, 1.2));
-    fig.add_line({center - 0.12, center + 0.12},
-                 {summary.whisker_high, summary.whisker_high},
-                 "",
-                 {},
-                 dataframe_series_style(i, "none", 0.85, 1.2));
-    if (!summary.outliers.empty()) {
-      std::vector<double> outlier_x(summary.outliers.size(), center);
-      auto outlier_style = dataframe_series_style(i, "circle", 0.8, 1.0);
-      outlier_style.marker_size = 2.4;
-      fig.add_scatter(outlier_x, summary.outliers, "", {}, outlier_style);
+    (void)summary;
+    for (const double value : values) {
+      if (!std::isfinite(value)) {
+        continue;
+      }
+      group_id.push_back(static_cast<double>(i));
+      merged_values.push_back(value);
     }
   }
 
-  fig.x_label("feature").y_label("value");
+  auto fig = make_studio();
+  auto& pane = fig.pane2();
+  setup_pane(pane, false);
+  auto& trace = pane.quartet(group_id, merged_values);
+  trace.label("distribution");
+  style_trace(trace, 0, 0.95, 1.1);
+
+  const auto centers = positional_plot_x(static_cast<std::int64_t>(names.size()));
+  pane.x_ticks(centers, names);
+  pane.x_label("feature").y_label("value");
   return fig;
 }
 
 template <typename AddTraceFn>
-pluss::plotism::Figure make_xy_figure(const DataFrame& frame,
-                                      std::initializer_list<std::string_view> y_features,
-                                      std::optional<std::string_view> x_feature,
-                                      std::string_view where,
-                                      AddTraceFn&& add_trace) {
+Studio make_xy_figure(const DataFrame& frame,
+                      std::initializer_list<std::string_view> y_features,
+                      std::optional<std::string_view> x_feature,
+                      std::string_view where,
+                      AddTraceFn&& add_trace) {
   PLUSS_CHECK(y_features.size() > 0, std::string(where) + ": at least one y feature is required");
 
   const auto axis = resolve_plot_axis(frame, x_feature, where);
-  auto fig = make_dataframe_figure(y_features.size() > 1, y_features.size() > 1 ? "feature" : "");
-  fig.x_label(axis.label);
+  auto fig = make_studio();
+  auto& pane = fig.pane2();
+  setup_pane(pane, y_features.size() > 1);
+  apply_axis(pane, axis);
+
+  std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
     auto y_values = thread_to_plot_numeric_values(frame.features(y_name));
     require_plot_size(y_values, frame.nrows(), y_name);
-    add_trace(fig, axis, y_values, y_name);
+    add_trace(pane, axis, y_values, y_name, feature_index);
+    ++feature_index;
   }
-  fig.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
+  pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
   return fig;
 }
 
@@ -512,68 +564,81 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<std::string>> g
 
 DataFramePlotAccessor::DataFramePlotAccessor(DataFrame frame) : frame_(std::move(frame)) {}
 
-pluss::plotism::Figure DataFramePlotAccessor::line(
+pluss::pl::Studio DataFramePlotAccessor::line(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
   return line({y_feature}, x_feature);
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::line(
+pluss::pl::Studio DataFramePlotAccessor::line(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
   return make_xy_figure(frame_, y_features, x_feature, "DataFrame::plot().line",
-                        [](pluss::plotism::Figure& fig,
+                        [](Pane& pane,
                            const ResolvedPlotAxis& axis,
                            const std::vector<double>& y_values,
-                           std::string_view name) {
-                          fig.add_line(axis.values, y_values, std::string(name), axis.labels);
+                           std::string_view name,
+                           std::size_t index) {
+                          auto& trace = pane.trend(axis.values, y_values);
+                          trace.label(std::string(name));
+                          style_trace(trace, index, 1.0, 1.6);
                         });
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::step(
+pluss::pl::Studio DataFramePlotAccessor::step(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
   return step({y_feature}, x_feature);
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::step(
+pluss::pl::Studio DataFramePlotAccessor::step(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
   return make_xy_figure(frame_, y_features, x_feature, "DataFrame::plot().step",
-                        [](pluss::plotism::Figure& fig,
+                        [](Pane& pane,
                            const ResolvedPlotAxis& axis,
                            const std::vector<double>& y_values,
-                           std::string_view name) {
-                          fig.add_step(axis.values, y_values, std::string(name), axis.labels);
+                           std::string_view name,
+                           std::size_t index) {
+                          auto [sx, sy] = make_step_xy(axis.values, y_values);
+                          auto& trace = pane.trend(sx, sy);
+                          trace.label(std::string(name));
+                          style_trace(trace, index, 1.0, 1.5);
                         });
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::area(
+pluss::pl::Studio DataFramePlotAccessor::area(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
   return area({y_feature}, x_feature);
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::area(
+pluss::pl::Studio DataFramePlotAccessor::area(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
   return make_xy_figure(frame_, y_features, x_feature, "DataFrame::plot().area",
-                        [](pluss::plotism::Figure& fig,
+                        [](Pane& pane,
                            const ResolvedPlotAxis& axis,
                            const std::vector<double>& y_values,
-                           std::string_view name) {
-                          fig.add_area(axis.values, y_values, std::string(name));
+                           std::string_view name,
+                           std::size_t index) {
+                          auto& trace = pane.ribbon(axis.values, y_values, 0.0);
+                          trace.label(std::string(name));
+                          style_trace(trace, index, 0.88, 1.3);
                         });
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::area_stacked(
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
   PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().area_stacked: at least one y feature is required");
 
   const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().area_stacked");
-  auto fig = make_dataframe_figure(y_features.size() > 1, y_features.size() > 1 ? "feature" : "");
-  fig.x_label(axis.label).y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
+  auto fig = make_studio();
+  auto& pane = fig.pane2();
+  setup_pane(pane, y_features.size() > 1);
+  apply_axis(pane, axis);
+  pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
 
   std::vector<double> baselines(static_cast<std::size_t>(frame_.nrows()), 0.0);
   std::size_t feature_index = 0;
@@ -584,26 +649,32 @@ pluss::plotism::Figure DataFramePlotAccessor::area_stacked(
     for (std::size_t i = 0; i < heights.size(); ++i) {
       tops[i] = baselines[i] + heights[i];
     }
-    auto style = dataframe_series_style(feature_index, "none", 1.0, 1.6);
-    fig.add_band(axis.values, baselines, tops, std::string(y_name), style);
-    fig.add_line(axis.values, tops, "", axis.labels, style);
+    auto& trace = pane.ribbon(axis.values, tops, 0.0);
+    trace.label(std::string(y_name));
+    style_trace(trace, feature_index, 0.7, 1.2);
     baselines = std::move(tops);
     ++feature_index;
   }
   return fig;
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::scatter(std::string_view x_feature,
-                                                      std::string_view y_feature,
-                                                      std::optional<std::string_view> hue_feature) const {
+pluss::pl::Studio DataFramePlotAccessor::scatter(std::string_view x_feature,
+                                                 std::string_view y_feature,
+                                                 std::optional<std::string_view> hue_feature) const {
   const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().scatter");
   const auto y_values = thread_to_plot_numeric_values(frame_.features(y_feature));
   require_plot_size(y_values, frame_.nrows(), y_feature);
 
-  auto fig = make_dataframe_figure(hue_feature.has_value(), hue_feature.has_value() ? std::string(*hue_feature) : "");
+  auto fig = make_studio();
+  auto& pane = fig.pane2();
+  setup_pane(pane, hue_feature.has_value());
+  apply_axis(pane, axis);
+  pane.y_label(std::string(y_feature));
+
   if (!hue_feature.has_value()) {
-    fig.add_scatter(axis.values, y_values, std::string(y_feature), axis.labels);
-    fig.x_label(axis.label).y_label(std::string(y_feature));
+    auto& trace = pane.cloud(axis.values, y_values);
+    trace.label(std::string(y_feature));
+    style_trace(trace, 0, 0.92, 1.1);
     return fig;
   }
 
@@ -623,39 +694,37 @@ pluss::plotism::Figure DataFramePlotAccessor::scatter(std::string_view x_feature
   for (std::size_t group_index = 0; group_index < groups.size(); ++group_index) {
     std::vector<double> grouped_x;
     std::vector<double> grouped_y;
-    std::vector<std::string> grouped_labels;
     for (std::size_t i = 0; i < hue_labels.size(); ++i) {
       if (hue_labels[i] != groups[group_index]) {
         continue;
       }
       grouped_x.push_back(axis.values[i]);
       grouped_y.push_back(y_values[i]);
-      if (!axis.labels.empty()) {
-        grouped_labels.push_back(axis.labels[i]);
-      }
     }
-    auto style = dataframe_series_style(group_index, "circle", 0.92, 1.2);
-    style.marker_size = 3.0;
-    fig.add_scatter(grouped_x, grouped_y, groups[group_index], std::move(grouped_labels), style);
+    auto& trace = pane.cloud(grouped_x, grouped_y);
+    trace.label(groups[group_index]);
+    style_trace(trace, group_index, 0.9, 1.1);
   }
-  fig.x_label(axis.label).y_label(std::string(y_feature));
   return fig;
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::bar(
+pluss::pl::Studio DataFramePlotAccessor::bar(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
   return bar({y_feature}, x_feature);
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::bar(
+pluss::pl::Studio DataFramePlotAccessor::bar(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
   PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().bar: at least one y feature is required");
 
   const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().bar");
-  auto fig = make_dataframe_figure(y_features.size() > 1, y_features.size() > 1 ? "feature" : "");
-  fig.x_label(axis.label).y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
+  auto fig = make_studio();
+  auto& pane = fig.pane2();
+  setup_pane(pane, y_features.size() > 1);
+  apply_axis(pane, axis);
+  pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
 
   const std::size_t group_count = y_features.size();
   std::size_t group_index = 0;
@@ -663,22 +732,30 @@ pluss::plotism::Figure DataFramePlotAccessor::bar(
     auto y_values = thread_to_plot_numeric_values(frame_.features(y_name));
     require_plot_size(y_values, frame_.nrows(), y_name);
     auto [centers, widths, labels] = grouped_bar_layout(axis, group_index, group_count);
-    fig.add_bar(centers, y_values, std::string(y_name), std::move(labels), std::move(widths));
+    (void)widths;
+    (void)labels;
+    auto& trace = pane.columns(centers, y_values);
+    trace.label(std::string(y_name));
+    style_trace(trace, group_index, 0.88, 1.0);
     ++group_index;
   }
   return fig;
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::bar_stacked(
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
   PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().bar_stacked: at least one y feature is required");
 
   const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().bar_stacked");
-  auto fig = make_dataframe_figure(y_features.size() > 1, y_features.size() > 1 ? "feature" : "");
-  fig.x_label(axis.label).y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
+  auto fig = make_studio();
+  auto& pane = fig.pane2();
+  setup_pane(pane, y_features.size() > 1);
+  apply_axis(pane, axis);
+  pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
 
   std::vector<double> baselines(static_cast<std::size_t>(frame_.nrows()), 0.0);
+  std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
     auto heights = thread_to_plot_numeric_values(frame_.features(y_name));
     require_plot_size(heights, frame_.nrows(), y_name);
@@ -686,28 +763,35 @@ pluss::plotism::Figure DataFramePlotAccessor::bar_stacked(
     for (std::size_t i = 0; i < heights.size(); ++i) {
       tops[i] = baselines[i] + heights[i];
     }
-    fig.add_bar(axis.values, tops, std::string(y_name), axis.labels, {}, baselines);
+    auto& trace = pane.columns(axis.values, tops);
+    trace.label(std::string(y_name));
+    style_trace(trace, feature_index, 0.65, 1.0);
     baselines = std::move(tops);
+    ++feature_index;
   }
   return fig;
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::box(std::initializer_list<std::string_view> features) const {
+pluss::pl::Studio DataFramePlotAccessor::box(std::initializer_list<std::string_view> features) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().box");
   return box_from_names(frame_, names);
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::hist(std::string_view feature, std::int64_t bins) const {
-  auto fig = make_dataframe_figure(false);
-  fig.add_hist(thread_to_plot_numeric_values(frame_.features(feature)), bins, std::string(feature));
-  fig.x_label(std::string(feature)).y_label("count");
+pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, std::int64_t bins) const {
+  auto fig = make_studio();
+  auto& pane = fig.pane2();
+  setup_pane(pane, false);
+  auto& trace = pane.bucket(thread_to_plot_numeric_values(frame_.features(feature)),
+                            static_cast<int>(std::max<std::int64_t>(1, bins)));
+  trace.label(std::string(feature));
+  style_trace(trace, 0, 0.95, 1.0);
+  pane.x_label(std::string(feature)).y_label("count");
   return fig;
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::heatmap(std::initializer_list<std::string_view> features) const {
+pluss::pl::Studio DataFramePlotAccessor::heatmap(std::initializer_list<std::string_view> features) const {
   PLUSS_CHECK(features.size() > 0, "DataFrame::plot().heatmap: at least one feature is required");
 
-  auto fig = make_dataframe_figure(false);
   std::vector<std::vector<double>> values;
   std::vector<std::string> y_labels;
   values.reserve(features.size());
@@ -719,16 +803,20 @@ pluss::plotism::Figure DataFramePlotAccessor::heatmap(std::initializer_list<std:
     y_labels.emplace_back(feature);
   }
 
-  fig.add_heatmap(values, "value", labels_for_cases(frame_, "DataFrame::plot().heatmap"), std::move(y_labels));
-  fig.x_label("case").y_label("feature");
-  fig.colorbar(pluss::plotism::Colorbar{.visible = true, .location = pluss::plotism::ColorbarLocation::Right, .title = "value"});
+  auto fig = make_studio();
+  auto& pane = fig.pane2();
+  setup_pane(pane, false);
+  add_heatmap(pane, values, "value");
+  pane.x_ticks(positional_plot_x(frame_.nrows()), labels_for_cases(frame_, "DataFrame::plot().heatmap"));
+  pane.y_ticks(positional_plot_x(static_cast<std::int64_t>(y_labels.size())), y_labels);
+  pane.x_label("case").y_label("feature");
   return fig;
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::heatmap(std::string_view case_feature,
-                                                      std::string_view feature_feature,
-                                                      std::string_view value_feature,
-                                                      DataFrame::GroupOp op) const {
+pluss::pl::Studio DataFramePlotAccessor::heatmap(std::string_view case_feature,
+                                                 std::string_view feature_feature,
+                                                 std::string_view value_feature,
+                                                 DataFrame::GroupOp op) const {
   auto pivoted = frame_.pivot_table(case_feature, feature_feature, value_feature, op, true, false);
   const auto& pivot_features = pivoted.feature_names();
   PLUSS_CHECK(!pivot_features.empty(),
@@ -744,31 +832,29 @@ pluss::plotism::Figure DataFramePlotAccessor::heatmap(std::string_view case_feat
     }
   }
 
-  auto fig = make_dataframe_figure(false);
-  fig.add_heatmap(values,
-                  std::string(value_feature),
-                  std::vector<std::string>(pivot_features.begin(), pivot_features.end()),
-                  labels_for_cases(pivoted, "DataFrame::plot().heatmap"));
-  fig.x_label(std::string(feature_feature)).y_label(std::string(case_feature));
-  fig.colorbar(pluss::plotism::Colorbar{
-      .visible = true,
-      .location = pluss::plotism::ColorbarLocation::Right,
-      .title = std::string(value_feature),
-  });
+  auto fig = make_studio();
+  auto& pane = fig.pane2();
+  setup_pane(pane, false);
+  add_heatmap(pane, values, std::string(value_feature));
+  pane.x_ticks(positional_plot_x(static_cast<std::int64_t>(pivot_features.size())),
+               std::vector<std::string>(pivot_features.begin(), pivot_features.end()));
+  pane.y_ticks(positional_plot_x(pivoted.nrows()),
+               labels_for_cases(pivoted, "DataFrame::plot().heatmap"));
+  pane.x_label(std::string(feature_feature)).y_label(std::string(case_feature));
   return fig;
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::corr_heatmap(std::initializer_list<std::string_view> features) const {
+pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(std::initializer_list<std::string_view> features) const {
   const auto names = correlation_feature_names(frame_, features);
   return corr_heatmap_from_names(frame_, names);
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::scatter_matrix(std::initializer_list<std::string_view> features) const {
+pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(std::initializer_list<std::string_view> features) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().scatter_matrix");
   return scatter_matrix_from_names(frame_, names);
 }
 
-pluss::plotism::Figure DataFramePlotAccessor::auto_plot(std::initializer_list<std::string_view> features) const {
+pluss::pl::Studio DataFramePlotAccessor::auto_plot(std::initializer_list<std::string_view> features) const {
   const bool explicit_features = features.size() > 0;
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().auto_plot");
   if (names.size() == 1) {

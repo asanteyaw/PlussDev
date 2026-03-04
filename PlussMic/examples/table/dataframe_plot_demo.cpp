@@ -18,12 +18,14 @@ int main() {
   std::cout << "pluss/pl.h is unavailable in this build.\n";
   return 0;
 #else
-  // PlussPl can be used directly without DataFrame.
   std::vector<double> wave_x{0.0, 1.0, 2.0, 3.0, 4.0};
   std::vector<double> wave_y{1.0, 2.0, 1.5, 3.0, 2.2};
-  auto raw_fig = pluss::plotism::line(wave_x, wave_y, "raw-2d").with_title("PlussPl raw line");
-  raw_fig.x_label("x").y_label("y");
-  raw_fig.show();
+
+  auto raw_fig = pluss::pl::studio("raw-2d");
+  raw_fig.headline("PlussPl raw line");
+  auto& raw_pane = raw_fig.pane2();
+  raw_pane.trend(wave_x, wave_y).label("raw-2d");
+  raw_pane.x_label("x").y_label("y");
   raw_fig.save_svg("plot_raw_wave.svg");
   raw_fig.save_pdf("plot_raw_wave.pdf");
 
@@ -34,26 +36,23 @@ int main() {
       /*engine=*/"auto",
       /*ncases=*/64);
 
-  auto fig_line = df.plot().line("Agency Code").with_title("Agency Code by case");
-  fig_line.show();
+  auto fig_line = df.plot().line("Agency Code");
+  fig_line.headline("Agency Code by case");
   fig_line.save_svg("plot_df_line.svg");
   fig_line.save_pdf("plot_df_line.pdf");
-  std::cout << fig_line.to_json() << "\n\n";
 
-  auto fig_scatter = df.plot()
-                         .scatter("Agency Code", "Lifecycle Cost")
-                         .with_title("Lifecycle Cost vs Agency Code");
-  fig_scatter.show();
+  auto fig_scatter = df.plot().scatter("Agency Code", "Lifecycle Cost");
+  fig_scatter.headline("Lifecycle Cost vs Agency Code");
   fig_scatter.save_pdf("plot_df_scatter.pdf");
 
   auto top_agencies = df.tally("Agency Name", /*top_n=*/8, /*dropna=*/true, /*render=*/false);
   auto ranked_agencies = top_agencies.set_cases("Agency Name", /*drop_feature=*/false);
-  auto fig_bar = ranked_agencies.plot().bar("count").with_title("Top Agencies by count");
-  fig_bar.show();
+  auto fig_bar = ranked_agencies.plot().bar("count");
+  fig_bar.headline("Top Agencies by count");
   fig_bar.save_pdf("plot_df_bar.pdf");
 
-  auto fig_hist = df.plot().hist("Lifecycle Cost", /*bins=*/12).with_title("Lifecycle Cost histogram");
-  fig_hist.show();
+  auto fig_hist = df.plot().hist("Lifecycle Cost", /*bins=*/12);
+  fig_hist.headline("Lifecycle Cost histogram");
   fig_hist.save_svg("plot_df_hist.svg");
   fig_hist.save_pdf("plot_df_hist.pdf");
 
@@ -63,46 +62,46 @@ int main() {
       {"month", pluss::table::Thread(pluss::make_note({"Jan", "Feb", "Mar", "Apr", "May", "Jun"}))},
   }).set_cases("month", /*drop_feature=*/false);
 
-  auto fig_monthly = monthly.plot().line({"sales", "forecast"}).with_title("Sales vs forecast by month");
-  fig_monthly.show();
+  auto fig_monthly = monthly.plot().line({"sales", "forecast"});
+  fig_monthly.headline("Sales vs forecast by month");
   fig_monthly.save_svg("plot_df_monthly.svg");
   fig_monthly.save_pdf("plot_df_monthly.pdf");
 
-  auto fig_step = monthly.plot().step("sales").with_title("Monthly sales step plot");
-  fig_step.show();
+  auto fig_step = monthly.plot().step("sales");
+  fig_step.headline("Monthly sales step plot");
   fig_step.save_svg("plot_df_step.svg");
   fig_step.save_pdf("plot_df_step.pdf");
 
-  auto fig_area = monthly.plot().area({"sales", "forecast"}).with_title("Monthly sales area plot");
-  fig_area.show();
+  auto fig_area = monthly.plot().area({"sales", "forecast"});
+  fig_area.headline("Monthly sales area plot");
   fig_area.save_svg("plot_df_area.svg");
   fig_area.save_pdf("plot_df_area.pdf");
 
-  auto fig_area_stacked = monthly.plot().area_stacked({"sales", "forecast"}).with_title("Monthly stacked area");
-  fig_area_stacked.show();
+  auto fig_area_stacked = monthly.plot().area_stacked({"sales", "forecast"});
+  fig_area_stacked.headline("Monthly stacked area");
   fig_area_stacked.save_pdf("plot_df_area_stacked.pdf");
 
-  auto fig_grouped_bar = monthly.plot().bar({"sales", "forecast"}).with_title("Monthly grouped bars");
-  fig_grouped_bar.show();
+  auto fig_grouped_bar = monthly.plot().bar({"sales", "forecast"});
+  fig_grouped_bar.headline("Monthly grouped bars");
   fig_grouped_bar.save_svg("plot_df_grouped_bar.svg");
   fig_grouped_bar.save_pdf("plot_df_grouped_bar.pdf");
 
-  auto fig_stacked_bar = monthly.plot().bar_stacked({"sales", "forecast"}).with_title("Monthly stacked bars");
-  fig_stacked_bar.show();
+  auto fig_stacked_bar = monthly.plot().bar_stacked({"sales", "forecast"});
+  fig_stacked_bar.headline("Monthly stacked bars");
   fig_stacked_bar.save_pdf("plot_df_stacked_bar.pdf");
 
-  auto fig_heatmap = monthly.plot().heatmap({"sales", "forecast"}).with_title("Monthly feature heatmap");
-  fig_heatmap.show();
+  auto fig_heatmap = monthly.plot().heatmap({"sales", "forecast"});
+  fig_heatmap.headline("Monthly feature heatmap");
   fig_heatmap.save_svg("plot_df_heatmap.svg");
   fig_heatmap.save_pdf("plot_df_heatmap.pdf");
 
-  auto fig_corr = monthly.plot().corr_heatmap({"sales", "forecast"}).with_title("Monthly correlation heatmap");
-  fig_corr.show();
+  auto fig_corr = monthly.plot().corr_heatmap({"sales", "forecast"});
+  fig_corr.headline("Monthly correlation heatmap");
   fig_corr.save_svg("plot_df_corr_heatmap.svg");
   fig_corr.save_pdf("plot_df_corr_heatmap.pdf");
 
-  auto fig_auto = monthly.plot().auto_plot({"sales", "forecast"}).with_title("Monthly auto plot");
-  fig_auto.show();
+  auto fig_auto = monthly.plot().auto_plot({"sales", "forecast"});
+  fig_auto.headline("Monthly auto plot");
   fig_auto.save_pdf("plot_df_auto.pdf");
 
   auto metrics = pluss::table::DataFrame({
@@ -111,12 +110,12 @@ int main() {
       {"carry", pluss::table::Thread(pluss::make_series({0.03, 0.04, 0.025, 0.038, 0.045, 0.031}))},
   });
 
-  auto fig_matrix = metrics.plot().scatter_matrix().with_title("Scatter matrix");
-  fig_matrix.show();
+  auto fig_matrix = metrics.plot().scatter_matrix();
+  fig_matrix.headline("Scatter matrix");
   fig_matrix.save_pdf("plot_df_scatter_matrix.pdf");
 
-  auto fig_box = metrics.plot().box().with_title("Metric box plot");
-  fig_box.show();
+  auto fig_box = metrics.plot().box();
+  fig_box.headline("Metric box plot");
   fig_box.save_pdf("plot_df_box.pdf");
 
   auto regime_points = pluss::table::DataFrame({
@@ -125,8 +124,8 @@ int main() {
       {"desk", pluss::table::Thread(pluss::make_note({"macro", "macro", "rates", "rates", "equity", "equity", "credit", "credit"}))},
   });
 
-  auto fig_scatter_hue = regime_points.plot().scatter("ret", "vol", "desk").with_title("Scatter with hue");
-  fig_scatter_hue.show();
+  auto fig_scatter_hue = regime_points.plot().scatter("ret", "vol", "desk");
+  fig_scatter_hue.headline("Scatter with hue");
   fig_scatter_hue.save_pdf("plot_df_scatter_hue.pdf");
 
   auto option_surface = pluss::table::DataFrame({
@@ -135,9 +134,8 @@ int main() {
       {"implied_vol", pluss::table::Thread(pluss::make_series({0.29, 0.24, 0.22, 0.31, 0.26, 0.24, 0.34, 0.29, 0.27}))},
   });
 
-  auto fig_surface_heatmap =
-      option_surface.plot().heatmap("maturity", "delta_bucket", "implied_vol").with_title("Implied vol surface heatmap");
-  fig_surface_heatmap.show();
+  auto fig_surface_heatmap = option_surface.plot().heatmap("maturity", "delta_bucket", "implied_vol");
+  fig_surface_heatmap.headline("Implied vol surface heatmap");
   fig_surface_heatmap.save_svg("plot_df_surface_heatmap.svg");
   fig_surface_heatmap.save_pdf("plot_df_surface_heatmap.pdf");
 
@@ -145,16 +143,17 @@ int main() {
   auto a1 = df.tail(20, /*render=*/false);
   pluss::table::Atlas atlas({a0, a1});
 
-  auto fig_atlas = atlas.plot(1).line("Agency Code").with_title("Atlas frame(1): Agency Code");
-  fig_atlas.show();
+  auto fig_atlas = atlas.plot(1).line("Agency Code");
+  fig_atlas.headline("Atlas frame(1): Agency Code");
   fig_atlas.save_svg("plot_atlas_line.svg");
   fig_atlas.save_pdf("plot_atlas_line.pdf");
 
-  // Native 3D plotism usage.
   std::vector<double> z{0.2, 0.4, 0.1, 0.8, 0.6};
-  auto fig3 = pluss::plotism::line3(wave_x, wave_y, z, "line3").with_title("PlussPl 3D line");
-  fig3.x_label("x").y_label("y").z_label("z");
-  fig3.show();
+  auto fig3 = pluss::pl::studio("line3");
+  fig3.headline("PlussPl 3D line");
+  auto& pane3 = fig3.pane3();
+  pane3.path3(wave_x, wave_y, z).label("line3");
+  pane3.x_label("x").y_label("y").z_label("z");
   fig3.save_svg("plot_raw_3d.svg");
   fig3.save_pdf("plot_raw_3d.pdf");
   return 0;
