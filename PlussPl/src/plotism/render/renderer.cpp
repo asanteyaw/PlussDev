@@ -3311,6 +3311,11 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
 
   const VolumeAxisFrame frame = resolve_volume_axis_frame(pane, bounds, layout.plot);
   const Rgba grid = Rgba::from_u8(190, 198, 208, 148);
+  const auto near_equal = [](double lhs, double rhs) {
+    return std::abs(lhs - rhs) <= 1e-10;
+  };
+  const bool snap_x_wall_vertical = near_equal(frame.z_start3.y, frame.rear_y);
+  const bool snap_y_wall_vertical = near_equal(frame.z_start3.x, frame.rear_x);
 
   for (const double value : x_pos) {
     add_path(
@@ -3323,7 +3328,9 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
         false);
     Point2d wall_bottom = map_projected_point({value, frame.rear_y, frame.bottom_z}, pane, bounds, layout.plot);
     Point2d wall_top = map_projected_point({value, frame.rear_y, frame.top_z}, pane, bounds, layout.plot);
-    wall_top.x = wall_bottom.x;
+    if (snap_x_wall_vertical) {
+      wall_top.x = wall_bottom.x;
+    }
     add_path(list,
              {wall_bottom, wall_top},
              FillStroke{grid, {}, true, false, 0.55},
@@ -3340,7 +3347,9 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
         false);
     Point2d wall_bottom = map_projected_point({frame.rear_x, value, frame.bottom_z}, pane, bounds, layout.plot);
     Point2d wall_top = map_projected_point({frame.rear_x, value, frame.top_z}, pane, bounds, layout.plot);
-    wall_top.x = wall_bottom.x;
+    if (snap_y_wall_vertical) {
+      wall_top.x = wall_bottom.x;
+    }
     add_path(list,
              {wall_bottom, wall_top},
              FillStroke{grid, {}, true, false, 0.55},
@@ -3414,6 +3423,15 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     }
     return outward.x > 0.0 ? TextCommand::Align::Start : TextCommand::Align::End;
   };
+  const auto unit_direction = [](Point2d from, Point2d to, Point2d fallback) {
+    const double dx = to.x - from.x;
+    const double dy = to.y - from.y;
+    const double length = std::hypot(dx, dy);
+    if (length > 1e-12) {
+      return Point2d{dx / length, dy / length};
+    }
+    return fallback;
+  };
   const Point2d x_outward = outward_normal(frame.x_start, frame.x_end);
   const Point2d y_outward = outward_normal(frame.y_start, frame.y_end);
   const Point2d z_axis_start{frame.z_start.x, frame.z_start.y};
@@ -3426,25 +3444,37 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
 
   for (const auto& [value, label] : x_ticks) {
     const Point2d p = map_projected_point({value, frame.front_y, frame.bottom_z}, pane, bounds, layout.plot);
-    const Point2d tick_end{p.x + x_outward.x * 5.5, p.y + x_outward.y * 5.5};
+    const Point2d rear = map_projected_point({value, frame.rear_y, frame.bottom_z}, pane, bounds, layout.plot);
+    const Point2d tick_dir = unit_direction(p, rear, x_outward);
+    const Point2d tick_end{p.x + tick_dir.x * 5.5, p.y + tick_dir.y * 5.5};
     const Point2d text_anchor{p.x + x_outward.x * 13.5, p.y + x_outward.y * 13.5};
     add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
     add_text(list, text_anchor, label, 9.0, pane.theme_tokens().foreground(), tick_text_align(x_outward));
   }
   for (const auto& [value, label] : y_ticks) {
     const Point2d p = map_projected_point({frame.front_x, value, frame.bottom_z}, pane, bounds, layout.plot);
-    const Point2d tick_end{p.x + y_outward.x * 7.0, p.y + y_outward.y * 7.0};
+    const Point2d rear = map_projected_point({frame.rear_x, value, frame.bottom_z}, pane, bounds, layout.plot);
+    const Point2d tick_dir = unit_direction(p, rear, y_outward);
+    const Point2d tick_end{p.x + tick_dir.x * 7.0, p.y + tick_dir.y * 7.0};
     const Point2d text_anchor{p.x + y_outward.x * 17.0, p.y + y_outward.y * 17.0};
     add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
     add_text(list, text_anchor, label, 9.0, pane.theme_tokens().foreground(), tick_text_align(y_outward));
   }
+  const Point3d center3d{
+      0.5 * (bounds.min_x + bounds.max_x),
+      0.5 * (bounds.min_y + bounds.max_y),
+      0.5 * (bounds.min_z + bounds.max_z),
+  };
   for (const auto& [value, label] : z_ticks) {
     Point2d p = map_projected_point({frame.z_start3.x, frame.z_start3.y, value}, pane, bounds, layout.plot);
     p.x = z_axis_start.x;
-    const Point2d tick_end{p.x + z_outward.x * 6.0, p.y + z_outward.y * 6.0};
-    const Point2d text_anchor{p.x + z_outward.x * 13.0, p.y + z_outward.y * 13.0};
+    const Point2d inside = map_projected_point({center3d.x, center3d.y, value}, pane, bounds, layout.plot);
+    const Point2d toward_inside = unit_direction(p, inside, z_outward);
+    const Point2d tick_dir{-toward_inside.x, -toward_inside.y};
+    const Point2d tick_end{p.x + tick_dir.x * 6.0, p.y + tick_dir.y * 6.0};
+    const Point2d text_anchor{p.x + tick_dir.x * 13.0, p.y + tick_dir.y * 13.0};
     add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
-    add_text(list, text_anchor, label, 9.0, pane.theme_tokens().foreground(), tick_text_align(z_outward));
+    add_text(list, text_anchor, label, 9.0, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
   }
 
   if (!pane.x_axis().label.empty()) {
