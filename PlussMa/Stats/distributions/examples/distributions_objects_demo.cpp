@@ -45,6 +45,11 @@ void show_object(std::string_view name, const Dist& dist, const Series& x, const
   std::cout << "  cdf(x):      " << preview(dist.cdf(x)) << "\n";
   std::cout << "  logcdf(x):   " << preview(dist.logcdf(x)) << "\n";
   std::cout << "  cgf(t):      " << preview(dist.cgf(t)) << "\n";
+  std::cout << "  cumulants:   ["
+            << dist.cumulant(1).template item<double>() << ", "
+            << dist.cumulant(2).template item<double>() << ", "
+            << dist.cumulant(3).template item<double>() << ", "
+            << dist.cumulant(4).template item<double>() << "]\n";
   std::cout << "  sample({4}): " << preview(dist.sample({4}, Config{}.with_dtype(ScalarType::Float64), 20260303ULL)) << "\n";
   std::cout << "  sample_like: " << preview(sample_like_draws)
             << " dtype=" << static_cast<int>(sample_like_draws.scalar_type()) << "\n";
@@ -57,6 +62,8 @@ int main() {
   const Series x_cont = pluss::make_series(std::vector<double>{-1.0, 0.0, 0.5, 1.0}, {4}, f64);
   const Series x_disc = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0}, {4}, f64);
   const Series t = pluss::make_series(std::vector<double>{-0.25, 0.0, 0.25}, {3}, f64);
+  const Series t_nonpositive = pluss::make_series(std::vector<double>{-0.5, -0.25, 0.0}, {3}, f64);
+  const Series t_zero_only = pluss::make_series(std::vector<double>{0.0}, {1}, f64);
   const Series like = pluss::zeros({4}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
   const Series mix_weights = pluss::make_series(std::vector<double>{0.7, 0.3}, {2}, f64);
   const Series mix_means = pluss::make_series(std::vector<double>{-1.0, 2.0}, {2}, f64);
@@ -69,12 +76,27 @@ int main() {
 
   show_object("Normal(mean=0, stddev=1)", Normal{0.0, 1.0}, x_cont, t, like);
   show_object("Gamma(shape=2, scale=1, location=0)", Gamma{2.0, 1.0, 0.0}, x_cont.add(1.5), t, like);
+  show_object("ChiSquare(df=5)", ChiSquare{5}, x_cont.add(2.0), t, like);
+  show_object("InverseGaussian(theta=1.5, chi=3)", InverseGaussian{1.5, 3.0}, x_cont.add(1.5), t, like);
+  show_object("Lognormal(mean_log=0.1, stddev_log=0.4)", Lognormal{0.1, 0.4}, x_cont.add(1.5), t_nonpositive, like);
   show_object("Uniform(low=0, high=1)", Uniform{0.0, 1.0}, x_cont.add(1.0).div(2.0), t, like);
   show_object("Exponential(rate=2)", Exponential{2.0}, x_cont.add(1.5), t, like);
+  show_object("Laplace(location=0, scale=0.5)", Laplace{0.0, 0.5}, x_cont, t, like);
+  show_object("Logistic(location=0, scale=0.75)", Logistic{0.0, 0.75}, x_cont, t, like);
+  show_object("Rayleigh(sigma=1)", Rayleigh{1.0}, x_cont.add(1.5), t, like);
+  show_object("NormalTrunc(lower=-1, upper=1, mean=0, stddev=1)", NormalTrunc{-1.0, 1.0, 0.0, 1.0}, x_cont, t, like);
+  show_object("StudentT(df=9, location=0, scale=1)", StudentT{9.0, 0.0, 1.0}, x_cont, t_zero_only, like);
+  show_object("FDistribution(d1=5, d2=12)", FDistribution{5.0, 12.0}, x_cont.add(1.5), t_zero_only, like);
+  show_object("Weibull(shape=2, scale=1.5)", Weibull{2.0, 1.5}, x_cont.add(1.5), t, like);
+  show_object("Beta(low=0, high=1, alpha=2, beta=3)", Beta{0.0, 1.0, 2.0, 3.0}, x_cont.add(1.0).div(2.5), t, like);
   show_object("Bernoulli(p=0.25)", Bernoulli{0.25}, x_disc, t, like);
   show_object("Binomial(count=4, p=0.25)", Binomial{4, 0.25}, x_disc, t, like);
+  show_object("Poisson(lambda=2.5)", Poisson{2.5}, x_disc, t, like);
+  show_object("Geometric(p=0.25)", Geometric{0.25}, x_disc.add(1.0), t, like);
+  show_object("NegativeBinomial(r=3, p=0.4)", NegativeBinomial{3.0, 0.4}, x_disc, t, like);
   show_object("Skellam(lambda1=2, lambda2=1)", Skellam{2.0, 1.0}, x_disc.sub(1.0), t, like);
   show_object("Nig(alpha=2, beta=0.5, location=0, scale=1)", Nig{2.0, 0.5, 0.0, 1.0}, x_cont, t, like);
+  show_object("Gh(lambda=1, alpha=2, beta=0.5, location=0, scale=1)", Gh{1.0, 2.0, 0.5, 0.0, 1.0}, x_cont, t, like);
   show_object("GaussianMixture(weights=[0.7,0.3], means=[-1,2], stddevs=[0.5,1.25])",
               GaussianMixture{mix_weights, mix_means, mix_stddevs},
               x_cont,

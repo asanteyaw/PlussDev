@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -30,6 +31,14 @@ std::vector<double> as_f64_vec(const Series& x) {
 
 std::vector<std::int64_t> as_shape_vec(const Series& x) {
   return std::vector<std::int64_t>(x.sizes().begin(), x.sizes().end());
+}
+
+template <typename Dist>
+void require_cumulant_close(const Dist& dist, std::int64_t order, double expected, double tol = kTol) {
+  const double actual = as_f64_scalar(dist.cumulant(order));
+  INFO("order=" << order << " actual=" << actual << " expected=" << expected);
+  REQUIRE(std::isfinite(actual));
+  REQUIRE(std::abs(actual - expected) <= tol);
 }
 
 void require_allclose(std::string_view label, const Series& actual, const Series& expected, double tol = kTol) {
@@ -65,6 +74,188 @@ double uniform_cgf_expected(double low, double high, double t) {
     return 0.0;
   }
   return low * t + std::log(std::expm1((high - low) * t) / ((high - low) * t));
+}
+
+double nig_cumulant_expected(double alpha, double beta, double location, double scale, std::int64_t order) {
+  const long double alpha_ld = static_cast<long double>(alpha);
+  const long double beta_ld = static_cast<long double>(beta);
+  const long double location_ld = static_cast<long double>(location);
+  const long double scale_ld = static_cast<long double>(scale);
+  const long double gamma = std::sqrt(alpha_ld * alpha_ld - beta_ld * beta_ld);
+  std::vector<long double> coeffs(static_cast<std::size_t>(order) + 1, 0.0L);
+  coeffs[0] = gamma;
+  for (std::int64_t n = 1; n <= order; ++n) {
+    long double acc = 0.0L;
+    for (std::int64_t k = 1; k < n; ++k) {
+      acc += coeffs[static_cast<std::size_t>(k)] * coeffs[static_cast<std::size_t>(n - k)];
+    }
+    const long double rhs = n == 1 ? -2.0L * beta_ld : (n == 2 ? -1.0L : 0.0L);
+    coeffs[static_cast<std::size_t>(n)] = (rhs - acc) / (2.0L * gamma);
+  }
+  long double factorial = 1.0L;
+  for (std::int64_t i = 2; i <= order; ++i) {
+    factorial *= static_cast<long double>(i);
+  }
+  long double cumulant = -scale_ld * factorial * coeffs[static_cast<std::size_t>(order)];
+  if (order == 1) {
+    cumulant += location_ld;
+  }
+  return static_cast<double>(cumulant);
+}
+
+double rayleigh_cumulant_expected(double sigma, std::int64_t order) {
+  std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
+  raw[0] = 1.0;
+  for (std::int64_t n = 1; n <= order; ++n) {
+    raw[static_cast<std::size_t>(n)] =
+        std::pow(sigma, static_cast<double>(n)) *
+        std::pow(2.0, 0.5 * static_cast<double>(n)) *
+        std::tgamma(1.0 + 0.5 * static_cast<double>(n));
+  }
+  std::vector<double> cumulants(raw.size(), 0.0);
+  for (std::size_t n = 1; n < raw.size(); ++n) {
+    double value = raw[n];
+    for (std::size_t m = 1; m < n; ++m) {
+      double binom = 1.0;
+      for (std::size_t i = 1; i <= m - 1; ++i) {
+        binom *= static_cast<double>(n - i);
+        binom /= static_cast<double>(i);
+      }
+      value -= binom * cumulants[m] * raw[n - m];
+    }
+    cumulants[n] = value;
+  }
+  return cumulants[static_cast<std::size_t>(order)];
+}
+
+double stirling_second_kind_expected(std::int64_t n, std::int64_t k) {
+  if (n < 0 || k < 0 || k > n) return 0.0;
+  std::vector<long double> row(static_cast<std::size_t>(k) + 1, 0.0L);
+  row[0] = 1.0L;
+  for (std::int64_t i = 1; i <= n; ++i) {
+    const std::int64_t upper = std::min(i, k);
+    for (std::int64_t j = upper; j >= 1; --j) {
+      row[static_cast<std::size_t>(j)] =
+          static_cast<long double>(j) * row[static_cast<std::size_t>(j)] +
+          row[static_cast<std::size_t>(j - 1)];
+    }
+    row[0] = 0.0L;
+  }
+  return static_cast<double>(row[static_cast<std::size_t>(k)]);
+}
+
+double factorial_expected(std::int64_t n) {
+  double out = 1.0;
+  for (std::int64_t i = 2; i <= n; ++i) out *= static_cast<double>(i);
+  return out;
+}
+
+double negbinom_cumulant_expected(double r, double p, std::int64_t order) {
+  const double q = 1.0 - p;
+  if (order == 1) {
+    return r * q / p;
+  }
+  double total = 0.0;
+  for (std::int64_t k = 1; k <= order - 1; ++k) {
+    total += stirling_second_kind_expected(order - 1, k) * factorial_expected(k) *
+             std::pow(q, static_cast<double>(k)) /
+             std::pow(p, static_cast<double>(k + 1));
+  }
+  return r * total;
+}
+
+double std_normal_pdf_expected(double x) {
+  return std::exp(-0.5 * x * x) / std::sqrt(2.0 * std::numbers::pi_v<double>);
+}
+
+double std_normal_cdf_expected(double x) {
+  return 0.5 * std::erfc(-x / std::sqrt(2.0));
+}
+
+double normaltrunc_cumulant_expected(double lower, double upper, double mean, double stddev, std::int64_t order) {
+  const double alpha = (lower - mean) / stddev;
+  const double beta = (upper - mean) / stddev;
+  const double z = std_normal_cdf_expected(beta) - std_normal_cdf_expected(alpha);
+  const double phi_alpha = std_normal_pdf_expected(alpha);
+  const double phi_beta = std_normal_pdf_expected(beta);
+  std::vector<double> std_raw(static_cast<std::size_t>(order) + 1, 0.0);
+  std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
+  raw[0] = 1.0;
+  std_raw[0] = 1.0;
+  if (order >= 1) {
+    std_raw[1] = (phi_alpha - phi_beta) / z;
+  }
+  for (std::int64_t n = 2; n <= order; ++n) {
+    std_raw[static_cast<std::size_t>(n)] =
+        static_cast<double>(n - 1) * std_raw[static_cast<std::size_t>(n - 2)] +
+        (std::pow(alpha, static_cast<double>(n - 1)) * phi_alpha -
+         std::pow(beta, static_cast<double>(n - 1)) * phi_beta) / z;
+  }
+  for (std::int64_t n = 1; n <= order; ++n) {
+    double moment = 0.0;
+    for (std::int64_t k = 0; k <= n; ++k) {
+      double binom = 1.0;
+      for (std::int64_t i = 1; i <= k; ++i) {
+        binom *= static_cast<double>(n - k + i);
+        binom /= static_cast<double>(i);
+      }
+      moment += binom * std::pow(mean, static_cast<double>(n - k)) *
+                std::pow(stddev, static_cast<double>(k)) *
+                std_raw[static_cast<std::size_t>(k)];
+    }
+    raw[static_cast<std::size_t>(n)] = moment;
+  }
+  std::vector<double> cumulants(raw.size(), 0.0);
+  for (std::size_t n = 1; n < raw.size(); ++n) {
+    double value = raw[n];
+    for (std::size_t m = 1; m < n; ++m) {
+      double binom = 1.0;
+      for (std::size_t i = 1; i <= m - 1; ++i) {
+        binom *= static_cast<double>(n - i);
+        binom /= static_cast<double>(i);
+      }
+      value -= binom * cumulants[m] * raw[n - m];
+    }
+    cumulants[n] = value;
+  }
+  return cumulants[static_cast<std::size_t>(order)];
+}
+
+double inverse_gaussian_cumulant_expected(double theta, double chi, std::int64_t order) {
+  double odd_df = 1.0;
+  for (std::int64_t k = 2 * order - 3; k >= 1; k -= 2) {
+    odd_df *= static_cast<double>(k);
+  }
+  return odd_df * std::pow(theta, static_cast<double>(2 * order - 1)) /
+         std::pow(chi, static_cast<double>(order - 1));
+}
+
+double student_t_even_raw_moment_expected(double nu, std::int64_t order) {
+  if (order % 2 == 1) return 0.0;
+  const double m = 0.5 * static_cast<double>(order);
+  return std::pow(nu, m) *
+         std::tgamma(m + 0.5) *
+         std::tgamma(0.5 * (nu - static_cast<double>(order))) /
+         (std::sqrt(std::numbers::pi_v<double>) * std::tgamma(0.5 * nu));
+}
+
+double beta_raw_moment_expected(double low, double high, double alpha, double beta, std::int64_t order) {
+  const double width = high - low;
+  double moment = 0.0;
+  for (std::int64_t k = 0; k <= order; ++k) {
+    double rising_alpha = 1.0;
+    double rising_sum = 1.0;
+    for (std::int64_t i = 0; i < k; ++i) {
+      rising_alpha *= alpha + static_cast<double>(i);
+      rising_sum *= alpha + beta + static_cast<double>(i);
+    }
+    moment += std::tgamma(static_cast<double>(order + 1)) /
+              (std::tgamma(static_cast<double>(k + 1)) * std::tgamma(static_cast<double>(order - k + 1))) *
+              std::pow(low, static_cast<double>(order - k)) *
+              std::pow(width, static_cast<double>(k)) *
+              rising_alpha / rising_sum;
+  }
+  return moment;
 }
 
 } // namespace
@@ -113,6 +304,20 @@ TEST_CASE("distribution objects stay aligned with functional pdf/logpdf/cdf rout
                             "gamma",
                             pluss::make_series(std::vector<double>{0.5, 1.0, 2.0}, {3}, f64),
                             std::initializer_list<double>{0.25, 1.5, 2.0});
+  require_functional_parity(ChiSquare{5},
+                            "chisq",
+                            pluss::make_series(std::vector<double>{0.5, 2.0, 4.0}, {3}, f64),
+                            std::initializer_list<double>{5.0});
+  require_functional_parity(InverseGaussian{1.5, 3.0},
+                            "ig",
+                            pluss::make_series(std::vector<double>{0.5, 1.5, 3.0}, {3}, f64),
+                            std::initializer_list<double>{1.5, 3.0},
+                            1e-10);
+  require_functional_parity(Lognormal{0.1, 0.4},
+                            "lognormal",
+                            pluss::make_series(std::vector<double>{0.5, 1.0, 2.0}, {3}, f64),
+                            std::initializer_list<double>{0.1, 0.4},
+                            1e-10);
   require_functional_parity(Uniform{-2.0, 3.0},
                             "uniform",
                             pluss::make_series(std::vector<double>{-2.0, 0.0, 2.0}, {3}, f64),
@@ -121,16 +326,79 @@ TEST_CASE("distribution objects stay aligned with functional pdf/logpdf/cdf rout
                             "exponential",
                             pluss::make_series(std::vector<double>{0.0, 0.5, 1.0}, {3}, f64),
                             std::initializer_list<double>{2.0});
+  require_functional_parity(Laplace{0.5, 0.75},
+                            "laplace",
+                            pluss::make_series(std::vector<double>{-1.0, 0.5, 2.0}, {3}, f64),
+                            std::initializer_list<double>{0.5, 0.75});
+  require_functional_parity(Logistic{-0.25, 0.8},
+                            "logistic",
+                            pluss::make_series(std::vector<double>{-2.0, 0.0, 2.0}, {3}, f64),
+                            std::initializer_list<double>{-0.25, 0.8});
+  require_functional_parity(Rayleigh{1.25},
+                            "rayleigh",
+                            pluss::make_series(std::vector<double>{0.25, 1.0, 2.5}, {3}, f64),
+                            std::initializer_list<double>{1.25});
+  require_functional_parity(NormalTrunc{-1.0, 1.0, 0.0, 1.0},
+                            "normaltrunc",
+                            pluss::make_series(std::vector<double>{-1.0, 0.0, 0.5}, {3}, f64),
+                            std::initializer_list<double>{-1.0, 1.0, 0.0, 1.0},
+                            1e-10);
+  require_functional_parity(StudentT{9.0, 0.25, 1.5},
+                            "t",
+                            pluss::make_series(std::vector<double>{-1.0, 0.25, 2.0}, {3}, f64),
+                            std::initializer_list<double>{9.0, 0.25, 1.5},
+                            1e-10);
+  require_functional_parity(FDistribution{5.0, 12.0},
+                            "f",
+                            pluss::make_series(std::vector<double>{0.25, 1.0, 3.0}, {3}, f64),
+                            std::initializer_list<double>{5.0, 12.0},
+                            1e-10);
+  require_functional_parity(Weibull{2.0, 1.5},
+                            "weibull",
+                            pluss::make_series(std::vector<double>{0.25, 1.0, 3.0}, {3}, f64),
+                            std::initializer_list<double>{2.0, 1.5},
+                            1e-10);
+  require_functional_parity(Beta{0.0, 1.0, 2.0, 3.0},
+                            "beta",
+                            pluss::make_series(std::vector<double>{0.1, 0.5, 0.9}, {3}, f64),
+                            std::initializer_list<double>{0.0, 1.0, 2.0, 3.0},
+                            1e-10);
   require_functional_parity(Skellam{4.0, 1.5},
                             "skellam",
                             pluss::make_series(std::vector<double>{-1.0, 0.0, 2.0}, {3}, f64),
                             std::initializer_list<double>{4.0, 1.5},
                             1e-9);
+  require_functional_parity(Poisson{2.5},
+                            "poisson",
+                            pluss::make_series(std::vector<double>{0.0, 1.0, 4.0}, {3}, f64),
+                            std::initializer_list<double>{2.5},
+                            1e-12);
+  require_functional_parity(Geometric{0.25},
+                            "geometric",
+                            pluss::make_series(std::vector<double>{1.0, 2.0, 5.0}, {3}, f64),
+                            std::initializer_list<double>{0.25},
+                            1e-12);
+  require_functional_parity(NegativeBinomial{3.0, 0.4},
+                            "negbinom",
+                            pluss::make_series(std::vector<double>{0.0, 1.0, 4.0}, {3}, f64),
+                            std::initializer_list<double>{3.0, 0.4},
+                            1e-12);
   require_functional_parity(Nig{2.0, 0.5, 0.0, 1.0},
                             "nig",
                             pluss::make_series(std::vector<double>{-1.0, 0.0, 1.0}, {3}, f64),
                             std::initializer_list<double>{2.0, 0.5, 0.0, 1.0},
                             1e-8);
+  require_functional_parity(Gh{1.0, 2.0, 0.5, 0.0, 1.0},
+                            "gh",
+                            pluss::make_series(std::vector<double>{-1.0, 0.0, 1.0}, {3}, f64),
+                            std::initializer_list<double>{1.0, 2.0, 0.5, 0.0, 1.0},
+                            1e-8);
+
+  const Gh gh_as_nig{-0.5, 2.0, 0.5, 0.0, 1.0};
+  const Nig nig{2.0, 0.5, 0.0, 1.0};
+  const Series x_gh_nig = pluss::make_series(std::vector<double>{-1.0, 0.0, 1.0}, {3}, f64);
+  require_allclose("gh(lambda=-0.5)::pdf vs nig", gh_as_nig.pdf(x_gh_nig), nig.pdf(x_gh_nig), 1e-7);
+  require_allclose("gh(lambda=-0.5)::cdf vs nig", gh_as_nig.cdf(x_gh_nig), nig.cdf(x_gh_nig), 1e-7);
 
   const Series mix_weights = pluss::make_series(std::vector<double>{0.7, 0.3}, {2}, f64);
   const Series mix_means = pluss::make_series(std::vector<double>{-1.0, 2.0}, {2}, f64);
@@ -152,28 +420,95 @@ TEST_CASE("distribution objects preserve sample_like shape platform and requeste
   const auto normal_like = Normal{0.0, 1.0}.sample_like(like, 11ULL);
   const auto bernoulli_like = Bernoulli{0.4}.sample_like(like, 13ULL);
   const auto gamma_like = Gamma{2.0, 1.5, 0.0}.sample_like(like, 17ULL);
+  const auto chisq_like = ChiSquare{5}.sample_like(like, 18ULL);
+  const auto ig_like = InverseGaussian{1.5, 3.0}.sample_like(like, 18ULL);
+  const auto lognormal_like = Lognormal{0.1, 0.4}.sample_like(like, 18ULL);
+  const auto laplace_like = Laplace{0.0, 0.5}.sample_like(like, 19ULL);
+  const auto logistic_like = Logistic{0.0, 0.75}.sample_like(like, 23ULL);
+  const auto rayleigh_like = Rayleigh{1.25}.sample_like(like, 29ULL);
+  const auto poisson_like = Poisson{2.5}.sample_like(like, 31ULL);
+  const auto geometric_like = Geometric{0.25}.sample_like(like, 33ULL);
+  const auto negbin_like = NegativeBinomial{3.0, 0.4}.sample_like(like, 35ULL);
+  const auto normaltrunc_like = NormalTrunc{-1.0, 1.0, 0.0, 1.0}.sample_like(like, 36ULL);
+  const auto student_like = StudentT{9.0, 0.0, 1.0}.sample_like(like, 36ULL);
+  const auto f_like = FDistribution{5.0, 12.0}.sample_like(like, 36ULL);
+  const auto weibull_like = Weibull{2.0, 1.5}.sample_like(like, 36ULL);
+  const auto beta_like = Beta{0.0, 1.0, 2.0, 3.0}.sample_like(like, 36ULL);
+  const auto gh_like = Gh{1.0, 2.0, 0.5, 0.0, 1.0}.sample_like(like, 36ULL);
 
   REQUIRE(normal_like.scalar_type() == ScalarType::Float32);
   REQUIRE(bernoulli_like.scalar_type() == ScalarType::Float32);
   REQUIRE(gamma_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(chisq_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(ig_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(lognormal_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(laplace_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(logistic_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(rayleigh_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(poisson_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(geometric_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(negbin_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(normaltrunc_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(student_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(f_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(weibull_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(beta_like.scalar_type() == ScalarType::Float32);
+  REQUIRE(gh_like.scalar_type() == ScalarType::Float32);
   REQUIRE(normal_like.platform() == pluss::pCPU);
   REQUIRE(bernoulli_like.platform() == pluss::pCPU);
   REQUIRE(gamma_like.platform() == pluss::pCPU);
+  REQUIRE(chisq_like.platform() == pluss::pCPU);
+  REQUIRE(ig_like.platform() == pluss::pCPU);
+  REQUIRE(lognormal_like.platform() == pluss::pCPU);
+  REQUIRE(laplace_like.platform() == pluss::pCPU);
+  REQUIRE(logistic_like.platform() == pluss::pCPU);
+  REQUIRE(rayleigh_like.platform() == pluss::pCPU);
+  REQUIRE(poisson_like.platform() == pluss::pCPU);
+  REQUIRE(geometric_like.platform() == pluss::pCPU);
+  REQUIRE(negbin_like.platform() == pluss::pCPU);
+  REQUIRE(normaltrunc_like.platform() == pluss::pCPU);
+  REQUIRE(student_like.platform() == pluss::pCPU);
+  REQUIRE(f_like.platform() == pluss::pCPU);
+  REQUIRE(weibull_like.platform() == pluss::pCPU);
+  REQUIRE(beta_like.platform() == pluss::pCPU);
+  REQUIRE(gh_like.platform() == pluss::pCPU);
   REQUIRE(as_shape_vec(normal_like) == like_shape);
   REQUIRE(as_shape_vec(bernoulli_like) == like_shape);
   REQUIRE(as_shape_vec(gamma_like) == like_shape);
+  REQUIRE(as_shape_vec(chisq_like) == like_shape);
+  REQUIRE(as_shape_vec(ig_like) == like_shape);
+  REQUIRE(as_shape_vec(lognormal_like) == like_shape);
+  REQUIRE(as_shape_vec(laplace_like) == like_shape);
+  REQUIRE(as_shape_vec(logistic_like) == like_shape);
+  REQUIRE(as_shape_vec(rayleigh_like) == like_shape);
+  REQUIRE(as_shape_vec(poisson_like) == like_shape);
+  REQUIRE(as_shape_vec(geometric_like) == like_shape);
+  REQUIRE(as_shape_vec(negbin_like) == like_shape);
+  REQUIRE(as_shape_vec(normaltrunc_like) == like_shape);
+  REQUIRE(as_shape_vec(student_like) == like_shape);
+  REQUIRE(as_shape_vec(f_like) == like_shape);
+  REQUIRE(as_shape_vec(weibull_like) == like_shape);
+  REQUIRE(as_shape_vec(beta_like) == like_shape);
+  REQUIRE(as_shape_vec(gh_like) == like_shape);
 
-  REQUIRE(Bernoulli{0.4}.sample({4}, Config{}.with_platform(pluss::pCPU), 19ULL).scalar_type() == ScalarType::Bool);
-  REQUIRE(Binomial{5, 0.4}.sample({4}, Config{}.with_platform(pluss::pCPU), 23ULL).scalar_type() == ScalarType::Int64);
-  REQUIRE(Skellam{1.5, 0.75}.sample({4}, Config{}.with_platform(pluss::pCPU), 29ULL).scalar_type() == ScalarType::Int64);
-  REQUIRE(Nig{2.0, 0.5, 0.0, 1.0}.sample({4}, Config{}.with_platform(pluss::pCPU), 31ULL).scalar_type() == ScalarType::Float64);
+  REQUIRE(Bernoulli{0.4}.sample({4}, Config{}.with_platform(pluss::pCPU), 37ULL).scalar_type() == ScalarType::Bool);
+  REQUIRE(Binomial{5, 0.4}.sample({4}, Config{}.with_platform(pluss::pCPU), 41ULL).scalar_type() == ScalarType::Int64);
+  REQUIRE(Poisson{2.5}.sample({4}, Config{}.with_platform(pluss::pCPU), 43ULL).scalar_type() == ScalarType::Int64);
+  REQUIRE(Skellam{1.5, 0.75}.sample({4}, Config{}.with_platform(pluss::pCPU), 47ULL).scalar_type() == ScalarType::Int64);
+  REQUIRE(Nig{2.0, 0.5, 0.0, 1.0}.sample({4}, Config{}.with_platform(pluss::pCPU), 53ULL).scalar_type() == ScalarType::Float64);
+  REQUIRE(Geometric{0.25}.sample({4}, Config{}.with_platform(pluss::pCPU), 57ULL).scalar_type() == ScalarType::Int64);
+  REQUIRE(NegativeBinomial{3.0, 0.4}.sample({4}, Config{}.with_platform(pluss::pCPU), 61ULL).scalar_type() == ScalarType::Int64);
+  REQUIRE(ChiSquare{5}.sample({4}, Config{}.with_platform(pluss::pCPU), 63ULL).scalar_type() == ScalarType::Float64);
+  REQUIRE(InverseGaussian{1.5, 3.0}.sample({4}, Config{}.with_platform(pluss::pCPU), 67ULL).scalar_type() == ScalarType::Float64);
+  REQUIRE(StudentT{9.0, 0.0, 1.0}.sample({4}, Config{}.with_platform(pluss::pCPU), 71ULL).scalar_type() == ScalarType::Float64);
+  REQUIRE(FDistribution{5.0, 12.0}.sample({4}, Config{}.with_platform(pluss::pCPU), 73ULL).scalar_type() == ScalarType::Float64);
 
   const GaussianMixture gm{
       pluss::make_series(std::vector<double>{1.0, 2.0}, {2}, Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU)),
       pluss::make_series(std::vector<double>{0.0, 1.0}, {2}, Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU)),
       pluss::make_series(std::vector<double>{1.0, 0.5}, {2}, Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU)),
   };
-  const auto mixture_like = gm.sample_like(like, 37ULL);
+  const auto mixture_like = gm.sample_like(like, 59ULL);
   REQUIRE(mixture_like.scalar_type() == ScalarType::Float32);
   REQUIRE(as_shape_vec(mixture_like) == like_shape);
 }
@@ -201,10 +536,128 @@ TEST_CASE("cgf implementations stay stable near zero and near domain boundaries"
   const double exponential_edge_t = 2.0 - 1e-12;
   const double gamma_edge = as_f64_scalar(Gamma{2.0, 1.5, 0.25}.cgf(pluss::make_series(gamma_edge_t, f64)));
   const double exponential_edge = as_f64_scalar(Exponential{2.0}.cgf(pluss::make_series(exponential_edge_t, f64)));
+  const double chisq_edge = as_f64_scalar(ChiSquare{5}.cgf(pluss::make_series(0.5 - 1e-12, f64)));
+  const double ig_edge = as_f64_scalar(InverseGaussian{1.5, 3.0}.cgf(pluss::make_series(3.0 / (2.0 * 1.5 * 1.5) - 1e-12, f64)));
+  const double lognormal_neg = as_f64_scalar(Lognormal{0.1, 0.4}.cgf(pluss::make_series(-0.25, f64)));
   REQUIRE(std::isfinite(gamma_edge));
   REQUIRE(std::isfinite(exponential_edge));
+  REQUIRE(std::isfinite(chisq_edge));
+  REQUIRE(std::isfinite(ig_edge));
+  REQUIRE(std::isfinite(lognormal_neg));
   REQUIRE(std::abs(gamma_edge - (0.25 * gamma_edge_t - 2.0 * std::log1p(-1.5 * gamma_edge_t))) <= 1e-10);
   REQUIRE(std::abs(exponential_edge - (-std::log1p(-exponential_edge_t / 2.0))) <= 1e-10);
+  REQUIRE(std::abs(chisq_edge - (-2.5 * std::log1p(-2.0 * (0.5 - 1e-12)))) <= 1e-10);
+}
+
+TEST_CASE("cumulant returns exact low-order cumulants for starter object families", "[distr][objects][cumulant]") {
+  require_cumulant_close(Normal{1.5, 2.0}, 1, 1.5);
+  require_cumulant_close(Normal{1.5, 2.0}, 2, 4.0);
+  require_cumulant_close(Normal{1.5, 2.0}, 3, 0.0);
+  require_cumulant_close(Normal{1.5, 2.0}, 4, 0.0);
+
+  require_cumulant_close(Bernoulli{0.25}, 1, 0.25);
+  require_cumulant_close(Bernoulli{0.25}, 2, 0.25 * 0.75);
+  require_cumulant_close(Bernoulli{0.25}, 3, 0.25 * 0.75 * (1.0 - 2.0 * 0.25));
+  require_cumulant_close(Bernoulli{0.25}, 4, 0.25 * 0.75 * (1.0 - 6.0 * 0.25 * 0.75), 1e-11);
+
+  require_cumulant_close(Binomial{4, 0.25}, 1, 1.0);
+  require_cumulant_close(Binomial{4, 0.25}, 2, 4.0 * 0.25 * 0.75);
+  require_cumulant_close(Binomial{4, 0.25}, 3, 4.0 * 0.25 * 0.75 * (1.0 - 2.0 * 0.25));
+  require_cumulant_close(Binomial{4, 0.25}, 4, 4.0 * 0.25 * 0.75 * (1.0 - 6.0 * 0.25 * 0.75), 1e-11);
+
+  require_cumulant_close(Gamma{2.0, 1.5, 0.25}, 1, 0.25 + 2.0 * 1.5);
+  require_cumulant_close(Gamma{2.0, 1.5, 0.25}, 2, 2.0 * 1.5 * 1.5);
+  require_cumulant_close(Gamma{2.0, 1.5, 0.25}, 3, 2.0 * 2.0 * 1.5 * 1.5 * 1.5);
+  require_cumulant_close(Gamma{2.0, 1.5, 0.25}, 4, 2.0 * 6.0 * std::pow(1.5, 4.0));
+
+  require_cumulant_close(ChiSquare{5}, 1, 5.0);
+  require_cumulant_close(ChiSquare{5}, 2, 10.0);
+  require_cumulant_close(ChiSquare{5}, 4, 240.0);
+
+  require_cumulant_close(InverseGaussian{1.5, 3.0}, 1, 1.5);
+  require_cumulant_close(InverseGaussian{1.5, 3.0}, 2, 1.125);
+  require_cumulant_close(InverseGaussian{1.5, 3.0}, 5, inverse_gaussian_cumulant_expected(1.5, 3.0, 5), 1e-11);
+
+  require_cumulant_close(Lognormal{0.1, 0.4}, 1, std::exp(0.1 + 0.5 * 0.16), 1e-12);
+  require_cumulant_close(Lognormal{0.1, 0.4}, 2, (std::exp(0.16) - 1.0) * std::exp(2.0 * 0.1 + 0.16), 1e-12);
+
+  require_cumulant_close(Uniform{0.0, 1.0}, 1, 0.5);
+  require_cumulant_close(Uniform{0.0, 1.0}, 2, 1.0 / 12.0);
+  require_cumulant_close(Uniform{0.0, 1.0}, 3, 0.0, 1e-12);
+  require_cumulant_close(Uniform{0.0, 1.0}, 4, -1.0 / 120.0, 1e-12);
+
+  require_cumulant_close(Exponential{2.0}, 1, 0.5);
+  require_cumulant_close(Exponential{2.0}, 2, 0.25);
+  require_cumulant_close(Exponential{2.0}, 3, 0.25);
+  require_cumulant_close(Exponential{2.0}, 4, 0.375);
+
+  require_cumulant_close(Laplace{0.5, 0.5}, 1, 0.5);
+  require_cumulant_close(Laplace{0.5, 0.5}, 2, 0.5);
+  require_cumulant_close(Laplace{0.5, 0.5}, 3, 0.0);
+  require_cumulant_close(Laplace{0.5, 0.5}, 6, 3.75);
+
+  require_cumulant_close(Logistic{0.25, 0.5}, 1, 0.25);
+  require_cumulant_close(Logistic{0.25, 0.5}, 2, std::numbers::pi_v<double> * std::numbers::pi_v<double> / 12.0);
+  require_cumulant_close(Logistic{0.25, 0.5}, 3, 0.0);
+  require_cumulant_close(Logistic{0.25, 0.5}, 6, std::pow(std::numbers::pi_v<double>, 6.0) / 252.0, 1e-10);
+
+  require_cumulant_close(Rayleigh{1.25}, 1, 1.25 * std::sqrt(std::numbers::pi_v<double> / 2.0));
+  require_cumulant_close(Rayleigh{1.25}, 2, ((4.0 - std::numbers::pi_v<double>) / 2.0) * 1.25 * 1.25, 1e-11);
+  require_cumulant_close(Rayleigh{1.25}, 5, rayleigh_cumulant_expected(1.25, 5), 1e-9);
+  require_cumulant_close(NormalTrunc{-1.0, 1.0, 0.0, 1.0}, 1, 0.0, 1e-12);
+  require_cumulant_close(NormalTrunc{-1.0, 1.0, 0.0, 1.0}, 2, normaltrunc_cumulant_expected(-1.0, 1.0, 0.0, 1.0, 2), 1e-11);
+  require_cumulant_close(NormalTrunc{-1.0, 1.0, 0.0, 1.0}, 5, 0.0, 1e-10);
+
+  require_cumulant_close(StudentT{9.0, 0.0, 1.0}, 1, 0.0);
+  require_cumulant_close(StudentT{9.0, 0.0, 1.0}, 2, 9.0 / 7.0, 1e-12);
+  require_cumulant_close(StudentT{9.0, 0.0, 1.0}, 4, 243.0 / 35.0 - 3.0 * std::pow(9.0 / 7.0, 2.0), 1e-10);
+
+  require_cumulant_close(FDistribution{5.0, 12.0}, 1, 12.0 / 10.0, 1e-12);
+  require_cumulant_close(FDistribution{5.0, 12.0}, 2, 1.08, 1e-12);
+
+  require_cumulant_close(Weibull{2.0, 1.5}, 1, 1.5 * std::tgamma(1.5), 1e-12);
+  require_cumulant_close(Weibull{2.0, 1.5}, 2, 2.25 * (1.0 - std::numbers::pi_v<double> / 4.0), 1e-12);
+
+  require_cumulant_close(Beta{0.0, 1.0, 2.0, 3.0}, 1, 0.4, 1e-12);
+  require_cumulant_close(Beta{0.0, 1.0, 2.0, 3.0}, 2, 0.04, 1e-12);
+
+  require_cumulant_close(Skellam{2.0, 1.0}, 1, 1.0);
+  require_cumulant_close(Skellam{2.0, 1.0}, 2, 3.0);
+  require_cumulant_close(Skellam{2.0, 1.0}, 3, 1.0);
+  require_cumulant_close(Skellam{2.0, 1.0}, 4, 3.0);
+
+  require_cumulant_close(Poisson{2.5}, 1, 2.5);
+  require_cumulant_close(Poisson{2.5}, 2, 2.5);
+  require_cumulant_close(Poisson{2.5}, 7, 2.5);
+  require_cumulant_close(Geometric{0.25}, 1, 4.0);
+  require_cumulant_close(Geometric{0.25}, 2, 12.0);
+  require_cumulant_close(Geometric{0.25}, 5, negbinom_cumulant_expected(1.0, 0.25, 5), 1e-8);
+  require_cumulant_close(NegativeBinomial{3.0, 0.4}, 1, 3.0 * 0.6 / 0.4);
+  require_cumulant_close(NegativeBinomial{3.0, 0.4}, 2, 3.0 * 0.6 / (0.4 * 0.4));
+  require_cumulant_close(NegativeBinomial{3.0, 0.4}, 5, negbinom_cumulant_expected(3.0, 0.4, 5), 1e-8);
+
+  const double alpha = 2.0;
+  const double beta = 0.5;
+  const double scale = 1.0;
+  const double gamma = std::sqrt(alpha * alpha - beta * beta);
+  require_cumulant_close(Nig{alpha, beta, 0.0, scale}, 1, scale * beta / gamma);
+  require_cumulant_close(Nig{alpha, beta, 0.0, scale}, 2, scale * alpha * alpha / std::pow(gamma, 3.0));
+  require_cumulant_close(Nig{alpha, beta, 0.0, scale}, 3, 3.0 * scale * beta * alpha * alpha / std::pow(gamma, 5.0), 1e-11);
+  require_cumulant_close(Nig{alpha, beta, 0.0, scale}, 4, 3.0 * scale * alpha * alpha * (alpha * alpha + 4.0 * beta * beta) / std::pow(gamma, 7.0), 1e-10);
+  require_cumulant_close(Nig{alpha, beta, 0.0, scale}, 5, nig_cumulant_expected(alpha, beta, 0.0, scale, 5), 1e-10);
+  require_cumulant_close(Nig{alpha, beta, 0.0, scale}, 6, nig_cumulant_expected(alpha, beta, 0.0, scale, 6), 1e-9);
+  require_cumulant_close(Gh{-0.5, alpha, beta, 0.0, scale}, 2, scale * alpha * alpha / std::pow(gamma, 3.0), 1e-8);
+
+  const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const GaussianMixture gm{
+      pluss::make_series(std::vector<double>{1.0, 0.0}, {2}, f64),
+      pluss::make_series(std::vector<double>{0.0, 5.0}, {2}, f64),
+      pluss::make_series(std::vector<double>{1.0, 2.0}, {2}, f64),
+  };
+  require_cumulant_close(gm, 1, 0.0);
+  require_cumulant_close(gm, 2, 1.0);
+  require_cumulant_close(gm, 3, 0.0, 1e-10);
+  require_cumulant_close(gm, 4, 0.0, 1e-10);
 }
 
 TEST_CASE("cgf rejects out-of-domain t values for gamma and exponential", "[distr][objects][cgf][domain]") {
@@ -213,11 +666,34 @@ TEST_CASE("cgf rejects out-of-domain t values for gamma and exponential", "[dist
   const Series exponential_bad = pluss::make_series(std::vector<double>{0.0, 2.0}, {2}, f64);
   const Gamma gamma{2.0, 2.0, 0.0};
   const Exponential exponential{2.0};
+  const Laplace laplace{0.0, 1.0};
+  const Logistic logistic{0.0, 1.0};
+  const Lognormal lognormal{0.1, 0.4};
+  const StudentT student_t{9.0, 0.0, 1.0};
+  const FDistribution f_dist{5.0, 12.0};
+  const Geometric geometric{0.0};
+  const NegativeBinomial negbin{3.0, 1.0};
   const Nig nig{1.0, 0.5, 0.0, 1.0};
+  const Nig invalid_nig{1.0, 1.0, 0.0, 1.0};
+  const NormalTrunc invalid_trunc{1.0, -1.0, 0.0, 1.0};
+  const Gh invalid_gh{1.0, 1.0, 1.0, 0.0, 1.0};
 
   REQUIRE_THROWS_AS(gamma.cgf(gamma_bad), std::domain_error);
   REQUIRE_THROWS_AS(exponential.cgf(exponential_bad), std::domain_error);
+  REQUIRE_THROWS_AS(laplace.cgf(pluss::make_series(1.0, f64)), std::domain_error);
+  REQUIRE_THROWS_AS(logistic.cgf(pluss::make_series(1.0, f64)), std::domain_error);
+  REQUIRE_THROWS_AS(lognormal.cgf(pluss::make_series(0.1, f64)), std::domain_error);
+  REQUIRE_THROWS_AS(student_t.cgf(pluss::make_series(0.1, f64)), std::domain_error);
+  REQUIRE_THROWS_AS(f_dist.cgf(pluss::make_series(0.1, f64)), std::domain_error);
+  REQUIRE_THROWS_AS((StudentT{4.0, 0.0, 1.0}.cumulant(4)), std::domain_error);
+  REQUIRE_THROWS_AS((FDistribution{5.0, 6.0}.cumulant(3)), std::domain_error);
+  REQUIRE_THROWS_AS(geometric.cumulant(1), std::domain_error);
+  REQUIRE_THROWS_AS(negbin.cumulant(1), std::domain_error);
   REQUIRE_THROWS_AS(nig.cgf(pluss::make_series(0.6, f64)), std::domain_error);
+  REQUIRE_THROWS_AS(Normal{}.cumulant(0), std::invalid_argument);
+  REQUIRE_THROWS_AS(invalid_nig.cumulant(2), std::domain_error);
+  REQUIRE_THROWS_AS(invalid_trunc.cumulant(2), std::domain_error);
+  REQUIRE_THROWS_AS(invalid_gh.cumulant(2), std::domain_error);
 }
 
 TEST_CASE("functional and object normal logcdf stay finite in the far left tail", "[distr][objects][logcdf][tail]") {

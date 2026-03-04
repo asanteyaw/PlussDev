@@ -141,20 +141,47 @@ auto x = pluss::make_series({-1.0, 0.0, 1.0}).to(pluss::ScalarType::Float64);
 auto dist = pluss::distr::cdf("t", x, {5.0});
 ```
 
-## `Normal`
+## `logcdf`
 
 ### Signature
 
 ```cpp
-struct pluss::distr::Normal {
-  double mean = 0.0;
-  double stddev = 1.0;
-};
+pluss::Series pluss::distr::logcdf(
+    std::string_view name,
+    const pluss::Series& x,
+    std::span<const double> params = {});
 ```
 
 ### Notes
 
-Typed wrappers bind parameters once and delegate to the same functional distribution engine. Start here when you want torch-like ergonomics for common distributions without giving up the catalog-style API.
+Evaluates the log of the cumulative distribution function directly. Use this instead of `cdf(...).log()` when you care about left-tail stability for extreme inputs.
+
+### Examples
+
+```cpp
+auto x = pluss::make_series({-8.0, -2.0, 0.0}).to(pluss::ScalarType::Float64);
+auto logtail = pluss::distr::logcdf("normal", x, {0.0, 1.0});
+```
+
+## `Object Wrappers`
+
+### Signature
+
+```cpp
+pluss::distr::Normal
+pluss::distr::Bernoulli
+pluss::distr::Binomial
+pluss::distr::Gamma
+pluss::distr::Uniform
+pluss::distr::Exponential
+pluss::distr::Skellam
+pluss::distr::Nig
+pluss::distr::GaussianMixture
+```
+
+### Notes
+
+The typed wrappers bind parameters into objects and then expose methods like `sample(...)`, `sample_like(...)`, `pdf(...)`, `logpdf(...)`, `cdf(...)`, `logcdf(...)`, and `cgf(...)`. Use them when the distribution itself is part of the model state and repeating raw parameter lists would make the code harder to read.
 
 ### Examples
 
@@ -162,12 +189,9 @@ Typed wrappers bind parameters once and delegate to the same functional distribu
 pluss::distr::Normal normal{0.0, 1.0};
 
 auto draws = normal.sample({8});
-auto logdens = normal.logpdf(pluss::make_series({-1.0, 0.0, 1.0}));
 auto logtail = normal.logcdf(pluss::make_series({-1.0, 0.0, 1.0}));
-auto cgf = normal.cgf(pluss::make_series({0.0, 1.0}));
+auto cumulants = normal.cgf(pluss::make_series({0.0, 0.25}));
 ```
-
-The same pattern now exists for `pluss::distr::Bernoulli`, `Binomial`, `Gamma`, `Uniform`, and `Exponential`.
 
 ## `mixture_normal`
 
@@ -278,4 +302,31 @@ auto means = pluss::make_series({-1.0, 2.0}).to(pluss::ScalarType::Float64);
 auto stddevs = pluss::make_series({0.5, 1.25}).to(pluss::ScalarType::Float64);
 
 auto dist = pluss::distr::mixture_normal_cdf(x, weights, means, stddevs);
+```
+
+## `mixture_normal_logcdf`
+
+### Signature
+
+```cpp
+pluss::Series pluss::distr::mixture_normal_logcdf(
+    const pluss::Series& x,
+    const pluss::Series& weights,
+    const pluss::Series& means,
+    const pluss::Series& stddevs);
+```
+
+### Notes
+
+Evaluates the log of the Gaussian-mixture CDF directly. This is the stable choice when you need extreme left-tail mixture probabilities without taking `log(mixture_normal_cdf(...))` yourself.
+
+### Examples
+
+```cpp
+auto x = pluss::make_series({-6.0, -1.0, 0.0}).to(pluss::ScalarType::Float64);
+auto weights = pluss::make_series({0.65, 0.35}).to(pluss::ScalarType::Float64);
+auto means = pluss::make_series({-1.0, 2.0}).to(pluss::ScalarType::Float64);
+auto stddevs = pluss::make_series({0.5, 1.25}).to(pluss::ScalarType::Float64);
+
+auto logtail = pluss::distr::mixture_normal_logcdf(x, weights, means, stddevs);
 ```

@@ -7,7 +7,7 @@ namespace pluss::plotism {
 namespace detail {
 
 inline std::string render_png_3d(const Figure3DView& fig, const RenderTarget& target) {
-  RasterSurface2D surface(target.width, target.height, 2);
+  RasterSurface2D surface(target.width, target.height, recommended_png_supersample(target.width, target.height));
   render_3d_scene(surface, fig, target);
   return surface.finish();
 }

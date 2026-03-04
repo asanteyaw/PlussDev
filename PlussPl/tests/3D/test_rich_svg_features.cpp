@@ -91,6 +91,8 @@ int main() {
   require(content.find("fill=\"#eef3f8\"") != std::string::npos, "expected slate theme page background in 3d svg");
   require(content.find("polygon") != std::string::npos, "expected surface polygons in 3d svg");
   require(content.find("surface value") != std::string::npos, "expected colorbar title in 3d svg");
+  require(content.find("clipPath") != std::string::npos, "expected clipped 3d plot area in svg");
+  require(content.find("clip-path=\"url(#plusspl_clip_") != std::string::npos, "expected clipped 3d scene group in svg");
 
   return 0;
 }

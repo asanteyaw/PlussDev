@@ -44,6 +44,7 @@
 <ul class="simple">
 <li><p>start with <code class="docutils literal notranslate"><span class="pre">quickstart</span></code> for the short-path workflow</p></li>
 <li><p>use <code class="docutils literal notranslate"><span class="pre">api_reference</span></code> when you need the function surface</p></li>
+<li><p>use <code class="docutils literal notranslate"><span class="pre">object_api_reference</span></code> when you want parameter-bound distribution objects</p></li>
 <li><p>use <code class="docutils literal notranslate"><span class="pre">distribution_catalog</span></code> when you need names, aliases, and parameter conventions</p></li>
 <li><p>use <code class="docutils literal notranslate"><span class="pre">build_outputs</span></code> when you want to build the docs or the example binary locally</p></li>
 </ul>
@@ -54,6 +55,7 @@
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#sample-in-one-line">Sample In One Line</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#keep-shape-and-dtype">Keep Shape And Dtype</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#evaluate-densities-and-cdfs">Evaluate Densities And CDFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#typed-wrapper-for-parameter-bound-models">Typed Wrapper For Parameter-Bound Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#gaussian-mixture">Gaussian Mixture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#intended-style">Intended Style</a></li>
 </ul>
@@ -65,10 +67,40 @@
 <li class="toctree-l2"><a class="reference internal" href="api_reference.html#pdf"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_reference.html#logpdf"><code class="docutils literal notranslate"><span class="pre">logpdf</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_reference.html#cdf"><code class="docutils literal notranslate"><span class="pre">cdf</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#logcdf"><code class="docutils literal notranslate"><span class="pre">logcdf</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#object-wrappers"><code class="docutils literal notranslate"><span class="pre">Object</span> <span class="pre">Wrappers</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_reference.html#mixture-normal"><code class="docutils literal notranslate"><span class="pre">mixture_normal</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_reference.html#mixture-normal-pdf"><code class="docutils literal notranslate"><span class="pre">mixture_normal_pdf</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_reference.html#mixture-normal-logpdf"><code class="docutils literal notranslate"><span class="pre">mixture_normal_logpdf</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_reference.html#mixture-normal-cdf"><code class="docutils literal notranslate"><span class="pre">mixture_normal_cdf</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#mixture-normal-logcdf"><code class="docutils literal notranslate"><span class="pre">mixture_normal_logcdf</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="object_api_reference.html">Object API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#normal"><code class="docutils literal notranslate"><span class="pre">Normal</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#bernoulli"><code class="docutils literal notranslate"><span class="pre">Bernoulli</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#binomial"><code class="docutils literal notranslate"><span class="pre">Binomial</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#poisson"><code class="docutils literal notranslate"><span class="pre">Poisson</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#geometric"><code class="docutils literal notranslate"><span class="pre">Geometric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#negativebinomial"><code class="docutils literal notranslate"><span class="pre">NegativeBinomial</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#gamma"><code class="docutils literal notranslate"><span class="pre">Gamma</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#chisquare"><code class="docutils literal notranslate"><span class="pre">ChiSquare</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#inversegaussian"><code class="docutils literal notranslate"><span class="pre">InverseGaussian</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#lognormal"><code class="docutils literal notranslate"><span class="pre">Lognormal</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#uniform"><code class="docutils literal notranslate"><span class="pre">Uniform</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#exponential"><code class="docutils literal notranslate"><span class="pre">Exponential</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#laplace"><code class="docutils literal notranslate"><span class="pre">Laplace</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#logistic"><code class="docutils literal notranslate"><span class="pre">Logistic</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#rayleigh"><code class="docutils literal notranslate"><span class="pre">Rayleigh</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#normaltrunc"><code class="docutils literal notranslate"><span class="pre">NormalTrunc</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#studentt"><code class="docutils literal notranslate"><span class="pre">StudentT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#fdistribution"><code class="docutils literal notranslate"><span class="pre">FDistribution</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#weibull"><code class="docutils literal notranslate"><span class="pre">Weibull</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#beta"><code class="docutils literal notranslate"><span class="pre">Beta</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#skellam"><code class="docutils literal notranslate"><span class="pre">Skellam</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#nig"><code class="docutils literal notranslate"><span class="pre">Nig</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#gh"><code class="docutils literal notranslate"><span class="pre">Gh</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_api_reference.html#gaussianmixture"><code class="docutils literal notranslate"><span class="pre">GaussianMixture</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="distribution_catalog.html">Distribution Catalog</a><ul>
@@ -77,6 +109,7 @@
 <li class="toctree-l2"><a class="reference internal" href="distribution_catalog.html#uniform"><code class="docutils literal notranslate"><span class="pre">uniform</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="distribution_catalog.html#exponential"><code class="docutils literal notranslate"><span class="pre">exponential</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="distribution_catalog.html#bernoulli"><code class="docutils literal notranslate"><span class="pre">bernoulli</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="distribution_catalog.html#bessel"><code class="docutils literal notranslate"><span class="pre">bessel</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="distribution_catalog.html#beta"><code class="docutils literal notranslate"><span class="pre">beta</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="distribution_catalog.html#binomial"><code class="docutils literal notranslate"><span class="pre">binomial</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="distribution_catalog.html#bradford"><code class="docutils literal notranslate"><span class="pre">bradford</span></code></a></li>
@@ -169,6 +202,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="object_api_reference.html">Object API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="distribution_catalog.html">Distribution Catalog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
 </ul>

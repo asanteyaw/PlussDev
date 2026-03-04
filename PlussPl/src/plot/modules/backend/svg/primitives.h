@@ -71,6 +71,27 @@ inline std::string normalized_marker(std::string_view marker, bool scatter_like)
 
 class SvgRenderSurface2D final : public RenderSurface2D {
 public:
+  void push_clip_rect(double x, double y, double w, double h) override {
+    if (!(w > 0.0 && h > 0.0)) {
+      return;
+    }
+    const std::string id = "plusspl_clip_" + std::to_string(next_clip_id_++);
+    defs_ << "<clipPath id=\"" << id << "\"><rect x=\"" << format_double(x, 6)
+          << "\" y=\"" << format_double(y, 6)
+          << "\" width=\"" << format_double(w, 6)
+          << "\" height=\"" << format_double(h, 6) << "\"/></clipPath>\n";
+    stream_ << "<g clip-path=\"url(#" << id << ")\">\n";
+    clip_stack_.push_back(id);
+  }
+
+  void pop_clip() override {
+    if (clip_stack_.empty()) {
+      return;
+    }
+    clip_stack_.pop_back();
+    stream_ << "</g>\n";
+  }
+
   void fill_rect(double x, double y, double w, double h, const FillStyle2D& style, double corner_radius = 0.0) override {
     if (!(w > 0.0 && h > 0.0)) {
       return;
@@ -160,6 +181,7 @@ public:
     if (text.empty()) {
       return;
     }
+    const double rotation = style.orientation == TextOrientation2D::VerticalCcw ? (style.rotation_deg - 90.0) : style.rotation_deg;
     stream_ << "<text x=\"" << format_double(x, 6)
             << "\" y=\"" << format_double(y, 6)
             << "\" text-anchor=\"" << anchor_name_(style.anchor)
@@ -170,13 +192,19 @@ public:
     if (style.bold) {
       stream_ << " font-weight=\"600\"";
     }
-    if (style.orientation == TextOrientation2D::VerticalCcw) {
-      stream_ << " transform=\"rotate(-90 " << format_double(x, 6) << " " << format_double(y, 6) << ")\"";
+    if (std::abs(rotation) > 1e-9) {
+      stream_ << " transform=\"rotate(" << format_double(rotation, 6) << " "
+              << format_double(x, 6) << " " << format_double(y, 6) << ")\"";
     }
     stream_ << ">" << escape_xml(text) << "</text>\n";
   }
 
-  std::string finish() const override { return stream_.str(); }
+  std::string finish() const override {
+    if (defs_.str().empty()) {
+      return stream_.str();
+    }
+    return std::string("<defs>\n") + defs_.str() + "</defs>\n" + stream_.str();
+  }
 
 private:
   static const char* anchor_name_(TextAnchor2D anchor) {
@@ -191,7 +219,10 @@ private:
     }
   }
 
+  mutable std::ostringstream defs_{};
   std::ostringstream stream_{};
+  std::vector<std::string> clip_stack_{};
+  std::size_t next_clip_id_{0};
 };
 
 inline void append_svg_marker(std::ostringstream& svg,

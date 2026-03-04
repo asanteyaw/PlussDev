@@ -20,6 +20,7 @@ struct CODEM_API Normal {
   pluss::Series logcdf(const pluss::Series& x) const;
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
 };
 
 struct CODEM_API Bernoulli {
@@ -37,6 +38,7 @@ struct CODEM_API Bernoulli {
   pluss::Series logcdf(const pluss::Series& x) const;
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
 };
 
 struct CODEM_API Binomial {
@@ -55,6 +57,62 @@ struct CODEM_API Binomial {
   pluss::Series logcdf(const pluss::Series& x) const;
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API Poisson {
+  double lambda = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API Geometric {
+  double p = 0.5;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API NegativeBinomial {
+  double r = 1.0;
+  double p = 0.5;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
 };
 
 struct CODEM_API Gamma {
@@ -74,6 +132,63 @@ struct CODEM_API Gamma {
   pluss::Series logcdf(const pluss::Series& x) const;
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API ChiSquare {
+  std::int64_t degrees_of_freedom = 1;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API InverseGaussian {
+  double theta = 1.0;
+  double chi = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API Lognormal {
+  double mean_log = 0.0;
+  double stddev_log = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
 };
 
 struct CODEM_API Uniform {
@@ -92,6 +207,7 @@ struct CODEM_API Uniform {
   pluss::Series logcdf(const pluss::Series& x) const;
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
 };
 
 struct CODEM_API Exponential {
@@ -109,6 +225,163 @@ struct CODEM_API Exponential {
   pluss::Series logcdf(const pluss::Series& x) const;
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API Laplace {
+  double location = 0.0;
+  double scale = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API Logistic {
+  double location = 0.0;
+  double scale = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API Rayleigh {
+  double sigma = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API NormalTrunc {
+  double lower = -1.0;
+  double upper = 1.0;
+  double mean = 0.0;
+  double stddev = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API StudentT {
+  double degrees_of_freedom = 1.0;
+  double location = 0.0;
+  double scale = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API FDistribution {
+  double numerator_degrees_of_freedom = 1.0;
+  double denominator_degrees_of_freedom = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API Weibull {
+  double shape = 1.0;
+  double scale = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API Beta {
+  double low = 0.0;
+  double high = 1.0;
+  double alpha = 1.0;
+  double beta = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
 };
 
 struct CODEM_API Skellam {
@@ -127,6 +400,7 @@ struct CODEM_API Skellam {
   pluss::Series logcdf(const pluss::Series& x) const;
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
 };
 
 struct CODEM_API Nig {
@@ -147,6 +421,29 @@ struct CODEM_API Nig {
   pluss::Series logcdf(const pluss::Series& x) const;
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
+};
+
+struct CODEM_API Gh {
+  double lambda = 1.0;
+  double alpha = 2.0;
+  double beta = 0.0;
+  double location = 0.0;
+  double scale = 1.0;
+
+  pluss::Series sample(std::span<const std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample(std::initializer_list<std::int64_t> sizes,
+                       pluss::Config cfg = {},
+                       std::uint64_t seed = 0) const;
+  pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;
+  pluss::Series pdf(const pluss::Series& x) const;
+  pluss::Series logpdf(const pluss::Series& x) const;
+  pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series cdf(const pluss::Series& x) const;
+  pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
 };
 
 struct CODEM_API GaussianMixture {
@@ -170,6 +467,7 @@ struct CODEM_API GaussianMixture {
   pluss::Series logcdf(const pluss::Series& x) const;
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
+  pluss::Series cumulant(std::int64_t order) const;
 };
 
 } // namespace pluss::subsp::stat::distr

@@ -32,6 +32,16 @@ struct View4DPanel {
   std::string title{};
 };
 
+struct View4DSharedLegend {
+  Legend legend{};
+  std::vector<Trace3D> traces{};
+};
+
+struct View4DSharedColorbar {
+  Colorbar colorbar{};
+  Trace2D trace{};
+};
+
 namespace detail {
 void render_4d_view(RenderSurface2D& surface, const View4D& view, const RenderTarget& target);
 }
@@ -58,10 +68,22 @@ public:
     return *this;
   }
 
+  View4D& shared_legend(View4DSharedLegend legend) {
+    shared_legend_ = std::move(legend);
+    return *this;
+  }
+
+  View4D& shared_colorbar(View4DSharedColorbar colorbar) {
+    shared_colorbar_ = std::move(colorbar);
+    return *this;
+  }
+
   const std::string& title() const noexcept { return title_; }
   const Style& view_style() const noexcept { return style_; }
   View4DLayout layout() const noexcept { return layout_; }
   const std::vector<View4DPanel>& panels() const noexcept { return panels_; }
+  const std::optional<View4DSharedLegend>& shared_legend() const noexcept { return shared_legend_; }
+  const std::optional<View4DSharedColorbar>& shared_colorbar() const noexcept { return shared_colorbar_; }
   std::size_t panel_count() const noexcept { return panels_.size(); }
 
   void show(std::ostream& os) const {
@@ -140,7 +162,7 @@ private:
         return;
       }
       case OutputFormat::Png: {
-        detail::RasterSurface2D surface(width, height, 2);
+        detail::RasterSurface2D surface(width, height, detail::recommended_png_supersample(width, height));
         detail::render_4d_view(surface, *this, target);
         detail::write_text_file(filepath, surface.finish());
         return;
@@ -160,6 +182,8 @@ private:
   Style style_{};
   View4DLayout layout_{View4DLayout::Grid};
   std::vector<View4DPanel> panels_{};
+  std::optional<View4DSharedLegend> shared_legend_{};
+  std::optional<View4DSharedColorbar> shared_colorbar_{};
 };
 
 namespace detail {
@@ -229,7 +253,25 @@ inline void render_4d_view(RenderSurface2D& surface, const View4D& view, const R
   const auto [rows, cols] = grid_shape_4d(view.panels().size());
   const double outer_margin = 26.0;
   const double gap = 22.0;
-  const double usable_width = static_cast<double>(target.width) - outer_margin * 2.0 - gap * static_cast<double>(cols - 1);
+  double shared_legend_width = 0.0;
+  double shared_legend_height = 0.0;
+  if (view.shared_legend().has_value() && view.shared_legend()->legend.visible && !view.shared_legend()->traces.empty()) {
+    std::size_t longest = view.shared_legend()->legend.title.size();
+    for (const auto& trace : view.shared_legend()->traces) {
+      longest = std::max(longest, trace.name.empty() ? std::size_t{5} : trace.name.size());
+    }
+    const bool has_title = !view.shared_legend()->legend.title.empty();
+    shared_legend_width = legend_width_hint_2d(view.shared_legend()->traces.size(), longest, has_title);
+    shared_legend_height = legend_height_hint_2d(view.shared_legend()->traces.size(), has_title);
+  }
+  const bool shared_colorbar_visible = view.shared_colorbar().has_value() &&
+                                       view.shared_colorbar()->colorbar.visible &&
+                                       !view.shared_colorbar()->trace.values.empty();
+  const double shared_colorbar_width = shared_colorbar_visible ? 56.0 : 0.0;
+  const double shared_aux_width = std::max(shared_legend_width, shared_colorbar_width);
+  const double shared_aux_gap = shared_aux_width > 0.0 ? 24.0 : 0.0;
+  const double usable_width = static_cast<double>(target.width) - outer_margin * 2.0 - gap * static_cast<double>(cols - 1) -
+                              shared_aux_width - shared_aux_gap;
   const double usable_height =
       static_cast<double>(target.height) - title_band - outer_margin - gap * static_cast<double>(rows - 1);
   const double panel_width = usable_width / static_cast<double>(cols);
@@ -251,7 +293,7 @@ inline void render_4d_view(RenderSurface2D& surface, const View4D& view, const R
     options.show_legend = false;
     options.show_colorbar = false;
     options.title_font_size = 13.0;
-    options.max_ticks_per_axis = 4;
+    options.max_ticks_per_axis = std::max(2, static_cast<int>(std::llround(std::sqrt(std::max(1.0, panel_width * panel_height)) / 20.0)));
     const auto& panel = view.panels()[index];
     const bool bottom_row = row + 1 == rows;
     const bool left_col = col == 0;
@@ -262,6 +304,73 @@ inline void render_4d_view(RenderSurface2D& surface, const View4D& view, const R
     options.title_override = panel.title.empty() ? std::optional<std::string>{panel.scene.view_data().title}
                                                  : std::optional<std::string>{panel.title};
     render_3d_scene_with_options(surface, panel.scene.view_data(), target, options);
+  }
+
+  if (shared_aux_width <= 0.0) {
+    return;
+  }
+
+  const double aux_left = outer_margin + static_cast<double>(cols) * panel_width + static_cast<double>(cols - 1) * gap + shared_aux_gap;
+  double aux_top = title_band + 6.0;
+  if (shared_colorbar_visible) {
+    const double colorbar_h = std::clamp(panel_height * static_cast<double>(rows) + gap * static_cast<double>(rows - 1) - 12.0,
+                                         120.0,
+                                         static_cast<double>(target.height) - aux_top - outer_margin);
+    const ColorbarArtist2D colorbar_artist{};
+    colorbar_artist.draw(surface,
+                         aux_left,
+                         aux_top,
+                         shared_colorbar_width,
+                         colorbar_h,
+                         view.shared_colorbar()->trace,
+                         view.shared_colorbar()->colorbar,
+                         theme);
+    aux_top += colorbar_h + 18.0;
+  }
+
+  if (shared_legend_width > 0.0) {
+    surface.fill_rect(aux_left, aux_top, shared_legend_width, shared_legend_height,
+                      FillStyle2D{.color = theme.legend_background, .alpha = 0.92},
+                      8.0);
+    surface.stroke_rect(aux_left, aux_top, shared_legend_width, shared_legend_height,
+                        StrokeStyle2D{
+                            .color = theme.legend_border,
+                            .line_width = 1.0,
+                            .alpha = 1.0,
+                            .line_style = "solid",
+                        },
+                        8.0);
+    double y = aux_top + 14.0;
+    if (!view.shared_legend()->legend.title.empty()) {
+      surface.text(aux_left + 10.0, y, view.shared_legend()->legend.title,
+                   TextStyle2D{
+                       .color = theme.legend_title_color,
+                       .size = 11.0,
+                       .alpha = 1.0,
+                       .bold = true,
+                       .anchor = TextAnchor2D::Left,
+                       .orientation = TextOrientation2D::Horizontal,
+                       .font_family = theme.font_family,
+                   });
+      y += 14.0;
+    }
+    const LegendArtist3D legend_artist{};
+    for (std::size_t ti = 0; ti < view.shared_legend()->traces.size(); ++ti) {
+      Trace3D styled_trace = view.shared_legend()->traces[ti];
+      apply_trace_style_defaults(styled_trace, theme, ti);
+      const double sample_y = y + static_cast<double>(ti) * 16.0;
+      legend_artist.draw_sample(surface, styled_trace, aux_left + 8.0, aux_left + 26.0, sample_y, theme);
+      surface.text(aux_left + 32.0, sample_y + 4.0, styled_trace.name.empty() ? std::string("trace") : styled_trace.name,
+                   TextStyle2D{
+                       .color = theme.legend_text_color,
+                       .size = 11.0,
+                       .alpha = 1.0,
+                       .bold = false,
+                       .anchor = TextAnchor2D::Left,
+                       .orientation = TextOrientation2D::Horizontal,
+                       .font_family = theme.font_family,
+                   });
+    }
   }
 }
 

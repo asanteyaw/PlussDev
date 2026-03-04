@@ -1,8 +1,11 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -75,6 +78,24 @@ public:
   Figure3D& projection(ProjectionMode mode) {
     camera_.projection = mode;
     return *this;
+  }
+
+  Figure3D& data_aspect(std::array<double, 3> ratio) {
+    data_aspect_ratio_ = sanitize_aspect_ratio_(ratio, "Figure3D::data_aspect");
+    return *this;
+  }
+
+  Figure3D& data_aspect(double x, double y, double z) {
+    return data_aspect({x, y, z});
+  }
+
+  Figure3D& plot_box_aspect(std::array<double, 3> ratio) {
+    plot_box_aspect_ratio_ = sanitize_aspect_ratio_(ratio, "Figure3D::plot_box_aspect");
+    return *this;
+  }
+
+  Figure3D& plot_box_aspect(double x, double y, double z) {
+    return plot_box_aspect({x, y, z});
   }
 
   Figure3D& x_limits(double min_v, double max_v) {
@@ -381,11 +402,13 @@ private:
   }
 
   Figure3DView make_view_() const {
+    box_aspect_cache_ = compute_box_aspect_();
     return Figure3DView{
         .title = title_,
         .x_axis = x_axis_,
         .y_axis = y_axis_,
         .z_axis = z_axis_,
+        .box_aspect = box_aspect_cache_,
         .camera = camera_,
         .legend = legend_,
         .colorbar = colorbar_,
@@ -411,15 +434,105 @@ private:
     return *backend_;
   }
 
+  static std::array<double, 3> sanitize_aspect_ratio_(std::array<double, 3> ratio, std::string_view where) {
+    for (double& value : ratio) {
+      if (!(value > 0.0) || !std::isfinite(value)) {
+        throw std::invalid_argument(fmt::format("{}: aspect ratio entries must be finite and > 0", where));
+      }
+    }
+    return ratio;
+  }
+
+  std::array<double, 3> compute_axis_spans_() const {
+    double xmin = std::numeric_limits<double>::infinity();
+    double xmax = -std::numeric_limits<double>::infinity();
+    double ymin = std::numeric_limits<double>::infinity();
+    double ymax = -std::numeric_limits<double>::infinity();
+    double zmin = std::numeric_limits<double>::infinity();
+    double zmax = -std::numeric_limits<double>::infinity();
+
+    for (const auto& trace : traces_) {
+      const std::size_t n = std::min(trace.x.size(), std::min(trace.y.size(), trace.z.size()));
+      for (std::size_t i = 0; i < n; ++i) {
+        const double tx = x_axis_.transform_value(trace.x[i]);
+        const double ty = y_axis_.transform_value(trace.y[i]);
+        const double tz = z_axis_.transform_value(trace.z[i]);
+        if (std::isfinite(tx)) {
+          xmin = std::min(xmin, tx);
+          xmax = std::max(xmax, tx);
+        }
+        if (std::isfinite(ty)) {
+          ymin = std::min(ymin, ty);
+          ymax = std::max(ymax, ty);
+        }
+        if (std::isfinite(tz)) {
+          zmin = std::min(zmin, tz);
+          zmax = std::max(zmax, tz);
+        }
+      }
+    }
+
+    if (x_axis_.min.has_value()) xmin = x_axis_.transform_value(*x_axis_.min);
+    if (x_axis_.max.has_value()) xmax = x_axis_.transform_value(*x_axis_.max);
+    if (y_axis_.min.has_value()) ymin = y_axis_.transform_value(*y_axis_.min);
+    if (y_axis_.max.has_value()) ymax = y_axis_.transform_value(*y_axis_.max);
+    if (z_axis_.min.has_value()) zmin = z_axis_.transform_value(*z_axis_.min);
+    if (z_axis_.max.has_value()) zmax = z_axis_.transform_value(*z_axis_.max);
+
+    const auto ensure_limits = [](double lo, double hi) {
+      if (!std::isfinite(lo) || !std::isfinite(hi)) {
+        return std::pair<double, double>{0.0, 1.0};
+      }
+      if (lo == hi) {
+        return std::pair<double, double>{lo - 0.5, hi + 0.5};
+      }
+      if (lo > hi) {
+        std::swap(lo, hi);
+      }
+      return std::pair<double, double>{lo, hi};
+    };
+    std::tie(xmin, xmax) = ensure_limits(xmin, xmax);
+    std::tie(ymin, ymax) = ensure_limits(ymin, ymax);
+    std::tie(zmin, zmax) = ensure_limits(zmin, zmax);
+    return {
+        std::max(1e-9, std::abs(xmax - xmin)),
+        std::max(1e-9, std::abs(ymax - ymin)),
+        std::max(1e-9, std::abs(zmax - zmin)),
+    };
+  }
+
+  std::array<double, 3> compute_box_aspect_() const {
+    const auto spans = compute_axis_spans_();
+    std::array<double, 3> aspect = spans;
+    if (data_aspect_ratio_.has_value()) {
+      for (std::size_t i = 0; i < 3; ++i) {
+        aspect[i] = spans[i] / std::max(1e-9, (*data_aspect_ratio_)[i]);
+      }
+    }
+    if (plot_box_aspect_ratio_.has_value()) {
+      for (std::size_t i = 0; i < 3; ++i) {
+        aspect[i] *= (*plot_box_aspect_ratio_)[i];
+      }
+    }
+    const double max_component = std::max({aspect[0], aspect[1], aspect[2], 1e-9});
+    for (double& value : aspect) {
+      value = std::clamp(value / max_component, 0.15, 1.0);
+    }
+    return aspect;
+  }
+
   std::string title_{};
   XAxis x_axis_{};
   YAxis y_axis_{};
   ZAxis z_axis_{};
   Camera3D camera_{};
+  std::optional<std::array<double, 3>> data_aspect_ratio_{};
+  std::optional<std::array<double, 3>> plot_box_aspect_ratio_{};
   Legend legend_{};
   std::optional<Colorbar> colorbar_{};
   Style style_{};
   std::vector<Trace3D> traces_{};
+  mutable std::array<double, 3> box_aspect_cache_{1.0, 1.0, 1.0};
   mutable std::shared_ptr<const IBackend> backend_{};
 };
 

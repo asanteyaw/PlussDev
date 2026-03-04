@@ -33,6 +33,67 @@ bool approx(double a, double b, double tol = 1e-9) {
   return std::abs(a - b) <= tol;
 }
 
+double nig_cumulant_expected(double alpha, double beta, double location, double scale, std::int64_t order) {
+  const long double alpha_ld = static_cast<long double>(alpha);
+  const long double beta_ld = static_cast<long double>(beta);
+  const long double location_ld = static_cast<long double>(location);
+  const long double scale_ld = static_cast<long double>(scale);
+  const long double gamma = std::sqrt(alpha_ld * alpha_ld - beta_ld * beta_ld);
+  std::vector<long double> coeffs(static_cast<std::size_t>(order) + 1, 0.0L);
+  coeffs[0] = gamma;
+  for (std::int64_t n = 1; n <= order; ++n) {
+    long double acc = 0.0L;
+    for (std::int64_t k = 1; k < n; ++k) {
+      acc += coeffs[static_cast<std::size_t>(k)] * coeffs[static_cast<std::size_t>(n - k)];
+    }
+    const long double rhs = n == 1 ? -2.0L * beta_ld : (n == 2 ? -1.0L : 0.0L);
+    coeffs[static_cast<std::size_t>(n)] = (rhs - acc) / (2.0L * gamma);
+  }
+  long double factorial = 1.0L;
+  for (std::int64_t i = 2; i <= order; ++i) {
+    factorial *= static_cast<long double>(i);
+  }
+  long double cumulant = -scale_ld * factorial * coeffs[static_cast<std::size_t>(order)];
+  if (order == 1) {
+    cumulant += location_ld;
+  }
+  return static_cast<double>(cumulant);
+}
+
+double negbinom_cumulant_expected(double r, double p, std::int64_t order) {
+  const double q = 1.0 - p;
+  if (order == 1) {
+    return r * q / p;
+  }
+  std::vector<long double> row(static_cast<std::size_t>(order), 0.0L);
+  auto stirling = [&](std::int64_t n, std::int64_t k) {
+    if (n < 0 || k < 0 || k > n) return 0.0L;
+    std::vector<long double> s(static_cast<std::size_t>(k) + 1, 0.0L);
+    s[0] = 1.0L;
+    for (std::int64_t i = 1; i <= n; ++i) {
+      const std::int64_t upper = std::min(i, k);
+      for (std::int64_t j = upper; j >= 1; --j) {
+        s[static_cast<std::size_t>(j)] =
+            static_cast<long double>(j) * s[static_cast<std::size_t>(j)] + s[static_cast<std::size_t>(j - 1)];
+      }
+      s[0] = 0.0L;
+    }
+    return s[static_cast<std::size_t>(k)];
+  };
+  auto factorial = [](std::int64_t n) {
+    long double out = 1.0L;
+    for (std::int64_t i = 2; i <= n; ++i) out *= static_cast<long double>(i);
+    return out;
+  };
+  long double total = 0.0L;
+  for (std::int64_t k = 1; k <= order - 1; ++k) {
+    total += stirling(order - 1, k) * factorial(k) *
+             std::pow(static_cast<long double>(q), static_cast<long double>(k)) /
+             std::pow(static_cast<long double>(p), static_cast<long double>(k + 1));
+  }
+  return static_cast<double>(static_cast<long double>(r) * total);
+}
+
 } // namespace
 
 int main() {
@@ -110,10 +171,14 @@ int main() {
   expect(approx(as_f64_scalar(normal_obj.logcdf(zero)), std::log(0.5), 1e-12), "Normal object logcdf delegates to functional API", &failures);
   expect(approx(as_f64_scalar(normal_obj.cdf(zero)), 0.5, 1e-12), "Normal object cdf delegates to functional API", &failures);
   expect(approx(as_f64_scalar(normal_obj.cgf(pluss::make_series(1.0, f64))), 0.5, 1e-12), "Normal object cgf", &failures);
+  expect(approx(as_f64_scalar(normal_obj.cumulant(1)), 0.0, 1e-12), "Normal object cumulant(1)", &failures);
+  expect(approx(as_f64_scalar(normal_obj.cumulant(2)), 1.0, 1e-12), "Normal object cumulant(2)", &failures);
+  expect(approx(as_f64_scalar(normal_obj.cumulant(3)), 0.0, 1e-12), "Normal object cumulant(3)", &failures);
 
   const pluss::distr::Bernoulli bernoulli_obj{0.25};
   expect(approx(as_f64_scalar(bernoulli_obj.pdf(pluss::make_series(1.0, f64))), 0.25, 1e-12), "Bernoulli object pdf", &failures);
   expect(approx(as_f64_scalar(bernoulli_obj.cgf(zero)), 0.0, 1e-12), "Bernoulli object cgf at 0", &failures);
+  expect(approx(as_f64_scalar(bernoulli_obj.cumulant(2)), 0.25 * 0.75, 1e-12), "Bernoulli object cumulant(2)", &failures);
 
   const pluss::distr::Binomial binomial_obj{4, 0.25};
   expect(approx(as_f64_scalar(binomial_obj.pdf(pluss::make_series(1.0, f64))),
@@ -122,27 +187,68 @@ int main() {
          "Binomial object pdf",
          &failures);
   expect(approx(as_f64_scalar(binomial_obj.cgf(zero)), 0.0, 1e-12), "Binomial object cgf at 0", &failures);
+  expect(approx(as_f64_scalar(binomial_obj.cumulant(2)), 4.0 * 0.25 * 0.75, 1e-12), "Binomial object cumulant(2)", &failures);
 
   const pluss::distr::Gamma gamma_obj{2.0, 1.0, 0.0};
   expect(approx(as_f64_scalar(gamma_obj.pdf(one)), std::exp(-1.0), 1e-12), "Gamma object pdf", &failures);
   expect(approx(as_f64_scalar(gamma_obj.cgf(pluss::make_series(0.5, f64))), 2.0 * std::log(2.0), 1e-12), "Gamma object cgf", &failures);
+  expect(approx(as_f64_scalar(gamma_obj.cumulant(3)), 4.0, 1e-12), "Gamma object cumulant(3)", &failures);
 
   const pluss::distr::Uniform uniform_obj{0.0, 1.0};
   expect(approx(as_f64_scalar(uniform_obj.pdf(pluss::make_series(0.25, f64))), 1.0, 1e-12), "Uniform object pdf", &failures);
   expect(approx(as_f64_scalar(uniform_obj.cgf(zero)), 0.0, 1e-12), "Uniform object cgf at 0", &failures);
+  expect(approx(as_f64_scalar(uniform_obj.cumulant(4)), -1.0 / 120.0, 1e-12), "Uniform object cumulant(4)", &failures);
 
   const pluss::distr::Exponential exponential_obj{2.0};
   expect(approx(as_f64_scalar(exponential_obj.pdf(one)), 2.0 * std::exp(-2.0), 1e-12), "Exponential object pdf", &failures);
   expect(approx(as_f64_scalar(exponential_obj.cgf(pluss::make_series(1.0, f64))), std::log(2.0), 1e-12), "Exponential object cgf", &failures);
+  expect(approx(as_f64_scalar(exponential_obj.cumulant(4)), 0.375, 1e-12), "Exponential object cumulant(4)", &failures);
+  const pluss::distr::Laplace laplace_obj{0.0, 0.5};
+  expect(approx(as_f64_scalar(laplace_obj.pdf(zero)), 1.0, 1e-12), "Laplace object pdf", &failures);
+  expect(approx(as_f64_scalar(laplace_obj.cumulant(6)), 3.75, 1e-12), "Laplace object cumulant(6)", &failures);
+  const pluss::distr::Logistic logistic_obj{0.0, 0.5};
+  expect(approx(as_f64_scalar(logistic_obj.pdf(zero)), 0.5, 1e-12), "Logistic object pdf", &failures);
+  expect(approx(as_f64_scalar(logistic_obj.cumulant(6)), std::pow(std::numbers::pi_v<double>, 6.0) / 252.0, 1e-10),
+         "Logistic object cumulant(6)",
+         &failures);
+  const pluss::distr::Rayleigh rayleigh_obj{1.25};
+  expect(std::isfinite(as_f64_scalar(rayleigh_obj.logpdf(one))), "Rayleigh object logpdf finite", &failures);
+  expect(approx(as_f64_scalar(rayleigh_obj.cumulant(2)),
+                ((4.0 - std::numbers::pi_v<double>) / 2.0) * 1.25 * 1.25,
+                1e-11),
+         "Rayleigh object cumulant(2)",
+         &failures);
+  const pluss::distr::NormalTrunc normaltrunc_obj{-1.0, 1.0, 0.0, 1.0};
+  expect(approx(as_f64_scalar(normaltrunc_obj.cumulant(1)), 0.0, 1e-12), "NormalTrunc object cumulant(1)", &failures);
+  const pluss::distr::Poisson poisson_obj{2.5};
+  expect(approx(as_f64_scalar(poisson_obj.pdf(pluss::make_series(2.0, f64))),
+                std::exp(-2.5) * std::pow(2.5, 2.0) / 2.0,
+                1e-12),
+         "Poisson object pdf",
+         &failures);
+  expect(approx(as_f64_scalar(poisson_obj.cumulant(7)), 2.5, 1e-12), "Poisson object cumulant(7)", &failures);
+  const pluss::distr::Geometric geometric_obj{0.25};
+  expect(approx(as_f64_scalar(geometric_obj.cumulant(1)), 4.0, 1e-12), "Geometric object cumulant(1)", &failures);
+  expect(approx(as_f64_scalar(geometric_obj.cumulant(2)), 12.0, 1e-12), "Geometric object cumulant(2)", &failures);
+  const pluss::distr::NegativeBinomial negbin_obj{3.0, 0.4};
+  expect(approx(as_f64_scalar(negbin_obj.cumulant(5)), negbinom_cumulant_expected(3.0, 0.4, 5), 1e-8),
+         "NegativeBinomial object cumulant(5)",
+         &failures);
   const pluss::distr::Skellam skellam_obj{2.0, 1.0};
   expect(std::isfinite(as_f64_scalar(skellam_obj.logpdf(zero))), "Skellam object logpdf finite", &failures);
   expect(approx(as_f64_scalar(skellam_obj.cgf(zero)), 0.0, 1e-12), "Skellam object cgf at 0", &failures);
+  expect(approx(as_f64_scalar(skellam_obj.cumulant(4)), 3.0, 1e-12), "Skellam object cumulant(4)", &failures);
   expect(skellam_obj.sample({4}, Config{}.with_platform(pluss::pCPU), 20260301ULL).scalar_type() == ScalarType::Int64,
          "Skellam object sample natural dtype",
          &failures);
   const pluss::distr::Nig nig_obj{2.0, 0.5, 0.0, 1.0};
   expect(std::isfinite(as_f64_scalar(nig_obj.logpdf(zero))), "Nig object logpdf finite", &failures);
   expect(approx(as_f64_scalar(nig_obj.cgf(zero)), 0.0, 1e-12), "Nig object cgf at 0", &failures);
+  const double nig_gamma = std::sqrt(2.0 * 2.0 - 0.5 * 0.5);
+  expect(approx(as_f64_scalar(nig_obj.cumulant(2)), 4.0 / std::pow(nig_gamma, 3.0), 1e-12), "Nig object cumulant(2)", &failures);
+  expect(approx(as_f64_scalar(nig_obj.cumulant(5)), nig_cumulant_expected(2.0, 0.5, 0.0, 1.0, 5), 1e-10),
+         "Nig object cumulant(5)",
+         &failures);
 
   const Series left_tail = pluss::make_series(-12.0, f64);
   expect(std::isfinite(as_f64_scalar(logcdf("normal", left_tail, std::initializer_list<double>{}))), "normal logcdf left tail finite", &failures);
@@ -153,6 +259,21 @@ int main() {
   expect(std::isfinite(as_f64_scalar(logcdf("laplace", pluss::make_series(-50.0, f64), {0.0, 1.0}))), "laplace logcdf left tail finite", &failures);
   expect(std::isfinite(as_f64_scalar(logcdf("rayleigh", pluss::make_series(10.0, f64), {1.0}))), "rayleigh logcdf finite", &failures);
   expect(std::isfinite(as_f64_scalar(logcdf("normaltrunc", pluss::make_series(-0.999, f64), {-1.0, 1.0, 0.0, 1.0}))), "normaltrunc logcdf finite near lower bound", &failures);
+  try {
+    static_cast<void>(laplace_obj.cgf(pluss::make_series(2.0, f64)));
+    expect(false, "Laplace object cgf outside domain should throw", &failures);
+  } catch (const std::domain_error&) {
+  }
+  try {
+    static_cast<void>(normaltrunc_obj.cumulant(0));
+    expect(false, "NormalTrunc object cumulant(0) should throw", &failures);
+  } catch (const std::invalid_argument&) {
+  }
+  try {
+    static_cast<void>(logistic_obj.cgf(pluss::make_series(2.0, f64)));
+    expect(false, "Logistic object cgf outside domain should throw", &failures);
+  } catch (const std::domain_error&) {
+  }
 
   const Series x_exp = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}, f64);
   const auto exp_pdf = pdf("exp", x_exp, {2.0}).to_vec<double>();
@@ -253,6 +374,18 @@ int main() {
   expect(gamma_obj.sample({4}, f64, 20260301ULL).numel() == 4, "Gamma object sample shape", &failures);
   expect(uniform_obj.sample({4}, f64, 20260301ULL).numel() == 4, "Uniform object sample shape", &failures);
   expect(exponential_obj.sample({4}, f64, 20260301ULL).numel() == 4, "Exponential object sample shape", &failures);
+  expect(laplace_obj.sample({4}, f64, 20260301ULL).numel() == 4, "Laplace object sample shape", &failures);
+  expect(logistic_obj.sample({4}, f64, 20260301ULL).numel() == 4, "Logistic object sample shape", &failures);
+  expect(rayleigh_obj.sample({4}, f64, 20260301ULL).numel() == 4, "Rayleigh object sample shape", &failures);
+  expect(poisson_obj.sample({4}, Config{}.with_platform(pluss::pCPU), 20260301ULL).scalar_type() == ScalarType::Int64,
+         "Poisson object sample natural dtype",
+         &failures);
+  expect(geometric_obj.sample({4}, Config{}.with_platform(pluss::pCPU), 20260301ULL).scalar_type() == ScalarType::Int64,
+         "Geometric object sample natural dtype",
+         &failures);
+  expect(negbin_obj.sample({4}, Config{}.with_platform(pluss::pCPU), 20260301ULL).scalar_type() == ScalarType::Int64,
+         "NegativeBinomial object sample natural dtype",
+         &failures);
   expect(sample("poisson", {2.0}, {6}, Config{}.with_platform(pluss::pCPU), 11ULL).scalar_type() == ScalarType::Int64,
          "poisson sample natural dtype",
          &failures);
@@ -274,14 +407,35 @@ int main() {
   const Series normal_like = normal_obj.sample_like(like, 31ULL);
   const Series gamma_like = gamma_obj.sample_like(like, 37ULL);
   const Series nig_like = nig_obj.sample_like(like, 41ULL);
+  const Series laplace_like = laplace_obj.sample_like(like, 43ULL);
+  const Series logistic_like = logistic_obj.sample_like(like, 47ULL);
+  const Series rayleigh_like = rayleigh_obj.sample_like(like, 53ULL);
+  const Series poisson_like = poisson_obj.sample_like(like, 59ULL);
+  const Series geometric_like = geometric_obj.sample_like(like, 61ULL);
+  const Series negbin_like = negbin_obj.sample_like(like, 67ULL);
+  const Series normaltrunc_like = normaltrunc_obj.sample_like(like, 71ULL);
   expect(weibull_like.scalar_type() == ScalarType::Float32, "sample_like preserves dtype", &failures);
   expect(normal_like.scalar_type() == ScalarType::Float32, "Normal object sample_like preserves dtype", &failures);
   expect(gamma_like.scalar_type() == ScalarType::Float32, "Gamma object sample_like preserves dtype", &failures);
   expect(nig_like.scalar_type() == ScalarType::Float32, "Nig object sample_like preserves dtype", &failures);
+  expect(laplace_like.scalar_type() == ScalarType::Float32, "Laplace object sample_like preserves dtype", &failures);
+  expect(logistic_like.scalar_type() == ScalarType::Float32, "Logistic object sample_like preserves dtype", &failures);
+  expect(rayleigh_like.scalar_type() == ScalarType::Float32, "Rayleigh object sample_like preserves dtype", &failures);
+  expect(poisson_like.scalar_type() == ScalarType::Float32, "Poisson object sample_like preserves dtype", &failures);
+  expect(geometric_like.scalar_type() == ScalarType::Float32, "Geometric object sample_like preserves dtype", &failures);
+  expect(negbin_like.scalar_type() == ScalarType::Float32, "NegativeBinomial object sample_like preserves dtype", &failures);
+  expect(normaltrunc_like.scalar_type() == ScalarType::Float32, "NormalTrunc object sample_like preserves dtype", &failures);
   expect(weibull_like.platform() == pluss::pCPU, "sample_like preserves platform", &failures);
   expect(normal_like.platform() == pluss::pCPU, "Normal object sample_like preserves platform", &failures);
   expect(gamma_like.platform() == pluss::pCPU, "Gamma object sample_like preserves platform", &failures);
   expect(nig_like.platform() == pluss::pCPU, "Nig object sample_like preserves platform", &failures);
+  expect(laplace_like.platform() == pluss::pCPU, "Laplace object sample_like preserves platform", &failures);
+  expect(logistic_like.platform() == pluss::pCPU, "Logistic object sample_like preserves platform", &failures);
+  expect(rayleigh_like.platform() == pluss::pCPU, "Rayleigh object sample_like preserves platform", &failures);
+  expect(poisson_like.platform() == pluss::pCPU, "Poisson object sample_like preserves platform", &failures);
+  expect(geometric_like.platform() == pluss::pCPU, "Geometric object sample_like preserves platform", &failures);
+  expect(negbin_like.platform() == pluss::pCPU, "NegativeBinomial object sample_like preserves platform", &failures);
+  expect(normaltrunc_like.platform() == pluss::pCPU, "NormalTrunc object sample_like preserves platform", &failures);
   expect(weibull_like.sizes().size() == 2 && weibull_like.sizes()[0] == 2 && weibull_like.sizes()[1] == 5,
          "sample_like preserves shape",
          &failures);
@@ -293,6 +447,27 @@ int main() {
          &failures);
   expect(nig_like.sizes().size() == 2 && nig_like.sizes()[0] == 2 && nig_like.sizes()[1] == 5,
          "Nig object sample_like preserves shape",
+         &failures);
+  expect(laplace_like.sizes().size() == 2 && laplace_like.sizes()[0] == 2 && laplace_like.sizes()[1] == 5,
+         "Laplace object sample_like preserves shape",
+         &failures);
+  expect(logistic_like.sizes().size() == 2 && logistic_like.sizes()[0] == 2 && logistic_like.sizes()[1] == 5,
+         "Logistic object sample_like preserves shape",
+         &failures);
+  expect(rayleigh_like.sizes().size() == 2 && rayleigh_like.sizes()[0] == 2 && rayleigh_like.sizes()[1] == 5,
+         "Rayleigh object sample_like preserves shape",
+         &failures);
+  expect(poisson_like.sizes().size() == 2 && poisson_like.sizes()[0] == 2 && poisson_like.sizes()[1] == 5,
+         "Poisson object sample_like preserves shape",
+         &failures);
+  expect(geometric_like.sizes().size() == 2 && geometric_like.sizes()[0] == 2 && geometric_like.sizes()[1] == 5,
+         "Geometric object sample_like preserves shape",
+         &failures);
+  expect(negbin_like.sizes().size() == 2 && negbin_like.sizes()[0] == 2 && negbin_like.sizes()[1] == 5,
+         "NegativeBinomial object sample_like preserves shape",
+         &failures);
+  expect(normaltrunc_like.sizes().size() == 2 && normaltrunc_like.sizes()[0] == 2 && normaltrunc_like.sizes()[1] == 5,
+         "NormalTrunc object sample_like preserves shape",
          &failures);
 
   const auto sobol_1d = pluss::sobol({4}, ScalarType::Float64, 0).to_vec<double>();
@@ -359,6 +534,9 @@ int main() {
          "GaussianMixture object logcdf parity",
          &failures);
   expect(approx(as_f64_scalar(gaussian_mixture_obj.cgf(zero)), 0.0, 1e-12), "GaussianMixture object cgf at 0", &failures);
+  expect(approx(as_f64_scalar(gaussian_mixture_obj.cumulant(1)), 0.0, 1e-12), "GaussianMixture object cumulant(1)", &failures);
+  expect(approx(as_f64_scalar(gaussian_mixture_obj.cumulant(2)), 1.0, 1e-12), "GaussianMixture object cumulant(2)", &failures);
+  expect(approx(as_f64_scalar(gaussian_mixture_obj.cumulant(3)), 0.0, 1e-10), "GaussianMixture object cumulant(3)", &failures);
   expect(gaussian_mixture_obj.sample({4}, f64, 43ULL).numel() == 4, "GaussianMixture object sample shape", &failures);
 
   const Series mix_left_tail = pluss::make_series(-12.0, f64);

@@ -10,8 +10,8 @@ enum class ProjectionMode : std::uint8_t {
 };
 
 struct Camera3D {
-  double azimuth_deg{135.0};
-  double elevation_deg{28.0};
+  double azimuth_deg{-37.5};
+  double elevation_deg{30.0};
   double distance{3.4};
   ProjectionMode projection{ProjectionMode::Perspective};
 };

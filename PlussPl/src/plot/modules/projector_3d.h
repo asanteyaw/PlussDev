@@ -78,28 +78,41 @@ inline std::string surface_color_3d(double value, double lo, double hi) {
   return hex_color_from_rgb_3d(stops.back().r, stops.back().g, stops.back().b);
 }
 
-inline std::array<double, 3> rotate_camera_3d(double xn, double yn, double zn, const Camera3D& camera) {
-  const double x0 = xn - 0.5;
-  const double y0 = yn - 0.5;
-  const double z0 = zn - 0.5;
+inline std::array<double, 3> rotate_camera_3d(double xn,
+                                              double yn,
+                                              double zn,
+                                              const Camera3D& camera,
+                                              const std::array<double, 3>& box_aspect) {
+  const double x0 = (xn - 0.5) * box_aspect[0];
+  const double y0 = (yn - 0.5) * box_aspect[1];
+  const double z0 = (zn - 0.5) * box_aspect[2];
   const double az = camera.azimuth_deg * 3.14159265358979323846 / 180.0;
   const double el = camera.elevation_deg * 3.14159265358979323846 / 180.0;
 
-  const double x1 = std::cos(az) * x0 - std::sin(az) * y0;
-  const double y1 = std::sin(az) * x0 + std::cos(az) * y0;
-  const double z1 = z0;
+  // Match MATLAB's viewmtx az/el convention so the projection math and face
+  // visibility decisions come from the camera model rather than fixed edges.
+  const double x1 = std::cos(az) * x0 + std::sin(az) * y0;
+  const double y1 = -std::sin(el) * std::sin(az) * x0 + std::sin(el) * std::cos(az) * y0 + std::cos(el) * z0;
+  const double z1 = std::cos(el) * std::sin(az) * x0 - std::cos(el) * std::cos(az) * y0 + std::sin(el) * z0;
+  return {x1, y1, z1};
+}
 
-  const double x2 = x1;
-  const double y2 = std::cos(el) * y1 - std::sin(el) * z1;
-  const double z2 = std::sin(el) * y1 + std::cos(el) * z1;
-  return {x2, y2, z2};
+inline std::array<double, 3> camera_view_direction_3d(const Camera3D& camera) {
+  const double az = camera.azimuth_deg * 3.14159265358979323846 / 180.0;
+  const double el = camera.elevation_deg * 3.14159265358979323846 / 180.0;
+  return {
+      std::cos(el) * std::sin(az),
+      -std::cos(el) * std::cos(az),
+      std::sin(el),
+  };
 }
 
 inline NormalizedProjection3D project_normalized_components_3d(double xn,
                                                                double yn,
                                                                double zn,
-                                                               const Camera3D& camera) {
-  const auto rotated = rotate_camera_3d(xn, yn, zn, camera);
+                                                               const Camera3D& camera,
+                                                               const std::array<double, 3>& box_aspect) {
+  const auto rotated = rotate_camera_3d(xn, yn, zn, camera, box_aspect);
   double scale = 1.0;
   if (camera.projection == ProjectionMode::Perspective) {
     scale = camera.distance / std::max(0.6, camera.distance - rotated[1]);
@@ -111,7 +124,7 @@ inline NormalizedProjection3D project_normalized_components_3d(double xn,
   };
 }
 
-inline double fitted_projection_extent_3d(const Camera3D& camera) {
+inline double fitted_projection_extent_3d(const Camera3D& camera, const std::array<double, 3>& box_aspect) {
   static constexpr std::array<std::array<double, 3>, 8> corners{{
       {0.0, 0.0, 0.0},
       {1.0, 0.0, 0.0},
@@ -126,7 +139,7 @@ inline double fitted_projection_extent_3d(const Camera3D& camera) {
   double max_abs_x = 0.0;
   double max_abs_y = 0.0;
   for (const auto& corner : corners) {
-    const auto projected = project_normalized_components_3d(corner[0], corner[1], corner[2], camera);
+    const auto projected = project_normalized_components_3d(corner[0], corner[1], corner[2], camera, box_aspect);
     max_abs_x = std::max(max_abs_x, std::abs(projected.x));
     max_abs_y = std::max(max_abs_y, std::abs(projected.y));
   }
@@ -135,6 +148,26 @@ inline double fitted_projection_extent_3d(const Camera3D& camera) {
   const double fit_x = usable_half_span / std::max(1e-9, max_abs_x);
   const double fit_y = usable_half_span / std::max(1e-9, max_abs_y);
   return std::clamp(std::min(fit_x, fit_y), 0.2, 0.94);
+}
+
+inline double fitted_projection_extent_3d(const Camera3D& camera) {
+  return fitted_projection_extent_3d(camera, {1.0, 1.0, 1.0});
+}
+
+inline ProjectedPoint3D project_normalized_3d(double xn,
+                                              double yn,
+                                              double zn,
+                                              const Camera3D& camera,
+                                              const std::array<double, 3>& box_aspect,
+                                              double extent,
+                                              double left,
+                                              double top,
+                                              double width,
+                                              double height) {
+  const auto projected = project_normalized_components_3d(xn, yn, zn, camera, box_aspect);
+  const double px = left + width * (0.5 + projected.x * extent);
+  const double py = top + height * (0.5 - projected.y * extent);
+  return ProjectedPoint3D{.x = px, .y = py, .depth = projected.depth};
 }
 
 inline ProjectedPoint3D project_normalized_3d(double xn,
@@ -146,10 +179,41 @@ inline ProjectedPoint3D project_normalized_3d(double xn,
                                               double top,
                                               double width,
                                               double height) {
-  const auto projected = project_normalized_components_3d(xn, yn, zn, camera);
-  const double px = left + width * (0.5 + projected.x * extent);
-  const double py = top + height * (0.5 - projected.y * extent);
-  return ProjectedPoint3D{.x = px, .y = py, .depth = projected.depth};
+  return project_normalized_3d(xn, yn, zn, camera, {1.0, 1.0, 1.0}, extent, left, top, width, height);
+}
+
+inline ProjectedPoint3D project_value_3d(double x,
+                                         double y,
+                                         double z,
+                                         const Axis& x_axis,
+                                         const Axis& y_axis,
+                                         const Axis& z_axis,
+                                         double xmin,
+                                         double xmax,
+                                         double ymin,
+                                         double ymax,
+                                         double zmin,
+                                         double zmax,
+                                         const Camera3D& camera,
+                                         const std::array<double, 3>& box_aspect,
+                                         double extent,
+                                         double left,
+                                         double top,
+                                         double width,
+                                         double height) {
+  const double tx = axis_transform_2d(x, x_axis);
+  const double ty = axis_transform_2d(y, y_axis);
+  const double tz = axis_transform_2d(z, z_axis);
+  if (!std::isfinite(tx) || !std::isfinite(ty) || !std::isfinite(tz)) {
+    return {};
+  }
+  double xn = (tx - xmin) / (xmax - xmin);
+  double yn = (ty - ymin) / (ymax - ymin);
+  double zn = (tz - zmin) / (zmax - zmin);
+  if (x_axis.inverted) xn = 1.0 - xn;
+  if (y_axis.inverted) yn = 1.0 - yn;
+  if (z_axis.inverted) zn = 1.0 - zn;
+  return project_normalized_3d(xn, yn, zn, camera, box_aspect, extent, left, top, width, height);
 }
 
 inline ProjectedPoint3D project_value_3d(double x,
@@ -170,19 +234,25 @@ inline ProjectedPoint3D project_value_3d(double x,
                                          double top,
                                          double width,
                                          double height) {
-  const double tx = axis_transform_2d(x, x_axis);
-  const double ty = axis_transform_2d(y, y_axis);
-  const double tz = axis_transform_2d(z, z_axis);
-  if (!std::isfinite(tx) || !std::isfinite(ty) || !std::isfinite(tz)) {
-    return {};
-  }
-  double xn = (tx - xmin) / (xmax - xmin);
-  double yn = (ty - ymin) / (ymax - ymin);
-  double zn = (tz - zmin) / (zmax - zmin);
-  if (x_axis.inverted) xn = 1.0 - xn;
-  if (y_axis.inverted) yn = 1.0 - yn;
-  if (z_axis.inverted) zn = 1.0 - zn;
-  return project_normalized_3d(xn, yn, zn, camera, extent, left, top, width, height);
+  return project_value_3d(x,
+                          y,
+                          z,
+                          x_axis,
+                          y_axis,
+                          z_axis,
+                          xmin,
+                          xmax,
+                          ymin,
+                          ymax,
+                          zmin,
+                          zmax,
+                          camera,
+                          {1.0, 1.0, 1.0},
+                          extent,
+                          left,
+                          top,
+                          width,
+                          height);
 }
 
 } // namespace detail

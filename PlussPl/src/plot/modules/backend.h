@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -38,6 +39,7 @@ struct Figure3DView {
   const XAxis& x_axis;
   const YAxis& y_axis;
   const ZAxis& z_axis;
+  const std::array<double, 3>& box_aspect;
   const Camera3D& camera;
   const Legend& legend;
   const std::optional<Colorbar>& colorbar;

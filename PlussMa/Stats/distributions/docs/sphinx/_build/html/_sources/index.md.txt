@@ -10,6 +10,7 @@ This manual is organized around how users actually consume the layer:
 
 - start with `quickstart` for the short-path workflow
 - use `api_reference` when you need the function surface
+- use `object_api_reference` when you want parameter-bound distribution objects
 - use `distribution_catalog` when you need names, aliases, and parameter conventions
 - use `build_outputs` when you want to build the docs or the example binary locally
 
@@ -18,6 +19,7 @@ This manual is organized around how users actually consume the layer:
 
 quickstart
 api_reference
+object_api_reference
 distribution_catalog
 build_outputs
 ```

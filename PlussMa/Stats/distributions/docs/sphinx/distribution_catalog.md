@@ -197,6 +197,44 @@ auto logprob = pluss::distr::logpdf("bern", x, {0.35});
 auto dist = pluss::distr::cdf("bern", x, {0.35});
 ```
 
+## `bessel`
+
+### Signature
+
+```cpp
+pluss::distr::sample("bessel", {nu, a}, sizes, cfg, seed);
+pluss::distr::sample_like("bessel", {nu, a}, like, seed);
+pluss::distr::pdf("bessel", x, {nu, a});
+pluss::distr::logpdf("bessel", x, {nu, a});
+pluss::distr::cdf("bessel", x, {nu, a});
+```
+
+### Notes
+
+Discrete non-negative count family normalized by the modified Bessel function `I_nu(a)`. `nu` must stay above `-1` and `a` must be positive. This is the right model when the count law itself is defined through a Bessel-function normalization rather than through a Poisson or negative-binomial construction.
+
+Aliases: none.
+
+Parameters: `{nu, a}`.
+
+Use `sample_like(...)` when you want the sampled output to inherit shape, dtype, and platform from an existing `Series`.
+
+### Examples
+
+```cpp
+auto cfg = pluss::Config{}
+    .with_dtype(pluss::ScalarType::Float64)
+    .with_platform(pluss::pCPU);
+auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
+
+auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0}).to(pluss::ScalarType::Float64);
+auto draws = pluss::distr::sample("bessel", {0.0, 2.5}, {6}, cfg, 15ULL);
+auto like_draws = pluss::distr::sample_like("bessel", {0.0, 2.5}, like, 15ULL);
+auto pmf = pluss::distr::pdf("bessel", x, {0.0, 2.5});
+auto logprob = pluss::distr::logpdf("bessel", x, {0.0, 2.5});
+auto dist = pluss::distr::cdf("bessel", x, {0.0, 2.5});
+```
+
 ## `beta`
 
 ### Signature
@@ -1214,7 +1252,7 @@ pluss::distr::cdf("planck", x, {lambda, scale});
 
 ### Notes
 
-Planck-type positive-support family.
+Discrete positive-count family with exponentially damped tails. Use it when you want a count distribution that stays strictly positive and decays faster than a pure power law. `lambda` sets the near-origin shape and `scale` controls the tail decay rate.
 
 Aliases: none.
 
@@ -1230,10 +1268,10 @@ auto cfg = pluss::Config{}
     .with_platform(pluss::pCPU);
 auto like = pluss::zeros({2, 4}, cfg.with_dtype(pluss::ScalarType::Float32));
 
-auto x = pluss::make_series({0.25, 0.5, 1.0}).to(pluss::ScalarType::Float64);
+auto x = pluss::make_series({1.0, 2.0, 3.0, 4.0}).to(pluss::ScalarType::Float64);
 auto draws = pluss::distr::sample("planck", {2.0, 1.5}, {6}, cfg, 42ULL);
 auto like_draws = pluss::distr::sample_like("planck", {2.0, 1.5}, like, 42ULL);
-auto dens = pluss::distr::pdf("planck", x, {2.0, 1.5});
+auto pmf = pluss::distr::pdf("planck", x, {2.0, 1.5});
 auto logprob = pluss::distr::logpdf("planck", x, {2.0, 1.5});
 auto dist = pluss::distr::cdf("planck", x, {2.0, 1.5});
 ```
@@ -1946,7 +1984,7 @@ pluss::distr::cdf("gig", x, {lambda, chi, psi});
 
 ### Notes
 
-Generalized inverse Gaussian family.
+Generalized inverse Gaussian family on the positive real line. `lambda` selects the subfamily, while `chi` and `psi` control the inverse-Gaussian versus gamma-like pull on the tails. In practice this is the workhorse mixing law behind several heavier-tailed continuous models, including the generalized hyperbolic family.
 
 Aliases: none.
 
@@ -1984,7 +2022,7 @@ pluss::distr::cdf("gh", x, {lambda, alpha, beta, mu, delta});
 
 ### Notes
 
-Generalized hyperbolic family with explicit skew and tail parameters.
+Five-parameter generalized hyperbolic family for skewed, heavy-tailed continuous data. `lambda` chooses the subclass, `alpha` and `beta` control tail weight and asymmetry, and `mu` / `delta` provide location and scale. This is the flexible parent family behind special cases like NIG.
 
 Aliases: none.
 
@@ -2022,7 +2060,7 @@ pluss::distr::cdf("nig", x, {alpha, beta, mu, delta});
 
 ### Notes
 
-Normal-inverse-Gaussian special case of the generalized hyperbolic family.
+Normal-inverse-Gaussian special case of the generalized hyperbolic family, with `alpha > |beta|` required by the runtime. Use it when you need a continuous law that can stay much more tail-heavy and skewed than a Gaussian while still supporting direct sampling, density evaluation, and object-based cumulant generation through `pluss::distr::Nig`.
 
 Aliases: none.
 

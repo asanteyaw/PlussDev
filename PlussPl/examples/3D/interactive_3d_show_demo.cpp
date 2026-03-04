@@ -62,13 +62,16 @@ int main() {
   fig.colorbar(pluss::plotism::Colorbar{true, pluss::plotism::ColorbarLocation::Right, "implied vol"});
 
   const auto svg = plusspl::examples::output_path(__FILE__, "plusspl_interactive_3d.svg");
+  const auto png = plusspl::examples::output_path(__FILE__, "plusspl_interactive_3d.png");
   const auto pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_3d.pdf");
   fig.save_svg(svg, 1200, 900);
+  fig.save_png(png, 1200, 900);
   fig.save_pdf(pdf, 1200, 900);
 
   const bool opened = fig.show_window(false);
   std::cout << "show_window() opened viewer: " << (opened ? "true" : "false") << "\n";
   std::cout << "Saved SVG: " << svg << "\n";
+  std::cout << "Saved PNG: " << png << "\n";
   std::cout << "Saved PDF: " << pdf << "\n";
 
   std::cout << "Calling fig.show() now. If interactive show is disabled or viewer unavailable, you will see text preview.\n";

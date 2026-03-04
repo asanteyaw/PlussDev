@@ -29,6 +29,7 @@ struct PlotTransform3D {
   double width{1.0};
   double height{1.0};
   double projection_extent{0.88};
+  std::array<double, 3> box_aspect{1.0, 1.0, 1.0};
   const XAxis* x_axis{nullptr};
   const YAxis* y_axis{nullptr};
   const ZAxis* z_axis{nullptr};
@@ -38,7 +39,7 @@ struct PlotTransform3D {
     if (camera == nullptr) {
       return {};
     }
-    return detail::project_normalized_3d(xn, yn, zn, *camera, projection_extent, left, top, width, height);
+    return detail::project_normalized_3d(xn, yn, zn, *camera, box_aspect, projection_extent, left, top, width, height);
   }
 
   detail::ProjectedPoint3D project(double x, double y, double z) const {
@@ -46,7 +47,7 @@ struct PlotTransform3D {
       return {};
     }
     return detail::project_value_3d(
-        x, y, z, *x_axis, *y_axis, *z_axis, xmin, xmax, ymin, ymax, zmin, zmax, *camera, projection_extent, left, top, width, height);
+        x, y, z, *x_axis, *y_axis, *z_axis, xmin, xmax, ymin, ymax, zmin, zmax, *camera, box_aspect, projection_extent, left, top, width, height);
   }
 };
 

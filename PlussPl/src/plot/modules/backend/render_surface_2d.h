@@ -50,6 +50,7 @@ struct TextStyle2D {
   bool bold{false};
   TextAnchor2D anchor{TextAnchor2D::Left};
   TextOrientation2D orientation{TextOrientation2D::Horizontal};
+  double rotation_deg{0.0};
   std::string font_family{"sans-serif"};
 };
 
@@ -57,6 +58,8 @@ class RenderSurface2D {
 public:
   virtual ~RenderSurface2D() = default;
 
+  virtual void push_clip_rect(double x, double y, double w, double h) = 0;
+  virtual void pop_clip() = 0;
   virtual void fill_rect(double x, double y, double w, double h, const FillStyle2D& style, double corner_radius = 0.0) = 0;
   virtual void stroke_rect(double x,
                            double y,

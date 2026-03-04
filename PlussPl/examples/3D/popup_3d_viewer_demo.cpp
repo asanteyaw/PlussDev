@@ -58,11 +58,14 @@ int main() {
   fig.colorbar(pluss::plotism::Colorbar{true, pluss::plotism::ColorbarLocation::Right, "implied vol"});
 
   const auto svg = plusspl::examples::output_path(__FILE__, "plusspl_popup_3d.svg");
+  const auto png = plusspl::examples::output_path(__FILE__, "plusspl_popup_3d.png");
   const auto pdf = plusspl::examples::output_path(__FILE__, "plusspl_popup_3d.pdf");
   fig.save_svg(svg, 1280, 920);
+  fig.save_png(png, 1280, 920);
   fig.save_pdf(pdf, 1280, 920);
 
   std::cout << "Saved SVG: " << svg << "\n";
+  std::cout << "Saved PNG: " << png << "\n";
   std::cout << "Saved PDF: " << pdf << "\n";
   std::cout << "Opening blocking popup viewer. Close the window to return.\n";
   const bool opened = fig.show_popup(pluss::plotism::OutputFormat::Svg, 1280, 920);

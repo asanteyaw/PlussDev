@@ -37,11 +37,14 @@ int main() {
       .add_hist(std::vector<int>{1, 1, 2, 3, 5, 8, 13, 21}, 6, "std::vector<int> hist");
 
   const auto svg = plusspl::examples::output_path(__FILE__, "plusspl_inputs_2d_demo.svg");
+  const auto png = plusspl::examples::output_path(__FILE__, "plusspl_inputs_2d_demo.png");
   const auto pdf = plusspl::examples::output_path(__FILE__, "plusspl_inputs_2d_demo.pdf");
   fig.save_svg(svg, 1200, 800);
+  fig.save_png(png, 1200, 800);
   fig.save_pdf(pdf, 1200, 800);
 
   std::cout << "Saved SVG: " << svg << "\n";
+  std::cout << "Saved PNG: " << png << "\n";
   std::cout << "Saved PDF: " << pdf << "\n";
   std::cout << "show_window() opened viewer: " << (fig.show_window(false) ? "true" : "false") << "\n";
   fig.show();

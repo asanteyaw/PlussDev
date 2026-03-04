@@ -260,6 +260,45 @@ public:
             << " Tm (" << pdf_escape_text(text) << ") Tj ET\n";
   }
 
+  void text_rotated(double x,
+                    double y,
+                    double size,
+                    std::string_view text,
+                    const PdfRgb& color,
+                    TextAnchor2D anchor,
+                    double rotation_deg) {
+    if (text.empty()) {
+      return;
+    }
+    const double width = text_width_estimate(size, text);
+    double offset = 0.0;
+    if (anchor == TextAnchor2D::Center) {
+      offset = -0.5 * width;
+    } else if (anchor == TextAnchor2D::Right) {
+      offset = -width;
+    }
+    const double radians = rotation_deg * 3.14159265358979323846 / 180.0;
+    const double c = std::cos(radians);
+    const double s = std::sin(radians);
+    set_fill_color(color);
+    stream_ << "BT /F1 " << f(size) << " Tf "
+            << f(c) << " " << f(s) << " " << f(-s) << " " << f(c) << " "
+            << f(x + offset * c) << " " << f(y_to_pdf(y) + offset * s)
+            << " Tm (" << pdf_escape_text(text) << ") Tj ET\n";
+  }
+
+  void push_clip_rect(double x, double y, double w, double h) {
+    if (!(w > 0.0 && h > 0.0)) {
+      return;
+    }
+    const double py = y_to_pdf(y) - h;
+    stream_ << "q\n" << f(x) << " " << f(py) << " " << f(w) << " " << f(h) << " re W n\n";
+  }
+
+  void pop_clip() {
+    stream_ << "Q\n";
+  }
+
   std::string finish() const { return stream_.str(); }
 
 private:
@@ -311,6 +350,14 @@ class PdfRenderSurface2D final : public RenderSurface2D {
 public:
   PdfRenderSurface2D(std::int32_t width, std::int32_t height) : painter_(width, height) {}
 
+  void push_clip_rect(double x, double y, double w, double h) override {
+    painter_.push_clip_rect(x, y, w, h);
+  }
+
+  void pop_clip() override {
+    painter_.pop_clip();
+  }
+
   void fill_rect(double x, double y, double w, double h, const FillStyle2D& style, double corner_radius = 0.0) override {
     (void)corner_radius;
     painter_.fill_rect(x, y, w, h, pdf_parse_color(style.color));
@@ -356,8 +403,9 @@ public:
 
   void text(double x, double y, std::string_view text, const TextStyle2D& style) override {
     const PdfRgb color = pdf_parse_color(style.color);
-    if (style.orientation == TextOrientation2D::VerticalCcw) {
-      painter_.text_vertical_ccw(x, y, style.size, text, color);
+    const double rotation = style.orientation == TextOrientation2D::VerticalCcw ? (style.rotation_deg - 90.0) : style.rotation_deg;
+    if (std::abs(rotation) > 1e-9) {
+      painter_.text_rotated(x, y, style.size, text, color, style.anchor, rotation);
       return;
     }
     switch (style.anchor) {

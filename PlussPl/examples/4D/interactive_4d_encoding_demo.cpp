@@ -39,32 +39,44 @@ int main() {
   auto color_fig = fig4.realize_color_figure();
 
   const auto svg = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_color.svg");
+  const auto png = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_color.png");
   const auto pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_color.pdf");
   color_fig.save_svg(svg, 1200, 900);
+  color_fig.save_png(png, 1200, 900);
   color_fig.save_pdf(pdf, 1200, 900);
 
   auto size_fig = fig4.encode_size("regime", 6).realize_size_figure();
+  const auto size_png = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_size.png");
   const auto size_pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_size.pdf");
+  size_fig.save_png(size_png, 1200, 900);
   size_fig.save_pdf(size_pdf, 1200, 900);
 
   auto frame_view = fig4.encode_frame("regime", 4).realize_frame_view();
   const auto frame_pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_frame_view.pdf");
+  const auto frame_png = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_frame_view.png");
   const auto frame_svg = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_frame_view.svg");
   frame_view.save_pdf(frame_pdf, 1400, 960);
+  frame_view.save_png(frame_png, 1400, 960);
   frame_view.save_svg(frame_svg, 1400, 960);
 
   auto facet_view = fig4.encode_facet("regime", 4).realize_facet_view();
   const auto facet_pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_facet_view.pdf");
+  const auto facet_png = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_facet_view.png");
   const auto facet_svg = plusspl::examples::output_path(__FILE__, "plusspl_interactive_4d_facet_view.svg");
   facet_view.save_pdf(facet_pdf, 1400, 960);
+  facet_view.save_png(facet_png, 1400, 960);
   facet_view.save_svg(facet_svg, 1400, 960);
 
   std::cout << "Saved SVG: " << svg << "\n";
+  std::cout << "Saved PNG: " << png << "\n";
   std::cout << "Saved PDF: " << pdf << "\n";
+  std::cout << "Saved size PNG: " << size_png << "\n";
   std::cout << "Saved size PDF: " << size_pdf << "\n";
   std::cout << "Saved frame view PDF: " << frame_pdf << "\n";
+  std::cout << "Saved frame view PNG: " << frame_png << "\n";
   std::cout << "Saved frame view SVG: " << frame_svg << "\n";
   std::cout << "Saved facet view PDF: " << facet_pdf << "\n";
+  std::cout << "Saved facet view PNG: " << facet_png << "\n";
   std::cout << "Saved facet view SVG: " << facet_svg << "\n";
   color_fig.show();
   return 0;

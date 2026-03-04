@@ -249,16 +249,48 @@ private:
     if (panels.empty()) {
       return View4D{fmt::format("{} {}", title_, mode), style_, View4DLayout::Grid, {}};
     }
+    std::optional<View4DSharedLegend> shared_legend;
+    std::optional<View4DSharedColorbar> shared_colorbar;
+    const auto first_view = panels.front().scene.view_data();
+    if (first_view.legend.visible && !first_view.traces.empty()) {
+      shared_legend = View4DSharedLegend{
+          .legend = first_view.legend,
+          .traces = std::vector<Trace3D>(first_view.traces.begin(), first_view.traces.end()),
+      };
+    }
+    if (first_view.colorbar.has_value() && first_view.colorbar->visible) {
+      auto it = std::find_if(first_view.traces.begin(), first_view.traces.end(), [](const Trace3D& trace) {
+        return trace.kind == Trace3DKind::Surface && !trace.z.empty();
+      });
+      if (it != first_view.traces.end()) {
+        Trace2D scalar_trace;
+        scalar_trace.kind = Trace2DKind::Heatmap;
+        scalar_trace.name = it->name;
+        scalar_trace.values = it->z;
+        scalar_trace.style = it->style;
+        shared_colorbar = View4DSharedColorbar{
+            .colorbar = *first_view.colorbar,
+            .trace = std::move(scalar_trace),
+        };
+      }
+    }
     for (auto& panel : panels) {
       panel.scene.legend(Legend{.visible = false});
       panel.scene.colorbar(Colorbar{.visible = false});
     }
-    return View4D{
+    auto view = View4D{
         fmt::format("{} {} view", title_, mode),
         style_,
         panels.size() == 1 ? View4DLayout::Single : View4DLayout::Grid,
         std::move(panels),
     };
+    if (shared_legend.has_value()) {
+      view.shared_legend(std::move(*shared_legend));
+    }
+    if (shared_colorbar.has_value()) {
+      view.shared_colorbar(std::move(*shared_colorbar));
+    }
+    return view;
   }
 
   std::vector<View4DPanel> make_binned_panels_() const {

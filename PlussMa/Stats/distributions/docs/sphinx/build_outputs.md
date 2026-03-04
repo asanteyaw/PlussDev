@@ -23,6 +23,7 @@ Expected entry files:
 - `_build/html/index.html`
 - `_build/html/quickstart.html`
 - `_build/html/api_reference.html`
+- `_build/html/object_api_reference.html`
 - `_build/html/distribution_catalog.html`
 - `_build/html/build_outputs.html`
 
@@ -57,9 +58,14 @@ The current checked build produced:
 The docs describe the production surface implemented in:
 
 - `PlussMa/Stats/distributions/distr.cpp`
+- `PlussMa/Stats/distributions/distr_objects_continuous.cpp`
+- `PlussMa/Stats/distributions/distr_objects_discrete.cpp`
+- `PlussMa/Stats/distributions/distr_objects_special.cpp`
 - `PlussMa/include/pluss/subsp/stat/distr_fwd.h`
+- `PlussMa/include/pluss/subsp/stat/distr.h`
 - `PlussMa/include/pluss/ma/stats.h`
 - `PlussMa/examples/Numerical/distributions_demo.cpp`
+- `PlussMa/Stats/distributions/examples/distributions_objects_demo.cpp`
 
 ## Validation Path
 

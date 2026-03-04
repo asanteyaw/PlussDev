@@ -15,6 +15,17 @@
 namespace pluss::plotism {
 namespace detail {
 
+inline int recommended_png_supersample(std::int32_t width, std::int32_t height) {
+  const std::int64_t pixels = static_cast<std::int64_t>(width) * static_cast<std::int64_t>(height);
+  if (pixels <= 1'600'000) {
+    return 4;
+  }
+  if (pixels <= 3'500'000) {
+    return 3;
+  }
+  return 2;
+}
+
 struct RasterColor {
   std::uint8_t r{0};
   std::uint8_t g{0};
@@ -282,6 +293,35 @@ public:
         raster_height_(height_ * ss_),
         rgba_(static_cast<std::size_t>(raster_width_) * static_cast<std::size_t>(raster_height_) * 4u, 255u) {}
 
+  void push_clip_rect(double x, double y, double w, double h) override {
+    if (!(w > 0.0 && h > 0.0)) {
+      return;
+    }
+    const ClipRect clip{
+        .x1 = x * static_cast<double>(ss_),
+        .y1 = y * static_cast<double>(ss_),
+        .x2 = (x + w) * static_cast<double>(ss_),
+        .y2 = (y + h) * static_cast<double>(ss_),
+    };
+    if (clip_stack_.empty()) {
+      clip_stack_.push_back(clip);
+      return;
+    }
+    const auto& current = clip_stack_.back();
+    clip_stack_.push_back(ClipRect{
+        .x1 = std::max(current.x1, clip.x1),
+        .y1 = std::max(current.y1, clip.y1),
+        .x2 = std::min(current.x2, clip.x2),
+        .y2 = std::min(current.y2, clip.y2),
+    });
+  }
+
+  void pop_clip() override {
+    if (!clip_stack_.empty()) {
+      clip_stack_.pop_back();
+    }
+  }
+
   void fill_rect(double x, double y, double w, double h, const FillStyle2D& style, double corner_radius = 0.0) override {
     if (!(w > 0.0) || !(h > 0.0)) {
       return;
@@ -446,28 +486,19 @@ public:
     const int text_w = static_cast<int>(text_value.size()) * advance - cell;
     const int text_h = glyph_h;
 
-    double start_x = x * static_cast<double>(ss_);
+    const double rotation = (style.orientation == TextOrientation2D::VerticalCcw ? -90.0 : 0.0) + style.rotation_deg;
+    double anchor_offset_x = 0.0;
     if (style.anchor == TextAnchor2D::Center) {
-      start_x -= static_cast<double>(text_w) * 0.5;
+      anchor_offset_x = -static_cast<double>(text_w) * 0.5;
     } else if (style.anchor == TextAnchor2D::Right) {
-      start_x -= static_cast<double>(text_w);
+      anchor_offset_x = -static_cast<double>(text_w);
     }
-    double start_y = y * static_cast<double>(ss_) - static_cast<double>(text_h) * 0.5;
-
-    if (style.orientation == TextOrientation2D::VerticalCcw) {
-      const double rotated_w = static_cast<double>(text_h);
-      const double rotated_h = static_cast<double>(text_w);
-      if (style.anchor == TextAnchor2D::Center) {
-        start_x = x * static_cast<double>(ss_) + rotated_w * 0.5;
-        start_y = y * static_cast<double>(ss_) - rotated_h * 0.5;
-      } else if (style.anchor == TextAnchor2D::Right) {
-        start_x = x * static_cast<double>(ss_) + rotated_w;
-        start_y = y * static_cast<double>(ss_) - rotated_h;
-      } else {
-        start_x = x * static_cast<double>(ss_) + rotated_w;
-        start_y = y * static_cast<double>(ss_);
-      }
-    }
+    const double anchor_offset_y = -static_cast<double>(text_h) * 0.5;
+    const double origin_x = x * static_cast<double>(ss_);
+    const double origin_y = y * static_cast<double>(ss_);
+    const double radians = rotation * 3.14159265358979323846 / 180.0;
+    const double c = std::cos(radians);
+    const double s = std::sin(radians);
 
     for (std::size_t i = 0; i < text_value.size(); ++i) {
       char c = text_value[i];
@@ -480,13 +511,11 @@ public:
           if ((rows[static_cast<std::size_t>(row)] & (1u << (4 - col))) == 0u) {
             continue;
           }
-          const double gx = static_cast<double>(static_cast<int>(i) * advance + col * cell);
-          const double gy = static_cast<double>(row * cell);
-          if (style.orientation == TextOrientation2D::Horizontal) {
-            fill_text_block(start_x + gx, start_y + gy, cell, cell, color);
-          } else {
-            fill_text_block(start_x - (gy + cell), start_y + gx, cell, cell, color);
-          }
+          const double local_x = anchor_offset_x + static_cast<double>(static_cast<int>(i) * advance + col * cell);
+          const double local_y = anchor_offset_y + static_cast<double>(row * cell);
+          const double px = origin_x + local_x * c - local_y * s;
+          const double py = origin_y + local_x * s + local_y * c;
+          fill_text_block(px, py, cell, cell, color);
         }
       }
     }
@@ -497,8 +526,28 @@ public:
   }
 
 private:
+  struct ClipRect {
+    double x1{0.0};
+    double y1{0.0};
+    double x2{0.0};
+    double y2{0.0};
+  };
+
+  bool clip_contains_pixel_(int x, int y) const {
+    if (clip_stack_.empty()) {
+      return true;
+    }
+    const auto& clip = clip_stack_.back();
+    const double xf = static_cast<double>(x) + 0.5;
+    const double yf = static_cast<double>(y) + 0.5;
+    return xf >= clip.x1 && xf <= clip.x2 && yf >= clip.y1 && yf <= clip.y2;
+  }
+
   void blend_pixel(int x, int y, const RasterColor& src) {
     if (x < 0 || x >= raster_width_ || y < 0 || y >= raster_height_) {
+      return;
+    }
+    if (!clip_contains_pixel_(x, y)) {
       return;
     }
     const std::size_t idx = (static_cast<std::size_t>(y) * static_cast<std::size_t>(raster_width_) +
@@ -608,6 +657,7 @@ private:
   int raster_width_{0};
   int raster_height_{0};
   std::vector<std::uint8_t> rgba_{};
+  std::vector<ClipRect> clip_stack_{};
 };
 
 } // namespace detail
