@@ -3209,6 +3209,74 @@ void render_volume_panel(DrawList& list, const Pane& pane, const PaneLayout& lay
       true);
 }
 
+struct VolumeAxisFrame {
+  double front_x{0.0};
+  double rear_x{0.0};
+  double front_y{0.0};
+  double rear_y{0.0};
+  double bottom_z{0.0};
+  double top_z{0.0};
+  Point3d x_start3{};
+  Point3d x_end3{};
+  Point3d y_start3{};
+  Point3d y_end3{};
+  Point3d z_start3{};
+  Point3d z_end3{};
+  Point2d x_start{};
+  Point2d x_end{};
+  Point2d y_start{};
+  Point2d y_end{};
+  Point2d z_start{};
+  Point2d z_end{};
+  Point2d pane_center{};
+};
+
+[[nodiscard]] VolumeAxisFrame resolve_volume_axis_frame(
+    const Pane& pane,
+    const Bounds3d& bounds,
+    const Rect& plot_rect) {
+  const CameraBasis basis = camera_basis(pane.lens());
+  VolumeAxisFrame frame{};
+  frame.front_x = basis.eye_direction.x >= 0.0 ? bounds.max_x : bounds.min_x;
+  frame.rear_x = basis.eye_direction.x >= 0.0 ? bounds.min_x : bounds.max_x;
+  frame.front_y = basis.eye_direction.y >= 0.0 ? bounds.max_y : bounds.min_y;
+  frame.rear_y = basis.eye_direction.y >= 0.0 ? bounds.min_y : bounds.max_y;
+  frame.bottom_z = bounds.min_z;
+  frame.top_z = bounds.max_z;
+
+  frame.x_start3 = {bounds.min_x, frame.front_y, frame.bottom_z};
+  frame.x_end3 = {bounds.max_x, frame.front_y, frame.bottom_z};
+  frame.y_start3 = {frame.front_x, bounds.min_y, frame.bottom_z};
+  frame.y_end3 = {frame.front_x, bounds.max_y, frame.bottom_z};
+
+  const std::array<Point3d, 4> z_edge_bottom_candidates{{
+      {bounds.min_x, bounds.min_y, frame.bottom_z},
+      {bounds.min_x, bounds.max_y, frame.bottom_z},
+      {bounds.max_x, bounds.min_y, frame.bottom_z},
+      {bounds.max_x, bounds.max_y, frame.bottom_z},
+  }};
+  std::size_t leftmost_z_edge = 0;
+  double leftmost_screen_x = std::numeric_limits<double>::infinity();
+  for (std::size_t i = 0; i < z_edge_bottom_candidates.size(); ++i) {
+    const Point2d projected = map_projected_point(z_edge_bottom_candidates[i], pane, bounds, plot_rect);
+    if (projected.x < leftmost_screen_x) {
+      leftmost_screen_x = projected.x;
+      leftmost_z_edge = i;
+    }
+  }
+  frame.z_start3 = z_edge_bottom_candidates[leftmost_z_edge];
+  frame.z_end3 = {frame.z_start3.x, frame.z_start3.y, frame.top_z};
+
+  frame.x_start = map_projected_point(frame.x_start3, pane, bounds, plot_rect);
+  frame.x_end = map_projected_point(frame.x_end3, pane, bounds, plot_rect);
+  frame.y_start = map_projected_point(frame.y_start3, pane, bounds, plot_rect);
+  frame.y_end = map_projected_point(frame.y_end3, pane, bounds, plot_rect);
+  frame.z_start = map_projected_point(frame.z_start3, pane, bounds, plot_rect);
+  frame.z_end = map_projected_point(frame.z_end3, pane, bounds, plot_rect);
+  frame.pane_center = map_projected_point(bounds_center(bounds), pane, bounds, plot_rect);
+  return frame;
+}
+
 void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layout, const Bounds3d& bounds) {
   if (pane.grid_style() == GridStyle::None) {
     return;
@@ -3241,46 +3309,23 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
     z_pos = uniform_grid_positions({bounds.min_z, bounds.max_z}, 6);
   }
 
-  const CameraBasis basis = camera_basis(pane.lens());
-  const double rear_x = basis.eye_direction.x >= 0.0 ? bounds.min_x : bounds.max_x;
-  const double rear_y = basis.eye_direction.y >= 0.0 ? bounds.min_y : bounds.max_y;
-  const double rear_z = basis.eye_direction.z >= 0.0 ? bounds.min_z : bounds.max_z;
-  const std::array<Point3d, 4> z_edge_bottom_candidates{{
-      {bounds.min_x, bounds.min_y, bounds.min_z},
-      {bounds.min_x, bounds.max_y, bounds.min_z},
-      {bounds.max_x, bounds.min_y, bounds.min_z},
-      {bounds.max_x, bounds.max_y, bounds.min_z},
-  }};
-  std::size_t leftmost_z_edge = 0;
-  double leftmost_screen_x = std::numeric_limits<double>::infinity();
-  for (std::size_t i = 0; i < z_edge_bottom_candidates.size(); ++i) {
-    const Point2d projected = map_projected_point(z_edge_bottom_candidates[i], pane, bounds, layout.plot);
-    if (projected.x < leftmost_screen_x) {
-      leftmost_screen_x = projected.x;
-      leftmost_z_edge = i;
-    }
-  }
-  const Point3d z_axis_edge = z_edge_bottom_candidates[leftmost_z_edge];
-  const double axis_x = map_projected_point(z_axis_edge, pane, bounds, layout.plot).x;
+  const VolumeAxisFrame frame = resolve_volume_axis_frame(pane, bounds, layout.plot);
   const Rgba grid = Rgba::from_u8(190, 198, 208, 148);
 
   for (const double value : x_pos) {
     add_path(
         list,
         {
-            map_projected_point({value, bounds.min_y, rear_z}, pane, bounds, layout.plot),
-            map_projected_point({value, bounds.max_y, rear_z}, pane, bounds, layout.plot),
+            map_projected_point({value, bounds.min_y, frame.bottom_z}, pane, bounds, layout.plot),
+            map_projected_point({value, bounds.max_y, frame.bottom_z}, pane, bounds, layout.plot),
         },
         FillStroke{grid, {}, true, false, 0.65},
         false);
     add_path(
         list,
         {
-            map_projected_point({value, rear_y, bounds.min_z}, pane, bounds, layout.plot),
-            {
-                map_projected_point({value, rear_y, bounds.min_z}, pane, bounds, layout.plot).x,
-                map_projected_point({value, rear_y, bounds.max_z}, pane, bounds, layout.plot).y,
-            },
+            map_projected_point({value, frame.rear_y, frame.bottom_z}, pane, bounds, layout.plot),
+            map_projected_point({value, frame.rear_y, frame.top_z}, pane, bounds, layout.plot),
         },
         FillStroke{grid, {}, true, false, 0.55},
         false);
@@ -3289,40 +3334,35 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
     add_path(
         list,
         {
-            map_projected_point({bounds.min_x, value, rear_z}, pane, bounds, layout.plot),
-            map_projected_point({bounds.max_x, value, rear_z}, pane, bounds, layout.plot),
+            map_projected_point({bounds.min_x, value, frame.bottom_z}, pane, bounds, layout.plot),
+            map_projected_point({bounds.max_x, value, frame.bottom_z}, pane, bounds, layout.plot),
         },
         FillStroke{grid, {}, true, false, 0.65},
         false);
     add_path(
         list,
         {
-            map_projected_point({rear_x, value, bounds.min_z}, pane, bounds, layout.plot),
-            {
-                map_projected_point({rear_x, value, bounds.min_z}, pane, bounds, layout.plot).x,
-                map_projected_point({rear_x, value, bounds.max_z}, pane, bounds, layout.plot).y,
-            },
+            map_projected_point({frame.rear_x, value, frame.bottom_z}, pane, bounds, layout.plot),
+            map_projected_point({frame.rear_x, value, frame.top_z}, pane, bounds, layout.plot),
         },
         FillStroke{grid, {}, true, false, 0.55},
         false);
   }
   for (const double value : z_pos) {
-    const Point2d axis_mapped = map_projected_point({z_axis_edge.x, z_axis_edge.y, value}, pane, bounds, layout.plot);
-    const Point2d axis_anchor{axis_x, axis_mapped.y};
-    const Point2d x_plane_a = map_projected_point({bounds.min_x, rear_y, value}, pane, bounds, layout.plot);
-    const Point2d x_plane_b = map_projected_point({bounds.max_x, rear_y, value}, pane, bounds, layout.plot);
-    const Point2d y_plane_a = map_projected_point({rear_x, bounds.min_y, value}, pane, bounds, layout.plot);
-    const Point2d y_plane_b = map_projected_point({rear_x, bounds.max_y, value}, pane, bounds, layout.plot);
-    const Point2d x_far = x_plane_a.x > x_plane_b.x ? x_plane_a : x_plane_b;
-    const Point2d y_far = y_plane_a.x > y_plane_b.x ? y_plane_a : y_plane_b;
     add_path(
         list,
-        {axis_anchor, x_far},
+        {
+            map_projected_point({bounds.min_x, frame.rear_y, value}, pane, bounds, layout.plot),
+            map_projected_point({bounds.max_x, frame.rear_y, value}, pane, bounds, layout.plot),
+        },
         FillStroke{grid, {}, true, false, 0.55},
         false);
     add_path(
         list,
-        {axis_anchor, y_far},
+        {
+            map_projected_point({frame.rear_x, bounds.min_y, value}, pane, bounds, layout.plot),
+            map_projected_point({frame.rear_x, bounds.max_y, value}, pane, bounds, layout.plot),
+        },
         FillStroke{grid, {}, true, false, 0.55},
         false);
   }
@@ -3342,40 +3382,9 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
   const auto x_ticks = clamp_ticks(ticks_for(pane.x_axis(), {bounds.min_x, bounds.max_x}), {bounds.min_x, bounds.max_x});
   const auto y_ticks = clamp_ticks(ticks_for(pane.y_axis(), {bounds.min_y, bounds.max_y}), {bounds.min_y, bounds.max_y});
   const auto z_ticks = clamp_ticks(ticks_for(pane.z_axis(), {bounds.min_z, bounds.max_z}), {bounds.min_z, bounds.max_z});
-  const CameraBasis basis = camera_basis(pane.lens());
-  const double front_x = basis.eye_direction.x >= 0.0 ? bounds.max_x : bounds.min_x;
-  const double front_y = basis.eye_direction.y >= 0.0 ? bounds.max_y : bounds.min_y;
-  const double bottom_z = bounds.min_z;
+  const VolumeAxisFrame frame = resolve_volume_axis_frame(pane, bounds, layout.plot);
   const Rgba primary = multiply_rgb(pane.theme_tokens().foreground(), 0.58);
 
-  const Point3d x_start3{bounds.min_x, front_y, bottom_z};
-  const Point3d x_end3{bounds.max_x, front_y, bottom_z};
-  const Point3d y_start3{front_x, bounds.min_y, bottom_z};
-  const Point3d y_end3{front_x, bounds.max_y, bottom_z};
-  const std::array<Point3d, 4> z_edge_bottom_candidates{{
-      {bounds.min_x, bounds.min_y, bottom_z},
-      {bounds.min_x, bounds.max_y, bottom_z},
-      {bounds.max_x, bounds.min_y, bottom_z},
-      {bounds.max_x, bounds.max_y, bottom_z},
-  }};
-  std::size_t leftmost_z_edge = 0;
-  double leftmost_screen_x = std::numeric_limits<double>::infinity();
-  for (std::size_t i = 0; i < z_edge_bottom_candidates.size(); ++i) {
-    const Point2d projected = map_projected_point(z_edge_bottom_candidates[i], pane, bounds, layout.plot);
-    if (projected.x < leftmost_screen_x) {
-      leftmost_screen_x = projected.x;
-      leftmost_z_edge = i;
-    }
-  }
-  const Point3d z_start3 = z_edge_bottom_candidates[leftmost_z_edge];
-  const Point3d z_end3{z_start3.x, z_start3.y, bounds.max_z};
-  const Point2d x_start = map_projected_point(x_start3, pane, bounds, layout.plot);
-  const Point2d x_end = map_projected_point(x_end3, pane, bounds, layout.plot);
-  const Point2d y_start = map_projected_point(y_start3, pane, bounds, layout.plot);
-  const Point2d y_end = map_projected_point(y_end3, pane, bounds, layout.plot);
-  const Point2d z_start = map_projected_point(z_start3, pane, bounds, layout.plot);
-  const Point2d z_end = map_projected_point(z_end3, pane, bounds, layout.plot);
-  const Point2d pane_center = map_projected_point(bounds_center(bounds), pane, bounds, layout.plot);
   const auto outward_normal = [&](Point2d a, Point2d b) {
     const double dx = b.x - a.x;
     const double dy = b.y - a.y;
@@ -3385,7 +3394,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     }
     Point2d normal{-dy / length, dx / length};
     const Point2d midpoint{0.5 * (a.x + b.x), 0.5 * (a.y + b.y)};
-    const Point2d to_center{pane_center.x - midpoint.x, pane_center.y - midpoint.y};
+    const Point2d to_center{frame.pane_center.x - midpoint.x, frame.pane_center.y - midpoint.y};
     if (normal.x * to_center.x + normal.y * to_center.y > 0.0) {
       normal.x = -normal.x;
       normal.y = -normal.y;
@@ -3407,39 +3416,38 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     }
     return outward.x > 0.0 ? TextCommand::Align::Start : TextCommand::Align::End;
   };
-  const Point2d x_outward = outward_normal(x_start, x_end);
-  const Point2d y_outward = outward_normal(y_start, y_end);
+  const Point2d x_outward = outward_normal(frame.x_start, frame.x_end);
+  const Point2d y_outward = outward_normal(frame.y_start, frame.y_end);
+  const Point2d z_outward = outward_normal(frame.z_start, frame.z_end);
 
-  add_path(list, {x_start, x_end}, FillStroke{primary, {}, true, false, 1.25}, false);
-  add_path(list, {y_start, y_end}, FillStroke{primary, {}, true, false, 1.25}, false);
-  add_path(list, {{z_start.x, z_start.y}, {z_start.x, z_end.y}}, FillStroke{primary, {}, true, false, 1.25}, false);
+  add_path(list, {frame.x_start, frame.x_end}, FillStroke{primary, {}, true, false, 1.25}, false);
+  add_path(list, {frame.y_start, frame.y_end}, FillStroke{primary, {}, true, false, 1.25}, false);
+  add_path(list, {frame.z_start, frame.z_end}, FillStroke{primary, {}, true, false, 1.25}, false);
 
   for (const auto& [value, label] : x_ticks) {
-    const Point2d p = map_projected_point({value, front_y, bottom_z}, pane, bounds, layout.plot);
+    const Point2d p = map_projected_point({value, frame.front_y, frame.bottom_z}, pane, bounds, layout.plot);
     const Point2d tick_end{p.x + x_outward.x * 5.5, p.y + x_outward.y * 5.5};
     const Point2d text_anchor{p.x + x_outward.x * 13.5, p.y + x_outward.y * 13.5};
     add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
     add_text(list, text_anchor, label, 9.0, pane.theme_tokens().foreground(), tick_text_align(x_outward));
   }
   for (const auto& [value, label] : y_ticks) {
-    const Point2d p = map_projected_point({front_x, value, bottom_z}, pane, bounds, layout.plot);
+    const Point2d p = map_projected_point({frame.front_x, value, frame.bottom_z}, pane, bounds, layout.plot);
     const Point2d tick_end{p.x + y_outward.x * 7.0, p.y + y_outward.y * 7.0};
     const Point2d text_anchor{p.x + y_outward.x * 17.0, p.y + y_outward.y * 17.0};
     add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
     add_text(list, text_anchor, label, 9.0, pane.theme_tokens().foreground(), tick_text_align(y_outward));
   }
   for (const auto& [value, label] : z_ticks) {
-    const Point2d p = map_projected_point({z_start3.x, z_start3.y, value}, pane, bounds, layout.plot);
-    const double axis_x = z_start.x;
-    const double y_top = std::min(z_start.y, z_end.y);
-    const double y_bottom = std::max(z_start.y, z_end.y);
-    const double y = std::clamp(p.y, y_top, y_bottom);
-    add_path(list, {{axis_x, y}, {axis_x - 5.0, y - 2.0}}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
-    add_text(list, {axis_x - 8.0, y + 2.0}, label, 9.0, pane.theme_tokens().foreground(), TextCommand::Align::End);
+    const Point2d p = map_projected_point({frame.z_start3.x, frame.z_start3.y, value}, pane, bounds, layout.plot);
+    const Point2d tick_end{p.x + z_outward.x * 6.0, p.y + z_outward.y * 6.0};
+    const Point2d text_anchor{p.x + z_outward.x * 13.0, p.y + z_outward.y * 13.0};
+    add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
+    add_text(list, text_anchor, label, 9.0, pane.theme_tokens().foreground(), tick_text_align(z_outward));
   }
 
   if (!pane.x_axis().label.empty()) {
-    const Point2d mid{0.5 * (x_start.x + x_end.x), 0.5 * (x_start.y + x_end.y)};
+    const Point2d mid{0.5 * (frame.x_start.x + frame.x_end.x), 0.5 * (frame.x_start.y + frame.x_end.y)};
     if (pane.parallel_xy_labels()) {
       add_text(list,
                {mid.x + x_outward.x * 44.0, mid.y + x_outward.y * 44.0},
@@ -3447,7 +3455,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
                11.0,
                pane.theme_tokens().foreground(),
                TextCommand::Align::Middle,
-               label_angle_deg(x_start, x_end));
+               label_angle_deg(frame.x_start, frame.x_end));
     } else {
       add_text(list,
                {mid.x, mid.y + 58.0},
@@ -3458,7 +3466,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     }
   }
   if (!pane.y_axis().label.empty()) {
-    const Point2d mid{0.5 * (y_start.x + y_end.x), 0.5 * (y_start.y + y_end.y)};
+    const Point2d mid{0.5 * (frame.y_start.x + frame.y_end.x), 0.5 * (frame.y_start.y + frame.y_end.y)};
     if (pane.parallel_xy_labels()) {
       add_text(list,
                {mid.x + y_outward.x * 44.0, mid.y + y_outward.y * 44.0},
@@ -3466,7 +3474,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
                11.0,
                pane.theme_tokens().foreground(),
                TextCommand::Align::Middle,
-               label_angle_deg(y_start, y_end));
+               label_angle_deg(frame.y_start, frame.y_end));
     } else {
       add_text(list,
                {mid.x - 24.0, mid.y + 58.0},
@@ -3477,13 +3485,14 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     }
   }
   if (!pane.z_axis().label.empty()) {
+    const Point2d mid{0.5 * (frame.z_start.x + frame.z_end.x), 0.5 * (frame.z_start.y + frame.z_end.y)};
     add_text(list,
-             {z_start.x - 28.0, 0.5 * (z_start.y + z_end.y)},
+             {mid.x + z_outward.x * 28.0, mid.y + z_outward.y * 28.0},
              pane.z_axis().label,
              11.0,
              pane.theme_tokens().foreground(),
              TextCommand::Align::Middle,
-             -90.0);
+             label_angle_deg(frame.z_start, frame.z_end));
   }
   if (!pane.caption_text().empty()) {
     add_text(list, {layout.outer.x + 10.0, layout.outer.y + layout.outer.height - 14.0},
