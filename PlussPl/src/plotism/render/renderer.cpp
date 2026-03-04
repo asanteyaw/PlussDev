@@ -3321,14 +3321,13 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
         },
         FillStroke{grid, {}, true, false, 0.65},
         false);
-    add_path(
-        list,
-        {
-            map_projected_point({value, frame.rear_y, frame.bottom_z}, pane, bounds, layout.plot),
-            map_projected_point({value, frame.rear_y, frame.top_z}, pane, bounds, layout.plot),
-        },
-        FillStroke{grid, {}, true, false, 0.55},
-        false);
+    Point2d wall_bottom = map_projected_point({value, frame.rear_y, frame.bottom_z}, pane, bounds, layout.plot);
+    Point2d wall_top = map_projected_point({value, frame.rear_y, frame.top_z}, pane, bounds, layout.plot);
+    wall_top.x = wall_bottom.x;
+    add_path(list,
+             {wall_bottom, wall_top},
+             FillStroke{grid, {}, true, false, 0.55},
+             false);
   }
   for (const double value : y_pos) {
     add_path(
@@ -3339,14 +3338,13 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
         },
         FillStroke{grid, {}, true, false, 0.65},
         false);
-    add_path(
-        list,
-        {
-            map_projected_point({frame.rear_x, value, frame.bottom_z}, pane, bounds, layout.plot),
-            map_projected_point({frame.rear_x, value, frame.top_z}, pane, bounds, layout.plot),
-        },
-        FillStroke{grid, {}, true, false, 0.55},
-        false);
+    Point2d wall_bottom = map_projected_point({frame.rear_x, value, frame.bottom_z}, pane, bounds, layout.plot);
+    Point2d wall_top = map_projected_point({frame.rear_x, value, frame.top_z}, pane, bounds, layout.plot);
+    wall_top.x = wall_bottom.x;
+    add_path(list,
+             {wall_bottom, wall_top},
+             FillStroke{grid, {}, true, false, 0.55},
+             false);
   }
   for (const double value : z_pos) {
     add_path(

@@ -210,7 +210,9 @@ set(PLUSS_SDK_CONSUMER_BUILD_DIR
 add_custom_target(pluss_sdk_stage
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${PLUSS_SDK_STAGING_DIR}"
     COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --prefix "${PLUSS_SDK_STAGING_DIR}"
-    DEPENDS pluss
+    DEPENDS
+        pluss
+        PlussPl
     USES_TERMINAL
     COMMENT "Staging pluss SDK at ${PLUSS_SDK_STAGING_DIR}"
 )
