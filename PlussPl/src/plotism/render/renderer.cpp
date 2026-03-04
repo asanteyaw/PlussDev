@@ -3432,6 +3432,33 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     }
     return fallback;
   };
+  const auto max_tick_label_chars = [](const auto& ticks) {
+    std::size_t max_chars = 1;
+    for (const auto& entry : ticks) {
+      max_chars = std::max(max_chars, entry.second.size());
+    }
+    return max_chars;
+  };
+  const auto estimated_text_extent = [](std::size_t chars, double font_size) {
+    return static_cast<double>(chars) * font_size * 0.56;
+  };
+  const double plot_scale = std::max(1.0, std::min(layout.plot.width, layout.plot.height));
+  const double tick_font_size = std::clamp(plot_scale * 0.014, 8.5, 10.0);
+  const double axis_font_size = std::clamp(plot_scale * 0.017, 10.5, 12.0);
+  const double tick_len_xy = std::clamp(plot_scale * 0.010, 4.5, 9.5);
+  const double tick_len_z = std::clamp(plot_scale * 0.009, 4.0, 8.5);
+  const double tick_to_text_gap = std::clamp(plot_scale * 0.012, 7.0, 16.0);
+  const std::size_t x_tick_chars = max_tick_label_chars(x_ticks);
+  const std::size_t y_tick_chars = max_tick_label_chars(y_ticks);
+  const std::size_t z_tick_chars = max_tick_label_chars(z_ticks);
+  const double x_tick_extent = estimated_text_extent(x_tick_chars, tick_font_size);
+  const double y_tick_extent = estimated_text_extent(y_tick_chars, tick_font_size);
+  const double z_tick_extent = estimated_text_extent(z_tick_chars, tick_font_size);
+  const double axis_label_base_gap = std::clamp(plot_scale * 0.038, 22.0, 56.0);
+  const double x_label_gap = axis_label_base_gap + std::clamp(x_tick_extent * 0.42, 9.0, 34.0);
+  const double y_label_gap = axis_label_base_gap + std::clamp(y_tick_extent * 0.42, 9.0, 34.0);
+  const double z_label_gap = axis_label_base_gap + std::clamp(z_tick_extent * 0.42, 8.0, 30.0);
+
   const Point2d x_outward = outward_normal(frame.x_start, frame.x_end);
   const Point2d y_outward = outward_normal(frame.y_start, frame.y_end);
   const Point2d z_axis_start{frame.z_start.x, frame.z_start.y};
@@ -3445,20 +3472,28 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
   for (const auto& [value, label] : x_ticks) {
     const Point2d p = map_projected_point({value, frame.front_y, frame.bottom_z}, pane, bounds, layout.plot);
     const Point2d rear = map_projected_point({value, frame.rear_y, frame.bottom_z}, pane, bounds, layout.plot);
-    const Point2d tick_dir = unit_direction(p, rear, x_outward);
-    const Point2d tick_end{p.x + tick_dir.x * 5.5, p.y + tick_dir.y * 5.5};
-    const Point2d text_anchor{p.x + x_outward.x * 13.5, p.y + x_outward.y * 13.5};
+    const Point2d toward_interior = unit_direction(p, rear, x_outward);
+    const Point2d tick_dir{-toward_interior.x, -toward_interior.y};
+    const Point2d tick_end{p.x + tick_dir.x * tick_len_xy, p.y + tick_dir.y * tick_len_xy};
+    const Point2d text_anchor{
+        p.x + tick_dir.x * (tick_len_xy + tick_to_text_gap),
+        p.y + tick_dir.y * (tick_len_xy + tick_to_text_gap),
+    };
     add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
-    add_text(list, text_anchor, label, 9.0, pane.theme_tokens().foreground(), tick_text_align(x_outward));
+    add_text(list, text_anchor, label, tick_font_size, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
   }
   for (const auto& [value, label] : y_ticks) {
     const Point2d p = map_projected_point({frame.front_x, value, frame.bottom_z}, pane, bounds, layout.plot);
     const Point2d rear = map_projected_point({frame.rear_x, value, frame.bottom_z}, pane, bounds, layout.plot);
-    const Point2d tick_dir = unit_direction(p, rear, y_outward);
-    const Point2d tick_end{p.x + tick_dir.x * 7.0, p.y + tick_dir.y * 7.0};
-    const Point2d text_anchor{p.x + y_outward.x * 17.0, p.y + y_outward.y * 17.0};
+    const Point2d toward_interior = unit_direction(p, rear, y_outward);
+    const Point2d tick_dir{-toward_interior.x, -toward_interior.y};
+    const Point2d tick_end{p.x + tick_dir.x * tick_len_xy, p.y + tick_dir.y * tick_len_xy};
+    const Point2d text_anchor{
+        p.x + tick_dir.x * (tick_len_xy + tick_to_text_gap),
+        p.y + tick_dir.y * (tick_len_xy + tick_to_text_gap),
+    };
     add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
-    add_text(list, text_anchor, label, 9.0, pane.theme_tokens().foreground(), tick_text_align(y_outward));
+    add_text(list, text_anchor, label, tick_font_size, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
   }
   const Point3d center3d{
       0.5 * (bounds.min_x + bounds.max_x),
@@ -3471,19 +3506,22 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     const Point2d inside = map_projected_point({center3d.x, center3d.y, value}, pane, bounds, layout.plot);
     const Point2d toward_inside = unit_direction(p, inside, z_outward);
     const Point2d tick_dir{-toward_inside.x, -toward_inside.y};
-    const Point2d tick_end{p.x + tick_dir.x * 6.0, p.y + tick_dir.y * 6.0};
-    const Point2d text_anchor{p.x + tick_dir.x * 13.0, p.y + tick_dir.y * 13.0};
+    const Point2d tick_end{p.x + tick_dir.x * tick_len_z, p.y + tick_dir.y * tick_len_z};
+    const Point2d text_anchor{
+        p.x + tick_dir.x * (tick_len_z + tick_to_text_gap),
+        p.y + tick_dir.y * (tick_len_z + tick_to_text_gap),
+    };
     add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
-    add_text(list, text_anchor, label, 9.0, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
+    add_text(list, text_anchor, label, tick_font_size, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
   }
 
   if (!pane.x_axis().label.empty()) {
     const Point2d mid{0.5 * (frame.x_start.x + frame.x_end.x), 0.5 * (frame.x_start.y + frame.x_end.y)};
     if (pane.parallel_xy_labels()) {
       add_text(list,
-               {mid.x + x_outward.x * 44.0, mid.y + x_outward.y * 44.0},
+               {mid.x + x_outward.x * x_label_gap, mid.y + x_outward.y * x_label_gap},
                pane.x_axis().label,
-               11.0,
+               axis_font_size,
                pane.theme_tokens().foreground(),
                TextCommand::Align::Middle,
                label_angle_deg(frame.x_start, frame.x_end));
@@ -3491,7 +3529,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
       add_text(list,
                {mid.x, mid.y + 58.0},
                pane.x_axis().label,
-               11.0,
+               axis_font_size,
                pane.theme_tokens().foreground(),
                TextCommand::Align::Middle);
     }
@@ -3500,9 +3538,9 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     const Point2d mid{0.5 * (frame.y_start.x + frame.y_end.x), 0.5 * (frame.y_start.y + frame.y_end.y)};
     if (pane.parallel_xy_labels()) {
       add_text(list,
-               {mid.x + y_outward.x * 44.0, mid.y + y_outward.y * 44.0},
+               {mid.x + y_outward.x * y_label_gap, mid.y + y_outward.y * y_label_gap},
                pane.y_axis().label,
-               11.0,
+               axis_font_size,
                pane.theme_tokens().foreground(),
                TextCommand::Align::Middle,
                label_angle_deg(frame.y_start, frame.y_end));
@@ -3510,7 +3548,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
       add_text(list,
                {mid.x - 24.0, mid.y + 58.0},
                pane.y_axis().label,
-               11.0,
+               axis_font_size,
                pane.theme_tokens().foreground(),
                TextCommand::Align::End);
     }
@@ -3518,9 +3556,9 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
   if (!pane.z_axis().label.empty()) {
     const Point2d mid{0.5 * (z_axis_start.x + z_axis_end.x), 0.5 * (z_axis_start.y + z_axis_end.y)};
     add_text(list,
-             {mid.x + z_outward.x * 28.0, mid.y + z_outward.y * 28.0},
+             {mid.x + z_outward.x * z_label_gap, mid.y + z_outward.y * z_label_gap},
              pane.z_axis().label,
-             11.0,
+             axis_font_size,
              pane.theme_tokens().foreground(),
              TextCommand::Align::Middle,
              label_angle_deg(z_axis_start, z_axis_end));
