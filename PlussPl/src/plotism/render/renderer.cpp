@@ -3464,16 +3464,46 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
   const Point2d z_axis_start{frame.z_start.x, frame.z_start.y};
   const Point2d z_axis_end{frame.z_start.x, frame.z_end.y};
   const Point2d z_outward = outward_normal(z_axis_start, z_axis_end);
+  const auto distance_sq = [](Point2d a, Point2d b) {
+    const double dx = a.x - b.x;
+    const double dy = a.y - b.y;
+    return dx * dx + dy * dy;
+  };
+  struct EndpointPair {
+    bool x_start{false};
+    bool y_start{false};
+    double dist_sq{0.0};
+  };
+  EndpointPair shared_pair{true, true, distance_sq(frame.x_start, frame.y_start)};
+  for (const EndpointPair candidate : {
+           EndpointPair{true, false, distance_sq(frame.x_start, frame.y_end)},
+           EndpointPair{false, true, distance_sq(frame.x_end, frame.y_start)},
+           EndpointPair{false, false, distance_sq(frame.x_end, frame.y_end)},
+       }) {
+    if (candidate.dist_sq < shared_pair.dist_sq) {
+      shared_pair = candidate;
+    }
+  }
+  const Point2d xy_corner = shared_pair.x_start ? frame.x_start : frame.x_end;
+  const Point2d x_opposite_corner = shared_pair.x_start ? frame.x_end : frame.x_start;
+  const Point2d y_opposite_corner = shared_pair.y_start ? frame.y_end : frame.y_start;
+  const Point2d x_extension_at_xy = unit_direction(x_opposite_corner, xy_corner, x_outward);
+  const Point2d y_extension_at_xy = unit_direction(y_opposite_corner, xy_corner, y_outward);
+  const Point2d z_parallel_tick_dir = unit_direction(xy_corner, x_opposite_corner, x_extension_at_xy);
 
   add_path(list, {frame.x_start, frame.x_end}, FillStroke{primary, {}, true, false, 1.25}, false);
   add_path(list, {frame.y_start, frame.y_end}, FillStroke{primary, {}, true, false, 1.25}, false);
   add_path(list, {z_axis_start, z_axis_end}, FillStroke{primary, {}, true, false, 1.25}, false);
 
-  for (const auto& [value, label] : x_ticks) {
+  for (std::size_t i = 0; i < x_ticks.size(); ++i) {
+    const auto& [value, label] = x_ticks[i];
     const Point2d p = map_projected_point({value, frame.front_y, frame.bottom_z}, pane, bounds, layout.plot);
     const Point2d rear = map_projected_point({value, frame.rear_y, frame.bottom_z}, pane, bounds, layout.plot);
     const Point2d toward_interior = unit_direction(p, rear, x_outward);
-    const Point2d tick_dir{-toward_interior.x, -toward_interior.y};
+    Point2d tick_dir{-toward_interior.x, -toward_interior.y};
+    if (!x_ticks.empty() && i + 1 == x_ticks.size()) {
+      tick_dir = y_extension_at_xy;
+    }
     const Point2d tick_end{p.x + tick_dir.x * tick_len_xy, p.y + tick_dir.y * tick_len_xy};
     const Point2d text_anchor{
         p.x + tick_dir.x * (tick_len_xy + tick_to_text_gap),
@@ -3482,11 +3512,15 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
     add_text(list, text_anchor, label, tick_font_size, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
   }
-  for (const auto& [value, label] : y_ticks) {
+  for (std::size_t i = 0; i < y_ticks.size(); ++i) {
+    const auto& [value, label] = y_ticks[i];
     const Point2d p = map_projected_point({frame.front_x, value, frame.bottom_z}, pane, bounds, layout.plot);
     const Point2d rear = map_projected_point({frame.rear_x, value, frame.bottom_z}, pane, bounds, layout.plot);
     const Point2d toward_interior = unit_direction(p, rear, y_outward);
-    const Point2d tick_dir{-toward_interior.x, -toward_interior.y};
+    Point2d tick_dir{-toward_interior.x, -toward_interior.y};
+    if (!y_ticks.empty() && i == 0) {
+      tick_dir = x_extension_at_xy;
+    }
     const Point2d tick_end{p.x + tick_dir.x * tick_len_xy, p.y + tick_dir.y * tick_len_xy};
     const Point2d text_anchor{
         p.x + tick_dir.x * (tick_len_xy + tick_to_text_gap),
@@ -3495,17 +3529,11 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
     add_text(list, text_anchor, label, tick_font_size, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
   }
-  const Point3d center3d{
-      0.5 * (bounds.min_x + bounds.max_x),
-      0.5 * (bounds.min_y + bounds.max_y),
-      0.5 * (bounds.min_z + bounds.max_z),
-  };
-  for (const auto& [value, label] : z_ticks) {
+  for (std::size_t i = 0; i < z_ticks.size(); ++i) {
+    const auto& [value, label] = z_ticks[i];
     Point2d p = map_projected_point({frame.z_start3.x, frame.z_start3.y, value}, pane, bounds, layout.plot);
     p.x = z_axis_start.x;
-    const Point2d inside = map_projected_point({center3d.x, center3d.y, value}, pane, bounds, layout.plot);
-    const Point2d toward_inside = unit_direction(p, inside, z_outward);
-    const Point2d tick_dir{-toward_inside.x, -toward_inside.y};
+    const Point2d tick_dir = z_parallel_tick_dir;
     const Point2d tick_end{p.x + tick_dir.x * tick_len_z, p.y + tick_dir.y * tick_len_z};
     const Point2d text_anchor{
         p.x + tick_dir.x * (tick_len_z + tick_to_text_gap),
