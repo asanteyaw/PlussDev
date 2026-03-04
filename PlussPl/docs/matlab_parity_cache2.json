@@ -1,0 +1,85 @@
+{
+  "generated_on": "2026-03-03",
+  "reference_roots": [
+    "/Applications/MATLAB_R2023b.app/toolbox/matlab/graph2d",
+    "/Applications/MATLAB_R2023b.app/toolbox/matlab/graph3d",
+    "/Applications/MATLAB_R2023b.app/toolbox/matlab/specgraph"
+  ],
+  "scope_rule": "Callable plot-family parity only; axes utilities and editor tooling are excluded from the percentage.",
+  "coverage": {
+    "2d": {
+      "implemented": 15,
+      "audited": 15,
+      "percent": 100.0,
+      "visual_parity_percent": 79.0,
+      "families": {
+        "plot": "implemented",
+        "scatter": "implemented",
+        "bar": "implemented",
+        "histogram": "implemented",
+        "stairs": "implemented",
+        "area": "implemented",
+        "errorbar": "implemented",
+        "imagesc_heatmap": "implemented",
+        "boxplot": "implemented",
+        "violin": "implemented",
+        "stem": "implemented",
+        "semilogx": "implemented",
+        "semilogy": "implemented",
+        "loglog": "implemented",
+        "polar": "implemented"
+      },
+      "visual_notes": [
+        "Callable family coverage is complete on the audited set.",
+        "Polar plotting now uses a dedicated polar subplot renderer instead of cartesian guide traces.",
+        "Statistical plot defaults still need more ruler, label, and typography refinement to match MATLAB."
+      ]
+    },
+    "3d": {
+      "implemented": 11,
+      "audited": 11,
+      "percent": 100.0,
+      "visual_parity_percent": 70.0,
+      "families": {
+        "plot3": "implemented",
+        "scatter3": "implemented",
+        "surf": "implemented",
+        "mesh": "implemented",
+        "surfc": "implemented",
+        "meshc": "implemented",
+        "surfl": "implemented",
+        "waterfall": "implemented",
+        "meshz": "implemented",
+        "contour3": "implemented",
+        "fill3": "implemented"
+      },
+      "visual_notes": [
+        "Audited callable family coverage is complete.",
+        "The implied-volatility demo no longer uses the old 4D-style legend/colorbar/path composition.",
+        "Tick/ruler polish, label placement, and surface edge treatment are still materially behind MATLAB."
+      ]
+    }
+  },
+  "matlab_references_used": [
+    "graph2d/Contents.m",
+    "graph2d/semilogx.m",
+    "graph2d/semilogy.m",
+    "graph2d/loglog.m",
+    "graph3d/Contents.m",
+    "graph3d/viewmtx.m",
+    "graph3d/view.m",
+    "graph3d/daspect.m",
+    "graph3d/pbaspect.m",
+    "graph3d/surf.m",
+    "graph3d/mesh.m",
+    "graph3d/surfl.m",
+    "specgraph/stem.m",
+    "specgraph/polarplot.m",
+    "stats/stats/boxplot.m",
+    "specgraph/surfc.m",
+    "specgraph/meshc.m",
+    "specgraph/waterfall.m",
+    "specgraph/meshz.m",
+    "specgraph/contour3.m"
+  ]
+}

@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -28,6 +29,14 @@ std::string read_text(const std::string& path) {
   return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 }
 
+pluss::Config plot_series_cfg() {
+  return pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+}
+
+pluss::Series make_numeric_series(const std::vector<double>& values) {
+  return pluss::make_series(values, {static_cast<std::int64_t>(values.size())}, plot_series_cfg());
+}
+
 } // namespace
 
 int main() {
@@ -47,7 +56,7 @@ int main() {
     }
   }
 
-  auto fig4 = pluss::plotism::scatter4(x, y, z, w, "surface cloud")
+  auto fig4 = pluss::plotism::scatter4(make_numeric_series(x), make_numeric_series(y), make_numeric_series(z), make_numeric_series(w), "surface cloud")
                   .with_title("4d")
                   .x_label("strike")
                   .y_label("expiry")

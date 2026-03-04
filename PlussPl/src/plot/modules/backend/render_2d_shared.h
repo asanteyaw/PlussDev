@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+#include <cmath>
 #include <limits>
 #include <stdexcept>
 
@@ -12,6 +14,17 @@
 
 namespace pluss::plotism {
 namespace detail {
+
+inline std::vector<Point2D> polar_circle_points_2d(double cx, double cy, double radius, std::size_t samples = 96) {
+  constexpr double pi = 3.14159265358979323846;
+  std::vector<Point2D> points;
+  points.reserve(samples + 1);
+  for (std::size_t i = 0; i <= samples; ++i) {
+    const double angle = 2.0 * pi * static_cast<double>(i) / static_cast<double>(samples);
+    points.push_back({cx + radius * std::cos(angle), cy - radius * std::sin(angle)});
+  }
+  return points;
+}
 
 inline void render_2d_scene(RenderSurface2D& surface, const Figure2DView& fig, const RenderTarget& target) {
   if (target.width <= 100 || target.height <= 100) {
@@ -100,16 +113,160 @@ inline void render_2d_scene(RenderSurface2D& surface, const Figure2DView& fig, c
                      });
       }
       if (!sub.y_axis.label.empty()) {
-        surface.text(subplot_layout.y_label_x, cell.y + cell.height * 0.5, sub.y_axis.label,
-                     TextStyle2D{
-                         .color = subplot_theme.axis_label_color,
-                         .size = 12.0,
-                         .alpha = 1.0,
-                         .bold = false,
-                         .anchor = TextAnchor2D::Center,
-                         .orientation = TextOrientation2D::VerticalCcw,
-                         .font_family = subplot_theme.font_family,
-                     });
+        if (sub.polar_projection) {
+          surface.text(plot.x + 8.0, plot.y + 14.0, sub.y_axis.label,
+                       TextStyle2D{
+                           .color = subplot_theme.axis_label_color,
+                           .size = 11.0,
+                           .alpha = 1.0,
+                           .bold = false,
+                           .anchor = TextAnchor2D::Left,
+                           .orientation = TextOrientation2D::Horizontal,
+                           .font_family = subplot_theme.font_family,
+                       });
+        } else {
+          surface.text(subplot_layout.y_label_x, cell.y + cell.height * 0.5, sub.y_axis.label,
+                       TextStyle2D{
+                           .color = subplot_theme.axis_label_color,
+                           .size = 12.0,
+                           .alpha = 1.0,
+                           .bold = false,
+                           .anchor = TextAnchor2D::Center,
+                           .orientation = TextOrientation2D::VerticalCcw,
+                           .font_family = subplot_theme.font_family,
+                       });
+        }
+      }
+
+      if (sub.polar_projection) {
+        double rmax = 0.0;
+        for (const auto& t : sub.traces) {
+          for (double radius_value : t.y) {
+            if (std::isfinite(radius_value)) {
+              rmax = std::max(rmax, radius_value);
+            }
+          }
+        }
+        if (sub.y_axis.max.has_value()) {
+          rmax = std::max(rmax, *sub.y_axis.max);
+        }
+        if (!(rmax > 0.0) || !std::isfinite(rmax)) {
+          rmax = 1.0;
+        }
+        const double rmin = sub.y_axis.min.has_value() ? std::max(0.0, *sub.y_axis.min) : 0.0;
+        const double center_x = left + plot_w * 0.5;
+        const double center_y = top + plot_h * 0.5;
+        const double outer_radius = 0.44 * std::min(plot_w, plot_h);
+        const auto radial_ticks = resolve_ticks_2d(sub.y_axis, rmin, rmax);
+        const std::array<double, 8> spoke_angles{
+            0.0,
+            0.25 * 3.14159265358979323846,
+            0.5 * 3.14159265358979323846,
+            0.75 * 3.14159265358979323846,
+            1.0 * 3.14159265358979323846,
+            1.25 * 3.14159265358979323846,
+            1.5 * 3.14159265358979323846,
+            1.75 * 3.14159265358979323846,
+        };
+        const std::array<const char*, 8> spoke_labels{"0", "45", "90", "135", "180", "225", "270", "315"};
+
+        for (const auto& tick : radial_ticks) {
+          if (!(tick.position > rmin + 1e-12) || !(rmax > rmin)) {
+            continue;
+          }
+          const double rr = outer_radius * (tick.position - rmin) / (rmax - rmin);
+          surface.stroke_polyline(polar_circle_points_2d(center_x, center_y, rr),
+                                  StrokeStyle2D{
+                                      .color = subplot_theme.grid_color,
+                                      .line_width = rr >= outer_radius - 1.0 ? 1.0 : 0.8,
+                                      .alpha = rr >= outer_radius - 1.0 ? 0.9 : 0.75,
+                                      .line_style = "solid",
+                                  });
+          surface.text(center_x + rr + 6.0,
+                       center_y - 4.0,
+                       tick.label,
+                       TextStyle2D{
+                           .color = subplot_theme.tick_label_color,
+                           .size = 9.0,
+                           .alpha = 1.0,
+                           .bold = false,
+                           .anchor = TextAnchor2D::Left,
+                           .orientation = TextOrientation2D::Horizontal,
+                           .font_family = subplot_theme.font_family,
+                       });
+        }
+
+        for (std::size_t i = 0; i < spoke_angles.size(); ++i) {
+          const double angle = spoke_angles[i];
+          const double ex = center_x + outer_radius * std::cos(angle);
+          const double ey = center_y - outer_radius * std::sin(angle);
+          surface.stroke_line(center_x, center_y, ex, ey,
+                              StrokeStyle2D{
+                                  .color = subplot_theme.grid_color,
+                                  .line_width = 0.8,
+                                  .alpha = 0.75,
+                                  .line_style = "solid",
+                              });
+          const double label_radius = outer_radius + 13.0;
+          surface.text(center_x + label_radius * std::cos(angle),
+                       center_y - label_radius * std::sin(angle) + 3.0,
+                       spoke_labels[i],
+                       TextStyle2D{
+                           .color = subplot_theme.tick_label_color,
+                           .size = 9.0,
+                           .alpha = 1.0,
+                           .bold = false,
+                           .anchor = TextAnchor2D::Center,
+                           .orientation = TextOrientation2D::Horizontal,
+                           .font_family = subplot_theme.font_family,
+                       });
+        }
+
+        surface.fill_rect(center_x - 1.5, center_y - 1.5, 3.0, 3.0, FillStyle2D{.color = subplot_theme.axis_color, .alpha = 1.0}, 1.5);
+
+        for (std::size_t ti = 0; ti < sub.traces.size(); ++ti) {
+          Trace2D styled_trace = sub.traces[ti];
+          detail::apply_trace_style_defaults(styled_trace, subplot_theme, ti);
+          const auto style = resolve_artist_style_2d(styled_trace, styled_trace.style.color);
+          std::vector<Point2D> points;
+          const std::size_t n = std::min(styled_trace.x.size(), styled_trace.y.size());
+          points.reserve(n);
+          for (std::size_t i = 0; i < n; ++i) {
+            const double theta = styled_trace.x[i];
+            const double radius_value = styled_trace.y[i];
+            if (!std::isfinite(theta) || !std::isfinite(radius_value) || radius_value < rmin) {
+              continue;
+            }
+            const double rr = outer_radius * std::clamp((radius_value - rmin) / std::max(1e-12, rmax - rmin), 0.0, 1.0);
+            points.push_back({center_x + rr * std::cos(theta), center_y - rr * std::sin(theta)});
+          }
+          if (styled_trace.kind == Trace2DKind::Line || styled_trace.kind == Trace2DKind::Step) {
+            surface.stroke_polyline(points,
+                                    StrokeStyle2D{
+                                        .color = style.color,
+                                        .line_width = std::max(1.2, style.line_width),
+                                        .alpha = style.alpha,
+                                        .line_style = style.line_style,
+                                    });
+          }
+          if (styled_trace.kind == Trace2DKind::Scatter || styled_trace.kind == Trace2DKind::Line ||
+              styled_trace.kind == Trace2DKind::Step) {
+            const std::string marker =
+                detail::canonical_marker_name(style.marker, styled_trace.kind == Trace2DKind::Scatter);
+            if (marker != "none") {
+              for (const auto& point : points) {
+                detail::draw_marker(surface,
+                                    point.x,
+                                    point.y,
+                                    marker,
+                                    effective_marker_size_2d(style, 3.0),
+                                    style.color,
+                                    style.alpha);
+              }
+            }
+          }
+        }
+        continue;
       }
 
       double xmin = std::numeric_limits<double>::infinity();

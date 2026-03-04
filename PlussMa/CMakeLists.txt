@@ -4,11 +4,12 @@ project(PlussTiq LANGUAGES CXX)
 add_library(PlussTiq INTERFACE)
 
 target_include_directories(PlussTiq INTERFACE
-	${PROJECT_SOURCE_DIR}/../include
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../include>
 )
 
 target_include_directories(pluss PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}/include
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/PlussMa/include>
 )
 
 add_subdirectory(Eng)

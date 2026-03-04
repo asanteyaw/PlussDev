@@ -24,6 +24,7 @@ struct RenderTarget {
   std::string_view path{};
   std::int32_t width{1200};
   std::int32_t height{800};
+  double dpi{144.0};
   OutputFormat format{OutputFormat::Svg};
 };
 

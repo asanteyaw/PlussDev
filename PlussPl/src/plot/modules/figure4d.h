@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "plot/modules/encoding_4d.h"
+#include "plot/modules/detail/series_helpers.h"
 #include "plot/modules/figure3d.h"
 #include "plot/modules/view4d.h"
 
@@ -110,50 +111,52 @@ public:
     return *this;
   }
 
+  [[deprecated("Use Figure4D::add_scatter4 with pluss::Series inputs.")]]
   Figure4D& add_scatter4(const std::vector<double>& x,
                          const std::vector<double>& y,
                          const std::vector<double>& z,
                          const std::vector<double>& w,
                          std::string name = "",
                          std::optional<Style> style = std::nullopt) {
-    detail::ensure_same_size(x, y, "Figure4D::add_scatter4");
-    detail::ensure_same_size(x, z, "Figure4D::add_scatter4");
-    detail::ensure_same_size(x, w, "Figure4D::add_scatter4");
-    Trace4D trace{
-        .kind = Trace4DKind::Scatter4,
-        .name = std::move(name),
-        .x = x,
-        .y = y,
-        .z = z,
-        .w = w,
-        .style = style.value_or(style_),
-    };
-    if (trace.style.marker == "none") {
-      trace.style.marker = "circle";
-    }
-    traces_.push_back(std::move(trace));
-    return *this;
+    return add_scatter4_values_(x, y, z, w, std::move(name), style);
   }
 
+  Figure4D& add_scatter4(const pluss::Series& x,
+                         const pluss::Series& y,
+                         const pluss::Series& z,
+                         const pluss::Series& w,
+                         std::string name = "",
+                         std::optional<Style> style = std::nullopt) {
+    return add_scatter4_values_(detail::to_plot_vector(x, "Figure4D::add_scatter4"),
+                                detail::to_plot_vector(y, "Figure4D::add_scatter4"),
+                                detail::to_plot_vector(z, "Figure4D::add_scatter4"),
+                                detail::to_plot_vector(w, "Figure4D::add_scatter4"),
+                                std::move(name),
+                                style);
+  }
+
+  [[deprecated("Use Figure4D::add_line4 with pluss::Series inputs.")]]
   Figure4D& add_line4(const std::vector<double>& x,
                       const std::vector<double>& y,
                       const std::vector<double>& z,
                       const std::vector<double>& w,
                       std::string name = "",
                       std::optional<Style> style = std::nullopt) {
-    detail::ensure_same_size(x, y, "Figure4D::add_line4");
-    detail::ensure_same_size(x, z, "Figure4D::add_line4");
-    detail::ensure_same_size(x, w, "Figure4D::add_line4");
-    traces_.push_back(Trace4D{
-        .kind = Trace4DKind::Line4,
-        .name = std::move(name),
-        .x = x,
-        .y = y,
-        .z = z,
-        .w = w,
-        .style = style.value_or(style_),
-    });
-    return *this;
+    return add_line4_values_(x, y, z, w, std::move(name), style);
+  }
+
+  Figure4D& add_line4(const pluss::Series& x,
+                      const pluss::Series& y,
+                      const pluss::Series& z,
+                      const pluss::Series& w,
+                      std::string name = "",
+                      std::optional<Style> style = std::nullopt) {
+    return add_line4_values_(detail::to_plot_vector(x, "Figure4D::add_line4"),
+                             detail::to_plot_vector(y, "Figure4D::add_line4"),
+                             detail::to_plot_vector(z, "Figure4D::add_line4"),
+                             detail::to_plot_vector(w, "Figure4D::add_line4"),
+                             std::move(name),
+                             style);
   }
 
   Figure3D realize_color_figure() const {
@@ -167,9 +170,9 @@ public:
 
     for (auto trace3 : detail::encode_color_4d(traces_, encoding_)) {
       if (trace3.kind == Trace3DKind::Line3) {
-        fig.add_line3(trace3.x, trace3.y, trace3.z, trace3.name, trace3.style);
+        fig.add_line3(series_from_values_(trace3.x), series_from_values_(trace3.y), series_from_values_(trace3.z), trace3.name, trace3.style);
       } else {
-        fig.add_scatter3(trace3.x, trace3.y, trace3.z, trace3.name, trace3.style);
+        fig.add_scatter3(series_from_values_(trace3.x), series_from_values_(trace3.y), series_from_values_(trace3.z), trace3.name, trace3.style);
       }
     }
     return fig;
@@ -185,9 +188,9 @@ public:
 
     for (auto trace3 : detail::encode_size_4d(traces_, encoding_)) {
       if (trace3.kind == Trace3DKind::Line3) {
-        fig.add_line3(trace3.x, trace3.y, trace3.z, trace3.name, trace3.style);
+        fig.add_line3(series_from_values_(trace3.x), series_from_values_(trace3.y), series_from_values_(trace3.z), trace3.name, trace3.style);
       } else {
-        fig.add_scatter3(trace3.x, trace3.y, trace3.z, trace3.name, trace3.style);
+        fig.add_scatter3(series_from_values_(trace3.x), series_from_values_(trace3.y), series_from_values_(trace3.z), trace3.name, trace3.style);
       }
     }
     return fig;
@@ -235,6 +238,58 @@ public:
   }
 
 private:
+  Figure4D& add_scatter4_values_(const std::vector<double>& x,
+                                 const std::vector<double>& y,
+                                 const std::vector<double>& z,
+                                 const std::vector<double>& w,
+                                 std::string name,
+                                 std::optional<Style> style) {
+    detail::ensure_same_size(x, y, "Figure4D::add_scatter4");
+    detail::ensure_same_size(x, z, "Figure4D::add_scatter4");
+    detail::ensure_same_size(x, w, "Figure4D::add_scatter4");
+    Trace4D trace{
+        .kind = Trace4DKind::Scatter4,
+        .name = std::move(name),
+        .x = x,
+        .y = y,
+        .z = z,
+        .w = w,
+        .style = style.value_or(style_),
+    };
+    if (trace.style.marker == "none") {
+      trace.style.marker = "circle";
+    }
+    traces_.push_back(std::move(trace));
+    return *this;
+  }
+
+  Figure4D& add_line4_values_(const std::vector<double>& x,
+                              const std::vector<double>& y,
+                              const std::vector<double>& z,
+                              const std::vector<double>& w,
+                              std::string name,
+                              std::optional<Style> style) {
+    detail::ensure_same_size(x, y, "Figure4D::add_line4");
+    detail::ensure_same_size(x, z, "Figure4D::add_line4");
+    detail::ensure_same_size(x, w, "Figure4D::add_line4");
+    traces_.push_back(Trace4D{
+        .kind = Trace4DKind::Line4,
+        .name = std::move(name),
+        .x = x,
+        .y = y,
+        .z = z,
+        .w = w,
+        .style = style.value_or(style_),
+    });
+    return *this;
+  }
+
+  static pluss::Series series_from_values_(const std::vector<double>& values) {
+    return pluss::make_series(values,
+                              {static_cast<std::int64_t>(values.size())},
+                              pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU));
+  }
+
   std::vector<Figure3D> realize_binned_figures_() const {
     std::vector<Figure3D> figures;
     for (auto panel : make_binned_panels_()) {
@@ -315,9 +370,9 @@ private:
       fig.view(camera_.azimuth_deg, camera_.elevation_deg).camera_distance(camera_.distance).projection(camera_.projection);
       for (const auto& trace : traces) {
         if (trace.kind == Trace3DKind::Line3) {
-          fig.add_line3(trace.x, trace.y, trace.z, trace.name, trace.style);
+          fig.add_line3(series_from_values_(trace.x), series_from_values_(trace.y), series_from_values_(trace.z), trace.name, trace.style);
         } else {
-          fig.add_scatter3(trace.x, trace.y, trace.z, trace.name, trace.style);
+          fig.add_scatter3(series_from_values_(trace.x), series_from_values_(trace.y), series_from_values_(trace.z), trace.name, trace.style);
         }
       }
       panels.push_back(View4DPanel{

@@ -1,11 +1,37 @@
+#include <algorithm>
+#include <cstdint>
 #include <cmath>
 #include <cstddef>
 #include <filesystem>
 #include <iostream>
 #include <vector>
 
+#include "matlab_surface_preset.h"
 #include "../output_paths.h"
 #include "pluss/plot/plot.h"
+
+namespace {
+
+pluss::Config plot_series_cfg() {
+  return pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+}
+
+pluss::Series make_numeric_series(const std::vector<double>& values) {
+  return pluss::make_series(values, {static_cast<std::int64_t>(values.size())}, plot_series_cfg());
+}
+
+pluss::Series make_grid_series(const std::vector<std::vector<double>>& rows) {
+  const std::int64_t row_count = static_cast<std::int64_t>(rows.size());
+  const std::int64_t col_count = row_count == 0 ? 0 : static_cast<std::int64_t>(rows.front().size());
+  std::vector<double> flat;
+  flat.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, row_count * col_count)));
+  for (const auto& row : rows) {
+    flat.insert(flat.end(), row.begin(), row.end());
+  }
+  return pluss::make_series(flat, {row_count, col_count}, plot_series_cfg());
+}
+
+} // namespace
 
 int main() {
   std::vector<double> strike;
@@ -29,44 +55,34 @@ int main() {
     }
   }
 
-  std::vector<double> sim_x;
-  std::vector<double> sim_y;
-  std::vector<double> sim_z;
-  sim_x.reserve(maturity.size());
-  sim_y.reserve(maturity.size());
-  sim_z.reserve(maturity.size());
-  for (std::size_t i = 0; i < maturity.size(); ++i) {
-    const double t = maturity[i];
-    const double k = 88.0 + static_cast<double>(i) * 2.5;
-    const double moneyness = (k - 100.0) / 30.0;
-    sim_x.push_back(k);
-    sim_y.push_back(t);
-    sim_z.push_back(0.15 + 0.11 * moneyness * moneyness + 0.035 * std::sqrt(t) + 0.01 * std::sin(2.3 * t + 0.7 * moneyness));
+  double zmin = iv_surface.front().front();
+  double zmax = iv_surface.front().front();
+  for (const auto& row : iv_surface) {
+    for (double value : row) {
+      zmin = std::min(zmin, value);
+      zmax = std::max(zmax, value);
+    }
   }
+  const double strike_span = strike.back() - strike.front();
+  const double maturity_span = maturity.back() - maturity.front();
+  const double vol_span = zmax - zmin;
+  const auto strike_series = make_numeric_series(strike);
+  const auto maturity_series = make_numeric_series(maturity);
+  const auto surface_series = make_grid_series(iv_surface);
 
-  pluss::plotism::Style path_style;
-  path_style.line_style = "dashed";
-  path_style.marker = "circle";
-  path_style.line_width = 2.0;
-  path_style.color = "#0f172a";
-
-  pluss::plotism::Figure3D fig;
-  fig.with_title("PlussPl 3D Interactive Show Demo")
-      .add_surface(strike, maturity, iv_surface, "IV surface")
-      .surface_contours(true, 2)
-      .add_line3(sim_x, sim_y, sim_z, "simulation path", path_style);
-  fig.theme("slate").font_family("IBM Plex Sans");
-  fig.view(128.0, 26.0).camera_distance(3.7).projection(pluss::plotism::ProjectionMode::Perspective);
-  fig.x_label("strike").y_label("expiry").z_label("implied vol");
-  fig.legend(pluss::plotism::Legend{true, pluss::plotism::LegendLocation::OutsideRight, "3D traces"});
-  fig.colorbar(pluss::plotism::Colorbar{true, pluss::plotism::ColorbarLocation::Right, "implied vol"});
+  auto fig = pluss::plotism::surf(strike_series, maturity_series, surface_series, "IV surface")
+                 .with_title("PlussPl Implied Volatility Surface");
+  plusspl::examples::apply_matlab_surface_preset(fig, strike_span, maturity_span, vol_span);
+  fig.x_label("strike").y_label("maturity").z_label("implied volatility");
+  fig.legend(pluss::plotism::Legend{false, pluss::plotism::LegendLocation::TopRight, ""});
 
   const auto svg = plusspl::examples::output_path(__FILE__, "plusspl_interactive_3d.svg");
   const auto png = plusspl::examples::output_path(__FILE__, "plusspl_interactive_3d.png");
   const auto pdf = plusspl::examples::output_path(__FILE__, "plusspl_interactive_3d.pdf");
-  fig.save_svg(svg, 1200, 900);
-  fig.save_png(png, 1200, 900);
-  fig.save_pdf(pdf, 1200, 900);
+  constexpr double export_dpi = 180.0;
+  fig.save_svg(svg, 1200, 900, export_dpi);
+  fig.save_png(png, 1200, 900, export_dpi);
+  fig.save_pdf(pdf, 1200, 900, export_dpi);
 
   const bool opened = fig.show_window(false);
   std::cout << "show_window() opened viewer: " << (opened ? "true" : "false") << "\n";

@@ -116,7 +116,7 @@ public:
                    std::int32_t width = 1400,
                    std::int32_t height = 960) const {
     const std::string path = detail::make_temp_plot_path("plusspl_4d", detail::output_extension(format));
-    save_(path, width, height, format);
+    save_(path, width, height, 144.0, format);
     return detail::open_plot_viewer(title_, path, block, width, height);
   }
 
@@ -126,31 +126,45 @@ public:
     return show_window(true, format, width, height);
   }
 
-  void save_svg(std::string_view filepath, std::int32_t width = 1400, std::int32_t height = 960) const {
-    save_(filepath, width, height, OutputFormat::Svg);
+  void save_svg(std::string_view filepath,
+                std::int32_t width = 1400,
+                std::int32_t height = 960,
+                double dpi = 144.0) const {
+    save_(filepath, width, height, dpi, OutputFormat::Svg);
   }
 
-  void save_png(std::string_view filepath, std::int32_t width = 1400, std::int32_t height = 960) const {
-    save_(filepath, width, height, OutputFormat::Png);
+  void save_png(std::string_view filepath,
+                std::int32_t width = 1400,
+                std::int32_t height = 960,
+                double dpi = 144.0) const {
+    save_(filepath, width, height, dpi, OutputFormat::Png);
   }
 
-  void save_pdf(std::string_view filepath, std::int32_t width = 1400, std::int32_t height = 960) const {
-    save_(filepath, width, height, OutputFormat::Pdf);
+  void save_pdf(std::string_view filepath,
+                std::int32_t width = 1400,
+                std::int32_t height = 960,
+                double dpi = 144.0) const {
+    save_(filepath, width, height, dpi, OutputFormat::Pdf);
   }
 
 private:
-  void save_(std::string_view filepath, std::int32_t width, std::int32_t height, OutputFormat format) const {
-    const RenderTarget target{.path = filepath, .width = width, .height = height, .format = format};
+  void save_(std::string_view filepath, std::int32_t width, std::int32_t height, double dpi, OutputFormat format) const {
+    const RenderTarget target{.path = filepath, .width = width, .height = height, .dpi = dpi, .format = format};
     switch (format) {
       case OutputFormat::Svg: {
         detail::SvgRenderSurface2D surface;
         detail::render_4d_view(surface, *this, target);
         std::string svg;
         svg.reserve(2048);
+        const double physical_width = static_cast<double>(width) / std::max(1.0, dpi);
+        const double physical_height = static_cast<double>(height) / std::max(1.0, dpi);
         svg += "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"";
-        svg += std::to_string(width);
-        svg += "\" height=\"";
-        svg += std::to_string(height);
+        svg += detail::format_double(physical_width, 6);
+        svg += "in\" height=\"";
+        svg += detail::format_double(physical_height, 6);
+        svg += "in\"";
+        svg += " data-plusspl-dpi=\"";
+        svg += detail::format_double(dpi, 6);
         svg += "\" viewBox=\"0 0 ";
         svg += std::to_string(width);
         svg += " ";
@@ -162,7 +176,7 @@ private:
         return;
       }
       case OutputFormat::Png: {
-        detail::RasterSurface2D surface(width, height, detail::recommended_png_supersample(width, height));
+        detail::RasterSurface2D surface(width, height, detail::recommended_png_supersample(width, height), dpi);
         detail::render_4d_view(surface, *this, target);
         detail::write_text_file(filepath, surface.finish());
         return;
@@ -170,7 +184,7 @@ private:
       case OutputFormat::Pdf: {
         detail::PdfRenderSurface2D surface(width, height);
         detail::render_4d_view(surface, *this, target);
-        detail::write_text_file(filepath, detail::build_pdf_document(width, height, surface.finish()));
+        detail::write_text_file(filepath, detail::build_pdf_document(width, height, surface.finish(), dpi));
         return;
       }
       default:

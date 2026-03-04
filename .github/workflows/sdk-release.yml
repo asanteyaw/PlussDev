@@ -1,0 +1,38 @@
+name: SDK Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  sdk-release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build
+
+      - name: Build SDK Archives
+        run: cmake --build build --target pluss_sdk_archive -j1
+
+      - name: Upload Workflow Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pluss-sdk-${{ github.ref_name || 'manual' }}
+          path: |
+            build/pluss-sdk-*.zip
+            build/pluss-sdk-*.tar.gz
+          if-no-files-found: error
+
+      - name: Publish GitHub Release Assets
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/pluss-sdk-*.zip
+            build/pluss-sdk-*.tar.gz

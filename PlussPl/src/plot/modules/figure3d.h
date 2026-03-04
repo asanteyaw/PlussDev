@@ -8,6 +8,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <span>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -19,7 +20,9 @@
 #include "plot/modules/backend/default_backend.h"
 #include "plot/modules/camera_3d.h"
 #include "plot/modules/core.h"
+#include "plot/modules/detail/series_helpers.h"
 #include "plot/modules/detail/show_helpers.h"
+#include "plot/modules/projector_3d.h"
 #include "plot/modules/trace.h"
 
 namespace pluss::plotism {
@@ -178,72 +181,141 @@ public:
 
   const std::shared_ptr<const IBackend>& backend() const noexcept { return backend_; }
 
+  [[deprecated("Use Figure3D::add_line3 with pluss::Series inputs.")]]
   Figure3D& add_line3(const std::vector<double>& x,
                       const std::vector<double>& y,
                       const std::vector<double>& z,
                       std::string name = "",
                       std::optional<Style> style = std::nullopt) {
-    detail::ensure_same_size(x, y, "Figure3D::add_line3");
-    detail::ensure_same_size(x, z, "Figure3D::add_line3");
-    traces_.push_back(Trace3D{
-        .kind = Trace3DKind::Line3,
-        .name = std::move(name),
-        .x = x,
-        .y = y,
-        .z = z,
-        .style = style.value_or(style_),
-    });
-    return *this;
+    return add_line3_values_(x, y, z, std::move(name), style);
   }
 
+  Figure3D& add_line3(const pluss::Series& x,
+                      const pluss::Series& y,
+                      const pluss::Series& z,
+                      std::string name = "",
+                      std::optional<Style> style = std::nullopt) {
+    return add_line3_values_(detail::to_plot_vector(x, "Figure3D::add_line3"),
+                             detail::to_plot_vector(y, "Figure3D::add_line3"),
+                             detail::to_plot_vector(z, "Figure3D::add_line3"),
+                             std::move(name),
+                             style);
+  }
+
+  [[deprecated("Use Figure3D::add_scatter3 with pluss::Series inputs.")]]
   Figure3D& add_scatter3(const std::vector<double>& x,
                          const std::vector<double>& y,
                          const std::vector<double>& z,
                          std::string name = "",
                          std::optional<Style> style = std::nullopt) {
-    detail::ensure_same_size(x, y, "Figure3D::add_scatter3");
-    detail::ensure_same_size(x, z, "Figure3D::add_scatter3");
-    traces_.push_back(Trace3D{
-        .kind = Trace3DKind::Scatter3,
-        .name = std::move(name),
-        .x = x,
-        .y = y,
-        .z = z,
-        .style = style.value_or(style_),
-    });
-    return *this;
+    return add_scatter3_values_(x, y, z, std::move(name), style);
   }
 
+  Figure3D& add_scatter3(const pluss::Series& x,
+                         const pluss::Series& y,
+                         const pluss::Series& z,
+                         std::string name = "",
+                         std::optional<Style> style = std::nullopt) {
+    return add_scatter3_values_(detail::to_plot_vector(x, "Figure3D::add_scatter3"),
+                                detail::to_plot_vector(y, "Figure3D::add_scatter3"),
+                                detail::to_plot_vector(z, "Figure3D::add_scatter3"),
+                                std::move(name),
+                                style);
+  }
+
+  [[deprecated("Use Figure3D::add_surface with pluss::Series inputs.")]]
   Figure3D& add_surface(const std::vector<double>& x,
                         const std::vector<double>& y,
                         const std::vector<double>& z,
                         std::string name = "",
                         std::optional<Style> style = std::nullopt) {
-    detail::ensure_same_size(x, y, "Figure3D::add_surface");
-    detail::ensure_same_size(x, z, "Figure3D::add_surface");
-    traces_.push_back(Trace3D{
-        .kind = Trace3DKind::Surface,
-        .name = std::move(name),
-        .x = x,
-        .y = y,
-        .z = z,
-        .style = style.value_or(style_),
-    });
+    return add_surface_values_(x, y, z, std::move(name), style);
+  }
+
+  Figure3D& add_surface(const pluss::Series& x,
+                        const pluss::Series& y,
+                        const pluss::Series& z,
+                        std::string name = "",
+                        std::optional<Style> style = std::nullopt) {
+    const auto z_shape = z.sizes();
+    if (z_shape.size() == 2 && x.dim() == 1 && y.dim() == 1) {
+      return add_surface_grid_(detail::to_plot_vector(x, "Figure3D::add_surface"),
+                               detail::to_plot_vector(y, "Figure3D::add_surface"),
+                               detail::to_plot_vector(z, "Figure3D::add_surface"),
+                               std::span<const std::int64_t>(z_shape.data(), z_shape.size()),
+                               std::move(name),
+                               style);
+    }
+    return add_surface_values_(detail::to_plot_vector(x, "Figure3D::add_surface"),
+                               detail::to_plot_vector(y, "Figure3D::add_surface"),
+                               detail::to_plot_vector(z, "Figure3D::add_surface"),
+                               std::move(name),
+                               style);
+  }
+
+  Figure3D& surface_filled(bool enabled = true) {
+    current_surface_("Figure3D::surface_filled").filled = enabled;
     return *this;
   }
 
-  Figure3D& surface_wireframe(bool enabled = true) {
-    current_surface_("Figure3D::surface_wireframe").wireframe = enabled;
+  Figure3D& surface_base_contours(bool enabled = true) {
+    current_surface_("Figure3D::surface_base_contours").base_contours = enabled;
     return *this;
   }
 
-  Figure3D& surface_contours(bool enabled = true, std::int32_t stride = 3) {
-    auto& surface = current_surface_("Figure3D::surface_contours");
-    surface.contours = enabled;
-    surface.contour_stride = std::max<std::int32_t>(1, stride);
+  Figure3D& surface_lighting(bool enabled = true, double light_azimuth_deg = 45.0, double light_elevation_deg = 30.0) {
+    auto& surface = current_surface_("Figure3D::surface_lighting");
+    surface.lighted = enabled;
+    surface.light_azimuth_deg = light_azimuth_deg;
+    surface.light_elevation_deg = light_elevation_deg;
     return *this;
   }
 
+  Figure3D& mesh_mode() {
+    return surface_filled(false).surface_wireframe(true).surface_contours(false).surface_base_contours(false);
+  }
+
+  Figure3D& surfc_mode() {
+    return surface_filled(true).surface_wireframe(false).surface_contours(false).surface_base_contours(true);
+  }
+
+  Figure3D& meshc_mode() {
+    return surface_filled(false).surface_wireframe(true).surface_contours(false).surface_base_contours(true);
+  }
+
+  Figure3D& surfl_mode(double light_azimuth_deg = 45.0, double light_elevation_deg = 30.0) {
+    return surface_filled(true).surface_wireframe(false).surface_base_contours(false).surface_lighting(true,
+                                                                                                          light_azimuth_deg,
+                                                                                                          light_elevation_deg);
+  }
+
+  Figure3D& waterfall_mode() {
+    auto& surface = current_surface_("Figure3D::waterfall_mode");
+    surface.filled = false;
+    surface.wireframe = true;
+    surface.wireframe_rows = true;
+    surface.wireframe_cols = false;
+    surface.curtain_mode = SurfaceCurtainMode::Rows;
+    surface.contours = false;
+    surface.base_contours = false;
+    surface.lighted = false;
+    return *this;
+  }
+
+  Figure3D& meshz_mode() {
+    auto& surface = current_surface_("Figure3D::meshz_mode");
+    surface.filled = false;
+    surface.wireframe = true;
+    surface.wireframe_rows = true;
+    surface.wireframe_cols = true;
+    surface.curtain_mode = SurfaceCurtainMode::Boundary;
+    surface.contours = false;
+    surface.base_contours = false;
+    surface.lighted = false;
+    return *this;
+  }
+
+  [[deprecated("Use Figure3D::add_surface with pluss::Series inputs.")]]
   Figure3D& add_surface(const std::vector<double>& x_axis,
                         const std::vector<double>& y_axis,
                         const std::vector<std::vector<double>>& z_rows,
@@ -256,34 +328,81 @@ public:
       throw std::invalid_argument("plotism::Figure3D::add_surface: y-axis size must match z row count");
     }
     const std::size_t cols = x_axis.size();
-    std::vector<double> x;
-    std::vector<double> y;
-    std::vector<double> z;
-    x.reserve(y_axis.size() * cols);
-    y.reserve(y_axis.size() * cols);
-    z.reserve(y_axis.size() * cols);
-    for (std::size_t row = 0; row < z_rows.size(); ++row) {
-      if (z_rows[row].size() != cols) {
+    std::vector<double> z_flat;
+    z_flat.reserve(y_axis.size() * cols);
+    for (const auto& row : z_rows) {
+      if (row.size() != cols) {
         throw std::invalid_argument("plotism::Figure3D::add_surface: all z rows must match x-axis size");
       }
-      for (std::size_t col = 0; col < cols; ++col) {
-        x.push_back(x_axis[col]);
-        y.push_back(y_axis[row]);
-        z.push_back(z_rows[row][col]);
-      }
+      z_flat.insert(z_flat.end(), row.begin(), row.end());
     }
-    traces_.push_back(Trace3D{
-        .kind = Trace3DKind::Surface,
-        .name = std::move(name),
-        .x = std::move(x),
-        .y = std::move(y),
-        .z = std::move(z),
-        .rows = static_cast<std::int64_t>(y_axis.size()),
-        .cols = static_cast<std::int64_t>(cols),
-        .style = style.value_or(style_),
-    });
+    const std::array<std::int64_t, 2> shape{
+        static_cast<std::int64_t>(y_axis.size()),
+        static_cast<std::int64_t>(cols),
+    };
+    return add_surface_grid_(x_axis,
+                             y_axis,
+                             std::move(z_flat),
+                             std::span<const std::int64_t>(shape.data(), shape.size()),
+                             std::move(name),
+                             style);
+  }
+
+  [[deprecated("Use Figure3D::add_fill3 with pluss::Series inputs.")]]
+  Figure3D& add_fill3(const std::vector<double>& x,
+                      const std::vector<double>& y,
+                      const std::vector<double>& z,
+                      std::string name = "",
+                      std::optional<Style> style = std::nullopt) {
+    return add_patch3_values_(x, y, z, std::move(name), style);
+  }
+
+  Figure3D& add_fill3(const pluss::Series& x,
+                      const pluss::Series& y,
+                      const pluss::Series& z,
+                      std::string name = "",
+                      std::optional<Style> style = std::nullopt) {
+    return add_patch3_values_(detail::to_plot_vector(x, "Figure3D::add_fill3"),
+                              detail::to_plot_vector(y, "Figure3D::add_fill3"),
+                              detail::to_plot_vector(z, "Figure3D::add_fill3"),
+                              std::move(name),
+                              style);
+  }
+
+  Figure3D& add_contour3(const pluss::Series& x_axis,
+                         const pluss::Series& y_axis,
+                         const pluss::Series& z_rows,
+                         std::string name = "",
+                         std::int32_t levels = 8,
+                         std::optional<Style> style = std::nullopt) {
+    const auto z_shape = z_rows.sizes();
+    if (z_shape.size() != 2) {
+      throw std::invalid_argument("plotism::Figure3D::add_contour3: z_rows Series must be 2D");
+    }
+    return add_contour3_grid_(detail::to_plot_vector(x_axis, "Figure3D::add_contour3"),
+                              detail::to_plot_vector(y_axis, "Figure3D::add_contour3"),
+                              detail::to_plot_vector(z_rows, "Figure3D::add_contour3"),
+                              std::span<const std::int64_t>(z_shape.data(), z_shape.size()),
+                              std::move(name),
+                              levels,
+                              style);
+  }
+
+  Figure3D& surface_wireframe(bool enabled = true) {
+    auto& surface = current_surface_("Figure3D::surface_wireframe");
+    surface.wireframe = enabled;
+    surface.wireframe_rows = enabled;
+    surface.wireframe_cols = enabled;
     return *this;
   }
+
+  Figure3D& surface_contours(bool enabled = true, std::int32_t stride = 3) {
+    auto& surface = current_surface_("Figure3D::surface_contours");
+    surface.contours = enabled;
+    surface.contour_stride = std::max<std::int32_t>(1, stride);
+    return *this;
+  }
+
 
   std::string to_string() const {
     std::string out = fmt::format("Figure3D(traces={}", traces_.size());
@@ -374,29 +493,241 @@ public:
     show(std::cout);
   }
 
-  void save_svg(std::string_view filepath, std::int32_t width = 1200, std::int32_t height = 900) const {
+  void save_svg(std::string_view filepath,
+                std::int32_t width = 1200,
+                std::int32_t height = 900,
+                double dpi = 144.0) const {
     ensure_backend_().save(make_view_(),
-                           RenderTarget{.path = filepath, .width = width, .height = height, .format = OutputFormat::Svg});
+                           RenderTarget{.path = filepath, .width = width, .height = height, .dpi = dpi, .format = OutputFormat::Svg});
   }
 
-  void save_png(std::string_view filepath, std::int32_t width = 1200, std::int32_t height = 900) const {
+  void save_png(std::string_view filepath,
+                std::int32_t width = 1200,
+                std::int32_t height = 900,
+                double dpi = 144.0) const {
     ensure_backend_().save(make_view_(),
-                           RenderTarget{.path = filepath, .width = width, .height = height, .format = OutputFormat::Png});
+                           RenderTarget{.path = filepath, .width = width, .height = height, .dpi = dpi, .format = OutputFormat::Png});
   }
 
-  void save_pdf(std::string_view filepath, std::int32_t width = 1200, std::int32_t height = 900) const {
+  void save_pdf(std::string_view filepath,
+                std::int32_t width = 1200,
+                std::int32_t height = 900,
+                double dpi = 144.0) const {
     ensure_backend_().save(make_view_(),
-                           RenderTarget{.path = filepath, .width = width, .height = height, .format = OutputFormat::Pdf});
+                           RenderTarget{.path = filepath, .width = width, .height = height, .dpi = dpi, .format = OutputFormat::Pdf});
   }
 
   Figure3DView view_data() const { return make_view_(); }
 
 private:
+  Figure3D& add_line3_values_(const std::vector<double>& x,
+                              const std::vector<double>& y,
+                              const std::vector<double>& z,
+                              std::string name,
+                              std::optional<Style> style) {
+    detail::ensure_same_size(x, y, "Figure3D::add_line3");
+    detail::ensure_same_size(x, z, "Figure3D::add_line3");
+    traces_.push_back(Trace3D{
+        .kind = Trace3DKind::Line3,
+        .name = std::move(name),
+        .x = x,
+        .y = y,
+        .z = z,
+        .style = style.value_or(style_),
+    });
+    return *this;
+  }
+
+  Figure3D& add_scatter3_values_(const std::vector<double>& x,
+                                 const std::vector<double>& y,
+                                 const std::vector<double>& z,
+                                 std::string name,
+                                 std::optional<Style> style) {
+    detail::ensure_same_size(x, y, "Figure3D::add_scatter3");
+    detail::ensure_same_size(x, z, "Figure3D::add_scatter3");
+    traces_.push_back(Trace3D{
+        .kind = Trace3DKind::Scatter3,
+        .name = std::move(name),
+        .x = x,
+        .y = y,
+        .z = z,
+        .style = style.value_or(style_),
+    });
+    return *this;
+  }
+
+  Figure3D& add_surface_values_(const std::vector<double>& x,
+                                const std::vector<double>& y,
+                                const std::vector<double>& z,
+                                std::string name,
+                                std::optional<Style> style) {
+    detail::ensure_same_size(x, y, "Figure3D::add_surface");
+    detail::ensure_same_size(x, z, "Figure3D::add_surface");
+    traces_.push_back(Trace3D{
+        .kind = Trace3DKind::Surface,
+        .name = std::move(name),
+        .x = x,
+        .y = y,
+        .z = z,
+        .style = style.value_or(style_),
+    });
+    return *this;
+  }
+
+  Figure3D& add_patch3_values_(const std::vector<double>& x,
+                               const std::vector<double>& y,
+                               const std::vector<double>& z,
+                               std::string name,
+                               std::optional<Style> style) {
+    detail::ensure_same_size(x, y, "Figure3D::add_fill3");
+    detail::ensure_same_size(x, z, "Figure3D::add_fill3");
+    traces_.push_back(Trace3D{
+        .kind = Trace3DKind::Patch3,
+        .name = std::move(name),
+        .x = x,
+        .y = y,
+        .z = z,
+        .filled = true,
+        .wireframe = true,
+        .wireframe_rows = false,
+        .wireframe_cols = false,
+        .style = style.value_or(style_),
+    });
+    return *this;
+  }
+
+  Figure3D& add_surface_grid_(const std::vector<double>& x_axis,
+                              const std::vector<double>& y_axis,
+                              std::vector<double> z_flat,
+                              std::span<const std::int64_t> z_shape,
+                              std::string name,
+                              std::optional<Style> style) {
+    if (x_axis.empty() || y_axis.empty() || z_flat.empty() || z_shape.size() != 2) {
+      throw std::invalid_argument("plotism::Figure3D::add_surface: grid axes and z rows must be non-empty");
+    }
+    if (z_shape[0] != static_cast<std::int64_t>(y_axis.size())) {
+      throw std::invalid_argument("plotism::Figure3D::add_surface: y-axis size must match z row count");
+    }
+    if (z_shape[1] != static_cast<std::int64_t>(x_axis.size())) {
+      throw std::invalid_argument("plotism::Figure3D::add_surface: x-axis size must match z column count");
+    }
+    std::vector<double> x;
+    std::vector<double> y;
+    x.reserve(y_axis.size() * x_axis.size());
+    y.reserve(y_axis.size() * x_axis.size());
+    for (std::size_t row = 0; row < y_axis.size(); ++row) {
+      for (std::size_t col = 0; col < x_axis.size(); ++col) {
+        x.push_back(x_axis[col]);
+        y.push_back(y_axis[row]);
+      }
+    }
+    traces_.push_back(Trace3D{
+        .kind = Trace3DKind::Surface,
+        .name = std::move(name),
+        .x = std::move(x),
+        .y = std::move(y),
+        .z = std::move(z_flat),
+        .rows = static_cast<std::int64_t>(y_axis.size()),
+        .cols = static_cast<std::int64_t>(x_axis.size()),
+        .style = style.value_or(style_),
+    });
+    return *this;
+  }
+
+  Figure3D& add_contour3_grid_(const std::vector<double>& x_axis,
+                               const std::vector<double>& y_axis,
+                               const std::vector<double>& z_flat,
+                               std::span<const std::int64_t> z_shape,
+                               std::string name,
+                               std::int32_t levels,
+                               std::optional<Style> style) {
+    if (x_axis.empty() || y_axis.empty() || z_flat.empty() || z_shape.size() != 2) {
+      throw std::invalid_argument("plotism::Figure3D::add_contour3: grid axes and z rows must be non-empty");
+    }
+    if (z_shape[0] != static_cast<std::int64_t>(y_axis.size()) || z_shape[1] != static_cast<std::int64_t>(x_axis.size())) {
+      throw std::invalid_argument("plotism::Figure3D::add_contour3: x/y sizes must match z grid");
+    }
+    const std::int64_t rows = z_shape[0];
+    const std::int64_t cols = z_shape[1];
+    if (rows < 2 || cols < 2) {
+      throw std::invalid_argument("plotism::Figure3D::add_contour3: z grid must be at least 2x2");
+    }
+
+    const auto [zmin, zmax] = finite_minmax_3d_trace(z_flat);
+    const int level_count = std::clamp(static_cast<int>(levels), 2, 24);
+    for (int level_index = 0; level_index < level_count; ++level_index) {
+      const double level_t = static_cast<double>(level_index + 1) / static_cast<double>(level_count + 1);
+      const double level = zmin + (zmax - zmin) * level_t;
+
+      for (std::int64_t row = 0; row + 1 < rows; ++row) {
+        for (std::int64_t col = 0; col + 1 < cols; ++col) {
+          const std::size_t i00 = static_cast<std::size_t>(row * cols + col);
+          const std::size_t i01 = static_cast<std::size_t>(row * cols + (col + 1));
+          const std::size_t i10 = static_cast<std::size_t>((row + 1) * cols + col);
+          const std::size_t i11 = static_cast<std::size_t>((row + 1) * cols + (col + 1));
+          const std::array<std::pair<std::size_t, std::size_t>, 4> edges{{
+              {i00, i01},
+              {i01, i11},
+              {i11, i10},
+              {i10, i00},
+          }};
+
+          std::vector<std::array<double, 3>> points;
+          points.reserve(4);
+          for (const auto& [ia, ib] : edges) {
+            const double za = z_flat[ia];
+            const double zb = z_flat[ib];
+            if (!std::isfinite(za) || !std::isfinite(zb)) {
+              continue;
+            }
+            const double lo = std::min(za, zb);
+            const double hi = std::max(za, zb);
+            if (!(level >= lo && level <= hi) || std::abs(zb - za) <= 1e-12) {
+              continue;
+            }
+            const double t = std::clamp((level - za) / (zb - za), 0.0, 1.0);
+            points.push_back({
+                x_axis[ia % static_cast<std::size_t>(cols)] + (x_axis[ib % static_cast<std::size_t>(cols)] - x_axis[ia % static_cast<std::size_t>(cols)]) * t,
+                y_axis[ia / static_cast<std::size_t>(cols)] + (y_axis[ib / static_cast<std::size_t>(cols)] - y_axis[ia / static_cast<std::size_t>(cols)]) * t,
+                level,
+            });
+          }
+
+          auto contour_style = style.value_or(style_);
+          contour_style.marker = "none";
+          contour_style.line_width = contour_style.line_width > 0.0 ? contour_style.line_width : 1.2;
+          contour_style.color = detail::surface_color_3d(level, zmin, zmax);
+
+          if (points.size() == 2) {
+            add_line3_values_({points[0][0], points[1][0]},
+                              {points[0][1], points[1][1]},
+                              {points[0][2], points[1][2]},
+                              name.empty() ? fmt::format("contour {:.4g}", level) : fmt::format("{} {:.4g}", name, level),
+                              contour_style);
+          } else if (points.size() == 4) {
+            add_line3_values_({points[0][0], points[1][0]},
+                              {points[0][1], points[1][1]},
+                              {points[0][2], points[1][2]},
+                              name.empty() ? fmt::format("contour {:.4g}", level) : fmt::format("{} {:.4g}", name, level),
+                              contour_style);
+            add_line3_values_({points[2][0], points[3][0]},
+                              {points[2][1], points[3][1]},
+                              {points[2][2], points[3][2]},
+                              name.empty() ? fmt::format("contour {:.4g}", level) : fmt::format("{} {:.4g}", name, level),
+                              contour_style);
+          }
+        }
+      }
+    }
+    return *this;
+  }
+
   static const char* trace_kind_name_(Trace3DKind k) noexcept {
     switch (k) {
       case Trace3DKind::Line3: return "line3";
       case Trace3DKind::Scatter3: return "scatter3";
       case Trace3DKind::Surface: return "surface";
+      case Trace3DKind::Patch3: return "patch3";
       default: return "trace3d";
     }
   }

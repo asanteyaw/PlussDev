@@ -15,8 +15,12 @@ inline std::string render_svg_3d(const Figure3DView& fig, const RenderTarget& ta
   render_3d_scene(surface, fig, target);
 
   std::ostringstream svg;
-  svg << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << target.width << "\" height=\""
-      << target.height << "\" viewBox=\"0 0 " << target.width << " " << target.height << "\">\n";
+  const double physical_width = static_cast<double>(target.width) / std::max(1.0, target.dpi);
+  const double physical_height = static_cast<double>(target.height) / std::max(1.0, target.dpi);
+  svg << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << format_double(physical_width, 6)
+      << "in\" height=\"" << format_double(physical_height, 6)
+      << "in\" data-plusspl-dpi=\"" << format_double(target.dpi, 6)
+      << "\" viewBox=\"0 0 " << target.width << " " << target.height << "\">\n";
   svg << surface.finish();
   svg << "</svg>\n";
   return svg.str();

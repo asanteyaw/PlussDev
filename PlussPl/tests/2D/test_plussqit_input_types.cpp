@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "pluss/codem/series_factory.h"
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/timeindex_factory.h"
 #include "pluss/codeh/timeline_factory.h"
@@ -42,15 +43,33 @@ int main() {
                                                  std::span<const std::int64_t>(shape.data(), shape.size()));
   const auto timeindex = pluss::make_timeindex(timeline);
 
-  const std::array<int, 3> native_values{10, 20, 30};
+  std::vector<double> numeric_values;
+  numeric_values.reserve(static_cast<std::size_t>(numeric_note.numel()));
+  for (const auto token : numeric_note) {
+    numeric_values.push_back(std::stod(std::string(token)));
+  }
+
+  std::vector<double> text_lengths;
+  text_lengths.reserve(static_cast<std::size_t>(text_note.numel()));
+  for (const auto token : text_note) {
+    text_lengths.push_back(static_cast<double>(token.size()));
+  }
+
+  const std::vector<double> native_values{10.0, 20.0, 30.0};
+  const auto numeric_series = pluss::make_series(numeric_values, {static_cast<std::int64_t>(numeric_values.size())});
+  const auto text_series = pluss::make_series(text_lengths, {static_cast<std::int64_t>(text_lengths.size())});
+  const auto timeline_series = timeline.epoch_seconds();
+  const auto timeindex_series = timeindex.timeline().epoch_seconds();
+  const auto native_series = pluss::make_series(native_values, {static_cast<std::int64_t>(native_values.size())});
+  const auto hist_series = pluss::make_series(std::vector<double>{1, 1, 2, 3, 5, 8}, {6});
 
   pluss::plotism::Figure2D fig;
-  fig.with_title("plussqit-input-types");
-  fig.add_line(numeric_note, "note-numeric");
-  fig.add_bar(text_note, "note-text");
-  fig.add_line(timeline, "timeline-y");
-  fig.add_scatter(timeindex, native_values, "timeindex-x-native-y");
-  fig.add_hist(std::vector<int>{1, 1, 2, 3, 5, 8}, 4, "native-hist");
+  fig.with_title("series-only-input-types");
+  fig.add_line(numeric_series, "note-numeric-series");
+  fig.add_bar(text_series, "note-text-series");
+  fig.add_line(timeline_series, "timeline-series");
+  fig.add_scatter(timeindex_series, native_series, "timeindex-x-series-y");
+  fig.add_hist(hist_series, 4, "series-hist");
 
   const auto& traces = fig.subplots().front().traces;
   require(traces.size() == 5, "expected 5 traces");
@@ -63,14 +82,14 @@ int main() {
   require(nearly_equal(traces[1].y[1], 4.0), "text Note should fallback to token length");
   require(nearly_equal(traces[1].y[2], 5.0), "text Note should fallback to token length");
 
-  require(nearly_equal(traces[2].y[0], 0.0), "Timeline should convert to epoch seconds");
-  require(nearly_equal(traces[2].y[1], 1.0), "Timeline should convert to epoch seconds");
-  require(nearly_equal(traces[2].y[2], 2.0), "Timeline should convert to epoch seconds");
+  require(nearly_equal(traces[2].y[0], 0.0), "Timeline Series should convert to epoch seconds");
+  require(nearly_equal(traces[2].y[1], 1.0), "Timeline Series should convert to epoch seconds");
+  require(nearly_equal(traces[2].y[2], 2.0), "Timeline Series should convert to epoch seconds");
 
-  require(nearly_equal(traces[3].x[0], 0.0), "TimeIndex x should convert to epoch seconds");
-  require(nearly_equal(traces[3].x[1], 1.0), "TimeIndex x should convert to epoch seconds");
-  require(nearly_equal(traces[3].x[2], 2.0), "TimeIndex x should convert to epoch seconds");
-  require(nearly_equal(traces[3].y[2], 30.0), "native std::array<int> should convert to double");
+  require(nearly_equal(traces[3].x[0], 0.0), "TimeIndex Series x should convert to epoch seconds");
+  require(nearly_equal(traces[3].x[1], 1.0), "TimeIndex Series x should convert to epoch seconds");
+  require(nearly_equal(traces[3].x[2], 2.0), "TimeIndex Series x should convert to epoch seconds");
+  require(nearly_equal(traces[3].y[2], 30.0), "native values should be wrapped into Series");
 
   const std::string svg = unique_path("plusspl_test_plussqit_inputs", ".svg");
   const std::string pdf = unique_path("plusspl_test_plussqit_inputs", ".pdf");

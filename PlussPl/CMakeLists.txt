@@ -10,6 +10,8 @@ add_library(PlussPl STATIC)
 
 set(PLUSSPL_HAVE_GTK_WEBKIT_VALUE 0)
 set(PLUSSPL_HAVE_MAC_WEBKIT_VALUE 0)
+set(PLUSSPL_HAVE_FREETYPE_VALUE 0)
+set(PLUSSPL_HAVE_FONTCONFIG_VALUE 0)
 
 target_include_directories(PlussPl PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -45,6 +47,23 @@ target_sources(PlussPl PRIVATE
 set_target_properties(PlussPl PROPERTIES CXX_STANDARD 20)
 target_compile_features(PlussPl PUBLIC cxx_std_20)
 target_compile_definitions(PlussPl PUBLIC FMT_HEADER_ONLY=1)
+
+find_package(Freetype QUIET)
+if(Freetype_FOUND)
+    set(PLUSSPL_HAVE_FREETYPE_VALUE 1)
+    target_link_libraries(PlussPl PUBLIC Freetype::Freetype)
+endif()
+
+if(PkgConfig_FOUND)
+    pkg_check_modules(PLUSSPL_FONTCONFIG QUIET fontconfig)
+    if(PLUSSPL_FONTCONFIG_FOUND)
+        set(PLUSSPL_HAVE_FONTCONFIG_VALUE 1)
+        target_include_directories(PlussPl SYSTEM PUBLIC ${PLUSSPL_FONTCONFIG_INCLUDE_DIRS})
+        target_link_directories(PlussPl PUBLIC ${PLUSSPL_FONTCONFIG_LIBRARY_DIRS})
+        target_compile_options(PlussPl PRIVATE ${PLUSSPL_FONTCONFIG_CFLAGS_OTHER})
+        target_link_libraries(PlussPl PUBLIC ${PLUSSPL_FONTCONFIG_LIBRARIES})
+    endif()
+endif()
 
 if(PLUSSPL_ENABLE_POPUP_VIEWER AND PkgConfig_FOUND)
     pkg_check_modules(PLUSSPL_GTK3 QUIET gtk+-3.0)
@@ -106,14 +125,22 @@ if(APPLE AND PLUSSPL_ENABLE_POPUP_VIEWER)
     )
     target_link_libraries(PlussPl PRIVATE
         "-framework Cocoa"
+        "-framework CoreGraphics"
+        "-framework CoreText"
         "-framework UniformTypeIdentifiers"
         "-framework WebKit"
         "-framework QuartzCore"
     )
 endif()
 
+if(WIN32)
+    target_link_libraries(PlussPl PRIVATE gdi32)
+endif()
+
 target_compile_definitions(PlussPl PUBLIC PLUSSPL_HAVE_GTK_WEBKIT=${PLUSSPL_HAVE_GTK_WEBKIT_VALUE})
 target_compile_definitions(PlussPl PUBLIC PLUSSPL_HAVE_MAC_WEBKIT=${PLUSSPL_HAVE_MAC_WEBKIT_VALUE})
+target_compile_definitions(PlussPl PUBLIC PLUSSPL_HAVE_FREETYPE=${PLUSSPL_HAVE_FREETYPE_VALUE})
+target_compile_definitions(PlussPl PUBLIC PLUSSPL_HAVE_FONTCONFIG=${PLUSSPL_HAVE_FONTCONFIG_VALUE})
 
 if(PLUSSPL_ENABLE_INTERACTIVE_SHOW)
     target_compile_definitions(PlussPl PUBLIC PLUSSPL_ENABLE_INTERACTIVE_SHOW=1)

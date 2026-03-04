@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cstdint>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -27,6 +28,25 @@ std::string read_text(const std::string& path) {
     throw std::runtime_error("failed to read " + path);
   }
   return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+}
+
+pluss::Config plot_series_cfg() {
+  return pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+}
+
+pluss::Series make_numeric_series(const std::vector<double>& values) {
+  return pluss::make_series(values, {static_cast<std::int64_t>(values.size())}, plot_series_cfg());
+}
+
+pluss::Series make_grid_series(const std::vector<std::vector<double>>& rows) {
+  const std::int64_t row_count = static_cast<std::int64_t>(rows.size());
+  const std::int64_t col_count = row_count == 0 ? 0 : static_cast<std::int64_t>(rows.front().size());
+  std::vector<double> flat;
+  flat.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, row_count * col_count)));
+  for (const auto& row : rows) {
+    flat.insert(flat.end(), row.begin(), row.end());
+  }
+  return pluss::make_series(flat, {row_count, col_count}, plot_series_cfg());
 }
 
 } // namespace
@@ -70,9 +90,9 @@ int main() {
 
   pluss::plotism::Figure3D fig;
   fig.with_title("rich3d")
-      .add_surface(strike, expiry, price_surface, "option surface")
+      .add_surface(make_numeric_series(strike), make_numeric_series(expiry), make_grid_series(price_surface), "option surface")
       .surface_contours(true, 2)
-      .add_line3(path_x, path_y, path_z, "simulation path", path_style);
+      .add_line3(make_numeric_series(path_x), make_numeric_series(path_y), make_numeric_series(path_z), "simulation path", path_style);
   fig.theme("slate").font_family("IBM Plex Sans");
   fig.view(132.0, 24.0).camera_distance(3.6).projection(pluss::plotism::ProjectionMode::Perspective);
   fig.x_label("strike").y_label("expiry").z_label("price");

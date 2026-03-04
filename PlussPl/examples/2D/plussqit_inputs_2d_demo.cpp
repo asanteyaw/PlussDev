@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "pluss/codem/series_factory.h"
 #include "../output_paths.h"
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/timeindex_factory.h"
@@ -23,18 +24,36 @@ int main() {
                                                  std::span<const std::int64_t>(shape.data(), shape.size()));
   const auto timeindex = pluss::make_timeindex(timeline);
 
-  const std::array<int, 4> native_y{10, 20, 35, 50};
+  std::vector<double> numeric_note_values;
+  numeric_note_values.reserve(static_cast<std::size_t>(numeric_note.numel()));
+  for (const auto token : numeric_note) {
+    numeric_note_values.push_back(std::stod(std::string(token)));
+  }
+
+  std::vector<double> word_note_lengths;
+  word_note_lengths.reserve(static_cast<std::size_t>(word_note.numel()));
+  for (const auto token : word_note) {
+    word_note_lengths.push_back(static_cast<double>(token.size()));
+  }
+
+  const std::vector<double> native_y{10.0, 20.0, 35.0, 50.0};
+  const auto numeric_note_series = pluss::make_series(numeric_note_values, {static_cast<std::int64_t>(numeric_note_values.size())});
+  const auto word_note_series = pluss::make_series(word_note_lengths, {static_cast<std::int64_t>(word_note_lengths.size())});
+  const auto timeline_series = timeline.epoch_seconds();
+  const auto timeindex_series = timeindex.timeline().epoch_seconds();
+  const auto native_y_series = pluss::make_series(native_y, {static_cast<std::int64_t>(native_y.size())});
+  const auto hist_series = pluss::make_series(std::vector<double>{1, 1, 2, 3, 5, 8, 13, 21}, {8});
 
   pluss::plotism::Figure2D fig;
-  fig.with_title("PlussQit Input Types Demo")
-      .title("Note + Timeline + TimeIndex + Native C++")
+  fig.with_title("Series-Only Plot Inputs Demo")
+      .title("Upstream inputs converted to Series before plotting")
       .x_label("x")
       .y_label("value")
-      .add_line(numeric_note, "Note numeric")
-      .add_bar(word_note, "Note fallback:length")
-      .add_line(timeline, "Timeline->epoch_seconds")
-      .add_scatter(timeindex, native_y, "TimeIndex x + std::array y")
-      .add_hist(std::vector<int>{1, 1, 2, 3, 5, 8, 13, 21}, 6, "std::vector<int> hist");
+      .add_line(numeric_note_series, "Note numeric -> Series")
+      .add_bar(word_note_series, "Note length -> Series")
+      .add_line(timeline_series, "Timeline seconds -> Series")
+      .add_scatter(timeindex_series, native_y_series, "TimeIndex seconds + Series y")
+      .add_hist(hist_series, 6, "Series hist");
 
   const auto svg = plusspl::examples::output_path(__FILE__, "plusspl_inputs_2d_demo.svg");
   const auto png = plusspl::examples::output_path(__FILE__, "plusspl_inputs_2d_demo.png");

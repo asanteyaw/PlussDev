@@ -1,0 +1,22 @@
+name: SDK Smoke
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  sdk-smoke:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build
+
+      - name: Run SDK Consumer Smoke Test
+        run: ctest --test-dir build --output-on-failure -R pluss_sdk_consumer_smoke

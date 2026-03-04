@@ -39,11 +39,7 @@ template <typename Range>
 concept NumericRange = std::ranges::input_range<Range> && PlotNumeric<std::ranges::range_value_t<Range>>;
 
 template <typename Input>
-concept PlotInput = std::same_as<std::remove_cvref_t<Input>, pluss::Series> ||
-                    std::same_as<std::remove_cvref_t<Input>, pluss::Note> ||
-                    std::same_as<std::remove_cvref_t<Input>, pluss::Timeline> ||
-                    std::same_as<std::remove_cvref_t<Input>, pluss::TimeIndex> ||
-                    NumericRange<Input>;
+concept PlotInput = std::same_as<std::remove_cvref_t<Input>, pluss::Series>;
 
 inline std::vector<double> make_index_axis(std::size_t size) {
   std::vector<double> x(size, 0.0);

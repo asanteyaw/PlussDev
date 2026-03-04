@@ -180,7 +180,8 @@ public:
                    double x2,
                    double y,
                    const std::string& color) const {
-    if (trace.kind == Trace2DKind::Heatmap || trace.kind == Trace2DKind::Area || trace.kind == Trace2DKind::Band) {
+    if (trace.kind == Trace2DKind::Heatmap || trace.kind == Trace2DKind::Area || trace.kind == Trace2DKind::Band ||
+        trace.kind == Trace2DKind::Polygon) {
       surface.fill_rect(x1, y - 4.0, x2 - x1, 8.0,
                         FillStyle2D{
                             .color = (trace.kind == Trace2DKind::Heatmap) ? std::string("#c44536") : color,
@@ -539,6 +540,39 @@ public:
   }
 };
 
+class PolygonArtist2D final : public Artist2D {
+public:
+  void draw(RenderSurface2D& surface, const Trace2D& trace, const PlotTransform2D& transform) const override {
+    const std::size_t n = std::min(trace.x.size(), trace.y.size());
+    if (n < 3) {
+      return;
+    }
+    const auto style = resolve_artist_style_2d(trace, "#1f77b4");
+    std::vector<Point2D> polygon;
+    polygon.reserve(n);
+    for (std::size_t i = 0; i < n; ++i) {
+      const double px = transform.sx(trace.x[i]);
+      const double py = transform.sy(trace.y[i]);
+      if (!std::isfinite(px) || !std::isfinite(py)) {
+        continue;
+      }
+      polygon.push_back({px, py});
+    }
+    if (polygon.size() < 3) {
+      return;
+    }
+    surface.fill_polygon(polygon, FillStyle2D{.color = style.color, .alpha = default_fill_alpha_2d(trace)});
+    polygon.push_back(polygon.front());
+    surface.stroke_polyline(polygon,
+                            StrokeStyle2D{
+                                .color = style.color,
+                                .line_width = std::max(1.0, style.line_width),
+                                .alpha = std::min(1.0, style.alpha),
+                                .line_style = style.line_style,
+                            });
+  }
+};
+
 class HeatmapArtist2D final : public Artist2D {
 public:
   void draw(RenderSurface2D& surface, const Trace2D& trace, const PlotTransform2D& transform) const override {
@@ -685,6 +719,7 @@ inline const Artist2D& artist_for_trace_2d(Trace2DKind kind) {
   static const BarArtist2D bar_artist{};
   static const AreaArtist2D area_artist{};
   static const BandArtist2D band_artist{};
+  static const PolygonArtist2D polygon_artist{};
   static const HeatmapArtist2D heatmap_artist{};
   static const AnnotationArtist2D annotation_artist{};
   static const ErrorBarArtist2D errorbar_artist{};
@@ -702,6 +737,8 @@ inline const Artist2D& artist_for_trace_2d(Trace2DKind kind) {
       return area_artist;
     case Trace2DKind::Band:
       return band_artist;
+    case Trace2DKind::Polygon:
+      return polygon_artist;
     case Trace2DKind::Heatmap:
       return heatmap_artist;
     case Trace2DKind::Annotation:

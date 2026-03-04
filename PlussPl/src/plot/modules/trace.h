@@ -19,9 +19,10 @@ enum class Trace2DKind : std::uint8_t {
   Step = 4,
   Area = 5,
   Band = 6,
-  Heatmap = 7,
-  Annotation = 8,
-  ErrorBar = 9,
+  Polygon = 7,
+  Heatmap = 8,
+  Annotation = 9,
+  ErrorBar = 10,
 };
 
 struct Trace2D {
@@ -48,6 +49,7 @@ struct Subplot2D {
   Legend legend{};
   std::optional<Colorbar> colorbar{};
   Style style{};
+  bool polar_projection{false};
   std::vector<Trace2D> traces{};
 };
 
@@ -55,6 +57,13 @@ enum class Trace3DKind : std::uint8_t {
   Line3 = 0,
   Scatter3 = 1,
   Surface = 2,
+  Patch3 = 3,
+};
+
+enum class SurfaceCurtainMode : std::uint8_t {
+  None = 0,
+  Boundary = 1,
+  Rows = 2,
 };
 
 struct Trace3D {
@@ -65,8 +74,16 @@ struct Trace3D {
   std::vector<double> z{};
   std::int64_t rows{0};
   std::int64_t cols{0};
+  bool filled{true};
   bool wireframe{true};
+  bool wireframe_rows{true};
+  bool wireframe_cols{true};
   bool contours{false};
+  bool base_contours{false};
+  bool lighted{false};
+  SurfaceCurtainMode curtain_mode{SurfaceCurtainMode::None};
+  double light_azimuth_deg{45.0};
+  double light_elevation_deg{30.0};
   std::int32_t contour_stride{3};
   Style style{};
 };

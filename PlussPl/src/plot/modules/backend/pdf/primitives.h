@@ -466,7 +466,10 @@ inline void draw_pdf_marker(PdfPainter& painter,
   }
 }
 
-inline std::string build_pdf_document(std::int32_t width, std::int32_t height, const std::string& content_stream) {
+inline std::string build_pdf_document(std::int32_t width,
+                                      std::int32_t height,
+                                      const std::string& content_stream,
+                                      double dpi = 144.0) {
   std::ostringstream out;
   out << "%PDF-1.4\n";
 
@@ -479,13 +482,24 @@ inline std::string build_pdf_document(std::int32_t width, std::int32_t height, c
   write_object(1, "<< /Type /Catalog /Pages 2 0 R >>");
   write_object(2, "<< /Type /Pages /Count 1 /Kids [3 0 R] >>");
 
+  const double page_width_points = static_cast<double>(width) * 72.0 / std::max(1.0, dpi);
+  const double page_height_points = static_cast<double>(height) * 72.0 / std::max(1.0, dpi);
   std::ostringstream page;
-  page << "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " << width << " " << height << "] "
+  page << "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " << detail::format_double(page_width_points, 6)
+       << " " << detail::format_double(page_height_points, 6) << "] "
        << "/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>";
   write_object(3, page.str());
 
+  const double pdf_scale = 72.0 / std::max(1.0, dpi);
+  std::ostringstream scaled_stream;
+  scaled_stream << "q " << detail::format_double(pdf_scale, 6) << " 0 0 " << detail::format_double(pdf_scale, 6)
+                << " 0 0 cm\n"
+                << content_stream
+                << "Q\n";
+  const std::string scaled_content = scaled_stream.str();
+
   std::ostringstream content;
-  content << "<< /Length " << content_stream.size() << " >>\nstream\n" << content_stream << "endstream";
+  content << "<< /Length " << scaled_content.size() << " >>\nstream\n" << scaled_content << "endstream";
   write_object(4, content.str());
 
   write_object(5, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");

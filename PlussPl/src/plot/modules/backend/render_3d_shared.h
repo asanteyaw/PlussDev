@@ -66,6 +66,17 @@ inline Vector2D operator*(const Vector2D& lhs, double scale) {
   return Vector2D{lhs.x * scale, lhs.y * scale};
 }
 
+inline Vector2D clamp_point_to_viewport_3d(double x,
+                                           double y,
+                                           const SceneViewport3D& viewport,
+                                           double pad_x,
+                                           double pad_y) {
+  return Vector2D{
+      std::clamp(x, viewport.left + pad_x, viewport.left + viewport.width - pad_x),
+      std::clamp(y, viewport.top + pad_y, viewport.top + viewport.height - pad_y),
+  };
+}
+
 inline double length_2d(const Vector2D& v) {
   return std::sqrt(v.x * v.x + v.y * v.y);
 }
@@ -375,6 +386,10 @@ inline double tick_label_axis_extent_3d(std::string_view text,
   return 0.5 * (std::abs(width * std::cos(delta)) + std::abs(height * std::sin(delta)));
 }
 
+inline std::vector<double> minor_tick_positions_3d(const Axis& axis, const std::vector<ResolvedTick>& major_ticks) {
+  return axis.resolve_minor_ticks(major_ticks);
+}
+
 inline double adaptive_tick_font_size_3d(double axis_length, double panel_width, double panel_height, bool constrained_view) {
   const double panel_scale = std::sqrt(std::max(1.0, std::min(panel_width, panel_height)));
   const double axis_scale = std::sqrt(std::max(1.0, axis_length));
@@ -587,7 +602,14 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
     double depth{0.0};
     std::array<Point2D, 4> polygon{};
   };
+  struct FrameEdge3D {
+    detail::ProjectedPoint3D p1{};
+    detail::ProjectedPoint3D p2{};
+    bool primary{false};
+    bool front{false};
+  };
   std::vector<Pane3D> panes;
+  std::vector<FrameEdge3D> frame_edges;
   for (const auto& pane : visible_panes_3d(transform, visible_faces)) {
     double depth = 0.0;
     for (const auto& point : pane) {
@@ -608,13 +630,29 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
     const bool primary = matches_axis_edge_3d(edge, x_axis_edge) ||
                          matches_axis_edge_3d(edge, y_axis_edge) ||
                          matches_axis_edge_3d(edge, z_axis_edge);
-    surface.stroke_line(p1.x, p1.y, p2.x, p2.y,
+    frame_edges.push_back(FrameEdge3D{
+        .p1 = p1,
+        .p2 = p2,
+        .primary = primary,
+        .front = 0.5 * (p1.depth + p2.depth) >= plot_center.depth,
+    });
+  }
+
+  const auto stroke_frame_edge = [&](const FrameEdge3D& edge, bool overlay) {
+    const bool strong = overlay && edge.primary;
+    surface.stroke_line(edge.p1.x, edge.p1.y, edge.p2.x, edge.p2.y,
                         StrokeStyle2D{
-                            .color = primary ? theme.axis_color : theme.grid_color,
-                            .line_width = primary ? 1.8 : 1.0,
-                            .alpha = primary ? 1.0 : 0.95,
-                            .line_style = "solid",
+                            .color = strong ? theme.axis_color : (overlay ? theme.axis_color : theme.grid_color),
+                            .line_width = strong ? 2.2 : (overlay ? 1.25 : 0.75),
+                            .alpha = strong ? 1.0 : (overlay ? 0.82 : 0.34),
+                            .line_style = overlay ? "solid" : "dashed",
                         });
+  };
+
+  for (const auto& edge : frame_edges) {
+    if (!edge.front) {
+      stroke_frame_edge(edge, false);
+    }
   }
 
   const double x_axis_length = axis_projected_length_3d(transform, x_axis_edge);
@@ -644,6 +682,9 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
                                                               z_tangent,
                                                               z_tick_font,
                                                               options.max_ticks_per_axis));
+  const auto x_minor_ticks = minor_tick_positions_3d(fig.x_axis, x_ticks);
+  const auto y_minor_ticks = minor_tick_positions_3d(fig.y_axis, y_ticks);
+  const auto z_minor_ticks = minor_tick_positions_3d(fig.z_axis, z_ticks);
   const auto clamp_t = [](double value) {
     if (!std::isfinite(value)) {
       return 0.5;
@@ -659,6 +700,15 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
                             .color = theme.grid_color,
                             .line_width = 0.9,
                             .alpha = 0.78,
+                            .line_style = "solid",
+                        });
+  };
+  const auto stroke_minor_gridline = [&](const detail::ProjectedPoint3D& p1, const detail::ProjectedPoint3D& p2) {
+    surface.stroke_line(p1.x, p1.y, p2.x, p2.y,
+                        StrokeStyle2D{
+                            .color = theme.grid_color,
+                            .line_width = 0.55,
+                            .alpha = 0.38,
                             .line_style = "solid",
                         });
   };
@@ -693,6 +743,36 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
     stroke_gridline(transform.project_normalized(0.0, visible_faces[1], t),
                     transform.project_normalized(1.0, visible_faces[1], t));
   }
+  for (double tick : x_minor_ticks) {
+    const double t = axis_display_coord_3d(clamp_t((tick - xmin) / std::max(1e-12, xmax - xmin)), fig.x_axis);
+    if (!should_draw_inner_grid(t)) {
+      continue;
+    }
+    stroke_minor_gridline(transform.project_normalized(t, 0.0, visible_faces[2]),
+                          transform.project_normalized(t, 1.0, visible_faces[2]));
+    stroke_minor_gridline(transform.project_normalized(t, visible_faces[1], 0.0),
+                          transform.project_normalized(t, visible_faces[1], 1.0));
+  }
+  for (double tick : y_minor_ticks) {
+    const double t = axis_display_coord_3d(clamp_t((tick - ymin) / std::max(1e-12, ymax - ymin)), fig.y_axis);
+    if (!should_draw_inner_grid(t)) {
+      continue;
+    }
+    stroke_minor_gridline(transform.project_normalized(0.0, t, visible_faces[2]),
+                          transform.project_normalized(1.0, t, visible_faces[2]));
+    stroke_minor_gridline(transform.project_normalized(visible_faces[0], t, 0.0),
+                          transform.project_normalized(visible_faces[0], t, 1.0));
+  }
+  for (double tick : z_minor_ticks) {
+    const double t = axis_display_coord_3d(clamp_t((tick - zmin) / std::max(1e-12, zmax - zmin)), fig.z_axis);
+    if (!should_draw_inner_grid(t)) {
+      continue;
+    }
+    stroke_minor_gridline(transform.project_normalized(visible_faces[0], 0.0, t),
+                          transform.project_normalized(visible_faces[0], 1.0, t));
+    stroke_minor_gridline(transform.project_normalized(0.0, visible_faces[1], t),
+                          transform.project_normalized(1.0, visible_faces[1], t));
+  }
 
   DepthSorter3D depth_sorter{};
   for (std::size_t ti = 0; ti < fig.traces.size(); ++ti) {
@@ -701,10 +781,16 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
     artist_for_trace_3d(styled_trace.kind).emit(depth_sorter, styled_trace, transform, theme);
   }
   depth_sorter.paint(surface);
+  for (const auto& edge : frame_edges) {
+    if (edge.front || edge.primary) {
+      stroke_frame_edge(edge, true);
+    }
+  }
   surface.pop_clip();
 
   const auto draw_ticks = [&](const Axis& axis,
                               const std::vector<ResolvedTick>& ticks,
+                              const std::vector<double>& minor_ticks,
                               const AxisEdgeSelection3D& edge,
                               const Vector2D& tangent,
                               double axis_length,
@@ -713,11 +799,28 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
                               double hi) {
     const double span = std::max(1e-12, hi - lo);
     const double tick_len = std::clamp(0.055 * tick_font_size + 0.012 * axis_length, 0.65 * tick_font_size, 1.15 * tick_font_size);
+    const double minor_tick_len = tick_len * 0.56;
     const double label_len = tick_len + 0.95 * tick_font_size;
     const double rotation_deg = tick_label_rotation_3d(tangent, axis_length, ticks, tick_font_size);
     const double tangent_norm = std::max(1e-9, length_2d(tangent));
     double prev_projection = -std::numeric_limits<double>::infinity();
     double prev_half_extent = 0.0;
+    for (double tick : minor_ticks) {
+      const double base_t = clamp_t((tick - lo) / span);
+      if (base_t <= 1e-6 || base_t >= 1.0 - 1e-6) {
+        continue;
+      }
+      const double axis_t = axis_display_coord_3d(base_t, axis);
+      const auto point = axis_edge_point_3d(transform, edge, axis_t);
+      const auto direction = axis_tick_direction_3d(transform, edge, axis_t, plot_center);
+      surface.stroke_line(point.x, point.y, point.x + direction.x * minor_tick_len, point.y + direction.y * minor_tick_len,
+                          StrokeStyle2D{
+                              .color = theme.tick_color,
+                              .line_width = 0.8,
+                              .alpha = 0.72,
+                              .line_style = "solid",
+                          });
+    }
     for (const auto& tick : ticks) {
       const double base_t = clamp_t((tick.position - lo) / span);
       const double axis_t = axis_display_coord_3d(base_t, axis);
@@ -732,8 +835,9 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
                           });
       const double text_x = point.x + direction.x * label_len;
       const double text_y = point.y + direction.y * label_len + 3.0;
-      const double axis_projection = (text_x * tangent.x + text_y * tangent.y) / tangent_norm;
       const double half_extent = tick_label_axis_extent_3d(tick.label, tick_font_size, rotation_deg, tangent) + 2.0;
+      const auto label_point = clamp_point_to_viewport_3d(text_x, text_y, viewport, half_extent + 4.0, tick_font_size + 6.0);
+      const double axis_projection = (label_point.x * tangent.x + label_point.y * tangent.y) / tangent_norm;
       const bool collides = std::isfinite(prev_projection) && axis_projection - prev_projection < (prev_half_extent + half_extent);
       if (collides && base_t > 1e-6 && base_t < 1.0 - 1e-6) {
         continue;
@@ -741,8 +845,8 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
       prev_projection = axis_projection;
       prev_half_extent = half_extent;
       const auto text_anchor = std::abs(rotation_deg) > 1e-9 ? TextAnchor2D::Center : anchor_for_direction_3d(direction);
-      surface.text(text_x,
-                   text_y,
+      surface.text(label_point.x,
+                   label_point.y,
                    tick.label,
                    TextStyle2D{
                        .color = theme.tick_label_color,
@@ -757,9 +861,9 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
     }
   };
 
-  draw_ticks(fig.x_axis, x_ticks, x_axis_edge, x_tangent, x_axis_length, x_tick_font, xmin, xmax);
-  draw_ticks(fig.y_axis, y_ticks, y_axis_edge, y_tangent, y_axis_length, y_tick_font, ymin, ymax);
-  draw_ticks(fig.z_axis, z_ticks, z_axis_edge, z_tangent, z_axis_length, z_tick_font, zmin, zmax);
+  draw_ticks(fig.x_axis, x_ticks, x_minor_ticks, x_axis_edge, x_tangent, x_axis_length, x_tick_font, xmin, xmax);
+  draw_ticks(fig.y_axis, y_ticks, y_minor_ticks, y_axis_edge, y_tangent, y_axis_length, y_tick_font, ymin, ymax);
+  draw_ticks(fig.z_axis, z_ticks, z_minor_ticks, z_axis_edge, z_tangent, z_axis_length, z_tick_font, zmin, zmax);
 
   const auto draw_axis_label = [&](const Axis& axis,
                                    const AxisEdgeSelection3D& edge,
@@ -774,11 +878,16 @@ inline void render_3d_scene_with_options(RenderSurface2D& surface,
     }
     const double axis_label_size = std::clamp(tick_font_size + 1.2, tick_font_size + 0.6, tick_font_size + 2.0);
     const double axis_label_offset = 1.3 * tick_font_size + std::clamp(0.025 * axis_length, 4.0, 12.0);
-    const double label_t = axis.inverted ? 0.0 : 1.0;
+    const double label_t = axis.inverted ? 0.14 : 0.86;
     const auto point = axis_edge_point_3d(transform, edge, label_t);
     const auto direction = axis_tick_direction_3d(transform, edge, label_t, plot_center);
-    surface.text(point.x + direction.x * axis_label_offset,
-                 point.y + direction.y * axis_label_offset,
+    const auto label_point = clamp_point_to_viewport_3d(point.x + direction.x * axis_label_offset,
+                                                        point.y + direction.y * axis_label_offset,
+                                                        viewport,
+                                                        axis_label_size * 2.0,
+                                                        axis_label_size * 1.5);
+    surface.text(label_point.x,
+                 label_point.y,
                  axis.label,
                  TextStyle2D{
                      .color = theme.axis_label_color,

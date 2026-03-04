@@ -13,7 +13,7 @@ inline std::string render_pdf_3d(const Figure3DView& fig, const RenderTarget& ta
 
   PdfRenderSurface2D surface(target.width, target.height);
   render_3d_scene(surface, fig, target);
-  return build_pdf_document(target.width, target.height, surface.finish());
+  return build_pdf_document(target.width, target.height, surface.finish(), target.dpi);
 }
 
 } // namespace detail

@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cstdint>
 #include <cmath>
 #include <cstddef>
 #include <filesystem>
@@ -32,6 +33,20 @@ void require_png_signature(const std::string& path) {
   require(header == expected, "PNG file does not have a valid signature");
 }
 
+void require_file_contains(const std::string& path, const std::string& needle, const std::string& message) {
+  std::ifstream in(path, std::ios::binary);
+  const std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+  require(contents.find(needle) != std::string::npos, message);
+}
+
+pluss::Config plot_series_cfg() {
+  return pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+}
+
+pluss::Series make_numeric_series(const std::vector<double>& values) {
+  return pluss::make_series(values, {static_cast<std::int64_t>(values.size())}, plot_series_cfg());
+}
+
 } // namespace
 
 int main() {
@@ -48,16 +63,17 @@ int main() {
     z.push_back(0.05 * static_cast<double>(i));
   }
 
-  auto fig = pluss::plotism::line3(x, y, z, "helix").with_title("test3d");
+  auto fig = pluss::plotism::line3(make_numeric_series(x), make_numeric_series(y), make_numeric_series(z), "helix").with_title("test3d");
   fig.x_label("x").y_label("y").z_label("z");
+  fig.xaxis().set_minor_tick_count(2);
 
   const std::string svg = unique_path("plusspl_test_3d", ".svg");
   const std::string png = unique_path("plusspl_test_3d", ".png");
   const std::string pdf = unique_path("plusspl_test_3d", ".pdf");
 
-  fig.save_svg(svg, 900, 700);
-  fig.save_png(png, 900, 700);
-  fig.save_pdf(pdf, 900, 700);
+  fig.save_svg(svg, 900, 700, 180.0);
+  fig.save_png(png, 900, 700, 180.0);
+  fig.save_pdf(pdf, 900, 700, 180.0);
 
   require(std::filesystem::exists(svg), "3D svg file was not created");
   require(std::filesystem::exists(png), "3D png file was not created");
@@ -66,6 +82,8 @@ int main() {
   require(std::filesystem::file_size(png) > 0, "3D png file is empty");
   require(std::filesystem::file_size(pdf) > 0, "3D pdf file is empty");
   require_png_signature(png);
+  require_file_contains(svg, "data-plusspl-dpi=\"180", "SVG dpi metadata missing");
+  require_file_contains(png, "pHYs", "PNG dpi metadata chunk missing");
 
   const bool opened = fig.show_window(false);
   (void)opened;

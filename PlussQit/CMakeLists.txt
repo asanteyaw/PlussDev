@@ -234,6 +234,7 @@ add_library(plussqit_codem
 )
 
 add_library(PlussQit::CodeM ALIAS plussqit_codem)
+add_library(pluss::plussqit_codem ALIAS plussqit_codem)
 
 target_compile_definitions(plussqit_codem PRIVATE PLUSS_CODEM_GEN_AVAILABLE)
 
@@ -381,6 +382,7 @@ add_library(plussqit_coden
 )
 
 add_library(PlussQit::CodeN ALIAS plussqit_coden)
+add_library(pluss::plussqit_coden ALIAS plussqit_coden)
 
 target_include_directories(plussqit_coden
   PUBLIC
@@ -484,6 +486,7 @@ if (PLUSSQIT_BUILD_CODEH)
   )
 
   add_library(PlussQit::CodeH ALIAS plussqit_codeh)
+  add_library(pluss::plussqit_codeh ALIAS plussqit_codeh)
 
   target_include_directories(plussqit_codeh
     PUBLIC
@@ -697,10 +700,99 @@ endif()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  PATTERN ".DS_Store" EXCLUDE
 )
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/aux/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/aux
+  PATTERN ".DS_Store" EXCLUDE
 )
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/CodeM.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeM
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeM/core
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.inc"
+  PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/compat/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeM/compat
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.inc"
+  PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeN/core/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeN/core
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.inc"
+  PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeN/compat/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeN/compat
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.inc"
+  PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeN/generated/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeN/generated
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.inc"
+  PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/MSharp/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/MSharp
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.inc"
+  PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/Flame/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Flame
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.inc"
+  PATTERN ".DS_Store" EXCLUDE
+)
+
+if (PLUSSQIT_BUILD_CODEH)
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeH/core/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeH/core
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.inc"
+    PATTERN ".DS_Store" EXCLUDE
+  )
+
+  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeH/compat/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeH/compat
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.inc"
+    PATTERN ".DS_Store" EXCLUDE
+  )
+endif()
 
 # Generated Series headers are included for completeness (CodeM only).
 if (PLUSSQIT_BUILD_CODEM)
@@ -708,7 +800,7 @@ if (PLUSSQIT_BUILD_CODEM)
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeM/generated
   )
   install(DIRECTORY ${SERIES_GEN_DIR}/CodeM/Series/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Series
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CodeM/Series
   )
 endif()
 

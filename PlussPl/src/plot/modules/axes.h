@@ -34,6 +34,13 @@ enum class TickFormatterKind : std::uint8_t {
   Categorical = 4,
 };
 
+enum class MinorTickLocatorKind : std::uint8_t {
+  Auto = 0,
+  None = 1,
+  LinearSubdivision = 2,
+  Explicit = 3,
+};
+
 enum class AxisKind : std::uint8_t {
   Generic = 0,
   X = 1,
@@ -167,6 +174,47 @@ private:
   }
 };
 
+struct MinorTickLocator {
+  MinorTickLocatorKind kind{MinorTickLocatorKind::Auto};
+  int subdivisions{4};
+  std::vector<double> positions{};
+
+  std::vector<double> locate(const std::vector<ResolvedTick>& major_ticks, AxisScale axis_scale) const {
+    const MinorTickLocatorKind effective = effective_kind(axis_scale);
+    if (effective == MinorTickLocatorKind::None || major_ticks.size() < 2) {
+      return {};
+    }
+    if (effective == MinorTickLocatorKind::Explicit) {
+      return positions;
+    }
+
+    const int subdivisions_per_interval =
+        std::max(1, kind == MinorTickLocatorKind::Auto ? (major_ticks.size() <= 5 ? 4 : 2) : subdivisions);
+    std::vector<double> minor_ticks;
+    minor_ticks.reserve((major_ticks.size() - 1) * static_cast<std::size_t>(subdivisions_per_interval));
+    for (std::size_t i = 1; i < major_ticks.size(); ++i) {
+      const double lo = major_ticks[i - 1].position;
+      const double hi = major_ticks[i].position;
+      const double step = (hi - lo) / static_cast<double>(subdivisions_per_interval + 1);
+      if (!(std::abs(step) > 1e-12) || !std::isfinite(step)) {
+        continue;
+      }
+      for (int k = 1; k <= subdivisions_per_interval; ++k) {
+        minor_ticks.push_back(lo + step * static_cast<double>(k));
+      }
+    }
+    return minor_ticks;
+  }
+
+private:
+  MinorTickLocatorKind effective_kind(AxisScale axis_scale) const {
+    if (kind == MinorTickLocatorKind::Auto) {
+      return axis_scale == AxisScale::Linear ? MinorTickLocatorKind::LinearSubdivision : MinorTickLocatorKind::None;
+    }
+    return kind;
+  }
+};
+
 struct Axis {
   explicit Axis(AxisKind kind = AxisKind::Generic) : kind(kind) {}
 
@@ -178,6 +226,7 @@ struct Axis {
   bool inverted{false};
   TickLocator tick_locator{};
   TickFormatter tick_formatter{};
+  MinorTickLocator minor_tick_locator{};
 
   Axis& set_label(std::string value) {
     label = std::move(value);
@@ -216,6 +265,33 @@ struct Axis {
     return *this;
   }
 
+  Axis& set_minor_tick_locator(MinorTickLocator locator) {
+    minor_tick_locator = std::move(locator);
+    return *this;
+  }
+
+  Axis& set_minor_tick_count(int subdivisions) {
+    minor_tick_locator = MinorTickLocator{
+        .kind = MinorTickLocatorKind::LinearSubdivision,
+        .subdivisions = std::max(1, subdivisions),
+    };
+    return *this;
+  }
+
+  Axis& set_minor_tick_positions(std::vector<double> positions_value) {
+    minor_tick_locator = MinorTickLocator{
+        .kind = MinorTickLocatorKind::Explicit,
+        .subdivisions = 0,
+        .positions = std::move(positions_value),
+    };
+    return *this;
+  }
+
+  Axis& disable_minor_ticks() {
+    minor_tick_locator = MinorTickLocator{.kind = MinorTickLocatorKind::None};
+    return *this;
+  }
+
   double transform_value(double value) const {
     if (!std::isfinite(value)) {
       return std::numeric_limits<double>::quiet_NaN();
@@ -244,6 +320,10 @@ struct Axis {
       });
     }
     return ticks;
+  }
+
+  std::vector<double> resolve_minor_ticks(const std::vector<ResolvedTick>& major_ticks) const {
+    return minor_tick_locator.locate(major_ticks, scale);
   }
 };
 

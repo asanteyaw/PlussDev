@@ -186,6 +186,11 @@ public:
     return *this;
   }
 
+  Figure2D& polar_axes(bool enabled = true) {
+    current_().polar_projection = enabled;
+    return *this;
+  }
+
   Figure2D& theme(std::string name) {
     figure_style_.theme = name;
     for (auto& subplot : subplots_) {
@@ -755,6 +760,16 @@ public:
     return add_heatmap_(data, std::move(name), std::move(x_labels), std::move(y_labels), style);
   }
 
+  Figure2D& add_polygon(const pluss::Series& x,
+                        const pluss::Series& y,
+                        std::string name = "",
+                        std::optional<Style> style = std::nullopt) {
+    return add_polygon_values_(detail::to_plot_vector(x, "Figure2D::add_polygon"),
+                               detail::to_plot_vector(y, "Figure2D::add_polygon"),
+                               std::move(name),
+                               style);
+  }
+
   Figure2D& annotate(std::string text, double x, double y, std::optional<Style> style = std::nullopt) {
     Trace2D t;
     t.kind = Trace2DKind::Annotation;
@@ -900,19 +915,28 @@ public:
     show(std::cout);
   }
 
-  void save_svg(std::string_view filepath, std::int32_t width = 1200, std::int32_t height = 800) const {
+  void save_svg(std::string_view filepath,
+                std::int32_t width = 1200,
+                std::int32_t height = 800,
+                double dpi = 144.0) const {
     ensure_backend_().save(make_view_(),
-                           RenderTarget{.path = filepath, .width = width, .height = height, .format = OutputFormat::Svg});
+                           RenderTarget{.path = filepath, .width = width, .height = height, .dpi = dpi, .format = OutputFormat::Svg});
   }
 
-  void save_png(std::string_view filepath, std::int32_t width = 1200, std::int32_t height = 800) const {
+  void save_png(std::string_view filepath,
+                std::int32_t width = 1200,
+                std::int32_t height = 800,
+                double dpi = 144.0) const {
     ensure_backend_().save(make_view_(),
-                           RenderTarget{.path = filepath, .width = width, .height = height, .format = OutputFormat::Png});
+                           RenderTarget{.path = filepath, .width = width, .height = height, .dpi = dpi, .format = OutputFormat::Png});
   }
 
-  void save_pdf(std::string_view filepath, std::int32_t width = 1200, std::int32_t height = 800) const {
+  void save_pdf(std::string_view filepath,
+                std::int32_t width = 1200,
+                std::int32_t height = 800,
+                double dpi = 144.0) const {
     ensure_backend_().save(make_view_(),
-                           RenderTarget{.path = filepath, .width = width, .height = height, .format = OutputFormat::Pdf});
+                           RenderTarget{.path = filepath, .width = width, .height = height, .dpi = dpi, .format = OutputFormat::Pdf});
   }
 
 private:
@@ -925,6 +949,7 @@ private:
       case Trace2DKind::Step: return "step";
       case Trace2DKind::Area: return "area";
       case Trace2DKind::Band: return "band";
+      case Trace2DKind::Polygon: return "polygon";
       case Trace2DKind::Heatmap: return "heatmap";
       case Trace2DKind::Annotation: return "annotation";
       case Trace2DKind::ErrorBar: return "errorbar";
@@ -986,6 +1011,24 @@ private:
     } else if (current_().colorbar->title.empty() && !t.name.empty()) {
       current_().colorbar->title = t.name;
     }
+    current_().traces.push_back(std::move(t));
+    return *this;
+  }
+
+  Figure2D& add_polygon_values_(const std::vector<double>& x,
+                                const std::vector<double>& y,
+                                std::string name,
+                                std::optional<Style> style) {
+    detail::ensure_same_size(x, y, "Figure2D::add_polygon");
+    if (x.size() < 3) {
+      throw std::invalid_argument("plotism::Figure2D::add_polygon: polygon requires at least 3 points");
+    }
+    Trace2D t;
+    t.kind = Trace2DKind::Polygon;
+    t.name = std::move(name);
+    t.x = x;
+    t.y = y;
+    t.style = style.value_or(current_().style);
     current_().traces.push_back(std::move(t));
     return *this;
   }
