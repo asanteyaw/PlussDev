@@ -14,6 +14,17 @@ class DataFramePlotAccessor {
 public:
   explicit DataFramePlotAccessor(DataFrame frame);
 
+  pluss::pl::Studio kind(std::string_view kind,
+                         std::initializer_list<std::string_view> features = {},
+                         std::optional<std::string_view> x_feature = std::nullopt,
+                         std::optional<std::string_view> hue_feature = std::nullopt,
+                         std::int64_t bins = 20) const;
+  pluss::pl::Studio kind(std::string_view kind,
+                         std::string_view feature,
+                         std::optional<std::string_view> x_feature = std::nullopt,
+                         std::optional<std::string_view> hue_feature = std::nullopt,
+                         std::int64_t bins = 20) const;
+
   pluss::pl::Studio line(std::string_view y_feature,
                          std::optional<std::string_view> x_feature = std::nullopt) const;
   pluss::pl::Studio line(std::initializer_list<std::string_view> y_features,

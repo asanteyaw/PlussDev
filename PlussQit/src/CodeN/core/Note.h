@@ -40,6 +40,9 @@ public:
   // Minimal core API remains implemented in Note.cpp
   ::std::vector<::std::int64_t> sizes() const;
   ::std::string_view at(::std::int64_t linear) const;
+  Note latex_to_text(::std::int64_t mode = 0) const;
+  Note text_to_latex(::std::int64_t mode = 0) const;
+  Note render_latex(::std::int64_t mode = 0) const;
 
   // Full surface (hundreds of methods + factories)
   #include "CodeN/generated/NoteMethodDeclsGen.h"

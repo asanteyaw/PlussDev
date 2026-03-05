@@ -45,6 +45,8 @@ static ::std::string tex_remove_color_text(::std::string_view s);
 static ::std::string tex_remove_left_right_text(::std::string_view s);
 static ::std::string tex_remove_big_delims_text(::std::string_view s);
 static ::std::string tex_remove_spacing_cmds_text(::std::string_view s);
+static ::std::string tex_expand_macros_text(::std::string_view s, ::std::int64_t max_passes);
+static ::std::string tex_remove_math_delimiters_text(::std::string_view s);
 
 static ::std::string replace_first_text(::std::string_view s, ::std::string_view from, ::std::string_view to) {
   if (from.empty()) return ::std::string(s);
@@ -2249,6 +2251,281 @@ static ::std::string tex_unescape_text(::std::string_view s) {
   return out;
 }
 
+static ::std::string lower_ascii_copy(::std::string_view s) {
+  ::std::string out;
+  out.reserve(s.size());
+  for (const unsigned char c : s) out.push_back(static_cast<char>(::std::tolower(c)));
+  return out;
+}
+
+static ::std::string text_to_tex_word_commands(::std::string_view s) {
+  static const ::std::unordered_map<::std::string, ::std::string> kWordMap{
+      {"alpha", "\\alpha"},   {"beta", "\\beta"},     {"gamma", "\\gamma"},
+      {"delta", "\\delta"},   {"theta", "\\theta"},   {"lambda", "\\lambda"},
+      {"mu", "\\mu"},         {"pi", "\\pi"},         {"sigma", "\\sigma"},
+      {"phi", "\\phi"},       {"omega", "\\omega"},   {"infty", "\\infty"},
+      {"inf", "\\infty"},     {"sum", "\\sum"},       {"prod", "\\prod"},
+      {"int", "\\int"},       {"sqrt", "\\sqrt"},
+  };
+
+  ::std::string out;
+  out.reserve(s.size() + 8);
+  for (::std::size_t i = 0; i < s.size();) {
+    const unsigned char c = static_cast<unsigned char>(s[i]);
+    if (::std::isalpha(c) == 0) {
+      out.push_back(s[i]);
+      ++i;
+      continue;
+    }
+    ::std::size_t j = i;
+    while (j < s.size() && ::std::isalpha(static_cast<unsigned char>(s[j])) != 0) ++j;
+    const auto token = s.substr(i, j - i);
+    const auto it = kWordMap.find(lower_ascii_copy(token));
+    if (it != kWordMap.end()) out.append(it->second);
+    else out.append(token);
+    i = j;
+  }
+  return out;
+}
+
+static bool tex_should_wrap_math(::std::string_view s) {
+  if (s.find('\\') != ::std::string_view::npos) return true;
+  return s.find_first_of("=+-*/^_<>") != ::std::string_view::npos;
+}
+
+static ::std::string text_to_tex_text(::std::string_view s, ::std::int64_t mode) {
+  ::std::string out = tex_escape_text(s);
+  if (mode > 0) {
+    out = text_to_tex_word_commands(out);
+    out = ::pluss::coden::native::cpu::replace_bytes(out, "<=", "\\leq ");
+    out = ::pluss::coden::native::cpu::replace_bytes(out, ">=", "\\geq ");
+    out = ::pluss::coden::native::cpu::replace_bytes(out, "!=", "\\neq ");
+    out = ::pluss::coden::native::cpu::replace_bytes(out, "+/-", "\\pm ");
+    out = ::pluss::coden::native::cpu::replace_bytes(out, "-/+", "\\mp ");
+    out = ::pluss::coden::native::cpu::replace_bytes(out, "<->", "\\leftrightarrow ");
+    out = ::pluss::coden::native::cpu::replace_bytes(out, "->", "\\to ");
+    out = ::pluss::coden::native::cpu::replace_bytes(out, "<-", "\\leftarrow ");
+
+    static const ::std::regex kSqrt(R"(\\sqrt\s*\(\s*([^)]+)\s*\))");
+    out = ::std::regex_replace(out, kSqrt, "\\\\sqrt{$1}");
+
+    out = ::pluss::coden::native::cpu::collapse_whitespace_ascii(out);
+    out = ::pluss::coden::native::cpu::strip_ascii(out);
+  }
+
+  if (mode > 1 && !out.empty() && tex_should_wrap_math(out)) {
+    out = "$" + out + "$";
+  }
+  return out;
+}
+
+static const char* tex_superscript_char(char c) {
+  switch (c) {
+    case '0': return "\xE2\x81\xB0";
+    case '1': return "\xC2\xB9";
+    case '2': return "\xC2\xB2";
+    case '3': return "\xC2\xB3";
+    case '4': return "\xE2\x81\xB4";
+    case '5': return "\xE2\x81\xB5";
+    case '6': return "\xE2\x81\xB6";
+    case '7': return "\xE2\x81\xB7";
+    case '8': return "\xE2\x81\xB8";
+    case '9': return "\xE2\x81\xB9";
+    case '+': return "\xE2\x81\xBA";
+    case '-': return "\xE2\x81\xBB";
+    case '=': return "\xE2\x81\xBC";
+    case '(': return "\xE2\x81\xBD";
+    case ')': return "\xE2\x81\xBE";
+    case 'n': return "\xE2\x81\xBF";
+    case 'i': return "\xE2\x81\xB1";
+    default: return nullptr;
+  }
+}
+
+static const char* tex_subscript_char(char c) {
+  switch (c) {
+    case '0': return "\xE2\x82\x80";
+    case '1': return "\xE2\x82\x81";
+    case '2': return "\xE2\x82\x82";
+    case '3': return "\xE2\x82\x83";
+    case '4': return "\xE2\x82\x84";
+    case '5': return "\xE2\x82\x85";
+    case '6': return "\xE2\x82\x86";
+    case '7': return "\xE2\x82\x87";
+    case '8': return "\xE2\x82\x88";
+    case '9': return "\xE2\x82\x89";
+    case '+': return "\xE2\x82\x8A";
+    case '-': return "\xE2\x82\x8B";
+    case '=': return "\xE2\x82\x8C";
+    case '(': return "\xE2\x82\x8D";
+    case ')': return "\xE2\x82\x8E";
+    case 'a': return "\xE2\x82\x90";
+    case 'e': return "\xE2\x82\x91";
+    case 'h': return "\xE2\x82\x95";
+    case 'i': return "\xE1\xB5\xA2";
+    case 'j': return "\xE2\xB1\xBC";
+    case 'k': return "\xE2\x82\x96";
+    case 'l': return "\xE2\x82\x97";
+    case 'm': return "\xE2\x82\x98";
+    case 'n': return "\xE2\x82\x99";
+    case 'o': return "\xE2\x82\x92";
+    case 'p': return "\xE2\x82\x9A";
+    case 'r': return "\xE1\xB5\xA3";
+    case 's': return "\xE2\x82\x9B";
+    case 't': return "\xE2\x82\x9C";
+    case 'u': return "\xE1\xB5\xA4";
+    case 'v': return "\xE1\xB5\xA5";
+    case 'x': return "\xE2\x82\x93";
+    default: return nullptr;
+  }
+}
+
+static bool tex_parse_braced_group(::std::string_view s,
+                                   ::std::size_t open_pos,
+                                   ::std::size_t* next_pos,
+                                   ::std::string* body) {
+  if (open_pos >= s.size() || s[open_pos] != '{') return false;
+  ::std::string out;
+  ::std::int64_t depth = 0;
+  for (::std::size_t i = open_pos; i < s.size(); ++i) {
+    const char c = s[i];
+    if (c == '\\' && i + 1 < s.size()) {
+      if (depth > 0) out.push_back(c);
+      if (depth > 0) out.push_back(s[++i]);
+      continue;
+    }
+    if (c == '{') {
+      if (depth > 0) out.push_back(c);
+      ++depth;
+      continue;
+    }
+    if (c == '}') {
+      --depth;
+      if (depth < 0) return false;
+      if (depth == 0) {
+        *next_pos = i + 1;
+        *body = ::std::move(out);
+        return true;
+      }
+      out.push_back(c);
+      continue;
+    }
+    if (depth > 0) out.push_back(c);
+  }
+  return false;
+}
+
+static ::std::string tex_render_script_token(::std::string_view token, bool superscript) {
+  ::std::string out;
+  out.reserve(token.size() * 2);
+  for (const char c : token) {
+    const char* mapped = superscript ? tex_superscript_char(c) : tex_subscript_char(c);
+    if (mapped == nullptr) return {};
+    out.append(mapped);
+  }
+  return out;
+}
+
+static ::std::string tex_render_apply_scripts(::std::string_view s) {
+  ::std::string out;
+  out.reserve(s.size() + 8);
+  for (::std::size_t i = 0; i < s.size();) {
+    const char c = s[i];
+    if ((c == '^' || c == '_') && i + 1 < s.size()) {
+      const bool superscript = (c == '^');
+      const ::std::size_t marker_pos = i;
+      ::std::size_t j = i + 1;
+      bool had_braces = false;
+      ::std::string token;
+      if (s[j] == '{') {
+        had_braces = true;
+        if (!tex_parse_braced_group(s, j, &j, &token)) {
+          out.push_back(c);
+          ++i;
+          continue;
+        }
+      } else {
+        token.assign(1, s[j]);
+        ++j;
+      }
+
+      const ::std::string rendered = tex_render_script_token(token, superscript);
+      if (!rendered.empty()) {
+        out.append(rendered);
+      } else {
+        out.push_back(s[marker_pos]);
+        if (had_braces) out.push_back('{');
+        out.append(token);
+        if (had_braces) out.push_back('}');
+      }
+      i = j;
+      continue;
+    }
+    out.push_back(c);
+    ++i;
+  }
+  return out;
+}
+
+template <::std::size_t N>
+static ::std::string tex_replace_named_commands(
+    ::std::string text,
+    const ::std::array<::std::pair<::std::string_view, ::std::string_view>, N>& map) {
+  for (const auto& [cmd, repl] : map) {
+    const ::std::regex re("\\\\" + regex_escape_text(cmd) + "(?![A-Za-z@])");
+    text = ::std::regex_replace(text, re, ::std::string(repl));
+  }
+  return text;
+}
+
+static ::std::string tex_render_text(::std::string_view s, ::std::int64_t mode) {
+  ::std::string out = tex_strip_comments_text(s);
+  out = tex_strip_preamble_text(out);
+  out = tex_expand_macros_text(out, mode > 0 ? mode : 1);
+  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\left", "");
+  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\right", "");
+  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\,", " ");
+  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\;", " ");
+  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\:", " ");
+  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\!", "");
+
+  static const ::std::regex kTextCmd(
+      R"(\\(?:text|mathrm|mathbf|mathit|mathsf|operatorname|textbf|textit|emph)\s*\{([^{}]*)\})");
+  static const ::std::regex kFrac(R"(\\(?:d|t)?frac\s*\{\s*([^{}]+?)\s*\}\s*\{\s*([^{}]+?)\s*\})");
+  static const ::std::regex kSqrtN(R"(\\sqrt\s*\[\s*([^\]]+?)\s*\]\s*\{\s*([^{}]+?)\s*\})");
+  static const ::std::regex kSqrt(R"(\\sqrt\s*\{\s*([^{}]+?)\s*\})");
+  static const ::std::regex kUnknownCmd(R"(\\[A-Za-z@]+[*]?)");
+
+  out = ::std::regex_replace(out, kTextCmd, "$1");
+  out = ::std::regex_replace(out, kFrac, "($1)/($2)");
+  out = ::std::regex_replace(out, kSqrtN, "root($2,$1)");
+  out = ::std::regex_replace(out, kSqrt, "sqrt($1)");
+
+  static constexpr ::std::array<::std::pair<::std::string_view, ::std::string_view>, 37> kMap{{
+      {"alpha", "\xCE\xB1"}, {"beta", "\xCE\xB2"}, {"gamma", "\xCE\xB3"}, {"delta", "\xCE\xB4"},
+      {"theta", "\xCE\xB8"}, {"lambda", "\xCE\xBB"}, {"mu", "\xCE\xBC"}, {"pi", "\xCF\x80"},
+      {"sigma", "\xCF\x83"}, {"phi", "\xCF\x86"}, {"omega", "\xCF\x89"}, {"Gamma", "\xCE\x93"},
+      {"Delta", "\xCE\x94"}, {"Theta", "\xCE\x98"}, {"Lambda", "\xCE\x9B"}, {"Pi", "\xCE\xA0"},
+      {"Sigma", "\xCE\xA3"}, {"Phi", "\xCE\xA6"}, {"Omega", "\xCE\xA9"}, {"pm", "\xC2\xB1"},
+      {"mp", "\xE2\x88\x93"}, {"times", "\xC3\x97"}, {"div", "\xC3\xB7"}, {"cdot", "\xC2\xB7"},
+      {"leq", "\xE2\x89\xA4"}, {"geq", "\xE2\x89\xA5"}, {"neq", "\xE2\x89\xA0"}, {"approx", "\xE2\x89\x88"},
+      {"to", "\xE2\x86\x92"}, {"leftarrow", "\xE2\x86\x90"}, {"leftrightarrow", "\xE2\x86\x94"},
+      {"infty", "\xE2\x88\x9E"}, {"sum", "\xE2\x88\x91"}, {"prod", "\xE2\x88\x8F"},
+      {"int", "\xE2\x88\xAB"}, {"in", "\xE2\x88\x88"}, {"notin", "\xE2\x88\x89"},
+  }};
+  out = tex_replace_named_commands(::std::move(out), kMap);
+  out = tex_render_apply_scripts(out);
+  out = tex_remove_math_delimiters_text(out);
+  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\\\", "\n");
+  out = ::std::regex_replace(out, kUnknownCmd, " ");
+  out = ::pluss::coden::native::cpu::replace_bytes(out, "{", "");
+  out = ::pluss::coden::native::cpu::replace_bytes(out, "}", "");
+  out = tex_unescape_text(out);
+  out = tex_fix_linebreaks_text(out);
+  out = ::pluss::coden::native::cpu::collapse_whitespace_ascii(out);
+  return ::pluss::coden::native::cpu::strip_ascii(out);
+}
+
 static ::std::string tex_remove_math_delimiters_text(::std::string_view s) {
   static const ::std::regex kMathDelims(R"(\\\(|\\\)|\\\[|\\\]|\$\$|\$)");
   return ::std::regex_replace(::std::string(s), kMathDelims, "");
@@ -3301,6 +3578,12 @@ Chord tex_replace_command(const Chord& x, ::std::string_view cmd, ::std::string_
 Chord tex_to_text(const Chord& x, ::std::int64_t mode) {
   return transform_chord_text(x, [mode](auto s) { return tex_to_text_text(s, mode); });
 }
+Chord text_to_tex(const Chord& x, ::std::int64_t mode) {
+  return transform_chord_text(x, [mode](auto s) { return text_to_tex_text(s, mode); });
+}
+Chord tex_render(const Chord& x, ::std::int64_t mode) {
+  return transform_chord_text(x, [mode](auto s) { return tex_render_text(s, mode); });
+}
 Chord tex_sanitize(const Chord& x, ::std::int64_t level) {
   return transform_chord_text(x, [level](auto s) { return tex_sanitize_text(s, level); });
 }
@@ -3952,6 +4235,12 @@ Note tex_replace_command(const Note& x, ::std::string_view cmd, ::std::string_vi
 }
 Note tex_to_text(const Note& x, ::std::int64_t mode) {
   return transform_note_text(x, "Note::tex_to_text", [mode](auto s) { return tex_to_text_text(s, mode); });
+}
+Note text_to_tex(const Note& x, ::std::int64_t mode) {
+  return transform_note_text(x, "Note::text_to_tex", [mode](auto s) { return text_to_tex_text(s, mode); });
+}
+Note tex_render(const Note& x, ::std::int64_t mode) {
+  return transform_note_text(x, "Note::tex_render", [mode](auto s) { return tex_render_text(s, mode); });
 }
 Note tex_sanitize(const Note& x, ::std::int64_t level) {
   return transform_note_text(x, "Note::tex_sanitize", [level](auto s) { return tex_sanitize_text(s, level); });

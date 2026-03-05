@@ -334,6 +334,18 @@ NoteBase::value_type NoteBase::scalar() const {
   return impl->bytes_at(linear);
 }
 
+Note Note::latex_to_text(::std::int64_t mode) const {
+  return ops_internal::tex_to_text(*this, mode);
+}
+
+Note Note::text_to_latex(::std::int64_t mode) const {
+  return ops_internal::text_to_tex(*this, mode);
+}
+
+Note Note::render_latex(::std::int64_t mode) const {
+  return ops_internal::tex_render(*this, mode);
+}
+
 Note Note::operator+(const Note& other) const { return note_concat_pair(*this, other); }
 Note Note::operator+(::std::string_view suffix) const {
   const ::std::array<::std::string_view, 1> flat{suffix};

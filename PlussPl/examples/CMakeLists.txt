@@ -17,6 +17,8 @@ plusspl_add_example(plusspl_2d_all_families_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/2D/all_2d_families_demo.cpp)
 plusspl_add_example(plusspl_2d_seaborn_style_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/2D/seaborn_style_gallery.cpp)
+plusspl_add_example(plusspl_2d_flash_seaborn_demo
+    ${CMAKE_CURRENT_SOURCE_DIR}/2D/flash_seaborn_demo.cpp)
 plusspl_add_example(plusspl_3d_gallery_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/3D/spatial_gallery.cpp)
 plusspl_add_example(plusspl_3d_option_surface_demo
@@ -40,6 +42,7 @@ add_custom_target(plusspl_gallery_outputs
     COMMAND plusspl_2d_fieldmap_demo
     COMMAND plusspl_2d_all_families_demo
     COMMAND plusspl_2d_seaborn_style_demo
+    COMMAND plusspl_2d_flash_seaborn_demo
     COMMAND plusspl_3d_gallery_demo
     COMMAND plusspl_3d_option_surface_demo
     COMMAND plusspl_3d_wave_mesh_demo
@@ -54,6 +57,7 @@ add_custom_target(plusspl_gallery_outputs
         plusspl_2d_fieldmap_demo
         plusspl_2d_all_families_demo
         plusspl_2d_seaborn_style_demo
+        plusspl_2d_flash_seaborn_demo
         plusspl_3d_gallery_demo
         plusspl_3d_option_surface_demo
         plusspl_3d_wave_mesh_demo

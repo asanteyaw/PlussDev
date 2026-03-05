@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
@@ -21,8 +22,22 @@ using Studio = pluss::pl::Studio;
 using Pane = pluss::pl::Pane;
 using Trace = pluss::pl::Trace;
 using Rgba = pluss::pl::Rgba;
+namespace flash = pluss::pl::flash;
 
 constexpr std::string_view kDefaultPlotName = "dataframe";
+
+std::string canonical_plot_kind(std::string_view kind) {
+  std::string out;
+  out.reserve(kind.size());
+  for (const char ch : kind) {
+    if (ch == '-' || ch == ' ') {
+      out.push_back('_');
+    } else {
+      out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
+    }
+  }
+  return out;
+}
 
 void setup_pane(Pane& pane, bool show_legend) {
   pane.grid(pluss::pl::GridStyle::Major);
@@ -461,12 +476,13 @@ Studio scatter_matrix_from_names(const DataFrame& frame, const std::vector<std::
       pane.place(row, col);
       setup_pane(pane, false);
       if (row == col) {
-        auto& trace = pane.bucket(columns[static_cast<std::size_t>(col)], 12);
+        auto& trace = flash::histplot(pane, columns[static_cast<std::size_t>(col)], 12);
         trace.label(names[static_cast<std::size_t>(col)]);
         style_trace(trace, static_cast<std::size_t>(col), 0.9, 1.0);
       } else {
-        auto& trace = pane.cloud(columns[static_cast<std::size_t>(col)],
-                                 columns[static_cast<std::size_t>(row)]);
+        auto& trace = flash::scatterplot(pane,
+                                         columns[static_cast<std::size_t>(col)],
+                                         columns[static_cast<std::size_t>(row)]);
         trace.label(names[static_cast<std::size_t>(row)] + " vs " + names[static_cast<std::size_t>(col)]);
         style_trace(trace, static_cast<std::size_t>(row + col), 0.92, 1.2);
       }
@@ -502,7 +518,7 @@ Studio box_from_names(const DataFrame& frame, const std::vector<std::string>& na
   auto fig = make_studio();
   auto& pane = fig.pane2();
   setup_pane(pane, false);
-  auto& trace = pane.quartet(group_id, merged_values);
+  auto& trace = flash::boxplot(pane, group_id, merged_values);
   trace.label("distribution");
   style_trace(trace, 0, 0.95, 1.1);
 
@@ -579,7 +595,7 @@ pluss::pl::Studio DataFramePlotAccessor::line(
                            const std::vector<double>& y_values,
                            std::string_view name,
                            std::size_t index) {
-                          auto& trace = pane.trend(axis.values, y_values);
+                          auto& trace = flash::lineplot(pane, axis.values, y_values);
                           trace.label(std::string(name));
                           style_trace(trace, index, 1.0, 1.6);
                         });
@@ -672,7 +688,7 @@ pluss::pl::Studio DataFramePlotAccessor::scatter(std::string_view x_feature,
   pane.y_label(std::string(y_feature));
 
   if (!hue_feature.has_value()) {
-    auto& trace = pane.cloud(axis.values, y_values);
+    auto& trace = flash::scatterplot(pane, axis.values, y_values);
     trace.label(std::string(y_feature));
     style_trace(trace, 0, 0.92, 1.1);
     return fig;
@@ -701,7 +717,7 @@ pluss::pl::Studio DataFramePlotAccessor::scatter(std::string_view x_feature,
       grouped_x.push_back(axis.values[i]);
       grouped_y.push_back(y_values[i]);
     }
-    auto& trace = pane.cloud(grouped_x, grouped_y);
+    auto& trace = flash::scatterplot(pane, grouped_x, grouped_y);
     trace.label(groups[group_index]);
     style_trace(trace, group_index, 0.9, 1.1);
   }
@@ -734,7 +750,7 @@ pluss::pl::Studio DataFramePlotAccessor::bar(
     auto [centers, widths, labels] = grouped_bar_layout(axis, group_index, group_count);
     (void)widths;
     (void)labels;
-    auto& trace = pane.columns(centers, y_values);
+    auto& trace = flash::barplot(pane, centers, y_values);
     trace.label(std::string(y_name));
     style_trace(trace, group_index, 0.88, 1.0);
     ++group_index;
@@ -763,7 +779,7 @@ pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
     for (std::size_t i = 0; i < heights.size(); ++i) {
       tops[i] = baselines[i] + heights[i];
     }
-    auto& trace = pane.columns(axis.values, tops);
+    auto& trace = flash::barplot(pane, axis.values, tops);
     trace.label(std::string(y_name));
     style_trace(trace, feature_index, 0.65, 1.0);
     baselines = std::move(tops);
@@ -781,8 +797,9 @@ pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, std::int
   auto fig = make_studio();
   auto& pane = fig.pane2();
   setup_pane(pane, false);
-  auto& trace = pane.bucket(thread_to_plot_numeric_values(frame_.features(feature)),
-                            static_cast<int>(std::max<std::int64_t>(1, bins)));
+  auto& trace = flash::histplot(pane,
+                                thread_to_plot_numeric_values(frame_.features(feature)),
+                                static_cast<int>(std::max<std::int64_t>(1, bins)));
   trace.label(std::string(feature));
   style_trace(trace, 0, 0.95, 1.0);
   pane.x_label(std::string(feature)).y_label("count");
@@ -899,8 +916,107 @@ pluss::pl::Studio DataFramePlotAccessor::auto_plot(std::initializer_list<std::st
   return corr_heatmap_from_names(frame_, names);
 }
 
+pluss::pl::Studio DataFramePlotAccessor::kind(std::string_view kind_name,
+                                              std::string_view feature,
+                                              std::optional<std::string_view> x_feature,
+                                              std::optional<std::string_view> hue_feature,
+                                              std::int64_t bins) const {
+  return kind(kind_name, {feature}, x_feature, hue_feature, bins);
+}
+
+pluss::pl::Studio DataFramePlotAccessor::kind(std::string_view kind_name,
+                                              std::initializer_list<std::string_view> features,
+                                              std::optional<std::string_view> x_feature,
+                                              std::optional<std::string_view> hue_feature,
+                                              std::int64_t bins) const {
+  const auto kind = canonical_plot_kind(kind_name);
+  const auto require_features = [&](std::string_view where) {
+    PLUSS_CHECK(features.size() > 0, std::string(where) + ": requires at least one feature");
+  };
+
+  if (kind == "line" || kind == "lineplot") {
+    require_features("DataFrame::plot(kind=line)");
+    return features.size() == 1 ? line(*features.begin(), x_feature) : line(features, x_feature);
+  }
+  if (kind == "step" || kind == "stepplot") {
+    require_features("DataFrame::plot(kind=step)");
+    return features.size() == 1 ? step(*features.begin(), x_feature) : step(features, x_feature);
+  }
+  if (kind == "area" || kind == "areaplot") {
+    require_features("DataFrame::plot(kind=area)");
+    return features.size() == 1 ? area(*features.begin(), x_feature) : area(features, x_feature);
+  }
+  if (kind == "area_stacked" || kind == "stacked_area") {
+    require_features("DataFrame::plot(kind=area_stacked)");
+    return area_stacked(features, x_feature);
+  }
+  if (kind == "bar" || kind == "barplot") {
+    require_features("DataFrame::plot(kind=bar)");
+    return features.size() == 1 ? bar(*features.begin(), x_feature) : bar(features, x_feature);
+  }
+  if (kind == "bar_stacked" || kind == "stacked_bar") {
+    require_features("DataFrame::plot(kind=bar_stacked)");
+    return bar_stacked(features, x_feature);
+  }
+  if (kind == "hist" || kind == "histogram" || kind == "histplot" || kind == "displot") {
+    require_features("DataFrame::plot(kind=hist)");
+    return hist(*features.begin(), bins);
+  }
+  if (kind == "box" || kind == "boxplot") {
+    return box(features);
+  }
+  if (kind == "scatter" || kind == "scatterplot") {
+    PLUSS_CHECK(features.size() >= 2 || (features.size() == 1 && x_feature.has_value()),
+                "DataFrame::plot(kind=scatter): provide [x, y] features or y plus x_feature");
+    if (features.size() >= 2) {
+      auto it = features.begin();
+      const auto x_name = *it++;
+      const auto y_name = *it;
+      return scatter(x_name, y_name, hue_feature);
+    }
+    return scatter(*x_feature, *features.begin(), hue_feature);
+  }
+  if (kind == "heatmap") {
+    if (features.size() == 3) {
+      auto it = features.begin();
+      const auto case_feature = *it++;
+      const auto feature_feature = *it++;
+      const auto value_feature = *it;
+      return heatmap(case_feature, feature_feature, value_feature);
+    }
+    return heatmap(features);
+  }
+  if (kind == "corr" || kind == "corr_heatmap" || kind == "correlation") {
+    return corr_heatmap(features);
+  }
+  if (kind == "scatter_matrix" || kind == "pairplot") {
+    return scatter_matrix(features);
+  }
+  if (kind == "auto" || kind == "auto_plot") {
+    return auto_plot(features);
+  }
+
+  PLUSS_FAIL("DataFrame::plot(kind): unsupported kind '" + std::string(kind_name) + "'");
+}
+
 DataFramePlotAccessor DataFrame::plot() const {
   return DataFramePlotAccessor(*this);
+}
+
+pluss::pl::Studio DataFrame::plot(std::string_view kind,
+                                  std::initializer_list<std::string_view> features,
+                                  std::optional<std::string_view> x_feature,
+                                  std::optional<std::string_view> hue_feature,
+                                  std::int64_t bins) const {
+  return plot().kind(kind, features, x_feature, hue_feature, bins);
+}
+
+pluss::pl::Studio DataFrame::plot(std::string_view kind,
+                                  std::string_view feature,
+                                  std::optional<std::string_view> x_feature,
+                                  std::optional<std::string_view> hue_feature,
+                                  std::int64_t bins) const {
+  return plot().kind(kind, feature, x_feature, hue_feature, bins);
 }
 
 } // namespace pluss::table

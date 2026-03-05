@@ -1,4 +1,5 @@
 #include "pluss/pl/plusspl.h"
+#include "pluss/coden/note_factory.h"
 #include "plotism/render/export_bridge.h"
 
 #include <algorithm>
@@ -359,6 +360,79 @@ struct WedgeSlice {
     out.push_back(c);
   }
   return out;
+}
+
+[[nodiscard]] bool looks_like_tex_markup(std::string_view text) noexcept {
+  return text.find('\\') != std::string_view::npos || text.find('$') != std::string_view::npos;
+}
+
+[[nodiscard]] std::size_t tex_marker_count(std::string_view text) noexcept {
+  std::size_t count = 0;
+  for (const char c : text) {
+    if (c == '\\' || c == '$') {
+      ++count;
+    }
+  }
+  return count;
+}
+
+void replace_all(std::string& text, std::string_view from, std::string_view to) {
+  if (from.empty()) {
+    return;
+  }
+  std::size_t pos = 0;
+  while ((pos = text.find(from, pos)) != std::string::npos) {
+    text.replace(pos, from.size(), to);
+    pos += to.size();
+  }
+}
+
+void apply_core_tex_symbol_replacements(std::string& text) {
+  constexpr std::string_view kLeqUtf8 = "\xE2\x89\xA4";
+  constexpr std::string_view kGeqUtf8 = "\xE2\x89\xA5";
+  constexpr std::string_view kTimesUtf8 = "\xC3\x97";
+  constexpr std::string_view kPlusMinusUtf8 = "\xC2\xB1";
+  replace_all(text, "\\leq", kLeqUtf8);
+  replace_all(text, "\\le", kLeqUtf8);
+  replace_all(text, "\\geq", kGeqUtf8);
+  replace_all(text, "\\ge", kGeqUtf8);
+  replace_all(text, "\\times", kTimesUtf8);
+  replace_all(text, "\\pm", kPlusMinusUtf8);
+}
+
+[[nodiscard]] std::string normalize_display_text(std::string text) {
+  if (text.empty()) {
+    return text;
+  }
+
+  std::string fallback = text;
+  apply_core_tex_symbol_replacements(fallback);
+  if (!looks_like_tex_markup(text)) {
+    return fallback;
+  }
+
+  try {
+    auto note = pluss::make_note(text);
+    std::string candidate;
+    try {
+      candidate = std::string(note.render_latex().scalar());
+    } catch (...) {
+      candidate = std::string(note.latex_to_text().scalar());
+    }
+    apply_core_tex_symbol_replacements(candidate);
+
+    if (tex_marker_count(candidate) < tex_marker_count(fallback)) {
+      return candidate;
+    }
+    if (tex_marker_count(candidate) == tex_marker_count(fallback) &&
+        candidate.size() >= fallback.size() / 2) {
+      return candidate;
+    }
+  } catch (...) {
+    // Keep fallback label text if CodeN tex transforms reject malformed input.
+  }
+
+  return fallback;
 }
 
 [[nodiscard]] std::vector<double> to_f64(const Series& series) {
@@ -2873,6 +2947,7 @@ void add_text(
     Rgba color,
     TextCommand::Align align = TextCommand::Align::Start,
     double rotation_deg = 0.0) {
+  text = normalize_display_text(std::move(text));
   if (text.empty()) {
     return;
   }

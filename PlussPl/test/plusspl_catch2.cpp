@@ -401,6 +401,86 @@ TEST_CASE("PlussPl exposes limit fit policies on pane axes", "[plusspl][axis][li
   REQUIRE(pane.color_axis().limit_method == LimitMethod::Padded);
 }
 
+TEST_CASE("PlussPl normalizes TeX-style text in labels and ticks", "[plusspl][text][tex]") {
+  using namespace pluss::pl;
+
+  Studio book("tex-normalization");
+  auto& pane = book.pane2();
+  pane.x_label("$\\alpha + \\beta \\leq \\gamma$")
+      .y_label("u \\geq 0")
+      .x_ticks(std::array<double, 2>{0.0, 1.0}, std::vector<std::string>{"t \\leq 1", "t \\geq 1"});
+  pane.trend(std::array<double, 2>{0.0, 1.0}, std::array<double, 2>{0.0, 1.0});
+
+  const std::string svg = book.to_svg();
+
+  REQUIRE(svg.find("\\alpha") == std::string::npos);
+  REQUIRE(svg.find("\\beta") == std::string::npos);
+  REQUIRE(svg.find("\\leq") == std::string::npos);
+  REQUIRE(svg.find("\\geq") == std::string::npos);
+
+  Studio pdf_book("pdf-unicode-fallback");
+  auto& pdf_pane = pdf_book.pane2();
+  pdf_pane.x_label("A\xE2\x89\xA4" "B")
+      .y_label("C\xE2\x89\xA5" "D");
+  pdf_pane.trend(std::array<double, 2>{0.0, 1.0}, std::array<double, 2>{0.0, 1.0});
+
+  const std::string pdf = pdf_book.to_pdf();
+  REQUIRE(pdf.find("<=") != std::string::npos);
+  REQUIRE(pdf.find(">=") != std::string::npos);
+}
+
+TEST_CASE("PlussPl flash facade maps seaborn-like names to PlussPl traces", "[plusspl][flash]") {
+  using namespace pluss::pl;
+  using namespace pluss::pl::flash;
+
+  Studio book("flash-facade");
+  auto& pane = book.pane2("main");
+  set_theme(book, Theme::paper());
+  set_style(pane, GridStyle::Major);
+  set_context(book, 1000.0, 700.0, 1.2, 1.1);
+
+  auto x = pluss::linspace(0.0, 1.0, 8, pluss::ScalarType::Float64);
+  auto y = pluss::make_series(std::vector<double>{0.0, 0.2, 0.35, 0.6, 0.7, 0.82, 0.9, 1.0}, {8});
+
+  scatterplot(pane, x, y).label("scatter");
+  lineplot(pane, x, y).label("line");
+  histplot(pane, y, 6).label("hist");
+  regplot(pane, x, y).label("reg");
+  ecdfplot(pane, y).label("ecdf");
+  kdeplot(pane, y, 32).label("kde");
+
+  auto cats = pluss::make_note({"A", "B", "A", "C", "B", "A", "C", "A"});
+  countplot(pane, cats).label("counts");
+
+  auto z = pluss::make_series(
+      std::vector<double>{
+          0.0, 0.4, 0.7,
+          0.2, 0.6, 0.9,
+          0.3, 0.8, 1.0,
+      },
+      {3, 3});
+  auto& heat = book.pane2("heat");
+  heatmap(heat, std::array<double, 3>{1.0, 2.0, 3.0}, std::array<double, 3>{1.0, 2.0, 3.0}, z).label("heatmap");
+
+  REQUIRE(book.pane_count() == 2);
+  REQUIRE(book.panes().front().trace_count() >= 7);
+  REQUIRE(book.panes().back().trace_count() >= 1);
+  REQUIRE(book.to_svg().find("<svg") != std::string::npos);
+
+  Studio rel("flash-relplot");
+  relplot(rel, x, y, "line", "rel").label("rel-line");
+  REQUIRE(rel.pane_count() == 1);
+  REQUIRE(rel.panes().front().trace_count() == 1);
+  REQUIRE(rel.to_svg().find("<svg") != std::string::npos);
+
+  const auto names = get_dataset_names();
+  REQUIRE(!names.empty());
+  const auto tips = load_dataset("tips");
+  REQUIRE(tips.has_value());
+  REQUIRE(tips->numerics.contains("tip"));
+  REQUIRE(tips->text.contains("day"));
+}
+
 TEST_CASE("PlussPl renders mixed-sign symlog traces", "[plusspl][scale][symlog]") {
   using namespace pluss::pl;
 

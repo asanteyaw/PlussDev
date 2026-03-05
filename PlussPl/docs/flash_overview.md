@@ -1,0 +1,41 @@
+# Flash: Seaborn-Style Layer On PlussPl
+
+`flash` is a convenience layer in `pluss::pl::flash` that maps Seaborn-style function names to PlussPl primitives.
+
+## Header
+
+```cpp
+#include <pluss/pluss.h>
+```
+
+## Core Usage
+
+```cpp
+using namespace pluss::pl;
+using namespace pluss::pl::flash;
+
+Studio fig("flash");
+auto& ax = fig.pane2();
+set_theme(fig, Theme::paper());
+set_context(fig, 1200.0, 780.0, 1.2, 1.1);
+set_style(ax, GridStyle::Major);
+
+scatterplot(ax, x, y);
+lineplot(ax, x, y);
+histplot(ax, values, 20);
+regplot(ax, x, y);
+heatmap(ax, gx, gy, z);
+```
+
+## Supported Seaborn-Style Names
+
+- Relational: `relplot`, `scatterplot`, `lineplot`
+- Distribution: `displot`, `histplot`, `kdeplot`, `ecdfplot`, `rugplot`
+- Categorical: `catplot`, `stripplot`, `swarmplot`, `boxplot`, `violinplot`, `boxenplot`, `pointplot`, `barplot`, `countplot`
+- Regression: `regplot`, `lmplot`, `residplot`
+- Matrix: `heatmap`, `clustermap`
+- Grids: `FacetGrid`, `PairGrid`, `JointGrid`, `pairplot`, `jointplot`
+- Palette helpers: `color_palette`, `hls_palette`, `husl_palette`, `cubehelix_palette`, `light_palette`, `dark_palette`, `diverging_palette`, `blend_palette`, `mpl_palette`, `xkcd_palette`, `crayon_palette`
+- Styling: `set`, `set_theme`, `set_style`, `axes_style`, `set_context`, `plotting_context`, `despine`, `move_legend`
+- Dataset helpers: `load_dataset`, `get_dataset_names`
+

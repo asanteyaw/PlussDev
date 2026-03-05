@@ -1,0 +1,647 @@
+#pragma once
+
+#include "pluss/coden/note_factory.h"
+#include "pluss/codeh/codeh.h"
+#include "pluss/pl/studio.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <map>
+#include <optional>
+#include <ranges>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+namespace pluss::pl::flash {
+namespace detail {
+
+template <class T>
+concept ArithmeticValue = std::is_arithmetic_v<std::remove_cvref_t<T>>;
+
+template <class Range>
+concept ArithmeticRange =
+    std::ranges::input_range<Range> && ArithmeticValue<std::ranges::range_value_t<Range>>;
+
+[[nodiscard]] inline Series to_series(const Series& values) {
+  return values;
+}
+
+template <ArithmeticRange Range>
+[[nodiscard]] inline Series to_series(Range&& values) {
+  return ::pluss::pl::detail::to_series(std::forward<Range>(values));
+}
+
+[[nodiscard]] inline Series to_series(const Timeline& timeline) {
+  return timeline.epoch_nanos().to(ScalarType::Float64).reshape({timeline.numel()});
+}
+
+[[nodiscard]] inline Series to_series(const TimeIndex& index) {
+  return index.timeline().epoch_nanos().to(ScalarType::Float64).reshape({index.size()});
+}
+
+[[nodiscard]] inline std::vector<std::string> note_values(const Note& note) {
+  const auto values = note.vector();
+  std::vector<std::string> out;
+  out.reserve(values.size());
+  for (const std::string_view value : values) {
+    out.emplace_back(value);
+  }
+  return out;
+}
+
+[[nodiscard]] inline std::vector<double> to_f64_vector(const Series& values) {
+  return values.to(ScalarType::Float64).to_vec<double>();
+}
+
+[[nodiscard]] inline Series flatten_f64(const Series& values) {
+  return values.to(ScalarType::Float64).reshape({values.numel()});
+}
+
+[[nodiscard]] inline std::pair<std::vector<double>, std::vector<std::string>> encode_categories(
+    const Note& categories) {
+  const std::vector<std::string> labels = note_values(categories);
+  std::vector<double> encoded;
+  encoded.reserve(labels.size());
+  std::vector<std::string> uniques;
+  std::map<std::string, std::int64_t> index_of;
+  for (const std::string& label : labels) {
+    const auto [it, inserted] = index_of.emplace(label, static_cast<std::int64_t>(index_of.size()));
+    if (inserted) {
+      uniques.push_back(label);
+    }
+    encoded.push_back(static_cast<double>(it->second + 1));
+  }
+  return {std::move(encoded), std::move(uniques)};
+}
+
+[[nodiscard]] inline std::vector<double> linspace(double low, double high, std::int64_t count) {
+  if (count <= 0) {
+    return {};
+  }
+  if (count == 1) {
+    return {low};
+  }
+  std::vector<double> out(static_cast<std::size_t>(count), low);
+  const double step = (high - low) / static_cast<double>(count - 1);
+  for (std::int64_t i = 0; i < count; ++i) {
+    out[static_cast<std::size_t>(i)] = low + step * static_cast<double>(i);
+  }
+  return out;
+}
+
+[[nodiscard]] inline std::pair<double, double> linear_fit(const Series& x, const Series& y) {
+  const std::vector<double> vx = to_f64_vector(x);
+  const std::vector<double> vy = to_f64_vector(y);
+  if (vx.size() != vy.size() || vx.empty()) {
+    throw std::invalid_argument("flash::linear_fit requires equal non-empty x/y vectors");
+  }
+
+  const double n = static_cast<double>(vx.size());
+  double sum_x = 0.0;
+  double sum_y = 0.0;
+  double sum_xx = 0.0;
+  double sum_xy = 0.0;
+  for (std::size_t i = 0; i < vx.size(); ++i) {
+    sum_x += vx[i];
+    sum_y += vy[i];
+    sum_xx += vx[i] * vx[i];
+    sum_xy += vx[i] * vy[i];
+  }
+  const double denom = n * sum_xx - sum_x * sum_x;
+  if (std::abs(denom) < 1e-12) {
+    return {0.0, sum_y / n};
+  }
+  const double slope = (n * sum_xy - sum_x * sum_y) / denom;
+  const double intercept = (sum_y - slope * sum_x) / n;
+  return {slope, intercept};
+}
+
+[[nodiscard]] inline std::pair<std::vector<double>, std::vector<double>> ecdf_xy(const Series& values) {
+  std::vector<double> x = to_f64_vector(values);
+  std::sort(x.begin(), x.end());
+  std::vector<double> y(x.size(), 0.0);
+  const double n = static_cast<double>(x.size());
+  for (std::size_t i = 0; i < x.size(); ++i) {
+    y[i] = static_cast<double>(i + 1) / n;
+  }
+  return {std::move(x), std::move(y)};
+}
+
+[[nodiscard]] inline std::pair<std::vector<double>, std::vector<double>> gaussian_kde(
+    const Series& values,
+    std::int64_t grid_points) {
+  std::vector<double> samples = to_f64_vector(values);
+  if (samples.empty()) {
+    return {{}, {}};
+  }
+  std::sort(samples.begin(), samples.end());
+  const std::int64_t count = std::max<std::int64_t>(grid_points, 16);
+  const double low = samples.front();
+  const double high = samples.back();
+  std::vector<double> x = linspace(low, high, count);
+  std::vector<double> y(x.size(), 0.0);
+
+  double mean = 0.0;
+  for (const double value : samples) {
+    mean += value;
+  }
+  mean /= static_cast<double>(samples.size());
+  double variance = 0.0;
+  for (const double value : samples) {
+    const double delta = value - mean;
+    variance += delta * delta;
+  }
+  variance /= static_cast<double>(samples.size());
+  const double sigma = std::sqrt(std::max(variance, 1e-18));
+  const double span = std::max(high - low, 1e-6);
+  const double bandwidth =
+      sigma > 0.0 ? (1.06 * sigma * std::pow(static_cast<double>(samples.size()), -0.2)) : (span / 24.0);
+  const double h = std::max(bandwidth, 1e-6);
+  const double inv_norm = 1.0 / (std::sqrt(2.0 * 3.14159265358979323846) * h * static_cast<double>(samples.size()));
+
+  for (std::size_t i = 0; i < x.size(); ++i) {
+    double acc = 0.0;
+    for (const double sample : samples) {
+      const double u = (x[i] - sample) / h;
+      acc += std::exp(-0.5 * u * u);
+    }
+    y[i] = acc * inv_norm;
+  }
+
+  return {std::move(x), std::move(y)};
+}
+
+[[nodiscard]] inline Rgba mix(Rgba a, Rgba b, double t) noexcept {
+  const double s = std::clamp(t, 0.0, 1.0);
+  return Rgba{
+      (1.0 - s) * a.red + s * b.red,
+      (1.0 - s) * a.green + s * b.green,
+      (1.0 - s) * a.blue + s * b.blue,
+      (1.0 - s) * a.alpha + s * b.alpha,
+  };
+}
+
+[[nodiscard]] inline Rgba hsl_to_rgb(double h, double s, double l) noexcept {
+  const auto hue_to_rgb = [](double p, double q, double t) {
+    if (t < 0.0) t += 1.0;
+    if (t > 1.0) t -= 1.0;
+    if (t < 1.0 / 6.0) return p + (q - p) * 6.0 * t;
+    if (t < 1.0 / 2.0) return q;
+    if (t < 2.0 / 3.0) return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
+    return p;
+  };
+
+  const double hh = std::fmod(std::max(h, 0.0), 1.0);
+  if (s <= 0.0) {
+    return Rgba{l, l, l, 1.0};
+  }
+  const double q = l < 0.5 ? (l * (1.0 + s)) : (l + s - l * s);
+  const double p = 2.0 * l - q;
+  return Rgba{
+      hue_to_rgb(p, q, hh + 1.0 / 3.0),
+      hue_to_rgb(p, q, hh),
+      hue_to_rgb(p, q, hh - 1.0 / 3.0),
+      1.0,
+  };
+}
+
+inline void apply_tick_font_scale(Pane& pane, double tick_scale, double axis_scale) {
+  pane.tick_font_scale(tick_scale).axis_label_font_scale(axis_scale);
+}
+
+} // namespace detail
+
+struct Dataset {
+  std::map<std::string, Series> numerics{};
+  std::map<std::string, Note> text{};
+};
+
+inline Studio& set(Studio& studio, Theme theme = Theme::paper()) {
+  studio.theme(std::move(theme));
+  return studio;
+}
+
+inline Studio& set_theme(Studio& studio, Theme theme = Theme::paper()) {
+  return set(studio, std::move(theme));
+}
+
+inline Pane& set_style(Pane& pane, GridStyle style = GridStyle::Major) {
+  return pane.grid(style);
+}
+
+inline Pane& axes_style(Pane& pane, GridStyle style = GridStyle::Major) {
+  return set_style(pane, style);
+}
+
+inline Studio& set_context(
+    Studio& studio,
+    double width,
+    double height,
+    double tick_font_scale = 1.0,
+    double axis_label_font_scale = 1.0) {
+  studio.size(width, height);
+  for (const Pane& pane_const : studio.panes()) {
+    auto& pane = const_cast<Pane&>(pane_const);
+    detail::apply_tick_font_scale(pane, tick_font_scale, axis_label_font_scale);
+  }
+  return studio;
+}
+
+inline Studio& plotting_context(
+    Studio& studio,
+    double width,
+    double height,
+    double tick_font_scale = 1.0,
+    double axis_label_font_scale = 1.0) {
+  return set_context(studio, width, height, tick_font_scale, axis_label_font_scale);
+}
+
+inline Pane& despine(Pane& pane, bool = true) noexcept {
+  return pane;
+}
+
+inline Pane& move_legend(Pane& pane, KeyPlace place) noexcept {
+  return pane.key(place);
+}
+
+inline Studio& move_legend(Studio& studio, KeyDock dock) noexcept {
+  return studio.trace_key(dock);
+}
+
+template <class X, class Y>
+Trace& scatterplot(Pane& pane, X&& x, Y&& y) {
+  return pane.cloud(detail::to_series(std::forward<X>(x)), detail::to_series(std::forward<Y>(y)));
+}
+
+template <class X, class Y>
+Trace& lineplot(Pane& pane, X&& x, Y&& y) {
+  return pane.trend(detail::to_series(std::forward<X>(x)), detail::to_series(std::forward<Y>(y)));
+}
+
+template <class X, class Y>
+Trace& relplot(Pane& pane, X&& x, Y&& y, std::string_view kind = "scatter") {
+  if (kind == "line") {
+    return lineplot(pane, std::forward<X>(x), std::forward<Y>(y));
+  }
+  return scatterplot(pane, std::forward<X>(x), std::forward<Y>(y));
+}
+
+template <class X, class Y>
+Trace& relplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter", std::string title = {}) {
+  Pane& pane = studio.pane2(std::move(title));
+  return relplot(pane, std::forward<X>(x), std::forward<Y>(y), kind);
+}
+
+template <class Values>
+Trace& histplot(Pane& pane, Values&& values, int bins = 12) {
+  return pane.bucket(detail::to_series(std::forward<Values>(values)), bins);
+}
+
+template <class Values>
+Trace& displot(Pane& pane, Values&& values, int bins = 12) {
+  return histplot(pane, std::forward<Values>(values), bins);
+}
+
+template <class X, class Density>
+  requires(!std::integral<std::remove_cvref_t<Density>>)
+Trace& kdeplot(Pane& pane, X&& x, Density&& density) {
+  return lineplot(pane, std::forward<X>(x), std::forward<Density>(density));
+}
+
+template <class Values>
+Trace& kdeplot(Pane& pane, Values&& values, std::int64_t points = 128) {
+  const auto [x, y] = detail::gaussian_kde(detail::to_series(std::forward<Values>(values)), points);
+  return lineplot(pane, x, y);
+}
+
+template <class Values>
+Trace& ecdfplot(Pane& pane, Values&& values) {
+  const auto [x, y] = detail::ecdf_xy(detail::to_series(std::forward<Values>(values)));
+  return lineplot(pane, x, y);
+}
+
+template <class Values>
+Trace& rugplot(Pane& pane, Values&& values, double height = 0.08) {
+  const Series x = detail::to_series(std::forward<Values>(values));
+  const std::vector<double> y(static_cast<std::size_t>(x.numel()), std::max(height, 1e-4));
+  return pane.spike(x, pluss::make_series(y, {x.numel()}), 0.0);
+}
+
+inline Trace& stripplot(Pane& pane, const Note& categories, const Series& values) {
+  const auto [encoded, labels] = detail::encode_categories(categories);
+  pane.x_categories(labels);
+  return pane.cloud(pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
+}
+
+template <class Group, class Values>
+  requires(!std::same_as<std::remove_cvref_t<Group>, Note>)
+Trace& stripplot(Pane& pane, Group&& group, Values&& values) {
+  return pane.cloud(detail::to_series(std::forward<Group>(group)),
+                    detail::to_series(std::forward<Values>(values)));
+}
+
+template <class Group, class Values>
+Trace& swarmplot(Pane& pane, Group&& group, Values&& values) {
+  return stripplot(pane, std::forward<Group>(group), std::forward<Values>(values));
+}
+
+template <class Values>
+Trace& boxplot(Pane& pane, Values&& values) {
+  return pane.quartet(detail::to_series(std::forward<Values>(values)));
+}
+
+template <class Group, class Values>
+Trace& boxplot(Pane& pane, Group&& group, Values&& values) {
+  return pane.quartet(detail::to_series(std::forward<Group>(group)),
+                      detail::to_series(std::forward<Values>(values)));
+}
+
+template <class Values>
+Trace& violinplot(Pane& pane, Values&& values) {
+  return pane.violin(detail::to_series(std::forward<Values>(values)));
+}
+
+template <class Group, class Values>
+Trace& violinplot(Pane& pane, Group&& group, Values&& values) {
+  return pane.violin(detail::to_series(std::forward<Group>(group)),
+                     detail::to_series(std::forward<Values>(values)));
+}
+
+template <class Values>
+Trace& boxenplot(Pane& pane, Values&& values) {
+  return boxplot(pane, std::forward<Values>(values));
+}
+
+template <class X, class Y, class Err>
+Trace& pointplot(Pane& pane, X&& x, Y&& y, Err&& err) {
+  lineplot(pane, x, y);
+  return pane.whisk(detail::to_series(std::forward<X>(x)),
+                    detail::to_series(std::forward<Y>(y)),
+                    detail::to_series(std::forward<Err>(err)));
+}
+
+template <class X, class Y>
+Trace& barplot(Pane& pane, X&& x, Y&& y) {
+  return pane.columns(detail::to_series(std::forward<X>(x)),
+                      detail::to_series(std::forward<Y>(y)));
+}
+
+template <class Values>
+  requires(!std::same_as<std::remove_cvref_t<Values>, Note>)
+Trace& countplot(Pane& pane, Values&& values, int bins = 12) {
+  return histplot(pane, std::forward<Values>(values), bins);
+}
+
+inline Trace& countplot(Pane& pane, const Note& categories) {
+  std::map<std::string, double> counts;
+  for (const std::string& label : detail::note_values(categories)) {
+    counts[label] += 1.0;
+  }
+  std::vector<double> y;
+  std::vector<std::string> labels;
+  y.reserve(counts.size());
+  labels.reserve(counts.size());
+  for (const auto& [label, count] : counts) {
+    labels.push_back(label);
+    y.push_back(count);
+  }
+  pane.x_categories(labels);
+  return pane.columns(pluss::make_series(y, {static_cast<std::int64_t>(y.size())}));
+}
+
+template <class X, class Y>
+Trace& regplot(Pane& pane, X&& x, Y&& y) {
+  const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
+  const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
+  pane.cloud(sx, sy);
+  const auto [slope, intercept] = detail::linear_fit(sx, sy);
+  const std::vector<double> vx = detail::to_f64_vector(sx);
+  const auto [xmin, xmax] = std::minmax_element(vx.begin(), vx.end());
+  const std::vector<double> fit_x{*xmin, *xmax};
+  const std::vector<double> fit_y{intercept + slope * (*xmin), intercept + slope * (*xmax)};
+  return pane.trend(fit_x, fit_y);
+}
+
+template <class X, class Y>
+Trace& lmplot(Studio& studio, X&& x, Y&& y, std::string title = {}) {
+  Pane& pane = studio.pane2(std::move(title));
+  return regplot(pane, std::forward<X>(x), std::forward<Y>(y));
+}
+
+template <class X, class Y>
+Trace& residplot(Pane& pane, X&& x, Y&& y) {
+  const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
+  const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
+  const auto [slope, intercept] = detail::linear_fit(sx, sy);
+  std::vector<double> vx = detail::to_f64_vector(sx);
+  std::vector<double> vy = detail::to_f64_vector(sy);
+  for (std::size_t i = 0; i < vy.size(); ++i) {
+    vy[i] -= intercept + slope * vx[i];
+  }
+  return pane.cloud(pluss::make_series(vx, {static_cast<std::int64_t>(vx.size())}),
+                    pluss::make_series(vy, {static_cast<std::int64_t>(vy.size())}));
+}
+
+template <class X, class Y, class Z>
+Trace& heatmap(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return pane.fieldmap(detail::to_series(std::forward<X>(x)),
+                       detail::to_series(std::forward<Y>(y)),
+                       detail::to_series(std::forward<Z>(z)));
+}
+
+template <class X, class Y, class Z, class C>
+Trace& heatmap(Pane& pane, X&& x, Y&& y, Z&& z, C&& c) {
+  return pane.fieldmap(detail::to_series(std::forward<X>(x)),
+                       detail::to_series(std::forward<Y>(y)),
+                       detail::to_series(std::forward<Z>(z)),
+                       detail::to_series(std::forward<C>(c)));
+}
+
+template <class X, class Y, class Z>
+Trace& clustermap(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return heatmap(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
+}
+
+template <class Group, class Values>
+Trace& catplot(Pane& pane, Group&& group, Values&& values, std::string_view kind = "strip") {
+  if (kind == "box") {
+    return boxplot(pane, std::forward<Group>(group), std::forward<Values>(values));
+  }
+  if (kind == "violin") {
+    return violinplot(pane, std::forward<Group>(group), std::forward<Values>(values));
+  }
+  if (kind == "bar") {
+    return barplot(pane, std::forward<Group>(group), std::forward<Values>(values));
+  }
+  return stripplot(pane, std::forward<Group>(group), std::forward<Values>(values));
+}
+
+inline Studio& FacetGrid(Studio& studio, std::int64_t rows, std::int64_t cols, double gx = 18.0, double gy = 18.0) {
+  return studio.mosaic(rows, cols, gx, gy);
+}
+
+inline Studio& PairGrid(Studio& studio, std::int64_t dimensions, double gx = 14.0, double gy = 14.0) {
+  return studio.mosaic(dimensions, dimensions, gx, gy);
+}
+
+inline Studio& JointGrid(Studio& studio, double gx = 14.0, double gy = 14.0) {
+  return studio.mosaic(2, 2, gx, gy);
+}
+
+inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns) {
+  if (columns.empty()) {
+    throw std::invalid_argument("flash::pairplot requires at least one series");
+  }
+  const std::int64_t n = static_cast<std::int64_t>(columns.size());
+  studio.mosaic(n, n, 10.0, 10.0);
+  for (std::int64_t row = 0; row < n; ++row) {
+    for (std::int64_t col = 0; col < n; ++col) {
+      Pane& pane = studio.pane2();
+      pane.place(row, col).grid(GridStyle::Major);
+      if (row == col) {
+        pane.bucket(columns[static_cast<std::size_t>(row)], 16);
+      } else {
+        pane.cloud(columns[static_cast<std::size_t>(col)], columns[static_cast<std::size_t>(row)]);
+      }
+    }
+  }
+  return studio;
+}
+
+template <class X, class Y>
+Studio& jointplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter") {
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  studio.mosaic(2, 2, 12.0, 12.0);
+
+  Pane& joint = studio.pane2("joint");
+  joint.place(1, 0).grid(GridStyle::Major);
+  relplot(joint, sx, sy, kind);
+
+  Pane& top = studio.pane2("marginal x");
+  top.place(0, 0).grid(GridStyle::Major);
+  top.bucket(sx, 18);
+
+  Pane& right = studio.pane2("marginal y");
+  right.place(1, 1).grid(GridStyle::Major);
+  right.bucket(sy, 18);
+  return studio;
+}
+
+[[nodiscard]] inline PaletteRamp color_palette(std::string_view name = "ocean") {
+  if (name == "thermal") return PaletteRamp::thermal();
+  if (name == "lagoon") return PaletteRamp::lagoon();
+  if (name == "meadow") return PaletteRamp::meadow();
+  if (name == "neutral") return PaletteRamp::neutral();
+  return PaletteRamp::ocean();
+}
+
+[[nodiscard]] inline PaletteRamp blend_palette(std::vector<Rgba> colors, std::string name = "blend") {
+  if (colors.empty()) {
+    colors = {Rgba::from_u8(42, 95, 153), Rgba::from_u8(229, 107, 111)};
+  }
+  return PaletteRamp(std::move(name), std::move(colors));
+}
+
+[[nodiscard]] inline PaletteRamp hls_palette(std::int64_t n = 6, double saturation = 0.68, double lightness = 0.52) {
+  const std::int64_t count = std::max<std::int64_t>(n, 2);
+  std::vector<Rgba> stops;
+  stops.reserve(static_cast<std::size_t>(count));
+  for (std::int64_t i = 0; i < count; ++i) {
+    const double hue = static_cast<double>(i) / static_cast<double>(count);
+    stops.push_back(detail::hsl_to_rgb(hue, saturation, lightness));
+  }
+  return PaletteRamp("hls", std::move(stops));
+}
+
+[[nodiscard]] inline PaletteRamp husl_palette(std::int64_t n = 6) {
+  return hls_palette(n, 0.74, 0.55);
+}
+
+[[nodiscard]] inline PaletteRamp cubehelix_palette(std::int64_t n = 6) {
+  return hls_palette(n, 0.58, 0.46);
+}
+
+[[nodiscard]] inline PaletteRamp light_palette(Rgba color, std::int64_t n = 6) {
+  const std::int64_t count = std::max<std::int64_t>(n, 2);
+  std::vector<Rgba> stops;
+  stops.reserve(static_cast<std::size_t>(count));
+  const Rgba white{1.0, 1.0, 1.0, 1.0};
+  for (std::int64_t i = 0; i < count; ++i) {
+    stops.push_back(detail::mix(white, color, static_cast<double>(i) / static_cast<double>(count - 1)));
+  }
+  return PaletteRamp("light", std::move(stops));
+}
+
+[[nodiscard]] inline PaletteRamp dark_palette(Rgba color, std::int64_t n = 6) {
+  const std::int64_t count = std::max<std::int64_t>(n, 2);
+  std::vector<Rgba> stops;
+  stops.reserve(static_cast<std::size_t>(count));
+  const Rgba black{0.0, 0.0, 0.0, 1.0};
+  for (std::int64_t i = 0; i < count; ++i) {
+    stops.push_back(detail::mix(black, color, static_cast<double>(i) / static_cast<double>(count - 1)));
+  }
+  return PaletteRamp("dark", std::move(stops));
+}
+
+[[nodiscard]] inline PaletteRamp diverging_palette(Rgba left, Rgba right, std::int64_t n = 7) {
+  const std::int64_t count = std::max<std::int64_t>(n, 3);
+  std::vector<Rgba> stops;
+  stops.reserve(static_cast<std::size_t>(count));
+  const std::int64_t mid = count / 2;
+  for (std::int64_t i = 0; i < count; ++i) {
+    if (i <= mid) {
+      const double t = mid == 0 ? 1.0 : static_cast<double>(i) / static_cast<double>(mid);
+      stops.push_back(detail::mix(left, Rgba{1.0, 1.0, 1.0, 1.0}, t));
+    } else {
+      const double t = static_cast<double>(i - mid) / static_cast<double>(count - 1 - mid);
+      stops.push_back(detail::mix(Rgba{1.0, 1.0, 1.0, 1.0}, right, t));
+    }
+  }
+  return PaletteRamp("diverging", std::move(stops));
+}
+
+[[nodiscard]] inline PaletteRamp mpl_palette(std::string_view = "viridis") {
+  return PaletteRamp::lagoon();
+}
+
+[[nodiscard]] inline PaletteRamp xkcd_palette() {
+  return blend_palette(
+      {Rgba::from_u8(49, 117, 187), Rgba::from_u8(255, 160, 64), Rgba::from_u8(89, 182, 116)},
+      "xkcd");
+}
+
+[[nodiscard]] inline PaletteRamp crayon_palette() {
+  return blend_palette(
+      {Rgba::from_u8(239, 71, 111), Rgba::from_u8(255, 209, 102), Rgba::from_u8(6, 214, 160)},
+      "crayon");
+}
+
+[[nodiscard]] inline std::vector<std::string> get_dataset_names() {
+  return {"tips", "flights"};
+}
+
+[[nodiscard]] inline std::optional<Dataset> load_dataset(std::string_view name) {
+  Dataset data;
+  if (name == "tips") {
+    data.numerics.emplace("total_bill", pluss::make_series(std::vector<double>{16.99, 10.34, 21.01, 23.68}, {4}));
+    data.numerics.emplace("tip", pluss::make_series(std::vector<double>{1.01, 1.66, 3.5, 3.31}, {4}));
+    data.numerics.emplace("size", pluss::make_series(std::vector<double>{2.0, 3.0, 3.0, 2.0}, {4}));
+    data.text.emplace("day", pluss::make_note({"Sun", "Sun", "Sun", "Sun"}));
+    return data;
+  }
+  if (name == "flights") {
+    data.numerics.emplace("month", pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {6}));
+    data.numerics.emplace("passengers", pluss::make_series(std::vector<double>{112, 118, 132, 129, 121, 135}, {6}));
+    data.text.emplace("year", pluss::make_note({"1949", "1949", "1949", "1949", "1949", "1949"}));
+    return data;
+  }
+  return std::nullopt;
+}
+
+} // namespace pluss::pl::flash
