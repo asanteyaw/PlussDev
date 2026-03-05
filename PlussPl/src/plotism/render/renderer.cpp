@@ -183,6 +183,17 @@ struct KeyEntry {
   double stroke_width{1.0};
 };
 
+struct WrappedKeyEntry {
+  std::size_t entry_index{0};
+  std::vector<std::string> lines{};
+  double block_height{0.0};
+};
+
+struct KeyBoxMetrics {
+  std::vector<WrappedKeyEntry> wrapped_entries{};
+  double box_height{0.0};
+};
+
 struct GroupRect {
   Rect rect{};
   bool valid{false};
@@ -1073,7 +1084,7 @@ void apply_core_tex_symbol_replacements(std::string& text) {
   cloud.y = xy.second;
   cloud.x.resize(count);
   cloud.y.resize(count);
-  cloud.size = broadcast_optional_series(data.size, count, 36.0);
+  cloud.size = broadcast_optional_series(data.size, count, 18.0);
   if (data.color.has_value()) {
     cloud.color = broadcast_optional_series(data.color, count, 0.0);
   }
@@ -1094,7 +1105,7 @@ void apply_core_tex_symbol_replacements(std::string& text) {
   cloud.x.resize(count);
   cloud.y.resize(count);
   cloud.z.resize(count);
-  cloud.size = broadcast_optional_series(data.size, count, 36.0);
+  cloud.size = broadcast_optional_series(data.size, count, 18.0);
   if (data.color.has_value()) {
     cloud.color = broadcast_optional_series(data.color, count, 0.0);
   }
@@ -1245,7 +1256,7 @@ void apply_core_tex_symbol_replacements(std::string& text) {
 }
 
 [[nodiscard]] std::vector<ViolinShape> violin_shapes(const ViolinData& data) {
-  constexpr std::size_t kResolution = 72;
+  constexpr std::size_t kResolution = 120;
   constexpr double kInvSqrt2Pi = 0.3989422804014327;
 
   std::vector<ViolinShape> shapes;
@@ -1263,11 +1274,7 @@ void apply_core_tex_symbol_replacements(std::string& text) {
     const double q3 = scalar_f64(sample.quantile(0.75));
     const double min_value = scalar_f64(sample.min());
     const double max_value = scalar_f64(sample.max());
-    const double range = max_value - min_value;
-    const double tail = range > 0.0 ? 0.12 * range : 0.5;
-    const double low = min_value - tail;
-    const double high = max_value + tail;
-    const double span = std::max(high - low, 1e-9);
+    const double span = std::max(max_value - min_value, 1e-9);
 
     const double mean = std::accumulate(sample_values.begin(), sample_values.end(), 0.0) /
                         static_cast<double>(n);
@@ -1279,11 +1286,13 @@ void apply_core_tex_symbol_replacements(std::string& text) {
     variance /= static_cast<double>(n);
     const double stddev = std::sqrt(std::max(variance, 0.0));
     const double iqr = std::max(q3 - q1, 0.0);
-    const double robust_sigma = std::min(stddev, iqr / 1.34);
-    double bandwidth = 0.9 * robust_sigma * std::pow(static_cast<double>(n), -0.2);
+    const double robust_sigma = iqr > 0.0 ? iqr / 1.34 : stddev;
+    const double sigma = std::max(robust_sigma, stddev);
+    double bandwidth = 0.9 * sigma * std::pow(static_cast<double>(n), -0.2);
     if (!std::isfinite(bandwidth) || bandwidth <= 1e-6) {
-      bandwidth = std::max(span / 18.0, 0.08);
+      bandwidth = std::max(span / 22.0, 0.05);
     }
+    bandwidth = std::max(bandwidth, span / 64.0);
 
     ViolinShape shape;
     shape.group = group;
@@ -1294,8 +1303,9 @@ void apply_core_tex_symbol_replacements(std::string& text) {
     shape.half_width.resize(kResolution);
 
     std::vector<double> density(kResolution, 0.0);
+    std::vector<double> smoothed(kResolution, 0.0);
     for (std::size_t i = 0; i < kResolution; ++i) {
-      const double y = low + span * static_cast<double>(i) / static_cast<double>(kResolution - 1);
+      const double y = min_value + span * static_cast<double>(i) / static_cast<double>(kResolution - 1);
       shape.y[i] = y;
       double sum = 0.0;
       for (const double value : sample_values) {
@@ -1305,10 +1315,42 @@ void apply_core_tex_symbol_replacements(std::string& text) {
       density[i] = sum / (static_cast<double>(n) * bandwidth) * kInvSqrt2Pi;
     }
 
+    if (density.size() > 4) {
+      smoothed.front() = density.front();
+      smoothed.back() = density.back();
+      for (std::size_t i = 1; i + 1 < density.size(); ++i) {
+        const double left = density[i - 1];
+        const double mid = density[i];
+        const double right = density[i + 1];
+        smoothed[i] = 0.25 * left + 0.5 * mid + 0.25 * right;
+      }
+      density.swap(smoothed);
+      smoothed.assign(kResolution, 0.0);
+      smoothed.front() = density.front();
+      smoothed.back() = density.back();
+      for (std::size_t i = 1; i + 1 < density.size(); ++i) {
+        const double left = density[i - 1];
+        const double mid = density[i];
+        const double right = density[i + 1];
+        smoothed[i] = 0.25 * left + 0.5 * mid + 0.25 * right;
+      }
+      density.swap(smoothed);
+    }
+
+    if (density.size() > 1) {
+      density.front() = 0.0;
+      density.back() = 0.0;
+      for (std::size_t i = 1; i + 1 < density.size(); ++i) {
+        const double t = static_cast<double>(i) / static_cast<double>(density.size() - 1);
+        const double taper = std::clamp(std::min(t, 1.0 - t) / 0.09, 0.0, 1.0);
+        density[i] *= taper;
+      }
+    }
+
     const double peak = *std::max_element(density.begin(), density.end());
-    const double scale = peak > 0.0 ? (0.5 * data.width / peak) : 0.0;
+    const double scale = peak > 0.0 ? (0.48 * data.width / peak) : 0.0;
     for (std::size_t i = 0; i < kResolution; ++i) {
-      shape.half_width[i] = density[i] * scale;
+      shape.half_width[i] = std::max(0.0, density[i] * scale);
     }
     shapes.push_back(std::move(shape));
   };
@@ -1838,7 +1880,7 @@ void apply_core_tex_symbol_replacements(std::string& text) {
   }
 
   const double left_margin = studio.y_captions().empty() ? 28.0 : 54.0;
-  const double right_margin = studio.trace_key_dock() == KeyDock::East ? 212.0 : 28.0;
+  const double right_margin = studio.trace_key_dock() == KeyDock::East ? 276.0 : 28.0;
   const double top_margin = studio.headline_text().empty() ? 28.0 : 58.0;
   double bottom_margin = studio.x_captions().empty() ? 28.0 : 56.0;
   if (studio.trace_key_dock() == KeyDock::South) {
@@ -1896,7 +1938,10 @@ void apply_core_tex_symbol_replacements(std::string& text) {
         const auto [row, col] = next_open();
         placement = PanePlacement{row, col, 1, 1, true};
       }
-      const double right_inset = pane.scale_guide_enabled() ? 92.0 : 28.0;
+      double right_inset = pane.scale_guide_enabled() ? 92.0 : 28.0;
+      if (pane.key_place() == KeyPlace::OutsideEast) {
+        right_inset = std::max(right_inset, 212.0);
+      }
       const Rect outer = claim(
           placement.row,
           placement.col,
@@ -1917,7 +1962,10 @@ void apply_core_tex_symbol_replacements(std::string& text) {
   const double pane_height = stacked_height / static_cast<double>(studio.pane_count());
   for (std::size_t i = 0; i < studio.pane_count(); ++i) {
     const Pane& pane = studio.panes()[i];
-    const double right_inset = pane.scale_guide_enabled() ? 92.0 : 28.0;
+    double right_inset = pane.scale_guide_enabled() ? 92.0 : 28.0;
+    if (pane.key_place() == KeyPlace::OutsideEast) {
+      right_inset = std::max(right_inset, 212.0);
+    }
     Rect outer{
         left_margin,
         top_margin + static_cast<double>(i) * (pane_height + gap),
@@ -2980,6 +3028,144 @@ void add_text(
   return entries;
 }
 
+[[nodiscard]] double estimated_text_extent(std::string_view text, double font_size) {
+  return std::max(1.0, static_cast<double>(text.size())) * font_size * 0.56;
+}
+
+[[nodiscard]] std::vector<std::string> wrap_key_label(
+    const std::string& text,
+    double max_text_width,
+    double font_size) {
+  if (text.empty()) {
+    return {"-"};
+  }
+  const std::size_t max_chars =
+      static_cast<std::size_t>(std::clamp(std::floor(max_text_width / (font_size * 0.56)), 4.0, 120.0));
+  if (text.size() <= max_chars) {
+    return {text};
+  }
+
+  std::vector<std::string> words;
+  std::string token;
+  for (char ch : text) {
+    if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') {
+      if (!token.empty()) {
+        words.push_back(token);
+        token.clear();
+      }
+      continue;
+    }
+    token.push_back(ch);
+  }
+  if (!token.empty()) {
+    words.push_back(std::move(token));
+  }
+  if (words.empty()) {
+    return {text};
+  }
+
+  std::vector<std::string> lines;
+  std::string current;
+  auto flush_current = [&]() {
+    if (!current.empty()) {
+      lines.push_back(current);
+      current.clear();
+    }
+  };
+  auto append_chunk = [&](std::string_view chunk) {
+    if (current.empty()) {
+      current.assign(chunk);
+      return;
+    }
+    if (current.size() + 1 + chunk.size() <= max_chars) {
+      current.push_back(' ');
+      current.append(chunk);
+      return;
+    }
+    flush_current();
+    current.assign(chunk);
+  };
+
+  for (const std::string& word : words) {
+    if (word.size() <= max_chars) {
+      append_chunk(word);
+      continue;
+    }
+    std::size_t start = 0;
+    while (start < word.size()) {
+      const std::size_t take = std::min(max_chars, word.size() - start);
+      append_chunk(std::string_view(word).substr(start, take));
+      flush_current();
+      start += take;
+    }
+  }
+  flush_current();
+
+  constexpr std::size_t kMaxLines = 4;
+  if (lines.size() > kMaxLines) {
+    lines.resize(kMaxLines);
+    std::string& tail = lines.back();
+    if (tail.size() > 1) {
+      tail = tail.substr(0, tail.size() - 1) + "...";
+    }
+  }
+  return lines;
+}
+
+[[nodiscard]] KeyBoxMetrics compute_key_box_metrics(
+    const std::vector<KeyEntry>& entries,
+    std::string_view title,
+    double box_width) {
+  KeyBoxMetrics metrics;
+  if (entries.empty()) {
+    return metrics;
+  }
+
+  constexpr double kTopPad = 10.0;
+  constexpr double kBottomPad = 10.0;
+  constexpr double kLeftPad = 10.0;
+  constexpr double kIconSpan = 24.0;
+  constexpr double kLabelGap = 8.0;
+  constexpr double kRightPad = 10.0;
+  constexpr double kFont = 11.0;
+  constexpr double kTitleHeight = 18.0;
+  constexpr double kLineHeight = 12.0;
+  constexpr double kRowPad = 4.0;
+  constexpr double kRowMinHeight = 16.0;
+
+  const double text_x = kLeftPad + kIconSpan + kLabelGap;
+  const double label_width = std::max(24.0, box_width - text_x - kRightPad);
+
+  metrics.wrapped_entries.reserve(entries.size());
+  double total_height = kTopPad + (title.empty() ? 0.0 : kTitleHeight + 2.0);
+  for (std::size_t i = 0; i < entries.size(); ++i) {
+    auto lines = wrap_key_label(entries[i].label, label_width, kFont);
+    const double text_block = static_cast<double>(std::max<std::size_t>(1, lines.size())) * kLineHeight;
+    const double block_height = std::max(kRowMinHeight, text_block + kRowPad);
+    total_height += block_height;
+    metrics.wrapped_entries.push_back(WrappedKeyEntry{i, std::move(lines), block_height});
+  }
+  total_height += kBottomPad;
+  metrics.box_height = total_height;
+  return metrics;
+}
+
+[[nodiscard]] double estimate_key_width(
+    const std::vector<KeyEntry>& entries,
+    std::string_view title,
+    double min_width,
+    double max_width) {
+  constexpr double kFont = 11.0;
+  constexpr double kTextX = 42.0;
+  constexpr double kRightPad = 10.0;
+  double max_text_extent = estimated_text_extent(title, kFont);
+  for (const auto& entry : entries) {
+    max_text_extent = std::max(max_text_extent, estimated_text_extent(entry.label, kFont));
+  }
+  const double requested = kTextX + kRightPad + max_text_extent;
+  return std::clamp(requested, min_width, max_width);
+}
+
 void render_key_box(
     DrawList& list,
     const Theme& theme,
@@ -2989,46 +3175,68 @@ void render_key_box(
   if (entries.empty()) {
     return;
   }
-  const double row_height = 16.0;
-  const double title_height = title.empty() ? 0.0 : 18.0;
-  const double box_height = 12.0 + title_height + row_height * static_cast<double>(entries.size());
+  constexpr double kLeftPad = 10.0;
+  constexpr double kIconSpan = 24.0;
+  constexpr double kLabelGap = 8.0;
+  constexpr double kTopPad = 10.0;
+  constexpr double kTitleHeight = 18.0;
+  constexpr double kLineHeight = 12.0;
+  constexpr double kFont = 11.0;
+  const KeyBoxMetrics metrics = compute_key_box_metrics(entries, title, box.width);
+  if (metrics.wrapped_entries.empty()) {
+    return;
+  }
 
   add_path(
       list,
       {
           {box.x, box.y},
           {box.x + box.width, box.y},
-          {box.x + box.width, box.y + box_height},
-          {box.x, box.y + box_height},
+          {box.x + box.width, box.y + metrics.box_height},
+          {box.x, box.y + metrics.box_height},
       },
-      FillStroke{theme.foreground(), theme.background(), true, true, 0.8},
+      FillStroke{theme.foreground(), theme.background(), true, true, 0.7},
       true);
 
+  double cursor_y = box.y + kTopPad;
   if (!title.empty()) {
-    add_text(list, {box.x + 10.0, box.y + 16.0}, std::string(title), 11.0, theme.foreground());
+    add_text(list, {box.x + kLeftPad, cursor_y + 13.0}, std::string(title), kFont, theme.foreground());
+    cursor_y += kTitleHeight + 2.0;
   }
 
-  for (std::size_t i = 0; i < entries.size(); ++i) {
-    const double cy = box.y + 12.0 + title_height + row_height * static_cast<double>(i);
-    if (entries[i].filled) {
+  for (const WrappedKeyEntry& wrapped : metrics.wrapped_entries) {
+    const KeyEntry& entry = entries[wrapped.entry_index];
+    const double cy = cursor_y + wrapped.block_height * 0.5;
+    if (entry.filled) {
       add_path(
           list,
           {
-              {box.x + 10.0, cy - 5.0},
-              {box.x + 34.0, cy - 5.0},
-              {box.x + 34.0, cy + 5.0},
-              {box.x + 10.0, cy + 5.0},
+              {box.x + kLeftPad, cy - 5.0},
+              {box.x + kLeftPad + kIconSpan, cy - 5.0},
+              {box.x + kLeftPad + kIconSpan, cy + 5.0},
+              {box.x + kLeftPad, cy + 5.0},
           },
-          FillStroke{entries[i].stroke, entries[i].fill, true, true, 0.6},
+          FillStroke{entry.stroke, entry.fill, true, true, 0.6},
           true);
     } else {
       add_path(
           list,
-          {{box.x + 10.0, cy}, {box.x + 34.0, cy}},
-          FillStroke{entries[i].stroke, {}, true, false, entries[i].stroke_width},
+          {{box.x + kLeftPad, cy}, {box.x + kLeftPad + kIconSpan, cy}},
+          FillStroke{entry.stroke, {}, true, false, entry.stroke_width},
           false);
     }
-    add_text(list, {box.x + 42.0, cy + 4.0}, entries[i].label, 11.0, theme.foreground());
+
+    double text_y = cursor_y + 10.0;
+    for (const std::string& line : wrapped.lines) {
+      add_text(
+          list,
+          {box.x + kLeftPad + kIconSpan + kLabelGap, text_y},
+          line,
+          kFont,
+          theme.foreground());
+      text_y += kLineHeight;
+    }
+    cursor_y += wrapped.block_height;
   }
 }
 
@@ -3042,16 +3250,20 @@ void render_key(DrawList& list, const Pane& pane, const PaneLayout& layout) {
     return;
   }
 
-  const double box_width = 130.0;
+  const bool outside_east = pane.key_place() == KeyPlace::OutsideEast;
+  const double min_width = outside_east ? 168.0 : 126.0;
+  const double max_width = outside_east ? 280.0 : std::max(160.0, layout.plot.width * 0.52);
+  const double box_width = estimate_key_width(entries, {}, min_width, max_width);
+  const double box_height = compute_key_box_metrics(entries, {}, box_width).box_height;
   double x = layout.plot.x + layout.plot.width - box_width - 8.0;
   double y = layout.plot.y + 8.0;
   if (pane.key_place() == KeyPlace::NorthWest) {
     x = layout.plot.x + 8.0;
   } else if (pane.key_place() == KeyPlace::SouthWest) {
     x = layout.plot.x + 8.0;
-    y = layout.plot.y + layout.plot.height - 12.0 - 16.0 * static_cast<double>(entries.size()) - 12.0;
+    y = layout.plot.y + layout.plot.height - box_height - 8.0;
   } else if (pane.key_place() == KeyPlace::SouthEast) {
-    y = layout.plot.y + layout.plot.height - 12.0 - 16.0 * static_cast<double>(entries.size()) - 12.0;
+    y = layout.plot.y + layout.plot.height - box_height - 8.0;
   } else if (pane.key_place() == KeyPlace::OutsideEast) {
     x = layout.plot.x + layout.plot.width + 22.0;
     y = layout.plot.y + 8.0;
@@ -3087,10 +3299,11 @@ void render_trace_key(
 
   Rect box{};
   if (studio.trace_key_dock() == KeyDock::East) {
+    constexpr double kDockWidth = 220.0;
     box = Rect{
-        studio.extent().width - 184.0,
+        studio.extent().width - (kDockWidth + 28.0),
         studio.headline_text().empty() ? 28.0 : 58.0,
-        156.0,
+        kDockWidth,
         0.0,
     };
   } else {
@@ -3424,9 +3637,9 @@ void render_planar_axes(
       FillStroke{
           pane.theme_tokens().foreground(),
           pane.theme_tokens().background(),
+          false,
           true,
-          true,
-          1.0,
+          0.0,
       },
       true);
 
@@ -3537,21 +3750,21 @@ void render_planar_axes(
             false);
       }
     }
-    add_path(
-        list,
-        {
-            {layout.plot.x, layout.plot.y},
-            {layout.plot.x + layout.plot.width, layout.plot.y},
-            {layout.plot.x + layout.plot.width, layout.plot.y + layout.plot.height},
-            {layout.plot.x, layout.plot.y + layout.plot.height},
-        },
-        FillStroke{pane.theme_tokens().foreground(), {}, true, false, 1.0},
-        true);
-
     const double tick_len = 4.8;
     const double x_axis_y = layout.plot.y + layout.plot.height;
     const double y_axis_x = layout.plot.x;
     const Rgba tick_color = multiply_rgb(pane.theme_tokens().foreground(), 0.7);
+    const Rgba axis_color = multiply_rgb(pane.theme_tokens().foreground(), 0.9);
+    add_path(
+        list,
+        {{layout.plot.x, x_axis_y}, {layout.plot.x + layout.plot.width, x_axis_y}},
+        FillStroke{axis_color, {}, true, false, 1.0},
+        false);
+    add_path(
+        list,
+        {{y_axis_x, layout.plot.y}, {y_axis_x, layout.plot.y + layout.plot.height}},
+        FillStroke{axis_color, {}, true, false, 1.0},
+        false);
     for (const auto& [value, label] : x_ticks) {
       const Point2d p = map_planar_point(value, bounds.min_y, pane, bounds, layout.plot, false);
       if (!std::isfinite(p.x) || !std::isfinite(p.y)) {
@@ -3650,13 +3863,25 @@ void render_planar_traces(
           if constexpr (std::is_same_v<Payload, TrendData>) {
             const auto xy = normalize_pairs(payload.x, payload.y);
             std::vector<Point2d> path;
+            auto flush_segment = [&]() {
+              if (path.size() >= 2) {
+                add_path(
+                    list,
+                    path,
+                    FillStroke{trace.stroke_color(), {}, true, false, trace.stroke_width()},
+                    false);
+              }
+              path.clear();
+            };
             for (std::size_t i = 0; i < xy.first.size(); ++i) {
               const Point2d mapped = map_planar_point(xy.first[i], xy.second[i], pane, bounds, layout.plot, false);
               if (std::isfinite(mapped.x) && std::isfinite(mapped.y)) {
                 path.push_back(mapped);
+              } else {
+                flush_segment();
               }
             }
-            add_path(list, std::move(path), FillStroke{trace.stroke_color(), {}, true, false, trace.stroke_width()}, false);
+            flush_segment();
           } else if constexpr (std::is_same_v<Payload, CloudData>) {
             const auto cloud = normalize_cloud(payload);
             Range1d color_range{0.0, 1.0};
@@ -3676,15 +3901,16 @@ void render_planar_traces(
               if (!std::isfinite(center.x) || !std::isfinite(center.y)) {
                 continue;
               }
-              const double radius = std::clamp(std::sqrt(std::max(cloud.size[i], 1.0)) * 0.35, 2.0, 12.0);
+              const double radius = std::clamp(std::sqrt(std::max(cloud.size[i], 1.0)) * 0.31, 0.95, 9.0);
               Rgba fill = trace.stroke_color();
               if (cloud.color.has_value() && i < cloud.color->size()) {
                 fill = palette_lookup(trace.palette_ramp(), color_range, (*cloud.color)[i]);
               }
+              fill.alpha = std::clamp(fill.alpha * 0.82, 0.18, 1.0);
               add_path(
                   list,
                   marker_circle(center, radius),
-                  FillStroke{multiply_rgb(fill, 0.55), fill, true, true, 0.8},
+                  FillStroke{{}, fill, false, true, 0.0},
                   true);
             }
           } else if constexpr (std::is_same_v<Payload, FieldmapData>) {

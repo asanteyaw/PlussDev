@@ -1,8 +1,8 @@
 #include "table/plot/DataFramePlot.h"
+#include "table/plot/DataFramePlotOps.h"
 
 #include <algorithm>
 #include <array>
-#include <cctype>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
@@ -25,19 +25,6 @@ using Rgba = pluss::pl::Rgba;
 namespace flash = pluss::pl::flash;
 
 constexpr std::string_view kDefaultPlotName = "dataframe";
-
-std::string canonical_plot_kind(std::string_view kind) {
-  std::string out;
-  out.reserve(kind.size());
-  for (const char ch : kind) {
-    if (ch == '-' || ch == ' ') {
-      out.push_back('_');
-    } else {
-      out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
-    }
-  }
-  return out;
-}
 
 void setup_pane(Pane& pane, bool show_legend) {
   pane.grid(pluss::pl::GridStyle::Major);
@@ -583,10 +570,16 @@ DataFramePlotAccessor::DataFramePlotAccessor(DataFrame frame) : frame_(std::move
 pluss::pl::Studio DataFramePlotAccessor::line(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return line({y_feature}, x_feature);
+  return _ops::call(*this, _ops::PlotDispatch::Line, _ops::PlotCall{{y_feature}, x_feature});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::line(
+    std::initializer_list<std::string_view> y_features,
+    std::optional<std::string_view> x_feature) const {
+  return _ops::call(*this, _ops::PlotDispatch::Line, _ops::PlotCall{y_features, x_feature});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_line(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
   return make_xy_figure(frame_, y_features, x_feature, "DataFrame::plot().line",
@@ -604,10 +597,16 @@ pluss::pl::Studio DataFramePlotAccessor::line(
 pluss::pl::Studio DataFramePlotAccessor::step(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return step({y_feature}, x_feature);
+  return _ops::call(*this, _ops::PlotDispatch::Step, _ops::PlotCall{{y_feature}, x_feature});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::step(
+    std::initializer_list<std::string_view> y_features,
+    std::optional<std::string_view> x_feature) const {
+  return _ops::call(*this, _ops::PlotDispatch::Step, _ops::PlotCall{y_features, x_feature});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_step(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
   return make_xy_figure(frame_, y_features, x_feature, "DataFrame::plot().step",
@@ -626,10 +625,16 @@ pluss::pl::Studio DataFramePlotAccessor::step(
 pluss::pl::Studio DataFramePlotAccessor::area(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return area({y_feature}, x_feature);
+  return _ops::call(*this, _ops::PlotDispatch::Area, _ops::PlotCall{{y_feature}, x_feature});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::area(
+    std::initializer_list<std::string_view> y_features,
+    std::optional<std::string_view> x_feature) const {
+  return _ops::call(*this, _ops::PlotDispatch::Area, _ops::PlotCall{y_features, x_feature});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_area(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
   return make_xy_figure(frame_, y_features, x_feature, "DataFrame::plot().area",
@@ -645,6 +650,12 @@ pluss::pl::Studio DataFramePlotAccessor::area(
 }
 
 pluss::pl::Studio DataFramePlotAccessor::area_stacked(
+    std::initializer_list<std::string_view> y_features,
+    std::optional<std::string_view> x_feature) const {
+  return _ops::call(*this, _ops::PlotDispatch::AreaStacked, _ops::PlotCall{y_features, x_feature});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_area_stacked(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
   PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().area_stacked: at least one y feature is required");
@@ -677,6 +688,15 @@ pluss::pl::Studio DataFramePlotAccessor::area_stacked(
 pluss::pl::Studio DataFramePlotAccessor::scatter(std::string_view x_feature,
                                                  std::string_view y_feature,
                                                  std::optional<std::string_view> hue_feature) const {
+  return _ops::call(
+      *this,
+      _ops::PlotDispatch::Scatter,
+      _ops::PlotCall{{x_feature, y_feature}, std::nullopt, hue_feature});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_scatter(std::string_view x_feature,
+                                                      std::string_view y_feature,
+                                                      std::optional<std::string_view> hue_feature) const {
   const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().scatter");
   const auto y_values = thread_to_plot_numeric_values(frame_.features(y_feature));
   require_plot_size(y_values, frame_.nrows(), y_feature);
@@ -727,10 +747,16 @@ pluss::pl::Studio DataFramePlotAccessor::scatter(std::string_view x_feature,
 pluss::pl::Studio DataFramePlotAccessor::bar(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return bar({y_feature}, x_feature);
+  return _ops::call(*this, _ops::PlotDispatch::Bar, _ops::PlotCall{{y_feature}, x_feature});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::bar(
+    std::initializer_list<std::string_view> y_features,
+    std::optional<std::string_view> x_feature) const {
+  return _ops::call(*this, _ops::PlotDispatch::Bar, _ops::PlotCall{y_features, x_feature});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_bar(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
   PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().bar: at least one y feature is required");
@@ -761,6 +787,12 @@ pluss::pl::Studio DataFramePlotAccessor::bar(
 pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
+  return _ops::call(*this, _ops::PlotDispatch::BarStacked, _ops::PlotCall{y_features, x_feature});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_bar_stacked(
+    std::initializer_list<std::string_view> y_features,
+    std::optional<std::string_view> x_feature) const {
   PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().bar_stacked: at least one y feature is required");
 
   const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().bar_stacked");
@@ -789,11 +821,19 @@ pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
 }
 
 pluss::pl::Studio DataFramePlotAccessor::box(std::initializer_list<std::string_view> features) const {
+  return _ops::call(*this, _ops::PlotDispatch::Box, _ops::PlotCall{features});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_box(std::initializer_list<std::string_view> features) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().box");
   return box_from_names(frame_, names);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, std::int64_t bins) const {
+  return _ops::call(*this, _ops::PlotDispatch::Hist, _ops::PlotCall{{feature}, std::nullopt, std::nullopt, bins});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_hist(std::string_view feature, std::int64_t bins) const {
   auto fig = make_studio();
   auto& pane = fig.pane2();
   setup_pane(pane, false);
@@ -807,6 +847,10 @@ pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, std::int
 }
 
 pluss::pl::Studio DataFramePlotAccessor::heatmap(std::initializer_list<std::string_view> features) const {
+  return _ops::call(*this, _ops::PlotDispatch::Heatmap, _ops::PlotCall{features});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::initializer_list<std::string_view> features) const {
   PLUSS_CHECK(features.size() > 0, "DataFrame::plot().heatmap: at least one feature is required");
 
   std::vector<std::vector<double>> values;
@@ -834,6 +878,16 @@ pluss::pl::Studio DataFramePlotAccessor::heatmap(std::string_view case_feature,
                                                  std::string_view feature_feature,
                                                  std::string_view value_feature,
                                                  DataFrame::GroupOp op) const {
+  return _ops::call(
+      *this,
+      _ops::PlotDispatch::HeatmapPivot,
+      _ops::PlotCall{{case_feature, feature_feature, value_feature}, std::nullopt, std::nullopt, 20, op});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::string_view case_feature,
+                                                      std::string_view feature_feature,
+                                                      std::string_view value_feature,
+                                                      DataFrame::GroupOp op) const {
   auto pivoted = frame_.pivot_table(case_feature, feature_feature, value_feature, op, true, false);
   const auto& pivot_features = pivoted.feature_names();
   PLUSS_CHECK(!pivot_features.empty(),
@@ -862,16 +916,28 @@ pluss::pl::Studio DataFramePlotAccessor::heatmap(std::string_view case_feature,
 }
 
 pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(std::initializer_list<std::string_view> features) const {
+  return _ops::call(*this, _ops::PlotDispatch::CorrHeatmap, _ops::PlotCall{features});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_corr_heatmap(std::initializer_list<std::string_view> features) const {
   const auto names = correlation_feature_names(frame_, features);
   return corr_heatmap_from_names(frame_, names);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(std::initializer_list<std::string_view> features) const {
+  return _ops::call(*this, _ops::PlotDispatch::ScatterMatrix, _ops::PlotCall{features});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_scatter_matrix(std::initializer_list<std::string_view> features) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().scatter_matrix");
   return scatter_matrix_from_names(frame_, names);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::auto_plot(std::initializer_list<std::string_view> features) const {
+  return _ops::call(*this, _ops::PlotDispatch::AutoPlot, _ops::PlotCall{features});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(std::initializer_list<std::string_view> features) const {
   const bool explicit_features = features.size() > 0;
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().auto_plot");
   if (names.size() == 1) {
@@ -916,107 +982,8 @@ pluss::pl::Studio DataFramePlotAccessor::auto_plot(std::initializer_list<std::st
   return corr_heatmap_from_names(frame_, names);
 }
 
-pluss::pl::Studio DataFramePlotAccessor::kind(std::string_view kind_name,
-                                              std::string_view feature,
-                                              std::optional<std::string_view> x_feature,
-                                              std::optional<std::string_view> hue_feature,
-                                              std::int64_t bins) const {
-  return kind(kind_name, {feature}, x_feature, hue_feature, bins);
-}
-
-pluss::pl::Studio DataFramePlotAccessor::kind(std::string_view kind_name,
-                                              std::initializer_list<std::string_view> features,
-                                              std::optional<std::string_view> x_feature,
-                                              std::optional<std::string_view> hue_feature,
-                                              std::int64_t bins) const {
-  const auto kind = canonical_plot_kind(kind_name);
-  const auto require_features = [&](std::string_view where) {
-    PLUSS_CHECK(features.size() > 0, std::string(where) + ": requires at least one feature");
-  };
-
-  if (kind == "line" || kind == "lineplot") {
-    require_features("DataFrame::plot(kind=line)");
-    return features.size() == 1 ? line(*features.begin(), x_feature) : line(features, x_feature);
-  }
-  if (kind == "step" || kind == "stepplot") {
-    require_features("DataFrame::plot(kind=step)");
-    return features.size() == 1 ? step(*features.begin(), x_feature) : step(features, x_feature);
-  }
-  if (kind == "area" || kind == "areaplot") {
-    require_features("DataFrame::plot(kind=area)");
-    return features.size() == 1 ? area(*features.begin(), x_feature) : area(features, x_feature);
-  }
-  if (kind == "area_stacked" || kind == "stacked_area") {
-    require_features("DataFrame::plot(kind=area_stacked)");
-    return area_stacked(features, x_feature);
-  }
-  if (kind == "bar" || kind == "barplot") {
-    require_features("DataFrame::plot(kind=bar)");
-    return features.size() == 1 ? bar(*features.begin(), x_feature) : bar(features, x_feature);
-  }
-  if (kind == "bar_stacked" || kind == "stacked_bar") {
-    require_features("DataFrame::plot(kind=bar_stacked)");
-    return bar_stacked(features, x_feature);
-  }
-  if (kind == "hist" || kind == "histogram" || kind == "histplot" || kind == "displot") {
-    require_features("DataFrame::plot(kind=hist)");
-    return hist(*features.begin(), bins);
-  }
-  if (kind == "box" || kind == "boxplot") {
-    return box(features);
-  }
-  if (kind == "scatter" || kind == "scatterplot") {
-    PLUSS_CHECK(features.size() >= 2 || (features.size() == 1 && x_feature.has_value()),
-                "DataFrame::plot(kind=scatter): provide [x, y] features or y plus x_feature");
-    if (features.size() >= 2) {
-      auto it = features.begin();
-      const auto x_name = *it++;
-      const auto y_name = *it;
-      return scatter(x_name, y_name, hue_feature);
-    }
-    return scatter(*x_feature, *features.begin(), hue_feature);
-  }
-  if (kind == "heatmap") {
-    if (features.size() == 3) {
-      auto it = features.begin();
-      const auto case_feature = *it++;
-      const auto feature_feature = *it++;
-      const auto value_feature = *it;
-      return heatmap(case_feature, feature_feature, value_feature);
-    }
-    return heatmap(features);
-  }
-  if (kind == "corr" || kind == "corr_heatmap" || kind == "correlation") {
-    return corr_heatmap(features);
-  }
-  if (kind == "scatter_matrix" || kind == "pairplot") {
-    return scatter_matrix(features);
-  }
-  if (kind == "auto" || kind == "auto_plot") {
-    return auto_plot(features);
-  }
-
-  PLUSS_FAIL("DataFrame::plot(kind): unsupported kind '" + std::string(kind_name) + "'");
-}
-
 DataFramePlotAccessor DataFrame::plot() const {
   return DataFramePlotAccessor(*this);
-}
-
-pluss::pl::Studio DataFrame::plot(std::string_view kind,
-                                  std::initializer_list<std::string_view> features,
-                                  std::optional<std::string_view> x_feature,
-                                  std::optional<std::string_view> hue_feature,
-                                  std::int64_t bins) const {
-  return plot().kind(kind, features, x_feature, hue_feature, bins);
-}
-
-pluss::pl::Studio DataFrame::plot(std::string_view kind,
-                                  std::string_view feature,
-                                  std::optional<std::string_view> x_feature,
-                                  std::optional<std::string_view> hue_feature,
-                                  std::int64_t bins) const {
-  return plot().kind(kind, feature, x_feature, hue_feature, bins);
 }
 
 } // namespace pluss::table

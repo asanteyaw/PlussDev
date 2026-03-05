@@ -64,10 +64,6 @@ int main() {
   fig_hist.save_svg("plot_df_hist.svg");
   fig_hist.save_pdf("plot_df_hist.pdf");
 
-  auto fig_hist_kind = df.plot("hist", "Lifecycle Cost", std::nullopt, std::nullopt, /*bins=*/12);
-  fig_hist_kind.headline("Lifecycle Cost histogram (kind dispatch)");
-  fig_hist_kind.save_pdf("plot_df_hist_kind_dispatch.pdf");
-
   auto monthly = pluss::table::DataFrame({
       {"sales", pluss::table::Thread(pluss::make_series({120.0, 135.0, 128.0, 150.0, 162.0, 171.0}))},
       {"forecast", pluss::table::Thread(pluss::make_series({118.0, 130.0, 132.0, 147.0, 158.0, 168.0}))},

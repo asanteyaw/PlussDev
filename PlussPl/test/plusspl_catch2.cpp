@@ -455,6 +455,8 @@ TEST_CASE("PlussPl flash facade maps seaborn-like names to PlussPl traces", "[pl
   auto cats = pluss::make_note({"A", "B", "A", "C", "B", "A", "C", "A"});
   auto cat_vals = pluss::make_series(std::vector<double>{0.3, 0.5, 0.42, 0.65, 0.58, 0.35, 0.72, 0.4}, {8});
   auto cat_err = pluss::make_series(std::vector<double>{0.04, 0.05, 0.03, 0.06, 0.05, 0.04, 0.05, 0.03}, {8});
+  auto hue_note = pluss::make_note({"alpha", "beta", "gamma", "alpha", "beta", "gamma", "alpha", "beta"});
+  auto hue_num = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 0.0, 1.0, 2.0, 0.0, 1.0}, {8});
   stripplot(pane, cats, cat_vals).label("strip");
   swarmplot(pane, cats, cat_vals).label("swarm");
   boxplot(pane, cats, cat_vals).label("box");
@@ -464,6 +466,10 @@ TEST_CASE("PlussPl flash facade maps seaborn-like names to PlussPl traces", "[pl
   barplot(pane, x, y).label("bar");
   catplot(pane, cats, cat_vals, "violin").label("cat");
   countplot(pane, cats).label("counts");
+  scatterplot(pane, x, y, hue_note);
+  lineplot(pane, x, y, hue_note);
+  relplot(pane, x, y, hue_num, "scatter");
+  relplot(pane, x, y, hue_num, "line");
 
   auto z = pluss::make_series(
       std::vector<double>{
@@ -477,9 +483,12 @@ TEST_CASE("PlussPl flash facade maps seaborn-like names to PlussPl traces", "[pl
   clustermap(heat, std::array<double, 3>{1.0, 2.0, 3.0}, std::array<double, 3>{1.0, 2.0, 3.0}, z).label("cluster");
 
   REQUIRE(book.pane_count() == 2);
-  REQUIRE(book.panes().front().trace_count() >= 19);
+  REQUIRE(book.panes().front().trace_count() >= 31);
   REQUIRE(book.panes().back().trace_count() >= 2);
-  REQUIRE(book.to_svg().find("<svg") != std::string::npos);
+  const std::string svg = book.to_svg();
+  REQUIRE(svg.find("<svg") != std::string::npos);
+  REQUIRE(svg.find("alpha") != std::string::npos);
+  REQUIRE(svg.find("hue=1") != std::string::npos);
 
   Studio rel("flash-relplot");
   relplot(rel, x, y, "line", "rel").label("rel-line");

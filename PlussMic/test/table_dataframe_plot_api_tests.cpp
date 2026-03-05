@@ -42,7 +42,7 @@ DataFrame make_xy_frame() {
   });
 }
 
-void test_object_and_kind_dispatch_apis() {
+void test_object_plot_apis() {
   const auto df = make_xy_frame();
 
   const auto fig_hist_obj = df.plot().hist("y", 7);
@@ -51,49 +51,37 @@ void test_object_and_kind_dispatch_apis() {
   expect(fig_hist_obj.panes().front().traces().front().kind() == TraceKind::Bucket,
          "plot().hist should emit bucket trace");
 
-  const auto fig_hist_kind = df.plot("hist", "y", std::nullopt, std::nullopt, 7);
-  expect(fig_hist_kind.pane_count() == 1, "plot(kind=hist) should produce one pane");
-  expect(fig_hist_kind.panes().front().trace_count() == 1, "plot(kind=hist) should emit one trace");
-  expect(fig_hist_kind.panes().front().traces().front().kind() == TraceKind::Bucket,
-         "plot(kind=hist) should emit bucket trace");
-
-  const auto fig_line_kind = df.plot("line", {"y", "z"}, "x");
-  expect(fig_line_kind.panes().front().trace_count() == 2, "plot(kind=line) should emit one trace per y feature");
-  expect(fig_line_kind.panes().front().traces().front().kind() == TraceKind::Trend,
-         "plot(kind=line) should emit trend traces");
-
-  const auto fig_line_dispatch = df.plot().kind("line", "y", "x");
-  expect(fig_line_dispatch.panes().front().trace_count() == 1,
-         "plot().kind(line, single feature) should emit one trace");
-  expect(fig_line_dispatch.panes().front().traces().front().kind() == TraceKind::Trend,
-         "plot().kind(line, single feature) should emit trend trace");
+  const auto fig_line = df.plot().line({"y", "z"}, "x");
+  expect(fig_line.panes().front().trace_count() == 2, "plot().line should emit one trace per y feature");
+  expect(fig_line.panes().front().traces().front().kind() == TraceKind::Trend,
+         "plot().line should emit trend traces");
 }
 
-void test_scatter_heatmap_and_kind_validation() {
+void test_scatter_heatmap_and_validation() {
   const auto df = make_xy_frame();
-  const auto fig_scatter = df.plot("scatter", {"x", "y"}, std::nullopt, "grp");
-  expect(fig_scatter.panes().front().trace_count() == 2, "plot(kind=scatter,hue) should split by hue");
+  const auto fig_scatter = df.plot().scatter("x", "y", "grp");
+  expect(fig_scatter.panes().front().trace_count() == 2, "plot().scatter(hue) should split by hue");
   expect(fig_scatter.panes().front().traces().front().kind() == TraceKind::Cloud,
-         "plot(kind=scatter) should emit cloud trace");
+         "plot().scatter should emit cloud trace");
 
   const auto surface = DataFrame({
       {"maturity", Thread(pluss::make_note({"1M", "1M", "3M", "3M"}))},
       {"delta_bucket", Thread(pluss::make_note({"25P", "ATM", "25P", "ATM"}))},
       {"implied_vol", Thread(pluss::make_series(std::vector<double>{0.30, 0.25, 0.33, 0.28}))},
   });
-  const auto fig_heatmap = surface.plot("heatmap", {"maturity", "delta_bucket", "implied_vol"});
-  expect(fig_heatmap.panes().front().trace_count() == 1, "plot(kind=heatmap,pivot) should emit one trace");
+  const auto fig_heatmap = surface.plot().heatmap("maturity", "delta_bucket", "implied_vol");
+  expect(fig_heatmap.panes().front().trace_count() == 1, "plot().heatmap(pivot) should emit one trace");
   expect(fig_heatmap.panes().front().traces().front().kind() == TraceKind::Fieldmap,
-         "plot(kind=heatmap,pivot) should emit fieldmap trace");
+         "plot().heatmap(pivot) should emit fieldmap trace");
 
-  expect_throw([&]() { (void)df.plot("unsupported_kind", {"x"}); },
-               "plot(kind=unsupported) should throw");
+  expect_throw([&]() { (void)df.plot().scatter("x", "missing_feature"); },
+               "plot().scatter with missing feature should throw");
 }
 
 } // namespace
 
 int main() {
-  test_object_and_kind_dispatch_apis();
-  test_scatter_heatmap_and_kind_validation();
+  test_object_plot_apis();
+  test_scatter_heatmap_and_validation();
   return 0;
 }

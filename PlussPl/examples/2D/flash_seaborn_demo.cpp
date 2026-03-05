@@ -18,21 +18,13 @@ int main() {
   };
 
   auto x = pluss::linspace(0.0, 10.0, 64, pluss::ScalarType::Float64);
-  const std::vector<double> xv = x.to_vec<double>();
-  std::vector<double> yv;
-  std::vector<double> y2v;
-  yv.reserve(xv.size());
-  y2v.reserve(xv.size());
-  for (const double v : xv) {
-    yv.push_back(std::sin(v * 0.65) + 0.25 * std::cos(v * 1.8));
-    y2v.push_back(0.6 * std::cos(v * 0.4) + 0.35 * std::sin(v * 1.1));
-  }
-  auto y = pluss::make_series(yv, {static_cast<std::int64_t>(yv.size())});
-  auto y2 = pluss::make_series(y2v, {static_cast<std::int64_t>(y2v.size())});
+  auto y = x.mul(0.65).sin().add(x.mul(1.8).cos().mul(0.25));
+  auto y2 = x.mul(0.4).cos().mul(0.6).add(x.mul(1.1).sin().mul(0.35));
 
   auto cats = pluss::make_note({"A", "B", "A", "C", "B", "A", "C", "A", "B", "C"});
   auto cat_vals = pluss::make_series(std::vector<double>{0.22, 0.47, 0.35, 0.68, 0.55, 0.31, 0.72, 0.28, 0.52, 0.76}, {10});
   auto cat_err = pluss::make_series(std::vector<double>{0.04, 0.05, 0.03, 0.06, 0.05, 0.04, 0.05, 0.03, 0.04, 0.06}, {10});
+  auto hue_numeric = x.mul(0.9).sin().add(1.0).mul(2.0).round();
 
   Studio fig("flash_seaborn_catalog", Theme::paper());
   set_theme(fig, Theme::paper());
@@ -44,6 +36,8 @@ int main() {
   set_style(relational, GridStyle::Major);
   scatterplot(relational, x, y).label("sns.scatterplot");
   lineplot(relational, x, y2).label("sns.lineplot");
+  scatterplot(relational, x, y, hue_numeric);
+  lineplot(relational, x, y2, hue_numeric);
   relplot(relational, x, y, "line").label("sns.relplot");
   move_legend(relational, KeyPlace::OutsideEast);
   despine(relational);
@@ -148,10 +142,15 @@ int main() {
   lm_fig.save_pdf(out_path("plusspl_flash_lmplot_demo.pdf"));
 
   Studio pairplot_fig("flash_pairplot_demo", Theme::paper());
+  const auto pair_a = pluss::randn({360}, pluss::ScalarType::Float64, 24681357ULL);
+  const auto pair_b = pair_a.mul(0.52).add(pluss::randn({360}, pluss::ScalarType::Float64, 31415926ULL).mul(0.82));
+  const auto pair_c = pair_a.mul(-0.3)
+                          .add(pair_b.mul(0.42))
+                          .add(pluss::randn({360}, pluss::ScalarType::Float64, 27182818ULL).mul(0.76));
   std::vector<pluss::Series> pair_cols{
-      y.reshape({y.numel()}),
-      y2.reshape({y2.numel()}),
-      x.reshape({x.numel()}),
+      pair_a,
+      pair_b,
+      pair_c,
   };
   pairplot(pairplot_fig, pair_cols);
   pairplot_fig.save_svg(out_path("plusspl_flash_pairplot_demo.svg"));

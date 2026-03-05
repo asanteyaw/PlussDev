@@ -20,6 +20,8 @@ plusspl_add_example(plusspl_2d_seaborn_style_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/2D/seaborn_style_gallery.cpp)
 plusspl_add_example(plusspl_2d_flash_seaborn_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/2D/flash_seaborn_demo.cpp)
+plusspl_add_example(plusspl_2d_returns_volatility_demo
+    ${CMAKE_CURRENT_SOURCE_DIR}/2D/returns_volatility_demo.cpp)
 plusspl_add_example(plusspl_3d_flash_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/3D/flash_3d_demo.cpp)
 plusspl_add_example(plusspl_3d_gallery_demo
@@ -46,6 +48,7 @@ add_custom_target(plusspl_gallery_outputs
     COMMAND plusspl_2d_all_families_demo
     COMMAND plusspl_2d_seaborn_style_demo
     COMMAND plusspl_2d_flash_seaborn_demo
+    COMMAND plusspl_2d_returns_volatility_demo
     COMMAND plusspl_3d_flash_demo
     COMMAND plusspl_3d_gallery_demo
     COMMAND plusspl_3d_option_surface_demo
@@ -62,6 +65,7 @@ add_custom_target(plusspl_gallery_outputs
         plusspl_2d_all_families_demo
         plusspl_2d_seaborn_style_demo
         plusspl_2d_flash_seaborn_demo
+        plusspl_2d_returns_volatility_demo
         plusspl_3d_flash_demo
         plusspl_3d_gallery_demo
         plusspl_3d_option_surface_demo

@@ -10,20 +10,15 @@
 
 namespace pluss::table {
 
+namespace _ops {
+enum class PlotDispatch : std::uint8_t;
+struct PlotCall;
+pluss::pl::Studio call(const class DataFramePlotAccessor& accessor, PlotDispatch dispatch, PlotCall args);
+} // namespace _ops
+
 class DataFramePlotAccessor {
 public:
   explicit DataFramePlotAccessor(DataFrame frame);
-
-  pluss::pl::Studio kind(std::string_view kind,
-                         std::initializer_list<std::string_view> features = {},
-                         std::optional<std::string_view> x_feature = std::nullopt,
-                         std::optional<std::string_view> hue_feature = std::nullopt,
-                         std::int64_t bins = 20) const;
-  pluss::pl::Studio kind(std::string_view kind,
-                         std::string_view feature,
-                         std::optional<std::string_view> x_feature = std::nullopt,
-                         std::optional<std::string_view> hue_feature = std::nullopt,
-                         std::int64_t bins = 20) const;
 
   pluss::pl::Studio line(std::string_view y_feature,
                          std::optional<std::string_view> x_feature = std::nullopt) const;
@@ -60,6 +55,36 @@ public:
   pluss::pl::Studio auto_plot(std::initializer_list<std::string_view> features = {}) const;
 
 private:
+  friend pluss::pl::Studio _ops::call(const DataFramePlotAccessor& accessor,
+                                      _ops::PlotDispatch dispatch,
+                                      _ops::PlotCall args);
+
+  pluss::pl::Studio impl_line(std::initializer_list<std::string_view> y_features,
+                              std::optional<std::string_view> x_feature) const;
+  pluss::pl::Studio impl_step(std::initializer_list<std::string_view> y_features,
+                              std::optional<std::string_view> x_feature) const;
+  pluss::pl::Studio impl_area(std::initializer_list<std::string_view> y_features,
+                              std::optional<std::string_view> x_feature) const;
+  pluss::pl::Studio impl_area_stacked(std::initializer_list<std::string_view> y_features,
+                                      std::optional<std::string_view> x_feature) const;
+  pluss::pl::Studio impl_scatter(std::string_view x_feature,
+                                 std::string_view y_feature,
+                                 std::optional<std::string_view> hue_feature) const;
+  pluss::pl::Studio impl_bar(std::initializer_list<std::string_view> y_features,
+                             std::optional<std::string_view> x_feature) const;
+  pluss::pl::Studio impl_bar_stacked(std::initializer_list<std::string_view> y_features,
+                                     std::optional<std::string_view> x_feature) const;
+  pluss::pl::Studio impl_box(std::initializer_list<std::string_view> features) const;
+  pluss::pl::Studio impl_hist(std::string_view feature, std::int64_t bins) const;
+  pluss::pl::Studio impl_heatmap(std::initializer_list<std::string_view> features) const;
+  pluss::pl::Studio impl_heatmap(std::string_view case_feature,
+                                 std::string_view feature_feature,
+                                 std::string_view value_feature,
+                                 DataFrame::GroupOp op) const;
+  pluss::pl::Studio impl_corr_heatmap(std::initializer_list<std::string_view> features) const;
+  pluss::pl::Studio impl_scatter_matrix(std::initializer_list<std::string_view> features) const;
+  pluss::pl::Studio impl_auto_plot(std::initializer_list<std::string_view> features) const;
+
   DataFrame frame_{};
 };
 

@@ -44,6 +44,15 @@ template <ArithmeticRange Range>
   return index.timeline().epoch_nanos().to(ScalarType::Float64).reshape({index.size()});
 }
 
+template <class T>
+concept StringLike = std::is_convertible_v<T, std::string_view>;
+
+template <class T>
+concept HueSeriesLike =
+    requires(T&& value) {
+      { to_series(std::forward<T>(value)) } -> std::same_as<Series>;
+    } && !StringLike<T>;
+
 [[nodiscard]] inline std::vector<std::string> note_values(const Note& note) {
   const auto values = note.vector();
   std::vector<std::string> out;
@@ -77,6 +86,141 @@ template <ArithmeticRange Range>
     encoded.push_back(static_cast<double>(it->second + 1));
   }
   return {std::move(encoded), std::move(uniques)};
+}
+
+inline void require_equal_xy_hue_lengths(
+    std::string_view name,
+    const Series& x,
+    const Series& y,
+    const Series& hue) {
+  if (x.numel() != y.numel() || x.numel() != hue.numel()) {
+    throw std::invalid_argument(
+        std::string(name) + " requires x, y, and hue to have identical lengths");
+  }
+}
+
+[[nodiscard]] inline Rgba hsl_to_rgb(double h, double s, double l) noexcept;
+
+[[nodiscard]] inline std::vector<Rgba> categorical_colors(std::int64_t count) {
+  if (count <= 0) {
+    return {};
+  }
+  std::vector<Rgba> colors;
+  colors.reserve(static_cast<std::size_t>(count));
+  for (const auto i : std::views::iota(std::int64_t{0}, count)) {
+    const double h = static_cast<double>(i) / static_cast<double>(std::max<std::int64_t>(count, 1));
+    colors.push_back(hsl_to_rgb(h, 0.68, 0.50));
+  }
+  return colors;
+}
+
+[[nodiscard]] inline std::string compact_number_label(double value) {
+  const double rounded = std::round(value);
+  if (std::abs(value - rounded) < 1e-9) {
+    return std::to_string(static_cast<std::int64_t>(rounded));
+  }
+  std::string text = std::to_string(value);
+  while (!text.empty() && text.back() == '0') {
+    text.pop_back();
+  }
+  if (!text.empty() && text.back() == '.') {
+    text.pop_back();
+  }
+  return text;
+}
+
+[[nodiscard]] inline std::vector<double> ordinal_levels(std::int64_t count, double first = 0.0) {
+  if (count <= 0) {
+    return {};
+  }
+  std::vector<double> levels;
+  levels.reserve(static_cast<std::size_t>(count));
+  for (const auto i : std::views::iota(std::int64_t{0}, count)) {
+    levels.push_back(first + static_cast<double>(i));
+  }
+  return levels;
+}
+
+[[nodiscard]] inline std::vector<double> linspace(double low, double high, std::int64_t count);
+
+[[nodiscard]] inline std::pair<Series, std::vector<std::string>> numeric_hue_bins(
+    const Series& hue_values,
+    std::int64_t bin_count) {
+  const Series hue = flatten_f64(hue_values);
+  if (hue.numel() == 0) {
+    return {hue, {}};
+  }
+  const std::int64_t bins = std::max<std::int64_t>(bin_count, 2);
+  const double low = to_f64_vector(hue.min())[0];
+  const double high = to_f64_vector(hue.max())[0];
+  if (!(high > low)) {
+    return {pluss::full({hue.numel()}, 0.0, ScalarType::Float64), {"hue=" + compact_number_label(low)}};
+  }
+
+  const Series codes = hue.sub(low)
+                           .div(high - low)
+                           .mul(static_cast<double>(bins))
+                           .floor()
+                           .clamp(0.0, static_cast<double>(bins - 1))
+                           .to(ScalarType::Float64);
+  const std::vector<double> edges = linspace(low, high, bins + 1);
+  std::vector<std::string> labels;
+  labels.reserve(static_cast<std::size_t>(bins));
+  for (const auto i : std::views::iota(std::int64_t{0}, bins)) {
+    const double start = edges[static_cast<std::size_t>(i)];
+    const double stop = edges[static_cast<std::size_t>(i + 1)];
+    const std::string left = compact_number_label(start);
+    const std::string right = compact_number_label(stop);
+    if (i == bins - 1) {
+      labels.push_back("[" + left + ", " + right + "]");
+    } else {
+      labels.push_back("[" + left + ", " + right + ")");
+    }
+  }
+  return {codes, std::move(labels)};
+}
+
+enum class HueRenderKind : std::uint8_t { Scatter, Line };
+
+inline Trace& draw_grouped_hue(
+    Pane& pane,
+    HueRenderKind render_kind,
+    const Series& x,
+    const Series& y,
+    const Series& hue_codes,
+    const std::vector<double>& levels,
+    const std::vector<std::string>& labels) {
+  if (levels.empty() || levels.size() != labels.size()) {
+    throw std::invalid_argument("flash::draw_grouped_hue requires aligned non-empty levels/labels");
+  }
+  const auto colors = categorical_colors(static_cast<std::int64_t>(levels.size()));
+  Trace* last = nullptr;
+  for (const auto i : std::views::iota(std::size_t{0}, levels.size())) {
+    const Series mask = hue_codes.eq(levels[i]);
+    const Series grouped_x = x.masked_select(mask);
+    if (grouped_x.numel() == 0) {
+      continue;
+    }
+    const Series grouped_y = y.masked_select(mask);
+    Trace* trace = nullptr;
+    if (render_kind == HueRenderKind::Line) {
+      trace = &pane.trend(grouped_x, grouped_y);
+    } else {
+      trace = &pane.cloud(grouped_x, grouped_y);
+    }
+    auto& out = *trace;
+    out.stroke(colors[i]).label(labels[i]);
+    if (render_kind == HueRenderKind::Line) {
+      out.width(1.6F);
+    } else {
+      out.width(0.55F);
+    }
+    last = &out;
+  }
+  if (last == nullptr) {
+    throw std::invalid_argument("flash::draw_grouped_hue produced no traces");
+  }
+  return *last;
 }
 
 [[nodiscard]] inline std::vector<double> linspace(double low, double high, std::int64_t count) {
@@ -504,8 +648,109 @@ Trace& scatterplot(Pane& pane, X&& x, Y&& y) {
 }
 
 template <class X, class Y>
+Trace& scatterplot(Pane& pane, X&& x, Y&& y, const Note& hue) {
+  const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
+  const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
+  const auto [encoded, labels] = detail::encode_categories(hue);
+  const Series hue_codes = pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())});
+  detail::require_equal_xy_hue_lengths("flash::scatterplot(..., hue)", sx, sy, hue_codes);
+  return detail::draw_grouped_hue(
+      pane,
+      detail::HueRenderKind::Scatter,
+      sx,
+      sy,
+      hue_codes,
+      detail::ordinal_levels(static_cast<std::int64_t>(labels.size()), 1.0),
+      labels);
+}
+
+template <class X, class Y, class Hue>
+  requires(detail::HueSeriesLike<Hue> && !std::same_as<std::remove_cvref_t<Hue>, Note>)
+Trace& scatterplot(Pane& pane, X&& x, Y&& y, Hue&& hue) {
+  const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
+  const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
+  const Series hue_values = detail::flatten_f64(detail::to_series(std::forward<Hue>(hue)));
+  detail::require_equal_xy_hue_lengths("flash::scatterplot(..., hue)", sx, sy, hue_values);
+
+  const Series unique = hue_values.unique(true).reshape({hue_values.unique(true).numel()});
+  if (unique.numel() <= 10) {
+    const std::vector<double> levels = detail::to_f64_vector(unique);
+    std::vector<std::string> labels;
+    labels.reserve(levels.size());
+    for (const double level : levels) {
+      labels.push_back("hue=" + detail::compact_number_label(level));
+    }
+    return detail::draw_grouped_hue(
+        pane,
+        detail::HueRenderKind::Scatter,
+        sx,
+        sy,
+        hue_values,
+        levels,
+        labels);
+  }
+
+  constexpr double marker_area = 18.0;
+  return pane.cloud(sx, sy, std::array<double, 1>{marker_area}, hue_values).palette(PaletteRamp::lagoon());
+}
+
+template <class X, class Y>
 Trace& lineplot(Pane& pane, X&& x, Y&& y) {
   return pane.trend(detail::to_series(std::forward<X>(x)), detail::to_series(std::forward<Y>(y)));
+}
+
+template <class X, class Y>
+Trace& lineplot(Pane& pane, X&& x, Y&& y, const Note& hue) {
+  const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
+  const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
+  const auto [encoded, labels] = detail::encode_categories(hue);
+  const Series hue_codes = pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())});
+  detail::require_equal_xy_hue_lengths("flash::lineplot(..., hue)", sx, sy, hue_codes);
+  return detail::draw_grouped_hue(
+      pane,
+      detail::HueRenderKind::Line,
+      sx,
+      sy,
+      hue_codes,
+      detail::ordinal_levels(static_cast<std::int64_t>(labels.size()), 1.0),
+      labels);
+}
+
+template <class X, class Y, class Hue>
+  requires(detail::HueSeriesLike<Hue> && !std::same_as<std::remove_cvref_t<Hue>, Note>)
+Trace& lineplot(Pane& pane, X&& x, Y&& y, Hue&& hue) {
+  const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
+  const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
+  const Series hue_values = detail::flatten_f64(detail::to_series(std::forward<Hue>(hue)));
+  detail::require_equal_xy_hue_lengths("flash::lineplot(..., hue)", sx, sy, hue_values);
+
+  const Series unique = hue_values.unique(true).reshape({hue_values.unique(true).numel()});
+  if (unique.numel() <= 8) {
+    const std::vector<double> levels = detail::to_f64_vector(unique);
+    std::vector<std::string> labels;
+    labels.reserve(levels.size());
+    for (const double level : levels) {
+      labels.push_back("hue=" + detail::compact_number_label(level));
+    }
+    return detail::draw_grouped_hue(
+        pane,
+        detail::HueRenderKind::Line,
+        sx,
+        sy,
+        hue_values,
+        levels,
+        labels);
+  }
+
+  const auto [bins, bin_labels] = detail::numeric_hue_bins(hue_values, 6);
+  return detail::draw_grouped_hue(
+      pane,
+      detail::HueRenderKind::Line,
+      sx,
+      sy,
+      bins,
+      detail::ordinal_levels(static_cast<std::int64_t>(bin_labels.size()), 0.0),
+      bin_labels);
 }
 
 template <class X, class Y>
@@ -517,9 +762,45 @@ Trace& relplot(Pane& pane, X&& x, Y&& y, std::string_view kind = "scatter") {
 }
 
 template <class X, class Y>
+Trace& relplot(Pane& pane, X&& x, Y&& y, const Note& hue, std::string_view kind = "scatter") {
+  if (kind == "line") {
+    return lineplot(pane, std::forward<X>(x), std::forward<Y>(y), hue);
+  }
+  return scatterplot(pane, std::forward<X>(x), std::forward<Y>(y), hue);
+}
+
+template <class X, class Y, class Hue>
+  requires(detail::HueSeriesLike<Hue> && !std::same_as<std::remove_cvref_t<Hue>, Note>)
+Trace& relplot(Pane& pane, X&& x, Y&& y, Hue&& hue, std::string_view kind = "scatter") {
+  if (kind == "line") {
+    return lineplot(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Hue>(hue));
+  }
+  return scatterplot(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Hue>(hue));
+}
+
+template <class X, class Y>
 Trace& relplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter", std::string title = {}) {
   Pane& pane = studio.pane2(std::move(title));
   return relplot(pane, std::forward<X>(x), std::forward<Y>(y), kind);
+}
+
+template <class X, class Y>
+Trace& relplot(Studio& studio, X&& x, Y&& y, const Note& hue, std::string_view kind = "scatter", std::string title = {}) {
+  Pane& pane = studio.pane2(std::move(title));
+  return relplot(pane, std::forward<X>(x), std::forward<Y>(y), hue, kind);
+}
+
+template <class X, class Y, class Hue>
+  requires(detail::HueSeriesLike<Hue> && !std::same_as<std::remove_cvref_t<Hue>, Note>)
+Trace& relplot(
+    Studio& studio,
+    X&& x,
+    Y&& y,
+    Hue&& hue,
+    std::string_view kind = "scatter",
+    std::string title = {}) {
+  Pane& pane = studio.pane2(std::move(title));
+  return relplot(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Hue>(hue), kind);
 }
 
 template <class Values>
@@ -744,15 +1025,38 @@ inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns) {
     throw std::invalid_argument("flash::pairplot requires at least one series");
   }
   const std::int64_t n = static_cast<std::int64_t>(columns.size());
-  studio.mosaic(n, n, 10.0, 10.0);
-  for (std::int64_t row = 0; row < n; ++row) {
-    for (std::int64_t col = 0; col < n; ++col) {
+  studio.mosaic(n, n, 8.0, 8.0);
+  for (const auto row : std::views::iota(std::int64_t{0}, n)) {
+    for (const auto col : std::views::iota(std::int64_t{0}, n)) {
       Pane& pane = studio.pane2();
-      pane.place(row, col).grid(GridStyle::Major);
-      if (row == col) {
-        pane.bucket(columns[static_cast<std::size_t>(row)], 16);
+      pane.place(row, col).grid(GridStyle::None).tick_font_scale(0.9).axis_label_font_scale(0.9);
+      if (row != n - 1) {
+        pane.x_label("");
       } else {
-        pane.cloud(columns[static_cast<std::size_t>(col)], columns[static_cast<std::size_t>(row)]);
+        pane.x_label("x" + std::to_string(col + 1));
+      }
+      if (col != 0) {
+        pane.y_label("");
+      } else {
+        pane.y_label("x" + std::to_string(row + 1));
+      }
+      if (row == col) {
+        pane.bucket(columns[static_cast<std::size_t>(row)], 14).width(0.75F);
+      } else {
+        const std::int64_t points = std::max<std::int64_t>(
+            1,
+            std::min(
+                columns[static_cast<std::size_t>(col)].numel(),
+                columns[static_cast<std::size_t>(row)].numel()));
+        const double marker_area = std::clamp(
+            380.0 / std::sqrt(static_cast<double>(points) * static_cast<double>(std::max<std::int64_t>(n, 1))),
+            7.0,
+            18.0);
+        pane.cloud(
+                columns[static_cast<std::size_t>(col)],
+                columns[static_cast<std::size_t>(row)],
+                std::array<double, 1>{marker_area})
+            .width(0.45F);
       }
     }
   }
@@ -763,18 +1067,18 @@ template <class X, class Y>
 Studio& jointplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter") {
   const Series sx = detail::to_series(std::forward<X>(x));
   const Series sy = detail::to_series(std::forward<Y>(y));
-  studio.mosaic(2, 2, 12.0, 12.0);
+  studio.mosaic(4, 4, 8.0, 8.0);
 
-  Pane& joint = studio.pane2("joint");
-  joint.place(1, 0).grid(GridStyle::Major);
+  Pane& joint = studio.pane2();
+  joint.place(1, 0, 3, 3).grid(GridStyle::Major);
   relplot(joint, sx, sy, kind);
 
-  Pane& top = studio.pane2("marginal x");
-  top.place(0, 0).grid(GridStyle::Major);
+  Pane& top = studio.pane2();
+  top.place(0, 0, 1, 3).grid(GridStyle::None).y_label("");
   top.bucket(sx, 18);
 
-  Pane& right = studio.pane2("marginal y");
-  right.place(1, 1).grid(GridStyle::Major);
+  Pane& right = studio.pane2();
+  right.place(1, 3, 3, 1).grid(GridStyle::None).x_label("");
   right.bucket(sy, 18);
   return studio;
 }

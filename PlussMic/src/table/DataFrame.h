@@ -412,16 +412,6 @@ public:
   DataFrame with_column(std::string name, const Thread& column) const;
   DataFrame& with_column_(std::string name, const Thread& column);
   DataFramePlotAccessor plot() const;
-  pluss::pl::Studio plot(std::string_view kind,
-                         std::initializer_list<std::string_view> features = {},
-                         std::optional<std::string_view> x_feature = std::nullopt,
-                         std::optional<std::string_view> hue_feature = std::nullopt,
-                         std::int64_t bins = 20) const;
-  pluss::pl::Studio plot(std::string_view kind,
-                         std::string_view feature,
-                         std::optional<std::string_view> x_feature = std::nullopt,
-                         std::optional<std::string_view> hue_feature = std::nullopt,
-                         std::int64_t bins = 20) const;
   DataFrameSqlAccessor sql(SqlOptions options) const;
   DataFrameSqlAccessor sql() const;
   DataFrameSqlPrepared prepare_sql(std::string_view statement) const;
