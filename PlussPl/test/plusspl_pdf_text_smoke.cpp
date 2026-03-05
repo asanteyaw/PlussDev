@@ -17,8 +17,10 @@ int main() {
 
   const std::string pdf = book.to_pdf();
   assert(pdf.rfind("%PDF-1.4", 0) == 0);
-  assert(pdf.find("mu + sigma + gamma + omega + alpha + beta + lambda") != std::string::npos);
-  assert(pdf.find("Delta sigma_t <= omega") != std::string::npos);
-  assert(pdf.find("(1)/(2)") != std::string::npos);
+  assert(pdf.find("\\frac") == std::string::npos);
+  assert(pdf.find("\\mu") == std::string::npos);
+  assert(pdf.find("/BaseFont /Symbol") != std::string::npos);
+  assert(pdf.find("/F2 ") != std::string::npos);
+  assert(pdf.find(" Ts") != std::string::npos);
   return 0;
 }

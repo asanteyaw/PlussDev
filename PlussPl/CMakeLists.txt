@@ -12,6 +12,7 @@ add_library(PlussPl STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/core/lens_trace.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/core/pane.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/core/studio.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/engines/spatex/spatex.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/render/renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/render/export_frontend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plotism/render/PlatformHtmlViewer.h

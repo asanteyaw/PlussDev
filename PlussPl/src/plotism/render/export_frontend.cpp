@@ -118,67 +118,6 @@ std::string lowercase_ascii(std::string text) {
   return text;
 }
 
-bool contains_non_ascii_(std::string_view text) {
-  return std::any_of(text.begin(), text.end(), [](char ch) {
-    return static_cast<unsigned char>(ch) >= 0x80U;
-  });
-}
-
-bool looks_like_tex_or_math_(std::string_view text) {
-  return text.find('$') != std::string_view::npos || text.find('\\') != std::string_view::npos ||
-         text.find('_') != std::string_view::npos || text.find('^') != std::string_view::npos ||
-         contains_non_ascii_(text);
-}
-
-bool axis_has_rich_text_(const AxisState& axis) {
-  if (looks_like_tex_or_math_(axis.label)) {
-    return true;
-  }
-  if (!axis.ticks.has_value()) {
-    return false;
-  }
-  return std::ranges::any_of(axis.ticks->labels, [](const std::string& text) {
-    return looks_like_tex_or_math_(text);
-  });
-}
-
-bool pane_has_rich_text_(const Pane& pane) {
-  if (looks_like_tex_or_math_(pane.title_text()) || looks_like_tex_or_math_(pane.caption_text())) {
-    return true;
-  }
-  if (axis_has_rich_text_(pane.x_axis()) || axis_has_rich_text_(pane.y_axis()) || axis_has_rich_text_(pane.z_axis())) {
-    return true;
-  }
-  if (std::ranges::any_of(pane.rules(), [](const RuleCue& cue) { return looks_like_tex_or_math_(cue.label); })) {
-    return true;
-  }
-  if (std::ranges::any_of(pane.bands(), [](const BandCue& cue) { return looks_like_tex_or_math_(cue.label); })) {
-    return true;
-  }
-  if (std::ranges::any_of(pane.pins(), [](const PinCue& cue) { return looks_like_tex_or_math_(cue.text); })) {
-    return true;
-  }
-  return std::ranges::any_of(pane.traces(), [](const Trace& trace) {
-    return looks_like_tex_or_math_(trace.label_text());
-  });
-}
-
-bool studio_has_rich_text_(const Studio& studio) {
-  if (looks_like_tex_or_math_(studio.name()) || looks_like_tex_or_math_(studio.headline_text())) {
-    return true;
-  }
-  const auto map_has_rich_text = [](const auto& captions) {
-    return std::ranges::any_of(captions, [](const auto& kv) {
-      return looks_like_tex_or_math_(kv.first) || looks_like_tex_or_math_(kv.second);
-    });
-  };
-  if (map_has_rich_text(studio.x_captions()) || map_has_rich_text(studio.y_captions()) ||
-      map_has_rich_text(studio.z_captions())) {
-    return true;
-  }
-  return std::ranges::any_of(studio.panes(), [](const Pane& pane) { return pane_has_rich_text_(pane); });
-}
-
 void ensure_extension_match_(const std::filesystem::path& path, std::string_view expected_ext, std::string_view where) {
   PLUSS_CHECK(!path.empty(), std::string(where) + "(): output path cannot be empty");
   const auto actual = lowercase_ascii(path.extension().string());
@@ -663,7 +602,7 @@ void Studio::save_svg(std::string_view path) const {
 
 void Studio::save_pdf(std::string_view path, PdfEngine engine) const {
   ensure_extension_match_(std::filesystem::path(path), ".pdf", "save_pdf");
-  if (engine == PdfEngine::Internal || (engine == PdfEngine::Auto && !studio_has_rich_text_(*this))) {
+  if (engine != PdfEngine::SvgConvert) {
     plotism::render::save_pdf(*this, path);
     return;
   }
@@ -687,13 +626,8 @@ void Studio::save_pdf(std::string_view path, PdfEngine engine) const {
     return;
   }
 
-  if (engine == PdfEngine::SvgConvert) {
-    throw std::runtime_error(
-        "save_pdf(): SvgConvert engine requested, but no SVG->PDF converter was available (rsvg-convert, inkscape, magick/convert).");
-  }
-
-  // Fallback: built-in PDF writer (kept for environments without external converters).
-  plotism::render::save_pdf(*this, path);
+  throw std::runtime_error(
+      "save_pdf(): SvgConvert engine requested, but no SVG->PDF converter was available (rsvg-convert, inkscape, magick/convert).");
 }
 
 void Studio::save_png(std::string_view path, std::int64_t dpi) const {
