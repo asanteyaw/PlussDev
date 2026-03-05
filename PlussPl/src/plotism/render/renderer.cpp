@@ -3311,11 +3311,18 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
 
   const VolumeAxisFrame frame = resolve_volume_axis_frame(pane, bounds, layout.plot);
   const Rgba grid = Rgba::from_u8(190, 198, 208, 148);
+  const double x_wall_y = frame.rear_y;
+  const double y_wall_x = frame.rear_x;
   const auto near_equal = [](double lhs, double rhs) {
     return std::abs(lhs - rhs) <= 1e-10;
   };
-  const bool snap_x_wall_vertical = near_equal(frame.z_start3.y, frame.rear_y);
-  const bool snap_y_wall_vertical = near_equal(frame.z_start3.x, frame.rear_x);
+  const bool axis_on_x_wall = near_equal(frame.z_start3.y, x_wall_y);
+  const bool axis_on_y_wall = near_equal(frame.z_start3.x, y_wall_x);
+  const auto z_axis_point = [&](double z_value) {
+    Point2d p = map_projected_point({frame.z_start3.x, frame.z_start3.y, z_value}, pane, bounds, layout.plot);
+    p.x = frame.z_start.x;
+    return p;
+  };
 
   for (const double value : x_pos) {
     add_path(
@@ -3326,10 +3333,11 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
         },
         FillStroke{grid, {}, true, false, 0.65},
         false);
-    Point2d wall_bottom = map_projected_point({value, frame.rear_y, frame.bottom_z}, pane, bounds, layout.plot);
-    Point2d wall_top = map_projected_point({value, frame.rear_y, frame.top_z}, pane, bounds, layout.plot);
-    if (snap_x_wall_vertical) {
-      wall_top.x = wall_bottom.x;
+    Point2d wall_bottom = map_projected_point({value, x_wall_y, frame.bottom_z}, pane, bounds, layout.plot);
+    Point2d wall_top = map_projected_point({value, x_wall_y, frame.top_z}, pane, bounds, layout.plot);
+    if (axis_on_x_wall && near_equal(value, frame.z_start3.x)) {
+      wall_bottom = z_axis_point(frame.bottom_z);
+      wall_top = z_axis_point(frame.top_z);
     }
     add_path(list,
              {wall_bottom, wall_top},
@@ -3345,10 +3353,11 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
         },
         FillStroke{grid, {}, true, false, 0.65},
         false);
-    Point2d wall_bottom = map_projected_point({frame.rear_x, value, frame.bottom_z}, pane, bounds, layout.plot);
-    Point2d wall_top = map_projected_point({frame.rear_x, value, frame.top_z}, pane, bounds, layout.plot);
-    if (snap_y_wall_vertical) {
-      wall_top.x = wall_bottom.x;
+    Point2d wall_bottom = map_projected_point({y_wall_x, value, frame.bottom_z}, pane, bounds, layout.plot);
+    Point2d wall_top = map_projected_point({y_wall_x, value, frame.top_z}, pane, bounds, layout.plot);
+    if (axis_on_y_wall && near_equal(value, frame.z_start3.y)) {
+      wall_bottom = z_axis_point(frame.bottom_z);
+      wall_top = z_axis_point(frame.top_z);
     }
     add_path(list,
              {wall_bottom, wall_top},
@@ -3356,19 +3365,37 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
              false);
   }
   for (const double value : z_pos) {
+    Point2d x_wall_a = map_projected_point({bounds.min_x, x_wall_y, value}, pane, bounds, layout.plot);
+    Point2d x_wall_b = map_projected_point({bounds.max_x, x_wall_y, value}, pane, bounds, layout.plot);
+    if (axis_on_x_wall) {
+      if (near_equal(frame.z_start3.x, bounds.min_x)) {
+        x_wall_a = z_axis_point(value);
+      } else if (near_equal(frame.z_start3.x, bounds.max_x)) {
+        x_wall_b = z_axis_point(value);
+      }
+    }
     add_path(
         list,
         {
-            map_projected_point({bounds.min_x, frame.rear_y, value}, pane, bounds, layout.plot),
-            map_projected_point({bounds.max_x, frame.rear_y, value}, pane, bounds, layout.plot),
+            x_wall_a,
+            x_wall_b,
         },
         FillStroke{grid, {}, true, false, 0.55},
         false);
+    Point2d y_wall_a = map_projected_point({y_wall_x, bounds.min_y, value}, pane, bounds, layout.plot);
+    Point2d y_wall_b = map_projected_point({y_wall_x, bounds.max_y, value}, pane, bounds, layout.plot);
+    if (axis_on_y_wall) {
+      if (near_equal(frame.z_start3.y, bounds.min_y)) {
+        y_wall_a = z_axis_point(value);
+      } else if (near_equal(frame.z_start3.y, bounds.max_y)) {
+        y_wall_b = z_axis_point(value);
+      }
+    }
     add_path(
         list,
         {
-            map_projected_point({frame.rear_x, bounds.min_y, value}, pane, bounds, layout.plot),
-            map_projected_point({frame.rear_x, bounds.max_y, value}, pane, bounds, layout.plot),
+            y_wall_a,
+            y_wall_b,
         },
         FillStroke{grid, {}, true, false, 0.55},
         false);
