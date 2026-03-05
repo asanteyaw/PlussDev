@@ -343,6 +343,48 @@ TEST_CASE("PlussPl axis policy validation rejects invalid scales and ranges", "[
   REQUIRE_THROWS(pane.pin("bad", std::numeric_limits<double>::quiet_NaN(), 1.0));
 }
 
+TEST_CASE("PlussPl exposes font scaling and rotation controls on panes", "[plusspl][axis][style]") {
+  using namespace pluss::pl;
+
+  Studio book("axis-style-controls");
+  auto& pane = book.pane3();
+  pane.tick_font_scale(1.3)
+      .axis_label_font_scale(1.2)
+      .x_tick_rotation(60.0)
+      .y_tick_rotation(120.0)
+      .z_tick_rotation(210.0)
+      .x_label_rotation(90.0)
+      .y_label_rotation(0.0)
+      .z_label_rotation(180.0);
+
+  REQUIRE(pane.tick_font_scale() == 1.3);
+  REQUIRE(pane.axis_label_font_scale() == 1.2);
+  REQUIRE(pane.x_axis().tick_rotation_deg.has_value());
+  REQUIRE(pane.y_axis().tick_rotation_deg.has_value());
+  REQUIRE(pane.z_axis().tick_rotation_deg.has_value());
+  REQUIRE(pane.x_axis().label_rotation_deg.has_value());
+  REQUIRE(pane.y_axis().label_rotation_deg.has_value());
+  REQUIRE(pane.z_axis().label_rotation_deg.has_value());
+
+  pane.clear_x_tick_rotation()
+      .clear_y_tick_rotation()
+      .clear_z_tick_rotation()
+      .clear_x_label_rotation()
+      .clear_y_label_rotation()
+      .clear_z_label_rotation();
+
+  REQUIRE(!pane.x_axis().tick_rotation_deg.has_value());
+  REQUIRE(!pane.y_axis().tick_rotation_deg.has_value());
+  REQUIRE(!pane.z_axis().tick_rotation_deg.has_value());
+  REQUIRE(!pane.x_axis().label_rotation_deg.has_value());
+  REQUIRE(!pane.y_axis().label_rotation_deg.has_value());
+  REQUIRE(!pane.z_axis().label_rotation_deg.has_value());
+
+  REQUIRE_THROWS(pane.tick_font_scale(0.0));
+  REQUIRE_THROWS(pane.axis_label_font_scale(-1.0));
+  REQUIRE_THROWS(pane.x_tick_rotation(std::numeric_limits<double>::quiet_NaN()));
+}
+
 TEST_CASE("PlussPl exposes limit fit policies on pane axes", "[plusspl][axis][limit-fit]") {
   using namespace pluss::pl;
 

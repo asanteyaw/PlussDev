@@ -197,6 +197,8 @@ struct AxisState {
   std::optional<Range1d> limits{};
   std::string label{};
   std::optional<AxisTicks> ticks{};
+  std::optional<double> tick_rotation_deg{};
+  std::optional<double> label_rotation_deg{};
   bool major_grid{false};
   bool minor_grid{false};
 };
@@ -548,6 +550,8 @@ class Pane {
   [[nodiscard]] const std::string& z_align_group() const noexcept { return z_align_group_; }
   [[nodiscard]] bool parallel_xy_labels() const noexcept { return parallel_xy_labels_; }
   [[nodiscard]] const PanePlacement& placement() const noexcept { return placement_; }
+  [[nodiscard]] double tick_font_scale() const noexcept { return tick_font_scale_; }
+  [[nodiscard]] double axis_label_font_scale() const noexcept { return axis_label_font_scale_; }
 
   Pane& title(std::string title);
   Pane& scale_x(ScalePolicy scale);
@@ -564,6 +568,20 @@ class Pane {
   Pane& x_tick_format(TickFormat format) noexcept;
   Pane& y_tick_format(TickFormat format) noexcept;
   Pane& z_tick_format(TickFormat format) noexcept;
+  Pane& tick_font_scale(double scale);
+  Pane& axis_label_font_scale(double scale);
+  Pane& x_tick_rotation(double degrees);
+  Pane& y_tick_rotation(double degrees);
+  Pane& z_tick_rotation(double degrees);
+  Pane& x_label_rotation(double degrees);
+  Pane& y_label_rotation(double degrees);
+  Pane& z_label_rotation(double degrees);
+  Pane& clear_x_tick_rotation() noexcept;
+  Pane& clear_y_tick_rotation() noexcept;
+  Pane& clear_z_tick_rotation() noexcept;
+  Pane& clear_x_label_rotation() noexcept;
+  Pane& clear_y_label_rotation() noexcept;
+  Pane& clear_z_label_rotation() noexcept;
   Pane& auto_x() noexcept;
   Pane& auto_y() noexcept;
   Pane& auto_z() noexcept;
@@ -1231,6 +1249,8 @@ class Pane {
   std::string y_align_group_{};
   std::string z_align_group_{};
   bool parallel_xy_labels_{true};
+  double tick_font_scale_{1.0};
+  double axis_label_font_scale_{1.0};
   PanePlacement placement_{};
 };
 

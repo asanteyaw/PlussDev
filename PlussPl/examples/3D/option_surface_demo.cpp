@@ -34,7 +34,7 @@ int main() {
       .y_limit_method(pl::LimitMethod::Tight)
       .z_limits({0.0, 120.0})
       .x_ticks(maturity_bins,
-               std::vector<std::string>{"179<=T<=252", "129<=T<179", "56<=T<129", "T<56"})
+               std::vector<std::string>{"T<56", "56≤T<129", "129≤T<179", "179<T<252"})
       .y_ticks(moneyness_bins,
                std::vector<std::string>{"[0.70, 0.75)", "[0.75, 0.80)", "[0.80, 0.85)", "[0.85, 0.90)",
                                         "[0.90, 0.95)", "[0.95, 1.00)", "[1.00, 1.05)", "[1.05, 1.10)",

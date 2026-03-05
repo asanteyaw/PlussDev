@@ -517,6 +517,18 @@ void require_scale_compatible_range(Range1d range, ScalePolicy scale, std::strin
   }
 }
 
+void require_font_scale(double scale, std::string_view where) {
+  if (!std::isfinite(scale) || scale <= 0.0) {
+    throw std::invalid_argument(std::string(where) + ": scale must be finite and positive");
+  }
+}
+
+void require_rotation_angle(double degrees, std::string_view where) {
+  if (!std::isfinite(degrees)) {
+    throw std::invalid_argument(std::string(where) + ": angle must be finite");
+  }
+}
+
 } // namespace
 
 Pane::Pane(PaneKind kind, Theme theme, std::string title)
@@ -620,6 +632,84 @@ Pane& Pane::y_tick_format(TickFormat format) noexcept {
 
 Pane& Pane::z_tick_format(TickFormat format) noexcept {
   z_axis_.tick_format = format;
+  return *this;
+}
+
+Pane& Pane::tick_font_scale(double scale) {
+  require_font_scale(scale, "tick_font_scale");
+  tick_font_scale_ = scale;
+  return *this;
+}
+
+Pane& Pane::axis_label_font_scale(double scale) {
+  require_font_scale(scale, "axis_label_font_scale");
+  axis_label_font_scale_ = scale;
+  return *this;
+}
+
+Pane& Pane::x_tick_rotation(double degrees) {
+  require_rotation_angle(degrees, "x_tick_rotation");
+  x_axis_.tick_rotation_deg = degrees;
+  return *this;
+}
+
+Pane& Pane::y_tick_rotation(double degrees) {
+  require_rotation_angle(degrees, "y_tick_rotation");
+  y_axis_.tick_rotation_deg = degrees;
+  return *this;
+}
+
+Pane& Pane::z_tick_rotation(double degrees) {
+  require_rotation_angle(degrees, "z_tick_rotation");
+  z_axis_.tick_rotation_deg = degrees;
+  return *this;
+}
+
+Pane& Pane::x_label_rotation(double degrees) {
+  require_rotation_angle(degrees, "x_label_rotation");
+  x_axis_.label_rotation_deg = degrees;
+  return *this;
+}
+
+Pane& Pane::y_label_rotation(double degrees) {
+  require_rotation_angle(degrees, "y_label_rotation");
+  y_axis_.label_rotation_deg = degrees;
+  return *this;
+}
+
+Pane& Pane::z_label_rotation(double degrees) {
+  require_rotation_angle(degrees, "z_label_rotation");
+  z_axis_.label_rotation_deg = degrees;
+  return *this;
+}
+
+Pane& Pane::clear_x_tick_rotation() noexcept {
+  x_axis_.tick_rotation_deg.reset();
+  return *this;
+}
+
+Pane& Pane::clear_y_tick_rotation() noexcept {
+  y_axis_.tick_rotation_deg.reset();
+  return *this;
+}
+
+Pane& Pane::clear_z_tick_rotation() noexcept {
+  z_axis_.tick_rotation_deg.reset();
+  return *this;
+}
+
+Pane& Pane::clear_x_label_rotation() noexcept {
+  x_axis_.label_rotation_deg.reset();
+  return *this;
+}
+
+Pane& Pane::clear_y_label_rotation() noexcept {
+  y_axis_.label_rotation_deg.reset();
+  return *this;
+}
+
+Pane& Pane::clear_z_label_rotation() noexcept {
+  z_axis_.label_rotation_deg.reset();
   return *this;
 }
 

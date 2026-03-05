@@ -3344,6 +3344,15 @@ void render_planar_axes(
         TextCommand::Align::Middle);
   }
 
+  const double tick_font =
+      std::clamp(10.0 * pane.tick_font_scale(), 7.0, 32.0);
+  const double axis_label_font =
+      std::clamp(11.0 * pane.axis_label_font_scale(), 8.0, 36.0);
+  const double x_tick_rotation = pane.x_axis().tick_rotation_deg.value_or(0.0);
+  const double y_tick_rotation = pane.y_axis().tick_rotation_deg.value_or(0.0);
+  const double x_label_rotation = pane.x_axis().label_rotation_deg.value_or(0.0);
+  const double y_label_rotation = pane.y_axis().label_rotation_deg.value_or(0.0);
+
   if (wedge_only) {
     return;
   }
@@ -3444,7 +3453,6 @@ void render_planar_axes(
         true);
 
     const double tick_len = 4.8;
-    const double tick_font = 10.0;
     const double x_axis_y = layout.plot.y + layout.plot.height;
     const double y_axis_x = layout.plot.x;
     const Rgba tick_color = multiply_rgb(pane.theme_tokens().foreground(), 0.7);
@@ -3464,7 +3472,8 @@ void render_planar_axes(
           label,
           tick_font,
           pane.theme_tokens().foreground(),
-          TextCommand::Align::Middle);
+          TextCommand::Align::Middle,
+          x_tick_rotation);
     }
     for (const auto& [value, label] : y_ticks) {
       const Point2d p = map_planar_point(bounds.min_x, value, pane, bounds, layout.plot, false);
@@ -3482,7 +3491,8 @@ void render_planar_axes(
           label,
           tick_font,
           pane.theme_tokens().foreground(),
-          TextCommand::Align::End);
+          TextCommand::Align::End,
+          y_tick_rotation);
     }
   }
 
@@ -3491,17 +3501,20 @@ void render_planar_axes(
         list,
         {layout.plot.x + layout.plot.width * 0.5, layout.outer.y + layout.outer.height - 14.0},
         pane.x_axis().label,
-        11.0,
+        axis_label_font,
         pane.theme_tokens().foreground(),
-        TextCommand::Align::Middle);
+        TextCommand::Align::Middle,
+        x_label_rotation);
   }
   if (!pane.y_axis().label.empty()) {
     add_text(
         list,
         {layout.outer.x + 6.0, layout.plot.y - 8.0},
         pane.y_axis().label,
-        11.0,
-        pane.theme_tokens().foreground());
+        axis_label_font,
+        pane.theme_tokens().foreground(),
+        TextCommand::Align::Start,
+        y_label_rotation);
   }
   if (!pane.caption_text().empty()) {
     add_text(
@@ -4280,8 +4293,10 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     return static_cast<double>(chars) * font_size * 0.56;
   };
   const double plot_scale = std::max(1.0, std::min(layout.plot.width, layout.plot.height));
-  const double tick_font_size = std::clamp(plot_scale * 0.014, 8.5, 10.0);
-  const double axis_font_size = std::clamp(plot_scale * 0.017, 10.5, 12.0);
+  const double tick_font_base = std::clamp(plot_scale * 0.016, 9.5, 11.8);
+  const double axis_font_base = std::clamp(plot_scale * 0.019, 12.0, 14.6);
+  const double tick_font_size = std::clamp(tick_font_base * pane.tick_font_scale(), 8.0, 24.0);
+  const double axis_font_size = std::clamp(axis_font_base * pane.axis_label_font_scale(), 9.0, 32.0);
   const double tick_len_xy = std::clamp(plot_scale * 0.013, 5.8, 12.5);
   const double tick_len_z = std::clamp(plot_scale * 0.012, 5.2, 11.0);
   const double tick_to_text_gap = std::clamp(plot_scale * 0.016, 10.0, 24.0);
@@ -4330,6 +4345,9 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
   const Point2d x_extension_at_xy = unit_direction(x_opposite_corner, xy_corner, x_outward);
   const Point2d y_extension_at_xy = unit_direction(y_opposite_corner, xy_corner, y_outward);
   const Point2d z_parallel_tick_dir = unit_direction(xy_corner, x_opposite_corner, x_extension_at_xy);
+  const double x_tick_rotation = pane.x_axis().tick_rotation_deg.value_or(0.0);
+  const double y_tick_rotation = pane.y_axis().tick_rotation_deg.value_or(0.0);
+  const double z_tick_rotation = pane.z_axis().tick_rotation_deg.value_or(0.0);
 
   add_path(list, {frame.x_start, frame.x_end}, FillStroke{primary, {}, true, false, 1.25}, false);
   add_path(list, {frame.y_start, frame.y_end}, FillStroke{primary, {}, true, false, 1.25}, false);
@@ -4350,7 +4368,13 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
         p.y + tick_dir.y * (tick_len_xy + tick_to_text_gap),
     };
     add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, 1.16}, false);
-    add_text(list, text_anchor, label, tick_font_size, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
+    add_text(list,
+             text_anchor,
+             label,
+             tick_font_size,
+             pane.theme_tokens().foreground(),
+             tick_text_align(tick_dir),
+             x_tick_rotation);
   }
   for (std::size_t i = 0; i < y_ticks.size(); ++i) {
     const auto& [value, label] = y_ticks[i];
@@ -4367,7 +4391,13 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
         p.y + tick_dir.y * (tick_len_xy + tick_to_text_gap),
     };
     add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, 1.16}, false);
-    add_text(list, text_anchor, label, tick_font_size, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
+    add_text(list,
+             text_anchor,
+             label,
+             tick_font_size,
+             pane.theme_tokens().foreground(),
+             tick_text_align(tick_dir),
+             y_tick_rotation);
   }
   for (std::size_t i = 0; i < z_ticks.size(); ++i) {
     const auto& [value, label] = z_ticks[i];
@@ -4379,11 +4409,19 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
         p.y + tick_dir.y * (tick_len_z + tick_to_text_gap),
     };
     add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, 1.16}, false);
-    add_text(list, text_anchor, label, tick_font_size, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
+    add_text(list,
+             text_anchor,
+             label,
+             tick_font_size,
+             pane.theme_tokens().foreground(),
+             tick_text_align(tick_dir),
+             z_tick_rotation);
   }
 
   if (!pane.x_axis().label.empty()) {
     const Point2d mid{0.5 * (frame.x_start.x + frame.x_end.x), 0.5 * (frame.x_start.y + frame.x_end.y)};
+    const double x_label_rotation = pane.x_axis().label_rotation_deg.value_or(
+        pane.parallel_xy_labels() ? label_angle_deg(frame.x_start, frame.x_end) : 0.0);
     if (pane.parallel_xy_labels()) {
       add_text(list,
                {mid.x + x_outward.x * x_label_gap, mid.y + x_outward.y * x_label_gap},
@@ -4391,18 +4429,21 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
                axis_font_size,
                pane.theme_tokens().foreground(),
                TextCommand::Align::Middle,
-               label_angle_deg(frame.x_start, frame.x_end));
+               x_label_rotation);
     } else {
       add_text(list,
                {mid.x, mid.y + 58.0},
                pane.x_axis().label,
                axis_font_size,
                pane.theme_tokens().foreground(),
-               TextCommand::Align::Middle);
+               TextCommand::Align::Middle,
+               x_label_rotation);
     }
   }
   if (!pane.y_axis().label.empty()) {
     const Point2d mid{0.5 * (frame.y_start.x + frame.y_end.x), 0.5 * (frame.y_start.y + frame.y_end.y)};
+    const double y_label_rotation = pane.y_axis().label_rotation_deg.value_or(
+        pane.parallel_xy_labels() ? label_angle_deg(frame.y_start, frame.y_end) : 0.0);
     if (pane.parallel_xy_labels()) {
       add_text(list,
                {mid.x + y_outward.x * y_label_gap, mid.y + y_outward.y * y_label_gap},
@@ -4410,25 +4451,28 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
                axis_font_size,
                pane.theme_tokens().foreground(),
                TextCommand::Align::Middle,
-               label_angle_deg(frame.y_start, frame.y_end));
+               y_label_rotation);
     } else {
       add_text(list,
                {mid.x - 24.0, mid.y + 58.0},
                pane.y_axis().label,
                axis_font_size,
                pane.theme_tokens().foreground(),
-               TextCommand::Align::End);
+               TextCommand::Align::End,
+               y_label_rotation);
     }
   }
   if (!pane.z_axis().label.empty()) {
     const Point2d mid{0.5 * (z_axis_start.x + z_axis_end.x), 0.5 * (z_axis_start.y + z_axis_end.y)};
+    const double z_label_rotation =
+        pane.z_axis().label_rotation_deg.value_or(label_angle_deg(z_axis_start, z_axis_end));
     add_text(list,
              {mid.x + z_outward.x * z_label_gap, mid.y + z_outward.y * z_label_gap},
              pane.z_axis().label,
              axis_font_size,
              pane.theme_tokens().foreground(),
              TextCommand::Align::Middle,
-             label_angle_deg(z_axis_start, z_axis_end));
+             z_label_rotation);
   }
   if (!pane.caption_text().empty()) {
     add_text(list, {layout.outer.x + 10.0, layout.outer.y + layout.outer.height - 14.0},
