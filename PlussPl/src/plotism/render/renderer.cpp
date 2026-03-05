@@ -330,10 +330,31 @@ struct WedgeSlice {
 
 [[nodiscard]] std::string escape_pdf_text(std::string_view text) {
   std::string out;
-  out.reserve(text.size());
-  for (char c : text) {
+  out.reserve(text.size() + 8);
+  for (std::size_t i = 0; i < text.size();) {
+    if (i + 2 < text.size()) {
+      const unsigned char b0 = static_cast<unsigned char>(text[i]);
+      const unsigned char b1 = static_cast<unsigned char>(text[i + 1]);
+      const unsigned char b2 = static_cast<unsigned char>(text[i + 2]);
+      // Fallback mappings for common UTF-8 math symbols when PDF base fonts lack glyphs.
+      if (b0 == 0xE2 && b1 == 0x89 && b2 == 0xA4) { // ≤
+        out += "<=";
+        i += 3;
+        continue;
+      }
+      if (b0 == 0xE2 && b1 == 0x89 && b2 == 0xA5) { // ≥
+        out += ">=";
+        i += 3;
+        continue;
+      }
+    }
+    const char c = text[i++];
     if (c == '\\' || c == '(' || c == ')') {
       out.push_back('\\');
+    }
+    if (static_cast<unsigned char>(c) >= 0x80) {
+      out.push_back('?');
+      continue;
     }
     out.push_back(c);
   }
@@ -4299,7 +4320,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
   const double axis_font_size = std::clamp(axis_font_base * pane.axis_label_font_scale(), 9.0, 32.0);
   const double tick_len_xy = std::clamp(plot_scale * 0.013, 5.8, 12.5);
   const double tick_len_z = std::clamp(plot_scale * 0.012, 5.2, 11.0);
-  const double tick_to_text_gap = std::clamp(plot_scale * 0.016, 10.0, 24.0);
+  const double tick_to_text_gap = std::clamp(plot_scale * 0.020, 14.0, 30.0);
   const std::size_t x_tick_chars = max_tick_label_chars(x_ticks);
   const std::size_t y_tick_chars = max_tick_label_chars(y_ticks);
   const std::size_t z_tick_chars = max_tick_label_chars(z_ticks);
