@@ -505,3 +505,106 @@ Start with a lean, explicit v1 centered on:
 - `save_svg`, `save_pdf`, `save_png`
 
 That gives the shortest path to a serious plotting library without inheriting MATLAB's legacy surface area.
+
+## 17. R2025b Graphics Assessment Update (2026-03-04)
+
+Additional source scan completed against:
+
+- `/Applications/MATLAB_R2025b.app/toolbox/matlab/graphics/graphics/graph3d/*.m`
+- `/Applications/MATLAB_R2025b.app/toolbox/matlab/graphics/graphics/graph2d/*.m`
+- `/Applications/MATLAB_R2025b.app/toolbox/matlab/graphics/graphics/axis/+matlab/+graphics/+internal/+ruler/rulerFunctions.m`
+- `/Applications/MATLAB_R2025b.app/toolbox/matlab/graphics/graphics/color/colormap.m`
+- `/Applications/MATLAB_R2025b.app/toolbox/matlab/graphics/graphics/scribe/legend.m`
+- `/Applications/MATLAB_R2025b.app/toolbox/matlab/graphics/graphics/scatter.m`
+
+Notes:
+
+- A large fraction of MATLAB internals in this area are `.p` files; those are opaque and not inspectable as source.
+- The open `.m` layer confirms the contract model: convenience wrappers normalize inputs, then delegate to strongly-typed property/ruler/camera state.
+
+Key maturity patterns confirmed:
+
+- axis limits are two-dimensional state: value mode (`auto`/`manual`) + fit strategy (`tickaligned`/`tight`/`padded`)
+- camera/light convenience functions are state mutators, not primitive generators
+- plotting maturity is primarily argument normalization + edge-case rules, not raw primitive count
+- legend/layout/interactivity behaviors are explicit subsystems with separate lifecycle
+
+## 18. Updated Gap Map
+
+What PlussPl already covers strongly:
+
+- typed retained scene (`Studio`/`Pane`/`Trace`)
+- broad primitive coverage for 2D and 3D core families
+- camera/lens + light rig + shading/material controls
+- deterministic SVG/PDF export
+- mosaic placement and alignment groups
+
+Highest remaining gaps to MATLAB-grade maturity:
+
+- limit/tick policy completeness across linear/log/symlog edge cases
+- deeper argument normalization breadth and richer type coercion matrix
+- interactivity stack parity (zoom/pan/rotate/data tip behaviors)
+- baseline image regression breadth and stress testing
+- higher-fidelity contour/isoband topology robustness at pathological grids
+- legend/layout behavior under dense multi-pane scenes
+
+## 19. Revised Patch Program
+
+To guarantee near-MATLAB maturity on the supported PlussPl feature set (not full MATLAB breadth), the current estimate is:
+
+- `58` patches total program size
+- `15` patches already represented in current codebase maturity
+- `43` additional patches required from this point
+
+Breakdown of the remaining `43` patches:
+
+- 11 patches: axis/scale/tick/limits normalization hardening
+- 8 patches: 2D statistical and annotation behavior hardening
+- 10 patches: 3D topology/shading/lighting robustness
+- 7 patches: layout/legend/export parity refinements
+- 7 patches: regression/performance/integration hardening
+
+Aggressive family-first program (targeting shared implementations before leaf wrappers):
+
+- `46` patches total program size (about `20.7%` below the conservative `58`)
+- `15` patches already represented in current codebase maturity
+- `31` additional patches required under this track
+
+Tactics used to compress patch count:
+
+- implement axis/ruler behavior once and fan out across planar + volumetric render paths
+- prioritize normalization engines and policy objects over one-off convenience APIs
+- ship gallery-wide regression baselines by family (axis/mesh/contour) rather than by wrapper
+- defer interactive editor parity until core render/state parity is stable
+
+## 20. Current Tranche Status
+
+This tranche lands:
+
+- explicit limit fit policy on axes (`TickAligned`, `Tight`, `Padded`)
+- stricter axis/range/symlog validation at API boundaries
+- symlog-aware tick generation in the renderer
+- shared major-minor grid generation across planar and volumetric panes
+- tick label rendering decoupled from planar grid visibility
+- axis tick formatting policies (`scientific`, `engineering`, `percent`, etc.)
+- categorical axis helpers (`x_categories`, `y_categories`, `z_categories`)
+- violin trace family with grouped KDE envelopes and robust flat-sample handling
+- volumetric `isoshell` family with 3D field normalization and marching-tetra extraction
+- comprehensive all-family demo entry points for 2D and 3D coverage
+- Seaborn-style and Matplotlib-3D equivalence demo suites
+- volumetric bounds optimization to remove an O(nx*ny*nz) nested loop in render prep
+- MATLAB-backed parity harness and maturity scoring report
+- new regression tests for axis policy and minor-grid behavior
+
+Latest measured score from strict MATLAB parity harness:
+
+- `2D family score`: `100.00%`
+- `3D family score`: `100.00%`
+- `MATLAB tick parity`: `100.00%`
+- `overall maturity score`: `100.00%`
+
+Immediate next tranche should target:
+
+1. datetimelike tick pipelines
+2. contour/isoband topology regression set expansion
+3. interactivity and behavior-parity regression breadth

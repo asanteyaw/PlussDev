@@ -268,6 +268,21 @@ void require_quartet_compatible(const QuartetData& data, std::string_view where)
   }
 }
 
+void require_violin_compatible(const ViolinData& data, std::string_view where) {
+  if (!series_is_vector(data.values) || data.values.numel() == 0) {
+    throw std::invalid_argument(std::string(where) + ": values must be a non-empty vector");
+  }
+  if (data.group.has_value()) {
+    if (!series_is_vector(*data.group)) {
+      throw std::invalid_argument(std::string(where) + ": group positions must be a vector");
+    }
+    require_pair_compatible(*data.group, data.values, where);
+  }
+  if (!(data.width > 0.0 && std::isfinite(data.width))) {
+    throw std::invalid_argument(std::string(where) + ": width must be positive and finite");
+  }
+}
+
 void require_surface_compatible(const SurfaceData& data, std::string_view where) {
   if (data.z.dim() != 2) {
     throw std::invalid_argument(std::string(where) + ": z must be a rank-2 matrix");
@@ -329,6 +344,35 @@ void require_contour_compatible(const ContourData& data, std::string_view where)
   }
 }
 
+void require_isoshell_compatible(const IsoShellData& data, std::string_view where) {
+  if (data.values.dim() != 3) {
+    throw std::invalid_argument(std::string(where) + ": values must be a rank-3 field");
+  }
+  const auto nx = data.values.sizes()[0];
+  const auto ny = data.values.sizes()[1];
+  const auto nz = data.values.sizes()[2];
+  if (nx <= 1 || ny <= 1 || nz <= 1) {
+    throw std::invalid_argument(std::string(where) + ": values must have at least 2 samples per axis");
+  }
+  if (!series_is_vector(data.x) || series_vector_extent(data.x) != nx) {
+    throw std::invalid_argument(std::string(where) + ": x must be a vector matching values axis-0 extent");
+  }
+  if (!series_is_vector(data.y) || series_vector_extent(data.y) != ny) {
+    throw std::invalid_argument(std::string(where) + ": y must be a vector matching values axis-1 extent");
+  }
+  if (!series_is_vector(data.z) || series_vector_extent(data.z) != nz) {
+    throw std::invalid_argument(std::string(where) + ": z must be a vector matching values axis-2 extent");
+  }
+  if (data.levels.empty() && data.auto_levels <= 0) {
+    throw std::invalid_argument(std::string(where) + ": automatic levels must be positive");
+  }
+  for (const double level : data.levels) {
+    if (!std::isfinite(level)) {
+      throw std::invalid_argument(std::string(where) + ": levels must be finite");
+    }
+  }
+}
+
 void validate_trace_payload(TraceKind kind, const TracePayload& payload) {
   std::visit(
       [&](const auto& data) {
@@ -355,10 +399,14 @@ void validate_trace_payload(TraceKind kind, const TracePayload& payload) {
           require_bucket_compatible(data, "bucket");
         } else if constexpr (std::is_same_v<Payload, QuartetData>) {
           require_quartet_compatible(data, "quartet");
+        } else if constexpr (std::is_same_v<Payload, ViolinData>) {
+          require_violin_compatible(data, "violin");
         } else if constexpr (std::is_same_v<Payload, RadialData>) {
           require_pair_compatible(data.theta, data.radius, "radial");
         } else if constexpr (std::is_same_v<Payload, ContourData>) {
           require_contour_compatible(data, "contour");
+        } else if constexpr (std::is_same_v<Payload, IsoShellData>) {
+          require_isoshell_compatible(data, "isoshell");
         } else if constexpr (std::is_same_v<Payload, Path3Data>) {
           require_triplet_compatible(data.x, data.y, data.z, "path3");
         } else if constexpr (std::is_same_v<Payload, Spire3Data>) {
@@ -419,6 +467,56 @@ void require_tick_spec(const Series& positions, const std::vector<std::string>& 
   }
 }
 
+void require_category_spec(
+    const std::vector<std::string>& labels,
+    double first,
+    double step,
+    std::string_view where) {
+  if (labels.empty()) {
+    throw std::invalid_argument(std::string(where) + ": labels cannot be empty");
+  }
+  if (!std::isfinite(first) || !std::isfinite(step) || step == 0.0) {
+    throw std::invalid_argument(std::string(where) + ": first/step must be finite and step cannot be zero");
+  }
+}
+
+[[nodiscard]] Series category_positions(double first, double step, std::size_t count) {
+  std::vector<double> values;
+  values.reserve(count);
+  for (std::size_t i = 0; i < count; ++i) {
+    values.push_back(first + step * static_cast<double>(i));
+  }
+  return pluss::make_series(values, {static_cast<std::int64_t>(values.size())});
+}
+
+[[nodiscard]] bool finite_and_increasing(Range1d range) noexcept {
+  return std::isfinite(range.low) && std::isfinite(range.high) && range.high > range.low;
+}
+
+void require_range(Range1d range, std::string_view where) {
+  if (!finite_and_increasing(range)) {
+    throw std::invalid_argument(std::string(where) + ": range must be finite and strictly increasing");
+  }
+}
+
+void require_scale_policy(ScalePolicy scale, std::string_view where) {
+  if (scale.kind != ScaleKind::SymLog) {
+    return;
+  }
+  if (!std::isfinite(scale.base) || scale.base <= 1.0) {
+    throw std::invalid_argument(std::string(where) + ": symlog base must be finite and greater than 1");
+  }
+  if (!std::isfinite(scale.linear_threshold) || scale.linear_threshold <= 0.0) {
+    throw std::invalid_argument(std::string(where) + ": symlog linear threshold must be finite and positive");
+  }
+}
+
+void require_scale_compatible_range(Range1d range, ScalePolicy scale, std::string_view where) {
+  if (scale.kind == ScaleKind::Log10 && (range.low <= 0.0 || range.high <= 0.0)) {
+    throw std::invalid_argument(std::string(where) + ": log10 limits must be strictly positive");
+  }
+}
+
 } // namespace
 
 Pane::Pane(PaneKind kind, Theme theme, std::string title)
@@ -432,42 +530,96 @@ Pane& Pane::title(std::string title) {
   return *this;
 }
 
-Pane& Pane::scale_x(ScalePolicy scale) noexcept {
+Pane& Pane::scale_x(ScalePolicy scale) {
+  require_scale_policy(scale, "scale_x");
+  if (x_axis_.limits.has_value()) {
+    require_scale_compatible_range(*x_axis_.limits, scale, "scale_x");
+  }
   x_axis_.scale = scale;
   return *this;
 }
 
-Pane& Pane::scale_y(ScalePolicy scale) noexcept {
+Pane& Pane::scale_y(ScalePolicy scale) {
+  require_scale_policy(scale, "scale_y");
+  if (y_axis_.limits.has_value()) {
+    require_scale_compatible_range(*y_axis_.limits, scale, "scale_y");
+  }
   y_axis_.scale = scale;
   return *this;
 }
 
-Pane& Pane::scale_z(ScalePolicy scale) noexcept {
+Pane& Pane::scale_z(ScalePolicy scale) {
+  require_scale_policy(scale, "scale_z");
+  if (z_axis_.limits.has_value()) {
+    require_scale_compatible_range(*z_axis_.limits, scale, "scale_z");
+  }
   z_axis_.scale = scale;
   return *this;
 }
 
-Pane& Pane::x_limits(Range1d limits) noexcept {
+Pane& Pane::x_limits(Range1d limits) {
+  require_range(limits, "x_limits");
+  require_scale_compatible_range(limits, x_axis_.scale, "x_limits");
   x_axis_.limits = limits;
   x_axis_.limit_mode = LimitMode::Manual;
   return *this;
 }
 
-Pane& Pane::y_limits(Range1d limits) noexcept {
+Pane& Pane::y_limits(Range1d limits) {
+  require_range(limits, "y_limits");
+  require_scale_compatible_range(limits, y_axis_.scale, "y_limits");
   y_axis_.limits = limits;
   y_axis_.limit_mode = LimitMode::Manual;
   return *this;
 }
 
-Pane& Pane::z_limits(Range1d limits) noexcept {
+Pane& Pane::z_limits(Range1d limits) {
+  require_range(limits, "z_limits");
+  require_scale_compatible_range(limits, z_axis_.scale, "z_limits");
   z_axis_.limits = limits;
   z_axis_.limit_mode = LimitMode::Manual;
   return *this;
 }
 
-Pane& Pane::color_limits(Range1d limits) noexcept {
+Pane& Pane::color_limits(Range1d limits) {
+  require_range(limits, "color_limits");
   color_axis_.limits = limits;
   color_axis_.limit_mode = LimitMode::Manual;
+  return *this;
+}
+
+Pane& Pane::x_limit_method(LimitMethod method) noexcept {
+  x_axis_.limit_method = method;
+  return *this;
+}
+
+Pane& Pane::y_limit_method(LimitMethod method) noexcept {
+  y_axis_.limit_method = method;
+  return *this;
+}
+
+Pane& Pane::z_limit_method(LimitMethod method) noexcept {
+  z_axis_.limit_method = method;
+  return *this;
+}
+
+Pane& Pane::color_limit_method(LimitMethod method) noexcept {
+  color_axis_.limit_method = method;
+  return *this;
+}
+
+Pane& Pane::x_tick_format(TickFormat format) noexcept {
+  x_axis_.tick_format = format;
+  return *this;
+}
+
+Pane& Pane::y_tick_format(TickFormat format) noexcept {
+  y_axis_.tick_format = format;
+  return *this;
+}
+
+Pane& Pane::z_tick_format(TickFormat format) noexcept {
+  z_axis_.tick_format = format;
   return *this;
 }
 
@@ -543,6 +695,21 @@ Pane& Pane::clear_z_ticks() noexcept {
   return *this;
 }
 
+Pane& Pane::x_categories(std::vector<std::string> labels, double first, double step) {
+  require_category_spec(labels, first, step, "x_categories");
+  return x_ticks(category_positions(first, step, labels.size()), std::move(labels));
+}
+
+Pane& Pane::y_categories(std::vector<std::string> labels, double first, double step) {
+  require_category_spec(labels, first, step, "y_categories");
+  return y_ticks(category_positions(first, step, labels.size()), std::move(labels));
+}
+
+Pane& Pane::z_categories(std::vector<std::string> labels, double first, double step) {
+  require_category_spec(labels, first, step, "z_categories");
+  return z_ticks(category_positions(first, step, labels.size()), std::move(labels));
+}
+
 Pane& Pane::key(KeyPlace place) noexcept {
   key_place_ = place;
   return *this;
@@ -565,41 +732,60 @@ Pane& Pane::caption(std::string text) {
 }
 
 Pane& Pane::rule_x(double value, std::string label) {
+  if (!std::isfinite(value)) {
+    throw std::invalid_argument("rule_x: value must be finite");
+  }
   rules_.push_back(make_rule(*this, CueAxis::X, value, std::move(label)));
   return *this;
 }
 
 Pane& Pane::rule_y(double value, std::string label) {
+  if (!std::isfinite(value)) {
+    throw std::invalid_argument("rule_y: value must be finite");
+  }
   rules_.push_back(make_rule(*this, CueAxis::Y, value, std::move(label)));
   return *this;
 }
 
 Pane& Pane::rule_z(double value, std::string label) {
+  if (!std::isfinite(value)) {
+    throw std::invalid_argument("rule_z: value must be finite");
+  }
   rules_.push_back(make_rule(*this, CueAxis::Z, value, std::move(label)));
   return *this;
 }
 
 Pane& Pane::band_x(Range1d span, std::string label) {
+  require_range(span, "band_x");
   bands_.push_back(make_band(*this, CueAxis::X, span, std::move(label)));
   return *this;
 }
 
 Pane& Pane::band_y(Range1d span, std::string label) {
+  require_range(span, "band_y");
   bands_.push_back(make_band(*this, CueAxis::Y, span, std::move(label)));
   return *this;
 }
 
 Pane& Pane::band_z(Range1d span, std::string label) {
+  require_range(span, "band_z");
   bands_.push_back(make_band(*this, CueAxis::Z, span, std::move(label)));
   return *this;
 }
 
 Pane& Pane::pin(std::string text, double x, double y, double offset_x, double offset_y) {
+  if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(offset_x) || !std::isfinite(offset_y)) {
+    throw std::invalid_argument("pin: anchor and offsets must be finite");
+  }
   pins_.push_back(make_pin(*this, std::move(text), Vec3d{x, y, 0.0}, offset_x, offset_y));
   return *this;
 }
 
 Pane& Pane::pin(std::string text, Vec3d anchor, double offset_x, double offset_y) {
+  if (!std::isfinite(anchor.x) || !std::isfinite(anchor.y) || !std::isfinite(anchor.z) ||
+      !std::isfinite(offset_x) || !std::isfinite(offset_y)) {
+    throw std::invalid_argument("pin: anchor and offsets must be finite");
+  }
   pins_.push_back(make_pin(*this, std::move(text), anchor, offset_x, offset_y));
   return *this;
 }

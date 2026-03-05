@@ -1,5 +1,7 @@
 #include "pluss/pl/plusspl.h"
 
+#include <cmath>
+
 namespace pluss::pl {
 
 Lens& Lens::look(double azimuth_deg, double elevation_deg) noexcept {
@@ -92,6 +94,9 @@ Trace& Trace::label(std::string label) {
 }
 
 Trace& Trace::width(float width) noexcept {
+  if (!(std::isfinite(width) && width > 0.0F)) {
+    return *this;
+  }
   stroke_width_ = width;
   return *this;
 }
@@ -107,6 +112,9 @@ Trace& Trace::palette(PaletteRamp palette) {
 }
 
 Trace& Trace::color_limits(Range1d limits) noexcept {
+  if (!(std::isfinite(limits.low) && std::isfinite(limits.high) && limits.high > limits.low)) {
+    return *this;
+  }
   color_limits_ = limits;
   return *this;
 }

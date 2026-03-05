@@ -2,6 +2,7 @@
 
 #include <array>
 #include <filesystem>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -87,6 +88,9 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
   pane2.quartet(std::array<double, 6>{1, 1, 1, 2, 2, 2},
                 std::array<double, 6>{0.2, 0.3, 0.5, 0.8, 1.0, 1.4})
       .label("quartet");
+  pane2.violin(std::array<double, 8>{1, 1, 1, 1, 2, 2, 2, 2},
+               std::array<double, 8>{0.15, 0.25, 0.3, 0.6, 0.75, 0.85, 1.1, 1.35})
+      .label("violin");
 
   auto& pane3 = book.pane3("surface");
   pane3.grid(GridStyle::Major).place(0, 1, 2, 1).x_label("x").y_label("y").z_label("z").key(KeyPlace::NorthEast).scale_guide();
@@ -126,6 +130,21 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
                std::array<double, 2>{0.75, 2.25})
       .label("ridge")
       .annotate_levels();
+  auto iso = pluss::make_series(
+      std::vector<double>{
+          0.0, 0.1, 0.2, 0.1, 0.5, 0.8, 0.2, 0.8, 1.2,
+          0.1, 0.3, 0.6, 0.3, 0.9, 1.3, 0.6, 1.3, 1.8,
+          0.2, 0.4, 0.7, 0.4, 1.0, 1.4, 0.7, 1.4, 2.0,
+      },
+      {3, 3, 3});
+  pane3.isoshell(std::array<double, 3>{0.0, 1.0, 2.0},
+                 std::array<double, 3>{0.0, 1.0, 2.0},
+                 std::array<double, 3>{0.0, 1.0, 2.0},
+                 iso,
+                 std::array<double, 2>{0.85, 1.45})
+      .label("isoshell")
+      .shade(ShadeMode::Smooth)
+      .transparent();
   pane3.pin("focus", Vec3d{1.0, 1.0, 3.0});
 
   const std::string svg = book.to_svg();
@@ -144,10 +163,12 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
   REQUIRE(svg.find("whisk") != std::string::npos);
   REQUIRE(svg.find("spike") != std::string::npos);
   REQUIRE(svg.find("spire3") != std::string::npos);
+  REQUIRE(svg.find("isoshell") != std::string::npos);
   REQUIRE(svg.find("wedge") != std::string::npos);
   REQUIRE(svg.find("columns") != std::string::npos);
   REQUIRE(svg.find("bucket") != std::string::npos);
   REQUIRE(svg.find("quartet") != std::string::npos);
+  REQUIRE(svg.find("violin") != std::string::npos);
   REQUIRE(svg.find("low") != std::string::npos);
   REQUIRE(svg.find("near") != std::string::npos);
   REQUIRE(svg.find("left") != std::string::npos);
@@ -218,6 +239,18 @@ TEST_CASE("PlussPl field and spire validation reject incompatible grids", "[plus
   REQUIRE_THROWS(pane3.spire3(std::array<double, 3>{0.0, 1.0, 2.0},
                               std::array<double, 2>{0.0, 1.0},
                               z));
+
+  auto bad_iso = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0}, {2, 2});
+  REQUIRE_THROWS(pane3.isoshell(std::array<double, 2>{0.0, 1.0},
+                                std::array<double, 2>{0.0, 1.0},
+                                std::array<double, 2>{0.0, 1.0},
+                                bad_iso));
+  auto iso = pluss::make_series(std::vector<double>(8, 0.25), {2, 2, 2});
+  REQUIRE_THROWS(pane3.isoshell(std::array<double, 3>{0.0, 1.0, 2.0},
+                                std::array<double, 2>{0.0, 1.0},
+                                std::array<double, 2>{0.0, 1.0},
+                                iso,
+                                0));
 }
 
 TEST_CASE("PlussPl statistical mark validation rejects degenerate inputs", "[plusspl][validation][marks]") {
@@ -230,6 +263,8 @@ TEST_CASE("PlussPl statistical mark validation rejects degenerate inputs", "[plu
   REQUIRE_THROWS(pane.bucket(std::array<double, 3>{0.0, 1.0, 2.0}, 0));
   REQUIRE_THROWS(pane.quartet(std::array<double, 2>{1.0, 2.0},
                               std::array<double, 3>{0.2, 0.3, 0.4}));
+  REQUIRE_THROWS(pane.violin(std::array<double, 2>{1.0, 2.0},
+                             std::array<double, 3>{0.2, 0.3, 0.4}));
 }
 
 TEST_CASE("PlussPl layout and uncertainty validation reject degenerate inputs", "[plusspl][validation][layout]") {
@@ -255,4 +290,145 @@ TEST_CASE("PlussPl layout and uncertainty validation reject degenerate inputs", 
   REQUIRE_THROWS(pane.wedge(std::array<double, 2>{0.0, 0.0}));
   REQUIRE_THROWS(pane.x_ticks(std::array<double, 2>{1.0, 2.0},
                               std::vector<std::string>{"only one"}));
+}
+
+TEST_CASE("PlussPl axis policy validation rejects invalid scales and ranges", "[plusspl][validation][axis]") {
+  using namespace pluss::pl;
+
+  Studio book("axis-validation");
+  auto& pane = book.pane2();
+
+  REQUIRE_THROWS(pane.scale_x(ScalePolicy::symlog(1.0, 1.0)));
+  REQUIRE_THROWS(pane.scale_x(ScalePolicy::symlog(10.0, 0.0)));
+
+  pane.scale_x(ScalePolicy::log10());
+  REQUIRE_THROWS(pane.x_limits({-1.0, 10.0}));
+  REQUIRE_THROWS(pane.x_limits({2.0, 2.0}));
+
+  REQUIRE_THROWS(pane.band_y({3.0, 1.0}));
+  REQUIRE_THROWS(pane.rule_x(std::numeric_limits<double>::infinity()));
+  REQUIRE_THROWS(pane.pin("bad", std::numeric_limits<double>::quiet_NaN(), 1.0));
+}
+
+TEST_CASE("PlussPl exposes limit fit policies on pane axes", "[plusspl][axis][limit-fit]") {
+  using namespace pluss::pl;
+
+  Studio book("limit-fit");
+  auto& pane = book.pane3();
+  pane.x_limit_method(LimitMethod::Padded)
+      .y_limit_method(LimitMethod::Tight)
+      .z_limit_method(LimitMethod::TickAligned)
+      .color_limit_method(LimitMethod::Padded);
+
+  REQUIRE(pane.x_axis().limit_method == LimitMethod::Padded);
+  REQUIRE(pane.y_axis().limit_method == LimitMethod::Tight);
+  REQUIRE(pane.z_axis().limit_method == LimitMethod::TickAligned);
+  REQUIRE(pane.color_axis().limit_method == LimitMethod::Padded);
+}
+
+TEST_CASE("PlussPl renders mixed-sign symlog traces", "[plusspl][scale][symlog]") {
+  using namespace pluss::pl;
+
+  Studio book("symlog-render");
+  auto& pane = book.pane2();
+  pane.scale_x(ScalePolicy::symlog(10.0, 0.25)).grid(GridStyle::Major);
+  pane.trend(std::array<double, 7>{-100.0, -10.0, -1.0, 0.0, 1.0, 10.0, 100.0},
+             std::array<double, 7>{3.0, 2.0, 1.0, 0.0, 1.0, 2.0, 3.0});
+
+  const auto svg = book.to_svg();
+  REQUIRE(svg.find("<svg") != std::string::npos);
+}
+
+TEST_CASE("PlussPl renders major-minor guides for planar and volume panes", "[plusspl][grid][minor]") {
+  using namespace pluss::pl;
+
+  Studio book("minor-guides");
+  book.mosaic(1, 2);
+
+  auto& pane2 = book.pane2("planar");
+  pane2.place(0, 0)
+      .grid(GridStyle::MajorMinor)
+      .scale_x(ScalePolicy::log10())
+      .scale_y(ScalePolicy::symlog(10.0, 0.2));
+  pane2.trend(std::array<double, 6>{0.1, 0.3, 1.0, 3.0, 10.0, 30.0},
+              std::array<double, 6>{-2.0, -1.0, -0.3, 0.4, 1.6, 2.8});
+
+  auto& pane3 = book.pane3("volume");
+  pane3.place(0, 1)
+      .grid(GridStyle::MajorMinor)
+      .scale_x(ScalePolicy::log10())
+      .scale_y(ScalePolicy::log10())
+      .scale_z(ScalePolicy::symlog(10.0, 0.2));
+  auto z = pluss::make_series(
+      std::vector<double>{
+          -1.0, -0.2, 0.5,
+          -0.4,  0.1, 0.8,
+           0.2,  0.9, 1.6,
+      },
+      {3, 3});
+  pane3.sheet(std::array<double, 3>{0.1, 1.0, 10.0},
+              std::array<double, 3>{0.2, 1.5, 12.0},
+              z);
+
+  const std::string svg = book.to_svg();
+  std::size_t path_count = 0;
+  std::size_t pos = 0;
+  while ((pos = svg.find("<path", pos)) != std::string::npos) {
+    ++path_count;
+    pos += 5;
+  }
+  REQUIRE(path_count > 60);
+}
+
+TEST_CASE("PlussPl keeps planar tick labels visible without grid", "[plusspl][axis][ticks]") {
+  using namespace pluss::pl;
+
+  Studio book("planar-ticks-no-grid");
+  auto& pane = book.pane2("no-grid");
+  pane.grid(GridStyle::None)
+      .x_ticks(std::array<double, 3>{1.0, 2.0, 3.0}, std::vector<std::string>{"alpha", "beta", "gamma"})
+      .y_ticks(std::array<double, 2>{10.0, 20.0}, std::vector<std::string>{"low", "high"});
+  pane.trend(std::array<double, 3>{1.0, 2.0, 3.0}, std::array<double, 3>{10.0, 15.0, 20.0});
+
+  const std::string svg = book.to_svg();
+  REQUIRE(svg.find("alpha") != std::string::npos);
+  REQUIRE(svg.find("gamma") != std::string::npos);
+  REQUIRE(svg.find("high") != std::string::npos);
+}
+
+TEST_CASE("PlussPl supports tick formatting and categorical helpers", "[plusspl][axis][format]") {
+  using namespace pluss::pl;
+
+  Studio book("tick-format");
+  auto& pane = book.pane2("formats");
+  pane.grid(GridStyle::Major)
+      .x_tick_format(TickFormat::Scientific)
+      .y_tick_format(TickFormat::Percent)
+      .x_categories({"Q1", "Q2", "Q3", "Q4"});
+  pane.trend(std::array<double, 4>{1.0, 2.0, 3.0, 4.0},
+             std::array<double, 4>{0.12, 0.24, 0.31, 0.5});
+  pane.cloud(std::array<double, 4>{1.0, 2.0, 3.0, 4.0},
+             std::array<double, 4>{0.11, 0.22, 0.33, 0.44});
+
+  const std::string svg = book.to_svg();
+  REQUIRE(svg.find("Q1") != std::string::npos);
+  REQUIRE(svg.find("Q4") != std::string::npos);
+  REQUIRE(svg.find("%") != std::string::npos);
+}
+
+TEST_CASE("PlussPl renders violin traces for degenerate and grouped samples", "[plusspl][violin]") {
+  using namespace pluss::pl;
+
+  Studio book("violin-stability");
+  auto& pane = book.pane2("stats");
+  pane.grid(GridStyle::Major);
+  pane.violin(std::array<double, 5>{3.0, 3.0, 3.0, 3.0, 3.0}).label("flat-sample");
+  pane.violin(std::array<double, 8>{1, 1, 1, 1, 2, 2, 2, 2},
+              std::array<double, 8>{0.2, 0.35, 0.4, 0.55, 0.7, 0.82, 1.0, 1.25})
+      .label("grouped-sample");
+
+  const std::string svg = book.to_svg();
+  REQUIRE(svg.find("<path") != std::string::npos);
+  REQUIRE(svg.find("nan") == std::string::npos);
+  REQUIRE(svg.find("inf") == std::string::npos);
 }

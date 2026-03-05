@@ -62,6 +62,8 @@ enum class KeyPlace : std::uint8_t { None, NorthEast, NorthWest, SouthEast, Sout
 enum class KeyDock : std::uint8_t { None, East, South };
 enum class ScaleKind : std::uint8_t { Linear, Log10, SymLog };
 enum class LimitMode : std::uint8_t { AutoFit, Manual };
+enum class LimitMethod : std::uint8_t { TickAligned, Tight, Padded };
+enum class TickFormat : std::uint8_t { Auto, Fixed3, Fixed6, Scientific, Engineering, Integer, Percent };
 enum class ProjectionKind : std::uint8_t { Perspective, Orthographic };
 enum class LightSpace : std::uint8_t { Camera, Data };
 enum class LightStyle : std::uint8_t { Local, Infinite };
@@ -81,10 +83,12 @@ enum class TraceKind : std::uint8_t {
   Columns,
   Bucket,
   Quartet,
+  Violin,
   Radial,
   Contour,
   Isoband,
   Ridge3,
+  IsoShell,
   Path3,
   Spire3,
   Sheet,
@@ -188,6 +192,8 @@ struct AxisTicks {
 struct AxisState {
   ScalePolicy scale{};
   LimitMode limit_mode{LimitMode::AutoFit};
+  LimitMethod limit_method{LimitMethod::TickAligned};
+  TickFormat tick_format{TickFormat::Auto};
   std::optional<Range1d> limits{};
   std::string label{};
   std::optional<AxisTicks> ticks{};
@@ -321,6 +327,12 @@ struct QuartetData {
   double width{0.7};
 };
 
+struct ViolinData {
+  std::optional<Series> group;
+  Series values;
+  double width{0.8};
+};
+
 struct RadialData {
   Series theta;
   Series radius;
@@ -352,6 +364,15 @@ struct ContourData {
   bool elevated{false};
 };
 
+struct IsoShellData {
+  Series x;
+  Series y;
+  Series z;
+  Series values;
+  std::vector<double> levels;
+  int auto_levels{4};
+};
+
 struct SurfaceData {
   Series x;
   Series y;
@@ -360,7 +381,7 @@ struct SurfaceData {
 };
 
 using TracePayload =
-    std::variant<TrendData, CloudData, Cloud3Data, FieldmapData, RibbonData, SpikeData, WedgeData, WhiskData, ColumnsData, BucketData, QuartetData, RadialData, ContourData, Path3Data, Spire3Data, SurfaceData>;
+    std::variant<TrendData, CloudData, Cloud3Data, FieldmapData, RibbonData, SpikeData, WedgeData, WhiskData, ColumnsData, BucketData, QuartetData, ViolinData, RadialData, ContourData, IsoShellData, Path3Data, Spire3Data, SurfaceData>;
 
 struct PanePlacement {
   std::int64_t row{0};
@@ -529,13 +550,20 @@ class Pane {
   [[nodiscard]] const PanePlacement& placement() const noexcept { return placement_; }
 
   Pane& title(std::string title);
-  Pane& scale_x(ScalePolicy scale) noexcept;
-  Pane& scale_y(ScalePolicy scale) noexcept;
-  Pane& scale_z(ScalePolicy scale) noexcept;
-  Pane& x_limits(Range1d limits) noexcept;
-  Pane& y_limits(Range1d limits) noexcept;
-  Pane& z_limits(Range1d limits) noexcept;
-  Pane& color_limits(Range1d limits) noexcept;
+  Pane& scale_x(ScalePolicy scale);
+  Pane& scale_y(ScalePolicy scale);
+  Pane& scale_z(ScalePolicy scale);
+  Pane& x_limits(Range1d limits);
+  Pane& y_limits(Range1d limits);
+  Pane& z_limits(Range1d limits);
+  Pane& color_limits(Range1d limits);
+  Pane& x_limit_method(LimitMethod method) noexcept;
+  Pane& y_limit_method(LimitMethod method) noexcept;
+  Pane& z_limit_method(LimitMethod method) noexcept;
+  Pane& color_limit_method(LimitMethod method) noexcept;
+  Pane& x_tick_format(TickFormat format) noexcept;
+  Pane& y_tick_format(TickFormat format) noexcept;
+  Pane& z_tick_format(TickFormat format) noexcept;
   Pane& auto_x() noexcept;
   Pane& auto_y() noexcept;
   Pane& auto_z() noexcept;
@@ -549,6 +577,9 @@ class Pane {
   Pane& clear_x_ticks() noexcept;
   Pane& clear_y_ticks() noexcept;
   Pane& clear_z_ticks() noexcept;
+  Pane& x_categories(std::vector<std::string> labels, double first = 1.0, double step = 1.0);
+  Pane& y_categories(std::vector<std::string> labels, double first = 1.0, double step = 1.0);
+  Pane& z_categories(std::vector<std::string> labels, double first = 1.0, double step = 1.0);
   Pane& key(KeyPlace place) noexcept;
   Pane& grid(GridStyle style) noexcept;
   Pane& scale_guide(bool enable = true) noexcept;
@@ -863,6 +894,22 @@ class Pane {
                                   0.7});
   }
 
+  template <class Values>
+  Trace& violin(Values&& values) {
+    ensure_planar_("violin");
+    return add_trace_(TraceKind::Violin,
+                      ViolinData{std::nullopt, detail::to_series(std::forward<Values>(values)), 0.8});
+  }
+
+  template <class Group, class Values>
+  Trace& violin(Group&& group, Values&& values) {
+    ensure_planar_("violin");
+    return add_trace_(TraceKind::Violin,
+                      ViolinData{detail::to_series(std::forward<Group>(group)),
+                                 detail::to_series(std::forward<Values>(values)),
+                                 0.8});
+  }
+
   template <class Theta, class Radius>
   Trace& radial(Theta&& theta, Radius&& radius) {
     ensure_planar_("radial");
@@ -1064,6 +1111,57 @@ class Pane {
                                   level_count,
                                   false,
                                   true});
+  }
+
+  template <class Values>
+  Trace& isoshell(Values&& values, int level_count = 4) {
+    ensure_volumetric_("isoshell");
+    const Series field = detail::to_series(std::forward<Values>(values));
+    if (field.dim() != 3) {
+      throw std::invalid_argument("isoshell: values must be a rank-3 field");
+    }
+    const auto nx = field.sizes()[0];
+    const auto ny = field.sizes()[1];
+    const auto nz = field.sizes()[2];
+    return add_trace_(TraceKind::IsoShell,
+                      IsoShellData{
+                          detail::index_series(nx),
+                          detail::index_series(ny),
+                          detail::index_series(nz),
+                          field,
+                          {},
+                          level_count,
+                      });
+  }
+
+  template <class X, class Y, class Z, class Values>
+  Trace& isoshell(X&& x, Y&& y, Z&& z, Values&& values, int level_count = 4) {
+    ensure_volumetric_("isoshell");
+    return add_trace_(TraceKind::IsoShell,
+                      IsoShellData{
+                          detail::to_series(std::forward<X>(x)),
+                          detail::to_series(std::forward<Y>(y)),
+                          detail::to_series(std::forward<Z>(z)),
+                          detail::to_series(std::forward<Values>(values)),
+                          {},
+                          level_count,
+                      });
+  }
+
+  template <class X, class Y, class Z, class Values, class Levels>
+  Trace& isoshell(X&& x, Y&& y, Z&& z, Values&& values, Levels&& levels)
+    requires(!std::integral<std::remove_cvref_t<Levels>>)
+  {
+    ensure_volumetric_("isoshell");
+    return add_trace_(TraceKind::IsoShell,
+                      IsoShellData{
+                          detail::to_series(std::forward<X>(x)),
+                          detail::to_series(std::forward<Y>(y)),
+                          detail::to_series(std::forward<Z>(z)),
+                          detail::to_series(std::forward<Values>(values)),
+                          detail::to_f64_vector(std::forward<Levels>(levels)),
+                          0,
+                      });
   }
 
   template <class X, class Y, class Z>

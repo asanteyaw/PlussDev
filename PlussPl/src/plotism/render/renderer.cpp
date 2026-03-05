@@ -214,6 +214,16 @@ struct SurfaceGrid {
   std::optional<std::vector<double>> color;
 };
 
+struct VolumeField {
+  std::int64_t nx{0};
+  std::int64_t ny{0};
+  std::int64_t nz{0};
+  std::vector<double> x;
+  std::vector<double> y;
+  std::vector<double> z;
+  std::vector<double> values;
+};
+
 struct CloudPoints {
   std::vector<double> x;
   std::vector<double> y;
@@ -264,6 +274,20 @@ struct QuartetSummary {
   double low_whisker{0.0};
   double high_whisker{0.0};
   std::vector<double> outliers;
+};
+
+struct ViolinShape {
+  double group{1.0};
+  double q1{0.0};
+  double median{0.0};
+  double q3{0.0};
+  std::vector<double> y;
+  std::vector<double> half_width;
+};
+
+struct IsoTriangle {
+  std::array<Point3d, 3> vertices{};
+  double level{0.0};
 };
 
 struct WedgeSlice {
@@ -465,7 +489,8 @@ struct WedgeSlice {
       }
       return std::log10(value);
     case ScaleKind::SymLog:
-      if (!std::isfinite(value)) {
+      if (!std::isfinite(value) || !std::isfinite(policy.base) || policy.base <= 1.0 ||
+          !std::isfinite(policy.linear_threshold) || policy.linear_threshold <= 0.0) {
         return std::nullopt;
       }
       if (std::abs(value) <= policy.linear_threshold) {
@@ -478,20 +503,148 @@ struct WedgeSlice {
   }
 }
 
+[[nodiscard]] std::optional<double> unscale_value(double value, const ScalePolicy& policy) {
+  switch (policy.kind) {
+    case ScaleKind::Linear:
+      return std::isfinite(value) ? std::optional<double>(value) : std::nullopt;
+    case ScaleKind::Log10:
+      if (!std::isfinite(value)) {
+        return std::nullopt;
+      }
+      return std::pow(10.0, value);
+    case ScaleKind::SymLog:
+      if (!std::isfinite(value) || !std::isfinite(policy.base) || policy.base <= 1.0 ||
+          !std::isfinite(policy.linear_threshold) || policy.linear_threshold <= 0.0) {
+        return std::nullopt;
+      }
+      if (std::abs(value) <= 1.0) {
+        return value * policy.linear_threshold;
+      }
+      return (value < 0.0 ? -1.0 : 1.0) *
+             policy.linear_threshold *
+             std::pow(policy.base, std::abs(value) - 1.0);
+    default:
+      return std::nullopt;
+  }
+}
+
+[[nodiscard]] std::string format_tick_value(double value) {
+  std::ostringstream label;
+  const double magnitude = std::abs(value);
+  if (magnitude >= 1.0e4 || (magnitude > 0.0 && magnitude < 1.0e-3)) {
+    label << std::scientific << std::setprecision(2) << value;
+  } else {
+    label << std::setprecision(4) << value;
+  }
+  return label.str();
+}
+
+[[nodiscard]] std::string format_tick_value(double value, TickFormat format) {
+  if (!std::isfinite(value)) {
+    return {};
+  }
+  if (format == TickFormat::Auto) {
+    return format_tick_value(value);
+  }
+
+  std::ostringstream out;
+  switch (format) {
+    case TickFormat::Fixed3:
+      out << std::fixed << std::setprecision(3) << value;
+      return out.str();
+    case TickFormat::Fixed6:
+      out << std::fixed << std::setprecision(6) << value;
+      return out.str();
+    case TickFormat::Scientific:
+      out << std::scientific << std::setprecision(2) << value;
+      return out.str();
+    case TickFormat::Engineering: {
+      if (value == 0.0) {
+        return "0";
+      }
+      const double abs_value = std::abs(value);
+      const int exponent3 = static_cast<int>(std::floor(std::log10(abs_value) / 3.0)) * 3;
+      const double mantissa = value / std::pow(10.0, static_cast<double>(exponent3));
+      out << std::fixed << std::setprecision(3) << mantissa << "e" << exponent3;
+      return out.str();
+    }
+    case TickFormat::Integer:
+      out << static_cast<long long>(std::llround(value));
+      return out.str();
+    case TickFormat::Percent:
+      out << std::fixed << std::setprecision(1) << (value * 100.0) << "%";
+      return out.str();
+    case TickFormat::Auto:
+    default:
+      return format_tick_value(value);
+  }
+}
+
+[[nodiscard]] double nice_step(double span, int target_ticks = 5);
+
 [[nodiscard]] Range1d effective_range(const AxisState& axis, double derived_low, double derived_high) {
   if (axis.limit_mode == LimitMode::Manual && axis.limits.has_value()) {
     return *axis.limits;
   }
   if (!std::isfinite(derived_low) || !std::isfinite(derived_high)) {
-    return {0.0, 1.0};
+    return axis.scale.kind == ScaleKind::Log10 ? Range1d{0.1, 10.0} : Range1d{-1.0, 1.0};
   }
+  if (axis.scale.kind == ScaleKind::Log10) {
+    if (derived_high <= 0.0) {
+      return {0.1, 10.0};
+    }
+    if (derived_low <= 0.0) {
+      derived_low = std::max(derived_high * 1.0e-3, 1.0e-6);
+    }
+  }
+
   if (derived_low == derived_high) {
+    if (axis.scale.kind == ScaleKind::Log10) {
+      return {derived_low / std::sqrt(10.0), derived_high * std::sqrt(10.0)};
+    }
     return {derived_low - 0.5, derived_high + 0.5};
   }
-  return {derived_low, derived_high};
+  if (axis.limit_method == LimitMethod::Tight) {
+    return {derived_low, derived_high};
+  }
+
+  const auto low_t = scale_value(derived_low, axis.scale);
+  const auto high_t = scale_value(derived_high, axis.scale);
+  if (!low_t.has_value() || !high_t.has_value()) {
+    return {derived_low, derived_high};
+  }
+  double aligned_low_t = *low_t;
+  double aligned_high_t = *high_t;
+  if (!(aligned_high_t > aligned_low_t)) {
+    return {derived_low, derived_high};
+  }
+
+  const double span_t = aligned_high_t - aligned_low_t;
+  if (axis.limit_method == LimitMethod::Padded) {
+    const double pad_t = std::max(span_t * 0.06, 1.0e-9);
+    aligned_low_t -= pad_t;
+    aligned_high_t += pad_t;
+  } else if (axis.limit_method == LimitMethod::TickAligned) {
+    const double step_t = nice_step(span_t, 5);
+    aligned_low_t = std::floor(aligned_low_t / step_t) * step_t;
+    aligned_high_t = std::ceil(aligned_high_t / step_t) * step_t;
+    if (!(aligned_high_t > aligned_low_t)) {
+      aligned_high_t = aligned_low_t + step_t;
+    }
+  }
+
+  const auto aligned_low = unscale_value(aligned_low_t, axis.scale);
+  const auto aligned_high = unscale_value(aligned_high_t, axis.scale);
+  if (!aligned_low.has_value() || !aligned_high.has_value()) {
+    return {derived_low, derived_high};
+  }
+  if (*aligned_high <= *aligned_low || !std::isfinite(*aligned_low) || !std::isfinite(*aligned_high)) {
+    return {derived_low, derived_high};
+  }
+  return {*aligned_low, *aligned_high};
 }
 
-[[nodiscard]] double nice_step(double span, int target_ticks = 5) {
+[[nodiscard]] double nice_step(double span, int target_ticks) {
   if (!(span > 0.0) || !std::isfinite(span)) {
     return 1.0;
   }
@@ -517,9 +670,7 @@ struct WedgeSlice {
   std::vector<std::pair<double, std::string>> ticks;
   for (double value = start; value <= range.high + step * 0.5; value += step) {
     if (value >= range.low - step * 0.5 && value <= range.high + step * 0.5) {
-      std::ostringstream label;
-      label << std::setprecision(4) << value;
-      ticks.emplace_back(value, label.str());
+      ticks.emplace_back(value, format_tick_value(value));
     }
     if (ticks.size() > 12) {
       break;
@@ -544,6 +695,29 @@ struct WedgeSlice {
   return ticks;
 }
 
+[[nodiscard]] std::vector<std::pair<double, std::string>> symlog_ticks(Range1d range, const ScalePolicy& policy) {
+  std::vector<std::pair<double, std::string>> ticks;
+  const auto low_t = scale_value(range.low, policy);
+  const auto high_t = scale_value(range.high, policy);
+  if (!low_t.has_value() || !high_t.has_value() || *high_t <= *low_t) {
+    return ticks;
+  }
+  const auto transformed_ticks = linear_ticks({*low_t, *high_t}, 7);
+  ticks.reserve(transformed_ticks.size());
+  const double eps = std::max(1.0e-9, 1.0e-7 * std::max(std::abs(range.low), std::abs(range.high)));
+  for (const auto& [transformed, _] : transformed_ticks) {
+    const auto value = unscale_value(transformed, policy);
+    if (!value.has_value() || !std::isfinite(*value)) {
+      continue;
+    }
+    if (!ticks.empty() && std::abs(ticks.back().first - *value) <= eps) {
+      continue;
+    }
+    ticks.emplace_back(*value, format_tick_value(*value));
+  }
+  return ticks;
+}
+
 [[nodiscard]] std::vector<std::pair<double, std::string>> ticks_for(const AxisState& axis, Range1d range) {
   if (axis.ticks.has_value()) {
     const auto positions = to_f64(flatten_f64(axis.ticks->positions));
@@ -555,23 +729,33 @@ struct WedgeSlice {
     }
     return ticks;
   }
+  std::vector<std::pair<double, std::string>> ticks;
   if (axis.scale.kind == ScaleKind::Log10) {
-    return log_ticks(range);
+    ticks = log_ticks(range);
+  } else if (axis.scale.kind == ScaleKind::SymLog) {
+    ticks = symlog_ticks(range, axis.scale);
+  } else {
+    ticks = linear_ticks(range);
   }
-  return linear_ticks(range);
+
+  if (axis.tick_format != TickFormat::Auto) {
+    for (auto& [value, label] : ticks) {
+      label = format_tick_value(value, axis.tick_format);
+    }
+  }
+  return ticks;
 }
 
 [[nodiscard]] std::vector<std::pair<double, std::string>> clamp_ticks(
     const std::vector<std::pair<double, std::string>>& ticks,
-    Range1d range) {
+    Range1d range,
+    const AxisState& axis) {
   std::vector<std::pair<double, std::string>> clipped;
   clipped.reserve(ticks.size() + 2);
   const double span = std::max(range.high - range.low, 1e-12);
   const double eps = std::max(1e-9 * span, 1e-9);
-  auto make_label = [](double value) {
-    std::ostringstream out;
-    out << std::setprecision(4) << value;
-    return out.str();
+  const auto make_label = [&](double value) {
+    return format_tick_value(value, axis.tick_format);
   };
   for (const auto& [value, label] : ticks) {
     if (!std::isfinite(value)) {
@@ -599,22 +783,26 @@ struct WedgeSlice {
 
   if (clipped.empty()) {
     clipped.emplace_back(range.low, make_label(range.low));
-    if (range.high > range.low + eps) {
+    if (!axis.ticks.has_value() && range.high > range.low + eps) {
       clipped.emplace_back(range.high, make_label(range.high));
     }
     return clipped;
   }
 
-  if (std::abs(clipped.front().first - range.low) > eps) {
-    clipped.insert(clipped.begin(), {range.low, make_label(range.low)});
-  } else {
-    clipped.front().first = range.low;
-  }
-  if (range.high > range.low + eps) {
-    if (std::abs(clipped.back().first - range.high) > eps) {
-      clipped.emplace_back(range.high, make_label(range.high));
+  if (!axis.ticks.has_value()) {
+    if (std::abs(clipped.front().first - range.low) > eps) {
+      clipped.insert(clipped.begin(), {range.low, make_label(range.low)});
     } else {
-      clipped.back().first = range.high;
+      clipped.front().first = range.low;
+      clipped.front().second = make_label(range.low);
+    }
+    if (range.high > range.low + eps) {
+      if (std::abs(clipped.back().first - range.high) > eps) {
+        clipped.emplace_back(range.high, make_label(range.high));
+      } else {
+        clipped.back().first = range.high;
+        clipped.back().second = make_label(range.high);
+      }
     }
   }
   return clipped;
@@ -630,6 +818,119 @@ struct WedgeSlice {
     values.push_back(range.low + span * t);
   }
   return values;
+}
+
+[[nodiscard]] std::vector<double> minor_tick_values(
+    const AxisState& axis,
+    Range1d range,
+    const std::vector<std::pair<double, std::string>>& major_ticks) {
+  std::vector<double> minor;
+  if (!std::isfinite(range.low) || !std::isfinite(range.high) || !(range.high > range.low)) {
+    return minor;
+  }
+
+  const double span = std::max(range.high - range.low, 1e-12);
+  const double eps = std::max(1.0e-9, span * 1.0e-7);
+  std::vector<double> major;
+  major.reserve(major_ticks.size());
+  for (const auto& [value, _] : major_ticks) {
+    if (!std::isfinite(value)) {
+      continue;
+    }
+    if (value < range.low - eps || value > range.high + eps) {
+      continue;
+    }
+    major.push_back(value);
+  }
+  std::sort(major.begin(), major.end());
+  major.erase(std::unique(major.begin(), major.end(), [eps](double lhs, double rhs) {
+                return std::abs(lhs - rhs) <= eps;
+              }),
+              major.end());
+
+  const auto is_major = [&](double value) {
+    for (const double major_value : major) {
+      if (std::abs(major_value - value) <= eps) {
+        return true;
+      }
+    }
+    return false;
+  };
+  const auto push_minor = [&](double value) {
+    if (!std::isfinite(value)) {
+      return;
+    }
+    if (value < range.low + eps || value > range.high - eps) {
+      return;
+    }
+    if (is_major(value)) {
+      return;
+    }
+    for (const double existing : minor) {
+      if (std::abs(existing - value) <= eps) {
+        return;
+      }
+    }
+    minor.push_back(value);
+  };
+
+  if (axis.scale.kind == ScaleKind::Log10) {
+    if (range.low <= 0.0 || range.high <= 0.0) {
+      return minor;
+    }
+    const int low_pow = static_cast<int>(std::floor(std::log10(range.low)));
+    const int high_pow = static_cast<int>(std::ceil(std::log10(range.high)));
+    for (int power = low_pow; power < high_pow; ++power) {
+      const double base = std::pow(10.0, static_cast<double>(power));
+      for (int m = 2; m <= 9; ++m) {
+        push_minor(base * static_cast<double>(m));
+      }
+      if (minor.size() >= 96) {
+        break;
+      }
+    }
+    std::sort(minor.begin(), minor.end());
+    return minor;
+  }
+
+  if (major.size() < 2) {
+    const auto fallback = linear_ticks(range, 9);
+    for (const auto& [value, _] : fallback) {
+      push_minor(value);
+    }
+    std::sort(minor.begin(), minor.end());
+    return minor;
+  }
+
+  for (std::size_t i = 1; i < major.size(); ++i) {
+    const double lo = major[i - 1];
+    const double hi = major[i];
+    if (!(hi > lo + eps)) {
+      continue;
+    }
+    const auto lo_t = scale_value(lo, axis.scale);
+    const auto hi_t = scale_value(hi, axis.scale);
+    if (!lo_t.has_value() || !hi_t.has_value() || !(*hi_t > *lo_t)) {
+      continue;
+    }
+    for (int div = 1; div < 5; ++div) {
+      const double transformed = *lo_t + (*hi_t - *lo_t) * (static_cast<double>(div) / 5.0);
+      const auto value = unscale_value(transformed, axis.scale);
+      if (!value.has_value()) {
+        continue;
+      }
+      push_minor(*value);
+      if (minor.size() >= 128) {
+        break;
+      }
+    }
+    if (minor.size() >= 128) {
+      break;
+    }
+  }
+
+  std::sort(minor.begin(), minor.end());
+  return minor;
 }
 
 [[nodiscard]] SeriesPairData normalize_pairs(const Series& first, const Series& second) {
@@ -848,6 +1149,112 @@ struct WedgeSlice {
   return summaries;
 }
 
+[[nodiscard]] std::vector<ViolinShape> violin_shapes(const ViolinData& data) {
+  constexpr std::size_t kResolution = 72;
+  constexpr double kInvSqrt2Pi = 0.3989422804014327;
+
+  std::vector<ViolinShape> shapes;
+  const Series values = flatten_f64(data.values);
+
+  auto append_shape = [&](double group, const Series& sample) {
+    const auto sample_values = to_f64(sample);
+    if (sample_values.empty()) {
+      return;
+    }
+
+    const std::size_t n = sample_values.size();
+    const double q1 = scalar_f64(sample.quantile(0.25));
+    const double median = scalar_f64(sample.median());
+    const double q3 = scalar_f64(sample.quantile(0.75));
+    const double min_value = scalar_f64(sample.min());
+    const double max_value = scalar_f64(sample.max());
+    const double range = max_value - min_value;
+    const double tail = range > 0.0 ? 0.12 * range : 0.5;
+    const double low = min_value - tail;
+    const double high = max_value + tail;
+    const double span = std::max(high - low, 1e-9);
+
+    const double mean = std::accumulate(sample_values.begin(), sample_values.end(), 0.0) /
+                        static_cast<double>(n);
+    double variance = 0.0;
+    for (const double value : sample_values) {
+      const double delta = value - mean;
+      variance += delta * delta;
+    }
+    variance /= static_cast<double>(n);
+    const double stddev = std::sqrt(std::max(variance, 0.0));
+    const double iqr = std::max(q3 - q1, 0.0);
+    const double robust_sigma = std::min(stddev, iqr / 1.34);
+    double bandwidth = 0.9 * robust_sigma * std::pow(static_cast<double>(n), -0.2);
+    if (!std::isfinite(bandwidth) || bandwidth <= 1e-6) {
+      bandwidth = std::max(span / 18.0, 0.08);
+    }
+
+    ViolinShape shape;
+    shape.group = group;
+    shape.q1 = q1;
+    shape.median = median;
+    shape.q3 = q3;
+    shape.y.resize(kResolution);
+    shape.half_width.resize(kResolution);
+
+    std::vector<double> density(kResolution, 0.0);
+    for (std::size_t i = 0; i < kResolution; ++i) {
+      const double y = low + span * static_cast<double>(i) / static_cast<double>(kResolution - 1);
+      shape.y[i] = y;
+      double sum = 0.0;
+      for (const double value : sample_values) {
+        const double u = (y - value) / bandwidth;
+        sum += std::exp(-0.5 * u * u);
+      }
+      density[i] = sum / (static_cast<double>(n) * bandwidth) * kInvSqrt2Pi;
+    }
+
+    const double peak = *std::max_element(density.begin(), density.end());
+    const double scale = peak > 0.0 ? (0.5 * data.width / peak) : 0.0;
+    for (std::size_t i = 0; i < kResolution; ++i) {
+      shape.half_width[i] = density[i] * scale;
+    }
+    shapes.push_back(std::move(shape));
+  };
+
+  if (!data.group.has_value()) {
+    append_shape(1.0, values);
+    return shapes;
+  }
+
+  const Series group = flatten_f64(*data.group);
+  const auto unique_groups = to_f64(group.unique(true));
+  shapes.reserve(unique_groups.size());
+  for (const double group_value : unique_groups) {
+    append_shape(group_value, values.masked_select(group.eq(group_value)));
+  }
+  return shapes;
+}
+
+[[nodiscard]] double width_at_y(const ViolinShape& shape, double y) {
+  if (shape.y.empty() || shape.half_width.empty()) {
+    return 0.0;
+  }
+  if (y <= shape.y.front()) {
+    return shape.half_width.front();
+  }
+  if (y >= shape.y.back()) {
+    return shape.half_width.back();
+  }
+  for (std::size_t i = 1; i < shape.y.size(); ++i) {
+    if (y <= shape.y[i]) {
+      const double y0 = shape.y[i - 1];
+      const double y1 = shape.y[i];
+      const double w0 = shape.half_width[i - 1];
+      const double w1 = shape.half_width[i];
+      const double t = (y - y0) / std::max(y1 - y0, 1e-12);
+      return w0 + (w1 - w0) * t;
+    }
+  }
+  return shape.half_width.back();
+}
+
 [[nodiscard]] std::optional<std::pair<Series, Series>> surface_coordinate_grids(
     const Series& x,
     const Series& y,
@@ -984,6 +1391,34 @@ struct WedgeSlice {
   return grid;
 }
 
+[[nodiscard]] std::optional<VolumeField> normalize_volume_field(const IsoShellData& data) {
+  const Series values = data.values.to(ScalarType::Float64);
+  if (values.dim() != 3) {
+    return std::nullopt;
+  }
+  VolumeField field;
+  field.nx = values.sizes()[0];
+  field.ny = values.sizes()[1];
+  field.nz = values.sizes()[2];
+  if (field.nx <= 1 || field.ny <= 1 || field.nz <= 1) {
+    return std::nullopt;
+  }
+
+  field.x = to_f64(flatten_f64(data.x));
+  field.y = to_f64(flatten_f64(data.y));
+  field.z = to_f64(flatten_f64(data.z));
+  if (field.x.size() != static_cast<std::size_t>(field.nx) ||
+      field.y.size() != static_cast<std::size_t>(field.ny) ||
+      field.z.size() != static_cast<std::size_t>(field.nz)) {
+    return std::nullopt;
+  }
+  field.values = to_f64(values.reshape({field.nx * field.ny * field.nz}));
+  if (field.values.size() != static_cast<std::size_t>(field.nx * field.ny * field.nz)) {
+    return std::nullopt;
+  }
+  return field;
+}
+
 [[nodiscard]] std::vector<double> unique_sorted_levels(std::vector<double> levels) {
   std::sort(levels.begin(), levels.end());
   levels.erase(
@@ -1021,11 +1456,231 @@ struct WedgeSlice {
   return levels;
 }
 
+[[nodiscard]] std::vector<double> auto_isoshell_levels(const VolumeField& field, int level_count) {
+  std::vector<double> finite_values;
+  finite_values.reserve(field.values.size());
+  for (const double value : field.values) {
+    if (std::isfinite(value)) {
+      finite_values.push_back(value);
+    }
+  }
+  if (finite_values.empty()) {
+    return {};
+  }
+  const auto [min_it, max_it] = std::minmax_element(finite_values.begin(), finite_values.end());
+  if (*min_it == *max_it) {
+    return {*min_it};
+  }
+  const int count = std::max(level_count, 1);
+  std::vector<double> levels;
+  levels.reserve(static_cast<std::size_t>(count));
+  const double span = *max_it - *min_it;
+  for (int i = 1; i <= count; ++i) {
+    levels.push_back(*min_it + span * static_cast<double>(i) / static_cast<double>(count + 1));
+  }
+  return levels;
+}
+
+[[nodiscard]] std::vector<double> isoshell_levels(const IsoShellData& data, const VolumeField& field) {
+  if (!data.levels.empty()) {
+    return unique_sorted_levels(data.levels);
+  }
+  return auto_isoshell_levels(field, data.auto_levels);
+}
+
 [[nodiscard]] std::vector<double> contour_levels(const ContourData& data, const SurfaceGrid& grid) {
   if (!data.levels.empty()) {
     return unique_sorted_levels(data.levels);
   }
   return auto_contour_levels(grid, data.auto_levels);
+}
+
+[[nodiscard]] std::size_t volume_index(
+    const VolumeField& field,
+    std::int64_t ix,
+    std::int64_t iy,
+    std::int64_t iz) noexcept {
+  return static_cast<std::size_t>((ix * field.ny + iy) * field.nz + iz);
+}
+
+[[nodiscard]] Point3d interpolate_iso_point(
+    Point3d a,
+    Point3d b,
+    double va,
+    double vb,
+    double level) noexcept {
+  const double denom = vb - va;
+  if (std::abs(denom) <= 1e-12) {
+    return make_point3d(0.5 * (a.x + b.x), 0.5 * (a.y + b.y), 0.5 * (a.z + b.z));
+  }
+  const double t = std::clamp((level - va) / denom, 0.0, 1.0);
+  return make_point3d(
+      a.x + (b.x - a.x) * t,
+      a.y + (b.y - a.y) * t,
+      a.z + (b.z - a.z) * t);
+}
+
+[[nodiscard]] std::vector<std::array<Point3d, 3>> iso_triangles_for_tetra(
+    const std::array<Point3d, 4>& points,
+    const std::array<double, 4>& values,
+    double level) {
+  const std::array<std::pair<int, int>, 6> edges{{
+      {0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3},
+  }};
+  std::vector<Point3d> intersections;
+  intersections.reserve(4);
+  auto same_point = [](Point3d a, Point3d b) {
+    const double dx = a.x - b.x;
+    const double dy = a.y - b.y;
+    const double dz = a.z - b.z;
+    return dx * dx + dy * dy + dz * dz <= 1e-16;
+  };
+
+  for (const auto [ia, ib] : edges) {
+    const double va = values[static_cast<std::size_t>(ia)];
+    const double vb = values[static_cast<std::size_t>(ib)];
+    if (!std::isfinite(va) || !std::isfinite(vb)) {
+      continue;
+    }
+    const bool crosses = (va <= level && vb >= level) || (vb <= level && va >= level);
+    if (!crosses) {
+      continue;
+    }
+    const Point3d point = interpolate_iso_point(
+        points[static_cast<std::size_t>(ia)],
+        points[static_cast<std::size_t>(ib)],
+        va,
+        vb,
+        level);
+    bool duplicate = false;
+    for (const Point3d existing : intersections) {
+      if (same_point(existing, point)) {
+        duplicate = true;
+        break;
+      }
+    }
+    if (!duplicate) {
+      intersections.push_back(point);
+    }
+  }
+
+  if (intersections.size() < 3 || intersections.size() > 4) {
+    return {};
+  }
+
+  Point3d centroid{};
+  for (const Point3d point : intersections) {
+    centroid = add(centroid, point);
+  }
+  centroid = scale(centroid, 1.0 / static_cast<double>(intersections.size()));
+  Point3d axis_u = subtract(intersections[0], centroid);
+  if (norm(axis_u) <= 1e-12 && intersections.size() > 1) {
+    axis_u = subtract(intersections[1], centroid);
+  }
+  axis_u = normalize(axis_u);
+  Point3d normal = normalize(cross(subtract(intersections[1], intersections[0]), subtract(intersections[2], intersections[0])));
+  if (norm(normal) <= 1e-12) {
+    return {};
+  }
+  Point3d axis_v = normalize(cross(normal, axis_u));
+  if (norm(axis_v) <= 1e-12) {
+    return {};
+  }
+
+  std::sort(
+      intersections.begin(),
+      intersections.end(),
+      [&](Point3d lhs, Point3d rhs) {
+        const Point3d vl = subtract(lhs, centroid);
+        const Point3d vr = subtract(rhs, centroid);
+        const double al = std::atan2(dot(vl, axis_v), dot(vl, axis_u));
+        const double ar = std::atan2(dot(vr, axis_v), dot(vr, axis_u));
+        return al < ar;
+      });
+
+  if (intersections.size() == 3) {
+    return {{{intersections[0], intersections[1], intersections[2]}}};
+  }
+  return {
+      {intersections[0], intersections[1], intersections[2]},
+      {intersections[0], intersections[2], intersections[3]},
+  };
+}
+
+[[nodiscard]] std::vector<IsoTriangle> extract_isoshell_triangles(
+    const VolumeField& field,
+    const std::vector<double>& levels) {
+  if (levels.empty()) {
+    return {};
+  }
+  std::vector<IsoTriangle> triangles;
+  const std::array<std::array<int, 4>, 6> tetrahedra{{
+      {{0, 5, 1, 6}},
+      {{0, 1, 2, 6}},
+      {{0, 2, 3, 6}},
+      {{0, 3, 7, 6}},
+      {{0, 7, 4, 6}},
+      {{0, 4, 5, 6}},
+  }};
+
+  for (std::int64_t ix = 0; ix + 1 < field.nx; ++ix) {
+    for (std::int64_t iy = 0; iy + 1 < field.ny; ++iy) {
+      for (std::int64_t iz = 0; iz + 1 < field.nz; ++iz) {
+        const std::array<std::size_t, 8> corner_index{{
+            volume_index(field, ix, iy, iz),
+            volume_index(field, ix + 1, iy, iz),
+            volume_index(field, ix + 1, iy + 1, iz),
+            volume_index(field, ix, iy + 1, iz),
+            volume_index(field, ix, iy, iz + 1),
+            volume_index(field, ix + 1, iy, iz + 1),
+            volume_index(field, ix + 1, iy + 1, iz + 1),
+            volume_index(field, ix, iy + 1, iz + 1),
+        }};
+        const std::array<Point3d, 8> corners{{
+            make_point3d(field.x[static_cast<std::size_t>(ix)], field.y[static_cast<std::size_t>(iy)], field.z[static_cast<std::size_t>(iz)]),
+            make_point3d(field.x[static_cast<std::size_t>(ix + 1)], field.y[static_cast<std::size_t>(iy)], field.z[static_cast<std::size_t>(iz)]),
+            make_point3d(field.x[static_cast<std::size_t>(ix + 1)], field.y[static_cast<std::size_t>(iy + 1)], field.z[static_cast<std::size_t>(iz)]),
+            make_point3d(field.x[static_cast<std::size_t>(ix)], field.y[static_cast<std::size_t>(iy + 1)], field.z[static_cast<std::size_t>(iz)]),
+            make_point3d(field.x[static_cast<std::size_t>(ix)], field.y[static_cast<std::size_t>(iy)], field.z[static_cast<std::size_t>(iz + 1)]),
+            make_point3d(field.x[static_cast<std::size_t>(ix + 1)], field.y[static_cast<std::size_t>(iy)], field.z[static_cast<std::size_t>(iz + 1)]),
+            make_point3d(field.x[static_cast<std::size_t>(ix + 1)], field.y[static_cast<std::size_t>(iy + 1)], field.z[static_cast<std::size_t>(iz + 1)]),
+            make_point3d(field.x[static_cast<std::size_t>(ix)], field.y[static_cast<std::size_t>(iy + 1)], field.z[static_cast<std::size_t>(iz + 1)]),
+        }};
+        const std::array<double, 8> scalars{{
+            field.values[corner_index[0]],
+            field.values[corner_index[1]],
+            field.values[corner_index[2]],
+            field.values[corner_index[3]],
+            field.values[corner_index[4]],
+            field.values[corner_index[5]],
+            field.values[corner_index[6]],
+            field.values[corner_index[7]],
+        }};
+        const auto [min_it, max_it] = std::minmax_element(scalars.begin(), scalars.end());
+        if (!std::isfinite(*min_it) || !std::isfinite(*max_it)) {
+          continue;
+        }
+        for (const double level : levels) {
+          if (level < *min_it || level > *max_it) {
+            continue;
+          }
+          for (const auto& tetra : tetrahedra) {
+            std::array<Point3d, 4> tetra_points{};
+            std::array<double, 4> tetra_values{};
+            for (std::size_t i = 0; i < tetra.size(); ++i) {
+              const int index = tetra[i];
+              tetra_points[i] = corners[static_cast<std::size_t>(index)];
+              tetra_values[i] = scalars[static_cast<std::size_t>(index)];
+            }
+            for (const auto& tri : iso_triangles_for_tetra(tetra_points, tetra_values, level)) {
+              triangles.push_back(IsoTriangle{tri, level});
+            }
+          }
+        }
+      }
+    }
+  }
+  return triangles;
 }
 
 [[nodiscard]] std::array<Point2d, 4> center_cell_polygon(
@@ -1279,6 +1934,18 @@ struct WedgeSlice {
                 bounds.include(summary.group, outlier);
               }
             }
+          } else if constexpr (std::is_same_v<Payload, ViolinData>) {
+            only_radial = false;
+            const auto shapes = violin_shapes(payload);
+            for (const auto& shape : shapes) {
+              if (shape.y.empty() || shape.half_width.empty()) {
+                continue;
+              }
+              for (std::size_t i = 0; i < shape.y.size(); ++i) {
+                bounds.include(shape.group - shape.half_width[i], shape.y[i]);
+                bounds.include(shape.group + shape.half_width[i], shape.y[i]);
+              }
+            }
           } else if constexpr (std::is_same_v<Payload, ContourData>) {
             only_radial = false;
             const auto grid = normalize_surface_grid(payload);
@@ -1376,6 +2043,19 @@ struct WedgeSlice {
               bounds.include(grid->x[i] - hx, grid->y[i] - hy, payload.base);
               bounds.include(grid->x[i] + hx, grid->y[i] + hy, grid->z[i]);
             }
+          } else if constexpr (std::is_same_v<Payload, IsoShellData>) {
+            const auto field = normalize_volume_field(payload);
+            if (!field.has_value()) {
+              return;
+            }
+            const auto [x_min_it, x_max_it] = std::minmax_element(field->x.begin(), field->x.end());
+            const auto [y_min_it, y_max_it] = std::minmax_element(field->y.begin(), field->y.end());
+            const auto [z_min_it, z_max_it] = std::minmax_element(field->z.begin(), field->z.end());
+            if (x_min_it == field->x.end() || y_min_it == field->y.end() || z_min_it == field->z.end()) {
+              return;
+            }
+            bounds.include(*x_min_it, *y_min_it, *z_min_it);
+            bounds.include(*x_max_it, *y_max_it, *z_max_it);
           } else if constexpr (std::is_same_v<Payload, ContourData>) {
             if (trace.kind() != TraceKind::Ridge3) {
               return;
@@ -2120,6 +2800,16 @@ struct ScaleGuideSpec {
               return;
             }
             range = surface_color_range(pane, trace, *grid);
+          } else if constexpr (std::is_same_v<Payload, IsoShellData>) {
+            const auto field = normalize_volume_field(payload);
+            if (!field.has_value()) {
+              return;
+            }
+            const auto levels = isoshell_levels(payload, *field);
+            if (levels.empty()) {
+              return;
+            }
+            range = Range1d{levels.front(), levels.back()};
           } else if constexpr (std::is_same_v<Payload, SurfaceData>) {
             const auto grid = normalize_surface_grid(payload);
             if (!grid.has_value()) {
@@ -2181,10 +2871,10 @@ void add_text(
     entry.stroke = trace.stroke_color();
     entry.stroke_width = trace.stroke_width();
     if (trace.kind() == TraceKind::Isoband || trace.kind() == TraceKind::Fieldmap ||
-        trace.kind() == TraceKind::Sheet || trace.kind() == TraceKind::Spire3 ||
+        trace.kind() == TraceKind::Sheet || trace.kind() == TraceKind::Spire3 || trace.kind() == TraceKind::IsoShell ||
         trace.kind() == TraceKind::Wedge ||
         trace.kind() == TraceKind::Ribbon || trace.kind() == TraceKind::Columns || trace.kind() == TraceKind::Bucket ||
-        trace.kind() == TraceKind::Quartet) {
+        trace.kind() == TraceKind::Quartet || trace.kind() == TraceKind::Violin) {
       entry.filled = true;
       entry.fill = trace.palette_ramp().sample(0.65);
       entry.stroke = multiply_rgb(entry.fill, 0.55);
@@ -2686,31 +3376,60 @@ void render_planar_axes(
           false);
     }
   } else {
-    const auto x_ticks = ticks_for(pane.x_axis(), {bounds.min_x, bounds.max_x});
-    const auto y_ticks = ticks_for(pane.y_axis(), {bounds.min_y, bounds.max_y});
+    const auto x_ticks = clamp_ticks(
+        ticks_for(pane.x_axis(), {bounds.min_x, bounds.max_x}),
+        {bounds.min_x, bounds.max_x},
+        pane.x_axis());
+    const auto y_ticks = clamp_ticks(
+        ticks_for(pane.y_axis(), {bounds.min_y, bounds.max_y}),
+        {bounds.min_y, bounds.max_y},
+        pane.y_axis());
+    const auto x_minor = pane.x_axis().minor_grid
+                             ? minor_tick_values(pane.x_axis(), {bounds.min_x, bounds.max_x}, x_ticks)
+                             : std::vector<double>{};
+    const auto y_minor = pane.y_axis().minor_grid
+                             ? minor_tick_values(pane.y_axis(), {bounds.min_y, bounds.max_y}, y_ticks)
+                             : std::vector<double>{};
+
+    if (pane.x_axis().minor_grid) {
+      for (const double value : x_minor) {
+        const Point2d p = map_planar_point(value, bounds.min_y, pane, bounds, layout.plot, false);
+        add_path(
+            list,
+            {{p.x, layout.plot.y}, {p.x, layout.plot.y + layout.plot.height}},
+            FillStroke{Rgba::from_u8(234, 238, 244), {}, true, false, 0.5},
+            false);
+      }
+    }
+    if (pane.y_axis().minor_grid) {
+      for (const double value : y_minor) {
+        const Point2d p = map_planar_point(bounds.min_x, value, pane, bounds, layout.plot, false);
+        add_path(
+            list,
+            {{layout.plot.x, p.y}, {layout.plot.x + layout.plot.width, p.y}},
+            FillStroke{Rgba::from_u8(234, 238, 244), {}, true, false, 0.5},
+            false);
+      }
+    }
 
     if (pane.x_axis().major_grid) {
-      for (const auto& [value, label] : x_ticks) {
+      for (const auto& [value, _] : x_ticks) {
         const Point2d p = map_planar_point(value, bounds.min_y, pane, bounds, layout.plot, false);
         add_path(
             list,
             {{p.x, layout.plot.y}, {p.x, layout.plot.y + layout.plot.height}},
             FillStroke{Rgba::from_u8(224, 229, 236), {}, true, false, 0.8},
             false);
-        add_text(list, {p.x, layout.plot.y + layout.plot.height + 16.0}, label, 10.0,
-                 pane.theme_tokens().foreground(), TextCommand::Align::Middle);
       }
     }
     if (pane.y_axis().major_grid) {
-      for (const auto& [value, label] : y_ticks) {
+      for (const auto& [value, _] : y_ticks) {
         const Point2d p = map_planar_point(bounds.min_x, value, pane, bounds, layout.plot, false);
         add_path(
             list,
             {{layout.plot.x, p.y}, {layout.plot.x + layout.plot.width, p.y}},
             FillStroke{Rgba::from_u8(224, 229, 236), {}, true, false, 0.8},
             false);
-        add_text(list, {layout.plot.x - 8.0, p.y + 4.0}, label, 10.0,
-                 pane.theme_tokens().foreground(), TextCommand::Align::End);
       }
     }
     add_path(
@@ -2723,6 +3442,48 @@ void render_planar_axes(
         },
         FillStroke{pane.theme_tokens().foreground(), {}, true, false, 1.0},
         true);
+
+    const double tick_len = 4.8;
+    const double tick_font = 10.0;
+    const double x_axis_y = layout.plot.y + layout.plot.height;
+    const double y_axis_x = layout.plot.x;
+    const Rgba tick_color = multiply_rgb(pane.theme_tokens().foreground(), 0.7);
+    for (const auto& [value, label] : x_ticks) {
+      const Point2d p = map_planar_point(value, bounds.min_y, pane, bounds, layout.plot, false);
+      if (!std::isfinite(p.x) || !std::isfinite(p.y)) {
+        continue;
+      }
+      add_path(
+          list,
+          {{p.x, x_axis_y}, {p.x, x_axis_y + tick_len}},
+          FillStroke{tick_color, {}, true, false, 0.9},
+          false);
+      add_text(
+          list,
+          {p.x, x_axis_y + 16.0},
+          label,
+          tick_font,
+          pane.theme_tokens().foreground(),
+          TextCommand::Align::Middle);
+    }
+    for (const auto& [value, label] : y_ticks) {
+      const Point2d p = map_planar_point(bounds.min_x, value, pane, bounds, layout.plot, false);
+      if (!std::isfinite(p.x) || !std::isfinite(p.y)) {
+        continue;
+      }
+      add_path(
+          list,
+          {{y_axis_x - tick_len, p.y}, {y_axis_x, p.y}},
+          FillStroke{tick_color, {}, true, false, 0.9},
+          false);
+      add_text(
+          list,
+          {y_axis_x - 8.0, p.y + 4.0},
+          label,
+          tick_font,
+          pane.theme_tokens().foreground(),
+          TextCommand::Align::End);
+    }
   }
 
   if (!pane.x_axis().label.empty()) {
@@ -3094,6 +3855,58 @@ void render_planar_traces(
                     true);
               }
             }
+          } else if constexpr (std::is_same_v<Payload, ViolinData>) {
+            const auto shapes = violin_shapes(payload);
+            const Rgba fill = trace.palette_ramp().sample(0.42);
+            for (const auto& shape : shapes) {
+              if (shape.y.size() < 3 || shape.half_width.size() != shape.y.size()) {
+                continue;
+              }
+
+              std::vector<Point2d> polygon;
+              polygon.reserve(shape.y.size() * 2);
+              for (std::size_t i = 0; i < shape.y.size(); ++i) {
+                const Point2d mapped =
+                    map_planar_point(shape.group - shape.half_width[i], shape.y[i], pane, bounds, layout.plot, false);
+                if (std::isfinite(mapped.x) && std::isfinite(mapped.y)) {
+                  polygon.push_back(mapped);
+                }
+              }
+              for (std::size_t i = shape.y.size(); i > 0; --i) {
+                const std::size_t index = i - 1;
+                const Point2d mapped =
+                    map_planar_point(shape.group + shape.half_width[index], shape.y[index], pane, bounds, layout.plot, false);
+                if (std::isfinite(mapped.x) && std::isfinite(mapped.y)) {
+                  polygon.push_back(mapped);
+                }
+              }
+              add_path(
+                  list,
+                  std::move(polygon),
+                  FillStroke{multiply_rgb(fill, 0.58), fill, true, true, 0.9},
+                  true);
+
+              const double median_half = width_at_y(shape, shape.median);
+              const Point2d median_left =
+                  map_planar_point(shape.group - median_half, shape.median, pane, bounds, layout.plot, false);
+              const Point2d median_right =
+                  map_planar_point(shape.group + median_half, shape.median, pane, bounds, layout.plot, false);
+              add_path(
+                  list,
+                  {median_left, median_right},
+                  FillStroke{trace.stroke_color(), {}, true, false, std::max(1.2, static_cast<double>(trace.stroke_width()))},
+                  false);
+
+              const Point2d q1_point =
+                  map_planar_point(shape.group, shape.q1, pane, bounds, layout.plot, false);
+              const Point2d q3_point =
+                  map_planar_point(shape.group, shape.q3, pane, bounds, layout.plot, false);
+              add_path(
+                  list,
+                  {q1_point, q3_point},
+                  FillStroke{trace.stroke_color(), {}, true, false, 0.95},
+                  false);
+            }
           } else if constexpr (std::is_same_v<Payload, RadialData>) {
             const auto polar = normalize_pairs(payload.theta, payload.radius);
             std::vector<Point2d> path;
@@ -3281,9 +4094,18 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
   if (pane.grid_style() == GridStyle::None) {
     return;
   }
-  const auto x_ticks = clamp_ticks(ticks_for(pane.x_axis(), {bounds.min_x, bounds.max_x}), {bounds.min_x, bounds.max_x});
-  const auto y_ticks = clamp_ticks(ticks_for(pane.y_axis(), {bounds.min_y, bounds.max_y}), {bounds.min_y, bounds.max_y});
-  const auto z_ticks = clamp_ticks(ticks_for(pane.z_axis(), {bounds.min_z, bounds.max_z}), {bounds.min_z, bounds.max_z});
+  const auto x_ticks = clamp_ticks(
+      ticks_for(pane.x_axis(), {bounds.min_x, bounds.max_x}),
+      {bounds.min_x, bounds.max_x},
+      pane.x_axis());
+  const auto y_ticks = clamp_ticks(
+      ticks_for(pane.y_axis(), {bounds.min_y, bounds.max_y}),
+      {bounds.min_y, bounds.max_y},
+      pane.y_axis());
+  const auto z_ticks = clamp_ticks(
+      ticks_for(pane.z_axis(), {bounds.min_z, bounds.max_z}),
+      {bounds.min_z, bounds.max_z},
+      pane.z_axis());
   std::vector<double> x_pos;
   std::vector<double> y_pos;
   std::vector<double> z_pos;
@@ -3308,9 +4130,19 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
   if (z_pos.empty()) {
     z_pos = uniform_grid_positions({bounds.min_z, bounds.max_z}, 6);
   }
+  const auto x_minor = pane.x_axis().minor_grid
+                           ? minor_tick_values(pane.x_axis(), {bounds.min_x, bounds.max_x}, x_ticks)
+                           : std::vector<double>{};
+  const auto y_minor = pane.y_axis().minor_grid
+                           ? minor_tick_values(pane.y_axis(), {bounds.min_y, bounds.max_y}, y_ticks)
+                           : std::vector<double>{};
+  const auto z_minor = pane.z_axis().minor_grid
+                           ? minor_tick_values(pane.z_axis(), {bounds.min_z, bounds.max_z}, z_ticks)
+                           : std::vector<double>{};
 
   const VolumeAxisFrame frame = resolve_volume_axis_frame(pane, bounds, layout.plot);
   const Rgba grid = Rgba::from_u8(190, 198, 208, 148);
+  const Rgba minor_grid = Rgba::from_u8(205, 212, 221, 122);
   const double x_wall_y = frame.rear_y;
   const double y_wall_x = frame.rear_x;
   const auto near_equal = [](double lhs, double rhs) {
@@ -3323,15 +4155,14 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
     p.x = frame.z_start.x;
     return p;
   };
-
-  for (const double value : x_pos) {
+  const auto draw_x_grid_lines = [&](double value, Rgba floor_color, double floor_width, Rgba wall_color, double wall_width) {
     add_path(
         list,
         {
             map_projected_point({value, bounds.min_y, frame.bottom_z}, pane, bounds, layout.plot),
             map_projected_point({value, bounds.max_y, frame.bottom_z}, pane, bounds, layout.plot),
         },
-        FillStroke{grid, {}, true, false, 0.65},
+        FillStroke{floor_color, {}, true, false, floor_width},
         false);
     Point2d wall_bottom = map_projected_point({value, x_wall_y, frame.bottom_z}, pane, bounds, layout.plot);
     Point2d wall_top = map_projected_point({value, x_wall_y, frame.top_z}, pane, bounds, layout.plot);
@@ -3341,17 +4172,17 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
     }
     add_path(list,
              {wall_bottom, wall_top},
-             FillStroke{grid, {}, true, false, 0.55},
+             FillStroke{wall_color, {}, true, false, wall_width},
              false);
-  }
-  for (const double value : y_pos) {
+  };
+  const auto draw_y_grid_lines = [&](double value, Rgba floor_color, double floor_width, Rgba wall_color, double wall_width) {
     add_path(
         list,
         {
             map_projected_point({bounds.min_x, value, frame.bottom_z}, pane, bounds, layout.plot),
             map_projected_point({bounds.max_x, value, frame.bottom_z}, pane, bounds, layout.plot),
         },
-        FillStroke{grid, {}, true, false, 0.65},
+        FillStroke{floor_color, {}, true, false, floor_width},
         false);
     Point2d wall_bottom = map_projected_point({y_wall_x, value, frame.bottom_z}, pane, bounds, layout.plot);
     Point2d wall_top = map_projected_point({y_wall_x, value, frame.top_z}, pane, bounds, layout.plot);
@@ -3361,10 +4192,10 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
     }
     add_path(list,
              {wall_bottom, wall_top},
-             FillStroke{grid, {}, true, false, 0.55},
+             FillStroke{wall_color, {}, true, false, wall_width},
              false);
-  }
-  for (const double value : z_pos) {
+  };
+  const auto draw_z_grid_lines = [&](double value, Rgba wall_color, double wall_width) {
     Point2d x_wall_a = map_projected_point({bounds.min_x, x_wall_y, value}, pane, bounds, layout.plot);
     Point2d x_wall_b = map_projected_point({bounds.max_x, x_wall_y, value}, pane, bounds, layout.plot);
     if (axis_on_x_wall) {
@@ -3380,7 +4211,7 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
             x_wall_a,
             x_wall_b,
         },
-        FillStroke{grid, {}, true, false, 0.55},
+        FillStroke{wall_color, {}, true, false, wall_width},
         false);
     Point2d y_wall_a = map_projected_point({y_wall_x, bounds.min_y, value}, pane, bounds, layout.plot);
     Point2d y_wall_b = map_projected_point({y_wall_x, bounds.max_y, value}, pane, bounds, layout.plot);
@@ -3397,8 +4228,27 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
             y_wall_a,
             y_wall_b,
         },
-        FillStroke{grid, {}, true, false, 0.55},
+        FillStroke{wall_color, {}, true, false, wall_width},
         false);
+  };
+
+  for (const double value : x_minor) {
+    draw_x_grid_lines(value, minor_grid, 0.38, minor_grid, 0.32);
+  }
+  for (const double value : y_minor) {
+    draw_y_grid_lines(value, minor_grid, 0.38, minor_grid, 0.32);
+  }
+  for (const double value : z_minor) {
+    draw_z_grid_lines(value, minor_grid, 0.32);
+  }
+  for (const double value : x_pos) {
+    draw_x_grid_lines(value, grid, 0.65, grid, 0.55);
+  }
+  for (const double value : y_pos) {
+    draw_y_grid_lines(value, grid, 0.65, grid, 0.55);
+  }
+  for (const double value : z_pos) {
+    draw_z_grid_lines(value, grid, 0.55);
   }
 }
 
@@ -3413,9 +4263,18 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
         TextCommand::Align::Middle);
   }
 
-  const auto x_ticks = clamp_ticks(ticks_for(pane.x_axis(), {bounds.min_x, bounds.max_x}), {bounds.min_x, bounds.max_x});
-  const auto y_ticks = clamp_ticks(ticks_for(pane.y_axis(), {bounds.min_y, bounds.max_y}), {bounds.min_y, bounds.max_y});
-  const auto z_ticks = clamp_ticks(ticks_for(pane.z_axis(), {bounds.min_z, bounds.max_z}), {bounds.min_z, bounds.max_z});
+  const auto x_ticks = clamp_ticks(
+      ticks_for(pane.x_axis(), {bounds.min_x, bounds.max_x}),
+      {bounds.min_x, bounds.max_x},
+      pane.x_axis());
+  const auto y_ticks = clamp_ticks(
+      ticks_for(pane.y_axis(), {bounds.min_y, bounds.max_y}),
+      {bounds.min_y, bounds.max_y},
+      pane.y_axis());
+  const auto z_ticks = clamp_ticks(
+      ticks_for(pane.z_axis(), {bounds.min_z, bounds.max_z}),
+      {bounds.min_z, bounds.max_z},
+      pane.z_axis());
   const VolumeAxisFrame frame = resolve_volume_axis_frame(pane, bounds, layout.plot);
   const Rgba primary = multiply_rgb(pane.theme_tokens().foreground(), 0.58);
 
@@ -3747,6 +4606,50 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
                     surface_face_style(lit, trace),
                 });
               }
+            }
+          } else if constexpr (std::is_same_v<Payload, IsoShellData>) {
+            const auto field = normalize_volume_field(payload);
+            if (!field.has_value()) {
+              return;
+            }
+            const std::vector<double> levels = isoshell_levels(payload, *field);
+            if (levels.empty()) {
+              return;
+            }
+            Range1d color_range{levels.front(), levels.back()};
+            if (!(color_range.high > color_range.low)) {
+              color_range.low -= 0.5;
+              color_range.high += 0.5;
+            }
+            for (const IsoTriangle& triangle : extract_isoshell_triangles(*field, levels)) {
+              std::vector<Point2d> polygon;
+              polygon.reserve(3);
+              double depth = 0.0;
+              bool finite = true;
+              for (const Point3d vertex : triangle.vertices) {
+                const Point3d projected = project_world(vertex, pane, bounds);
+                const Point2d mapped = map_projected_point(vertex, pane, bounds, layout.plot);
+                finite = finite && std::isfinite(mapped.x) && std::isfinite(mapped.y) && std::isfinite(projected.z);
+                depth += projected.z;
+                polygon.push_back(mapped);
+              }
+              if (!finite) {
+                continue;
+              }
+              depth /= 3.0;
+              Rgba fill = palette_lookup(trace.palette_ramp(), color_range, triangle.level);
+              const std::array<Point3d, 4> tri_cell{{
+                  triangle.vertices[0],
+                  triangle.vertices[1],
+                  triangle.vertices[2],
+                  triangle.vertices[2],
+              }};
+              fill = apply_surface_lighting(fill, trace, pane, tri_cell);
+              faces.push_back(SurfaceFace{
+                  std::move(polygon),
+                  depth,
+                  surface_face_style(fill, trace),
+              });
             }
           } else if constexpr (std::is_same_v<Payload, ContourData>) {
             if (trace.kind() != TraceKind::Ridge3) {

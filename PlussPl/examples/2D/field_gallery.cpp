@@ -123,9 +123,9 @@ int main() {
   auto sample_values = sample_axis.sin().mul(1.15).add(sample_axis.mul(0.5).cos().mul(0.55));
   bucket.bucket(sample_values, 18).label("bucket count").palette(pl::PaletteRamp::meadow());
 
-  auto& spread = gallery.pane2("Quartet spread");
+  auto& spread = gallery.pane2("Quartet + violin spread");
   spread.grid(pl::GridStyle::Major)
-        .caption("median, quartiles, whiskers, outliers")
+        .caption("quartile summary plus KDE violin envelope")
         .place(2, 1)
         .x_label("group")
         .y_label("value");
@@ -143,6 +143,10 @@ int main() {
       .label("group spread")
       .palette(pl::PaletteRamp::thermal())
       .stroke(pl::Rgba::from_u8(40, 50, 66));
+  spread.violin(group, spread_values)
+      .label("group density")
+      .palette(pl::PaletteRamp::lagoon())
+      .stroke(pl::Rgba::from_u8(30, 74, 122));
 
   auto& canopy = gallery.pane2("Ribbon canopy");
   canopy.grid(pl::GridStyle::Major)
