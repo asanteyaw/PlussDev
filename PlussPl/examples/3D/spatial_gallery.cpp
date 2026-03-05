@@ -35,7 +35,7 @@ int main() {
   gallery.size(1320.0, 980.0);
   gallery.mosaic(2, 2, 22.0, 20.0);
   gallery.headline("Pluss 3D Spatial Gallery");
-  gallery.trace_key(pl::KeyDock::East)
+  gallery.legend(pl::KeyDock::East)
       .x_caption("terrain-plane", "shared terrain x axis")
       .y_caption("terrain-plane", "shared terrain y axis")
       .z_caption("terrain-plane", "elevation family");

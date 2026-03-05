@@ -433,16 +433,36 @@ inline Studio& plotting_context(
   return set_context(studio, width, height, tick_font_scale, axis_label_font_scale);
 }
 
+inline Studio& tight_layout(Studio& studio, double padding = 6.0) {
+  return studio.tight_layout(true, padding);
+}
+
 inline Pane& despine(Pane& pane, bool = true) noexcept {
   return pane;
 }
 
 inline Pane& move_legend(Pane& pane, KeyPlace place) noexcept {
-  return pane.key(place);
+  return pane.legend(place);
 }
 
 inline Studio& move_legend(Studio& studio, KeyDock dock) noexcept {
-  return studio.trace_key(dock);
+  return studio.legend(dock);
+}
+
+inline Pane& legend(Pane& pane, KeyPlace place) noexcept {
+  return pane.legend(place);
+}
+
+inline Studio& legend(Studio& studio, KeyDock dock) noexcept {
+  return studio.legend(dock);
+}
+
+inline Pane& legend_frame(Pane& pane, KeyFrame frame) noexcept {
+  return pane.legend_frame(frame);
+}
+
+inline Studio& legend_frame(Studio& studio, KeyFrame frame) noexcept {
+  return studio.legend_frame(frame);
 }
 
 inline bool show(Studio& studio,
@@ -451,6 +471,10 @@ inline bool show(Studio& studio,
                  std::int64_t height = 820,
                  bool launch = true) {
   return studio.show(title, width, height, launch);
+}
+
+inline void save_png(Studio& studio, std::string_view path, std::int64_t dpi = 144) {
+  studio.save_png(path, dpi);
 }
 
 template <class X, class Y, class Z>

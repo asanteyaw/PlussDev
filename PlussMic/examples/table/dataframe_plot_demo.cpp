@@ -75,6 +75,17 @@ int main() {
   fig_monthly.save_svg("plot_df_monthly.svg");
   fig_monthly.save_pdf("plot_df_monthly.pdf");
 
+  pluss::table::DataFramePlotOptions monthly_opts;
+  monthly_opts.default_x_feature = "month";
+  monthly_opts.use_tight_layout = true;
+  monthly_opts.tight_layout_padding = 4.0;
+  monthly_opts.width = 1280.0;
+  monthly_opts.height = 760.0;
+  auto fig_monthly_cfg = monthly.plot(monthly_opts).line({"sales", "forecast"});
+  fig_monthly_cfg.headline("Sales vs forecast (plot options)");
+  fig_monthly_cfg.save_svg("plot_df_monthly_options.svg");
+  fig_monthly_cfg.save_pdf("plot_df_monthly_options.pdf");
+
   auto fig_step = monthly.plot().step("sales");
   fig_step.headline("Monthly sales step plot");
   fig_step.save_svg("plot_df_step.svg");
@@ -132,7 +143,10 @@ int main() {
       {"desk", pluss::table::Thread(pluss::make_note({"macro", "macro", "rates", "rates", "equity", "equity", "credit", "credit"}))},
   });
 
-  auto fig_scatter_hue = regime_points.plot().scatter("ret", "vol", "desk");
+  pluss::table::DataFramePlotOptions hue_opts;
+  hue_opts.default_hue_feature = "desk";
+  hue_opts.use_tight_layout = true;
+  auto fig_scatter_hue = regime_points.plot(hue_opts).scatter("ret", "vol");
   fig_scatter_hue.headline("Scatter with hue");
   fig_scatter_hue.save_pdf("plot_df_scatter_hue.pdf");
 

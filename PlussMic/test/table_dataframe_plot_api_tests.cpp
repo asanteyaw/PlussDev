@@ -78,10 +78,31 @@ void test_scatter_heatmap_and_validation() {
                "plot().scatter with missing feature should throw");
 }
 
+void test_plot_options_defaults() {
+  const auto df = make_xy_frame();
+  pluss::table::DataFramePlotOptions options;
+  options.default_hue_feature = "grp";
+  options.default_bins = 9;
+  options.width = 920.0;
+  options.height = 640.0;
+  options.use_tight_layout = true;
+
+  const auto fig_scatter = df.plot(options).scatter("x", "y");
+  expect(fig_scatter.panes().front().trace_count() == 2, "plot(options).scatter should use default hue feature");
+  expect(fig_scatter.extent().width == 920.0 && fig_scatter.extent().height == 640.0,
+         "plot(options) should apply figure size defaults");
+
+  const auto fig_hist = df.plot(options).hist("y");
+  expect(fig_hist.panes().front().trace_count() == 1, "plot(options).hist should still emit one trace");
+  expect(fig_hist.panes().front().traces().front().kind() == TraceKind::Bucket,
+         "plot(options).hist should emit bucket trace");
+}
+
 } // namespace
 
 int main() {
   test_object_plot_apis();
   test_scatter_heatmap_and_validation();
+  test_plot_options_defaults();
   return 0;
 }

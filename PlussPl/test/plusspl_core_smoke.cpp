@@ -13,15 +13,16 @@ int main() {
   Studio book("core-smoke", Theme::ocean());
   book.size(960.0, 720.0);
   book.headline("Core studio");
-  book.trace_key(KeyDock::East).x_caption("shared-signal", "shared signal axis");
+  book.legend(KeyDock::East).legend_frame(KeyFrame::Soft).x_caption("shared-signal", "shared signal axis");
   Pane& pane2 = book.pane2("signals");
   pane2.grid(GridStyle::MajorMinor)
       .scale_x(ScalePolicy::log10())
       .x_label("frequency")
-      .y_label("gain")
-      .key(KeyPlace::NorthEast)
+      .y_label("$\\mu + \\sigma + \\gamma + \\omega + \\alpha + \\beta + \\lambda$")
+      .legend(KeyPlace::NorthEast)
+      .legend_frame(KeyFrame::Soft)
       .align_x("shared-signal")
-      .caption("signal pane")
+      .caption("$\\Delta\\sigma_t \\leq \\omega$")
       .rule_x(10.0, "pivot")
       .scale_guide();
 
@@ -72,6 +73,8 @@ int main() {
   assert(pane2.x_axis().minor_grid);
   assert(pane3.lens().azimuth_deg() == -25.5);
   assert(pane3.lens().elevation_deg() == 38.0);
+  assert(book.legend_frame() == KeyFrame::Soft);
+  assert(pane2.legend_frame() == KeyFrame::Soft);
 
   const std::string svg = book.to_svg();
   const std::string pdf = book.to_pdf();
@@ -80,9 +83,11 @@ int main() {
   assert(svg.find("Core studio") != std::string::npos);
   assert(svg.find("cloud") != std::string::npos);
   assert(svg.find("bucket") != std::string::npos);
-  assert(svg.find("trace key") != std::string::npos);
+  assert(svg.find("response") != std::string::npos);
   assert(svg.find("pivot") != std::string::npos);
   assert(pdf.rfind("%PDF-1.4", 0) == 0);
+  assert(pdf.find("mu + sigma + gamma + omega + alpha + beta + lambda") != std::string::npos);
+  assert(pdf.find("Delta sigma_t <= omega") != std::string::npos);
 
   const std::filesystem::path out_dir = std::filesystem::temp_directory_path() / "plusspl_core_smoke";
   std::filesystem::create_directories(out_dir);
@@ -94,5 +99,29 @@ int main() {
   assert(std::filesystem::exists(pdf_path));
   assert(std::filesystem::file_size(svg_path) > 0);
   assert(std::filesystem::file_size(pdf_path) > 0);
+
+  bool threw = false;
+  try {
+    book.save_svg((out_dir / "wrong.pdf").string());
+  } catch (const std::exception&) {
+    threw = true;
+  }
+  assert(threw);
+
+  threw = false;
+  try {
+    book.save_pdf((out_dir / "wrong.png").string());
+  } catch (const std::exception&) {
+    threw = true;
+  }
+  assert(threw);
+
+  threw = false;
+  try {
+    book.save_png((out_dir / "wrong.svg").string(), 120);
+  } catch (const std::exception&) {
+    threw = true;
+  }
+  assert(threw);
   return 0;
 }

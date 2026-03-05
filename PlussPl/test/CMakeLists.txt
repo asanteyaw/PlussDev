@@ -18,4 +18,10 @@ else()
     )
     target_link_libraries(plusspl_core_smoke PRIVATE PlussPl)
     add_test(NAME plusspl_core_smoke COMMAND plusspl_core_smoke)
+
+    add_executable(plusspl_pdf_text_smoke
+        ${CMAKE_CURRENT_SOURCE_DIR}/plusspl_pdf_text_smoke.cpp
+    )
+    target_link_libraries(plusspl_pdf_text_smoke PRIVATE PlussPl)
+    add_test(NAME plusspl_pdf_text_smoke COMMAND plusspl_pdf_text_smoke)
 endif()

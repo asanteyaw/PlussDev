@@ -16,9 +16,19 @@ struct PlotCall;
 pluss::pl::Studio call(const class DataFramePlotAccessor& accessor, PlotDispatch dispatch, PlotCall args);
 } // namespace _ops
 
+struct DataFramePlotOptions {
+  std::optional<std::string> default_x_feature{std::nullopt};
+  std::optional<std::string> default_hue_feature{std::nullopt};
+  std::int64_t default_bins{20};
+  std::optional<double> width{std::nullopt};
+  std::optional<double> height{std::nullopt};
+  bool use_tight_layout{false};
+  double tight_layout_padding{6.0};
+};
+
 class DataFramePlotAccessor {
 public:
-  explicit DataFramePlotAccessor(DataFrame frame);
+  explicit DataFramePlotAccessor(DataFrame frame, DataFramePlotOptions options = {});
 
   pluss::pl::Studio line(std::string_view y_feature,
                          std::optional<std::string_view> x_feature = std::nullopt) const;
@@ -84,8 +94,13 @@ private:
   pluss::pl::Studio impl_corr_heatmap(std::initializer_list<std::string_view> features) const;
   pluss::pl::Studio impl_scatter_matrix(std::initializer_list<std::string_view> features) const;
   pluss::pl::Studio impl_auto_plot(std::initializer_list<std::string_view> features) const;
+  [[nodiscard]] std::optional<std::string_view> resolve_x_feature(std::optional<std::string_view> x_feature) const;
+  [[nodiscard]] std::optional<std::string_view> resolve_hue_feature(std::optional<std::string_view> hue_feature) const;
+  [[nodiscard]] std::int64_t resolve_bins(std::int64_t bins) const noexcept;
+  void apply_figure_options(pluss::pl::Studio& figure) const;
 
   DataFrame frame_{};
+  DataFramePlotOptions options_{};
 };
 
 } // namespace pluss::table

@@ -34,7 +34,7 @@ int main() {
   studio.size(1440.0, 980.0);
   studio.mosaic(2, 3, 18.0, 16.0);
   studio.headline("Matplotlib 3D Equivalence Gallery (PlussPl)");
-  studio.trace_key(pl::KeyDock::East);
+  studio.legend(pl::KeyDock::East);
 
   const auto t = pluss::linspace(0.0, 11.0, 260, pluss::ScalarType::Float64);
   const auto x = t.mul(1.6).cos();

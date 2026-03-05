@@ -39,8 +39,22 @@ Studio& Studio::mosaic(std::int64_t rows, std::int64_t cols, double gutter_x, do
   return *this;
 }
 
-Studio& Studio::trace_key(KeyDock dock) noexcept {
-  trace_key_dock_ = dock;
+Studio& Studio::tight_layout(bool enable, double padding) {
+  if (!(padding >= 0.0 && std::isfinite(padding))) {
+    throw std::invalid_argument("tight_layout: padding must be finite and non-negative");
+  }
+  tight_layout_enabled_ = enable;
+  tight_layout_padding_ = padding;
+  return *this;
+}
+
+Studio& Studio::legend(KeyDock dock) noexcept {
+  legend_dock_ = dock;
+  return *this;
+}
+
+Studio& Studio::legend_frame(KeyFrame frame) noexcept {
+  legend_frame_ = frame;
   return *this;
 }
 

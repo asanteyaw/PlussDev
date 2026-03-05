@@ -48,7 +48,7 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
   book.size(960.0, 720.0);
   book.mosaic(2, 2, 18.0, 16.0);
   book.headline("Core studio");
-  book.trace_key(KeyDock::East).x_caption("terrain", "shared x");
+  book.legend(KeyDock::East).x_caption("terrain", "shared x");
 
   auto& pane2 = book.pane2("signals");
   pane2.grid(GridStyle::MajorMinor)
@@ -58,7 +58,7 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
       .y_label("gain")
       .x_ticks(std::array<double, 3>{1.0, 10.0, 100.0},
                std::vector<std::string>{"low", "mid", "high"})
-      .key(KeyPlace::NorthEast)
+      .legend(KeyPlace::NorthEast)
       .caption("signal pane")
       .rule_x(10.0, "pivot")
       .band_y({0.55, 1.0}, "target")
@@ -126,7 +126,7 @@ TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
       .label("violin");
 
   auto& pane3 = book.pane3("surface");
-  pane3.grid(GridStyle::Major).place(0, 1, 2, 1).x_label("x").y_label("y").z_label("z").key(KeyPlace::NorthEast).scale_guide();
+  pane3.grid(GridStyle::Major).place(0, 1, 2, 1).x_label("x").y_label("y").z_label("z").legend(KeyPlace::NorthEast).scale_guide();
   pane3.x_ticks(std::array<double, 2>{0.0, 1.0},
                 std::vector<std::string>{"near", "far"});
   pane3.y_ticks(std::array<double, 2>{0.0, 1.0},

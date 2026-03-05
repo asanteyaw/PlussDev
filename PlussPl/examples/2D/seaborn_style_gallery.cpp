@@ -36,7 +36,7 @@ int main() {
   gallery.size(1680.0, 1240.0);
   gallery.mosaic(4, 4, 16.0, 16.0);
   gallery.headline("Seaborn-Style Plot Gallery (PlussPl Mappings)");
-  gallery.trace_key(pl::KeyDock::East);
+  gallery.legend(pl::KeyDock::East);
 
   const auto x = pluss::linspace(0.0, 12.0, 180, pluss::ScalarType::Float64);
   const auto y = x.mul(0.72).sin().add(x.mul(0.17).cos().mul(0.28)).add(x.mul(0.04));

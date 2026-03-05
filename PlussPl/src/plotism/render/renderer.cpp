@@ -340,35 +340,104 @@ struct WedgeSlice {
   return out;
 }
 
+struct Utf8AsciiReplacement {
+  std::string_view utf8;
+  std::string_view ascii;
+};
+
+constexpr auto kUtf8AsciiMathFallbacks = std::to_array<Utf8AsciiReplacement>({
+    {"\xE2\x89\xA4", "<="},       // ≤
+    {"\xE2\x89\xA5", ">="},       // ≥
+    {"\xE2\x89\xA0", "!="},       // ≠
+    {"\xE2\x89\x88", "~="},       // ≈
+    {"\xE2\x88\x92", "-"},        // −
+    {"\xE2\x88\x9A", "sqrt"},     // √
+    {"\xE2\x88\x9E", "inf"},      // ∞
+    {"\xE2\x88\x82", "d"},        // ∂
+    {"\xE2\x8B\x85", "*"},        // ⋅
+    {"\xE2\x88\x99", "*"},        // ∙
+    {"\xC3\x97", "x"},            // ×
+    {"\xC2\xB1", "+/-"},          // ±
+    {"\xCE\x93", "Gamma"},        // Γ
+    {"\xCE\x94", "Delta"},        // Δ
+    {"\xCE\x9B", "Lambda"},       // Λ
+    {"\xCE\xA3", "Sigma"},        // Σ
+    {"\xCE\xA6", "Phi"},          // Φ
+    {"\xCE\xA8", "Psi"},          // Ψ
+    {"\xCE\xA9", "Omega"},        // Ω
+    {"\xCE\xB1", "alpha"},        // α
+    {"\xCE\xB2", "beta"},         // β
+    {"\xCE\xB3", "gamma"},        // γ
+    {"\xCE\xB4", "delta"},        // δ
+    {"\xCE\xB5", "epsilon"},      // ε
+    {"\xCE\xB6", "zeta"},         // ζ
+    {"\xCE\xB7", "eta"},          // η
+    {"\xCE\xB8", "theta"},        // θ
+    {"\xCE\xBA", "kappa"},        // κ
+    {"\xCE\xBB", "lambda"},       // λ
+    {"\xCE\xBC", "mu"},           // μ
+    {"\xCE\xBD", "nu"},           // ν
+    {"\xCE\xBE", "xi"},           // ξ
+    {"\xCF\x80", "pi"},           // π
+    {"\xCF\x81", "rho"},          // ρ
+    {"\xCF\x82", "sigma"},        // ς
+    {"\xCF\x83", "sigma"},        // σ
+    {"\xCF\x84", "tau"},          // τ
+    {"\xCF\x86", "phi"},          // φ
+    {"\xCF\x87", "chi"},          // χ
+    {"\xCF\x88", "psi"},          // ψ
+    {"\xCF\x89", "omega"},        // ω
+    {"\xE2\x82\x80", "_0"},       // ₀
+    {"\xE2\x82\x81", "_1"},       // ₁
+    {"\xE2\x82\x82", "_2"},       // ₂
+    {"\xE2\x82\x83", "_3"},       // ₃
+    {"\xE2\x82\x84", "_4"},       // ₄
+    {"\xE2\x82\x85", "_5"},       // ₅
+    {"\xE2\x82\x86", "_6"},       // ₆
+    {"\xE2\x82\x87", "_7"},       // ₇
+    {"\xE2\x82\x88", "_8"},       // ₈
+    {"\xE2\x82\x89", "_9"},       // ₉
+    {"\xE2\x82\x9C", "_t"},       // ₜ
+    {"\xE2\x81\xB0", "^0"},       // ⁰
+    {"\xC2\xB9", "^1"},           // ¹
+    {"\xC2\xB2", "^2"},           // ²
+    {"\xC2\xB3", "^3"},           // ³
+    {"\xE2\x81\xBB", "^-"},       // ⁻
+});
+
 [[nodiscard]] std::string escape_pdf_text(std::string_view text) {
+  const auto append_escaped_ascii = [](std::string& dst, std::string_view ascii) {
+    for (const char c : ascii) {
+      if (c == '\\' || c == '(' || c == ')') {
+        dst.push_back('\\');
+      }
+      dst.push_back(c);
+    }
+  };
+
   std::string out;
-  out.reserve(text.size() + 8);
+  out.reserve(text.size() + 24);
   for (std::size_t i = 0; i < text.size();) {
-    if (i + 2 < text.size()) {
-      const unsigned char b0 = static_cast<unsigned char>(text[i]);
-      const unsigned char b1 = static_cast<unsigned char>(text[i + 1]);
-      const unsigned char b2 = static_cast<unsigned char>(text[i + 2]);
-      // Fallback mappings for common UTF-8 math symbols when PDF base fonts lack glyphs.
-      if (b0 == 0xE2 && b1 == 0x89 && b2 == 0xA4) { // ≤
-        out += "<=";
-        i += 3;
-        continue;
-      }
-      if (b0 == 0xE2 && b1 == 0x89 && b2 == 0xA5) { // ≥
-        out += ">=";
-        i += 3;
-        continue;
+    bool matched_fallback = false;
+    for (const auto& fallback : kUtf8AsciiMathFallbacks) {
+      if (i + fallback.utf8.size() <= text.size() &&
+          text.compare(i, fallback.utf8.size(), fallback.utf8) == 0) {
+        append_escaped_ascii(out, fallback.ascii);
+        i += fallback.utf8.size();
+        matched_fallback = true;
+        break;
       }
     }
+    if (matched_fallback) {
+      continue;
+    }
+
     const char c = text[i++];
-    if (c == '\\' || c == '(' || c == ')') {
-      out.push_back('\\');
-    }
     if (static_cast<unsigned char>(c) >= 0x80) {
       out.push_back('?');
       continue;
     }
-    out.push_back(c);
+    append_escaped_ascii(out, std::string_view(&c, 1));
   }
   return out;
 }
@@ -398,6 +467,35 @@ void replace_all(std::string& text, std::string_view from, std::string_view to) 
   }
 }
 
+void apply_utf8_math_ascii_replacements(std::string& text) {
+  for (const auto& replacement : kUtf8AsciiMathFallbacks) {
+    replace_all(text, replacement.utf8, replacement.ascii);
+  }
+}
+
+void apply_utf8_subsup_markers(std::string& text) {
+  constexpr std::array<Utf8AsciiReplacement, 15> kSubSup{{
+      {"\xE2\x82\x80", "_0"}, // ₀
+      {"\xE2\x82\x81", "_1"}, // ₁
+      {"\xE2\x82\x82", "_2"}, // ₂
+      {"\xE2\x82\x83", "_3"}, // ₃
+      {"\xE2\x82\x84", "_4"}, // ₄
+      {"\xE2\x82\x85", "_5"}, // ₅
+      {"\xE2\x82\x86", "_6"}, // ₆
+      {"\xE2\x82\x87", "_7"}, // ₇
+      {"\xE2\x82\x88", "_8"}, // ₈
+      {"\xE2\x82\x89", "_9"}, // ₉
+      {"\xE2\x82\x9C", "_t"}, // ₜ
+      {"\xC2\xB2", "^2"},     // ²
+      {"\xC2\xB3", "^3"},     // ³
+      {"\xC2\xB9", "^1"},     // ¹
+      {"\xE2\x81\xB0", "^0"}, // ⁰
+  }};
+  for (const auto& replacement : kSubSup) {
+    replace_all(text, replacement.utf8, replacement.ascii);
+  }
+}
+
 void apply_core_tex_symbol_replacements(std::string& text) {
   constexpr std::string_view kLeqUtf8 = "\xE2\x89\xA4";
   constexpr std::string_view kGeqUtf8 = "\xE2\x89\xA5";
@@ -411,6 +509,195 @@ void apply_core_tex_symbol_replacements(std::string& text) {
   replace_all(text, "\\pm", kPlusMinusUtf8);
 }
 
+[[nodiscard]] std::size_t utf8_char_length_local(unsigned char lead) noexcept {
+  if ((lead & 0x80U) == 0U) return 1;
+  if ((lead & 0xE0U) == 0xC0U) return 2;
+  if ((lead & 0xF0U) == 0xE0U) return 3;
+  if ((lead & 0xF8U) == 0xF0U) return 4;
+  return 1;
+}
+
+[[nodiscard]] bool is_ascii_alpha(char c) noexcept {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
+[[nodiscard]] std::string_view lookup_tex_command(std::string_view cmd) noexcept {
+  constexpr auto kTexCommandMap = std::to_array<std::pair<std::string_view, std::string_view>>({
+      {"alpha", "\xCE\xB1"},   {"beta", "\xCE\xB2"},    {"gamma", "\xCE\xB3"},   {"delta", "\xCE\xB4"},
+      {"epsilon", "\xCE\xB5"}, {"zeta", "\xCE\xB6"},    {"eta", "\xCE\xB7"},     {"theta", "\xCE\xB8"},
+      {"kappa", "\xCE\xBA"},   {"lambda", "\xCE\xBB"},  {"mu", "\xCE\xBC"},      {"nu", "\xCE\xBD"},
+      {"xi", "\xCE\xBE"},      {"pi", "\xCF\x80"},      {"rho", "\xCF\x81"},     {"sigma", "\xCF\x83"},
+      {"tau", "\xCF\x84"},     {"phi", "\xCF\x86"},     {"chi", "\xCF\x87"},     {"psi", "\xCF\x88"},
+      {"omega", "\xCF\x89"},   {"Gamma", "\xCE\x93"},   {"Delta", "\xCE\x94"},   {"Lambda", "\xCE\x9B"},
+      {"Sigma", "\xCE\xA3"},   {"Phi", "\xCE\xA6"},     {"Psi", "\xCE\xA8"},     {"Omega", "\xCE\xA9"},
+      {"leq", "\xE2\x89\xA4"}, {"le", "\xE2\x89\xA4"},  {"geq", "\xE2\x89\xA5"}, {"ge", "\xE2\x89\xA5"},
+      {"neq", "\xE2\x89\xA0"}, {"times", "\xC3\x97"},   {"cdot", "\xE2\x8B\x85"}, {"pm", "\xC2\xB1"},
+      {"infty", "\xE2\x88\x9E"}, {"partial", "\xE2\x88\x82"},
+  });
+  const auto found = std::ranges::find_if(kTexCommandMap, [cmd](const auto& item) { return item.first == cmd; });
+  if (found == kTexCommandMap.end()) {
+    return {};
+  }
+  return found->second;
+}
+
+void skip_tex_spaces(std::string_view input, std::size_t& pos) {
+  while (pos < input.size() && (input[pos] == ' ' || input[pos] == '\t' || input[pos] == '\n' || input[pos] == '\r')) {
+    ++pos;
+  }
+}
+
+[[nodiscard]] std::string parse_tex_subset_expr(std::string_view input, std::size_t& pos, bool stop_on_brace);
+
+[[nodiscard]] std::string parse_tex_subset_group(std::string_view input, std::size_t& pos) {
+  skip_tex_spaces(input, pos);
+  if (pos >= input.size()) {
+    return {};
+  }
+  if (input[pos] == '{') {
+    ++pos;
+    auto inner = parse_tex_subset_expr(input, pos, true);
+    if (pos < input.size() && input[pos] == '}') {
+      ++pos;
+    }
+    return inner;
+  }
+  if (input[pos] == '\\') {
+    // Parse as a single command token when braces are omitted.
+    ++pos;
+    std::size_t start = pos;
+    while (pos < input.size() && is_ascii_alpha(input[pos])) {
+      ++pos;
+    }
+    const std::string_view cmd = (start < pos) ? input.substr(start, pos - start) : std::string_view{};
+    if (!cmd.empty()) {
+      if (const auto mapped = lookup_tex_command(cmd); !mapped.empty()) {
+        return std::string(mapped);
+      }
+      if (cmd == "left" || cmd == "right") {
+        return {};
+      }
+      return std::string(cmd);
+    }
+    if (pos < input.size()) {
+      return std::string(1, input[pos++]);
+    }
+    return {};
+  }
+  const auto len = std::min<std::size_t>(utf8_char_length_local(static_cast<unsigned char>(input[pos])), input.size() - pos);
+  const std::string token(input.substr(pos, len));
+  pos += len;
+  return token;
+}
+
+[[nodiscard]] std::string parse_tex_subset_command(std::string_view input, std::size_t& pos) {
+  if (pos >= input.size() || input[pos] != '\\') {
+    return {};
+  }
+  ++pos;
+  std::size_t start = pos;
+  while (pos < input.size() && is_ascii_alpha(input[pos])) {
+    ++pos;
+  }
+  const std::string_view cmd = (start < pos) ? input.substr(start, pos - start) : std::string_view{};
+  if (cmd.empty()) {
+    if (pos < input.size()) {
+      const char escaped = input[pos++];
+      if (escaped == ',' || escaped == ';' || escaped == ':' || escaped == '!') {
+        return " ";
+      }
+      if (escaped == '_' || escaped == '^' || escaped == '{' || escaped == '}' || escaped == '$' || escaped == '%') {
+        return std::string(1, escaped);
+      }
+      return std::string(1, escaped);
+    }
+    return {};
+  }
+
+  if (cmd == "frac") {
+    const std::string numer = parse_tex_subset_group(input, pos);
+    const std::string denom = parse_tex_subset_group(input, pos);
+    if (numer.empty() || denom.empty()) {
+      return "frac";
+    }
+    return "(" + numer + ")/(" + denom + ")";
+  }
+  if (cmd == "text") {
+    return parse_tex_subset_group(input, pos);
+  }
+  if (cmd == "mathrm" || cmd == "mathbf" || cmd == "mathit" || cmd == "operatorname" || cmd == "textrm") {
+    return parse_tex_subset_group(input, pos);
+  }
+  if (cmd == "quad" || cmd == "qquad") {
+    return " ";
+  }
+  if (cmd == "left" || cmd == "right") {
+    return {};
+  }
+  if (const auto mapped = lookup_tex_command(cmd); !mapped.empty()) {
+    return std::string(mapped);
+  }
+  return std::string(cmd);
+}
+
+[[nodiscard]] std::string parse_tex_subset_expr(std::string_view input, std::size_t& pos, bool stop_on_brace) {
+  std::string out;
+  out.reserve(input.size());
+  while (pos < input.size()) {
+    const char c = input[pos];
+    if (stop_on_brace && c == '}') {
+      break;
+    }
+    if (c == '$') {
+      ++pos;
+      continue;
+    }
+    if (c == '\\') {
+      out += parse_tex_subset_command(input, pos);
+      continue;
+    }
+    if (c == '{') {
+      ++pos;
+      out += parse_tex_subset_expr(input, pos, true);
+      if (pos < input.size() && input[pos] == '}') {
+        ++pos;
+      }
+      continue;
+    }
+    if (c == '_' || c == '^') {
+      const char marker = c;
+      ++pos;
+      std::string token = parse_tex_subset_group(input, pos);
+      if (token.empty()) {
+        continue;
+      }
+      out.push_back(marker);
+      if (token.size() == 1) {
+        out += token;
+      } else {
+        out.push_back('{');
+        out += token;
+        out.push_back('}');
+      }
+      continue;
+    }
+    const auto len = std::min<std::size_t>(utf8_char_length_local(static_cast<unsigned char>(c)), input.size() - pos);
+    out.append(input.substr(pos, len));
+    pos += len;
+  }
+  return out;
+}
+
+[[nodiscard]] std::string normalize_tex_subset(std::string_view text) {
+  if (!looks_like_tex_markup(text)) {
+    return std::string(text);
+  }
+  std::size_t pos = 0;
+  auto parsed = parse_tex_subset_expr(text, pos, false);
+  apply_core_tex_symbol_replacements(parsed);
+  return parsed;
+}
+
 [[nodiscard]] std::string normalize_display_text(std::string text) {
   if (text.empty()) {
     return text;
@@ -422,22 +709,38 @@ void apply_core_tex_symbol_replacements(std::string& text) {
     return fallback;
   }
 
+  const std::string parsed = normalize_tex_subset(text);
+  if (!parsed.empty() && tex_marker_count(parsed) <= tex_marker_count(fallback)) {
+    return parsed;
+  }
+
   try {
     auto note = pluss::make_note(text);
-    std::string candidate;
+    std::string rendered;
     try {
-      candidate = std::string(note.render_latex().scalar());
+      rendered = std::string(note.render_latex().scalar());
     } catch (...) {
-      candidate = std::string(note.latex_to_text().scalar());
+      rendered.clear();
     }
-    apply_core_tex_symbol_replacements(candidate);
+    apply_utf8_subsup_markers(rendered);
+    apply_core_tex_symbol_replacements(rendered);
+    if (!rendered.empty() &&
+        tex_marker_count(rendered) <= tex_marker_count(fallback)) {
+      return rendered;
+    }
 
-    if (tex_marker_count(candidate) < tex_marker_count(fallback)) {
-      return candidate;
-    }
-    if (tex_marker_count(candidate) == tex_marker_count(fallback) &&
-        candidate.size() >= fallback.size() / 2) {
-      return candidate;
+    std::string plain;
+    try {
+      plain = std::string(note.latex_to_text().scalar());
+      apply_utf8_subsup_markers(plain);
+      apply_core_tex_symbol_replacements(plain);
+      if (tex_marker_count(plain) < tex_marker_count(fallback) ||
+          (tex_marker_count(plain) == tex_marker_count(fallback) &&
+           plain.size() >= fallback.size() / 2)) {
+        return plain;
+      }
+    } catch (...) {
+      // Keep fallback label text.
     }
   } catch (...) {
     // Keep fallback label text if CodeN tex transforms reject malformed input.
@@ -1879,12 +2182,26 @@ void apply_core_tex_symbol_replacements(std::string& text) {
     return layouts;
   }
 
-  const double left_margin = studio.y_captions().empty() ? 28.0 : 54.0;
-  const double right_margin = studio.trace_key_dock() == KeyDock::East ? 276.0 : 28.0;
-  const double top_margin = studio.headline_text().empty() ? 28.0 : 58.0;
-  double bottom_margin = studio.x_captions().empty() ? 28.0 : 56.0;
-  if (studio.trace_key_dock() == KeyDock::South) {
-    bottom_margin += 104.0;
+  const bool tight = studio.tight_layout_enabled();
+  const double pad = tight ? studio.tight_layout_padding() : 0.0;
+  const auto compact_or_default = [tight, pad](double relaxed, double compact) {
+    return (tight ? compact : relaxed) + pad;
+  };
+
+  const double left_margin = studio.y_captions().empty()
+                                 ? compact_or_default(28.0, 18.0)
+                                 : compact_or_default(54.0, 34.0);
+  const double right_margin = studio.legend_dock() == KeyDock::East
+                                  ? compact_or_default(276.0, 232.0)
+                                  : compact_or_default(28.0, 18.0);
+  const double top_margin = studio.headline_text().empty()
+                                ? compact_or_default(28.0, 18.0)
+                                : compact_or_default(58.0, 40.0);
+  double bottom_margin = studio.x_captions().empty()
+                             ? compact_or_default(28.0, 18.0)
+                             : compact_or_default(56.0, 40.0);
+  if (studio.legend_dock() == KeyDock::South) {
+    bottom_margin += tight ? 78.0 : 104.0;
   }
   const double inner_width = std::max(0.0, studio.extent().width - left_margin - right_margin);
   const double inner_height = std::max(0.0, studio.extent().height - top_margin - bottom_margin);
@@ -1892,8 +2209,8 @@ void apply_core_tex_symbol_replacements(std::string& text) {
 
   layouts.reserve(studio.pane_count());
   if (mosaic.active) {
-    const double gap_x = mosaic.gutter_x;
-    const double gap_y = mosaic.gutter_y;
+    const double gap_x = tight ? std::max(6.0, mosaic.gutter_x * 0.62) : mosaic.gutter_x;
+    const double gap_y = tight ? std::max(6.0, mosaic.gutter_y * 0.62) : mosaic.gutter_y;
     const double cell_width =
         std::max(0.0, inner_width - gap_x * static_cast<double>(std::max<std::int64_t>(mosaic.cols - 1, 0))) /
         static_cast<double>(mosaic.cols);
@@ -1938,9 +2255,9 @@ void apply_core_tex_symbol_replacements(std::string& text) {
         const auto [row, col] = next_open();
         placement = PanePlacement{row, col, 1, 1, true};
       }
-      double right_inset = pane.scale_guide_enabled() ? 92.0 : 28.0;
-      if (pane.key_place() == KeyPlace::OutsideEast) {
-        right_inset = std::max(right_inset, 212.0);
+      double right_inset = pane.scale_guide_enabled() ? (tight ? 78.0 : 92.0) : (tight ? 20.0 : 28.0);
+      if (pane.legend_place() == KeyPlace::OutsideEast) {
+        right_inset = std::max(right_inset, tight ? 176.0 : 212.0);
       }
       const Rect outer = claim(
           placement.row,
@@ -1949,22 +2266,22 @@ void apply_core_tex_symbol_replacements(std::string& text) {
           placement.col_span);
       layouts.push_back(PaneLayout{
           outer,
-          inset(outer, 58.0, 38.0, right_inset, 56.0),
+          inset(outer, tight ? 44.0 : 58.0, tight ? 28.0 : 38.0, right_inset, tight ? 42.0 : 56.0),
       });
     }
     return layouts;
   }
 
-  const double gap = 18.0;
+  const double gap = tight ? 12.0 : 18.0;
   const double stacked_height =
       std::max(0.0,
                inner_height - gap * static_cast<double>(studio.pane_count() - 1));
   const double pane_height = stacked_height / static_cast<double>(studio.pane_count());
   for (std::size_t i = 0; i < studio.pane_count(); ++i) {
     const Pane& pane = studio.panes()[i];
-    double right_inset = pane.scale_guide_enabled() ? 92.0 : 28.0;
-    if (pane.key_place() == KeyPlace::OutsideEast) {
-      right_inset = std::max(right_inset, 212.0);
+    double right_inset = pane.scale_guide_enabled() ? (tight ? 78.0 : 92.0) : (tight ? 20.0 : 28.0);
+    if (pane.legend_place() == KeyPlace::OutsideEast) {
+      right_inset = std::max(right_inset, tight ? 176.0 : 212.0);
     }
     Rect outer{
         left_margin,
@@ -1974,7 +2291,7 @@ void apply_core_tex_symbol_replacements(std::string& text) {
     };
     layouts.push_back(PaneLayout{
         outer,
-        inset(outer, 58.0, 38.0, right_inset, 56.0),
+        inset(outer, tight ? 44.0 : 58.0, tight ? 28.0 : 38.0, right_inset, tight ? 42.0 : 56.0),
     });
   }
   return layouts;
@@ -3171,7 +3488,8 @@ void render_key_box(
     const Theme& theme,
     Rect box,
     std::string_view title,
-    const std::vector<KeyEntry>& entries) {
+    const std::vector<KeyEntry>& entries,
+    KeyFrame frame) {
   if (entries.empty()) {
     return;
   }
@@ -3187,16 +3505,41 @@ void render_key_box(
     return;
   }
 
-  add_path(
-      list,
-      {
-          {box.x, box.y},
-          {box.x + box.width, box.y},
-          {box.x + box.width, box.y + metrics.box_height},
-          {box.x, box.y + metrics.box_height},
-      },
-      FillStroke{theme.foreground(), theme.background(), true, true, 0.7},
-      true);
+  bool draw_panel = true;
+  Rgba panel_fill = theme.background();
+  Rgba panel_stroke = theme.foreground();
+  double panel_stroke_width = 0.7;
+  switch (frame) {
+    case KeyFrame::Framed:
+      panel_fill = theme.background();
+      panel_stroke = theme.foreground();
+      panel_stroke.alpha = std::clamp(panel_stroke.alpha * 0.72, 0.0, 1.0);
+      panel_stroke_width = 0.7;
+      break;
+    case KeyFrame::Soft:
+      panel_fill = mix(theme.background(), Rgba::from_u8(255, 255, 255), 0.08);
+      panel_fill.alpha = std::clamp(panel_fill.alpha * 0.94, 0.0, 1.0);
+      panel_stroke = mix(theme.foreground(), theme.background(), 0.78);
+      panel_stroke.alpha = std::clamp(panel_stroke.alpha * 0.28, 0.0, 1.0);
+      panel_stroke_width = 0.6;
+      break;
+    case KeyFrame::None:
+      draw_panel = false;
+      break;
+  }
+
+  if (draw_panel) {
+    add_path(
+        list,
+        {
+            {box.x, box.y},
+            {box.x + box.width, box.y},
+            {box.x + box.width, box.y + metrics.box_height},
+            {box.x, box.y + metrics.box_height},
+        },
+        FillStroke{panel_stroke, panel_fill, true, true, panel_stroke_width},
+        true);
+  }
 
   double cursor_y = box.y + kTopPad;
   if (!title.empty()) {
@@ -3240,8 +3583,39 @@ void render_key_box(
   }
 }
 
-void render_key(DrawList& list, const Pane& pane, const PaneLayout& layout) {
-  if (pane.key_place() == KeyPlace::None) {
+[[nodiscard]] bool point_in_rect(const Rect& rect, Point2d point) noexcept {
+  return point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height;
+}
+
+[[nodiscard]] double legend_overlap_score(
+    const DrawList& list,
+    const Rect& candidate,
+    const Rect& pane_plot,
+    std::size_t command_begin) {
+  double score = 0.0;
+  for (std::size_t i = command_begin; i < list.commands.size(); ++i) {
+    std::visit(
+        [&](const auto& command) {
+          using Cmd = std::decay_t<decltype(command)>;
+          if constexpr (std::is_same_v<Cmd, PathCommand>) {
+            for (const auto& point : command.points) {
+              if (point_in_rect(pane_plot, point) && point_in_rect(candidate, point)) {
+                score += 1.0;
+              }
+            }
+          } else if constexpr (std::is_same_v<Cmd, TextCommand>) {
+            if (point_in_rect(pane_plot, command.anchor) && point_in_rect(candidate, command.anchor)) {
+              score += 2.0;
+            }
+          }
+        },
+        list.commands[i]);
+  }
+  return score;
+}
+
+void render_legend(DrawList& list, const Pane& pane, const PaneLayout& layout, std::size_t command_begin) {
+  if (pane.legend_place() == KeyPlace::None) {
     return;
   }
 
@@ -3250,38 +3624,66 @@ void render_key(DrawList& list, const Pane& pane, const PaneLayout& layout) {
     return;
   }
 
-  const bool outside_east = pane.key_place() == KeyPlace::OutsideEast;
+  const bool outside_east = pane.legend_place() == KeyPlace::OutsideEast;
   const double min_width = outside_east ? 168.0 : 126.0;
   const double max_width = outside_east ? 280.0 : std::max(160.0, layout.plot.width * 0.52);
   const double box_width = estimate_key_width(entries, {}, min_width, max_width);
   const double box_height = compute_key_box_metrics(entries, {}, box_width).box_height;
-  double x = layout.plot.x + layout.plot.width - box_width - 8.0;
-  double y = layout.plot.y + 8.0;
-  if (pane.key_place() == KeyPlace::NorthWest) {
-    x = layout.plot.x + 8.0;
-  } else if (pane.key_place() == KeyPlace::SouthWest) {
-    x = layout.plot.x + 8.0;
-    y = layout.plot.y + layout.plot.height - box_height - 8.0;
-  } else if (pane.key_place() == KeyPlace::SouthEast) {
-    y = layout.plot.y + layout.plot.height - box_height - 8.0;
-  } else if (pane.key_place() == KeyPlace::OutsideEast) {
-    x = layout.plot.x + layout.plot.width + 22.0;
-    y = layout.plot.y + 8.0;
+
+  const auto rect_for_place = [&](KeyPlace place) {
+    double x = layout.plot.x + layout.plot.width - box_width - 8.0;
+    double y = layout.plot.y + 8.0;
+    if (place == KeyPlace::NorthWest) {
+      x = layout.plot.x + 8.0;
+    } else if (place == KeyPlace::SouthWest) {
+      x = layout.plot.x + 8.0;
+      y = layout.plot.y + layout.plot.height - box_height - 8.0;
+    } else if (place == KeyPlace::SouthEast) {
+      y = layout.plot.y + layout.plot.height - box_height - 8.0;
+    } else if (place == KeyPlace::OutsideEast) {
+      x = layout.plot.x + layout.plot.width + 22.0;
+      y = layout.plot.y + 8.0;
+    }
+    return Rect{x, y, box_width, 0.0};
+  };
+
+  Rect legend_box{};
+  if (pane.legend_place() == KeyPlace::Auto) {
+    constexpr std::array<KeyPlace, 4> kCandidates{
+        KeyPlace::NorthEast,
+        KeyPlace::NorthWest,
+        KeyPlace::SouthEast,
+        KeyPlace::SouthWest,
+    };
+    double best_score = std::numeric_limits<double>::infinity();
+    KeyPlace best_place = kCandidates.front();
+    for (const KeyPlace place : kCandidates) {
+      const Rect candidate = rect_for_place(place);
+      const double score = legend_overlap_score(list, candidate, layout.plot, command_begin);
+      if (score < best_score) {
+        best_score = score;
+        best_place = place;
+      }
+    }
+    legend_box = rect_for_place(best_place);
+  } else {
+    legend_box = rect_for_place(pane.legend_place());
   }
 
   render_key_box(
       list,
       pane.theme_tokens(),
-      Rect{x, y, box_width, 0.0},
+      legend_box,
       {},
-      entries);
+      entries,
+      pane.legend_frame());
 }
 
-void render_trace_key(
+void render_legend_dock(
     DrawList& list,
     const Studio& studio,
     const std::vector<PaneLayout>& layouts) {
-  if (studio.trace_key_dock() == KeyDock::None || layouts.empty()) {
+  if (studio.legend_dock() == KeyDock::None || layouts.empty()) {
     return;
   }
 
@@ -3298,7 +3700,7 @@ void render_trace_key(
   }
 
   Rect box{};
-  if (studio.trace_key_dock() == KeyDock::East) {
+  if (studio.legend_dock() == KeyDock::East) {
     constexpr double kDockWidth = 220.0;
     box = Rect{
         studio.extent().width - (kDockWidth + 28.0),
@@ -3315,7 +3717,7 @@ void render_trace_key(
     };
   }
 
-  render_key_box(list, studio.theme_tokens(), box, "trace key", entries);
+  render_key_box(list, studio.theme_tokens(), box, {}, entries, studio.legend_frame());
 }
 
 void render_shared_captions(
@@ -5214,6 +5616,7 @@ DrawList build_draw_list(const Studio& studio) {
   for (std::size_t i = 0; i < studio.pane_count(); ++i) {
     const Pane& pane = studio.panes()[i];
     const PaneLayout& layout = layouts[i];
+    const std::size_t pane_command_begin = list.commands.size();
     if (pane.kind() == PaneKind::Planar) {
       const Bounds2d bounds = *planar_bounds[i];
       render_planar_axes(list, pane, layout, bounds, radial_only[i], wedge_only[i]);
@@ -5222,7 +5625,7 @@ DrawList build_draw_list(const Studio& studio) {
       }
       render_planar_traces(list, pane, layout, bounds, radial_only[i], wedge_only[i]);
       render_scale_guide(list, pane, layout);
-      render_key(list, pane, layout);
+      render_legend(list, pane, layout, pane_command_begin);
     } else {
       const Bounds3d bounds = *volume_bounds[i];
       render_volume_panel(list, pane, layout);
@@ -5231,14 +5634,78 @@ DrawList build_draw_list(const Studio& studio) {
       render_volume_cues(list, pane, layout, bounds);
       render_volume_axes(list, pane, layout, bounds);
       render_scale_guide(list, pane, layout);
-      render_key(list, pane, layout);
+      render_legend(list, pane, layout, pane_command_begin);
     }
   }
 
   render_shared_captions(list, studio, layouts);
-  render_trace_key(list, studio, layouts);
+  render_legend_dock(list, studio, layouts);
 
   return list;
+}
+
+enum class MathRunKind {
+  Normal,
+  Subscript,
+  Superscript,
+};
+
+struct MathRun {
+  MathRunKind kind{MathRunKind::Normal};
+  std::string text{};
+};
+
+[[nodiscard]] std::size_t utf8_char_length(unsigned char lead) noexcept {
+  if ((lead & 0x80U) == 0U) return 1;
+  if ((lead & 0xE0U) == 0xC0U) return 2;
+  if ((lead & 0xF0U) == 0xE0U) return 3;
+  if ((lead & 0xF8U) == 0xF0U) return 4;
+  return 1;
+}
+
+void append_math_run(std::vector<MathRun>& runs, MathRunKind kind, std::string chunk) {
+  if (chunk.empty()) {
+    return;
+  }
+  if (!runs.empty() && runs.back().kind == kind) {
+    runs.back().text += chunk;
+    return;
+  }
+  runs.push_back(MathRun{kind, std::move(chunk)});
+}
+
+[[nodiscard]] std::vector<MathRun> split_math_runs(std::string_view text) {
+  std::vector<MathRun> runs;
+  runs.reserve(8);
+  std::size_t i = 0;
+  while (i < text.size()) {
+    const char marker = text[i];
+    if ((marker == '_' || marker == '^') && (i + 1) < text.size()) {
+      const auto kind = (marker == '_') ? MathRunKind::Subscript : MathRunKind::Superscript;
+      std::size_t j = i + 1;
+      if (text[j] == '{') {
+        std::size_t k = j + 1;
+        while (k < text.size() && text[k] != '}') {
+          ++k;
+        }
+        if (k < text.size() && k > j + 1) {
+          append_math_run(runs, kind, std::string(text.substr(j + 1, k - (j + 1))));
+          i = k + 1;
+          continue;
+        }
+      } else {
+        const auto len = std::min<std::size_t>(utf8_char_length(static_cast<unsigned char>(text[j])), text.size() - j);
+        append_math_run(runs, kind, std::string(text.substr(j, len)));
+        i = j + len;
+        continue;
+      }
+    }
+
+    const auto len = std::min<std::size_t>(utf8_char_length(static_cast<unsigned char>(text[i])), text.size() - i);
+    append_math_run(runs, MathRunKind::Normal, std::string(text.substr(i, len)));
+    i += len;
+  }
+  return runs;
 }
 
 [[nodiscard]] std::string emit_svg(const DrawList& list) {
@@ -5293,7 +5760,24 @@ DrawList build_draw_list(const Studio& studio) {
               out << " transform=\"rotate(" << format_number(item.rotation_deg) << " "
                   << format_number(item.anchor.x) << " " << format_number(item.anchor.y) << ")\"";
             }
-            out << ">" << escape_xml(item.text) << "</text>\n";
+            const auto runs = split_math_runs(item.text);
+            const bool rich = std::any_of(
+                runs.begin(), runs.end(), [](const MathRun& run) { return run.kind != MathRunKind::Normal; });
+            out << ">";
+            if (!rich) {
+              out << escape_xml(item.text);
+            } else {
+              for (const auto& run : runs) {
+                if (run.kind == MathRunKind::Normal) {
+                  out << escape_xml(run.text);
+                } else if (run.kind == MathRunKind::Subscript) {
+                  out << "<tspan baseline-shift=\"sub\" font-size=\"72%\">" << escape_xml(run.text) << "</tspan>";
+                } else {
+                  out << "<tspan baseline-shift=\"super\" font-size=\"72%\">" << escape_xml(run.text) << "</tspan>";
+                }
+              }
+            }
+            out << "</text>\n";
           }
         },
         command);

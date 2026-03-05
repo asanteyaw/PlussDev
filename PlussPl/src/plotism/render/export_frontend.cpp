@@ -1,7 +1,9 @@
 #include "plotism/render/export_bridge.h"
 
 #include <algorithm>
+#include <cctype>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -10,6 +12,8 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+
+#include "CodeM/core/Errors.h"
 
 #if defined(PLUSSPL_HAVE_GTK_WEBKIT) && PLUSSPL_HAVE_GTK_WEBKIT
 #include <cairo.h>
@@ -105,6 +109,83 @@ bool write_svg_document(std::string_view svg_payload, const std::filesystem::pat
   out << svg_payload;
   out.close();
   return static_cast<bool>(out);
+}
+
+std::string lowercase_ascii(std::string text) {
+  std::transform(text.begin(), text.end(), text.begin(), [](unsigned char ch) {
+    return static_cast<char>(std::tolower(ch));
+  });
+  return text;
+}
+
+bool contains_non_ascii_(std::string_view text) {
+  return std::any_of(text.begin(), text.end(), [](char ch) {
+    return static_cast<unsigned char>(ch) >= 0x80U;
+  });
+}
+
+bool looks_like_tex_or_math_(std::string_view text) {
+  return text.find('$') != std::string_view::npos || text.find('\\') != std::string_view::npos ||
+         text.find('_') != std::string_view::npos || text.find('^') != std::string_view::npos ||
+         contains_non_ascii_(text);
+}
+
+bool axis_has_rich_text_(const AxisState& axis) {
+  if (looks_like_tex_or_math_(axis.label)) {
+    return true;
+  }
+  if (!axis.ticks.has_value()) {
+    return false;
+  }
+  return std::ranges::any_of(axis.ticks->labels, [](const std::string& text) {
+    return looks_like_tex_or_math_(text);
+  });
+}
+
+bool pane_has_rich_text_(const Pane& pane) {
+  if (looks_like_tex_or_math_(pane.title_text()) || looks_like_tex_or_math_(pane.caption_text())) {
+    return true;
+  }
+  if (axis_has_rich_text_(pane.x_axis()) || axis_has_rich_text_(pane.y_axis()) || axis_has_rich_text_(pane.z_axis())) {
+    return true;
+  }
+  if (std::ranges::any_of(pane.rules(), [](const RuleCue& cue) { return looks_like_tex_or_math_(cue.label); })) {
+    return true;
+  }
+  if (std::ranges::any_of(pane.bands(), [](const BandCue& cue) { return looks_like_tex_or_math_(cue.label); })) {
+    return true;
+  }
+  if (std::ranges::any_of(pane.pins(), [](const PinCue& cue) { return looks_like_tex_or_math_(cue.text); })) {
+    return true;
+  }
+  return std::ranges::any_of(pane.traces(), [](const Trace& trace) {
+    return looks_like_tex_or_math_(trace.label_text());
+  });
+}
+
+bool studio_has_rich_text_(const Studio& studio) {
+  if (looks_like_tex_or_math_(studio.name()) || looks_like_tex_or_math_(studio.headline_text())) {
+    return true;
+  }
+  const auto map_has_rich_text = [](const auto& captions) {
+    return std::ranges::any_of(captions, [](const auto& kv) {
+      return looks_like_tex_or_math_(kv.first) || looks_like_tex_or_math_(kv.second);
+    });
+  };
+  if (map_has_rich_text(studio.x_captions()) || map_has_rich_text(studio.y_captions()) ||
+      map_has_rich_text(studio.z_captions())) {
+    return true;
+  }
+  return std::ranges::any_of(studio.panes(), [](const Pane& pane) { return pane_has_rich_text_(pane); });
+}
+
+void ensure_extension_match_(const std::filesystem::path& path, std::string_view expected_ext, std::string_view where) {
+  PLUSS_CHECK(!path.empty(), std::string(where) + "(): output path cannot be empty");
+  const auto actual = lowercase_ascii(path.extension().string());
+  const auto expected = lowercase_ascii(std::string(expected_ext));
+  PLUSS_CHECK(actual == expected,
+              std::string(where) + "(): filename extension '" + actual + "' does not match expected '" + expected +
+                  "'");
 }
 
 std::string svg_embed_html(const Studio& studio, std::string_view title, std::int64_t width, std::int64_t height) {
@@ -217,6 +298,144 @@ bool runtime_gui_env_available_() {
 
 std::string native_window_title_(std::string_view fallback) {
   return std::string(fallback);
+}
+
+bool run_command_(const std::string& command) {
+  const int status = std::system(command.c_str());
+  return status == 0;
+}
+
+bool command_available_(std::string_view command) {
+#if defined(_WIN32)
+  const std::string probe = "where " + std::string(command) + " >nul 2>nul";
+#else
+  const std::string probe = "command -v " + std::string(command) + " >/dev/null 2>&1";
+#endif
+  return run_command_(probe);
+}
+
+std::string quote_path_(const std::filesystem::path& path) {
+#if defined(_WIN32)
+  return shell_quote_windows(path.string());
+#else
+  return shell_quote_posix(path.string());
+#endif
+}
+
+std::string quiet_redirect_() {
+#if defined(_WIN32)
+  return " >nul 2>nul";
+#else
+  return " >/dev/null 2>&1";
+#endif
+}
+
+bool convert_svg_to_png_(const std::filesystem::path& svg_path,
+                         const std::filesystem::path& png_path,
+                         std::int64_t width_px,
+                         std::int64_t height_px,
+                         std::int64_t dpi) {
+  std::error_code ec;
+  if (png_path.has_parent_path()) {
+    std::filesystem::create_directories(png_path.parent_path(), ec);
+  }
+
+  const auto svg_q = quote_path_(svg_path);
+  const auto png_q = quote_path_(png_path);
+  const auto quiet = quiet_redirect_();
+  const auto width_s = std::to_string(std::max<std::int64_t>(width_px, 1));
+  const auto height_s = std::to_string(std::max<std::int64_t>(height_px, 1));
+  const auto dpi_s = std::to_string(std::max<std::int64_t>(dpi, 36));
+
+#if defined(__APPLE__)
+  if (command_available_("qlmanage")) {
+    const auto ql_dir = png_path.parent_path();
+    const std::string cmd = "qlmanage -t -s " + std::to_string(std::max(width_px, height_px)) + " -o " +
+                            quote_path_(ql_dir) + " " + svg_q + quiet;
+    if (run_command_(cmd)) {
+      const auto generated = ql_dir / (svg_path.stem().string() + ".png");
+      if (std::filesystem::exists(generated, ec)) {
+        std::filesystem::copy_file(generated, png_path, std::filesystem::copy_options::overwrite_existing, ec);
+        std::filesystem::remove(generated, ec);
+        if (!ec && std::filesystem::exists(png_path, ec)) {
+          return true;
+        }
+      }
+    }
+  }
+#endif
+
+  if (command_available_("rsvg-convert")) {
+    const std::string cmd = "rsvg-convert -w " + width_s + " -h " + height_s + " -o " + png_q + " " + svg_q + quiet;
+    if (run_command_(cmd) && std::filesystem::exists(png_path, ec)) {
+      return true;
+    }
+  }
+
+  if (command_available_("inkscape")) {
+    const std::string cmd = "inkscape " + svg_q + " --export-type=png --export-filename=" + png_q +
+                            " --export-width=" + width_s + " --export-height=" + height_s + quiet;
+    if (run_command_(cmd) && std::filesystem::exists(png_path, ec)) {
+      return true;
+    }
+  }
+
+  if (command_available_("magick")) {
+    const std::string cmd = "magick -density " + dpi_s + " " + svg_q + " " + png_q + quiet;
+    if (run_command_(cmd) && std::filesystem::exists(png_path, ec)) {
+      return true;
+    }
+  }
+
+  if (command_available_("convert")) {
+    const std::string cmd = "convert -density " + dpi_s + " " + svg_q + " " + png_q + quiet;
+    if (run_command_(cmd) && std::filesystem::exists(png_path, ec)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool convert_svg_to_pdf_(const std::filesystem::path& svg_path, const std::filesystem::path& pdf_path) {
+  std::error_code ec;
+  if (pdf_path.has_parent_path()) {
+    std::filesystem::create_directories(pdf_path.parent_path(), ec);
+  }
+
+  const auto svg_q = quote_path_(svg_path);
+  const auto pdf_q = quote_path_(pdf_path);
+  const auto quiet = quiet_redirect_();
+
+  if (command_available_("rsvg-convert")) {
+    const std::string cmd = "rsvg-convert -f pdf -o " + pdf_q + " " + svg_q + quiet;
+    if (run_command_(cmd) && std::filesystem::exists(pdf_path, ec)) {
+      return true;
+    }
+  }
+
+  if (command_available_("inkscape")) {
+    const std::string cmd = "inkscape " + svg_q + " --export-type=pdf --export-filename=" + pdf_q + quiet;
+    if (run_command_(cmd) && std::filesystem::exists(pdf_path, ec)) {
+      return true;
+    }
+  }
+
+  if (command_available_("magick")) {
+    const std::string cmd = "magick " + svg_q + " " + pdf_q + quiet;
+    if (run_command_(cmd) && std::filesystem::exists(pdf_path, ec)) {
+      return true;
+    }
+  }
+
+  if (command_available_("convert")) {
+    const std::string cmd = "convert " + svg_q + " " + pdf_q + quiet;
+    if (run_command_(cmd) && std::filesystem::exists(pdf_path, ec)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 bool show_html_window_(const std::string& html, std::string_view title, std::int64_t width, std::int64_t height) {
@@ -438,11 +657,76 @@ std::string Studio::to_pdf() const {
 }
 
 void Studio::save_svg(std::string_view path) const {
+  ensure_extension_match_(std::filesystem::path(path), ".svg", "save_svg");
   plotism::render::save_svg(*this, path);
 }
 
-void Studio::save_pdf(std::string_view path) const {
+void Studio::save_pdf(std::string_view path, PdfEngine engine) const {
+  ensure_extension_match_(std::filesystem::path(path), ".pdf", "save_pdf");
+  if (engine == PdfEngine::Internal || (engine == PdfEngine::Auto && !studio_has_rich_text_(*this))) {
+    plotism::render::save_pdf(*this, path);
+    return;
+  }
+
+  const std::filesystem::path out_path(path);
+  std::error_code ec;
+  if (out_path.has_parent_path()) {
+    std::filesystem::create_directories(out_path.parent_path(), ec);
+  }
+
+  const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+  const auto stem = (name_.empty() ? std::string("plusspl_plot") : name_) + "_" + std::to_string(static_cast<long long>(now));
+  const auto temp_root = fallback_viewer_temp_dir_();
+  std::filesystem::create_directories(temp_root, ec);
+  const auto temp_svg = temp_root / (stem + ".svg");
+
+  plotism::render::save_svg(*this, temp_svg.string());
+  const bool converted = convert_svg_to_pdf_(temp_svg, out_path);
+  std::filesystem::remove(temp_svg, ec);
+  if (converted) {
+    return;
+  }
+
+  if (engine == PdfEngine::SvgConvert) {
+    throw std::runtime_error(
+        "save_pdf(): SvgConvert engine requested, but no SVG->PDF converter was available (rsvg-convert, inkscape, magick/convert).");
+  }
+
+  // Fallback: built-in PDF writer (kept for environments without external converters).
   plotism::render::save_pdf(*this, path);
+}
+
+void Studio::save_png(std::string_view path, std::int64_t dpi) const {
+  ensure_extension_match_(std::filesystem::path(path), ".png", "save_png");
+  if (dpi <= 0) {
+    throw std::invalid_argument("save_png(): dpi must be positive");
+  }
+
+  const std::filesystem::path out_path(path);
+  std::error_code ec;
+  if (out_path.has_parent_path()) {
+    std::filesystem::create_directories(out_path.parent_path(), ec);
+  }
+
+  const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+  const auto stem = (name_.empty() ? std::string("plusspl_plot") : name_) + "_" + std::to_string(static_cast<long long>(now));
+  const auto temp_root = fallback_viewer_temp_dir_();
+  std::filesystem::create_directories(temp_root, ec);
+  const auto temp_svg = temp_root / (stem + ".svg");
+
+  plotism::render::save_svg(*this, temp_svg.string());
+
+  const double scale = static_cast<double>(dpi) / 96.0;
+  const auto width_px = std::max<std::int64_t>(64, static_cast<std::int64_t>(std::llround(extent_.width * scale)));
+  const auto height_px = std::max<std::int64_t>(64, static_cast<std::int64_t>(std::llround(extent_.height * scale)));
+
+  const bool converted = convert_svg_to_png_(temp_svg, out_path, width_px, height_px, dpi);
+  std::filesystem::remove(temp_svg, ec);
+
+  if (!converted) {
+    throw std::runtime_error(
+        "save_png(): unable to rasterize SVG. Install one of: rsvg-convert, inkscape, or ImageMagick (magick).");
+  }
 }
 
 bool Studio::show(std::string_view title, std::int64_t width, std::int64_t height, bool launch) const {

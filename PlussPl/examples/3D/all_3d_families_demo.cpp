@@ -67,7 +67,7 @@ int main() {
   gallery.size(1560.0, 1040.0);
   gallery.mosaic(2, 3, 20.0, 18.0);
   gallery.headline("PlussPl All 3D Families");
-  gallery.trace_key(pl::KeyDock::East).z_caption("terrain-group", "shared z scale");
+  gallery.legend(pl::KeyDock::East).z_caption("terrain-group", "shared z scale");
 
   const auto xs = pluss::linspace(-3.0, 3.0, 34, pluss::ScalarType::Float64);
   const auto ys = pluss::linspace(-3.0, 3.0, 34, pluss::ScalarType::Float64);

@@ -35,7 +35,7 @@ int main() {
   studio.size(1540.0, 1140.0);
   studio.mosaic(3, 3, 20.0, 18.0);
   studio.headline("PlussPl All 2D Families");
-  studio.trace_key(pl::KeyDock::East);
+  studio.legend(pl::KeyDock::East);
 
   const auto axis = pluss::linspace(1.0, 20.0, 20, pluss::ScalarType::Float64);
   const auto wave = axis.mul(0.45).sin().add(axis.mul(0.15).cos().mul(0.4));

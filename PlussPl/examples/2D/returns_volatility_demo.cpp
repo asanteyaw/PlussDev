@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <exception>
 #include <filesystem>
 #include <string_view>
 
@@ -48,11 +49,13 @@ int main() {
   pl::Studio studio("returns-volatility-demo", pl::Theme::paper());
   studio.size(1420.0, 920.0);
   studio.mosaic(2, 1, 16.0, 18.0);
+  studio.tight_layout(true, 4.0);
   studio.headline("Random Returns And Rolling Volatility (Vectorized Series)");
 
   auto& returns_pane = studio.pane2("Daily Log Returns");
   returns_pane.place(0, 0)
       .grid(pl::GridStyle::Major)
+      .legend(pl::KeyPlace::Auto)
       .x_label("observation")
       .y_label("return")
       .caption("simulated with normal innovations");
@@ -63,6 +66,7 @@ int main() {
   auto& vol_pane = studio.pane2("Rolling Volatility");
   vol_pane.place(1, 0)
       .grid(pl::GridStyle::Major)
+      .legend(pl::KeyPlace::Auto)
       .x_label("observation")
       .y_label("annualized vol")
       .caption("21-sample moving standard deviation");
@@ -71,5 +75,10 @@ int main() {
 
   studio.save_svg(out_path("plusspl_returns_volatility_demo.svg"));
   studio.save_pdf(out_path("plusspl_returns_volatility_demo.pdf"));
+  try {
+    studio.save_png(out_path("plusspl_returns_volatility_demo.png"), 160);
+  } catch (const std::exception&) {
+    // PNG export requires an external SVG rasterizer (rsvg-convert/inkscape/magick).
+  }
   return 0;
 }

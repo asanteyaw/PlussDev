@@ -58,8 +58,9 @@ struct Extent2d {
 
 enum class PaneKind : std::uint8_t { Planar, Volumetric };
 enum class GridStyle : std::uint8_t { None, Major, MajorMinor };
-enum class KeyPlace : std::uint8_t { None, NorthEast, NorthWest, SouthEast, SouthWest, OutsideEast };
+enum class KeyPlace : std::uint8_t { None, Auto, NorthEast, NorthWest, SouthEast, SouthWest, OutsideEast };
 enum class KeyDock : std::uint8_t { None, East, South };
+enum class KeyFrame : std::uint8_t { Framed, Soft, None };
 enum class ScaleKind : std::uint8_t { Linear, Log10, SymLog };
 enum class LimitMode : std::uint8_t { AutoFit, Manual };
 enum class LimitMethod : std::uint8_t { TickAligned, Tight, Padded };
@@ -70,6 +71,7 @@ enum class LightStyle : std::uint8_t { Local, Infinite };
 enum class ShadeMode : std::uint8_t { Faceted, Flat, Smooth };
 enum class LightingMode : std::uint8_t { None, Flat, Gouraud };
 enum class MaterialProfile : std::uint8_t { Default, Dull, Shiny, Metal };
+enum class PdfEngine : std::uint8_t { Auto, Internal, SvgConvert };
 enum class TraceKind : std::uint8_t {
   Trend,
   Cloud,
@@ -532,7 +534,8 @@ class Pane {
   [[nodiscard]] const AxisState& y_axis() const noexcept { return y_axis_; }
   [[nodiscard]] const AxisState& z_axis() const noexcept { return z_axis_; }
   [[nodiscard]] const AxisState& color_axis() const noexcept { return color_axis_; }
-  [[nodiscard]] KeyPlace key_place() const noexcept { return key_place_; }
+  [[nodiscard]] KeyPlace legend_place() const noexcept { return legend_place_; }
+  [[nodiscard]] KeyFrame legend_frame() const noexcept { return legend_frame_; }
   [[nodiscard]] GridStyle grid_style() const noexcept { return grid_style_; }
   [[nodiscard]] const Lens& lens() const noexcept { return lens_; }
   [[nodiscard]] Lens& lens() noexcept { return lens_; }
@@ -598,7 +601,8 @@ class Pane {
   Pane& x_categories(std::vector<std::string> labels, double first = 1.0, double step = 1.0);
   Pane& y_categories(std::vector<std::string> labels, double first = 1.0, double step = 1.0);
   Pane& z_categories(std::vector<std::string> labels, double first = 1.0, double step = 1.0);
-  Pane& key(KeyPlace place) noexcept;
+  Pane& legend(KeyPlace place) noexcept;
+  Pane& legend_frame(KeyFrame frame) noexcept;
   Pane& grid(GridStyle style) noexcept;
   Pane& scale_guide(bool enable = true) noexcept;
   Pane& caption(std::string text);
@@ -1235,7 +1239,8 @@ class Pane {
   AxisState y_axis_{};
   AxisState z_axis_{};
   AxisState color_axis_{};
-  KeyPlace key_place_{KeyPlace::None};
+  KeyPlace legend_place_{KeyPlace::None};
+  KeyFrame legend_frame_{KeyFrame::Soft};
   GridStyle grid_style_{GridStyle::None};
   Lens lens_{Lens::spatial()};
   LightRig lights_{};
@@ -1266,7 +1271,10 @@ class Studio {
   [[nodiscard]] std::size_t pane_count() const noexcept { return panes_.size(); }
   [[nodiscard]] const Extent2d& extent() const noexcept { return extent_; }
   [[nodiscard]] const MosaicLayout& mosaic_layout() const noexcept { return mosaic_layout_; }
-  [[nodiscard]] KeyDock trace_key_dock() const noexcept { return trace_key_dock_; }
+  [[nodiscard]] bool tight_layout_enabled() const noexcept { return tight_layout_enabled_; }
+  [[nodiscard]] double tight_layout_padding() const noexcept { return tight_layout_padding_; }
+  [[nodiscard]] KeyDock legend_dock() const noexcept { return legend_dock_; }
+  [[nodiscard]] KeyFrame legend_frame() const noexcept { return legend_frame_; }
   [[nodiscard]] const std::map<std::string, std::string>& x_captions() const noexcept { return x_captions_; }
   [[nodiscard]] const std::map<std::string, std::string>& y_captions() const noexcept { return y_captions_; }
   [[nodiscard]] const std::map<std::string, std::string>& z_captions() const noexcept { return z_captions_; }
@@ -1276,7 +1284,9 @@ class Studio {
   Studio& theme(Theme theme);
   Studio& size(double width, double height) noexcept;
   Studio& mosaic(std::int64_t rows, std::int64_t cols, double gutter_x = 18.0, double gutter_y = 18.0);
-  Studio& trace_key(KeyDock dock) noexcept;
+  Studio& tight_layout(bool enable = true, double padding = 6.0);
+  Studio& legend(KeyDock dock) noexcept;
+  Studio& legend_frame(KeyFrame frame) noexcept;
   Studio& x_caption(std::string group, std::string text);
   Studio& y_caption(std::string group, std::string text);
   Studio& z_caption(std::string group, std::string text);
@@ -1285,7 +1295,8 @@ class Studio {
   [[nodiscard]] std::string to_svg() const;
   [[nodiscard]] std::string to_pdf() const;
   void save_svg(std::string_view path) const;
-  void save_pdf(std::string_view path) const;
+  void save_pdf(std::string_view path, PdfEngine engine = PdfEngine::Auto) const;
+  void save_png(std::string_view path, std::int64_t dpi = 144) const;
   bool show(std::string_view title = {}, std::int64_t width = 1280, std::int64_t height = 820, bool launch = true) const;
 
  private:
@@ -1294,7 +1305,10 @@ class Studio {
   Theme theme_{Theme::paper()};
   Extent2d extent_{};
   MosaicLayout mosaic_layout_{};
-  KeyDock trace_key_dock_{KeyDock::None};
+  bool tight_layout_enabled_{false};
+  double tight_layout_padding_{6.0};
+  KeyDock legend_dock_{KeyDock::None};
+  KeyFrame legend_frame_{KeyFrame::Soft};
   std::map<std::string, std::string> x_captions_{};
   std::map<std::string, std::string> y_captions_{};
   std::map<std::string, std::string> z_captions_{};

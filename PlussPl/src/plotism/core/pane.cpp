@@ -800,8 +800,13 @@ Pane& Pane::z_categories(std::vector<std::string> labels, double first, double s
   return z_ticks(category_positions(first, step, labels.size()), std::move(labels));
 }
 
-Pane& Pane::key(KeyPlace place) noexcept {
-  key_place_ = place;
+Pane& Pane::legend(KeyPlace place) noexcept {
+  legend_place_ = place;
+  return *this;
+}
+
+Pane& Pane::legend_frame(KeyFrame frame) noexcept {
+  legend_frame_ = frame;
   return *this;
 }
 

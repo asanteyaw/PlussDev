@@ -43,6 +43,7 @@ class DataFrameImpl;
 class DataFrame;
 class DataFrameView;
 class DataFramePlotAccessor;
+struct DataFramePlotOptions;
 class DataFrameSqlAccessor;
 class DataFrameSqlPrepared;
 class Atlas;
@@ -412,6 +413,7 @@ public:
   DataFrame with_column(std::string name, const Thread& column) const;
   DataFrame& with_column_(std::string name, const Thread& column);
   DataFramePlotAccessor plot() const;
+  DataFramePlotAccessor plot(const DataFramePlotOptions& options) const;
   DataFrameSqlAccessor sql(SqlOptions options) const;
   DataFrameSqlAccessor sql() const;
   DataFrameSqlPrepared prepare_sql(std::string_view statement) const;

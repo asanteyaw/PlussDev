@@ -36,7 +36,7 @@ int main() {
   gallery.size(1380.0, 1720.0);
   gallery.mosaic(4, 2, 22.0, 18.0);
   gallery.headline("Pluss 2D Field Gallery");
-  gallery.trace_key(pl::KeyDock::East)
+  gallery.legend(pl::KeyDock::East)
       .x_caption("signal-x", "shared frequency axis")
       .y_caption("signal-y", "shared response bands");
 
