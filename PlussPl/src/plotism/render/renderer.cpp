@@ -4282,19 +4282,22 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
   const double plot_scale = std::max(1.0, std::min(layout.plot.width, layout.plot.height));
   const double tick_font_size = std::clamp(plot_scale * 0.014, 8.5, 10.0);
   const double axis_font_size = std::clamp(plot_scale * 0.017, 10.5, 12.0);
-  const double tick_len_xy = std::clamp(plot_scale * 0.010, 4.5, 9.5);
-  const double tick_len_z = std::clamp(plot_scale * 0.009, 4.0, 8.5);
-  const double tick_to_text_gap = std::clamp(plot_scale * 0.012, 7.0, 16.0);
+  const double tick_len_xy = std::clamp(plot_scale * 0.013, 5.8, 12.5);
+  const double tick_len_z = std::clamp(plot_scale * 0.012, 5.2, 11.0);
+  const double tick_to_text_gap = std::clamp(plot_scale * 0.016, 10.0, 24.0);
   const std::size_t x_tick_chars = max_tick_label_chars(x_ticks);
   const std::size_t y_tick_chars = max_tick_label_chars(y_ticks);
   const std::size_t z_tick_chars = max_tick_label_chars(z_ticks);
   const double x_tick_extent = estimated_text_extent(x_tick_chars, tick_font_size);
   const double y_tick_extent = estimated_text_extent(y_tick_chars, tick_font_size);
   const double z_tick_extent = estimated_text_extent(z_tick_chars, tick_font_size);
-  const double axis_label_base_gap = std::clamp(plot_scale * 0.038, 22.0, 56.0);
-  const double x_label_gap = axis_label_base_gap + std::clamp(x_tick_extent * 0.42, 9.0, 34.0);
-  const double y_label_gap = axis_label_base_gap + std::clamp(y_tick_extent * 0.42, 9.0, 34.0);
-  const double z_label_gap = axis_label_base_gap + std::clamp(z_tick_extent * 0.42, 8.0, 30.0);
+  const double axis_label_base_gap = std::clamp(plot_scale * 0.042, 26.0, 66.0);
+  const double x_label_gap =
+      axis_label_base_gap + tick_len_xy + tick_to_text_gap + std::clamp(x_tick_extent * 0.55, 12.0, 48.0);
+  const double y_label_gap =
+      axis_label_base_gap + tick_len_xy + tick_to_text_gap + std::clamp(y_tick_extent * 0.55, 12.0, 48.0);
+  const double z_label_gap =
+      axis_label_base_gap + tick_len_z + tick_to_text_gap + std::clamp(z_tick_extent * 0.52, 10.0, 42.0);
 
   const Point2d x_outward = outward_normal(frame.x_start, frame.x_end);
   const Point2d y_outward = outward_normal(frame.y_start, frame.y_end);
