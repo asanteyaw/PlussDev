@@ -180,6 +180,8 @@ bool run_conv_checks(std::ostream* err = nullptr) {
   return true;
 }
 
+} // namespace
+
 #ifdef PLUSS_AI_HAS_CATCH2
 TEST_CASE("conv functional and module surfaces stay aligned") {
   REQUIRE(run_conv_checks());
@@ -193,5 +195,3 @@ int main() {
   return 0;
 }
 #endif
-
-} // namespace

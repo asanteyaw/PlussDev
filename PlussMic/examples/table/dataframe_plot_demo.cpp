@@ -12,6 +12,10 @@ std::filesystem::path data_file(const std::string& name) {
   return std::filesystem::path(PLUSSMIC_SOURCE_DIR) / "data" / name;
 }
 
+std::filesystem::path output_dir() {
+  return std::filesystem::path(PLUSSMIC_SOURCE_DIR) / "examples" / "outputs" / "dataframe_plot_demo";
+}
+
 } // namespace
 
 int main() {
@@ -19,6 +23,9 @@ int main() {
   std::cout << "pluss/pl.h is unavailable in this build.\n";
   return 0;
 #else
+  std::filesystem::create_directories(output_dir());
+  std::filesystem::current_path(output_dir());
+
   std::vector<double> wave_x{0.0, 1.0, 2.0, 3.0, 4.0};
   std::vector<double> wave_y{1.0, 2.0, 1.5, 3.0, 2.2};
 

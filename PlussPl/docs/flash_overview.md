@@ -37,5 +37,7 @@ heatmap(ax, gx, gy, z);
 - Grids: `FacetGrid`, `PairGrid`, `JointGrid`, `pairplot`, `jointplot`
 - Palette helpers: `color_palette`, `hls_palette`, `husl_palette`, `cubehelix_palette`, `light_palette`, `dark_palette`, `diverging_palette`, `blend_palette`, `mpl_palette`, `xkcd_palette`, `crayon_palette`
 - Styling: `set`, `set_theme`, `set_style`, `axes_style`, `set_context`, `plotting_context`, `despine`, `move_legend`
-- Dataset helpers: `load_dataset`, `get_dataset_names`
-
+- Dataset helpers: `load_dataset`, `get_dataset_names` (`Note` names; no DataFrame dependency)
+- 3D helpers: `path3`, `cloud3`, `sheet`, `lattice`, `ridge3`, `isoshell`, `spire3`
+- Matplotlib-3D aliases: `plot3D`, `scatter3D`, `plot_surface`, `plot_wireframe`, `contour3D`, `bar3d`
+- Popup display: `flash::show(studio, ...)` / `studio.show(...)` (native window on macOS, GTK/WebKit on Linux when available, WebView2 on Windows when available; browser fallback otherwise). Embedded controls include zoom/reset, theme toggle, and SVG save.

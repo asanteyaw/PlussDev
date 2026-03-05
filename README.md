@@ -1,5 +1,5 @@
-# PlussMa
-Next-generation technical computing and AI stack for C++.
+# Pluss
+Next-generation technical computing and AI Ecosystem for C++.
 
 ## Quick Start
 
@@ -9,7 +9,7 @@ Next-generation technical computing and AI stack for C++.
 int main() {
   using pluss::table::DataFrame;
 
-  auto df = DataFrame::load_csv("../../PlussMic/data/messy_data.csv");
+  auto df = DataFrame::load_csv("path/to/data.csv");
   df.head();
   df.info();
 
@@ -17,7 +17,7 @@ int main() {
   auto numeric = df.series();
 
   auto df2 = df.set_features("Lifecycle Cost x2", df.features("Lifecycle Cost") * 2.0);
-  df2.save_csv("messy_with_derived.csv");
+  df2.save_csv("path/to/save/data.csv");
 }
 ```
 

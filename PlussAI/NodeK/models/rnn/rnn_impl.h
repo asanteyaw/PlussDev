@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../fusion/fusion.h"
+#include "../fusion/Fusion.h"
 #include "utils_config.h"
 
 #include <string_view>

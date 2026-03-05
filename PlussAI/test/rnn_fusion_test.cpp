@@ -377,6 +377,8 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
   return true;
 }
 
+} // namespace
+
 #ifdef PLUSS_AI_HAS_CATCH2
 TEST_CASE("rnn fusion surface stays aligned") {
   REQUIRE(run_rnn_fusion_checks());
@@ -390,5 +392,3 @@ int main() {
   return 0;
 }
 #endif
-
-} // namespace

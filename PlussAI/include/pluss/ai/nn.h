@@ -2,7 +2,7 @@
 
 #include "NodeK/NN/modules/Module.h"
 #include "NodeK/NN/modules/activation/Activation.h"
-#include "NodeK/NN/modules/fusion/Fusion.h"
+#include "NodeK/NN/modules/fusion/fusion.h"
 #include "NodeK/NN/modules/rnn/RNNBase.h"
 #include "NodeK/NN/modules/rnn/RNNImpl.h"
 #include "NodeK/NN/modules/rnn/GRUImpl.h"

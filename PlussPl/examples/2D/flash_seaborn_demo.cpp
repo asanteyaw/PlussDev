@@ -1,43 +1,189 @@
 #include <pluss/pluss.h>
 
+#include <array>
 #include <cmath>
 #include <filesystem>
+#include <string>
+#include <string_view>
 #include <vector>
 
 int main() {
   using namespace pluss::pl;
   using namespace pluss::pl::flash;
 
-  std::filesystem::create_directories("outputs");
+  const auto output_dir = std::filesystem::path(PLUSSPL_EXAMPLES_SOURCE_DIR) / "outputs" / "2D";
+  std::filesystem::create_directories(output_dir);
+  const auto out_path = [&output_dir](std::string_view name) {
+    return (output_dir / std::string(name)).string();
+  };
 
-  Studio fig("flash_seaborn_demo", Theme::paper());
-  auto& pane = fig.pane2("flash facade");
-  set_context(fig, 1200.0, 780.0, 1.2, 1.1);
-  set_style(pane, GridStyle::Major);
-  move_legend(pane, KeyPlace::OutsideEast);
-
-  auto x = pluss::linspace(0.0, 10.0, 48, pluss::ScalarType::Float64);
+  auto x = pluss::linspace(0.0, 10.0, 64, pluss::ScalarType::Float64);
   const std::vector<double> xv = x.to_vec<double>();
   std::vector<double> yv;
+  std::vector<double> y2v;
   yv.reserve(xv.size());
-  for (const double value : xv) {
-    yv.push_back(std::sin(value * 0.7) + 0.15 * std::cos(value * 2.1));
+  y2v.reserve(xv.size());
+  for (const double v : xv) {
+    yv.push_back(std::sin(v * 0.65) + 0.25 * std::cos(v * 1.8));
+    y2v.push_back(0.6 * std::cos(v * 0.4) + 0.35 * std::sin(v * 1.1));
   }
   auto y = pluss::make_series(yv, {static_cast<std::int64_t>(yv.size())});
+  auto y2 = pluss::make_series(y2v, {static_cast<std::int64_t>(y2v.size())});
 
-  scatterplot(pane, x, y).label("sns.scatterplot");
-  lineplot(pane, x, y).label("sns.lineplot");
-  regplot(pane, x, y).label("sns.regplot");
-  histplot(pane, y, 14).label("sns.histplot");
-  kdeplot(pane, y, 96).label("sns.kdeplot");
-  ecdfplot(pane, y).label("sns.ecdfplot");
+  auto cats = pluss::make_note({"A", "B", "A", "C", "B", "A", "C", "A", "B", "C"});
+  auto cat_vals = pluss::make_series(std::vector<double>{0.22, 0.47, 0.35, 0.68, 0.55, 0.31, 0.72, 0.28, 0.52, 0.76}, {10});
+  auto cat_err = pluss::make_series(std::vector<double>{0.04, 0.05, 0.03, 0.06, 0.05, 0.04, 0.05, 0.03, 0.04, 0.06}, {10});
 
-  auto bands = pluss::make_note({"low", "mid", "high", "mid", "low", "high", "mid", "low"});
-  auto vals = pluss::make_series(std::vector<double>{0.35, 0.6, 1.15, 0.82, 0.44, 1.22, 0.75, 0.38}, {8});
-  stripplot(pane, bands, vals).label("sns.stripplot");
-  countplot(pane, bands).label("sns.countplot");
+  Studio fig("flash_seaborn_catalog", Theme::paper());
+  set_theme(fig, Theme::paper());
+  set_context(fig, 1520.0, 980.0, 1.08, 1.05);
+  fig.mosaic(3, 3, 16.0, 16.0);
 
-  fig.save_svg("outputs/plusspl_flash_seaborn_demo.svg");
-  fig.save_pdf("outputs/plusspl_flash_seaborn_demo.pdf");
+  auto& relational = fig.pane2("Relational");
+  relational.place(0, 0);
+  set_style(relational, GridStyle::Major);
+  scatterplot(relational, x, y).label("sns.scatterplot");
+  lineplot(relational, x, y2).label("sns.lineplot");
+  relplot(relational, x, y, "line").label("sns.relplot");
+  move_legend(relational, KeyPlace::OutsideEast);
+  despine(relational);
+
+  auto& dist = fig.pane2("Distribution");
+  dist.place(0, 1);
+  set_style(dist, GridStyle::Major);
+  displot(dist, y, 16).label("sns.displot");
+  histplot(dist, y2, 14).label("sns.histplot");
+  kdeplot(dist, y, 96).label("sns.kdeplot");
+  ecdfplot(dist, y).label("sns.ecdfplot");
+  rugplot(dist, y2, 0.06).label("sns.rugplot");
+
+  auto& categorical = fig.pane2("Categorical");
+  categorical.place(0, 2);
+  set_style(categorical, GridStyle::Major);
+  stripplot(categorical, cats, cat_vals).label("sns.stripplot");
+  swarmplot(categorical, cats, cat_vals).label("sns.swarmplot");
+  boxplot(categorical, cats, cat_vals).label("sns.boxplot");
+  violinplot(categorical, cats, cat_vals).label("sns.violinplot");
+  boxenplot(categorical, cat_vals).label("sns.boxenplot");
+  pointplot(categorical, pluss::linspace(0.0, 9.0, 10, pluss::ScalarType::Float64), cat_vals, cat_err).label("sns.pointplot");
+  barplot(categorical, pluss::linspace(0.0, 9.0, 10, pluss::ScalarType::Float64), cat_vals).label("sns.barplot");
+  countplot(categorical, cats).label("sns.countplot");
+  catplot(categorical, cats, cat_vals, "violin").label("sns.catplot");
+  move_legend(categorical, KeyPlace::OutsideEast);
+
+  auto& regression = fig.pane2("Regression");
+  regression.place(1, 0);
+  set_style(regression, GridStyle::Major);
+  regplot(regression, x, y).label("sns.regplot");
+  residplot(regression, x, y).label("sns.residplot");
+
+  auto hm_z = pluss::make_series(
+      std::vector<double>{
+          0.2, 0.35, 0.48, 0.62,
+          0.28, 0.42, 0.57, 0.71,
+          0.36, 0.51, 0.66, 0.83,
+      },
+      {3, 4});
+  auto& matrix = fig.pane2("Matrix");
+  matrix.place(1, 1);
+  set_style(matrix, GridStyle::Major);
+  heatmap(matrix,
+          std::array<double, 4>{0.0, 1.0, 2.0, 3.0},
+          std::array<double, 3>{0.0, 1.0, 2.0},
+          hm_z).label("sns.heatmap");
+  clustermap(matrix,
+             std::array<double, 4>{0.0, 1.0, 2.0, 3.0},
+             std::array<double, 3>{0.0, 1.0, 2.0},
+             hm_z).label("sns.clustermap");
+
+  auto& palette = fig.pane2("Palette + Style");
+  palette.place(1, 2);
+  palette.grid(GridStyle::Major);
+  palette.trend(std::array<double, 4>{0.0, 1.0, 2.0, 3.0},
+                std::array<double, 4>{0.2, 0.5, 0.35, 0.72})
+      .label("sns.color_palette")
+      .palette(color_palette("lagoon"));
+  palette.trend(std::array<double, 4>{0.0, 1.0, 2.0, 3.0},
+                std::array<double, 4>{0.1, 0.26, 0.44, 0.64})
+      .label("sns.hls/husl/cubehelix")
+      .palette(hls_palette(6));
+  palette.trend(std::array<double, 4>{0.0, 1.0, 2.0, 3.0},
+                std::array<double, 4>{0.3, 0.18, 0.58, 0.42})
+      .label("sns.light/dark/diverging")
+      .palette(diverging_palette(Rgba::from_u8(55, 110, 190), Rgba::from_u8(198, 74, 65), 7));
+  palette.trend(std::array<double, 4>{0.0, 1.0, 2.0, 3.0},
+                std::array<double, 4>{0.15, 0.38, 0.22, 0.54})
+      .label("sns.blend/mpl/xkcd/crayon")
+      .palette(blend_palette({Rgba::from_u8(36, 126, 190), Rgba::from_u8(238, 156, 31)}, "blend"));
+  move_legend(palette, KeyPlace::OutsideEast);
+
+  auto names = get_dataset_names();
+  auto tips = load_dataset("tips");
+  auto& util = fig.pane2("Utility");
+  util.place(2, 0);
+  util.grid(GridStyle::Major);
+  util.caption("sns.get_dataset_names + sns.load_dataset");
+  util.trend(std::array<double, 3>{0.0, 1.0, 2.0},
+             std::array<double, 3>{static_cast<double>(names.numel()), tips.has_value() ? 1.0 : 0.0, 3.0})
+      .label("dataset utilities");
+
+  auto& grid_meta = fig.pane2("Grid API");
+  grid_meta.place(2, 1);
+  grid_meta.grid(GridStyle::Major);
+  grid_meta.caption("sns.FacetGrid / PairGrid / JointGrid in separate studios");
+  grid_meta.trend(std::array<double, 3>{0.0, 1.0, 2.0}, std::array<double, 3>{2.0, 3.0, 2.0}).label("grid api");
+
+  auto& lm = fig.pane2("lmplot marker");
+  lm.place(2, 2);
+  lm.grid(GridStyle::Major);
+  lm.trend(std::array<double, 3>{0.0, 1.0, 2.0}, std::array<double, 3>{0.2, 0.5, 0.9}).label("lmplot in separate studio");
+
+  fig.save_svg(out_path("plusspl_flash_seaborn_demo.svg"));
+  fig.save_pdf(out_path("plusspl_flash_seaborn_demo.pdf"));
+
+  Studio lm_fig("flash_lmplot_demo", Theme::paper());
+  set_context(lm_fig, 980.0, 720.0, 1.05, 1.05);
+  lmplot(lm_fig, x, y2, "sns.lmplot");
+  lm_fig.save_svg(out_path("plusspl_flash_lmplot_demo.svg"));
+  lm_fig.save_pdf(out_path("plusspl_flash_lmplot_demo.pdf"));
+
+  Studio pairplot_fig("flash_pairplot_demo", Theme::paper());
+  std::vector<pluss::Series> pair_cols{
+      y.reshape({y.numel()}),
+      y2.reshape({y2.numel()}),
+      x.reshape({x.numel()}),
+  };
+  pairplot(pairplot_fig, pair_cols);
+  pairplot_fig.save_svg(out_path("plusspl_flash_pairplot_demo.svg"));
+  pairplot_fig.save_pdf(out_path("plusspl_flash_pairplot_demo.pdf"));
+
+  Studio jointplot_fig("flash_jointplot_demo", Theme::paper());
+  jointplot(jointplot_fig, x, y, "scatter");
+  jointplot_fig.save_svg(out_path("plusspl_flash_jointplot_demo.svg"));
+  jointplot_fig.save_pdf(out_path("plusspl_flash_jointplot_demo.pdf"));
+
+  Studio facet_fig("flash_facetgrid_demo", Theme::paper());
+  FacetGrid(facet_fig, 2, 2);
+  auto& f0 = facet_fig.pane2("facet");
+  f0.place(0, 0).trend(std::array<double, 3>{0.0, 1.0, 2.0}, std::array<double, 3>{0.2, 0.4, 0.6});
+  facet_fig.save_svg(out_path("plusspl_flash_facetgrid_demo.svg"));
+
+  Studio pair_grid_fig("flash_pairgrid_demo", Theme::paper());
+  PairGrid(pair_grid_fig, 2);
+  auto& pg0 = pair_grid_fig.pane2("pair");
+  pg0.place(0, 0).trend(std::array<double, 3>{0.0, 1.0, 2.0}, std::array<double, 3>{0.3, 0.5, 0.7});
+  pair_grid_fig.save_svg(out_path("plusspl_flash_pairgrid_demo.svg"));
+
+  Studio joint_grid_fig("flash_jointgrid_demo", Theme::paper());
+  JointGrid(joint_grid_fig);
+  auto& jg0 = joint_grid_fig.pane2("joint-grid");
+  jg0.place(0, 0).trend(std::array<double, 3>{0.0, 1.0, 2.0}, std::array<double, 3>{0.25, 0.45, 0.65});
+  joint_grid_fig.save_svg(out_path("plusspl_flash_jointgrid_demo.svg"));
+
+  auto figz = pluss::pl::studio("demo");
+  auto& ax = figz.pane2();
+  ax.trend(std::array<double,3>{0,1,2}, std::array<double,3>{1,2,1});
+  figz.show("Demo Plot", 1280, 820, true); // opens popup/viewer
+
   return 0;
 }

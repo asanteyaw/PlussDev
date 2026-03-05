@@ -1,6 +1,433 @@
 #include "plotism/render/export_bridge.h"
 
+#include <algorithm>
+#include <chrono>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+
+#if defined(PLUSSPL_HAVE_GTK_WEBKIT) && PLUSSPL_HAVE_GTK_WEBKIT
+#include <cairo.h>
+#include <gdk/gdkkeysyms.h>
+#include <gtk/gtk.h>
+#include <webkit2/webkit2.h>
+#endif
+
+#include "PlatformHtmlViewer.h"
+
 namespace pluss::pl {
+
+namespace {
+
+std::string escape_html(std::string_view text) {
+  std::string out;
+  out.reserve(text.size() + 16);
+  for (const auto ch : text) {
+    switch (ch) {
+      case '&':
+        out += "&amp;";
+        break;
+      case '<':
+        out += "&lt;";
+        break;
+      case '>':
+        out += "&gt;";
+        break;
+      case '"':
+        out += "&quot;";
+        break;
+      case '\'':
+        out += "&#39;";
+        break;
+      default:
+        out.push_back(ch);
+        break;
+    }
+  }
+  return out;
+}
+
+std::string shell_quote_posix(std::string_view raw) {
+  std::string out;
+  out.reserve(raw.size() + 2);
+  out.push_back('\'');
+  for (const char ch : raw) {
+    if (ch == '\'') {
+      out.append("'\\''");
+    } else {
+      out.push_back(ch);
+    }
+  }
+  out.push_back('\'');
+  return out;
+}
+
+std::string shell_quote_windows(std::string_view raw) {
+  std::string out;
+  out.reserve(raw.size() + 2);
+  out.push_back('"');
+  for (const char ch : raw) {
+    if (ch == '"') {
+      out.push_back('\\');
+    }
+    out.push_back(ch);
+  }
+  out.push_back('"');
+  return out;
+}
+
+std::optional<std::string> extract_svg_fragment(std::string_view html) {
+  const auto begin = html.find("<svg");
+  if (begin == std::string_view::npos) {
+    return std::nullopt;
+  }
+  const auto end_tag = html.find("</svg>", begin);
+  if (end_tag == std::string_view::npos) {
+    return std::nullopt;
+  }
+  const auto end = end_tag + std::string_view("</svg>").size();
+  return std::string(html.substr(begin, end - begin));
+}
+
+bool write_svg_document(std::string_view svg_payload, const std::filesystem::path& output_path) {
+  std::ofstream out(output_path, std::ios::out | std::ios::trunc | std::ios::binary);
+  if (!out.is_open()) {
+    return false;
+  }
+  out << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
+  out << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" "
+         "\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n";
+  out << svg_payload;
+  out.close();
+  return static_cast<bool>(out);
+}
+
+std::string svg_embed_html(const Studio& studio, std::string_view title, std::int64_t width, std::int64_t height) {
+  const auto safe_width = std::max<std::int64_t>(320, width);
+  const auto safe_height = std::max<std::int64_t>(240, height);
+  const auto page_title = title.empty() ? studio.name() : std::string(title);
+  const auto svg = studio.to_svg();
+  return "<!doctype html>\n"
+         "<html lang=\"en\">\n"
+         "<head>\n"
+         "  <meta charset=\"utf-8\" />\n"
+         "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n"
+         "  <title>" + escape_html(page_title) + "</title>\n"
+         "  <style>\n"
+         "    html, body { margin: 0; padding: 0; background: #f7f7f7; min-height: 100%; }\n"
+         "    body { display: grid; grid-template-rows: auto 1fr; min-height: 100vh; }\n"
+         "    .toolbar { display: flex; align-items: center; justify-content: space-between; "
+         "padding: 10px 12px; border-bottom: 1px solid #dddddd; background: #ffffff; }\n"
+         "    .title { font: 600 14px/1.2 -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; "
+         "color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50vw; }\n"
+         "    .controls { display: flex; gap: 6px; }\n"
+         "    button { border: 1px solid #cbd5e1; background: #ffffff; color: #1f2937; border-radius: 6px; "
+         "padding: 6px 10px; font: 500 12px/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; cursor: pointer; }\n"
+         "    button:hover { background: #f3f4f6; }\n"
+         "    .stage { display: grid; place-items: center; min-height: 0; padding: 16px; }\n"
+         "    .frame { width: " + std::to_string(safe_width) + "px; max-width: 96vw; max-height: 96vh; "
+         "background: #ffffff; border: 1px solid #d8d8d8; box-shadow: 0 10px 30px rgba(0,0,0,0.12); overflow: auto; }\n"
+         "    #canvas { transform-origin: center top; transition: transform 120ms ease-out; }\n"
+         "    svg { display: block; width: 100%; height: auto; min-height: " + std::to_string(safe_height) + "px; }\n"
+         "    .dark body, body.dark { background: #0f172a; }\n"
+         "    body.dark .toolbar { background: #111827; border-color: #374151; }\n"
+         "    body.dark .title { color: #e5e7eb; }\n"
+         "    body.dark button { background: #1f2937; border-color: #4b5563; color: #e5e7eb; }\n"
+         "    body.dark button:hover { background: #374151; }\n"
+         "    body.dark .frame { background: #111827; border-color: #374151; }\n"
+         "  </style>\n"
+         "</head>\n"
+         "<body>\n"
+         "  <div class=\"toolbar\">\n"
+         "    <div class=\"title\">" + escape_html(page_title) + "</div>\n"
+         "    <div class=\"controls\">\n"
+         "      <button id=\"zoom-out\" type=\"button\">-</button>\n"
+         "      <button id=\"zoom-reset\" type=\"button\">Reset</button>\n"
+         "      <button id=\"zoom-in\" type=\"button\">+</button>\n"
+         "      <button id=\"toggle-bg\" type=\"button\">Theme</button>\n"
+         "      <button id=\"download-svg\" type=\"button\">Save SVG</button>\n"
+         "    </div>\n"
+         "  </div>\n"
+         "  <div class=\"stage\">\n"
+         "    <div class=\"frame\">\n"
+         "      <div id=\"canvas\">\n" + svg + "\n      </div>\n"
+         "    </div>\n"
+         "  </div>\n"
+         "  <script>\n"
+         "    (function () {\n"
+         "      const canvas = document.getElementById('canvas');\n"
+         "      const zoomIn = document.getElementById('zoom-in');\n"
+         "      const zoomOut = document.getElementById('zoom-out');\n"
+         "      const zoomReset = document.getElementById('zoom-reset');\n"
+         "      const toggleBg = document.getElementById('toggle-bg');\n"
+         "      const downloadSvg = document.getElementById('download-svg');\n"
+         "      let scale = 1.0;\n"
+         "      function clamp(value, lo, hi) { return Math.min(hi, Math.max(lo, value)); }\n"
+         "      function apply() { canvas.style.transform = 'scale(' + scale.toFixed(3) + ')'; }\n"
+         "      function step(delta) { scale = clamp(scale + delta, 0.35, 3.0); apply(); }\n"
+         "      zoomIn.addEventListener('click', function () { step(0.1); });\n"
+         "      zoomOut.addEventListener('click', function () { step(-0.1); });\n"
+         "      zoomReset.addEventListener('click', function () { scale = 1.0; apply(); });\n"
+         "      toggleBg.addEventListener('click', function () { document.body.classList.toggle('dark'); });\n"
+         "      downloadSvg.addEventListener('click', function () {\n"
+         "        const svg = canvas.querySelector('svg');\n"
+         "        if (!svg) { return; }\n"
+         "        const serializer = new XMLSerializer();\n"
+         "        let data = serializer.serializeToString(svg);\n"
+         "        if (!data.startsWith('<?xml')) {\n"
+         "          data = '<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\\n' + data;\n"
+         "        }\n"
+         "        const blob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });\n"
+         "        const url = URL.createObjectURL(blob);\n"
+         "        const a = document.createElement('a');\n"
+         "        a.href = url; a.download = 'plusspl_plot.svg'; document.body.appendChild(a); a.click();\n"
+         "        document.body.removeChild(a); URL.revokeObjectURL(url);\n"
+         "      });\n"
+         "      document.addEventListener('keydown', function (evt) {\n"
+         "        if (evt.key === '+' || evt.key === '=') { step(0.1); }\n"
+         "        else if (evt.key === '-') { step(-0.1); }\n"
+         "        else if (evt.key === '0') { scale = 1.0; apply(); }\n"
+         "        else if (evt.key === 'b' || evt.key === 'B') { document.body.classList.toggle('dark'); }\n"
+         "        else if (evt.key === 's' || evt.key === 'S') { downloadSvg.click(); }\n"
+         "      });\n"
+         "      canvas.addEventListener('wheel', function (evt) {\n"
+         "        if (!evt.ctrlKey) { return; }\n"
+         "        evt.preventDefault();\n"
+         "        step(evt.deltaY < 0 ? 0.08 : -0.08);\n"
+         "      }, { passive: false });\n"
+         "      apply();\n"
+         "    })();\n"
+         "  </script>\n"
+         "</body>\n"
+         "</html>\n";
+}
+
+bool runtime_gui_env_available_() {
+#if defined(_WIN32) || defined(__APPLE__)
+  return true;
+#else
+  return std::getenv("DISPLAY") != nullptr || std::getenv("WAYLAND_DISPLAY") != nullptr;
+#endif
+}
+
+std::string native_window_title_(std::string_view fallback) {
+  return std::string(fallback);
+}
+
+bool show_html_window_(const std::string& html, std::string_view title, std::int64_t width, std::int64_t height) {
+#if defined(PLUSSPL_HAVE_GTK_WEBKIT) && PLUSSPL_HAVE_GTK_WEBKIT
+  struct SnapshotRequest {
+    std::string path;
+  };
+  struct ViewerData {
+    std::string html_payload;
+  };
+
+  if (!runtime_gui_env_available_()) {
+    return false;
+  }
+  if (!gtk_init_check(nullptr, nullptr)) {
+    return false;
+  }
+
+  GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(window), native_window_title_(title).c_str());
+  gtk_window_set_default_size(GTK_WINDOW(window),
+                              static_cast<int>(std::max<std::int64_t>(640, width)),
+                              static_cast<int>(std::max<std::int64_t>(420, height)));
+
+  g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), nullptr);
+  g_signal_connect(window,
+                   "key-press-event",
+                   G_CALLBACK(+[](GtkWidget*, GdkEventKey* event, gpointer) -> gboolean {
+                     if (event->keyval == GDK_KEY_Escape) {
+                       gtk_main_quit();
+                       return TRUE;
+                     }
+                     return FALSE;
+                   }),
+                   nullptr);
+
+  GtkWidget* root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_container_add(GTK_CONTAINER(window), root);
+
+  GtkWidget* toolbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+  gtk_widget_set_margin_top(toolbar, 10);
+  gtk_widget_set_margin_bottom(toolbar, 6);
+  gtk_widget_set_margin_start(toolbar, 12);
+  gtk_widget_set_margin_end(toolbar, 12);
+  gtk_box_pack_start(GTK_BOX(root), toolbar, FALSE, FALSE, 0);
+
+  GtkWidget* save_png_button = gtk_button_new_with_label("Save PNG");
+  GtkWidget* save_svg_button = gtk_button_new_with_label("Save SVG");
+  gtk_box_pack_end(GTK_BOX(toolbar), save_png_button, FALSE, FALSE, 0);
+  gtk_box_pack_end(GTK_BOX(toolbar), save_svg_button, FALSE, FALSE, 0);
+
+  GtkWidget* scroller = gtk_scrolled_window_new(nullptr, nullptr);
+  gtk_box_pack_start(GTK_BOX(root), scroller, TRUE, TRUE, 0);
+
+  WebKitWebView* webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
+  webkit_web_view_load_html(webview, html.c_str(), "file:///");
+  gtk_container_add(GTK_CONTAINER(scroller), GTK_WIDGET(webview));
+
+  ViewerData viewer_data{html};
+
+  g_signal_connect(
+      save_png_button,
+      "clicked",
+      G_CALLBACK(+[](GtkButton*, gpointer user_data) {
+        auto* webview = WEBKIT_WEB_VIEW(user_data);
+        GtkWidget* dialog = gtk_file_chooser_dialog_new("Save Plot Snapshot",
+                                                        nullptr,
+                                                        GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                        "_Cancel",
+                                                        GTK_RESPONSE_CANCEL,
+                                                        "_Save",
+                                                        GTK_RESPONSE_ACCEPT,
+                                                        nullptr);
+        gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), "plot-view.png");
+        if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+          char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+          auto* request = new SnapshotRequest{filename != nullptr ? filename : "plot-view.png"};
+          if (filename != nullptr) {
+            g_free(filename);
+          }
+          webkit_web_view_get_snapshot(
+              webview,
+              WEBKIT_SNAPSHOT_REGION_FULL_DOCUMENT,
+              WEBKIT_SNAPSHOT_OPTIONS_NONE,
+              nullptr,
+              +[](GObject* source, GAsyncResult* result, gpointer user_data) {
+                std::unique_ptr<SnapshotRequest> request(static_cast<SnapshotRequest*>(user_data));
+                GError* error = nullptr;
+                cairo_surface_t* surface =
+                    webkit_web_view_get_snapshot_finish(WEBKIT_WEB_VIEW(source), result, &error);
+                if (error != nullptr) {
+                  g_error_free(error);
+                  return;
+                }
+                if (surface != nullptr) {
+                  cairo_surface_write_to_png(surface, request->path.c_str());
+                  cairo_surface_destroy(surface);
+                }
+              },
+              request);
+        }
+        gtk_widget_destroy(dialog);
+      }),
+      webview);
+
+  g_signal_connect(
+      save_svg_button,
+      "clicked",
+      G_CALLBACK(+[](GtkButton*, gpointer user_data) {
+        const auto* data = static_cast<const ViewerData*>(user_data);
+        if (data == nullptr) {
+          return;
+        }
+
+        GtkWidget* dialog = gtk_file_chooser_dialog_new("Save SVG",
+                                                        nullptr,
+                                                        GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                        "_Cancel",
+                                                        GTK_RESPONSE_CANCEL,
+                                                        "_Save",
+                                                        GTK_RESPONSE_ACCEPT,
+                                                        nullptr);
+        gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), "plot-view.svg");
+        if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+          char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+          if (filename != nullptr) {
+            const auto svg = extract_svg_fragment(data->html_payload);
+            if (svg.has_value()) {
+              (void)write_svg_document(*svg, std::filesystem::path(filename));
+            }
+            g_free(filename);
+          }
+        }
+        gtk_widget_destroy(dialog);
+      }),
+      &viewer_data);
+
+  gtk_widget_show_all(window);
+  gtk_main();
+  return true;
+#elif defined(PLUSSPL_HAVE_MAC_WEBKIT) && PLUSSPL_HAVE_MAC_WEBKIT
+  if (!detail::mac_html_viewer_available()) {
+    return false;
+  }
+  return detail::show_macos_html_window(native_window_title_(title),
+                                        html,
+                                        std::max<std::int64_t>(640, width),
+                                        std::max<std::int64_t>(420, height));
+#elif defined(PLUSSPL_HAVE_WIN_WEBVIEW2) && PLUSSPL_HAVE_WIN_WEBVIEW2
+  if (!detail::windows_html_viewer_available()) {
+    return false;
+  }
+  return detail::show_windows_html_window(native_window_title_(title),
+                                          html,
+                                          std::max<std::int64_t>(640, width),
+                                          std::max<std::int64_t>(420, height));
+#else
+  (void)html;
+  (void)title;
+  (void)width;
+  (void)height;
+  return false;
+#endif
+}
+
+bool launch_html_in_default_viewer(const std::filesystem::path& html_path) {
+  const auto native = html_path.string();
+#if defined(_WIN32)
+  const std::string command = "cmd /c start \"\" " + shell_quote_windows(native);
+#elif defined(__APPLE__)
+  const std::string command = "open " + shell_quote_posix(native) + " >/dev/null 2>&1";
+#else
+  const std::string command = "xdg-open " + shell_quote_posix(native) + " >/dev/null 2>&1";
+#endif
+  return std::system(command.c_str()) == 0;
+}
+
+std::filesystem::path fallback_viewer_temp_dir_() {
+  const auto dir = std::filesystem::temp_directory_path() / "plusspl_show";
+  std::error_code ec;
+  std::filesystem::create_directories(dir, ec);
+  return dir;
+}
+
+void cleanup_stale_fallback_html_(const std::filesystem::path& root) {
+  std::error_code ec;
+  if (!std::filesystem::exists(root, ec) || ec) {
+    return;
+  }
+
+  const auto now = std::chrono::system_clock::now();
+  for (const auto& entry : std::filesystem::directory_iterator(root, ec)) {
+    if (ec || !entry.is_regular_file()) {
+      continue;
+    }
+    const auto path = entry.path();
+    if (path.extension() != ".html") {
+      continue;
+    }
+    const auto stamp = std::filesystem::last_write_time(path, ec);
+    if (ec) {
+      continue;
+    }
+    const auto age = now - std::chrono::file_clock::to_sys(stamp);
+    if (age > std::chrono::hours(36)) {
+      std::filesystem::remove(path, ec);
+    }
+  }
+}
+
+} // namespace
 
 std::string Studio::to_svg() const {
   return plotism::render::render_svg(*this);
@@ -16,6 +443,35 @@ void Studio::save_svg(std::string_view path) const {
 
 void Studio::save_pdf(std::string_view path) const {
   plotism::render::save_pdf(*this, path);
+}
+
+bool Studio::show(std::string_view title, std::int64_t width, std::int64_t height, bool launch) const {
+  const auto html = svg_embed_html(*this, title, width, height);
+  const auto window_title = title.empty() ? std::string(name_.empty() ? "PlussPl Plot" : name_) : std::string(title);
+  if (launch && show_html_window_(html, window_title, width, height)) {
+    return true;
+  }
+
+  const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+  const auto name = name_.empty() ? std::string("plusspl_plot") : name_;
+  const auto output_root = fallback_viewer_temp_dir_();
+  cleanup_stale_fallback_html_(output_root);
+  const auto output_path = output_root /
+                           (name + "_" + std::to_string(static_cast<long long>(now)) + ".html");
+
+  std::ofstream out(output_path, std::ios::out | std::ios::trunc | std::ios::binary);
+  if (!out.is_open()) {
+    throw std::runtime_error("show(): unable to create temporary html file");
+  }
+  out << html;
+  out.close();
+  if (!out) {
+    throw std::runtime_error("show(): failed while writing html payload");
+  }
+  if (!launch) {
+    return true;
+  }
+  return launch_html_in_default_viewer(output_path);
 }
 
 } // namespace pluss::pl

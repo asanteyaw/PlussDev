@@ -444,12 +444,25 @@ TEST_CASE("PlussPl flash facade maps seaborn-like names to PlussPl traces", "[pl
 
   scatterplot(pane, x, y).label("scatter");
   lineplot(pane, x, y).label("line");
+  displot(pane, y, 6).label("dis");
   histplot(pane, y, 6).label("hist");
   regplot(pane, x, y).label("reg");
+  residplot(pane, x, y).label("resid");
   ecdfplot(pane, y).label("ecdf");
   kdeplot(pane, y, 32).label("kde");
+  rugplot(pane, y, 0.04).label("rug");
 
   auto cats = pluss::make_note({"A", "B", "A", "C", "B", "A", "C", "A"});
+  auto cat_vals = pluss::make_series(std::vector<double>{0.3, 0.5, 0.42, 0.65, 0.58, 0.35, 0.72, 0.4}, {8});
+  auto cat_err = pluss::make_series(std::vector<double>{0.04, 0.05, 0.03, 0.06, 0.05, 0.04, 0.05, 0.03}, {8});
+  stripplot(pane, cats, cat_vals).label("strip");
+  swarmplot(pane, cats, cat_vals).label("swarm");
+  boxplot(pane, cats, cat_vals).label("box");
+  violinplot(pane, cats, cat_vals).label("violin");
+  boxenplot(pane, cat_vals).label("boxen");
+  pointplot(pane, x, y, y).label("point");
+  barplot(pane, x, y).label("bar");
+  catplot(pane, cats, cat_vals, "violin").label("cat");
   countplot(pane, cats).label("counts");
 
   auto z = pluss::make_series(
@@ -461,10 +474,11 @@ TEST_CASE("PlussPl flash facade maps seaborn-like names to PlussPl traces", "[pl
       {3, 3});
   auto& heat = book.pane2("heat");
   heatmap(heat, std::array<double, 3>{1.0, 2.0, 3.0}, std::array<double, 3>{1.0, 2.0, 3.0}, z).label("heatmap");
+  clustermap(heat, std::array<double, 3>{1.0, 2.0, 3.0}, std::array<double, 3>{1.0, 2.0, 3.0}, z).label("cluster");
 
   REQUIRE(book.pane_count() == 2);
-  REQUIRE(book.panes().front().trace_count() >= 7);
-  REQUIRE(book.panes().back().trace_count() >= 1);
+  REQUIRE(book.panes().front().trace_count() >= 19);
+  REQUIRE(book.panes().back().trace_count() >= 2);
   REQUIRE(book.to_svg().find("<svg") != std::string::npos);
 
   Studio rel("flash-relplot");
@@ -473,12 +487,131 @@ TEST_CASE("PlussPl flash facade maps seaborn-like names to PlussPl traces", "[pl
   REQUIRE(rel.panes().front().trace_count() == 1);
   REQUIRE(rel.to_svg().find("<svg") != std::string::npos);
 
+  Studio lm("flash-lmplot");
+  lmplot(lm, x, y, "lm");
+  REQUIRE(lm.pane_count() == 1);
+  REQUIRE(lm.panes().front().trace_count() >= 2);
+
+  Studio facet("flash-facet-grid");
+  FacetGrid(facet, 2, 3);
+  REQUIRE(facet.mosaic_layout().active);
+
+  Studio pair("flash-pair-grid");
+  PairGrid(pair, 3);
+  pairplot(pair, {x.reshape({x.numel()}), y.reshape({y.numel()}), cat_vals.reshape({cat_vals.numel()})});
+  REQUIRE(pair.to_svg().find("<svg") != std::string::npos);
+
+  Studio joint("flash-joint-grid");
+  JointGrid(joint);
+  jointplot(joint, x, y, "scatter");
+  REQUIRE(joint.to_svg().find("<svg") != std::string::npos);
+
+  REQUIRE(!color_palette("ocean").empty());
+  REQUIRE(!hls_palette(5).empty());
+  REQUIRE(!husl_palette(5).empty());
+  REQUIRE(!cubehelix_palette(5).empty());
+  REQUIRE(!light_palette(Rgba::from_u8(42, 95, 153), 5).empty());
+  REQUIRE(!dark_palette(Rgba::from_u8(42, 95, 153), 5).empty());
+  REQUIRE(!diverging_palette(Rgba::from_u8(42, 95, 153), Rgba::from_u8(211, 78, 60), 7).empty());
+  REQUIRE(!blend_palette({Rgba::from_u8(42, 95, 153), Rgba::from_u8(211, 78, 60)}, "blend").empty());
+  REQUIRE(!mpl_palette("viridis").empty());
+  REQUIRE(!xkcd_palette().empty());
+  REQUIRE(!crayon_palette().empty());
+
   const auto names = get_dataset_names();
-  REQUIRE(!names.empty());
+  REQUIRE(names.numel() > 0);
   const auto tips = load_dataset("tips");
   REQUIRE(tips.has_value());
-  REQUIRE(tips->numerics.contains("tip"));
-  REQUIRE(tips->text.contains("day"));
+  REQUIRE(tips->numeric("tip").has_value());
+  REQUIRE(tips->note("day").has_value());
+}
+
+TEST_CASE("PlussPl flash exposes direct 3D wrappers and aliases", "[plusspl][flash][3d]") {
+  using namespace pluss::pl;
+  using namespace pluss::pl::flash;
+
+  Studio book("flash-3d");
+  auto& pane = book.pane3("vol");
+  pane.grid(GridStyle::Major);
+
+  auto z = pluss::make_series(
+      std::vector<double>{
+          0.0, 0.4, 0.7,
+          0.2, 0.6, 0.9,
+          0.3, 0.8, 1.0,
+      },
+      {3, 3});
+  auto c = pluss::make_series(
+      std::vector<double>{
+          0.1, 0.3, 0.5,
+          0.2, 0.45, 0.62,
+          0.32, 0.58, 0.84,
+      },
+      {3, 3});
+  auto iso = pluss::make_series(
+      std::vector<double>{
+          0.0, 0.1, 0.2, 0.1, 0.5, 0.8, 0.2, 0.8, 1.2,
+          0.1, 0.3, 0.6, 0.3, 0.9, 1.3, 0.6, 1.3, 1.8,
+          0.2, 0.4, 0.7, 0.4, 1.0, 1.4, 0.7, 1.4, 2.0,
+      },
+      {3, 3, 3});
+
+  path3(pane, std::array<double, 4>{0.0, 0.5, 1.0, 1.5},
+        std::array<double, 4>{0.0, 0.4, 0.9, 1.4},
+        std::array<double, 4>{0.2, 0.45, 0.85, 1.25}).label("path3");
+  cloud3(pane, std::array<double, 4>{0.1, 0.6, 1.1, 1.4},
+         std::array<double, 4>{0.1, 0.5, 0.95, 1.3},
+         std::array<double, 4>{0.3, 0.62, 0.98, 1.4}).label("cloud3");
+  sheet(pane, std::array<double, 3>{0.0, 1.0, 2.0},
+        std::array<double, 3>{0.0, 1.0, 2.0},
+        z, c).label("sheet");
+  lattice(pane, std::array<double, 3>{0.0, 1.0, 2.0},
+          std::array<double, 3>{0.0, 1.0, 2.0},
+          z).label("lattice");
+  ridge3(pane, std::array<double, 3>{0.0, 1.0, 2.0},
+         std::array<double, 3>{0.0, 1.0, 2.0},
+         z, 6).label("ridge3");
+  spire3(pane, std::array<double, 3>{0.0, 1.0, 2.0},
+         std::array<double, 3>{0.0, 1.0, 2.0},
+         z).label("spire3");
+  isoshell(pane,
+           std::array<double, 3>{0.0, 1.0, 2.0},
+           std::array<double, 3>{0.0, 1.0, 2.0},
+           std::array<double, 3>{0.0, 1.0, 2.0},
+           iso,
+           4).label("isoshell");
+  plot3D(pane, std::array<double, 4>{0.0, 0.5, 1.0, 1.5},
+         std::array<double, 4>{0.0, 0.4, 0.9, 1.4},
+         std::array<double, 4>{0.2, 0.45, 0.85, 1.25}).label("plot3D");
+  scatter3D(pane, std::array<double, 4>{0.1, 0.6, 1.1, 1.4},
+            std::array<double, 4>{0.1, 0.5, 0.95, 1.3},
+            std::array<double, 4>{0.3, 0.62, 0.98, 1.4}).label("scatter3D");
+  plot_surface(pane, std::array<double, 3>{0.0, 1.0, 2.0},
+               std::array<double, 3>{0.0, 1.0, 2.0},
+               z).label("plot_surface");
+  plot_wireframe(pane, std::array<double, 3>{0.0, 1.0, 2.0},
+                 std::array<double, 3>{0.0, 1.0, 2.0},
+                 z).label("plot_wireframe");
+  contour3D(pane, std::array<double, 3>{0.0, 1.0, 2.0},
+            std::array<double, 3>{0.0, 1.0, 2.0},
+            z, 5).label("contour3D");
+  bar3d(pane, std::array<double, 3>{0.0, 1.0, 2.0},
+        std::array<double, 3>{0.0, 1.0, 2.0},
+        z).label("bar3d");
+
+  REQUIRE(book.pane_count() == 1);
+  REQUIRE(book.panes().front().trace_count() >= 13);
+  REQUIRE(book.to_svg().find("<svg") != std::string::npos);
+}
+
+TEST_CASE("PlussPl Studio show writes html payload", "[plusspl][display]") {
+  using namespace pluss::pl;
+
+  Studio book("show-html");
+  auto& pane = book.pane2();
+  pane.trend(std::array<double, 3>{0.0, 1.0, 2.0}, std::array<double, 3>{0.2, 0.5, 0.8});
+
+  REQUIRE(book.show("Show HTML", 900, 620, false));
 }
 
 TEST_CASE("PlussPl renders mixed-sign symlog traces", "[plusspl][scale][symlog]") {

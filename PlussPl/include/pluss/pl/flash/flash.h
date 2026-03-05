@@ -217,8 +217,36 @@ inline void apply_tick_font_scale(Pane& pane, double tick_scale, double axis_sca
 } // namespace detail
 
 struct Dataset {
-  std::map<std::string, Series> numerics{};
-  std::map<std::string, Note> text{};
+  std::optional<Note> numeric_names{};
+  std::vector<Series> numeric_values{};
+  std::optional<Note> note_names{};
+  std::vector<Note> note_values{};
+
+  [[nodiscard]] std::optional<Series> numeric(std::string_view name) const {
+    if (!numeric_names.has_value()) {
+      return std::nullopt;
+    }
+    const auto n = std::min<std::int64_t>(numeric_names->numel(), static_cast<std::int64_t>(numeric_values.size()));
+    for (std::int64_t i = 0; i < n; ++i) {
+      if (numeric_names->at(i) == name) {
+        return numeric_values[static_cast<std::size_t>(i)];
+      }
+    }
+    return std::nullopt;
+  }
+
+  [[nodiscard]] std::optional<Note> note(std::string_view name) const {
+    if (!note_names.has_value()) {
+      return std::nullopt;
+    }
+    const auto n = std::min<std::int64_t>(note_names->numel(), static_cast<std::int64_t>(note_values.size()));
+    for (std::int64_t i = 0; i < n; ++i) {
+      if (note_names->at(i) == name) {
+        return note_values[static_cast<std::size_t>(i)];
+      }
+    }
+    return std::nullopt;
+  }
 };
 
 inline Studio& set(Studio& studio, Theme theme = Theme::paper()) {
@@ -271,6 +299,203 @@ inline Pane& move_legend(Pane& pane, KeyPlace place) noexcept {
 
 inline Studio& move_legend(Studio& studio, KeyDock dock) noexcept {
   return studio.trace_key(dock);
+}
+
+inline bool show(Studio& studio,
+                 std::string_view title = {},
+                 std::int64_t width = 1280,
+                 std::int64_t height = 820,
+                 bool launch = true) {
+  return studio.show(title, width, height, launch);
+}
+
+template <class X, class Y, class Z>
+Trace& path3(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return pane.path3(detail::to_series(std::forward<X>(x)),
+                    detail::to_series(std::forward<Y>(y)),
+                    detail::to_series(std::forward<Z>(z)));
+}
+
+template <class X, class Y, class Z>
+Trace& path3(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {}) {
+  Pane& pane = studio.pane3(std::move(title));
+  return path3(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
+}
+
+template <class X, class Y, class Z>
+Trace& cloud3(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return pane.cloud3(detail::to_series(std::forward<X>(x)),
+                     detail::to_series(std::forward<Y>(y)),
+                     detail::to_series(std::forward<Z>(z)));
+}
+
+template <class X, class Y, class Z, class Size>
+Trace& cloud3(Pane& pane, X&& x, Y&& y, Z&& z, Size&& size) {
+  return pane.cloud3(detail::to_series(std::forward<X>(x)),
+                     detail::to_series(std::forward<Y>(y)),
+                     detail::to_series(std::forward<Z>(z)),
+                     detail::to_series(std::forward<Size>(size)));
+}
+
+template <class X, class Y, class Z, class Size, class Color>
+Trace& cloud3(Pane& pane, X&& x, Y&& y, Z&& z, Size&& size, Color&& color) {
+  return pane.cloud3(detail::to_series(std::forward<X>(x)),
+                     detail::to_series(std::forward<Y>(y)),
+                     detail::to_series(std::forward<Z>(z)),
+                     detail::to_series(std::forward<Size>(size)),
+                     detail::to_series(std::forward<Color>(color)));
+}
+
+template <class X, class Y, class Z>
+Trace& cloud3(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {}) {
+  Pane& pane = studio.pane3(std::move(title));
+  return cloud3(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
+}
+
+template <class X, class Y, class Z>
+Trace& sheet(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return pane.sheet(detail::to_series(std::forward<X>(x)),
+                    detail::to_series(std::forward<Y>(y)),
+                    detail::to_series(std::forward<Z>(z)));
+}
+
+template <class X, class Y, class Z, class C>
+Trace& sheet(Pane& pane, X&& x, Y&& y, Z&& z, C&& c) {
+  return pane.sheet(detail::to_series(std::forward<X>(x)),
+                    detail::to_series(std::forward<Y>(y)),
+                    detail::to_series(std::forward<Z>(z)),
+                    detail::to_series(std::forward<C>(c)));
+}
+
+template <class X, class Y, class Z>
+Trace& sheet(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {}) {
+  Pane& pane = studio.pane3(std::move(title));
+  return sheet(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
+}
+
+template <class X, class Y, class Z>
+Trace& lattice(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return pane.lattice(detail::to_series(std::forward<X>(x)),
+                      detail::to_series(std::forward<Y>(y)),
+                      detail::to_series(std::forward<Z>(z)));
+}
+
+template <class X, class Y, class Z, class C>
+Trace& lattice(Pane& pane, X&& x, Y&& y, Z&& z, C&& c) {
+  return pane.lattice(detail::to_series(std::forward<X>(x)),
+                      detail::to_series(std::forward<Y>(y)),
+                      detail::to_series(std::forward<Z>(z)),
+                      detail::to_series(std::forward<C>(c)));
+}
+
+template <class X, class Y, class Z>
+Trace& lattice(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {}) {
+  Pane& pane = studio.pane3(std::move(title));
+  return lattice(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
+}
+
+template <class Z>
+Trace& spire3(Pane& pane, Z&& z) {
+  return pane.spire3(detail::to_series(std::forward<Z>(z)));
+}
+
+template <class Y, class Z>
+Trace& spire3(Pane& pane, Y&& y, Z&& z) {
+  return pane.spire3(detail::to_series(std::forward<Y>(y)),
+                     detail::to_series(std::forward<Z>(z)));
+}
+
+template <class X, class Y, class Z>
+Trace& spire3(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return pane.spire3(detail::to_series(std::forward<X>(x)),
+                     detail::to_series(std::forward<Y>(y)),
+                     detail::to_series(std::forward<Z>(z)));
+}
+
+template <class X, class Y, class Z, class C>
+Trace& spire3(Pane& pane, X&& x, Y&& y, Z&& z, C&& c) {
+  return pane.spire3(detail::to_series(std::forward<X>(x)),
+                     detail::to_series(std::forward<Y>(y)),
+                     detail::to_series(std::forward<Z>(z)),
+                     detail::to_series(std::forward<C>(c)));
+}
+
+template <class X, class Y, class Z>
+Trace& ridge3(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return pane.ridge3(detail::to_series(std::forward<X>(x)),
+                     detail::to_series(std::forward<Y>(y)),
+                     detail::to_series(std::forward<Z>(z)));
+}
+
+template <class X, class Y, class Z, class Levels>
+  requires(!std::integral<std::remove_cvref_t<Levels>>)
+Trace& ridge3(Pane& pane, X&& x, Y&& y, Z&& z, Levels&& levels) {
+  return pane.ridge3(detail::to_series(std::forward<X>(x)),
+                     detail::to_series(std::forward<Y>(y)),
+                     detail::to_series(std::forward<Z>(z)),
+                     detail::to_series(std::forward<Levels>(levels)));
+}
+
+template <class X, class Y, class Z>
+Trace& ridge3(Pane& pane, X&& x, Y&& y, Z&& z, int level_count) {
+  return pane.ridge3(detail::to_series(std::forward<X>(x)),
+                     detail::to_series(std::forward<Y>(y)),
+                     detail::to_series(std::forward<Z>(z)),
+                     level_count);
+}
+
+template <class Values>
+Trace& isoshell(Pane& pane, Values&& values, int level_count = 4) {
+  return pane.isoshell(detail::to_series(std::forward<Values>(values)), level_count);
+}
+
+template <class X, class Y, class Z, class Values>
+Trace& isoshell(Pane& pane, X&& x, Y&& y, Z&& z, Values&& values, int level_count = 4) {
+  return pane.isoshell(detail::to_series(std::forward<X>(x)),
+                       detail::to_series(std::forward<Y>(y)),
+                       detail::to_series(std::forward<Z>(z)),
+                       detail::to_series(std::forward<Values>(values)),
+                       level_count);
+}
+
+template <class X, class Y, class Z, class Values, class Levels>
+  requires(!std::integral<std::remove_cvref_t<Levels>>)
+Trace& isoshell(Pane& pane, X&& x, Y&& y, Z&& z, Values&& values, Levels&& levels) {
+  return pane.isoshell(detail::to_series(std::forward<X>(x)),
+                       detail::to_series(std::forward<Y>(y)),
+                       detail::to_series(std::forward<Z>(z)),
+                       detail::to_series(std::forward<Values>(values)),
+                       detail::to_series(std::forward<Levels>(levels)));
+}
+
+template <class X, class Y, class Z>
+Trace& plot3D(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return path3(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
+}
+
+template <class X, class Y, class Z>
+Trace& scatter3D(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return cloud3(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
+}
+
+template <class X, class Y, class Z>
+Trace& plot_surface(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return sheet(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
+}
+
+template <class X, class Y, class Z>
+Trace& plot_wireframe(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return lattice(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
+}
+
+template <class X, class Y, class Z>
+Trace& contour3D(Pane& pane, X&& x, Y&& y, Z&& z, int level_count = 8) {
+  return ridge3(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z), level_count);
+}
+
+template <class X, class Y, class Z>
+Trace& bar3d(Pane& pane, X&& x, Y&& y, Z&& z) {
+  return spire3(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Z>(z));
 }
 
 template <class X, class Y>
@@ -355,7 +580,14 @@ Trace& boxplot(Pane& pane, Values&& values) {
   return pane.quartet(detail::to_series(std::forward<Values>(values)));
 }
 
+inline Trace& boxplot(Pane& pane, const Note& categories, const Series& values) {
+  const auto [encoded, labels] = detail::encode_categories(categories);
+  pane.x_categories(labels);
+  return pane.quartet(pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
+}
+
 template <class Group, class Values>
+  requires(!std::same_as<std::remove_cvref_t<Group>, Note>)
 Trace& boxplot(Pane& pane, Group&& group, Values&& values) {
   return pane.quartet(detail::to_series(std::forward<Group>(group)),
                       detail::to_series(std::forward<Values>(values)));
@@ -366,7 +598,14 @@ Trace& violinplot(Pane& pane, Values&& values) {
   return pane.violin(detail::to_series(std::forward<Values>(values)));
 }
 
+inline Trace& violinplot(Pane& pane, const Note& categories, const Series& values) {
+  const auto [encoded, labels] = detail::encode_categories(categories);
+  pane.x_categories(labels);
+  return pane.violin(pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
+}
+
 template <class Group, class Values>
+  requires(!std::same_as<std::remove_cvref_t<Group>, Note>)
 Trace& violinplot(Pane& pane, Group&& group, Values&& values) {
   return pane.violin(detail::to_series(std::forward<Group>(group)),
                      detail::to_series(std::forward<Values>(values)));
@@ -386,9 +625,16 @@ Trace& pointplot(Pane& pane, X&& x, Y&& y, Err&& err) {
 }
 
 template <class X, class Y>
+  requires(!std::same_as<std::remove_cvref_t<X>, Note>)
 Trace& barplot(Pane& pane, X&& x, Y&& y) {
   return pane.columns(detail::to_series(std::forward<X>(x)),
                       detail::to_series(std::forward<Y>(y)));
+}
+
+inline Trace& barplot(Pane& pane, const Note& categories, const Series& values) {
+  const auto [encoded, labels] = detail::encode_categories(categories);
+  pane.x_categories(labels);
+  return pane.columns(pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
 template <class Values>
@@ -622,23 +868,35 @@ Studio& jointplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter
       "crayon");
 }
 
-[[nodiscard]] inline std::vector<std::string> get_dataset_names() {
-  return {"tips", "flights"};
+[[nodiscard]] inline Note get_dataset_names() {
+  return pluss::make_note({"tips", "flights"});
 }
 
 [[nodiscard]] inline std::optional<Dataset> load_dataset(std::string_view name) {
   Dataset data;
   if (name == "tips") {
-    data.numerics.emplace("total_bill", pluss::make_series(std::vector<double>{16.99, 10.34, 21.01, 23.68}, {4}));
-    data.numerics.emplace("tip", pluss::make_series(std::vector<double>{1.01, 1.66, 3.5, 3.31}, {4}));
-    data.numerics.emplace("size", pluss::make_series(std::vector<double>{2.0, 3.0, 3.0, 2.0}, {4}));
-    data.text.emplace("day", pluss::make_note({"Sun", "Sun", "Sun", "Sun"}));
+    data.numeric_names = pluss::make_note({"total_bill", "tip", "size"});
+    data.numeric_values = {
+        pluss::make_series(std::vector<double>{16.99, 10.34, 21.01, 23.68}, {4}),
+        pluss::make_series(std::vector<double>{1.01, 1.66, 3.5, 3.31}, {4}),
+        pluss::make_series(std::vector<double>{2.0, 3.0, 3.0, 2.0}, {4}),
+    };
+    data.note_names = pluss::make_note({"day"});
+    data.note_values = {
+        pluss::make_note({"Sun", "Sun", "Sun", "Sun"}),
+    };
     return data;
   }
   if (name == "flights") {
-    data.numerics.emplace("month", pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {6}));
-    data.numerics.emplace("passengers", pluss::make_series(std::vector<double>{112, 118, 132, 129, 121, 135}, {6}));
-    data.text.emplace("year", pluss::make_note({"1949", "1949", "1949", "1949", "1949", "1949"}));
+    data.numeric_names = pluss::make_note({"month", "passengers"});
+    data.numeric_values = {
+        pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {6}),
+        pluss::make_series(std::vector<double>{112, 118, 132, 129, 121, 135}, {6}),
+    };
+    data.note_names = pluss::make_note({"year"});
+    data.note_values = {
+        pluss::make_note({"1949", "1949", "1949", "1949", "1949", "1949"}),
+    };
     return data;
   }
   return std::nullopt;

@@ -1286,6 +1286,7 @@ class Studio {
   [[nodiscard]] std::string to_pdf() const;
   void save_svg(std::string_view path) const;
   void save_pdf(std::string_view path) const;
+  bool show(std::string_view title = {}, std::int64_t width = 1280, std::int64_t height = 820, bool launch = true) const;
 
  private:
   std::string name_{};
