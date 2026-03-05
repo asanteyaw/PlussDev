@@ -4061,23 +4061,7 @@ struct VolumeAxisFrame {
   frame.x_end3 = {bounds.max_x, frame.front_y, frame.bottom_z};
   frame.y_start3 = {frame.front_x, bounds.min_y, frame.bottom_z};
   frame.y_end3 = {frame.front_x, bounds.max_y, frame.bottom_z};
-
-  const std::array<Point3d, 4> z_edge_bottom_candidates{{
-      {bounds.min_x, bounds.min_y, frame.bottom_z},
-      {bounds.min_x, bounds.max_y, frame.bottom_z},
-      {bounds.max_x, bounds.min_y, frame.bottom_z},
-      {bounds.max_x, bounds.max_y, frame.bottom_z},
-  }};
-  std::size_t leftmost_z_edge = 0;
-  double leftmost_screen_x = std::numeric_limits<double>::infinity();
-  for (std::size_t i = 0; i < z_edge_bottom_candidates.size(); ++i) {
-    const Point2d projected = map_projected_point(z_edge_bottom_candidates[i], pane, bounds, plot_rect);
-    if (projected.x < leftmost_screen_x) {
-      leftmost_screen_x = projected.x;
-      leftmost_z_edge = i;
-    }
-  }
-  frame.z_start3 = z_edge_bottom_candidates[leftmost_z_edge];
+  frame.z_start3 = frame.x_start3;
   frame.z_end3 = {frame.z_start3.x, frame.z_start3.y, frame.top_z};
 
   frame.x_start = map_projected_point(frame.x_start3, pane, bounds, plot_rect);
@@ -4145,16 +4129,6 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
   const Rgba minor_grid = Rgba::from_u8(205, 212, 221, 122);
   const double x_wall_y = frame.rear_y;
   const double y_wall_x = frame.rear_x;
-  const auto near_equal = [](double lhs, double rhs) {
-    return std::abs(lhs - rhs) <= 1e-10;
-  };
-  const bool axis_on_x_wall = near_equal(frame.z_start3.y, x_wall_y);
-  const bool axis_on_y_wall = near_equal(frame.z_start3.x, y_wall_x);
-  const auto z_axis_point = [&](double z_value) {
-    Point2d p = map_projected_point({frame.z_start3.x, frame.z_start3.y, z_value}, pane, bounds, layout.plot);
-    p.x = frame.z_start.x;
-    return p;
-  };
   const auto draw_x_grid_lines = [&](double value, Rgba floor_color, double floor_width, Rgba wall_color, double wall_width) {
     add_path(
         list,
@@ -4164,14 +4138,11 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
         },
         FillStroke{floor_color, {}, true, false, floor_width},
         false);
-    Point2d wall_bottom = map_projected_point({value, x_wall_y, frame.bottom_z}, pane, bounds, layout.plot);
-    Point2d wall_top = map_projected_point({value, x_wall_y, frame.top_z}, pane, bounds, layout.plot);
-    if (axis_on_x_wall && near_equal(value, frame.z_start3.x)) {
-      wall_bottom = z_axis_point(frame.bottom_z);
-      wall_top = z_axis_point(frame.top_z);
-    }
     add_path(list,
-             {wall_bottom, wall_top},
+             {
+                 map_projected_point({value, x_wall_y, frame.bottom_z}, pane, bounds, layout.plot),
+                 map_projected_point({value, x_wall_y, frame.top_z}, pane, bounds, layout.plot),
+             },
              FillStroke{wall_color, {}, true, false, wall_width},
              false);
   };
@@ -4184,49 +4155,28 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
         },
         FillStroke{floor_color, {}, true, false, floor_width},
         false);
-    Point2d wall_bottom = map_projected_point({y_wall_x, value, frame.bottom_z}, pane, bounds, layout.plot);
-    Point2d wall_top = map_projected_point({y_wall_x, value, frame.top_z}, pane, bounds, layout.plot);
-    if (axis_on_y_wall && near_equal(value, frame.z_start3.y)) {
-      wall_bottom = z_axis_point(frame.bottom_z);
-      wall_top = z_axis_point(frame.top_z);
-    }
     add_path(list,
-             {wall_bottom, wall_top},
+             {
+                 map_projected_point({y_wall_x, value, frame.bottom_z}, pane, bounds, layout.plot),
+                 map_projected_point({y_wall_x, value, frame.top_z}, pane, bounds, layout.plot),
+             },
              FillStroke{wall_color, {}, true, false, wall_width},
              false);
   };
   const auto draw_z_grid_lines = [&](double value, Rgba wall_color, double wall_width) {
-    Point2d x_wall_a = map_projected_point({bounds.min_x, x_wall_y, value}, pane, bounds, layout.plot);
-    Point2d x_wall_b = map_projected_point({bounds.max_x, x_wall_y, value}, pane, bounds, layout.plot);
-    if (axis_on_x_wall) {
-      if (near_equal(frame.z_start3.x, bounds.min_x)) {
-        x_wall_a = z_axis_point(value);
-      } else if (near_equal(frame.z_start3.x, bounds.max_x)) {
-        x_wall_b = z_axis_point(value);
-      }
-    }
     add_path(
         list,
         {
-            x_wall_a,
-            x_wall_b,
+            map_projected_point({bounds.min_x, x_wall_y, value}, pane, bounds, layout.plot),
+            map_projected_point({bounds.max_x, x_wall_y, value}, pane, bounds, layout.plot),
         },
         FillStroke{wall_color, {}, true, false, wall_width},
         false);
-    Point2d y_wall_a = map_projected_point({y_wall_x, bounds.min_y, value}, pane, bounds, layout.plot);
-    Point2d y_wall_b = map_projected_point({y_wall_x, bounds.max_y, value}, pane, bounds, layout.plot);
-    if (axis_on_y_wall) {
-      if (near_equal(frame.z_start3.y, bounds.min_y)) {
-        y_wall_a = z_axis_point(value);
-      } else if (near_equal(frame.z_start3.y, bounds.max_y)) {
-        y_wall_b = z_axis_point(value);
-      }
-    }
     add_path(
         list,
         {
-            y_wall_a,
-            y_wall_b,
+            map_projected_point({y_wall_x, bounds.min_y, value}, pane, bounds, layout.plot),
+            map_projected_point({y_wall_x, bounds.max_y, value}, pane, bounds, layout.plot),
         },
         FillStroke{wall_color, {}, true, false, wall_width},
         false);
@@ -4277,6 +4227,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
       pane.z_axis());
   const VolumeAxisFrame frame = resolve_volume_axis_frame(pane, bounds, layout.plot);
   const Rgba primary = multiply_rgb(pane.theme_tokens().foreground(), 0.58);
+  const Rgba tick_stroke = multiply_rgb(pane.theme_tokens().foreground(), 0.72);
 
   const auto outward_normal = [&](Point2d a, Point2d b) {
     const double dx = b.x - a.x;
@@ -4347,8 +4298,8 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
 
   const Point2d x_outward = outward_normal(frame.x_start, frame.x_end);
   const Point2d y_outward = outward_normal(frame.y_start, frame.y_end);
-  const Point2d z_axis_start{frame.z_start.x, frame.z_start.y};
-  const Point2d z_axis_end{frame.z_start.x, frame.z_end.y};
+  const Point2d z_axis_start = frame.z_start;
+  const Point2d z_axis_end = frame.z_end;
   const Point2d z_outward = outward_normal(z_axis_start, z_axis_end);
   const auto distance_sq = [](Point2d a, Point2d b) {
     const double dx = a.x - b.x;
@@ -4395,7 +4346,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
         p.x + tick_dir.x * (tick_len_xy + tick_to_text_gap),
         p.y + tick_dir.y * (tick_len_xy + tick_to_text_gap),
     };
-    add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
+    add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, 1.16}, false);
     add_text(list, text_anchor, label, tick_font_size, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
   }
   for (std::size_t i = 0; i < y_ticks.size(); ++i) {
@@ -4412,20 +4363,19 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
         p.x + tick_dir.x * (tick_len_xy + tick_to_text_gap),
         p.y + tick_dir.y * (tick_len_xy + tick_to_text_gap),
     };
-    add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
+    add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, 1.16}, false);
     add_text(list, text_anchor, label, tick_font_size, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
   }
   for (std::size_t i = 0; i < z_ticks.size(); ++i) {
     const auto& [value, label] = z_ticks[i];
-    Point2d p = map_projected_point({frame.z_start3.x, frame.z_start3.y, value}, pane, bounds, layout.plot);
-    p.x = z_axis_start.x;
+    const Point2d p = map_projected_point({frame.z_start3.x, frame.z_start3.y, value}, pane, bounds, layout.plot);
     const Point2d tick_dir = z_parallel_tick_dir;
     const Point2d tick_end{p.x + tick_dir.x * tick_len_z, p.y + tick_dir.y * tick_len_z};
     const Point2d text_anchor{
         p.x + tick_dir.x * (tick_len_z + tick_to_text_gap),
         p.y + tick_dir.y * (tick_len_z + tick_to_text_gap),
     };
-    add_path(list, {p, tick_end}, FillStroke{Rgba::from_u8(176, 186, 199), {}, true, false, 0.8}, false);
+    add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, 1.16}, false);
     add_text(list, text_anchor, label, tick_font_size, pane.theme_tokens().foreground(), tick_text_align(tick_dir));
   }
 

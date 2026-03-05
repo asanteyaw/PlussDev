@@ -1,12 +1,45 @@
 #include <pluss/pluss.h>
 
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <limits>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
+
+namespace {
+
+[[nodiscard]] std::optional<double> text_x_by_label(const std::string& svg, std::string_view label) {
+  const std::string needle = ">" + std::string(label) + "</text>";
+  const std::size_t text_close = svg.find(needle);
+  if (text_close == std::string::npos) {
+    return std::nullopt;
+  }
+  const std::size_t text_open = svg.rfind("<text ", text_close);
+  if (text_open == std::string::npos) {
+    return std::nullopt;
+  }
+  const std::size_t x_attr = svg.find("x=\"", text_open);
+  if (x_attr == std::string::npos || x_attr > text_close) {
+    return std::nullopt;
+  }
+  const std::size_t value_start = x_attr + 3;
+  const std::size_t value_end = svg.find('"', value_start);
+  if (value_end == std::string::npos) {
+    return std::nullopt;
+  }
+  try {
+    return std::stod(svg.substr(value_start, value_end - value_start));
+  } catch (...) {
+    return std::nullopt;
+  }
+}
+
+} // namespace
 
 TEST_CASE("PlussPl studio exports SVG and PDF", "[plusspl][export]") {
   using namespace pluss::pl;
@@ -431,4 +464,41 @@ TEST_CASE("PlussPl renders violin traces for degenerate and grouped samples", "[
   REQUIRE(svg.find("<path") != std::string::npos);
   REQUIRE(svg.find("nan") == std::string::npos);
   REQUIRE(svg.find("inf") == std::string::npos);
+}
+
+TEST_CASE("PlussPl projects volume z ticks without screen-space pinning", "[plusspl][volume][axis]") {
+  using namespace pluss::pl;
+
+  Studio book("volume-z-ticks");
+  auto& pane = book.pane3("volume");
+  pane.grid(GridStyle::Major)
+      .x_label("x")
+      .y_label("y")
+      .z_label("z")
+      .z_ticks(std::array<double, 3>{0.0, 1.0, 2.0},
+               std::vector<std::string>{"z_lo", "z_mid", "z_hi"});
+  pane.lens().look(-37.5, 30.0).project(ProjectionKind::Perspective);
+
+  const auto z = pluss::make_series(
+      std::vector<double>{
+          0.0, 0.6, 1.1,
+          0.4, 1.2, 1.7,
+          0.8, 1.5, 2.0,
+      },
+      {3, 3});
+  pane.sheet(std::array<double, 3>{-1.0, 0.0, 1.0},
+             std::array<double, 3>{-1.0, 0.0, 1.0},
+             z);
+
+  const std::string svg = book.to_svg();
+  const auto x_lo = text_x_by_label(svg, "z_lo");
+  const auto x_mid = text_x_by_label(svg, "z_mid");
+  const auto x_hi = text_x_by_label(svg, "z_hi");
+  REQUIRE(x_lo.has_value());
+  REQUIRE(x_mid.has_value());
+  REQUIRE(x_hi.has_value());
+
+  const std::array<double, 3> xs{*x_lo, *x_mid, *x_hi};
+  const auto [min_it, max_it] = std::minmax_element(xs.begin(), xs.end());
+  REQUIRE(std::abs(*max_it - *min_it) > 0.05);
 }

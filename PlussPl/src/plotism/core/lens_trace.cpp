@@ -50,7 +50,7 @@ Lens Lens::spatial() noexcept {
   lens.azimuth_deg_ = -37.5;
   lens.elevation_deg_ = 30.0;
   lens.up_vector_ = Vec3d{0.0, 0.0, 1.0};
-  lens.projection_ = ProjectionKind::Perspective;
+  lens.projection_ = ProjectionKind::Orthographic;
   return lens;
 }
 
