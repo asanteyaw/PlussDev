@@ -38,9 +38,9 @@ int main() {
                std::vector<std::string>{"[0.70, 0.75)", "[0.75, 0.80)", "[0.80, 0.85)", "[0.85, 0.90)",
                                         "[0.90, 0.95)", "[0.95, 1.00)", "[1.00, 1.05)", "[1.05, 1.10)",
                                         "[1.10, 1.15)", "[1.15, 1.20)", "[1.20, 1.25)", "[1.25, 1.30)"})
-      .z_ticks(std::vector<double>{0.0, 20.0, 40.0, 60.0, 80.0, 100.0},
-               std::vector<std::string>{"0", "20", "40", "60", "80", "100"});
-  pane.lens().look(45.0, 30.0);
+      .z_ticks(std::vector<double>{0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 120.0},
+               std::vector<std::string>{"0", "20", "40", "60", "80", "100", "120"});
+  pane.lens().look(-37.5, 30.0).project(pl::ProjectionKind::Orthographic);
   pane.sheet(maturity_bins, moneyness_bins, avg_price)
       .label("option surface")
       .shade(pl::ShadeMode::Smooth)
