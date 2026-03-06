@@ -196,6 +196,7 @@ struct AxisState {
   LimitMode limit_mode{LimitMode::AutoFit};
   LimitMethod limit_method{LimitMethod::TickAligned};
   TickFormat tick_format{TickFormat::Auto};
+  std::optional<int> auto_tick_decimals{};
   std::optional<Range1d> limits{};
   std::string label{};
   std::optional<AxisTicks> ticks{};
@@ -555,6 +556,7 @@ class Pane {
   [[nodiscard]] const PanePlacement& placement() const noexcept { return placement_; }
   [[nodiscard]] double tick_font_scale() const noexcept { return tick_font_scale_; }
   [[nodiscard]] double axis_label_font_scale() const noexcept { return axis_label_font_scale_; }
+  [[nodiscard]] bool visible() const noexcept { return visible_; }
 
   Pane& title(std::string title);
   Pane& scale_x(ScalePolicy scale);
@@ -571,6 +573,12 @@ class Pane {
   Pane& x_tick_format(TickFormat format) noexcept;
   Pane& y_tick_format(TickFormat format) noexcept;
   Pane& z_tick_format(TickFormat format) noexcept;
+  Pane& x_auto_tick_decimals(int decimals);
+  Pane& y_auto_tick_decimals(int decimals);
+  Pane& z_auto_tick_decimals(int decimals);
+  Pane& clear_x_auto_tick_decimals() noexcept;
+  Pane& clear_y_auto_tick_decimals() noexcept;
+  Pane& clear_z_auto_tick_decimals() noexcept;
   Pane& tick_font_scale(double scale);
   Pane& axis_label_font_scale(double scale);
   Pane& x_tick_rotation(double degrees);
@@ -620,6 +628,9 @@ class Pane {
   Pane& align_xy(std::string group);
   Pane& align_xyz(std::string group);
   Pane& parallel_xy_labels(bool enable = true) noexcept;
+  Pane& visible(bool enable = true) noexcept;
+  Pane& hide() noexcept;
+  Pane& show() noexcept;
   Pane& clear_x_align() noexcept;
   Pane& clear_y_align() noexcept;
   Pane& clear_z_align() noexcept;
@@ -1256,6 +1267,7 @@ class Pane {
   bool parallel_xy_labels_{true};
   double tick_font_scale_{1.0};
   double axis_label_font_scale_{1.0};
+  bool visible_{true};
   PanePlacement placement_{};
 };
 

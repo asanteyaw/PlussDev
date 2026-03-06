@@ -409,7 +409,7 @@ void write_parity_report(const fs::path& out_dir) {
   out << "- 10_boxplots_distributions: dual-panel box plots\n";
   out << "- 11_hourly_violin: grouped violin plot\n";
   out << "- 12_correlation_heatmap: corr heatmap\n";
-  out << "- 13_pairplot_sampled: scatter matrix (pairplot proxy)\n\n";
+  out << "- 13_pairplot_sampled: full scatter matrix (pairplot proxy)\n\n";
   out << "## Known gaps vs Python/seaborn script\n";
   out << "- Grouped-bar CI for multiple hue columns is still limited when bars are pre-pivoted.\n";
   out << "- STL and SARIMAX sections were intentionally skipped as requested.\n";
@@ -519,8 +519,10 @@ int main(int argc, char** argv) {
 
   auto sample = df.features({"temp", "atemp", "humidity", "windspeed", "casual", "registered", "total_count"})
                     .sample(std::min<std::int64_t>(800, df.nrows()), 42);
-  auto fig_13 = sample.plot(build_plot_options()).scatter_matrix();
-  fig_13.headline("Pairplot proxy (scatter matrix, sampled)");
+  auto pair_opts = build_plot_options();
+  pair_opts.scatter_matrix_triangle = pluss::table::ScatterMatrixTriangle::Full;
+  auto fig_13 = sample.plot(pair_opts).scatter_matrix();
+  fig_13.headline("Pairplot (sampled)");
   save_and_optionally_show(fig_13, cli.out_dir, "13_pairplot_sampled", cli.show);
 
   write_parity_report(cli.out_dir);

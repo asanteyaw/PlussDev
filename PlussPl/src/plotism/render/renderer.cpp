@@ -26,6 +26,7 @@ namespace pluss::pl {
 namespace {
 
 constexpr double kPi = 3.14159265358979323846;
+constexpr char kMathTextMarker = '\x1F';
 
 struct Point2d {
   double x{0.0};
@@ -344,6 +345,10 @@ struct WedgeSlice {
   return plotism::spatex::normalize_display_text(text);
 }
 
+[[nodiscard]] bool looks_like_math_markup(std::string_view text) noexcept {
+  return text.find('\\') != std::string_view::npos || text.find('$') != std::string_view::npos;
+}
+
 [[nodiscard]] std::vector<double> to_f64(const Series& series) {
   return series.to(ScalarType::Float64).to_vec<double>();
 }
@@ -533,12 +538,13 @@ struct WedgeSlice {
 }
 
 [[nodiscard]] std::string format_tick_value(double value) {
+  const double snapped = std::abs(value) <= 1.0e-12 ? 0.0 : value;
   std::ostringstream label;
-  const double magnitude = std::abs(value);
+  const double magnitude = std::abs(snapped);
   if (magnitude >= 1.0e4 || (magnitude > 0.0 && magnitude < 1.0e-3)) {
-    label << std::scientific << std::setprecision(2) << value;
+    label << std::scientific << std::setprecision(2) << snapped;
   } else {
-    label << std::setprecision(4) << value;
+    label << std::setprecision(4) << snapped;
   }
   return label.str();
 }
@@ -547,36 +553,37 @@ struct WedgeSlice {
   if (!std::isfinite(value)) {
     return {};
   }
+  const double snapped = std::abs(value) <= 1.0e-12 ? 0.0 : value;
   if (format == TickFormat::Auto) {
-    return format_tick_value(value);
+    return format_tick_value(snapped);
   }
 
   std::ostringstream out;
   switch (format) {
     case TickFormat::Fixed3:
-      out << std::fixed << std::setprecision(3) << value;
+      out << std::fixed << std::setprecision(3) << snapped;
       return out.str();
     case TickFormat::Fixed6:
-      out << std::fixed << std::setprecision(6) << value;
+      out << std::fixed << std::setprecision(6) << snapped;
       return out.str();
     case TickFormat::Scientific:
-      out << std::scientific << std::setprecision(2) << value;
+      out << std::scientific << std::setprecision(2) << snapped;
       return out.str();
     case TickFormat::Engineering: {
-      if (value == 0.0) {
+      if (snapped == 0.0) {
         return "0";
       }
-      const double abs_value = std::abs(value);
+      const double abs_value = std::abs(snapped);
       const int exponent3 = static_cast<int>(std::floor(std::log10(abs_value) / 3.0)) * 3;
-      const double mantissa = value / std::pow(10.0, static_cast<double>(exponent3));
+      const double mantissa = snapped / std::pow(10.0, static_cast<double>(exponent3));
       out << std::fixed << std::setprecision(3) << mantissa << "e" << exponent3;
       return out.str();
     }
     case TickFormat::Integer:
-      out << static_cast<long long>(std::llround(value));
+      out << static_cast<long long>(std::llround(snapped));
       return out.str();
     case TickFormat::Percent:
-      out << std::fixed << std::setprecision(1) << (value * 100.0) << "%";
+      out << std::fixed << std::setprecision(1) << (snapped * 100.0) << "%";
       return out.str();
     case TickFormat::Auto:
     default:
@@ -722,6 +729,98 @@ struct WedgeSlice {
   return ticks;
 }
 
+[[nodiscard]] std::vector<std::pair<double, std::string>> harmonize_auto_tick_labels(
+    std::vector<std::pair<double, std::string>> ticks,
+    std::optional<int> forced_decimals = std::nullopt) {
+  if (ticks.empty()) {
+    return ticks;
+  }
+
+  std::vector<double> values;
+  values.reserve(ticks.size());
+  double max_abs = 0.0;
+  double min_nonzero_abs = std::numeric_limits<double>::infinity();
+  for (const auto& [value, _] : ticks) {
+    if (!std::isfinite(value)) {
+      continue;
+    }
+    const double abs_value = std::abs(value);
+    max_abs = std::max(max_abs, abs_value);
+    if (abs_value > 0.0) {
+      min_nonzero_abs = std::min(min_nonzero_abs, abs_value);
+    }
+    values.push_back(value);
+  }
+  if (values.empty()) {
+    return ticks;
+  }
+
+  const auto [min_it, max_it] = std::minmax_element(values.begin(), values.end());
+  const double span = std::max(*max_it - *min_it, 1.0e-12);
+  const double eps = std::max(1.0e-9, span * 1.0e-8);
+
+  if (forced_decimals.has_value()) {
+    const int decimals = std::clamp(*forced_decimals, 0, 8);
+    for (auto& [value, label] : ticks) {
+      const double snapped = std::abs(value) <= eps ? 0.0 : value;
+      std::ostringstream out;
+      out << std::fixed << std::setprecision(decimals) << snapped;
+      label = out.str();
+    }
+    return ticks;
+  }
+
+  if (max_abs >= 1.0e4 || (std::isfinite(min_nonzero_abs) && min_nonzero_abs < 1.0e-3)) {
+    return ticks;
+  }
+
+  const auto is_effective_integer = [eps](double value) {
+    return std::abs(value - std::round(value)) <= eps;
+  };
+  const bool has_fractional_ticks =
+      std::any_of(values.begin(), values.end(), [&](double value) { return !is_effective_integer(value); });
+  if (!has_fractional_ticks) {
+    return ticks;
+  }
+
+  std::sort(values.begin(), values.end());
+  values.erase(std::unique(values.begin(), values.end(), [eps](double lhs, double rhs) {
+                 return std::abs(lhs - rhs) <= eps;
+               }),
+               values.end());
+
+  double min_step = std::numeric_limits<double>::infinity();
+  for (std::size_t i = 1; i < values.size(); ++i) {
+    const double delta = values[i] - values[i - 1];
+    if (delta > eps) {
+      min_step = std::min(min_step, delta);
+    }
+  }
+
+  int decimals = 1;
+  if (std::isfinite(min_step)) {
+    int detected = 6;
+    for (int d = 0; d <= 6; ++d) {
+      const double scaled = min_step * std::pow(10.0, static_cast<double>(d));
+      const double rounded = std::round(scaled);
+      const double tolerance = 1.0e-6 * std::max(1.0, std::abs(scaled));
+      if (std::abs(scaled - rounded) <= tolerance) {
+        detected = d;
+        break;
+      }
+    }
+    decimals = std::clamp(detected, 1, 3);
+  }
+
+  for (auto& [value, label] : ticks) {
+    const double snapped = std::abs(value) <= eps ? 0.0 : value;
+    std::ostringstream out;
+    out << std::fixed << std::setprecision(decimals) << snapped;
+    label = out.str();
+  }
+  return ticks;
+}
+
 [[nodiscard]] std::vector<std::pair<double, std::string>> ticks_for(const AxisState& axis, Range1d range) {
   if (axis.ticks.has_value()) {
     const auto positions = to_f64(flatten_f64(axis.ticks->positions));
@@ -742,7 +841,11 @@ struct WedgeSlice {
     ticks = linear_ticks(range);
   }
 
-  if (axis.tick_format != TickFormat::Auto) {
+  if (axis.tick_format == TickFormat::Auto) {
+    if (axis.scale.kind == ScaleKind::Linear || axis.scale.kind == ScaleKind::SymLog) {
+      ticks = harmonize_auto_tick_labels(std::move(ticks), axis.auto_tick_decimals);
+    }
+  } else {
     for (auto& [value, label] : ticks) {
       label = format_tick_value(value, axis.tick_format);
     }
@@ -793,7 +896,7 @@ struct WedgeSlice {
     return clipped;
   }
 
-  if (!axis.ticks.has_value()) {
+  if (!axis.ticks.has_value() && axis.tick_format != TickFormat::Auto) {
     if (std::abs(clipped.front().first - range.low) > eps) {
       clipped.insert(clipped.begin(), {range.low, make_label(range.low)});
     } else {
@@ -808,6 +911,10 @@ struct WedgeSlice {
         clipped.back().second = make_label(range.high);
       }
     }
+  }
+  if (axis.tick_format == TickFormat::Auto &&
+      (axis.scale.kind == ScaleKind::Linear || axis.scale.kind == ScaleKind::SymLog)) {
+    return harmonize_auto_tick_labels(std::move(clipped), axis.auto_tick_decimals);
   }
   return clipped;
 }
@@ -1156,6 +1263,8 @@ struct WedgeSlice {
 [[nodiscard]] std::vector<ViolinShape> violin_shapes(const ViolinData& data) {
   constexpr std::size_t kResolution = 120;
   constexpr double kInvSqrt2Pi = 0.3989422804014327;
+  constexpr double kTailTaperExtent = 0.07;
+  constexpr double kPeakHalfWidthRatio = 0.34;
 
   std::vector<ViolinShape> shapes;
   const Series values = flatten_f64(data.values);
@@ -1240,13 +1349,14 @@ struct WedgeSlice {
       density.back() = 0.0;
       for (std::size_t i = 1; i + 1 < density.size(); ++i) {
         const double t = static_cast<double>(i) / static_cast<double>(density.size() - 1);
-        const double taper = std::clamp(std::min(t, 1.0 - t) / 0.09, 0.0, 1.0);
+        const double taper = std::clamp(std::min(t, 1.0 - t) / kTailTaperExtent, 0.0, 1.0);
         density[i] *= taper;
       }
     }
 
     const double peak = *std::max_element(density.begin(), density.end());
-    const double scale = peak > 0.0 ? (0.48 * data.width / peak) : 0.0;
+    const double target_peak_half_width = std::clamp(kPeakHalfWidthRatio * data.width, 0.08, 0.50);
+    const double scale = peak > 0.0 ? (target_peak_half_width / peak) : 0.0;
     for (std::size_t i = 0; i < kResolution; ++i) {
       shape.half_width[i] = std::max(0.0, density[i] * scale);
     }
@@ -2907,7 +3017,11 @@ void add_text(
     Rgba color,
     TextCommand::Align align = TextCommand::Align::Start,
     double rotation_deg = 0.0) {
+  const bool math_markup = looks_like_math_markup(text);
   text = normalize_display_text(std::move(text));
+  if (math_markup) {
+    text.insert(text.begin(), kMathTextMarker);
+  }
   if (text.empty()) {
     return;
   }
@@ -3283,8 +3397,15 @@ void render_legend_dock(
   }
 
   std::vector<KeyEntry> entries;
-  const bool include_titles = studio.pane_count() > 1;
+  const auto visible_panes = static_cast<std::size_t>(std::count_if(
+      studio.panes().begin(),
+      studio.panes().end(),
+      [](const Pane& pane) { return pane.visible(); }));
+  const bool include_titles = visible_panes > 1;
   for (const Pane& pane : studio.panes()) {
+    if (!pane.visible()) {
+      continue;
+    }
     auto pane_entries = key_entries_for_pane(pane, include_titles);
     entries.insert(entries.end(),
                    std::make_move_iterator(pane_entries.begin()),
@@ -3325,6 +3446,9 @@ void render_shared_captions(
 
   for (std::size_t i = 0; i < studio.pane_count(); ++i) {
     const Pane& pane = studio.panes()[i];
+    if (!pane.visible()) {
+      continue;
+    }
     if (!pane.x_align_group().empty()) {
       x_groups[pane.x_align_group()].include(layouts[i].plot);
     }
@@ -5198,6 +5322,9 @@ DrawList build_draw_list(const Studio& studio) {
 
   for (std::size_t i = 0; i < studio.pane_count(); ++i) {
     const Pane& pane = studio.panes()[i];
+    if (!pane.visible()) {
+      continue;
+    }
     if (pane.kind() == PaneKind::Planar) {
       radial_only[i] = pane_is_radial_only(pane);
       wedge_only[i] = pane_is_wedge_only(pane);
@@ -5210,6 +5337,9 @@ DrawList build_draw_list(const Studio& studio) {
 
   for (std::size_t i = 0; i < studio.pane_count(); ++i) {
     const Pane& pane = studio.panes()[i];
+    if (!pane.visible()) {
+      continue;
+    }
     const PaneLayout& layout = layouts[i];
     const std::size_t pane_command_begin = list.commands.size();
     if (pane.kind() == PaneKind::Planar) {
@@ -5273,6 +5403,20 @@ void append_math_run(std::vector<MathRun>& runs, MathRunKind kind, std::string c
 [[nodiscard]] std::vector<MathRun> split_math_runs(std::string_view text) {
   constexpr char kStretchLeftMarker = '\x1D';
   constexpr char kStretchRightMarker = '\x1E';
+
+  bool enable_math_scripts = false;
+  if (!text.empty() && text.front() == kMathTextMarker) {
+    enable_math_scripts = true;
+    text.remove_prefix(1);
+  }
+  if (!enable_math_scripts &&
+      (text.find(kStretchLeftMarker) != std::string_view::npos ||
+       text.find(kStretchRightMarker) != std::string_view::npos)) {
+    enable_math_scripts = true;
+  }
+  if (!enable_math_scripts) {
+    return {MathRun{MathRunKind::Normal, std::string(text)}};
+  }
 
   std::vector<MathRun> runs;
   runs.reserve(8);

@@ -84,6 +84,12 @@ void test_scatter_heatmap_and_validation() {
   expect(fig_heatmap.panes().front().trace_count() == 1, "plot().heatmap(pivot) should emit one trace");
   expect(fig_heatmap.panes().front().traces().front().kind() == TraceKind::Fieldmap,
          "plot().heatmap(pivot) should emit fieldmap trace");
+  expect(fig_heatmap.panes().front().scale_guide_enabled(),
+         "plot().heatmap(pivot) should enable scale guide by default");
+
+  const auto fig_corr = df.plot().corr_heatmap({"x", "y", "z"});
+  expect(fig_corr.panes().front().traces().front().annotate_levels(),
+         "plot().corr_heatmap should annotate cell values by default");
 
   expect_throw([&]() { (void)df.plot().scatter("x", "missing_feature"); },
                "plot().scatter with missing feature should throw");
@@ -117,6 +123,24 @@ void test_plot_options_defaults() {
     return trace.kind() == TraceKind::Whisk;
   });
   expect(has_whisk, "plot(options).bar with CI should include whisk trace");
+
+  options.scatter_matrix_triangle = pluss::table::ScatterMatrixTriangle::Lower;
+  options.scatter_matrix_auto_tick_decimals = 1;
+  const auto fig_corner = df.plot(options).scatter_matrix({"x", "y", "z"});
+  std::size_t trace_count = 0;
+  for (const auto& pane : fig_corner.panes()) {
+    trace_count += pane.trace_count();
+  }
+  expect(trace_count == 6, "plot(options).scatter_matrix(lower) should render only lower triangle + diagonal");
+  expect(fig_corner.panes().front().x_axis().auto_tick_decimals.has_value(),
+         "plot(options).scatter_matrix should propagate auto tick decimals");
+  expect(*fig_corner.panes().front().x_axis().auto_tick_decimals == 1,
+         "plot(options).scatter_matrix should use requested auto tick decimals");
+
+  options.heatmap_annotate_levels = true;
+  const auto fig_heatmap = df.plot(options).heatmap({"x", "y"});
+  expect(fig_heatmap.panes().front().traces().front().annotate_levels(),
+         "plot(options).heatmap should honor heatmap_annotate_levels");
 }
 
 } // namespace

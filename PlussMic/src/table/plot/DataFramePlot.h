@@ -16,12 +16,20 @@ struct PlotCall;
 pluss::pl::Studio call(const class DataFramePlotAccessor& accessor, PlotDispatch dispatch, PlotCall args);
 } // namespace _ops
 
+enum class ScatterMatrixTriangle : std::uint8_t { Full, Lower, Upper };
+
 struct DataFramePlotOptions {
   std::optional<std::string> default_x_feature{std::nullopt};
   std::optional<std::string> default_hue_feature{std::nullopt};
   std::int64_t default_bins{20};
   bool bar_ci_enabled{false};
   double bar_ci_level{0.95};
+  bool heatmap_annotate_levels{false};
+  bool corr_heatmap_annotate_levels{true};
+  bool heatmap_scale_guide{true};
+  ScatterMatrixTriangle scatter_matrix_triangle{ScatterMatrixTriangle::Full};
+  bool scatter_matrix_monochrome{true};
+  std::optional<int> scatter_matrix_auto_tick_decimals{std::nullopt};
   std::optional<double> width{std::nullopt};
   std::optional<double> height{std::nullopt};
   bool use_tight_layout{false};

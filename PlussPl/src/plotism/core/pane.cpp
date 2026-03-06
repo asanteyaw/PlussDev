@@ -529,6 +529,12 @@ void require_rotation_angle(double degrees, std::string_view where) {
   }
 }
 
+void require_auto_tick_decimals(int decimals, std::string_view where) {
+  if (decimals < 0 || decimals > 8) {
+    throw std::invalid_argument(std::string(where) + ": decimals must be in [0, 8]");
+  }
+}
+
 } // namespace
 
 Pane::Pane(PaneKind kind, Theme theme, std::string title)
@@ -632,6 +638,39 @@ Pane& Pane::y_tick_format(TickFormat format) noexcept {
 
 Pane& Pane::z_tick_format(TickFormat format) noexcept {
   z_axis_.tick_format = format;
+  return *this;
+}
+
+Pane& Pane::x_auto_tick_decimals(int decimals) {
+  require_auto_tick_decimals(decimals, "x_auto_tick_decimals");
+  x_axis_.auto_tick_decimals = decimals;
+  return *this;
+}
+
+Pane& Pane::y_auto_tick_decimals(int decimals) {
+  require_auto_tick_decimals(decimals, "y_auto_tick_decimals");
+  y_axis_.auto_tick_decimals = decimals;
+  return *this;
+}
+
+Pane& Pane::z_auto_tick_decimals(int decimals) {
+  require_auto_tick_decimals(decimals, "z_auto_tick_decimals");
+  z_axis_.auto_tick_decimals = decimals;
+  return *this;
+}
+
+Pane& Pane::clear_x_auto_tick_decimals() noexcept {
+  x_axis_.auto_tick_decimals.reset();
+  return *this;
+}
+
+Pane& Pane::clear_y_auto_tick_decimals() noexcept {
+  y_axis_.auto_tick_decimals.reset();
+  return *this;
+}
+
+Pane& Pane::clear_z_auto_tick_decimals() noexcept {
+  z_axis_.auto_tick_decimals.reset();
   return *this;
 }
 
@@ -915,6 +954,21 @@ Pane& Pane::align_xyz(std::string group) {
 
 Pane& Pane::parallel_xy_labels(bool enable) noexcept {
   parallel_xy_labels_ = enable;
+  return *this;
+}
+
+Pane& Pane::visible(bool enable) noexcept {
+  visible_ = enable;
+  return *this;
+}
+
+Pane& Pane::hide() noexcept {
+  visible_ = false;
+  return *this;
+}
+
+Pane& Pane::show() noexcept {
+  visible_ = true;
   return *this;
 }
 

@@ -368,7 +368,7 @@ bool prefer_index_plot(const DataFrame& frame) {
   return thread_prefers_labeled_axis(frame.cases()) || frame.nrows() > 24;
 }
 
-void add_heatmap(Pane& pane, const std::vector<std::vector<double>>& matrix, std::string label) {
+Trace& add_heatmap(Pane& pane, const std::vector<std::vector<double>>& matrix, std::string label) {
   const std::int64_t rows = static_cast<std::int64_t>(matrix.size());
   const std::int64_t cols = rows == 0 ? 0 : static_cast<std::int64_t>(matrix.front().size());
   std::vector<double> z_values(static_cast<std::size_t>(std::max<std::int64_t>(0, rows * cols)),
@@ -394,6 +394,12 @@ void add_heatmap(Pane& pane, const std::vector<std::vector<double>>& matrix, std
   auto& trace = pane.fieldmap(x, y, z);
   trace.label(std::move(label));
   trace.shade(pluss::pl::ShadeMode::Smooth);
+  return trace;
+}
+
+void configure_heatmap(Pane& pane, Trace& trace, bool annotate_levels, bool scale_guide) {
+  trace.annotate_levels(annotate_levels);
+  pane.scale_guide(scale_guide);
 }
 
 std::pair<std::vector<double>, std::vector<double>> make_step_xy(const std::vector<double>& x,
@@ -417,7 +423,10 @@ std::pair<std::vector<double>, std::vector<double>> make_step_xy(const std::vect
   return {std::move(sx), std::move(sy)};
 }
 
-Studio corr_heatmap_from_names(const DataFrame& frame, const std::vector<std::string>& names) {
+Studio corr_heatmap_from_names(const DataFrame& frame,
+                               const std::vector<std::string>& names,
+                               bool annotate_levels,
+                               bool scale_guide) {
   std::vector<std::vector<double>> columns;
   columns.reserve(names.size());
   for (const auto& name : names) {
@@ -436,7 +445,8 @@ Studio corr_heatmap_from_names(const DataFrame& frame, const std::vector<std::st
   auto fig = make_studio();
   auto& pane = fig.pane2();
   setup_pane(pane, false);
-  add_heatmap(pane, matrix, "corr");
+  auto& trace = add_heatmap(pane, matrix, "corr");
+  configure_heatmap(pane, trace, annotate_levels, scale_guide);
 
   const auto tick_pos = positional_plot_x(static_cast<std::int64_t>(names.size()));
   pane.x_ticks(tick_pos, names).y_ticks(tick_pos, names);
@@ -444,7 +454,11 @@ Studio corr_heatmap_from_names(const DataFrame& frame, const std::vector<std::st
   return fig;
 }
 
-Studio scatter_matrix_from_names(const DataFrame& frame, const std::vector<std::string>& names) {
+Studio scatter_matrix_from_names(const DataFrame& frame,
+                                 const std::vector<std::string>& names,
+                                 ScatterMatrixTriangle triangle,
+                                 bool monochrome,
+                                 std::optional<int> auto_tick_decimals) {
   PLUSS_CHECK(names.size() >= 2, "DataFrame::plot().scatter_matrix: need at least two numeric features");
 
   std::vector<std::vector<double>> columns;
@@ -455,6 +469,33 @@ Studio scatter_matrix_from_names(const DataFrame& frame, const std::vector<std::
     columns.push_back(std::move(values));
   }
 
+  auto axis_range = [](const std::vector<double>& values) -> pluss::pl::Range1d {
+    double lo = std::numeric_limits<double>::infinity();
+    double hi = -std::numeric_limits<double>::infinity();
+    for (const double value : values) {
+      if (!std::isfinite(value)) {
+        continue;
+      }
+      lo = std::min(lo, value);
+      hi = std::max(hi, value);
+    }
+    if (!std::isfinite(lo) || !std::isfinite(hi)) {
+      return {0.0, 1.0};
+    }
+    if (!(hi > lo)) {
+      const double pad = std::max(0.5, std::abs(lo) * 0.05);
+      return {lo - pad, hi + pad};
+    }
+    const double pad = (hi - lo) * 0.04;
+    return {lo - pad, hi + pad};
+  };
+
+  std::vector<pluss::pl::Range1d> feature_ranges;
+  feature_ranges.reserve(columns.size());
+  for (const auto& values : columns) {
+    feature_ranges.push_back(axis_range(values));
+  }
+
   const auto dims = static_cast<std::int64_t>(names.size());
   auto fig = make_studio();
   fig.mosaic(dims, dims, 12.0, 12.0);
@@ -462,17 +503,34 @@ Studio scatter_matrix_from_names(const DataFrame& frame, const std::vector<std::
     for (std::int64_t col = 0; col < dims; ++col) {
       auto& pane = fig.pane2();
       pane.place(row, col);
+      const bool keep_cell =
+          triangle == ScatterMatrixTriangle::Full ||
+          (triangle == ScatterMatrixTriangle::Lower && row >= col) ||
+          (triangle == ScatterMatrixTriangle::Upper && row <= col);
+      if (!keep_cell) {
+        pane.hide();
+        continue;
+      }
+
       setup_pane(pane, false);
+      if (auto_tick_decimals.has_value()) {
+        pane.x_auto_tick_decimals(*auto_tick_decimals);
+      }
+      pane.x_limits(feature_ranges[static_cast<std::size_t>(col)]);
       if (row == col) {
         auto& trace = flash::histplot(pane, columns[static_cast<std::size_t>(col)], 12);
         trace.label(names[static_cast<std::size_t>(col)]);
-        style_trace(trace, static_cast<std::size_t>(col), 0.9, 1.0);
+        style_trace(trace, monochrome ? 0U : static_cast<std::size_t>(col), 0.9, 1.0);
       } else {
+        if (auto_tick_decimals.has_value()) {
+          pane.y_auto_tick_decimals(*auto_tick_decimals);
+        }
+        pane.y_limits(feature_ranges[static_cast<std::size_t>(row)]);
         auto& trace = flash::scatterplot(pane,
                                          columns[static_cast<std::size_t>(col)],
                                          columns[static_cast<std::size_t>(row)]);
         trace.label(names[static_cast<std::size_t>(row)] + " vs " + names[static_cast<std::size_t>(col)]);
-        style_trace(trace, static_cast<std::size_t>(row + col), 0.92, 1.2);
+        style_trace(trace, monochrome ? 0U : static_cast<std::size_t>(row + col), 0.92, 1.2);
       }
       pane.x_label(row + 1 == dims ? names[static_cast<std::size_t>(col)] : "");
       pane.y_label(col == 0 ? names[static_cast<std::size_t>(row)] : "");
@@ -1131,7 +1189,8 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::initializer_list<std:
   apply_figure_options(fig);
   auto& pane = fig.pane2();
   setup_pane(pane, false);
-  add_heatmap(pane, values, "value");
+  auto& trace = add_heatmap(pane, values, "value");
+  configure_heatmap(pane, trace, options_.heatmap_annotate_levels, options_.heatmap_scale_guide);
   pane.x_ticks(positional_plot_x(frame_.nrows()), labels_for_cases(frame_, "DataFrame::plot().heatmap"));
   pane.y_ticks(positional_plot_x(static_cast<std::int64_t>(y_labels.size())), y_labels);
   pane.x_label("case").y_label("feature");
@@ -1171,7 +1230,8 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::string_view case_feat
   apply_figure_options(fig);
   auto& pane = fig.pane2();
   setup_pane(pane, false);
-  add_heatmap(pane, values, std::string(value_feature));
+  auto& trace = add_heatmap(pane, values, std::string(value_feature));
+  configure_heatmap(pane, trace, options_.heatmap_annotate_levels, options_.heatmap_scale_guide);
   pane.x_ticks(positional_plot_x(static_cast<std::int64_t>(pivot_features.size())),
                std::vector<std::string>(pivot_features.begin(), pivot_features.end()));
   pane.y_ticks(positional_plot_x(pivoted.nrows()),
@@ -1186,7 +1246,8 @@ pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(std::initializer_list<std:
 
 pluss::pl::Studio DataFramePlotAccessor::impl_corr_heatmap(std::initializer_list<std::string_view> features) const {
   const auto names = correlation_feature_names(frame_, features);
-  auto fig = corr_heatmap_from_names(frame_, names);
+  auto fig =
+      corr_heatmap_from_names(frame_, names, options_.corr_heatmap_annotate_levels, options_.heatmap_scale_guide);
   apply_figure_options(fig);
   return fig;
 }
@@ -1197,7 +1258,11 @@ pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(std::initializer_list<st
 
 pluss::pl::Studio DataFramePlotAccessor::impl_scatter_matrix(std::initializer_list<std::string_view> features) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().scatter_matrix");
-  auto fig = scatter_matrix_from_names(frame_, names);
+  auto fig = scatter_matrix_from_names(frame_,
+                                       names,
+                                       options_.scatter_matrix_triangle,
+                                       options_.scatter_matrix_monochrome,
+                                       options_.scatter_matrix_auto_tick_decimals);
   apply_figure_options(fig);
   return fig;
 }
@@ -1246,9 +1311,16 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(std::initializer_list<st
     }
   }
   if (names.size() <= 5 && frame_.nrows() <= 256) {
-    return scatter_matrix_from_names(frame_, names);
+    return scatter_matrix_from_names(frame_,
+                                     names,
+                                     options_.scatter_matrix_triangle,
+                                     options_.scatter_matrix_monochrome,
+                                     options_.scatter_matrix_auto_tick_decimals);
   }
-  return corr_heatmap_from_names(frame_, names);
+  return corr_heatmap_from_names(frame_,
+                                 names,
+                                 options_.corr_heatmap_annotate_levels,
+                                 options_.heatmap_scale_guide);
 }
 
 DataFramePlotAccessor DataFrame::plot() const {
