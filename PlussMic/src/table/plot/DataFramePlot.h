@@ -20,6 +20,8 @@ struct DataFramePlotOptions {
   std::optional<std::string> default_x_feature{std::nullopt};
   std::optional<std::string> default_hue_feature{std::nullopt};
   std::int64_t default_bins{20};
+  bool bar_ci_enabled{false};
+  double bar_ci_level{0.95};
   std::optional<double> width{std::nullopt};
   std::optional<double> height{std::nullopt};
   bool use_tight_layout{false};
@@ -54,6 +56,8 @@ public:
   pluss::pl::Studio bar_stacked(std::initializer_list<std::string_view> y_features,
                                 std::optional<std::string_view> x_feature = std::nullopt) const;
   pluss::pl::Studio box(std::initializer_list<std::string_view> features = {}) const;
+  pluss::pl::Studio violin(std::initializer_list<std::string_view> features = {}) const;
+  pluss::pl::Studio violin(std::string_view value_feature, std::string_view group_feature) const;
   pluss::pl::Studio hist(std::string_view feature, std::int64_t bins = 20) const;
   pluss::pl::Studio heatmap(std::initializer_list<std::string_view> features) const;
   pluss::pl::Studio heatmap(std::string_view case_feature,
@@ -85,6 +89,8 @@ private:
   pluss::pl::Studio impl_bar_stacked(std::initializer_list<std::string_view> y_features,
                                      std::optional<std::string_view> x_feature) const;
   pluss::pl::Studio impl_box(std::initializer_list<std::string_view> features) const;
+  pluss::pl::Studio impl_violin(std::initializer_list<std::string_view> features) const;
+  pluss::pl::Studio impl_violin(std::string_view value_feature, std::string_view group_feature) const;
   pluss::pl::Studio impl_hist(std::string_view feature, std::int64_t bins) const;
   pluss::pl::Studio impl_heatmap(std::initializer_list<std::string_view> features) const;
   pluss::pl::Studio impl_heatmap(std::string_view case_feature,

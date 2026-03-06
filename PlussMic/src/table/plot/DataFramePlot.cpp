@@ -10,6 +10,7 @@
 #include <span>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 #include "CodeM/core/Errors.h"
@@ -515,6 +516,39 @@ Studio box_from_names(const DataFrame& frame, const std::vector<std::string>& na
   return fig;
 }
 
+Studio violin_from_names(const DataFrame& frame, const std::vector<std::string>& names) {
+  PLUSS_CHECK(!names.empty(), "DataFrame::plot().violin: at least one numeric feature is required");
+
+  std::vector<double> group_id;
+  std::vector<double> merged_values;
+  group_id.reserve(static_cast<std::size_t>(frame.nrows()) * names.size());
+  merged_values.reserve(static_cast<std::size_t>(frame.nrows()) * names.size());
+
+  for (std::size_t i = 0; i < names.size(); ++i) {
+    auto values = thread_to_plot_numeric_values(frame.features(names[i]));
+    require_plot_size(values, frame.nrows(), names[i]);
+    for (const double value : values) {
+      if (!std::isfinite(value)) {
+        continue;
+      }
+      group_id.push_back(static_cast<double>(i));
+      merged_values.push_back(value);
+    }
+  }
+
+  auto fig = make_studio();
+  auto& pane = fig.pane2();
+  setup_pane(pane, false);
+  auto& trace = flash::violinplot(pane, group_id, merged_values);
+  trace.label("distribution");
+  style_trace(trace, 0, 0.92, 1.1);
+
+  const auto centers = positional_plot_x(static_cast<std::int64_t>(names.size()));
+  pane.x_ticks(centers, names);
+  pane.x_label("feature").y_label("value");
+  return fig;
+}
+
 template <typename AddTraceFn>
 Studio make_xy_figure(const DataFrame& frame,
                       std::initializer_list<std::string_view> y_features,
@@ -561,6 +595,121 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<std::string>> g
     widths[i] = bar_width * 0.92;
   }
   return {std::move(centers), std::move(widths), axis.labels};
+}
+
+double z_score_for_confidence(double confidence_level) {
+  const double clamped = std::clamp(confidence_level, 0.5, 0.999);
+  if (clamped >= 0.99) {
+    return 2.575829;
+  }
+  if (clamped >= 0.98) {
+    return 2.326348;
+  }
+  if (clamped >= 0.95) {
+    return 1.959964;
+  }
+  if (clamped >= 0.9) {
+    return 1.644854;
+  }
+  return 1.281552;
+}
+
+std::string compact_number_label(double value) {
+  const double rounded = std::round(value);
+  if (std::abs(value - rounded) < 1e-9) {
+    return std::to_string(static_cast<std::int64_t>(rounded));
+  }
+  std::string text = std::to_string(value);
+  while (!text.empty() && text.back() == '0') {
+    text.pop_back();
+  }
+  if (!text.empty() && text.back() == '.') {
+    text.pop_back();
+  }
+  return text;
+}
+
+struct AggregatedBarSeries {
+  ResolvedPlotAxis axis{};
+  std::vector<double> mean{};
+  std::vector<double> ci_half_width{};
+};
+
+AggregatedBarSeries aggregate_for_bar_ci(const ResolvedPlotAxis& axis,
+                                         const std::vector<double>& y_values,
+                                         double confidence_level) {
+  PLUSS_CHECK(axis.values.size() == y_values.size(),
+              "DataFrame::plot().bar(ci): x/y length mismatch");
+
+  const bool has_axis_labels = !axis.labels.empty();
+  const auto z = z_score_for_confidence(confidence_level);
+
+  std::unordered_map<std::string, std::size_t> group_index;
+  group_index.reserve(axis.values.size());
+
+  std::vector<std::vector<double>> grouped_samples;
+  std::vector<double> grouped_x;
+  std::vector<std::string> grouped_labels;
+
+  for (std::size_t i = 0; i < axis.values.size(); ++i) {
+    const auto& y = y_values[i];
+    if (!std::isfinite(y)) {
+      continue;
+    }
+
+    const std::string label = has_axis_labels ? axis.labels[i] : compact_number_label(axis.values[i]);
+    const std::string key = has_axis_labels ? label : std::to_string(axis.values[i]);
+    const auto [it, inserted] = group_index.emplace(key, grouped_samples.size());
+    if (inserted) {
+      grouped_samples.emplace_back();
+      grouped_x.push_back(axis.values[i]);
+      if (has_axis_labels) {
+        grouped_labels.push_back(label);
+      }
+    }
+    grouped_samples[it->second].push_back(y);
+  }
+
+  AggregatedBarSeries out;
+  out.axis.label = axis.label;
+  if (has_axis_labels) {
+    out.axis.values = positional_plot_x(static_cast<std::int64_t>(grouped_labels.size()));
+    out.axis.labels = grouped_labels;
+  } else {
+    out.axis.values = grouped_x;
+  }
+
+  out.mean.reserve(grouped_samples.size());
+  out.ci_half_width.reserve(grouped_samples.size());
+
+  for (const auto& samples : grouped_samples) {
+    if (samples.empty()) {
+      out.mean.push_back(std::numeric_limits<double>::quiet_NaN());
+      out.ci_half_width.push_back(0.0);
+      continue;
+    }
+
+    const double n = static_cast<double>(samples.size());
+    const double sum = std::accumulate(samples.begin(), samples.end(), 0.0);
+    const double mean = sum / n;
+    out.mean.push_back(mean);
+
+    if (samples.size() < 2) {
+      out.ci_half_width.push_back(0.0);
+      continue;
+    }
+
+    const double sq_sum = std::accumulate(samples.begin(), samples.end(), 0.0,
+                                          [mean](double acc, double value) {
+                                            const double d = value - mean;
+                                            return acc + d * d;
+                                          });
+    const double var = sq_sum / (n - 1.0);
+    const double sem = std::sqrt(var / n);
+    out.ci_half_width.push_back(z * sem);
+  }
+
+  return out;
 }
 
 } // namespace
@@ -826,12 +975,27 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
   for (const auto y_name : y_features) {
     auto y_values = thread_to_plot_numeric_values(frame_.features(y_name));
     require_plot_size(y_values, frame_.nrows(), y_name);
-    auto [centers, widths, labels] = grouped_bar_layout(axis, group_index, group_count);
+
+    AggregatedBarSeries ci_ready{};
+    ci_ready.axis = axis;
+    ci_ready.mean = y_values;
+    ci_ready.ci_half_width.assign(y_values.size(), 0.0);
+    if (options_.bar_ci_enabled) {
+      ci_ready = aggregate_for_bar_ci(axis, y_values, options_.bar_ci_level);
+    }
+
+    auto [centers, widths, labels] = grouped_bar_layout(ci_ready.axis, group_index, group_count);
     (void)widths;
     (void)labels;
-    auto& trace = flash::barplot(pane, centers, y_values);
+    auto& trace = flash::barplot(pane, centers, ci_ready.mean);
     trace.label(std::string(y_name));
     style_trace(trace, group_index, 0.88, 1.0);
+
+    if (options_.bar_ci_enabled) {
+      auto& ci = pane.whisk(centers, ci_ready.mean, ci_ready.ci_half_width);
+      ci.label(std::string(y_name) + " CI");
+      style_trace(ci, group_index, 0.7, 0.95);
+    }
     ++group_index;
   }
   return fig;
@@ -881,6 +1045,50 @@ pluss::pl::Studio DataFramePlotAccessor::box(std::initializer_list<std::string_v
 pluss::pl::Studio DataFramePlotAccessor::impl_box(std::initializer_list<std::string_view> features) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().box");
   return box_from_names(frame_, names);
+}
+
+pluss::pl::Studio DataFramePlotAccessor::violin(std::initializer_list<std::string_view> features) const {
+  return _ops::call(*this, _ops::PlotDispatch::Violin, _ops::PlotCall{features});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::violin(std::string_view value_feature,
+                                                std::string_view group_feature) const {
+  return _ops::call(*this, _ops::PlotDispatch::ViolinGrouped, _ops::PlotCall{{group_feature, value_feature}});
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_violin(std::initializer_list<std::string_view> features) const {
+  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().violin");
+  return violin_from_names(frame_, names);
+}
+
+pluss::pl::Studio DataFramePlotAccessor::impl_violin(std::string_view value_feature,
+                                                     std::string_view group_feature) const {
+  const auto y_values = thread_to_plot_numeric_values(frame_.features(value_feature));
+  require_plot_size(y_values, frame_.nrows(), value_feature);
+  const auto y_series = pluss::make_series(y_values, {static_cast<std::int64_t>(y_values.size())});
+
+  auto fig = make_studio();
+  apply_figure_options(fig);
+  auto& pane = fig.pane2();
+  setup_pane(pane, false);
+
+  const auto group_thread = frame_.features(group_feature);
+  if (thread_supports_hue(group_thread)) {
+    auto& trace = flash::violinplot(pane, pluss::make_note(thread_to_plot_labels(group_thread)), y_series);
+    trace.label(std::string(value_feature));
+    style_trace(trace, 0, 0.92, 1.1);
+  } else {
+    auto group_values = thread_to_plot_numeric_values(group_thread);
+    require_plot_size(group_values, frame_.nrows(), group_feature);
+    auto& trace = flash::violinplot(pane,
+                                    pluss::make_series(group_values, {static_cast<std::int64_t>(group_values.size())}),
+                                    y_series);
+    trace.label(std::string(value_feature));
+    style_trace(trace, 0, 0.92, 1.1);
+  }
+
+  pane.x_label(std::string(group_feature)).y_label(std::string(value_feature));
+  return fig;
 }
 
 pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, std::int64_t bins) const {

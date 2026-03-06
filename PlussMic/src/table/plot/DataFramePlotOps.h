@@ -23,6 +23,8 @@ enum class PlotDispatch : std::uint8_t {
   Bar,
   BarStacked,
   Box,
+  Violin,
+  ViolinGrouped,
   Hist,
   Heatmap,
   HeatmapPivot,

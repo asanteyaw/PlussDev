@@ -144,6 +144,152 @@ void apply_core_tex_symbol_replacements(std::string& text) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
+[[nodiscard]] bool is_ascii_space(char c) noexcept {
+  return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
+
+[[nodiscard]] std::string_view unicode_script_char(char marker, char ascii) noexcept {
+  struct ScriptPair {
+    char ascii;
+    std::string_view utf8;
+  };
+  constexpr auto kSubscript = std::to_array<ScriptPair>({
+      {'0', "\xE2\x82\x80"}, {'1', "\xE2\x82\x81"}, {'2', "\xE2\x82\x82"},
+      {'3', "\xE2\x82\x83"}, {'4', "\xE2\x82\x84"}, {'5', "\xE2\x82\x85"},
+      {'6', "\xE2\x82\x86"}, {'7', "\xE2\x82\x87"}, {'8', "\xE2\x82\x88"},
+      {'9', "\xE2\x82\x89"}, {'+', "\xE2\x82\x8A"}, {'-', "\xE2\x82\x8B"},
+      {'=', "\xE2\x82\x8C"}, {'(', "\xE2\x82\x8D"}, {')', "\xE2\x82\x8E"},
+      {'a', "\xE2\x82\x90"}, {'e', "\xE2\x82\x91"}, {'h', "\xE2\x82\x95"},
+      {'i', "\xE1\xB5\xA2"}, {'j', "\xE2\xB1\xBC"}, {'k', "\xE2\x82\x96"},
+      {'l', "\xE2\x82\x97"}, {'m', "\xE2\x82\x98"}, {'n', "\xE2\x82\x99"},
+      {'o', "\xE2\x82\x92"}, {'p', "\xE2\x82\x9A"}, {'r', "\xE1\xB5\xA3"},
+      {'s', "\xE2\x82\x9B"}, {'t', "\xE2\x82\x9C"}, {'u', "\xE1\xB5\xA4"},
+      {'v', "\xE1\xB5\xA5"}, {'x', "\xE2\x82\x93"},
+  });
+  constexpr auto kSuperscript = std::to_array<ScriptPair>({
+      {'0', "\xE2\x81\xB0"}, {'1', "\xC2\xB9"}, {'2', "\xC2\xB2"},
+      {'3', "\xC2\xB3"}, {'4', "\xE2\x81\xB4"}, {'5', "\xE2\x81\xB5"},
+      {'6', "\xE2\x81\xB6"}, {'7', "\xE2\x81\xB7"}, {'8', "\xE2\x81\xB8"},
+      {'9', "\xE2\x81\xB9"}, {'+', "\xE2\x81\xBA"}, {'-', "\xE2\x81\xBB"},
+      {'=', "\xE2\x81\xBC"}, {'(', "\xE2\x81\xBD"}, {')', "\xE2\x81\xBE"},
+      {'i', "\xE2\x81\xB1"}, {'n', "\xE2\x81\xBF"},
+  });
+  if (marker == '_') {
+    const auto found = std::ranges::find_if(kSubscript, [ascii](const ScriptPair& pair) { return pair.ascii == ascii; });
+    return found == kSubscript.end() ? std::string_view{} : found->utf8;
+  }
+  const auto found = std::ranges::find_if(kSuperscript, [ascii](const ScriptPair& pair) { return pair.ascii == ascii; });
+  return found == kSuperscript.end() ? std::string_view{} : found->utf8;
+}
+
+[[nodiscard]] std::string collapse_inline_nested_scripts(std::string_view token) {
+  std::string out;
+  out.reserve(token.size() + 8);
+  for (std::size_t i = 0; i < token.size();) {
+    const char marker = token[i];
+    if ((marker == '_' || marker == '^') && i + 1 < token.size()) {
+      std::size_t j = i + 1;
+      if (token[j] == '{') {
+        std::size_t depth = 1;
+        ++j;
+        std::size_t start = j;
+        while (j < token.size() && depth > 0) {
+          if (token[j] == '{') {
+            ++depth;
+          } else if (token[j] == '}') {
+            --depth;
+          }
+          ++j;
+        }
+        if (depth == 0) {
+          const std::string inner = collapse_inline_nested_scripts(token.substr(start, (j - 1) - start));
+          if (inner.size() == 1U) {
+            if (const auto mapped = unicode_script_char(marker, inner.front()); !mapped.empty()) {
+              out += mapped;
+              i = j;
+              continue;
+            }
+          }
+          out.push_back(marker);
+          out.push_back('{');
+          out += inner;
+          out.push_back('}');
+          i = j;
+          continue;
+        }
+      } else if (token[j] < 0x80U) {
+        if (const auto mapped = unicode_script_char(marker, token[j]); !mapped.empty()) {
+          out += mapped;
+          i = j + 1;
+          continue;
+        }
+      }
+    }
+
+    const auto len = std::min<std::size_t>(utf8_char_length_local(static_cast<unsigned char>(token[i])), token.size() - i);
+    out.append(token.substr(i, len));
+    i += len;
+  }
+  return out;
+}
+
+[[nodiscard]] bool should_accent_codepoint(std::string_view cp) noexcept {
+  if (cp.empty()) {
+    return false;
+  }
+  if (cp.size() == 1) {
+    const char c = cp.front();
+    if (is_ascii_space(c)) {
+      return false;
+    }
+    constexpr std::string_view kPunct = ",.;:!?()[]{}<>|/\\+-*=^_";
+    return kPunct.find(c) == std::string_view::npos;
+  }
+  return true;
+}
+
+[[nodiscard]] std::string apply_combining_accent(std::string_view text, std::string_view combining_mark) {
+  if (combining_mark.empty()) {
+    return std::string(text);
+  }
+  std::string out;
+  out.reserve(text.size() + 8);
+  for (std::size_t i = 0; i < text.size();) {
+    const auto len = std::min<std::size_t>(
+        utf8_char_length_local(static_cast<unsigned char>(text[i])),
+        text.size() - i);
+    const std::string_view cp = text.substr(i, len);
+    out.append(cp);
+    if (should_accent_codepoint(cp)) {
+      out.append(combining_mark);
+    }
+    i += len;
+  }
+  return out;
+}
+
+[[nodiscard]] std::string_view accent_mark_for_command(std::string_view cmd) noexcept {
+  if (cmd == "bar" || cmd == "overline") {
+    return "\xCC\x84"; // COMBINING MACRON
+  }
+  if (cmd == "hat" || cmd == "widehat") {
+    return "\xCC\x82"; // COMBINING CIRCUMFLEX ACCENT
+  }
+  if (cmd == "tilde" || cmd == "widetilde") {
+    return "\xCC\x83"; // COMBINING TILDE
+  }
+  if (cmd == "dot") {
+    return "\xCC\x87"; // COMBINING DOT ABOVE
+  }
+  if (cmd == "ddot") {
+    return "\xCC\x88"; // COMBINING DIAERESIS
+  }
+  if (cmd == "vec") {
+    return "\xE2\x83\x97"; // COMBINING RIGHT ARROW ABOVE
+  }
+  return {};
+}
+
 [[nodiscard]] std::string_view lookup_tex_command(std::string_view cmd) noexcept {
   constexpr auto kTexCommandMap = std::to_array<std::pair<std::string_view, std::string_view>>({
       {"alpha", "\xCE\xB1"},   {"beta", "\xCE\xB2"},    {"gamma", "\xCE\xB3"},   {"delta", "\xCE\xB4"},
@@ -188,6 +334,71 @@ void skip_tex_spaces(std::string_view input, std::size_t& pos) {
   }
 }
 
+constexpr char kStretchLeftMarker = '\x1D';
+constexpr char kStretchRightMarker = '\x1E';
+
+[[nodiscard]] std::string parse_left_right_delimiter(std::string_view input, std::size_t& pos) {
+  skip_tex_spaces(input, pos);
+  if (pos >= input.size()) {
+    return {};
+  }
+
+  if (input[pos] == '.') {
+    ++pos;
+    return {};
+  }
+
+  if (input[pos] == '\\') {
+    ++pos;
+    std::size_t start = pos;
+    while (pos < input.size() && is_ascii_alpha(input[pos])) {
+      ++pos;
+    }
+    const std::string_view cmd = (start < pos) ? input.substr(start, pos - start) : std::string_view{};
+    if (cmd.empty()) {
+      if (pos < input.size()) {
+        return std::string(1, input[pos++]);
+      }
+      return {};
+    }
+
+    if (cmd == "lbrace" || cmd == "rbrace") return "{}";
+    if (cmd == "lbrack" || cmd == "rbrack") return "[]";
+    if (cmd == "langle" || cmd == "rangle") return "<>";
+    if (cmd == "lvert" || cmd == "rvert" || cmd == "vert" || cmd == "mid") return "|";
+    if (cmd == "lVert" || cmd == "rVert" || cmd == "Vert" || cmd == "parallel") return "||";
+    if (const auto mapped = lookup_tex_command(cmd); !mapped.empty()) {
+      return std::string(mapped);
+    }
+    return std::string(cmd);
+  }
+
+  const auto len = std::min<std::size_t>(
+      utf8_char_length_local(static_cast<unsigned char>(input[pos])),
+      input.size() - pos);
+  std::string token(input.substr(pos, len));
+  pos += len;
+  return token;
+}
+
+[[nodiscard]] std::string encode_stretch_delimiter(bool left, std::string token) {
+  if (token.empty()) {
+    return {};
+  }
+  if (token == "{}") {
+    token = left ? "{" : "}";
+  } else if (token == "[]") {
+    token = left ? "[" : "]";
+  } else if (token == "<>") {
+    token = left ? "<" : ">";
+  }
+  std::string out;
+  out.reserve(token.size() + 1);
+  out.push_back(left ? kStretchLeftMarker : kStretchRightMarker);
+  out += token;
+  return out;
+}
+
 [[nodiscard]] std::string parse_tex_subset_expr(std::string_view input, std::size_t& pos, bool stop_on_brace);
 
 [[nodiscard]] std::string parse_tex_subset_group(std::string_view input, std::size_t& pos) {
@@ -214,8 +425,11 @@ void skip_tex_spaces(std::string_view input, std::size_t& pos) {
       if (const auto mapped = lookup_tex_command(cmd); !mapped.empty()) {
         return std::string(mapped);
       }
-      if (cmd == "left" || cmd == "right") {
-        return {};
+      if (cmd == "left") {
+        return encode_stretch_delimiter(true, parse_left_right_delimiter(input, pos));
+      }
+      if (cmd == "right") {
+        return encode_stretch_delimiter(false, parse_left_right_delimiter(input, pos));
       }
       return std::string(cmd);
     }
@@ -273,7 +487,10 @@ void skip_tex_spaces(std::string_view input, std::size_t& pos) {
   if (cmd == "text") {
     return parse_tex_subset_group(input, pos);
   }
-  if (cmd == "overline" || cmd == "underline" || cmd == "hat" || cmd == "bar" || cmd == "tilde") {
+  if (const auto mark = accent_mark_for_command(cmd); !mark.empty()) {
+    return apply_combining_accent(parse_tex_subset_group(input, pos), mark);
+  }
+  if (cmd == "underline") {
     return parse_tex_subset_group(input, pos);
   }
   if (cmd == "textbf" || cmd == "textit" || cmd == "texttt" || cmd == "mathsf" || cmd == "mathtt") {
@@ -285,8 +502,11 @@ void skip_tex_spaces(std::string_view input, std::size_t& pos) {
   if (cmd == "quad" || cmd == "qquad") {
     return " ";
   }
-  if (cmd == "left" || cmd == "right") {
-    return {};
+  if (cmd == "left") {
+    return encode_stretch_delimiter(true, parse_left_right_delimiter(input, pos));
+  }
+  if (cmd == "right") {
+    return encode_stretch_delimiter(false, parse_left_right_delimiter(input, pos));
   }
   if (const auto mapped = lookup_tex_command(cmd); !mapped.empty()) {
     return std::string(mapped);
@@ -325,6 +545,7 @@ void skip_tex_spaces(std::string_view input, std::size_t& pos) {
       if (token.empty()) {
         continue;
       }
+      token = collapse_inline_nested_scripts(token);
       out.push_back(marker);
       if (token.size() == 1) {
         out += token;

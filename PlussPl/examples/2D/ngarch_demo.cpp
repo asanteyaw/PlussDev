@@ -166,7 +166,7 @@ int main() {
   const auto kde_counts = kde_density * (static_cast<double>(ng_asset1.numel()) * bin_width);
   flash::kdeplot(ng_dist, kde_x, kde_counts).label("kde");
 
-  auto& g_ret = studio.pane2("GARCH Returns ($\\gamma = 0$ )");
+  auto& g_ret = studio.pane2(R"(GARCH Returns ($\gamma = 0$))");
   g_ret.place(1, 0)
       .grid(pl::GridStyle::Major)
       .legend(pl::KeyPlace::Auto)
@@ -180,13 +180,13 @@ int main() {
         .width(1.35F);
   }
 
-  auto& g_vol = studio.pane2("GARCH Volatility $\\gamma = 0$");
+  auto& g_vol = studio.pane2(R"(GARCH Volatility ($\gamma = 0$))");
   g_vol.place(1, 1)
       .grid(pl::GridStyle::Major)
       .legend(pl::KeyPlace::Auto)
       .legend_frame(pl::KeyFrame::None)
       .x_label("observation")
-      .y_label("$\\sigma_t$")
+      .y_label(R"($\sigma_t$)")
       .caption("no leverage channel");
   for (std::int64_t i = 0; i < assets_count; ++i) {
     flash::lineplot(g_vol, t, asset_column(garch.sigma, i))
@@ -200,7 +200,7 @@ int main() {
       .legend(pl::KeyPlace::Auto)
       .legend_frame(pl::KeyFrame::Soft)
       .x_label("observation")
-      .y_label("$\\mathrm{RMS}\\,\\Delta\\sigma_t$")
+      .y_label(R"($\mathrm{RMS}\,\Delta\sigma_t$)")
       .caption("cross-asset volatility divergence");
   flash::lineplot(compare, t, spread_rms).label("NGARCH - GARCH RMS").width(1.9F);
 
@@ -211,5 +211,6 @@ int main() {
   } catch (const std::exception&) {
     // PNG export depends on an external rasterizer (rsvg-convert/inkscape/magick).
   }
+  studio.show();
   return 0;
 }

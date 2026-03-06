@@ -54,6 +54,12 @@ pluss::pl::Studio call(const DataFramePlotAccessor& accessor, PlotDispatch dispa
       return accessor.impl_bar_stacked(args.features, args.x_feature);
     case PlotDispatch::Box:
       return accessor.impl_box(args.features);
+    case PlotDispatch::Violin:
+      return accessor.impl_violin(args.features);
+    case PlotDispatch::ViolinGrouped: {
+      const auto [group_feature, value_feature] = first_two_features(args.features, "DataFrame::plot().violin");
+      return accessor.impl_violin(value_feature, group_feature);
+    }
     case PlotDispatch::Hist:
       return accessor.impl_hist(first_feature(args.features, "DataFrame::plot().hist"), args.bins);
     case PlotDispatch::Heatmap:

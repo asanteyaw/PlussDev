@@ -5243,6 +5243,7 @@ enum class MathRunKind {
   Normal,
   Subscript,
   Superscript,
+  StretchDelimiter,
 };
 
 struct MathRun {
@@ -5270,11 +5271,21 @@ void append_math_run(std::vector<MathRun>& runs, MathRunKind kind, std::string c
 }
 
 [[nodiscard]] std::vector<MathRun> split_math_runs(std::string_view text) {
+  constexpr char kStretchLeftMarker = '\x1D';
+  constexpr char kStretchRightMarker = '\x1E';
+
   std::vector<MathRun> runs;
   runs.reserve(8);
   std::size_t i = 0;
   while (i < text.size()) {
     const char marker = text[i];
+    if ((marker == kStretchLeftMarker || marker == kStretchRightMarker) && (i + 1) < text.size()) {
+      const std::size_t j = i + 1;
+      const auto len = std::min<std::size_t>(utf8_char_length(static_cast<unsigned char>(text[j])), text.size() - j);
+      append_math_run(runs, MathRunKind::StretchDelimiter, std::string(text.substr(j, len)));
+      i = j + len;
+      continue;
+    }
     if ((marker == '_' || marker == '^') && (i + 1) < text.size()) {
       const auto kind = (marker == '_') ? MathRunKind::Subscript : MathRunKind::Superscript;
       std::size_t j = i + 1;
@@ -5301,6 +5312,49 @@ void append_math_run(std::vector<MathRun>& runs, MathRunKind kind, std::string c
     i += len;
   }
   return runs;
+}
+
+[[nodiscard]] bool is_script_run(MathRunKind kind) noexcept {
+  return kind == MathRunKind::Subscript || kind == MathRunKind::Superscript;
+}
+
+[[nodiscard]] bool is_stretch_delimiter_run(MathRunKind kind) noexcept {
+  return kind == MathRunKind::StretchDelimiter;
+}
+
+[[nodiscard]] double stretch_delimiter_scale_for_context(std::span<const MathRun> runs, std::size_t idx) {
+  if (idx >= runs.size()) {
+    return 1.24;
+  }
+  const std::size_t start = idx > 4 ? idx - 4 : 0;
+  const std::size_t end = std::min(runs.size(), idx + 5);
+  bool has_script = false;
+  bool has_fraction_hint = false;
+  for (std::size_t i = start; i < end; ++i) {
+    if (i == idx) {
+      continue;
+    }
+    if (is_script_run(runs[i].kind)) {
+      has_script = true;
+    }
+    if (runs[i].kind == MathRunKind::Normal) {
+      const std::string_view txt = runs[i].text;
+      const auto first = txt.find_first_not_of(" \t\r\n");
+      if (first != std::string_view::npos) {
+        const auto last = txt.find_last_not_of(" \t\r\n");
+        if (first == last && txt[first] == '/') {
+          has_fraction_hint = true;
+        }
+      }
+    }
+  }
+  if (has_fraction_hint) {
+    return 1.56;
+  }
+  if (has_script) {
+    return 1.40;
+  }
+  return 1.24;
 }
 
 enum class PdfFontKind : std::uint8_t {
@@ -5347,6 +5401,14 @@ void append_pdf_encoded_text(std::vector<PdfTextChunk>& chunks,
                              std::string_view text,
                              double size,
                              double rise) {
+  constexpr auto kCombiningMarks = std::to_array<std::string_view>({
+      "\xCC\x84", // COMBINING MACRON
+      "\xCC\x82", // COMBINING CIRCUMFLEX ACCENT
+      "\xCC\x83", // COMBINING TILDE
+      "\xCC\x87", // COMBINING DOT ABOVE
+      "\xCC\x88", // COMBINING DIAERESIS
+      "\xE2\x83\x97", // COMBINING RIGHT ARROW ABOVE
+  });
   constexpr auto kGreekToSymbol = std::to_array<std::pair<std::string_view, char>>({
       {"\xCE\xB1", 'a'}, // α
       {"\xCE\xB2", 'b'}, // β
@@ -5415,6 +5477,16 @@ void append_pdf_encoded_text(std::vector<PdfTextChunk>& chunks,
 
   for (std::size_t i = 0; i < text.size();) {
     bool matched = false;
+    for (const auto& mark : kCombiningMarks) {
+      if (i + mark.size() <= text.size() && text.compare(i, mark.size(), mark) == 0) {
+        i += mark.size();
+        matched = true;
+        break;
+      }
+    }
+    if (matched) {
+      continue;
+    }
     for (const auto& [utf8, symbol] : kGreekToSymbol) {
       if (i + utf8.size() <= text.size() && text.compare(i, utf8.size(), utf8) == 0) {
         const std::string sym(1, symbol);
@@ -5453,14 +5525,19 @@ void append_pdf_encoded_text(std::vector<PdfTextChunk>& chunks,
 [[nodiscard]] std::vector<PdfTextChunk> build_pdf_text_chunks(std::string_view text, double base_size) {
   std::vector<PdfTextChunk> chunks;
   const auto runs = split_math_runs(text);
-  for (const auto& run : runs) {
-    const bool scripted = run.kind != MathRunKind::Normal;
-    const double run_size = scripted ? (base_size * 0.72) : base_size;
+  for (std::size_t idx = 0; idx < runs.size(); ++idx) {
+    const auto& run = runs[idx];
+    const bool scripted = is_script_run(run.kind);
+    const bool stretch_delim = is_stretch_delimiter_run(run.kind);
+    const double stretch_scale = stretch_delimiter_scale_for_context(runs, idx);
+    const double run_size = scripted ? (base_size * 0.72) : (stretch_delim ? (base_size * stretch_scale) : base_size);
     double rise = 0.0;
     if (run.kind == MathRunKind::Superscript) {
       rise = base_size * 0.33;
     } else if (run.kind == MathRunKind::Subscript) {
       rise = -base_size * 0.20;
+    } else if (stretch_delim) {
+      rise = -(run_size - base_size) * 0.36;
     }
     append_pdf_encoded_text(chunks, run.text, run_size, rise);
   }
@@ -5742,13 +5819,17 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
     }
 
     const auto& run = runs[i];
-    const bool scripted = run.kind != MathRunKind::Normal;
-    const double run_size = scripted ? (base_size * 0.72) : base_size;
+    const bool scripted = is_script_run(run.kind);
+    const bool stretch_delim = is_stretch_delimiter_run(run.kind);
+    const double stretch_scale = stretch_delimiter_scale_for_context(runs, i);
+    const double run_size = scripted ? (base_size * 0.72) : (stretch_delim ? (base_size * stretch_scale) : base_size);
     double rise = 0.0;
     if (run.kind == MathRunKind::Superscript) {
       rise = base_size * 0.33;
     } else if (run.kind == MathRunKind::Subscript) {
       rise = -base_size * 0.20;
+    } else if (stretch_delim) {
+      rise = -(run_size - base_size) * 0.36;
     }
     std::vector<PdfTextChunk> encoded;
     append_pdf_encoded_text(encoded, run.text, run_size, rise);
@@ -5838,11 +5919,17 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
               if (!rich) {
                 out << escape_xml(item.text);
               } else {
-                for (const auto& run : runs) {
+                for (std::size_t idx = 0; idx < runs.size(); ++idx) {
+                  const auto& run = runs[idx];
                   if (run.kind == MathRunKind::Normal) {
                     out << escape_xml(run.text);
                   } else if (run.kind == MathRunKind::Subscript) {
                     out << "<tspan baseline-shift=\"sub\" font-size=\"72%\">" << escape_xml(run.text) << "</tspan>";
+                  } else if (run.kind == MathRunKind::StretchDelimiter) {
+                    const double scale = stretch_delimiter_scale_for_context(runs, idx);
+                    const double dy_em = -(scale - 1.0) * 0.36;
+                    out << "<tspan font-size=\"" << format_number(scale * 100.0) << "%\" dy=\""
+                        << format_number(dy_em) << "em\">" << escape_xml(run.text) << "</tspan>";
                   } else {
                     out << "<tspan baseline-shift=\"super\" font-size=\"72%\">" << escape_xml(run.text) << "</tspan>";
                   }
@@ -5924,13 +6011,18 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
                 }
 
                 const auto& run = runs[i];
-                const bool scripted = run.kind != MathRunKind::Normal;
-                const double run_size = scripted ? (item.size * 0.72) : item.size;
+                const bool scripted = is_script_run(run.kind);
+                const bool stretch_delim = is_stretch_delimiter_run(run.kind);
+                const double stretch_scale = stretch_delimiter_scale_for_context(runs, i);
+                const double run_size =
+                    scripted ? (item.size * 0.72) : (stretch_delim ? (item.size * stretch_scale) : item.size);
                 double rise = 0.0;
                 if (run.kind == MathRunKind::Superscript) {
                   rise = item.size * 0.33;
                 } else if (run.kind == MathRunKind::Subscript) {
                   rise = -item.size * 0.20;
+                } else if (stretch_delim) {
+                  rise = -(run_size - item.size) * 0.36;
                 }
                 if (!run.text.empty()) {
                   placed.push_back(SvgPlacedText{std::string(run.text), run_size, rise, cursor});

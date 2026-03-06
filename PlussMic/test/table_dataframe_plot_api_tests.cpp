@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <stdexcept>
 #include <string_view>
 #include <vector>
@@ -55,6 +56,16 @@ void test_object_plot_apis() {
   expect(fig_line.panes().front().trace_count() == 2, "plot().line should emit one trace per y feature");
   expect(fig_line.panes().front().traces().front().kind() == TraceKind::Trend,
          "plot().line should emit trend traces");
+
+  const auto fig_violin = df.plot().violin({"y", "z"});
+  expect(fig_violin.panes().front().trace_count() == 1, "plot().violin(features) should emit one trace");
+  expect(fig_violin.panes().front().traces().front().kind() == TraceKind::Violin,
+         "plot().violin(features) should emit violin trace");
+
+  const auto fig_violin_grouped = df.plot().violin("y", "grp");
+  expect(fig_violin_grouped.panes().front().trace_count() == 1, "plot().violin(value, group) should emit one trace");
+  expect(fig_violin_grouped.panes().front().traces().front().kind() == TraceKind::Violin,
+         "plot().violin(value, group) should emit violin trace");
 }
 
 void test_scatter_heatmap_and_validation() {
@@ -96,6 +107,16 @@ void test_plot_options_defaults() {
   expect(fig_hist.panes().front().trace_count() == 1, "plot(options).hist should still emit one trace");
   expect(fig_hist.panes().front().traces().front().kind() == TraceKind::Bucket,
          "plot(options).hist should emit bucket trace");
+
+  options.bar_ci_enabled = true;
+  options.bar_ci_level = 0.95;
+  const auto fig_bar_ci = df.plot(options).bar("y", "grp");
+  expect(fig_bar_ci.panes().front().trace_count() == 2, "plot(options).bar with CI should emit bar + whisker");
+  const auto& traces = fig_bar_ci.panes().front().traces();
+  const bool has_whisk = std::any_of(traces.begin(), traces.end(), [](const auto& trace) {
+    return trace.kind() == TraceKind::Whisk;
+  });
+  expect(has_whisk, "plot(options).bar with CI should include whisk trace");
 }
 
 } // namespace
