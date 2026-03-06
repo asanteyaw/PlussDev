@@ -57,6 +57,25 @@ constexpr auto kUtf8AsciiMathFallbacks = std::to_array<Utf8AsciiReplacement>({
     {"\xCF\x87", "chi"},          // chi
     {"\xCF\x88", "psi"},          // psi
     {"\xCF\x89", "omega"},        // omega
+    {"\xE2\x86\x90", "<-"},       // ←
+    {"\xE2\x86\x92", "->"},       // →
+    {"\xE2\x86\x94", "<->"},      // ↔
+    {"\xE2\x88\x88", "in"},       // ∈
+    {"\xE2\x88\x89", "notin"},    // ∉
+    {"\xE2\x8A\x82", "subset"},   // ⊂
+    {"\xE2\x8A\x86", "subseteq"}, // ⊆
+    {"\xE2\x8A\x83", "supset"},   // ⊃
+    {"\xE2\x8A\x87", "supseteq"}, // ⊇
+    {"\xE2\x88\xAA", "cup"},      // ∪
+    {"\xE2\x88\xA9", "cap"},      // ∩
+    {"\xE2\x88\x91", "sum"},      // ∑
+    {"\xE2\x88\x8F", "prod"},     // ∏
+    {"\xE2\x88\xAB", "int"},      // ∫
+    {"\xE2\x88\x87", "nabla"},    // ∇
+    {"\xE2\x88\x80", "forall"},   // ∀
+    {"\xE2\x88\x83", "exists"},   // ∃
+    {"\xE2\x88\x9D", "prop"},     // ∝
+    {"\xE2\x88\xBC", "~"},        // ∼
     {"\xE2\x82\x80", "_0"},       // _0
     {"\xE2\x82\x81", "_1"},       // _1
     {"\xE2\x82\x82", "_2"},       // _2
@@ -129,14 +148,32 @@ void apply_core_tex_symbol_replacements(std::string& text) {
   constexpr auto kTexCommandMap = std::to_array<std::pair<std::string_view, std::string_view>>({
       {"alpha", "\xCE\xB1"},   {"beta", "\xCE\xB2"},    {"gamma", "\xCE\xB3"},   {"delta", "\xCE\xB4"},
       {"epsilon", "\xCE\xB5"}, {"zeta", "\xCE\xB6"},    {"eta", "\xCE\xB7"},     {"theta", "\xCE\xB8"},
+      {"varepsilon", "\xCE\xB5"}, {"vartheta", "\xCE\xB8"},
       {"kappa", "\xCE\xBA"},   {"lambda", "\xCE\xBB"},  {"mu", "\xCE\xBC"},      {"nu", "\xCE\xBD"},
       {"xi", "\xCE\xBE"},      {"pi", "\xCF\x80"},      {"rho", "\xCF\x81"},     {"sigma", "\xCF\x83"},
+      {"varpi", "\xCF\x80"},   {"varrho", "\xCF\x81"},  {"varsigma", "\xCF\x82"},
       {"tau", "\xCF\x84"},     {"phi", "\xCF\x86"},     {"chi", "\xCF\x87"},     {"psi", "\xCF\x88"},
+      {"varphi", "\xCF\x86"},
       {"omega", "\xCF\x89"},   {"Gamma", "\xCE\x93"},   {"Delta", "\xCE\x94"},   {"Lambda", "\xCE\x9B"},
-      {"Sigma", "\xCE\xA3"},   {"Phi", "\xCE\xA6"},     {"Psi", "\xCE\xA8"},     {"Omega", "\xCE\xA9"},
+      {"Sigma", "\xCE\xA3"},   {"Pi", "\xCE\xA0"},      {"Phi", "\xCE\xA6"},     {"Psi", "\xCE\xA8"},
+      {"Omega", "\xCE\xA9"},
       {"leq", "\xE2\x89\xA4"}, {"le", "\xE2\x89\xA4"},  {"geq", "\xE2\x89\xA5"}, {"ge", "\xE2\x89\xA5"},
       {"neq", "\xE2\x89\xA0"}, {"times", "\xC3\x97"},   {"cdot", "\xE2\x8B\x85"}, {"pm", "\xC2\xB1"},
       {"infty", "\xE2\x88\x9E"}, {"partial", "\xE2\x88\x82"},
+      {"leftarrow", "\xE2\x86\x90"}, {"to", "\xE2\x86\x92"}, {"rightarrow", "\xE2\x86\x92"},
+      {"leftrightarrow", "\xE2\x86\x94"},
+      {"in", "\xE2\x88\x88"}, {"notin", "\xE2\x88\x89"},
+      {"subset", "\xE2\x8A\x82"}, {"subseteq", "\xE2\x8A\x86"},
+      {"supset", "\xE2\x8A\x83"}, {"supseteq", "\xE2\x8A\x87"},
+      {"cup", "\xE2\x88\xAA"}, {"cap", "\xE2\x88\xA9"},
+      {"sum", "\xE2\x88\x91"}, {"prod", "\xE2\x88\x8F"}, {"int", "\xE2\x88\xAB"},
+      {"nabla", "\xE2\x88\x87"}, {"forall", "\xE2\x88\x80"}, {"exists", "\xE2\x88\x83"},
+      {"approx", "\xE2\x89\x88"}, {"sim", "\xE2\x88\xBC"}, {"propto", "\xE2\x88\x9D"},
+      {"ldots", "..."}, {"cdots", "\xE2\x8B\xAF"},
+      {"sin", "sin"}, {"cos", "cos"}, {"tan", "tan"},
+      {"sinh", "sinh"}, {"cosh", "cosh"}, {"tanh", "tanh"},
+      {"log", "log"}, {"ln", "ln"}, {"exp", "exp"},
+      {"min", "min"}, {"max", "max"}, {"argmin", "argmin"}, {"argmax", "argmax"},
   });
   const auto found = std::ranges::find_if(kTexCommandMap, [cmd](const auto& item) { return item.first == cmd; });
   if (found == kTexCommandMap.end()) {
@@ -234,6 +271,12 @@ void skip_tex_spaces(std::string_view input, std::size_t& pos) {
     return "\xE2\x88\x9A(" + radicand + ")";
   }
   if (cmd == "text") {
+    return parse_tex_subset_group(input, pos);
+  }
+  if (cmd == "overline" || cmd == "underline" || cmd == "hat" || cmd == "bar" || cmd == "tilde") {
+    return parse_tex_subset_group(input, pos);
+  }
+  if (cmd == "textbf" || cmd == "textit" || cmd == "texttt" || cmd == "mathsf" || cmd == "mathtt") {
     return parse_tex_subset_group(input, pos);
   }
   if (cmd == "mathrm" || cmd == "mathbf" || cmd == "mathit" || cmd == "operatorname" || cmd == "textrm") {

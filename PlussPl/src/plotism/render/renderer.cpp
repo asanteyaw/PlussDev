@@ -5374,6 +5374,7 @@ void append_pdf_encoded_text(std::vector<PdfTextChunk>& chunks,
       {"\xCE\x94", 'D'}, // Δ
       {"\xCE\x9B", 'L'}, // Λ
       {"\xCE\xA3", 'S'}, // Σ
+      {"\xCE\xA0", 'P'}, // Π
       {"\xCE\xA6", 'F'}, // Φ
       {"\xCE\xA8", 'Y'}, // Ψ
       {"\xCE\xA9", 'W'}, // Ω
@@ -5387,7 +5388,26 @@ void append_pdf_encoded_text(std::vector<PdfTextChunk>& chunks,
       {"\xE2\x88\x9A", "sqrt"},// √
       {"\xE2\x88\x9E", "inf"}, // ∞
       {"\xE2\x88\x82", "d"},   // ∂
+      {"\xE2\x88\xAB", "int"}, // ∫
+      {"\xE2\x88\x91", "sum"}, // ∑
+      {"\xE2\x88\x8F", "prod"},// ∏
+      {"\xE2\x88\x87", "nabla"}, // ∇
+      {"\xE2\x86\x90", "<-"},  // ←
+      {"\xE2\x86\x92", "->"},  // →
+      {"\xE2\x86\x94", "<->"}, // ↔
+      {"\xE2\x88\x88", "in"},  // ∈
+      {"\xE2\x88\x89", "notin"}, // ∉
+      {"\xE2\x8A\x82", "subset"}, // ⊂
+      {"\xE2\x8A\x86", "subseteq"}, // ⊆
+      {"\xE2\x8A\x83", "supset"}, // ⊃
+      {"\xE2\x8A\x87", "supseteq"}, // ⊇
+      {"\xE2\x88\xAA", "cup"}, // ∪
+      {"\xE2\x88\xA9", "cap"}, // ∩
+      {"\xE2\x88\x80", "forall"}, // ∀
+      {"\xE2\x88\x83", "exists"}, // ∃
+      {"\xE2\x88\x9D", "prop"}, // ∝
       {"\xE2\x8B\x85", "*"},   // ⋅
+      {"\xE2\x8B\xAF", "..."}, // ⋯
       {"\xE2\x88\x99", "*"},   // ∙
       {"\xC3\x97", "x"},       // ×
       {"\xC2\xB1", "+/-"},     // ±
@@ -5447,8 +5467,173 @@ void append_pdf_encoded_text(std::vector<PdfTextChunk>& chunks,
   return chunks;
 }
 
+[[nodiscard]] constexpr std::array<double, 128> make_helvetica_widths() {
+  std::array<double, 128> widths{};
+  widths.fill(556.0);
+  widths[' '] = 278.0;
+  widths['\t'] = 556.0;
+  widths['0'] = 556.0;
+  widths['1'] = 556.0;
+  widths['2'] = 556.0;
+  widths['3'] = 556.0;
+  widths['4'] = 556.0;
+  widths['5'] = 556.0;
+  widths['6'] = 556.0;
+  widths['7'] = 556.0;
+  widths['8'] = 556.0;
+  widths['9'] = 556.0;
+  widths['!'] = 278.0;
+  widths['"'] = 355.0;
+  widths['#'] = 556.0;
+  widths['$'] = 556.0;
+  widths['%'] = 889.0;
+  widths['&'] = 667.0;
+  widths['\''] = 191.0;
+  widths['('] = 333.0;
+  widths[')'] = 333.0;
+  widths['*'] = 389.0;
+  widths['+'] = 584.0;
+  widths[','] = 278.0;
+  widths['-'] = 333.0;
+  widths['.'] = 278.0;
+  widths['/'] = 278.0;
+  widths[':'] = 278.0;
+  widths[';'] = 278.0;
+  widths['<'] = 584.0;
+  widths['='] = 584.0;
+  widths['>'] = 584.0;
+  widths['?'] = 556.0;
+  widths['@'] = 1015.0;
+  widths['A'] = 667.0;
+  widths['B'] = 667.0;
+  widths['C'] = 722.0;
+  widths['D'] = 722.0;
+  widths['E'] = 667.0;
+  widths['F'] = 611.0;
+  widths['G'] = 778.0;
+  widths['H'] = 722.0;
+  widths['I'] = 278.0;
+  widths['J'] = 500.0;
+  widths['K'] = 667.0;
+  widths['L'] = 556.0;
+  widths['M'] = 833.0;
+  widths['N'] = 722.0;
+  widths['O'] = 778.0;
+  widths['P'] = 667.0;
+  widths['Q'] = 778.0;
+  widths['R'] = 722.0;
+  widths['S'] = 667.0;
+  widths['T'] = 611.0;
+  widths['U'] = 722.0;
+  widths['V'] = 667.0;
+  widths['W'] = 944.0;
+  widths['X'] = 667.0;
+  widths['Y'] = 667.0;
+  widths['Z'] = 611.0;
+  widths['['] = 278.0;
+  widths['\\'] = 278.0;
+  widths[']'] = 278.0;
+  widths['^'] = 469.0;
+  widths['_'] = 556.0;
+  widths['`'] = 333.0;
+  widths['a'] = 556.0;
+  widths['b'] = 556.0;
+  widths['c'] = 500.0;
+  widths['d'] = 556.0;
+  widths['e'] = 556.0;
+  widths['f'] = 278.0;
+  widths['g'] = 556.0;
+  widths['h'] = 556.0;
+  widths['i'] = 222.0;
+  widths['j'] = 222.0;
+  widths['k'] = 500.0;
+  widths['l'] = 222.0;
+  widths['m'] = 833.0;
+  widths['n'] = 556.0;
+  widths['o'] = 556.0;
+  widths['p'] = 556.0;
+  widths['q'] = 556.0;
+  widths['r'] = 333.0;
+  widths['s'] = 500.0;
+  widths['t'] = 278.0;
+  widths['u'] = 556.0;
+  widths['v'] = 500.0;
+  widths['w'] = 722.0;
+  widths['x'] = 500.0;
+  widths['y'] = 500.0;
+  widths['z'] = 500.0;
+  widths['{'] = 334.0;
+  widths['|'] = 260.0;
+  widths['}'] = 334.0;
+  widths['~'] = 584.0;
+  return widths;
+}
+
+[[nodiscard]] constexpr std::array<double, 128> make_symbol_widths() {
+  std::array<double, 128> widths{};
+  widths.fill(600.0);
+  widths[' '] = 250.0;
+  widths['!'] = 333.0;
+  widths['"'] = 713.0;
+  widths['#'] = 500.0;
+  widths['$'] = 549.0;
+  widths['%'] = 833.0;
+  widths['&'] = 778.0;
+  widths['('] = 333.0;
+  widths[')'] = 333.0;
+  widths['+'] = 549.0;
+  widths[','] = 250.0;
+  widths['-'] = 549.0;
+  widths['.'] = 250.0;
+  widths['/'] = 278.0;
+  widths['0'] = 500.0;
+  widths['1'] = 500.0;
+  widths['2'] = 500.0;
+  widths['3'] = 500.0;
+  widths['4'] = 500.0;
+  widths['5'] = 500.0;
+  widths['6'] = 500.0;
+  widths['7'] = 500.0;
+  widths['8'] = 500.0;
+  widths['9'] = 500.0;
+  widths[':'] = 278.0;
+  widths[';'] = 278.0;
+  widths['<'] = 549.0;
+  widths['='] = 549.0;
+  widths['>'] = 549.0;
+  widths['?'] = 444.0;
+  widths['@'] = 549.0;
+  widths['['] = 333.0;
+  widths['\\'] = 278.0;
+  widths[']'] = 333.0;
+  widths['^'] = 500.0;
+  widths['_'] = 500.0;
+  widths['`'] = 333.0;
+  widths['{'] = 480.0;
+  widths['|'] = 200.0;
+  widths['}'] = 480.0;
+  widths['~'] = 549.0;
+  return widths;
+}
+
+[[nodiscard]] double pdf_glyph_width_units(PdfFontKind font, unsigned char c) {
+  static constexpr auto kHelvetica = make_helvetica_widths();
+  static constexpr auto kSymbol = make_symbol_widths();
+  const auto& table = (font == PdfFontKind::Symbol) ? kSymbol : kHelvetica;
+  if (c < table.size()) {
+    return table[c];
+  }
+  return table['?'];
+}
+
 [[nodiscard]] double pdf_chunk_advance(const PdfTextChunk& chunk) {
-  return chunk.size * 0.52 * static_cast<double>(chunk.text.size());
+  const double units = std::transform_reduce(
+      chunk.text.begin(),
+      chunk.text.end(),
+      0.0,
+      std::plus<>{},
+      [&](char c) { return pdf_glyph_width_units(chunk.font, static_cast<unsigned char>(c)); });
+  return chunk.size * units / 1000.0;
 }
 
 struct PdfPlacedChunk {
@@ -5493,7 +5678,28 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
   return width;
 }
 
+[[nodiscard]] bool is_fraction_separator_run(std::string_view text) {
+  const auto first = text.find_first_not_of(" \t\r\n");
+  if (first == std::string_view::npos) {
+    return false;
+  }
+  const auto last = text.find_last_not_of(" \t\r\n");
+  return first == last && text[first] == '/';
+}
+
 [[nodiscard]] PdfTextLayout layout_pdf_text(std::string_view text, double base_size, bool stack_fractions) {
+  struct FractionTuning {
+    double script_scale{0.72};
+    double numerator_rise_em{0.60};
+    double denominator_rise_em{-0.54};
+    double inner_side_padding_em{0.08};
+    double min_width_em{0.74};
+    double bar_offset_em{0.03};
+    double bar_width_em{0.055};
+    double trailing_gap_em{0.10};
+  };
+  static constexpr FractionTuning kFractionTuning{};
+
   PdfTextLayout layout;
   layout.chunks.reserve(16);
   layout.bars.reserve(4);
@@ -5505,17 +5711,21 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
     const bool has_fraction_triplet = stack_fractions && i + 2 < runs.size() &&
                                       runs[i].kind == MathRunKind::Superscript &&
                                       runs[i + 1].kind == MathRunKind::Normal &&
-                                      runs[i + 1].text == "/" &&
+                                      is_fraction_separator_run(runs[i + 1].text) &&
                                       runs[i + 2].kind == MathRunKind::Subscript;
     if (has_fraction_triplet) {
       std::vector<PdfTextChunk> numer_chunks;
       std::vector<PdfTextChunk> denom_chunks;
-      const double frac_size = base_size * 0.68;
-      append_pdf_encoded_text(numer_chunks, runs[i].text, frac_size, base_size * 0.46);
-      append_pdf_encoded_text(denom_chunks, runs[i + 2].text, frac_size, -base_size * 0.30);
+      const double frac_size = base_size * kFractionTuning.script_scale;
+      append_pdf_encoded_text(
+          numer_chunks, runs[i].text, frac_size, base_size * kFractionTuning.numerator_rise_em);
+      append_pdf_encoded_text(
+          denom_chunks, runs[i + 2].text, frac_size, base_size * kFractionTuning.denominator_rise_em);
       const double numer_width = chunks_advance(numer_chunks);
       const double denom_width = chunks_advance(denom_chunks);
-      const double frac_width = std::max({numer_width, denom_width, base_size * 0.48});
+      const double inner_padding = base_size * kFractionTuning.inner_side_padding_em;
+      const double frac_width =
+          std::max({numer_width, denom_width, base_size * kFractionTuning.min_width_em}) + 2.0 * inner_padding;
       const double num_start = cursor + (frac_width - numer_width) * 0.5;
       const double den_start = cursor + (frac_width - denom_width) * 0.5;
       append_placed_chunks(layout.chunks, numer_chunks, num_start);
@@ -5523,10 +5733,10 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
       layout.bars.push_back(PdfFractionBar{
           cursor,
           cursor + frac_width,
-          base_size * 0.08,
-          std::max(0.6, base_size * 0.07),
+          base_size * kFractionTuning.bar_offset_em,
+          std::max(0.6, base_size * kFractionTuning.bar_width_em),
       });
-      cursor += frac_width + base_size * 0.08;
+      cursor += frac_width + base_size * kFractionTuning.trailing_gap_em;
       i += 3;
       continue;
     }
@@ -5552,6 +5762,21 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
 }
 
 [[nodiscard]] std::string emit_svg(const DrawList& list) {
+  auto svg_text_advance = [](std::string_view text, double size) -> double {
+    double units = 0.0;
+    for (std::size_t i = 0; i < text.size();) {
+      const unsigned char lead = static_cast<unsigned char>(text[i]);
+      const auto len = std::min<std::size_t>(utf8_char_length(lead), text.size() - i);
+      if (lead < 0x80U) {
+        units += pdf_glyph_width_units(PdfFontKind::Helvetica, lead);
+      } else {
+        units += 600.0;
+      }
+      i += len;
+    }
+    return size * units / 1000.0;
+  };
+
   std::ostringstream out;
   out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
   out << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" << format_number(list.extent.width)
@@ -5595,32 +5820,152 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
             } else if (item.align == TextCommand::Align::End) {
               anchor = "end";
             }
-            out << "<text x=\"" << format_number(item.anchor.x) << "\" y=\"" << format_number(item.anchor.y)
-                << "\" font-family=\"Helvetica, Arial, sans-serif\" font-size=\"" << format_number(item.size)
-                << "\" fill=\"" << svg_rgb(item.color) << "\" fill-opacity=\"" << format_number(item.color.alpha)
-                << "\" text-anchor=\"" << anchor << "\"";
-            if (std::abs(item.rotation_deg) > 1e-9) {
-              out << " transform=\"rotate(" << format_number(item.rotation_deg) << " "
-                  << format_number(item.anchor.x) << " " << format_number(item.anchor.y) << ")\"";
-            }
             const auto runs = split_math_runs(item.text);
             const bool rich = std::any_of(
                 runs.begin(), runs.end(), [](const MathRun& run) { return run.kind != MathRunKind::Normal; });
-            out << ">";
-            if (!rich) {
-              out << escape_xml(item.text);
-            } else {
-              for (const auto& run : runs) {
-                if (run.kind == MathRunKind::Normal) {
-                  out << escape_xml(run.text);
-                } else if (run.kind == MathRunKind::Subscript) {
-                  out << "<tspan baseline-shift=\"sub\" font-size=\"72%\">" << escape_xml(run.text) << "</tspan>";
-                } else {
-                  out << "<tspan baseline-shift=\"super\" font-size=\"72%\">" << escape_xml(run.text) << "</tspan>";
+
+            constexpr bool kEnableStackedSvgFractions = false;
+            if (!rich || std::abs(item.rotation_deg) > 1e-9 || !kEnableStackedSvgFractions) {
+              out << "<text x=\"" << format_number(item.anchor.x) << "\" y=\"" << format_number(item.anchor.y)
+                  << "\" font-family=\"Helvetica, Arial, sans-serif\" font-size=\"" << format_number(item.size)
+                  << "\" fill=\"" << svg_rgb(item.color) << "\" fill-opacity=\"" << format_number(item.color.alpha)
+                  << "\" text-anchor=\"" << anchor << "\"";
+              if (std::abs(item.rotation_deg) > 1e-9) {
+                out << " transform=\"rotate(" << format_number(item.rotation_deg) << " "
+                    << format_number(item.anchor.x) << " " << format_number(item.anchor.y) << ")\"";
+              }
+              out << ">";
+              if (!rich) {
+                out << escape_xml(item.text);
+              } else {
+                for (const auto& run : runs) {
+                  if (run.kind == MathRunKind::Normal) {
+                    out << escape_xml(run.text);
+                  } else if (run.kind == MathRunKind::Subscript) {
+                    out << "<tspan baseline-shift=\"sub\" font-size=\"72%\">" << escape_xml(run.text) << "</tspan>";
+                  } else {
+                    out << "<tspan baseline-shift=\"super\" font-size=\"72%\">" << escape_xml(run.text) << "</tspan>";
+                  }
                 }
               }
+              out << "</text>\n";
+            } else {
+              struct SvgPlacedText {
+                std::string text{};
+                double size{12.0};
+                double rise{0.0};
+                double x_offset{0.0};
+              };
+              struct SvgFractionBar {
+                double x0{0.0};
+                double x1{0.0};
+                double y_offset{0.0};
+                double stroke_width{0.8};
+              };
+              std::vector<SvgPlacedText> placed{};
+              std::vector<SvgFractionBar> bars{};
+              placed.reserve(24);
+              bars.reserve(4);
+
+              struct FractionTuning {
+                double script_scale{0.72};
+                double numerator_rise_em{0.60};
+                double denominator_rise_em{-0.54};
+                double inner_side_padding_em{0.08};
+                double min_width_em{0.74};
+                double bar_offset_em{0.03};
+                double bar_width_em{0.055};
+                double trailing_gap_em{0.10};
+              };
+              static constexpr FractionTuning kFractionTuning{};
+
+              double cursor = 0.0;
+              std::size_t i = 0;
+              while (i < runs.size()) {
+                const bool has_fraction_triplet = i + 2 < runs.size() &&
+                                                  runs[i].kind == MathRunKind::Superscript &&
+                                                  runs[i + 1].kind == MathRunKind::Normal &&
+                                                  is_fraction_separator_run(runs[i + 1].text) &&
+                                                  runs[i + 2].kind == MathRunKind::Subscript;
+                if (has_fraction_triplet) {
+                  const double frac_size = item.size * kFractionTuning.script_scale;
+                  const double num_w = svg_text_advance(runs[i].text, frac_size);
+                  const double den_w = svg_text_advance(runs[i + 2].text, frac_size);
+                  const double inner_padding = item.size * kFractionTuning.inner_side_padding_em;
+                  const double frac_w =
+                      std::max({num_w, den_w, item.size * kFractionTuning.min_width_em}) + 2.0 * inner_padding;
+                  const double num_start = cursor + (frac_w - num_w) * 0.5;
+                  const double den_start = cursor + (frac_w - den_w) * 0.5;
+                  if (!runs[i].text.empty()) {
+                    placed.push_back(SvgPlacedText{
+                        std::string(runs[i].text),
+                        frac_size,
+                        item.size * kFractionTuning.numerator_rise_em,
+                        num_start,
+                    });
+                  }
+                  if (!runs[i + 2].text.empty()) {
+                    placed.push_back(SvgPlacedText{
+                        std::string(runs[i + 2].text),
+                        frac_size,
+                        item.size * kFractionTuning.denominator_rise_em,
+                        den_start,
+                    });
+                  }
+                  bars.push_back(SvgFractionBar{
+                      cursor,
+                      cursor + frac_w,
+                      item.size * kFractionTuning.bar_offset_em,
+                      std::max(0.6, item.size * kFractionTuning.bar_width_em),
+                  });
+                  cursor += frac_w + item.size * kFractionTuning.trailing_gap_em;
+                  i += 3;
+                  continue;
+                }
+
+                const auto& run = runs[i];
+                const bool scripted = run.kind != MathRunKind::Normal;
+                const double run_size = scripted ? (item.size * 0.72) : item.size;
+                double rise = 0.0;
+                if (run.kind == MathRunKind::Superscript) {
+                  rise = item.size * 0.33;
+                } else if (run.kind == MathRunKind::Subscript) {
+                  rise = -item.size * 0.20;
+                }
+                if (!run.text.empty()) {
+                  placed.push_back(SvgPlacedText{std::string(run.text), run_size, rise, cursor});
+                }
+                cursor += svg_text_advance(run.text, run_size);
+                ++i;
+              }
+
+              double dx = 0.0;
+              if (item.align == TextCommand::Align::Middle) {
+                dx = -cursor * 0.5;
+              } else if (item.align == TextCommand::Align::End) {
+                dx = -cursor;
+              }
+
+              for (const auto& chunk : placed) {
+                out << "<text x=\"" << format_number(item.anchor.x + dx + chunk.x_offset) << "\" y=\""
+                    << format_number(item.anchor.y + chunk.rise)
+                    << "\" font-family=\"Helvetica, Arial, sans-serif\" font-size=\""
+                    << format_number(chunk.size)
+                    << "\" fill=\"" << svg_rgb(item.color) << "\" fill-opacity=\""
+                    << format_number(item.color.alpha) << "\" text-anchor=\"start\">";
+                out << escape_xml(chunk.text);
+                out << "</text>\n";
+              }
+              for (const auto& bar : bars) {
+                out << "<line x1=\"" << format_number(item.anchor.x + dx + bar.x0)
+                    << "\" y1=\"" << format_number(item.anchor.y + bar.y_offset)
+                    << "\" x2=\"" << format_number(item.anchor.x + dx + bar.x1)
+                    << "\" y2=\"" << format_number(item.anchor.y + bar.y_offset)
+                    << "\" stroke=\"" << svg_rgb(item.color)
+                    << "\" stroke-opacity=\"" << format_number(item.color.alpha)
+                    << "\" stroke-width=\"" << format_number(bar.stroke_width) << "\"/>\n";
+              }
             }
-            out << "</text>\n";
           }
         },
         command);
@@ -5719,7 +6064,8 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
             apply_alpha(make_alpha_key(item.color.alpha, item.color.alpha));
             const bool rotated = std::abs(item.rotation_deg) > 1e-9;
             double x = item.anchor.x;
-            const auto layout = layout_pdf_text(item.text, item.size, !rotated);
+            constexpr bool kEnableStackedPdfFractions = false;
+            const auto layout = layout_pdf_text(item.text, item.size, !rotated && kEnableStackedPdfFractions);
             const double rough_width = layout.advance;
             double dx = 0.0;
             if (item.align == TextCommand::Align::Middle) {
@@ -5765,21 +6111,50 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
               }
               stream << "ET\n";
             } else {
-              for (const auto& chunk : layout.chunks) {
-                if (chunk.text.empty()) {
-                  continue;
-                }
+              if (layout.bars.empty()) {
+                const auto chunks = build_pdf_text_chunks(item.text, item.size);
                 stream << "BT\n";
-                stream << "/" << (chunk.font == PdfFontKind::Symbol ? "F2 " : "F1 ")
-                       << format_number(chunk.size) << " Tf\n";
                 stream << format_number(item.color.red) << " " << format_number(item.color.green) << " "
                        << format_number(item.color.blue) << " rg\n";
-                stream << format_number(x + dx + chunk.x_offset) << " "
-                       << format_number(y + chunk.rise) << " Td\n";
-                stream << "(" << escape_pdf_literal(chunk.text) << ") Tj\n";
+                stream << "1 0 0 1 " << format_number(x + dx) << " " << format_number(y) << " Tm\n";
+                PdfFontKind active_font = PdfFontKind::Helvetica;
+                double active_size = -1.0;
+                double active_rise = 1e9;
+                for (const auto& chunk : chunks) {
+                  if (chunk.text.empty()) {
+                    continue;
+                  }
+                  if (chunk.font != active_font || std::abs(chunk.size - active_size) > 1e-9) {
+                    stream << "/" << (chunk.font == PdfFontKind::Symbol ? "F2 " : "F1 ")
+                           << format_number(chunk.size) << " Tf\n";
+                    active_font = chunk.font;
+                    active_size = chunk.size;
+                  }
+                  if (std::abs(chunk.rise - active_rise) > 1e-9) {
+                    stream << format_number(chunk.rise) << " Ts\n";
+                    active_rise = chunk.rise;
+                  }
+                  stream << "(" << escape_pdf_literal(chunk.text) << ") Tj\n";
+                }
+                if (std::abs(active_rise) > 1e-9) {
+                  stream << "0 Ts\n";
+                }
                 stream << "ET\n";
-              }
-              if (!layout.bars.empty()) {
+              } else {
+                for (const auto& chunk : layout.chunks) {
+                  if (chunk.text.empty()) {
+                    continue;
+                  }
+                  stream << "BT\n";
+                  stream << "/" << (chunk.font == PdfFontKind::Symbol ? "F2 " : "F1 ")
+                         << format_number(chunk.size) << " Tf\n";
+                  stream << format_number(item.color.red) << " " << format_number(item.color.green) << " "
+                         << format_number(item.color.blue) << " rg\n";
+                  stream << format_number(x + dx + chunk.x_offset) << " "
+                         << format_number(y + chunk.rise) << " Td\n";
+                  stream << "(" << escape_pdf_literal(chunk.text) << ") Tj\n";
+                  stream << "ET\n";
+                }
                 stream << format_number(item.color.red) << " " << format_number(item.color.green) << " "
                        << format_number(item.color.blue) << " RG\n";
                 for (const auto& bar : layout.bars) {
