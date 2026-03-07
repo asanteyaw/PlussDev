@@ -81,6 +81,9 @@ int main() {
   fig_scatter.headline("Daily range vs log-volume");
   fig_scatter.save_pdf("sp500_range_vs_logvolume_scatter.pdf");
 
+  let fig_scat = df.plot().scatter_matrix();
+  fig_scat.headline("scatter plot").show();
+
   let numeric = df.series_features();
   let corr_table = numeric.corr(DataFrame::CorrMethod::Spearman, false);
   corr_table.save_csv("sp500_corr_matrix_spearman.csv");

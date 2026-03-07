@@ -76,44 +76,36 @@ std::vector<double> positional_plot_x(std::int64_t nrows) {
 }
 
 std::vector<double> thread_to_plot_numeric_values(const Thread& t) {
-  std::vector<double> out;
+  Thread numeric_thread = t;
   switch (t.kind()) {
     case ThreadKind::Series: {
-      out = t.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
       break;
     }
     case ThreadKind::Timeline: {
-      const auto ticks = t.as_timeline().to_epoch_nanos_vector();
-      out.reserve(ticks.size());
-      for (const auto tick : ticks) {
-        out.push_back(static_cast<double>(tick));
-      }
+      numeric_thread = Thread(t.as_timeline().epoch_nanos(), t.validity_mask());
       break;
     }
     case ThreadKind::TimeIndex: {
-      const auto ticks = t.as_timeindex().timeline().to_epoch_nanos_vector();
-      out.reserve(ticks.size());
-      for (const auto tick : ticks) {
-        out.push_back(static_cast<double>(tick));
-      }
+      numeric_thread = Thread(t.as_timeindex().timeline().epoch_nanos(), t.validity_mask());
       break;
     }
     case ThreadKind::Note: {
-      const auto& note = t.as_note();
-      out.reserve(static_cast<std::size_t>(note.numel()));
-      note.for_each_flat([&](std::string_view s) {
-        std::string value(s);
-        char* end = nullptr;
-        const double parsed = std::strtod(value.c_str(), &end);
-        const bool valid = (end != nullptr) && (end != value.c_str()) && (*end == '\0');
-        out.push_back(valid ? parsed : std::numeric_limits<double>::quiet_NaN());
-      });
+      numeric_thread = t.cast(ThreadCastTarget::Series, pluss::codem::ScalarType::Float64);
       break;
     }
     default:
       PLUSS_FAIL("DataFrame::plot: unsupported Thread kind for numeric plotting");
   }
-  return out;
+
+  auto values = numeric_thread.as_series().to(pluss::codem::ScalarType::Float64);
+  if (numeric_thread.has_validity_mask()) {
+    const auto nan_fill = pluss::Series::full(
+        {values.numel()},
+        std::numeric_limits<double>::quiet_NaN(),
+        pluss::codem::ScalarType::Float64);
+    values = values.where(*numeric_thread.validity_mask(), nan_fill);
+  }
+  return values.to_vec<double>();
 }
 
 std::vector<std::string> thread_to_plot_labels(const Thread& t) {
@@ -456,86 +448,17 @@ Studio corr_heatmap_from_names(const DataFrame& frame,
 
 Studio scatter_matrix_from_names(const DataFrame& frame,
                                  const std::vector<std::string>& names,
-                                 ScatterMatrixTriangle triangle,
-                                 bool monochrome,
-                                 std::optional<int> auto_tick_decimals) {
+                                 const flash::PairPlotOptions& options) {
   PLUSS_CHECK(names.size() >= 2, "DataFrame::plot().scatter_matrix: need at least two numeric features");
 
-  std::vector<std::vector<double>> columns;
+  std::vector<pluss::Series> columns;
   columns.reserve(names.size());
-  for (const auto& name : names) {
-    auto values = thread_to_plot_numeric_values(frame.features(name));
-    require_plot_size(values, frame.ncases(), name);
-    columns.push_back(std::move(values));
-  }
+  std::transform(names.begin(), names.end(), std::back_inserter(columns), [&](const std::string& name) {
+    return frame.features(name).as_series();
+  });
 
-  auto axis_range = [](const std::vector<double>& values) -> pluss::pl::Range1d {
-    double lo = std::numeric_limits<double>::infinity();
-    double hi = -std::numeric_limits<double>::infinity();
-    for (const double value : values) {
-      if (!std::isfinite(value)) {
-        continue;
-      }
-      lo = std::min(lo, value);
-      hi = std::max(hi, value);
-    }
-    if (!std::isfinite(lo) || !std::isfinite(hi)) {
-      return {0.0, 1.0};
-    }
-    if (!(hi > lo)) {
-      const double pad = std::max(0.5, std::abs(lo) * 0.05);
-      return {lo - pad, hi + pad};
-    }
-    const double pad = (hi - lo) * 0.04;
-    return {lo - pad, hi + pad};
-  };
-
-  std::vector<pluss::pl::Range1d> feature_ranges;
-  feature_ranges.reserve(columns.size());
-  for (const auto& values : columns) {
-    feature_ranges.push_back(axis_range(values));
-  }
-
-  const auto dims = static_cast<std::int64_t>(names.size());
   auto fig = make_studio();
-  fig.mosaic(dims, dims, 12.0, 12.0);
-  for (std::int64_t row = 0; row < dims; ++row) {
-    for (std::int64_t col = 0; col < dims; ++col) {
-      auto& pane = fig.pane2();
-      pane.place(row, col);
-      const bool keep_cell =
-          triangle == ScatterMatrixTriangle::Full ||
-          (triangle == ScatterMatrixTriangle::Lower && row >= col) ||
-          (triangle == ScatterMatrixTriangle::Upper && row <= col);
-      if (!keep_cell) {
-        pane.hide();
-        continue;
-      }
-
-      setup_pane(pane, false);
-      if (auto_tick_decimals.has_value()) {
-        pane.x_auto_tick_decimals(*auto_tick_decimals);
-      }
-      pane.x_limits(feature_ranges[static_cast<std::size_t>(col)]);
-      if (row == col) {
-        auto& trace = flash::histplot(pane, columns[static_cast<std::size_t>(col)], 12);
-        trace.label(names[static_cast<std::size_t>(col)]);
-        style_trace(trace, monochrome ? 0U : static_cast<std::size_t>(col), 0.9, 1.0);
-      } else {
-        if (auto_tick_decimals.has_value()) {
-          pane.y_auto_tick_decimals(*auto_tick_decimals);
-        }
-        pane.y_limits(feature_ranges[static_cast<std::size_t>(row)]);
-        auto& trace = flash::scatterplot(pane,
-                                         columns[static_cast<std::size_t>(col)],
-                                         columns[static_cast<std::size_t>(row)]);
-        trace.label(names[static_cast<std::size_t>(row)] + " vs " + names[static_cast<std::size_t>(col)]);
-        style_trace(trace, monochrome ? 0U : static_cast<std::size_t>(row + col), 0.92, 1.2);
-      }
-      pane.x_label(row + 1 == dims ? names[static_cast<std::size_t>(col)] : "");
-      pane.y_label(col == 0 ? names[static_cast<std::size_t>(row)] : "");
-    }
-  }
+  flash::pairplot(fig, columns, options);
   return fig;
 }
 
@@ -1258,11 +1181,7 @@ pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(std::initializer_list<st
 
 pluss::pl::Studio DataFramePlotAccessor::impl_scatter_matrix(std::initializer_list<std::string_view> features) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().scatter_matrix");
-  auto fig = scatter_matrix_from_names(frame_,
-                                       names,
-                                       options_.scatter_matrix_triangle,
-                                       options_.scatter_matrix_monochrome,
-                                       options_.scatter_matrix_auto_tick_decimals);
+  auto fig = scatter_matrix_from_names(frame_, names, options_.scatter_matrix_options);
   apply_figure_options(fig);
   return fig;
 }
@@ -1311,11 +1230,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(std::initializer_list<st
     }
   }
   if (names.size() <= 5 && frame_.ncases() <= 256) {
-    return scatter_matrix_from_names(frame_,
-                                     names,
-                                     options_.scatter_matrix_triangle,
-                                     options_.scatter_matrix_monochrome,
-                                     options_.scatter_matrix_auto_tick_decimals);
+    return scatter_matrix_from_names(frame_, names, options_.scatter_matrix_options);
   }
   return corr_heatmap_from_names(frame_,
                                  names,

@@ -520,7 +520,7 @@ int main(int argc, char** argv) {
   auto sample = df.features({"temp", "atemp", "humidity", "windspeed", "casual", "registered", "total_count"})
                     .sample(std::min<std::int64_t>(800, df.ncases()), 42);
   auto pair_opts = build_plot_options();
-  pair_opts.scatter_matrix_triangle = pluss::table::ScatterMatrixTriangle::Full;
+  pair_opts.scatter_matrix_options.triangle = pluss::table::ScatterMatrixTriangle::Full;
   auto fig_13 = sample.plot(pair_opts).scatter_matrix();
   fig_13.headline("Pairplot (sampled)");
   save_and_optionally_show(fig_13, cli.out_dir, "13_pairplot_sampled", cli.show);

@@ -1044,16 +1044,51 @@ inline Studio& JointGrid(Studio& studio, double gx = 14.0, double gy = 14.0) {
   return studio.mosaic(2, 2, gx, gy);
 }
 
-inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns) {
+enum class PairPlotTriangle : std::uint8_t { Full, Lower, Upper };
+
+struct PairPlotOptions {
+  PairPlotTriangle triangle{PairPlotTriangle::Full};
+  bool monochrome{true};
+  std::optional<int> auto_tick_decimals{std::nullopt};
+  std::int64_t diag_bins{14};
+  double grid_gap_x{8.0};
+  double grid_gap_y{8.0};
+  double tick_font_scale{0.9};
+  double axis_label_font_scale{0.9};
+  float diag_trace_width{0.75F};
+  float scatter_trace_width{0.45F};
+  double marker_area_scale{380.0};
+  double marker_area_min{7.0};
+  double marker_area_max{18.0};
+  bool show_grid{false};
+};
+
+inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns, const PairPlotOptions& options = {}) {
   if (columns.empty()) {
     throw std::invalid_argument("flash::pairplot requires at least one series");
   }
   const std::int64_t n = static_cast<std::int64_t>(columns.size());
-  studio.mosaic(n, n, 8.0, 8.0);
+  studio.mosaic(n, n, options.grid_gap_x, options.grid_gap_y);
+  const auto colors = detail::categorical_colors(n);
   for (const auto row : std::views::iota(std::int64_t{0}, n)) {
     for (const auto col : std::views::iota(std::int64_t{0}, n)) {
       Pane& pane = studio.pane2();
-      pane.place(row, col).grid(GridStyle::None).tick_font_scale(0.9).axis_label_font_scale(0.9);
+      pane.place(row, col)
+          .grid(options.show_grid ? GridStyle::Major : GridStyle::None)
+          .tick_font_scale(options.tick_font_scale)
+          .axis_label_font_scale(options.axis_label_font_scale);
+      if (options.auto_tick_decimals.has_value()) {
+        pane.x_auto_tick_decimals(*options.auto_tick_decimals);
+        pane.y_auto_tick_decimals(*options.auto_tick_decimals);
+      }
+      const bool keep_cell =
+          options.triangle == PairPlotTriangle::Full ||
+          (options.triangle == PairPlotTriangle::Lower && row >= col) ||
+          (options.triangle == PairPlotTriangle::Upper && row <= col);
+      if (!keep_cell) {
+        pane.hide();
+        continue;
+      }
       if (row != n - 1) {
         pane.x_label("");
       } else {
@@ -1065,7 +1100,11 @@ inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns) {
         pane.y_label("x" + std::to_string(row + 1));
       }
       if (row == col) {
-        pane.bucket(columns[static_cast<std::size_t>(row)], 14).width(0.75F);
+        auto& trace = pane.bucket(columns[static_cast<std::size_t>(row)], static_cast<int>(std::max<std::int64_t>(1, options.diag_bins)));
+        trace.width(options.diag_trace_width);
+        if (!options.monochrome && !colors.empty()) {
+          trace.stroke(colors[static_cast<std::size_t>(row) % colors.size()]);
+        }
       } else {
         const std::int64_t points = std::max<std::int64_t>(
             1,
@@ -1073,14 +1112,17 @@ inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns) {
                 columns[static_cast<std::size_t>(col)].numel(),
                 columns[static_cast<std::size_t>(row)].numel()));
         const double marker_area = std::clamp(
-            380.0 / std::sqrt(static_cast<double>(points) * static_cast<double>(std::max<std::int64_t>(n, 1))),
-            7.0,
-            18.0);
-        pane.cloud(
+            options.marker_area_scale / std::sqrt(static_cast<double>(points) * static_cast<double>(std::max<std::int64_t>(n, 1))),
+            options.marker_area_min,
+            options.marker_area_max);
+        auto& trace = pane.cloud(
                 columns[static_cast<std::size_t>(col)],
                 columns[static_cast<std::size_t>(row)],
-                std::array<double, 1>{marker_area})
-            .width(0.45F);
+                std::array<double, 1>{marker_area});
+        trace.width(options.scatter_trace_width);
+        if (!options.monochrome && !colors.empty()) {
+          trace.stroke(colors[static_cast<std::size_t>(row + col) % colors.size()]);
+        }
       }
     }
   }

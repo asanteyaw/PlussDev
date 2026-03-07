@@ -124,8 +124,8 @@ void test_plot_options_defaults() {
   });
   expect(has_whisk, "plot(options).bar with CI should include whisk trace");
 
-  options.scatter_matrix_triangle = pluss::table::ScatterMatrixTriangle::Lower;
-  options.scatter_matrix_auto_tick_decimals = 1;
+  options.scatter_matrix_options.triangle = pluss::table::ScatterMatrixTriangle::Lower;
+  options.scatter_matrix_options.auto_tick_decimals = 1;
   const auto fig_corner = df.plot(options).scatter_matrix({"x", "y", "z"});
   std::size_t trace_count = 0;
   for (const auto& pane : fig_corner.panes()) {
