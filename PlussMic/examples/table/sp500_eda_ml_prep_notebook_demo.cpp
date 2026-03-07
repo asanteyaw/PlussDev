@@ -74,7 +74,7 @@ int main() {
   fig_close_line.save_pdf("sp500_close_line.pdf");
 
   let fig_volume_hist = df.plot().hist("Volume", 80);
-  fig_volume_hist.headline("Volume histogram");
+  fig_volume_hist.headline("Volume histogram").show();
   fig_volume_hist.save_pdf("sp500_volume_hist.pdf");
 
   let fig_scatter = df.plot().scatter("LogVolume", "DailyRange");
@@ -108,7 +108,7 @@ int main() {
   fig3_line.save_pdf("sp500_3d_path.pdf");
 
   let fig3_surface = df.plot3d().surface("Month", "Year", "Close", GroupOp::Mean);
-  fig3_surface.headline("Monthly mean close surface (Month x Year)");
+  fig3_surface.headline("Monthly mean close surface (Month x Year)").show();
   fig3_surface.save_pdf("sp500_3d_surface_month_year_close.pdf");
 
   //========== Cell Six ===========

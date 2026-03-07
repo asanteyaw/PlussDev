@@ -98,7 +98,13 @@
 
 - (void)windowWillClose:(NSNotification*)notification {
   (void)notification;
-  [NSApp stopModal];
+  // Hide immediately so close feels instant, then unwind modal loop.
+  [window_ orderOut:nil];
+  if ([NSApp modalWindow] == window_) {
+    [NSApp abortModal];
+  } else {
+    [NSApp stopModal];
+  }
 }
 
 - (void)savePNG:(id)sender {

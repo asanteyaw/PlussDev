@@ -662,7 +662,7 @@ bool SoftwareRenderer::render(const Scene& scene, PixelCanvas& canvas, std::vect
               clip.reset();
             }
           } else if constexpr (std::is_same_v<CommandT, TextCommand>) {
-            detail::render_text_command(canvas, cmd, events);
+            detail::render_text_command(canvas, cmd, clip, events);
           }
         },
         command);

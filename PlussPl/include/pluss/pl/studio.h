@@ -18,6 +18,10 @@
 #include <variant>
 #include <vector>
 
+namespace pluss::view {
+struct HtmlWindowOptions;
+}
+
 namespace pluss::pl {
 
 struct Rgba {
@@ -1310,6 +1314,7 @@ class Studio {
   void save_pdf(std::string_view path, PdfEngine engine = PdfEngine::Auto) const;
   void save_png(std::string_view path, std::int64_t dpi = 144) const;
   bool show(std::string_view title = {}, std::int64_t width = 1280, std::int64_t height = 820, bool launch = true) const;
+  bool show(const pluss::view::HtmlWindowOptions& options, bool launch = true) const;
 
  private:
   std::string name_{};

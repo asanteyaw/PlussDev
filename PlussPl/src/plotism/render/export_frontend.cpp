@@ -195,10 +195,10 @@ std::string native_window_title_(std::string_view fallback) {
   return std::string(fallback);
 }
 
-pluss::view::HtmlBackendPreference plot_backend_preference_() {
+pluss::view::BackendPreference plot_backend_preference_() {
   const char* raw = std::getenv("PLUSSVIEW_PLOT_BACKEND");
   if (raw == nullptr) {
-    return pluss::view::HtmlBackendPreference::NativeWebView;
+    return pluss::view::BackendPreference::NativeWebView;
   }
 
   std::string token(raw);
@@ -208,16 +208,17 @@ pluss::view::HtmlBackendPreference plot_backend_preference_() {
                              [](unsigned char ch) { return std::isspace(ch) != 0; }),
               token.end());
 
-  if (token == "inhouse" || token == "inhousehtml") {
-    return pluss::view::HtmlBackendPreference::InHouseHtml;
+  if (token == "inhouse" || token == "inhousehtml" || token == "plusswebview" || token == "pluss-webview") {
+    return pluss::view::BackendPreference::PlussWebView;
   }
-  if (token == "inhouseonly" || token == "inhouse-only") {
-    return pluss::view::HtmlBackendPreference::InHouseOnly;
+  if (token == "inhouseonly" || token == "inhouse-only" || token == "plusswebviewonly" ||
+      token == "plusswebview-only" || token == "pluss-webview-only") {
+    return pluss::view::BackendPreference::PlussWebViewOnly;
   }
   if (token == "auto") {
-    return pluss::view::HtmlBackendPreference::Auto;
+    return pluss::view::BackendPreference::Auto;
   }
-  return pluss::view::HtmlBackendPreference::NativeWebView;
+  return pluss::view::BackendPreference::NativeWebView;
 }
 
 bool run_command_(const std::string& command) {
@@ -502,6 +503,52 @@ bool Studio::show(std::string_view title, std::int64_t width, std::int64_t heigh
   const auto svg_payload = to_svg();
   const auto html = svg_embed_html(svg_payload, window_title, width, height);
   if (launch && show_html_window_(html, svg_payload, window_title, width, height)) {
+    return true;
+  }
+
+  const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+  const auto name = name_.empty() ? std::string("plusspl_plot") : name_;
+  const auto output_root = fallback_viewer_temp_dir_();
+  cleanup_stale_fallback_html_(output_root);
+  const auto output_path = output_root /
+                           (name + "_" + std::to_string(static_cast<long long>(now)) + ".html");
+
+  std::ofstream out(output_path, std::ios::out | std::ios::trunc | std::ios::binary);
+  if (!out.is_open()) {
+    throw std::runtime_error("show(): unable to create temporary html file");
+  }
+  out << html;
+  out.close();
+  if (!out) {
+    throw std::runtime_error("show(): failed while writing html payload");
+  }
+  if (!launch) {
+    return true;
+  }
+  return launch_html_in_default_viewer(output_path);
+}
+
+bool Studio::show(const pluss::view::HtmlWindowOptions& options, bool launch) const {
+  const auto fallback_title = name_.empty() ? std::string("PlussPl Plot") : name_;
+  const auto window_title = options.title.empty() ? fallback_title : options.title;
+  const auto svg_payload = to_svg();
+  const auto window_width = std::max<std::int64_t>(640, options.width);
+  const auto window_height = std::max<std::int64_t>(420, options.height);
+  const auto html = svg_embed_html(svg_payload, window_title, window_width, window_height);
+
+  pluss::view::HtmlWindowOptions runtime_options = options;
+  runtime_options.title = window_title;
+  runtime_options.width = window_width;
+  runtime_options.height = window_height;
+  if (runtime_options.snapshot_name.empty()) {
+    runtime_options.snapshot_name = "plot-view.png";
+  }
+  runtime_options.svg_payload = svg_payload;
+  if (runtime_options.svg_snapshot_name.empty()) {
+    runtime_options.svg_snapshot_name = "plot-view.svg";
+  }
+
+  if (launch && pluss::view::show_html_window(html, runtime_options)) {
     return true;
   }
 

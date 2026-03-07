@@ -231,10 +231,11 @@ class CocoaWindowShell final : public IWindowShell {
                                                                       if (strong_host == nil || e == nil || e.window != strong_host.window) {
                                                                         return e;
                                                                       }
+                                                                      const double factor = e.hasPreciseScrollingDeltas ? 1.0 : 12.0;
                                                                       [strong_host.input_events addObject:@{
                                                                         @"kind" : @"scroll",
-                                                                        @"dx" : @(e.scrollingDeltaX),
-                                                                        @"dy" : @(e.scrollingDeltaY)
+                                                                        @"dx" : @(e.scrollingDeltaX * factor),
+                                                                        @"dy" : @(e.scrollingDeltaY * factor)
                                                                       }];
                                                                       return e;
                                                                     }];

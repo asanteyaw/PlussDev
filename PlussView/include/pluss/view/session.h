@@ -24,7 +24,7 @@ enum class SessionBackend : std::uint8_t {
   GtkWebKit = 1,
   MacWebKit = 2,
   WinWebView2 = 3,
-  InHouseHtml = 4,
+  PlussWebView = 4,
 };
 
 enum class SessionEventKind : std::uint8_t {

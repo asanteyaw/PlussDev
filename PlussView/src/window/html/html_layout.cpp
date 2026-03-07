@@ -93,6 +93,17 @@ struct SimpleSelector {
   return std::max(0, value);
 }
 
+void reset_render_stats(HtmlRenderStats& stats) {
+  stats.document_viewport_rect = RectI{};
+  stats.table_viewport_rect = RectI{};
+  stats.document_max_scroll_x = 0;
+  stats.document_max_scroll_y = 0;
+  stats.table_max_scroll_x = 0;
+  stats.table_max_scroll_y = 0;
+  stats.table_body_row_height_px = 0;
+  stats.has_table = false;
+}
+
 [[nodiscard]] int clamp_font(const int value) {
   return std::clamp(value, 8, 48);
 }
@@ -2583,6 +2594,28 @@ int render_table(Scene& scene,
   const int table_origin_x = content_x - scroll_x;
   const int scrollable_left = content_x + sticky_total_w;
   const int scrollable_right = content_x + content_w;
+  if (render_config.render_stats != nullptr) {
+    auto& stats = *render_config.render_stats;
+    stats.has_table = true;
+    stats.table_max_scroll_x = std::max(stats.table_max_scroll_x, max_scroll_x);
+    stats.table_max_scroll_y = std::max(stats.table_max_scroll_y, max_scroll_y);
+    const int current_area = stats.table_viewport_rect.width * stats.table_viewport_rect.height;
+    const int candidate_area = viewport_clip.width * viewport_clip.height;
+    if (candidate_area >= current_area) {
+      stats.table_viewport_rect = viewport_clip;
+    }
+    if (!body_order.empty()) {
+      const std::size_t sample_count = std::min<std::size_t>(body_order.size(), 12U);
+      int sample_sum = 0;
+      for (std::size_t i = 0; i < sample_count; ++i) {
+        sample_sum += row_heights[body_order[i]];
+      }
+      if (sample_sum > 0 && sample_count > 0) {
+        stats.table_body_row_height_px =
+            std::max(stats.table_body_row_height_px, sample_sum / static_cast<int>(sample_count));
+      }
+    }
+  }
 
   std::vector<std::size_t> visible_scroll_columns;
   visible_scroll_columns.reserve(plan.source_indices.size());
@@ -3136,6 +3169,10 @@ int render_node(Scene& scene,
 } // namespace
 
 Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewport, const HtmlRenderConfig config) {
+  if (config.render_stats != nullptr) {
+    reset_render_stats(*config.render_stats);
+  }
+
   const int width = std::max(320, viewport.width);
   const int height = std::max(240, viewport.height);
 
@@ -3176,6 +3213,12 @@ Scene build_html_document_scene(const HtmlDocument& document, const SizeI viewpo
   const int doc_scroll_x = std::clamp(config.document_scroll_x_px, 0, max_scroll_x);
   const int doc_scroll_y = std::clamp(config.document_scroll_y_px, 0, max_scroll_y);
   const RectI body_clip{body_left, body_top, body_width, body_height};
+  if (config.render_stats != nullptr) {
+    auto& stats = *config.render_stats;
+    stats.document_viewport_rect = body_clip;
+    stats.document_max_scroll_x = max_scroll_x;
+    stats.document_max_scroll_y = max_scroll_y;
+  }
 
   if (config.clip_document_viewport) {
     scene.add(SetClipRectCommand{body_clip});

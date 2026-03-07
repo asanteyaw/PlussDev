@@ -22,18 +22,18 @@ constexpr auto kAutoBackendPriority = std::to_array<SessionBackend>({
     SessionBackend::GtkWebKit,
     SessionBackend::MacWebKit,
     SessionBackend::WinWebView2,
-    SessionBackend::InHouseHtml,
+    SessionBackend::PlussWebView,
 });
 
-constexpr auto kInHousePreferredPriority = std::to_array<SessionBackend>({
-    SessionBackend::InHouseHtml,
+constexpr auto kPlussWebViewPreferredPriority = std::to_array<SessionBackend>({
+    SessionBackend::PlussWebView,
     SessionBackend::GtkWebKit,
     SessionBackend::MacWebKit,
     SessionBackend::WinWebView2,
 });
 
-constexpr auto kInHouseOnlyPriority = std::to_array<SessionBackend>({
-    SessionBackend::InHouseHtml,
+constexpr auto kPlussWebViewOnlyPriority = std::to_array<SessionBackend>({
+    SessionBackend::PlussWebView,
 });
 
 HostCapabilities capabilities_for_backend_(const SessionBackend backend) noexcept {
@@ -62,7 +62,7 @@ HostCapabilities capabilities_for_backend_(const SessionBackend backend) noexcep
       caps.supports_png_snapshot = true;
 #endif
       return caps;
-    case SessionBackend::InHouseHtml:
+    case SessionBackend::PlussWebView:
       caps.available = detail::inhouse_html_viewer_available();
       caps.supports_png_snapshot = true;
       return caps;
@@ -173,13 +173,13 @@ void SessionController::transition_(SessionState to, std::string note) {
 
 SessionBackend SessionController::select_backend_() const noexcept {
   switch (options_.backend_preference) {
-    case HtmlBackendPreference::NativeWebView:
+    case BackendPreference::NativeWebView:
       return first_available_backend_(kNativeWebViewPriority);
-    case HtmlBackendPreference::InHouseHtml:
-      return first_available_backend_(kInHousePreferredPriority);
-    case HtmlBackendPreference::InHouseOnly:
-      return first_available_backend_(kInHouseOnlyPriority);
-    case HtmlBackendPreference::Auto:
+    case BackendPreference::PlussWebView:
+      return first_available_backend_(kPlussWebViewPreferredPriority);
+    case BackendPreference::PlussWebViewOnly:
+      return first_available_backend_(kPlussWebViewOnlyPriority);
+    case BackendPreference::Auto:
       return first_available_backend_(kAutoBackendPriority);
   }
   return SessionBackend::None;
@@ -231,7 +231,7 @@ bool SessionController::launch_on_backend_(SessionBackend backend,
 #else
       return false;
 #endif
-    case SessionBackend::InHouseHtml:
+    case SessionBackend::PlussWebView:
       return detail::show_inhouse_html_window(title,
                                               html,
                                               width,

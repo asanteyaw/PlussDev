@@ -27,7 +27,7 @@ int main() {
   </div>
   <table id="metrics" class="card">
     <tr><th>Metric</th><th>Value</th></tr>
-    <tr><td>Backend</td><td>InHouseHtml</td></tr>
+    <tr><td>Backend</td><td>PlussWebView</td></tr>
     <tr><td>Renderer</td><td>SoftwareRenderEngine</td></tr>
     <tr><td>Status</td><td>Smoke Pass</td></tr>
   </table>

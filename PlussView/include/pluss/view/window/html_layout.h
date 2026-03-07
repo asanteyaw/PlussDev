@@ -12,6 +12,17 @@ struct HtmlHitRegion {
   int value{0};
 };
 
+struct HtmlRenderStats {
+  RectI document_viewport_rect{};
+  RectI table_viewport_rect{};
+  int document_max_scroll_x{0};
+  int document_max_scroll_y{0};
+  int table_max_scroll_x{0};
+  int table_max_scroll_y{0};
+  int table_body_row_height_px{0};
+  bool has_table{false};
+};
+
 struct HtmlRenderConfig {
   int root_padding_px{18};
   int top_bar_height_px{54};
@@ -30,6 +41,7 @@ struct HtmlRenderConfig {
   std::string active_input_target{};
   std::string active_input_value{};
   std::vector<HtmlHitRegion>* hit_regions{nullptr};
+  HtmlRenderStats* render_stats{nullptr};
 };
 
 [[nodiscard]] Scene build_html_document_scene(const HtmlDocument& document,

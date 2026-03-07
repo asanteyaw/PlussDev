@@ -5,11 +5,11 @@
 
 namespace pluss::view {
 
-enum class HtmlBackendPreference : std::uint8_t {
+enum class BackendPreference : std::uint8_t {
   Auto = 0,
   NativeWebView = 1,
-  InHouseHtml = 2,
-  InHouseOnly = 3,
+  PlussWebView = 2,
+  PlussWebViewOnly = 3,
 };
 
 struct HtmlWindowOptions {
@@ -19,7 +19,7 @@ struct HtmlWindowOptions {
   std::string svg_snapshot_name{"view.svg"};
   std::int64_t width{1280};
   std::int64_t height{760};
-  HtmlBackendPreference backend_preference{HtmlBackendPreference::Auto};
+  BackendPreference backend_preference{BackendPreference::Auto};
 };
 
 [[nodiscard]] bool runtime_gui_environment_available() noexcept;

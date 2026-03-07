@@ -26,9 +26,9 @@ opts.title = "PlussView";
 opts.snapshot_name = "plot-view.png";
 opts.width = 1280;
 opts.height = 760;
-opts.backend_preference = pluss::view::HtmlBackendPreference::Auto;
-// Use InHouseHtml to prefer the in-house HTML renderer backend.
-// opts.backend_preference = pluss::view::HtmlBackendPreference::InHouseHtml;
+opts.backend_preference = pluss::view::BackendPreference::Auto;
+// Use PlussWebView to prefer the in-house HTML renderer backend.
+// opts.backend_preference = pluss::view::BackendPreference::PlussWebView;
 
 const bool opened = pluss::view::show_html_window(html, opts);
 ```

@@ -135,6 +135,16 @@ void test_comma_fixture_load_and_cases() {
   expect(!idx.empty(), "comma fixture: cases unexpectedly empty");
   expect(idx.front() == 0, "comma fixture: cases must start at 0");
   expect(idx.back() == 63, "comma fixture: cases last value mismatch");
+
+  pluss::table::display::DisplayOptions show_opts;
+  show_opts.mode = pluss::table::display::DisplayMode::Compact;
+  show_opts.terminal_width = 120;
+  const auto date_only = df.features({"Updated Date"}).head(3, false).to_string(show_opts);
+  const auto first_date = std::string(df.features("Updated Date").as_timeline().to_note_date().at(0));
+  expect(date_only.find(first_date) != std::string::npos,
+         "timeline display should include plain date for date-only values");
+  expect(date_only.find("T00:00:00") == std::string::npos,
+         "timeline display should omit synthetic midnight time for date-only values");
 }
 
 void test_semicolon_fixture_with_case_col() {

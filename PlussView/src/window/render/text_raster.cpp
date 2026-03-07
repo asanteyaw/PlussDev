@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <cmath>
+#include <optional>
 
 #include "pluss/view/window/text_layout.h"
 
@@ -13,6 +14,11 @@ namespace {
 
 constexpr int kGlyphCols = 5;
 constexpr int kGlyphRows = 7;
+
+[[nodiscard]] bool contains(const RectI rect, const PointI p) {
+  return !rect.empty() && p.x >= rect.x && p.y >= rect.y && p.x < (rect.x + rect.width) &&
+         p.y < (rect.y + rect.height);
+}
 
 [[nodiscard]] std::array<std::uint8_t, 7> glyph_bitmap(char ch) {
   switch (ch) {
@@ -110,15 +116,27 @@ constexpr int kGlyphRows = 7;
   }
 }
 
-void fill_block(PixelCanvas& canvas, const RectI rect, const Color color) {
+void fill_block(PixelCanvas& canvas,
+                const RectI rect,
+                const Color color,
+                const std::optional<RectI>& clip) {
   if (rect.empty()) {
     return;
   }
   const auto size = canvas.size();
-  const int x0 = std::max(0, rect.x);
-  const int y0 = std::max(0, rect.y);
-  const int x1 = std::min(size.width, rect.x + rect.width);
-  const int y1 = std::min(size.height, rect.y + rect.height);
+  int x0 = std::max(0, rect.x);
+  int y0 = std::max(0, rect.y);
+  int x1 = std::min(size.width, rect.x + rect.width);
+  int y1 = std::min(size.height, rect.y + rect.height);
+  if (clip.has_value()) {
+    x0 = std::max(x0, clip->x);
+    y0 = std::max(y0, clip->y);
+    x1 = std::min(x1, clip->x + clip->width);
+    y1 = std::min(y1, clip->y + clip->height);
+  }
+  if (x0 >= x1 || y0 >= y1) {
+    return;
+  }
 
   for (int y = y0; y < y1; ++y) {
     for (int x = x0; x < x1; ++x) {
@@ -127,15 +145,28 @@ void fill_block(PixelCanvas& canvas, const RectI rect, const Color color) {
   }
 }
 
-void blend_block(PixelCanvas& canvas, const RectI rect, const Color color, const std::uint8_t alpha) {
+void blend_block(PixelCanvas& canvas,
+                 const RectI rect,
+                 const Color color,
+                 const std::uint8_t alpha,
+                 const std::optional<RectI>& clip) {
   if (rect.empty() || alpha == 0) {
     return;
   }
   const auto size = canvas.size();
-  const int x0 = std::max(0, rect.x);
-  const int y0 = std::max(0, rect.y);
-  const int x1 = std::min(size.width, rect.x + rect.width);
-  const int y1 = std::min(size.height, rect.y + rect.height);
+  int x0 = std::max(0, rect.x);
+  int y0 = std::max(0, rect.y);
+  int x1 = std::min(size.width, rect.x + rect.width);
+  int y1 = std::min(size.height, rect.y + rect.height);
+  if (clip.has_value()) {
+    x0 = std::max(x0, clip->x);
+    y0 = std::max(y0, clip->y);
+    x1 = std::min(x1, clip->x + clip->width);
+    y1 = std::min(y1, clip->y + clip->height);
+  }
+  if (x0 >= x1 || y0 >= y1) {
+    return;
+  }
 
   for (int y = y0; y < y1; ++y) {
     for (int x = x0; x < x1; ++x) {
@@ -152,7 +183,11 @@ void blend_block(PixelCanvas& canvas, const RectI rect, const Color color, const
   return 1.0 - fpart(x);
 }
 
-void draw_wu_line(PixelCanvas& canvas, PointI p0, PointI p1, const Color color) {
+void draw_wu_line(PixelCanvas& canvas,
+                  PointI p0,
+                  PointI p1,
+                  const Color color,
+                  const std::optional<RectI>& clip) {
   bool steep = std::abs(p1.y - p0.y) > std::abs(p1.x - p0.x);
   if (steep) {
     std::swap(p0.x, p0.y);
@@ -172,9 +207,15 @@ void draw_wu_line(PixelCanvas& canvas, PointI p0, PointI p1, const Color color) 
       return;
     }
     if (steep) {
-      canvas.blend_pixel(PointI{y, x}, color, alpha);
+      const PointI p{y, x};
+      if (!clip.has_value() || contains(*clip, p)) {
+        canvas.blend_pixel(p, color, alpha);
+      }
     } else {
-      canvas.blend_pixel(PointI{x, y}, color, alpha);
+      const PointI p{x, y};
+      if (!clip.has_value() || contains(*clip, p)) {
+        canvas.blend_pixel(p, color, alpha);
+      }
     }
   };
 
@@ -204,10 +245,15 @@ void draw_wu_line(PixelCanvas& canvas, PointI p0, PointI p1, const Color color) 
   plot(xpxl2, ypxl2 + 1, fpart(yend2) * xgap2);
 }
 
-void draw_line(PixelCanvas& canvas, PointI p0, PointI p1, const int thickness, const Color color) {
+void draw_line(PixelCanvas& canvas,
+               PointI p0,
+               PointI p1,
+               const int thickness,
+               const Color color,
+               const std::optional<RectI>& clip) {
   const int t = std::max(1, thickness);
   if (t == 1) {
-    draw_wu_line(canvas, p0, p1, color);
+    draw_wu_line(canvas, p0, p1, color, clip);
     return;
   }
 
@@ -218,7 +264,7 @@ void draw_line(PixelCanvas& canvas, PointI p0, PointI p1, const int thickness, c
   int err = dx - dy;
 
   while (true) {
-    fill_block(canvas, RectI{p0.x - t / 2, p0.y - t / 2, t, t}, color);
+    fill_block(canvas, RectI{p0.x - t / 2, p0.y - t / 2, t, t}, color, clip);
     if (p0.x == p1.x && p0.y == p1.y) {
       break;
     }
@@ -235,7 +281,11 @@ void draw_line(PixelCanvas& canvas, PointI p0, PointI p1, const int thickness, c
   }
 }
 
-void draw_glyph(PixelCanvas& canvas, const TextGlyph& glyph, const PointI anchor, const Color color) {
+void draw_glyph(PixelCanvas& canvas,
+                const TextGlyph& glyph,
+                const PointI anchor,
+                const Color color,
+                const std::optional<RectI>& clip) {
   if (glyph.ch == ' ') {
     return;
   }
@@ -258,34 +308,42 @@ void draw_glyph(PixelCanvas& canvas, const TextGlyph& glyph, const PointI anchor
       const int block_x = anchor.x + glyph.x + col * cell;
       const int block_y = top + row * cell;
       if (cell == 1) {
-        fill_block(canvas, RectI{block_x, block_y, 1, 1}, color);
-        blend_block(canvas, RectI{block_x + 1, block_y, 1, 1}, color, edge_alpha);
-        blend_block(canvas, RectI{block_x, block_y + 1, 1, 1}, color, edge_alpha);
-        blend_block(canvas, RectI{block_x + 1, block_y + 1, 1, 1}, color, corner_alpha);
+        fill_block(canvas, RectI{block_x, block_y, 1, 1}, color, clip);
+        blend_block(canvas, RectI{block_x + 1, block_y, 1, 1}, color, edge_alpha, clip);
+        blend_block(canvas, RectI{block_x, block_y + 1, 1, 1}, color, edge_alpha, clip);
+        blend_block(canvas, RectI{block_x + 1, block_y + 1, 1, 1}, color, corner_alpha, clip);
         continue;
       }
       if (cell == 2) {
-        fill_block(canvas, RectI{block_x, block_y, 2, 2}, color);
-        blend_block(canvas, RectI{block_x - 1, block_y, 1, 2}, color, corner_alpha);
-        blend_block(canvas, RectI{block_x + 2, block_y, 1, 2}, color, corner_alpha);
-        blend_block(canvas, RectI{block_x, block_y - 1, 2, 1}, color, corner_alpha);
-        blend_block(canvas, RectI{block_x, block_y + 2, 2, 1}, color, corner_alpha);
+        fill_block(canvas, RectI{block_x, block_y, 2, 2}, color, clip);
+        blend_block(canvas, RectI{block_x - 1, block_y, 1, 2}, color, corner_alpha, clip);
+        blend_block(canvas, RectI{block_x + 2, block_y, 1, 2}, color, corner_alpha, clip);
+        blend_block(canvas, RectI{block_x, block_y - 1, 2, 1}, color, corner_alpha, clip);
+        blend_block(canvas, RectI{block_x, block_y + 2, 2, 1}, color, corner_alpha, clip);
         continue;
       }
 
-      fill_block(canvas, RectI{block_x + 1, block_y + 1, cell - 2, cell - 2}, color);
+      fill_block(canvas, RectI{block_x + 1, block_y + 1, cell - 2, cell - 2}, color, clip);
 
       for (int i = 1; i < (cell - 1); ++i) {
-        canvas.blend_pixel(PointI{block_x + i, block_y}, color, edge_alpha);
-        canvas.blend_pixel(PointI{block_x + i, block_y + cell - 1}, color, edge_alpha);
-        canvas.blend_pixel(PointI{block_x, block_y + i}, color, edge_alpha);
-        canvas.blend_pixel(PointI{block_x + cell - 1, block_y + i}, color, edge_alpha);
+        const PointI top_p{block_x + i, block_y};
+        const PointI bot_p{block_x + i, block_y + cell - 1};
+        const PointI left_p{block_x, block_y + i};
+        const PointI right_p{block_x + cell - 1, block_y + i};
+        if (!clip.has_value() || contains(*clip, top_p)) canvas.blend_pixel(top_p, color, edge_alpha);
+        if (!clip.has_value() || contains(*clip, bot_p)) canvas.blend_pixel(bot_p, color, edge_alpha);
+        if (!clip.has_value() || contains(*clip, left_p)) canvas.blend_pixel(left_p, color, edge_alpha);
+        if (!clip.has_value() || contains(*clip, right_p)) canvas.blend_pixel(right_p, color, edge_alpha);
       }
 
-      canvas.blend_pixel(PointI{block_x, block_y}, color, corner_alpha);
-      canvas.blend_pixel(PointI{block_x + cell - 1, block_y}, color, corner_alpha);
-      canvas.blend_pixel(PointI{block_x, block_y + cell - 1}, color, corner_alpha);
-      canvas.blend_pixel(PointI{block_x + cell - 1, block_y + cell - 1}, color, corner_alpha);
+      const PointI p0{block_x, block_y};
+      const PointI p1{block_x + cell - 1, block_y};
+      const PointI p2{block_x, block_y + cell - 1};
+      const PointI p3{block_x + cell - 1, block_y + cell - 1};
+      if (!clip.has_value() || contains(*clip, p0)) canvas.blend_pixel(p0, color, corner_alpha);
+      if (!clip.has_value() || contains(*clip, p1)) canvas.blend_pixel(p1, color, corner_alpha);
+      if (!clip.has_value() || contains(*clip, p2)) canvas.blend_pixel(p2, color, corner_alpha);
+      if (!clip.has_value() || contains(*clip, p3)) canvas.blend_pixel(p3, color, corner_alpha);
     }
   }
 }
@@ -295,16 +353,21 @@ void draw_glyph(PixelCanvas& canvas, const TextGlyph& glyph, const PointI anchor
 #if !defined(__APPLE__)
 bool render_text_command_native(PixelCanvas& canvas,
                                 const TextCommand& command,
+                                const std::optional<RectI>& clip,
                                 std::vector<RenderEvent>& events) {
   (void)canvas;
   (void)command;
+  (void)clip;
   (void)events;
   return false;
 }
 #endif
 
-void render_text_command(PixelCanvas& canvas, const TextCommand& command, std::vector<RenderEvent>& events) {
-  if (render_text_command_native(canvas, command, events)) {
+void render_text_command(PixelCanvas& canvas,
+                         const TextCommand& command,
+                         const std::optional<RectI>& clip,
+                         std::vector<RenderEvent>& events) {
+  if (render_text_command_native(canvas, command, clip, events)) {
     return;
   }
 
@@ -321,10 +384,11 @@ void render_text_command(PixelCanvas& canvas, const TextCommand& command, std::v
                 PointI{anchor.x + line.x0, anchor.y + line.y0},
                 PointI{anchor.x + line.x1, anchor.y + line.y1},
                 line.thickness,
-                command.color);
+                command.color,
+                clip);
     }
     for (const auto& glyph : layout.glyphs) {
-      draw_glyph(canvas, glyph, anchor, command.color);
+      draw_glyph(canvas, glyph, anchor, command.color, clip);
     }
   };
 

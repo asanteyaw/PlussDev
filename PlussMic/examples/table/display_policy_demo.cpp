@@ -32,13 +32,13 @@ int main() {
 
   std::cout << "\n=== Smart .show() viewer (falls back to terminal if unavailable) ===\n";
   std::cout << "head()/describe() return a DataFrameView.\n";
-  std::cout << "Auto mode uses NativeWebView first, then InHouseHtml if native is unavailable.\n";
+  std::cout << "Auto mode uses NativeWebView first, then PlussWebView if native is unavailable.\n";
   df.head(8).show();
   df.describe().show();
 
   std::cout << "\n=== Explicit backend selection ===\n";
   pluss::table::display::DisplayOptions inhouse_opts;
-  inhouse_opts.backend = pluss::table::display::DisplayBackend::InHouseHtml;
+  inhouse_opts.backend = pluss::table::display::DisplayBackend::PlussWebView;
   inhouse_opts.window_title = "DataFrame - head (InHouse)";
   df.head(8).show(inhouse_opts);
 

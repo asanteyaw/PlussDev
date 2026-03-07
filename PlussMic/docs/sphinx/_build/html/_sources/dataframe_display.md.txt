@@ -117,7 +117,7 @@ df.describe().show(opts);
 Notes:
 
 - `backend = DisplayBackend::Terminal` forces terminal rendering
-- `backend = DisplayBackend::GtkWebKit` requests the GUI path when a GUI backend exists
+- `backend = DisplayBackend::NativeWebView` requests the GUI path when a native backend exists
 - `window_title` is available, but for most users the better pattern is to name the frame with `title(...)` or `title_(...)`
 
 ## DataFrame Titles

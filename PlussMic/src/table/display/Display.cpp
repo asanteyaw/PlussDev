@@ -174,6 +174,33 @@ bool is_numeric_thread(const Thread& t) {
   return dt.is_floating() || dt.is_integral() || dt.scalar == pluss::codem::ScalarType::Bool;
 }
 
+bool series_all_zero_i64(const pluss::Series& s) {
+  const auto values = s.to_vec<std::int64_t>();
+  return std::all_of(values.begin(), values.end(), [](const std::int64_t v) { return v == 0; });
+}
+
+Thread temporal_thread_to_display_note(const Thread& t) {
+  const auto timeline = (t.kind() == ThreadKind::Timeline) ? t.as_timeline() : t.as_timeindex().timeline();
+  const auto has_subsecond = !series_all_zero_i64(timeline.nanosecond());
+  const auto has_clock_time = has_subsecond || !series_all_zero_i64(timeline.second())
+                              || !series_all_zero_i64(timeline.minute())
+                              || !series_all_zero_i64(timeline.hour());
+  if (!has_clock_time) {
+    return Thread(timeline.to_note_date(), t.validity_mask());
+  }
+  if (!has_subsecond) {
+    return Thread(timeline.to_note_datetime(), t.validity_mask());
+  }
+  return Thread(timeline.to_note_datetime_nano(), t.validity_mask());
+}
+
+Thread display_thread(const Thread& t) {
+  if (t.kind() == ThreadKind::Timeline || t.kind() == ThreadKind::TimeIndex) {
+    return temporal_thread_to_display_note(t);
+  }
+  return t;
+}
+
 std::string thread_value_at(const Thread& t, std::int64_t row) {
   if (t.has_validity_mask()) {
     const auto valid = t.validity_mask()->to_vec<bool>();
@@ -530,6 +557,12 @@ TableMatrix build_dataframe_matrix(
 
   const auto names = frame.column_names();
   const auto cols = frame.columns();
+  const auto display_cases = display_thread(frame.cases());
+  std::vector<Thread> display_cols;
+  display_cols.reserve(cols.size());
+  for (const auto& col : cols) {
+    display_cols.push_back(display_thread(col));
+  }
 
   auto has_negative_visible_value = [&](std::int64_t cidx) {
     const auto& col = cols[static_cast<std::size_t>(cidx)];
@@ -538,7 +571,7 @@ TableMatrix build_dataframe_matrix(
     }
 
     auto row_is_negative = [&](std::int64_t ridx) {
-      const auto v = thread_value_at(col, ridx);
+      const auto v = thread_value_at(display_cols[static_cast<std::size_t>(cidx)], ridx);
       return !v.empty() && v.front() == '-';
     };
 
@@ -595,11 +628,11 @@ TableMatrix build_dataframe_matrix(
     row.reserve(m.headers.size());
 
     if (options.show_case_index) {
-      row.push_back(clip_cell(thread_value_at(frame.cases(), ridx), options.max_cell_width));
+      row.push_back(clip_cell(thread_value_at(display_cases, ridx), options.max_cell_width));
     }
 
     auto render_data_cell = [&](std::int64_t cidx) {
-      std::string value = thread_value_at(cols[static_cast<std::size_t>(cidx)], ridx);
+      std::string value = thread_value_at(display_cols[static_cast<std::size_t>(cidx)], ridx);
       if (sign_pad_by_column.contains(cidx) && sign_pad_by_column.at(cidx)) {
         if (!value.empty() && value != "NA" && value.front() != '-') {
           value.insert(value.begin(), ' ');
@@ -689,15 +722,15 @@ DisplayBackend resolve_backend_(const DisplayOptions& options) {
 
   if (configured == DisplayBackend::Auto) {
     // Default remains native-webview first for best fidelity, with in-house fallback.
-    return native_webview_backend_available_() ? DisplayBackend::NativeWebView : DisplayBackend::InHouseHtml;
+    return native_webview_backend_available_() ? DisplayBackend::NativeWebView : DisplayBackend::PlussWebView;
   }
 
-  if (configured == DisplayBackend::NativeWebView || configured == DisplayBackend::GtkWebKit) {
+  if (configured == DisplayBackend::NativeWebView) {
     return native_webview_backend_available_() ? DisplayBackend::NativeWebView : DisplayBackend::Terminal;
   }
 
-  if (configured == DisplayBackend::InHouseHtml) {
-    return DisplayBackend::InHouseHtml;
+  if (configured == DisplayBackend::PlussWebView) {
+    return DisplayBackend::PlussWebView;
   }
 
   return configured;
@@ -1178,6 +1211,12 @@ std::string render_html_table_body_(const DataFrame& frame,
                                     const DisplayOptions& options,
                                     std::string_view table_id) {
   const auto cols = frame.columns();
+  const auto display_cases = display_thread(frame.cases());
+  std::vector<Thread> display_cols;
+  display_cols.reserve(cols.size());
+  for (const auto& col : cols) {
+    display_cols.push_back(display_thread(col));
+  }
   const auto names = frame.column_names();
 
   std::string body;
@@ -1218,7 +1257,7 @@ std::string render_html_table_body_(const DataFrame& frame,
   for (std::int64_t row = 0; row < frame.ncases(); ++row) {
     body += "<tr>";
     if (options.show_case_index) {
-      const auto case_value = thread_value_at(frame.cases(), row);
+      const auto case_value = thread_value_at(display_cases, row);
       const auto case_numeric = is_numeric_thread(frame.cases());
       body += fmt::format("<td class=\"sticky-left{}\" data-sort-value=\"{}\">{}</td>",
                           case_numeric ? " num" : "",
@@ -1226,7 +1265,7 @@ std::string render_html_table_body_(const DataFrame& frame,
                           escape_html_(case_value));
     }
     for (std::size_t col = 0; col < cols.size(); ++col) {
-      const auto value = thread_value_at(cols[col], row);
+      const auto value = thread_value_at(display_cols[col], row);
       const auto numeric = is_numeric_thread(cols[col]);
       body += fmt::format("<td class=\"{}\" data-sort-value=\"{}\">{}</td>",
                           numeric ? "num" : "",
@@ -1249,6 +1288,11 @@ std::string render_html_table_(const DataFrame& frame,
 }
 
 std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options) {
+  std::optional<Thread> display_axis0;
+  if (atlas.axis0_labels().has_value()) {
+    display_axis0 = display_thread(*atlas.axis0_labels());
+  }
+
   std::string body;
   body += "<div class=\"summary-grid\">";
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Depth</div><div class=\"value\">{}</div></div>",
@@ -1274,8 +1318,8 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   body += "<div class=\"atlas-nav\">";
   for (std::int64_t i = 0; i < atlas.depth(); ++i) {
     std::string label = fmt::format("Frame {}", i);
-    if (atlas.axis0_labels().has_value()) {
-      label = thread_value_at(*atlas.axis0_labels(), i);
+    if (display_axis0.has_value()) {
+      label = thread_value_at(*display_axis0, i);
     }
     body += fmt::format("<button type=\"button\" class=\"atlas-tab{}\" data-frame-index=\"{}\">{}</button>",
                         i == 0 ? " active" : "",
@@ -1286,8 +1330,8 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
 
   for (std::int64_t i = 0; i < atlas.depth(); ++i) {
     std::string label = fmt::format("Frame {}", i);
-    if (atlas.axis0_labels().has_value()) {
-      label = thread_value_at(*atlas.axis0_labels(), i);
+    if (display_axis0.has_value()) {
+      label = thread_value_at(*display_axis0, i);
     }
     const auto frame = atlas.frame(i);
     body += fmt::format("<section class=\"atlas-panel{}\" data-frame-index=\"{}\">",
@@ -1309,6 +1353,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
 
 std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& options) {
   const auto cols = frame.columns();
+  const auto display_cases = display_thread(frame.cases());
   const auto names = frame.column_names();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
@@ -1319,8 +1364,8 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
     memory_bytes += estimate_bytes(cols[i]);
   }
 
-  const auto first_case = frame.ncases() > 0 ? thread_value_at(frame.cases(), 0) : std::string("NA");
-  const auto last_case = frame.ncases() > 0 ? thread_value_at(frame.cases(), frame.ncases() - 1) : std::string("NA");
+  const auto first_case = frame.ncases() > 0 ? thread_value_at(display_cases, 0) : std::string("NA");
+  const auto last_case = frame.ncases() > 0 ? thread_value_at(display_cases, frame.ncases() - 1) : std::string("NA");
 
   std::string body;
   body += "<div class=\"summary-grid\">";
@@ -1387,14 +1432,14 @@ bool show_html_window_(const std::string& html,
   window_opts.width = std::max<std::int64_t>(640, options.viewer_width);
   window_opts.height = std::max<std::int64_t>(420, options.viewer_height);
   switch (backend) {
-    case DisplayBackend::InHouseHtml:
-      window_opts.backend_preference = pluss::view::HtmlBackendPreference::InHouseOnly;
+    case DisplayBackend::PlussWebView:
+      window_opts.backend_preference = pluss::view::BackendPreference::PlussWebViewOnly;
       break;
     case DisplayBackend::NativeWebView:
-      window_opts.backend_preference = pluss::view::HtmlBackendPreference::NativeWebView;
+      window_opts.backend_preference = pluss::view::BackendPreference::NativeWebView;
       break;
     case DisplayBackend::Auto:
-      window_opts.backend_preference = pluss::view::HtmlBackendPreference::Auto;
+      window_opts.backend_preference = pluss::view::BackendPreference::Auto;
       break;
     case DisplayBackend::Terminal:
       return false;
@@ -1514,6 +1559,7 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   const auto terminal_width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
 
   const auto cols = frame.columns();
+  const auto display_cases = display_thread(frame.cases());
   const auto names = frame.column_names();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
@@ -1525,8 +1571,8 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
     memory_bytes += estimate_bytes(cols[i]);
   }
 
-  const auto first_case = frame.ncases() > 0 ? thread_value_at(frame.cases(), 0) : std::string("NA");
-  const auto last_case = frame.ncases() > 0 ? thread_value_at(frame.cases(), frame.ncases() - 1) : std::string("NA");
+  const auto first_case = frame.ncases() > 0 ? thread_value_at(display_cases, 0) : std::string("NA");
+  const auto last_case = frame.ncases() > 0 ? thread_value_at(display_cases, frame.ncases() - 1) : std::string("NA");
 
   TableMatrix summary;
   summary.headers = {"Field", "Value"};
@@ -1611,6 +1657,10 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
   if (frame_opts.mode == DisplayMode::Wide) {
     frame_opts.mode = DisplayMode::Auto;
   }
+  std::optional<Thread> display_axis0;
+  if (atlas.axis0_labels().has_value()) {
+    display_axis0 = display_thread(*atlas.axis0_labels());
+  }
 
   for (std::size_t i = 0; i < visible.size(); ++i) {
     if (ellipsis && i == static_cast<std::size_t>(effective.edge_rows)) {
@@ -1619,8 +1669,8 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
 
     const auto idx = visible[i];
     std::string label = fmt::format("frame[{}]", idx);
-    if (atlas.axis0_labels().has_value()) {
-      label += fmt::format(" case={}", thread_value_at(*atlas.axis0_labels(), idx));
+    if (display_axis0.has_value()) {
+      label += fmt::format(" case={}", thread_value_at(*display_axis0, idx));
     }
     lines.push_back(label);
     lines.push_back(render(atlas.frame(idx), frame_opts));
@@ -1641,7 +1691,7 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
     render_opts.backend = backend;
-    if (backend == DisplayBackend::InHouseHtml) {
+    if (backend == DisplayBackend::PlussWebView) {
       render_opts.html_desktop_table_viewport = true;
     }
     const auto html = render_html(frame, render_opts);
@@ -1657,7 +1707,7 @@ void show(const Thread& thread, const DisplayOptions& options) {
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
     render_opts.backend = backend;
-    if (backend == DisplayBackend::InHouseHtml) {
+    if (backend == DisplayBackend::PlussWebView) {
       render_opts.html_desktop_table_viewport = true;
     }
     const auto html = render_html(thread, render_opts);
@@ -1673,7 +1723,7 @@ void show(const Atlas& atlas, const DisplayOptions& options) {
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
     render_opts.backend = backend;
-    if (backend == DisplayBackend::InHouseHtml) {
+    if (backend == DisplayBackend::PlussWebView) {
       render_opts.html_desktop_table_viewport = true;
     }
     const auto html = render_html(atlas, render_opts);
@@ -1689,7 +1739,7 @@ void show_info(const DataFrame& frame, const DisplayOptions& options) {
   if (backend != DisplayBackend::Terminal) {
     auto render_opts = options;
     render_opts.backend = backend;
-    if (backend == DisplayBackend::InHouseHtml) {
+    if (backend == DisplayBackend::PlussWebView) {
       render_opts.html_desktop_table_viewport = true;
     }
     const auto html = render_info_html(frame, render_opts);

@@ -108,6 +108,7 @@ NSFont* font_from_family_list(const std::string& family_list, const CGFloat size
 
 bool render_text_command_native(PixelCanvas& canvas,
                                 const TextCommand& command,
+                                const std::optional<RectI>& clip,
                                 std::vector<RenderEvent>& events) {
   (void)events;
   if (canvas.empty() || command.text.empty() || command.pixel_size <= 0) {
@@ -248,7 +249,15 @@ bool render_text_command_native(PixelCanvas& canvas,
         if (coverage == 0) {
           continue;
         }
-        canvas.blend_pixel(PointI{left + x, top + y}, command.color, coverage);
+        const PointI target{left + x, top + y};
+        if (clip.has_value()) {
+          const RectI rect = *clip;
+          if (rect.empty() || target.x < rect.x || target.y < rect.y || target.x >= (rect.x + rect.width) ||
+              target.y >= (rect.y + rect.height)) {
+            continue;
+          }
+        }
+        canvas.blend_pixel(target, command.color, coverage);
       }
     }
 

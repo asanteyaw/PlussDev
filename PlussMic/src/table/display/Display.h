@@ -22,9 +22,7 @@ enum class DisplayBackend : std::uint8_t {
   Auto = 0,
   Terminal = 1,
   NativeWebView = 2,
-  InHouseHtml = 3,
-  // Backward-compatible alias for existing call sites.
-  GtkWebKit = NativeWebView,
+  PlussWebView = 3,
 };
 
 struct TerminalInfo {
