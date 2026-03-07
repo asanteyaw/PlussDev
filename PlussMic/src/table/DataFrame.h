@@ -457,6 +457,8 @@ public:
   DataFrameView head(std::int64_t n = 5, bool render = true) const;
   DataFrameView tail(std::int64_t n = 5, bool render = true) const;
   DataFrame sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;
+  DataFrame shift(std::int64_t periods = 1) const;
+  DataFrame shift(std::initializer_list<std::string_view> features, std::int64_t periods = 1) const;
   DataFrame slice(std::int64_t start, std::int64_t stop) const;
   DataFrame take(std::span<const std::int64_t> indices) const;
   DataFrame where(const pluss::Series& bool_mask) const;

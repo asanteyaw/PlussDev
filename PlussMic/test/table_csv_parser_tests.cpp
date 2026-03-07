@@ -1453,6 +1453,22 @@ void test_versatile_dataframe_families() {
   expect(age_le.kind() == ThreadKind::Series && age_eq_self.kind() == ThreadKind::Series,
          "Thread comparison operators should produce Thread outputs");
 
+  const auto age_shifted = age_thread.shift(1);
+  expect(age_shifted.has_validity_mask(), "Thread::shift should null-pad shifted edge");
+  const auto age_shifted_valid = age_shifted.validity_mask()->to_vec<bool>();
+  expect(!age_shifted_valid.front(),
+         "Thread::shift(periods=1) should set first row null");
+  expect(age_shifted.as_series().to_vec<std::int64_t>(1) == age_thread.as_series().to_vec<std::int64_t>(0),
+         "Thread::shift(periods=1) should move values by one case");
+
+  const auto age_self_corr = age_thread.corr(age_thread);
+  const auto age_bal_corr = age_thread.corr(df.features("balance"));
+  const auto age_bal_spearman = age_thread.corr(df.features("balance"), pluss::table::ThreadCorrMethod::Spearman);
+  const auto age_bal_kendall = age_thread.corr(df.features("balance"), pluss::table::ThreadCorrMethod::KendallTau);
+  expect(std::fabs(age_self_corr - 1.0) < 1e-12, "Thread::corr(self) should be 1 for non-constant Series");
+  expect(std::isfinite(age_bal_corr) && std::isfinite(age_bal_spearman) && std::isfinite(age_bal_kendall),
+         "Thread::corr should return finite coefficients on numeric inputs");
+
   auto df_assign = df;
   const auto age_before = df_assign.features("age").as_series().to_vec<std::int64_t>();
   df_assign.with_column_("age", df_assign.features("age") + 7.0);
@@ -1583,6 +1599,31 @@ void test_versatile_dataframe_families() {
   const auto shifted_tdf = tdf.shift_time({"start"}, 1, "D");
   expect(shifted_tdf.ncases() == tdf.ncases() && shifted_tdf.has_feature("start"),
          "shift_time should preserve shape and update selected temporal feature");
+
+  const auto shifted_age = df.shift({"age"}, 1);
+  expect(shifted_age.ncases() == df.ncases() && shifted_age.nfeats() == df.nfeats(),
+         "shift(selected, periods) should preserve frame shape");
+  expect(shifted_age.features("age").has_validity_mask(),
+         "shift should introduce null validity at shifted edge");
+  const auto shifted_age_valid = shifted_age.features("age").validity_mask()->to_vec<bool>();
+  const auto shifted_age_values = shifted_age.features("age").as_series().to_vec<std::int64_t>();
+  const auto base_age_values = df.features("age").as_series().to_vec<std::int64_t>();
+  expect(!shifted_age_valid.front() && shifted_age_values[1] == base_age_values[0],
+         "shift(periods=1) should move values down and mark first row null");
+
+  const auto shifted_job_lead = df.shift({"job"}, -1);
+  expect(shifted_job_lead.features("job").has_validity_mask(),
+         "shift with negative periods should null-pad tail rows");
+  const auto shifted_job_valid = shifted_job_lead.features("job").validity_mask()->to_vec<bool>();
+  expect(!shifted_job_valid.back(),
+         "shift(periods=-1) should set last row null");
+  expect(std::string(shifted_job_lead.features("job").as_note().at(0))
+             == std::string(df.features("job").as_note().at(1)),
+         "shift(periods=-1) should move values up by one case");
+
+  const auto zero_shift = df.shift(0);
+  expect(zero_shift.equals(df), "shift(periods=0) should be identity");
+
   const auto floored_tdf = tdf.floor_time({"start"}, "D");
   expect(floored_tdf.ncases() == tdf.ncases(), "floor_time should preserve shape");
   const auto localized_tdf = tdf.tz_localize({"start"}, "UTC");

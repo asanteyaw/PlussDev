@@ -121,6 +121,117 @@ bool is_numeric_series_type(const pluss::Series& s) {
   return dt.scalar == pluss::codem::ScalarType::Bool || dt.is_integral() || dt.is_floating();
 }
 
+double pearson_corr_from_vectors_(const std::vector<double>& x, const std::vector<double>& y) {
+  const auto n = x.size();
+  if (n < 2 || y.size() != n) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  double sum_x = 0.0;
+  double sum_y = 0.0;
+  double sum_xx = 0.0;
+  double sum_yy = 0.0;
+  double sum_xy = 0.0;
+  for (std::size_t i = 0; i < n; ++i) {
+    const double xv = x[i];
+    const double yv = y[i];
+    sum_x += xv;
+    sum_y += yv;
+    sum_xx += xv * xv;
+    sum_yy += yv * yv;
+    sum_xy += xv * yv;
+  }
+  const auto nd = static_cast<double>(n);
+  const double num = nd * sum_xy - sum_x * sum_y;
+  const double den_x = nd * sum_xx - sum_x * sum_x;
+  const double den_y = nd * sum_yy - sum_y * sum_y;
+  if (den_x <= 0.0 || den_y <= 0.0) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  const double corr = num / std::sqrt(den_x * den_y);
+  if (!std::isfinite(corr)) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  return std::clamp(corr, -1.0, 1.0);
+}
+
+std::vector<double> rank_average_ties_(const std::vector<double>& input, double eps = 1e-12) {
+  const auto n = input.size();
+  std::vector<double> out(n, 0.0);
+  std::vector<std::size_t> order(n, 0);
+  std::iota(order.begin(), order.end(), static_cast<std::size_t>(0));
+  std::stable_sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) {
+    return input[a] < input[b];
+  });
+
+  std::size_t start = 0;
+  while (start < n) {
+    std::size_t stop = start + 1;
+    while (stop < n && std::abs(input[order[stop]] - input[order[start]]) <= eps) {
+      ++stop;
+    }
+    const double rank = 0.5 * (static_cast<double>(start + 1) + static_cast<double>(stop));
+    for (std::size_t k = start; k < stop; ++k) {
+      out[order[k]] = rank;
+    }
+    start = stop;
+  }
+  return out;
+}
+
+double kendall_tau_b_from_vectors_(const std::vector<double>& x, const std::vector<double>& y, double eps = 1e-12) {
+  const auto n = x.size();
+  if (n < 2 || y.size() != n) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+
+  std::int64_t concordant = 0;
+  std::int64_t discordant = 0;
+  std::int64_t tie_x_only = 0;
+  std::int64_t tie_y_only = 0;
+  std::int64_t tie_xy = 0;
+
+  for (std::size_t i = 0; i < n; ++i) {
+    for (std::size_t j = i + 1; j < n; ++j) {
+      const double dx = x[i] - x[j];
+      const double dy = y[i] - y[j];
+      const bool tx = std::abs(dx) <= eps;
+      const bool ty = std::abs(dy) <= eps;
+      if (tx && ty) {
+        ++tie_xy;
+        continue;
+      }
+      if (tx) {
+        ++tie_x_only;
+        continue;
+      }
+      if (ty) {
+        ++tie_y_only;
+        continue;
+      }
+      const double prod = dx * dy;
+      if (prod > 0.0) {
+        ++concordant;
+      } else if (prod < 0.0) {
+        ++discordant;
+      }
+    }
+  }
+
+  const double n0 = static_cast<double>(concordant + discordant + tie_x_only + tie_y_only + tie_xy);
+  const double n1 = static_cast<double>(tie_x_only + tie_xy);
+  const double n2 = static_cast<double>(tie_y_only + tie_xy);
+  const double den_x = n0 - n1;
+  const double den_y = n0 - n2;
+  if (den_x <= 0.0 || den_y <= 0.0) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  const double tau = static_cast<double>(concordant - discordant) / std::sqrt(den_x * den_y);
+  if (!std::isfinite(tau)) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  return std::clamp(tau, -1.0, 1.0);
+}
+
 std::string infer_dtype_name(const Payload& payload) {
   return std::visit([](const auto& v) -> std::string {
     using T = std::decay_t<decltype(v)>;

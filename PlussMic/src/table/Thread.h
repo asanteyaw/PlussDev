@@ -61,6 +61,12 @@ enum class ThreadWindowOp : std::uint8_t {
   RollingMax = 3,
 };
 
+enum class ThreadCorrMethod : std::uint8_t {
+  Pearson = 0,
+  Spearman = 1,
+  KendallTau = 2,
+};
+
 class Thread {
 public:
   Thread();
@@ -126,6 +132,7 @@ public:
   // 1D row-space transforms.
   Thread head(std::int64_t n) const;
   Thread tail(std::int64_t n) const;
+  Thread shift(std::int64_t periods = 1) const;
   Thread slice(std::int64_t start, std::int64_t stop) const;
   Thread take(std::span<const std::int64_t> indices) const;
   Thread filter(const pluss::Series& bool_mask) const;
@@ -140,6 +147,7 @@ public:
   pluss::Series max() const;
   pluss::Series var(bool unbiased = true) const;
   pluss::Series std(bool unbiased = true) const;
+  double corr(const Thread& other, ThreadCorrMethod method = ThreadCorrMethod::Pearson) const;
 
   // Text operations (Note payload only).
   Thread lower() const;

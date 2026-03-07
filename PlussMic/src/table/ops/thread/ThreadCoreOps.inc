@@ -258,6 +258,46 @@ Thread Thread::tail(std::int64_t n) const {
   return slice(size() - clipped, size());
 }
 
+Thread Thread::shift(std::int64_t periods) const {
+  const auto n = size();
+  if (n <= 0 || periods == 0) {
+    return *this;
+  }
+
+  std::vector<std::int64_t> out_rows(static_cast<std::size_t>(n), 0);
+  std::iota(out_rows.begin(), out_rows.end(), static_cast<std::int64_t>(0));
+
+  std::vector<std::int64_t> indices(static_cast<std::size_t>(n), 0);
+  std::transform(out_rows.begin(), out_rows.end(), indices.begin(), [&](std::int64_t out_row) {
+    const auto src_row = out_row - periods;
+    return (src_row >= 0 && src_row < n) ? src_row : static_cast<std::int64_t>(0);
+  });
+
+  std::vector<bool> out_valid(static_cast<std::size_t>(n), false);
+  std::optional<std::vector<bool>> src_valid = std::nullopt;
+  if (has_validity_mask()) {
+    src_valid = validity_mask()->to_vec<bool>();
+  }
+
+  std::transform(out_rows.begin(), out_rows.end(), out_valid.begin(), [&](std::int64_t out_row) {
+    const auto src_row = out_row - periods;
+    if (src_row < 0 || src_row >= n) {
+      return false;
+    }
+    return src_valid.has_value() ? (*src_valid)[static_cast<std::size_t>(src_row)] : true;
+  });
+
+  auto shifted = take(indices);
+  if (std::all_of(out_valid.begin(), out_valid.end(), [](bool v) { return v; })) {
+    return shifted.clear_validity_mask();
+  }
+
+  auto mask = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
+  auto* p = reinterpret_cast<bool*>(mask.raw_data());
+  std::copy(out_valid.begin(), out_valid.end(), p);
+  return shifted.with_validity_mask(mask);
+}
+
 Thread Thread::slice(std::int64_t start, std::int64_t stop) const {
   const auto [s, e] = normalize_slice(start, stop, size());
   std::vector<std::int64_t> indices;
@@ -419,6 +459,42 @@ pluss::Series Thread::std(bool unbiased) const {
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::std on an empty (all-null) selection");
   return s.std(unbiased);
+}
+
+double Thread::corr(const Thread& other, ThreadCorrMethod method) const {
+  PLUSS_CHECK(kind() == ThreadKind::Series && other.kind() == ThreadKind::Series,
+              "Thread::corr: both operands must be Series");
+  PLUSS_CHECK(size() == other.size(), "Thread::corr: size mismatch");
+  PLUSS_CHECK(is_numeric_series_type(as_series()) && is_numeric_series_type(other.as_series()),
+              "Thread::corr: both operands must be numeric Series");
+
+  auto lhs = as_series().to(pluss::codem::ScalarType::Float64);
+  auto rhs = other.as_series().to(pluss::codem::ScalarType::Float64);
+
+  auto valid = lhs.isfinite().logical_and(rhs.isfinite());
+  if (has_validity_mask()) {
+    valid = valid.logical_and(*validity_mask());
+  }
+  if (other.has_validity_mask()) {
+    valid = valid.logical_and(*other.validity_mask());
+  }
+
+  const auto x = lhs.masked_select(valid).to_vec<double>();
+  const auto y = rhs.masked_select(valid).to_vec<double>();
+
+  switch (method) {
+    case ThreadCorrMethod::Pearson:
+      return pearson_corr_from_vectors_(x, y);
+    case ThreadCorrMethod::Spearman: {
+      const auto rx = rank_average_ties_(x);
+      const auto ry = rank_average_ties_(y);
+      return pearson_corr_from_vectors_(rx, ry);
+    }
+    case ThreadCorrMethod::KendallTau:
+      return kendall_tau_b_from_vectors_(x, y);
+    default:
+      return pearson_corr_from_vectors_(x, y);
+  }
 }
 
 Thread Thread::lower() const {

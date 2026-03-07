@@ -37,6 +37,33 @@ std::vector<std::size_t> resolve_time_feature_indices_(
   return indices;
 }
 
+std::vector<std::size_t> resolve_shift_feature_indices_(
+    const detail::DataFrameImpl& src,
+    std::initializer_list<std::string_view> features,
+    std::string_view where) {
+  std::vector<std::size_t> indices;
+  if (features.size() == 0) {
+    indices.reserve(src.columns_.size());
+    for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+      indices.push_back(i);
+    }
+    return indices;
+  }
+
+  std::unordered_set<std::string> seen;
+  seen.reserve(features.size());
+  indices.reserve(features.size());
+  for (const auto name_sv : features) {
+    const auto name = owned_name(name_sv);
+    PLUSS_CHECK(!name.empty(), std::string(where) + ": feature name cannot be empty");
+    PLUSS_CHECK(seen.insert(name).second, std::string(where) + ": duplicate feature '" + name + "'");
+    const auto it = src.name_to_idx_.find(name);
+    PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + name + "'");
+    indices.push_back(it->second);
+  }
+  return indices;
+}
+
 pluss::TimeIndex time_axis_to_index_(const Thread& axis, std::string_view where) {
   if (axis.kind() == ThreadKind::TimeIndex) {
     return axis.as_timeindex();
@@ -110,6 +137,29 @@ DataFrame DataFrame::sample(std::int64_t n, std::optional<std::uint64_t> random_
   std::shuffle(idx.begin(), idx.end(), rng);
   idx.resize(static_cast<std::size_t>(draw));
   return take(idx);
+}
+
+DataFrame DataFrame::shift(std::int64_t periods) const {
+  return shift({}, periods);
+}
+
+DataFrame DataFrame::shift(std::initializer_list<std::string_view> features, std::int64_t periods) const {
+  const auto& src = impl_ref_();
+  if (src.columns_.empty() || src.nrows_ == 0 || periods == 0) {
+    return *this;
+  }
+
+  const auto indices = resolve_shift_feature_indices_(src, features, "DataFrame::shift");
+  if (indices.empty()) {
+    return *this;
+  }
+
+  auto out_cols = src.columns_;
+  for (const auto idx : indices) {
+    out_cols[idx] = src.columns_[idx].shift(periods);
+  }
+
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), src.cases_));
 }
 
 DataFrame DataFrame::slice(std::int64_t start, std::int64_t stop) const {
