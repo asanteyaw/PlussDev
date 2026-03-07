@@ -3937,14 +3937,42 @@ void render_planar_axes(
         x_label_rotation);
   }
   if (!pane.y_axis().label.empty()) {
+    const bool center_on_axis = pane.y_axis().label_centered_on_axis;
+    const double label_x = center_on_axis ? (layout.plot.x - 38.0) : (layout.outer.x + 6.0);
+    const double label_y = center_on_axis ? (layout.plot.y + layout.plot.height * 0.5) : (layout.plot.y - 8.0);
+    const auto label_align = center_on_axis ? TextCommand::Align::Middle : TextCommand::Align::Start;
+    const double label_rotation =
+        pane.y_axis().label_rotation_deg.value_or(center_on_axis ? -90.0 : y_label_rotation);
+    double label_font = axis_label_font;
+    std::string label_text = pane.y_axis().label;
+    if (center_on_axis) {
+      const double rotation_mod = std::fmod(std::abs(label_rotation), 180.0);
+      const bool near_vertical = std::abs(rotation_mod - 90.0) <= 20.0;
+      if (near_vertical) {
+        const double available = std::max(12.0, layout.plot.height - 10.0);
+        const double needed = estimated_text_extent(label_text, label_font);
+        if (needed > available) {
+          label_font = std::max(7.0, label_font * (available / needed));
+        }
+        const double fitted_extent = estimated_text_extent(label_text, label_font);
+        if (fitted_extent > available) {
+          const std::size_t max_chars = static_cast<std::size_t>(
+              std::clamp(std::floor(available / std::max(1.0, label_font * 0.56)), 4.0, 2048.0));
+          if (label_text.size() > max_chars) {
+            label_text = label_text.substr(0, max_chars > 3 ? max_chars - 3 : 1);
+            label_text += "...";
+          }
+        }
+      }
+    }
     add_text(
         list,
-        {layout.outer.x + 6.0, layout.plot.y - 8.0},
-        pane.y_axis().label,
-        axis_label_font,
+        {label_x, label_y},
+        label_text,
+        label_font,
         pane.theme_tokens().foreground(),
-        TextCommand::Align::Start,
-        y_label_rotation);
+        label_align,
+        label_rotation);
   }
   if (!pane.caption_text().empty()) {
     add_text(

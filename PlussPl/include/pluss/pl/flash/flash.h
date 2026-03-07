@@ -1050,10 +1050,19 @@ struct PairPlotOptions {
   PairPlotTriangle triangle{PairPlotTriangle::Full};
   bool monochrome{true};
   std::optional<int> auto_tick_decimals{std::nullopt};
+  std::vector<std::string> labels{};
+  bool auto_size{true};
+  double min_width{1280.0};
+  double min_height{900.0};
+  double cell_width{210.0};
+  double cell_height{210.0};
+  double outer_pad_x{120.0};
+  double outer_pad_y{120.0};
+  std::int64_t max_points{2500};
   std::int64_t diag_bins{14};
   double grid_gap_x{8.0};
   double grid_gap_y{8.0};
-  double tick_font_scale{0.9};
+  double tick_font_scale{0.8};
   double axis_label_font_scale{0.9};
   float diag_trace_width{0.75F};
   float scatter_trace_width{0.45F};
@@ -1061,22 +1070,54 @@ struct PairPlotOptions {
   double marker_area_min{7.0};
   double marker_area_max{18.0};
   bool show_grid{false};
+  bool hide_inner_ticks{true};
 };
 
 inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns, const PairPlotOptions& options = {}) {
   if (columns.empty()) {
     throw std::invalid_argument("flash::pairplot requires at least one series");
   }
-  const std::int64_t n = static_cast<std::int64_t>(columns.size());
+  std::vector<Series> prepared = columns;
+  const std::int64_t n = static_cast<std::int64_t>(prepared.size());
+  if (options.max_points > 0 && !prepared.empty()) {
+    const auto total = prepared.front().numel();
+    if (total > options.max_points) {
+      const auto step = std::max<std::int64_t>(1, (total + options.max_points - 1) / options.max_points);
+      const auto idx = Series::arange(0, total, step, ScalarType::Int64);
+      for (auto& series : prepared) {
+        series = series.take(idx);
+      }
+    }
+  }
+  if (options.auto_size) {
+    const double cols = static_cast<double>(n);
+    const double rows = static_cast<double>(n);
+    const double suggested_width =
+        std::max(options.min_width, cols * options.cell_width + std::max(0.0, cols - 1.0) * options.grid_gap_x + options.outer_pad_x);
+    const double suggested_height =
+        std::max(options.min_height, rows * options.cell_height + std::max(0.0, rows - 1.0) * options.grid_gap_y + options.outer_pad_y);
+    studio.size(suggested_width, suggested_height);
+  }
   studio.mosaic(n, n, options.grid_gap_x, options.grid_gap_y);
   const auto colors = detail::categorical_colors(n);
+  const bool labels_match = options.labels.size() == static_cast<std::size_t>(n);
+  const double safe_tick_font_scale =
+      (std::isfinite(options.tick_font_scale) && options.tick_font_scale > 0.0) ? options.tick_font_scale : 0.8;
+  const double safe_axis_label_font_scale =
+      (std::isfinite(options.axis_label_font_scale) && options.axis_label_font_scale > 0.0)
+          ? options.axis_label_font_scale
+          : 0.9;
   for (const auto row : std::views::iota(std::int64_t{0}, n)) {
     for (const auto col : std::views::iota(std::int64_t{0}, n)) {
       Pane& pane = studio.pane2();
+      const bool edge_x = row == n - 1;
+      const bool edge_y = col == 0;
+      const bool show_ticks = !options.hide_inner_ticks || edge_x || edge_y;
+      const double tick_scale = show_ticks ? safe_tick_font_scale : 0.01;
       pane.place(row, col)
           .grid(options.show_grid ? GridStyle::Major : GridStyle::None)
-          .tick_font_scale(options.tick_font_scale)
-          .axis_label_font_scale(options.axis_label_font_scale);
+          .tick_font_scale(tick_scale)
+          .axis_label_font_scale(safe_axis_label_font_scale);
       if (options.auto_tick_decimals.has_value()) {
         pane.x_auto_tick_decimals(*options.auto_tick_decimals);
         pane.y_auto_tick_decimals(*options.auto_tick_decimals);
@@ -1089,18 +1130,18 @@ inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns, cons
         pane.hide();
         continue;
       }
-      if (row != n - 1) {
+      if (!edge_x) {
         pane.x_label("");
       } else {
-        pane.x_label("x" + std::to_string(col + 1));
+        pane.x_label(labels_match ? options.labels[static_cast<std::size_t>(col)] : "x" + std::to_string(col + 1));
       }
-      if (col != 0) {
+      if (!edge_y) {
         pane.y_label("");
       } else {
-        pane.y_label("x" + std::to_string(row + 1));
+        pane.y_label(labels_match ? options.labels[static_cast<std::size_t>(row)] : "x" + std::to_string(row + 1));
       }
       if (row == col) {
-        auto& trace = pane.bucket(columns[static_cast<std::size_t>(row)], static_cast<int>(std::max<std::int64_t>(1, options.diag_bins)));
+        auto& trace = pane.bucket(prepared[static_cast<std::size_t>(row)], static_cast<int>(std::max<std::int64_t>(1, options.diag_bins)));
         trace.width(options.diag_trace_width);
         if (!options.monochrome && !colors.empty()) {
           trace.stroke(colors[static_cast<std::size_t>(row) % colors.size()]);
@@ -1109,15 +1150,15 @@ inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns, cons
         const std::int64_t points = std::max<std::int64_t>(
             1,
             std::min(
-                columns[static_cast<std::size_t>(col)].numel(),
-                columns[static_cast<std::size_t>(row)].numel()));
+                prepared[static_cast<std::size_t>(col)].numel(),
+                prepared[static_cast<std::size_t>(row)].numel()));
         const double marker_area = std::clamp(
             options.marker_area_scale / std::sqrt(static_cast<double>(points) * static_cast<double>(std::max<std::int64_t>(n, 1))),
             options.marker_area_min,
             options.marker_area_max);
         auto& trace = pane.cloud(
-                columns[static_cast<std::size_t>(col)],
-                columns[static_cast<std::size_t>(row)],
+                prepared[static_cast<std::size_t>(col)],
+                prepared[static_cast<std::size_t>(row)],
                 std::array<double, 1>{marker_area});
         trace.width(options.scatter_trace_width);
         if (!options.monochrome && !colors.empty()) {

@@ -716,6 +716,11 @@ Pane& Pane::y_label_rotation(double degrees) {
   return *this;
 }
 
+Pane& Pane::y_label_centered(bool enable) noexcept {
+  y_axis_.label_centered_on_axis = enable;
+  return *this;
+}
+
 Pane& Pane::z_label_rotation(double degrees) {
   require_rotation_angle(degrees, "z_label_rotation");
   z_axis_.label_rotation_deg = degrees;

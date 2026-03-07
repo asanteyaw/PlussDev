@@ -457,8 +457,13 @@ Studio scatter_matrix_from_names(const DataFrame& frame,
     return frame.features(name).as_series();
   });
 
+  auto pair_options = options;
+  if (pair_options.labels.empty()) {
+    pair_options.labels = names;
+  }
+
   auto fig = make_studio();
-  flash::pairplot(fig, columns, options);
+  flash::pairplot(fig, columns, pair_options);
   return fig;
 }
 
@@ -1180,8 +1185,10 @@ pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(std::initializer_list<st
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_scatter_matrix(std::initializer_list<std::string_view> features) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().scatter_matrix");
-  auto fig = scatter_matrix_from_names(frame_, names, options_.scatter_matrix_options);
+  const auto scoped = features.size() > 0 ? frame_.features(features) : frame_;
+  const auto series_only = scoped.series_features();
+  const auto names = series_only.feature_names();
+  auto fig = scatter_matrix_from_names(series_only, names, options_.scatter_matrix_options);
   apply_figure_options(fig);
   return fig;
 }

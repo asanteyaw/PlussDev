@@ -31,6 +31,10 @@ int main() {
   df.info();
   df.describe();
 
+  let fig_scat = df.plot().scatter_matrix();
+  fig_scat.headline("scatter plot");
+  fig_scat.save_pdf("spx_scatter_matrix.pdf");
+
   // Feature extraction
   df.set({"Year", "Month", "DayOfWeek", "DailyRange", "OpenCloseSpread", "LogVolume"}) = {
       df.features("Date").year(),
@@ -42,7 +46,7 @@ int main() {
   };
 
   std::cout << "\nCleaned shape: [" << df.ncases() << " cs x " << df.nfeats() << " feat]\n";
-  df.head(5);
+  df.features({"Year", "Month", "DayOfWeek", "DailyRange", "OpenCloseSpread", "LogVolume"}).head(5);
 
   //========== Cell Three ===========
   // Top three months with the most traded volumes
@@ -81,8 +85,10 @@ int main() {
   fig_scatter.headline("Daily range vs log-volume");
   fig_scatter.save_pdf("sp500_range_vs_logvolume_scatter.pdf");
 
-  let fig_scat = df.plot().scatter_matrix();
-  fig_scat.headline("scatter plot").show();
+//   let fig_scat = df.plot().scatter_matrix();
+//   fig_scat.headline("scatter plot").show();
+//   fig_scat.save_pdf("sp500_scatter_matrix.pdf");
+
 
   let numeric = df.series_features();
   let corr_table = numeric.corr(DataFrame::CorrMethod::Spearman, false);

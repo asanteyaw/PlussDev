@@ -206,6 +206,7 @@ struct AxisState {
   std::optional<AxisTicks> ticks{};
   std::optional<double> tick_rotation_deg{};
   std::optional<double> label_rotation_deg{};
+  bool label_centered_on_axis{false};
   bool major_grid{false};
   bool minor_grid{false};
 };
@@ -591,6 +592,7 @@ class Pane {
   Pane& x_label_rotation(double degrees);
   Pane& y_label_rotation(double degrees);
   Pane& z_label_rotation(double degrees);
+  Pane& y_label_centered(bool enable = true) noexcept;
   Pane& clear_x_tick_rotation() noexcept;
   Pane& clear_y_tick_rotation() noexcept;
   Pane& clear_z_tick_rotation() noexcept;
