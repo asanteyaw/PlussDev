@@ -1,6 +1,6 @@
 # Optima Clone-Parity TODO
 
-Purpose: drive `optima(...)` from defensible near-parity to clone-parity maturity for the `SequentialQP` and `InteriorPoint` backends, while keeping Pluss-native names and module boundaries.
+Purpose: drive `optima(...)` from defensible near-parity to clone-parity maturity for the `SequentialQP` and `InternalProtocol` backends, while keeping Pluss-native names and module boundaries.
 
 Ownership boundary:
 - `PlussQit`: `Series`, autodiff, backend compute, BLAS/LAPACK/Accelerate/XLA-facing kernels
@@ -18,7 +18,7 @@ Primary references:
 
 Current baseline estimate:
 - `SequentialQP`: 100%
-- `InteriorPoint`: 100%
+- `InternalProtocol`: 100%
 - combined clone-parity progress: 100%
 
 ## Test Discipline
@@ -84,7 +84,7 @@ Progress so far:
 ## Workstream 2: Large-Scale Sparse Structure Exploitation
 
 Goal:
-- move the solver core beyond dense-small assumptions so `SequentialQP` and `InteriorPoint` have a credible large-scale path closer to MATLAB’s mature solver behavior.
+- move the solver core beyond dense-small assumptions so `SequentialQP` and `InternalProtocol` have a credible large-scale path closer to MATLAB’s mature solver behavior.
 
 Reference anchors:
 - `getIpOptions.m` `SubproblemAlgorithm`, `PivotThreshold`, projected-CG settings
@@ -100,7 +100,7 @@ Required deliverables:
 
 Acceptance:
 - large structured problems do not automatically fall back to dense-small behavior
-- `InteriorPoint` and `SequentialQP` expose and use a real structure-aware linear algebra policy
+- `InternalProtocol` and `SequentialQP` expose and use a real structure-aware linear algebra policy
 - the large-scale path is measured in the benchmark table
 
 Status:
@@ -109,8 +109,8 @@ Status:
 Progress so far:
 - SQP now has a structured iterative KKT routing path instead of always falling back to dense-direct solves
 - structured benchmark family shows the SQP fixes materially improved solution quality
-- interior-point matrix-free structured subproblem path is now implemented and tested
-- the standing structured benchmark still performs best with the current `Lbfgs` interior-point configuration, so the matrix-free path is not yet the benchmark winner
+- internal-protocol matrix-free structured subproblem path is now implemented and tested
+- the standing structured benchmark still performs best with the current `Lbfgs` internal-protocol configuration, so the matrix-free path is not yet the benchmark winner
 
 ## Workstream 3: MATLAB-Style Stall Diagnostics
 

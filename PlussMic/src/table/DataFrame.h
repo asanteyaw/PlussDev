@@ -43,6 +43,7 @@ class DataFrameImpl;
 class DataFrame;
 class DataFrameView;
 class DataFramePlotAccessor;
+class DataFramePlot3DAccessor;
 struct DataFramePlotOptions;
 class DataFrameSqlAccessor;
 class DataFrameSqlPrepared;
@@ -117,6 +118,12 @@ public:
     Mean = 3,
     Min = 4,
     Max = 5,
+  };
+
+  enum class CorrMethod : std::uint8_t {
+    Pearson = 0,
+    Spearman = 1,
+    KendallTau = 2,
   };
 
   enum class MissingOp : std::uint8_t {
@@ -262,15 +269,15 @@ public:
   static DataFrame load(std::string_view source_type,
                         std::string_view filepath,
                         char sep,
-                        std::optional<std::size_t> nrows = std::nullopt,
-                        std::vector<std::string> usecols = {},
+                        std::optional<std::size_t> ncases = std::nullopt,
+                        std::vector<std::string> usefeats = {},
                         std::optional<std::string> case_col = std::nullopt,
                         pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error);
   static DataFrame load(std::string_view source_type,
                         std::string_view filepath,
                         char sep,
-                        std::optional<std::size_t> nrows,
-                        std::initializer_list<std::string_view> usecols,
+                        std::optional<std::size_t> ncases,
+                        std::initializer_list<std::string_view> usefeats,
                         std::optional<std::string> case_col = std::nullopt,
                         pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error);
   static DataFrame load_csv(std::string_view filepath);
@@ -288,14 +295,14 @@ public:
                             std::size_t ncases);
   static DataFrame load_csv(std::string_view filepath,
                             char sep,
-                            std::optional<std::size_t> nrows = std::nullopt,
-                            std::vector<std::string> usecols = {},
+                            std::optional<std::size_t> ncases = std::nullopt,
+                            std::vector<std::string> usefeats = {},
                             std::optional<std::string> case_col = std::nullopt,
                             pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error);
   static DataFrame load_csv(std::string_view filepath,
                             char sep,
-                            std::optional<std::size_t> nrows,
-                            std::initializer_list<std::string_view> usecols,
+                            std::optional<std::size_t> ncases,
+                            std::initializer_list<std::string_view> usefeats,
                             std::optional<std::string> case_col = std::nullopt,
                             pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error);
   static DataFrame load_txt(std::string_view filepath);
@@ -344,9 +351,8 @@ public:
 
   bool defined() const noexcept;
   bool unique() const noexcept;
-
-  std::int64_t nrows() const;
-  std::int64_t ncols() const;
+  std::int64_t ncases() const;
+  std::int64_t nfeats() const;
   std::int64_t nfeatures() const;
   const std::vector<std::string>& column_names() const;
   std::vector<Thread> columns() const;
@@ -414,6 +420,8 @@ public:
   DataFrame& with_column_(std::string name, const Thread& column);
   DataFramePlotAccessor plot() const;
   DataFramePlotAccessor plot(const DataFramePlotOptions& options) const;
+  DataFramePlot3DAccessor plot3d() const;
+  DataFramePlot3DAccessor plot3d(const DataFramePlotOptions& options) const;
   DataFrameSqlAccessor sql(SqlOptions options) const;
   DataFrameSqlAccessor sql() const;
   DataFrameSqlPrepared prepare_sql(std::string_view statement) const;
@@ -562,6 +570,10 @@ public:
   DataFrameView var(bool render = true) const;
   DataFrameView count(bool render = true) const;
   DataFrameView nunique(bool render = true) const;
+  DataFrameView corr(CorrMethod method, bool render = true) const;
+  DataFrameView corr(bool render = true) const;
+  DataFrameView corr(std::initializer_list<std::string_view> features, CorrMethod method, bool render = true) const;
+  DataFrameView corr(std::initializer_list<std::string_view> features, bool render = true) const;
   DataFrame isna(std::initializer_list<std::string_view> features = {}) const;
   DataFrame isnull(std::initializer_list<std::string_view> features = {}) const;
   DataFrame notna(std::initializer_list<std::string_view> features = {}) const;

@@ -39,6 +39,9 @@ add_executable(plussmic_loader_saver_parity_demo
 add_executable(plussmic_bike_sharing_eda_dfplot_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/bike_sharing_eda_dfplot.cpp
 )
+add_executable(plussmic_sp500_eda_ml_prep_notebook_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/sp500_eda_ml_prep_notebook_demo.cpp
+)
 
 target_link_libraries(plussmic_dataframe_initial_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_view_demo PRIVATE PlussMic)
@@ -52,6 +55,7 @@ target_link_libraries(plussmic_dataframe_plot_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_thread_values_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_loader_saver_parity_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_bike_sharing_eda_dfplot_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_sp500_eda_ml_prep_notebook_demo PRIVATE PlussMic)
 
 target_compile_definitions(plussmic_dataframe_initial_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
@@ -88,5 +92,8 @@ target_compile_definitions(plussmic_loader_saver_parity_demo PRIVATE
   FMT_HEADER_ONLY=1
 )
 target_compile_definitions(plussmic_bike_sharing_eda_dfplot_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_sp500_eda_ml_prep_notebook_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )

@@ -38,8 +38,8 @@ public:
   bool empty() const;
 
   std::int64_t depth() const;
-  std::int64_t nrows() const;
-  std::int64_t ncols() const;
+  std::int64_t ncases() const;
+  std::int64_t nfeats() const;
 
   const std::vector<std::string>& column_names() const;
   const std::optional<Thread>& axis0_labels() const;

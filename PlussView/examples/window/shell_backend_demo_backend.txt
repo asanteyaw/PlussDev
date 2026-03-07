@@ -1,0 +1,6 @@
+Cocoa
+native=true
+supports_live_present=true
+supports_resize_events=true
+supports_shortcut_events=true
+supports_pointer_scroll=true

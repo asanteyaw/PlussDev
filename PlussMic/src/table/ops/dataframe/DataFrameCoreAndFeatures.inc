@@ -33,9 +33,9 @@ bool DataFrame::consume_stream_suppression_() const {
   return true;
 }
 
-std::int64_t DataFrame::nrows() const { return impl_ref_().nrows_; }
-std::int64_t DataFrame::ncols() const { return static_cast<std::int64_t>(impl_ref_().columns_.size()); }
-std::int64_t DataFrame::nfeatures() const { return ncols(); }
+std::int64_t DataFrame::ncases() const { return impl_ref_().nrows_; }
+std::int64_t DataFrame::nfeats() const { return static_cast<std::int64_t>(impl_ref_().columns_.size()); }
+std::int64_t DataFrame::nfeatures() const { return nfeats(); }
 
 const std::vector<std::string>& DataFrame::column_names() const { return impl_ref_().names_; }
 
@@ -47,7 +47,7 @@ std::vector<Thread> DataFrame::features() const { return columns(); }
 const Thread& DataFrame::cases() const { return impl_ref_().cases_; }
 
 DataFrame DataFrame::cases(std::int64_t row) const {
-  const auto idx = normalize_row_index(row, nrows());
+  const auto idx = normalize_row_index(row, ncases());
   return slice(idx, idx + 1);
 }
 
@@ -56,14 +56,14 @@ DataFrame DataFrame::cases(std::pair<std::int64_t, std::int64_t> row_span) const
 }
 
 std::string DataFrame::cases(std::int64_t row, std::size_t feature_idx) const {
-  const auto r = normalize_row_index(row, nrows());
-  PLUSS_CHECK(feature_idx < static_cast<std::size_t>(ncols()), "DataFrame::cases(row, feature): feature index out of bounds");
+  const auto r = normalize_row_index(row, ncases());
+  PLUSS_CHECK(feature_idx < static_cast<std::size_t>(nfeats()), "DataFrame::cases(row, feature): feature index out of bounds");
   const auto& src = impl_ref_();
   return thread_scalar_string_at(src.columns_[feature_idx], r);
 }
 
 std::string DataFrame::cases(std::int64_t row, std::string_view feature_name) const {
-  const auto r = normalize_row_index(row, nrows());
+  const auto r = normalize_row_index(row, ncases());
   return thread_scalar_string_at(column(feature_name), r);
 }
 
@@ -422,7 +422,7 @@ DataFrame DataFrame::sort_values(std::initializer_list<ArrangeSpec> specs) const
 }
 
 DataFrame DataFrame::sort_cases(bool ascending, bool nulls_last) const {
-  std::vector<std::int64_t> idx(static_cast<std::size_t>(nrows()));
+  std::vector<std::int64_t> idx(static_cast<std::size_t>(ncases()));
   std::iota(idx.begin(), idx.end(), 0);
   const auto& case_axis = cases();
   std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t a, std::int64_t b) {
@@ -468,11 +468,11 @@ pluss::Series DataFrame::repeated_cases(std::initializer_list<std::string_view> 
     }
   }
 
-  auto out = pluss::Series::zeros({nrows()}, pluss::codem::ScalarType::Bool);
+  auto out = pluss::Series::zeros({ncases()}, pluss::codem::ScalarType::Bool);
   auto* mask = reinterpret_cast<bool*>(out.raw_data());
 
   std::unordered_set<std::string> seen_keys;
-  seen_keys.reserve(static_cast<std::size_t>(nrows()));
+  seen_keys.reserve(static_cast<std::size_t>(ncases()));
   for (std::int64_t r = 0; r < src.nrows_; ++r) {
     std::string key;
     key.reserve(feature_idx.size() * 16);
@@ -493,9 +493,9 @@ pluss::Series DataFrame::repeated_cases(std::initializer_list<std::string_view> 
 
 DataFrame DataFrame::unique_cases(std::initializer_list<std::string_view> features) const {
   const auto dup = repeated_cases(features).to_vec<bool>();
-  auto keep = pluss::Series::zeros({nrows()}, pluss::codem::ScalarType::Bool);
+  auto keep = pluss::Series::zeros({ncases()}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(keep.raw_data());
-  for (std::int64_t i = 0; i < nrows(); ++i) {
+  for (std::int64_t i = 0; i < ncases(); ++i) {
     p[i] = !dup[static_cast<std::size_t>(i)];
   }
   return filter(keep);
@@ -511,14 +511,14 @@ DataFrame DataFrame::set_cases(std::string_view feature_name, bool drop_feature)
 
 DataFrame DataFrame::reset_cases(std::string case_feature) const {
   auto out = with_column(case_feature, cases());
-  return out.with_cases(default_cases(out.nrows()));
+  return out.with_cases(default_cases(out.ncases()));
 }
 
 DataFrame DataFrame::align_cases(const Thread& new_cases) const {
   PLUSS_CHECK(new_cases.defined(), "DataFrame::align_cases: new cases are undefined");
   std::unordered_map<std::string, std::int64_t> old_pos;
-  old_pos.reserve(static_cast<std::size_t>(nrows()));
-  for (std::int64_t i = 0; i < nrows(); ++i) {
+  old_pos.reserve(static_cast<std::size_t>(ncases()));
+  for (std::int64_t i = 0; i < ncases(); ++i) {
     old_pos.emplace(thread_scalar_string_at(cases(), i), i);
   }
 
@@ -739,14 +739,14 @@ DataFrame DataFrame::stitch_on(std::string_view left_feature,
   const auto right_col = right.features(right_key);
 
   std::unordered_map<std::string, std::vector<std::int64_t>> right_lookup;
-  right_lookup.reserve(static_cast<std::size_t>(right.nrows()));
-  for (std::int64_t r = 0; r < right.nrows(); ++r) {
+  right_lookup.reserve(static_cast<std::size_t>(right.ncases()));
+  for (std::int64_t r = 0; r < right.ncases(); ++r) {
     right_lookup[thread_scalar_string_at(right_col, r)].push_back(r);
   }
 
   std::vector<std::int64_t> left_rows;
   std::vector<std::int64_t> right_rows;
-  for (std::int64_t l = 0; l < nrows(); ++l) {
+  for (std::int64_t l = 0; l < ncases(); ++l) {
     const auto key = thread_scalar_string_at(left_col, l);
     const auto it = right_lookup.find(key);
     if (it == right_lookup.end()) {
@@ -833,14 +833,14 @@ DataFrame DataFrame::stitch_on(std::initializer_list<std::string_view> left_feat
   };
 
   std::unordered_map<std::string, std::vector<std::int64_t>> right_lookup;
-  right_lookup.reserve(static_cast<std::size_t>(right.nrows()));
-  for (std::int64_t r = 0; r < right.nrows(); ++r) {
+  right_lookup.reserve(static_cast<std::size_t>(right.ncases()));
+  for (std::int64_t r = 0; r < right.ncases(); ++r) {
     right_lookup[make_key(right_cols, r)].push_back(r);
   }
 
   std::vector<std::int64_t> left_rows;
   std::vector<std::int64_t> right_rows;
-  for (std::int64_t l = 0; l < nrows(); ++l) {
+  for (std::int64_t l = 0; l < ncases(); ++l) {
     const auto key = make_key(left_cols, l);
     const auto it = right_lookup.find(key);
     if (it == right_lookup.end()) {

@@ -223,9 +223,9 @@ ReadCsvOptions csv_read_options_from_config(const Config& config) {
     }
   }
 
-  if (const auto* v = find_config(config, {"nrows", "rows"})) {
+  if (const auto* v = find_config(config, {"ncases"})) {
     if (auto n = parse_int_value(*v); n.has_value() && *n >= 0) {
-      options.nrows = static_cast<std::size_t>(*n);
+      options.ncases = static_cast<std::size_t>(*n);
     }
   }
 
@@ -239,15 +239,16 @@ ReadCsvOptions csv_read_options_from_config(const Config& config) {
     }
   }
 
-  if (const auto* v = find_config(config, {"usecols", "columns", "selectcols"})) {
-    if (auto cols = parse_string_list_value(*v); cols.has_value()) {
-      options.usecols = std::move(*cols);
+  if (const auto* v = find_config(config, {"usefeats", "features", "selectfeats"})) {
+    if (auto feats = parse_string_list_value(*v); feats.has_value()) {
+      options.usefeats = std::move(*feats);
     }
   }
 
-  if (const auto* v = find_config(config, {"usecolsidx", "columnsidx", "selectcolsidx"})) {
+  if (const auto* v = find_config(config,
+                                  {"usefeatsidx", "featuresidx", "selectfeatsidx"})) {
     if (auto idx = parse_size_t_list_value(*v); idx.has_value()) {
-      options.usecols_idx = std::move(*idx);
+      options.usefeats_idx = std::move(*idx);
     }
   }
 
@@ -1273,8 +1274,8 @@ CsvRawBatch raw_from_json_value(const JsonValue& root, const Config& config) {
 }
 
 void apply_projection_to_raw(CsvRawBatch& raw, const ReadCsvOptions& options) {
-  if (options.nrows.has_value()) {
-    const auto limit = *options.nrows;
+  if (options.ncases.has_value()) {
+    const auto limit = *options.ncases;
     for (auto& col : raw.features) {
       if (col.values.size() > limit) col.values.resize(limit);
     }
@@ -1298,19 +1299,19 @@ void apply_projection_to_raw(CsvRawBatch& raw, const ReadCsvOptions& options) {
   }
 
   std::vector<std::size_t> selected_idx;
-  if (!options.usecols_idx.empty()) {
-    selected_idx = options.usecols_idx;
+  if (!options.usefeats_idx.empty()) {
+    selected_idx = options.usefeats_idx;
     for (const auto idx : selected_idx) {
-      PLUSS_CHECK(idx < raw.features.size(), "loader::read_json_raw_batch: usecols_idx out of range");
+      PLUSS_CHECK(idx < raw.features.size(), "loader::read_json_raw_batch: usefeats_idx out of range");
     }
-  } else if (!options.usecols.empty()) {
-    selected_idx.reserve(options.usecols.size());
-    for (const auto& name : options.usecols) {
+  } else if (!options.usefeats.empty()) {
+    selected_idx.reserve(options.usefeats.size());
+    for (const auto& name : options.usefeats) {
       const auto it = std::find_if(raw.features.begin(),
                                    raw.features.end(),
                                    [&](const CsvRawColumn& col) { return col.name == name; });
       PLUSS_CHECK(it != raw.features.end(),
-                  "loader::read_json_raw_batch: usecols column not found '" + name + "'");
+                  "loader::read_json_raw_batch: usefeats feature not found '" + name + "'");
       selected_idx.push_back(static_cast<std::size_t>(std::distance(raw.features.begin(), it)));
     }
   } else {
@@ -1897,7 +1898,7 @@ void save_parquet_cpp(const pluss::table::DataFrame& frame,
   }
 
   const auto schema = arrow::schema(fields);
-  auto table = arrow::Table::Make(schema, arrays, frame.nrows());
+  auto table = arrow::Table::Make(schema, arrays, frame.ncases());
   PLUSS_CHECK(table != nullptr, "loader::save_parquet: failed to assemble arrow table");
 
   auto maybe_out = arrow::io::FileOutputStream::Open(std::string(filepath));
@@ -1919,7 +1920,7 @@ void save_parquet_cpp(const pluss::table::DataFrame& frame,
   }
   auto writer_props = writer_builder.build();
 
-  std::int64_t row_group_size = std::max<std::int64_t>(1, frame.nrows());
+  std::int64_t row_group_size = std::max<std::int64_t>(1, frame.ncases());
   if (const auto* v = find_config(config, {"rowgroupsize", "chunksize", "parquetchunksize"})) {
     if (auto n = parse_int_value(*v); n.has_value() && *n > 0) {
       row_group_size = *n;
@@ -1946,10 +1947,10 @@ CsvRawBatch read_parquet_raw_batch_cpp(std::string_view filepath, const Config& 
   PLUSS_CHECK(st.ok() && schema != nullptr, "loader::read_parquet_raw_batch: failed to read schema: " + st.ToString());
 
   std::vector<int> column_indices;
-  if (const auto* cols_cfg = find_config(config, {"columns", "usecols", "selectcols"})) {
-    if (auto cols = parse_string_list_value(*cols_cfg); cols.has_value() && !cols->empty()) {
-      column_indices.reserve(cols->size());
-      for (const auto& col : *cols) {
+  if (const auto* cols_cfg = find_config(config, {"usefeats", "features", "selectfeats"})) {
+    if (auto feats = parse_string_list_value(*cols_cfg); feats.has_value() && !feats->empty()) {
+      column_indices.reserve(feats->size());
+      for (const auto& col : *feats) {
         const auto idx = schema->GetFieldIndex(col);
         PLUSS_CHECK(idx >= 0, "loader::read_parquet_raw_batch: requested column not found '" + col + "'");
         column_indices.push_back(idx);
@@ -1965,7 +1966,7 @@ CsvRawBatch read_parquet_raw_batch_cpp(std::string_view filepath, const Config& 
   }
   PLUSS_CHECK(st.ok() && table != nullptr, "loader::read_parquet_raw_batch: failed to read table: " + st.ToString());
 
-  if (const auto* n_cfg = find_config(config, {"nrows", "rows"})) {
+  if (const auto* n_cfg = find_config(config, {"ncases"})) {
     if (auto n = parse_int_value(*n_cfg); n.has_value() && *n >= 0) {
       table = table->Slice(0, *n);
     }
@@ -2031,10 +2032,10 @@ pluss::table::DataFrame load_parquet_cpp(std::string_view filepath, const Config
   PLUSS_CHECK(st.ok() && schema != nullptr, "loader::load_parquet: failed to read schema: " + st.ToString());
 
   std::vector<int> column_indices;
-  if (const auto* cols_cfg = find_config(config, {"columns", "usecols", "selectcols"})) {
-    if (auto cols = parse_string_list_value(*cols_cfg); cols.has_value() && !cols->empty()) {
-      column_indices.reserve(cols->size());
-      for (const auto& col : *cols) {
+  if (const auto* cols_cfg = find_config(config, {"usefeats", "features", "selectfeats"})) {
+    if (auto feats = parse_string_list_value(*cols_cfg); feats.has_value() && !feats->empty()) {
+      column_indices.reserve(feats->size());
+      for (const auto& col : *feats) {
         const auto idx = schema->GetFieldIndex(col);
         PLUSS_CHECK(idx >= 0, "loader::load_parquet: requested column not found '" + col + "'");
         column_indices.push_back(idx);
@@ -2050,7 +2051,7 @@ pluss::table::DataFrame load_parquet_cpp(std::string_view filepath, const Config
   }
   PLUSS_CHECK(st.ok() && table != nullptr, "loader::load_parquet: failed to read table: " + st.ToString());
 
-  if (const auto* n_cfg = find_config(config, {"nrows", "rows"})) {
+  if (const auto* n_cfg = find_config(config, {"ncases"})) {
     if (auto n = parse_int_value(*n_cfg); n.has_value() && *n >= 0) {
       table = table->Slice(0, *n);
     }
@@ -2208,7 +2209,7 @@ std::ostream& operator<<(std::ostream& os, const LoadResult& loaded) {
   os << fmt::format("Workbook({} sheets)", wb.size());
   for (std::size_t i = 0; i < wb.size(); ++i) {
     const auto& [name, frame] = wb[i];
-    os << fmt::format("\n  [{}] {} -> [{} cs x {} feat]", i, name, frame.nrows(), frame.ncols());
+    os << fmt::format("\n  [{}] {} -> [{} cs x {} feat]", i, name, frame.ncases(), frame.nfeats());
   }
   return os;
 }
@@ -2336,7 +2337,7 @@ pluss::table::DataFrame load_csv(std::string_view filepath,
     options.case_col = std::string(case_feature);
   }
   if (ncases.has_value()) {
-    options.nrows = *ncases;
+    options.ncases = *ncases;
   }
 
   const auto eng = normalize_key(std::string(engine));
@@ -2806,7 +2807,7 @@ void save_json(const pluss::table::DataFrame& frame,
   std::ofstream out(std::string(filepath), std::ios::out | std::ios::trunc | std::ios::binary);
   PLUSS_CHECK(out.is_open(), "loader::save_json: failed to open file '" + std::string(filepath) + "'");
 
-  const auto nrows = frame.nrows();
+  const auto nrows = frame.ncases();
   const auto newline = pretty ? "\n" : "";
   const auto i1 = pretty ? indent : "";
   const auto i2 = pretty ? (indent + indent) : "";

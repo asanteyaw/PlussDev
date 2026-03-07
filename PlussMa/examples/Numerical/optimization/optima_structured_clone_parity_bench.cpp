@@ -259,19 +259,19 @@ int main() {
     sqp_options.sequential_qp.hessian_approximation = OptimaHessianApproximation::Bfgs;
 
     OptimaOptions ip_options;
-    ip_options.algorithm = OptimaAlgorithm::InteriorPoint;
-    ip_options.interior_point.max_iterations = 400;
-    ip_options.interior_point.constraint_tolerance = 1e-8;
-    ip_options.interior_point.optimality_tolerance = 1e-6;
-    ip_options.interior_point.initial_barrier_parameter = 1e-2;
-    ip_options.interior_point.minimum_barrier_parameter = 1e-8;
-    ip_options.interior_point.enable_feasibility_phase = true;
-    ip_options.interior_point.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
-    ip_options.interior_point.system_structure = OptimaLinearSystemStructure::Auto;
-    ip_options.interior_point.linear_system_solver = OptimaLinearSystemSolver::Auto;
-    ip_options.interior_point.hessian_approximation = OptimaHessianApproximation::Lbfgs;
-    ip_options.interior_point.lbfgs_memory = 10;
-    ip_options.interior_point.max_krylov_iterations = 2 * (n - 1);
+    ip_options.algorithm = OptimaAlgorithm::InternalProtocol;
+    ip_options.internal_protocol.max_iterations = 400;
+    ip_options.internal_protocol.constraint_tolerance = 1e-8;
+    ip_options.internal_protocol.optimality_tolerance = 1e-6;
+    ip_options.internal_protocol.initial_barrier_parameter = 1e-2;
+    ip_options.internal_protocol.minimum_barrier_parameter = 1e-8;
+    ip_options.internal_protocol.enable_feasibility_phase = true;
+    ip_options.internal_protocol.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
+    ip_options.internal_protocol.system_structure = OptimaLinearSystemStructure::Auto;
+    ip_options.internal_protocol.linear_system_solver = OptimaLinearSystemSolver::Auto;
+    ip_options.internal_protocol.hessian_approximation = OptimaHessianApproximation::Lbfgs;
+    ip_options.internal_protocol.lbfgs_memory = 10;
+    ip_options.internal_protocol.max_krylov_iterations = 2 * (n - 1);
 
     rows.push_back(run_structured_case(n, "SequentialQP", problem, initial, target, sqp_options));
     rows.push_back(run_structured_case(n, "InternalProtocol", problem, initial, target, ip_options));

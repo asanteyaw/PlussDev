@@ -165,7 +165,7 @@ std::pair<double, double> cell_bounds(std::span<const double> coords, std::size_
 ResolvedPlotAxis resolve_plot_axis(const DataFrame& frame,
                                    std::optional<std::string_view> x_feature,
                                    std::string_view where) {
-  const auto nrows = frame.nrows();
+  const auto nrows = frame.ncases();
   const auto axis_name = x_feature.has_value() ? std::string(*x_feature) : std::string("case");
   const auto axis_thread = x_feature.has_value() ? frame.features(*x_feature) : frame.cases();
 
@@ -192,7 +192,7 @@ void apply_axis(Pane& pane, const ResolvedPlotAxis& axis) {
 
 std::vector<std::string> labels_for_cases(const DataFrame& frame, std::string_view where) {
   auto labels = thread_to_plot_labels(frame.cases());
-  require_plot_size(labels, frame.nrows(), "case", where);
+  require_plot_size(labels, frame.ncases(), "case", where);
   return labels;
 }
 
@@ -365,7 +365,7 @@ bool all_nonnegative_columns(const DataFrame& frame, const std::vector<std::stri
 }
 
 bool prefer_index_plot(const DataFrame& frame) {
-  return thread_prefers_labeled_axis(frame.cases()) || frame.nrows() > 24;
+  return thread_prefers_labeled_axis(frame.cases()) || frame.ncases() > 24;
 }
 
 Trace& add_heatmap(Pane& pane, const std::vector<std::vector<double>>& matrix, std::string label) {
@@ -431,7 +431,7 @@ Studio corr_heatmap_from_names(const DataFrame& frame,
   columns.reserve(names.size());
   for (const auto& name : names) {
     auto values = thread_to_plot_numeric_values(frame.features(name));
-    require_plot_size(values, frame.nrows(), name);
+    require_plot_size(values, frame.ncases(), name);
     columns.push_back(std::move(values));
   }
 
@@ -465,7 +465,7 @@ Studio scatter_matrix_from_names(const DataFrame& frame,
   columns.reserve(names.size());
   for (const auto& name : names) {
     auto values = thread_to_plot_numeric_values(frame.features(name));
-    require_plot_size(values, frame.nrows(), name);
+    require_plot_size(values, frame.ncases(), name);
     columns.push_back(std::move(values));
   }
 
@@ -544,12 +544,12 @@ Studio box_from_names(const DataFrame& frame, const std::vector<std::string>& na
 
   std::vector<double> group_id;
   std::vector<double> merged_values;
-  group_id.reserve(static_cast<std::size_t>(frame.nrows()) * names.size());
-  merged_values.reserve(static_cast<std::size_t>(frame.nrows()) * names.size());
+  group_id.reserve(static_cast<std::size_t>(frame.ncases()) * names.size());
+  merged_values.reserve(static_cast<std::size_t>(frame.ncases()) * names.size());
 
   for (std::size_t i = 0; i < names.size(); ++i) {
     auto values = thread_to_plot_numeric_values(frame.features(names[i]));
-    require_plot_size(values, frame.nrows(), names[i]);
+    require_plot_size(values, frame.ncases(), names[i]);
     const auto summary = summarize_boxplot(values);
     (void)summary;
     for (const double value : values) {
@@ -579,12 +579,12 @@ Studio violin_from_names(const DataFrame& frame, const std::vector<std::string>&
 
   std::vector<double> group_id;
   std::vector<double> merged_values;
-  group_id.reserve(static_cast<std::size_t>(frame.nrows()) * names.size());
-  merged_values.reserve(static_cast<std::size_t>(frame.nrows()) * names.size());
+  group_id.reserve(static_cast<std::size_t>(frame.ncases()) * names.size());
+  merged_values.reserve(static_cast<std::size_t>(frame.ncases()) * names.size());
 
   for (std::size_t i = 0; i < names.size(); ++i) {
     auto values = thread_to_plot_numeric_values(frame.features(names[i]));
-    require_plot_size(values, frame.nrows(), names[i]);
+    require_plot_size(values, frame.ncases(), names[i]);
     for (const double value : values) {
       if (!std::isfinite(value)) {
         continue;
@@ -624,7 +624,7 @@ Studio make_xy_figure(const DataFrame& frame,
   std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
     auto y_values = thread_to_plot_numeric_values(frame.features(y_name));
-    require_plot_size(y_values, frame.nrows(), y_name);
+    require_plot_size(y_values, frame.ncases(), y_name);
     add_trace(pane, axis, y_values, y_name, feature_index);
     ++feature_index;
   }
@@ -924,11 +924,11 @@ pluss::pl::Studio DataFramePlotAccessor::impl_area_stacked(
   apply_axis(pane, axis);
   pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
 
-  std::vector<double> baselines(static_cast<std::size_t>(frame_.nrows()), 0.0);
+  std::vector<double> baselines(static_cast<std::size_t>(frame_.ncases()), 0.0);
   std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
     auto heights = thread_to_plot_numeric_values(frame_.features(y_name));
-    require_plot_size(heights, frame_.nrows(), y_name);
+    require_plot_size(heights, frame_.ncases(), y_name);
     std::vector<double> tops(heights.size(), 0.0);
     for (std::size_t i = 0; i < heights.size(); ++i) {
       tops[i] = baselines[i] + heights[i];
@@ -957,7 +957,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_scatter(std::string_view x_feature
   const auto resolved_hue = resolve_hue_feature(hue_feature);
   const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().scatter");
   const auto y_values = thread_to_plot_numeric_values(frame_.features(y_feature));
-  require_plot_size(y_values, frame_.nrows(), y_feature);
+  require_plot_size(y_values, frame_.ncases(), y_feature);
 
   auto fig = make_studio();
   apply_figure_options(fig);
@@ -977,7 +977,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_scatter(std::string_view x_feature
   PLUSS_CHECK(thread_supports_hue(hue_thread),
               "DataFrame::plot().scatter: hue feature '" + std::string(*resolved_hue) + "' must be note-like or time-like");
   const auto hue_labels = thread_to_plot_labels(hue_thread);
-  require_plot_size(hue_labels, frame_.nrows(), *resolved_hue, "DataFrame::plot().scatter");
+  require_plot_size(hue_labels, frame_.ncases(), *resolved_hue, "DataFrame::plot().scatter");
 
   std::vector<std::string> groups;
   for (const auto& label : hue_labels) {
@@ -1032,7 +1032,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
   std::size_t group_index = 0;
   for (const auto y_name : y_features) {
     auto y_values = thread_to_plot_numeric_values(frame_.features(y_name));
-    require_plot_size(y_values, frame_.nrows(), y_name);
+    require_plot_size(y_values, frame_.ncases(), y_name);
 
     AggregatedBarSeries ci_ready{};
     ci_ready.axis = axis;
@@ -1078,11 +1078,11 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar_stacked(
   apply_axis(pane, axis);
   pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
 
-  std::vector<double> baselines(static_cast<std::size_t>(frame_.nrows()), 0.0);
+  std::vector<double> baselines(static_cast<std::size_t>(frame_.ncases()), 0.0);
   std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
     auto heights = thread_to_plot_numeric_values(frame_.features(y_name));
-    require_plot_size(heights, frame_.nrows(), y_name);
+    require_plot_size(heights, frame_.ncases(), y_name);
     std::vector<double> tops(heights.size(), 0.0);
     for (std::size_t i = 0; i < heights.size(); ++i) {
       tops[i] = baselines[i] + heights[i];
@@ -1122,7 +1122,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_violin(std::initializer_list<std::
 pluss::pl::Studio DataFramePlotAccessor::impl_violin(std::string_view value_feature,
                                                      std::string_view group_feature) const {
   const auto y_values = thread_to_plot_numeric_values(frame_.features(value_feature));
-  require_plot_size(y_values, frame_.nrows(), value_feature);
+  require_plot_size(y_values, frame_.ncases(), value_feature);
   const auto y_series = pluss::make_series(y_values, {static_cast<std::int64_t>(y_values.size())});
 
   auto fig = make_studio();
@@ -1137,7 +1137,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_violin(std::string_view value_feat
     style_trace(trace, 0, 0.92, 1.1);
   } else {
     auto group_values = thread_to_plot_numeric_values(group_thread);
-    require_plot_size(group_values, frame_.nrows(), group_feature);
+    require_plot_size(group_values, frame_.ncases(), group_feature);
     auto& trace = flash::violinplot(pane,
                                     pluss::make_series(group_values, {static_cast<std::int64_t>(group_values.size())}),
                                     y_series);
@@ -1180,7 +1180,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::initializer_list<std:
   y_labels.reserve(features.size());
   for (const auto feature : features) {
     auto feature_values = thread_to_plot_numeric_values(frame_.features(feature));
-    require_plot_size(feature_values, frame_.nrows(), feature);
+    require_plot_size(feature_values, frame_.ncases(), feature);
     values.push_back(std::move(feature_values));
     y_labels.emplace_back(feature);
   }
@@ -1191,7 +1191,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::initializer_list<std:
   setup_pane(pane, false);
   auto& trace = add_heatmap(pane, values, "value");
   configure_heatmap(pane, trace, options_.heatmap_annotate_levels, options_.heatmap_scale_guide);
-  pane.x_ticks(positional_plot_x(frame_.nrows()), labels_for_cases(frame_, "DataFrame::plot().heatmap"));
+  pane.x_ticks(positional_plot_x(frame_.ncases()), labels_for_cases(frame_, "DataFrame::plot().heatmap"));
   pane.y_ticks(positional_plot_x(static_cast<std::int64_t>(y_labels.size())), y_labels);
   pane.x_label("case").y_label("feature");
   return fig;
@@ -1216,11 +1216,11 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::string_view case_feat
   PLUSS_CHECK(!pivot_features.empty(),
               "DataFrame::plot().heatmap: pivot produced no columns for feature '" + std::string(feature_feature) + "'");
 
-  std::vector<std::vector<double>> values(static_cast<std::size_t>(pivoted.nrows()),
+  std::vector<std::vector<double>> values(static_cast<std::size_t>(pivoted.ncases()),
                                           std::vector<double>(pivot_features.size(), std::numeric_limits<double>::quiet_NaN()));
   for (std::size_t c = 0; c < pivot_features.size(); ++c) {
     auto column_values = thread_to_plot_numeric_values(pivoted.features(pivot_features[c]));
-    require_plot_size(column_values, pivoted.nrows(), pivot_features[c]);
+    require_plot_size(column_values, pivoted.ncases(), pivot_features[c]);
     for (std::size_t r = 0; r < column_values.size(); ++r) {
       values[r][c] = column_values[r];
     }
@@ -1234,7 +1234,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::string_view case_feat
   configure_heatmap(pane, trace, options_.heatmap_annotate_levels, options_.heatmap_scale_guide);
   pane.x_ticks(positional_plot_x(static_cast<std::int64_t>(pivot_features.size())),
                std::vector<std::string>(pivot_features.begin(), pivot_features.end()));
-  pane.y_ticks(positional_plot_x(pivoted.nrows()),
+  pane.y_ticks(positional_plot_x(pivoted.ncases()),
                labels_for_cases(pivoted, "DataFrame::plot().heatmap"));
   pane.x_label(std::string(feature_feature)).y_label(std::string(case_feature));
   return fig;
@@ -1275,7 +1275,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(std::initializer_list<st
   const bool explicit_features = features.size() > 0;
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().auto_plot");
   if (names.size() == 1) {
-    if (thread_prefers_labeled_axis(frame_.cases()) && frame_.nrows() <= 16) {
+    if (thread_prefers_labeled_axis(frame_.cases()) && frame_.ncases() <= 16) {
       return bar(names.front());
     }
     return line(names.front());
@@ -1287,7 +1287,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(std::initializer_list<st
     }
   }
   if (names.size() <= 3 && thread_prefers_labeled_axis(frame_.cases()) && all_nonnegative_columns(frame_, names)) {
-    if (frame_.nrows() <= 12) {
+    if (frame_.ncases() <= 12) {
       if (names.size() == 2) {
         return bar_stacked({names[0], names[1]});
       }
@@ -1310,7 +1310,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(std::initializer_list<st
         break;
     }
   }
-  if (names.size() <= 5 && frame_.nrows() <= 256) {
+  if (names.size() <= 5 && frame_.ncases() <= 256) {
     return scatter_matrix_from_names(frame_,
                                      names,
                                      options_.scatter_matrix_triangle,
@@ -1323,12 +1323,194 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(std::initializer_list<st
                                  options_.heatmap_scale_guide);
 }
 
+DataFramePlot3DAccessor::DataFramePlot3DAccessor(DataFrame frame, DataFramePlotOptions options)
+    : frame_(std::move(frame)), options_(std::move(options)) {}
+
+void DataFramePlot3DAccessor::apply_figure_options(pluss::pl::Studio& figure) const {
+  const double width = options_.width.value_or(figure.extent().width);
+  const double height = options_.height.value_or(figure.extent().height);
+  figure.size(width, height);
+  if (options_.use_tight_layout) {
+    figure.tight_layout(true, options_.tight_layout_padding);
+  }
+}
+
+pluss::pl::Studio DataFramePlot3DAccessor::scatter(std::string_view x_feature,
+                                                   std::string_view y_feature,
+                                                   std::string_view z_feature,
+                                                   std::optional<std::string_view> size_feature,
+                                                   std::optional<std::string_view> color_feature) const {
+  auto fig = make_studio();
+  auto& pane = fig.pane3("scatter3d");
+  pane.grid(pluss::pl::GridStyle::Major).legend(pluss::pl::KeyPlace::Auto);
+  pane.x_label(std::string(x_feature)).y_label(std::string(y_feature)).z_label(std::string(z_feature));
+
+  const auto n = frame_.ncases();
+  const auto x = thread_to_plot_numeric_values(frame_.features(x_feature));
+  const auto y = thread_to_plot_numeric_values(frame_.features(y_feature));
+  const auto z = thread_to_plot_numeric_values(frame_.features(z_feature));
+  require_plot_size(x, n, x_feature);
+  require_plot_size(y, n, y_feature);
+  require_plot_size(z, n, z_feature);
+
+  if (size_feature.has_value()) {
+    const auto s = thread_to_plot_numeric_values(frame_.features(*size_feature));
+    require_plot_size(s, n, *size_feature);
+    if (color_feature.has_value()) {
+      const auto c = thread_to_plot_numeric_values(frame_.features(*color_feature));
+      require_plot_size(c, n, *color_feature);
+      flash::cloud3(pane, x, y, z, s, c).label("scatter3d");
+    } else {
+      flash::cloud3(pane, x, y, z, s).label("scatter3d");
+    }
+  } else if (color_feature.has_value()) {
+    const auto c = thread_to_plot_numeric_values(frame_.features(*color_feature));
+    require_plot_size(c, n, *color_feature);
+    std::vector<double> default_size(static_cast<std::size_t>(n), 12.0);
+    flash::cloud3(pane, x, y, z, default_size, c).label("scatter3d");
+  } else {
+    flash::cloud3(pane, x, y, z).label("scatter3d");
+  }
+
+  apply_figure_options(fig);
+  return fig;
+}
+
+pluss::pl::Studio DataFramePlot3DAccessor::line(std::string_view x_feature,
+                                                std::string_view y_feature,
+                                                std::string_view z_feature) const {
+  auto fig = make_studio();
+  auto& pane = fig.pane3("line3d");
+  pane.grid(pluss::pl::GridStyle::Major).legend(pluss::pl::KeyPlace::Auto);
+  pane.x_label(std::string(x_feature)).y_label(std::string(y_feature)).z_label(std::string(z_feature));
+
+  const auto n = frame_.ncases();
+  const auto x = thread_to_plot_numeric_values(frame_.features(x_feature));
+  const auto y = thread_to_plot_numeric_values(frame_.features(y_feature));
+  const auto z = thread_to_plot_numeric_values(frame_.features(z_feature));
+  require_plot_size(x, n, x_feature);
+  require_plot_size(y, n, y_feature);
+  require_plot_size(z, n, z_feature);
+
+  flash::path3(pane, x, y, z).label("line3d");
+  apply_figure_options(fig);
+  return fig;
+}
+
+pluss::pl::Studio DataFramePlot3DAccessor::surface(std::string_view x_feature,
+                                                   std::string_view y_feature,
+                                                   std::string_view z_feature,
+                                                   DataFrame::GroupOp op) const {
+  auto pivoted = frame_.pivot_table(y_feature, x_feature, z_feature, op, true, false);
+  PLUSS_CHECK(pivoted.ncases() > 0, "DataFrame::plot3d().surface: pivot produced zero rows");
+  PLUSS_CHECK(pivoted.nfeats() > 0, "DataFrame::plot3d().surface: pivot produced zero columns");
+
+  auto y_axis = thread_to_plot_numeric_values(pivoted.cases());
+  for (std::size_t i = 0; i < y_axis.size(); ++i) {
+    if (!std::isfinite(y_axis[i])) y_axis[i] = static_cast<double>(i);
+  }
+
+  std::vector<double> x_axis;
+  x_axis.reserve(static_cast<std::size_t>(pivoted.nfeats()));
+  for (const auto& name : pivoted.feature_names()) {
+    char* end = nullptr;
+    const double parsed = std::strtod(name.c_str(), &end);
+    const bool ok = (end != nullptr) && (end != name.c_str()) && (*end == '\0');
+    x_axis.push_back(ok ? parsed : static_cast<double>(x_axis.size()));
+  }
+
+  const auto rows = pivoted.ncases();
+  const auto cols = static_cast<std::int64_t>(pivoted.nfeats());
+  std::vector<std::vector<double>> col_values;
+  col_values.reserve(static_cast<std::size_t>(cols));
+  for (const auto& name : pivoted.feature_names()) {
+    auto v = thread_to_plot_numeric_values(pivoted.features(name));
+    require_plot_size(v, rows, name);
+    col_values.push_back(std::move(v));
+  }
+
+  std::vector<double> z_flat(static_cast<std::size_t>(rows * cols), 0.0);
+  for (std::int64_t r = 0; r < rows; ++r) {
+    for (std::int64_t c = 0; c < cols; ++c) {
+      double value = col_values[static_cast<std::size_t>(c)][static_cast<std::size_t>(r)];
+      if (!std::isfinite(value)) value = 0.0;
+      z_flat[static_cast<std::size_t>(r * cols + c)] = value;
+    }
+  }
+
+  auto fig = make_studio();
+  auto& pane = fig.pane3("surface3d");
+  pane.grid(pluss::pl::GridStyle::Major).legend(pluss::pl::KeyPlace::Auto);
+  pane.x_label(std::string(x_feature)).y_label(std::string(y_feature)).z_label(std::string(z_feature));
+  flash::sheet(pane, x_axis, y_axis, pluss::make_series(z_flat, {rows, cols})).label("surface3d");
+  apply_figure_options(fig);
+  return fig;
+}
+
+pluss::pl::Studio DataFramePlot3DAccessor::wireframe(std::string_view x_feature,
+                                                     std::string_view y_feature,
+                                                     std::string_view z_feature,
+                                                     DataFrame::GroupOp op) const {
+  auto pivoted = frame_.pivot_table(y_feature, x_feature, z_feature, op, true, false);
+  PLUSS_CHECK(pivoted.ncases() > 0, "DataFrame::plot3d().wireframe: pivot produced zero rows");
+  PLUSS_CHECK(pivoted.nfeats() > 0, "DataFrame::plot3d().wireframe: pivot produced zero columns");
+
+  auto y_axis = thread_to_plot_numeric_values(pivoted.cases());
+  for (std::size_t i = 0; i < y_axis.size(); ++i) {
+    if (!std::isfinite(y_axis[i])) y_axis[i] = static_cast<double>(i);
+  }
+
+  std::vector<double> x_axis;
+  x_axis.reserve(static_cast<std::size_t>(pivoted.nfeats()));
+  for (const auto& name : pivoted.feature_names()) {
+    char* end = nullptr;
+    const double parsed = std::strtod(name.c_str(), &end);
+    const bool ok = (end != nullptr) && (end != name.c_str()) && (*end == '\0');
+    x_axis.push_back(ok ? parsed : static_cast<double>(x_axis.size()));
+  }
+
+  const auto rows = pivoted.ncases();
+  const auto cols = static_cast<std::int64_t>(pivoted.nfeats());
+  std::vector<std::vector<double>> col_values;
+  col_values.reserve(static_cast<std::size_t>(cols));
+  for (const auto& name : pivoted.feature_names()) {
+    auto v = thread_to_plot_numeric_values(pivoted.features(name));
+    require_plot_size(v, rows, name);
+    col_values.push_back(std::move(v));
+  }
+
+  std::vector<double> z_flat(static_cast<std::size_t>(rows * cols), 0.0);
+  for (std::int64_t r = 0; r < rows; ++r) {
+    for (std::int64_t c = 0; c < cols; ++c) {
+      double value = col_values[static_cast<std::size_t>(c)][static_cast<std::size_t>(r)];
+      if (!std::isfinite(value)) value = 0.0;
+      z_flat[static_cast<std::size_t>(r * cols + c)] = value;
+    }
+  }
+
+  auto fig = make_studio();
+  auto& pane = fig.pane3("wireframe3d");
+  pane.grid(pluss::pl::GridStyle::Major).legend(pluss::pl::KeyPlace::Auto);
+  pane.x_label(std::string(x_feature)).y_label(std::string(y_feature)).z_label(std::string(z_feature));
+  flash::lattice(pane, x_axis, y_axis, pluss::make_series(z_flat, {rows, cols})).label("wireframe3d");
+  apply_figure_options(fig);
+  return fig;
+}
+
 DataFramePlotAccessor DataFrame::plot() const {
   return DataFramePlotAccessor(*this);
 }
 
 DataFramePlotAccessor DataFrame::plot(const DataFramePlotOptions& options) const {
   return DataFramePlotAccessor(*this, options);
+}
+
+DataFramePlot3DAccessor DataFrame::plot3d() const {
+  return DataFramePlot3DAccessor(*this);
+}
+
+DataFramePlot3DAccessor DataFrame::plot3d(const DataFramePlotOptions& options) const {
+  return DataFramePlot3DAccessor(*this, options);
 }
 
 } // namespace pluss::table

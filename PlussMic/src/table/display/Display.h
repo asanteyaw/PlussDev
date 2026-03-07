@@ -21,7 +21,10 @@ enum class DisplayMode : std::uint8_t {
 enum class DisplayBackend : std::uint8_t {
   Auto = 0,
   Terminal = 1,
-  GtkWebKit = 2,
+  NativeWebView = 2,
+  InHouseHtml = 3,
+  // Backward-compatible alias for existing call sites.
+  GtkWebKit = NativeWebView,
 };
 
 struct TerminalInfo {
@@ -43,6 +46,7 @@ struct DisplayOptions {
   bool html_sortable{true};
   bool html_search{true};
   bool html_copy_button{true};
+  bool html_desktop_table_viewport{false};
   std::string window_title{};
 };
 

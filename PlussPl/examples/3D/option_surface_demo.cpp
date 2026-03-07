@@ -50,6 +50,8 @@ int main() {
       .transparent(false)
       .palette(pl::PaletteRamp::lagoon());
 
+//   studio.show();
+
   studio.save_svg((root / "outputs" / "svg" / "plusspl_option_surface.svg").string());
   studio.save_pdf((root / "outputs" / "pdf" / "plusspl_option_surface.pdf").string());
   return 0;

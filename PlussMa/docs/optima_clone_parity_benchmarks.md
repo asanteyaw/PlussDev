@@ -22,7 +22,7 @@ Configuration:
   - persistence `= 0.98`
 - same likelihood surface for:
   - `SequentialQP`
-  - `InteriorPoint`
+  - `InternalProtocol`
   - `NelderMead`
   - `DE_PRMM`
 
@@ -30,14 +30,14 @@ Why this is the standing slice:
 - it completes quickly enough to be a routine clone-parity benchmark
 - larger GARCH tiers are still too slow for a standing run on the current implementation
 - that performance gap is an open clone-parity issue, not a solved problem
-- `SequentialQP` and `InteriorPoint` are both evaluated here with MATLAB-scale iteration budgets rather than the undersized caps used early in the parity phase
+- `SequentialQP` and `InternalProtocol` are both evaluated here with MATLAB-scale iteration budgets rather than the undersized caps used early in the parity phase
 
 ### Results
 
 | Solver | Family | Exit | Stall | Iter | Eval | Objective | Constr viol | First-order | Complementarity | Best feasible | Best feas viol | Time ms | Persistence | \|omega err\| | \|alpha err\| | \|beta err\| |
 |---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | SequentialQP | Optima | Converged | none | 14 | 17 | 13.763152 | 0.000000 | 0.000079 | 0.000000 | 13.763152 | 0.000000 | 195.855167 | 0.953936 | 0.013726 | 0.079999 | 0.053935 |
-| InteriorPoint | Optima | Converged | none | 46 | 50 | 13.763152 | 0.000000 | 0.000001 | 0.000000 | 13.763152 | 0.000000 | 507.593916 | 0.953847 | 0.013789 | 0.079999 | 0.053846 |
+| InternalProtocol | Optima | Converged | none | 46 | 50 | 13.763152 | 0.000000 | 0.000001 | 0.000000 | 13.763152 | 0.000000 | 507.593916 | 0.953847 | 0.013789 | 0.079999 | 0.053846 |
 | NelderMead | DFO | Converged | n/a | 433 | 799 | 13.763136 | 0.000000 | 0.000000 | 0.000000 | n/a | n/a | 2183.660583 | 0.430625 | 0.396838 | 0.080000 | 0.469375 |
 | DE_PRMM | DFO | Converged | n/a | 30 | 1068 | 13.763137 | 0.000000 | 0.000000 | 0.000000 | n/a | n/a | 2855.994500 | 0.652633 | 0.234286 | 0.080000 | 0.247367 |
 

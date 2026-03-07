@@ -80,5 +80,6 @@ int main() {
   } catch (const std::exception&) {
     // PNG export requires an external SVG rasterizer (rsvg-convert/inkscape/magick).
   }
+  
   return 0;
 }

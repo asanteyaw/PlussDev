@@ -1,6 +1,6 @@
 # Optima Parity Matrix
 
-Purpose: track the curated benchmark and pathological cases used to justify `optima(...)` near-parity claims for `SequentialQP` and `InteriorPoint`.
+Purpose: track the curated benchmark and pathological cases used to justify `optima(...)` near-parity claims for `SequentialQP` and `InternalProtocol`.
 
 Reference anchors:
 - `/Users/yawasante/Documents/Doctrate/Thesis/C++/second_paper/with_returns/DFO/fmincon.pdf`
@@ -13,23 +13,23 @@ Reference anchors:
 
 | Case | Coverage | Backend expectation | Regression |
 |---|---|---|---|
-| Mixed nonlinear equality + inequality, infeasible start | feasibility recovery, multipliers, nonlinear Jacobians | `SequentialQP`, `InteriorPoint` should recover to a feasible point | `test_patch88_optima_parity_suite.cpp` |
+| Mixed nonlinear equality + inequality, infeasible start | feasibility recovery, multipliers, nonlinear Jacobians | `SequentialQP`, `InternalProtocol` should recover to a feasible point | `test_patch88_optima_parity_suite.cpp` |
 | Active bounds + active nonlinear inequality | bound handling, complementarity, multiplier reporting | both backends should converge with active bound multipliers | `test_patch88_optima_parity_suite.cpp` |
 | Ill-conditioned objective + equality scaling | scaling, normalization, stationarity under poor conditioning | both backends should solve with `ObjectiveAndConstraints` scaling | `test_patch88_optima_parity_suite.cpp` |
 | Non-finite trial region | NaN/Inf recovery, restoration/recovery paths | both backends should shrink/recover instead of aborting | `test_patch72_optima_recovery.cpp` |
 | Invalid callback contracts | callback validation and controlled exit | fail cleanly with `InvalidProblem` | `test_patch73_optima_validation.cpp` |
 | Best feasible vs returned iterate | best-feasible tracking and public diagnostics | public output should preserve best-feasible summaries | `test_patch87_optima_output_parity.cpp` |
 | Stall taxonomy and progress diagnostics | boundary stalls, recovery failures, complementarity stalls, non-finite regions | public output and progress snapshots should classify pathological exits consistently | `test_patch90_optima_stall_diagnostics.cpp` |
-| Exact curvature / HVP interior-point | second-order curvature modes | `InteriorPoint` should support exact/HVP modes | `test_patch83_optima_exact_curvature.cpp` |
+| Exact curvature / HVP internal-protocol | second-order curvature modes | `InternalProtocol` should support exact/HVP modes | `test_patch83_optima_exact_curvature.cpp` |
 | Linear-system routing | direct, pivoted, and Krylov policy | solver should obey explicit routing policy | `test_patch85_optima_linear_policy.cpp`, `test_patch79_optima_cg.cpp` |
 | GARCH likelihood benchmark | real objective recurrence and optimizer runtime behavior | compare `optima(...)` against DFO baselines | `PlussMa/examples/Numerical/optimization/garch11_optima_demo.cpp` |
-| GARCH clone-parity standing slice | real workload table with wall time, best-feasible, and solver comparisons | `SequentialQP`, `InteriorPoint`, and DFO baselines should be compared on the same seeded likelihood surface | `PlussMa/examples/Numerical/optimization/optima_clone_parity_bench.cpp`, `PlussMa/docs/optima_clone_parity_benchmarks.md` |
-| Structured banded family | larger structured problem with banded constraints and smooth chain objective | `SequentialQP` and `InteriorPoint` should be measured on tens-of-variables structured problems before sparse routing is added | `PlussMa/examples/Numerical/optimization/optima_structured_clone_parity_bench.cpp`, `PlussMa/docs/optima_structured_clone_parity_benchmarks.md` |
+| GARCH clone-parity standing slice | real workload table with wall time, best-feasible, and solver comparisons | `SequentialQP`, `InternalProtocol`, and DFO baselines should be compared on the same seeded likelihood surface | `PlussMa/examples/Numerical/optimization/optima_clone_parity_bench.cpp`, `PlussMa/docs/optima_clone_parity_benchmarks.md` |
+| Structured banded family | larger structured problem with banded constraints and smooth chain objective | `SequentialQP` and `InternalProtocol` should be measured on tens-of-variables structured problems before sparse routing is added | `PlussMa/examples/Numerical/optimization/optima_structured_clone_parity_bench.cpp`, `PlussMa/docs/optima_structured_clone_parity_benchmarks.md` |
 | Pathological live stall suite | real solver-triggered non-finite, boundary, collapse, recovery, and feasibility failures | public diagnostics should match the actual live exit mode | `PlussMa/examples/Numerical/optimization/optima_pathology_clone_parity_bench.cpp`, `PlussMa/docs/optima_pathology_clone_parity_benchmarks.md`, `test_patch91_optima_pathology_suite.cpp` |
 
 ## Remaining Clone-Parity Focus
 
-- tracked clone-parity suite is now closed for `SequentialQP` and `InteriorPoint`
+- tracked clone-parity suite is now closed for `SequentialQP` and `InternalProtocol`
 - next-phase work is no longer clone closure; it is extension:
   - richer large-scale sparse structure exploitation
   - broader real-world benchmark table with recorded metrics

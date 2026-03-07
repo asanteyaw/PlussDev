@@ -43,7 +43,7 @@ template <class T>
   }
 
 template <class... Ts>
-inline Args pack_args(Ts&&... xs) {
+inline Args call_args(Ts&&... xs) {
   Args out;
   out.reserve(sizeof...(Ts));
   (out.emplace_back(detail::pack_one(std::forward<Ts>(xs))), ...);
@@ -65,7 +65,7 @@ struct args : public Args {
 using kwargs = Kwargs;
 
 template <class... Ts>
-inline args pack_args(Ts&&... xs) {
+inline args call_args(Ts&&... xs) {
   return args(std::forward<Ts>(xs)...);
 }
 

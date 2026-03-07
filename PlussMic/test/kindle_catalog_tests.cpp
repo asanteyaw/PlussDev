@@ -373,10 +373,10 @@ void test_catalog_mutation_tabelize_io() {
   policy.case_feature_name = "case";
   policy.collision = pluss::kindle::CollisionPolicy::Suffix;
   const auto frame = base.tabelize(policy);
-  expect(frame.nrows() == 5, "tabelize row count mismatch");
+  expect(frame.ncases() == 5, "tabelize row count mismatch");
   expect(frame.nfeatures() >= base.nstreams(), "tabelize feature count mismatch");
   const auto frame_via_to_table = base.to_table(policy, false);
-  expect(frame_via_to_table.nrows() == frame.nrows(), "to_table(row count) should match tabelize");
+  expect(frame_via_to_table.ncases() == frame.ncases(), "to_table(row count) should match tabelize");
   expect(frame_via_to_table.nfeatures() == frame.nfeatures(), "to_table(feature count) should match tabelize");
 
   expect(!base.to_string().empty(), "to_string should not be empty");
@@ -392,25 +392,25 @@ void test_catalog_mutation_tabelize_io() {
   const auto out_path = temp_csv_path("catalog_save");
   base.save_csv(out_path.string());
   const auto reloaded = DataFrame::load_csv(out_path.string());
-  expect(reloaded.nrows() == 5, "save_csv/load_csv roundtrip rows mismatch");
+  expect(reloaded.ncases() == 5, "save_csv/load_csv roundtrip rows mismatch");
 
   auto txt_out = temp_csv_path("catalog_save_txt");
   txt_out.replace_extension(".txt");
   base.save_txt(txt_out.string(), pluss::loader::config_from({{"header", true}}));
   const auto txt_roundtrip = DataFrame::load_txt(txt_out.string(), {{"header", true}});
-  expect(txt_roundtrip.nrows() == 5, "Catalog::save_txt roundtrip rows mismatch");
+  expect(txt_roundtrip.ncases() == 5, "Catalog::save_txt roundtrip rows mismatch");
 
   auto json_out = temp_csv_path("catalog_save_json");
   json_out.replace_extension(".json");
   base.save_json(json_out.string());
   const auto json_roundtrip = DataFrame::load_json(json_out.string());
-  expect(json_roundtrip.nrows() == 5, "Catalog::save_json roundtrip rows mismatch");
+  expect(json_roundtrip.ncases() == 5, "Catalog::save_json roundtrip rows mismatch");
 
   auto save_as_json_out = temp_csv_path("catalog_save_as_json");
   save_as_json_out.replace_extension(".json");
   base.save_as("json", save_as_json_out.string(), pluss::loader::config_from({{"orient", "split"}}));
   const auto save_as_json_roundtrip = DataFrame::load_json(save_as_json_out.string());
-  expect(save_as_json_roundtrip.nrows() == 5, "Catalog::save_as(json) roundtrip rows mismatch");
+  expect(save_as_json_roundtrip.ncases() == 5, "Catalog::save_as(json) roundtrip rows mismatch");
 
   const auto loaded_csv = Catalog::load_csv(data_file("messy_data.csv").string());
   expect(loaded_csv.nstreams() > 0, "load_csv should return non-empty catalog");
@@ -419,12 +419,12 @@ void test_catalog_mutation_tabelize_io() {
       "csv",
       data_file("messy_data.csv").string(),
       pluss::loader::config_from({
-          {"nrows", 8},
+          {"ncases", 8},
       }));
   expect(loaded_generic.count() == 8, "Catalog::load(csv, config) nrows mismatch");
 
   pluss::loader::ReadCsvOptions opts;
-  opts.nrows = 24;
+  opts.ncases = 24;
   const auto keyed = Catalog::load_csv_with_key(data_file("bank-full.csv").string(), "job", opts);
   expect(keyed.has("_case"), "load_csv_with_key should materialize _case stream");
 
@@ -511,8 +511,8 @@ void test_archive_to_table_bridge() {
   const auto atlas_a = archive.tabelize();
   const auto atlas_b = archive.to_table({}, false);
   expect(atlas_a.depth() == atlas_b.depth(), "Archive::to_table depth mismatch");
-  expect(atlas_a.nrows() == atlas_b.nrows(), "Archive::to_table nrows mismatch");
-  expect(atlas_a.ncols() == atlas_b.ncols(), "Archive::to_table ncols mismatch");
+  expect(atlas_a.ncases() == atlas_b.ncases(), "Archive::to_table nrows mismatch");
+  expect(atlas_a.nfeats() == atlas_b.nfeats(), "Archive::to_table ncols mismatch");
 }
 
 } // namespace

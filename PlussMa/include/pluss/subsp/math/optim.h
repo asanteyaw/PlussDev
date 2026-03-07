@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <concepts>
 #include <cstdint>
 #include <functional>
 #include <initializer_list>
@@ -492,12 +493,14 @@ struct NonlinearConstraintEvaluation {
 };
 
 struct ObjectiveDefinition {
+  std::function<Series(const ParameterPack<Series>&)> series{};
   std::function<Trace(const ParameterPack<Trace>&)> autodiff{};
   std::function<DualTrace(const ParameterPack<DualTrace>&)> autodiff_dual{};
   std::function<std::pair<Series, ParameterPack<Series>>(const ParameterPack<Series>&)> analytic{};
 
   bool defined() const noexcept {
-    return static_cast<bool>(autodiff) || static_cast<bool>(autodiff_dual) || static_cast<bool>(analytic);
+    return static_cast<bool>(series) || static_cast<bool>(autodiff) ||
+           static_cast<bool>(autodiff_dual) || static_cast<bool>(analytic);
   }
 };
 
@@ -532,6 +535,59 @@ inline ParameterPack<Series> pack_scalars(std::initializer_list<std::pair<std::s
   return ParameterPack<Series>(std::move(out));
 }
 
+inline ParameterPack<Series> pack_vector(std::initializer_list<std::pair<std::string, Series>> blocks) {
+  std::vector<typename ParameterPack<Series>::Block> out;
+  out.reserve(blocks.size());
+  for (const auto& [name, value] : blocks) {
+    detail::require_defined_(value, "pack_vector");
+    out.push_back({name, value.reshape({value.numel()})});
+  }
+  return ParameterPack<Series>(std::move(out));
+}
+
+inline ParameterPack<Series> pack_series(const Series& values, std::string name = "x") {
+  detail::require_defined_(values, "pack_series");
+  return pack_vector({{std::move(name), values}});
+}
+
+template <class Fn, class... Bound>
+auto bind_objective(Fn&& fn, Bound&&... bound) {
+  using FnStorage = std::decay_t<Fn>;
+  using BoundStorage = std::tuple<std::decay_t<Bound>...>;
+  return [f = FnStorage(std::forward<Fn>(fn)),
+          bound_args = BoundStorage(std::forward<Bound>(bound)...)](const Series& x) -> Series {
+    return std::apply(
+        [&](const auto&... args) -> Series {
+          return std::invoke(f, x, args...);
+        },
+        bound_args);
+  };
+}
+
+template <class... Bound>
+struct ObjectiveArgs {
+  std::tuple<Bound...> values{};
+};
+
+template <class... Bound>
+auto pack_args(Bound&&... bound) {
+  using Storage = ObjectiveArgs<std::decay_t<Bound>...>;
+  return Storage{std::tuple<std::decay_t<Bound>...>(std::forward<Bound>(bound)...)};
+}
+
+template <class Fn, class... Bound>
+auto bind_objective(Fn&& fn, const ObjectiveArgs<Bound...>& bound) {
+  using FnStorage = std::decay_t<Fn>;
+  return [f = FnStorage(std::forward<Fn>(fn)),
+          bound_args = bound.values](const Series& x) -> Series {
+    return std::apply(
+        [&](const auto&... args) -> Series {
+          return std::invoke(f, x, args...);
+        },
+        bound_args);
+  };
+}
+
 class ProblemBuilder {
 public:
   ProblemBuilder() = default;
@@ -540,6 +596,35 @@ public:
   ProblemBuilder& objective(Fn&& fn) {
     problem_.objective.autodiff = std::forward<Fn>(fn);
     return *this;
+  }
+
+  template <class Fn>
+  ProblemBuilder& objective_series(Fn&& fn) {
+    problem_.objective.series = std::forward<Fn>(fn);
+    return *this;
+  }
+
+  template <class Fn>
+  ProblemBuilder& objective_fn(Fn&& fn) {
+    problem_.objective.series = [f = std::forward<Fn>(fn)](const ParameterPack<Series>& p) -> Series {
+      return f(p.at("x").reshape({p.at("x").numel()}));
+    };
+    return *this;
+  }
+
+  template <class Fn, class... Bound>
+  requires(sizeof...(Bound) > 0 &&
+           std::invocable<Fn&, const Series&, Bound...> &&
+           std::convertible_to<std::invoke_result_t<Fn&, const Series&, Bound...>, Series>)
+  ProblemBuilder& objective_fn(Fn&& fn, Bound&&... bound) {
+    return objective_fn(bind_objective(std::forward<Fn>(fn), std::forward<Bound>(bound)...));
+  }
+
+  template <class Fn, class... Bound>
+  requires(std::invocable<Fn&, const Series&, Bound...> &&
+           std::convertible_to<std::invoke_result_t<Fn&, const Series&, Bound...>, Series>)
+  ProblemBuilder& objective_fn(Fn&& fn, const ObjectiveArgs<Bound...>& bound) {
+    return objective_fn(bind_objective(std::forward<Fn>(fn), bound));
   }
 
   template <class Fn>
@@ -566,29 +651,49 @@ public:
     return *this;
   }
 
+  template <class Fn>
+  ProblemBuilder& nl_eq(Fn&& fn) {
+    return nonlinear_equality(std::forward<Fn>(fn));
+  }
+
+  template <class Fn>
+  ProblemBuilder& nl_ineq(Fn&& fn) {
+    return nonlinear_inequality(std::forward<Fn>(fn));
+  }
+
   ProblemBuilder& nonlinear_analytic(
       std::function<NonlinearConstraintEvaluation(const ParameterPack<Series>&)> fn) {
     problem_.nonlinear.analytic = std::move(fn);
     return *this;
   }
 
-  ProblemBuilder& lower_bounds(const ParameterPack<Series>& lower) {
+  ProblemBuilder& lbs(const ParameterPack<Series>& lower) {
     problem_.bounds.lower = lower;
     return *this;
   }
 
-  ProblemBuilder& upper_bounds(const ParameterPack<Series>& upper) {
+  ProblemBuilder& lbs(const Series& lower) {
+    problem_.bounds.lower = pack_series(lower);
+    return *this;
+  }
+
+  ProblemBuilder& ubs(const ParameterPack<Series>& upper) {
     problem_.bounds.upper = upper;
     return *this;
   }
 
-  ProblemBuilder& linear_equalities(const Series& Aeq, const Series& beq) {
+  ProblemBuilder& ubs(const Series& upper) {
+    problem_.bounds.upper = pack_series(upper);
+    return *this;
+  }
+
+  ProblemBuilder& ln_eq(const Series& Aeq, const Series& beq) {
     problem_.linear.Aeq = Aeq;
     problem_.linear.beq = beq;
     return *this;
   }
 
-  ProblemBuilder& linear_inequalities(const Series& Aineq, const Series& bineq) {
+  ProblemBuilder& ln_ineq(const Series& Aineq, const Series& bineq) {
     problem_.linear.Aineq = Aineq;
     problem_.linear.bineq = bineq;
     return *this;
@@ -604,6 +709,87 @@ private:
 
 inline ProblemBuilder problem() {
   return ProblemBuilder{};
+}
+
+struct ObjectiveConstraints {
+  NonlinearConstraints nonlinear{};
+  LinearConstraints linear{};
+  Bounds bounds{};
+};
+
+class ObjectiveConstraintsBuilder {
+public:
+  ObjectiveConstraintsBuilder() = default;
+
+  template <class Fn>
+  ObjectiveConstraintsBuilder& nonlinear_equality(Fn&& fn) {
+    constraints_.nonlinear.equality = std::forward<Fn>(fn);
+    return *this;
+  }
+
+  template <class Fn>
+  ObjectiveConstraintsBuilder& nonlinear_inequality(Fn&& fn) {
+    constraints_.nonlinear.inequality = std::forward<Fn>(fn);
+    return *this;
+  }
+
+  template <class Fn>
+  ObjectiveConstraintsBuilder& nl_eq(Fn&& fn) {
+    return nonlinear_equality(std::forward<Fn>(fn));
+  }
+
+  template <class Fn>
+  ObjectiveConstraintsBuilder& nl_ineq(Fn&& fn) {
+    return nonlinear_inequality(std::forward<Fn>(fn));
+  }
+
+  ObjectiveConstraintsBuilder& nonlinear_analytic(
+      std::function<NonlinearConstraintEvaluation(const ParameterPack<Series>&)> fn) {
+    constraints_.nonlinear.analytic = std::move(fn);
+    return *this;
+  }
+
+  ObjectiveConstraintsBuilder& lbs(const ParameterPack<Series>& lower) {
+    constraints_.bounds.lower = lower;
+    return *this;
+  }
+
+  ObjectiveConstraintsBuilder& lbs(const Series& lower) {
+    constraints_.bounds.lower = pack_series(lower);
+    return *this;
+  }
+
+  ObjectiveConstraintsBuilder& ubs(const ParameterPack<Series>& upper) {
+    constraints_.bounds.upper = upper;
+    return *this;
+  }
+
+  ObjectiveConstraintsBuilder& ubs(const Series& upper) {
+    constraints_.bounds.upper = pack_series(upper);
+    return *this;
+  }
+
+  ObjectiveConstraintsBuilder& ln_eq(const Series& Aeq, const Series& beq) {
+    constraints_.linear.Aeq = Aeq;
+    constraints_.linear.beq = beq;
+    return *this;
+  }
+
+  ObjectiveConstraintsBuilder& ln_ineq(const Series& Aineq, const Series& bineq) {
+    constraints_.linear.Aineq = Aineq;
+    constraints_.linear.bineq = bineq;
+    return *this;
+  }
+
+  ObjectiveConstraints build() const { return constraints_; }
+  operator ObjectiveConstraints() const { return build(); }
+
+private:
+  ObjectiveConstraints constraints_{};
+};
+
+inline ObjectiveConstraintsBuilder constraints() {
+  return ObjectiveConstraintsBuilder{};
 }
 
 struct ProblemEvaluation {
@@ -671,6 +857,18 @@ enum class OptimaProgressStage : std::uint8_t {
   Iteration,
   Done,
 };
+
+inline std::string_view optima_progress_stage_name(OptimaProgressStage stage) {
+  switch (stage) {
+    case OptimaProgressStage::Start:
+      return "start";
+    case OptimaProgressStage::Iteration:
+      return "iter";
+    case OptimaProgressStage::Done:
+      return "done";
+  }
+  return "iter";
+}
 
 enum class OptimaStallCategory : std::uint8_t {
   None = 0,
@@ -865,7 +1063,7 @@ struct WorkingSetState : SequentialQPState {
   std::int64_t stalled_iterations{0};
 };
 
-struct InteriorPointOptions {
+struct InternalProtocolOptions {
   std::int64_t max_iterations{100};
   std::int64_t max_line_search_iterations{25};
   std::int64_t max_restoration_iterations{8};
@@ -903,7 +1101,7 @@ struct InteriorPointOptions {
   std::function<bool(const OptimaProgressSnapshot&)> progress_hook{};
 };
 
-struct InteriorPointState {
+struct InternalProtocolState {
   ParameterPack<Series> params{};
   ProblemEvaluation evaluation{};
   std::int64_t iteration{0};
@@ -933,7 +1131,7 @@ enum class OptimaAlgorithm : std::uint8_t {
   Penalty = 0,
   SequentialQP,
   WorkingSet,
-  InteriorPoint,
+  InternalProtocol,
 };
 
 enum class OptimaExitFlag : std::int32_t {
@@ -977,7 +1175,7 @@ struct OptimaOptions {
   PenaltyMethodOptions penalty{};
   SequentialQPOptions sequential_qp{};
   WorkingSetOptions working_set{};
-  InteriorPointOptions interior_point{};
+  InternalProtocolOptions internal_protocol{};
   std::function<bool(const OptimaProgressSnapshot&)> progress_hook{};
 };
 
@@ -1013,28 +1211,28 @@ inline OptimaOptions sequential_qp() {
 
 inline OptimaOptions internal_protocol() {
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 100;
-  options.interior_point.initial_barrier_parameter = 1e-2;
-  options.interior_point.minimum_barrier_parameter = 1e-8;
-  options.interior_point.barrier_decay = 0.2;
-  options.interior_point.constraint_tolerance = 1e-8;
-  options.interior_point.optimality_tolerance = 1e-6;
-  options.interior_point.max_line_search_iterations = 16;
-  options.interior_point.problem_scaling = OptimaProblemScaling::InitialPoint;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 100;
+  options.internal_protocol.initial_barrier_parameter = 1e-2;
+  options.internal_protocol.minimum_barrier_parameter = 1e-8;
+  options.internal_protocol.barrier_decay = 0.2;
+  options.internal_protocol.constraint_tolerance = 1e-8;
+  options.internal_protocol.optimality_tolerance = 1e-6;
+  options.internal_protocol.max_line_search_iterations = 16;
+  options.internal_protocol.problem_scaling = OptimaProblemScaling::InitialPoint;
   return options;
 }
 
 inline OptimaOptions robust_internal_protocol() {
   OptimaOptions options = internal_protocol();
-  options.interior_point.max_iterations = 160;
-  options.interior_point.max_restoration_iterations = 10;
-  options.interior_point.max_restoration_line_search_iterations = 20;
-  options.interior_point.enable_restoration = true;
-  options.interior_point.enable_feasibility_phase = false;
-  options.interior_point.hessian_approximation = OptimaHessianApproximation::Bfgs;
-  options.interior_point.linear_system_solver = OptimaLinearSystemSolver::Auto;
-  options.interior_point.system_structure = OptimaLinearSystemStructure::Auto;
+  options.internal_protocol.max_iterations = 160;
+  options.internal_protocol.max_restoration_iterations = 10;
+  options.internal_protocol.max_restoration_line_search_iterations = 20;
+  options.internal_protocol.enable_restoration = true;
+  options.internal_protocol.enable_feasibility_phase = false;
+  options.internal_protocol.hessian_approximation = OptimaHessianApproximation::Bfgs;
+  options.internal_protocol.linear_system_solver = OptimaLinearSystemSolver::Auto;
+  options.internal_protocol.system_structure = OptimaLinearSystemStructure::Auto;
   return options;
 }
 
@@ -1059,6 +1257,97 @@ inline std::ostream& print_summary(std::ostream& os, const OptimaState& result) 
      << " message=" << result.message;
   return os;
 }
+
+namespace reports {
+
+struct ProgressTracePreset {
+  bool include_start{true};
+  bool include_done{true};
+  bool include_message{true};
+  bool include_krylov{true};
+  int precision{6};
+};
+
+inline std::function<bool(const OptimaProgressSnapshot&)> trace(std::ostream& os,
+                                                                ProgressTracePreset preset = {}) {
+  return [&os, preset](const OptimaProgressSnapshot& snapshot) {
+    if (snapshot.stage == OptimaProgressStage::Start && !preset.include_start) return false;
+    if (snapshot.stage == OptimaProgressStage::Done && !preset.include_done) return false;
+
+    const auto old_flags = os.flags();
+    const auto old_precision = os.precision();
+    os.setf(std::ios::fixed, std::ios::floatfield);
+    os.precision(preset.precision);
+
+    double objective = std::numeric_limits<double>::quiet_NaN();
+    if (snapshot.evaluation.value.defined() && snapshot.evaluation.value.numel() == 1) {
+      objective = snapshot.evaluation.value.item<double>();
+    }
+
+    os << '[' << snapshot.algorithm << ':' << optima_progress_stage_name(snapshot.stage) << ']'
+       << " iter=" << snapshot.iteration
+       << " evals=" << snapshot.function_evaluations
+       << " objective=" << objective
+       << " viol=" << snapshot.evaluation.max_constraint_violation
+       << " stationarity=" << snapshot.stationarity
+       << " backend=" << snapshot.backend_parameter
+       << " step=" << snapshot.step_size;
+    if (preset.include_krylov) {
+      os << " krylov=" << snapshot.krylov_iterations;
+    }
+    os << " stall=" << optima_stall_category_name(snapshot.stall_category);
+    if (preset.include_message && !snapshot.message.empty()) {
+      os << " msg=\"" << snapshot.message << '"';
+    }
+    os << '\n';
+
+    os.flags(old_flags);
+    os.precision(old_precision);
+    return false;
+  };
+}
+
+inline std::function<bool(const OptimaProgressSnapshot&)> iteration_only_trace(std::ostream& os,
+                                                                               int precision = 6) {
+  ProgressTracePreset preset{};
+  preset.include_start = false;
+  preset.include_done = false;
+  preset.include_message = false;
+  preset.include_krylov = false;
+  preset.precision = precision;
+  return trace(os, preset);
+}
+
+inline std::function<bool(const OptimaProgressSnapshot&)> iter(std::ostream& os,
+                                                               int precision = 6) {
+  return iteration_only_trace(os, precision);
+}
+
+inline std::ostream& compact_summary(std::ostream& os, const OptimaState& result) {
+  return print_summary(os, result);
+}
+
+inline std::ostream& detailed_summary(std::ostream& os, const OptimaState& result) {
+  os << "algorithm=" << result.output.algorithm << '\n';
+  os << "exit=" << static_cast<int>(result.exit_flag) << '\n';
+  os << "iterations=" << result.output.iterations << '\n';
+  os << "evaluations=" << result.output.function_evaluations << '\n';
+  os << "constraint_violation=" << result.output.constraint_violation << '\n';
+  os << "first_order_optimality=" << result.output.first_order_optimality << '\n';
+  os << "step_size=" << result.output.step_size << '\n';
+  os << "backend_parameter=" << result.output.backend_parameter << '\n';
+  os << "complementarity=" << result.output.complementarity << '\n';
+  os << "krylov_iterations=" << result.output.krylov_iterations << '\n';
+  os << "best_feasible_available=" << (result.output.best_feasible_available ? "true" : "false") << '\n';
+  os << "returned_best_feasible=" << (result.output.returned_best_feasible ? "true" : "false") << '\n';
+  os << "stall=" << optima_stall_category_name(result.output.stall_category) << '\n';
+  os << "stall_measure=" << result.output.stall_measure << '\n';
+  os << "stall_reference=" << result.output.stall_reference << '\n';
+  os << "message=" << result.message;
+  return os;
+}
+
+} // namespace reports
 
 inline ProblemEvaluation evaluate_problem(const ConstrainedProblem& problem,
                                           const ParameterPack<Series>& params);
@@ -1392,10 +1681,39 @@ AD dense_matvec_autodiff_(const Series& matrix, const AD& vector) {
   }
 }
 
+inline ParameterPack<Series> values_from_trace_pack_(const ParameterPack<Trace>& params) {
+  std::vector<typename ParameterPack<Series>::Block> out;
+  out.reserve(params.size());
+  for (const auto& block : params.blocks()) {
+    out.push_back({block.name, block.value.value()});
+  }
+  return ParameterPack<Series>(std::move(out));
+}
+
+inline std::pair<Series, ParameterPack<Series>> objective_autodiff_value_and_grad_(
+    const ConstrainedProblem& problem,
+    const ParameterPack<Series>& params) {
+  if (problem.objective.autodiff) {
+    return value_and_grad(
+        [&](const ParameterPack<Trace>& p) -> Trace { return problem.objective.autodiff(p); },
+        params);
+  }
+  if (problem.objective.series) {
+    return value_and_grad(
+        [&](const ParameterPack<Trace>& p) -> Trace {
+          return Trace(problem.objective.series(values_from_trace_pack_(p)));
+        },
+        params);
+  }
+  throw std::runtime_error(
+      "subsp::math::optim::objective_autodiff_value_and_grad_: objective callback is not defined");
+}
+
 template <class AD>
 AD call_objective_autodiff_(const ConstrainedProblem& problem, const ParameterPack<AD>& params) {
   if constexpr (std::is_same_v<AD, Trace>) {
     if (problem.objective.autodiff) return problem.objective.autodiff(params);
+    if (problem.objective.series) return Trace(problem.objective.series(values_from_trace_pack_(params)));
   } else {
     if (problem.objective.autodiff_dual) return problem.objective.autodiff_dual(params);
   }
@@ -1466,7 +1784,7 @@ AD barrier_objective_autodiff_(const ConstrainedProblem& problem,
   if constexpr (std::is_same_v<AD, DualTrace>) {
     if (!supports_exact_curvature_(problem, OptimaHessianApproximation::Exact)) {
       throw std::runtime_error(
-          "subsp::math::optim::barrier_objective_autodiff_: exact interior-point curvature requires objective.autodiff_dual and dual nonlinear callbacks");
+          "subsp::math::optim::barrier_objective_autodiff_: exact internal-protocol curvature requires objective.autodiff_dual and dual nonlinear callbacks");
     }
   }
 
@@ -3160,7 +3478,7 @@ inline Series primal_dual_stationarity_flat_(const ProblemEvaluation& evaluation
   return grad;
 }
 
-inline void update_primal_dual_metrics_(InteriorPointState& state,
+inline void update_primal_dual_metrics_(InternalProtocolState& state,
                                         const FlatConstraintSystem& system,
                                         double barrier_parameter,
                                         double equality_penalty) {
@@ -3180,7 +3498,7 @@ inline void update_primal_dual_metrics_(InteriorPointState& state,
   state.feasibility_metric = state.evaluation.max_constraint_violation;
 }
 
-inline void update_primal_dual_metrics_(InteriorPointState& state,
+inline void update_primal_dual_metrics_(InternalProtocolState& state,
                                         const FlatConstraintSystem& system,
                                         double barrier_parameter,
                                         double equality_penalty,
@@ -3315,7 +3633,7 @@ inline ParameterPack<Series> make_strictly_interior_(const ConstrainedProblem& p
   return params;
 }
 
-inline void maybe_update_best_feasible_(InteriorPointState& state,
+inline void maybe_update_best_feasible_(InternalProtocolState& state,
                                         double constraint_tolerance = 0.0) {
   if (!feasible_with_tolerance_(state.evaluation, constraint_tolerance) ||
       !state.evaluation.value.defined() || state.evaluation.value.numel() != 1) {
@@ -3331,12 +3649,12 @@ inline void maybe_update_best_feasible_(InteriorPointState& state,
   }
 }
 
-inline bool should_enter_feasibility_phase_(const InteriorPointState& state,
-                                            const InteriorPointOptions& options);
+inline bool should_enter_feasibility_phase_(const InternalProtocolState& state,
+                                            const InternalProtocolOptions& options);
 
-inline void reduce_barrier_state_(InteriorPointState& state,
+inline void reduce_barrier_state_(InternalProtocolState& state,
                                   const FlatConstraintSystem& system,
-                                  const InteriorPointOptions& options) {
+                                  const InternalProtocolOptions& options) {
   if (!(state.barrier_parameter > options.minimum_barrier_parameter)) return;
 
   state.barrier_parameter = std::max(options.minimum_barrier_parameter,
@@ -3837,7 +4155,7 @@ inline const char* algorithm_name_(OptimaAlgorithm algorithm) {
       return "sqp";
     case OptimaAlgorithm::WorkingSet:
       return "working-set";
-    case OptimaAlgorithm::InteriorPoint:
+    case OptimaAlgorithm::InternalProtocol:
       return "internal-protocol";
   }
   return "unknown";
@@ -3903,7 +4221,7 @@ inline OptimaStallDiagnostic classify_stall_(OptimaAlgorithm algorithm,
       message.find("barrier recovery failed") != std::string::npos ||
       message.find("recovery requires") != std::string::npos ||
       message.find("line search failed to produce an acceptable SQP step after restoration") != std::string::npos ||
-      message.find("line search failed to produce an acceptable interior-point step after recovery") !=
+      message.find("line search failed to produce an acceptable internal-protocol step after recovery") !=
           std::string::npos) {
     return make(OptimaStallCategory::RecoveryFailure, step_size, 0.0);
   }
@@ -3915,7 +4233,7 @@ inline OptimaStallDiagnostic classify_stall_(OptimaAlgorithm algorithm,
     return make(OptimaStallCategory::SearchDirectionCollapse, std::abs(step_size), 0.0);
   }
   if (message.find("maximum iterations reached") != std::string::npos) {
-    if (algorithm == OptimaAlgorithm::InteriorPoint &&
+    if (algorithm == OptimaAlgorithm::InternalProtocol &&
         complementarity > std::max(1e-3, 1e-2 * std::max(stationarity, 1e-12))) {
       return make(OptimaStallCategory::ComplementarityStagnation, complementarity,
                   std::max(stationarity, 1e-12));
@@ -3994,7 +4312,7 @@ inline OptimaProgressSnapshot make_progress_snapshot_(OptimaAlgorithm algorithm,
 
 inline OptimaProgressSnapshot make_progress_snapshot_(OptimaAlgorithm algorithm,
                                                       OptimaProgressStage stage,
-                                                      const InteriorPointState& state) {
+                                                      const InternalProtocolState& state) {
   const auto diagnostic =
       classify_stall_(algorithm, state.evaluation.status, state.message, state.last_step_size,
                       state.barrier_gradient_norm, state.complementarity_residual);
@@ -4051,7 +4369,7 @@ inline OptimaExitFlag exit_flag_from_state_(bool converged,
     if (message.find("constraint violation locally stationary") != std::string::npos) {
       return OptimaExitFlag::ConstraintStationary;
     }
-    if (message.find("failed to initialize a strict interior point") != std::string::npos) {
+    if (message.find("failed to initialize a strict internal protocol") != std::string::npos) {
       return OptimaExitFlag::NoFeasiblePoint;
     }
     if (message.find("restoration failed") != std::string::npos ||
@@ -4309,8 +4627,7 @@ inline ProblemEvaluation evaluate_problem(const ConstrainedProblem& problem,
     }
   } else {
     try {
-      auto [value, grad_pack] =
-          value_and_grad([&](const ParameterPack<Trace>& p) -> Trace { return problem.objective.autodiff(p); }, params);
+      auto [value, grad_pack] = detail::objective_autodiff_value_and_grad_(problem, params);
       out.value = std::move(value);
       out.gradient = std::move(grad_pack);
     } catch (...) {
@@ -4520,10 +4837,9 @@ inline DerivativeAuditReport audit_optima_derivatives(
 
   DerivativeAuditReport report;
 
-  if (problem.objective.analytic && problem.objective.autodiff) {
+  if (problem.objective.analytic && (problem.objective.autodiff || problem.objective.series)) {
     auto [analytic_value, analytic_gradient] = problem.objective.analytic(params);
-    auto [autodiff_value, autodiff_gradient] =
-        value_and_grad([&](const ParameterPack<Trace>& p) -> Trace { return problem.objective.autodiff(p); }, params);
+    auto [autodiff_value, autodiff_gradient] = detail::objective_autodiff_value_and_grad_(problem, params);
     const double value_abs_diff = detail::max_abs_diff_series_(analytic_value, autodiff_value);
     const double value_rel_diff = detail::max_rel_diff_series_(analytic_value, autodiff_value);
     const double gradient_abs_diff = detail::max_abs_diff_pack_(analytic_gradient, autodiff_gradient);
@@ -4536,7 +4852,7 @@ inline DerivativeAuditReport audit_optima_derivatives(
         gradient_rel_diff,
         "objective analytic vs autodiff");
   } else {
-    report.objective.message = "requires both analytic and autodiff objective definitions";
+    report.objective.message = "requires analytic objective and either autodiff or series objective definition";
   }
 
   if (problem.nonlinear.analytic && problem.nonlinear.equality) {
@@ -4852,7 +5168,7 @@ inline RecoveryResult recover_barrier_descent_(const ConstrainedProblem& problem
                                                const ProblemEvaluation& start_evaluation,
                                                const OptimaNormalizationStats& normalization,
                                                double barrier_parameter,
-                                               const InteriorPointOptions& options) {
+                                               const InternalProtocolOptions& options) {
   RecoveryResult result;
   result.params = start_params;
   result.evaluation = start_evaluation;
@@ -4956,8 +5272,8 @@ inline RecoveryResult recover_barrier_descent_(const ConstrainedProblem& problem
   return result;
 }
 
-inline bool should_enter_feasibility_phase_(const InteriorPointState& state,
-                                            const InteriorPointOptions& options) {
+inline bool should_enter_feasibility_phase_(const InternalProtocolState& state,
+                                            const InternalProtocolOptions& options) {
   if (!options.enable_feasibility_phase) return false;
   if (state.evaluation.status != EvalStatus::Ok) return false;
   const double threshold =
@@ -4969,7 +5285,7 @@ inline RecoveryResult advance_feasibility_phase_(const ConstrainedProblem& probl
                                                  const ParameterPack<Series>& start_params,
                                                  const ProblemEvaluation& start_evaluation,
                                                  const OptimaNormalizationStats& normalization,
-                                                 const InteriorPointOptions& options) {
+                                                 const InternalProtocolOptions& options) {
   RecoveryResult result;
   result.params = start_params;
   result.evaluation = start_evaluation;
@@ -6239,16 +6555,16 @@ inline WorkingSetState solve_working_set(const ConstrainedProblem& problem,
   return state;
 }
 
-inline InteriorPointState init_interior_point_state(const ConstrainedProblem& problem,
+inline InternalProtocolState init_internal_protocol_state(const ConstrainedProblem& problem,
                                                     const ParameterPack<Series>& initial_params,
-                                                    const InteriorPointOptions& options = {}) {
-  InteriorPointState state;
+                                                    const InternalProtocolOptions& options = {}) {
+  InternalProtocolState state;
   if (!detail::supports_exact_curvature_(problem, options.hessian_approximation)) {
     state.params = initial_params;
     state.evaluation.status = EvalStatus::InvalidProblem;
     state.converged = true;
     state.message =
-        "exact interior-point curvature requires objective.autodiff_dual and dual nonlinear callbacks";
+        "exact internal-protocol curvature requires objective.autodiff_dual and dual nonlinear callbacks";
     return state;
   }
   std::int64_t eval_count = 0;
@@ -6293,7 +6609,7 @@ inline InteriorPointState init_interior_point_state(const ConstrainedProblem& pr
     state.complementarity_residual = std::numeric_limits<double>::infinity();
   }
   state.converged = !init_ok || state.evaluation.status != EvalStatus::Ok || !std::isfinite(state.barrier_value);
-  state.message = state.converged ? "failed to initialize a strict interior point" : "initialized";
+  state.message = state.converged ? "failed to initialize a strict internal protocol" : "initialized";
   if (state.evaluation.status != EvalStatus::Ok) state.message = state.evaluation.message;
   state.hessian = detail::identity_matrix_(
       state.params.total_numel(),
@@ -6311,10 +6627,10 @@ inline InteriorPointState init_interior_point_state(const ConstrainedProblem& pr
   return state;
 }
 
-inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
-                                              const InteriorPointState& state,
-                                              const InteriorPointOptions& options = {}) {
-  InteriorPointState next = state;
+inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& problem,
+                                              const InternalProtocolState& state,
+                                              const InternalProtocolOptions& options = {}) {
+  InternalProtocolState next = state;
   if (state.converged || state.evaluation.status != EvalStatus::Ok) return next;
 
   if (state.in_feasibility_phase) {
@@ -6610,7 +6926,7 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
   }
   if (!(max_step > 0.0) || !std::isfinite(max_step)) {
     next.converged = true;
-    next.message = "interior-point step hit the boundary";
+    next.message = "internal-protocol step hit the boundary";
     return next;
   }
 
@@ -6820,7 +7136,7 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
       return next;
     }
     next.message = recovery.message.empty()
-                       ? "line search failed to produce an acceptable interior-point step after recovery"
+                       ? "line search failed to produce an acceptable internal-protocol step after recovery"
                        : recovery.message;
     next.converged = true;
     return next;
@@ -6833,24 +7149,24 @@ inline InteriorPointState interior_point_step(const ConstrainedProblem& problem,
   }
 
   next.converged = true;
-  next.message = "line search failed to produce an acceptable interior-point step";
+  next.message = "line search failed to produce an acceptable internal-protocol step";
   return next;
 }
 
-inline InteriorPointState solve_interior_point(const ConstrainedProblem& problem,
+inline InternalProtocolState solve_internal_protocol(const ConstrainedProblem& problem,
                                                const ParameterPack<Series>& initial_params,
-                                               const InteriorPointOptions& options = {}) {
-  InteriorPointState state = init_interior_point_state(problem, initial_params, options);
+                                               const InternalProtocolOptions& options = {}) {
+  InternalProtocolState state = init_internal_protocol_state(problem, initial_params, options);
   std::string progress_message;
   if (detail::run_progress_hook_(
           options.progress_hook,
-          detail::make_progress_snapshot_(OptimaAlgorithm::InteriorPoint, OptimaProgressStage::Start, state),
+          detail::make_progress_snapshot_(OptimaAlgorithm::InternalProtocol, OptimaProgressStage::Start, state),
           &progress_message)) {
     state.converged = true;
     state.message = progress_message.empty() ? "stopped by progress hook" : progress_message;
   }
   while (!state.converged && state.iteration < options.max_iterations) {
-    InteriorPointState next = interior_point_step(problem, state, options);
+    InternalProtocolState next = internal_protocol_step(problem, state, options);
     if (next.iteration == state.iteration && next.message == state.message &&
         next.converged == state.converged) {
       break;
@@ -6859,7 +7175,7 @@ inline InteriorPointState solve_interior_point(const ConstrainedProblem& problem
     progress_message.clear();
     if (detail::run_progress_hook_(
             options.progress_hook,
-            detail::make_progress_snapshot_(OptimaAlgorithm::InteriorPoint, OptimaProgressStage::Iteration, state),
+            detail::make_progress_snapshot_(OptimaAlgorithm::InternalProtocol, OptimaProgressStage::Iteration, state),
             &progress_message)) {
       state.converged = true;
       state.message = progress_message.empty() ? "stopped by progress hook" : progress_message;
@@ -6871,7 +7187,7 @@ inline InteriorPointState solve_interior_point(const ConstrainedProblem& problem
     ++state.function_evaluations;
     if (best_evaluation.status == EvalStatus::Ok) {
       const auto best_system = detail::assemble_constraint_system_(problem, state.best_feasible->params, best_evaluation);
-      InteriorPointState best_state = state;
+      InternalProtocolState best_state = state;
       best_state.params = state.best_feasible->params;
       best_state.evaluation = std::move(best_evaluation);
       detail::update_primal_dual_metrics_(
@@ -6890,7 +7206,7 @@ inline InteriorPointState solve_interior_point(const ConstrainedProblem& problem
   }
   detail::run_progress_hook_(
       options.progress_hook,
-      detail::make_progress_snapshot_(OptimaAlgorithm::InteriorPoint, OptimaProgressStage::Done, state));
+      detail::make_progress_snapshot_(OptimaAlgorithm::InternalProtocol, OptimaProgressStage::Done, state));
   return state;
 }
 
@@ -6977,9 +7293,9 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Sequ
   return to_optima_state(problem, state, OptimaAlgorithm::SequentialQP);
 }
 
-inline OptimaState to_optima_state(const ConstrainedProblem& problem, const InteriorPointState& state) {
+inline OptimaState to_optima_state(const ConstrainedProblem& problem, const InternalProtocolState& state) {
   OptimaState out{
-      OptimaAlgorithm::InteriorPoint,
+      OptimaAlgorithm::InternalProtocol,
       state.params,
       state.evaluation,
       state.iteration,
@@ -7042,14 +7358,150 @@ inline OptimaState optima(const ConstrainedProblem& problem,
                              solve_working_set(problem, initial_params, working_set_options),
                              OptimaAlgorithm::WorkingSet);
     }
-    case OptimaAlgorithm::InteriorPoint: {
-      auto interior_point_options = options.interior_point;
-      if (!interior_point_options.progress_hook) interior_point_options.progress_hook = options.progress_hook;
-      return to_optima_state(problem, solve_interior_point(problem, initial_params, interior_point_options));
+    case OptimaAlgorithm::InternalProtocol: {
+      auto internal_protocol_options = options.internal_protocol;
+      if (!internal_protocol_options.progress_hook) internal_protocol_options.progress_hook = options.progress_hook;
+      return to_optima_state(problem, solve_internal_protocol(problem, initial_params, internal_protocol_options));
     }
   }
 
   throw std::runtime_error("subsp::math::optim::optima: unknown algorithm");
+}
+
+inline OptimaState optima(const ConstrainedProblem& problem,
+                          const Series& initial_params,
+                          const OptimaOptions& options = {}) {
+  return optima(problem, pack_series(initial_params), options);
+}
+
+inline OptimaState optima(
+    std::function<Series(const ParameterPack<Series>&)> objective_series,
+    const ParameterPack<Series>& initial_params,
+    const OptimaOptions& options = {},
+    const ObjectiveConstraints& constraints = {}) {
+  ConstrainedProblem problem;
+  problem.objective.series = std::move(objective_series);
+  problem.nonlinear = constraints.nonlinear;
+  problem.linear = constraints.linear;
+  problem.bounds = constraints.bounds;
+  return optima(problem, initial_params, options);
+}
+
+inline OptimaState optima(
+    std::function<Series(const Series&)> objective_series,
+    const Series& initial_params,
+    const OptimaOptions& options = {},
+    const ObjectiveConstraints& constraints = {}) {
+  ConstrainedProblem problem;
+  problem.objective.series = [f = std::move(objective_series)](const ParameterPack<Series>& p) -> Series {
+    return f(p.at("x").reshape({p.at("x").numel()}));
+  };
+  problem.nonlinear = constraints.nonlinear;
+  problem.linear = constraints.linear;
+  problem.bounds = constraints.bounds;
+  return optima(problem, pack_series(initial_params), options);
+}
+
+template <class Fn, class... Bound>
+requires(sizeof...(Bound) > 0 &&
+         std::invocable<Fn&, const Series&, Bound...> &&
+         std::convertible_to<std::invoke_result_t<Fn&, const Series&, Bound...>, Series>)
+inline OptimaState optima(
+    Fn&& objective_series,
+    const Series& initial_params,
+    const OptimaOptions& options,
+    const ObjectiveConstraints& constraints,
+    Bound&&... bound) {
+  return optima(
+      bind_objective(std::forward<Fn>(objective_series), std::forward<Bound>(bound)...),
+      initial_params,
+      options,
+      constraints);
+}
+
+template <class Fn, class... Bound>
+requires(std::invocable<Fn&, const Series&, Bound...> &&
+         std::convertible_to<std::invoke_result_t<Fn&, const Series&, Bound...>, Series>)
+inline OptimaState optima(
+    Fn&& objective_series,
+    const Series& initial_params,
+    const OptimaOptions& options,
+    const ObjectiveConstraints& constraints,
+    const ObjectiveArgs<Bound...>& bound) {
+  return optima(
+      bind_objective(std::forward<Fn>(objective_series), bound),
+      initial_params,
+      options,
+      constraints);
+}
+
+template <class Fn, class... Bound>
+requires(std::invocable<Fn&, const Series&, Bound...> &&
+         std::convertible_to<std::invoke_result_t<Fn&, const Series&, Bound...>, Series>)
+inline OptimaState optima(
+    Fn&& objective_series,
+    const Series& initial_params,
+    const OptimaOptions& options,
+    const ObjectiveArgs<Bound...>& bound) {
+  return optima(std::forward<Fn>(objective_series), initial_params, options, ObjectiveConstraints{}, bound);
+}
+
+inline OptimaState optima(
+    std::function<Trace(const ParameterPack<Trace>&)> objective_autodiff,
+    const ParameterPack<Series>& initial_params,
+    const OptimaOptions& options = {},
+    const ObjectiveConstraints& constraints = {}) {
+  ConstrainedProblem problem;
+  problem.objective.autodiff = std::move(objective_autodiff);
+  problem.nonlinear = constraints.nonlinear;
+  problem.linear = constraints.linear;
+  problem.bounds = constraints.bounds;
+  return optima(problem, initial_params, options);
+}
+
+inline OptimaState optima(
+    std::function<Trace(const Trace&)> objective_autodiff,
+    const Series& initial_params,
+    const OptimaOptions& options = {},
+    const ObjectiveConstraints& constraints = {}) {
+  ConstrainedProblem problem;
+  problem.objective.autodiff = [f = std::move(objective_autodiff)](const ParameterPack<Trace>& p) -> Trace {
+    return f(p.at("x"));
+  };
+  problem.nonlinear = constraints.nonlinear;
+  problem.linear = constraints.linear;
+  problem.bounds = constraints.bounds;
+  return optima(problem, pack_series(initial_params), options);
+}
+
+inline OptimaState optima(
+    std::function<std::pair<Series, ParameterPack<Series>>(const ParameterPack<Series>&)> objective_analytic,
+    const ParameterPack<Series>& initial_params,
+    const OptimaOptions& options = {},
+    const ObjectiveConstraints& constraints = {}) {
+  ConstrainedProblem problem;
+  problem.objective.analytic = std::move(objective_analytic);
+  problem.nonlinear = constraints.nonlinear;
+  problem.linear = constraints.linear;
+  problem.bounds = constraints.bounds;
+  return optima(problem, initial_params, options);
+}
+
+inline OptimaState optima(
+    std::function<std::pair<Series, Series>(const Series&)> objective_analytic,
+    const Series& initial_params,
+    const OptimaOptions& options = {},
+    const ObjectiveConstraints& constraints = {}) {
+  ConstrainedProblem problem;
+  problem.objective.analytic =
+      [f = std::move(objective_analytic)](const ParameterPack<Series>& p) -> std::pair<Series, ParameterPack<Series>> {
+    auto [value, grad] = f(p.at("x").reshape({p.at("x").numel()}));
+    return {std::move(value), pack_series(grad)};
+  };
+  problem.nonlinear = constraints.nonlinear;
+  problem.linear = constraints.linear;
+  problem.bounds = constraints.bounds;
+  return optima(problem, pack_series(initial_params), options);
 }
 
 struct AdamOptions {

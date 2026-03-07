@@ -9,7 +9,6 @@
 #include <cstring>
 #include <iostream>
 #include <limits>
-#include <memory>
 #include <numeric>
 #include <optional>
 #include <string>
@@ -25,20 +24,13 @@
 #include <unistd.h>
 #endif
 
-#if defined(PLUSSMIC_HAVE_GTK_WEBKIT) && PLUSSMIC_HAVE_GTK_WEBKIT
-#include <cairo.h>
-#include <gdk/gdkkeysyms.h>
-#include <gtk/gtk.h>
-#include <webkit2/webkit2.h>
-#endif
-
 #include "CodeM/core/Complex.h"
 #include "CodeM/core/Half.h"
 #include "CodeM/core/ScalarType.h"
+#include "pluss/view/html_window.h"
 #include "table/Atlas.h"
 #include "table/DataFrame.h"
 #include "table/Thread.h"
-#include "table/display/PlatformHtmlViewer.h"
 
 namespace pluss::table::display {
 
@@ -533,8 +525,8 @@ TableMatrix build_dataframe_matrix(
     const DataFrame& frame,
     const EffectiveDisplayOptions& options,
     bool compact_columns) {
-  const auto row_plan = build_row_plan(frame.nrows(), options);
-  const auto col_plan = build_col_plan(frame.ncols(), options, compact_columns);
+  const auto row_plan = build_row_plan(frame.ncases(), options);
+  const auto col_plan = build_col_plan(frame.nfeats(), options, compact_columns);
 
   const auto names = frame.column_names();
   const auto cols = frame.columns();
@@ -680,36 +672,34 @@ std::string logical_dtype_name(const Thread& t) {
   }
 }
 
-bool compiled_with_gui_backend_() {
-#if defined(PLUSSMIC_HAVE_GTK_WEBKIT) && PLUSSMIC_HAVE_GTK_WEBKIT
-  return true;
-#elif defined(PLUSSMIC_HAVE_WIN_WEBVIEW2) && PLUSSMIC_HAVE_WIN_WEBVIEW2
-  return true;
-#elif defined(PLUSSMIC_HAVE_MAC_WEBKIT) && PLUSSMIC_HAVE_MAC_WEBKIT
-  return true;
-#else
-  return false;
-#endif
+bool native_webview_backend_available_() {
+  return pluss::view::native_backend_available();
 }
 
 bool runtime_gui_env_available_() {
-#if defined(_WIN32) || defined(__APPLE__)
-  return true;
-#else
-  return std::getenv("DISPLAY") != nullptr || std::getenv("WAYLAND_DISPLAY") != nullptr;
-#endif
+  return pluss::view::runtime_gui_environment_available();
 }
 
 DisplayBackend resolve_backend_(const DisplayOptions& options) {
   const auto configured =
       options.backend == DisplayBackend::Auto ? g_default_backend.load(std::memory_order_relaxed) : options.backend;
-  if (configured == DisplayBackend::Auto) {
-    return (compiled_with_gui_backend_() && runtime_gui_env_available_()) ? DisplayBackend::GtkWebKit
-                                                                           : DisplayBackend::Terminal;
-  }
-  if (configured == DisplayBackend::GtkWebKit && (!compiled_with_gui_backend_() || !runtime_gui_env_available_())) {
+  if (!runtime_gui_env_available_()) {
     return DisplayBackend::Terminal;
   }
+
+  if (configured == DisplayBackend::Auto) {
+    // Default remains native-webview first for best fidelity, with in-house fallback.
+    return native_webview_backend_available_() ? DisplayBackend::NativeWebView : DisplayBackend::InHouseHtml;
+  }
+
+  if (configured == DisplayBackend::NativeWebView || configured == DisplayBackend::GtkWebKit) {
+    return native_webview_backend_available_() ? DisplayBackend::NativeWebView : DisplayBackend::Terminal;
+  }
+
+  if (configured == DisplayBackend::InHouseHtml) {
+    return DisplayBackend::InHouseHtml;
+  }
+
   return configured;
 }
 
@@ -759,6 +749,33 @@ std::string html_shell_(std::string_view title,
   const auto sortable = options.html_sortable ? "true" : "false";
   const auto search = options.html_search ? "true" : "false";
   const auto copy = options.html_copy_button ? "true" : "false";
+  const std::string desktop_overrides = options.html_desktop_table_viewport
+                                            ? R"CSS(
+    .hero { flex-wrap: nowrap; }
+    .tools { flex-wrap: nowrap; }
+    .tools input { min-width: 280px; width: 280px; }
+    .summary-grid { grid-template-columns: repeat(3, minmax(160px, 1fr)); }
+)CSS"
+                                            : std::string{};
+  const std::string responsive_css = options.html_desktop_table_viewport
+                                         ? std::string{}
+                                         : R"CSS(
+    @media (max-width: 720px) {
+      .shell {
+        padding: 10px;
+      }
+      .hero {
+        padding: 18px 16px 14px;
+      }
+      .content {
+        padding: 0 10px 10px;
+      }
+      .tools input {
+        min-width: 0;
+        width: 100%;
+      }
+    }
+)CSS";
 
   return fmt::format(R"HTML(<!DOCTYPE html>
 <html lang="en">
@@ -1001,21 +1018,8 @@ std::string html_shell_(std::string_view title,
       font-weight: 600;
       letter-spacing: -0.01em;
     }}
-    @media (max-width: 720px) {{
-      .shell {{
-        padding: 10px;
-      }}
-      .hero {{
-        padding: 18px 16px 14px;
-      }}
-      .content {{
-        padding: 0 10px 10px;
-      }}
-      .tools input {{
-        min-width: 0;
-        width: 100%;
-      }}
-    }}
+    {6}
+    {7}
   </style>
 </head>
 <body>
@@ -1155,7 +1159,9 @@ std::string html_shell_(std::string_view title,
                      body,
                      sortable,
                      search,
-                     copy);
+                     copy,
+                     desktop_overrides,
+                     responsive_css);
 }
 
 std::string render_html_pre_(std::string_view title,
@@ -1177,10 +1183,10 @@ std::string render_html_table_body_(const DataFrame& frame,
   std::string body;
   body += "<div class=\"summary-grid\">";
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
-                      frame.nrows());
+                      frame.ncases());
   body +=
       fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
-                  frame.ncols());
+                  frame.nfeats());
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div class=\"value\">{}</div></div>",
       escape_html_(logical_dtype_name(frame.cases())));
@@ -1209,7 +1215,7 @@ std::string render_html_table_body_(const DataFrame& frame,
   }
   body += "</tr></thead><tbody>";
 
-  for (std::int64_t row = 0; row < frame.nrows(); ++row) {
+  for (std::int64_t row = 0; row < frame.ncases(); ++row) {
     body += "<tr>";
     if (options.show_case_index) {
       const auto case_value = thread_value_at(frame.cases(), row);
@@ -1248,9 +1254,9 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Depth</div><div class=\"value\">{}</div></div>",
                       atlas.depth());
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
-                      atlas.nrows());
+                      atlas.ncases());
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
-                      atlas.ncols());
+                      atlas.nfeats());
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Depth Labels</div><div class=\"value\">{}</div></div>",
                       atlas.axis0_labels().has_value() ? escape_html_(logical_dtype_name(*atlas.axis0_labels()))
                                                        : "None");
@@ -1296,7 +1302,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   }
 
   return html_shell_(document_title_("Atlas", options),
-                     fmt::format("{} frames, {} cases, {} features", atlas.depth(), atlas.nrows(), atlas.ncols()),
+                     fmt::format("{} frames, {} cases, {} features", atlas.depth(), atlas.ncases(), atlas.nfeats()),
                      body,
                      options);
 }
@@ -1313,18 +1319,18 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
     memory_bytes += estimate_bytes(cols[i]);
   }
 
-  const auto first_case = frame.nrows() > 0 ? thread_value_at(frame.cases(), 0) : std::string("NA");
-  const auto last_case = frame.nrows() > 0 ? thread_value_at(frame.cases(), frame.nrows() - 1) : std::string("NA");
+  const auto first_case = frame.ncases() > 0 ? thread_value_at(frame.cases(), 0) : std::string("NA");
+  const auto last_case = frame.ncases() > 0 ? thread_value_at(frame.cases(), frame.ncases() - 1) : std::string("NA");
 
   std::string body;
   body += "<div class=\"summary-grid\">";
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Class</div><div class=\"value\">{}</div></div>",
                       "pluss::table::DataFrame");
   body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
-                      frame.nrows());
+                      frame.ncases());
   body +=
       fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
-                  frame.ncols());
+                  frame.nfeats());
   body += fmt::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Range</div><div class=\"value\">{} <span class=\"muted\">to</span> {}</div></div>",
       escape_html_(first_case),
@@ -1362,132 +1368,38 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
 
   body += "</tbody></table></div>";
   return html_shell_(document_title_("DataFrame Info", options),
-                     fmt::format("{} cases, {} features", frame.nrows(), frame.ncols()),
+                     fmt::format("{} cases, {} features", frame.ncases(), frame.nfeats()),
                      body,
                      options);
 }
 
-bool show_html_window_(const std::string& html, const DisplayOptions& options, std::string_view title) {
-#if defined(PLUSSMIC_HAVE_GTK_WEBKIT) && PLUSSMIC_HAVE_GTK_WEBKIT
-  struct SnapshotRequest {
-    std::string path;
-  };
-
-  if (!runtime_gui_env_available_()) {
-    return false;
-  }
-  if (!gtk_init_check(nullptr, nullptr)) {
+bool show_html_window_(const std::string& html,
+                       const DisplayOptions& options,
+                       std::string_view title,
+                       const DisplayBackend backend) {
+  if (backend == DisplayBackend::Terminal) {
     return false;
   }
 
-  GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(window), native_window_title_(title).c_str());
-  gtk_window_set_default_size(GTK_WINDOW(window),
-                              static_cast<int>(std::max<std::int64_t>(640, options.viewer_width)),
-                              static_cast<int>(std::max<std::int64_t>(420, options.viewer_height)));
-
-  g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), nullptr);
-  g_signal_connect(window,
-                   "key-press-event",
-                   G_CALLBACK(+[](GtkWidget*, GdkEventKey* event, gpointer) -> gboolean {
-                     if (event->keyval == GDK_KEY_Escape) {
-                       gtk_main_quit();
-                       return TRUE;
-                     }
-                     return FALSE;
-                   }),
-                   nullptr);
-
-  GtkWidget* root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_container_add(GTK_CONTAINER(window), root);
-
-  GtkWidget* toolbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-  gtk_widget_set_margin_top(toolbar, 10);
-  gtk_widget_set_margin_bottom(toolbar, 6);
-  gtk_widget_set_margin_start(toolbar, 12);
-  gtk_widget_set_margin_end(toolbar, 12);
-  gtk_box_pack_start(GTK_BOX(root), toolbar, FALSE, FALSE, 0);
-
-  GtkWidget* save_button = gtk_button_new_with_label("Save PNG");
-  gtk_box_pack_end(GTK_BOX(toolbar), save_button, FALSE, FALSE, 0);
-
-  GtkWidget* scroller = gtk_scrolled_window_new(nullptr, nullptr);
-  gtk_box_pack_start(GTK_BOX(root), scroller, TRUE, TRUE, 0);
-
-  WebKitWebView* webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
-  webkit_web_view_load_html(webview, html.c_str(), "file:///");
-  gtk_container_add(GTK_CONTAINER(scroller), GTK_WIDGET(webview));
-
-  g_signal_connect(
-      save_button,
-      "clicked",
-      G_CALLBACK(+[](GtkButton*, gpointer user_data) {
-        auto* webview = WEBKIT_WEB_VIEW(user_data);
-        GtkWidget* dialog = gtk_file_chooser_dialog_new("Save Table Snapshot",
-                                                        nullptr,
-                                                        GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                        "_Cancel",
-                                                        GTK_RESPONSE_CANCEL,
-                                                        "_Save",
-                                                        GTK_RESPONSE_ACCEPT,
-                                                        nullptr);
-        gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), "table-view.png");
-        if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-          char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-          auto* request = new SnapshotRequest{filename != nullptr ? filename : "table-view.png"};
-          if (filename != nullptr) {
-            g_free(filename);
-          }
-          webkit_web_view_get_snapshot(
-              webview,
-              WEBKIT_SNAPSHOT_REGION_FULL_DOCUMENT,
-              WEBKIT_SNAPSHOT_OPTIONS_NONE,
-              nullptr,
-              +[](GObject* source, GAsyncResult* result, gpointer user_data) {
-                std::unique_ptr<SnapshotRequest> request(static_cast<SnapshotRequest*>(user_data));
-                GError* error = nullptr;
-                cairo_surface_t* surface =
-                    webkit_web_view_get_snapshot_finish(WEBKIT_WEB_VIEW(source), result, &error);
-                if (error != nullptr) {
-                  g_error_free(error);
-                  return;
-                }
-                if (surface != nullptr) {
-                  cairo_surface_write_to_png(surface, request->path.c_str());
-                  cairo_surface_destroy(surface);
-                }
-              },
-              request);
-        }
-        gtk_widget_destroy(dialog);
-      }),
-      webview);
-
-  gtk_widget_show_all(window);
-  gtk_main();
-  return true;
-#elif defined(PLUSSMIC_HAVE_MAC_WEBKIT) && PLUSSMIC_HAVE_MAC_WEBKIT
-  if (!detail::mac_html_viewer_available()) {
-    return false;
+  pluss::view::HtmlWindowOptions window_opts{};
+  window_opts.title = native_window_title_(title);
+  window_opts.snapshot_name = "table-view.png";
+  window_opts.width = std::max<std::int64_t>(640, options.viewer_width);
+  window_opts.height = std::max<std::int64_t>(420, options.viewer_height);
+  switch (backend) {
+    case DisplayBackend::InHouseHtml:
+      window_opts.backend_preference = pluss::view::HtmlBackendPreference::InHouseOnly;
+      break;
+    case DisplayBackend::NativeWebView:
+      window_opts.backend_preference = pluss::view::HtmlBackendPreference::NativeWebView;
+      break;
+    case DisplayBackend::Auto:
+      window_opts.backend_preference = pluss::view::HtmlBackendPreference::Auto;
+      break;
+    case DisplayBackend::Terminal:
+      return false;
   }
-  return detail::show_macos_html_window(native_window_title_(title),
-                                        html,
-                                        std::max<std::int64_t>(640, options.viewer_width),
-                                        std::max<std::int64_t>(420, options.viewer_height));
-#elif defined(PLUSSMIC_HAVE_WIN_WEBVIEW2) && PLUSSMIC_HAVE_WIN_WEBVIEW2
-  if (!detail::windows_html_viewer_available()) {
-    return false;
-  }
-  return detail::show_windows_html_window(native_window_title_(title),
-                                          html,
-                                          std::max<std::int64_t>(640, options.viewer_width),
-                                          std::max<std::int64_t>(420, options.viewer_height));
-#else
-  (void)html;
-  (void)options;
-  (void)title;
-  return false;
-#endif
+  return pluss::view::show_html_window(html, window_opts);
 }
 
 } // namespace
@@ -1524,7 +1436,7 @@ void set_default_backend(DisplayBackend backend) {
 }
 
 bool gui_backend_available() {
-  return compiled_with_gui_backend_() && runtime_gui_env_available_();
+  return runtime_gui_env_available_();
 }
 
 std::string render(const DataFrame& frame, const DisplayOptions& options) {
@@ -1537,7 +1449,7 @@ std::string render(const DataFrame& frame, const DisplayOptions& options) {
   auto matrix = build_dataframe_matrix(frame, working, compact);
 
   while (estimate_matrix_width(matrix, working) > terminal_width) {
-    if (!compact && frame.ncols() > 1) {
+    if (!compact && frame.nfeats() > 1) {
       compact = true;
       matrix = build_dataframe_matrix(frame, working, compact);
       continue;
@@ -1569,7 +1481,7 @@ std::string render(const DataFrame& frame, const DisplayOptions& options) {
 
   std::string out = render_ascii_table(matrix, working, terminal_width);
   if (working.show_shape_footer) {
-    out += fmt::format("\n[{} cs x {} feat]", frame.nrows(), frame.ncols());
+    out += fmt::format("\n[{} cs x {} feat]", frame.ncases(), frame.nfeats());
   }
   return out;
 }
@@ -1583,7 +1495,7 @@ std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
   return render_html_table_(
       frame,
       document_title_("DataFrame", options),
-      fmt::format("{} cases, {} features", frame.nrows(), frame.ncols()),
+      fmt::format("{} cases, {} features", frame.ncases(), frame.nfeats()),
       options);
 }
 
@@ -1613,8 +1525,8 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
     memory_bytes += estimate_bytes(cols[i]);
   }
 
-  const auto first_case = frame.nrows() > 0 ? thread_value_at(frame.cases(), 0) : std::string("NA");
-  const auto last_case = frame.nrows() > 0 ? thread_value_at(frame.cases(), frame.nrows() - 1) : std::string("NA");
+  const auto first_case = frame.ncases() > 0 ? thread_value_at(frame.cases(), 0) : std::string("NA");
+  const auto last_case = frame.ncases() > 0 ? thread_value_at(frame.cases(), frame.ncases() - 1) : std::string("NA");
 
   TableMatrix summary;
   summary.headers = {"Field", "Value"};
@@ -1622,8 +1534,8 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   summary.min_widths = {5, 8};
   summary.rows = {
       {"Class", "pluss::table::DataFrame"},
-      {"Cases", fmt::format("{}", frame.nrows())},
-      {"Features", fmt::format("{}", frame.ncols())},
+      {"Cases", fmt::format("{}", frame.ncases())},
+      {"Features", fmt::format("{}", frame.nfeats())},
       {"Case Range", fmt::format("{} -> {}", first_case, last_case)},
       {"Null Case Rows", fmt::format("{}", frame.count_null_rows())},
       {"Dtypes", dtype_summary_line(dtype_counts)},
@@ -1672,7 +1584,7 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
   const auto term = detect_terminal();
   const auto effective = resolve_effective_options(options, term, false);
   std::vector<std::string> lines;
-  lines.push_back(fmt::format("Atlas(depth={}, rows={}, cols={})", atlas.depth(), atlas.nrows(), atlas.ncols()));
+  lines.push_back(fmt::format("Atlas(depth={}, rows={}, cols={})", atlas.depth(), atlas.ncases(), atlas.nfeats()));
 
   const auto total = atlas.depth();
   const auto max_frames = std::max<std::int64_t>(2, effective.edge_rows + effective.tail_rows);
@@ -1725,9 +1637,15 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
 }
 
 void show(const DataFrame& frame, const DisplayOptions& options) {
-  if (resolve_backend_(options) == DisplayBackend::GtkWebKit) {
-    const auto html = render_html(frame, options);
-    if (show_html_window_(html, options, "Pluss DataFrame")) {
+  const auto backend = resolve_backend_(options);
+  if (backend != DisplayBackend::Terminal) {
+    auto render_opts = options;
+    render_opts.backend = backend;
+    if (backend == DisplayBackend::InHouseHtml) {
+      render_opts.html_desktop_table_viewport = true;
+    }
+    const auto html = render_html(frame, render_opts);
+    if (show_html_window_(html, render_opts, "Pluss DataFrame", backend)) {
       return;
     }
   }
@@ -1735,9 +1653,15 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
 }
 
 void show(const Thread& thread, const DisplayOptions& options) {
-  if (resolve_backend_(options) == DisplayBackend::GtkWebKit) {
-    const auto html = render_html(thread, options);
-    if (show_html_window_(html, options, "PlussMic Thread")) {
+  const auto backend = resolve_backend_(options);
+  if (backend != DisplayBackend::Terminal) {
+    auto render_opts = options;
+    render_opts.backend = backend;
+    if (backend == DisplayBackend::InHouseHtml) {
+      render_opts.html_desktop_table_viewport = true;
+    }
+    const auto html = render_html(thread, render_opts);
+    if (show_html_window_(html, render_opts, "PlussMic Thread", backend)) {
       return;
     }
   }
@@ -1745,9 +1669,15 @@ void show(const Thread& thread, const DisplayOptions& options) {
 }
 
 void show(const Atlas& atlas, const DisplayOptions& options) {
-  if (resolve_backend_(options) == DisplayBackend::GtkWebKit) {
-    const auto html = render_html(atlas, options);
-    if (show_html_window_(html, options, "Pluss Atlas")) {
+  const auto backend = resolve_backend_(options);
+  if (backend != DisplayBackend::Terminal) {
+    auto render_opts = options;
+    render_opts.backend = backend;
+    if (backend == DisplayBackend::InHouseHtml) {
+      render_opts.html_desktop_table_viewport = true;
+    }
+    const auto html = render_html(atlas, render_opts);
+    if (show_html_window_(html, render_opts, "Pluss Atlas", backend)) {
       return;
     }
   }
@@ -1755,9 +1685,15 @@ void show(const Atlas& atlas, const DisplayOptions& options) {
 }
 
 void show_info(const DataFrame& frame, const DisplayOptions& options) {
-  if (resolve_backend_(options) == DisplayBackend::GtkWebKit) {
-    const auto html = render_info_html(frame, options);
-    if (show_html_window_(html, options, "Pluss DataFrame")) {
+  const auto backend = resolve_backend_(options);
+  if (backend != DisplayBackend::Terminal) {
+    auto render_opts = options;
+    render_opts.backend = backend;
+    if (backend == DisplayBackend::InHouseHtml) {
+      render_opts.html_desktop_table_viewport = true;
+    }
+    const auto html = render_info_html(frame, render_opts);
+    if (show_html_window_(html, render_opts, "Pluss DataFrame", backend)) {
       return;
     }
   }

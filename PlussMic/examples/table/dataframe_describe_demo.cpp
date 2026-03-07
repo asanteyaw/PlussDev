@@ -38,7 +38,7 @@ TimingSummary benchmark_csv_load(std::string_view label, std::size_t rounds, Loa
     const auto elapsed_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
     samples_ms.push_back(elapsed_ms);
     std::cout << "  round " << (i + 1) << ": " << elapsed_ms << " ms\n";
-    ncases = df.nrows();
+    ncases = df.ncases();
     nfeatures = df.nfeatures();
   }
 
@@ -63,8 +63,8 @@ int main() {
   auto df = pluss::table::DataFrame::load_csv(
       data_file("messy_data.csv").string(),
       {
-          {"nrows", 80},
-          {"columns",
+          {"ncases", 80},
+          {"features",
            std::vector<std::string>{
                "Business Case ID",
                "Agency Name",

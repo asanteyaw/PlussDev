@@ -56,15 +56,15 @@ struct ReadCsvOptions {
   bool header{true};
   std::int64_t header_row{0};
   std::vector<std::string> names{};
-  std::vector<std::string> usecols{};
-  std::vector<std::size_t> usecols_idx{};
+  std::vector<std::string> usefeats{};
+  std::vector<std::size_t> usefeats_idx{};
   std::optional<std::string> case_col{};
   std::optional<std::size_t> case_col_idx{};
 
-  // Row filtering / limits
-  std::unordered_set<std::size_t> skiprows{};
-  std::size_t skiprows_first_n{0};
-  std::optional<std::size_t> nrows{};
+  // Case filtering / limits
+  std::unordered_set<std::size_t> skipcases{};
+  std::size_t skipcases_first_n{0};
+  std::optional<std::size_t> ncases{};
   std::size_t skipfooter{0};
 
   // Type and null handling
@@ -142,14 +142,14 @@ pluss::table::DataFrame load_csv(const ReadCsvOptions& options);
 pluss::table::DataFrame load_csv(std::string_view filepath, const ReadCsvOptions& options = {});
 pluss::table::DataFrame load_csv(std::string_view filepath,
                                  char sep,
-                                 std::optional<std::size_t> nrows = std::nullopt,
-                                 std::vector<std::string> usecols = {},
+                                 std::optional<std::size_t> ncases = std::nullopt,
+                                 std::vector<std::string> usefeats = {},
                                  std::optional<std::string> case_col = std::nullopt,
                                  BadLinePolicy on_bad_lines = BadLinePolicy::Error);
 pluss::table::DataFrame load_csv(std::string_view filepath,
                                  char sep,
-                                 std::optional<std::size_t> nrows,
-                                 std::initializer_list<std::string_view> usecols,
+                                 std::optional<std::size_t> ncases,
+                                 std::initializer_list<std::string_view> usefeats,
                                  std::optional<std::string> case_col = std::nullopt,
                                  BadLinePolicy on_bad_lines = BadLinePolicy::Error);
 pluss::table::DataFrame load_csv_records(const std::vector<std::vector<std::string>>& records,

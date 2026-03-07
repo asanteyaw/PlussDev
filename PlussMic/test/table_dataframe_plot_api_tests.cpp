@@ -143,11 +143,43 @@ void test_plot_options_defaults() {
          "plot(options).heatmap should honor heatmap_annotate_levels");
 }
 
+void test_corr_methods_and_plot3d() {
+  const auto df = make_xy_frame();
+  const auto pearson = df.corr({"x", "y", "z"}, false);
+  const auto spearman = df.corr({"x", "y", "z"}, DataFrame::CorrMethod::Spearman, false);
+  const auto kendall = df.corr({"x", "y", "z"}, DataFrame::CorrMethod::KendallTau, false);
+  expect(pearson.ncases() == 3 && pearson.nfeats() == 3, "corr(pearson) should return square matrix");
+  expect(spearman.ncases() == 3 && spearman.nfeats() == 3, "corr(spearman) should return square matrix");
+  expect(kendall.ncases() == 3 && kendall.nfeats() == 3, "corr(kendall) should return square matrix");
+
+  const auto fig_scatter3 = df.plot3d().scatter("x", "y", "z");
+  expect(fig_scatter3.panes().front().traces().front().kind() == TraceKind::Cloud3,
+         "plot3d().scatter should emit cloud3 trace");
+
+  const auto fig_line3 = df.plot3d().line("x", "y", "z");
+  expect(fig_line3.panes().front().traces().front().kind() == TraceKind::Path3,
+         "plot3d().line should emit path3 trace");
+
+  const auto grid = DataFrame({
+      {"gx", Thread(pluss::make_series(std::vector<double>{0.0, 1.0, 0.0, 1.0}))},
+      {"gy", Thread(pluss::make_series(std::vector<double>{0.0, 0.0, 1.0, 1.0}))},
+      {"gz", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
+  });
+  const auto fig_surface = grid.plot3d().surface("gx", "gy", "gz");
+  expect(fig_surface.panes().front().traces().front().kind() == TraceKind::Sheet,
+         "plot3d().surface should emit sheet trace");
+
+  const auto fig_wire = grid.plot3d().wireframe("gx", "gy", "gz");
+  expect(fig_wire.panes().front().traces().front().kind() == TraceKind::Lattice,
+         "plot3d().wireframe should emit lattice trace");
+}
+
 } // namespace
 
 int main() {
   test_object_plot_apis();
   test_scatter_heatmap_and_validation();
   test_plot_options_defaults();
+  test_corr_methods_and_plot3d();
   return 0;
 }

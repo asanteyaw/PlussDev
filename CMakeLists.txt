@@ -77,6 +77,7 @@ add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 
 add_subdirectory(PlussAI)
 add_subdirectory(PlussQit)
+add_subdirectory(PlussView)
 if(NOT TARGET plussqit_coden)
     message(FATAL_ERROR "plussqit_coden (CodeN) must be built for PlussMa.")
 endif()
@@ -95,6 +96,13 @@ add_subdirectory(PlussPl)
 add_subdirectory(PlussMa)
 add_subdirectory(PlussMic)
 
+if(TARGET plussview_window_registry_demo AND TARGET PlussMic)
+    target_link_libraries(plussview_window_registry_demo PRIVATE PlussMic)
+    target_compile_definitions(plussview_window_registry_demo PRIVATE
+        PLUSSMIC_SOURCE_DIR="${CMAKE_SOURCE_DIR}/PlussMic"
+    )
+endif()
+
 # Top-level aggregate target for downstream consumers that want the full stack.
 # Use together with `#include <pluss/pluss.h>`.
 add_library(pluss_sdk INTERFACE)
@@ -108,6 +116,9 @@ if(TARGET PlussPl)
 endif()
 if(TARGET PlussMic)
     target_link_libraries(pluss_sdk INTERFACE PlussMic)
+endif()
+if(TARGET PlussView)
+    target_link_libraries(pluss_sdk INTERFACE PlussView)
 endif()
 if(TARGET PlussTiq)
     target_link_libraries(pluss_sdk INTERFACE PlussTiq)

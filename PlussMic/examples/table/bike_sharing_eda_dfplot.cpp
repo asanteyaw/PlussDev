@@ -342,8 +342,8 @@ void draw_box_features(pl::Pane& pane,
   configure_pane(pane, false);
   std::vector<double> groups;
   std::vector<double> values;
-  groups.reserve(static_cast<std::size_t>(frame.nrows()) * features.size());
-  values.reserve(static_cast<std::size_t>(frame.nrows()) * features.size());
+  groups.reserve(static_cast<std::size_t>(frame.ncases()) * features.size());
+  values.reserve(static_cast<std::size_t>(frame.ncases()) * features.size());
   std::vector<std::string> labels;
   labels.reserve(features.size());
 
@@ -431,7 +431,7 @@ int main(int argc, char** argv) {
 
   auto df = load_and_prepare(cli.data_path);
 
-  std::cout << "\n=== Dataset shape ===\n" << df.nrows() << " rows x " << df.ncols() << " columns\n";
+  std::cout << "\n=== Dataset shape ===\n" << df.ncases() << " rows x " << df.nfeats() << " columns\n";
   std::cout << "\n=== Head (first 5 rows) ===\n";
   df.head(5, true);
 
@@ -518,7 +518,7 @@ int main(int argc, char** argv) {
   save_and_optionally_show(fig_12, cli.out_dir, "12_correlation_heatmap", cli.show);
 
   auto sample = df.features({"temp", "atemp", "humidity", "windspeed", "casual", "registered", "total_count"})
-                    .sample(std::min<std::int64_t>(800, df.nrows()), 42);
+                    .sample(std::min<std::int64_t>(800, df.ncases()), 42);
   auto pair_opts = build_plot_options();
   pair_opts.scatter_matrix_triangle = pluss::table::ScatterMatrixTriangle::Full;
   auto fig_13 = sample.plot(pair_opts).scatter_matrix();

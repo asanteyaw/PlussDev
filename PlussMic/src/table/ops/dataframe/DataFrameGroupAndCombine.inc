@@ -142,11 +142,11 @@ DataFrame DataFrame::group(std::initializer_list<std::string_view> keys,
   };
 
   std::vector<GroupState> groups;
-  groups.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, nrows() / 32)));
+  groups.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, ncases() / 32)));
   std::unordered_map<std::string, std::size_t> index_by_key;
   index_by_key.reserve(groups.capacity());
 
-  for (std::int64_t r = 0; r < nrows(); ++r) {
+  for (std::int64_t r = 0; r < ncases(); ++r) {
     std::vector<std::string> key_vals(key_infos.size());
     bool skip = false;
     for (std::size_t k = 0; k < key_infos.size(); ++k) {
@@ -331,8 +331,8 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
   std::vector<std::string> feat_labels;
   std::vector<std::vector<PivotAgg>> grid;
 
-  case_to_row.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, nrows() / 64)));
-  feat_to_col.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, nrows() / 64)));
+  case_to_row.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, ncases() / 64)));
+  feat_to_col.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, ncases() / 64)));
 
   auto ensure_case = [&](const std::string& key) -> std::size_t {
     const auto [it, inserted] = case_to_row.emplace(key, case_labels.size());
@@ -354,7 +354,7 @@ DataFrameView DataFrame::pivot_table(std::string_view case_feature,
     return it->second;
   };
 
-  for (std::int64_t r = 0; r < nrows(); ++r) {
+  for (std::int64_t r = 0; r < ncases(); ++r) {
     const bool case_valid = case_col.is_valid(r);
     const bool feat_valid = feat_col.is_valid(r);
     if (dropna_keys && (!case_valid || !feat_valid)) {
@@ -440,7 +440,7 @@ DataFrame DataFrame::combine(const DataFrame& other) const {
 }
 
 DataFrame DataFrame::combine(const DataFrame& other, const CombineSpec& spec) const {
-  PLUSS_CHECK(nrows() == other.nrows(),
+  PLUSS_CHECK(ncases() == other.ncases(),
               "DataFrame::combine: case count mismatch between left and right frames");
 
   const auto& left = impl_ref_();
@@ -529,8 +529,8 @@ DataFrameView DataFrame::count_by(std::string_view feature_name,
   const auto counts = grouped.features("count").as_series().to_vec<std::int64_t>();
 
   std::vector<std::pair<std::string, std::int64_t>> rows;
-  rows.reserve(static_cast<std::size_t>(grouped.nrows()));
-  for (std::int64_t i = 0; i < grouped.nrows(); ++i) {
+  rows.reserve(static_cast<std::size_t>(grouped.ncases()));
+  for (std::int64_t i = 0; i < grouped.ncases(); ++i) {
     rows.emplace_back(
         std::string(keys_note.at(i)),
         counts[static_cast<std::size_t>(i)]);
@@ -588,8 +588,8 @@ DataFrameView DataFrame::mean_by(std::string_view group_feature_name,
   const auto grouped_counts = grouped.features("count").as_series().to_vec<std::int64_t>();
 
   std::vector<MeanRow> rows;
-  rows.reserve(static_cast<std::size_t>(grouped.nrows()));
-  for (std::int64_t i = 0; i < grouped.nrows(); ++i) {
+  rows.reserve(static_cast<std::size_t>(grouped.ncases()));
+  for (std::int64_t i = 0; i < grouped.ncases(); ++i) {
     const auto cnt = grouped_counts[static_cast<std::size_t>(i)];
     if (cnt < min_count) {
       continue;

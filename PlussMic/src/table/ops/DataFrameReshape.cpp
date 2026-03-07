@@ -102,8 +102,8 @@ std::string case_label_from_axis(const Thread& axis, std::int64_t row) {
 } // namespace
 
 DataFrameView DataFrame::transpose(bool render) const {
-  const auto rows = nrows();
-  const auto cols = ncols();
+  const auto rows = ncases();
+  const auto cols = nfeats();
 
   const auto src_columns = columns();
   std::vector<pluss::Note> src_notes;

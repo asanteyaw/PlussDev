@@ -1049,7 +1049,7 @@ void save_excel(const pluss::table::DataFrame& frame,
     emit_row(header_cells);
   }
 
-  for (std::int64_t r = 0; r < frame.nrows(); ++r) {
+  for (std::int64_t r = 0; r < frame.ncases(); ++r) {
     std::vector<std::string> row;
     row.reserve(names.size() + (include_cases ? 1u : 0u));
     if (include_cases) {

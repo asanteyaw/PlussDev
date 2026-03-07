@@ -323,7 +323,7 @@ void test_registry_loaders() {
   expect(reg_via_load.nslots() == reg_csv.nslots(), "Registry::load(csv) should match Registry::load_csv");
 
   pluss::loader::Config csv_cfg;
-  csv_cfg.emplace("nrows", 2);
+  csv_cfg.emplace("ncases", 2);
   const auto reg_cfg = Registry::load_csv(csv_path.string(), csv_cfg);
   expect(reg_cfg.slot("id").size() == 2, "Registry::load_csv(config) should honor nrows");
 

@@ -165,7 +165,7 @@ std::string_view to_string(OptimaProgressStage stage) {
   return "iter";
 }
 
-void print_ip_options(const pluss::optim::InteriorPointOptions& opt) {
+void print_ip_options(const pluss::optim::InternalProtocolOptions& opt) {
   std::cout << "InternalProtocol options\n";
   std::cout << "  max_iterations=" << opt.max_iterations << '\n';
   std::cout << "  max_line_search_iterations=" << opt.max_line_search_iterations << '\n';
@@ -253,12 +253,12 @@ int main() {
       .nonlinear_inequality([](const ParameterPack<Trace>& p) -> Trace {
         return p.at("alpha") + p.at("beta") - 0.999;
       })
-      .lower_bounds(pluss::optim::pack_scalars({
+      .lbs(pluss::optim::pack_scalars({
           {"omega", scalar(1e-6, cfg)},
           {"alpha", scalar(1e-6, cfg)},
           {"beta", scalar(1e-6, cfg)},
       }))
-      .upper_bounds(pluss::optim::pack_scalars({
+      .ubs(pluss::optim::pack_scalars({
           {"omega", scalar(1.0, cfg)},
           {"alpha", scalar(0.999, cfg)},
           {"beta", scalar(0.999, cfg)},
@@ -272,16 +272,16 @@ int main() {
   });
 
   OptimaOptions options = pluss::optim::presets::robust_internal_protocol();
-  options.interior_point.max_line_search_iterations = 20;
-  options.interior_point.max_krylov_iterations = 25;
-  options.interior_point.iterative_dimension_threshold = 16;
-  options.interior_point.krylov_tolerance = 1e-3;
-  options.interior_point.krylov_absolute_tolerance = 1e-10;
-  options.interior_point.pivot_threshold = 1e-12;
-  options.interior_point.initialization_margin = 1e-4;
-  options.interior_point.lbfgs_memory = 10;
+  options.internal_protocol.max_line_search_iterations = 20;
+  options.internal_protocol.max_krylov_iterations = 25;
+  options.internal_protocol.iterative_dimension_threshold = 16;
+  options.internal_protocol.krylov_tolerance = 1e-3;
+  options.internal_protocol.krylov_absolute_tolerance = 1e-10;
+  options.internal_protocol.pivot_threshold = 1e-12;
+  options.internal_protocol.initialization_margin = 1e-4;
+  options.internal_protocol.lbfgs_memory = 10;
 
-  options.interior_point.progress_hook = [](const OptimaProgressSnapshot& snapshot) {
+  options.internal_protocol.progress_hook = [](const OptimaProgressSnapshot& snapshot) {
     std::cout << std::fixed << std::setprecision(6)
               << "[ip:" << to_string(snapshot.stage) << "]"
               << " iter=" << snapshot.iteration
@@ -307,7 +307,7 @@ int main() {
             << " beta=" << as_f64(truth.beta)
             << " persistence=" << as_f64(truth.alpha.add(truth.beta)) << "\n\n";
 
-  print_ip_options(options.interior_point);
+  print_ip_options(options.internal_protocol);
 
   const auto result = optima(problem, initial, options);
   const Garch11Params est = decode_params(result.params);

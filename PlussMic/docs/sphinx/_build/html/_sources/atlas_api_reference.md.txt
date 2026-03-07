@@ -778,12 +778,12 @@ sales
 40.0
 ```
 
-### `ncols`
+### `nfeats`
 
 #### Signature
 
 ```cpp
-std::int64_t ncols(self) const
+std::int64_t nfeats(self) const
 ```
 
 #### Parameters
@@ -810,7 +810,7 @@ auto f1 = pluss::table::DataFrame({
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
-auto out = atlas.ncols();
+auto out = atlas.nfeats();
 ```
 
 #### Output
@@ -819,12 +819,12 @@ auto out = atlas.ncols();
 2
 ```
 
-### `nrows`
+### `ncases`
 
 #### Signature
 
 ```cpp
-std::int64_t nrows(self) const
+std::int64_t ncases(self) const
 ```
 
 #### Parameters
@@ -851,7 +851,7 @@ auto f1 = pluss::table::DataFrame({
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
-auto out = atlas.nrows();
+auto out = atlas.ncases();
 ```
 
 #### Output

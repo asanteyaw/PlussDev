@@ -86,19 +86,19 @@ std::vector<std::size_t> resolve_resample_value_indices_(
 } // namespace
 
 DataFrameView DataFrame::head(std::int64_t n, bool render) const {
-  const auto clipped = std::clamp<std::int64_t>(n, 0, nrows());
+  const auto clipped = std::clamp<std::int64_t>(n, 0, ncases());
   auto out = slice(0, clipped);
   return DataFrameView(std::move(out), render, "head", title());
 }
 
 DataFrameView DataFrame::tail(std::int64_t n, bool render) const {
-  const auto clipped = std::clamp<std::int64_t>(n, 0, nrows());
-  auto out = slice(nrows() - clipped, nrows());
+  const auto clipped = std::clamp<std::int64_t>(n, 0, ncases());
+  auto out = slice(ncases() - clipped, ncases());
   return DataFrameView(std::move(out), render, "tail", title());
 }
 
 DataFrame DataFrame::sample(std::int64_t n, std::optional<std::uint64_t> random_state) const {
-  const auto total = nrows();
+  const auto total = ncases();
   PLUSS_CHECK(total >= 0, "DataFrame::sample: invalid case count");
   PLUSS_CHECK(n >= 0, "DataFrame::sample: n must be >= 0");
   const auto draw = std::min<std::int64_t>(n, total);
@@ -113,7 +113,7 @@ DataFrame DataFrame::sample(std::int64_t n, std::optional<std::uint64_t> random_
 }
 
 DataFrame DataFrame::slice(std::int64_t start, std::int64_t stop) const {
-  const auto [s, e] = normalize_slice(start, stop, nrows());
+  const auto [s, e] = normalize_slice(start, stop, ncases());
   std::vector<std::int64_t> idx;
   idx.reserve(static_cast<std::size_t>(e - s));
   for (std::int64_t i = s; i < e; ++i) {
@@ -138,7 +138,7 @@ DataFrame DataFrame::where(const pluss::Series& bool_mask) const {
 }
 
 DataFrame DataFrame::filter(const pluss::Series& bool_mask) const {
-  validate_bool_mask(bool_mask, nrows(), "DataFrame::filter");
+  validate_bool_mask(bool_mask, ncases(), "DataFrame::filter");
   const auto& src = impl_ref_();
   std::vector<Thread> out_cols;
   out_cols.reserve(src.columns_.size());
@@ -164,9 +164,9 @@ DataFrame DataFrame::query(std::string_view expression) const {
   auto parser = QueryParser(*this, tokenize_query(text));
   auto eval = parser.parse();
 
-  auto mask = pluss::Series::zeros({nrows()}, pluss::codem::ScalarType::Bool);
+  auto mask = pluss::Series::zeros({ncases()}, pluss::codem::ScalarType::Bool);
   auto* keep = reinterpret_cast<bool*>(mask.raw_data());
-  for (std::int64_t i = 0; i < nrows(); ++i) {
+  for (std::int64_t i = 0; i < ncases(); ++i) {
     keep[i] = eval(i);
   }
   return where(mask);

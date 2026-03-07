@@ -117,4 +117,32 @@ private:
   DataFramePlotOptions options_{};
 };
 
+class DataFramePlot3DAccessor {
+public:
+  explicit DataFramePlot3DAccessor(DataFrame frame, DataFramePlotOptions options = {});
+
+  pluss::pl::Studio scatter(std::string_view x_feature,
+                            std::string_view y_feature,
+                            std::string_view z_feature,
+                            std::optional<std::string_view> size_feature = std::nullopt,
+                            std::optional<std::string_view> color_feature = std::nullopt) const;
+  pluss::pl::Studio line(std::string_view x_feature,
+                         std::string_view y_feature,
+                         std::string_view z_feature) const;
+  pluss::pl::Studio surface(std::string_view x_feature,
+                            std::string_view y_feature,
+                            std::string_view z_feature,
+                            DataFrame::GroupOp op = DataFrame::GroupOp::Mean) const;
+  pluss::pl::Studio wireframe(std::string_view x_feature,
+                              std::string_view y_feature,
+                              std::string_view z_feature,
+                              DataFrame::GroupOp op = DataFrame::GroupOp::Mean) const;
+
+private:
+  void apply_figure_options(pluss::pl::Studio& figure) const;
+
+  DataFrame frame_{};
+  DataFramePlotOptions options_{};
+};
+
 } // namespace pluss::table

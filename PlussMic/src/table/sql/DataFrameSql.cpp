@@ -887,13 +887,13 @@ void enforce_row_limit(const DataFrame::SqlOptions& options,
     return;
   }
   PLUSS_CHECK(*limit >= 0, "DataFrame::sql().execute: row limit must be >= 0");
-  PLUSS_CHECK(frame.nrows() <= *limit,
+  PLUSS_CHECK(frame.ncases() <= *limit,
               "DataFrame::sql().execute: " + std::string(stage) + " rows exceed configured limit");
 }
 
 std::int64_t estimate_frame_bytes(const DataFrame& frame) {
   constexpr std::int64_t kCellHint = 16;
-  const auto cells = frame.nrows() * frame.ncols();
+  const auto cells = frame.ncases() * frame.nfeats();
   if (cells < 0) {
     return 0;
   }
@@ -1115,7 +1115,7 @@ DataFrame DataFrameSqlAccessor::execute(std::string_view statement) const {
   enforce_row_limit(options_, out, options_.max_intermediate_rows, "intermediate");
   enforce_memory_budget(options_, out, "projection");
 
-  const auto nrows = out.nrows();
+  const auto nrows = out.ncases();
   auto start = spec.offset.value_or(0);
   if (start > nrows) {
     start = nrows;
@@ -1137,7 +1137,7 @@ DataFrame DataFrameSqlAccessor::execute(std::string_view statement) const {
     out = out.slice(start, stop);
   }
 
-  if (options_.max_result_rows.has_value() && out.nrows() > *options_.max_result_rows) {
+  if (options_.max_result_rows.has_value() && out.ncases() > *options_.max_result_rows) {
     out = out.slice(0, *options_.max_result_rows);
   }
   if (options_.result_mode == DataFrame::SqlOptions::ResultMode::Chunked) {
@@ -1160,7 +1160,7 @@ DataFrame DataFrameSqlAccessor::execute(std::string_view statement) const {
                     parse_ms,
                     exec_ms,
                     total_ms,
-                    out.nrows()));
+                    out.ncases()));
   }
 
   return out;

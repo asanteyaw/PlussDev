@@ -15,8 +15,8 @@ DataFrame::LetSlot::LetSlot(DataFrame& owner, std::string name) : owner_(&owner)
 
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const Thread& value) {
   PLUSS_CHECK(value.defined(), "DataFrame::set(name)=Thread requires defined rhs thread");
-  if (owner_->ncols() > 0) {
-    PLUSS_CHECK(value.size() == owner_->nrows(),
+  if (owner_->nfeats() > 0) {
+    PLUSS_CHECK(value.size() == owner_->ncases(),
                 "DataFrame::set(name)=Thread requires rhs length to match DataFrame cases");
   }
   owner_->set_features_(name_, value);
@@ -60,7 +60,7 @@ DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::TimeIndex& value)
 }
 
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const DataFrame& frame) {
-  PLUSS_CHECK(frame.ncols() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
+  PLUSS_CHECK(frame.nfeats() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
   const auto cols = frame.features();
   PLUSS_CHECK(cols.size() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
   return (*this = cols.front());
@@ -83,8 +83,8 @@ void DataFrame::LetSlots::assign_from_threads(std::span<const Thread> values) {
               "DataFrame::set(names): rhs feature count must match lhs feature count");
 
   std::optional<std::int64_t> expected_rows;
-  if (owner_->ncols() > 0) {
-    expected_rows = owner_->nrows();
+  if (owner_->nfeats() > 0) {
+    expected_rows = owner_->ncases();
   }
 
   for (const auto& value : values) {
@@ -184,24 +184,24 @@ DataFrame DataFrame::load(std::string_view source_type,
     pluss::loader::Config config;
     config.emplace("header", options.header);
     config.emplace("sep", std::string(1, options.sep));
-    if (options.nrows.has_value()) {
-      config.emplace("nrows", static_cast<std::int64_t>(*options.nrows));
+    if (options.ncases.has_value()) {
+      config.emplace("ncases", static_cast<std::int64_t>(*options.ncases));
     }
     if (options.case_col.has_value()) {
       config.emplace("case", *options.case_col);
     } else if (options.case_col_idx.has_value()) {
       config.emplace("caseindex", static_cast<std::int64_t>(*options.case_col_idx));
     }
-    if (!options.usecols.empty()) {
-      config.emplace("usecols", options.usecols);
+    if (!options.usefeats.empty()) {
+      config.emplace("usefeats", options.usefeats);
     }
-    if (!options.usecols_idx.empty()) {
+    if (!options.usefeats_idx.empty()) {
       std::vector<std::string> idx_tokens;
-      idx_tokens.reserve(options.usecols_idx.size());
-      for (const auto idx : options.usecols_idx) {
+      idx_tokens.reserve(options.usefeats_idx.size());
+      for (const auto idx : options.usefeats_idx) {
         idx_tokens.push_back(std::to_string(idx));
       }
-      config.emplace("usecolsidx", std::move(idx_tokens));
+      config.emplace("usefeatsidx", std::move(idx_tokens));
     }
     return dataframe_from_raw_batch_padded(pluss::loader::read_txt_raw_batch(filepath, config), options);
   }
@@ -211,14 +211,14 @@ DataFrame DataFrame::load(std::string_view source_type,
 DataFrame DataFrame::load(std::string_view source_type,
                           std::string_view filepath,
                           char sep,
-                          std::optional<std::size_t> nrows,
-                          std::vector<std::string> usecols,
+                          std::optional<std::size_t> ncases,
+                          std::vector<std::string> usefeats,
                           std::optional<std::string> case_col,
                           pluss::loader::BadLinePolicy on_bad_lines) {
   pluss::loader::ReadCsvOptions options;
   options.sep = sep;
-  options.nrows = nrows;
-  options.usecols = std::move(usecols);
+  options.ncases = ncases;
+  options.usefeats = std::move(usefeats);
   options.case_col = std::move(case_col);
   options.on_bad_lines = on_bad_lines;
   return load(source_type, filepath, options);
@@ -227,11 +227,11 @@ DataFrame DataFrame::load(std::string_view source_type,
 DataFrame DataFrame::load(std::string_view source_type,
                           std::string_view filepath,
                           char sep,
-                          std::optional<std::size_t> nrows,
-                          std::initializer_list<std::string_view> usecols,
+                          std::optional<std::size_t> ncases,
+                          std::initializer_list<std::string_view> usefeats,
                           std::optional<std::string> case_col,
                           pluss::loader::BadLinePolicy on_bad_lines) {
-  return load(source_type, filepath, sep, nrows, normalize_name_list(usecols), std::move(case_col), on_bad_lines);
+  return load(source_type, filepath, sep, ncases, normalize_name_list(usefeats), std::move(case_col), on_bad_lines);
 }
 
 DataFrame DataFrame::load_csv(std::string_view filepath) {
@@ -264,7 +264,7 @@ DataFrame DataFrame::load_csv(std::string_view filepath,
     options.case_col = std::string(case_feature);
   }
   if (ncases.has_value()) {
-    options.nrows = *ncases;
+    options.ncases = *ncases;
   }
   const auto eng = lower_copy(owned_name(engine));
   if (eng == "parallel") {
@@ -285,14 +285,14 @@ DataFrame DataFrame::load_csv(std::string_view filepath,
 
 DataFrame DataFrame::load_csv(std::string_view filepath,
                               char sep,
-                              std::optional<std::size_t> nrows,
-                              std::vector<std::string> usecols,
+                              std::optional<std::size_t> ncases,
+                              std::vector<std::string> usefeats,
                               std::optional<std::string> case_col,
                               pluss::loader::BadLinePolicy on_bad_lines) {
   pluss::loader::ReadCsvOptions options;
   options.sep = sep;
-  options.nrows = nrows;
-  options.usecols = std::move(usecols);
+  options.ncases = ncases;
+  options.usefeats = std::move(usefeats);
   options.case_col = std::move(case_col);
   options.on_bad_lines = on_bad_lines;
   return load_csv(filepath, options);
@@ -300,11 +300,11 @@ DataFrame DataFrame::load_csv(std::string_view filepath,
 
 DataFrame DataFrame::load_csv(std::string_view filepath,
                               char sep,
-                              std::optional<std::size_t> nrows,
-                              std::initializer_list<std::string_view> usecols,
+                              std::optional<std::size_t> ncases,
+                              std::initializer_list<std::string_view> usefeats,
                               std::optional<std::string> case_col,
                               pluss::loader::BadLinePolicy on_bad_lines) {
-  return load_csv(filepath, sep, nrows, normalize_name_list(usecols), std::move(case_col), on_bad_lines);
+  return load_csv(filepath, sep, ncases, normalize_name_list(usefeats), std::move(case_col), on_bad_lines);
 }
 
 DataFrame DataFrame::load_txt(std::string_view filepath) {

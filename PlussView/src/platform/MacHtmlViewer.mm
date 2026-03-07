@@ -6,33 +6,38 @@
 #include <cstdint>
 #include <string>
 
-#include "table/display/PlatformHtmlViewer.h"
+#include "PlatformHtmlViewer.h"
 
-@interface PlussMicHtmlWindowController : NSObject <NSWindowDelegate>
+@interface PlussViewHtmlWindowController : NSObject <NSWindowDelegate>
 
 - (instancetype)initWithTitle:(NSString*)title
                          html:(NSString*)html
                         width:(CGFloat)width
-                       height:(CGFloat)height;
+                       height:(CGFloat)height
+                 snapshotName:(NSString*)snapshotName;
 - (NSWindow*)window;
 - (void)present;
 - (void)savePNG:(id)sender;
 
 @end
 
-@implementation PlussMicHtmlWindowController {
+@implementation PlussViewHtmlWindowController {
   NSWindow* window_;
   WKWebView* webView_;
+  NSString* snapshotName_;
 }
 
 - (instancetype)initWithTitle:(NSString*)title
                          html:(NSString*)html
                         width:(CGFloat)width
-                       height:(CGFloat)height {
+                       height:(CGFloat)height
+                 snapshotName:(NSString*)snapshotName {
   self = [super init];
   if (!self) {
     return nil;
   }
+
+  snapshotName_ = [snapshotName copy];
 
   const NSRect frame = NSMakeRect(0.0, 0.0, width, height);
   const NSWindowStyleMask style =
@@ -100,11 +105,9 @@
   (void)sender;
   NSSavePanel* panel = [NSSavePanel savePanel];
   [panel setCanCreateDirectories:YES];
-  [panel setNameFieldStringValue:@"table-view.png"];
+  [panel setNameFieldStringValue:(snapshotName_ == nil || [snapshotName_ length] == 0) ? @"view.png" : snapshotName_];
   if (@available(macOS 11.0, *)) {
     [panel setAllowedContentTypes:@[UTTypePNG]];
-  } else {
-    [panel setAllowedFileTypes:@[@"png"]];
   }
 
   if ([panel runModal] != NSModalResponseOK) {
@@ -138,7 +141,7 @@
 
 @end
 
-namespace pluss::table::display::detail {
+namespace pluss::view::detail {
 
 bool mac_html_viewer_available() {
   return true;
@@ -151,33 +154,38 @@ bool windows_html_viewer_available() {
 bool show_windows_html_window(const std::string& title,
                               const std::string& html,
                               std::int64_t width,
-                              std::int64_t height) {
+                              std::int64_t height,
+                              const std::string& snapshot_name) {
   (void)title;
   (void)html;
   (void)width;
   (void)height;
+  (void)snapshot_name;
   return false;
 }
 
 bool show_macos_html_window(const std::string& title,
                             const std::string& html,
                             std::int64_t width,
-                            std::int64_t height) {
+                            std::int64_t height,
+                            const std::string& snapshot_name) {
   @autoreleasepool {
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
     NSString* title_ns = [NSString stringWithUTF8String:title.c_str()];
     NSString* html_ns = [NSString stringWithUTF8String:html.c_str()];
-    if (title_ns == nil || html_ns == nil) {
+    NSString* snapshot_ns = [NSString stringWithUTF8String:snapshot_name.c_str()];
+    if (title_ns == nil || html_ns == nil || snapshot_ns == nil) {
       return false;
     }
 
-    PlussMicHtmlWindowController* controller =
-        [[PlussMicHtmlWindowController alloc] initWithTitle:title_ns
-                                                       html:html_ns
-                                                      width:static_cast<CGFloat>(std::max<std::int64_t>(640, width))
-                                                     height:static_cast<CGFloat>(std::max<std::int64_t>(420, height))];
+    PlussViewHtmlWindowController* controller =
+        [[PlussViewHtmlWindowController alloc] initWithTitle:title_ns
+                                                        html:html_ns
+                                                       width:static_cast<CGFloat>(std::max<std::int64_t>(640, width))
+                                                      height:static_cast<CGFloat>(std::max<std::int64_t>(420, height))
+                                                snapshotName:snapshot_ns];
     if (controller == nil) {
       return false;
     }
@@ -188,4 +196,4 @@ bool show_macos_html_window(const std::string& title,
   }
 }
 
-} // namespace pluss::table::display::detail
+} // namespace pluss::view::detail

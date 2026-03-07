@@ -10,21 +10,9 @@
 
 namespace {
 
-using pluss::Series;
 using pluss::ScalarType;
-using pluss::subsp::math::optim::ConstrainedProblem;
-using pluss::subsp::math::optim::OptimaAlgorithm;
-using pluss::subsp::math::optim::OptimaExitFlag;
-using pluss::subsp::math::optim::OptimaOptions;
-using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::Trace;
-using pluss::subsp::math::optim::optima;
-using pluss::subsp::math::optimization::DifferentialEvolutionPrmmConfig;
-using pluss::subsp::math::optimization::NelderMeadConfig;
-using pluss::subsp::math::optimization::NelderMeadOutcome;
-using pluss::subsp::math::optimization::PopulationSolverOutcome;
-using pluss::subsp::math::optimization::differential_evolution_prmm_minimizer;
-using pluss::subsp::math::optimization::nelder_mead_minimizer;
+using pluss::Series;
+namespace dfo = pluss::subsp::math::optimization;
 
 struct Garch11Params {
   Series omega{Series::undefined()};
@@ -62,7 +50,7 @@ Garch11Params decode_params(const Series& unconstrained) {
   return p;
 }
 
-Garch11Params decode_params(const ParameterPack<Series>& params) {
+Garch11Params decode_params(const pluss::optim::ParameterPack<Series>& params) {
   const auto cfg = scalar_config_like(params.at("log_omega"));
   const Series persistence_cap = scalar(0.999, cfg);
   const Series one = scalar(1.0, cfg);
@@ -130,13 +118,12 @@ Series garch11_negloglik(const Series& returns, const Garch11Params& p) {
 }
 
 double as_f64(const Series& x) {
-  if (!x.defined() || x.numel() != 1) {
-    throw std::runtime_error("expected scalar Series");
-  }
+  if (!x.defined() || x.numel() != 1) throw std::runtime_error("expected scalar Series");
   return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
 }
 
-const char* to_string(OptimaExitFlag flag) {
+const char* to_string(pluss::optim::OptimaExitFlag flag) {
+  using pluss::optim::OptimaExitFlag;
   switch (flag) {
     case OptimaExitFlag::Converged:
       return "Converged";
@@ -160,101 +147,81 @@ const char* to_string(OptimaExitFlag flag) {
   return "Unknown";
 }
 
-const char* to_string(pluss::subsp::math::optimization::SolverStatus status) {
-  using pluss::subsp::math::optimization::SolverStatus;
+const char* to_string(dfo::SolverStatus status) {
   switch (status) {
-    case SolverStatus::Converged:
+    case dfo::SolverStatus::Converged:
       return "Converged";
-    case SolverStatus::ReachedIterationBudget:
+    case dfo::SolverStatus::ReachedIterationBudget:
       return "ReachedIterationBudget";
-    case SolverStatus::ReachedEvaluationBudget:
+    case dfo::SolverStatus::ReachedEvaluationBudget:
       return "ReachedEvaluationBudget";
   }
   return "Unknown";
 }
 
-const char* to_string(pluss::subsp::math::optimization::PopulationSolverStatus status) {
-  using pluss::subsp::math::optimization::PopulationSolverStatus;
+const char* to_string(dfo::PopulationSolverStatus status) {
   switch (status) {
-    case PopulationSolverStatus::Converged:
+    case dfo::PopulationSolverStatus::Converged:
       return "Converged";
-    case PopulationSolverStatus::ReachedIterationBudget:
+    case dfo::PopulationSolverStatus::ReachedIterationBudget:
       return "ReachedIterationBudget";
-    case PopulationSolverStatus::ReachedEvaluationBudget:
+    case dfo::PopulationSolverStatus::ReachedEvaluationBudget:
       return "ReachedEvaluationBudget";
   }
   return "Unknown";
 }
 
-void print_report(const std::string& label,
-                  const OptimaOptions& options,
-                  const ConstrainedProblem& problem,
-                  const ParameterPack<Series>& initial,
-                  const Garch11Params& truth) {
-  const auto result = optima(problem, initial, options);
+void print_fit(const Garch11Params& fit, const Garch11Params& truth) {
+  std::cout << "  fitted omega=" << as_f64(fit.omega)
+            << " alpha=" << as_f64(fit.alpha)
+            << " beta=" << as_f64(fit.beta)
+            << " persistence=" << as_f64(fit.alpha.add(fit.beta)) << '\n';
+  std::cout << "  abs err omega=" << std::abs(as_f64(fit.omega.sub(truth.omega)))
+            << " alpha=" << std::abs(as_f64(fit.alpha.sub(truth.alpha)))
+            << " beta=" << std::abs(as_f64(fit.beta.sub(truth.beta))) << "\n\n";
+}
+
+void print_optima_report(const std::string& label,
+                         const pluss::optim::ConstrainedProblem& model,
+                         const pluss::optim::ParameterPack<Series>& initial,
+                         const pluss::optim::OptimaOptions& options,
+                         const Garch11Params& truth) {
+  const auto result = pluss::optim::optima(model, initial, options);
   const Garch11Params est = decode_params(result.params);
 
+  std::cout << label << " exit=" << to_string(result.exit_flag) << '\n';
+  std::cout << "  ";
+  pluss::optim::reports::compact_summary(std::cout, result) << '\n';
+  print_fit(est, truth);
+}
+
+void print_report(const std::string& label, const dfo::NelderMeadOutcome& out, const Garch11Params& truth) {
+  const Garch11Params est = decode_params(out.minimizer);
   std::cout << label
-            << " exit=" << to_string(result.exit_flag)
-            << " iterations=" << result.iteration
-            << " evaluations=" << result.function_evaluations
-            << " objective=" << result.evaluation.value.item<double>()
-            << " stationarity=" << result.stationarity
-            << " message=" << result.message << "\n";
-
-  std::cout << "  fitted omega=" << as_f64(est.omega)
-            << " alpha=" << as_f64(est.alpha)
-            << " beta=" << as_f64(est.beta)
-            << " persistence=" << as_f64(est.alpha.add(est.beta)) << "\n";
-
-  std::cout << "  abs err omega=" << std::abs(as_f64(est.omega.sub(truth.omega)))
-            << " alpha=" << std::abs(as_f64(est.alpha.sub(truth.alpha)))
-            << " beta=" << std::abs(as_f64(est.beta.sub(truth.beta))) << "\n\n";
+            << " exit=" << to_string(out.status)
+            << " iterations=" << out.diagnostics.iterations
+            << " evaluations=" << out.diagnostics.evaluations
+            << " objective=" << out.minimum << '\n';
+  print_fit(est, truth);
 }
 
 void print_report(const std::string& label,
-                  const NelderMeadOutcome& out,
+                  const dfo::PopulationSolverOutcome& out,
                   const Garch11Params& truth) {
   const Garch11Params est = decode_params(out.minimizer);
   std::cout << label
             << " exit=" << to_string(out.status)
             << " iterations=" << out.diagnostics.iterations
             << " evaluations=" << out.diagnostics.evaluations
-            << " objective=" << out.minimum << "\n";
-
-  std::cout << "  fitted omega=" << as_f64(est.omega)
-            << " alpha=" << as_f64(est.alpha)
-            << " beta=" << as_f64(est.beta)
-            << " persistence=" << as_f64(est.alpha.add(est.beta)) << "\n";
-
-  std::cout << "  abs err omega=" << std::abs(as_f64(est.omega.sub(truth.omega)))
-            << " alpha=" << std::abs(as_f64(est.alpha.sub(truth.alpha)))
-            << " beta=" << std::abs(as_f64(est.beta.sub(truth.beta))) << "\n\n";
-}
-
-void print_report(const std::string& label,
-                  const PopulationSolverOutcome& out,
-                  const Garch11Params& truth) {
-  const Garch11Params est = decode_params(out.minimizer);
-  std::cout << label
-            << " exit=" << to_string(out.status)
-            << " iterations=" << out.diagnostics.iterations
-            << " evaluations=" << out.diagnostics.evaluations
-            << " objective=" << out.minimum << "\n";
-
-  std::cout << "  fitted omega=" << as_f64(est.omega)
-            << " alpha=" << as_f64(est.alpha)
-            << " beta=" << as_f64(est.beta)
-            << " persistence=" << as_f64(est.alpha.add(est.beta)) << "\n";
-
-  std::cout << "  abs err omega=" << std::abs(as_f64(est.omega.sub(truth.omega)))
-            << " alpha=" << std::abs(as_f64(est.alpha.sub(truth.alpha)))
-            << " beta=" << std::abs(as_f64(est.beta.sub(truth.beta))) << "\n\n";
+            << " objective=" << out.minimum << '\n';
+  print_fit(est, truth);
 }
 
 } // namespace
 
 int main() {
+  using namespace pluss::optim;
+
   const pluss::Config cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const Garch11Params truth{
@@ -269,79 +236,69 @@ int main() {
   const Series alpha_guess = scalar(0.15, cfg);
   const Series beta_guess = scalar(0.70, cfg);
   const Series x0 = encode_guess(omega_guess, alpha_guess, beta_guess);
+
   const auto objective = [&](const Series& x_unconstrained) {
     return garch11_negloglik(returns, decode_params(x_unconstrained));
   };
 
-  ConstrainedProblem problem;
-  problem.objective.autodiff = [returns, cfg](const ParameterPack<Trace>& p) -> Trace {
-    using namespace pluss::subsp::math::optim;
+  const ConstrainedProblem model = pluss::optim::problem()
+      .objective([returns, cfg](const ParameterPack<Trace>& p) -> Trace {
+        const Trace omega = exp(p.at("log_omega"));
+        const Trace s1 = sigmoid(p.at("logit_alpha"));
+        const Trace s2 = sigmoid(p.at("logit_beta"));
+        const Trace alpha = 0.999 * s1;
+        const Trace beta = 0.999 * (1.0 - s1) * s2;
 
-    const Trace omega = exp(p.at("log_omega"));
-    const Trace s1 = sigmoid(p.at("logit_alpha"));
-    const Trace s2 = sigmoid(p.at("logit_beta"));
-    const Trace alpha = 0.999 * s1;
-    const Trace beta = 0.999 * (1.0 - s1) * s2;
+        Trace variance = omega / clamp(1.0 - alpha - beta, 1e-8, 1e8);
+        Trace nll = trace(scalar(0.0, cfg), false);
+        const std::int64_t n = returns.numel();
+        for (std::int64_t t_idx = 0; t_idx < n; ++t_idx) {
+          if (t_idx > 0) {
+            const Trace prev = trace(returns.select(0, t_idx - 1), false);
+            variance = omega + alpha * prev * prev + beta * variance;
+          }
+          const Trace var_clamped = clamp(variance, 1e-12, 1e12);
+          const Trace r = trace(returns.select(0, t_idx), false);
+          nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
+        }
+        return nll;
+      })
+      .build();
 
-    Trace variance = omega / clamp(1.0 - alpha - beta, 1e-8, 1e8);
-    Trace nll = trace(scalar(0.0, cfg), false);
-
-    const std::int64_t n = returns.numel();
-    for (std::int64_t t_idx = 0; t_idx < n; ++t_idx) {
-      if (t_idx > 0) {
-        const Trace prev = trace(returns.select(0, t_idx - 1), false);
-        variance = omega + alpha * prev * prev + beta * variance;
-      }
-
-      const Trace var_clamped = clamp(variance, 1e-12, 1e12);
-      const Trace r = trace(returns.select(0, t_idx), false);
-      nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
-    }
-
-    return nll;
-  };
-
-  const ParameterPack<Series> initial({
-      {"log_omega", x0.select(0, 0).reshape({1})},
-      {"logit_alpha", x0.select(0, 1).reshape({1})},
-      {"logit_beta", x0.select(0, 2).reshape({1})},
+  const ParameterPack<Series> initial = pluss::optim::pack_scalars({
+      {"log_omega", x0.select(0, 0)},
+      {"logit_alpha", x0.select(0, 1)},
+      {"logit_beta", x0.select(0, 2)},
   });
 
-  OptimaOptions sqp_options;
-  sqp_options.algorithm = OptimaAlgorithm::SequentialQP;
+  OptimaOptions sqp_options = pluss::optim::presets::sequential_qp();
   sqp_options.sequential_qp.max_iterations = 30;
-  sqp_options.sequential_qp.constraint_tolerance = 1e-8;
-  sqp_options.sequential_qp.optimality_tolerance = 1e-6;
+  sqp_options.sequential_qp.max_line_search_iterations = 12;
   sqp_options.sequential_qp.active_set_tolerance = 1e-6;
   sqp_options.sequential_qp.regularization = 1e-8;
-  sqp_options.sequential_qp.max_line_search_iterations = 12;
-  sqp_options.sequential_qp.problem_scaling = pluss::subsp::math::optim::OptimaProblemScaling::InitialPoint;
 
-  OptimaOptions ip_options;
-  ip_options.algorithm = OptimaAlgorithm::InteriorPoint;
-  ip_options.interior_point.max_iterations = 35;
-  ip_options.interior_point.initial_barrier_parameter = 1e-2;
-  ip_options.interior_point.minimum_barrier_parameter = 1e-8;
-  ip_options.interior_point.barrier_decay = 0.2;
-  ip_options.interior_point.constraint_tolerance = 1e-8;
-  ip_options.interior_point.optimality_tolerance = 1e-6;
-  ip_options.interior_point.max_line_search_iterations = 16;
-  ip_options.interior_point.problem_scaling = pluss::subsp::math::optim::OptimaProblemScaling::InitialPoint;
+  OptimaOptions ip_options = pluss::optim::presets::internal_protocol();
+  ip_options.internal_protocol.max_iterations = 35;
+  ip_options.internal_protocol.max_line_search_iterations = 16;
+  constexpr bool kShowIpTrace = false;
+  if (kShowIpTrace) {
+    ip_options.internal_protocol.progress_hook = pluss::optim::reports::iteration_only_trace(std::cout);
+  }
 
-  NelderMeadConfig nm_options;
+  dfo::NelderMeadConfig nm_options;
   nm_options.position_tolerance = 1e-7;
   nm_options.value_tolerance = 1e-7;
   nm_options.max_iterations = 120;
   nm_options.max_evaluations = 240;
 
-  DifferentialEvolutionPrmmConfig de_options;
+  dfo::DifferentialEvolutionPrmmConfig de_options;
   de_options.population_size = 12;
   de_options.elite_count = 4;
   de_options.max_generations = 10;
   de_options.max_evaluations = 0;
   de_options.check_every = 5;
   de_options.relative_improvement_tolerance = 1e-7;
-  de_options.display = pluss::subsp::math::optimization::PopulationSolverDisplay::None;
+  de_options.display = dfo::PopulationSolverDisplay::None;
   de_options.rng_seed = 20260226ULL;
 
   std::cout << std::fixed << std::setprecision(6);
@@ -351,11 +308,11 @@ int main() {
             << " beta=" << as_f64(truth.beta)
             << " persistence=" << as_f64(truth.alpha.add(truth.beta)) << "\n\n";
 
-  const auto nm_out = nelder_mead_minimizer(objective, x0, nm_options);
-  const auto de_out = differential_evolution_prmm_minimizer(objective, x0, de_options);
+  print_optima_report("SequentialQP", model, initial, sqp_options, truth);
+  print_optima_report("InternalProtocol", model, initial, ip_options, truth);
 
-  print_report("SequentialQP", sqp_options, problem, initial, truth);
-  print_report("InternalProtocol", ip_options, problem, initial, truth);
+  const auto nm_out = dfo::nelder_mead_minimizer(objective, x0, nm_options);
+  const auto de_out = dfo::differential_evolution_prmm_minimizer(objective, x0, de_options);
   print_report("NelderMead", nm_out, truth);
   print_report("DE_PRMM", de_out, truth);
 

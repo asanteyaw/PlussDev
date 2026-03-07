@@ -1063,7 +1063,7 @@ Thread apply_cmp_thread_pair(const Thread& lhs, const Thread& rhs, BinaryCmpOp o
 }
 
 void validate_binary_frame_compat(const DataFrame& lhs, const DataFrame& rhs, std::string_view where) {
-  PLUSS_CHECK(lhs.nrows() == rhs.nrows(), fmt::format("{}: case count mismatch", where));
+  PLUSS_CHECK(lhs.ncases() == rhs.ncases(), fmt::format("{}: case count mismatch", where));
   PLUSS_CHECK(lhs.column_names() == rhs.column_names(),
               fmt::format("{}: features must match by name and order", where));
 }
@@ -1121,7 +1121,7 @@ DataFrame dataframe_cmp_frame(const DataFrame& lhs, const DataFrame& rhs, Binary
 DataFrame arrange_impl_frame(
     const DataFrame& frame,
     const std::vector<DataFrame::ArrangeSpec>& input_specs) {
-  if (frame.nrows() <= 1 || input_specs.empty()) {
+  if (frame.ncases() <= 1 || input_specs.empty()) {
     return frame;
   }
 
@@ -1147,7 +1147,7 @@ DataFrame arrange_impl_frame(
     keys.push_back(frame.features(spec.feature));
   }
 
-  std::vector<std::int64_t> indices(static_cast<std::size_t>(frame.nrows()));
+  std::vector<std::int64_t> indices(static_cast<std::size_t>(frame.ncases()));
   std::iota(indices.begin(), indices.end(), static_cast<std::int64_t>(0));
 
   std::stable_sort(indices.begin(), indices.end(), [&](std::int64_t lhs, std::int64_t rhs) {

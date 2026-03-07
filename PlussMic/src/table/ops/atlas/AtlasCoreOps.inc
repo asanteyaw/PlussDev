@@ -26,8 +26,8 @@ const detail::AtlasImpl& Atlas::impl_ref_() const {
 }
 
 std::int64_t Atlas::depth() const { return static_cast<std::int64_t>(impl_ref_().frames_.size()); }
-std::int64_t Atlas::nrows() const { return impl_ref_().nrows_; }
-std::int64_t Atlas::ncols() const { return impl_ref_().ncols_; }
+std::int64_t Atlas::ncases() const { return impl_ref_().nrows_; }
+std::int64_t Atlas::nfeats() const { return impl_ref_().ncols_; }
 
 const std::vector<std::string>& Atlas::column_names() const { return impl_ref_().names_; }
 const std::optional<Thread>& Atlas::axis0_labels() const { return impl_ref_().axis0_labels_; }

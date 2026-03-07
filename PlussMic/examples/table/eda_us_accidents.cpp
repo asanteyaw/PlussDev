@@ -21,13 +21,13 @@ int main(int argc, char** argv) {
   if (argc > 1) {
     const auto n = std::stoll(argv[1]);
     df = n > 0
-        ? pluss::table::DataFrame::load_csv(csv_path, {{"nrows", static_cast<std::int64_t>(n)}})
+        ? pluss::table::DataFrame::load_csv(csv_path, {{"ncases", static_cast<std::int64_t>(n)}})
         : pluss::table::DataFrame::load_csv(csv_path);
   } else {
     df = pluss::table::DataFrame::load_csv(csv_path);
   }
 
-  std::cout << "Loaded: [" << df.nrows() << " cs x " << df.ncols() << " feat]\n";
+  std::cout << "Loaded: [" << df.ncases() << " cs x " << df.nfeats() << " feat]\n";
   std::cout << "\n=== Initial Exploration ===\n";
   df.info();
   std::cout << "\n";
@@ -123,8 +123,8 @@ int main(int argc, char** argv) {
 
   std::cout << "\n// =========== Question Seven==========\n";
   std::cout << "// Are accidents more frequent in urban or rural areas?\n";
-  std::cout << "Urban proxy (City notnull): " << work.query("City notnull").nrows() << "\n";
-  std::cout << "Rural proxy (City isnull): " << work.query("isnull(City)").nrows() << "\n";
+  std::cout << "Urban proxy (City notnull): " << work.query("City notnull").ncases() << "\n";
+  std::cout << "Rural proxy (City isnull): " << work.query("isnull(City)").ncases() << "\n";
 
   std::cout << "\n// =========== Question Eight==========\n";
   std::cout << "// Which airports are associated with the most accidents nearby?\n";

@@ -22,7 +22,7 @@ void run_comma_csv_demo() {
   auto df = pluss::table::DataFrame::load_csv(
       data_file("messy_data.csv").string(),
       {
-          {"nrows", 32},
+          {"ncases", 32},
       });
 
   std::cout << "\n=== Comma CSV demo: messy_data.csv ===\n";
@@ -54,7 +54,7 @@ void run_semicolon_csv_demo() {
   auto df = pluss::table::DataFrame::load_csv(
       data_file("bank-full.csv").string(),
       {
-          {"nrows", 24},
+          {"ncases", 24},
           {"case col", "job"},
       });
 
@@ -77,8 +77,8 @@ void run_atlas_demo() {
   auto df = pluss::table::DataFrame::load_csv(
       data_file("bank-full.csv").string(),
       {
-          {"nrows", 20},
-          {"columns", std::vector<std::string>{"age", "balance", "duration"}},
+          {"ncases", 20},
+          {"features", std::vector<std::string>{"age", "balance", "duration"}},
       });
   auto f0 = df.slice(0, 10);
   auto f1 = df.slice(10, 20);

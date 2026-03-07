@@ -1,6 +1,6 @@
-#if defined(_WIN32) && defined(PLUSSMIC_HAVE_WIN_WEBVIEW2) && PLUSSMIC_HAVE_WIN_WEBVIEW2
+#if defined(_WIN32) && defined(PLUSSVIEW_HAVE_WIN_WEBVIEW2) && PLUSSVIEW_HAVE_WIN_WEBVIEW2
 
-#include "table/display/PlatformHtmlViewer.h"
+#include "PlatformHtmlViewer.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -13,13 +13,13 @@
 #include <wrl.h>
 #include <WebView2.h>
 
-namespace pluss::table::display::detail {
+namespace pluss::view::detail {
 
 namespace {
 
 using Microsoft::WRL::ComPtr;
 
-constexpr wchar_t kWindowClassName[] = L"PlussMicHtmlViewerWindow";
+constexpr wchar_t kWindowClassName[] = L"PlussViewHtmlViewerWindow";
 constexpr int kToolbarHeight = 44;
 constexpr int kButtonWidth = 92;
 constexpr int kButtonHeight = 28;
@@ -57,6 +57,7 @@ struct ScopedCoInit {
 struct ViewerState {
   std::wstring title;
   std::wstring html;
+  std::wstring snapshot_name;
   HWND hwnd{nullptr};
   HWND save_button{nullptr};
   ComPtr<ICoreWebView2Environment> environment;
@@ -98,7 +99,10 @@ void save_png_(ViewerState* state) {
     return;
   }
 
-  wchar_t path[MAX_PATH] = L"table-view.png";
+  const std::wstring default_name = state->snapshot_name.empty() ? std::wstring(L"view.png") : state->snapshot_name;
+  wchar_t path[MAX_PATH] = {};
+  wcsncpy(path, default_name.c_str(), MAX_PATH - 1);
+
   OPENFILENAMEW ofn{};
   ofn.lStructSize = sizeof(ofn);
   ofn.hwndOwner = state->hwnd;
@@ -276,18 +280,21 @@ bool mac_html_viewer_available() {
 bool show_macos_html_window(const std::string& title,
                             const std::string& html,
                             std::int64_t width,
-                            std::int64_t height) {
+                            std::int64_t height,
+                            const std::string& snapshot_name) {
   (void)title;
   (void)html;
   (void)width;
   (void)height;
+  (void)snapshot_name;
   return false;
 }
 
 bool show_windows_html_window(const std::string& title,
                               const std::string& html,
                               std::int64_t width,
-                              std::int64_t height) {
+                              std::int64_t height,
+                              const std::string& snapshot_name) {
   ScopedCoInit coinit;
   if (!coinit.initialized && coinit.hr != RPC_E_CHANGED_MODE) {
     return false;
@@ -302,6 +309,7 @@ bool show_windows_html_window(const std::string& title,
   ViewerState state;
   state.title = utf8_to_wstring_(title);
   state.html = utf8_to_wstring_(html);
+  state.snapshot_name = utf8_to_wstring_(snapshot_name);
   if (state.title.empty() || state.html.empty()) {
     return false;
   }
@@ -334,6 +342,6 @@ bool show_windows_html_window(const std::string& title,
   return state.created && state.success;
 }
 
-} // namespace pluss::table::display::detail
+} // namespace pluss::view::detail
 
 #endif

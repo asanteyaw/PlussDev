@@ -585,7 +585,7 @@ Stream Catalog::max(std::string_view field) const {
 std::int64_t Catalog::count() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   if (empty()) return 0;
-  return tabelize().nrows();
+  return tabelize().ncases();
 }
 
 Catalog Catalog::merge(const Catalog& other, std::string_view on, std::string_view how) const {

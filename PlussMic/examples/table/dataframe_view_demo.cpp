@@ -17,8 +17,8 @@ int main() {
   auto df = pluss::table::DataFrame::load_csv(
       data_file("bank-full.csv").string(),
       {
-          {"nrows", 32},
-          {"columns", std::vector<std::string>{"age", "job", "balance", "duration", "y"}},
+          {"ncases", 32},
+          {"features", std::vector<std::string>{"age", "job", "balance", "duration", "y"}},
       });
 
   std::cout << "=== view demo ===\n";

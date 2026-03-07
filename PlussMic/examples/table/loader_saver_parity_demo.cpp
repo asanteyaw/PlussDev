@@ -32,7 +32,7 @@ void write_text_file(const fs::path& path, std::string_view text) {
 }
 
 void print_frame_shape(std::string_view label, const pluss::table::DataFrame& frame) {
-  fmt::print("{} -> [{} cs x {} feat]\n", label, frame.nrows(), frame.nfeatures());
+  fmt::print("{} -> [{} cs x {} feat]\n", label, frame.ncases(), frame.nfeatures());
 }
 
 void print_catalog_shape(std::string_view label, const pluss::kindle::Catalog& catalog) {
@@ -106,13 +106,13 @@ void demo_dataframe_io(const TextFixtures& fixtures) {
   const auto df_csv = pluss::table::DataFrame::load(
       "csv",
       data_file("messy_data.csv").string(),
-      {{"nrows", 6}});
+      {{"ncases", 6}});
   fmt::print("loading DataFrame excel...\n");
   const auto df_excel = pluss::table::DataFrame::load_excel(data_file("report.xlsx").string(), report_excel_cfg);
   fmt::print("loading DataFrame json...\n");
   const auto df_json = pluss::table::DataFrame::load_json(
       data_file("weather.json").string(),
-      {{"nrows", 6}});
+      {{"ncases", 6}});
 
   fmt::print("loading DataFrame txt delimited...\n");
   const auto df_txt_delimited = pluss::table::DataFrame::load_txt(
@@ -186,11 +186,11 @@ void demo_catalog_io(const TextFixtures& fixtures) {
   const auto cat_csv = pluss::kindle::Catalog::load(
       "csv",
       data_file("messy_data.csv").string(),
-      pluss::loader::config_from({{"nrows", 6}}));
+      pluss::loader::config_from({{"ncases", 6}}));
   const auto cat_excel = pluss::kindle::Catalog::load("excel", data_file("report.xlsx").string(), report_excel_cfg);
   const auto cat_json = pluss::kindle::Catalog::load_json(
       data_file("weather.json").string(),
-      pluss::loader::config_from({{"nrows", 6}}));
+      pluss::loader::config_from({{"ncases", 6}}));
   const auto cat_txt = pluss::kindle::Catalog::load_txt(
       fixtures.whitespace_txt.string(),
       pluss::loader::config_from({{"txt_mode", "whitespace"}, {"header", true}}));
@@ -245,7 +245,7 @@ void demo_registry_io(const TextFixtures& fixtures) {
   const auto reg_csv = pluss::bundle::Registry::load(
       "csv",
       data_file("messy_data.csv").string(),
-      pluss::loader::config_from({{"nrows", 6}}));
+      pluss::loader::config_from({{"ncases", 6}}));
   const auto reg_excel = pluss::bundle::Registry::load("excel", data_file("report.xlsx").string(), report_excel_cfg);
   const auto reg_txt = pluss::bundle::Registry::load_txt(
       fixtures.whitespace_txt.string(),
@@ -304,7 +304,7 @@ void demo_loader_level_save_as() {
   const auto df = pluss::table::DataFrame::load(
       "csv",
       data_file("messy_data.csv").string(),
-      {{"nrows", 5}});
+      {{"ncases", 5}});
 
   const auto out_dir = demo_temp_dir() / "loader_outputs";
   fs::create_directories(out_dir);

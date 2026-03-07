@@ -899,11 +899,11 @@ Thread infer_column_thread(const std::string& col_name,
   return make_note_thread(values, valid);
 }
 
-std::vector<std::size_t> resolve_usecols(const std::vector<std::string>& names,
-                                         const ReadCsvOptions& options) {
+std::vector<std::size_t> resolve_usefeats(const std::vector<std::string>& names,
+                                          const ReadCsvOptions& options) {
   std::vector<std::size_t> out;
 
-  if (options.usecols.empty() && options.usecols_idx.empty()) {
+  if (options.usefeats.empty() && options.usefeats_idx.empty()) {
     out.resize(names.size());
     for (std::size_t i = 0; i < names.size(); ++i) {
       out[i] = i;
@@ -911,14 +911,14 @@ std::vector<std::size_t> resolve_usecols(const std::vector<std::string>& names,
     return out;
   }
 
-  for (const auto idx : options.usecols_idx) {
-    PLUSS_CHECK(idx < names.size(), fmt::format("load_csv: usecols_idx {} out of range", idx));
+  for (const auto idx : options.usefeats_idx) {
+    PLUSS_CHECK(idx < names.size(), fmt::format("load_csv: usefeats_idx {} out of range", idx));
     out.push_back(idx);
   }
 
-  for (const auto& name : options.usecols) {
+  for (const auto& name : options.usefeats) {
     const auto it = std::find(names.begin(), names.end(), name);
-    PLUSS_CHECK(it != names.end(), "load_csv: unknown usecols name '" + name + "'");
+    PLUSS_CHECK(it != names.end(), "load_csv: unknown usefeats name '" + name + "'");
     out.push_back(static_cast<std::size_t>(std::distance(names.begin(), it)));
   }
 
@@ -1051,10 +1051,10 @@ CsvRawBatch build_raw_batch_from_records(const std::vector<std::vector<std::stri
   std::vector<std::size_t> kept_rows;
   kept_rows.reserve(records.size());
   for (std::size_t logical_row = 0; logical_row < records.size(); ++logical_row) {
-    if (options.skiprows_first_n > 0 && logical_row < options.skiprows_first_n) {
+    if (options.skipcases_first_n > 0 && logical_row < options.skipcases_first_n) {
       continue;
     }
-    if (options.skiprows.find(logical_row) != options.skiprows.end()) {
+    if (options.skipcases.find(logical_row) != options.skipcases.end()) {
       continue;
     }
     kept_rows.push_back(logical_row);
@@ -1099,7 +1099,7 @@ CsvRawBatch build_raw_batch_from_records(const std::vector<std::vector<std::stri
     PLUSS_CHECK(options.skipfooter <= n_data, "load_csv: skipfooter exceeds number of data rows");
   }
 
-  const auto usecols = resolve_usecols(names, options);
+  const auto usefeats = resolve_usefeats(names, options);
 
   std::optional<std::size_t> case_col;
   if (options.case_col_idx.has_value()) {
@@ -1113,8 +1113,8 @@ CsvRawBatch build_raw_batch_from_records(const std::vector<std::vector<std::stri
   }
 
   std::vector<std::size_t> selected_cols;
-  selected_cols.reserve(usecols.size());
-  for (const auto c : usecols) {
+  selected_cols.reserve(usefeats.size());
+  for (const auto c : usefeats) {
     if (case_col.has_value() && c == *case_col) {
       continue;
     }
@@ -1129,8 +1129,8 @@ CsvRawBatch build_raw_batch_from_records(const std::vector<std::vector<std::stri
 
   const auto data_end_pos = kept_rows.size() - options.skipfooter;
   const auto raw_data_rows = data_end_pos > data_start_pos ? (data_end_pos - data_start_pos) : 0;
-  const auto reserve_rows = options.nrows.has_value()
-      ? std::min<std::size_t>(raw_data_rows, *options.nrows)
+  const auto reserve_rows = options.ncases.has_value()
+      ? std::min<std::size_t>(raw_data_rows, *options.ncases)
       : raw_data_rows;
 
   const auto t_scan_start = std::chrono::steady_clock::now();
@@ -1178,7 +1178,7 @@ CsvRawBatch build_raw_batch_from_records(const std::vector<std::vector<std::stri
       continue;
     }
 
-    if (options.nrows.has_value() && accepted_rows >= *options.nrows) {
+    if (options.ncases.has_value() && accepted_rows >= *options.ncases) {
       break;
     }
 
@@ -1333,15 +1333,15 @@ CsvRawBatch read_csv_records_raw_batch(const std::vector<std::vector<std::string
 }
 
 CsvRawBatch read_csv_raw_batch(const ReadCsvOptions& options) {
-  PLUSS_CHECK(!options.filepath.empty(), "load_csv: filepath is empty");
+  ReadCsvOptions resolved = options;
+  PLUSS_CHECK(!resolved.filepath.empty(), "load_csv: filepath is empty");
 
   const auto t_total_start = std::chrono::steady_clock::now();
   CsvLoadProfile profile_stats;
 
-  ReadCsvOptions resolved = options;
   {
     const auto t0 = std::chrono::steady_clock::now();
-    resolved.sep = detect_separator(options);
+    resolved.sep = detect_separator(resolved);
     profile_stats.detect_sep_ms = elapsed_ms(t0, std::chrono::steady_clock::now());
   }
 
@@ -1395,8 +1395,8 @@ CsvRawBatch read_csv_raw_batch(const ReadCsvOptions& options) {
     fmt::print(
         stderr,
         "load_csv(raw) profile [{}]: total={:.2f} ms, detect_sep={:.2f} ms, parse_records={:.2f} ms, "
-        "build_batch={:.2f} ms, row_filter={:.2f} ms, scan_cells={:.2f} ms, "
-        "rows(raw/selected)={}/{}, cols={}\n",
+        "build_batch={:.2f} ms, case_filter={:.2f} ms, scan_cells={:.2f} ms, "
+        "cases(raw/selected)={}/{}, features={}\n",
         resolved.filepath,
         profile_stats.total_ms,
         profile_stats.detect_sep_ms,
@@ -1436,15 +1436,15 @@ CsvBatch read_csv_records_batch(const std::vector<std::vector<std::string>>& rec
 }
 
 CsvBatch read_csv_batch(const ReadCsvOptions& options) {
-  PLUSS_CHECK(!options.filepath.empty(), "load_csv: filepath is empty");
+  ReadCsvOptions resolved = options;
+  PLUSS_CHECK(!resolved.filepath.empty(), "load_csv: filepath is empty");
 
   const auto t_total_start = std::chrono::steady_clock::now();
   CsvLoadProfile profile_stats;
 
-  ReadCsvOptions resolved = options;
   {
     const auto t0 = std::chrono::steady_clock::now();
-    resolved.sep = detect_separator(options);
+    resolved.sep = detect_separator(resolved);
     profile_stats.detect_sep_ms = elapsed_ms(t0, std::chrono::steady_clock::now());
   }
 
@@ -1498,8 +1498,8 @@ CsvBatch read_csv_batch(const ReadCsvOptions& options) {
     fmt::print(
         stderr,
         "load_csv profile [{}]: total={:.2f} ms, detect_sep={:.2f} ms, parse_records={:.2f} ms, "
-        "build_dataframe={:.2f} ms, row_filter={:.2f} ms, scan_cells={:.2f} ms, infer_columns={:.2f} ms, "
-        "rows(raw/selected)={}/{}, cols={}\n",
+        "build_dataframe={:.2f} ms, case_filter={:.2f} ms, scan_cells={:.2f} ms, infer_columns={:.2f} ms, "
+        "cases(raw/selected)={}/{}, features={}\n",
         resolved.filepath,
         profile_stats.total_ms,
         profile_stats.detect_sep_ms,
@@ -1540,14 +1540,14 @@ pluss::table::DataFrame load_csv(std::string_view filepath, const ReadCsvOptions
 
 pluss::table::DataFrame load_csv(std::string_view filepath,
                                  char sep,
-                                 std::optional<std::size_t> nrows,
-                                 std::vector<std::string> usecols,
+                                 std::optional<std::size_t> ncases,
+                                 std::vector<std::string> usefeats,
                                  std::optional<std::string> case_col,
                                  BadLinePolicy on_bad_lines) {
   ReadCsvOptions options;
   options.sep = sep;
-  options.nrows = nrows;
-  options.usecols = std::move(usecols);
+  options.ncases = ncases;
+  options.usefeats = std::move(usefeats);
   options.case_col = std::move(case_col);
   options.on_bad_lines = on_bad_lines;
   return load_csv(filepath, options);
@@ -1555,16 +1555,16 @@ pluss::table::DataFrame load_csv(std::string_view filepath,
 
 pluss::table::DataFrame load_csv(std::string_view filepath,
                                  char sep,
-                                 std::optional<std::size_t> nrows,
-                                 std::initializer_list<std::string_view> usecols,
+                                 std::optional<std::size_t> ncases,
+                                 std::initializer_list<std::string_view> usefeats,
                                  std::optional<std::string> case_col,
                                  BadLinePolicy on_bad_lines) {
-  std::vector<std::string> cols;
-  cols.reserve(usecols.size());
-  for (const auto name : usecols) {
-    cols.emplace_back(name);
+  std::vector<std::string> feats;
+  feats.reserve(usefeats.size());
+  for (const auto name : usefeats) {
+    feats.emplace_back(name);
   }
-  return load_csv(filepath, sep, nrows, std::move(cols), std::move(case_col), on_bad_lines);
+  return load_csv(filepath, sep, ncases, std::move(feats), std::move(case_col), on_bad_lines);
 }
 
 void save_csv(const pluss::table::DataFrame& frame,
@@ -1597,7 +1597,7 @@ void save_csv(const pluss::table::DataFrame& frame,
     out << options.line_terminator;
   }
 
-  for (std::int64_t r = 0; r < frame.nrows(); ++r) {
+  for (std::int64_t r = 0; r < frame.ncases(); ++r) {
     bool first = true;
     if (include_cases) {
       out << escape_csv_cell(thread_value_for_csv(frame.cases(), r, options), options);

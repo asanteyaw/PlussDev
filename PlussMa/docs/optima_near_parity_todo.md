@@ -1,6 +1,6 @@
 # Optima Near-Parity TODO
 
-Purpose: drive `optima(...)` to defensible near-parity with MATLAB `fmincon` for the `SequentialQP` and `InteriorPoint` backends while keeping Pluss-native naming and architecture.
+Purpose: drive `optima(...)` to defensible near-parity with MATLAB `fmincon` for the `SequentialQP` and `InternalProtocol` backends while keeping Pluss-native naming and architecture.
 
 Ownership boundary:
 - `PlussQit`: `Series`, autodiff, backend compute, linear algebra kernels
@@ -18,7 +18,7 @@ Reference sources used for this plan:
 
 Current rough maturity estimate:
 - `SequentialQP`: 91%
-- `InteriorPoint`: 94%
+- `InternalProtocol`: 94%
 - combined near-parity progress: 93%
 
 ## Completed So Far
@@ -27,10 +27,10 @@ Current rough maturity estimate:
 - strict callback validation and derivative audits
 - best-feasible tracking and richer outputs
 - SQP restoration fallback and non-finite recovery
-- interior-point restoration fallback and non-finite recovery
+- internal-protocol restoration fallback and non-finite recovery
 - scaling/preconditioning from initial-point magnitudes
-- interior-point CG subproblem path with Krylov reporting
-- interior-point L-BFGS Hessian approximation
+- internal-protocol CG subproblem path with Krylov reporting
+- internal-protocol L-BFGS Hessian approximation
 - GARCH benchmark harness beside the DFO demos
 
 ## Workstream 1: Primal-Dual Interior-Point
@@ -52,7 +52,7 @@ Required deliverables:
 - monotone barrier update policy and centrality control
 
 Acceptance:
-- `InteriorPoint` output includes meaningful complementarity/stationarity measures
+- `InternalProtocol` output includes meaningful complementarity/stationarity measures
 - inequality handling no longer relies only on the current log-barrier surrogate
 
 Status:
@@ -61,7 +61,7 @@ Status:
 ## Workstream 2: Feasibility Mode
 
 Goal:
-- add a dedicated feasibility-search mode for interior-point aligned with the behavior described for `EnableFeasibilityMode`
+- add a dedicated feasibility-search mode for internal-protocol aligned with the behavior described for `EnableFeasibilityMode`
 
 Reference anchors:
 - `fmincon.pdf` page 35
@@ -82,7 +82,7 @@ Status:
 ## Workstream 3: Exact Hessian / Hessian-Vector
 
 Goal:
-- allow interior-point to use exact Hessian or Hessian-vector products from autodiff rather than only quasi-Newton approximations
+- allow internal-protocol to use exact Hessian or Hessian-vector products from autodiff rather than only quasi-Newton approximations
 
 Reference anchors:
 - `fmincon.pdf` page 31
@@ -95,7 +95,7 @@ Required deliverables:
 - compatibility rules between Hessian mode and subproblem solver mode
 
 Acceptance:
-- interior-point can run in exact-Hessian and Hessian-vector modes under `Series` inputs only
+- internal-protocol can run in exact-Hessian and Hessian-vector modes under `Series` inputs only
 
 Status:
 - completed

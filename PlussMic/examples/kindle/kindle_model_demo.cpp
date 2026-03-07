@@ -220,7 +220,7 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   policy.case_feature_name = "case";
   policy.collision = pluss::kindle::CollisionPolicy::Suffix;
   const auto back_df = catalog.tabelize(policy);
-  std::cout << "tabelize shape: [" << back_df.nrows() << " cs x " << back_df.nfeatures() << " feat]\n";
+  std::cout << "tabelize shape: [" << back_df.ncases() << " cs x " << back_df.nfeatures() << " feat]\n";
   std::cout << "to_table (table renderer):\n";
   (void)catalog.head(5).to_table(policy, true);
 
@@ -276,8 +276,8 @@ void demo_archive_methods(const pluss::table::DataFrame& base_df) {
 
   const auto atlas_back = archive.tabelize();
   std::cout << "archive.tabelize depth: " << atlas_back.depth()
-            << ", rows/frame: " << atlas_back.nrows()
-            << ", features/frame: " << atlas_back.ncols() << "\n";
+            << ", rows/frame: " << atlas_back.ncases()
+            << ", features/frame: " << atlas_back.nfeats() << "\n";
   std::cout << "archive.to_table (atlas renderer):\n";
   (void)archive.to_table({}, true);
 }
@@ -295,12 +295,12 @@ void demo_loader_entrypoints() {
       "csv",
       csv_path,
       pluss::loader::config_from({
-          {"nrows", 10},
+          {"ncases", 10},
       }));
   std::cout << "load(csv, config) rows: " << loaded_generic.count() << "\n";
 
   pluss::loader::ReadCsvOptions key_opts;
-  key_opts.nrows = 32;
+  key_opts.ncases = 32;
   const auto keyed = pluss::kindle::Catalog::load_csv_with_key(bank_path, "job", key_opts);
   std::cout << "load_csv_with_key has(_case): " << keyed.has("_case")
             << ", rows: " << keyed.count() << "\n";

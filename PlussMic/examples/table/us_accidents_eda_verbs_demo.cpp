@@ -465,7 +465,7 @@ void run_verb_walkthrough(const DataFrame& df) {
   (void)d_spec.assign({{"Severity_Alias", d_spec.features("Severity")}});
 
   auto sum = df.aggregate({
-      {"rows", "Severity", DataFrame::SummaryOp::Count},
+      {"cases", "Severity", DataFrame::SummaryOp::Count},
       {"severity_mean", "Severity", DataFrame::SummaryOp::Mean},
       {"severity_std", "Severity", DataFrame::SummaryOp::Std},
       {"distance_mean", "Distance(mi)", DataFrame::SummaryOp::Mean},
@@ -556,7 +556,7 @@ int main(int argc, char** argv) {
   options.engine = pluss::loader::CsvEngine::Auto;
   options.on_bad_lines = pluss::loader::BadLinePolicy::Skip;
   options.parse_dates = {"Start_Time", "End_Time"};
-  options.usecols = {
+  options.usefeats = {
       "Severity",
       "Start_Time",
       "End_Time",
@@ -589,11 +589,11 @@ int main(int argc, char** argv) {
       "Nautical_Twilight",
       "Astronomical_Twilight",
   };
-  options.nrows = ncases;
+  options.ncases = ncases;
 
   auto df = DataFrame::load_csv(options.filepath, options);
 
-  std::cout << fmt::format("Loaded US accidents dataset: [ {} cs x {} feat ]\n", df.nrows(), df.ncols());
+  std::cout << fmt::format("Loaded US accidents dataset: [ {} cs x {} feat ]\n", df.ncases(), df.nfeats());
   std::cout << "Use argv[1]=0 or omit for full file; pass a positive integer for a quick sample.\n";
 
   run_verb_walkthrough(df);
@@ -668,7 +668,7 @@ int main(int argc, char** argv) {
   MeanAccum night_sev;
   MeanAccum day_sev;
 
-  const auto n = df.nrows();
+  const auto n = df.ncases();
   for (std::int64_t i = 0; i < n; ++i) {
     const auto sev = numeric_at(severity_t, i);
     if (!sev.has_value()) {
@@ -934,7 +934,7 @@ int main(int argc, char** argv) {
     auto ydf = DataFrame({{"year", make_note_thread(years)}, {"accidents", make_i64_thread(counts)}});
     auto trend = ydf.rolling(
         {DataFrame::WindowSpec{"accidents_rollmean_3", "accidents", ThreadWindowOp::RollingMean, 3, 1}}, true);
-    show_q_table(17, "Accident frequency trend over time", trend, trend.nrows());
+    show_q_table(17, "Accident frequency trend over time", trend, trend.ncases());
   }
 
   std::cout << fmt::format("\nQ18. Average accident duration (End_Time - Start_Time): {:.3f} hours\n", duration_mean.mean());

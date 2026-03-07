@@ -35,10 +35,10 @@
             
   <section id="optima-internal-protocol">
 <h1>Optima Internal Protocol<a class="headerlink" href="#optima-internal-protocol" title="Link to this heading">¶</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">InternalProtocol</span></code> is the Pluss-native public label for the primal-dual barrier backend currently implemented under the <code class="docutils literal notranslate"><span class="pre">OptimaAlgorithm::InteriorPoint</span></code> enum branch.</p>
+<p><code class="docutils literal notranslate"><span class="pre">InternalProtocol</span></code> is the Pluss-native public label for the primal-dual barrier backend currently implemented under the <code class="docutils literal notranslate"><span class="pre">OptimaAlgorithm::InternalProtocol</span></code> enum branch.</p>
 <p>The intent is straightforward:</p>
 <ul class="simple">
-<li><p>the algorithmic family is still interior-point</p></li>
+<li><p>the algorithmic family is still internal-protocol</p></li>
 <li><p>the public product naming stays Pluss-native</p></li>
 </ul>
 <section id="mathematical-problem">
@@ -145,7 +145,7 @@ f(x)
 </section>
 <section id="option-surface">
 <h2>Option Surface<a class="headerlink" href="#option-surface" title="Link to this heading">¶</a></h2>
-<p>The underlying C++ option type is still <code class="docutils literal notranslate"><span class="pre">InteriorPointOptions</span></code>. It exposes:</p>
+<p>The underlying C++ option type is still <code class="docutils literal notranslate"><span class="pre">InternalProtocolOptions</span></code>. It exposes:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Option</p></th>
@@ -407,7 +407,7 @@ f(x)
 <h2>Dedicated Demo<a class="headerlink" href="#dedicated-demo" title="Link to this heading">¶</a></h2>
 <p>For an isolated walkthrough, use:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">PlussMa/examples/Numerical/optimization/garch11_interior_point_demo.cpp</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussMa/examples/Numerical/optimization/garch11_internal_protocol_demo.cpp</span></code></p></li>
 </ul>
 <p>That demo prints:</p>
 <ul class="simple">

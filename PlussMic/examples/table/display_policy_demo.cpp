@@ -16,7 +16,7 @@ int main() {
   auto df = pluss::table::DataFrame::load_csv(
       data_file("messy_data.csv").string(),
       {
-          {"nrows", 120},
+          {"ncases", 120},
       });
 
   std::cout << "=== display policy demo (dynamic terminal width) ===\n";
@@ -32,9 +32,20 @@ int main() {
 
   std::cout << "\n=== Smart .show() viewer (falls back to terminal if unavailable) ===\n";
   std::cout << "head()/describe() return a DataFrameView.\n";
-  std::cout << "Leave it alone for terminal preview, or call .show() to request the popup.\n";
+  std::cout << "Auto mode uses NativeWebView first, then InHouseHtml if native is unavailable.\n";
   df.head(8).show();
   df.describe().show();
+
+  std::cout << "\n=== Explicit backend selection ===\n";
+  pluss::table::display::DisplayOptions inhouse_opts;
+  inhouse_opts.backend = pluss::table::display::DisplayBackend::InHouseHtml;
+  inhouse_opts.window_title = "DataFrame - head (InHouse)";
+  df.head(8).show(inhouse_opts);
+
+  pluss::table::display::DisplayOptions native_opts;
+  native_opts.backend = pluss::table::display::DisplayBackend::NativeWebView;
+  native_opts.window_title = "DataFrame - head (NativeWebView)";
+  df.head(8).show(native_opts);
 
   std::cout << "\n=== Explicit DataFrame titles ===\n";
   auto prices = df.title("prices");

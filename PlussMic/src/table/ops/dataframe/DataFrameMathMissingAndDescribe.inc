@@ -280,6 +280,246 @@ DataFrameView DataFrame::nunique(bool render) const {
   return DataFrameView(summarize_specs(specs, false), render, "nunique", title());
 }
 
+DataFrameView DataFrame::corr(CorrMethod method, bool render) const {
+  return corr({}, method, render);
+}
+
+DataFrameView DataFrame::corr(bool render) const {
+  return corr({}, CorrMethod::Pearson, render);
+}
+
+DataFrameView DataFrame::corr(std::initializer_list<std::string_view> features, bool render) const {
+  return corr(features, CorrMethod::Pearson, render);
+}
+
+DataFrameView DataFrame::corr(std::initializer_list<std::string_view> features, CorrMethod method, bool render) const {
+  const auto& src = impl_ref_();
+
+  std::vector<std::string> names;
+  if (features.size() == 0) {
+    names.reserve(src.names_.size());
+    for (std::size_t i = 0; i < src.names_.size(); ++i) {
+      const auto& col = src.columns_[i];
+      if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+        names.push_back(src.names_[i]);
+      }
+    }
+  } else {
+    std::unordered_set<std::string> seen;
+    seen.reserve(features.size());
+    names.reserve(features.size());
+    for (const auto feature : features) {
+      const auto key = owned_name(feature);
+      PLUSS_CHECK(!key.empty(), "DataFrame::corr: feature name cannot be empty");
+      if (!seen.insert(key).second) {
+        continue;
+      }
+      const auto it = src.name_to_idx_.find(key);
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::corr: unknown feature '" + key + "'");
+      const auto& col = src.columns_[it->second];
+      PLUSS_CHECK(col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series()),
+                  "DataFrame::corr: feature '" + key + "' must be numeric");
+      names.push_back(key);
+    }
+  }
+
+  PLUSS_CHECK(!names.empty(), "DataFrame::corr: no numeric features");
+
+  const auto feature_count = names.size();
+  const auto row_count = src.nrows_;
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  constexpr double eps = 1e-12;
+
+  std::vector<std::vector<double>> values(feature_count, std::vector<double>(static_cast<std::size_t>(row_count), nan));
+  std::vector<std::vector<bool>> present(feature_count, std::vector<bool>(static_cast<std::size_t>(row_count), false));
+
+  for (std::size_t i = 0; i < feature_count; ++i) {
+    const auto& col = src.columns_[src.name_to_idx_.at(names[i])];
+    const auto& series = col.as_series();
+    std::optional<std::vector<bool>> validity = std::nullopt;
+    if (col.has_validity_mask()) {
+      validity = col.validity_mask()->to_vec<bool>();
+    }
+
+    for (std::int64_t r = 0; r < row_count; ++r) {
+      const auto rr = static_cast<std::size_t>(r);
+      if (validity.has_value() && !(*validity)[rr]) {
+        continue;
+      }
+      double v = 0.0;
+      if (!extract_numeric_value(series, r, v) || !std::isfinite(v)) {
+        continue;
+      }
+      values[i][rr] = v;
+      present[i][rr] = true;
+    }
+  }
+
+  const auto pearson_corr = [nan](const std::vector<double>& x, const std::vector<double>& y) {
+    const auto n = x.size();
+    if (n < 2 || y.size() != n) {
+      return nan;
+    }
+    double sum_x = 0.0;
+    double sum_y = 0.0;
+    double sum_xx = 0.0;
+    double sum_yy = 0.0;
+    double sum_xy = 0.0;
+    for (std::size_t i = 0; i < n; ++i) {
+      const double xv = x[i];
+      const double yv = y[i];
+      sum_x += xv;
+      sum_y += yv;
+      sum_xx += xv * xv;
+      sum_yy += yv * yv;
+      sum_xy += xv * yv;
+    }
+    const auto nd = static_cast<double>(n);
+    const double num = nd * sum_xy - sum_x * sum_y;
+    const double den_x = nd * sum_xx - sum_x * sum_x;
+    const double den_y = nd * sum_yy - sum_y * sum_y;
+    if (den_x <= 0.0 || den_y <= 0.0) {
+      return nan;
+    }
+    const double corr = num / std::sqrt(den_x * den_y);
+    if (!std::isfinite(corr)) {
+      return nan;
+    }
+    return std::clamp(corr, -1.0, 1.0);
+  };
+
+  const auto rank_average_ties = [eps](const std::vector<double>& input) {
+    const auto n = input.size();
+    std::vector<double> out(n, 0.0);
+    std::vector<std::size_t> order(n, 0);
+    std::iota(order.begin(), order.end(), static_cast<std::size_t>(0));
+    std::stable_sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) {
+      return input[a] < input[b];
+    });
+
+    std::size_t start = 0;
+    while (start < n) {
+      std::size_t stop = start + 1;
+      while (stop < n && std::abs(input[order[stop]] - input[order[start]]) <= eps) {
+        ++stop;
+      }
+      const double rank = 0.5 * (static_cast<double>(start + 1) + static_cast<double>(stop));
+      for (std::size_t k = start; k < stop; ++k) {
+        out[order[k]] = rank;
+      }
+      start = stop;
+    }
+    return out;
+  };
+
+  const auto kendall_tau_b = [nan, eps](const std::vector<double>& x, const std::vector<double>& y) {
+    const auto n = x.size();
+    if (n < 2 || y.size() != n) {
+      return nan;
+    }
+
+    std::int64_t concordant = 0;
+    std::int64_t discordant = 0;
+    std::int64_t tie_x_only = 0;
+    std::int64_t tie_y_only = 0;
+    std::int64_t tie_xy = 0;
+
+    for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = i + 1; j < n; ++j) {
+        const double dx = x[i] - x[j];
+        const double dy = y[i] - y[j];
+        const bool tx = std::abs(dx) <= eps;
+        const bool ty = std::abs(dy) <= eps;
+        if (tx && ty) {
+          ++tie_xy;
+          continue;
+        }
+        if (tx) {
+          ++tie_x_only;
+          continue;
+        }
+        if (ty) {
+          ++tie_y_only;
+          continue;
+        }
+        const double prod = dx * dy;
+        if (prod > 0.0) {
+          ++concordant;
+        } else if (prod < 0.0) {
+          ++discordant;
+        }
+      }
+    }
+
+    const double n0 = static_cast<double>(concordant + discordant + tie_x_only + tie_y_only + tie_xy);
+    const double n1 = static_cast<double>(tie_x_only + tie_xy);
+    const double n2 = static_cast<double>(tie_y_only + tie_xy);
+    const double den_x = n0 - n1;
+    const double den_y = n0 - n2;
+    if (den_x <= 0.0 || den_y <= 0.0) {
+      return nan;
+    }
+    const double tau = static_cast<double>(concordant - discordant) / std::sqrt(den_x * den_y);
+    if (!std::isfinite(tau)) {
+      return nan;
+    }
+    return std::clamp(tau, -1.0, 1.0);
+  };
+
+  std::vector<double> corr_matrix(feature_count * feature_count, nan);
+  for (std::size_t i = 0; i < feature_count; ++i) {
+    for (std::size_t j = i; j < feature_count; ++j) {
+      std::vector<double> pair_x;
+      std::vector<double> pair_y;
+      pair_x.reserve(static_cast<std::size_t>(row_count));
+      pair_y.reserve(static_cast<std::size_t>(row_count));
+      for (std::int64_t r = 0; r < row_count; ++r) {
+        const auto rr = static_cast<std::size_t>(r);
+        if (!present[i][rr] || !present[j][rr]) {
+          continue;
+        }
+        pair_x.push_back(values[i][rr]);
+        pair_y.push_back(values[j][rr]);
+      }
+
+      double corr = nan;
+      switch (method) {
+        case CorrMethod::Pearson:
+          corr = pearson_corr(pair_x, pair_y);
+          break;
+        case CorrMethod::Spearman: {
+          const auto rx = rank_average_ties(pair_x);
+          const auto ry = rank_average_ties(pair_y);
+          corr = pearson_corr(rx, ry);
+          break;
+        }
+        case CorrMethod::KendallTau:
+          corr = kendall_tau_b(pair_x, pair_y);
+          break;
+        default:
+          corr = pearson_corr(pair_x, pair_y);
+          break;
+      }
+
+      corr_matrix[i * feature_count + j] = corr;
+      corr_matrix[j * feature_count + i] = corr;
+    }
+  }
+
+  std::vector<std::pair<std::string, Thread>> out_cols;
+  out_cols.reserve(feature_count);
+  for (std::size_t c = 0; c < feature_count; ++c) {
+    std::vector<double> col(feature_count, nan);
+    for (std::size_t r = 0; r < feature_count; ++r) {
+      col[r] = corr_matrix[r * feature_count + c];
+    }
+    out_cols.emplace_back(names[c], make_f64_thread(col));
+  }
+
+  auto out = DataFrame(std::move(out_cols), make_note_thread(names));
+  return DataFrameView(std::move(out), render, "corr", title());
+}
+
 DataFrame DataFrame::missing(const MissingSpec& spec) const {
   const auto& src = impl_ref_();
   std::vector<std::size_t> target_indices;
@@ -844,7 +1084,7 @@ DataFrameView DataFrame::tally(std::string_view feature_name,
 }
 
 DataFrameView DataFrame::view(std::int64_t start, std::int64_t stop, bool render) const {
-  const auto n = nrows();
+  const auto n = ncases();
   const auto s = normalize_view_start(start, n);
   const auto e = normalize_view_stop(stop, n);
 
@@ -868,7 +1108,7 @@ DataFrame DataFrame::copy() const {
 }
 
 bool DataFrame::equals(const DataFrame& other) const {
-  if (nrows() != other.nrows() || ncols() != other.ncols()) {
+  if (ncases() != other.ncases() || nfeats() != other.nfeats()) {
     return false;
   }
   if (feature_names() != other.feature_names()) {
@@ -877,7 +1117,7 @@ bool DataFrame::equals(const DataFrame& other) const {
   if (cases().dtype_name() != other.cases().dtype_name()) {
     return false;
   }
-  for (std::int64_t r = 0; r < nrows(); ++r) {
+  for (std::int64_t r = 0; r < ncases(); ++r) {
     if (cases().is_valid(r) != other.cases().is_valid(r)) {
       return false;
     }

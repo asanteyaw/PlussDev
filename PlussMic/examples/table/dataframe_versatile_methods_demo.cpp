@@ -16,8 +16,8 @@ std::filesystem::path data_file(const std::string& name) {
 int main() {
   pluss::loader::ReadCsvOptions options;
   options.sep = ';';
-  options.nrows = 32;
-  options.usecols = {"age", "job", "balance", "duration"};
+  options.ncases = 32;
+  options.usefeats = {"age", "job", "balance", "duration"};
   auto df = pluss::table::DataFrame::load_csv(data_file("bank-full.csv").string(), options);
 
   std::cout << "=== versatile families demo ===\n";
@@ -81,7 +81,7 @@ int main() {
   std::cout << "\nsummarize specs\n";
   flagged.aggregate(
       {
-          {"rows", "age", pluss::table::DataFrame::SummaryOp::Count},
+          {"cases", "age", pluss::table::DataFrame::SummaryOp::Count},
           {"age_mean", "age", pluss::table::DataFrame::SummaryOp::Mean},
           {"job_cardinality", "job", pluss::table::DataFrame::SummaryOp::Nunique},
       },
@@ -147,8 +147,8 @@ int main() {
   auto missing_demo = pluss::table::DataFrame::load_csv(
       data_file("messy_data.csv").string(),
       {
-          {"nrows", 16},
-          {"columns", {"Business Case ID", "Agency Name", "Lifecycle Cost"}},
+          {"ncases", 16},
+          {"features", {"Business Case ID", "Agency Name", "Lifecycle Cost"}},
       });
   missing_demo.head(8);
   missing_demo.isna().head(8);

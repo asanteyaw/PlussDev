@@ -158,6 +158,6 @@ Returning `true` requests an orderly stop.
 Current demos relevant to these backends:
 
 - `PlussMa/examples/Numerical/optimization/optima_sequential_qp_demo.cpp`
-- `PlussMa/examples/Numerical/optimization/optima_interior_point_demo.cpp`
+- `PlussMa/examples/Numerical/optimization/optima_internal_protocol_demo.cpp`
 - `PlussMa/examples/Numerical/optimization/garch11_optima_demo.cpp`
-- `PlussMa/examples/Numerical/optimization/garch11_interior_point_demo.cpp`
+- `PlussMa/examples/Numerical/optimization/garch11_internal_protocol_demo.cpp`

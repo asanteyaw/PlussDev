@@ -255,7 +255,7 @@ BenchmarkRow run_sequential_qp(const ConstrainedProblem& problem,
   return row;
 }
 
-BenchmarkRow run_interior_point(const ConstrainedProblem& problem,
+BenchmarkRow run_internal_protocol(const ConstrainedProblem& problem,
                                 const ParameterPack<Series>& initial,
                                 const Garch11Params& truth,
                                 const OptimaOptions& options) {
@@ -422,15 +422,15 @@ int main() {
   sqp_options.sequential_qp.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
 
   OptimaOptions ip_options;
-  ip_options.algorithm = OptimaAlgorithm::InteriorPoint;
-  ip_options.interior_point.max_iterations = 60;
-  ip_options.interior_point.initial_barrier_parameter = 1e-2;
-  ip_options.interior_point.minimum_barrier_parameter = 1e-8;
-  ip_options.interior_point.barrier_decay = 0.2;
-  ip_options.interior_point.constraint_tolerance = 1e-8;
-  ip_options.interior_point.optimality_tolerance = 1e-6;
-  ip_options.interior_point.max_line_search_iterations = 20;
-  ip_options.interior_point.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
+  ip_options.algorithm = OptimaAlgorithm::InternalProtocol;
+  ip_options.internal_protocol.max_iterations = 60;
+  ip_options.internal_protocol.initial_barrier_parameter = 1e-2;
+  ip_options.internal_protocol.minimum_barrier_parameter = 1e-8;
+  ip_options.internal_protocol.barrier_decay = 0.2;
+  ip_options.internal_protocol.constraint_tolerance = 1e-8;
+  ip_options.internal_protocol.optimality_tolerance = 1e-6;
+  ip_options.internal_protocol.max_line_search_iterations = 20;
+  ip_options.internal_protocol.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
 
   NelderMeadConfig nm_options;
   nm_options.position_tolerance = 1e-8;
@@ -454,7 +454,7 @@ int main() {
 
   std::vector<BenchmarkRow> rows;
   rows.push_back(run_sequential_qp(problem, initial, truth, sqp_options));
-  rows.push_back(run_interior_point(problem, initial, truth, ip_options));
+  rows.push_back(run_internal_protocol(problem, initial, truth, ip_options));
   rows.push_back(run_nelder_mead(x0, truth, objective, nm_options));
   rows.push_back(run_de_prmm(x0, truth, objective, de_options));
 

@@ -14,7 +14,6 @@ target_sources(PlussMic PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/sql/DataFrameSql.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/AtlasPlot.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/display/Display.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/display/PlatformHtmlViewer.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Thread.h
   ${CMAKE_CURRENT_SOURCE_DIR}/DataFrame.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Atlas.h
@@ -24,19 +23,3 @@ target_sources(PlussMic PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/display/Display.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Table.h
 )
-
-if(APPLE)
-  target_sources(PlussMic PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/display/MacHtmlViewer.mm
-  )
-  set_source_files_properties(
-    ${CMAKE_CURRENT_SOURCE_DIR}/display/MacHtmlViewer.mm
-    PROPERTIES COMPILE_OPTIONS "-fobjc-arc"
-  )
-endif()
-
-if(WIN32)
-  target_sources(PlussMic PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/display/WindowsHtmlViewer.cpp
-  )
-endif()

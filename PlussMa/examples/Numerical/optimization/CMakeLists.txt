@@ -23,11 +23,11 @@ if(TARGET pluss AND TARGET plussqit_codem)
   target_compile_features(plussma_optima_working_set_bench PRIVATE cxx_std_20)
   target_link_libraries(plussma_optima_working_set_bench PRIVATE pluss plussqit_codem)
 
-  add_executable(plussma_optima_interior_point_demo
-    optima_interior_point_demo.cpp
+  add_executable(plussma_optima_internal_protocol_demo
+    optima_internal_protocol_demo.cpp
   )
-  target_compile_features(plussma_optima_interior_point_demo PRIVATE cxx_std_20)
-  target_link_libraries(plussma_optima_interior_point_demo PRIVATE pluss plussqit_codem)
+  target_compile_features(plussma_optima_internal_protocol_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_optima_internal_protocol_demo PRIVATE pluss plussqit_codem)
 
   add_executable(plussma_optima_demo
     optima_demo.cpp
@@ -41,11 +41,35 @@ if(TARGET pluss AND TARGET plussqit_codem)
   target_compile_features(plussma_garch11_optima_demo PRIVATE cxx_std_20)
   target_link_libraries(plussma_garch11_optima_demo PRIVATE pluss plussqit_codem)
 
-  add_executable(plussma_garch11_interior_point_demo
-    garch11_interior_point_demo.cpp
+  add_executable(plussma_simple_garch11_optim_demo
+    simple_garch11_optim_demo.cpp
   )
-  target_compile_features(plussma_garch11_interior_point_demo PRIVATE cxx_std_20)
-  target_link_libraries(plussma_garch11_interior_point_demo PRIVATE pluss plussqit_codem)
+  target_compile_features(plussma_simple_garch11_optim_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_simple_garch11_optim_demo PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_simple_garch11_objective_first_demo
+    simple_garch11_objective_first_demo.cpp
+  )
+  target_compile_features(plussma_simple_garch11_objective_first_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_simple_garch11_objective_first_demo PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_series_objective_analytic_grad_demo
+    series_objective_analytic_grad_demo.cpp
+  )
+  target_compile_features(plussma_series_objective_analytic_grad_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_series_objective_analytic_grad_demo PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_trace_objective_autodiff_demo
+    trace_objective_autodiff_demo.cpp
+  )
+  target_compile_features(plussma_trace_objective_autodiff_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_trace_objective_autodiff_demo PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_garch11_internal_protocol_demo
+    garch11_internal_protocol_demo.cpp
+  )
+  target_compile_features(plussma_garch11_internal_protocol_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_garch11_internal_protocol_demo PRIVATE pluss plussqit_codem)
 
   add_executable(plussma_optima_clone_parity_bench
     optima_clone_parity_bench.cpp

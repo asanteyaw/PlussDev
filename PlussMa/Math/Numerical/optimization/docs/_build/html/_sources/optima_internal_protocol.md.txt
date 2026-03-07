@@ -1,10 +1,10 @@
 # Optima Internal Protocol
 
-`InternalProtocol` is the Pluss-native public label for the primal-dual barrier backend currently implemented under the `OptimaAlgorithm::InteriorPoint` enum branch.
+`InternalProtocol` is the Pluss-native public label for the primal-dual barrier backend currently implemented under the `OptimaAlgorithm::InternalProtocol` enum branch.
 
 The intent is straightforward:
 
-- the algorithmic family is still interior-point
+- the algorithmic family is still internal-protocol
 - the public product naming stays Pluss-native
 
 ## Mathematical Problem
@@ -124,7 +124,7 @@ subject to $c_{\mathrm{ineq}}(x)+s=0$. This is also the right mental model for i
 
 ## Option Surface
 
-The underlying C++ option type is still `InteriorPointOptions`. It exposes:
+The underlying C++ option type is still `InternalProtocolOptions`. It exposes:
 
 | Option | Meaning |
 | --- | --- |
@@ -282,7 +282,7 @@ Interpretation:
 
 For an isolated walkthrough, use:
 
-- `PlussMa/examples/Numerical/optimization/garch11_interior_point_demo.cpp`
+- `PlussMa/examples/Numerical/optimization/garch11_internal_protocol_demo.cpp`
 
 That demo prints:
 

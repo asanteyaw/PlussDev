@@ -238,8 +238,8 @@ int main() {
 
   {
     OptimaOptions options;
-    options.algorithm = OptimaAlgorithm::InteriorPoint;
-    options.interior_point.initial_barrier_parameter = 0.1;
+    options.algorithm = OptimaAlgorithm::InternalProtocol;
+    options.internal_protocol.initial_barrier_parameter = 0.1;
     const auto problem = make_nonfinite_region_problem();
     const ParameterPack<Series> initial({{"x", scalar(-0.5)}});
     rows.push_back(run_case("NonFiniteInitial", "InternalProtocol", problem, initial, options));
@@ -279,14 +279,14 @@ int main() {
 
   {
     OptimaOptions options;
-    options.algorithm = OptimaAlgorithm::InteriorPoint;
-    options.interior_point.max_iterations = 5;
-    options.interior_point.max_line_search_iterations = 0;
-    options.interior_point.enable_restoration = false;
-    options.interior_point.enable_feasibility_phase = true;
-    options.interior_point.max_restoration_iterations = 0;
-    options.interior_point.initial_barrier_parameter = 0.01;
-    options.interior_point.minimum_barrier_parameter = 1e-6;
+    options.algorithm = OptimaAlgorithm::InternalProtocol;
+    options.internal_protocol.max_iterations = 5;
+    options.internal_protocol.max_line_search_iterations = 0;
+    options.internal_protocol.enable_restoration = false;
+    options.internal_protocol.enable_feasibility_phase = true;
+    options.internal_protocol.max_restoration_iterations = 0;
+    options.internal_protocol.initial_barrier_parameter = 0.01;
+    options.internal_protocol.minimum_barrier_parameter = 1e-6;
     const auto problem = make_feasibility_phase_problem();
     const ParameterPack<Series> initial({{"x", scalar(1.0)}});
     rows.push_back(run_case("FeasibilityFailure", "InternalProtocol", problem, initial, options));
@@ -294,13 +294,13 @@ int main() {
 
   {
     OptimaOptions options;
-    options.algorithm = OptimaAlgorithm::InteriorPoint;
-    options.interior_point.max_iterations = 1;
-    options.interior_point.initial_barrier_parameter = 0.1;
-    options.interior_point.minimum_barrier_parameter = 1e-10;
-    options.interior_point.constraint_tolerance = 1e-6;
-    options.interior_point.optimality_tolerance = 1e-6;
-    options.interior_point.dual_recentering_fraction = 0.0;
+    options.algorithm = OptimaAlgorithm::InternalProtocol;
+    options.internal_protocol.max_iterations = 1;
+    options.internal_protocol.initial_barrier_parameter = 0.1;
+    options.internal_protocol.minimum_barrier_parameter = 1e-10;
+    options.internal_protocol.constraint_tolerance = 1e-6;
+    options.internal_protocol.optimality_tolerance = 1e-6;
+    options.internal_protocol.dual_recentering_fraction = 0.0;
     const auto problem = make_complementarity_probe_problem();
     const ParameterPack<Series> initial({
         {"x", make_vec2(0.7, 0.7)},
