@@ -296,6 +296,7 @@ struct ColumnsData {
   Series y;
   double base{0.0};
   double width{0.8};
+  bool horizontal{false};
 };
 
 struct RibbonData {
@@ -901,6 +902,29 @@ class Pane {
                                   detail::to_series(std::forward<Y>(y)),
                                   0.0,
                                   0.8});
+  }
+
+  template <class X>
+  Trace& columns_h(X&& x) {
+    ensure_planar_("columns_h");
+    const Series x_series = detail::to_series(std::forward<X>(x));
+    return add_trace_(TraceKind::Columns,
+                      ColumnsData{x_series,
+                                  detail::index_series(x_series.numel()),
+                                  0.0,
+                                  0.8,
+                                  true});
+  }
+
+  template <class X, class Y>
+  Trace& columns_h(X&& x, Y&& y) {
+    ensure_planar_("columns_h");
+    return add_trace_(TraceKind::Columns,
+                      ColumnsData{detail::to_series(std::forward<X>(x)),
+                                  detail::to_series(std::forward<Y>(y)),
+                                  0.0,
+                                  0.8,
+                                  true});
   }
 
   template <class Values>

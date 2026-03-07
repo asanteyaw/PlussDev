@@ -7,13 +7,19 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <iomanip>
+#include <limits>
 #include <map>
+#include <numeric>
 #include <optional>
+#include <random>
 #include <ranges>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -356,6 +362,65 @@ inline Trace& draw_grouped_hue(
 
 inline void apply_tick_font_scale(Pane& pane, double tick_scale, double axis_scale) {
   pane.tick_font_scale(tick_scale).axis_label_font_scale(axis_scale);
+}
+
+[[nodiscard]] inline double scalar_value(const Series& value) {
+  const Series scalar = value.to(ScalarType::Float64).reshape({value.numel()});
+  if (scalar.numel() == 0) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  return scalar.item<double>();
+}
+
+[[nodiscard]] inline Series normalize_unit(const Series& values) {
+  const Series flat = flatten_f64(values);
+  if (flat.numel() == 0) {
+    return flat;
+  }
+  const double low = scalar_value(flat.min());
+  const double high = scalar_value(flat.max());
+  if (!std::isfinite(low) || !std::isfinite(high) || !(high > low)) {
+    return pluss::full({flat.numel()}, 0.0, ScalarType::Float64);
+  }
+  return flat.sub(low).div(high - low);
+}
+
+[[nodiscard]] inline double pearson_corr(const Series& lhs, const Series& rhs) {
+  const Series x = flatten_f64(lhs);
+  const Series y = flatten_f64(rhs);
+  if (x.numel() != y.numel() || x.numel() < 2) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  const double x_mean = scalar_value(x.mean());
+  const double y_mean = scalar_value(y.mean());
+  const Series x_centered = x.sub(x_mean);
+  const Series y_centered = y.sub(y_mean);
+  const double numerator = scalar_value(x_centered.mul(y_centered).sum());
+  const double denom_x = scalar_value(x_centered.mul(x_centered).sum());
+  const double denom_y = scalar_value(y_centered.mul(y_centered).sum());
+  const double denom = std::sqrt(std::max(0.0, denom_x) * std::max(0.0, denom_y));
+  if (!(denom > 0.0) || !std::isfinite(denom)) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  return numerator / denom;
+}
+
+[[nodiscard]] inline double quantile_sorted(const std::vector<double>& sorted, double q) {
+  if (sorted.empty()) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  if (sorted.size() == 1) {
+    return sorted.front();
+  }
+  const double clamped = std::clamp(q, 0.0, 1.0);
+  const double position = clamped * static_cast<double>(sorted.size() - 1);
+  const auto lo = static_cast<std::size_t>(std::floor(position));
+  const auto hi = static_cast<std::size_t>(std::ceil(position));
+  if (lo == hi) {
+    return sorted[lo];
+  }
+  const double weight = position - static_cast<double>(lo);
+  return sorted[lo] * (1.0 - weight) + sorted[hi] * weight;
 }
 
 } // namespace detail
@@ -1167,6 +1232,833 @@ inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns, cons
       }
     }
   }
+  return studio;
+}
+
+struct ParallelCoordinatesOptions {
+  std::vector<std::string> labels{};
+  bool normalize{true};
+  std::int64_t max_points{1200};
+  double alpha{0.24};
+  float trace_width{0.9F};
+  bool show_grid{true};
+  bool show_legend{true};
+};
+
+struct AndrewsCurvesOptions {
+  std::vector<std::string> labels{};
+  bool normalize{true};
+  std::int64_t points{220};
+  std::int64_t max_curves{600};
+  double alpha{0.28};
+  float trace_width{0.9F};
+  bool show_grid{true};
+  bool show_legend{true};
+};
+
+struct RadvizOptions {
+  std::vector<std::string> labels{};
+  bool normalize{true};
+  std::int64_t max_points{3000};
+  double marker_area{18.0};
+  float trace_width{0.55F};
+  bool show_grid{true};
+  bool show_anchors{true};
+  bool show_legend{true};
+};
+
+struct LagPlotOptions {
+  std::int64_t lag{1};
+  std::int64_t max_points{2500};
+  double marker_area{16.0};
+  float trace_width{0.55F};
+};
+
+struct AutocorrelationPlotOptions {
+  std::int64_t max_lag{40};
+  bool show_confidence_band{true};
+  double confidence_level{0.95};
+  float trace_width{1.2F};
+};
+
+enum class BootstrapStatistic : std::uint8_t {
+  Mean,
+  Median,
+  Std,
+};
+
+struct BootstrapPlotOptions {
+  std::int64_t samples{300};
+  std::int64_t sample_size{0};
+  std::uint64_t seed{7};
+  int bins{24};
+  BootstrapStatistic statistic{BootstrapStatistic::Mean};
+  float trace_width{0.85F};
+};
+
+struct SummaryOptions {
+  std::string title{"table"};
+  int precision{4};
+  bool include_header{true};
+  std::int64_t max_cases{10};
+  bool transpose{false};
+  bool include_case_index{true};
+};
+
+inline Studio& parallelplot(
+    Studio& studio,
+    const std::vector<Series>& columns,
+    const ParallelCoordinatesOptions& options = {}) {
+  if (columns.size() < 2) {
+    throw std::invalid_argument("flash::parallelplot requires at least two columns");
+  }
+
+  std::vector<Series> prepared;
+  prepared.reserve(columns.size());
+  for (const auto& column : columns) {
+    prepared.push_back(options.normalize ? detail::normalize_unit(column) : detail::flatten_f64(column));
+  }
+
+  const std::int64_t ncols = static_cast<std::int64_t>(prepared.size());
+  const std::int64_t nrows = prepared.front().numel();
+  for (const auto& column : prepared) {
+    if (column.numel() != nrows) {
+      throw std::invalid_argument("flash::parallelplot requires equal-length columns");
+    }
+  }
+  if (nrows <= 0) {
+    throw std::invalid_argument("flash::parallelplot requires at least one row");
+  }
+
+  if (options.max_points > 0 && nrows > options.max_points) {
+    const auto step = std::max<std::int64_t>(1, (nrows + options.max_points - 1) / options.max_points);
+    const auto idx = Series::arange(0, nrows, step, ScalarType::Int64);
+    for (auto& column : prepared) {
+      column = column.take(idx);
+    }
+  }
+
+  const std::vector<double> x = detail::ordinal_levels(ncols, 0.0);
+  std::vector<std::string> labels = options.labels;
+  if (labels.size() != static_cast<std::size_t>(ncols)) {
+    labels.clear();
+    labels.reserve(static_cast<std::size_t>(ncols));
+    for (const auto i : std::views::iota(std::int64_t{0}, ncols)) {
+      labels.push_back("x" + std::to_string(i + 1));
+    }
+  }
+
+  std::vector<std::vector<double>> values;
+  values.reserve(prepared.size());
+  for (const auto& column : prepared) {
+    values.push_back(detail::to_f64_vector(column));
+  }
+
+  auto& pane = studio.pane2();
+  pane.grid(options.show_grid ? GridStyle::Major : GridStyle::None)
+      .legend(options.show_legend ? KeyPlace::Auto : KeyPlace::None)
+      .x_ticks(x, labels)
+      .x_label("feature")
+      .y_label(options.normalize ? "normalized value" : "value");
+
+  const auto colors = detail::categorical_colors(8);
+  const std::size_t rows = values.front().size();
+  for (const auto row : std::views::iota(std::size_t{0}, rows)) {
+    std::vector<double> y;
+    y.reserve(values.size());
+    for (const auto& column : values) {
+      y.push_back(column[row]);
+    }
+    auto& trace = pane.trend(x, y);
+    Rgba color = colors[row % colors.size()];
+    color.alpha = std::clamp(options.alpha, 0.05, 1.0);
+    trace.stroke(color).width(options.trace_width).transparent(color.alpha < 0.999);
+  }
+  return studio;
+}
+
+inline Studio& parallelplot(
+    Studio& studio,
+    const std::vector<Series>& columns,
+    const Note& class_labels,
+    const ParallelCoordinatesOptions& options = {}) {
+  if (columns.size() < 2) {
+    throw std::invalid_argument("flash::parallelplot requires at least two columns");
+  }
+  std::vector<std::string> labels = detail::note_values(class_labels);
+  if (labels.empty()) {
+    return parallelplot(studio, columns, options);
+  }
+
+  std::vector<Series> prepared;
+  prepared.reserve(columns.size());
+  for (const auto& column : columns) {
+    prepared.push_back(options.normalize ? detail::normalize_unit(column) : detail::flatten_f64(column));
+  }
+
+  const std::int64_t ncols = static_cast<std::int64_t>(prepared.size());
+  const std::int64_t nrows = prepared.front().numel();
+  for (const auto& column : prepared) {
+    if (column.numel() != nrows) {
+      throw std::invalid_argument("flash::parallelplot requires equal-length columns");
+    }
+  }
+  if (nrows != static_cast<std::int64_t>(labels.size())) {
+    throw std::invalid_argument("flash::parallelplot: class label length must match rows");
+  }
+
+  if (options.max_points > 0 && nrows > options.max_points) {
+    const auto step = std::max<std::int64_t>(1, (nrows + options.max_points - 1) / options.max_points);
+    const auto idx = Series::arange(0, nrows, step, ScalarType::Int64);
+    const auto sampled_idx = idx.to_vec<std::int64_t>();
+    std::vector<std::string> sampled_labels;
+    sampled_labels.reserve(sampled_idx.size());
+    for (const auto row_index : sampled_idx) {
+      sampled_labels.push_back(labels[static_cast<std::size_t>(row_index)]);
+    }
+    labels = std::move(sampled_labels);
+    for (auto& column : prepared) {
+      column = column.take(idx);
+    }
+  }
+
+  const std::vector<double> x = detail::ordinal_levels(ncols, 0.0);
+  std::vector<std::string> feature_labels = options.labels;
+  if (feature_labels.size() != static_cast<std::size_t>(ncols)) {
+    feature_labels.clear();
+    feature_labels.reserve(static_cast<std::size_t>(ncols));
+    for (const auto i : std::views::iota(std::int64_t{0}, ncols)) {
+      feature_labels.push_back("x" + std::to_string(i + 1));
+    }
+  }
+
+  std::vector<std::vector<double>> values;
+  values.reserve(prepared.size());
+  for (const auto& column : prepared) {
+    values.push_back(detail::to_f64_vector(column));
+  }
+
+  std::unordered_map<std::string, std::size_t> color_index;
+  std::vector<std::string> ordered_classes;
+  for (const auto& label : labels) {
+    const auto [it, inserted] = color_index.emplace(label, color_index.size());
+    if (inserted) {
+      ordered_classes.push_back(label);
+    }
+    (void)it;
+  }
+
+  auto& pane = studio.pane2();
+  pane.grid(options.show_grid ? GridStyle::Major : GridStyle::None)
+      .legend(options.show_legend ? KeyPlace::Auto : KeyPlace::None)
+      .x_ticks(x, feature_labels)
+      .x_label("feature")
+      .y_label(options.normalize ? "normalized value" : "value");
+  const auto colors = detail::categorical_colors(static_cast<std::int64_t>(ordered_classes.size()));
+  std::unordered_map<std::string, bool> emitted;
+  for (const auto row : std::views::iota(std::size_t{0}, labels.size())) {
+    std::vector<double> y;
+    y.reserve(values.size());
+    for (const auto& column : values) {
+      y.push_back(column[row]);
+    }
+    auto& trace = pane.trend(x, y);
+    const auto class_name = labels[row];
+    const auto class_idx = color_index[class_name];
+    Rgba color = colors[class_idx % colors.size()];
+    color.alpha = std::clamp(options.alpha, 0.05, 1.0);
+    trace.stroke(color).width(options.trace_width).transparent(color.alpha < 0.999);
+    if (!emitted[class_name]) {
+      trace.label(class_name);
+      emitted[class_name] = true;
+    }
+  }
+  return studio;
+}
+
+inline Studio& andrews_curves(
+    Studio& studio,
+    const std::vector<Series>& columns,
+    const AndrewsCurvesOptions& options = {}) {
+  if (columns.size() < 2) {
+    throw std::invalid_argument("flash::andrews_curves requires at least two columns");
+  }
+  std::vector<Series> prepared;
+  prepared.reserve(columns.size());
+  for (const auto& column : columns) {
+    prepared.push_back(options.normalize ? detail::normalize_unit(column) : detail::flatten_f64(column));
+  }
+  const std::int64_t ncols = static_cast<std::int64_t>(prepared.size());
+  const std::int64_t nrows = prepared.front().numel();
+  for (const auto& column : prepared) {
+    if (column.numel() != nrows) {
+      throw std::invalid_argument("flash::andrews_curves requires equal-length columns");
+    }
+  }
+  if (nrows <= 0) {
+    throw std::invalid_argument("flash::andrews_curves requires at least one row");
+  }
+
+  if (options.max_curves > 0 && nrows > options.max_curves) {
+    const auto step = std::max<std::int64_t>(1, (nrows + options.max_curves - 1) / options.max_curves);
+    const auto idx = Series::arange(0, nrows, step, ScalarType::Int64);
+    for (auto& column : prepared) {
+      column = column.take(idx);
+    }
+  }
+
+  const auto t = pluss::linspace(-3.14159265358979323846,
+                                 3.14159265358979323846,
+                                 std::max<std::int64_t>(64, options.points),
+                                 ScalarType::Float64);
+  const auto t_values = detail::to_f64_vector(t);
+  std::vector<std::vector<double>> values;
+  values.reserve(prepared.size());
+  for (const auto& column : prepared) {
+    values.push_back(detail::to_f64_vector(column));
+  }
+
+  auto& pane = studio.pane2();
+  pane.grid(options.show_grid ? GridStyle::Major : GridStyle::None)
+      .legend(options.show_legend ? KeyPlace::Auto : KeyPlace::None)
+      .x_label("t")
+      .y_label("f(t)");
+  const auto colors = detail::categorical_colors(8);
+
+  const std::size_t rows = values.front().size();
+  for (const auto row : std::views::iota(std::size_t{0}, rows)) {
+    std::vector<double> curve(t_values.size(), 0.0);
+    if (!values.empty()) {
+      for (auto i = std::size_t{0}; i < curve.size(); ++i) {
+        curve[i] = values[0][row] / std::sqrt(2.0);
+      }
+    }
+    for (const auto col : std::views::iota(std::size_t{1}, values.size())) {
+      const double coeff = values[col][row];
+      const std::int64_t harmonic = static_cast<std::int64_t>((col + 1) / 2);
+      const bool use_sin = (col % 2) == 1;
+      for (auto i = std::size_t{0}; i < curve.size(); ++i) {
+        const double arg = static_cast<double>(harmonic) * t_values[i];
+        curve[i] += coeff * (use_sin ? std::sin(arg) : std::cos(arg));
+      }
+    }
+    auto& trace = pane.trend(t_values, curve);
+    Rgba color = colors[row % colors.size()];
+    color.alpha = std::clamp(options.alpha, 0.05, 1.0);
+    trace.stroke(color).width(options.trace_width).transparent(color.alpha < 0.999);
+  }
+  return studio;
+}
+
+inline Studio& andrews_curves(
+    Studio& studio,
+    const std::vector<Series>& columns,
+    const Note& class_labels,
+    const AndrewsCurvesOptions& options = {}) {
+  if (columns.size() < 2) {
+    throw std::invalid_argument("flash::andrews_curves requires at least two columns");
+  }
+
+  std::vector<std::string> labels = detail::note_values(class_labels);
+  std::vector<Series> prepared;
+  prepared.reserve(columns.size());
+  for (const auto& column : columns) {
+    prepared.push_back(options.normalize ? detail::normalize_unit(column) : detail::flatten_f64(column));
+  }
+  const std::int64_t nrows = prepared.front().numel();
+  for (const auto& column : prepared) {
+    if (column.numel() != nrows) {
+      throw std::invalid_argument("flash::andrews_curves requires equal-length columns");
+    }
+  }
+  if (nrows != static_cast<std::int64_t>(labels.size())) {
+    throw std::invalid_argument("flash::andrews_curves: class label length must match rows");
+  }
+
+  if (options.max_curves > 0 && nrows > options.max_curves) {
+    const auto step = std::max<std::int64_t>(1, (nrows + options.max_curves - 1) / options.max_curves);
+    const auto idx = Series::arange(0, nrows, step, ScalarType::Int64);
+    const auto sampled_idx = idx.to_vec<std::int64_t>();
+    std::vector<std::string> sampled_labels;
+    sampled_labels.reserve(sampled_idx.size());
+    for (const auto row_index : sampled_idx) {
+      sampled_labels.push_back(labels[static_cast<std::size_t>(row_index)]);
+    }
+    labels = std::move(sampled_labels);
+    for (auto& column : prepared) {
+      column = column.take(idx);
+    }
+  }
+
+  const auto t = pluss::linspace(-3.14159265358979323846,
+                                 3.14159265358979323846,
+                                 std::max<std::int64_t>(64, options.points),
+                                 ScalarType::Float64);
+  const auto t_values = detail::to_f64_vector(t);
+  std::vector<std::vector<double>> values;
+  values.reserve(prepared.size());
+  for (const auto& column : prepared) {
+    values.push_back(detail::to_f64_vector(column));
+  }
+  std::unordered_map<std::string, std::size_t> color_index;
+  std::vector<std::string> ordered_classes;
+  for (const auto& label : labels) {
+    const auto [it, inserted] = color_index.emplace(label, color_index.size());
+    if (inserted) {
+      ordered_classes.push_back(label);
+    }
+    (void)it;
+  }
+  const auto colors = detail::categorical_colors(static_cast<std::int64_t>(ordered_classes.size()));
+  std::unordered_map<std::string, bool> emitted;
+
+  auto& pane = studio.pane2();
+  pane.grid(options.show_grid ? GridStyle::Major : GridStyle::None)
+      .legend(options.show_legend ? KeyPlace::Auto : KeyPlace::None)
+      .x_label("t")
+      .y_label("f(t)");
+
+  for (const auto row : std::views::iota(std::size_t{0}, labels.size())) {
+    std::vector<double> curve(t_values.size(), 0.0);
+    if (!values.empty()) {
+      for (auto i = std::size_t{0}; i < curve.size(); ++i) {
+        curve[i] = values[0][row] / std::sqrt(2.0);
+      }
+    }
+    for (const auto col : std::views::iota(std::size_t{1}, values.size())) {
+      const double coeff = values[col][row];
+      const std::int64_t harmonic = static_cast<std::int64_t>((col + 1) / 2);
+      const bool use_sin = (col % 2) == 1;
+      for (auto i = std::size_t{0}; i < curve.size(); ++i) {
+        const double arg = static_cast<double>(harmonic) * t_values[i];
+        curve[i] += coeff * (use_sin ? std::sin(arg) : std::cos(arg));
+      }
+    }
+    auto& trace = pane.trend(t_values, curve);
+    const auto class_name = labels[row];
+    const auto class_idx = color_index[class_name];
+    Rgba color = colors[class_idx % colors.size()];
+    color.alpha = std::clamp(options.alpha, 0.05, 1.0);
+    trace.stroke(color).width(options.trace_width).transparent(color.alpha < 0.999);
+    if (!emitted[class_name]) {
+      trace.label(class_name);
+      emitted[class_name] = true;
+    }
+  }
+  return studio;
+}
+
+inline Studio& radviz(
+    Studio& studio,
+    const std::vector<Series>& columns,
+    const RadvizOptions& options = {}) {
+  if (columns.size() < 3) {
+    throw std::invalid_argument("flash::radviz requires at least three columns");
+  }
+
+  std::vector<Series> prepared;
+  prepared.reserve(columns.size());
+  for (const auto& column : columns) {
+    prepared.push_back(options.normalize ? detail::normalize_unit(column) : detail::flatten_f64(column));
+  }
+  const std::int64_t ncols = static_cast<std::int64_t>(prepared.size());
+  const std::int64_t nrows = prepared.front().numel();
+  for (const auto& column : prepared) {
+    if (column.numel() != nrows) {
+      throw std::invalid_argument("flash::radviz requires equal-length columns");
+    }
+  }
+  if (nrows <= 0) {
+    throw std::invalid_argument("flash::radviz requires at least one row");
+  }
+
+  if (options.max_points > 0 && nrows > options.max_points) {
+    const auto step = std::max<std::int64_t>(1, (nrows + options.max_points - 1) / options.max_points);
+    const auto idx = Series::arange(0, nrows, step, ScalarType::Int64);
+    for (auto& column : prepared) {
+      column = column.take(idx);
+    }
+  }
+
+  std::vector<std::vector<double>> values;
+  values.reserve(prepared.size());
+  for (const auto& column : prepared) {
+    values.push_back(detail::to_f64_vector(column));
+  }
+  std::vector<double> anchor_x;
+  std::vector<double> anchor_y;
+  anchor_x.reserve(static_cast<std::size_t>(ncols));
+  anchor_y.reserve(static_cast<std::size_t>(ncols));
+  for (const auto i : std::views::iota(std::int64_t{0}, ncols)) {
+    const double theta = 2.0 * 3.14159265358979323846 * static_cast<double>(i) / static_cast<double>(ncols);
+    anchor_x.push_back(std::cos(theta));
+    anchor_y.push_back(std::sin(theta));
+  }
+
+  std::vector<double> x_points;
+  std::vector<double> y_points;
+  x_points.reserve(values.front().size());
+  y_points.reserve(values.front().size());
+  for (const auto row : std::views::iota(std::size_t{0}, values.front().size())) {
+    double sum_w = 0.0;
+    double x_acc = 0.0;
+    double y_acc = 0.0;
+    for (const auto col : std::views::iota(std::size_t{0}, values.size())) {
+      const double weight = std::max(0.0, values[col][row]);
+      sum_w += weight;
+      x_acc += weight * anchor_x[col];
+      y_acc += weight * anchor_y[col];
+    }
+    const double denom = sum_w > 0.0 ? sum_w : 1.0;
+    x_points.push_back(x_acc / denom);
+    y_points.push_back(y_acc / denom);
+  }
+
+  auto& pane = studio.pane2();
+  pane.grid(options.show_grid ? GridStyle::Major : GridStyle::None)
+      .legend(KeyPlace::None)
+      .x_label("radviz-x")
+      .y_label("radviz-y")
+      .x_limits({-1.1, 1.1})
+      .y_limits({-1.1, 1.1});
+  auto& trace = pane.cloud(x_points, y_points, std::array<double, 1>{std::max(2.0, options.marker_area)});
+  trace.width(options.trace_width);
+  if (options.show_anchors) {
+    auto& anchors = pane.cloud(anchor_x, anchor_y, std::array<double, 1>{26.0});
+    anchors.width(0.85F);
+    std::vector<std::string> labels = options.labels;
+    if (labels.size() != static_cast<std::size_t>(ncols)) {
+      labels.clear();
+      labels.reserve(static_cast<std::size_t>(ncols));
+      for (const auto i : std::views::iota(std::int64_t{0}, ncols)) {
+        labels.push_back("x" + std::to_string(i + 1));
+      }
+    }
+    for (const auto i : std::views::iota(std::size_t{0}, labels.size())) {
+      pane.pin(labels[i], anchor_x[i], anchor_y[i], 18.0, -10.0);
+    }
+  }
+  return studio;
+}
+
+inline Studio& radviz(
+    Studio& studio,
+    const std::vector<Series>& columns,
+    const Note& class_labels,
+    const RadvizOptions& options = {}) {
+  if (columns.size() < 3) {
+    throw std::invalid_argument("flash::radviz requires at least three columns");
+  }
+  std::vector<std::string> labels = detail::note_values(class_labels);
+
+  std::vector<Series> prepared;
+  prepared.reserve(columns.size());
+  for (const auto& column : columns) {
+    prepared.push_back(options.normalize ? detail::normalize_unit(column) : detail::flatten_f64(column));
+  }
+  const std::int64_t ncols = static_cast<std::int64_t>(prepared.size());
+  const std::int64_t nrows = prepared.front().numel();
+  for (const auto& column : prepared) {
+    if (column.numel() != nrows) {
+      throw std::invalid_argument("flash::radviz requires equal-length columns");
+    }
+  }
+  if (nrows != static_cast<std::int64_t>(labels.size())) {
+    throw std::invalid_argument("flash::radviz: class label length must match rows");
+  }
+
+  if (options.max_points > 0 && nrows > options.max_points) {
+    const auto step = std::max<std::int64_t>(1, (nrows + options.max_points - 1) / options.max_points);
+    const auto idx = Series::arange(0, nrows, step, ScalarType::Int64);
+    const auto sampled_idx = idx.to_vec<std::int64_t>();
+    std::vector<std::string> sampled_labels;
+    sampled_labels.reserve(sampled_idx.size());
+    for (const auto row_index : sampled_idx) {
+      sampled_labels.push_back(labels[static_cast<std::size_t>(row_index)]);
+    }
+    labels = std::move(sampled_labels);
+    for (auto& column : prepared) {
+      column = column.take(idx);
+    }
+  }
+
+  std::vector<std::vector<double>> values;
+  values.reserve(prepared.size());
+  for (const auto& column : prepared) {
+    values.push_back(detail::to_f64_vector(column));
+  }
+
+  std::vector<double> anchor_x;
+  std::vector<double> anchor_y;
+  anchor_x.reserve(static_cast<std::size_t>(ncols));
+  anchor_y.reserve(static_cast<std::size_t>(ncols));
+  for (const auto i : std::views::iota(std::int64_t{0}, ncols)) {
+    const double theta = 2.0 * 3.14159265358979323846 * static_cast<double>(i) / static_cast<double>(ncols);
+    anchor_x.push_back(std::cos(theta));
+    anchor_y.push_back(std::sin(theta));
+  }
+
+  std::unordered_map<std::string, std::size_t> color_index;
+  std::vector<std::string> ordered_classes;
+  for (const auto& label : labels) {
+    const auto [it, inserted] = color_index.emplace(label, color_index.size());
+    if (inserted) {
+      ordered_classes.push_back(label);
+    }
+    (void)it;
+  }
+  std::vector<std::vector<double>> grouped_x(ordered_classes.size());
+  std::vector<std::vector<double>> grouped_y(ordered_classes.size());
+  for (const auto row : std::views::iota(std::size_t{0}, labels.size())) {
+    double sum_w = 0.0;
+    double x_acc = 0.0;
+    double y_acc = 0.0;
+    for (const auto col : std::views::iota(std::size_t{0}, values.size())) {
+      const double weight = std::max(0.0, values[col][row]);
+      sum_w += weight;
+      x_acc += weight * anchor_x[col];
+      y_acc += weight * anchor_y[col];
+    }
+    const double denom = sum_w > 0.0 ? sum_w : 1.0;
+    const auto class_idx = color_index[labels[row]];
+    grouped_x[class_idx].push_back(x_acc / denom);
+    grouped_y[class_idx].push_back(y_acc / denom);
+  }
+
+  auto& pane = studio.pane2();
+  pane.grid(options.show_grid ? GridStyle::Major : GridStyle::None)
+      .legend(options.show_legend ? KeyPlace::Auto : KeyPlace::None)
+      .x_label("radviz-x")
+      .y_label("radviz-y")
+      .x_limits({-1.1, 1.1})
+      .y_limits({-1.1, 1.1});
+  const auto colors = detail::categorical_colors(static_cast<std::int64_t>(ordered_classes.size()));
+  for (const auto i : std::views::iota(std::size_t{0}, ordered_classes.size())) {
+    auto& trace = pane.cloud(grouped_x[i], grouped_y[i], std::array<double, 1>{std::max(2.0, options.marker_area)});
+    trace.stroke(colors[i % colors.size()]).width(options.trace_width).label(ordered_classes[i]);
+  }
+  if (options.show_anchors) {
+    auto& anchors = pane.cloud(anchor_x, anchor_y, std::array<double, 1>{26.0});
+    anchors.width(0.85F);
+    std::vector<std::string> feature_labels = options.labels;
+    if (feature_labels.size() != static_cast<std::size_t>(ncols)) {
+      feature_labels.clear();
+      feature_labels.reserve(static_cast<std::size_t>(ncols));
+      for (const auto i : std::views::iota(std::int64_t{0}, ncols)) {
+        feature_labels.push_back("x" + std::to_string(i + 1));
+      }
+    }
+    for (const auto i : std::views::iota(std::size_t{0}, feature_labels.size())) {
+      pane.pin(feature_labels[i], anchor_x[i], anchor_y[i], 18.0, -10.0);
+    }
+  }
+  return studio;
+}
+
+template <class Values>
+Studio& lagplot(Studio& studio, Values&& values, const LagPlotOptions& options = {}) {
+  const Series base = detail::flatten_f64(detail::to_series(std::forward<Values>(values)));
+  const std::int64_t n = base.numel();
+  if (n < 2) {
+    throw std::invalid_argument("flash::lagplot requires at least two points");
+  }
+  const std::int64_t lag = std::clamp<std::int64_t>(options.lag, 1, n - 1);
+  const std::int64_t usable = n - lag;
+  const std::int64_t step =
+      (options.max_points > 0 && usable > options.max_points)
+          ? std::max<std::int64_t>(1, (usable + options.max_points - 1) / options.max_points)
+          : 1;
+  const auto idx_x = Series::arange(0, usable, step, ScalarType::Int64);
+  const auto idx_y = Series::arange(lag, lag + usable, step, ScalarType::Int64);
+  auto& pane = studio.pane2();
+  pane.grid(GridStyle::Major).x_label("x(t)").y_label("x(t + lag)");
+  auto& trace = pane.cloud(base.take(idx_x), base.take(idx_y), std::array<double, 1>{std::max(2.0, options.marker_area)});
+  trace.width(options.trace_width).label("lag");
+  return studio;
+}
+
+template <class Values>
+Studio& actplot(Studio& studio, Values&& values, const AutocorrelationPlotOptions& options = {}) {
+  const Series base = detail::flatten_f64(detail::to_series(std::forward<Values>(values)));
+  const std::int64_t n = base.numel();
+  if (n < 3) {
+    throw std::invalid_argument("flash::actplot requires at least three points");
+  }
+  const std::int64_t max_lag = std::clamp<std::int64_t>(options.max_lag, 1, n - 1);
+  std::vector<double> lags;
+  std::vector<double> acf;
+  lags.reserve(static_cast<std::size_t>(max_lag));
+  acf.reserve(static_cast<std::size_t>(max_lag));
+  for (const auto lag : std::views::iota(std::int64_t{1}, max_lag + 1)) {
+    const auto idx_x = Series::arange(0, n - lag, 1, ScalarType::Int64);
+    const auto idx_y = Series::arange(lag, n, 1, ScalarType::Int64);
+    lags.push_back(static_cast<double>(lag));
+    acf.push_back(detail::pearson_corr(base.take(idx_x), base.take(idx_y)));
+  }
+
+  auto& pane = studio.pane2();
+  pane.grid(GridStyle::Major).x_label("lag").y_label("autocorrelation");
+  auto& trend = pane.trend(lags, acf);
+  trend.width(options.trace_width).label("acf");
+  pane.cloud(lags, acf, std::array<double, 1>{14.0}).width(0.65F);
+  pane.rule_y(0.0, "zero");
+  if (options.show_confidence_band) {
+    const double z = options.confidence_level >= 0.99 ? 2.576 : (options.confidence_level >= 0.95 ? 1.96 : 1.645);
+    const double band = z / std::sqrt(static_cast<double>(n));
+    pane.rule_y(band, "+CI").rule_y(-band, "-CI");
+  }
+  return studio;
+}
+
+template <class Values>
+Studio& bootstrapplot(Studio& studio, Values&& values, const BootstrapPlotOptions& options = {}) {
+  const Series base = detail::flatten_f64(detail::to_series(std::forward<Values>(values)));
+  const std::int64_t n = base.numel();
+  if (n < 2) {
+    throw std::invalid_argument("flash::bootstrapplot requires at least two points");
+  }
+  const std::int64_t draw_size = options.sample_size > 0 ? options.sample_size : n;
+  const std::int64_t samples = std::max<std::int64_t>(8, options.samples);
+  std::vector<double> bootstrap_stats;
+  bootstrap_stats.reserve(static_cast<std::size_t>(samples));
+  for (const auto i : std::views::iota(std::int64_t{0}, samples)) {
+    const auto idx = pluss::randint(0, n, {draw_size}, ScalarType::Int64, options.seed + static_cast<std::uint64_t>(i + 1));
+    const Series sample = base.take(idx);
+    double stat = 0.0;
+    switch (options.statistic) {
+      case BootstrapStatistic::Mean:
+        stat = detail::scalar_value(sample.mean());
+        break;
+      case BootstrapStatistic::Std:
+        stat = detail::scalar_value(sample.std(false));
+        break;
+      case BootstrapStatistic::Median: {
+        auto values_vec = detail::to_f64_vector(sample);
+        std::sort(values_vec.begin(), values_vec.end());
+        stat = detail::quantile_sorted(values_vec, 0.5);
+        break;
+      }
+    }
+    bootstrap_stats.push_back(stat);
+  }
+
+  double observed = 0.0;
+  switch (options.statistic) {
+    case BootstrapStatistic::Mean:
+      observed = detail::scalar_value(base.mean());
+      break;
+    case BootstrapStatistic::Std:
+      observed = detail::scalar_value(base.std(false));
+      break;
+    case BootstrapStatistic::Median: {
+      auto values_vec = detail::to_f64_vector(base);
+      std::sort(values_vec.begin(), values_vec.end());
+      observed = detail::quantile_sorted(values_vec, 0.5);
+      break;
+    }
+  }
+
+  auto& pane = studio.pane2();
+  pane.grid(GridStyle::Major).x_label("bootstrap statistic").y_label("count");
+  auto& trace = pane.bucket(bootstrap_stats, std::max(4, options.bins));
+  trace.width(options.trace_width).label("bootstrap");
+  pane.rule_x(observed, "observed");
+  return studio;
+}
+
+inline Studio& summaryplot(
+    Studio& studio,
+    const std::vector<Series>& columns,
+    const std::vector<std::string>& labels,
+    const SummaryOptions& options = {}) {
+  if (columns.empty()) {
+    throw std::invalid_argument("flash::summaryplot requires at least one column");
+  }
+  if (!labels.empty() && labels.size() != columns.size()) {
+    throw std::invalid_argument("flash::summaryplot: labels size must match columns size");
+  }
+
+  std::vector<std::string> names = labels;
+  if (names.empty()) {
+    names.reserve(columns.size());
+    for (const auto i : std::views::iota(std::size_t{0}, columns.size())) {
+      names.push_back("x" + std::to_string(i + 1));
+    }
+  }
+
+  std::vector<std::vector<double>> values;
+  values.reserve(columns.size());
+  for (const auto& column : columns) {
+    values.push_back(detail::to_f64_vector(detail::flatten_f64(column)));
+  }
+  const std::int64_t ncases = static_cast<std::int64_t>(values.front().size());
+  for (const auto& column_values : values) {
+    if (static_cast<std::int64_t>(column_values.size()) != ncases) {
+      throw std::invalid_argument("flash::summaryplot requires equal-length columns");
+    }
+  }
+
+  const std::int64_t max_cases = options.max_cases > 0 ? options.max_cases : 10;
+  const std::int64_t shown_cases = std::min(ncases, max_cases);
+
+  auto format_cell = [&](double value) -> std::string {
+    if (!std::isfinite(value)) {
+      return "nan";
+    }
+    std::ostringstream cell;
+    cell.setf(std::ios::fixed);
+    cell << std::setprecision(std::max(0, options.precision)) << value;
+    return cell.str();
+  };
+
+  std::ostringstream out;
+  if (options.transpose) {
+    if (options.include_header) {
+      out << std::left << std::setw(18) << "feature";
+      for (const auto row : std::views::iota(std::int64_t{0}, shown_cases)) {
+        out << std::right << std::setw(14) << ("case_" + std::to_string(row));
+      }
+      out << "\n";
+    }
+    for (const auto col : std::views::iota(std::size_t{0}, values.size())) {
+      out << std::left << std::setw(18) << names[col];
+      for (const auto row : std::views::iota(std::int64_t{0}, shown_cases)) {
+        out << std::right << std::setw(14) << format_cell(values[col][static_cast<std::size_t>(row)]);
+      }
+      out << "\n";
+    }
+  } else {
+    if (options.include_header) {
+      if (options.include_case_index) {
+        out << std::left << std::setw(10) << "case";
+      }
+      for (const auto& name : names) {
+        out << std::right << std::setw(14) << name;
+      }
+      out << "\n";
+    }
+    for (const auto row : std::views::iota(std::int64_t{0}, shown_cases)) {
+      if (options.include_case_index) {
+        out << std::left << std::setw(10) << row;
+      }
+      for (const auto& column_values : values) {
+        out << std::right << std::setw(14) << format_cell(column_values[static_cast<std::size_t>(row)]);
+      }
+      out << "\n";
+    }
+  }
+  if (ncases > shown_cases) {
+    out << "... (" << (ncases - shown_cases) << " more cases)\n";
+  }
+
+  auto& pane = studio.pane2(options.title);
+  pane.grid(GridStyle::None)
+      .legend(KeyPlace::None)
+      .x_label("")
+      .y_label("")
+      .tick_font_scale(0.01)
+      .axis_label_font_scale(0.01)
+      .caption(out.str());
   return studio;
 }
 

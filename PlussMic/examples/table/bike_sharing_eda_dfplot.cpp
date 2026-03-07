@@ -135,15 +135,11 @@ template <std::size_t NCodes, std::size_t NLabels>
 
 [[nodiscard]] pluss::table::DataFramePlotOptions build_plot_options(std::optional<std::string> default_x = std::nullopt,
                                                                      std::optional<std::string> default_hue =
-                                                                         std::nullopt,
-                                                                     bool bar_ci_enabled = false,
-                                                                     double bar_ci_level = 0.95) {
+                                                                         std::nullopt) {
   pluss::table::DataFramePlotOptions options;
   options.default_x_feature = std::move(default_x);
   options.default_hue_feature = std::move(default_hue);
   options.default_bins = 24;
-  options.bar_ci_enabled = bar_ci_enabled;
-  options.bar_ci_level = bar_ci_level;
   options.width = 1400.0;
   options.height = 860.0;
   options.use_tight_layout = true;
@@ -496,7 +492,10 @@ int main(int argc, char** argv) {
   fig_07.headline("Monthly mean bike rentals (hourly averaged)");
   save_and_optionally_show(fig_07, cli.out_dir, "07_monthly_mean", cli.show);
 
-  auto fig_08 = df.plot(build_plot_options("month_name", std::nullopt, true, 0.95)).bar("total_count", "month_name");
+  pluss::table::BarPlotOptions bar_opts;
+  bar_opts.ci_enabled = true;
+  bar_opts.ci_level = 0.95;
+  auto fig_08 = df.plot(build_plot_options("month_name", std::nullopt)).bar("total_count", "month_name", bar_opts);
   fig_08.headline("Mean hourly rentals by month (95% CI)");
   save_and_optionally_show(fig_08, cli.out_dir, "08_mean_by_month_ci", cli.show);
 
@@ -519,9 +518,9 @@ int main(int argc, char** argv) {
 
   auto sample = df.features({"temp", "atemp", "humidity", "windspeed", "casual", "registered", "total_count"})
                     .sample(std::min<std::int64_t>(800, df.ncases()), 42);
-  auto pair_opts = build_plot_options();
-  pair_opts.scatter_matrix_options.triangle = pluss::table::ScatterMatrixTriangle::Full;
-  auto fig_13 = sample.plot(pair_opts).scatter_matrix();
+  pluss::table::ScatterMatrixPlotOptions scatter_matrix_opts;
+  scatter_matrix_opts.pair.triangle = pluss::table::ScatterMatrixTriangle::Full;
+  auto fig_13 = sample.plot(build_plot_options()).scatter_matrix({}, scatter_matrix_opts);
   fig_13.headline("Pairplot (sampled)");
   save_and_optionally_show(fig_13, cli.out_dir, "13_pairplot_sampled", cli.show);
 

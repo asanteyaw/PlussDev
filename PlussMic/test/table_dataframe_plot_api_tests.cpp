@@ -52,6 +52,12 @@ void test_object_plot_apis() {
   expect(fig_hist_obj.panes().front().traces().front().kind() == TraceKind::Bucket,
          "plot().hist should emit bucket trace");
 
+  const auto fig_hist_multi = df.plot().hist({"x", "y", "z"}, 7);
+  expect(fig_hist_multi.pane_count() == 3, "plot().hist(features) should produce one pane per feature");
+
+  const auto fig_hist_all = df.plot().hist(7);
+  expect(fig_hist_all.pane_count() == 3, "plot().hist(bins) should default to all numeric features");
+
   const auto fig_line = df.plot().line({"y", "z"}, "x");
   expect(fig_line.panes().front().trace_count() == 2, "plot().line should emit one trace per y feature");
   expect(fig_line.panes().front().traces().front().kind() == TraceKind::Trend,
@@ -62,10 +68,68 @@ void test_object_plot_apis() {
   expect(fig_violin.panes().front().traces().front().kind() == TraceKind::Violin,
          "plot().violin(features) should emit violin trace");
 
+  const auto fig_box = df.plot().box({"y", "z"});
+  expect(fig_box.panes().front().trace_count() == 1, "plot().box(features) should emit one trace");
+  expect(fig_box.panes().front().traces().front().kind() == TraceKind::Quartet,
+         "plot().box(features) should emit quartet trace");
+
   const auto fig_violin_grouped = df.plot().violin("y", "grp");
   expect(fig_violin_grouped.panes().front().trace_count() == 1, "plot().violin(value, group) should emit one trace");
   expect(fig_violin_grouped.panes().front().traces().front().kind() == TraceKind::Violin,
          "plot().violin(value, group) should emit violin trace");
+
+  const auto fig_density_multi = df.plot().density({"y", "z"}, 64);
+  expect(fig_density_multi.panes().front().trace_count() == 2,
+         "plot().density(features) should emit one trace per feature");
+  expect(fig_density_multi.panes().front().traces().front().kind() == TraceKind::Trend,
+         "plot().density(features) should emit trend traces");
+
+  const auto fig_density = df.plot().density("y", 64);
+  expect(fig_density.panes().front().trace_count() == 1, "plot().density(feature) should emit one trace");
+  expect(fig_density.panes().front().traces().front().kind() == TraceKind::Trend,
+         "plot().density(feature) should emit trend trace");
+
+  const auto fig_pie = df.plot().pie("y", "grp");
+  expect(fig_pie.panes().front().trace_count() == 1, "plot().pie should emit one trace");
+  expect(fig_pie.panes().front().traces().front().kind() == TraceKind::Wedge,
+         "plot().pie should emit wedge trace");
+
+  const auto fig_parallel = df.plot().parallel({"x", "y", "z"}, "grp");
+  expect(fig_parallel.panes().front().trace_count() > 0,
+         "plot().parallel should emit one trend trace per sampled case");
+  expect(fig_parallel.panes().front().traces().front().kind() == TraceKind::Trend,
+         "plot().parallel should emit trend traces");
+
+  const auto fig_andrews = df.plot().andrews_curves({"x", "y", "z"}, "grp");
+  expect(fig_andrews.panes().front().trace_count() > 0,
+         "plot().andrews_curves should emit one trend trace per sampled case");
+  expect(fig_andrews.panes().front().traces().front().kind() == TraceKind::Trend,
+         "plot().andrews_curves should emit trend traces");
+
+  const auto fig_radviz = df.plot().radviz({"x", "y", "z"}, "grp");
+  expect(fig_radviz.panes().front().trace_count() > 0, "plot().radviz should emit cloud traces");
+  expect(fig_radviz.panes().front().traces().front().kind() == TraceKind::Cloud,
+         "plot().radviz should emit cloud traces");
+
+  const auto fig_lag = df.plot().lag("x");
+  expect(fig_lag.panes().front().trace_count() == 1, "plot().lag should emit one cloud trace");
+  expect(fig_lag.panes().front().traces().front().kind() == TraceKind::Cloud,
+         "plot().lag should emit cloud trace");
+
+  const auto fig_acf = df.plot().act("x");
+  expect(fig_acf.panes().front().trace_count() >= 2,
+         "plot().act should emit trend + marker traces");
+  expect(fig_acf.panes().front().traces().front().kind() == TraceKind::Trend,
+         "plot().act should emit trend trace first");
+
+  const auto fig_bootstrap = df.plot().bootstrap("x");
+  expect(fig_bootstrap.panes().front().trace_count() == 1,
+         "plot().bootstrap should emit one histogram trace");
+  expect(fig_bootstrap.panes().front().traces().front().kind() == TraceKind::Bucket,
+         "plot().bootstrap should emit bucket trace");
+
+  const auto fig_brief = df.plot().brief({"x", "y", "z"});
+  expect(fig_brief.panes().front().caption_text().size() > 0, "plot().brief should populate caption text");
 }
 
 void test_scatter_heatmap_and_validation() {
@@ -114,9 +178,10 @@ void test_plot_options_defaults() {
   expect(fig_hist.panes().front().traces().front().kind() == TraceKind::Bucket,
          "plot(options).hist should emit bucket trace");
 
-  options.bar_ci_enabled = true;
-  options.bar_ci_level = 0.95;
-  const auto fig_bar_ci = df.plot(options).bar("y", "grp");
+  pluss::table::BarPlotOptions bar_options;
+  bar_options.ci_enabled = true;
+  bar_options.ci_level = 0.95;
+  const auto fig_bar_ci = df.plot(options).bar("y", "grp", bar_options);
   expect(fig_bar_ci.panes().front().trace_count() == 2, "plot(options).bar with CI should emit bar + whisker");
   const auto& traces = fig_bar_ci.panes().front().traces();
   const bool has_whisk = std::any_of(traces.begin(), traces.end(), [](const auto& trace) {
@@ -124,9 +189,22 @@ void test_plot_options_defaults() {
   });
   expect(has_whisk, "plot(options).bar with CI should include whisk trace");
 
-  options.scatter_matrix_options.triangle = pluss::table::ScatterMatrixTriangle::Lower;
-  options.scatter_matrix_options.auto_tick_decimals = 1;
-  const auto fig_corner = df.plot(options).scatter_matrix({"x", "y", "z"});
+  pluss::table::BarPlotOptions horizontal_bar_options;
+  horizontal_bar_options.horizontal = true;
+  const auto fig_bar_horizontal = df.plot(options).bar("y", "grp", horizontal_bar_options);
+  expect(fig_bar_horizontal.panes().front().trace_count() == 1,
+         "plot(options).bar(horizontal) should emit one columns trace without CI");
+  expect(fig_bar_horizontal.panes().front().traces().front().kind() == TraceKind::Columns,
+         "plot(options).bar(horizontal) should still emit columns trace kind");
+  expect(fig_bar_horizontal.panes().front().y_axis().ticks.has_value(),
+         "plot(options).bar(horizontal) should place categorical ticks on y-axis");
+  expect(fig_bar_horizontal.panes().front().x_axis().label == "y",
+         "plot(options).bar(horizontal) should label value axis on x-axis");
+
+  pluss::table::ScatterMatrixPlotOptions scatter_matrix_options;
+  scatter_matrix_options.pair.triangle = pluss::table::ScatterMatrixTriangle::Lower;
+  scatter_matrix_options.pair.auto_tick_decimals = 1;
+  const auto fig_corner = df.plot(options).scatter_matrix({"x", "y", "z"}, scatter_matrix_options);
   std::size_t trace_count = 0;
   for (const auto& pane : fig_corner.panes()) {
     trace_count += pane.trace_count();
@@ -137,8 +215,9 @@ void test_plot_options_defaults() {
   expect(*fig_corner.panes().front().x_axis().auto_tick_decimals == 1,
          "plot(options).scatter_matrix should use requested auto tick decimals");
 
-  options.heatmap_annotate_levels = true;
-  const auto fig_heatmap = df.plot(options).heatmap({"x", "y"});
+  pluss::table::HeatmapPlotOptions heatmap_options;
+  heatmap_options.annotate_levels = true;
+  const auto fig_heatmap = df.plot(options).heatmap({"x", "y"}, heatmap_options);
   expect(fig_heatmap.panes().front().traces().front().annotate_levels(),
          "plot(options).heatmap should honor heatmap_annotate_levels");
 }

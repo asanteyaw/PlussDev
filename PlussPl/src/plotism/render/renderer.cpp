@@ -3028,6 +3028,59 @@ void add_text(
   list.commands.emplace_back(TextCommand{anchor, std::move(text), size, color, rotation_deg, align});
 }
 
+void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layout) {
+  if (pane.caption_text().empty()) {
+    return;
+  }
+
+  std::vector<std::string> lines;
+  lines.reserve(32);
+  std::string current;
+  current.reserve(256);
+  for (char ch : pane.caption_text()) {
+    if (ch == '\r') {
+      continue;
+    }
+    if (ch == '\n') {
+      lines.push_back(std::move(current));
+      current.clear();
+      continue;
+    }
+    current.push_back(ch);
+  }
+  lines.push_back(std::move(current));
+
+  const Rgba color = multiply_rgb(pane.theme_tokens().foreground(), 0.85);
+  const double font_size = 10.0;
+
+  if (lines.size() <= 1U) {
+    add_text(
+        list,
+        {layout.outer.x + 10.0, layout.outer.y + layout.outer.height - 14.0},
+        lines.empty() ? std::string{} : lines.front(),
+        font_size,
+        color);
+    return;
+  }
+
+  const double line_gap = 2.0;
+  const double line_step = font_size + line_gap;
+  const double start_x = layout.plot.x + 8.0;
+  const double start_y = layout.plot.y + 16.0;
+  const double available_height = std::max(0.0, layout.plot.height - 8.0);
+  const std::size_t max_lines = static_cast<std::size_t>(
+      std::max(1.0, std::floor(available_height / std::max(1.0, line_step))));
+  const std::size_t limit = std::min(lines.size(), max_lines);
+
+  for (const auto i : std::views::iota(std::size_t{0}, limit)) {
+    std::string line = lines[i];
+    if (i + 1 == limit && lines.size() > limit && line.size() > 3U) {
+      line.replace(line.size() - 3U, 3U, "...");
+    }
+    add_text(list, {start_x, start_y + static_cast<double>(i) * line_step}, std::move(line), font_size, color);
+  }
+}
+
 [[nodiscard]] std::vector<KeyEntry> key_entries_for_pane(const Pane& pane, bool include_pane_title) {
   std::vector<KeyEntry> entries;
   for (const Trace& trace : pane.traces()) {
@@ -3974,14 +4027,7 @@ void render_planar_axes(
         label_align,
         label_rotation);
   }
-  if (!pane.caption_text().empty()) {
-    add_text(
-        list,
-        {layout.outer.x + 10.0, layout.outer.y + layout.outer.height - 14.0},
-        pane.caption_text(),
-        10.0,
-        multiply_rgb(pane.theme_tokens().foreground(), 0.85));
-  }
+  add_caption_block(list, pane, layout);
 }
 
 [[nodiscard]] std::vector<Point2d> marker_circle(Point2d center, double radius, int steps = 14) {
@@ -4231,14 +4277,21 @@ void render_planar_traces(
             const double half_width = 0.5 * payload.width;
             const Rgba fill = trace.palette_ramp().sample(0.62);
             for (std::size_t i = 0; i < xy.first.size(); ++i) {
-              const Point2d base_left =
-                  map_planar_point(xy.first[i] - half_width, payload.base, pane, bounds, layout.plot, false);
-              const Point2d base_right =
-                  map_planar_point(xy.first[i] + half_width, payload.base, pane, bounds, layout.plot, false);
-              const Point2d top_left =
-                  map_planar_point(xy.first[i] - half_width, xy.second[i], pane, bounds, layout.plot, false);
-              const Point2d top_right =
-                  map_planar_point(xy.first[i] + half_width, xy.second[i], pane, bounds, layout.plot, false);
+              Point2d base_left{};
+              Point2d base_right{};
+              Point2d top_left{};
+              Point2d top_right{};
+              if (payload.horizontal) {
+                base_left = map_planar_point(payload.base, xy.second[i] - half_width, pane, bounds, layout.plot, false);
+                base_right = map_planar_point(payload.base, xy.second[i] + half_width, pane, bounds, layout.plot, false);
+                top_left = map_planar_point(xy.first[i], xy.second[i] - half_width, pane, bounds, layout.plot, false);
+                top_right = map_planar_point(xy.first[i], xy.second[i] + half_width, pane, bounds, layout.plot, false);
+              } else {
+                base_left = map_planar_point(xy.first[i] - half_width, payload.base, pane, bounds, layout.plot, false);
+                base_right = map_planar_point(xy.first[i] + half_width, payload.base, pane, bounds, layout.plot, false);
+                top_left = map_planar_point(xy.first[i] - half_width, xy.second[i], pane, bounds, layout.plot, false);
+                top_right = map_planar_point(xy.first[i] + half_width, xy.second[i], pane, bounds, layout.plot, false);
+              }
               add_path(
                   list,
                   {
@@ -4945,10 +4998,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
              TextCommand::Align::Middle,
              z_label_rotation);
   }
-  if (!pane.caption_text().empty()) {
-    add_text(list, {layout.outer.x + 10.0, layout.outer.y + layout.outer.height - 14.0},
-             pane.caption_text(), 10.0, multiply_rgb(pane.theme_tokens().foreground(), 0.85));
-  }
+  add_caption_block(list, pane, layout);
 }
 
 void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& layout, const Bounds3d& bounds) {
