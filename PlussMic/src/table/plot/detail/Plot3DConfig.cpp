@@ -3,61 +3,25 @@
 namespace pluss::table::plot::detail {
 
 void apply_3d_trace_options(pluss::pl::Trace& trace, const Plot3DTraceOptions& options) {
-  if (options.shade.has_value()) {
-    trace.shade(*options.shade);
-  }
-  if (options.lighting.has_value()) {
-    trace.lighting(*options.lighting);
-  }
-  if (options.material.has_value()) {
-    trace.material(*options.material);
-  }
-  if (options.line_width.has_value()) {
-    trace.width(*options.line_width);
-  }
-  if (options.transparent.has_value()) {
-    trace.transparent(*options.transparent);
-  }
-}
-
-void apply_3d_theme_preset(pluss::pl::Pane& pane, Plot3DThemePreset preset) {
-  switch (preset) {
-    case Plot3DThemePreset::Paper:
-      pane.theme_tokens() = pluss::pl::themes::paper();
-      return;
-    case Plot3DThemePreset::Ocean:
-      pane.theme_tokens() = pluss::pl::themes::ocean();
-      return;
-    case Plot3DThemePreset::Dark: {
-      const auto base = pane.theme_tokens();
-      pane.theme_tokens() = pluss::pl::Theme{
-          "plot3d_dark",
-          base.accents(),
-          pluss::pl::Rgba::from_u8(18, 24, 33),
-          pluss::pl::Rgba::from_u8(236, 240, 245),
-          base.surface_palette(),
-      };
-      return;
-    }
-  }
+  pluss::pl::flash::Trace3DOptions trace_options;
+  trace_options.preset = options.preset;
+  trace_options.shade = options.shade;
+  trace_options.lighting = options.lighting;
+  trace_options.material = options.material;
+  trace_options.line_width = options.line_width;
+  trace_options.transparent = options.transparent;
+  pluss::pl::flash::trace3d(trace, trace_options);
 }
 
 void apply_3d_scene_options(pluss::pl::Pane& pane, const Plot3DSceneOptions& options) {
-  if (options.theme.has_value()) {
-    apply_3d_theme_preset(pane, *options.theme);
-  }
-  if (options.grid_style.has_value()) {
-    pane.grid(*options.grid_style);
-  }
-  if (options.camera_preset.has_value()) {
-    pluss::pl::flash::camera_preset3d(pane, *options.camera_preset);
-  }
-  if (options.camera.has_value()) {
-    pluss::pl::flash::camera3d(pane, *options.camera);
-  }
-  if (options.lighting.has_value()) {
-    pluss::pl::flash::lighting3d(pane, *options.lighting);
-  }
+  pluss::pl::flash::Scene3DOptions scene_options;
+  scene_options.preset = options.preset;
+  scene_options.theme = options.theme;
+  scene_options.camera_preset = options.camera_preset;
+  scene_options.camera = options.camera;
+  scene_options.lighting = options.lighting;
+  scene_options.grid_style = options.grid_style;
+  pluss::pl::flash::scene3d(pane, scene_options);
 }
 
 } // namespace pluss::table::plot::detail

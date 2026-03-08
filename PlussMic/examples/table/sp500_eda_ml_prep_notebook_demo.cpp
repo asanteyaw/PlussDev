@@ -184,7 +184,8 @@ int main() {
   //==============End Cell Five =============
   std::cout << "\n[Cell 5] 3D plot -> PDF/SVG outputs\n";
   pluss::table::Plot3DSceneOptions scene3_opts;
-  scene3_opts.theme = pluss::table::Plot3DThemePreset::Dark;
+  scene3_opts.preset = pluss::pl::flash::ScenePreset3D::Presentation;
+  scene3_opts.theme = pluss::pl::flash::ThemePreset3D::Slate;
   scene3_opts.camera_preset = pluss::pl::flash::CameraPreset3D::Isometric;
   scene3_opts.lighting = pluss::pl::flash::Lighting3DOptions{
       .clear_first = true,
@@ -194,6 +195,7 @@ int main() {
   };
   pluss::table::Scatter3DPlotOptions scatter3_opts;
   scatter3_opts.scene = scene3_opts;
+  scatter3_opts.trace.preset = pluss::pl::flash::TracePreset3D::Cloud;
   scatter3_opts.trace.material = pluss::pl::MaterialProfile::Shiny;
   scatter3_opts.trace.lighting = pluss::pl::LightingMode::Gouraud;
   scatter3_opts.trace.shade = pluss::pl::ShadeMode::Smooth;
@@ -204,6 +206,7 @@ int main() {
 
   pluss::table::Line3DPlotOptions line3_opts;
   line3_opts.scene = scene3_opts;
+  line3_opts.trace.preset = pluss::pl::flash::TracePreset3D::Path;
   line3_opts.scene.camera = pluss::pl::flash::Camera3DOptions{
       .azimuth_deg = -48.0,
       .elevation_deg = 24.0,
@@ -220,6 +223,7 @@ int main() {
   hist3d_opts.bins_x = 30;
   hist3d_opts.bins_y = 18;
   hist3d_opts.scene = scene3_opts;
+  hist3d_opts.trace.preset = pluss::pl::flash::TracePreset3D::Spire;
   hist3d_opts.trace.material = pluss::pl::MaterialProfile::Metal;
   hist3d_opts.trace.lighting = pluss::pl::LightingMode::Gouraud;
   df.plot3d()
@@ -229,6 +233,7 @@ int main() {
 
   pluss::table::Surface3DPlotOptions surface3_opts;
   surface3_opts.scene = scene3_opts;
+  surface3_opts.trace.preset = pluss::pl::flash::TracePreset3D::Surface;
   surface3_opts.trace.material = pluss::pl::MaterialProfile::Shiny;
   surface3_opts.trace.shade = pluss::pl::ShadeMode::Smooth;
   df.plot3d()

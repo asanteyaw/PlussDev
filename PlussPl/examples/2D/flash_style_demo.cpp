@@ -246,10 +246,70 @@ int main() {
   // pairplot_fig.save_svg(out_path("plusspl_flash_pairplot_demo.svg"));
   pairplot_fig.save_pdf(out_path("plusspl_flash_pairplot_demo.pdf"));
 
+  const auto pair_matrix = pair_a
+                               .unite({pair_b, pair_c}, 0)
+                               .reshape({3, 360})
+                               .transpose(0, 1)
+                               .contiguous();
+  const auto named_pair_data = make_dataset(pair_matrix, {"temp", "humidity", "cnt"});
+
+  Studio pairplot_named_dataset_fig("flash_pairplot_named_dataset_demo", Theme::paper());
+  PairPlotOptions pair_named_opts;
+  pair_named_opts.kind = PairPlotKind::Scatter;
+  pair_named_opts.diag_kind = PairPlotDiagKind::Histogram;
+  pair_named_opts.corner = true;
+  pair_named_opts.max_points = 320;
+  pairplot(pairplot_named_dataset_fig, named_pair_data, pair_named_opts);
+  pairplot_named_dataset_fig.save_pdf(out_path("plusspl_flash_pairplot_named_dataset_demo.pdf"));
+
+  Studio pairplot_matrix_fig("flash_pairplot_matrix_demo", Theme::paper());
+  PairPlotOptions pair_matrix_opts;
+  pair_matrix_opts.kind = PairPlotKind::Reg;
+  pair_matrix_opts.diag_kind = PairPlotDiagKind::Density;
+  pair_matrix_opts.corner = true;
+  pair_matrix_opts.max_points = 320;
+  pairplot(
+      pairplot_matrix_fig,
+      pair_matrix,
+      {"temp", "humidity", "cnt"},
+      Axis::Cols,
+      pair_matrix_opts);
+  pairplot_matrix_fig.save_pdf(out_path("plusspl_flash_pairplot_matrix_demo.pdf"));
+
   Studio jointplot_fig("flash_jointplot_demo", Theme::paper());
   jointplot(jointplot_fig, x, y, "scatter");
   // jointplot_fig.save_svg(out_path("plusspl_flash_jointplot_demo.svg"));
   jointplot_fig.save_pdf(out_path("plusspl_flash_jointplot_demo.pdf"));
+
+  Studio jointplot_named_dataset_fig("flash_jointplot_named_dataset_demo", Theme::paper());
+  jointplot(jointplot_named_dataset_fig, named_pair_data, "temp", "cnt", "reg");
+  jointplot_named_dataset_fig.save_pdf(out_path("plusspl_flash_jointplot_named_dataset_demo.pdf"));
+
+  Studio jointplot_matrix_fig("flash_jointplot_matrix_demo", Theme::paper());
+  MatrixJointOptions matrix_joint_opts;
+  matrix_joint_opts.feature_axis = Axis::Cols;
+  matrix_joint_opts.x_feature = 0;
+  matrix_joint_opts.y_feature = 2;
+  jointplot(jointplot_matrix_fig, pair_matrix, matrix_joint_opts, "hex");
+  jointplot_matrix_fig.save_pdf(out_path("plusspl_flash_jointplot_matrix_demo.pdf"));
+
+  Studio parallelplot_dataset_fig("flash_parallelplot_dataset_demo", Theme::paper());
+  ParallelCoordinatesOptions parallel_opts;
+  parallel_opts.max_points = 320;
+  parallelplot(parallelplot_dataset_fig, named_pair_data, parallel_opts);
+  parallelplot_dataset_fig.save_pdf(out_path("plusspl_flash_parallelplot_dataset_demo.pdf"));
+
+  Studio andrews_dataset_fig("flash_andrews_dataset_demo", Theme::paper());
+  AndrewsCurvesOptions andrews_opts;
+  andrews_opts.max_curves = 320;
+  andrews_curves(andrews_dataset_fig, named_pair_data, andrews_opts);
+  andrews_dataset_fig.save_pdf(out_path("plusspl_flash_andrews_dataset_demo.pdf"));
+
+  Studio radviz_dataset_fig("flash_radviz_dataset_demo", Theme::paper());
+  RadvizOptions radviz_opts;
+  radviz_opts.max_points = 320;
+  radviz(radviz_dataset_fig, named_pair_data, radviz_opts);
+  radviz_dataset_fig.save_pdf(out_path("plusspl_flash_radviz_dataset_demo.pdf"));
 
   Studio axis_style_fig("flash_axis_style_demo", Theme::paper());
   set_theme(axis_style_fig, FlashThemeOptions{

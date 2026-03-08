@@ -54,6 +54,12 @@ template <ArithmeticRange Range>
   return index.timeline().epoch_nanos().to(ScalarType::Float64).reshape({index.size()});
 }
 
+inline void require_rank_at_most(const Series& values, std::int64_t max_rank, std::string_view where) {
+  PLUSS_CHECK(
+      values.dim() <= max_rank,
+      std::string(where) + ": expected input rank <= " + std::to_string(max_rank));
+}
+
 template <class T>
 concept StringLike = std::is_convertible_v<T, std::string_view>;
 
@@ -765,6 +771,56 @@ inline void downsample_columns(
   return out;
 }
 
+[[nodiscard]] inline std::vector<std::string> default_feature_labels_underscore(std::int64_t ncols) {
+  std::vector<std::string> out;
+  out.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, ncols)));
+  for (const auto i : std::views::iota(std::int64_t{0}, std::max<std::int64_t>(0, ncols))) {
+    out.push_back("x_" + std::to_string(i + 1));
+  }
+  return out;
+}
+
+[[nodiscard]] inline std::vector<std::string> note_labels_or_default(
+    const std::optional<Note>& labels,
+    std::int64_t count) {
+  if (labels.has_value() && labels->numel() == count) {
+    return note_values(*labels);
+  }
+  return default_feature_labels_underscore(count);
+}
+
+[[nodiscard]] inline std::vector<Series> feature_columns_from_matrix(
+    const Series& matrix,
+    bool feature_axis_is_columns) {
+  PLUSS_CHECK(matrix.defined(), "flash::feature_columns_from_matrix requires a defined Series");
+  PLUSS_CHECK(matrix.dim() <= 2, "flash::feature_columns_from_matrix supports up to 2D input");
+
+  if (matrix.dim() == 0 || matrix.dim() == 1) {
+    return {flatten_f64(matrix)};
+  }
+
+  const auto shape = matrix.sizes();
+  const std::int64_t rows = shape[0];
+  const std::int64_t cols = shape[1];
+  const std::int64_t feature_count = feature_axis_is_columns ? cols : rows;
+  const std::int64_t case_count = feature_axis_is_columns ? rows : cols;
+  const Series feature_major = feature_axis_is_columns
+                                   ? matrix.transpose(0, 1).contiguous().to(ScalarType::Float64)
+                                   : matrix.contiguous().to(ScalarType::Float64);
+  const auto flat = feature_major.reshape({feature_count * case_count}).to_vec<double>();
+
+  std::vector<Series> columns;
+  columns.reserve(static_cast<std::size_t>(feature_count));
+  const auto case_count_us = static_cast<std::size_t>(case_count);
+  for (const auto feature : std::views::iota(std::int64_t{0}, feature_count)) {
+    std::vector<double> values(case_count_us, 0.0);
+    const auto offset = static_cast<std::size_t>(feature) * case_count_us;
+    std::copy_n(flat.begin() + static_cast<std::ptrdiff_t>(offset), case_count_us, values.begin());
+    columns.push_back(pluss::make_series(std::move(values), {case_count}));
+  }
+  return columns;
+}
+
 [[nodiscard]] inline Series matrix_from_columns(const std::vector<Series>& columns, std::int64_t rows) {
   if (columns.empty()) {
     return {};
@@ -1124,14 +1180,67 @@ struct Dataset {
   }
 };
 
+enum class Axis : std::uint8_t {
+  Cols,
+  Rows,
+};
+
+struct MatrixFrameOptions {
+  Axis feature_axis{Axis::Cols};
+  std::vector<std::string> feature_names{};
+};
+
+struct MatrixJointOptions {
+  Axis feature_axis{Axis::Cols};
+  std::int64_t x_feature{0};
+  std::int64_t y_feature{1};
+};
+
+[[nodiscard]] inline Dataset make_dataset(
+    std::vector<Series> numeric_values,
+    std::vector<std::string> numeric_names = {}) {
+  PLUSS_CHECK(!numeric_values.empty(), "flash::make_dataset requires at least one numeric feature");
+  Dataset data;
+  data.numeric_values = std::move(numeric_values);
+  if (!numeric_names.empty()) {
+    PLUSS_CHECK(
+        numeric_names.size() == data.numeric_values.size(),
+        "flash::make_dataset: numeric_names size must match numeric_values size");
+    data.numeric_names = pluss::make_note(numeric_names);
+  }
+  return data;
+}
+
+[[nodiscard]] inline Dataset make_dataset(
+    const Series& matrix,
+    std::vector<std::string> feature_names = {},
+    Axis feature_axis = Axis::Cols) {
+  PLUSS_CHECK(matrix.dim() <= 2, "flash::make_dataset(matrix): expected up to 2D Series");
+  Dataset data;
+  data.numeric_values = detail::feature_columns_from_matrix(matrix, feature_axis == Axis::Cols);
+  if (feature_names.empty()) {
+    feature_names = detail::default_feature_labels_underscore(static_cast<std::int64_t>(data.numeric_values.size()));
+  } else {
+    PLUSS_CHECK(
+        feature_names.size() == data.numeric_values.size(),
+        "flash::make_dataset(matrix): feature_names size must match matrix feature axis size");
+  }
+  data.numeric_names = pluss::make_note(feature_names);
+  return data;
+}
+
 #include "pluss/pl/flash/detail/flash_style.h"
 #include "pluss/pl/flash/detail/scene3d.h"
 
 template <class X, class Y, class Z>
 Trace& path3(Pane& pane, X&& x, Y&& y, Z&& z) {
-  return pane.path3(detail::to_series(std::forward<X>(x)),
-                    detail::to_series(std::forward<Y>(y)),
-                    detail::to_series(std::forward<Z>(z)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  detail::require_rank_at_most(sx, 3, "flash::path3");
+  detail::require_rank_at_most(sy, 3, "flash::path3");
+  detail::require_rank_at_most(sz, 3, "flash::path3");
+  return pane.path3(sx, sy, sz);
 }
 
 template <class X, class Y, class Z>
@@ -1142,26 +1251,41 @@ Trace& path3(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {}) {
 
 template <class X, class Y, class Z>
 Trace& cloud3(Pane& pane, X&& x, Y&& y, Z&& z) {
-  return pane.cloud3(detail::to_series(std::forward<X>(x)),
-                     detail::to_series(std::forward<Y>(y)),
-                     detail::to_series(std::forward<Z>(z)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  detail::require_rank_at_most(sx, 3, "flash::cloud3");
+  detail::require_rank_at_most(sy, 3, "flash::cloud3");
+  detail::require_rank_at_most(sz, 3, "flash::cloud3");
+  return pane.cloud3(sx, sy, sz);
 }
 
 template <class X, class Y, class Z, class Size>
 Trace& cloud3(Pane& pane, X&& x, Y&& y, Z&& z, Size&& size) {
-  return pane.cloud3(detail::to_series(std::forward<X>(x)),
-                     detail::to_series(std::forward<Y>(y)),
-                     detail::to_series(std::forward<Z>(z)),
-                     detail::to_series(std::forward<Size>(size)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  const Series ssize = detail::to_series(std::forward<Size>(size));
+  detail::require_rank_at_most(sx, 3, "flash::cloud3");
+  detail::require_rank_at_most(sy, 3, "flash::cloud3");
+  detail::require_rank_at_most(sz, 3, "flash::cloud3");
+  detail::require_rank_at_most(ssize, 3, "flash::cloud3");
+  return pane.cloud3(sx, sy, sz, ssize);
 }
 
 template <class X, class Y, class Z, class Size, class Color>
 Trace& cloud3(Pane& pane, X&& x, Y&& y, Z&& z, Size&& size, Color&& color) {
-  return pane.cloud3(detail::to_series(std::forward<X>(x)),
-                     detail::to_series(std::forward<Y>(y)),
-                     detail::to_series(std::forward<Z>(z)),
-                     detail::to_series(std::forward<Size>(size)),
-                     detail::to_series(std::forward<Color>(color)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  const Series ssize = detail::to_series(std::forward<Size>(size));
+  const Series scolor = detail::to_series(std::forward<Color>(color));
+  detail::require_rank_at_most(sx, 3, "flash::cloud3");
+  detail::require_rank_at_most(sy, 3, "flash::cloud3");
+  detail::require_rank_at_most(sz, 3, "flash::cloud3");
+  detail::require_rank_at_most(ssize, 3, "flash::cloud3");
+  detail::require_rank_at_most(scolor, 3, "flash::cloud3");
+  return pane.cloud3(sx, sy, sz, ssize, scolor);
 }
 
 template <class X, class Y, class Z>
@@ -1172,17 +1296,26 @@ Trace& cloud3(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {}) {
 
 template <class X, class Y, class Z>
 Trace& sheet(Pane& pane, X&& x, Y&& y, Z&& z) {
-  return pane.sheet(detail::to_series(std::forward<X>(x)),
-                    detail::to_series(std::forward<Y>(y)),
-                    detail::to_series(std::forward<Z>(z)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  detail::require_rank_at_most(sx, 3, "flash::sheet");
+  detail::require_rank_at_most(sy, 3, "flash::sheet");
+  detail::require_rank_at_most(sz, 3, "flash::sheet");
+  return pane.sheet(sx, sy, sz);
 }
 
 template <class X, class Y, class Z, class C>
 Trace& sheet(Pane& pane, X&& x, Y&& y, Z&& z, C&& c) {
-  return pane.sheet(detail::to_series(std::forward<X>(x)),
-                    detail::to_series(std::forward<Y>(y)),
-                    detail::to_series(std::forward<Z>(z)),
-                    detail::to_series(std::forward<C>(c)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  const Series sc = detail::to_series(std::forward<C>(c));
+  detail::require_rank_at_most(sx, 3, "flash::sheet");
+  detail::require_rank_at_most(sy, 3, "flash::sheet");
+  detail::require_rank_at_most(sz, 3, "flash::sheet");
+  detail::require_rank_at_most(sc, 3, "flash::sheet");
+  return pane.sheet(sx, sy, sz, sc);
 }
 
 template <class X, class Y, class Z>
@@ -1193,17 +1326,26 @@ Trace& sheet(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {}) {
 
 template <class X, class Y, class Z>
 Trace& lattice(Pane& pane, X&& x, Y&& y, Z&& z) {
-  return pane.lattice(detail::to_series(std::forward<X>(x)),
-                      detail::to_series(std::forward<Y>(y)),
-                      detail::to_series(std::forward<Z>(z)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  detail::require_rank_at_most(sx, 3, "flash::lattice");
+  detail::require_rank_at_most(sy, 3, "flash::lattice");
+  detail::require_rank_at_most(sz, 3, "flash::lattice");
+  return pane.lattice(sx, sy, sz);
 }
 
 template <class X, class Y, class Z, class C>
 Trace& lattice(Pane& pane, X&& x, Y&& y, Z&& z, C&& c) {
-  return pane.lattice(detail::to_series(std::forward<X>(x)),
-                      detail::to_series(std::forward<Y>(y)),
-                      detail::to_series(std::forward<Z>(z)),
-                      detail::to_series(std::forward<C>(c)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  const Series sc = detail::to_series(std::forward<C>(c));
+  detail::require_rank_at_most(sx, 3, "flash::lattice");
+  detail::require_rank_at_most(sy, 3, "flash::lattice");
+  detail::require_rank_at_most(sz, 3, "flash::lattice");
+  detail::require_rank_at_most(sc, 3, "flash::lattice");
+  return pane.lattice(sx, sy, sz, sc);
 }
 
 template <class X, class Y, class Z>
@@ -1214,76 +1356,114 @@ Trace& lattice(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {}) {
 
 template <class Z>
 Trace& spire3(Pane& pane, Z&& z) {
-  return pane.spire3(detail::to_series(std::forward<Z>(z)));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  detail::require_rank_at_most(sz, 3, "flash::spire3");
+  return pane.spire3(sz);
 }
 
 template <class Y, class Z>
 Trace& spire3(Pane& pane, Y&& y, Z&& z) {
-  return pane.spire3(detail::to_series(std::forward<Y>(y)),
-                     detail::to_series(std::forward<Z>(z)));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  detail::require_rank_at_most(sy, 3, "flash::spire3");
+  detail::require_rank_at_most(sz, 3, "flash::spire3");
+  return pane.spire3(sy, sz);
 }
 
 template <class X, class Y, class Z>
 Trace& spire3(Pane& pane, X&& x, Y&& y, Z&& z) {
-  return pane.spire3(detail::to_series(std::forward<X>(x)),
-                     detail::to_series(std::forward<Y>(y)),
-                     detail::to_series(std::forward<Z>(z)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  detail::require_rank_at_most(sx, 3, "flash::spire3");
+  detail::require_rank_at_most(sy, 3, "flash::spire3");
+  detail::require_rank_at_most(sz, 3, "flash::spire3");
+  return pane.spire3(sx, sy, sz);
 }
 
 template <class X, class Y, class Z, class C>
 Trace& spire3(Pane& pane, X&& x, Y&& y, Z&& z, C&& c) {
-  return pane.spire3(detail::to_series(std::forward<X>(x)),
-                     detail::to_series(std::forward<Y>(y)),
-                     detail::to_series(std::forward<Z>(z)),
-                     detail::to_series(std::forward<C>(c)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  const Series sc = detail::to_series(std::forward<C>(c));
+  detail::require_rank_at_most(sx, 3, "flash::spire3");
+  detail::require_rank_at_most(sy, 3, "flash::spire3");
+  detail::require_rank_at_most(sz, 3, "flash::spire3");
+  detail::require_rank_at_most(sc, 3, "flash::spire3");
+  return pane.spire3(sx, sy, sz, sc);
 }
 
 template <class X, class Y, class Z>
 Trace& ridge3(Pane& pane, X&& x, Y&& y, Z&& z) {
-  return pane.ridge3(detail::to_series(std::forward<X>(x)),
-                     detail::to_series(std::forward<Y>(y)),
-                     detail::to_series(std::forward<Z>(z)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  detail::require_rank_at_most(sx, 3, "flash::ridge3");
+  detail::require_rank_at_most(sy, 3, "flash::ridge3");
+  detail::require_rank_at_most(sz, 3, "flash::ridge3");
+  return pane.ridge3(sx, sy, sz);
 }
 
 template <class X, class Y, class Z, class Levels>
   requires(!std::integral<std::remove_cvref_t<Levels>>)
 Trace& ridge3(Pane& pane, X&& x, Y&& y, Z&& z, Levels&& levels) {
-  return pane.ridge3(detail::to_series(std::forward<X>(x)),
-                     detail::to_series(std::forward<Y>(y)),
-                     detail::to_series(std::forward<Z>(z)),
-                     detail::to_series(std::forward<Levels>(levels)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  const Series slevels = detail::to_series(std::forward<Levels>(levels));
+  detail::require_rank_at_most(sx, 3, "flash::ridge3");
+  detail::require_rank_at_most(sy, 3, "flash::ridge3");
+  detail::require_rank_at_most(sz, 3, "flash::ridge3");
+  detail::require_rank_at_most(slevels, 3, "flash::ridge3");
+  return pane.ridge3(sx, sy, sz, slevels);
 }
 
 template <class X, class Y, class Z>
 Trace& ridge3(Pane& pane, X&& x, Y&& y, Z&& z, int level_count) {
-  return pane.ridge3(detail::to_series(std::forward<X>(x)),
-                     detail::to_series(std::forward<Y>(y)),
-                     detail::to_series(std::forward<Z>(z)),
-                     level_count);
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  detail::require_rank_at_most(sx, 3, "flash::ridge3");
+  detail::require_rank_at_most(sy, 3, "flash::ridge3");
+  detail::require_rank_at_most(sz, 3, "flash::ridge3");
+  return pane.ridge3(sx, sy, sz, level_count);
 }
 
 template <class Values>
 Trace& isoshell(Pane& pane, Values&& values, int level_count = 4) {
-  return pane.isoshell(detail::to_series(std::forward<Values>(values)), level_count);
+  const Series svalues = detail::to_series(std::forward<Values>(values));
+  detail::require_rank_at_most(svalues, 3, "flash::isoshell");
+  return pane.isoshell(svalues, level_count);
 }
 
 template <class X, class Y, class Z, class Values>
 Trace& isoshell(Pane& pane, X&& x, Y&& y, Z&& z, Values&& values, int level_count = 4) {
-  return pane.isoshell(detail::to_series(std::forward<X>(x)),
-                       detail::to_series(std::forward<Y>(y)),
-                       detail::to_series(std::forward<Z>(z)),
-                       detail::to_series(std::forward<Values>(values)),
-                       level_count);
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  const Series svalues = detail::to_series(std::forward<Values>(values));
+  detail::require_rank_at_most(sx, 3, "flash::isoshell");
+  detail::require_rank_at_most(sy, 3, "flash::isoshell");
+  detail::require_rank_at_most(sz, 3, "flash::isoshell");
+  detail::require_rank_at_most(svalues, 3, "flash::isoshell");
+  return pane.isoshell(sx, sy, sz, svalues, level_count);
 }
 
 template <class X, class Y, class Z, class Values, class Levels>
   requires(!std::integral<std::remove_cvref_t<Levels>>)
 Trace& isoshell(Pane& pane, X&& x, Y&& y, Z&& z, Values&& values, Levels&& levels) {
-  return pane.isoshell(detail::to_series(std::forward<X>(x)),
-                       detail::to_series(std::forward<Y>(y)),
-                       detail::to_series(std::forward<Z>(z)),
-                       detail::to_series(std::forward<Values>(values)),
-                       detail::to_series(std::forward<Levels>(levels)));
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  const Series svalues = detail::to_series(std::forward<Values>(values));
+  const Series slevels = detail::to_series(std::forward<Levels>(levels));
+  detail::require_rank_at_most(sx, 3, "flash::isoshell");
+  detail::require_rank_at_most(sy, 3, "flash::isoshell");
+  detail::require_rank_at_most(sz, 3, "flash::isoshell");
+  detail::require_rank_at_most(svalues, 3, "flash::isoshell");
+  detail::require_rank_at_most(slevels, 3, "flash::isoshell");
+  return pane.isoshell(sx, sy, sz, svalues, slevels);
 }
 
 template <class X, class Y, class Z>
@@ -2896,6 +3076,19 @@ struct PairPlotOptions {
   std::int64_t diag_density_points{128};
 };
 
+[[nodiscard]] inline std::pair<std::vector<Series>, std::vector<std::string>> dataset_numeric_columns(
+    const Dataset& data) {
+  PLUSS_CHECK(!data.numeric_values.empty(), "flash::dataset_numeric_columns requires at least one numeric feature");
+  std::vector<Series> columns;
+  columns.reserve(data.numeric_values.size());
+  for (const auto& values : data.numeric_values) {
+    PLUSS_CHECK(values.dim() <= 2, "flash::dataset_numeric_columns supports up to 2D numeric features");
+    columns.push_back(values);
+  }
+  std::vector<std::string> labels = detail::note_labels_or_default(data.numeric_names, static_cast<std::int64_t>(columns.size()));
+  return {std::move(columns), std::move(labels)};
+}
+
 inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns, const PairPlotOptions& options = {}) {
   if (columns.empty()) {
     throw std::invalid_argument("flash::pairplot requires at least one series");
@@ -3034,6 +3227,292 @@ inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns, cons
     }
   }
   return studio;
+}
+
+inline Studio& pairplot(Studio& studio, const Dataset& data, const PairPlotOptions& options = {}) {
+  auto [columns, labels] = dataset_numeric_columns(data);
+  auto pair_options = options;
+  if (pair_options.labels.empty()) {
+    pair_options.labels = std::move(labels);
+  }
+  return pairplot(studio, columns, pair_options);
+}
+
+inline Studio& pairplot(
+    Studio& studio,
+    const Series& matrix,
+    const MatrixFrameOptions& frame_options,
+    const PairPlotOptions& options = {}) {
+  PLUSS_CHECK(matrix.dim() <= 2, "flash::pairplot(matrix): expected up to 2D Series");
+  auto columns = detail::feature_columns_from_matrix(
+      matrix,
+      frame_options.feature_axis == Axis::Cols);
+  auto pair_options = options;
+  if (pair_options.labels.empty()) {
+    if (frame_options.feature_names.size() == columns.size()) {
+      pair_options.labels = frame_options.feature_names;
+    } else {
+      pair_options.labels = detail::default_feature_labels_underscore(static_cast<std::int64_t>(columns.size()));
+    }
+  }
+  return pairplot(studio, columns, pair_options);
+}
+
+inline Studio& pairplot(
+    Studio& studio,
+    const Series& matrix,
+    std::vector<std::string> feature_names,
+    Axis feature_axis,
+    const PairPlotOptions& options = {}) {
+  MatrixFrameOptions frame_options;
+  frame_options.feature_axis = feature_axis;
+  frame_options.feature_names = std::move(feature_names);
+  return pairplot(studio, matrix, frame_options, options);
+}
+
+inline Studio& pairplot(Studio& studio, const Series& matrix, const PairPlotOptions& options = {}) {
+  return pairplot(studio, matrix, MatrixFrameOptions{}, options);
+}
+
+enum class TriplotKind : std::uint8_t {
+  Cloud,
+  Path,
+  Sheet,
+  Lattice,
+  Spire,
+  Ridge,
+};
+
+struct TriplotOptions {
+  TriplotKind kind{TriplotKind::Cloud};
+  std::vector<std::string> labels{};
+  std::vector<std::int64_t> feature_indices{};
+  std::vector<std::string> feature_names{};
+  std::int64_t max_features{0};
+  std::int64_t max_panels{9};
+  std::int64_t rows{0};
+  std::int64_t cols{0};
+  std::int64_t max_points{2500};
+  std::int64_t ridge_levels{8};
+  bool show_grid{true};
+  bool auto_size{true};
+  double min_width{1280.0};
+  double min_height{900.0};
+  double cell_width{360.0};
+  double cell_height{300.0};
+  double outer_pad_x{100.0};
+  double outer_pad_y{100.0};
+  double grid_gap_x{10.0};
+  double grid_gap_y{10.0};
+};
+
+[[nodiscard]] inline std::vector<std::int64_t> triplot_feature_indices(
+    const std::vector<std::string>& labels,
+    const TriplotOptions& options) {
+  const auto feature_count = static_cast<std::int64_t>(labels.size());
+  PLUSS_CHECK(feature_count >= 3, "flash::triplot requires at least three features");
+
+  std::vector<std::int64_t> selected;
+  std::unordered_set<std::int64_t> seen;
+
+  if (!options.feature_indices.empty()) {
+    selected.reserve(options.feature_indices.size());
+    for (const auto idx : options.feature_indices) {
+      PLUSS_CHECK(idx >= 0 && idx < feature_count, "flash::triplot feature index out of range");
+      if (seen.insert(idx).second) {
+        selected.push_back(idx);
+      }
+    }
+  } else if (!options.feature_names.empty()) {
+    selected.reserve(options.feature_names.size());
+    for (const auto& name : options.feature_names) {
+      const auto it = std::find(labels.begin(), labels.end(), name);
+      PLUSS_CHECK(it != labels.end(), "flash::triplot unknown feature name: " + name);
+      const auto idx = static_cast<std::int64_t>(std::distance(labels.begin(), it));
+      if (seen.insert(idx).second) {
+        selected.push_back(idx);
+      }
+    }
+  } else {
+    selected.reserve(static_cast<std::size_t>(feature_count));
+    for (const auto idx : std::views::iota(std::int64_t{0}, feature_count)) {
+      selected.push_back(idx);
+    }
+  }
+
+  if (options.max_features > 0 && static_cast<std::int64_t>(selected.size()) > options.max_features) {
+    selected.resize(static_cast<std::size_t>(options.max_features));
+  }
+  PLUSS_CHECK(selected.size() >= 3, "flash::triplot requires at least three selected features");
+  return selected;
+}
+
+[[nodiscard]] inline std::vector<std::array<std::int64_t, 3>> triplot_triplets(
+    const std::vector<std::int64_t>& selected,
+    std::int64_t max_panels) {
+  std::vector<std::array<std::int64_t, 3>> triplets;
+  const auto selected_count = static_cast<std::int64_t>(selected.size());
+  const auto panel_limit = max_panels > 0 ? max_panels : std::numeric_limits<std::int64_t>::max();
+  for (const auto a : std::views::iota(std::int64_t{0}, selected_count - 2)) {
+    for (const auto b : std::views::iota(a + 1, selected_count - 1)) {
+      for (const auto c : std::views::iota(b + 1, selected_count)) {
+        triplets.push_back({selected[static_cast<std::size_t>(a)],
+                            selected[static_cast<std::size_t>(b)],
+                            selected[static_cast<std::size_t>(c)]});
+        if (static_cast<std::int64_t>(triplets.size()) >= panel_limit) {
+          return triplets;
+        }
+      }
+    }
+  }
+  return triplets;
+}
+
+inline Studio& triplot(
+    Studio& studio,
+    const std::vector<Series>& columns,
+    const TriplotOptions& options = {}) {
+  PLUSS_CHECK(columns.size() >= 3, "flash::triplot requires at least three numeric features");
+  auto prepared = detail::prepare_numeric_columns(columns, false);
+  (void)detail::require_equal_lengths(prepared, "flash::triplot");
+  detail::downsample_columns(prepared, options.max_points);
+
+  std::vector<std::string> labels = detail::default_feature_labels(options.labels, static_cast<std::int64_t>(prepared.size()));
+  const auto selected = triplot_feature_indices(labels, options);
+  const auto triplets = triplot_triplets(selected, options.max_panels);
+  PLUSS_CHECK(!triplets.empty(), "flash::triplot produced no feature triplets");
+
+  const auto [rows, cols] = resolve_grid_shape(triplets.size(), options.rows, options.cols);
+  if (options.auto_size) {
+    const double cols_d = static_cast<double>(cols);
+    const double rows_d = static_cast<double>(rows);
+    const double width = std::max(
+        options.min_width,
+        cols_d * options.cell_width + std::max(0.0, cols_d - 1.0) * options.grid_gap_x + options.outer_pad_x);
+    const double height = std::max(
+        options.min_height,
+        rows_d * options.cell_height + std::max(0.0, rows_d - 1.0) * options.grid_gap_y + options.outer_pad_y);
+    studio.size(width, height);
+  }
+  studio.mosaic(rows, cols, options.grid_gap_x, options.grid_gap_y);
+
+  const auto panel_count = static_cast<std::size_t>(rows * cols);
+  for (const auto panel : std::views::iota(std::size_t{0}, panel_count)) {
+    const auto row = static_cast<std::int64_t>(panel / static_cast<std::size_t>(cols));
+    const auto col = static_cast<std::int64_t>(panel % static_cast<std::size_t>(cols));
+    Pane& pane = studio.pane3();
+    pane.place(row, col).grid(options.show_grid ? GridStyle::Major : GridStyle::None);
+    if (panel >= triplets.size()) {
+      pane.hide();
+      continue;
+    }
+    const auto triple = triplets[panel];
+    const auto i = triple[0];
+    const auto j = triple[1];
+    const auto k = triple[2];
+    pane.x_label(labels[static_cast<std::size_t>(i)])
+        .y_label(labels[static_cast<std::size_t>(j)])
+        .z_label(labels[static_cast<std::size_t>(k)]);
+
+    switch (options.kind) {
+      case TriplotKind::Path:
+        path3(
+            pane,
+            prepared[static_cast<std::size_t>(i)],
+            prepared[static_cast<std::size_t>(j)],
+            prepared[static_cast<std::size_t>(k)]);
+        break;
+      case TriplotKind::Sheet:
+        sheet(
+            pane,
+            prepared[static_cast<std::size_t>(i)],
+            prepared[static_cast<std::size_t>(j)],
+            prepared[static_cast<std::size_t>(k)]);
+        break;
+      case TriplotKind::Lattice:
+        lattice(
+            pane,
+            prepared[static_cast<std::size_t>(i)],
+            prepared[static_cast<std::size_t>(j)],
+            prepared[static_cast<std::size_t>(k)]);
+        break;
+      case TriplotKind::Spire:
+        spire3(
+            pane,
+            prepared[static_cast<std::size_t>(i)],
+            prepared[static_cast<std::size_t>(j)],
+            prepared[static_cast<std::size_t>(k)]);
+        break;
+      case TriplotKind::Ridge:
+        ridge3(
+            pane,
+            prepared[static_cast<std::size_t>(i)],
+            prepared[static_cast<std::size_t>(j)],
+            prepared[static_cast<std::size_t>(k)],
+            static_cast<int>(std::max<std::int64_t>(3, options.ridge_levels)));
+        break;
+      case TriplotKind::Cloud:
+      default:
+        cloud3(
+            pane,
+            prepared[static_cast<std::size_t>(i)],
+            prepared[static_cast<std::size_t>(j)],
+            prepared[static_cast<std::size_t>(k)]);
+        break;
+    }
+  }
+  return studio;
+}
+
+inline Studio& triplot(
+    Studio& studio,
+    const Dataset& data,
+    const TriplotOptions& options = {}) {
+  auto [columns, labels] = dataset_numeric_columns(data);
+  auto local_options = options;
+  if (local_options.labels.empty()) {
+    local_options.labels = std::move(labels);
+  }
+  return triplot(studio, columns, local_options);
+}
+
+inline Studio& triplot(
+    Studio& studio,
+    const Series& matrix,
+    const MatrixFrameOptions& frame_options,
+    const TriplotOptions& options = {}) {
+  PLUSS_CHECK(matrix.dim() <= 2, "flash::triplot(matrix): expected up to 2D Series");
+  auto columns = detail::feature_columns_from_matrix(
+      matrix,
+      frame_options.feature_axis == Axis::Cols);
+  auto local_options = options;
+  if (local_options.labels.empty()) {
+    if (frame_options.feature_names.size() == columns.size()) {
+      local_options.labels = frame_options.feature_names;
+    } else {
+      local_options.labels = detail::default_feature_labels_underscore(static_cast<std::int64_t>(columns.size()));
+    }
+  }
+  return triplot(studio, columns, local_options);
+}
+
+inline Studio& triplot(
+    Studio& studio,
+    const Series& matrix,
+    std::vector<std::string> feature_names,
+    Axis feature_axis,
+    const TriplotOptions& options = {}) {
+  MatrixFrameOptions frame_options;
+  frame_options.feature_axis = feature_axis;
+  frame_options.feature_names = std::move(feature_names);
+  return triplot(studio, matrix, frame_options, options);
+}
+
+inline Studio& triplot(
+    Studio& studio,
+    const Series& matrix,
+    const TriplotOptions& options = {}) {
+  return triplot(studio, matrix, MatrixFrameOptions{}, options);
 }
 
 struct ParallelCoordinatesOptions {
@@ -3247,6 +3726,57 @@ inline Studio& parallelplot(
   return studio;
 }
 
+inline Studio& parallelplot(
+    Studio& studio,
+    const Dataset& data,
+    const ParallelCoordinatesOptions& options = {}) {
+  auto [columns, labels] = dataset_numeric_columns(data);
+  auto local_options = options;
+  if (local_options.labels.empty()) {
+    local_options.labels = std::move(labels);
+  }
+  return parallelplot(studio, columns, local_options);
+}
+
+inline Studio& parallelplot(
+    Studio& studio,
+    const Series& matrix,
+    const MatrixFrameOptions& frame_options,
+    const ParallelCoordinatesOptions& options = {}) {
+  PLUSS_CHECK(matrix.dim() <= 2, "flash::parallelplot(matrix): expected up to 2D Series");
+  auto columns = detail::feature_columns_from_matrix(
+      matrix,
+      frame_options.feature_axis == Axis::Cols);
+  auto local_options = options;
+  if (local_options.labels.empty()) {
+    if (frame_options.feature_names.size() == columns.size()) {
+      local_options.labels = frame_options.feature_names;
+    } else {
+      local_options.labels = detail::default_feature_labels_underscore(static_cast<std::int64_t>(columns.size()));
+    }
+  }
+  return parallelplot(studio, columns, local_options);
+}
+
+inline Studio& parallelplot(
+    Studio& studio,
+    const Series& matrix,
+    std::vector<std::string> feature_names,
+    Axis feature_axis,
+    const ParallelCoordinatesOptions& options = {}) {
+  MatrixFrameOptions frame_options;
+  frame_options.feature_axis = feature_axis;
+  frame_options.feature_names = std::move(feature_names);
+  return parallelplot(studio, matrix, frame_options, options);
+}
+
+inline Studio& parallelplot(
+    Studio& studio,
+    const Series& matrix,
+    const ParallelCoordinatesOptions& options = {}) {
+  return parallelplot(studio, matrix, MatrixFrameOptions{}, options);
+}
+
 inline Studio& andrews_curves(
     Studio& studio,
     const std::vector<Series>& columns,
@@ -3357,6 +3887,57 @@ inline Studio& andrews_curves(
     }
   }
   return studio;
+}
+
+inline Studio& andrews_curves(
+    Studio& studio,
+    const Dataset& data,
+    const AndrewsCurvesOptions& options = {}) {
+  auto [columns, labels] = dataset_numeric_columns(data);
+  auto local_options = options;
+  if (local_options.labels.empty()) {
+    local_options.labels = std::move(labels);
+  }
+  return andrews_curves(studio, columns, local_options);
+}
+
+inline Studio& andrews_curves(
+    Studio& studio,
+    const Series& matrix,
+    const MatrixFrameOptions& frame_options,
+    const AndrewsCurvesOptions& options = {}) {
+  PLUSS_CHECK(matrix.dim() <= 2, "flash::andrews_curves(matrix): expected up to 2D Series");
+  auto columns = detail::feature_columns_from_matrix(
+      matrix,
+      frame_options.feature_axis == Axis::Cols);
+  auto local_options = options;
+  if (local_options.labels.empty()) {
+    if (frame_options.feature_names.size() == columns.size()) {
+      local_options.labels = frame_options.feature_names;
+    } else {
+      local_options.labels = detail::default_feature_labels_underscore(static_cast<std::int64_t>(columns.size()));
+    }
+  }
+  return andrews_curves(studio, columns, local_options);
+}
+
+inline Studio& andrews_curves(
+    Studio& studio,
+    const Series& matrix,
+    std::vector<std::string> feature_names,
+    Axis feature_axis,
+    const AndrewsCurvesOptions& options = {}) {
+  MatrixFrameOptions frame_options;
+  frame_options.feature_axis = feature_axis;
+  frame_options.feature_names = std::move(feature_names);
+  return andrews_curves(studio, matrix, frame_options, options);
+}
+
+inline Studio& andrews_curves(
+    Studio& studio,
+    const Series& matrix,
+    const AndrewsCurvesOptions& options = {}) {
+  return andrews_curves(studio, matrix, MatrixFrameOptions{}, options);
 }
 
 inline Studio& radviz(
@@ -3510,6 +4091,57 @@ inline Studio& radviz(
     }
   }
   return studio;
+}
+
+inline Studio& radviz(
+    Studio& studio,
+    const Dataset& data,
+    const RadvizOptions& options = {}) {
+  auto [columns, labels] = dataset_numeric_columns(data);
+  auto local_options = options;
+  if (local_options.labels.empty()) {
+    local_options.labels = std::move(labels);
+  }
+  return radviz(studio, columns, local_options);
+}
+
+inline Studio& radviz(
+    Studio& studio,
+    const Series& matrix,
+    const MatrixFrameOptions& frame_options,
+    const RadvizOptions& options = {}) {
+  PLUSS_CHECK(matrix.dim() <= 2, "flash::radviz(matrix): expected up to 2D Series");
+  auto columns = detail::feature_columns_from_matrix(
+      matrix,
+      frame_options.feature_axis == Axis::Cols);
+  auto local_options = options;
+  if (local_options.labels.empty()) {
+    if (frame_options.feature_names.size() == columns.size()) {
+      local_options.labels = frame_options.feature_names;
+    } else {
+      local_options.labels = detail::default_feature_labels_underscore(static_cast<std::int64_t>(columns.size()));
+    }
+  }
+  return radviz(studio, columns, local_options);
+}
+
+inline Studio& radviz(
+    Studio& studio,
+    const Series& matrix,
+    std::vector<std::string> feature_names,
+    Axis feature_axis,
+    const RadvizOptions& options = {}) {
+  MatrixFrameOptions frame_options;
+  frame_options.feature_axis = feature_axis;
+  frame_options.feature_names = std::move(feature_names);
+  return radviz(studio, matrix, frame_options, options);
+}
+
+inline Studio& radviz(
+    Studio& studio,
+    const Series& matrix,
+    const RadvizOptions& options = {}) {
+  return radviz(studio, matrix, MatrixFrameOptions{}, options);
 }
 
 template <class Values>
@@ -3969,6 +4601,7 @@ inline Studio& summaryplot(
 }
 
 template <class X, class Y>
+  requires(detail::HueSeriesLike<X> && detail::HueSeriesLike<Y>)
 Studio& jointplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter") {
   JointPlotOptions options;
   if (kind == "reg") {
@@ -3985,6 +4618,7 @@ Studio& jointplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter
 }
 
 template <class X, class Y>
+  requires(detail::HueSeriesLike<X> && detail::HueSeriesLike<Y>)
 Studio& jointplot(Studio& studio, X&& x, Y&& y, const JointPlotOptions& options) {
   const Series sx = detail::to_series(std::forward<X>(x));
   const Series sy = detail::to_series(std::forward<Y>(y));
@@ -4039,6 +4673,150 @@ Studio& jointplot(Studio& studio, X&& x, Y&& y, const JointPlotOptions& options)
     right.bucket(sy, static_cast<int>(std::max<std::int64_t>(4, options.marginal_bins)));
   }
   return studio;
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Dataset& data,
+    std::string_view x_name,
+    std::string_view y_name,
+    std::string_view kind = "scatter") {
+  const auto x = data.numeric(x_name);
+  const auto y = data.numeric(y_name);
+  PLUSS_CHECK(x.has_value(), std::string("flash::jointplot(dataset): unknown numeric feature '") + std::string(x_name) + "'");
+  PLUSS_CHECK(y.has_value(), std::string("flash::jointplot(dataset): unknown numeric feature '") + std::string(y_name) + "'");
+  PLUSS_CHECK(x->dim() <= 2 && y->dim() <= 2, "flash::jointplot(dataset): supports up to 2D numeric features");
+  return jointplot(studio, *x, *y, kind);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Dataset& data,
+    std::string_view x_name,
+    std::string_view y_name,
+    const JointPlotOptions& options) {
+  const auto x = data.numeric(x_name);
+  const auto y = data.numeric(y_name);
+  PLUSS_CHECK(x.has_value(), std::string("flash::jointplot(dataset): unknown numeric feature '") + std::string(x_name) + "'");
+  PLUSS_CHECK(y.has_value(), std::string("flash::jointplot(dataset): unknown numeric feature '") + std::string(y_name) + "'");
+  PLUSS_CHECK(x->dim() <= 2 && y->dim() <= 2, "flash::jointplot(dataset): supports up to 2D numeric features");
+  return jointplot(studio, *x, *y, options);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    std::string_view x_name,
+    std::string_view y_name,
+    const MatrixFrameOptions& frame_options,
+    std::string_view kind = "scatter") {
+  const auto data = make_dataset(matrix, frame_options.feature_names, frame_options.feature_axis);
+  return jointplot(studio, data, x_name, y_name, kind);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    std::string_view x_name,
+    std::string_view y_name,
+    const MatrixFrameOptions& frame_options,
+    const JointPlotOptions& options) {
+  const auto data = make_dataset(matrix, frame_options.feature_names, frame_options.feature_axis);
+  return jointplot(studio, data, x_name, y_name, options);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    std::string_view x_name,
+    std::string_view y_name,
+    std::vector<std::string> feature_names,
+    Axis feature_axis,
+    std::string_view kind = "scatter") {
+  MatrixFrameOptions frame_options;
+  frame_options.feature_axis = feature_axis;
+  frame_options.feature_names = std::move(feature_names);
+  return jointplot(studio, matrix, x_name, y_name, frame_options, kind);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    std::string_view x_name,
+    std::string_view y_name,
+    std::vector<std::string> feature_names,
+    Axis feature_axis,
+    const JointPlotOptions& options) {
+  MatrixFrameOptions frame_options;
+  frame_options.feature_axis = feature_axis;
+  frame_options.feature_names = std::move(feature_names);
+  return jointplot(studio, matrix, x_name, y_name, frame_options, options);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    std::string_view x_name,
+    std::string_view y_name,
+    std::string_view kind = "scatter") {
+  return jointplot(studio, matrix, x_name, y_name, MatrixFrameOptions{}, kind);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    std::string_view x_name,
+    std::string_view y_name,
+    const JointPlotOptions& options) {
+  return jointplot(studio, matrix, x_name, y_name, MatrixFrameOptions{}, options);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    const MatrixJointOptions& matrix_options,
+    std::string_view kind = "scatter") {
+  PLUSS_CHECK(matrix.dim() <= 2, "flash::jointplot(matrix): expected up to 2D Series");
+  auto columns = detail::feature_columns_from_matrix(
+      matrix,
+      matrix_options.feature_axis == Axis::Cols);
+  PLUSS_CHECK(columns.size() >= 2, "flash::jointplot(matrix): expected at least two features");
+  const std::int64_t feature_count = static_cast<std::int64_t>(columns.size());
+  PLUSS_CHECK(matrix_options.x_feature >= 0 && matrix_options.x_feature < feature_count,
+              "flash::jointplot(matrix): x_feature index out of range");
+  PLUSS_CHECK(matrix_options.y_feature >= 0 && matrix_options.y_feature < feature_count,
+              "flash::jointplot(matrix): y_feature index out of range");
+  PLUSS_CHECK(matrix_options.x_feature != matrix_options.y_feature,
+              "flash::jointplot(matrix): x_feature and y_feature must differ");
+  return jointplot(
+      studio,
+      columns[static_cast<std::size_t>(matrix_options.x_feature)],
+      columns[static_cast<std::size_t>(matrix_options.y_feature)],
+      kind);
+}
+
+inline Studio& jointplot(
+    Studio& studio,
+    const Series& matrix,
+    const MatrixJointOptions& matrix_options,
+    const JointPlotOptions& options) {
+  PLUSS_CHECK(matrix.dim() <= 2, "flash::jointplot(matrix): expected up to 2D Series");
+  auto columns = detail::feature_columns_from_matrix(
+      matrix,
+      matrix_options.feature_axis == Axis::Cols);
+  PLUSS_CHECK(columns.size() >= 2, "flash::jointplot(matrix): expected at least two features");
+  const std::int64_t feature_count = static_cast<std::int64_t>(columns.size());
+  PLUSS_CHECK(matrix_options.x_feature >= 0 && matrix_options.x_feature < feature_count,
+              "flash::jointplot(matrix): x_feature index out of range");
+  PLUSS_CHECK(matrix_options.y_feature >= 0 && matrix_options.y_feature < feature_count,
+              "flash::jointplot(matrix): y_feature index out of range");
+  PLUSS_CHECK(matrix_options.x_feature != matrix_options.y_feature,
+              "flash::jointplot(matrix): x_feature and y_feature must differ");
+  return jointplot(
+      studio,
+      columns[static_cast<std::size_t>(matrix_options.x_feature)],
+      columns[static_cast<std::size_t>(matrix_options.y_feature)],
+      options);
 }
 
 [[nodiscard]] inline PaletteRamp color_palette(std::string_view name = "ocean") {

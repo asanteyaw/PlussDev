@@ -134,6 +134,34 @@ Status:
 - Remaining depth item:
   - add optional QQ confidence envelopes and robust residual scaling presets.
 
+### Phase 4: 3D Scene + Styling Upgrade
+
+1. Add first-class 3D scene presets in `flash`:
+- `ScenePreset3D`: `Survey`, `Presentation`, `Studio`, `Topology`.
+- `Scene3DOptions` + `scene3d(...)` to apply:
+  - camera presets or explicit camera settings
+  - lighting rigs
+  - grid style
+  - 3D theme preset
+Status:
+- Implemented in flash (`pluss/pl/flash/detail/scene3d.h`).
+- Added demo coverage in `PlussPl/examples/3D/flash_3d_demo.cpp`:
+  - scene preset gallery output.
+
+2. Add first-class 3D trace presets in `flash`:
+- `TracePreset3D`: `Path`, `Cloud`, `Surface`, `Wireframe`, `Spire`, `Volume`.
+- `Trace3DOptions` + `trace3d(...)` for preset-first then explicit override semantics.
+Status:
+- Implemented in flash (`pluss/pl/flash/detail/scene3d.h`).
+- Applied in `flash_3d_demo` to surface/cloud/path/volume traces.
+
+3. Keep `DataFrame::plot3d()` delegated and lightweight:
+- `Plot3DSceneOptions` delegates to `flash::Scene3DOptions`.
+- `Plot3DTraceOptions` delegates to `flash::Trace3DOptions`.
+Status:
+- Implemented in `PlussMic/src/table/plot/detail/Plot3DConfig.cpp`.
+- Demo delegation shown in `PlussMic/examples/table/sp500_eda_ml_prep_notebook_demo.cpp`.
+
 ## Delegation Contract (Important)
 
 1. `DataFrame::plot()` should delegate to `flash` where a flash op exists.

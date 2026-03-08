@@ -123,14 +123,9 @@ struct BootstrapPlotOptions {
   float trace_width{0.85F};
 };
 
-enum class Plot3DThemePreset : std::uint8_t {
-  Paper,
-  Ocean,
-  Dark,
-};
-
 struct Plot3DSceneOptions {
-  std::optional<Plot3DThemePreset> theme{std::nullopt};
+  std::optional<pluss::pl::flash::ScenePreset3D> preset{std::nullopt};
+  std::optional<pluss::pl::flash::ThemePreset3D> theme{std::nullopt};
   std::optional<pluss::pl::flash::CameraPreset3D> camera_preset{std::nullopt};
   std::optional<pluss::pl::flash::Camera3DOptions> camera{std::nullopt};
   std::optional<pluss::pl::flash::Lighting3DOptions> lighting{std::nullopt};
@@ -138,6 +133,7 @@ struct Plot3DSceneOptions {
 };
 
 struct Plot3DTraceOptions {
+  std::optional<pluss::pl::flash::TracePreset3D> preset{std::nullopt};
   std::optional<pluss::pl::ShadeMode> shade{std::nullopt};
   std::optional<pluss::pl::LightingMode> lighting{std::nullopt};
   std::optional<pluss::pl::MaterialProfile> material{std::nullopt};
