@@ -541,6 +541,12 @@ void require_auto_tick_decimals(int decimals, std::string_view where) {
   }
 }
 
+void require_axis_gap(double points, std::string_view where) {
+  if (!std::isfinite(points) || points < 0.0) {
+    throw std::invalid_argument(std::string(where) + ": spacing must be finite and non-negative");
+  }
+}
+
 } // namespace
 
 Pane::Pane(PaneKind kind, Theme theme, std::string title)
@@ -710,6 +716,42 @@ Pane& Pane::z_tick_rotation(double degrees) {
   return *this;
 }
 
+Pane& Pane::x_tick_label_gap(double points) {
+  require_axis_gap(points, "x_tick_label_gap");
+  x_axis_.tick_label_gap = points;
+  return *this;
+}
+
+Pane& Pane::y_tick_label_gap(double points) {
+  require_axis_gap(points, "y_tick_label_gap");
+  y_axis_.tick_label_gap = points;
+  return *this;
+}
+
+Pane& Pane::z_tick_label_gap(double points) {
+  require_axis_gap(points, "z_tick_label_gap");
+  z_axis_.tick_label_gap = points;
+  return *this;
+}
+
+Pane& Pane::x_label_gap(double points) {
+  require_axis_gap(points, "x_label_gap");
+  x_axis_.label_gap = points;
+  return *this;
+}
+
+Pane& Pane::y_label_gap(double points) {
+  require_axis_gap(points, "y_label_gap");
+  y_axis_.label_gap = points;
+  return *this;
+}
+
+Pane& Pane::z_label_gap(double points) {
+  require_axis_gap(points, "z_label_gap");
+  z_axis_.label_gap = points;
+  return *this;
+}
+
 Pane& Pane::x_label_rotation(double degrees) {
   require_rotation_angle(degrees, "x_label_rotation");
   x_axis_.label_rotation_deg = degrees;
@@ -745,6 +787,36 @@ Pane& Pane::clear_y_tick_rotation() noexcept {
 
 Pane& Pane::clear_z_tick_rotation() noexcept {
   z_axis_.tick_rotation_deg.reset();
+  return *this;
+}
+
+Pane& Pane::clear_x_tick_label_gap() noexcept {
+  x_axis_.tick_label_gap.reset();
+  return *this;
+}
+
+Pane& Pane::clear_y_tick_label_gap() noexcept {
+  y_axis_.tick_label_gap.reset();
+  return *this;
+}
+
+Pane& Pane::clear_z_tick_label_gap() noexcept {
+  z_axis_.tick_label_gap.reset();
+  return *this;
+}
+
+Pane& Pane::clear_x_label_gap() noexcept {
+  x_axis_.label_gap.reset();
+  return *this;
+}
+
+Pane& Pane::clear_y_label_gap() noexcept {
+  y_axis_.label_gap.reset();
+  return *this;
+}
+
+Pane& Pane::clear_z_label_gap() noexcept {
+  z_axis_.label_gap.reset();
   return *this;
 }
 

@@ -220,7 +220,13 @@ int main() {
           heatmap_borderless_opts);
   heatmap_borderless_ax.x_ticks(std::array<double, 4>{0.0, 1.0, 2.0, 3.0}, {"T<56", "56<=T<129", "129<=T<179", "179<=T<=252"});
   heatmap_borderless_ax.y_ticks(std::array<double, 3>{0.0, 1.0, 2.0}, {"[0.8,0.9)", "[0.9,1.0)", "[1.0,1.1)"});
-  heatmap_borderless_ax.x_label("Maturity").y_label("Moneyness");
+  heatmap_borderless_ax
+      .x_tick_label_gap(6.0)
+      .x_label_gap(14.0)
+      .y_tick_label_gap(7.0)
+      .y_label_gap(12.0)
+      .x_label("Maturity")
+      .y_label("Moneyness");
   // heatmap_borderless_fig.save_svg(out_path("plusspl_flash_heatmap_borderless_demo.svg"));
   heatmap_borderless_fig.save_pdf(out_path("plusspl_flash_heatmap_borderless_demo.pdf"));
 
@@ -262,6 +268,7 @@ int main() {
   auto& horizontal_grid_ax = axis_style_fig.pane2("horizontal grid only");
   horizontal_grid_ax.place(0, 0);
   horizontal_grid(horizontal_grid_ax, true);
+  horizontal_grid_ax.x_label("temperature").y_label("height");
   lineplot(horizontal_grid_ax, x, y).label("horizontal grid");
   auto& tickless_ax = axis_style_fig.pane2("tickless");
   tickless_ax.place(0, 1);
@@ -550,10 +557,10 @@ int main() {
   // joint_map_fig.save_svg(out_path("plusspl_flash_jointgrid_map_plot_demo.svg"));
   joint_map_fig.save_pdf(out_path("plusspl_flash_jointgrid_map_plot_demo.pdf"));
 
-  auto figz = pluss::pl::studio("demo");
-  auto& ax = figz.pane2();
-  ax.trend(std::array<double,3>{0,1,2}, std::array<double,3>{1,2,1});
-  figz.show("Demo Plot", 1280, 820, true); // opens popup/viewer
+//   auto figz = pluss::pl::studio("demo");
+//   auto& ax = figz.pane2();
+//   ax.trend(std::array<double,3>{0,1,2}, std::array<double,3>{1,2,1});
+//   figz.show("Demo Plot", 1280, 820, true); // opens popup/viewer
 
   return 0;
 }

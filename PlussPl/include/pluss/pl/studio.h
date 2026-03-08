@@ -209,6 +209,8 @@ struct AxisState {
   std::optional<AxisTicks> ticks{};
   std::optional<double> tick_rotation_deg{};
   std::optional<double> label_rotation_deg{};
+  std::optional<double> tick_label_gap{};
+  std::optional<double> label_gap{};
   bool label_centered_on_axis{false};
   bool tick_labels_visible{true};
   bool major_grid{false};
@@ -604,6 +606,12 @@ class Pane {
   Pane& x_tick_rotation(double degrees);
   Pane& y_tick_rotation(double degrees);
   Pane& z_tick_rotation(double degrees);
+  Pane& x_tick_label_gap(double points);
+  Pane& y_tick_label_gap(double points);
+  Pane& z_tick_label_gap(double points);
+  Pane& x_label_gap(double points);
+  Pane& y_label_gap(double points);
+  Pane& z_label_gap(double points);
   Pane& x_label_rotation(double degrees);
   Pane& y_label_rotation(double degrees);
   Pane& z_label_rotation(double degrees);
@@ -611,6 +619,12 @@ class Pane {
   Pane& clear_x_tick_rotation() noexcept;
   Pane& clear_y_tick_rotation() noexcept;
   Pane& clear_z_tick_rotation() noexcept;
+  Pane& clear_x_tick_label_gap() noexcept;
+  Pane& clear_y_tick_label_gap() noexcept;
+  Pane& clear_z_tick_label_gap() noexcept;
+  Pane& clear_x_label_gap() noexcept;
+  Pane& clear_y_label_gap() noexcept;
+  Pane& clear_z_label_gap() noexcept;
   Pane& x_tick_labels(bool enable = true) noexcept;
   Pane& y_tick_labels(bool enable = true) noexcept;
   Pane& z_tick_labels(bool enable = true) noexcept;
