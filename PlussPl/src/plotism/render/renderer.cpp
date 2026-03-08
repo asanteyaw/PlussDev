@@ -2015,6 +2015,22 @@ struct FiniteMinMax {
   return x_axis ? std::clamp(axis_font * 0.85, 6.0, 20.0) : std::clamp(axis_font * 0.75, 6.0, 18.0);
 }
 
+[[nodiscard]] double default_scale_guide_bar_gap(bool axes_visible) noexcept {
+  return axes_visible ? 22.0 : 7.0;
+}
+
+[[nodiscard]] double default_scale_guide_right_inset(bool axes_visible, bool tight) noexcept {
+  constexpr double kScaleGuideBarWidth = 14.0;
+  constexpr double kScaleGuideTickLength = 5.0;
+  const double kScaleGuideTickLabelPad = axes_visible ? 8.0 : 6.0;
+  const double tick_label_allowance = axes_visible ? (tight ? 34.0 : 40.0) : (tight ? 22.0 : 28.0);
+  return default_scale_guide_bar_gap(axes_visible)
+         + kScaleGuideBarWidth
+         + kScaleGuideTickLength
+         + kScaleGuideTickLabelPad
+         + tick_label_allowance;
+}
+
 [[nodiscard]] MosaicLayout resolved_mosaic_layout(const Studio& studio) {
   if (studio.mosaic_layout().active) {
     return studio.mosaic_layout();
@@ -2055,14 +2071,15 @@ struct FiniteMinMax {
   const auto pane_insets = [tight, &max_tick_label_chars](const Pane& pane) {
     const double top = tight ? 44.0 : 58.0;
     double left = tight ? 28.0 : 38.0;
-    double right = pane.scale_guide_enabled() ? (tight ? 78.0 : 92.0) : (tight ? 20.0 : 28.0);
+    const bool axes_visible = pane.axes_visible();
+    double right = pane.scale_guide_enabled() ? default_scale_guide_right_inset(axes_visible, tight)
+                                              : (tight ? 20.0 : 28.0);
     if (pane.legend_place() == KeyPlace::OutsideEast) {
       right = std::max(right, tight ? 176.0 : 212.0);
     }
     double bottom = tight ? 42.0 : 56.0;
 
     if (pane.kind() == PaneKind::Planar) {
-      const bool axes_visible = pane.axes_visible();
       if (!axes_visible) {
         left = tight ? 12.0 : 16.0;
         bottom = tight ? 18.0 : 22.0;
@@ -2079,9 +2096,10 @@ struct FiniteMinMax {
         const auto chars = max_tick_label_chars(axis, fallback_chars);
         const double extent = std::max(1.0, static_cast<double>(chars)) * tick_font * 0.56;
         const double radians = std::abs(axis.tick_rotation_deg.value_or(0.0)) * kPi / 180.0;
+        const double projection = x_axis ? (0.5 * std::sin(radians) * extent) : (0.95 * std::cos(radians) * extent);
         return resolved_planar_tick_label_gap(axis, axes_visible, tick_font, x_axis)
                + tick_font * 0.35
-               + 0.5 * std::sin(radians) * extent;
+               + std::max(0.0, projection);
       };
 
       const double x_depth = axis_tick_depth(pane.x_axis(), 8, true);
@@ -3762,9 +3780,9 @@ void render_scale_guide(DrawList& list, const Pane& pane, const PaneLayout& layo
     return;
   }
 
-  const double bar_width = 14.0;
+  constexpr double bar_width = 14.0;
   const double bar_height = layout.plot.height;
-  const double bar_x = layout.plot.x + layout.plot.width + 22.0;
+  const double bar_x = layout.plot.x + layout.plot.width + default_scale_guide_bar_gap(pane.axes_visible());
   const double bar_y = layout.plot.y;
   constexpr int slices = 64;
 
@@ -4283,10 +4301,14 @@ void render_planar_axes(
   }
   if (!pane.y_axis().label.empty()) {
     const bool center_on_axis = pane.y_axis().label_centered_on_axis;
+    const double y_tick_gap = resolved_planar_tick_label_gap(pane.y_axis(), axes_visible, tick_font, false);
     const double y_label_gap = resolved_axis_label_gap(pane.y_axis(), axes_visible, axis_label_font, false);
-    const double label_x = center_on_axis ? (layout.plot.x - (axis_label_font + y_label_gap)) : (layout.outer.x + 6.0);
+    const double label_x = center_on_axis
+                               ? (layout.plot.x - (axis_label_font + y_label_gap))
+                               : (axes_visible ? (layout.outer.x + 6.0) : (layout.plot.x - y_tick_gap));
     const double label_y = center_on_axis ? (layout.plot.y + layout.plot.height * 0.5) : (layout.plot.y - 8.0);
-    const auto label_align = center_on_axis ? TextCommand::Align::Middle : TextCommand::Align::Start;
+    const auto label_align =
+        center_on_axis ? TextCommand::Align::Middle : (axes_visible ? TextCommand::Align::Start : TextCommand::Align::End);
     const double label_rotation =
         pane.y_axis().label_rotation_deg.value_or(center_on_axis ? -90.0 : y_label_rotation);
     double label_font = axis_label_font;

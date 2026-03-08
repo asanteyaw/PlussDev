@@ -2016,9 +2016,11 @@ Trace& heatmap(Pane& pane, X&& x, Y&& y, Z&& z, const HeatmapOptions& options) {
         .y_major_grid(false)
         .x_minor_grid(false)
         .y_minor_grid(false)
-        .axes_visible(true)
+        .axes_visible(false)
         .x_tick_labels(true)
-        .y_tick_labels(true);
+        .y_tick_labels(true)
+        .x_limit_method(LimitMethod::Tight)
+        .y_limit_method(LimitMethod::Tight);
   }
   return trace;
 }
@@ -2054,9 +2056,11 @@ Trace& heatmap(Pane& pane, X&& x, Y&& y, Z&& z, C&& c, const HeatmapOptions& opt
         .y_major_grid(false)
         .x_minor_grid(false)
         .y_minor_grid(false)
-        .axes_visible(true)
+        .axes_visible(false)
         .x_tick_labels(true)
-        .y_tick_labels(true);
+        .y_tick_labels(true)
+        .x_limit_method(LimitMethod::Tight)
+        .y_limit_method(LimitMethod::Tight);
   }
   return trace;
 }

@@ -151,3 +151,7 @@ Status:
 3. Works with pluss-native types (`Series`, `Note`, `Timeline`) only.
 4. Scales to large data via sampling/downsampling options.
 5. Has one focused example in `PlussPl/examples` and one delegation example in `PlussMic/examples/table`.
+
+
+## Doctrine
+Loops(and nested loops) only when inevitable or needed for correctness. Linear passes preferred or vectorized Series/Note/Timeline ops where possible. Modernized cpp 20 semantics, when loops are needed and stl iterators and algos (they are not necessarily faster than classical loops but are cleaner and more compact) can do it, then they can be used rather than classical loops, other times you migh seek clarity so you can use traditional loops(they are more verbose but easier to understand), so you should manage it. Smart and vectorized delegations. No aliasing/unecessary bloat.

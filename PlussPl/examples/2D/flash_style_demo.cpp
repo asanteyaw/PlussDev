@@ -220,13 +220,7 @@ int main() {
           heatmap_borderless_opts);
   heatmap_borderless_ax.x_ticks(std::array<double, 4>{0.0, 1.0, 2.0, 3.0}, {"T<56", "56<=T<129", "129<=T<179", "179<=T<=252"});
   heatmap_borderless_ax.y_ticks(std::array<double, 3>{0.0, 1.0, 2.0}, {"[0.8,0.9)", "[0.9,1.0)", "[1.0,1.1)"});
-  heatmap_borderless_ax
-      .x_tick_label_gap(6.0)
-      .x_label_gap(14.0)
-      .y_tick_label_gap(7.0)
-      .y_label_gap(12.0)
-      .x_label("Maturity")
-      .y_label("Moneyness");
+  heatmap_borderless_ax.x_label("Maturity").y_label("Moneyness");
   // heatmap_borderless_fig.save_svg(out_path("plusspl_flash_heatmap_borderless_demo.svg"));
   heatmap_borderless_fig.save_pdf(out_path("plusspl_flash_heatmap_borderless_demo.pdf"));
 
