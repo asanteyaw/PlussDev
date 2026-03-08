@@ -32,10 +32,10 @@ int main() {
   std::filesystem::create_directories(root / "outputs" / "pdf");
   std::filesystem::create_directories(root / "outputs" / "pdfs");
 
-  pl::Studio gallery("plusspl-seaborn-style", pl::Theme::paper());
+  pl::Studio gallery("plusspl-flash-style", pl::Theme::paper());
   gallery.size(1680.0, 1240.0);
   gallery.mosaic(4, 4, 16.0, 16.0);
-  gallery.headline("Seaborn-Style Plot Gallery (PlussPl Mappings)");
+  gallery.headline("Flash-Style Plot Gallery (PlussPl Mappings)");
   gallery.legend(pl::KeyDock::East);
 
   const auto x = pluss::linspace(0.0, 12.0, 180, pluss::ScalarType::Float64);
@@ -144,8 +144,8 @@ int main() {
       .label("set_theme / palette mapping")
       .palette(pl::PaletteRamp::ocean());
 
-  gallery.save_svg((root / "outputs" / "svg" / "plusspl_seaborn_style_gallery.svg").string());
-  gallery.save_pdf((root / "outputs" / "pdf" / "plusspl_seaborn_style_gallery.pdf").string());
-  gallery.save_pdf((root / "outputs" / "pdfs" / "plusspl_seaborn_style_gallery.pdf").string());
+  gallery.save_svg((root / "outputs" / "svg" / "plusspl_style_gallery.svg").string());
+  gallery.save_pdf((root / "outputs" / "pdf" / "plusspl_style_gallery.pdf").string());
+  gallery.save_pdf((root / "outputs" / "pdfs" / "plusspl_style_gallery.pdf").string());
   return 0;
 }

@@ -118,7 +118,7 @@ int main() {
            4)
       .label("flash::isoshell");
 
-  fig.save_svg(out_path("plusspl_flash_3d_demo.svg"));
+  // fig.save_svg(out_path("plusspl_flash_3d_demo.svg"));
   fig.save_pdf(out_path("plusspl_flash_3d_demo.pdf"));
 
   Studio camera_gallery("flash_3d_camera_gallery", Theme::paper());
@@ -147,7 +147,7 @@ int main() {
           z_surface)
         .label("surface");
   }
-  camera_gallery.save_svg(out_path("plusspl_flash_3d_camera_gallery.svg"));
+  // camera_gallery.save_svg(out_path("plusspl_flash_3d_camera_gallery.svg"));
   camera_gallery.save_pdf(out_path("plusspl_flash_3d_camera_gallery.pdf"));
 
   fig.show("PlussPl Flash 3D", 1400, 900, true);

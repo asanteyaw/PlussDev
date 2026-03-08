@@ -429,7 +429,7 @@ TEST_CASE("PlussPl normalizes TeX-style text in labels and ticks", "[plusspl][te
   REQUIRE(pdf.find(">=") != std::string::npos);
 }
 
-TEST_CASE("PlussPl flash facade maps seaborn-like names to PlussPl traces", "[plusspl][flash]") {
+TEST_CASE("PlussPl flash facade maps flash-like names to PlussPl traces", "[plusspl][flash]") {
   using namespace pluss::pl;
   using namespace pluss::pl::flash;
 

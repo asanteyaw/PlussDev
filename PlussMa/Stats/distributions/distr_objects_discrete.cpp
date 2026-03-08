@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <numeric>
 #include <span>
@@ -128,6 +129,52 @@ double poisson_count_sum_(const std::vector<double>& values, const char* op) {
     PLUSS_CHECK(is_integerish_(v), std::string(op) + ": x must contain integer counts");
     return acc + v;
   });
+}
+
+constexpr double kFitPenalty = -1e300;
+constexpr double kMinInfo = 1e-12;
+
+std::vector<double> info_diag_from_loglik_(const std::vector<double>& params, const std::function<double(const std::vector<double>&)>& loglik_fn) {
+  const auto hdiag = fit_detail::fd_hess_diag(params, loglik_fn);
+  std::vector<double> info(hdiag.size(), kMinInfo);
+  std::transform(hdiag.begin(), hdiag.end(), info.begin(), [](double h) {
+    const double v = -h;
+    return (std::isfinite(v) && v > kMinInfo) ? v : kMinInfo;
+  });
+  return info;
+}
+
+Series info_diag_matrix_series_(const std::vector<double>& info, const Series& like) {
+  return fit_detail::diag_matrix_series(info, like);
+}
+
+Series vcov_diag_matrix_series_(const std::vector<double>& info, const Series& like, const char* op) {
+  const auto inv = fit_detail::diag_inverse(info, op);
+  return fit_detail::diag_matrix_series(inv, like);
+}
+
+std::vector<double> stderr_from_info_diag_(const std::vector<double>& info) {
+  std::vector<double> se(info.size(), 0.0);
+  std::transform(info.begin(), info.end(), se.begin(), [](double v) { return std::sqrt(1.0 / v); });
+  return se;
+}
+
+Series confint_matrix_series_(const std::vector<double>& params,
+                              const std::vector<double>& se,
+                              const Series& like,
+                              double level,
+                              const char* op) {
+  const double z = wald_z_value_(level, op);
+  PLUSS_CHECK(params.size() == se.size(), std::string(op) + ": params/se size mismatch");
+  std::vector<double> out(params.size() * 2, 0.0);
+  for (std::size_t i = 0; i < params.size(); ++i) {
+    out[i * 2 + 0] = params[i] - z * se[i];
+    out[i * 2 + 1] = params[i] + z * se[i];
+  }
+  return pluss::codem::make_series(std::span<const double>(out.data(), out.size()),
+                                   {static_cast<std::int64_t>(params.size()), 2},
+                                   Config{}.with_dtype(ScalarType::Float64))
+      .to(like.platform(), ScalarType::Float64);
 }
 
 } // namespace
@@ -591,6 +638,111 @@ Series NegativeBinomial::cgf(const Series& t) const {
 
 Series NegativeBinomial::cumulant(std::int64_t order) const {
   return detail::scalar_f64(negbinom_cumulant_scalar(r, p, order));
+}
+
+NegativeBinomial NegativeBinomialFit::model() const {
+  return NegativeBinomial{r, p};
+}
+
+Series NegativeBinomialFit::loglik(const Series& x) const {
+  return model().logpdf(x).sum().to(x.platform(), ScalarType::Float64);
+}
+
+Series NegativeBinomialFit::loglik_per_obs(const Series& x) const {
+  return model().logpdf(x).to(x.platform(), ScalarType::Float64);
+}
+
+Series NegativeBinomialFit::nll(const Series& x) const {
+  return loglik(x).neg();
+}
+
+Series NegativeBinomialFit::score(const Series& x) const {
+  const auto values = fit_data_f64_(x, "NegativeBinomialFit::score");
+  const auto fn = [&values](const std::vector<double>& params) -> double {
+    if (params.size() != 2 || !(params[0] > 0.0) || !(params[1] > 0.0 && params[1] < 1.0)) return kFitPenalty;
+    const auto valid = std::all_of(values.begin(), values.end(), [](double v) { return v >= 0.0 && is_integerish_(v); });
+    if (!valid) return kFitPenalty;
+    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
+    return NegativeBinomial{params[0], params[1]}.logpdf(xs).sum().item<double>();
+  };
+  return fit_detail::vec_series(fit_detail::fd_grad({r, p}, fn), {2}, x);
+}
+
+Series NegativeBinomialFit::fisher_inf(const Series& x) const {
+  return observed_inf(x);
+}
+
+Series NegativeBinomialFit::observed_inf(const Series& x) const {
+  const auto values = fit_data_f64_(x, "NegativeBinomialFit::observed_inf");
+  const auto fn = [&values](const std::vector<double>& params) -> double {
+    if (params.size() != 2 || !(params[0] > 0.0) || !(params[1] > 0.0 && params[1] < 1.0)) return kFitPenalty;
+    const auto valid = std::all_of(values.begin(), values.end(), [](double v) { return v >= 0.0 && is_integerish_(v); });
+    if (!valid) return kFitPenalty;
+    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
+    return NegativeBinomial{params[0], params[1]}.logpdf(xs).sum().item<double>();
+  };
+  return info_diag_matrix_series_(info_diag_from_loglik_({r, p}, fn), x);
+}
+
+Series NegativeBinomialFit::vcov(const Series& x) const {
+  const auto values = fit_data_f64_(x, "NegativeBinomialFit::vcov");
+  const auto fn = [&values](const std::vector<double>& params) -> double {
+    if (params.size() != 2 || !(params[0] > 0.0) || !(params[1] > 0.0 && params[1] < 1.0)) return kFitPenalty;
+    const auto valid = std::all_of(values.begin(), values.end(), [](double v) { return v >= 0.0 && is_integerish_(v); });
+    if (!valid) return kFitPenalty;
+    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
+    return NegativeBinomial{params[0], params[1]}.logpdf(xs).sum().item<double>();
+  };
+  return vcov_diag_matrix_series_(info_diag_from_loglik_({r, p}, fn), x, "NegativeBinomialFit::vcov");
+}
+
+Series NegativeBinomialFit::stderr(const Series& x) const {
+  const auto values = fit_data_f64_(x, "NegativeBinomialFit::stderr");
+  const auto fn = [&values](const std::vector<double>& params) -> double {
+    if (params.size() != 2 || !(params[0] > 0.0) || !(params[1] > 0.0 && params[1] < 1.0)) return kFitPenalty;
+    const auto valid = std::all_of(values.begin(), values.end(), [](double v) { return v >= 0.0 && is_integerish_(v); });
+    if (!valid) return kFitPenalty;
+    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
+    return NegativeBinomial{params[0], params[1]}.logpdf(xs).sum().item<double>();
+  };
+  return fit_detail::vec_series(stderr_from_info_diag_(info_diag_from_loglik_({r, p}, fn)), {2}, x);
+}
+
+Series NegativeBinomialFit::confint(const Series& x, double level) const {
+  const auto values = fit_data_f64_(x, "NegativeBinomialFit::confint");
+  const auto fn = [&values](const std::vector<double>& params) -> double {
+    if (params.size() != 2 || !(params[0] > 0.0) || !(params[1] > 0.0 && params[1] < 1.0)) return kFitPenalty;
+    const auto valid = std::all_of(values.begin(), values.end(), [](double v) { return v >= 0.0 && is_integerish_(v); });
+    if (!valid) return kFitPenalty;
+    const Series xs = fit_detail::vec_series_cpu(values, {static_cast<std::int64_t>(values.size())});
+    return NegativeBinomial{params[0], params[1]}.logpdf(xs).sum().item<double>();
+  };
+  const std::vector<double> params = {r, p};
+  auto ci = confint_matrix_series_(params, stderr_from_info_diag_(info_diag_from_loglik_(params, fn)), x, level, "NegativeBinomialFit::confint");
+  auto flat = ci.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  flat[2] = std::clamp(flat[2], 0.0, 1.0);
+  flat[3] = std::clamp(flat[3], 0.0, 1.0);
+  return fit_detail::vec_series_cpu(flat, {2, 2}).to(x.platform(), ScalarType::Float64);
+}
+
+NegativeBinomialFit NegativeBinomial::MLE(const Series& x) const {
+  const auto values = fit_data_f64_(x, "NegativeBinomial::MLE");
+  const auto valid = std::all_of(values.begin(), values.end(), [](double v) { return v >= 0.0 && is_integerish_(v); });
+  PLUSS_CHECK(valid, "NegativeBinomial::MLE: x must contain non-negative integer counts");
+  const double n = static_cast<double>(values.size());
+  const double mean = std::accumulate(values.begin(), values.end(), 0.0) / n;
+  const double var = std::transform_reduce(values.begin(),
+                                           values.end(),
+                                           0.0,
+                                           std::plus<>{},
+                                           [mean](double v) {
+                                             const double d = v - mean;
+                                             return d * d;
+                                           }) /
+                     n;
+  const double r_hat = (var > mean + 1e-9) ? std::max(1e-8, mean * mean / (var - mean)) : 1e6;
+  const double p_hat = std::clamp(r_hat / (r_hat + std::max(mean, 1e-12)), 1e-8, 1.0 - 1e-8);
+  return NegativeBinomialFit{r_hat, p_hat};
 }
 
 } // namespace pluss::subsp::stat::distr

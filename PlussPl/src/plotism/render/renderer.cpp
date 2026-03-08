@@ -1995,7 +1995,25 @@ struct FiniteMinMax {
     }
     return chars;
   };
-  const auto pane_insets = [tight, &max_tick_label_chars](const Pane& pane) {
+  const auto planar_tick_label_gap = [](bool axes_visible, double tick_font, double rotation_deg, bool x_axis) {
+    const double abs_rotation = std::abs(rotation_deg);
+    const double tick_len = std::clamp(tick_font * 0.45, 4.0, 9.0);
+    const double base_tick_len = axes_visible ? tick_len : 0.0;
+    if (abs_rotation <= 1e-9) {
+      if (!axes_visible) {
+        return x_axis ? std::clamp(tick_font * 0.40, 2.5, 7.0) : std::clamp(tick_font * 0.32, 2.0, 6.0);
+      }
+      return base_tick_len + (x_axis ? std::clamp(tick_font * 0.74, 4.0, 13.0)
+                                     : std::clamp(tick_font * 0.42, 2.0, 8.0));
+    }
+    const double rotation_gain = std::clamp(abs_rotation / 90.0, 0.0, 1.0);
+    if (!axes_visible) {
+      return x_axis ? std::clamp(tick_font * (0.28 + 0.12 * rotation_gain), 2.0, 6.0)
+                    : std::clamp(tick_font * (0.22 + 0.10 * rotation_gain), 2.0, 6.0);
+    }
+    return base_tick_len + std::clamp(tick_font * (0.28 + 0.16 * rotation_gain), 2.0, 9.0);
+  };
+  const auto pane_insets = [tight, &max_tick_label_chars, &planar_tick_label_gap](const Pane& pane) {
     const double top = tight ? 44.0 : 58.0;
     double left = tight ? 28.0 : 38.0;
     double right = pane.scale_guide_enabled() ? (tight ? 78.0 : 92.0) : (tight ? 20.0 : 28.0);
@@ -2005,23 +2023,34 @@ struct FiniteMinMax {
     double bottom = tight ? 42.0 : 56.0;
 
     if (pane.kind() == PaneKind::Planar) {
+      const bool axes_visible = pane.axes_visible();
+      if (!axes_visible) {
+        left = tight ? 12.0 : 16.0;
+        bottom = tight ? 18.0 : 22.0;
+        if (!pane.scale_guide_enabled()) {
+          right = tight ? 12.0 : 16.0;
+        }
+      }
       const double tick_font = std::clamp(10.0 * pane.tick_font_scale(), 7.0, 32.0);
       const double axis_font = std::clamp(11.0 * pane.axis_label_font_scale(), 8.0, 36.0);
-      const double tick_len = std::clamp(tick_font * 0.45, 4.0, 9.0);
-      const double tick_to_text_gap = std::clamp(tick_font * 0.9, 7.0, 20.0);
-      const auto axis_tick_depth = [&](const AxisState& axis, std::size_t fallback_chars) {
+      const auto axis_tick_depth = [&](const AxisState& axis, std::size_t fallback_chars, bool x_axis) {
+        if (!axis.tick_labels_visible) {
+          return axes_visible ? std::clamp(tick_font * 0.45, 4.0, 9.0) : 0.0;
+        }
         const auto chars = max_tick_label_chars(axis, fallback_chars);
         const double extent = std::max(1.0, static_cast<double>(chars)) * tick_font * 0.56;
         const double radians = std::abs(axis.tick_rotation_deg.value_or(0.0)) * kPi / 180.0;
-        return tick_len + tick_to_text_gap + tick_font * 0.35 + 0.5 * std::sin(radians) * extent;
+        return planar_tick_label_gap(axes_visible, tick_font, axis.tick_rotation_deg.value_or(0.0), x_axis)
+               + tick_font * 0.35
+               + 0.5 * std::sin(radians) * extent;
       };
 
-      const double x_depth = axis_tick_depth(pane.x_axis(), 8);
-      const double x_label_pad = pane.x_axis().label.empty() ? 8.0 : (axis_font + 10.0);
+      const double x_depth = axis_tick_depth(pane.x_axis(), 8, true);
+      const double x_label_pad = pane.x_axis().label.empty() ? 6.0 : (axis_font + (axes_visible ? 10.0 : 4.0));
       bottom = std::max(bottom, x_depth + x_label_pad);
 
-      const double y_depth = axis_tick_depth(pane.y_axis(), 6);
-      const double y_label_pad = pane.y_axis().label.empty() ? 8.0 : (axis_font + 10.0);
+      const double y_depth = axis_tick_depth(pane.y_axis(), 6, false);
+      const double y_label_pad = pane.y_axis().label.empty() ? 6.0 : (axis_font + (axes_visible ? 10.0 : 4.0));
       left = std::max(left, y_depth + y_label_pad);
     }
 
@@ -4038,8 +4067,25 @@ void render_planar_axes(
     const Rgba bg = pane.theme_tokens().background();
     const std::string_view theme_name = pane.theme_tokens().name();
     const bool darkgrid_style = theme_name.find("darkgrid") != std::string_view::npos;
+    const bool dark_style = !darkgrid_style &&
+                            (theme_name.find("flash_style_dark") != std::string_view::npos ||
+                             theme_name.find("flash_dark") != std::string_view::npos);
     const double bg_luma = 0.2126 * bg.red + 0.7152 * bg.green + 0.0722 * bg.blue;
     const bool dark_background = bg_luma < 0.5;
+    if (darkgrid_style || dark_style) {
+      const Rgba plot_face = darkgrid_style ? Rgba::from_u8(239, 242, 246) : Rgba::from_u8(231, 236, 242);
+      add_path(
+          list,
+          {
+              {layout.plot.x, layout.plot.y},
+              {layout.plot.x + layout.plot.width, layout.plot.y},
+              {layout.plot.x + layout.plot.width, layout.plot.y + layout.plot.height},
+              {layout.plot.x, layout.plot.y + layout.plot.height},
+              {layout.plot.x, layout.plot.y},
+          },
+          FillStroke{plot_face, plot_face, false, true, 0.0},
+          true);
+    }
     const Rgba minor_grid_color = darkgrid_style
                                       ? Rgba::from_u8(184, 192, 204, 186)
                                       : (dark_background ? Rgba::from_u8(73, 86, 104, 170)
@@ -4119,10 +4165,16 @@ void render_planar_axes(
       const double abs_rotation = std::abs(rotation_deg);
       const double base_tick_len = axes_visible ? tick_len : 0.0;
       if (abs_rotation <= 1e-9) {
+        if (!axes_visible) {
+          return std::clamp(tick_font * 0.40, 2.5, 7.0);
+        }
         return base_tick_len + std::clamp(tick_font * 0.74, 4.0, 13.0);
       }
       // For rotated labels anchored at the tick tip, keep only a small baseline clearance.
       const double rotation_gain = std::clamp(abs_rotation / 90.0, 0.0, 1.0);
+      if (!axes_visible) {
+        return std::clamp(tick_font * (0.28 + 0.12 * rotation_gain), 2.0, 6.0);
+      }
       return base_tick_len + std::clamp(tick_font * (0.28 + 0.16 * rotation_gain), 2.0, 9.0);
     };
     const auto planar_y_tick_label_gap = [&](double rotation_deg, double max_label_extent) {
@@ -4130,9 +4182,15 @@ void render_planar_axes(
       const double abs_rotation = std::abs(rotation_deg);
       const double base_tick_len = axes_visible ? tick_len : 0.0;
       if (abs_rotation <= 1e-9) {
+        if (!axes_visible) {
+          return std::clamp(tick_font * 0.32, 2.0, 6.0);
+        }
         return base_tick_len + tick_to_text_gap;
       }
       const double rotation_gain = std::clamp(abs_rotation / 90.0, 0.0, 1.0);
+      if (!axes_visible) {
+        return std::clamp(tick_font * (0.22 + 0.10 * rotation_gain), 2.0, 6.0);
+      }
       return base_tick_len + std::clamp(tick_font * (0.28 + 0.16 * rotation_gain), 2.0, 9.0);
     };
     const double x_axis_y = layout.plot.y + layout.plot.height;
@@ -4211,8 +4269,8 @@ void render_planar_axes(
         x_label_rotation);
   }
   if (!pane.y_axis().label.empty()) {
-    const bool center_on_axis = pane.y_axis().label_centered_on_axis;
-    const double label_x = center_on_axis ? (layout.plot.x - 38.0) : (layout.outer.x + 6.0);
+    const bool center_on_axis = pane.y_axis().label_centered_on_axis || !axes_visible;
+    const double label_x = center_on_axis ? (layout.plot.x - (axes_visible ? 38.0 : 30.0)) : (layout.outer.x + 6.0);
     const double label_y = center_on_axis ? (layout.plot.y + layout.plot.height * 0.5) : (layout.plot.y - 8.0);
     const auto label_align = center_on_axis ? TextCommand::Align::Middle : TextCommand::Align::Start;
     const double label_rotation =

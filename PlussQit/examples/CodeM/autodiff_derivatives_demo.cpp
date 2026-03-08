@@ -1,3 +1,4 @@
+#include "pluss/subsp/math/diff.h"
 #include <pluss/pluss.h>
 
 #include <cmath>
@@ -28,10 +29,11 @@ bool report_case(std::string_view name,
 
     const Series value = tracked_y.value();
     const Series first = tracked_x.sensitivity();
-    const Series second = nth_derivative(
-        [&](const auto& z) { return fn(z); },
+    const auto [_, hv] = pluss::subsp::math::diff::hvp(
+        [&](const auto& xx) { return fn(xx); },
         x,
-        2);
+        pluss::ones_like(x));
+    const Series second = hv;
 
     const double value_err = std::abs(value.template item<double>() - expected_value);
     const double first_err = std::abs(first.template item<double>() - expected_first);
@@ -41,7 +43,7 @@ bool report_case(std::string_view name,
               << " x=" << x0
               << " value=" << value.template item<double>()
               << " reverse_grad=" << first.template item<double>()
-              << " nth_second=" << second.template item<double>()
+              << " hvp_second=" << second.template item<double>()
               << " errs=(" << value_err << "," << first_err << "," << second_err << ")\n";
 
     return value_err <= tol && first_err <= tol && second_err <= tol;

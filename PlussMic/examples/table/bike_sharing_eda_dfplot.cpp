@@ -406,7 +406,7 @@ void write_parity_report(const fs::path& out_dir) {
   out << "- 11_hourly_violin: grouped violin plot\n";
   out << "- 12_correlation_heatmap: corr heatmap\n";
   out << "- 13_pairplot_sampled: full scatter matrix (pairplot proxy)\n\n";
-  out << "## Known gaps vs Python/seaborn script\n";
+  out << "## Known gaps vs Python reference script\n";
   out << "- Grouped-bar CI for multiple hue columns is still limited when bars are pre-pivoted.\n";
   out << "- STL and SARIMAX sections were intentionally skipped as requested.\n";
   out << "- Facet-grid style relplot layout is approximated by pivoted multi-line charts.\n";

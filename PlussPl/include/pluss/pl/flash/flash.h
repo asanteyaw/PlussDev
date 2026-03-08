@@ -1124,7 +1124,7 @@ struct Dataset {
   }
 };
 
-#include "pluss/pl/flash/detail/seaborn_style.h"
+#include "pluss/pl/flash/detail/flash_style.h"
 #include "pluss/pl/flash/detail/scene3d.h"
 
 template <class X, class Y, class Z>
@@ -1704,7 +1704,7 @@ struct JointPlotOptions {
 struct HeatmapOptions {
   bool annotate_levels{false};
   bool scale_guide{true};
-  bool borderless{false};
+  bool borderless{true};
   std::optional<double> vmin{std::nullopt};
   std::optional<double> vmax{std::nullopt};
   std::optional<Series> mask{std::nullopt};
@@ -2011,7 +2011,14 @@ Trace& heatmap(Pane& pane, X&& x, Y&& y, Z&& z, const HeatmapOptions& options) {
   trace.annotate_levels(options.annotate_levels);
   pane.scale_guide(options.scale_guide);
   if (options.borderless) {
-    pane.grid(GridStyle::None).axes_visible(false);
+    pane.grid(GridStyle::None)
+        .x_major_grid(false)
+        .y_major_grid(false)
+        .x_minor_grid(false)
+        .y_minor_grid(false)
+        .axes_visible(true)
+        .x_tick_labels(true)
+        .y_tick_labels(true);
   }
   return trace;
 }
@@ -2042,7 +2049,14 @@ Trace& heatmap(Pane& pane, X&& x, Y&& y, Z&& z, C&& c, const HeatmapOptions& opt
   trace.annotate_levels(options.annotate_levels);
   pane.scale_guide(options.scale_guide);
   if (options.borderless) {
-    pane.grid(GridStyle::None).axes_visible(false);
+    pane.grid(GridStyle::None)
+        .x_major_grid(false)
+        .y_major_grid(false)
+        .x_minor_grid(false)
+        .y_minor_grid(false)
+        .axes_visible(true)
+        .x_tick_labels(true)
+        .y_tick_labels(true);
   }
   return trace;
 }
@@ -4026,7 +4040,7 @@ Studio& jointplot(Studio& studio, X&& x, Y&& y, const JointPlotOptions& options)
 [[nodiscard]] inline PaletteRamp color_palette(std::string_view name = "ocean") {
   if (name == "deep" || name == "muted" || name == "pastel" || name == "bright" || name == "dark"
       || name == "colorblind") {
-    return seaborn_palette(name);
+    return flash_palette(name);
   }
   if (name == "thermal") return PaletteRamp::thermal();
   if (name == "lagoon") return PaletteRamp::lagoon();

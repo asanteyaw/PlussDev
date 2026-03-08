@@ -1,13 +1,13 @@
 // This header is intentionally included from flash.h inside namespace pluss::pl::flash.
 
-enum class SeabornContext : std::uint8_t {
+enum class FlashContext : std::uint8_t {
   Paper,
   Notebook,
   Talk,
   Poster,
 };
 
-enum class SeabornStyle : std::uint8_t {
+enum class FlashStyle : std::uint8_t {
   Darkgrid,
   Whitegrid,
   Dark,
@@ -15,7 +15,7 @@ enum class SeabornStyle : std::uint8_t {
   Ticks,
 };
 
-enum class SeabornPalette : std::uint8_t {
+enum class FlashPalette : std::uint8_t {
   Deep,
   Muted,
   Pastel,
@@ -24,41 +24,41 @@ enum class SeabornPalette : std::uint8_t {
   Colorblind,
 };
 
-struct SeabornThemeOptions {
-  SeabornStyle style{SeabornStyle::Whitegrid};
-  SeabornContext context{SeabornContext::Notebook};
-  SeabornPalette palette{SeabornPalette::Deep};
+struct FlashThemeOptions {
+  FlashStyle style{FlashStyle::Whitegrid};
+  FlashContext context{FlashContext::Notebook};
+  FlashPalette palette{FlashPalette::Deep};
   std::optional<double> width{std::nullopt};
   std::optional<double> height{std::nullopt};
 };
 
-[[nodiscard]] inline SeabornContext seaborn_context(std::string_view name) {
-  if (name == "paper") return SeabornContext::Paper;
-  if (name == "talk") return SeabornContext::Talk;
-  if (name == "poster") return SeabornContext::Poster;
-  return SeabornContext::Notebook;
+[[nodiscard]] inline FlashContext flash_context(std::string_view name) {
+  if (name == "paper") return FlashContext::Paper;
+  if (name == "talk") return FlashContext::Talk;
+  if (name == "poster") return FlashContext::Poster;
+  return FlashContext::Notebook;
 }
 
-[[nodiscard]] inline SeabornStyle seaborn_style(std::string_view name) {
-  if (name == "darkgrid") return SeabornStyle::Darkgrid;
-  if (name == "dark") return SeabornStyle::Dark;
-  if (name == "white") return SeabornStyle::White;
-  if (name == "ticks") return SeabornStyle::Ticks;
-  return SeabornStyle::Whitegrid;
+[[nodiscard]] inline FlashStyle flash_style(std::string_view name) {
+  if (name == "darkgrid") return FlashStyle::Darkgrid;
+  if (name == "dark") return FlashStyle::Dark;
+  if (name == "white") return FlashStyle::White;
+  if (name == "ticks") return FlashStyle::Ticks;
+  return FlashStyle::Whitegrid;
 }
 
-[[nodiscard]] inline SeabornPalette seaborn_palette_kind(std::string_view name) {
-  if (name == "muted") return SeabornPalette::Muted;
-  if (name == "pastel") return SeabornPalette::Pastel;
-  if (name == "bright") return SeabornPalette::Bright;
-  if (name == "dark") return SeabornPalette::Dark;
-  if (name == "colorblind") return SeabornPalette::Colorblind;
-  return SeabornPalette::Deep;
+[[nodiscard]] inline FlashPalette flash_palette_kind(std::string_view name) {
+  if (name == "muted") return FlashPalette::Muted;
+  if (name == "pastel") return FlashPalette::Pastel;
+  if (name == "bright") return FlashPalette::Bright;
+  if (name == "dark") return FlashPalette::Dark;
+  if (name == "colorblind") return FlashPalette::Colorblind;
+  return FlashPalette::Deep;
 }
 
-[[nodiscard]] inline std::vector<Rgba> seaborn_palette_colors(SeabornPalette palette) {
+[[nodiscard]] inline std::vector<Rgba> flash_palette_colors(FlashPalette palette) {
   switch (palette) {
-    case SeabornPalette::Muted:
+    case FlashPalette::Muted:
       return {
           Rgba::from_u8(72, 120, 208),
           Rgba::from_u8(238, 133, 74),
@@ -69,7 +69,7 @@ struct SeabornThemeOptions {
           Rgba::from_u8(218, 94, 155),
           Rgba::from_u8(140, 140, 140),
       };
-    case SeabornPalette::Pastel:
+    case FlashPalette::Pastel:
       return {
           Rgba::from_u8(161, 201, 244),
           Rgba::from_u8(255, 180, 130),
@@ -80,7 +80,7 @@ struct SeabornThemeOptions {
           Rgba::from_u8(250, 176, 228),
           Rgba::from_u8(207, 207, 207),
       };
-    case SeabornPalette::Bright:
+    case FlashPalette::Bright:
       return {
           Rgba::from_u8(2, 62, 255),
           Rgba::from_u8(255, 124, 0),
@@ -91,7 +91,7 @@ struct SeabornThemeOptions {
           Rgba::from_u8(241, 76, 193),
           Rgba::from_u8(160, 160, 160),
       };
-    case SeabornPalette::Dark:
+    case FlashPalette::Dark:
       return {
           Rgba::from_u8(0, 28, 127),
           Rgba::from_u8(177, 64, 13),
@@ -102,7 +102,7 @@ struct SeabornThemeOptions {
           Rgba::from_u8(154, 26, 116),
           Rgba::from_u8(90, 90, 90),
       };
-    case SeabornPalette::Colorblind:
+    case FlashPalette::Colorblind:
       return {
           Rgba::from_u8(1, 115, 178),
           Rgba::from_u8(222, 143, 5),
@@ -113,7 +113,7 @@ struct SeabornThemeOptions {
           Rgba::from_u8(251, 175, 228),
           Rgba::from_u8(148, 148, 148),
       };
-    case SeabornPalette::Deep:
+    case FlashPalette::Deep:
     default:
       return {
           Rgba::from_u8(76, 114, 176),
@@ -128,92 +128,92 @@ struct SeabornThemeOptions {
   }
 }
 
-[[nodiscard]] inline PaletteRamp seaborn_palette_ramp(SeabornPalette palette) {
+[[nodiscard]] inline PaletteRamp flash_palette_ramp(FlashPalette palette) {
   std::string name = "deep";
   switch (palette) {
-    case SeabornPalette::Muted:
+    case FlashPalette::Muted:
       name = "muted";
       break;
-    case SeabornPalette::Pastel:
+    case FlashPalette::Pastel:
       name = "pastel";
       break;
-    case SeabornPalette::Bright:
+    case FlashPalette::Bright:
       name = "bright";
       break;
-    case SeabornPalette::Dark:
+    case FlashPalette::Dark:
       name = "dark";
       break;
-    case SeabornPalette::Colorblind:
+    case FlashPalette::Colorblind:
       name = "colorblind";
       break;
-    case SeabornPalette::Deep:
+    case FlashPalette::Deep:
     default:
       name = "deep";
       break;
   }
-  return PaletteRamp(std::move(name), seaborn_palette_colors(palette));
+  return PaletteRamp(std::move(name), flash_palette_colors(palette));
 }
 
-[[nodiscard]] inline PaletteRamp seaborn_palette(SeabornPalette palette = SeabornPalette::Deep) {
-  return seaborn_palette_ramp(palette);
+[[nodiscard]] inline PaletteRamp flash_palette(FlashPalette palette = FlashPalette::Deep) {
+  return flash_palette_ramp(palette);
 }
 
-[[nodiscard]] inline PaletteRamp seaborn_palette(std::string_view name) {
-  return seaborn_palette(seaborn_palette_kind(name));
+[[nodiscard]] inline PaletteRamp flash_palette(std::string_view name) {
+  return flash_palette(flash_palette_kind(name));
 }
 
-[[nodiscard]] inline Theme seaborn_theme(SeabornStyle style = SeabornStyle::Whitegrid,
-                                         SeabornPalette palette = SeabornPalette::Deep) {
+[[nodiscard]] inline Theme flash_theme(FlashStyle style = FlashStyle::Whitegrid,
+                                         FlashPalette palette = FlashPalette::Deep) {
   Rgba background = Rgba::from_u8(255, 255, 255);
   Rgba foreground = Rgba::from_u8(34, 34, 34);
-  std::string theme_name = "seaborn_whitegrid";
+  std::string theme_name = "flash_whitegrid";
   switch (style) {
-    case SeabornStyle::Darkgrid:
-      // Seaborn darkgrid uses a light gray plot face with darker gray gridlines.
-      background = Rgba::from_u8(239, 242, 246);
-      foreground = Rgba::from_u8(34, 34, 34);
-      theme_name = "seaborn_darkgrid";
-      break;
-    case SeabornStyle::Whitegrid:
+    case FlashStyle::Darkgrid:
+      // Darkgrid keeps a neutral figure background; the renderer shades only the plot face.
       background = Rgba::from_u8(255, 255, 255);
       foreground = Rgba::from_u8(34, 34, 34);
-      theme_name = "seaborn_whitegrid";
+      theme_name = "flash_darkgrid";
       break;
-    case SeabornStyle::Dark:
-      background = Rgba::from_u8(18, 24, 33);
-      foreground = Rgba::from_u8(236, 240, 245);
-      theme_name = "seaborn_dark";
+    case FlashStyle::Whitegrid:
+      background = Rgba::from_u8(255, 255, 255);
+      foreground = Rgba::from_u8(34, 34, 34);
+      theme_name = "flash_whitegrid";
       break;
-    case SeabornStyle::White:
+    case FlashStyle::Dark:
+      background = Rgba::from_u8(236, 240, 245);
+      foreground = Rgba::from_u8(34, 34, 34);
+      theme_name = "flash_dark";
+      break;
+    case FlashStyle::White:
       background = Rgba::from_u8(255, 255, 255);
       foreground = Rgba::from_u8(26, 26, 26);
-      theme_name = "seaborn_white";
+      theme_name = "flash_white";
       break;
-    case SeabornStyle::Ticks:
+    case FlashStyle::Ticks:
       background = Rgba::from_u8(255, 255, 255);
       foreground = Rgba::from_u8(26, 26, 26);
-      theme_name = "seaborn_ticks";
+      theme_name = "flash_ticks";
       break;
   }
   return Theme{
       std::move(theme_name),
-      seaborn_palette_colors(palette),
+      flash_palette_colors(palette),
       background,
       foreground,
-      seaborn_palette_ramp(palette),
+      flash_palette_ramp(palette),
   };
 }
 
-[[nodiscard]] inline std::tuple<double, double, double, double> seaborn_context_values(
-    SeabornContext context) {
+[[nodiscard]] inline std::tuple<double, double, double, double> flash_context_values(
+    FlashContext context) {
   switch (context) {
-    case SeabornContext::Paper:
+    case FlashContext::Paper:
       return {920.0, 640.0, 0.92, 0.94};
-    case SeabornContext::Talk:
+    case FlashContext::Talk:
       return {1440.0, 900.0, 1.18, 1.14};
-    case SeabornContext::Poster:
+    case FlashContext::Poster:
       return {1840.0, 1160.0, 1.36, 1.3};
-    case SeabornContext::Notebook:
+    case FlashContext::Notebook:
     default:
       return {1200.0, 780.0, 1.0, 1.0};
   }
@@ -232,51 +232,51 @@ inline Pane& set_style(Pane& pane, GridStyle style = GridStyle::Major) {
   return pane.grid(style);
 }
 
-inline Pane& set_style(Pane& pane, SeabornStyle style) {
+inline Pane& set_style(Pane& pane, FlashStyle style) {
   const Theme base = pane.theme_tokens();
   Rgba bg = base.background();
   Rgba fg = base.foreground();
-  std::string theme_name = "seaborn_style_whitegrid";
+  std::string theme_name = "flash_style_whitegrid";
   switch (style) {
-    case SeabornStyle::Darkgrid:
-      bg = Rgba::from_u8(239, 242, 246);
-      fg = Rgba::from_u8(34, 34, 34);
-      theme_name = "seaborn_style_darkgrid";
-      break;
-    case SeabornStyle::Whitegrid:
+    case FlashStyle::Darkgrid:
       bg = Rgba::from_u8(255, 255, 255);
       fg = Rgba::from_u8(34, 34, 34);
-      theme_name = "seaborn_style_whitegrid";
+      theme_name = "flash_style_darkgrid";
       break;
-    case SeabornStyle::Dark:
-      bg = Rgba::from_u8(18, 24, 33);
-      fg = Rgba::from_u8(236, 240, 245);
-      theme_name = "seaborn_style_dark";
+    case FlashStyle::Whitegrid:
+      bg = Rgba::from_u8(255, 255, 255);
+      fg = Rgba::from_u8(34, 34, 34);
+      theme_name = "flash_style_whitegrid";
       break;
-    case SeabornStyle::White:
+    case FlashStyle::Dark:
+      bg = Rgba::from_u8(236, 240, 245);
+      fg = Rgba::from_u8(34, 34, 34);
+      theme_name = "flash_style_dark";
+      break;
+    case FlashStyle::White:
       bg = Rgba::from_u8(255, 255, 255);
       fg = Rgba::from_u8(26, 26, 26);
-      theme_name = "seaborn_style_white";
+      theme_name = "flash_style_white";
       break;
-    case SeabornStyle::Ticks:
+    case FlashStyle::Ticks:
       bg = Rgba::from_u8(255, 255, 255);
       fg = Rgba::from_u8(26, 26, 26);
-      theme_name = "seaborn_style_ticks";
+      theme_name = "flash_style_ticks";
       break;
   }
   pane.theme_tokens() = Theme{std::move(theme_name), base.accents(), bg, fg, base.surface_palette()};
   switch (style) {
-    case SeabornStyle::Darkgrid:
-    case SeabornStyle::Whitegrid:
+    case FlashStyle::Darkgrid:
+    case FlashStyle::Whitegrid:
       pane.axes_visible(true)
           .grid(GridStyle::Major)
           .x_major_grid(true)
           .y_major_grid(true)
           .z_major_grid(true);
       break;
-    case SeabornStyle::Dark:
-    case SeabornStyle::White:
-    case SeabornStyle::Ticks:
+    case FlashStyle::Dark:
+    case FlashStyle::White:
+    case FlashStyle::Ticks:
       pane.axes_visible(true)
           .grid(GridStyle::None)
           .x_major_grid(false)
@@ -291,19 +291,19 @@ inline Pane& set_style(Pane& pane, SeabornStyle style) {
 }
 
 inline Pane& set_style(Pane& pane, std::string_view style) {
-  return set_style(pane, seaborn_style(style));
+  return set_style(pane, flash_style(style));
 }
 
 inline Pane& axes_style(Pane& pane, GridStyle style = GridStyle::Major) {
   return set_style(pane, style);
 }
 
-inline Pane& axes_style(Pane& pane, SeabornStyle style) {
+inline Pane& axes_style(Pane& pane, FlashStyle style) {
   return set_style(pane, style);
 }
 
 inline Pane& axes_style(Pane& pane, std::string_view style) {
-  return set_style(pane, seaborn_style(style));
+  return set_style(pane, flash_style(style));
 }
 
 inline Studio& set_context(
@@ -331,10 +331,10 @@ inline Studio& plotting_context(
 
 inline Studio& set_context(
     Studio& studio,
-    SeabornContext context,
+    FlashContext context,
     std::optional<double> width = std::nullopt,
     std::optional<double> height = std::nullopt) {
-  const auto [base_w, base_h, tick_scale, axis_scale] = seaborn_context_values(context);
+  const auto [base_w, base_h, tick_scale, axis_scale] = flash_context_values(context);
   return set_context(
       studio,
       width.value_or(base_w),
@@ -348,11 +348,11 @@ inline Studio& set_context(
     std::string_view context,
     std::optional<double> width = std::nullopt,
     std::optional<double> height = std::nullopt) {
-  return set_context(studio, seaborn_context(context), width, height);
+  return set_context(studio, flash_context(context), width, height);
 }
 
-inline Studio& set_theme(Studio& studio, const SeabornThemeOptions& options) {
-  const Theme theme_tokens = seaborn_theme(options.style, options.palette);
+inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
+  const Theme theme_tokens = flash_theme(options.style, options.palette);
   studio.theme(theme_tokens);
   set_context(studio, options.context, options.width, options.height);
   for (const Pane& pane_const : studio.panes()) {
@@ -368,10 +368,10 @@ inline Studio& set_theme(
     std::string_view style,
     std::string_view context = "notebook",
     std::string_view palette = "deep") {
-  SeabornThemeOptions options;
-  options.style = seaborn_style(style);
-  options.context = seaborn_context(context);
-  options.palette = seaborn_palette_kind(palette);
+  FlashThemeOptions options;
+  options.style = flash_style(style);
+  options.context = flash_context(context);
+  options.palette = flash_palette_kind(palette);
   return set_theme(studio, options);
 }
 

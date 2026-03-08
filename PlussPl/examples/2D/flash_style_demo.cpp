@@ -27,9 +27,9 @@ int main() {
   auto cat_err = pluss::make_series(std::vector<double>{0.04, 0.05, 0.03, 0.06, 0.05, 0.04, 0.05, 0.03, 0.04, 0.06}, {10});
   auto hue_numeric = x.mul(0.9).sin().add(1.0).mul(2.0).round();
 
-  Studio fig("flash_seaborn_catalog", Theme::paper());
+  Studio fig("flash_flash_catalog", Theme::paper());
   set_theme(fig, "whitegrid", "talk", "deep");
-  set_context(fig, SeabornContext::Talk, 1520.0, 980.0);
+  set_context(fig, FlashContext::Talk, 1520.0, 980.0);
   fig.mosaic(3, 3, 16.0, 16.0);
 
   auto& relational = fig.pane2("Relational");
@@ -55,15 +55,15 @@ int main() {
   auto& categorical = fig.pane2("Categorical");
   categorical.place(0, 2);
   set_style(categorical, GridStyle::Major);
-  ViolinOptions seaborn_violin_opts;
-  seaborn_violin_opts.bw_adjust = 0.9;
-  seaborn_violin_opts.cut = 1.3;
-  seaborn_violin_opts.scale = ViolinScale::Area;
-  seaborn_violin_opts.inner = ViolinInner::Quartile;
+  ViolinOptions flash_violin_opts;
+  flash_violin_opts.bw_adjust = 0.9;
+  flash_violin_opts.cut = 1.3;
+  flash_violin_opts.scale = ViolinScale::Area;
+  flash_violin_opts.inner = ViolinInner::Quartile;
   stripplot(categorical, cats, cat_vals).label("sns.stripplot");
   swarmplot(categorical, cats, cat_vals).label("sns.swarmplot");
   boxplot(categorical, cats, cat_vals).label("sns.boxplot");
-  violinplot(categorical, cats, cat_vals, seaborn_violin_opts).label("sns.violinplot");
+  violinplot(categorical, cats, cat_vals, flash_violin_opts).label("sns.violinplot");
   boxenplot(categorical, cat_vals).label("sns.boxenplot");
   pointplot(categorical, pluss::linspace(0.0, 9.0, 10, pluss::ScalarType::Float64), cat_vals, cat_err).label("sns.pointplot");
   barplot(categorical, pluss::linspace(0.0, 9.0, 10, pluss::ScalarType::Float64), cat_vals).label("sns.barplot");
@@ -113,7 +113,7 @@ int main() {
 
   auto& palette = fig.pane2("Palette + Style");
   palette.place(1, 2);
-  set_style(palette, SeabornStyle::Whitegrid);
+  set_style(palette, FlashStyle::Whitegrid);
   palette.trend(std::array<double, 4>{0.0, 1.0, 2.0, 3.0},
                 std::array<double, 4>{0.16, 0.22, 0.18, 0.24})
       .label("deep")
@@ -161,14 +161,14 @@ int main() {
   lm.grid(GridStyle::Major);
   lm.trend(std::array<double, 3>{0.0, 1.0, 2.0}, std::array<double, 3>{0.2, 0.5, 0.9}).label("lmplot in separate studio");
 
-  fig.save_svg(out_path("plusspl_flash_seaborn_demo.svg"));
-  fig.save_pdf(out_path("plusspl_flash_seaborn_demo.pdf"));
+  // fig.save_svg(out_path("plusspl_flash_flash_demo.svg"));
+  fig.save_pdf(out_path("plusspl_flash_style_demo.pdf"));
 
   Studio lm_fig("flash_lmplot_demo", Theme::paper());
-  set_theme(lm_fig, SeabornThemeOptions{
-                        .style = SeabornStyle::Darkgrid,
-                        .context = SeabornContext::Notebook,
-                        .palette = SeabornPalette::Muted,
+  set_theme(lm_fig, FlashThemeOptions{
+                        .style = FlashStyle::Darkgrid,
+                        .context = FlashContext::Notebook,
+                        .palette = FlashPalette::Muted,
                         .width = 980.0,
                         .height = 720.0});
   RegPlotOptions lm_opts;
@@ -177,7 +177,7 @@ int main() {
   lm_opts.show_ci = true;
   lm_opts.n_boot = 120;
   lmplot(lm_fig, x, y2, lm_opts, "sns.lmplot");
-  lm_fig.save_svg(out_path("plusspl_flash_lmplot_demo.svg"));
+  // lm_fig.save_svg(out_path("plusspl_flash_lmplot_demo.svg"));
   lm_fig.save_pdf(out_path("plusspl_flash_lmplot_demo.pdf"));
 
   Studio catplot_bar_fig("flash_catplot_bar_options_demo", Theme::paper());
@@ -191,7 +191,7 @@ int main() {
   cat_bar_opts.hue_order = {"DeskA", "DeskB"};
   auto& cat_bar_ax = catplot_bar_fig.pane2("catplot bar + ci + dodge");
   catplot(cat_bar_ax, cats, cat_vals, cat_hue, cat_bar_opts);
-  catplot_bar_fig.save_svg(out_path("plusspl_flash_catplot_bar_options_demo.svg"));
+  // catplot_bar_fig.save_svg(out_path("plusspl_flash_catplot_bar_options_demo.svg"));
   catplot_bar_fig.save_pdf(out_path("plusspl_flash_catplot_bar_options_demo.pdf"));
 
   Studio catplot_violin_fig("flash_catplot_violin_options_demo", Theme::paper());
@@ -205,7 +205,7 @@ int main() {
   cat_violin_opts.violin.inner = ViolinInner::Quartile;
   auto& cat_violin_ax = catplot_violin_fig.pane2("catplot violin + hue split");
   catplot(cat_violin_ax, cats, cat_vals, cat_hue, cat_violin_opts);
-  catplot_violin_fig.save_svg(out_path("plusspl_flash_catplot_violin_options_demo.svg"));
+  // catplot_violin_fig.save_svg(out_path("plusspl_flash_catplot_violin_options_demo.svg"));
   catplot_violin_fig.save_pdf(out_path("plusspl_flash_catplot_violin_options_demo.pdf"));
 
   Studio heatmap_borderless_fig("flash_heatmap_borderless_demo", Theme::paper());
@@ -221,7 +221,7 @@ int main() {
   heatmap_borderless_ax.x_ticks(std::array<double, 4>{0.0, 1.0, 2.0, 3.0}, {"T<56", "56<=T<129", "129<=T<179", "179<=T<=252"});
   heatmap_borderless_ax.y_ticks(std::array<double, 3>{0.0, 1.0, 2.0}, {"[0.8,0.9)", "[0.9,1.0)", "[1.0,1.1)"});
   heatmap_borderless_ax.x_label("Maturity").y_label("Moneyness");
-  heatmap_borderless_fig.save_svg(out_path("plusspl_flash_heatmap_borderless_demo.svg"));
+  // heatmap_borderless_fig.save_svg(out_path("plusspl_flash_heatmap_borderless_demo.svg"));
   heatmap_borderless_fig.save_pdf(out_path("plusspl_flash_heatmap_borderless_demo.pdf"));
 
   Studio pairplot_fig("flash_pairplot_demo", Theme::paper());
@@ -243,19 +243,19 @@ int main() {
   pair_opts.labels = {"A", "B", "C"};
   pair_opts.max_points = 320;
   pairplot(pairplot_fig, pair_cols, pair_opts);
-  pairplot_fig.save_svg(out_path("plusspl_flash_pairplot_demo.svg"));
+  // pairplot_fig.save_svg(out_path("plusspl_flash_pairplot_demo.svg"));
   pairplot_fig.save_pdf(out_path("plusspl_flash_pairplot_demo.pdf"));
 
   Studio jointplot_fig("flash_jointplot_demo", Theme::paper());
   jointplot(jointplot_fig, x, y, "scatter");
-  jointplot_fig.save_svg(out_path("plusspl_flash_jointplot_demo.svg"));
+  // jointplot_fig.save_svg(out_path("plusspl_flash_jointplot_demo.svg"));
   jointplot_fig.save_pdf(out_path("plusspl_flash_jointplot_demo.pdf"));
 
   Studio axis_style_fig("flash_axis_style_demo", Theme::paper());
-  set_theme(axis_style_fig, SeabornThemeOptions{
-                              .style = SeabornStyle::Whitegrid,
-                              .context = SeabornContext::Notebook,
-                              .palette = SeabornPalette::Deep,
+  set_theme(axis_style_fig, FlashThemeOptions{
+                              .style = FlashStyle::Whitegrid,
+                              .context = FlashContext::Notebook,
+                              .palette = FlashPalette::Deep,
                               .width = 1120.0,
                               .height = 760.0});
   axis_style_fig.mosaic(1, 2, 14.0, 10.0);
@@ -265,18 +265,18 @@ int main() {
   lineplot(horizontal_grid_ax, x, y).label("horizontal grid");
   auto& tickless_ax = axis_style_fig.pane2("tickless");
   tickless_ax.place(0, 1);
-  set_style(tickless_ax, SeabornStyle::Whitegrid);
+  set_style(tickless_ax, FlashStyle::Whitegrid);
   tickless(tickless_ax, true);
   tickless_ax.x_label("temperature").y_label("height");
   lineplot(tickless_ax, x, y2).label("tickless chart");
-  axis_style_fig.save_svg(out_path("plusspl_flash_axis_style_demo.svg"));
+  // axis_style_fig.save_svg(out_path("plusspl_flash_axis_style_demo.svg"));
   axis_style_fig.save_pdf(out_path("plusspl_flash_axis_style_demo.pdf"));
 
-  const std::array<SeabornContext, 4> contexts{
-      SeabornContext::Paper,
-      SeabornContext::Notebook,
-      SeabornContext::Talk,
-      SeabornContext::Poster,
+  const std::array<FlashContext, 4> contexts{
+      FlashContext::Paper,
+      FlashContext::Notebook,
+      FlashContext::Talk,
+      FlashContext::Poster,
   };
   const std::array<std::string_view, 4> context_names{
       "paper",
@@ -286,31 +286,31 @@ int main() {
   };
   for (std::size_t i = 0; i < contexts.size(); ++i) {
     Studio context_fig("flash_context_demo", Theme::paper());
-    set_theme(context_fig, SeabornThemeOptions{
-                              .style = SeabornStyle::Whitegrid,
+    set_theme(context_fig, FlashThemeOptions{
+                              .style = FlashStyle::Whitegrid,
                               .context = contexts[i],
-                              .palette = SeabornPalette::Deep});
+                              .palette = FlashPalette::Deep});
     auto& pane = context_fig.pane2(std::string(context_names[i]) + " context");
     lineplot(pane, x, y).label("line");
     pane.x_label("x").y_label("y");
-    context_fig.save_svg(out_path("plusspl_flash_context_" + std::string(context_names[i]) + "_demo.svg"));
+    // context_fig.save_svg(out_path("plusspl_flash_context_" + std::string(context_names[i]) + "_demo.svg"));
     context_fig.save_pdf(out_path("plusspl_flash_context_" + std::string(context_names[i]) + "_demo.pdf"));
   }
 
   Studio style_gallery_fig("flash_style_gallery_demo", Theme::paper());
-  set_theme(style_gallery_fig, SeabornThemeOptions{
-                                 .style = SeabornStyle::Whitegrid,
-                                 .context = SeabornContext::Notebook,
-                                 .palette = SeabornPalette::Deep,
+  set_theme(style_gallery_fig, FlashThemeOptions{
+                                 .style = FlashStyle::Whitegrid,
+                                 .context = FlashContext::Notebook,
+                                 .palette = FlashPalette::Deep,
                                  .width = 1740.0,
                                  .height = 460.0});
   style_gallery_fig.mosaic(1, 5, 8.0, 8.0);
-  const std::array<SeabornStyle, 5> styles{
-      SeabornStyle::Darkgrid,
-      SeabornStyle::Whitegrid,
-      SeabornStyle::Dark,
-      SeabornStyle::White,
-      SeabornStyle::Ticks,
+  const std::array<FlashStyle, 5> styles{
+      FlashStyle::Darkgrid,
+      FlashStyle::Whitegrid,
+      FlashStyle::Dark,
+      FlashStyle::White,
+      FlashStyle::Ticks,
   };
   const std::array<std::string_view, 5> style_names{
       "darkgrid",
@@ -326,14 +326,14 @@ int main() {
     lineplot(pane, x, y).label(std::string(style_names[i]));
     pane.x_label("x").y_label("y");
   }
-  style_gallery_fig.save_svg(out_path("plusspl_flash_style_gallery_demo.svg"));
+  // style_gallery_fig.save_svg(out_path("plusspl_flash_style_gallery_demo.svg"));
   style_gallery_fig.save_pdf(out_path("plusspl_flash_style_gallery_demo.pdf"));
 
   Studio palette_gallery_fig("flash_palette_gallery_demo", Theme::paper());
-  set_theme(palette_gallery_fig, SeabornThemeOptions{
-                                   .style = SeabornStyle::Whitegrid,
-                                   .context = SeabornContext::Notebook,
-                                   .palette = SeabornPalette::Deep,
+  set_theme(palette_gallery_fig, FlashThemeOptions{
+                                   .style = FlashStyle::Whitegrid,
+                                   .context = FlashContext::Notebook,
+                                   .palette = FlashPalette::Deep,
                                    .width = 1580.0,
                                    .height = 900.0});
   palette_gallery_fig.mosaic(2, 3, 8.0, 8.0);
@@ -348,11 +348,11 @@ int main() {
   for (std::size_t i = 0; i < palette_names.size(); ++i) {
     auto& pane = palette_gallery_fig.pane2(std::string(palette_names[i]));
     pane.place(static_cast<std::int64_t>(i / 3), static_cast<std::int64_t>(i % 3));
-    set_style(pane, SeabornStyle::Whitegrid);
+    set_style(pane, FlashStyle::Whitegrid);
     lineplot(pane, x, y).label("line").palette(color_palette(palette_names[i]));
     pane.x_label("x").y_label("y");
   }
-  palette_gallery_fig.save_svg(out_path("plusspl_flash_palette_gallery_demo.svg"));
+  // palette_gallery_fig.save_svg(out_path("plusspl_flash_palette_gallery_demo.svg"));
   palette_gallery_fig.save_pdf(out_path("plusspl_flash_palette_gallery_demo.pdf"));
 
   Studio jointplot_hex_fig("flash_jointplot_hex_demo", Theme::paper());
@@ -362,7 +362,7 @@ int main() {
   joint_hex_opts.hex_bins_x = 24;
   joint_hex_opts.hex_bins_y = 20;
   jointplot(jointplot_hex_fig, pair_a, pair_b, joint_hex_opts);
-  jointplot_hex_fig.save_svg(out_path("plusspl_flash_jointplot_hex_demo.svg"));
+  // jointplot_hex_fig.save_svg(out_path("plusspl_flash_jointplot_hex_demo.svg"));
   jointplot_hex_fig.save_pdf(out_path("plusspl_flash_jointplot_hex_demo.pdf"));
 
   Studio jointplot_kde_fig("flash_jointplot_kde_demo", Theme::paper());
@@ -374,7 +374,7 @@ int main() {
   joint_kde_opts.kde_smooth_passes = 2;
   joint_kde_opts.kde_levels = 10;
   jointplot(jointplot_kde_fig, pair_a, pair_c, joint_kde_opts);
-  jointplot_kde_fig.save_svg(out_path("plusspl_flash_jointplot_kde_demo.svg"));
+  // jointplot_kde_fig.save_svg(out_path("plusspl_flash_jointplot_kde_demo.svg"));
   jointplot_kde_fig.save_pdf(out_path("plusspl_flash_jointplot_kde_demo.pdf"));
 
   Studio acf_fig("flash_acfplot_demo", Theme::paper());
@@ -382,7 +382,7 @@ int main() {
   acf_opts.max_lag = 36;
   acf_opts.include_zero_lag = false;
   acfplot(acf_fig, y, acf_opts);
-  acf_fig.save_svg(out_path("plusspl_flash_acfplot_demo.svg"));
+  // acf_fig.save_svg(out_path("plusspl_flash_acfplot_demo.svg"));
   acf_fig.save_pdf(out_path("plusspl_flash_acfplot_demo.pdf"));
 
   Studio pacf_fig("flash_pacfplot_demo", Theme::paper());
@@ -390,19 +390,19 @@ int main() {
   pacf_opts.max_lag = 36;
   pacf_opts.include_zero_lag = false;
   pacfplot(pacf_fig, y, pacf_opts);
-  pacf_fig.save_svg(out_path("plusspl_flash_pacfplot_demo.svg"));
+  // pacf_fig.save_svg(out_path("plusspl_flash_pacfplot_demo.svg"));
   pacf_fig.save_pdf(out_path("plusspl_flash_pacfplot_demo.pdf"));
 
   Studio ccf_fig("flash_ccfplot_demo", Theme::paper());
   CcfPlotOptions ccf_opts;
   ccf_opts.max_lag = 36;
   ccfplot(ccf_fig, pair_a, pair_b, ccf_opts);
-  ccf_fig.save_svg(out_path("plusspl_flash_ccfplot_demo.svg"));
+  // ccf_fig.save_svg(out_path("plusspl_flash_ccfplot_demo.svg"));
   ccf_fig.save_pdf(out_path("plusspl_flash_ccfplot_demo.pdf"));
 
   Studio qq_fig("flash_qqplot_demo", Theme::paper());
   qqplot(qq_fig, pair_c, QqPlotOptions{}, "qq for pair_c");
-  qq_fig.save_svg(out_path("plusspl_flash_qqplot_demo.svg"));
+  // qq_fig.save_svg(out_path("plusspl_flash_qqplot_demo.svg"));
   qq_fig.save_pdf(out_path("plusspl_flash_qqplot_demo.pdf"));
 
   Studio resid_hist_fig("flash_resid_histplot_demo", Theme::paper());
@@ -410,7 +410,7 @@ int main() {
   rh_opts.bins = 20;
   rh_opts.reg = reg_opts;
   resid_histplot(resid_hist_fig, x, y, rh_opts, "residual histogram");
-  resid_hist_fig.save_svg(out_path("plusspl_flash_resid_histplot_demo.svg"));
+  // resid_hist_fig.save_svg(out_path("plusspl_flash_resid_histplot_demo.svg"));
   resid_hist_fig.save_pdf(out_path("plusspl_flash_resid_histplot_demo.pdf"));
 
   Studio resid_acf_fig("flash_resid_acfplot_demo", Theme::paper());
@@ -418,7 +418,7 @@ int main() {
   ra_opts.reg = reg_opts;
   ra_opts.acf.max_lag = 28;
   resid_acfplot(resid_acf_fig, x, y, ra_opts);
-  resid_acf_fig.save_svg(out_path("plusspl_flash_resid_acfplot_demo.svg"));
+  // resid_acf_fig.save_svg(out_path("plusspl_flash_resid_acfplot_demo.svg"));
   resid_acf_fig.save_pdf(out_path("plusspl_flash_resid_acfplot_demo.pdf"));
 
   std::vector<pluss::Series> rel_xs{
@@ -442,7 +442,7 @@ int main() {
   rel_grid_opts.x_labels = {"x", "x", "x", "x"};
   rel_grid_opts.y_labels = {"y1", "y2", "y3", "y4"};
   relgridplot(rel_grid_fig, rel_xs, rel_ys, rel_grid_opts);
-  rel_grid_fig.save_svg(out_path("plusspl_flash_relgridplot_demo.svg"));
+  // rel_grid_fig.save_svg(out_path("plusspl_flash_relgridplot_demo.svg"));
   rel_grid_fig.save_pdf(out_path("plusspl_flash_relgridplot_demo.pdf"));
 
   std::vector<pluss::Note> cat_groups{
@@ -473,7 +473,7 @@ int main() {
   cat_grid_opts.cat.errorbar = CatErrorBar::SE;
   cat_grid_opts.cat.dodge = true;
   catgridplot(cat_grid_fig, cat_groups, cat_values, cat_hues, cat_grid_opts);
-  cat_grid_fig.save_svg(out_path("plusspl_flash_catgridplot_demo.svg"));
+  // cat_grid_fig.save_svg(out_path("plusspl_flash_catgridplot_demo.svg"));
   cat_grid_fig.save_pdf(out_path("plusspl_flash_catgridplot_demo.pdf"));
 
   std::vector<pluss::Series> dis_values{
@@ -489,7 +489,7 @@ int main() {
   dis_grid_opts.cols = 2;
   dis_grid_opts.titles = {"density A", "density B", "density C", "density A+0.25C"};
   disgridplot(dis_grid_fig, dis_values, dis_grid_opts);
-  dis_grid_fig.save_svg(out_path("plusspl_flash_disgridplot_demo.svg"));
+  // dis_grid_fig.save_svg(out_path("plusspl_flash_disgridplot_demo.svg"));
   dis_grid_fig.save_pdf(out_path("plusspl_flash_disgridplot_demo.pdf"));
 
   Studio facet_map_fig("flash_facet_map_plot_demo", Theme::paper());
@@ -504,7 +504,7 @@ int main() {
         pane.grid(GridStyle::Major).x_label("x").y_label("y");
         pane.trend(x, y_local).label("r" + std::to_string(row) + " c" + std::to_string(col));
       });
-  facet_map_fig.save_svg(out_path("plusspl_flash_facet_map_plot_demo.svg"));
+  // facet_map_fig.save_svg(out_path("plusspl_flash_facet_map_plot_demo.svg"));
   facet_map_fig.save_pdf(out_path("plusspl_flash_facet_map_plot_demo.pdf"));
 
   Studio pair_map_fig("flash_pairgrid_map_plot_demo", Theme::paper());
@@ -527,7 +527,7 @@ int main() {
             map_cols[static_cast<std::size_t>(col)],
             map_cols[static_cast<std::size_t>(row)]);
       });
-  pair_map_fig.save_svg(out_path("plusspl_flash_pairgrid_map_plot_demo.svg"));
+  // pair_map_fig.save_svg(out_path("plusspl_flash_pairgrid_map_plot_demo.svg"));
   pair_map_fig.save_pdf(out_path("plusspl_flash_pairgrid_map_plot_demo.pdf"));
 
   Studio joint_map_fig("flash_jointgrid_map_plot_demo", Theme::paper());
@@ -547,7 +547,7 @@ int main() {
         histplot(pane, pair_b, 20);
         pane.x_label("");
       });
-  joint_map_fig.save_svg(out_path("plusspl_flash_jointgrid_map_plot_demo.svg"));
+  // joint_map_fig.save_svg(out_path("plusspl_flash_jointgrid_map_plot_demo.svg"));
   joint_map_fig.save_pdf(out_path("plusspl_flash_jointgrid_map_plot_demo.pdf"));
 
   auto figz = pluss::pl::studio("demo");
