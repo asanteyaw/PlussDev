@@ -1365,6 +1365,8 @@ class Studio {
   [[nodiscard]] const MosaicLayout& mosaic_layout() const noexcept { return mosaic_layout_; }
   [[nodiscard]] bool tight_layout_enabled() const noexcept { return tight_layout_enabled_; }
   [[nodiscard]] double tight_layout_padding() const noexcept { return tight_layout_padding_; }
+  [[nodiscard]] double default_tick_font_scale() const noexcept { return default_tick_font_scale_; }
+  [[nodiscard]] double default_axis_label_font_scale() const noexcept { return default_axis_label_font_scale_; }
   [[nodiscard]] KeyDock legend_dock() const noexcept { return legend_dock_; }
   [[nodiscard]] KeyFrame legend_frame() const noexcept { return legend_frame_; }
   [[nodiscard]] const std::map<std::string, std::string>& x_captions() const noexcept { return x_captions_; }
@@ -1374,6 +1376,9 @@ class Studio {
   Studio& rename(std::string name);
   Studio& headline(std::string text);
   Studio& theme(Theme theme);
+  Studio& context_scales(double tick_font_scale, double axis_label_font_scale);
+  Studio& pane_style_defaults(const Pane& pane);
+  Studio& clear_pane_style_defaults() noexcept;
   Studio& size(double width, double height) noexcept;
   Studio& mosaic(std::int64_t rows, std::int64_t cols, double gutter_x = 18.0, double gutter_y = 18.0);
   Studio& tight_layout(bool enable = true, double padding = 6.0);
@@ -1405,6 +1410,18 @@ class Studio {
   std::map<std::string, std::string> x_captions_{};
   std::map<std::string, std::string> y_captions_{};
   std::map<std::string, std::string> z_captions_{};
+  double default_tick_font_scale_{1.0};
+  double default_axis_label_font_scale_{1.0};
+  bool pane_style_defaults_enabled_{false};
+  Theme default_pane_theme_{Theme::paper()};
+  bool default_axes_visible_{true};
+  GridStyle default_grid_style_{GridStyle::None};
+  bool default_x_major_grid_{false};
+  bool default_y_major_grid_{false};
+  bool default_z_major_grid_{false};
+  bool default_x_minor_grid_{false};
+  bool default_y_minor_grid_{false};
+  bool default_z_minor_grid_{false};
   std::vector<Pane> panes_{};
 };
 

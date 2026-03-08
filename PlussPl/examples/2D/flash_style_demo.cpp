@@ -28,7 +28,7 @@ int main() {
   auto hue_numeric = x.mul(0.9).sin().add(1.0).mul(2.0).round();
 
   Studio fig("flash_flash_catalog", Theme::paper());
-  set_theme(fig, "whitegrid", "talk", "deep");
+  set_theme(fig, "lightgrid", "talk");
   set_context(fig, FlashContext::Talk, 1520.0, 980.0);
   fig.mosaic(3, 3, 16.0, 16.0);
 
@@ -113,7 +113,7 @@ int main() {
 
   auto& palette = fig.pane2("Palette + Style");
   palette.place(1, 2);
-  set_style(palette, FlashStyle::Whitegrid);
+  set_style(palette, FlashStyle::Lightgrid);
   palette.trend(std::array<double, 4>{0.0, 1.0, 2.0, 3.0},
                 std::array<double, 4>{0.16, 0.22, 0.18, 0.24})
       .label("deep")
@@ -168,7 +168,6 @@ int main() {
   set_theme(lm_fig, FlashThemeOptions{
                         .style = FlashStyle::Darkgrid,
                         .context = FlashContext::Notebook,
-                        .palette = FlashPalette::Muted,
                         .width = 980.0,
                         .height = 720.0});
   RegPlotOptions lm_opts;
@@ -313,9 +312,8 @@ int main() {
 
   Studio axis_style_fig("flash_axis_style_demo", Theme::paper());
   set_theme(axis_style_fig, FlashThemeOptions{
-                              .style = FlashStyle::Whitegrid,
+                              .style = FlashStyle::Lightgrid,
                               .context = FlashContext::Notebook,
-                              .palette = FlashPalette::Deep,
                               .width = 1120.0,
                               .height = 760.0});
   axis_style_fig.mosaic(1, 2, 14.0, 10.0);
@@ -326,7 +324,7 @@ int main() {
   lineplot(horizontal_grid_ax, x, y).label("horizontal grid");
   auto& tickless_ax = axis_style_fig.pane2("tickless");
   tickless_ax.place(0, 1);
-  set_style(tickless_ax, FlashStyle::Whitegrid);
+  set_style(tickless_ax, FlashStyle::Lightgrid);
   tickless(tickless_ax, true);
   tickless_ax.x_label("temperature").y_label("height");
   lineplot(tickless_ax, x, y2).label("tickless chart");
@@ -348,73 +346,59 @@ int main() {
   for (std::size_t i = 0; i < contexts.size(); ++i) {
     Studio context_fig("flash_context_demo", Theme::paper());
     set_theme(context_fig, FlashThemeOptions{
-                              .style = FlashStyle::Whitegrid,
+                              .style = FlashStyle::Lightgrid,
                               .context = contexts[i],
-                              .palette = FlashPalette::Deep});
+                              .width = 1020.0,
+                              .height = 720.0});
     auto& pane = context_fig.pane2(std::string(context_names[i]) + " context");
-    lineplot(pane, x, y).label("line");
+    pane.grid(GridStyle::Major)
+        .x_ticks(std::array<double, 6>{0.0, 2.0, 4.0, 6.0, 8.0, 10.0}, {"0", "2", "4", "6", "8", "10"})
+        .y_ticks(std::array<double, 6>{-1.0, -0.5, 0.0, 0.5, 1.0, 1.5}, {"-1.0", "-0.5", "0.0", "0.5", "1.0", "1.5"});
+    lineplot(pane, x, y).label("signal");
+    lineplot(pane, x, y2).label("baseline");
     pane.x_label("x").y_label("y");
+    pane.caption("context size and readability sample");
+    move_legend(pane, KeyPlace::OutsideEast);
     // context_fig.save_svg(out_path("plusspl_flash_context_" + std::string(context_names[i]) + "_demo.svg"));
     context_fig.save_pdf(out_path("plusspl_flash_context_" + std::string(context_names[i]) + "_demo.pdf"));
   }
 
   Studio style_gallery_fig("flash_style_gallery_demo", Theme::paper());
   set_theme(style_gallery_fig, FlashThemeOptions{
-                                 .style = FlashStyle::Whitegrid,
+                                 .style = FlashStyle::Lightgrid,
                                  .context = FlashContext::Notebook,
-                                 .palette = FlashPalette::Deep,
                                  .width = 1740.0,
-                                 .height = 460.0});
-  style_gallery_fig.mosaic(1, 5, 8.0, 8.0);
-  const std::array<FlashStyle, 5> styles{
+                                 .height = 860.0});
+  style_gallery_fig.mosaic(2, 4, 8.0, 8.0);
+  const std::array<FlashStyle, 4> styles{
       FlashStyle::Darkgrid,
-      FlashStyle::Whitegrid,
+      FlashStyle::Lightgrid,
       FlashStyle::Dark,
-      FlashStyle::White,
-      FlashStyle::Ticks,
+      FlashStyle::Light,
   };
-  const std::array<std::string_view, 5> style_names{
+  const std::array<std::string_view, 4> style_names{
       "darkgrid",
-      "whitegrid",
+      "lightgrid",
       "dark",
-      "white",
-      "ticks",
+      "light",
   };
   for (std::size_t i = 0; i < styles.size(); ++i) {
-    auto& pane = style_gallery_fig.pane2(std::string(style_names[i]));
+    auto& pane = style_gallery_fig.pane2(std::string(style_names[i]) + " (borderless=false)");
     pane.place(0, static_cast<std::int64_t>(i));
     set_style(pane, styles[i]);
     lineplot(pane, x, y).label(std::string(style_names[i]));
     pane.x_label("x").y_label("y");
   }
-  // style_gallery_fig.save_svg(out_path("plusspl_flash_style_gallery_demo.svg"));
-  style_gallery_fig.save_pdf(out_path("plusspl_flash_style_gallery_demo.pdf"));
-
-  Studio palette_gallery_fig("flash_palette_gallery_demo", Theme::paper());
-  set_theme(palette_gallery_fig, FlashThemeOptions{
-                                   .style = FlashStyle::Whitegrid,
-                                   .context = FlashContext::Notebook,
-                                   .palette = FlashPalette::Deep,
-                                   .width = 1580.0,
-                                   .height = 900.0});
-  palette_gallery_fig.mosaic(2, 3, 8.0, 8.0);
-  const std::array<std::string_view, 6> palette_names{
-      "deep",
-      "muted",
-      "pastel",
-      "bright",
-      "dark",
-      "colorblind",
-  };
-  for (std::size_t i = 0; i < palette_names.size(); ++i) {
-    auto& pane = palette_gallery_fig.pane2(std::string(palette_names[i]));
-    pane.place(static_cast<std::int64_t>(i / 3), static_cast<std::int64_t>(i % 3));
-    set_style(pane, FlashStyle::Whitegrid);
-    lineplot(pane, x, y).label("line").palette(color_palette(palette_names[i]));
+  for (std::size_t i = 0; i < styles.size(); ++i) {
+    auto& pane = style_gallery_fig.pane2(std::string(style_names[i]) + " (borderless=true)");
+    pane.place(1, static_cast<std::int64_t>(i));
+    set_style(pane, styles[i]);
+    pane.axes_visible(false);
+    lineplot(pane, x, y).label(std::string(style_names[i]));
     pane.x_label("x").y_label("y");
   }
-  // palette_gallery_fig.save_svg(out_path("plusspl_flash_palette_gallery_demo.svg"));
-  palette_gallery_fig.save_pdf(out_path("plusspl_flash_palette_gallery_demo.pdf"));
+  // style_gallery_fig.save_svg(out_path("plusspl_flash_style_gallery_demo.svg"));
+  style_gallery_fig.save_pdf(out_path("plusspl_flash_style_gallery_demo.pdf"));
 
   Studio jointplot_hex_fig("flash_jointplot_hex_demo", Theme::paper());
   JointPlotOptions joint_hex_opts;

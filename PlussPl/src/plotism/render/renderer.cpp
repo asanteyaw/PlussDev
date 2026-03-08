@@ -2081,10 +2081,17 @@ struct FiniteMinMax {
 
     if (pane.kind() == PaneKind::Planar) {
       if (!axes_visible) {
-        left = tight ? 12.0 : 16.0;
-        bottom = tight ? 18.0 : 22.0;
-        if (!pane.scale_guide_enabled()) {
-          right = tight ? 12.0 : 16.0;
+        const bool has_axis_text =
+            pane.x_axis().tick_labels_visible
+            || pane.y_axis().tick_labels_visible
+            || !pane.x_axis().label.empty()
+            || !pane.y_axis().label.empty();
+        if (!has_axis_text) {
+          left = tight ? 12.0 : 16.0;
+          bottom = tight ? 18.0 : 22.0;
+          if (!pane.scale_guide_enabled()) {
+            right = tight ? 12.0 : 16.0;
+          }
         }
       }
       const double tick_font = std::clamp(10.0 * pane.tick_font_scale(), 7.0, 32.0);
@@ -4305,10 +4312,9 @@ void render_planar_axes(
     const double y_label_gap = resolved_axis_label_gap(pane.y_axis(), axes_visible, axis_label_font, false);
     const double label_x = center_on_axis
                                ? (layout.plot.x - (axis_label_font + y_label_gap))
-                               : (axes_visible ? (layout.outer.x + 6.0) : (layout.plot.x - y_tick_gap));
+                               : (layout.plot.x - y_tick_gap);
     const double label_y = center_on_axis ? (layout.plot.y + layout.plot.height * 0.5) : (layout.plot.y - 8.0);
-    const auto label_align =
-        center_on_axis ? TextCommand::Align::Middle : (axes_visible ? TextCommand::Align::Start : TextCommand::Align::End);
+    const auto label_align = center_on_axis ? TextCommand::Align::Middle : TextCommand::Align::End;
     const double label_rotation =
         pane.y_axis().label_rotation_deg.value_or(center_on_axis ? -90.0 : y_label_rotation);
     double label_font = axis_label_font;

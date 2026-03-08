@@ -1,6 +1,7 @@
 #include "pluss/pl/plusspl.h"
 
 #include <cmath>
+#include <stdexcept>
 
 namespace pluss::pl {
 
@@ -19,6 +20,37 @@ Studio& Studio::headline(std::string text) {
 
 Studio& Studio::theme(Theme theme) {
   theme_ = std::move(theme);
+  return *this;
+}
+
+Studio& Studio::context_scales(double tick_font_scale, double axis_label_font_scale) {
+  if (!(tick_font_scale > 0.0 && std::isfinite(tick_font_scale))) {
+    throw std::invalid_argument("context_scales: tick_font_scale must be finite and positive");
+  }
+  if (!(axis_label_font_scale > 0.0 && std::isfinite(axis_label_font_scale))) {
+    throw std::invalid_argument("context_scales: axis_label_font_scale must be finite and positive");
+  }
+  default_tick_font_scale_ = tick_font_scale;
+  default_axis_label_font_scale_ = axis_label_font_scale;
+  return *this;
+}
+
+Studio& Studio::pane_style_defaults(const Pane& pane) {
+  pane_style_defaults_enabled_ = true;
+  default_pane_theme_ = pane.theme_tokens();
+  default_axes_visible_ = pane.axes_visible();
+  default_grid_style_ = pane.grid_style();
+  default_x_major_grid_ = pane.x_axis().major_grid;
+  default_y_major_grid_ = pane.y_axis().major_grid;
+  default_z_major_grid_ = pane.z_axis().major_grid;
+  default_x_minor_grid_ = pane.x_axis().minor_grid;
+  default_y_minor_grid_ = pane.y_axis().minor_grid;
+  default_z_minor_grid_ = pane.z_axis().minor_grid;
+  return *this;
+}
+
+Studio& Studio::clear_pane_style_defaults() noexcept {
+  pane_style_defaults_enabled_ = false;
   return *this;
 }
 
@@ -75,11 +107,37 @@ Studio& Studio::z_caption(std::string group, std::string text) {
 
 Pane& Studio::pane2(std::string title) {
   panes_.emplace_back(PaneKind::Planar, theme_, std::move(title));
+  auto& pane = panes_.back();
+  pane.tick_font_scale(default_tick_font_scale_).axis_label_font_scale(default_axis_label_font_scale_);
+  if (pane_style_defaults_enabled_) {
+    pane.theme_tokens() = default_pane_theme_;
+    pane.grid(default_grid_style_)
+        .x_major_grid(default_x_major_grid_)
+        .y_major_grid(default_y_major_grid_)
+        .z_major_grid(default_z_major_grid_)
+        .x_minor_grid(default_x_minor_grid_)
+        .y_minor_grid(default_y_minor_grid_)
+        .z_minor_grid(default_z_minor_grid_)
+        .axes_visible(default_axes_visible_);
+  }
   return panes_.back();
 }
 
 Pane& Studio::pane3(std::string title) {
   panes_.emplace_back(PaneKind::Volumetric, theme_, std::move(title));
+  auto& pane = panes_.back();
+  pane.tick_font_scale(default_tick_font_scale_).axis_label_font_scale(default_axis_label_font_scale_);
+  if (pane_style_defaults_enabled_) {
+    pane.theme_tokens() = default_pane_theme_;
+    pane.grid(default_grid_style_)
+        .x_major_grid(default_x_major_grid_)
+        .y_major_grid(default_y_major_grid_)
+        .z_major_grid(default_z_major_grid_)
+        .x_minor_grid(default_x_minor_grid_)
+        .y_minor_grid(default_y_minor_grid_)
+        .z_minor_grid(default_z_minor_grid_)
+        .axes_visible(default_axes_visible_);
+  }
   return panes_.back();
 }
 

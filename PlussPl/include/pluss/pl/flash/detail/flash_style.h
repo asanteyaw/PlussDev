@@ -9,10 +9,9 @@ enum class FlashContext : std::uint8_t {
 
 enum class FlashStyle : std::uint8_t {
   Darkgrid,
-  Whitegrid,
+  Lightgrid,
   Dark,
-  White,
-  Ticks,
+  Light,
 };
 
 enum class FlashPalette : std::uint8_t {
@@ -25,9 +24,9 @@ enum class FlashPalette : std::uint8_t {
 };
 
 struct FlashThemeOptions {
-  FlashStyle style{FlashStyle::Whitegrid};
+  FlashStyle style{FlashStyle::Lightgrid};
   FlashContext context{FlashContext::Notebook};
-  FlashPalette palette{FlashPalette::Deep};
+  bool borderless{false};
   std::optional<double> width{std::nullopt};
   std::optional<double> height{std::nullopt};
 };
@@ -42,9 +41,9 @@ struct FlashThemeOptions {
 [[nodiscard]] inline FlashStyle flash_style(std::string_view name) {
   if (name == "darkgrid") return FlashStyle::Darkgrid;
   if (name == "dark") return FlashStyle::Dark;
-  if (name == "white") return FlashStyle::White;
-  if (name == "ticks") return FlashStyle::Ticks;
-  return FlashStyle::Whitegrid;
+  if (name == "light") return FlashStyle::Light;
+  if (name == "lightgrid") return FlashStyle::Lightgrid;
+  return FlashStyle::Lightgrid;
 }
 
 [[nodiscard]] inline FlashPalette flash_palette_kind(std::string_view name) {
@@ -65,9 +64,11 @@ struct FlashThemeOptions {
           Rgba::from_u8(106, 204, 100),
           Rgba::from_u8(214, 95, 95),
           Rgba::from_u8(149, 108, 180),
-          Rgba::from_u8(140, 109, 49),
-          Rgba::from_u8(218, 94, 155),
-          Rgba::from_u8(140, 140, 140),
+          Rgba::from_u8(140, 97, 60),
+          Rgba::from_u8(220, 126, 192),
+          Rgba::from_u8(121, 121, 121),
+          Rgba::from_u8(213, 187, 103),
+          Rgba::from_u8(130, 198, 226),
       };
     case FlashPalette::Pastel:
       return {
@@ -79,6 +80,8 @@ struct FlashThemeOptions {
           Rgba::from_u8(222, 187, 155),
           Rgba::from_u8(250, 176, 228),
           Rgba::from_u8(207, 207, 207),
+          Rgba::from_u8(255, 254, 163),
+          Rgba::from_u8(185, 242, 240),
       };
     case FlashPalette::Bright:
       return {
@@ -86,21 +89,25 @@ struct FlashThemeOptions {
           Rgba::from_u8(255, 124, 0),
           Rgba::from_u8(26, 201, 56),
           Rgba::from_u8(232, 0, 11),
-          Rgba::from_u8(142, 43, 226),
+          Rgba::from_u8(139, 43, 226),
           Rgba::from_u8(159, 72, 0),
           Rgba::from_u8(241, 76, 193),
-          Rgba::from_u8(160, 160, 160),
+          Rgba::from_u8(163, 163, 163),
+          Rgba::from_u8(255, 196, 0),
+          Rgba::from_u8(0, 215, 255),
       };
     case FlashPalette::Dark:
       return {
-          Rgba::from_u8(0, 28, 127),
+          Rgba::from_u8(0, 44, 127),
           Rgba::from_u8(177, 64, 13),
           Rgba::from_u8(18, 113, 28),
-          Rgba::from_u8(140, 8, 0),
-          Rgba::from_u8(89, 30, 113),
-          Rgba::from_u8(114, 57, 6),
-          Rgba::from_u8(154, 26, 116),
-          Rgba::from_u8(90, 90, 90),
+          Rgba::from_u8(140, 8, 1),
+          Rgba::from_u8(89, 30, 114),
+          Rgba::from_u8(89, 47, 13),
+          Rgba::from_u8(162, 53, 131),
+          Rgba::from_u8(60, 60, 60),
+          Rgba::from_u8(184, 133, 10),
+          Rgba::from_u8(0, 99, 117),
       };
     case FlashPalette::Colorblind:
       return {
@@ -112,6 +119,8 @@ struct FlashThemeOptions {
           Rgba::from_u8(202, 145, 97),
           Rgba::from_u8(251, 175, 228),
           Rgba::from_u8(148, 148, 148),
+          Rgba::from_u8(236, 225, 51),
+          Rgba::from_u8(86, 180, 233),
       };
     case FlashPalette::Deep:
     default:
@@ -124,6 +133,8 @@ struct FlashThemeOptions {
           Rgba::from_u8(147, 120, 96),
           Rgba::from_u8(218, 139, 195),
           Rgba::from_u8(140, 140, 140),
+          Rgba::from_u8(204, 185, 116),
+          Rgba::from_u8(100, 181, 205),
       };
   }
 }
@@ -162,11 +173,11 @@ struct FlashThemeOptions {
   return flash_palette(flash_palette_kind(name));
 }
 
-[[nodiscard]] inline Theme flash_theme(FlashStyle style = FlashStyle::Whitegrid,
-                                         FlashPalette palette = FlashPalette::Deep) {
+[[nodiscard]] inline Theme flash_theme(FlashStyle style = FlashStyle::Lightgrid,
+                                       FlashPalette palette = FlashPalette::Deep) {
   Rgba background = Rgba::from_u8(255, 255, 255);
   Rgba foreground = Rgba::from_u8(34, 34, 34);
-  std::string theme_name = "flash_whitegrid";
+  std::string theme_name = "flash_lightgrid";
   switch (style) {
     case FlashStyle::Darkgrid:
       // Darkgrid keeps a neutral figure background; the renderer shades only the plot face.
@@ -174,25 +185,21 @@ struct FlashThemeOptions {
       foreground = Rgba::from_u8(34, 34, 34);
       theme_name = "flash_darkgrid";
       break;
-    case FlashStyle::Whitegrid:
+    case FlashStyle::Lightgrid:
       background = Rgba::from_u8(255, 255, 255);
       foreground = Rgba::from_u8(34, 34, 34);
-      theme_name = "flash_whitegrid";
+      theme_name = "flash_lightgrid";
       break;
     case FlashStyle::Dark:
-      background = Rgba::from_u8(236, 240, 245);
+      // Dark style shades only the plot face; keep panel background neutral.
+      background = Rgba::from_u8(255, 255, 255);
       foreground = Rgba::from_u8(34, 34, 34);
       theme_name = "flash_dark";
       break;
-    case FlashStyle::White:
+    case FlashStyle::Light:
       background = Rgba::from_u8(255, 255, 255);
       foreground = Rgba::from_u8(26, 26, 26);
-      theme_name = "flash_white";
-      break;
-    case FlashStyle::Ticks:
-      background = Rgba::from_u8(255, 255, 255);
-      foreground = Rgba::from_u8(26, 26, 26);
-      theme_name = "flash_ticks";
+      theme_name = "flash_light";
       break;
   }
   return Theme{
@@ -208,11 +215,11 @@ struct FlashThemeOptions {
     FlashContext context) {
   switch (context) {
     case FlashContext::Paper:
-      return {920.0, 640.0, 0.92, 0.94};
+      return {920.0, 640.0, 0.8, 0.8};
     case FlashContext::Talk:
-      return {1440.0, 900.0, 1.18, 1.14};
+      return {1440.0, 900.0, 1.3, 1.3};
     case FlashContext::Poster:
-      return {1840.0, 1160.0, 1.36, 1.3};
+      return {1840.0, 1160.0, 1.6, 1.6};
     case FlashContext::Notebook:
     default:
       return {1200.0, 780.0, 1.0, 1.0};
@@ -236,38 +243,33 @@ inline Pane& set_style(Pane& pane, FlashStyle style) {
   const Theme base = pane.theme_tokens();
   Rgba bg = base.background();
   Rgba fg = base.foreground();
-  std::string theme_name = "flash_style_whitegrid";
+  std::string theme_name = "flash_style_lightgrid";
   switch (style) {
     case FlashStyle::Darkgrid:
       bg = Rgba::from_u8(255, 255, 255);
       fg = Rgba::from_u8(34, 34, 34);
       theme_name = "flash_style_darkgrid";
       break;
-    case FlashStyle::Whitegrid:
+    case FlashStyle::Lightgrid:
       bg = Rgba::from_u8(255, 255, 255);
       fg = Rgba::from_u8(34, 34, 34);
-      theme_name = "flash_style_whitegrid";
+      theme_name = "flash_style_lightgrid";
       break;
     case FlashStyle::Dark:
-      bg = Rgba::from_u8(236, 240, 245);
+      bg = Rgba::from_u8(255, 255, 255);
       fg = Rgba::from_u8(34, 34, 34);
       theme_name = "flash_style_dark";
       break;
-    case FlashStyle::White:
+    case FlashStyle::Light:
       bg = Rgba::from_u8(255, 255, 255);
       fg = Rgba::from_u8(26, 26, 26);
-      theme_name = "flash_style_white";
-      break;
-    case FlashStyle::Ticks:
-      bg = Rgba::from_u8(255, 255, 255);
-      fg = Rgba::from_u8(26, 26, 26);
-      theme_name = "flash_style_ticks";
+      theme_name = "flash_style_light";
       break;
   }
   pane.theme_tokens() = Theme{std::move(theme_name), base.accents(), bg, fg, base.surface_palette()};
   switch (style) {
     case FlashStyle::Darkgrid:
-    case FlashStyle::Whitegrid:
+    case FlashStyle::Lightgrid:
       pane.axes_visible(true)
           .grid(GridStyle::Major)
           .x_major_grid(true)
@@ -275,8 +277,7 @@ inline Pane& set_style(Pane& pane, FlashStyle style) {
           .z_major_grid(true);
       break;
     case FlashStyle::Dark:
-    case FlashStyle::White:
-    case FlashStyle::Ticks:
+    case FlashStyle::Light:
       pane.axes_visible(true)
           .grid(GridStyle::None)
           .x_major_grid(false)
@@ -306,6 +307,30 @@ inline Pane& axes_style(Pane& pane, std::string_view style) {
   return set_style(pane, flash_style(style));
 }
 
+inline Pane& set_theme(Pane& pane, const FlashThemeOptions& options) {
+  set_style(pane, options.style);
+  const auto [base_w, base_h, tick_scale, axis_scale] = flash_context_values(options.context);
+  (void)base_w;
+  (void)base_h;
+  detail::apply_tick_font_scale(pane, tick_scale, axis_scale);
+  if (options.borderless) {
+    pane.axes_visible(false);
+  }
+  return pane;
+}
+
+inline Pane& set_theme(Pane& pane, FlashStyle style, FlashContext context = FlashContext::Notebook, bool borderless = false) {
+  FlashThemeOptions options;
+  options.style = style;
+  options.context = context;
+  options.borderless = borderless;
+  return set_theme(pane, options);
+}
+
+inline Pane& set_theme(Pane& pane, std::string_view style, std::string_view context = "notebook", bool borderless = false) {
+  return set_theme(pane, flash_style(style), flash_context(context), borderless);
+}
+
 inline Studio& set_context(
     Studio& studio,
     double width,
@@ -313,6 +338,7 @@ inline Studio& set_context(
     double tick_font_scale = 1.0,
     double axis_label_font_scale = 1.0) {
   studio.size(width, height);
+  studio.context_scales(tick_font_scale, axis_label_font_scale);
   for (const Pane& pane_const : studio.panes()) {
     auto& pane = const_cast<Pane&>(pane_const);
     detail::apply_tick_font_scale(pane, tick_font_scale, axis_label_font_scale);
@@ -352,13 +378,22 @@ inline Studio& set_context(
 }
 
 inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
-  const Theme theme_tokens = flash_theme(options.style, options.palette);
+  const Theme theme_tokens = flash_theme(options.style);
   studio.theme(theme_tokens);
   set_context(studio, options.context, options.width, options.height);
+  Pane pane_defaults(PaneKind::Planar, theme_tokens, {});
+  set_style(pane_defaults, options.style);
+  if (options.borderless) {
+    pane_defaults.axes_visible(false);
+  }
+  studio.pane_style_defaults(pane_defaults);
   for (const Pane& pane_const : studio.panes()) {
     auto& pane = const_cast<Pane&>(pane_const);
     pane.theme_tokens() = theme_tokens;
     set_style(pane, options.style);
+    if (options.borderless) {
+      pane.axes_visible(false);
+    }
   }
   return studio;
 }
@@ -367,11 +402,11 @@ inline Studio& set_theme(
     Studio& studio,
     std::string_view style,
     std::string_view context = "notebook",
-    std::string_view palette = "deep") {
+    bool borderless = false) {
   FlashThemeOptions options;
   options.style = flash_style(style);
   options.context = flash_context(context);
-  options.palette = flash_palette_kind(palette);
+  options.borderless = borderless;
   return set_theme(studio, options);
 }
 
