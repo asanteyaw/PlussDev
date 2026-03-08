@@ -22,6 +22,13 @@ double as_f64_scalar(const Series& x) {
   return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
 }
 
+std::vector<double> as_f64_vec(const Series& x) {
+  if (!x.defined()) {
+    throw std::runtime_error("expected defined Series");
+  }
+  return x.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+}
+
 void expect(bool cond, const std::string& msg, int* failures) {
   if (!cond) {
     ++(*failures);
@@ -203,6 +210,232 @@ int main() {
   expect(approx(as_f64_scalar(exponential_obj.pdf(one)), 2.0 * std::exp(-2.0), 1e-12), "Exponential object pdf", &failures);
   expect(approx(as_f64_scalar(exponential_obj.cgf(pluss::make_series(1.0, f64))), std::log(2.0), 1e-12), "Exponential object cgf", &failures);
   expect(approx(as_f64_scalar(exponential_obj.cumulant(4)), 0.375, 1e-12), "Exponential object cumulant(4)", &failures);
+
+  const Series normal_fit_x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}, f64);
+  const auto normal_fit = normal_obj.MLE(normal_fit_x);
+  expect(approx(normal_fit.mean, 2.5, 1e-12), "Normal MLE mean", &failures);
+  expect(approx(normal_fit.stddev, std::sqrt(1.25), 1e-12), "Normal MLE stddev", &failures);
+  const auto normal_score = as_f64_vec(normal_fit.score(normal_fit_x));
+  expect(normal_score.size() == 2 && approx(normal_score[0], 0.0, 1e-11) && approx(normal_score[1], 0.0, 1e-11),
+         "Normal MLE score at optimum",
+         &failures);
+  const auto normal_fisher = as_f64_vec(normal_fit.fisher_inf(normal_fit_x));
+  expect(normal_fisher.size() == 4 &&
+             approx(normal_fisher[0], 3.2, 1e-10) &&
+             approx(normal_fisher[1], 0.0, 1e-12) &&
+             approx(normal_fisher[2], 0.0, 1e-12) &&
+             approx(normal_fisher[3], 6.4, 1e-10),
+         "Normal MLE Fisher information",
+         &failures);
+  const auto normal_observed = as_f64_vec(normal_fit.observed_inf(normal_fit_x));
+  expect(normal_observed.size() == 4 &&
+             approx(normal_observed[0], 3.2, 1e-10) &&
+             approx(normal_observed[1], 0.0, 1e-11) &&
+             approx(normal_observed[2], 0.0, 1e-11) &&
+             approx(normal_observed[3], 6.4, 1e-10),
+         "Normal MLE observed information",
+         &failures);
+  const auto normal_vcov = as_f64_vec(normal_fit.vcov(normal_fit_x));
+  expect(normal_vcov.size() == 4 &&
+             approx(normal_vcov[0], 0.3125, 1e-12) &&
+             approx(normal_vcov[1], 0.0, 1e-12) &&
+             approx(normal_vcov[2], 0.0, 1e-12) &&
+             approx(normal_vcov[3], 0.15625, 1e-12),
+         "Normal MLE vcov",
+         &failures);
+  const auto normal_stderr = as_f64_vec(normal_fit.stderr(normal_fit_x));
+  expect(normal_stderr.size() == 2 &&
+             approx(normal_stderr[0], std::sqrt(0.3125), 1e-12) &&
+             approx(normal_stderr[1], std::sqrt(0.15625), 1e-12),
+         "Normal MLE stderr",
+         &failures);
+  expect(as_f64_vec(normal_fit.loglik_per_obs(normal_fit_x)).size() == 4,
+         "Normal MLE loglik_per_obs size",
+         &failures);
+  const auto normal_ci = as_f64_vec(normal_fit.confint(normal_fit_x));
+  expect(normal_ci.size() == 4 &&
+             normal_ci[0] < normal_fit.mean &&
+             normal_ci[1] > normal_fit.mean &&
+             normal_ci[2] >= 0.0 &&
+             normal_ci[3] > normal_fit.stddev,
+         "Normal MLE confint shape/order",
+         &failures);
+  expect(approx(as_f64_scalar(normal_fit.nll(normal_fit_x)),
+                -as_f64_scalar(normal_fit.loglik(normal_fit_x)),
+                1e-12),
+         "Normal MLE nll/loglik consistency",
+         &failures);
+
+  const Series exponential_fit_x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0}, {4}, f64);
+  const auto exponential_fit = exponential_obj.MLE(exponential_fit_x);
+  expect(approx(exponential_fit.rate, 0.8, 1e-12), "Exponential MLE rate", &failures);
+  expect(approx(as_f64_scalar(exponential_fit.score(exponential_fit_x)), 0.0, 1e-11),
+         "Exponential MLE score at optimum",
+         &failures);
+  expect(approx(as_f64_scalar(exponential_fit.fisher_inf(exponential_fit_x)), 6.25, 1e-10),
+         "Exponential MLE Fisher information",
+         &failures);
+  expect(approx(as_f64_scalar(exponential_fit.observed_inf(exponential_fit_x)), 6.25, 1e-10),
+         "Exponential MLE observed information",
+         &failures);
+  expect(approx(as_f64_scalar(exponential_fit.vcov(exponential_fit_x)), 0.16, 1e-12),
+         "Exponential MLE vcov",
+         &failures);
+  expect(approx(as_f64_scalar(exponential_fit.stderr(exponential_fit_x)), 0.4, 1e-12),
+         "Exponential MLE stderr",
+         &failures);
+  expect(as_f64_vec(exponential_fit.loglik_per_obs(exponential_fit_x)).size() == 4,
+         "Exponential MLE loglik_per_obs size",
+         &failures);
+  const auto exp_ci = as_f64_vec(exponential_fit.confint(exponential_fit_x));
+  expect(exp_ci.size() == 2 && exp_ci[0] >= 0.0 && exp_ci[0] < exponential_fit.rate && exp_ci[1] > exponential_fit.rate,
+         "Exponential MLE confint shape/order",
+         &failures);
+
+  const pluss::distr::Poisson poisson_mle_obj{1.0};
+  const Series poisson_fit_x = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0}, {5}, f64);
+  const auto poisson_fit = poisson_mle_obj.MLE(poisson_fit_x);
+  expect(approx(poisson_fit.lambda, 2.0, 1e-12), "Poisson MLE lambda", &failures);
+  expect(approx(as_f64_scalar(poisson_fit.score(poisson_fit_x)), 0.0, 1e-11),
+         "Poisson MLE score at optimum",
+         &failures);
+  expect(approx(as_f64_scalar(poisson_fit.fisher_inf(poisson_fit_x)), 2.5, 1e-10),
+         "Poisson MLE Fisher information",
+         &failures);
+  expect(approx(as_f64_scalar(poisson_fit.observed_inf(poisson_fit_x)), 2.5, 1e-10),
+         "Poisson MLE observed information",
+         &failures);
+  expect(approx(as_f64_scalar(poisson_fit.vcov(poisson_fit_x)), 0.4, 1e-12),
+         "Poisson MLE vcov",
+         &failures);
+  expect(approx(as_f64_scalar(poisson_fit.stderr(poisson_fit_x)), std::sqrt(0.4), 1e-12),
+         "Poisson MLE stderr",
+         &failures);
+  expect(as_f64_vec(poisson_fit.loglik_per_obs(poisson_fit_x)).size() == 5,
+         "Poisson MLE loglik_per_obs size",
+         &failures);
+  const auto pois_ci = as_f64_vec(poisson_fit.confint(poisson_fit_x));
+  expect(pois_ci.size() == 2 && pois_ci[0] >= 0.0 && pois_ci[0] < poisson_fit.lambda && pois_ci[1] > poisson_fit.lambda,
+         "Poisson MLE confint shape/order",
+         &failures);
+
+  const Series bernoulli_fit_x = pluss::make_series(std::vector<double>{0.0, 1.0, 1.0, 0.0, 1.0}, {5}, f64);
+  const auto bernoulli_fit = bernoulli_obj.MLE(bernoulli_fit_x);
+  expect(approx(bernoulli_fit.p, 0.6, 1e-12), "Bernoulli MLE p", &failures);
+  expect(approx(as_f64_scalar(bernoulli_fit.score(bernoulli_fit_x)), 0.0, 1e-11),
+         "Bernoulli MLE score at optimum",
+         &failures);
+  expect(approx(as_f64_scalar(bernoulli_fit.fisher_inf(bernoulli_fit_x)), 5.0 / (0.6 * 0.4), 1e-10),
+         "Bernoulli MLE fisher information",
+         &failures);
+  expect(approx(as_f64_scalar(bernoulli_fit.observed_inf(bernoulli_fit_x)), 5.0 / (0.6 * 0.4), 1e-10),
+         "Bernoulli MLE observed information",
+         &failures);
+  expect(approx(as_f64_scalar(bernoulli_fit.vcov(bernoulli_fit_x)), 0.048, 1e-12),
+         "Bernoulli MLE vcov",
+         &failures);
+  expect(as_f64_vec(bernoulli_fit.loglik_per_obs(bernoulli_fit_x)).size() == 5,
+         "Bernoulli MLE loglik_per_obs size",
+         &failures);
+
+  const Series binomial_fit_x = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0}, {5}, f64);
+  const auto binomial_fit = binomial_obj.MLE(binomial_fit_x);
+  expect(binomial_fit.count == 4, "Binomial MLE count", &failures);
+  expect(approx(binomial_fit.p, 0.5, 1e-12), "Binomial MLE p", &failures);
+  expect(approx(as_f64_scalar(binomial_fit.score(binomial_fit_x)), 0.0, 1e-11),
+         "Binomial MLE score at optimum",
+         &failures);
+  expect(approx(as_f64_scalar(binomial_fit.fisher_inf(binomial_fit_x)), 80.0, 1e-10),
+         "Binomial MLE fisher information",
+         &failures);
+  expect(approx(as_f64_scalar(binomial_fit.observed_inf(binomial_fit_x)), 80.0, 1e-10),
+         "Binomial MLE observed information",
+         &failures);
+  expect(approx(as_f64_scalar(binomial_fit.vcov(binomial_fit_x)), 0.0125, 1e-12),
+         "Binomial MLE vcov",
+         &failures);
+  expect(as_f64_vec(binomial_fit.loglik_per_obs(binomial_fit_x)).size() == 5,
+         "Binomial MLE loglik_per_obs size",
+         &failures);
+
+  const Series geometric_fit_x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}, f64);
+  const auto geometric_fit = pluss::distr::Geometric{0.5}.MLE(geometric_fit_x);
+  expect(approx(geometric_fit.p, 0.4, 1e-12), "Geometric MLE p", &failures);
+  expect(approx(as_f64_scalar(geometric_fit.score(geometric_fit_x)), 0.0, 1e-11),
+         "Geometric MLE score at optimum",
+         &failures);
+  expect(approx(as_f64_scalar(geometric_fit.fisher_inf(geometric_fit_x)), 4.0 / (0.4 * 0.4 * 0.6), 1e-10),
+         "Geometric MLE fisher information",
+         &failures);
+  expect(approx(as_f64_scalar(geometric_fit.observed_inf(geometric_fit_x)), 4.0 / (0.4 * 0.4 * 0.6), 1e-10),
+         "Geometric MLE observed information",
+         &failures);
+  expect(as_f64_vec(geometric_fit.loglik_per_obs(geometric_fit_x)).size() == 4,
+         "Geometric MLE loglik_per_obs size",
+         &failures);
+
+  const pluss::distr::Uniform uniform_mle_obj{0.0, 1.0};
+  const Series uniform_fit_x = pluss::make_series(std::vector<double>{2.0, 3.0, 5.0, 7.0}, {4}, f64);
+  const auto uniform_fit = uniform_mle_obj.MLE(uniform_fit_x);
+  expect(approx(uniform_fit.low, 2.0, 1e-12) && approx(uniform_fit.high, 7.0, 1e-12),
+         "Uniform MLE low/high",
+         &failures);
+  const auto uniform_score = as_f64_vec(uniform_fit.score(uniform_fit_x));
+  expect(uniform_score.size() == 2 && approx(uniform_score[0], 0.0, 1e-12) && approx(uniform_score[1], 0.0, 1e-12),
+         "Uniform MLE score",
+         &failures);
+  const auto uniform_vcov = as_f64_vec(uniform_fit.vcov(uniform_fit_x));
+  expect(uniform_vcov.size() == 4 &&
+             approx(uniform_vcov[0], 2.0 / 3.0, 1e-12) &&
+             approx(uniform_vcov[1], 1.0 / 6.0, 1e-12) &&
+             approx(uniform_vcov[2], 1.0 / 6.0, 1e-12) &&
+             approx(uniform_vcov[3], 2.0 / 3.0, 1e-12),
+         "Uniform MLE vcov",
+         &failures);
+  expect(as_f64_vec(uniform_fit.loglik_per_obs(uniform_fit_x)).size() == 4,
+         "Uniform MLE loglik_per_obs size",
+         &failures);
+
+  const pluss::distr::Lognormal lognormal_mle_obj{0.0, 1.0};
+  const Series lognormal_fit_x = pluss::make_series(std::vector<double>{1.0, 2.0, 4.0, 8.0}, {4}, f64);
+  const auto lognormal_fit = lognormal_mle_obj.MLE(lognormal_fit_x);
+  const std::vector<double> lognormal_vals = {std::log(1.0), std::log(2.0), std::log(4.0), std::log(8.0)};
+  const double lognormal_mean =
+      std::accumulate(lognormal_vals.begin(), lognormal_vals.end(), 0.0) / static_cast<double>(lognormal_vals.size());
+  double lognormal_sum_sq = 0.0;
+  for (double lv : lognormal_vals) {
+    const double r = lv - lognormal_mean;
+    lognormal_sum_sq += r * r;
+  }
+  const double lognormal_std = std::sqrt(lognormal_sum_sq / static_cast<double>(lognormal_vals.size()));
+  expect(approx(lognormal_fit.mean_log, lognormal_mean, 1e-12) &&
+             approx(lognormal_fit.stddev_log, lognormal_std, 1e-12),
+         "Lognormal MLE mean_log/stddev_log",
+         &failures);
+  const auto lognormal_score = as_f64_vec(lognormal_fit.score(lognormal_fit_x));
+  expect(lognormal_score.size() == 2 && approx(lognormal_score[0], 0.0, 1e-11) && approx(lognormal_score[1], 0.0, 1e-11),
+         "Lognormal MLE score at optimum",
+         &failures);
+  expect(as_f64_vec(lognormal_fit.loglik_per_obs(lognormal_fit_x)).size() == 4,
+         "Lognormal MLE loglik_per_obs size",
+         &failures);
+
+  const pluss::distr::Rayleigh rayleigh_mle_obj{1.0};
+  const Series rayleigh_fit_x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}, f64);
+  const auto rayleigh_fit = rayleigh_mle_obj.MLE(rayleigh_fit_x);
+  expect(approx(rayleigh_fit.sigma, std::sqrt(3.75), 1e-12), "Rayleigh MLE sigma", &failures);
+  expect(approx(as_f64_scalar(rayleigh_fit.score(rayleigh_fit_x)), 0.0, 1e-11),
+         "Rayleigh MLE score at optimum",
+         &failures);
+  expect(approx(as_f64_scalar(rayleigh_fit.fisher_inf(rayleigh_fit_x)), 16.0 / 3.75, 1e-10),
+         "Rayleigh MLE fisher information",
+         &failures);
+  expect(approx(as_f64_scalar(rayleigh_fit.vcov(rayleigh_fit_x)), 1.0 / (16.0 / 3.75), 1e-12),
+         "Rayleigh MLE vcov",
+         &failures);
+  expect(as_f64_vec(rayleigh_fit.loglik_per_obs(rayleigh_fit_x)).size() == 4,
+         "Rayleigh MLE loglik_per_obs size",
+         &failures);
   const pluss::distr::Laplace laplace_obj{0.0, 0.5};
   expect(approx(as_f64_scalar(laplace_obj.pdf(zero)), 1.0, 1e-12), "Laplace object pdf", &failures);
   expect(approx(as_f64_scalar(laplace_obj.cumulant(6)), 3.75, 1e-12), "Laplace object cumulant(6)", &failures);
@@ -363,6 +596,83 @@ int main() {
   expect(normal_draws.sizes().size() == 2 && normal_draws.sizes()[0] == 4 && normal_draws.sizes()[1] == 3,
          "normal sample shape",
          &failures);
+  const Series sobol_u = pluss::rng::sobol({4, 3}, f64, 7ULL);
+  const Series halton_u = pluss::rng::halton({4, 3}, f64, 7ULL);
+  const Series torus_u = pluss::rng::torus({4, 3}, f64, 7ULL);
+  expect(sobol_u.numel() == 12 && halton_u.numel() == 12 && torus_u.numel() == 12,
+         "pluss::rng low-discrepancy generators preserve requested shape",
+         &failures);
+  expect(sobol_u.ge(0.0).logical_and(sobol_u.lt(1.0)).all().item<bool>(),
+         "sobol values are in [0, 1)",
+         &failures);
+  expect(halton_u.ge(0.0).logical_and(halton_u.lt(1.0)).all().item<bool>(),
+         "halton values are in [0, 1)",
+         &failures);
+  expect(torus_u.ge(0.0).logical_and(torus_u.lt(1.0)).all().item<bool>(),
+         "torus values are in [0, 1)",
+         &failures);
+  expect(pluss::rng::sobol({3, 64}, f64, 0ULL).numel() == 192, "sobol supports dimension > 16", &failures);
+  expect(pluss::rng::sobol({2, 1200}, f64, 0ULL).numel() == 2400, "sobol supports dimension > 1111 via fallback", &failures);
+
+  pluss::rng::SobolOptions sob_opts;
+  sob_opts.init = true;
+  sob_opts.start = 1;
+  const Series sob_a = pluss::rng::sobol({5}, sob_opts, f64);
+  sob_opts.init = false;
+  const Series sob_b = pluss::rng::sobol({5}, sob_opts, f64);
+  const Series sob_full = pluss::rng::sobol({10}, pluss::rng::SobolOptions{}, f64);
+  const auto sob_ab = as_f64_vec(sob_a.unite({sob_b}, 0));
+  const auto sob_vec = as_f64_vec(sob_full);
+  bool sob_concat_ok = sob_ab.size() == sob_vec.size();
+  for (std::size_t i = 0; sob_concat_ok && i < sob_vec.size(); ++i) {
+    sob_concat_ok = std::abs(sob_ab[i] - sob_vec[i]) < 1e-12;
+  }
+  expect(sob_concat_ok, "sobol init=false continues the sequence", &failures);
+
+  pluss::rng::SobolOptions sob_scr;
+  sob_scr.scrambling = 3;
+  sob_scr.seed_set = true;
+  sob_scr.seed = 12345ULL;
+  const auto sob_scr_vec = as_f64_vec(pluss::rng::sobol({16, 3}, sob_scr, f64));
+  const auto sob_plain_vec = as_f64_vec(pluss::rng::sobol({16, 3}, f64, 1ULL));
+  bool sob_scr_differs = false;
+  for (std::size_t i = 0; i < sob_scr_vec.size(); ++i) {
+    if (std::abs(sob_scr_vec[i] - sob_plain_vec[i]) > 1e-15) {
+      sob_scr_differs = true;
+      break;
+    }
+  }
+  expect(sob_scr_differs, "sobol scrambling option changes generated sequence", &failures);
+
+  pluss::rng::HaltonOptions hal_opts;
+  hal_opts.usetime = true;
+  const Series hal_time = pluss::rng::halton({4, 3}, hal_opts, f64);
+  expect(hal_time.ge(0.0).logical_and(hal_time.lt(1.0)).all().item<bool>(),
+         "halton usetime option works",
+         &failures);
+
+  pluss::rng::TorusOptions tor_opts;
+  tor_opts.prime = {7, 11, 13};
+  const Series tor_custom = pluss::rng::torus({6}, tor_opts, f64);
+  expect(tor_custom.sizes().size() == 2 && tor_custom.sizes()[0] == 6 && tor_custom.sizes()[1] == 3,
+         "torus custom prime vector sets output dimension",
+         &failures);
+
+  pluss::rng::TorusOptions tor_mix;
+  tor_mix.mixed = true;
+  tor_mix.seed_set = true;
+  tor_mix.seed = 42ULL;
+  const Series tor_mixed = pluss::rng::torus({8, 2}, tor_mix, f64);
+  expect(tor_mixed.ge(0.0).logical_and(tor_mixed.lt(1.0)).all().item<bool>(),
+         "torus mixed option works",
+         &failures);
+
+  const Series normal_halton = sample("normal", {0.0, 1.0}, {8}, f64, 97ULL, pluss::rng::Method::Halton);
+  const Series uniform_torus = sample("uniform", {0.0, 1.0}, {8}, f64, 101ULL, pluss::rng::Method::Torus);
+  expect(normal_halton.numel() == 8, "sample(..., Method::Halton) works for normal", &failures);
+  expect(uniform_torus.ge(0.0).logical_and(uniform_torus.le(1.0)).all().item<bool>(),
+         "sample(..., Method::Torus) works for uniform",
+         &failures);
 
   const Series bern_draws = sample("bern", {0.4}, {8}, Config{}.with_platform(pluss::pCPU), 20260301ULL);
   expect(bern_draws.scalar_type() == ScalarType::Bool, "bernoulli sample natural dtype", &failures);
@@ -402,6 +712,11 @@ int main() {
           .with_pinned(true));
   expect(pluss::distr::sample_like("rademacher", like, 29ULL).numel() == like.numel(),
          "sample_like overload without params",
+         &failures);
+  const Series like_uniform_sobol =
+      pluss::distr::sample_like("uniform", {0.0, 1.0}, like, 33ULL, pluss::rng::Method::Sobol);
+  expect(like_uniform_sobol.ge(0.0).logical_and(like_uniform_sobol.le(1.0)).all().item<bool>(),
+         "sample_like supports low-discrepancy method selection",
          &failures);
   const Series weibull_like = sample_like("weibull", {1.5, 2.0}, like, 7ULL);
   const Series normal_like = normal_obj.sample_like(like, 31ULL);
@@ -470,13 +785,13 @@ int main() {
          "NormalTrunc object sample_like preserves shape",
          &failures);
 
-  const auto sobol_1d = pluss::sobol({4}, ScalarType::Float64, 0).to_vec<double>();
+  const auto sobol_1d = pluss::rng::sobol({4}, f64, 0ULL).to_vec<double>();
   expect(approx(sobol_1d.at(0), 0.0), "sobol 1d first", &failures);
   expect(approx(sobol_1d.at(1), 0.5), "sobol 1d second", &failures);
   expect(approx(sobol_1d.at(2), 0.75), "sobol 1d third", &failures);
   expect(approx(sobol_1d.at(3), 0.25), "sobol 1d fourth", &failures);
 
-  const auto sobol_2d = pluss::sobol({4, 2}, ScalarType::Float64, 0).to_vec<double>();
+  const auto sobol_2d = pluss::rng::sobol({4, 2}, f64, 0ULL).to_vec<double>();
   expect(approx(sobol_2d.at(0), 0.0) && approx(sobol_2d.at(1), 0.0), "sobol 2d point 0", &failures);
   expect(approx(sobol_2d.at(2), 0.5) && approx(sobol_2d.at(3), 0.5), "sobol 2d point 1", &failures);
   expect(approx(sobol_2d.at(4), 0.75) && approx(sobol_2d.at(5), 0.25), "sobol 2d point 2", &failures);

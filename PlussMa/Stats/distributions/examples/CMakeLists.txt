@@ -10,4 +10,16 @@ if(TARGET pluss AND TARGET plussqit_codem)
   )
   target_compile_features(plussma_distributions_objects_demo PRIVATE cxx_std_20)
   target_link_libraries(plussma_distributions_objects_demo PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_distributions_objects_mle_raw_demo
+    distributions_objects_mle_raw_demo.cpp
+  )
+  target_compile_features(plussma_distributions_objects_mle_raw_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_distributions_objects_mle_raw_demo PRIVATE pluss plussqit_codem)
+
+  add_executable(plussma_distributions_quasirandom_demo
+    quasirandom_demo.cpp
+  )
+  target_compile_features(plussma_distributions_quasirandom_demo PRIVATE cxx_std_20)
+  target_link_libraries(plussma_distributions_quasirandom_demo PRIVATE pluss plussqit_codem)
 endif()

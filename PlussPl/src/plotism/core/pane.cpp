@@ -278,8 +278,14 @@ void require_violin_compatible(const ViolinData& data, std::string_view where) {
     }
     require_pair_compatible(*data.group, data.values, where);
   }
-  if (!(data.width > 0.0 && std::isfinite(data.width))) {
+  if (!(data.options.width > 0.0 && std::isfinite(data.options.width))) {
     throw std::invalid_argument(std::string(where) + ": width must be positive and finite");
+  }
+  if (!(data.options.bw_adjust > 0.0 && std::isfinite(data.options.bw_adjust))) {
+    throw std::invalid_argument(std::string(where) + ": bw_adjust must be positive and finite");
+  }
+  if (!(data.options.cut >= 0.0 && std::isfinite(data.options.cut))) {
+    throw std::invalid_argument(std::string(where) + ": cut must be non-negative and finite");
   }
 }
 
@@ -742,6 +748,21 @@ Pane& Pane::clear_z_tick_rotation() noexcept {
   return *this;
 }
 
+Pane& Pane::x_tick_labels(bool enable) noexcept {
+  x_axis_.tick_labels_visible = enable;
+  return *this;
+}
+
+Pane& Pane::y_tick_labels(bool enable) noexcept {
+  y_axis_.tick_labels_visible = enable;
+  return *this;
+}
+
+Pane& Pane::z_tick_labels(bool enable) noexcept {
+  z_axis_.tick_labels_visible = enable;
+  return *this;
+}
+
 Pane& Pane::clear_x_label_rotation() noexcept {
   x_axis_.label_rotation_deg.reset();
   return *this;
@@ -860,6 +881,42 @@ Pane& Pane::grid(GridStyle style) noexcept {
   return *this;
 }
 
+Pane& Pane::x_major_grid(bool enable) noexcept {
+  x_axis_.major_grid = enable;
+  sync_grid_style_();
+  return *this;
+}
+
+Pane& Pane::y_major_grid(bool enable) noexcept {
+  y_axis_.major_grid = enable;
+  sync_grid_style_();
+  return *this;
+}
+
+Pane& Pane::z_major_grid(bool enable) noexcept {
+  z_axis_.major_grid = enable;
+  sync_grid_style_();
+  return *this;
+}
+
+Pane& Pane::x_minor_grid(bool enable) noexcept {
+  x_axis_.minor_grid = enable;
+  sync_grid_style_();
+  return *this;
+}
+
+Pane& Pane::y_minor_grid(bool enable) noexcept {
+  y_axis_.minor_grid = enable;
+  sync_grid_style_();
+  return *this;
+}
+
+Pane& Pane::z_minor_grid(bool enable) noexcept {
+  z_axis_.minor_grid = enable;
+  sync_grid_style_();
+  return *this;
+}
+
 Pane& Pane::scale_guide(bool enable) noexcept {
   scale_guide_ = enable;
   return *this;
@@ -967,6 +1024,11 @@ Pane& Pane::visible(bool enable) noexcept {
   return *this;
 }
 
+Pane& Pane::axes_visible(bool enable) noexcept {
+  axes_visible_ = enable;
+  return *this;
+}
+
 Pane& Pane::hide() noexcept {
   visible_ = false;
   return *this;
@@ -1041,6 +1103,18 @@ void Pane::sync_grid_flags_() noexcept {
   x_axis_.minor_grid = minor;
   y_axis_.minor_grid = minor;
   z_axis_.minor_grid = minor;
+}
+
+void Pane::sync_grid_style_() noexcept {
+  const bool any_minor = x_axis_.minor_grid || y_axis_.minor_grid || z_axis_.minor_grid;
+  const bool any_major = x_axis_.major_grid || y_axis_.major_grid || z_axis_.major_grid;
+  if (any_minor) {
+    grid_style_ = GridStyle::MajorMinor;
+  } else if (any_major) {
+    grid_style_ = GridStyle::Major;
+  } else {
+    grid_style_ = GridStyle::None;
+  }
 }
 
 } // namespace pluss::pl

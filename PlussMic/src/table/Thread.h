@@ -114,12 +114,6 @@ public:
   Thread log() const;
   Thread exp() const;
 
-  // Type-scoped full-surface accessors (delegate into underlying pluss types).
-  const pluss::Series& series() const;
-  const pluss::Note& note() const;
-  const pluss::Timeline& timeline() const;
-  const pluss::TimeIndex& timeindex() const;
-
   // Explicit mutating transforms (copy-on-write when shared).
   Thread& fillna_(double value);
   Thread& fillna_(std::string_view value);

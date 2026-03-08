@@ -199,27 +199,6 @@ Thread Thread::exp() const {
   return Thread(s.exp(), validity_mask());
 }
 
-const pluss::Series& Thread::series() const {
-  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::series is only valid for Series payload");
-  return as_series();
-}
-
-const pluss::Note& Thread::note() const {
-  PLUSS_CHECK(kind() == ThreadKind::Note, "Thread::note is only valid for Note payload");
-  return as_note();
-}
-
-const pluss::Timeline& Thread::timeline() const {
-  PLUSS_CHECK(kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex,
-              "Thread::timeline is only valid for Timeline/TimeIndex payload");
-  return kind() == ThreadKind::Timeline ? as_timeline() : as_timeindex().timeline();
-}
-
-const pluss::TimeIndex& Thread::timeindex() const {
-  PLUSS_CHECK(kind() == ThreadKind::TimeIndex, "Thread::timeindex is only valid for TimeIndex payload");
-  return as_timeindex();
-}
-
 Thread& Thread::fillna_(double value) {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::fillna_(double) is only valid for Series payload");
   if (!has_validity_mask()) {

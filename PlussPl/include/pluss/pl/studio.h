@@ -76,6 +76,9 @@ enum class ShadeMode : std::uint8_t { Faceted, Flat, Smooth };
 enum class LightingMode : std::uint8_t { None, Flat, Gouraud };
 enum class MaterialProfile : std::uint8_t { Default, Dull, Shiny, Metal };
 enum class PdfEngine : std::uint8_t { Auto, Internal, SvgConvert };
+enum class ViolinScale : std::uint8_t { Area, Count, Width };
+enum class ViolinInner : std::uint8_t { None, Box, Quartile, Stick, Point };
+enum class ViolinSide : std::uint8_t { Full, Left, Right };
 enum class TraceKind : std::uint8_t {
   Trend,
   Cloud,
@@ -207,6 +210,7 @@ struct AxisState {
   std::optional<double> tick_rotation_deg{};
   std::optional<double> label_rotation_deg{};
   bool label_centered_on_axis{false};
+  bool tick_labels_visible{true};
   bool major_grid{false};
   bool minor_grid{false};
 };
@@ -338,10 +342,19 @@ struct QuartetData {
   double width{0.7};
 };
 
+struct ViolinOptions {
+  double width{0.8};
+  double bw_adjust{1.0};
+  double cut{2.0};
+  ViolinScale scale{ViolinScale::Area};
+  ViolinInner inner{ViolinInner::Box};
+  ViolinSide side{ViolinSide::Full};
+};
+
 struct ViolinData {
   std::optional<Series> group;
   Series values;
-  double width{0.8};
+  ViolinOptions options{};
 };
 
 struct RadialData {
@@ -563,6 +576,7 @@ class Pane {
   [[nodiscard]] double tick_font_scale() const noexcept { return tick_font_scale_; }
   [[nodiscard]] double axis_label_font_scale() const noexcept { return axis_label_font_scale_; }
   [[nodiscard]] bool visible() const noexcept { return visible_; }
+  [[nodiscard]] bool axes_visible() const noexcept { return axes_visible_; }
 
   Pane& title(std::string title);
   Pane& scale_x(ScalePolicy scale);
@@ -597,6 +611,9 @@ class Pane {
   Pane& clear_x_tick_rotation() noexcept;
   Pane& clear_y_tick_rotation() noexcept;
   Pane& clear_z_tick_rotation() noexcept;
+  Pane& x_tick_labels(bool enable = true) noexcept;
+  Pane& y_tick_labels(bool enable = true) noexcept;
+  Pane& z_tick_labels(bool enable = true) noexcept;
   Pane& clear_x_label_rotation() noexcept;
   Pane& clear_y_label_rotation() noexcept;
   Pane& clear_z_label_rotation() noexcept;
@@ -619,6 +636,12 @@ class Pane {
   Pane& legend(KeyPlace place) noexcept;
   Pane& legend_frame(KeyFrame frame) noexcept;
   Pane& grid(GridStyle style) noexcept;
+  Pane& x_major_grid(bool enable = true) noexcept;
+  Pane& y_major_grid(bool enable = true) noexcept;
+  Pane& z_major_grid(bool enable = true) noexcept;
+  Pane& x_minor_grid(bool enable = true) noexcept;
+  Pane& y_minor_grid(bool enable = true) noexcept;
+  Pane& z_minor_grid(bool enable = true) noexcept;
   Pane& scale_guide(bool enable = true) noexcept;
   Pane& caption(std::string text);
   Pane& rule_x(double value, std::string label = {});
@@ -636,6 +659,7 @@ class Pane {
   Pane& align_xyz(std::string group);
   Pane& parallel_xy_labels(bool enable = true) noexcept;
   Pane& visible(bool enable = true) noexcept;
+  Pane& axes_visible(bool enable = true) noexcept;
   Pane& hide() noexcept;
   Pane& show() noexcept;
   Pane& clear_x_align() noexcept;
@@ -959,18 +983,28 @@ class Pane {
 
   template <class Values>
   Trace& violin(Values&& values) {
+    return violin(std::forward<Values>(values), ViolinOptions{});
+  }
+
+  template <class Values>
+  Trace& violin(Values&& values, const ViolinOptions& options) {
     ensure_planar_("violin");
     return add_trace_(TraceKind::Violin,
-                      ViolinData{std::nullopt, detail::to_series(std::forward<Values>(values)), 0.8});
+                      ViolinData{std::nullopt, detail::to_series(std::forward<Values>(values)), options});
   }
 
   template <class Group, class Values>
   Trace& violin(Group&& group, Values&& values) {
+    return violin(std::forward<Group>(group), std::forward<Values>(values), ViolinOptions{});
+  }
+
+  template <class Group, class Values>
+  Trace& violin(Group&& group, Values&& values, const ViolinOptions& options) {
     ensure_planar_("violin");
     return add_trace_(TraceKind::Violin,
                       ViolinData{detail::to_series(std::forward<Group>(group)),
                                  detail::to_series(std::forward<Values>(values)),
-                                 0.8});
+                                 options});
   }
 
   template <class Theta, class Radius>
@@ -1272,6 +1306,7 @@ class Pane {
   void ensure_volumetric_(std::string_view op) const;
   Trace& add_trace_(TraceKind kind, TracePayload payload);
   void sync_grid_flags_() noexcept;
+  void sync_grid_style_() noexcept;
 
   PaneKind kind_{PaneKind::Planar};
   Theme theme_{Theme::paper()};
@@ -1298,6 +1333,7 @@ class Pane {
   double tick_font_scale_{1.0};
   double axis_label_font_scale_{1.0};
   bool visible_{true};
+  bool axes_visible_{true};
   PanePlacement placement_{};
 };
 

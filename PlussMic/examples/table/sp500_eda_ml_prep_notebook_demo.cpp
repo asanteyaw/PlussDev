@@ -31,15 +31,23 @@ int main() {
   df.info();
   df.describe();
 
-  let fig_scat = df.plot().scatter_matrix();
-  fig_scat.headline("scatter plot");
-  fig_scat.save_pdf("spx_scatter_matrix.pdf");
+  pluss::table::ScatterMatrixPlotOptions scat_opts;
+  scat_opts.corner = true;
+  scat_opts.pair.kind = pluss::pl::flash::PairPlotKind::Reg;
+  scat_opts.pair.diag_kind = pluss::pl::flash::PairPlotDiagKind::Density;
+  scat_opts.pair.dropna = true;
+  scat_opts.pair.max_points = 1400;
+  scat_opts.pair.show_grid = true;
+  df.plot()
+      .scatter_matrix({"Adj Close", "Close", "High", "Low", "Open", "Volume"}, scat_opts)
+      .headline("scatter plot")
+      .save_pdf("spx_scatter_matrix.pdf");
 
   // Feature extraction
   df.set({"Year", "Month", "DayOfWeek", "DailyRange", "OpenCloseSpread", "LogVolume"}) = {
       df.features("Date").year(),
       df.features("Date").month(),
-      df.features("Date").to_note_weekday(),
+      df.features("Date").as_timeline().strftime("%A"),
       df.features("High") - df.features("Low"),
       df.features("Close") - df.features("Open"),
       (df.features("Volume") + 1.0).log(),
@@ -72,22 +80,17 @@ int main() {
   plot_opts.tight_layout_padding = 4.0;
   plot_opts.width = 1280.0;
   plot_opts.height = 760.0;
+  plot_opts.max_labeled_ticks = 10;
+  plot_opts.labeled_tick_rotation_deg = 55.0;
 
-  let fig_close_line = df.plot(plot_opts).line("Close");
-  fig_close_line.headline("S&P 500 Close over time");
-  fig_close_line.save_pdf("sp500_close_line.pdf");
+  df.plot(plot_opts).line("Close").headline("S&P 500 Close over time").save_pdf("sp500_close_line.pdf");
 
-  let fig_volume_hist = df.plot().hist("Volume", 80);
-  fig_volume_hist.headline("Volume histogram");
-  fig_volume_hist.save_pdf("sp500_volume_hist.pdf");
+  df.plot().hist("Volume", 80).headline("Volume histogram").save_pdf("sp500_volume_hist.pdf");
 
-  let fig_scatter = df.plot().scatter("LogVolume", "DailyRange");
-  fig_scatter.headline("Daily range vs log-volume");
-  fig_scatter.save_pdf("sp500_range_vs_logvolume_scatter.pdf");
-
-//   let fig_scat = df.plot().scatter_matrix();
-//   fig_scat.headline("scatter plot").show();
-//   fig_scat.save_pdf("sp500_scatter_matrix.pdf");
+  df.plot()
+      .scatter("LogVolume", "DailyRange")
+      .headline("Daily range vs log-volume")
+      .save_pdf("sp500_range_vs_logvolume_scatter.pdf");
 
 
   let numeric = df.series_features();
@@ -95,77 +98,143 @@ int main() {
   corr_table.save_csv("sp500_corr_matrix_spearman.csv");
   corr_table.head(12);
 
-  let fig_corr = numeric.plot().corr_heatmap();
-  fig_corr.headline("Correlation heatmap (price/volume features)");
-  fig_corr.save_pdf("sp500_corr_heatmap.pdf");
+  numeric.plot()
+      .corr_heatmap()
+      .headline("Correlation heatmap (price/volume features)")
+      .save_pdf("sp500_corr_heatmap.pdf");
 
   std::cout << "\n[Cell 4B] Advanced plotters (parallel/andrews/radviz/lag/act/bootstrap/brief)\n";
-  pluss::pl::flash::ParallelCoordinatesOptions parallel_opts;
+  pluss::table::ParallelPlotOptions parallel_opts;
   parallel_opts.max_points = 700;
-  let fig_parallel = df.plot().parallel({"Adj Close", "Close", "High", "Low", "Open"}, "DayOfWeek", parallel_opts);
-  fig_parallel.headline("Parallel coordinates by weekday");
-  fig_parallel.save_pdf("sp500_parallel.pdf");
+  df.plot()
+      .parallel({"Adj Close", "Close", "High", "Low", "Open"}, "DayOfWeek", parallel_opts)
+      .headline("Parallel coordinates by weekday")
+      .save_pdf("sp500_parallel.pdf");
 
-  pluss::pl::flash::AndrewsCurvesOptions andrews_opts;
+  pluss::table::AndrewsCurvesPlotOptions andrews_opts;
   andrews_opts.max_curves = 500;
-  let fig_andrews = df.plot().andrews_curves({"Adj Close", "Close", "High", "Low", "Open"}, "DayOfWeek", andrews_opts);
-  fig_andrews.headline("Andrews curves by weekday");
-  fig_andrews.save_pdf("sp500_andrews_curves.pdf");
+  df.plot()
+      .andrews_curves({"Adj Close", "Close", "High", "Low", "Open"}, "DayOfWeek", andrews_opts)
+      .headline("Andrews curves by weekday")
+      .save_pdf("sp500_andrews_curves.pdf");
 
-  pluss::pl::flash::RadvizOptions radviz_opts;
+  pluss::table::RadvizPlotOptions radviz_opts;
   radviz_opts.max_points = 3000;
   let fig_radviz = df.plot().radviz({"Adj Close", "Close", "High", "Low", "Open", "LogVolume"}, "DayOfWeek", radviz_opts);
   fig_radviz.headline("Radviz by weekday");
   fig_radviz.save_pdf("sp500_radviz.pdf");
 
-  pluss::pl::flash::LagPlotOptions lag_opts;
+  pluss::table::LagPlotOptions lag_opts;
   lag_opts.lag = 1;
   lag_opts.max_points = 2500;
   let fig_lag = df.plot().lag("Close", lag_opts);
   fig_lag.headline("Lag plot (Close, lag=1)");
   fig_lag.save_pdf("sp500_lag_close.pdf");
 
-  pluss::pl::flash::AutocorrelationPlotOptions acf_opts;
+  pluss::table::ActPlotOptions acf_opts;
   acf_opts.max_lag = 60;
-  let fig_acf = df.plot().act("Close", acf_opts);
-  fig_acf.headline("Autocorrelation plot (Close)");
-  fig_acf.save_pdf("sp500_act_close.pdf");
+  df.plot().act("Close", acf_opts).headline("Autocorrelation plot (Close)").save_pdf("sp500_act_close.pdf");
 
-  pluss::pl::flash::BootstrapPlotOptions boot_opts;
+  pluss::table::BootstrapPlotOptions boot_opts;
   boot_opts.samples = 320;
   boot_opts.sample_size = 512;
   boot_opts.bins = 28;
-  let fig_boot = df.plot().bootstrap("Close", boot_opts);
-  fig_boot.headline("Bootstrap distribution (Close mean)");
-  fig_boot.save_pdf("sp500_bootstrap_close.pdf");
+  df.plot()
+      .bootstrap("Close", boot_opts)
+      .headline("Bootstrap distribution (Close mean)")
+      .save_pdf("sp500_bootstrap_close.pdf");
 
-  pluss::pl::flash::SummaryOptions summary_opts;
-  summary_opts.title = "SP500 summary table";
-  summary_opts.precision = 4;
-  let fig_brief = df.plot().brief({"Adj Close", "Close", "High", "Low", "Open", "Volume", "DailyRange", "LogVolume"}, summary_opts);
-  fig_brief.headline("Data table (brief)");
-  fig_brief.save_pdf("sp500_summary_table.pdf");
+  pluss::table::BriefPlotOptions brief_opts;
+  brief_opts.title = "Tables for plotted series (first cases)";
+  brief_opts.precision = 2;
+  brief_opts.max_cases = 8;
+  brief_opts.features_per_table = 1;
+  brief_opts.tables_per_row = 3;
+  brief_opts.table_gap_spaces = 8;
+  let fig_report = df.plot().line({"Close", "Open", "High", "Low", "Adj Close"}, "Date");
+  fig_report.mosaic(2, 1, 12.0, 10.0).tight_layout(true, 4.0).size(1480.0, 920.0);
+  df.plot().brief(fig_report, {"Close", "Open", "High", "Low", "Adj Close"}, brief_opts);
+  fig_report.headline("Price trends + supporting tables");
+  fig_report.save_pdf("sp500_close_with_brief_table.pdf");
 
   let monthly_top24 = monthly_volume.head(24, false);
-  let fig_monthly_bar = monthly_top24.plot().bar("TotalVolume");
-  fig_monthly_bar.headline("Top 24 (Year, Month) by traded volume");
-  fig_monthly_bar.save_pdf("sp500_top24_monthly_volume_bar.pdf");
+  monthly_top24.plot()
+      .bar("TotalVolume")
+      .headline("Top 24 (Year, Month) by traded volume")
+      .save_pdf("sp500_top24_monthly_volume_bar.pdf");
+  pluss::table::BarPlotOptions hbar_opts;
+  hbar_opts.horizontal = true;
+  monthly_top24.plot()
+      .bar("TotalVolume", std::nullopt, hbar_opts)
+      .headline("Top 24 (Year, Month) by traded volume - horizontal")
+      .save_pdf("sp500_top24_monthly_volume_barh.pdf");
+  pluss::table::PiePlotOptions pie_opts;
+  pie_opts.show_label = true;
+  pie_opts.show_percent = true;
+  pie_opts.show_value = true;
+  pie_opts.precision = 1;
+  monthly_top24.head(8, false)
+      .plot()
+      .pie("TotalVolume", "Month", pie_opts)
+      .headline("Top 8 monthly traded volume share (by month label)")
+      .save_pdf("sp500_top8_monthly_volume_pie.pdf");
 
   //========== Cell Five ===========
   // plotting 3d scatter
   //==============End Cell Five =============
   std::cout << "\n[Cell 5] 3D plot -> PDF/SVG outputs\n";
-  let fig3_scatter = df.plot3d().scatter("Close", "LogVolume", "DailyRange");
-  fig3_scatter.headline("S&P 500 3D scatter: close vs log-volume vs daily-range");
-  fig3_scatter.save_pdf("sp500_3d_scatter.pdf");
+  pluss::table::Plot3DSceneOptions scene3_opts;
+  scene3_opts.theme = pluss::table::Plot3DThemePreset::Dark;
+  scene3_opts.camera_preset = pluss::pl::flash::CameraPreset3D::Isometric;
+  scene3_opts.lighting = pluss::pl::flash::Lighting3DOptions{
+      .clear_first = true,
+      .headlight = true,
+      .lamp_left = true,
+      .sun_key = true,
+  };
+  pluss::table::Scatter3DPlotOptions scatter3_opts;
+  scatter3_opts.scene = scene3_opts;
+  scatter3_opts.trace.material = pluss::pl::MaterialProfile::Shiny;
+  scatter3_opts.trace.lighting = pluss::pl::LightingMode::Gouraud;
+  scatter3_opts.trace.shade = pluss::pl::ShadeMode::Smooth;
+  df.plot3d()
+      .scatter("Close", "LogVolume", "DailyRange", std::nullopt, std::nullopt, scatter3_opts)
+      .headline("S&P 500 3D scatter: close vs log-volume vs daily-range")
+      .save_pdf("sp500_3d_scatter.pdf");
 
-  let fig3_line = df.plot3d().line("Close", "LogVolume", "DailyRange");
-  fig3_line.headline("S&P 500 3D path: close vs log-volume vs daily-range");
-  fig3_line.save_pdf("sp500_3d_path.pdf");
+  pluss::table::Line3DPlotOptions line3_opts;
+  line3_opts.scene = scene3_opts;
+  line3_opts.scene.camera = pluss::pl::flash::Camera3DOptions{
+      .azimuth_deg = -48.0,
+      .elevation_deg = 24.0,
+      .view_angle_deg = 28.0,
+      .projection = pluss::pl::ProjectionKind::Perspective,
+  };
+  line3_opts.trace.line_width = 1.8F;
+  df.plot3d()
+      .line("Close", "LogVolume", "DailyRange", line3_opts)
+      .headline("S&P 500 3D path: close vs log-volume vs daily-range")
+      .save_pdf("sp500_3d_path.pdf");
 
-  let fig3_surface = df.plot3d().surface("Month", "Year", "Close", GroupOp::Mean);
-  fig3_surface.headline("Monthly mean close surface (Month x Year)");
-  fig3_surface.save_pdf("sp500_3d_surface_month_year_close.pdf");
+  pluss::table::Hist3DPlotOptions hist3d_opts;
+  hist3d_opts.bins_x = 30;
+  hist3d_opts.bins_y = 18;
+  hist3d_opts.scene = scene3_opts;
+  hist3d_opts.trace.material = pluss::pl::MaterialProfile::Metal;
+  hist3d_opts.trace.lighting = pluss::pl::LightingMode::Gouraud;
+  df.plot3d()
+      .hist("Close", "Volume", hist3d_opts)
+      .headline("S&P 500 3D histogram: Close x Volume")
+      .save_pdf("sp500_3d_hist_close_volume.pdf");
+
+  pluss::table::Surface3DPlotOptions surface3_opts;
+  surface3_opts.scene = scene3_opts;
+  surface3_opts.trace.material = pluss::pl::MaterialProfile::Shiny;
+  surface3_opts.trace.shade = pluss::pl::ShadeMode::Smooth;
+  df.plot3d()
+      .surface("Month", "Year", "Close", GroupOp::Mean, surface3_opts)
+      .headline("Monthly mean close surface (Month x Year)")
+      .save_pdf("sp500_3d_surface_month_year_close.pdf");
 
   //========== Cell Six ===========
   // preparing data for ML regression task
@@ -200,9 +269,10 @@ int main() {
   valid.save_csv("sp500_ml_valid.csv");
   ml_frame.save_csv("sp500_ml_full.csv");
 
-  let fig_target_hist = ml_frame.plot().hist("TargetNextRet", 120);
-  fig_target_hist.headline("Target distribution: next-day return");
-  fig_target_hist.save_pdf("sp500_target_next_return_hist.pdf");
+  ml_frame.plot()
+      .hist("TargetNextRet", 120)
+      .headline("Target distribution: next-day return")
+      .save_pdf("sp500_target_next_return_hist.pdf");
 
   std::cout << "\nSaved outputs under: " << out_dir << "\n";
   std::cout << "Done. Data is ready for NodeJ/PlussAI training phase when available.\n";

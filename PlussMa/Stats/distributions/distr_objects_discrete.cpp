@@ -1,9 +1,13 @@
-#include "distr_object_detail.h"
+#include "distr_fit_common.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
+#include <numeric>
 #include <span>
+#include <string>
 
 namespace pluss::subsp::stat::distr {
 namespace {
@@ -80,6 +84,52 @@ double negbinom_cumulant_scalar(double r, double p, std::int64_t order) {
   return r * polylog_negative_integer_sum(1.0 - p, order - 1);
 }
 
+std::vector<double> fit_data_f64_(const Series& x, const char* op) {
+  return fit_detail::data_f64(x, op);
+}
+
+double wald_z_value_(double level, const char* op) {
+  return fit_detail::wald_z(level, op);
+}
+
+bool is_integerish_(double value) {
+  return std::abs(value - std::round(value)) <= 1e-9;
+}
+
+double binary_sum_(const std::vector<double>& values, const char* op) {
+  return std::accumulate(values.begin(), values.end(), 0.0, [op](double acc, double v) {
+    PLUSS_CHECK(is_integerish_(v), std::string(op) + ": x must contain integer values");
+    PLUSS_CHECK(v == 0.0 || v == 1.0, std::string(op) + ": x must contain only 0/1 values");
+    return acc + v;
+  });
+}
+
+double bounded_count_sum_(const std::vector<double>& values, std::int64_t count, const char* op) {
+  PLUSS_CHECK(count > 0, std::string(op) + ": count must be > 0");
+  const double upper = static_cast<double>(count);
+  return std::accumulate(values.begin(), values.end(), 0.0, [op, upper](double acc, double v) {
+    PLUSS_CHECK(is_integerish_(v), std::string(op) + ": x must contain integer values");
+    PLUSS_CHECK(v >= 0.0 && v <= upper, std::string(op) + ": x must lie in [0, count]");
+    return acc + v;
+  });
+}
+
+double geometric_sum_(const std::vector<double>& values, const char* op) {
+  return std::accumulate(values.begin(), values.end(), 0.0, [op](double acc, double v) {
+    PLUSS_CHECK(is_integerish_(v), std::string(op) + ": x must contain integer values");
+    PLUSS_CHECK(v >= 1.0, std::string(op) + ": x must be >= 1");
+    return acc + v;
+  });
+}
+
+double poisson_count_sum_(const std::vector<double>& values, const char* op) {
+  return std::accumulate(values.begin(), values.end(), 0.0, [op](double acc, double v) {
+    PLUSS_CHECK(v >= 0.0, std::string(op) + ": x must be >= 0");
+    PLUSS_CHECK(is_integerish_(v), std::string(op) + ": x must contain integer counts");
+    return acc + v;
+  });
+}
+
 } // namespace
 
 Series Bernoulli::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -120,6 +170,76 @@ Series Bernoulli::cumulant(std::int64_t order) const {
   return detail::scalar_f64(detail::cumulants_from_raw_moments(raw)[static_cast<std::size_t>(order)]);
 }
 
+Bernoulli BernoulliFit::model() const {
+  return Bernoulli{p};
+}
+
+Series BernoulliFit::loglik(const Series& x) const {
+  return model().logpdf(x).sum().to(x.platform(), ScalarType::Float64);
+}
+
+Series BernoulliFit::loglik_per_obs(const Series& x) const {
+  return model().logpdf(x).to(x.platform(), ScalarType::Float64);
+}
+
+Series BernoulliFit::nll(const Series& x) const {
+  return loglik(x).neg();
+}
+
+Series BernoulliFit::score(const Series& x) const {
+  const auto values = fit_data_f64_(x, "BernoulliFit::score");
+  PLUSS_CHECK(p > 0.0 && p < 1.0, "BernoulliFit::score: p must be in (0, 1)");
+  const double sum_x = binary_sum_(values, "BernoulliFit::score");
+  const double n = static_cast<double>(values.size());
+  return detail::scalar_f64(sum_x / p - (n - sum_x) / (1.0 - p)).to(x.platform(), ScalarType::Float64);
+}
+
+Series BernoulliFit::fisher_inf(const Series& x) const {
+  const auto values = fit_data_f64_(x, "BernoulliFit::fisher_inf");
+  PLUSS_CHECK(p > 0.0 && p < 1.0, "BernoulliFit::fisher_inf: p must be in (0, 1)");
+  static_cast<void>(binary_sum_(values, "BernoulliFit::fisher_inf"));
+  const double n = static_cast<double>(values.size());
+  return detail::scalar_f64(n / (p * (1.0 - p))).to(x.platform(), ScalarType::Float64);
+}
+
+Series BernoulliFit::observed_inf(const Series& x) const {
+  const auto values = fit_data_f64_(x, "BernoulliFit::observed_inf");
+  PLUSS_CHECK(p > 0.0 && p < 1.0, "BernoulliFit::observed_inf: p must be in (0, 1)");
+  const double sum_x = binary_sum_(values, "BernoulliFit::observed_inf");
+  const double n = static_cast<double>(values.size());
+  return detail::scalar_f64(sum_x / (p * p) + (n - sum_x) / ((1.0 - p) * (1.0 - p)))
+      .to(x.platform(), ScalarType::Float64);
+}
+
+Series BernoulliFit::vcov(const Series& x) const {
+  const double info = fisher_inf(x).item<double>();
+  PLUSS_CHECK(info > 0.0, "BernoulliFit::vcov: fisher_inf must be > 0");
+  return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
+}
+
+Series BernoulliFit::stderr(const Series& x) const {
+  return vcov(x).sqrt().to(x.platform(), ScalarType::Float64);
+}
+
+Series BernoulliFit::confint(const Series& x, double level) const {
+  const double z = wald_z_value_(level, "BernoulliFit::confint");
+  const double se = stderr(x).item<double>();
+  const std::array<double, 2> ci = {std::clamp(p - z * se, 0.0, 1.0), std::clamp(p + z * se, 0.0, 1.0)};
+  return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
+                                   {2},
+                                   Config{}.with_dtype(ScalarType::Float64))
+      .to(x.platform(), ScalarType::Float64);
+}
+
+BernoulliFit Bernoulli::MLE(const Series& x) const {
+  const auto values = fit_data_f64_(x, "Bernoulli::MLE");
+  const double sum_x = binary_sum_(values, "Bernoulli::MLE");
+  const double n = static_cast<double>(values.size());
+  const double p_hat = sum_x / n;
+  PLUSS_CHECK(p_hat > 0.0 && p_hat < 1.0, "Bernoulli::MLE: boundary fit (p=0 or p=1) is unsupported");
+  return BernoulliFit{p_hat};
+}
+
 Series Binomial::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
   return detail::sample_with_params("binomial", binomial_params(count, p), sizes, cfg, seed);
 }
@@ -153,6 +273,79 @@ Series Binomial::cumulant(std::int64_t order) const {
   return Bernoulli{p}.cumulant(order).mul(static_cast<double>(count));
 }
 
+Binomial BinomialFit::model() const {
+  return Binomial{count, p};
+}
+
+Series BinomialFit::loglik(const Series& x) const {
+  return model().logpdf(x).sum().to(x.platform(), ScalarType::Float64);
+}
+
+Series BinomialFit::loglik_per_obs(const Series& x) const {
+  return model().logpdf(x).to(x.platform(), ScalarType::Float64);
+}
+
+Series BinomialFit::nll(const Series& x) const {
+  return loglik(x).neg();
+}
+
+Series BinomialFit::score(const Series& x) const {
+  const auto values = fit_data_f64_(x, "BinomialFit::score");
+  PLUSS_CHECK(p > 0.0 && p < 1.0, "BinomialFit::score: p must be in (0, 1)");
+  const double sum_x = bounded_count_sum_(values, count, "BinomialFit::score");
+  const double n_obs = static_cast<double>(values.size());
+  const double total = n_obs * static_cast<double>(count);
+  return detail::scalar_f64(sum_x / p - (total - sum_x) / (1.0 - p)).to(x.platform(), ScalarType::Float64);
+}
+
+Series BinomialFit::fisher_inf(const Series& x) const {
+  const auto values = fit_data_f64_(x, "BinomialFit::fisher_inf");
+  PLUSS_CHECK(p > 0.0 && p < 1.0, "BinomialFit::fisher_inf: p must be in (0, 1)");
+  static_cast<void>(bounded_count_sum_(values, count, "BinomialFit::fisher_inf"));
+  const double n_obs = static_cast<double>(values.size());
+  return detail::scalar_f64(n_obs * static_cast<double>(count) / (p * (1.0 - p)))
+      .to(x.platform(), ScalarType::Float64);
+}
+
+Series BinomialFit::observed_inf(const Series& x) const {
+  const auto values = fit_data_f64_(x, "BinomialFit::observed_inf");
+  PLUSS_CHECK(p > 0.0 && p < 1.0, "BinomialFit::observed_inf: p must be in (0, 1)");
+  const double sum_x = bounded_count_sum_(values, count, "BinomialFit::observed_inf");
+  const double n_obs = static_cast<double>(values.size());
+  const double total = n_obs * static_cast<double>(count);
+  return detail::scalar_f64(sum_x / (p * p) + (total - sum_x) / ((1.0 - p) * (1.0 - p)))
+      .to(x.platform(), ScalarType::Float64);
+}
+
+Series BinomialFit::vcov(const Series& x) const {
+  const double info = fisher_inf(x).item<double>();
+  PLUSS_CHECK(info > 0.0, "BinomialFit::vcov: fisher_inf must be > 0");
+  return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
+}
+
+Series BinomialFit::stderr(const Series& x) const {
+  return vcov(x).sqrt().to(x.platform(), ScalarType::Float64);
+}
+
+Series BinomialFit::confint(const Series& x, double level) const {
+  const double z = wald_z_value_(level, "BinomialFit::confint");
+  const double se = stderr(x).item<double>();
+  const std::array<double, 2> ci = {std::clamp(p - z * se, 0.0, 1.0), std::clamp(p + z * se, 0.0, 1.0)};
+  return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
+                                   {2},
+                                   Config{}.with_dtype(ScalarType::Float64))
+      .to(x.platform(), ScalarType::Float64);
+}
+
+BinomialFit Binomial::MLE(const Series& x) const {
+  const auto values = fit_data_f64_(x, "Binomial::MLE");
+  const double sum_x = bounded_count_sum_(values, count, "Binomial::MLE");
+  const double n_obs = static_cast<double>(values.size());
+  const double p_hat = sum_x / (n_obs * static_cast<double>(count));
+  PLUSS_CHECK(p_hat > 0.0 && p_hat < 1.0, "Binomial::MLE: boundary fit (p=0 or p=1) is unsupported");
+  return BinomialFit{count, p_hat};
+}
+
 Series Poisson::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
   return detail::sample_with_params("poisson", poisson_params(lambda), sizes, cfg, seed);
 }
@@ -184,6 +377,72 @@ Series Poisson::cgf(const Series& t) const {
 Series Poisson::cumulant(std::int64_t order) const {
   detail::require_positive_order(order, "Poisson::cumulant");
   return detail::scalar_f64(lambda);
+}
+
+Poisson PoissonFit::model() const {
+  return Poisson{lambda};
+}
+
+Series PoissonFit::loglik(const Series& x) const {
+  return model().logpdf(x).sum().to(x.platform(), ScalarType::Float64);
+}
+
+Series PoissonFit::loglik_per_obs(const Series& x) const {
+  return model().logpdf(x).to(x.platform(), ScalarType::Float64);
+}
+
+Series PoissonFit::nll(const Series& x) const {
+  return loglik(x).neg();
+}
+
+Series PoissonFit::score(const Series& x) const {
+  const auto values = fit_data_f64_(x, "PoissonFit::score");
+  PLUSS_CHECK(lambda > 0.0, "PoissonFit::score: lambda must be > 0");
+  const double sum_x = poisson_count_sum_(values, "PoissonFit::score");
+  const double n = static_cast<double>(values.size());
+  return detail::scalar_f64(sum_x / lambda - n).to(x.platform(), ScalarType::Float64);
+}
+
+Series PoissonFit::fisher_inf(const Series& x) const {
+  const auto values = fit_data_f64_(x, "PoissonFit::fisher_inf");
+  PLUSS_CHECK(lambda > 0.0, "PoissonFit::fisher_inf: lambda must be > 0");
+  const double n = static_cast<double>(values.size());
+  return detail::scalar_f64(n / lambda).to(x.platform(), ScalarType::Float64);
+}
+
+Series PoissonFit::observed_inf(const Series& x) const {
+  const auto values = fit_data_f64_(x, "PoissonFit::observed_inf");
+  PLUSS_CHECK(lambda > 0.0, "PoissonFit::observed_inf: lambda must be > 0");
+  const double sum_x = poisson_count_sum_(values, "PoissonFit::observed_inf");
+  return detail::scalar_f64(sum_x / (lambda * lambda)).to(x.platform(), ScalarType::Float64);
+}
+
+Series PoissonFit::vcov(const Series& x) const {
+  const double info = fisher_inf(x).item<double>();
+  PLUSS_CHECK(info > 0.0, "PoissonFit::vcov: fisher_inf must be > 0");
+  return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
+}
+
+Series PoissonFit::stderr(const Series& x) const {
+  return vcov(x).sqrt().to(x.platform(), ScalarType::Float64);
+}
+
+Series PoissonFit::confint(const Series& x, double level) const {
+  const double z = wald_z_value_(level, "PoissonFit::confint");
+  const double se = stderr(x).item<double>();
+  const std::array<double, 2> ci = {std::max(0.0, lambda - z * se), lambda + z * se};
+  return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
+                                   {2},
+                                   Config{}.with_dtype(ScalarType::Float64))
+      .to(x.platform(), ScalarType::Float64);
+}
+
+PoissonFit Poisson::MLE(const Series& x) const {
+  const auto values = fit_data_f64_(x, "Poisson::MLE");
+  const double sum_x = poisson_count_sum_(values, "Poisson::MLE");
+  const double lambda_hat = sum_x / static_cast<double>(values.size());
+  PLUSS_CHECK(lambda_hat > 0.0, "Poisson::MLE: fitted lambda is 0; this boundary fit is unsupported");
+  return PoissonFit{lambda_hat};
 }
 
 Series Geometric::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -227,6 +486,78 @@ Series Geometric::cumulant(std::int64_t order) const {
     return detail::scalar_f64(1.0 + negbinom_cumulant_scalar(1.0, p, 1));
   }
   return detail::scalar_f64(negbinom_cumulant_scalar(1.0, p, order));
+}
+
+Geometric GeometricFit::model() const {
+  return Geometric{p};
+}
+
+Series GeometricFit::loglik(const Series& x) const {
+  return model().logpdf(x).sum().to(x.platform(), ScalarType::Float64);
+}
+
+Series GeometricFit::loglik_per_obs(const Series& x) const {
+  return model().logpdf(x).to(x.platform(), ScalarType::Float64);
+}
+
+Series GeometricFit::nll(const Series& x) const {
+  return loglik(x).neg();
+}
+
+Series GeometricFit::score(const Series& x) const {
+  const auto values = fit_data_f64_(x, "GeometricFit::score");
+  PLUSS_CHECK(p > 0.0 && p < 1.0, "GeometricFit::score: p must be in (0, 1)");
+  const double sum_x = geometric_sum_(values, "GeometricFit::score");
+  const double n_obs = static_cast<double>(values.size());
+  const double sum_k = sum_x - n_obs;
+  return detail::scalar_f64(n_obs / p - sum_k / (1.0 - p)).to(x.platform(), ScalarType::Float64);
+}
+
+Series GeometricFit::fisher_inf(const Series& x) const {
+  const auto values = fit_data_f64_(x, "GeometricFit::fisher_inf");
+  PLUSS_CHECK(p > 0.0 && p < 1.0, "GeometricFit::fisher_inf: p must be in (0, 1)");
+  static_cast<void>(geometric_sum_(values, "GeometricFit::fisher_inf"));
+  const double n_obs = static_cast<double>(values.size());
+  return detail::scalar_f64(n_obs / (p * p * (1.0 - p))).to(x.platform(), ScalarType::Float64);
+}
+
+Series GeometricFit::observed_inf(const Series& x) const {
+  const auto values = fit_data_f64_(x, "GeometricFit::observed_inf");
+  PLUSS_CHECK(p > 0.0 && p < 1.0, "GeometricFit::observed_inf: p must be in (0, 1)");
+  const double sum_x = geometric_sum_(values, "GeometricFit::observed_inf");
+  const double n_obs = static_cast<double>(values.size());
+  const double sum_k = sum_x - n_obs;
+  return detail::scalar_f64(n_obs / (p * p) + sum_k / ((1.0 - p) * (1.0 - p)))
+      .to(x.platform(), ScalarType::Float64);
+}
+
+Series GeometricFit::vcov(const Series& x) const {
+  const double info = fisher_inf(x).item<double>();
+  PLUSS_CHECK(info > 0.0, "GeometricFit::vcov: fisher_inf must be > 0");
+  return detail::scalar_f64(1.0 / info).to(x.platform(), ScalarType::Float64);
+}
+
+Series GeometricFit::stderr(const Series& x) const {
+  return vcov(x).sqrt().to(x.platform(), ScalarType::Float64);
+}
+
+Series GeometricFit::confint(const Series& x, double level) const {
+  const double z = wald_z_value_(level, "GeometricFit::confint");
+  const double se = stderr(x).item<double>();
+  const std::array<double, 2> ci = {std::clamp(p - z * se, 0.0, 1.0), std::clamp(p + z * se, 0.0, 1.0)};
+  return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
+                                   {2},
+                                   Config{}.with_dtype(ScalarType::Float64))
+      .to(x.platform(), ScalarType::Float64);
+}
+
+GeometricFit Geometric::MLE(const Series& x) const {
+  const auto values = fit_data_f64_(x, "Geometric::MLE");
+  const double sum_x = geometric_sum_(values, "Geometric::MLE");
+  const double n_obs = static_cast<double>(values.size());
+  const double p_hat = n_obs / sum_x;
+  PLUSS_CHECK(p_hat > 0.0 && p_hat < 1.0, "Geometric::MLE: boundary fit (p=1) is unsupported");
+  return GeometricFit{p_hat};
 }
 
 Series NegativeBinomial::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {

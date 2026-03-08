@@ -103,5 +103,54 @@ int main() {
               t,
               like);
 
+  std::cout << "\nClosed-form MLE object methods\n";
+  const Series xn = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}, f64);
+  const Series xe = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0}, {4}, f64);
+  const Series xp = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0}, {5}, f64);
+  const Series xb = pluss::make_series(std::vector<double>{0.0, 1.0, 1.0, 0.0, 1.0}, {5}, f64);
+  const Series xbin = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0}, {5}, f64);
+  const Series xg = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}, f64);
+  const Series xl = pluss::make_series(std::vector<double>{1.0, 2.0, 4.0, 8.0}, {4}, f64);
+  const Series xu = pluss::make_series(std::vector<double>{2.0, 3.0, 5.0, 7.0}, {4}, f64);
+  const Series xr = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}, f64);
+
+  const auto nfit = Normal{0.0, 1.0}.MLE(xn);
+  const auto efit = Exponential{1.0}.MLE(xe);
+  const auto pfit = Poisson{1.0}.MLE(xp);
+  const auto bfit = Bernoulli{0.5}.MLE(xb);
+  const auto binfit = Binomial{4, 0.5}.MLE(xbin);
+  const auto gfit = Geometric{0.5}.MLE(xg);
+  const auto lfit = Lognormal{0.0, 1.0}.MLE(xl);
+  const auto ufit = Uniform{0.0, 1.0}.MLE(xu);
+  const auto rfit = Rayleigh{1.0}.MLE(xr);
+
+  std::cout << "  Normal MLE: mean=" << nfit.mean << " stddev=" << nfit.stddev
+            << " score=" << preview(nfit.score(xn))
+            << " fisher=" << preview(nfit.fisher_inf(xn)) << "\n";
+  std::cout << "  Exponential MLE: rate=" << efit.rate
+            << " score=" << preview(efit.score(xe))
+            << " fisher=" << preview(efit.fisher_inf(xe)) << "\n";
+  std::cout << "  Poisson MLE: lambda=" << pfit.lambda
+            << " score=" << preview(pfit.score(xp))
+            << " fisher=" << preview(pfit.fisher_inf(xp)) << "\n";
+  std::cout << "  Bernoulli MLE: p=" << bfit.p
+            << " score=" << preview(bfit.score(xb))
+            << " fisher=" << preview(bfit.fisher_inf(xb)) << "\n";
+  std::cout << "  Binomial MLE: count=" << binfit.count << " p=" << binfit.p
+            << " score=" << preview(binfit.score(xbin))
+            << " fisher=" << preview(binfit.fisher_inf(xbin)) << "\n";
+  std::cout << "  Geometric MLE: p=" << gfit.p
+            << " score=" << preview(gfit.score(xg))
+            << " fisher=" << preview(gfit.fisher_inf(xg)) << "\n";
+  std::cout << "  Lognormal MLE: mean_log=" << lfit.mean_log << " stddev_log=" << lfit.stddev_log
+            << " score=" << preview(lfit.score(xl))
+            << " fisher=" << preview(lfit.fisher_inf(xl)) << "\n";
+  std::cout << "  Uniform MLE: low=" << ufit.low << " high=" << ufit.high
+            << " score=" << preview(ufit.score(xu))
+            << " fisher=" << preview(ufit.fisher_inf(xu)) << "\n";
+  std::cout << "  Rayleigh MLE: sigma=" << rfit.sigma
+            << " score=" << preview(rfit.score(xr))
+            << " fisher=" << preview(rfit.fisher_inf(xr)) << "\n";
+
   return 0;
 }

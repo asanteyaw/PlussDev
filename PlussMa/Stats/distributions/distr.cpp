@@ -1,8 +1,8 @@
 #include "pluss/subsp/stat/distr.h"
+#include "pluss/subsp/stat/rng.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/codem.h"
-#include "pluss/codem/quasirandom_factory.h"
 #include "pluss/codem/series_factory.h"
 
 #include <algorithm>
@@ -24,10 +24,26 @@ namespace {
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
+using RngMethod = ::pluss::subsp::stat::rng::Method;
 
 constexpr double kEps = 1e-12;
 constexpr double kSqrt2 = 1.4142135623730950488;
 constexpr double kLog2Pi = 1.8378770664093454836;
+
+thread_local RngMethod g_sample_rng_method = RngMethod::Pseudo;
+
+struct SampleRngMethodScope {
+  explicit SampleRngMethodScope(RngMethod method)
+      : previous(g_sample_rng_method) {
+    g_sample_rng_method = method;
+  }
+
+  ~SampleRngMethodScope() {
+    g_sample_rng_method = previous;
+  }
+
+  RngMethod previous;
+};
 
 enum class Family : std::uint8_t {
   Alpha,
@@ -129,7 +145,20 @@ Series ones_like_f64_(const Series& x) {
 }
 
 Series unit_uniform_(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  return pluss::rand(sizes, float64_cfg_on_(cfg), seed).clamp_min(kEps).clamp_max(1.0 - kEps);
+  const Config out_cfg = float64_cfg_on_(cfg);
+  switch (g_sample_rng_method) {
+    case RngMethod::Pseudo:
+      return pluss::rand(sizes, out_cfg, seed).clamp_min(kEps).clamp_max(1.0 - kEps);
+    case RngMethod::Sobol:
+    case RngMethod::Halton:
+    case RngMethod::Torus:
+      return pluss::rng::uniform(sizes, g_sample_rng_method, out_cfg, seed)
+          .clamp_min(kEps)
+          .clamp_max(1.0 - kEps);
+    default:
+      PLUSS_CHECK(false, "subsp::stat::distr::sample: unsupported rng method");
+      return pluss::rand(sizes, out_cfg, seed).clamp_min(kEps).clamp_max(1.0 - kEps);
+  }
 }
 
 std::string normalize_name_(std::string_view name) {
@@ -667,7 +696,14 @@ Series normal_sample_(double mean,
                       Config cfg,
                       std::uint64_t seed) {
   PLUSS_CHECK(stddev >= 0.0, "subsp::stat::distr::normal sample: std must be >= 0");
-  return pluss::normal(mean, stddev, sizes, cfg, seed);
+  if (g_sample_rng_method == RngMethod::Pseudo) {
+    return pluss::normal(mean, stddev, sizes, cfg, seed);
+  }
+
+  return pluss::rng::standard_normal(sizes, g_sample_rng_method, float64_cfg_on_(cfg), seed)
+      .mul(stddev)
+      .add(mean)
+      .to(cfg.platform, cfg.dtype);
 }
 
 Series lognormal_pdf_(const Series& x, double mu, double sigma) {
@@ -2742,7 +2778,14 @@ Series sample(std::string_view name,
               std::span<const double> params,
               std::span<const std::int64_t> sizes,
               Config cfg,
-              std::uint64_t seed) {
+              std::uint64_t seed,
+              RngMethod method) {
+  PLUSS_CHECK(
+      method == RngMethod::Pseudo || method == RngMethod::Sobol || method == RngMethod::Halton ||
+          method == RngMethod::Torus,
+      "subsp::stat::distr::sample: unsupported rng method");
+  const SampleRngMethodScope rng_scope(method);
+
   switch (resolve_(name)) {
     case Family::Alpha:
       expect_param_count_("alpha sample", params, {2});
@@ -2934,57 +2977,69 @@ Series sample(std::string_view name,
               std::initializer_list<double> params,
               std::span<const std::int64_t> sizes,
               Config cfg,
-              std::uint64_t seed) {
-  return sample(name, std::span<const double>(params.begin(), params.size()), sizes, cfg, seed);
+              std::uint64_t seed,
+              RngMethod method) {
+  return sample(name, std::span<const double>(params.begin(), params.size()), sizes, cfg, seed, method);
 }
 
 Series sample(std::string_view name,
               std::initializer_list<double> params,
               std::initializer_list<std::int64_t> sizes,
               Config cfg,
-              std::uint64_t seed) {
+              std::uint64_t seed,
+              RngMethod method) {
   return sample(name,
                 std::span<const double>(params.begin(), params.size()),
                 std::span<const std::int64_t>(sizes.begin(), sizes.size()),
                 cfg,
-                seed);
+                seed,
+                method);
 }
 
 Series sample(std::string_view name,
               std::span<const std::int64_t> sizes,
               Config cfg,
-              std::uint64_t seed) {
-  return sample(name, std::span<const double>{}, sizes, cfg, seed);
+              std::uint64_t seed,
+              RngMethod method) {
+  return sample(name, std::span<const double>{}, sizes, cfg, seed, method);
 }
 
 Series sample(std::string_view name,
               std::initializer_list<std::int64_t> sizes,
               Config cfg,
-              std::uint64_t seed) {
-  return sample(name, std::span<const double>{}, std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
+              std::uint64_t seed,
+              RngMethod method) {
+  return sample(name,
+                std::span<const double>{},
+                std::span<const std::int64_t>(sizes.begin(), sizes.size()),
+                cfg,
+                seed,
+                method);
 }
 
 Series sample_like(std::string_view name,
                    std::span<const double> params,
                    const Series& like,
-                   std::uint64_t seed) {
+                   std::uint64_t seed,
+                   RngMethod method) {
   PLUSS_CHECK(like.defined(), "subsp::stat::distr::sample_like: expected defined Series");
   const Config cfg = Config{}
                          .with_dtype(like.scalar_type())
                          .with_platform(like.platform())
                          .with_pinned(like.is_pinned().item<bool>());
-  return sample(name, params, like.sizes(), cfg, seed);
+  return sample(name, params, like.sizes(), cfg, seed, method);
 }
 
 Series sample_like(std::string_view name,
                    std::initializer_list<double> params,
                    const Series& like,
-                   std::uint64_t seed) {
-  return sample_like(name, std::span<const double>(params.begin(), params.size()), like, seed);
+                   std::uint64_t seed,
+                   RngMethod method) {
+  return sample_like(name, std::span<const double>(params.begin(), params.size()), like, seed, method);
 }
 
-Series sample_like(std::string_view name, const Series& like, std::uint64_t seed) {
-  return sample_like(name, std::span<const double>{}, like, seed);
+Series sample_like(std::string_view name, const Series& like, std::uint64_t seed, RngMethod method) {
+  return sample_like(name, std::span<const double>{}, like, seed, method);
 }
 
 struct MixtureNormalParams {
@@ -3096,9 +3151,11 @@ Series mixture_normal(const Series& weights,
       pluss::arange(0, k, Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform)).reshape({1, k});
   const Series selector_mask = component_ids.eq(selectors).to(ScalarType::Float64);
 
-  const Series base = (use_sobol
-                           ? pluss::sobol_normal({total, k}, Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform), seed)
-                           : pluss::randn({total, k}, Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform), seed));
+  const Series base = pluss::rng::standard_normal(
+      {total, k},
+      use_sobol ? RngMethod::Sobol : RngMethod::Pseudo,
+      Config{}.with_dtype(ScalarType::Float64).with_platform(cfg.platform),
+      seed);
   const Series components = params.means.reshape({1, k}).add(params.stddevs.reshape({1, k}).mul(base));
   return selector_mask.mul(components).sum(1, false).reshape(sizes).to(cfg.dtype);
 }

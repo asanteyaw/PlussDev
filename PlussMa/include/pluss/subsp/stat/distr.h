@@ -4,6 +4,155 @@
 
 namespace pluss::subsp::stat::distr {
 
+struct Normal;
+struct Bernoulli;
+struct Binomial;
+struct Geometric;
+struct Lognormal;
+struct Uniform;
+struct Exponential;
+struct Rayleigh;
+struct Poisson;
+
+struct CODEM_API NormalFit {
+  double mean = 0.0;
+  double stddev = 1.0;
+
+  Normal model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series loglik_per_obs(const pluss::Series& x) const;
+  pluss::Series nll(const pluss::Series& x) const;
+  pluss::Series score(const pluss::Series& x) const;
+  pluss::Series fisher_inf(const pluss::Series& x) const;
+  pluss::Series observed_inf(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API ExponentialFit {
+  double rate = 1.0;
+
+  Exponential model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series loglik_per_obs(const pluss::Series& x) const;
+  pluss::Series nll(const pluss::Series& x) const;
+  pluss::Series score(const pluss::Series& x) const;
+  pluss::Series fisher_inf(const pluss::Series& x) const;
+  pluss::Series observed_inf(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API PoissonFit {
+  double lambda = 1.0;
+
+  Poisson model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series loglik_per_obs(const pluss::Series& x) const;
+  pluss::Series nll(const pluss::Series& x) const;
+  pluss::Series score(const pluss::Series& x) const;
+  pluss::Series fisher_inf(const pluss::Series& x) const;
+  pluss::Series observed_inf(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API BernoulliFit {
+  double p = 0.5;
+
+  Bernoulli model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series loglik_per_obs(const pluss::Series& x) const;
+  pluss::Series nll(const pluss::Series& x) const;
+  pluss::Series score(const pluss::Series& x) const;
+  pluss::Series fisher_inf(const pluss::Series& x) const;
+  pluss::Series observed_inf(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API BinomialFit {
+  std::int64_t count = 1;
+  double p = 0.5;
+
+  Binomial model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series loglik_per_obs(const pluss::Series& x) const;
+  pluss::Series nll(const pluss::Series& x) const;
+  pluss::Series score(const pluss::Series& x) const;
+  pluss::Series fisher_inf(const pluss::Series& x) const;
+  pluss::Series observed_inf(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API GeometricFit {
+  double p = 0.5;
+
+  Geometric model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series loglik_per_obs(const pluss::Series& x) const;
+  pluss::Series nll(const pluss::Series& x) const;
+  pluss::Series score(const pluss::Series& x) const;
+  pluss::Series fisher_inf(const pluss::Series& x) const;
+  pluss::Series observed_inf(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API LognormalFit {
+  double mean_log = 0.0;
+  double stddev_log = 1.0;
+
+  Lognormal model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series loglik_per_obs(const pluss::Series& x) const;
+  pluss::Series nll(const pluss::Series& x) const;
+  pluss::Series score(const pluss::Series& x) const;
+  pluss::Series fisher_inf(const pluss::Series& x) const;
+  pluss::Series observed_inf(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API UniformFit {
+  double low = 0.0;
+  double high = 1.0;
+
+  Uniform model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series loglik_per_obs(const pluss::Series& x) const;
+  pluss::Series nll(const pluss::Series& x) const;
+  pluss::Series score(const pluss::Series& x) const;
+  pluss::Series fisher_inf(const pluss::Series& x) const;
+  pluss::Series observed_inf(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
+struct CODEM_API RayleighFit {
+  double sigma = 1.0;
+
+  Rayleigh model() const;
+  pluss::Series loglik(const pluss::Series& x) const;
+  pluss::Series loglik_per_obs(const pluss::Series& x) const;
+  pluss::Series nll(const pluss::Series& x) const;
+  pluss::Series score(const pluss::Series& x) const;
+  pluss::Series fisher_inf(const pluss::Series& x) const;
+  pluss::Series observed_inf(const pluss::Series& x) const;
+  pluss::Series vcov(const pluss::Series& x) const;
+  pluss::Series stderr(const pluss::Series& x) const;
+  pluss::Series confint(const pluss::Series& x, double level = 0.95) const;
+};
+
 struct CODEM_API Normal {
   double mean = 0.0;
   double stddev = 1.0;
@@ -21,6 +170,7 @@ struct CODEM_API Normal {
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
   pluss::Series cumulant(std::int64_t order) const;
+  NormalFit MLE(const pluss::Series& x) const;
 };
 
 struct CODEM_API Bernoulli {
@@ -39,6 +189,7 @@ struct CODEM_API Bernoulli {
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
   pluss::Series cumulant(std::int64_t order) const;
+  BernoulliFit MLE(const pluss::Series& x) const;
 };
 
 struct CODEM_API Binomial {
@@ -58,6 +209,7 @@ struct CODEM_API Binomial {
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
   pluss::Series cumulant(std::int64_t order) const;
+  BinomialFit MLE(const pluss::Series& x) const;
 };
 
 struct CODEM_API Poisson {
@@ -76,6 +228,7 @@ struct CODEM_API Poisson {
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
   pluss::Series cumulant(std::int64_t order) const;
+  PoissonFit MLE(const pluss::Series& x) const;
 };
 
 struct CODEM_API Geometric {
@@ -94,6 +247,7 @@ struct CODEM_API Geometric {
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
   pluss::Series cumulant(std::int64_t order) const;
+  GeometricFit MLE(const pluss::Series& x) const;
 };
 
 struct CODEM_API NegativeBinomial {
@@ -189,6 +343,7 @@ struct CODEM_API Lognormal {
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
   pluss::Series cumulant(std::int64_t order) const;
+  LognormalFit MLE(const pluss::Series& x) const;
 };
 
 struct CODEM_API Uniform {
@@ -208,6 +363,7 @@ struct CODEM_API Uniform {
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
   pluss::Series cumulant(std::int64_t order) const;
+  UniformFit MLE(const pluss::Series& x) const;
 };
 
 struct CODEM_API Exponential {
@@ -226,6 +382,7 @@ struct CODEM_API Exponential {
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
   pluss::Series cumulant(std::int64_t order) const;
+  ExponentialFit MLE(const pluss::Series& x) const;
 };
 
 struct CODEM_API Laplace {
@@ -282,6 +439,7 @@ struct CODEM_API Rayleigh {
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series cgf(const pluss::Series& t) const;
   pluss::Series cumulant(std::int64_t order) const;
+  RayleighFit MLE(const pluss::Series& x) const;
 };
 
 struct CODEM_API NormalTrunc {

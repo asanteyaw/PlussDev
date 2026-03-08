@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/subsp/stat/distr.h"
+#include "pluss/subsp/stat/rng.h"
 #include "pluss/subsp/stat/stats.h"
 
 namespace pluss {

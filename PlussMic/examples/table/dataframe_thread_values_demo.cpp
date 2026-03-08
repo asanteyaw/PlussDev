@@ -75,10 +75,10 @@ int main() {
   std::cout << ts.mean(false) << "\n";
 
   auto ts_enriched = ts.assign({
-      {"year", [](const DataFrame& df) { return df.features("event_time").timeline().year(); }},
-      {"hour", [](const DataFrame& df) { return df.features("event_time").timeline().hour(); }},
+      {"year", [](const DataFrame& df) { return df.features("event_time").as_timeline().year(); }},
+      {"hour", [](const DataFrame& df) { return df.features("event_time").as_timeline().hour(); }},
   });
-  std::cout << "features(\"event_time\").timeline().year()/hour() used to derive year/hour:\n";
+  std::cout << "features(\"event_time\").as_timeline().year()/hour() used to derive year/hour:\n";
   ts_enriched.features({"event_time", "year", "hour", "load_mw"}).head(8);
 
   auto ts_idx = ts.cast_timeindex({"event_time"});
@@ -95,10 +95,10 @@ int main() {
   txt.info();
 
   auto txt_aug = txt
-                     .set_features("city_lower", txt.features("city").note().lower())
-                     .set_features("comment_tagged", txt.features("comment").note().replace(" ", "_"));
+                     .set_features("city_lower", txt.features("city").as_note().lower())
+                     .set_features("comment_tagged", txt.features("comment").as_note().replace(" ", "_"));
 
-  std::cout << "features(\"...\").note() chain derived features:\n";
+  std::cout << "features(\"...\").as_note() chain derived features:\n";
   txt_aug.features({"city", "city_lower", "comment", "comment_tagged", "score"}).head(8);
 
   return 0;
