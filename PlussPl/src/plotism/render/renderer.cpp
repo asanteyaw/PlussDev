@@ -1963,12 +1963,14 @@ struct FiniteMinMax {
     double tick_font,
     double rotation_deg,
     bool x_axis) {
-  (void)axes_visible;
   (void)x_axis;
+  constexpr double kBorderedVirtualTickFactor = 1.0;
+  constexpr double kBorderlessVirtualTickFactor = 0.35;
   const double abs_rotation = std::abs(rotation_deg);
   const double tick_len = std::clamp(tick_font * 0.45, 4.0, 9.0);
-  // Use a virtual tick length even when axes are hidden so bordered and borderless spacing match.
-  const double base_tick_len = tick_len;
+  // Borderless panes still need a small virtual tick clearance, but less than bordered panes.
+  const double virtual_tick_factor = axes_visible ? kBorderedVirtualTickFactor : kBorderlessVirtualTickFactor;
+  const double base_tick_len = tick_len * virtual_tick_factor;
   if (abs_rotation <= 1e-9) {
     return base_tick_len + std::clamp(tick_font * 0.74, 4.0, 13.0);
   }
@@ -1984,7 +1986,19 @@ struct FiniteMinMax {
   if (axis.tick_label_gap.has_value()) {
     return std::max(0.0, *axis.tick_label_gap);
   }
-  return default_planar_tick_label_gap(axes_visible, tick_font, axis.tick_rotation_deg.value_or(0.0), x_axis);
+  double gap = default_planar_tick_label_gap(axes_visible, tick_font, axis.tick_rotation_deg.value_or(0.0), x_axis);
+  if (!x_axis) {
+    // Optical correction: y tick labels are end-anchored, which renders visually farther from the axis.
+    constexpr double kYAxisOpticalCompFactor = 0.18;
+    constexpr double kYAxisOpticalCompMin = 0.8;
+    constexpr double kYAxisOpticalCompMax = 3.0;
+    const double rotation_gain = std::clamp(std::abs(axis.tick_rotation_deg.value_or(0.0)) / 90.0, 0.0, 1.0);
+    const double attenuation = 1.0 - 0.6 * rotation_gain;
+    const double optical_comp =
+        std::clamp(tick_font * kYAxisOpticalCompFactor * attenuation, kYAxisOpticalCompMin, kYAxisOpticalCompMax);
+    gap = std::max(0.0, gap - optical_comp);
+  }
+  return gap;
 }
 
 [[nodiscard]] double resolved_axis_label_gap(
