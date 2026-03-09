@@ -43,7 +43,9 @@ Depth labels from `axis0_labels` should be used when available.
 - [x] Add depth aggregation view:
   - `atlas.plot().depth("feature", ...)`
   - supports center statistic + optional lower/upper envelopes across frames.
-- [ ] Add depth-axis configuration options (ordering, label formatting, subsampling).
+- [x] Add depth-axis configuration options:
+  - ordering and subsampling via `AtlasDepthAxisOptions`.
+  - applied across depth-native atlas plots.
 
 ### Tranche 3
 - [x] Add atlas-native feature triplet panels:
@@ -51,7 +53,10 @@ Depth labels from `axis0_labels` should be used when available.
 - [x] Add atlas-native comparison plots:
   - `atlas.plot().depth_compare(...)` for multi-feature depth overlays.
   - `atlas.plot().depth_facet(...)` for per-feature depth facets.
-- [ ] Add rolling depth summaries (windowed depth statistics).
+- [x] Add rolling depth summaries:
+  - `atlas.plot().depth_rolling(...)`.
+- [x] Add multi-frame frame-selection plotting:
+  - `atlas.plot().frames({...}, y, x, AtlasFramesPlotOptions{mode=Overlay|Facet})`.
 - Add stricter API docs and tests for shape/label contracts.
 
 ## Keep / Remove Rule

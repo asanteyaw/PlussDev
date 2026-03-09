@@ -180,7 +180,7 @@ Series confint_matrix_series_(const std::vector<double>& params,
 } // namespace
 
 Series Bernoulli::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("bernoulli", bernoulli_params(p), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Bernoulli, bernoulli_params(p), sizes, cfg, seed);
 }
 
 Series Bernoulli::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -188,20 +188,20 @@ Series Bernoulli::sample(std::initializer_list<std::int64_t> sizes, Config cfg, 
 }
 
 Series Bernoulli::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("bernoulli", bernoulli_params(p), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Bernoulli, bernoulli_params(p), like, seed), like);
 }
 
-Series Bernoulli::pdf(const Series& x) const { return detail::pdf_with_params("bernoulli", x, bernoulli_params(p)); }
+Series Bernoulli::pdf(const Series& x) const { return detail::pdf_with_params(dst::Bernoulli, x, bernoulli_params(p)); }
 
 Series Bernoulli::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("bernoulli", x, bernoulli_params(p));
+  return detail::logpdf_with_params(dst::Bernoulli, x, bernoulli_params(p));
 }
 
 Series Bernoulli::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("bernoulli", x, bernoulli_params(p));
+  return detail::logcdf_with_params(dst::Bernoulli, x, bernoulli_params(p));
 }
 
-Series Bernoulli::cdf(const Series& x) const { return detail::cdf_with_params("bernoulli", x, bernoulli_params(p)); }
+Series Bernoulli::cdf(const Series& x) const { return detail::cdf_with_params(dst::Bernoulli, x, bernoulli_params(p)); }
 
 Series Bernoulli::cgf(const Series& t) const {
   return bernoulli_log_mgf_kernel(t, p);
@@ -288,7 +288,7 @@ BernoulliFit Bernoulli::MLE(const Series& x) const {
 }
 
 Series Binomial::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("binomial", binomial_params(count, p), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Binomial, binomial_params(count, p), sizes, cfg, seed);
 }
 
 Series Binomial::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -296,20 +296,20 @@ Series Binomial::sample(std::initializer_list<std::int64_t> sizes, Config cfg, s
 }
 
 Series Binomial::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("binomial", binomial_params(count, p), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Binomial, binomial_params(count, p), like, seed), like);
 }
 
-Series Binomial::pdf(const Series& x) const { return detail::pdf_with_params("binomial", x, binomial_params(count, p)); }
+Series Binomial::pdf(const Series& x) const { return detail::pdf_with_params(dst::Binomial, x, binomial_params(count, p)); }
 
 Series Binomial::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("binomial", x, binomial_params(count, p));
+  return detail::logpdf_with_params(dst::Binomial, x, binomial_params(count, p));
 }
 
 Series Binomial::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("binomial", x, binomial_params(count, p));
+  return detail::logcdf_with_params(dst::Binomial, x, binomial_params(count, p));
 }
 
-Series Binomial::cdf(const Series& x) const { return detail::cdf_with_params("binomial", x, binomial_params(count, p)); }
+Series Binomial::cdf(const Series& x) const { return detail::cdf_with_params(dst::Binomial, x, binomial_params(count, p)); }
 
 Series Binomial::cgf(const Series& t) const {
   return bernoulli_log_mgf_kernel(t, p).mul(static_cast<double>(count));
@@ -394,7 +394,7 @@ BinomialFit Binomial::MLE(const Series& x) const {
 }
 
 Series Poisson::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("poisson", poisson_params(lambda), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Poisson, poisson_params(lambda), sizes, cfg, seed);
 }
 
 Series Poisson::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -402,20 +402,20 @@ Series Poisson::sample(std::initializer_list<std::int64_t> sizes, Config cfg, st
 }
 
 Series Poisson::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("poisson", poisson_params(lambda), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Poisson, poisson_params(lambda), like, seed), like);
 }
 
-Series Poisson::pdf(const Series& x) const { return detail::pdf_with_params("poisson", x, poisson_params(lambda)); }
+Series Poisson::pdf(const Series& x) const { return detail::pdf_with_params(dst::Poisson, x, poisson_params(lambda)); }
 
 Series Poisson::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("poisson", x, poisson_params(lambda));
+  return detail::logpdf_with_params(dst::Poisson, x, poisson_params(lambda));
 }
 
 Series Poisson::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("poisson", x, poisson_params(lambda));
+  return detail::logcdf_with_params(dst::Poisson, x, poisson_params(lambda));
 }
 
-Series Poisson::cdf(const Series& x) const { return detail::cdf_with_params("poisson", x, poisson_params(lambda)); }
+Series Poisson::cdf(const Series& x) const { return detail::cdf_with_params(dst::Poisson, x, poisson_params(lambda)); }
 
 Series Poisson::cgf(const Series& t) const {
   return t.exp().sub(1.0).mul(lambda);
@@ -493,7 +493,7 @@ PoissonFit Poisson::MLE(const Series& x) const {
 }
 
 Series Geometric::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("geometric", geometric_params(p), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Geometric, geometric_params(p), sizes, cfg, seed);
 }
 
 Series Geometric::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -501,20 +501,20 @@ Series Geometric::sample(std::initializer_list<std::int64_t> sizes, Config cfg, 
 }
 
 Series Geometric::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("geometric", geometric_params(p), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Geometric, geometric_params(p), like, seed), like);
 }
 
-Series Geometric::pdf(const Series& x) const { return detail::pdf_with_params("geometric", x, geometric_params(p)); }
+Series Geometric::pdf(const Series& x) const { return detail::pdf_with_params(dst::Geometric, x, geometric_params(p)); }
 
 Series Geometric::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("geometric", x, geometric_params(p));
+  return detail::logpdf_with_params(dst::Geometric, x, geometric_params(p));
 }
 
 Series Geometric::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("geometric", x, geometric_params(p));
+  return detail::logcdf_with_params(dst::Geometric, x, geometric_params(p));
 }
 
-Series Geometric::cdf(const Series& x) const { return detail::cdf_with_params("geometric", x, geometric_params(p)); }
+Series Geometric::cdf(const Series& x) const { return detail::cdf_with_params(dst::Geometric, x, geometric_params(p)); }
 
 Series Geometric::cgf(const Series& t) const {
   detail::require_all_true(t.lt(-std::log1p(-p)), "Geometric::cgf requires every t element to satisfy t < -log(1 - p)");
@@ -608,7 +608,7 @@ GeometricFit Geometric::MLE(const Series& x) const {
 }
 
 Series NegativeBinomial::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("negbinom", negbinom_params(r, p), sizes, cfg, seed);
+  return detail::sample_with_params(dst::NegativeBinomial, negbinom_params(r, p), sizes, cfg, seed);
 }
 
 Series NegativeBinomial::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -616,20 +616,20 @@ Series NegativeBinomial::sample(std::initializer_list<std::int64_t> sizes, Confi
 }
 
 Series NegativeBinomial::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("negbinom", negbinom_params(r, p), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::NegativeBinomial, negbinom_params(r, p), like, seed), like);
 }
 
-Series NegativeBinomial::pdf(const Series& x) const { return detail::pdf_with_params("negbinom", x, negbinom_params(r, p)); }
+Series NegativeBinomial::pdf(const Series& x) const { return detail::pdf_with_params(dst::NegativeBinomial, x, negbinom_params(r, p)); }
 
 Series NegativeBinomial::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("negbinom", x, negbinom_params(r, p));
+  return detail::logpdf_with_params(dst::NegativeBinomial, x, negbinom_params(r, p));
 }
 
 Series NegativeBinomial::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("negbinom", x, negbinom_params(r, p));
+  return detail::logcdf_with_params(dst::NegativeBinomial, x, negbinom_params(r, p));
 }
 
-Series NegativeBinomial::cdf(const Series& x) const { return detail::cdf_with_params("negbinom", x, negbinom_params(r, p)); }
+Series NegativeBinomial::cdf(const Series& x) const { return detail::cdf_with_params(dst::NegativeBinomial, x, negbinom_params(r, p)); }
 
 Series NegativeBinomial::cgf(const Series& t) const {
   detail::require_all_true(t.lt(-std::log1p(-p)), "NegativeBinomial::cgf requires every t element to satisfy t < -log(1 - p)");

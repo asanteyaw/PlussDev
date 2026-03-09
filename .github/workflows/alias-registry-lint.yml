@@ -1,0 +1,19 @@
+name: Alias Registry Lint
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  alias-registry-lint:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint alias registry
+        run: python3 tools/lint_alias_registry.py

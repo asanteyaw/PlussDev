@@ -12,12 +12,6 @@
 
 namespace pluss::table {
 
-namespace _ops {
-enum class PlotDispatch : std::uint8_t;
-struct PlotCall;
-pluss::pl::Studio call(const class DataFramePlotAccessor& accessor, PlotDispatch dispatch, PlotCall args);
-} // namespace _ops
-
 using ScatterMatrixTriangle = pluss::pl::flash::PairPlotTriangle;
 
 enum class DateTimeLabelView : std::uint8_t {
@@ -391,10 +385,6 @@ public:
                               const AutoPlotOptions& options) const;
 
 private:
-  friend pluss::pl::Studio _ops::call(const DataFramePlotAccessor& accessor,
-                                      _ops::PlotDispatch dispatch,
-                                      _ops::PlotCall args);
-
   pluss::pl::Studio impl_line(std::initializer_list<std::string_view> y_features,
                               std::optional<std::string_view> x_feature) const;
   pluss::pl::Studio impl_step(std::initializer_list<std::string_view> y_features,

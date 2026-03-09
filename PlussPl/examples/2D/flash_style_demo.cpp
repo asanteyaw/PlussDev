@@ -29,8 +29,8 @@ int main() {
 
   Studio fig("flash_flash_catalog", Theme::paper());
   set_theme(fig, FlashThemeOptions{
-                     .style = FlashStyle::Lightgrid,
-                     .context = FlashContext::Talk,
+                     .style = fs::Lightgrid,
+                     .context = fc::Talk,
                  });
   set_context(fig, FlashContext::Talk, 1520.0, 980.0);
   fig.mosaic(3, 3, 16.0, 16.0);
@@ -365,6 +365,25 @@ int main() {
     // context_fig.save_svg(out_path("plusspl_flash_context_" + std::string(context_names[i]) + "_demo.svg"));
     context_fig.save_pdf(out_path("plusspl_flash_context_" + std::string(context_names[i]) + "_demo.pdf"));
   }
+
+  // Explicit Inherit context: preserves previously selected context sizing/scales.
+  Studio context_inherit_fig("flash_context_inherit_demo", Theme::paper());
+  set_theme(context_inherit_fig, FlashThemeOptions{
+                                  .style = FlashStyle::Sandgrid,
+                                  .context = FlashContext::Inherit,
+                                  .width = 1320.0,
+                                  .height = 840.0,
+                              });
+  auto& inherit_pane = context_inherit_fig.pane2("inherit context (style only)");
+  inherit_pane.grid(GridStyle::Major)
+      .x_ticks(std::array<double, 6>{0.0, 2.0, 4.0, 6.0, 8.0, 10.0}, {"0", "2", "4", "6", "8", "10"})
+      .y_ticks(std::array<double, 6>{-1.0, -0.5, 0.0, 0.5, 1.0, 1.5}, {"-1.0", "-0.5", "0.0", "0.5", "1.0", "1.5"});
+  lineplot(inherit_pane, x, y).label("signal");
+  lineplot(inherit_pane, x, y2).label("baseline");
+  inherit_pane.x_label("x").y_label("y");
+  inherit_pane.caption("context=Inherit keeps current studio context");
+  move_legend(inherit_pane, KeyPlace::OutsideEast);
+  context_inherit_fig.save_pdf(out_path("plusspl_flash_context_inherit_demo.pdf"));
 
   const std::array<FlashStyle, 6> styles{
       FlashStyle::Darkgrid,

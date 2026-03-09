@@ -9,6 +9,7 @@
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
+using namespace pluss::subsp::stat::distr;
 
 namespace {
 
@@ -67,11 +68,11 @@ int main() {
 
   // 3) Distribution sampling using low-discrepancy methods
   const Series normal_sob = pluss::distr::sample(
-      "normal", {0.0, 1.0}, {10}, f64, 123ULL, pluss::rng::Method::Sobol);
+      dst::Normal, {0.0, 1.0}, {10}, f64, 123ULL, pluss::rng::Method::Sobol);
 
   const Series like = pluss::zeros({2, 5}, f64);
   const Series unif_like_tor = pluss::distr::sample_like(
-      "uniform", {0.0, 1.0}, like, 999ULL, pluss::rng::Method::Torus);
+      dst::Uniform, {0.0, 1.0}, like, 999ULL, pluss::rng::Method::Torus);
 
   show("distr::sample(normal, Sobol)", normal_sob);
   show("distr::sample_like(uniform, Torus)", unif_like_tor);

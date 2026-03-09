@@ -277,7 +277,7 @@ em_gaussian_mixture_1d_(const std::vector<double>& x,
 } // namespace
 
 Series Skellam::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("skellam", skellam_params(lambda1, lambda2), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Skellam, skellam_params(lambda1, lambda2), sizes, cfg, seed);
 }
 
 Series Skellam::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -285,20 +285,20 @@ Series Skellam::sample(std::initializer_list<std::int64_t> sizes, Config cfg, st
 }
 
 Series Skellam::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("skellam", skellam_params(lambda1, lambda2), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Skellam, skellam_params(lambda1, lambda2), like, seed), like);
 }
 
-Series Skellam::pdf(const Series& x) const { return detail::pdf_with_params("skellam", x, skellam_params(lambda1, lambda2)); }
+Series Skellam::pdf(const Series& x) const { return detail::pdf_with_params(dst::Skellam, x, skellam_params(lambda1, lambda2)); }
 
 Series Skellam::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("skellam", x, skellam_params(lambda1, lambda2));
+  return detail::logpdf_with_params(dst::Skellam, x, skellam_params(lambda1, lambda2));
 }
 
 Series Skellam::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("skellam", x, skellam_params(lambda1, lambda2));
+  return detail::logcdf_with_params(dst::Skellam, x, skellam_params(lambda1, lambda2));
 }
 
-Series Skellam::cdf(const Series& x) const { return detail::cdf_with_params("skellam", x, skellam_params(lambda1, lambda2)); }
+Series Skellam::cdf(const Series& x) const { return detail::cdf_with_params(dst::Skellam, x, skellam_params(lambda1, lambda2)); }
 
 Series Skellam::cgf(const Series& t) const {
   return t.exp().sub(1.0).mul(lambda1).add(t.neg().exp().sub(1.0).mul(lambda2));
@@ -310,7 +310,7 @@ Series Skellam::cumulant(std::int64_t order) const {
 }
 
 Series Nig::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("nig", nig_params(alpha, beta, location, scale), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Nig, nig_params(alpha, beta, location, scale), sizes, cfg, seed);
 }
 
 Series Nig::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -318,20 +318,20 @@ Series Nig::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::u
 }
 
 Series Nig::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("nig", nig_params(alpha, beta, location, scale), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Nig, nig_params(alpha, beta, location, scale), like, seed), like);
 }
 
-Series Nig::pdf(const Series& x) const { return detail::pdf_with_params("nig", x, nig_params(alpha, beta, location, scale)); }
+Series Nig::pdf(const Series& x) const { return detail::pdf_with_params(dst::Nig, x, nig_params(alpha, beta, location, scale)); }
 
 Series Nig::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("nig", x, nig_params(alpha, beta, location, scale));
+  return detail::logpdf_with_params(dst::Nig, x, nig_params(alpha, beta, location, scale));
 }
 
 Series Nig::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("nig", x, nig_params(alpha, beta, location, scale));
+  return detail::logcdf_with_params(dst::Nig, x, nig_params(alpha, beta, location, scale));
 }
 
-Series Nig::cdf(const Series& x) const { return detail::cdf_with_params("nig", x, nig_params(alpha, beta, location, scale)); }
+Series Nig::cdf(const Series& x) const { return detail::cdf_with_params(dst::Nig, x, nig_params(alpha, beta, location, scale)); }
 
 Series Nig::cgf(const Series& t) const {
   detail::require_all_true(t.add(beta).abs().lt(alpha), "Nig::cgf requires every t element to satisfy |beta + t| < alpha");
@@ -344,7 +344,7 @@ Series Nig::cumulant(std::int64_t order) const {
 }
 
 Series Gh::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("gh", gh_params(lambda, alpha, beta, location, scale), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Gh, gh_params(lambda, alpha, beta, location, scale), sizes, cfg, seed);
 }
 
 Series Gh::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -352,20 +352,20 @@ Series Gh::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::ui
 }
 
 Series Gh::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("gh", gh_params(lambda, alpha, beta, location, scale), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Gh, gh_params(lambda, alpha, beta, location, scale), like, seed), like);
 }
 
-Series Gh::pdf(const Series& x) const { return detail::pdf_with_params("gh", x, gh_params(lambda, alpha, beta, location, scale)); }
+Series Gh::pdf(const Series& x) const { return detail::pdf_with_params(dst::Gh, x, gh_params(lambda, alpha, beta, location, scale)); }
 
 Series Gh::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("gh", x, gh_params(lambda, alpha, beta, location, scale));
+  return detail::logpdf_with_params(dst::Gh, x, gh_params(lambda, alpha, beta, location, scale));
 }
 
 Series Gh::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("gh", x, gh_params(lambda, alpha, beta, location, scale));
+  return detail::logcdf_with_params(dst::Gh, x, gh_params(lambda, alpha, beta, location, scale));
 }
 
-Series Gh::cdf(const Series& x) const { return detail::cdf_with_params("gh", x, gh_params(lambda, alpha, beta, location, scale)); }
+Series Gh::cdf(const Series& x) const { return detail::cdf_with_params(dst::Gh, x, gh_params(lambda, alpha, beta, location, scale)); }
 
 Series Gh::cgf(const Series& t) const {
   if (!(alpha > 0.0) || !(scale > 0.0) || !(std::abs(beta) < alpha)) {

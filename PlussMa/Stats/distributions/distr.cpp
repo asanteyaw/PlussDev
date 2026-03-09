@@ -6,7 +6,6 @@
 #include "pluss/codem/series_factory.h"
 
 #include <algorithm>
-#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <functional>
@@ -105,6 +104,69 @@ enum class Family : std::uint8_t {
   Nig,
 };
 
+Family resolve_(dst::Kind kind) {
+  switch (kind) {
+    case dst::Kind::Alpha: return Family::Alpha;
+    case dst::Kind::Anglit: return Family::Anglit;
+    case dst::Kind::Arcsin: return Family::Arcsin;
+    case dst::Kind::Bessel: return Family::Bessel;
+    case dst::Kind::Normal: return Family::Normal;
+    case dst::Kind::Lognormal: return Family::Lognormal;
+    case dst::Kind::Uniform: return Family::Uniform;
+    case dst::Kind::Exponential: return Family::Exponential;
+    case dst::Kind::Bernoulli: return Family::Bernoulli;
+    case dst::Kind::Beta: return Family::Beta;
+    case dst::Kind::Binomial: return Family::Binomial;
+    case dst::Kind::Bradford: return Family::Bradford;
+    case dst::Kind::Burr: return Family::Burr;
+    case dst::Kind::Cauchy: return Family::Cauchy;
+    case dst::Kind::Chi: return Family::Chi;
+    case dst::Kind::ChiSquare: return Family::ChiSquare;
+    case dst::Kind::ChiSquareNoncentral: return Family::ChiSquareNoncentral;
+    case dst::Kind::Cosine: return Family::Cosine;
+    case dst::Kind::Erlang: return Family::Erlang;
+    case dst::Kind::ExtremeValue: return Family::ExtremeValue;
+    case dst::Kind::F: return Family::F;
+    case dst::Kind::FNoncentral: return Family::FNoncentral;
+    case dst::Kind::Laplace: return Family::Laplace;
+    case dst::Kind::Logistic: return Family::Logistic;
+    case dst::Kind::Geometric: return Family::Geometric;
+    case dst::Kind::Gamma: return Family::Gamma;
+    case dst::Kind::Gompertz: return Family::Gompertz;
+    case dst::Kind::HalfCosine: return Family::HalfCosine;
+    case dst::Kind::HyperbolicSecant: return Family::HyperbolicSecant;
+    case dst::Kind::Hypergeometric: return Family::Hypergeometric;
+    case dst::Kind::InverseGaussian: return Family::InverseGaussian;
+    case dst::Kind::Maxwell: return Family::Maxwell;
+    case dst::Kind::Nakagami: return Family::Nakagami;
+    case dst::Kind::NegativeBinomial: return Family::NegativeBinomial;
+    case dst::Kind::NormalTrunc: return Family::NormalTrunc;
+    case dst::Kind::Planck: return Family::Planck;
+    case dst::Kind::Poisson: return Family::Poisson;
+    case dst::Kind::Quadratic: return Family::Quadratic;
+    case dst::Kind::Rademacher: return Family::Rademacher;
+    case dst::Kind::StudentT: return Family::StudentT;
+    case dst::Kind::Triangular: return Family::Triangular;
+    case dst::Kind::Pareto: return Family::Pareto;
+    case dst::Kind::Lomax: return Family::Lomax;
+    case dst::Kind::Rayleigh: return Family::Rayleigh;
+    case dst::Kind::Rice: return Family::Rice;
+    case dst::Kind::Semicircle: return Family::Semicircle;
+    case dst::Kind::Skellam: return Family::Skellam;
+    case dst::Kind::TukeyLambda: return Family::TukeyLambda;
+    case dst::Kind::UShape: return Family::UShape;
+    case dst::Kind::VonMises: return Family::VonMises;
+    case dst::Kind::Wald: return Family::Wald;
+    case dst::Kind::Weibull: return Family::Weibull;
+    case dst::Kind::Yule: return Family::Yule;
+    case dst::Kind::Zeta: return Family::Zeta;
+    case dst::Kind::Gig: return Family::Gig;
+    case dst::Kind::Gh: return Family::Gh;
+    case dst::Kind::Nig: return Family::Nig;
+  }
+  return Family::Normal;
+}
+
 Config float64_cfg_like_(const Series& x) {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(x.platform());
 }
@@ -159,147 +221,6 @@ Series unit_uniform_(std::span<const std::int64_t> sizes, Config cfg, std::uint6
       PLUSS_CHECK(false, "subsp::stat::distr::sample: unsupported rng method");
       return pluss::rand(sizes, out_cfg, seed).clamp_min(kEps).clamp_max(1.0 - kEps);
   }
-}
-
-std::string normalize_name_(std::string_view name) {
-  std::string out;
-  out.reserve(name.size());
-  for (const char ch : name) {
-    const unsigned char u = static_cast<unsigned char>(ch);
-    if (std::isalnum(u) != 0) {
-      out.push_back(static_cast<char>(std::tolower(u)));
-    }
-  }
-  return out;
-}
-
-Family resolve_(std::string_view name) {
-  const std::string key = normalize_name_(name);
-
-  if (key == "alpha") return Family::Alpha;
-  if (key == "anglit") return Family::Anglit;
-  if (key == "arcsin") return Family::Arcsin;
-  if (key == "bessel") return Family::Bessel;
-  if (key == "norm" || key == "normal" || key == "gaussian" || key == "gauss") return Family::Normal;
-  if (key == "lognorm" || key == "lognormal" || key == "cobbdouglas" || key == "antilognormal") return Family::Lognormal;
-  if (key == "uniform" || key == "unif") return Family::Uniform;
-  if (key == "exp" || key == "exponential") return Family::Exponential;
-  if (key == "bern" || key == "bernoulli") return Family::Bernoulli;
-  if (key == "beta" || key == "powerfunction" || key == "powerfunc") return Family::Beta;
-  if (key == "binom" || key == "binomial") return Family::Binomial;
-  if (key == "bradford") return Family::Bradford;
-  if (key == "burr" || key == "fisk") return Family::Burr;
-  if (key == "cauchy" || key == "lorentz" || key == "caushy") return Family::Cauchy;
-  if (key == "chi") return Family::Chi;
-  if (key == "chisquare" || key == "chisq" || key == "chi2") return Family::ChiSquare;
-  if (key == "chisqnc" || key == "chisqnoncentral" || key == "chisqnoncentr" || key == "chi2noncentral") return Family::ChiSquareNoncentral;
-  if (key == "cosine") return Family::Cosine;
-  if (key == "erlang") return Family::Erlang;
-  if (key == "extrval" || key == "extremevalue" || key == "extrvalue" || key == "gumbel") return Family::ExtremeValue;
-  if (key == "f" || key == "fdistribution" || key == "fdistrib" || key == "fdistr" || key == "fdist" || key == "fdis") return Family::F;
-  if (key == "fnc" || key == "fnoncentral" || key == "fnoncentr") return Family::FNoncentral;
-  if (key == "laplace" || key == "doubleexponential" || key == "doubleexp" ||
-      key == "bilateralexponential" || key == "bilateralexp") return Family::Laplace;
-  if (key == "logistic") return Family::Logistic;
-  if (key == "geom" || key == "geometric" || key == "furry") return Family::Geometric;
-  if (key == "gamma") return Family::Gamma;
-  if (key == "gompertz") return Family::Gompertz;
-  if (key == "halfcosine" || key == "hcosine" || key == "hcos") return Family::HalfCosine;
-  if (key == "hyperbolicsecant" || key == "hsecant" || key == "hsec") return Family::HyperbolicSecant;
-  if (key == "hypergeom" || key == "hypergeometric") return Family::Hypergeometric;
-  if (key == "ig" || key == "inversegauss" || key == "invgauss") return Family::InverseGaussian;
-  if (key == "maxwell") return Family::Maxwell;
-  if (key == "nakagamim" || key == "nakagami") return Family::Nakagami;
-  if (key == "negativebinomial" || key == "negbinomial" || key == "negbinom" || key == "pascal") return Family::NegativeBinomial;
-  if (key == "normaltrunc" || key == "normaltruncated" || key == "gausstrunc") return Family::NormalTrunc;
-  if (key == "planck") return Family::Planck;
-  if (key == "poisson" || key == "po") return Family::Poisson;
-  if (key == "quadratic" || key == "quad" || key == "quadr") return Family::Quadratic;
-  if (key == "rademacher") return Family::Rademacher;
-  if (key == "studentst" || key == "t") return Family::StudentT;
-  if (key == "tri" || key == "triangular") return Family::Triangular;
-  if (key == "pareto") return Family::Pareto;
-  if (key == "pareto2" || key == "lomax") return Family::Lomax;
-  if (key == "rayl" || key == "rayleigh") return Family::Rayleigh;
-  if (key == "rice" || key == "rician") return Family::Rice;
-  if (key == "semicirc" || key == "semicircle" || key == "wigner") return Family::Semicircle;
-  if (key == "skellam") return Family::Skellam;
-  if (key == "tukeylambda") return Family::TukeyLambda;
-  if (key == "u" || key == "ushape") return Family::UShape;
-  if (key == "vonmises") return Family::VonMises;
-  if (key == "wald") return Family::Wald;
-  if (key == "weibull" || key == "wbl" || key == "frechet") return Family::Weibull;
-  if (key == "yule" || key == "yulesimon") return Family::Yule;
-  if (key == "zeta" || key == "zipf") return Family::Zeta;
-  if (key == "gig") return Family::Gig;
-  if (key == "gh") return Family::Gh;
-  if (key == "nig") return Family::Nig;
-
-  PLUSS_CHECK(false,
-              "subsp::stat::distr: unsupported distribution '" + std::string(name) + "'");
-  return Family::Normal;
-}
-
-bool supports_impl_(std::string_view name) noexcept {
-  const std::string key = normalize_name_(name);
-  return key == "alpha" ||
-         key == "anglit" ||
-         key == "arcsin" ||
-         key == "bessel" ||
-         key == "norm" || key == "normal" || key == "gaussian" || key == "gauss" ||
-         key == "lognorm" || key == "lognormal" || key == "cobbdouglas" || key == "antilognormal" ||
-         key == "uniform" || key == "unif" ||
-         key == "exp" || key == "exponential" ||
-         key == "bern" || key == "bernoulli" ||
-         key == "beta" || key == "powerfunction" || key == "powerfunc" ||
-         key == "binom" || key == "binomial" ||
-         key == "bradford" ||
-         key == "burr" || key == "fisk" ||
-         key == "cauchy" || key == "lorentz" || key == "caushy" ||
-         key == "chi" ||
-         key == "chisquare" || key == "chisq" || key == "chi2" ||
-         key == "chisqnc" || key == "chisqnoncentral" || key == "chisqnoncentr" || key == "chi2noncentral" ||
-         key == "cosine" ||
-         key == "erlang" ||
-         key == "extrval" || key == "extremevalue" || key == "extrvalue" || key == "gumbel" ||
-         key == "f" || key == "fdistribution" || key == "fdistrib" || key == "fdistr" || key == "fdist" || key == "fdis" ||
-         key == "fnc" || key == "fnoncentral" || key == "fnoncentr" ||
-         key == "laplace" || key == "doubleexponential" || key == "doubleexp" ||
-         key == "bilateralexponential" || key == "bilateralexp" ||
-         key == "logistic" ||
-         key == "geom" || key == "geometric" || key == "furry" ||
-         key == "gamma" ||
-         key == "gompertz" ||
-         key == "halfcosine" || key == "hcosine" || key == "hcos" ||
-         key == "hyperbolicsecant" || key == "hsecant" || key == "hsec" ||
-         key == "hypergeom" || key == "hypergeometric" ||
-         key == "ig" || key == "inversegauss" || key == "invgauss" ||
-         key == "maxwell" ||
-         key == "nakagamim" || key == "nakagami-m" || key == "nakagami" ||
-         key == "negativebinomial" || key == "negbinomial" || key == "negbinom" || key == "pascal" ||
-         key == "normaltrunc" || key == "normaltruncated" || key == "gausstrunc" ||
-         key == "planck" ||
-         key == "poisson" || key == "po" ||
-         key == "quadratic" || key == "quad" || key == "quadr" ||
-         key == "rademacher" ||
-         key == "studentst" || key == "t" ||
-         key == "tri" || key == "triangular" ||
-         key == "pareto" ||
-         key == "pareto2" || key == "lomax" ||
-         key == "rayl" || key == "rayleigh" ||
-         key == "rice" || key == "rician" ||
-         key == "semicirc" || key == "semicircle" || key == "wigner" ||
-         key == "skellam" ||
-         key == "tukeylambda" ||
-         key == "u" || key == "ushape" ||
-         key == "vonmises" ||
-         key == "wald" ||
-         key == "weibull" || key == "wbl" || key == "frechet" ||
-         key == "yule" || key == "yulesimon" ||
-         key == "zeta" || key == "zipf" ||
-         key == "gig" ||
-         key == "gh" ||
-         key == "nig";
 }
 
 void expect_param_count_(std::string_view name,
@@ -2770,11 +2691,11 @@ Series yule_sample_(double p, std::span<const std::int64_t> sizes, Config cfg, s
 
 } // namespace
 
-bool supports(std::string_view name) noexcept {
-  return supports_impl_(name);
+bool supports(dst::Kind) noexcept {
+  return true;
 }
 
-Series sample(std::string_view name,
+Series sample(dst::Kind kind,
               std::span<const double> params,
               std::span<const std::int64_t> sizes,
               Config cfg,
@@ -2786,7 +2707,7 @@ Series sample(std::string_view name,
       "subsp::stat::distr::sample: unsupported rng method");
   const SampleRngMethodScope rng_scope(method);
 
-  switch (resolve_(name)) {
+  switch (resolve_(kind)) {
     case Family::Alpha:
       expect_param_count_("alpha sample", params, {2});
       return alpha_sample_(params[0], params[1], sizes, cfg, seed);
@@ -2973,22 +2894,22 @@ Series sample(std::string_view name,
   return Series::undefined();
 }
 
-Series sample(std::string_view name,
+Series sample(dst::Kind kind,
               std::initializer_list<double> params,
               std::span<const std::int64_t> sizes,
               Config cfg,
               std::uint64_t seed,
               RngMethod method) {
-  return sample(name, std::span<const double>(params.begin(), params.size()), sizes, cfg, seed, method);
+  return sample(kind, std::span<const double>(params.begin(), params.size()), sizes, cfg, seed, method);
 }
 
-Series sample(std::string_view name,
+Series sample(dst::Kind kind,
               std::initializer_list<double> params,
               std::initializer_list<std::int64_t> sizes,
               Config cfg,
               std::uint64_t seed,
               RngMethod method) {
-  return sample(name,
+  return sample(kind,
                 std::span<const double>(params.begin(), params.size()),
                 std::span<const std::int64_t>(sizes.begin(), sizes.size()),
                 cfg,
@@ -2996,20 +2917,20 @@ Series sample(std::string_view name,
                 method);
 }
 
-Series sample(std::string_view name,
+Series sample(dst::Kind kind,
               std::span<const std::int64_t> sizes,
               Config cfg,
               std::uint64_t seed,
               RngMethod method) {
-  return sample(name, std::span<const double>{}, sizes, cfg, seed, method);
+  return sample(kind, std::span<const double>{}, sizes, cfg, seed, method);
 }
 
-Series sample(std::string_view name,
+Series sample(dst::Kind kind,
               std::initializer_list<std::int64_t> sizes,
               Config cfg,
               std::uint64_t seed,
               RngMethod method) {
-  return sample(name,
+  return sample(kind,
                 std::span<const double>{},
                 std::span<const std::int64_t>(sizes.begin(), sizes.size()),
                 cfg,
@@ -3017,7 +2938,7 @@ Series sample(std::string_view name,
                 method);
 }
 
-Series sample_like(std::string_view name,
+Series sample_like(dst::Kind kind,
                    std::span<const double> params,
                    const Series& like,
                    std::uint64_t seed,
@@ -3027,19 +2948,19 @@ Series sample_like(std::string_view name,
                          .with_dtype(like.scalar_type())
                          .with_platform(like.platform())
                          .with_pinned(like.is_pinned().item<bool>());
-  return sample(name, params, like.sizes(), cfg, seed, method);
+  return sample(kind, params, like.sizes(), cfg, seed, method);
 }
 
-Series sample_like(std::string_view name,
+Series sample_like(dst::Kind kind,
                    std::initializer_list<double> params,
                    const Series& like,
                    std::uint64_t seed,
                    RngMethod method) {
-  return sample_like(name, std::span<const double>(params.begin(), params.size()), like, seed, method);
+  return sample_like(kind, std::span<const double>(params.begin(), params.size()), like, seed, method);
 }
 
-Series sample_like(std::string_view name, const Series& like, std::uint64_t seed, RngMethod method) {
-  return sample_like(name, std::span<const double>{}, like, seed, method);
+Series sample_like(dst::Kind kind, const Series& like, std::uint64_t seed, RngMethod method) {
+  return sample_like(kind, std::span<const double>{}, like, seed, method);
 }
 
 struct MixtureNormalParams {
@@ -3249,8 +3170,8 @@ Series mixture_normal_logcdf(const Series& x,
       .reshape(xx.sizes());
 }
 
-Series pdf(std::string_view name, const Series& x, std::span<const double> params) {
-  switch (resolve_(name)) {
+Series pdf(dst::Kind kind, const Series& x, std::span<const double> params) {
+  switch (resolve_(kind)) {
     case Family::Alpha:
       expect_param_count_("alpha pdf", params, {2});
       return alpha_pdf_(x, params[0], params[1]);
@@ -3429,12 +3350,12 @@ Series pdf(std::string_view name, const Series& x, std::span<const double> param
   return Series::undefined();
 }
 
-Series pdf(std::string_view name, const Series& x, std::initializer_list<double> params) {
-  return pdf(name, x, std::span<const double>(params.begin(), params.size()));
+Series pdf(dst::Kind kind, const Series& x, std::initializer_list<double> params) {
+  return pdf(kind, x, std::span<const double>(params.begin(), params.size()));
 }
 
-Series logpdf(std::string_view name, const Series& x, std::span<const double> params) {
-  switch (resolve_(name)) {
+Series logpdf(dst::Kind kind, const Series& x, std::span<const double> params) {
+  switch (resolve_(kind)) {
     case Family::Alpha:
       expect_param_count_("alpha logpdf", params, {2});
       return alpha_logpdf_(x, params[0], params[1]);
@@ -3613,12 +3534,12 @@ Series logpdf(std::string_view name, const Series& x, std::span<const double> pa
   return Series::undefined();
 }
 
-Series logpdf(std::string_view name, const Series& x, std::initializer_list<double> params) {
-  return logpdf(name, x, std::span<const double>(params.begin(), params.size()));
+Series logpdf(dst::Kind kind, const Series& x, std::initializer_list<double> params) {
+  return logpdf(kind, x, std::span<const double>(params.begin(), params.size()));
 }
 
-Series cdf(std::string_view name, const Series& x, std::span<const double> params) {
-  switch (resolve_(name)) {
+Series cdf(dst::Kind kind, const Series& x, std::span<const double> params) {
+  switch (resolve_(kind)) {
     case Family::Alpha:
       expect_param_count_("alpha cdf", params, {2});
       return alpha_cdf_(x, params[0], params[1]);
@@ -3797,12 +3718,12 @@ Series cdf(std::string_view name, const Series& x, std::span<const double> param
   return Series::undefined();
 }
 
-Series cdf(std::string_view name, const Series& x, std::initializer_list<double> params) {
-  return cdf(name, x, std::span<const double>(params.begin(), params.size()));
+Series cdf(dst::Kind kind, const Series& x, std::initializer_list<double> params) {
+  return cdf(kind, x, std::span<const double>(params.begin(), params.size()));
 }
 
-Series logcdf(std::string_view name, const Series& x, std::span<const double> params) {
-  switch (resolve_(name)) {
+Series logcdf(dst::Kind kind, const Series& x, std::span<const double> params) {
+  switch (resolve_(kind)) {
     case Family::Normal:
       expect_param_count_("normal logcdf", params, {0, 2});
       return normal_logcdf_(x, param_or_(params, 0, 0.0), param_or_(params, 1, 1.0));
@@ -3837,12 +3758,12 @@ Series logcdf(std::string_view name, const Series& x, std::span<const double> pa
       expect_param_count_("normaltrunc logcdf", params, {4});
       return normaltrunc_logcdf_(x, params[0], params[1], params[2], params[3]);
     default:
-      return cdf(name, x, params).log();
+      return cdf(kind, x, params).log();
   }
 }
 
-Series logcdf(std::string_view name, const Series& x, std::initializer_list<double> params) {
-  return logcdf(name, x, std::span<const double>(params.begin(), params.size()));
+Series logcdf(dst::Kind kind, const Series& x, std::initializer_list<double> params) {
+  return logcdf(kind, x, std::span<const double>(params.begin(), params.size()));
 }
 
 } // namespace pluss::subsp::stat::distr

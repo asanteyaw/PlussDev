@@ -1,5 +1,5 @@
-#include "pluss/subsp/stat/distr_fwd.h"
 #include <pluss/pluss.h>
+#include "pluss/ma/aliases.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -19,6 +19,7 @@ using pluss::Series;
 
 struct DemoCase {
   const char* name;
+  ma::dst::Kind kind;
   std::vector<double> params;
   double probe;
 };
@@ -57,13 +58,14 @@ void run_case(const DemoCase& c, const Config& cfg, std::uint64_t seed) {
   const std::array<std::int64_t, 1> sizes_buf{5};
   const std::span<const std::int64_t> sizes = sizes_buf;
   const std::span<const double> params = params_span(c.params);
+  const ma::dst::Kind kind = c.kind;
 
   const Series sample = c.params.empty()
-                            ? pluss::distr::sample(c.name, sizes, cfg, seed)
-                            : pluss::distr::sample(c.name, params, sizes, cfg, seed);
-  const Series pdf = pluss::distr::pdf(c.name, probe, params);
-  const Series logpdf = pluss::distr::logpdf(c.name, probe, params);
-  const Series cdf = pluss::distr::cdf(c.name, probe, params);
+                            ? pluss::distr::sample(kind, sizes, cfg, seed)
+                            : pluss::distr::sample(kind, params, sizes, cfg, seed);
+  const Series pdf = pluss::distr::pdf(kind, probe, params);
+  const Series logpdf = pluss::distr::logpdf(kind, probe, params);
+  const Series cdf = pluss::distr::cdf(kind, probe, params);
 
   std::cout << std::left << std::setw(12) << c.name
             << " sample=" << preview(sample)
@@ -79,63 +81,63 @@ int main() {
   const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const std::vector<DemoCase> cases = {
-      {"alpha", {2.0, 3.0}, 2.0},
-      {"anglit", {}, 0.0},
-      {"arcsin", {}, 0.5},
-      {"bern", {0.35}, 1.0},
-      {"bessel", {0.0, 2.5}, 1.0},
-      {"beta", {2.0, 5.0}, 0.35},
-      {"binom", {10.0, 0.30}, 3.0},
-      {"bradford", {1.5}, 0.4},
-      {"burr", {2.0, 3.0}, 1.25},
-      {"cauchy", {0.0, 1.0}, 0.25},
-      {"chi", {3.0}, 1.5},
-      {"chisq", {4.0}, 2.0},
-      {"chisqnc", {1.5, 4.0}, 3.0},
-      {"cosine", {}, 0.25},
-      {"erlang", {1.25, 3.0}, 2.0},
-      {"exp", {1.5}, 0.75},
-      {"extrval", {0.0, 1.0}, 0.25},
-      {"f", {4.0, 6.0}, 1.0},
-      {"fnc", {1.5, 4.0, 6.0}, 1.0},
-      {"gamma", {2.5}, 1.5},
-      {"geom", {0.35}, 3.0},
-      {"gig", {0.5, 1.0, 2.0}, 1.0},
-      {"gh", {1.0, 2.0, 0.5, 0.0, 1.0}, 0.25},
-      {"gompertz", {1.0, 2.0}, 0.5},
-      {"hcos", {}, 0.0},
-      {"hsec", {}, 0.0},
-      {"hypergeom", {20.0, 8.0, 5.0}, 2.0},
-      {"ig", {1.5, 2.0}, 1.0},
-      {"laplace", {0.0, 1.0}, 0.25},
-      {"logistic", {0.0, 1.0}, 0.25},
-      {"lognorm", {0.0, 0.5}, 1.0},
-      {"maxwell", {1.0}, 1.0},
-      {"nakagami", {1.5, 2.0}, 1.0},
-      {"negbinom", {3.0, 0.45}, 2.0},
-      {"norm", {}, 0.0},
-      {"normaltrunc", {-1.0, 1.0, 0.0, 1.0}, 0.0},
-      {"nig", {2.0, 0.5, 0.0, 1.0}, 0.25},
-      {"pareto", {1.0, 3.0}, 2.0},
-      {"lomax", {2.0, 3.0}, 1.0},
-      {"planck", {2.0, 1.5}, 0.75},
-      {"poisson", {2.0}, 2.0},
-      {"quadr", {}, 0.0},
-      {"rademacher", {}, 1.0},
-      {"rayl", {1.0}, 1.0},
-      {"rice", {1.0, 1.0}, 1.5},
-      {"semicirc", {0.0, 1.0}, 0.0},
-      {"skellam", {2.0, 1.0}, 1.0},
-      {"t", {5.0}, 0.5},
-      {"tri", {0.0, 0.5, 1.0}, 0.6},
-      {"tukeylambda", {0.14}, 0.0},
-      {"u", {}, 0.0},
-      {"uniform", {0.0, 1.0}, 0.25},
-      {"vonmises", {0.0, 2.0}, 0.0},
-      {"wald", {2.0}, 1.0},
-      {"weibull", {0.0, 2.0, 1.5}, 1.0},
-      {"yule", {3.0}, 2.0},
-      {"zeta", {2.5}, 2.0},
+      {"alpha", ma::dst::Alpha, {2.0, 3.0}, 2.0},
+      {"anglit", ma::dst::Anglit, {}, 0.0},
+      {"arcsin", ma::dst::Arcsin, {}, 0.5},
+      {"bern", ma::dst::Bernoulli, {0.35}, 1.0},
+      {"bessel", ma::dst::Bessel, {0.0, 2.5}, 1.0},
+      {"beta", ma::dst::Beta, {2.0, 5.0}, 0.35},
+      {"binom", ma::dst::Binomial, {10.0, 0.30}, 3.0},
+      {"bradford", ma::dst::Bradford, {1.5}, 0.4},
+      {"burr", ma::dst::Burr, {2.0, 3.0}, 1.25},
+      {"cauchy", ma::dst::Cauchy, {0.0, 1.0}, 0.25},
+      {"chi", ma::dst::Chi, {3.0}, 1.5},
+      {"chisq", ma::dst::ChiSquare, {4.0}, 2.0},
+      {"chisqnc", ma::dst::ChiSquareNoncentral, {1.5, 4.0}, 3.0},
+      {"cosine", ma::dst::Cosine, {}, 0.25},
+      {"erlang", ma::dst::Erlang, {1.25, 3.0}, 2.0},
+      {"exp", ma::dst::Exponential, {1.5}, 0.75},
+      {"extrval", ma::dst::ExtremeValue, {0.0, 1.0}, 0.25},
+      {"f", ma::dst::F, {4.0, 6.0}, 1.0},
+      {"fnc", ma::dst::FNoncentral, {1.5, 4.0, 6.0}, 1.0},
+      {"gamma", ma::dst::Gamma, {2.5}, 1.5},
+      {"geom", ma::dst::Geometric, {0.35}, 3.0},
+      {"gig", ma::dst::Gig, {0.5, 1.0, 2.0}, 1.0},
+      {"gh", ma::dst::Gh, {1.0, 2.0, 0.5, 0.0, 1.0}, 0.25},
+      {"gompertz", ma::dst::Gompertz, {1.0, 2.0}, 0.5},
+      {"hcos", ma::dst::HalfCosine, {}, 0.0},
+      {"hsec", ma::dst::HyperbolicSecant, {}, 0.0},
+      {"hypergeom", ma::dst::Hypergeometric, {20.0, 8.0, 5.0}, 2.0},
+      {"ig", ma::dst::InverseGaussian, {1.5, 2.0}, 1.0},
+      {"laplace", ma::dst::Laplace, {0.0, 1.0}, 0.25},
+      {"logistic", ma::dst::Logistic, {0.0, 1.0}, 0.25},
+      {"lognorm", ma::dst::Lognormal, {0.0, 0.5}, 1.0},
+      {"maxwell", ma::dst::Maxwell, {1.0}, 1.0},
+      {"nakagami", ma::dst::Nakagami, {1.5, 2.0}, 1.0},
+      {"negbinom", ma::dst::NegativeBinomial, {3.0, 0.45}, 2.0},
+      {"norm", ma::dst::Normal, {}, 0.0},
+      {"normaltrunc", ma::dst::NormalTrunc, {-1.0, 1.0, 0.0, 1.0}, 0.0},
+      {"nig", ma::dst::Nig, {2.0, 0.5, 0.0, 1.0}, 0.25},
+      {"pareto", ma::dst::Pareto, {1.0, 3.0}, 2.0},
+      {"lomax", ma::dst::Lomax, {2.0, 3.0}, 1.0},
+      {"planck", ma::dst::Planck, {2.0, 1.5}, 0.75},
+      {"poisson", ma::dst::Poisson, {2.0}, 2.0},
+      {"quadr", ma::dst::Quadratic, {}, 0.0},
+      {"rademacher", ma::dst::Rademacher, {}, 1.0},
+      {"rayl", ma::dst::Rayleigh, {1.0}, 1.0},
+      {"rice", ma::dst::Rice, {1.0, 1.0}, 1.5},
+      {"semicirc", ma::dst::Semicircle, {0.0, 1.0}, 0.0},
+      {"skellam", ma::dst::Skellam, {2.0, 1.0}, 1.0},
+      {"t", ma::dst::StudentT, {5.0}, 0.5},
+      {"tri", ma::dst::Triangular, {0.0, 0.5, 1.0}, 0.6},
+      {"tukeylambda", ma::dst::TukeyLambda, {0.14}, 0.0},
+      {"u", ma::dst::UShape, {}, 0.0},
+      {"uniform", ma::dst::Uniform, {0.0, 1.0}, 0.25},
+      {"vonmises", ma::dst::VonMises, {0.0, 2.0}, 0.0},
+      {"wald", ma::dst::Wald, {2.0}, 1.0},
+      {"weibull", ma::dst::Weibull, {0.0, 2.0, 1.5}, 1.0},
+      {"yule", ma::dst::Yule, {3.0}, 2.0},
+      {"zeta", ma::dst::Zeta, {2.5}, 2.0},
   };
 
   std::cout << "PlussMa distribution catalog demo\n";
@@ -146,14 +148,14 @@ int main() {
   }
 
   std::cout << "\nShort-form patterns\n";
-  std::cout << "supports(gauss)=" << pluss::distr::supports("gauss")
-            << " supports(zipf)=" << pluss::distr::supports("zipf")
-            << " supports(pascal)=" << pluss::distr::supports("pascal") << '\n';
+  std::cout << "supports(Normal)=" << pluss::distr::supports(ma::dst::Normal)
+            << " supports(Zeta)=" << pluss::distr::supports(ma::dst::Zeta)
+            << " supports(NegativeBinomial)=" << pluss::distr::supports(ma::dst::NegativeBinomial) << '\n';
 
   const Series like = pluss::zeros({2, 4}, Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU));
-  const Series like_gamma = pluss::distr::sample_like("gamma", {2.0}, like, 77ULL);
-  const Series like_sign = pluss::distr::sample_like("rademacher", like, 79ULL);
-  const Series nig = pluss::distr::sample("nig", {2.0, 0.5, 0.0, 1.0}, {2, 4}, f64, 83ULL);
+  const Series like_gamma = pluss::distr::sample_like(ma::dst::Gamma, {2.0}, like, 77ULL);
+  const Series like_sign = pluss::distr::sample_like(ma::dst::Rademacher, like, 79ULL);
+  const Series nig = pluss::distr::sample(ma::dst::Nig, {2.0, 0.5, 0.0, 1.0}, {2, 4}, f64, 83ULL);
   std::cout << "sample_like(gamma) preview=" << preview(like_gamma)
             << " dtype=" << static_cast<int>(like_gamma.scalar_type()) << '\n';
   std::cout << "sample_like(rademacher) preview=" << preview(like_sign)

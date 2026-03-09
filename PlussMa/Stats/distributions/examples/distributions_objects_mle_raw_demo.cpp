@@ -9,6 +9,7 @@ int main() {
   using namespace pluss::subsp::stat::distr;
 
   const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const Series enum_draw = pluss::distr::sample(dst::Normal, {0.0, 1.0}, {6}, f64, 20260309ULL);
 
   const Series xn = pluss::make_series({-1.2, -0.2, 0.1, 0.8, 1.4, 2.0}, f64);
   const Series xe = pluss::make_series({0.3, 0.6, 1.1, 1.7, 2.4, 3.2}, f64);
@@ -26,6 +27,7 @@ int main() {
   const Series xmix = pluss::make_series({-3.0, -2.5, -2.1, -1.4, 0.9, 1.2, 1.8, 2.5, 3.0}, f64);
 
   std::cout << "Raw MLE object usage demo (closed form + approximation families)\n";
+  std::cout << "enum sample(dst::Normal, ...): " << enum_draw << "\n";
 
   const auto nfit = Normal{0.0, 1.0}.MLE(xn);
   std::cout << "\nNormal\n";

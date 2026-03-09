@@ -48,6 +48,10 @@ int main() {
   plot_opts.figure.height = 860.0;
   plot_opts.figure.use_tight_layout = true;
   plot_opts.figure.tight_layout_padding = 6.0;
+  plot_opts.frames.mode = pluss::table::AtlasFrameSelectionMode::Overlay;
+  plot_opts.frames.cols = 2;
+  plot_opts.depth_axis.order = pluss::table::AtlasDepthOrder::Ascending;
+  plot_opts.depth_axis.step = 1;
   plot_opts.surface.scene.preset = pluss::pl::flash::ScenePreset3D::Survey;
   plot_opts.wireframe.scene.preset = pluss::pl::flash::ScenePreset3D::Presentation;
   plot_opts.cloud3.scene.preset = pluss::pl::flash::ScenePreset3D::Studio;
@@ -60,6 +64,9 @@ int main() {
   plot_opts.depth_facet.statistic = AtlasDepthStatistic::Median;
   plot_opts.depth_facet.cols = 2;
   plot_opts.depth_facet.max_features = 3;
+  plot_opts.depth_rolling.statistic = AtlasDepthStatistic::Mean;
+  plot_opts.depth_rolling.window = 2;
+  plot_opts.depth_rolling.show_raw = true;
   plot_opts.triplot.kind = pluss::pl::flash::TriplotKind::Cloud;
   plot_opts.triplot.max_panels = 1;
   plot_opts.triplot.max_points = 2000;
@@ -69,6 +76,17 @@ int main() {
   auto fig_frame = atlas_plot.frames(1).line("Close");
   fig_frame.headline("Atlas frame(1): Close");
   fig_frame.save_pdf(out_path("atlas_frame_line_close.pdf"));
+
+  auto fig_frames_overlay = atlas_plot.frames({0, 1, 3}, "Close");
+  fig_frames_overlay.headline("Atlas frames overlay: Close");
+  fig_frames_overlay.save_pdf(out_path("atlas_frames_overlay_close.pdf"));
+
+  pluss::table::AtlasFramesPlotOptions frame_facet_opts;
+  frame_facet_opts.mode = pluss::table::AtlasFrameSelectionMode::Facet;
+  frame_facet_opts.cols = 2;
+  auto fig_frames_facet = atlas_plot.frames({0, 1, 2, 3}, "Close", std::nullopt, frame_facet_opts);
+  fig_frames_facet.headline("Atlas frames facet: Close");
+  fig_frames_facet.save_pdf(out_path("atlas_frames_facet_close.pdf"));
 
   auto fig_surface = atlas_plot.surface("Close");
   fig_surface.headline("Atlas depth surface: Close");
@@ -93,6 +111,10 @@ int main() {
   auto fig_depth_facet = atlas_plot.depth_facet({"Close", "Volume", "Range"});
   fig_depth_facet.headline("Atlas depth facet: median per feature");
   fig_depth_facet.save_pdf(out_path("atlas_depth_facet_close_volume_range.pdf"));
+
+  auto fig_depth_rolling = atlas_plot.depth_rolling("Close");
+  fig_depth_rolling.headline("Atlas depth rolling: Close");
+  fig_depth_rolling.save_pdf(out_path("atlas_depth_rolling_close.pdf"));
 
   auto fig_triplot = atlas_plot.triplot({"Close", "Volume", "Range"});
   fig_triplot.headline("Atlas triplot: Close / Volume / Range");

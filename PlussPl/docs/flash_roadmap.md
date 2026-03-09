@@ -202,5 +202,8 @@ Outstanding doctrine work (non-blocking):
   - `atlas.plot().depth(...)` computes per-frame reductions directly from pluss-native feature values.
   - `atlas.plot().triplot(...)` flattens selected features once, then delegates panel emission to `flash::triplot(...)`.
   - No "loop relocation" from `DataFramePlot` into flash wrappers was used as a doctrine shortcut.
-- [ ] `DataFramePlot.cpp` still has per-trace render loops in categorical/stacked builders; these are mostly structural but can be further reduced when additional flash kernels are added.
+- [x] DataFrame routing cleanup completed:
+  - removed `DataFramePlotOps` shim; default `df.plot().*` entry points now route through canonical option-bearing methods.
+  - duplicate `impl_*` default render paths were collapsed to avoid parallel logic branches.
+- [ ] `DataFramePlot.cpp` still has per-trace render loops in categorical/stacked builders; these are mostly structural and can be further reduced only with new multi-trace flash kernels.
 - [ ] `flash.h` high-level families still use nested loops for panel/combination emission by design.

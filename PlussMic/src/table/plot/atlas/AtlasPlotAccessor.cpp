@@ -8,6 +8,7 @@
 #include <limits>
 #include <numeric>
 #include <ranges>
+#include <span>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -76,6 +77,40 @@ std::int64_t normalize_frame_index(std::int64_t idx, std::int64_t depth) {
   return out;
 }
 
+std::vector<std::int64_t> normalize_frame_indices(std::initializer_list<std::int64_t> indices, std::int64_t depth) {
+  PLUSS_CHECK(indices.size() != 0, "Atlas::plot().frames: at least one frame index is required");
+  std::vector<std::int64_t> out;
+  out.reserve(indices.size());
+  for (const auto idx : indices) {
+    const auto normalized = normalize_frame_index(idx, depth);
+    if (std::find(out.begin(), out.end(), normalized) == out.end()) {
+      out.push_back(normalized);
+    }
+  }
+  PLUSS_CHECK(!out.empty(), "Atlas::plot().frames: no valid frame indices selected");
+  return out;
+}
+
+std::vector<std::int64_t> depth_positions(std::int64_t depth, const AtlasDepthAxisOptions& options) {
+  PLUSS_CHECK(depth > 0, "Atlas::plot(): atlas has no frames");
+  const auto step = std::max<std::int64_t>(1, options.step);
+  std::vector<std::int64_t> positions;
+  positions.reserve(static_cast<std::size_t>((depth + step - 1) / step));
+  if (options.order == AtlasDepthOrder::Ascending) {
+    for (auto i = std::int64_t{0}; i < depth; i += step) {
+      positions.push_back(i);
+    }
+    return positions;
+  }
+  for (auto i = depth - 1; i >= 0; i -= step) {
+    positions.push_back(i);
+    if (i < step) {
+      break;
+    }
+  }
+  return positions;
+}
+
 std::vector<double> positional_axis(std::int64_t n) {
   PLUSS_CHECK(n >= 0, "Atlas::plot: axis length must be non-negative");
   std::vector<double> values(static_cast<std::size_t>(n), 0.0);
@@ -138,28 +173,52 @@ void require_size(std::int64_t actual, std::int64_t expected, std::string_view w
           + ", got " + std::to_string(actual) + ")");
 }
 
-std::vector<std::string> depth_legend_labels(const std::optional<Thread>& depth_labels, std::int64_t depth) {
+void require_min_size(std::int64_t actual, std::int64_t minimum, std::string_view where, std::string_view what) {
+  PLUSS_CHECK(
+      actual >= minimum,
+      std::string(where) + ": " + std::string(what) + " length mismatch (minimum " + std::to_string(minimum)
+          + ", got " + std::to_string(actual) + ")");
+}
+
+std::vector<std::string> depth_legend_labels(const std::optional<Thread>& depth_labels,
+                                             std::span<const std::int64_t> positions,
+                                             std::string_view where) {
+  const auto depth = static_cast<std::int64_t>(positions.size());
+  PLUSS_CHECK(depth > 0, std::string(where) + ": empty depth selection");
   if (!depth_labels.has_value()) {
     std::vector<std::string> labels;
     labels.reserve(static_cast<std::size_t>(depth));
-    for (const auto i : std::views::iota(std::int64_t{0}, depth)) {
-      labels.push_back("frame " + std::to_string(i));
+    for (const auto p : positions) {
+      labels.push_back("frame " + std::to_string(p));
     }
     return labels;
   }
 
   if (thread_prefers_labels(*depth_labels)) {
-    auto labels = thread_to_labels(*depth_labels);
-    require_size(static_cast<std::int64_t>(labels.size()), depth, "Atlas::plot().cloud3", "depth labels");
+    const auto source = thread_to_labels(*depth_labels);
+    require_min_size(
+        static_cast<std::int64_t>(source.size()),
+        *std::max_element(positions.begin(), positions.end()) + 1,
+        where,
+        "depth labels");
+    std::vector<std::string> labels;
+    labels.reserve(static_cast<std::size_t>(depth));
+    for (const auto p : positions) {
+      labels.push_back(source[static_cast<std::size_t>(p)]);
+    }
     return labels;
   }
 
-  const auto values = thread_to_numeric_values(*depth_labels, "Atlas::plot().cloud3", "depth axis");
-  require_size(static_cast<std::int64_t>(values.size()), depth, "Atlas::plot().cloud3", "depth axis");
+  const auto values = thread_to_numeric_values(*depth_labels, where, "depth axis");
+  require_min_size(
+      static_cast<std::int64_t>(values.size()),
+      *std::max_element(positions.begin(), positions.end()) + 1,
+      where,
+      "depth axis");
   std::vector<std::string> labels;
   labels.reserve(static_cast<std::size_t>(depth));
-  for (double value : values) {
-    labels.push_back(compact_number_label(value));
+  for (const auto p : positions) {
+    labels.push_back(compact_number_label(values[static_cast<std::size_t>(p)]));
   }
   return labels;
 }
@@ -227,20 +286,43 @@ double reduce_statistic(const std::vector<double>& values, AtlasDepthStatistic s
   PLUSS_FAIL("Atlas::plot().depth: unsupported reduction statistic");
 }
 
-DepthAxis2D build_depth_axis(const std::optional<Thread>& depth_labels, std::int64_t depth) {
+DepthAxis2D build_depth_axis(const std::optional<Thread>& depth_labels,
+                             std::span<const std::int64_t> positions,
+                             std::string_view where) {
+  const auto depth = static_cast<std::int64_t>(positions.size());
+  PLUSS_CHECK(depth > 0, std::string(where) + ": empty depth selection");
   DepthAxis2D axis;
   if (!depth_labels.has_value()) {
-    axis.values = positional_axis(depth);
+    axis.values.reserve(static_cast<std::size_t>(depth));
+    for (const auto p : positions) {
+      axis.values.push_back(static_cast<double>(p));
+    }
     return axis;
   }
   if (thread_prefers_labels(*depth_labels)) {
     axis.values = positional_axis(depth);
-    axis.labels = thread_to_labels(*depth_labels);
-    require_size(static_cast<std::int64_t>(axis.labels.size()), depth, "Atlas::plot().depth", "depth labels");
+    const auto source = thread_to_labels(*depth_labels);
+    require_min_size(
+        static_cast<std::int64_t>(source.size()),
+        *std::max_element(positions.begin(), positions.end()) + 1,
+        where,
+        "depth labels");
+    axis.labels.reserve(static_cast<std::size_t>(depth));
+    for (const auto p : positions) {
+      axis.labels.push_back(source[static_cast<std::size_t>(p)]);
+    }
     return axis;
   }
-  axis.values = thread_to_numeric_values(*depth_labels, "Atlas::plot().depth", "depth axis");
-  require_size(static_cast<std::int64_t>(axis.values.size()), depth, "Atlas::plot().depth", "depth axis");
+  const auto source = thread_to_numeric_values(*depth_labels, where, "depth axis");
+  require_min_size(
+      static_cast<std::int64_t>(source.size()),
+      *std::max_element(positions.begin(), positions.end()) + 1,
+      where,
+      "depth axis");
+  axis.values.reserve(static_cast<std::size_t>(depth));
+  for (const auto p : positions) {
+    axis.values.push_back(source[static_cast<std::size_t>(p)]);
+  }
   return axis;
 }
 
@@ -306,16 +388,18 @@ std::vector<std::string> resolve_depth_features(std::initializer_list<std::strin
 }
 
 std::vector<double> depth_statistic_values(const std::vector<DataFrame>& frames,
+                                           std::span<const std::int64_t> positions,
                                            std::string_view feature,
                                            AtlasDepthStatistic statistic,
                                            std::string_view where) {
-  PLUSS_CHECK(!frames.empty(), std::string(where) + ": atlas has no frames");
-  const auto ncases = frames.front().ncases();
+  PLUSS_CHECK(!positions.empty(), std::string(where) + ": empty depth selection");
+  const auto ncases = frames[static_cast<std::size_t>(positions.front())].ncases();
   PLUSS_CHECK(ncases > 0, std::string(where) + ": frame has zero cases");
 
   std::vector<double> values;
-  values.reserve(frames.size());
-  for (const auto& frame : frames) {
+  values.reserve(positions.size());
+  for (const auto p : positions) {
+    const auto& frame = frames[static_cast<std::size_t>(p)];
     require_size(frame.ncases(), ncases, where, "case axis");
     PLUSS_CHECK(
         frame.has_feature(feature),
@@ -361,22 +445,24 @@ std::vector<pluss::Series> flatten_feature_columns(const std::vector<DataFrame>&
 
 AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
                                   const std::optional<Thread>& depth_labels,
+                                  std::span<const std::int64_t> positions,
                                   std::string_view feature,
                                   std::string_view where) {
-  PLUSS_CHECK(!frames.empty(), std::string(where) + ": atlas has no frames");
+  PLUSS_CHECK(!positions.empty(), std::string(where) + ": empty depth selection");
 
-  const auto depth = static_cast<std::int64_t>(frames.size());
-  const auto ncases = frames.front().ncases();
+  const auto depth = static_cast<std::int64_t>(positions.size());
+  const auto ncases = frames[static_cast<std::size_t>(positions.front())].ncases();
   PLUSS_CHECK(ncases > 0, std::string(where) + ": frame has zero cases");
 
-  for (const auto& frame : frames) {
+  for (const auto p : positions) {
+    const auto& frame = frames[static_cast<std::size_t>(p)];
     require_size(frame.ncases(), ncases, where, "case axis");
     PLUSS_CHECK(frame.has_feature(feature),
                 std::string(where) + ": missing feature '" + std::string(feature) + "' in one or more frames");
   }
 
   AtlasGrid3D out;
-  const auto& case_thread = frames.front().cases();
+  const auto& case_thread = frames[static_cast<std::size_t>(positions.front())].cases();
   if (thread_prefers_labels(case_thread)) {
     out.x_axis = positional_axis(ncases);
     out.x_labels = thread_to_labels(case_thread);
@@ -386,28 +472,69 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
     require_size(static_cast<std::int64_t>(out.x_axis.size()), ncases, where, "case axis");
   }
 
-  if (depth_labels.has_value()) {
-    if (thread_prefers_labels(*depth_labels)) {
-      out.y_axis = positional_axis(depth);
-      out.y_labels = thread_to_labels(*depth_labels);
-      require_size(static_cast<std::int64_t>(out.y_labels.size()), depth, where, "depth labels");
-    } else {
-      out.y_axis = thread_to_numeric_values(*depth_labels, where, "depth axis");
-      require_size(static_cast<std::int64_t>(out.y_axis.size()), depth, where, "depth axis");
-    }
-  } else {
-    out.y_axis = positional_axis(depth);
-  }
+  auto depth_axis = build_depth_axis(depth_labels, positions, where);
+  out.y_axis = std::move(depth_axis.values);
+  out.y_labels = std::move(depth_axis.labels);
 
   std::vector<double> z_values;
   z_values.reserve(static_cast<std::size_t>(depth * ncases));
-  for (const auto& frame : frames) {
+  for (const auto p : positions) {
+    const auto& frame = frames[static_cast<std::size_t>(p)];
     const auto values = thread_to_numeric_values(frame.features(feature), where, feature);
     require_size(static_cast<std::int64_t>(values.size()), ncases, where, feature);
     z_values.insert(z_values.end(), values.begin(), values.end());
   }
   out.z = pluss::make_series(z_values, {depth, ncases});
   return out;
+}
+
+std::vector<double> rolling_mean(std::span<const double> values, std::int64_t window) {
+  const auto w = std::max<std::int64_t>(1, window);
+  std::vector<double> out(values.size(), std::numeric_limits<double>::quiet_NaN());
+  double sum = 0.0;
+  std::int64_t count = 0;
+  for (const auto i : std::views::iota(std::size_t{0}, values.size())) {
+    const auto v = values[i];
+    if (std::isfinite(v)) {
+      sum += v;
+      ++count;
+    }
+    if (i >= static_cast<std::size_t>(w)) {
+      const auto stale = values[i - static_cast<std::size_t>(w)];
+      if (std::isfinite(stale)) {
+        sum -= stale;
+        --count;
+      }
+    }
+    if (count > 0) {
+      out[i] = sum / static_cast<double>(count);
+    }
+  }
+  return out;
+}
+
+struct ResolvedFrameAxis {
+  std::vector<double> values{};
+  std::vector<std::string> labels{};
+  std::string label{"case"};
+};
+
+ResolvedFrameAxis resolve_frame_axis(const DataFrame& frame,
+                                     std::optional<std::string_view> x_feature,
+                                     std::string_view where) {
+  const auto& axis_thread = x_feature.has_value() ? frame.features(*x_feature) : frame.cases();
+  const auto axis_label = x_feature.has_value() ? std::string(*x_feature) : std::string("case");
+  ResolvedFrameAxis axis;
+  axis.label = axis_label;
+  if (thread_prefers_labels(axis_thread)) {
+    axis.values = positional_axis(frame.ncases());
+    axis.labels = thread_to_labels(axis_thread);
+    require_size(static_cast<std::int64_t>(axis.labels.size()), frame.ncases(), where, "x labels");
+    return axis;
+  }
+  axis.values = thread_to_numeric_values(axis_thread, where, axis_label);
+  require_size(static_cast<std::int64_t>(axis.values.size()), frame.ncases(), where, "x axis");
+  return axis;
 }
 
 } // namespace
@@ -420,6 +547,77 @@ AtlasPlotAccessor::AtlasPlotAccessor(std::vector<DataFrame> frames,
 DataFramePlotAccessor AtlasPlotAccessor::frames(std::int64_t frame_index) const {
   const auto idx = normalize_frame_index(frame_index, static_cast<std::int64_t>(frames_.size()));
   return frames_[static_cast<std::size_t>(idx)].plot(options_.figure);
+}
+
+pluss::pl::Studio AtlasPlotAccessor::frames(std::initializer_list<std::int64_t> frame_indices,
+                                            std::string_view y_feature,
+                                            std::optional<std::string_view> x_feature) const {
+  return frames(frame_indices, y_feature, x_feature, options_.frames);
+}
+
+pluss::pl::Studio AtlasPlotAccessor::frames(std::initializer_list<std::int64_t> frame_indices,
+                                            std::string_view y_feature,
+                                            std::optional<std::string_view> x_feature,
+                                            const AtlasFramesPlotOptions& options) const {
+  PLUSS_CHECK(!frames_.empty(), "Atlas::plot().frames: atlas has no frames");
+  const auto selected = normalize_frame_indices(frame_indices, static_cast<std::int64_t>(frames_.size()));
+  const auto labels = depth_legend_labels(depth_labels_, selected, "Atlas::plot().frames");
+
+  std::vector<ResolvedFrameAxis> axes;
+  std::vector<std::vector<double>> y_values;
+  std::vector<pluss::Series> xs_series;
+  std::vector<pluss::Series> ys_series;
+  axes.reserve(selected.size());
+  y_values.reserve(selected.size());
+  xs_series.reserve(selected.size());
+  ys_series.reserve(selected.size());
+
+  for (const auto p : selected) {
+    const auto& frame = frames_[static_cast<std::size_t>(p)];
+    PLUSS_CHECK(frame.has_feature(y_feature),
+                "Atlas::plot().frames: missing y feature '" + std::string(y_feature) + "' in one or more frames");
+    auto axis = resolve_frame_axis(frame, x_feature, "Atlas::plot().frames");
+    auto values = thread_to_numeric_values(frame.features(y_feature), "Atlas::plot().frames", y_feature);
+    require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), "Atlas::plot().frames", y_feature);
+    xs_series.push_back(pluss::make_series(axis.values));
+    ys_series.push_back(pluss::make_series(values));
+    axes.push_back(std::move(axis));
+    y_values.push_back(std::move(values));
+  }
+
+  auto fig = make_studio();
+  if (options.mode == AtlasFrameSelectionMode::Facet) {
+    flash::RelGridPlotOptions facet_options;
+    facet_options.kind = flash::RelGridKind::Line;
+    facet_options.rows = options.rows;
+    facet_options.cols = options.cols;
+    facet_options.grid_gap_x = options.grid_gap_x;
+    facet_options.grid_gap_y = options.grid_gap_y;
+    facet_options.show_grid = options.show_grid;
+    facet_options.titles = labels;
+    facet_options.y_labels.assign(labels.size(), std::string(y_feature));
+    facet_options.x_labels.assign(labels.size(), axes.front().label);
+    flash::relgridplot(fig, xs_series, ys_series, facet_options);
+    apply_figure_options(fig);
+    return fig;
+  }
+
+  auto& pane = fig.pane2("atlas_frames_overlay");
+  pane.grid(options.show_grid ? pluss::pl::GridStyle::Major : pluss::pl::GridStyle::None)
+      .legend(pluss::pl::KeyPlace::Auto)
+      .x_label(axes.front().label)
+      .y_label(std::string(y_feature));
+  if (!axes.front().labels.empty()) {
+    pane.x_ticks(axes.front().values, axes.front().labels);
+  }
+  for (const auto i : std::views::iota(std::size_t{0}, y_values.size())) {
+    flash::lineplot(pane, axes[i].values, y_values[i])
+        .label(labels[i])
+        .stroke(color_for_index(i))
+        .width(std::max(0.5F, options.line_width));
+  }
+  apply_figure_options(fig);
+  return fig;
 }
 
 void AtlasPlotAccessor::apply_figure_options(pluss::pl::Studio& figure) const {
@@ -437,7 +635,8 @@ pluss::pl::Studio AtlasPlotAccessor::surface(std::string_view feature) const {
 
 pluss::pl::Studio AtlasPlotAccessor::surface(std::string_view feature,
                                              const Surface3DPlotOptions& options) const {
-  auto grid = build_depth_case_grid(frames_, depth_labels_, feature, "Atlas::plot().surface");
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
+  auto grid = build_depth_case_grid(frames_, depth_labels_, selected_depth, feature, "Atlas::plot().surface");
 
   auto fig = make_studio();
   auto& pane = fig.pane3("atlas_surface");
@@ -462,7 +661,8 @@ pluss::pl::Studio AtlasPlotAccessor::wireframe(std::string_view feature) const {
 
 pluss::pl::Studio AtlasPlotAccessor::wireframe(std::string_view feature,
                                                const Wireframe3DPlotOptions& options) const {
-  auto grid = build_depth_case_grid(frames_, depth_labels_, feature, "Atlas::plot().wireframe");
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
+  auto grid = build_depth_case_grid(frames_, depth_labels_, selected_depth, feature, "Atlas::plot().wireframe");
 
   auto fig = make_studio();
   auto& pane = fig.pane3("atlas_wireframe");
@@ -492,11 +692,12 @@ pluss::pl::Studio AtlasPlotAccessor::cloud3(std::string_view x_feature,
                                             std::string_view z_feature,
                                             const Scatter3DPlotOptions& options) const {
   PLUSS_CHECK(!frames_.empty(), "Atlas::plot().cloud3: atlas has no frames");
-  const auto depth = static_cast<std::int64_t>(frames_.size());
-  const auto ncases = frames_.front().ncases();
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
+  const auto depth = static_cast<std::int64_t>(selected_depth.size());
+  const auto ncases = frames_[static_cast<std::size_t>(selected_depth.front())].ncases();
   PLUSS_CHECK(ncases > 0, "Atlas::plot().cloud3: frame has zero cases");
 
-  const auto labels = depth_legend_labels(depth_labels_, depth);
+  const auto labels = depth_legend_labels(depth_labels_, selected_depth, "Atlas::plot().cloud3");
 
   auto fig = make_studio();
   auto& pane = fig.pane3("atlas_cloud3");
@@ -504,8 +705,8 @@ pluss::pl::Studio AtlasPlotAccessor::cloud3(std::string_view x_feature,
   pane.x_label(std::string(x_feature)).y_label(std::string(y_feature)).z_label(std::string(z_feature));
   plot::detail::apply_3d_scene_options(pane, options.scene);
 
-  for (const auto i : std::views::iota(std::int64_t{0}, depth)) {
-    const auto& frame = frames_[static_cast<std::size_t>(i)];
+  for (const auto i : std::views::iota(std::size_t{0}, selected_depth.size())) {
+    const auto& frame = frames_[static_cast<std::size_t>(selected_depth[i])];
     require_size(frame.ncases(), ncases, "Atlas::plot().cloud3", "case axis");
     PLUSS_CHECK(
         frame.has_feature(x_feature) && frame.has_feature(y_feature) && frame.has_feature(z_feature),
@@ -525,8 +726,8 @@ pluss::pl::Studio AtlasPlotAccessor::cloud3(std::string_view x_feature,
                       y,
                       z,
                       std::array<double, 1>{std::max(1.0, options.default_marker_size)})
-                      .label(labels[static_cast<std::size_t>(i)]);
-    trace.stroke(color_for_index(static_cast<std::size_t>(i)));
+                      .label(labels[i]);
+    trace.stroke(color_for_index(i));
     plot::detail::apply_3d_trace_options(trace, options.trace);
   }
 
@@ -540,11 +741,12 @@ pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature) const {
 
 pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature, const AtlasDepthPlotOptions& options) const {
   PLUSS_CHECK(!frames_.empty(), "Atlas::plot().depth: atlas has no frames");
-  const auto depth_size = static_cast<std::int64_t>(frames_.size());
-  const auto ncases = frames_.front().ncases();
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
+  const auto depth_size = static_cast<std::int64_t>(selected_depth.size());
+  const auto ncases = frames_[static_cast<std::size_t>(selected_depth.front())].ncases();
   PLUSS_CHECK(ncases > 0, "Atlas::plot().depth: frame has zero cases");
 
-  auto depth_axis = build_depth_axis(depth_labels_, depth_size);
+  auto depth_axis = build_depth_axis(depth_labels_, selected_depth, "Atlas::plot().depth");
   std::vector<double> center_values;
   center_values.reserve(static_cast<std::size_t>(depth_size));
 
@@ -559,7 +761,8 @@ pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature, const Atlas
     upper_values.reserve(static_cast<std::size_t>(depth_size));
   }
 
-  for (const auto& frame : frames_) {
+  for (const auto p : selected_depth) {
+    const auto& frame = frames_[static_cast<std::size_t>(p)];
     require_size(frame.ncases(), ncases, "Atlas::plot().depth", "case axis");
     PLUSS_CHECK(
         frame.has_feature(feature),
@@ -613,7 +816,8 @@ pluss::pl::Studio AtlasPlotAccessor::depth_compare(std::initializer_list<std::st
                                                    const AtlasDepthComparePlotOptions& options) const {
   const auto selected = resolve_depth_features(
       features, frames_, options.max_features, "Atlas::plot().depth_compare");
-  const auto depth_axis = build_depth_axis(depth_labels_, static_cast<std::int64_t>(frames_.size()));
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
+  const auto depth_axis = build_depth_axis(depth_labels_, selected_depth, "Atlas::plot().depth_compare");
 
   auto fig = make_studio();
   auto& pane = fig.pane2("atlas_depth_compare");
@@ -628,7 +832,7 @@ pluss::pl::Studio AtlasPlotAccessor::depth_compare(std::initializer_list<std::st
   for (const auto feature_index : std::views::iota(std::size_t{0}, selected.size())) {
     const auto& feature = selected[feature_index];
     const auto values = depth_statistic_values(
-        frames_, feature, options.statistic, "Atlas::plot().depth_compare");
+        frames_, selected_depth, feature, options.statistic, "Atlas::plot().depth_compare");
     flash::lineplot(pane, depth_axis.values, values)
         .label(feature)
         .stroke(color_for_index(feature_index))
@@ -647,7 +851,8 @@ pluss::pl::Studio AtlasPlotAccessor::depth_facet(std::initializer_list<std::stri
                                                  const AtlasDepthFacetPlotOptions& options) const {
   const auto selected = resolve_depth_features(
       features, frames_, options.max_features, "Atlas::plot().depth_facet");
-  const auto depth_axis = build_depth_axis(depth_labels_, static_cast<std::int64_t>(frames_.size()));
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
+  const auto depth_axis = build_depth_axis(depth_labels_, selected_depth, "Atlas::plot().depth_facet");
 
   std::vector<pluss::Series> xs;
   std::vector<pluss::Series> ys;
@@ -663,7 +868,7 @@ pluss::pl::Studio AtlasPlotAccessor::depth_facet(std::initializer_list<std::stri
   const auto x_series = pluss::make_series(depth_axis.values);
   for (const auto& feature : selected) {
     auto values = depth_statistic_values(
-        frames_, feature, options.statistic, "Atlas::plot().depth_facet");
+        frames_, selected_depth, feature, options.statistic, "Atlas::plot().depth_facet");
     xs.push_back(x_series);
     ys.push_back(pluss::make_series(values));
     titles.push_back(feature);
@@ -683,6 +888,45 @@ pluss::pl::Studio AtlasPlotAccessor::depth_facet(std::initializer_list<std::stri
   rel_options.x_labels = std::move(x_labels);
   rel_options.y_labels = std::move(y_labels);
   flash::relgridplot(fig, xs, ys, rel_options);
+  apply_figure_options(fig);
+  return fig;
+}
+
+pluss::pl::Studio AtlasPlotAccessor::depth_rolling(std::string_view feature) const {
+  return depth_rolling(feature, options_.depth_rolling);
+}
+
+pluss::pl::Studio AtlasPlotAccessor::depth_rolling(std::string_view feature,
+                                                   const AtlasDepthRollingPlotOptions& options) const {
+  const auto selected_depth = depth_positions(static_cast<std::int64_t>(frames_.size()), options_.depth_axis);
+  const auto depth_axis = build_depth_axis(depth_labels_, selected_depth, "Atlas::plot().depth_rolling");
+  const auto raw_values = depth_statistic_values(
+      frames_,
+      selected_depth,
+      feature,
+      options.statistic,
+      "Atlas::plot().depth_rolling");
+  const auto rolling_values = rolling_mean(raw_values, options.window);
+
+  auto fig = make_studio();
+  auto& pane = fig.pane2("atlas_depth_rolling");
+  pane.grid(options.show_grid ? pluss::pl::GridStyle::Major : pluss::pl::GridStyle::None)
+      .legend(pluss::pl::KeyPlace::Auto)
+      .x_label("depth")
+      .y_label(std::string(feature));
+  if (!depth_axis.labels.empty()) {
+    pane.x_ticks(depth_axis.values, depth_axis.labels);
+  }
+  if (options.show_raw) {
+    flash::lineplot(pane, depth_axis.values, raw_values)
+        .label("raw")
+        .stroke(pluss::pl::Rgba::from_u8(148, 163, 184))
+        .width(std::max(0.5F, options.raw_line_width));
+  }
+  flash::lineplot(pane, depth_axis.values, rolling_values)
+      .label("rolling")
+      .stroke(pluss::pl::Rgba::from_u8(15, 118, 110))
+      .width(std::max(0.5F, options.rolling_line_width));
   apply_figure_options(fig);
   return fig;
 }

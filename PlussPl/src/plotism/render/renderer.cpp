@@ -3494,6 +3494,128 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
   return std::clamp(requested, min_width, max_width);
 }
 
+[[nodiscard]] double legend_shape_target_ratio(KeyShape shape) noexcept {
+  switch (shape) {
+    case KeyShape::Horizontal:
+      return 1.7;
+    case KeyShape::Vertical:
+      return 0.72;
+    case KeyShape::Auto:
+    default:
+      return 1.0;
+  }
+}
+
+[[nodiscard]] double choose_key_box_width(
+    const std::vector<KeyEntry>& entries,
+    std::string_view title,
+    double min_width,
+    double max_width,
+    double max_height,
+    KeyShape shape) {
+  if (entries.empty()) {
+    return min_width;
+  }
+  if (!(max_width > min_width) || !std::isfinite(max_height) || max_height <= 0.0) {
+    return min_width;
+  }
+
+  std::vector<double> candidates;
+  candidates.reserve(16);
+  const double requested = estimate_key_width(entries, title, min_width, max_width);
+  constexpr std::int64_t kSamples = 10;
+  const double span = max_width - min_width;
+  for (std::int64_t i = 0; i <= kSamples; ++i) {
+    candidates.push_back(min_width + span * static_cast<double>(i) / static_cast<double>(kSamples));
+  }
+  candidates.push_back(requested);
+  std::sort(candidates.begin(), candidates.end());
+  candidates.erase(std::unique(candidates.begin(), candidates.end()), candidates.end());
+
+  const double target_ratio = legend_shape_target_ratio(shape);
+  double best_width = requested;
+  double best_score = std::numeric_limits<double>::infinity();
+
+  for (const double width : candidates) {
+    const KeyBoxMetrics metrics = compute_key_box_metrics(entries, title, width);
+    if (metrics.wrapped_entries.empty()) {
+      continue;
+    }
+    const double box_height = std::max(1.0, metrics.box_height);
+    const double ratio = width / box_height;
+    const double ratio_score = std::abs(std::log((ratio + 1e-9) / (target_ratio + 1e-9)));
+    const double overflow = std::max(0.0, box_height - max_height) / std::max(1.0, max_height);
+    const double overflow_score = overflow > 0.0 ? (5.0 + overflow * 8.0) : 0.0;
+    const double area_score = 0.03 * (width / max_width) + 0.03 * (box_height / std::max(max_height, box_height));
+    const double score = ratio_score + overflow_score + area_score;
+    if (score < best_score) {
+      best_score = score;
+      best_width = width;
+    }
+  }
+
+  return std::clamp(best_width, min_width, max_width);
+}
+
+[[nodiscard]] std::vector<KeyEntry> fit_key_entries_to_height(
+    const std::vector<KeyEntry>& entries,
+    std::string_view title,
+    double box_width,
+    double max_height,
+    const Theme& theme) {
+  if (entries.empty()) {
+    return {};
+  }
+  const auto fits = [&](const std::vector<KeyEntry>& candidate) {
+    return compute_key_box_metrics(candidate, title, box_width).box_height <= max_height;
+  };
+
+  if (fits(entries)) {
+    return entries;
+  }
+
+  std::vector<KeyEntry> trimmed;
+  trimmed.reserve(entries.size());
+  for (const KeyEntry& entry : entries) {
+    trimmed.push_back(entry);
+    if (!fits(trimmed)) {
+      trimmed.pop_back();
+      break;
+    }
+  }
+
+  if (trimmed.empty()) {
+    std::vector<KeyEntry> fallback{entries.front()};
+    return fallback;
+  }
+
+  auto append_more_entry = [&](std::vector<KeyEntry>& candidate, std::size_t hidden) {
+    KeyEntry more{};
+    more.label = "... +" + std::to_string(hidden) + " more";
+    more.stroke = mix(theme.foreground(), theme.background(), 0.25);
+    more.stroke_width = 1.2;
+    candidate.push_back(std::move(more));
+  };
+
+  std::size_t hidden = entries.size() - trimmed.size();
+  std::vector<KeyEntry> candidate = trimmed;
+  append_more_entry(candidate, hidden);
+  while (!candidate.empty() && !fits(candidate)) {
+    if (trimmed.empty()) {
+      break;
+    }
+    trimmed.pop_back();
+    hidden = entries.size() - trimmed.size();
+    candidate = trimmed;
+    append_more_entry(candidate, hidden);
+  }
+
+  if (!candidate.empty() && fits(candidate)) {
+    return candidate;
+  }
+  return trimmed;
+}
+
 void render_key_box(
     DrawList& list,
     const Theme& theme,
@@ -3638,8 +3760,19 @@ void render_legend(DrawList& list, const Pane& pane, const PaneLayout& layout, s
   const bool outside_east = pane.legend_place() == KeyPlace::OutsideEast;
   const double min_width = outside_east ? 168.0 : 126.0;
   const double max_width = outside_east ? 280.0 : std::max(160.0, layout.plot.width * 0.52);
-  const double box_width = estimate_key_width(entries, {}, min_width, max_width);
-  const double box_height = compute_key_box_metrics(entries, {}, box_width).box_height;
+  const double max_height = std::max(48.0, layout.plot.height - 16.0);
+  const double box_width = choose_key_box_width(
+      entries,
+      {},
+      min_width,
+      max_width,
+      max_height,
+      pane.legend_shape());
+  const auto fitted_entries = fit_key_entries_to_height(entries, {}, box_width, max_height, pane.theme_tokens());
+  if (fitted_entries.empty()) {
+    return;
+  }
+  const double box_height = compute_key_box_metrics(fitted_entries, {}, box_width).box_height;
 
   const auto rect_for_place = [&](KeyPlace place) {
     double x = layout.plot.x + layout.plot.width - box_width - 8.0;
@@ -3655,6 +3788,9 @@ void render_legend(DrawList& list, const Pane& pane, const PaneLayout& layout, s
       x = layout.plot.x + layout.plot.width + 22.0;
       y = layout.plot.y + 8.0;
     }
+    const double y_min = layout.plot.y + 8.0;
+    const double y_max = layout.plot.y + layout.plot.height - box_height - 8.0;
+    y = std::clamp(y, y_min, std::max(y_min, y_max));
     return Rect{x, y, box_width, 0.0};
   };
 
@@ -3686,7 +3822,7 @@ void render_legend(DrawList& list, const Pane& pane, const PaneLayout& layout, s
       pane.theme_tokens(),
       legend_box,
       {},
-      entries,
+      fitted_entries,
       pane.legend_frame());
 }
 
@@ -3718,24 +3854,61 @@ void render_legend_dock(
   }
 
   Rect box{};
+  std::string_view title{};
+  std::vector<KeyEntry> fitted_entries;
   if (studio.legend_dock() == KeyDock::East) {
-    constexpr double kDockWidth = 220.0;
+    const double min_width = 168.0;
+    const double max_width = std::clamp(studio.extent().width * 0.24, 220.0, 360.0);
+    const double max_height = std::max(64.0, studio.extent().height - (studio.headline_text().empty() ? 62.0 : 92.0));
+    const double box_width = choose_key_box_width(
+        entries,
+        title,
+        min_width,
+        max_width,
+        max_height,
+        studio.legend_shape());
+    fitted_entries = fit_key_entries_to_height(entries, title, box_width, max_height, studio.theme_tokens());
+    if (fitted_entries.empty()) {
+      return;
+    }
+    const double box_height = compute_key_box_metrics(fitted_entries, title, box_width).box_height;
     box = Rect{
-        studio.extent().width - (kDockWidth + 28.0),
+        studio.extent().width - (box_width + 28.0),
         studio.headline_text().empty() ? 28.0 : 58.0,
-        kDockWidth,
+        box_width,
         0.0,
     };
+    const double y_min = studio.headline_text().empty() ? 28.0 : 58.0;
+    const double y_max = studio.extent().height - box_height - 22.0;
+    box.y = std::clamp(box.y, y_min, std::max(y_min, y_max));
   } else {
+    const double min_width = 220.0;
+    const double max_width = std::max(min_width, studio.extent().width - 108.0);
+    const double max_height = std::max(52.0, studio.extent().height * 0.26);
+    const double box_width = choose_key_box_width(
+        entries,
+        title,
+        min_width,
+        max_width,
+        max_height,
+        studio.legend_shape());
+    fitted_entries = fit_key_entries_to_height(entries, title, box_width, max_height, studio.theme_tokens());
+    if (fitted_entries.empty()) {
+      return;
+    }
+    const double box_height = compute_key_box_metrics(fitted_entries, title, box_width).box_height;
     box = Rect{
-        54.0,
-        studio.extent().height - 92.0,
-        std::max(220.0, studio.extent().width - 108.0),
+        (studio.extent().width - box_width) * 0.5,
+        studio.extent().height - box_height - 18.0,
+        box_width,
         0.0,
     };
+    const double x_min = 22.0;
+    const double x_max = studio.extent().width - box_width - 22.0;
+    box.x = std::clamp(box.x, x_min, std::max(x_min, x_max));
   }
 
-  render_key_box(list, studio.theme_tokens(), box, {}, entries, studio.legend_frame());
+  render_key_box(list, studio.theme_tokens(), box, title, fitted_entries, studio.legend_frame());
 }
 
 void render_shared_captions(
@@ -4358,10 +4531,17 @@ void render_planar_axes(
     const bool center_on_axis = pane.y_axis().label_centered_on_axis;
     const double y_tick_gap = resolved_planar_tick_label_gap(pane.y_axis(), axes_visible, tick_font, false);
     const double y_label_gap = resolved_axis_label_gap(pane.y_axis(), axes_visible, axis_label_font, false);
+    constexpr double kUncenteredYLabelBaseClearance = 8.0;
+    constexpr double kUncenteredYLabelFontFactor = 0.95;
+    const double y_label_top_clearance = std::max(
+        kUncenteredYLabelBaseClearance,
+        tick_font * kUncenteredYLabelFontFactor);
     const double label_x = center_on_axis
                                ? (layout.plot.x - (axis_label_font + y_label_gap))
                                : (layout.plot.x - y_tick_gap);
-    const double label_y = center_on_axis ? (layout.plot.y + layout.plot.height * 0.5) : (layout.plot.y - 8.0);
+    const double label_y = center_on_axis
+                               ? (layout.plot.y + layout.plot.height * 0.5)
+                               : (layout.plot.y - y_label_top_clearance);
     const auto label_align = center_on_axis ? TextCommand::Align::Middle : TextCommand::Align::End;
     const double label_rotation =
         pane.y_axis().label_rotation_deg.value_or(center_on_axis ? -90.0 : y_label_rotation);

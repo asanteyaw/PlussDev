@@ -1,11 +1,21 @@
 // This header is intentionally included from flash.h inside namespace pluss::pl::flash.
 
 enum class FlashContext : std::uint8_t {
+  Inherit,
   Paper,
   Notebook,
   Talk,
   Poster,
 };
+
+// Compact typed shorthand for context selection.
+namespace fc {
+inline constexpr FlashContext Inherit = FlashContext::Inherit;
+inline constexpr FlashContext Paper = FlashContext::Paper;
+inline constexpr FlashContext Notebook = FlashContext::Notebook;
+inline constexpr FlashContext Talk = FlashContext::Talk;
+inline constexpr FlashContext Poster = FlashContext::Poster;
+} // namespace fc
 
 enum class FlashStyle : std::uint8_t {
   Darkgrid,
@@ -16,6 +26,16 @@ enum class FlashStyle : std::uint8_t {
   Sand,
 };
 
+// Compact typed shorthand for style selection.
+namespace fs {
+inline constexpr FlashStyle Darkgrid = FlashStyle::Darkgrid;
+inline constexpr FlashStyle Lightgrid = FlashStyle::Lightgrid;
+inline constexpr FlashStyle Sandgrid = FlashStyle::Sandgrid;
+inline constexpr FlashStyle Dark = FlashStyle::Dark;
+inline constexpr FlashStyle Light = FlashStyle::Light;
+inline constexpr FlashStyle Sand = FlashStyle::Sand;
+} // namespace fs
+
 enum class FlashPalette : std::uint8_t {
   Deep,
   Muted,
@@ -25,11 +45,24 @@ enum class FlashPalette : std::uint8_t {
   Colorblind,
 };
 
+// Compact typed shorthand for palette selection.
+namespace fp {
+inline constexpr FlashPalette Deep = FlashPalette::Deep;
+inline constexpr FlashPalette Muted = FlashPalette::Muted;
+inline constexpr FlashPalette Pastel = FlashPalette::Pastel;
+inline constexpr FlashPalette Bright = FlashPalette::Bright;
+inline constexpr FlashPalette Dark = FlashPalette::Dark;
+inline constexpr FlashPalette Colorblind = FlashPalette::Colorblind;
+} // namespace fp
+
 struct FlashThemeOptions {
   FlashStyle style{FlashStyle::Lightgrid};
-  FlashContext context{FlashContext::Notebook};
+  FlashContext context{FlashContext::Inherit};
   bool borderless{false};
   bool horizontal_grid{false};
+  std::optional<KeyPlace> legend_place{std::nullopt};
+  std::optional<KeyDock> legend_dock{std::nullopt};
+  std::optional<KeyShape> legend_shape{std::nullopt};
   std::optional<double> width{std::nullopt};
   std::optional<double> height{std::nullopt};
 };
@@ -213,6 +246,9 @@ struct FlashThemeOptions {
 [[nodiscard]] inline std::tuple<double, double, double, double> flash_context_values(
     FlashContext context) {
   switch (context) {
+    case FlashContext::Inherit:
+      // Inherit leaves studio/pane context unchanged when used via set_theme.
+      return {1200.0, 780.0, 1.0, 1.0};
     case FlashContext::Paper:
       return {920.0, 640.0, 0.8, 0.8};
     case FlashContext::Talk:
@@ -351,12 +387,20 @@ inline Pane& apply_horizontal_grid_policy(Pane& pane, bool enable) noexcept {
 
 inline Pane& set_theme(Pane& pane, const FlashThemeOptions& options) {
   set_style(pane, options.style);
-  const auto [base_w, base_h, tick_scale, axis_scale] = flash_context_values(options.context);
-  (void)base_w;
-  (void)base_h;
-  detail::apply_tick_font_scale(pane, tick_scale, axis_scale);
+  if (options.context != FlashContext::Inherit) {
+    const auto [base_w, base_h, tick_scale, axis_scale] = flash_context_values(options.context);
+    (void)base_w;
+    (void)base_h;
+    detail::apply_tick_font_scale(pane, tick_scale, axis_scale);
+  }
   if (options.borderless) {
     pane.axes_visible(false);
+  }
+  if (options.legend_place.has_value()) {
+    pane.legend(*options.legend_place);
+  }
+  if (options.legend_shape.has_value()) {
+    pane.legend_shape(*options.legend_shape);
   }
   apply_horizontal_grid_policy(pane, options.horizontal_grid);
   return pane;
@@ -365,7 +409,7 @@ inline Pane& set_theme(Pane& pane, const FlashThemeOptions& options) {
 inline Pane& set_theme(
     Pane& pane,
     FlashStyle style,
-    FlashContext context = FlashContext::Notebook,
+    FlashContext context = FlashContext::Inherit,
     bool borderless = false,
     bool horizontal_grid = false) {
   FlashThemeOptions options;
@@ -405,6 +449,12 @@ inline Studio& set_context(
     FlashContext context,
     std::optional<double> width = std::nullopt,
     std::optional<double> height = std::nullopt) {
+  if (context == FlashContext::Inherit) {
+    if (width.has_value() || height.has_value()) {
+      studio.size(width.value_or(studio.extent().width), height.value_or(studio.extent().height));
+    }
+    return studio;
+  }
   const auto [base_w, base_h, tick_scale, axis_scale] = flash_context_values(context);
   return set_context(
       studio,
@@ -417,10 +467,22 @@ inline Studio& set_context(
 inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
   const Theme base_theme = studio.theme_tokens();
   set_context(studio, options.context, options.width, options.height);
+  if (options.legend_dock.has_value()) {
+    studio.legend(*options.legend_dock);
+  }
+  if (options.legend_shape.has_value()) {
+    studio.legend_shape(*options.legend_shape);
+  }
   Pane pane_defaults(PaneKind::Planar, base_theme, {});
   set_style(pane_defaults, options.style);
   if (options.borderless) {
     pane_defaults.axes_visible(false);
+  }
+  if (options.legend_place.has_value()) {
+    pane_defaults.legend(*options.legend_place);
+  }
+  if (options.legend_shape.has_value()) {
+    pane_defaults.legend_shape(*options.legend_shape);
   }
   apply_horizontal_grid_policy(pane_defaults, options.horizontal_grid);
   studio.pane_style_defaults(pane_defaults);
@@ -429,6 +491,12 @@ inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
     set_style(pane, options.style);
     if (options.borderless) {
       pane.axes_visible(false);
+    }
+    if (options.legend_place.has_value()) {
+      pane.legend(*options.legend_place);
+    }
+    if (options.legend_shape.has_value()) {
+      pane.legend_shape(*options.legend_shape);
     }
     apply_horizontal_grid_policy(pane, options.horizontal_grid);
   }

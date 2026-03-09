@@ -40,6 +40,9 @@ Studio& Studio::pane_style_defaults(const Pane& pane) {
   default_pane_theme_ = pane.theme_tokens();
   default_axes_visible_ = pane.axes_visible();
   default_grid_style_ = pane.grid_style();
+  default_legend_place_ = pane.legend_place();
+  default_legend_frame_ = pane.legend_frame();
+  default_legend_shape_ = pane.legend_shape();
   default_x_major_grid_ = pane.x_axis().major_grid;
   default_y_major_grid_ = pane.y_axis().major_grid;
   default_z_major_grid_ = pane.z_axis().major_grid;
@@ -90,6 +93,11 @@ Studio& Studio::legend_frame(KeyFrame frame) noexcept {
   return *this;
 }
 
+Studio& Studio::legend_shape(KeyShape shape) noexcept {
+  legend_shape_ = shape;
+  return *this;
+}
+
 Studio& Studio::x_caption(std::string group, std::string text) {
   x_captions_[std::move(group)] = std::move(text);
   return *this;
@@ -112,6 +120,9 @@ Pane& Studio::pane2(std::string title) {
   if (pane_style_defaults_enabled_) {
     pane.theme_tokens() = default_pane_theme_;
     pane.grid(default_grid_style_)
+        .legend(default_legend_place_)
+        .legend_frame(default_legend_frame_)
+        .legend_shape(default_legend_shape_)
         .x_major_grid(default_x_major_grid_)
         .y_major_grid(default_y_major_grid_)
         .z_major_grid(default_z_major_grid_)
@@ -130,6 +141,9 @@ Pane& Studio::pane3(std::string title) {
   if (pane_style_defaults_enabled_) {
     pane.theme_tokens() = default_pane_theme_;
     pane.grid(default_grid_style_)
+        .legend(default_legend_place_)
+        .legend_frame(default_legend_frame_)
+        .legend_shape(default_legend_shape_)
         .x_major_grid(default_x_major_grid_)
         .y_major_grid(default_y_major_grid_)
         .z_major_grid(default_z_major_grid_)

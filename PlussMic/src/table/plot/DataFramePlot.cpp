@@ -1,5 +1,4 @@
 #include "table/plot/DataFramePlot.h"
-#include "table/plot/DataFramePlotOps.h"
 #include "table/plot/detail/Plot3DConfig.h"
 
 #include <algorithm>
@@ -1059,13 +1058,13 @@ void DataFramePlotAccessor::apply_figure_options(pluss::pl::Studio& figure) cons
 pluss::pl::Studio DataFramePlotAccessor::line(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return _ops::call(*this, _ops::PlotDispatch::Line, _ops::PlotCall{{y_feature}, x_feature});
+  return line(y_feature, x_feature, LinePlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::line(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return _ops::call(*this, _ops::PlotDispatch::Line, _ops::PlotCall{y_features, x_feature});
+  return line(y_features, x_feature, LinePlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::line(
@@ -1098,32 +1097,19 @@ pluss::pl::Studio DataFramePlotAccessor::line(
 pluss::pl::Studio DataFramePlotAccessor::impl_line(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  auto fig = make_xy_figure(frame_, y_features, resolve_x_feature(x_feature), "DataFrame::plot().line",
-                            [](Pane& pane,
-                               const ResolvedPlotAxis& axis,
-                               const std::vector<double>& y_values,
-                               std::string_view name,
-                               std::size_t index) {
-                              auto& trace = flash::lineplot(pane, axis.values, y_values);
-                              trace.label(std::string(name));
-                              style_trace(trace, index, 1.0, 1.6);
-                            },
-                            options_,
-                            pluss::pl::LimitMethod::Padded);
-  apply_figure_options(fig);
-  return fig;
+  return line(y_features, x_feature, LinePlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::step(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return _ops::call(*this, _ops::PlotDispatch::Step, _ops::PlotCall{{y_feature}, x_feature});
+  return step(y_feature, x_feature, StepPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::step(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return _ops::call(*this, _ops::PlotDispatch::Step, _ops::PlotCall{y_features, x_feature});
+  return step(y_features, x_feature, StepPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::step(
@@ -1155,31 +1141,19 @@ pluss::pl::Studio DataFramePlotAccessor::step(
 pluss::pl::Studio DataFramePlotAccessor::impl_step(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  auto fig = make_xy_figure(frame_, y_features, resolve_x_feature(x_feature), "DataFrame::plot().step",
-                            [](Pane& pane,
-                               const ResolvedPlotAxis& axis,
-                               const std::vector<double>& y_values,
-                               std::string_view name,
-                               std::size_t index) {
-                              auto& trace = flash::stepplot(pane, axis.values, y_values);
-                              trace.label(std::string(name));
-                              style_trace(trace, index, 1.0, 1.5);
-                            },
-                            options_);
-  apply_figure_options(fig);
-  return fig;
+  return step(y_features, x_feature, StepPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::area(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return _ops::call(*this, _ops::PlotDispatch::Area, _ops::PlotCall{{y_feature}, x_feature});
+  return area(y_feature, x_feature, AreaPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::area(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return _ops::call(*this, _ops::PlotDispatch::Area, _ops::PlotCall{y_features, x_feature});
+  return area(y_features, x_feature, AreaPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::area(
@@ -1211,25 +1185,13 @@ pluss::pl::Studio DataFramePlotAccessor::area(
 pluss::pl::Studio DataFramePlotAccessor::impl_area(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  auto fig = make_xy_figure(frame_, y_features, resolve_x_feature(x_feature), "DataFrame::plot().area",
-                            [](Pane& pane,
-                               const ResolvedPlotAxis& axis,
-                               const std::vector<double>& y_values,
-                               std::string_view name,
-                               std::size_t index) {
-                              auto& trace = flash::areaplot(pane, axis.values, y_values, 0.0);
-                              trace.label(std::string(name));
-                              style_trace(trace, index, 0.88, 1.3);
-                            },
-                            options_);
-  apply_figure_options(fig);
-  return fig;
+  return area(y_features, x_feature, AreaPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::area_stacked(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return _ops::call(*this, _ops::PlotDispatch::AreaStacked, _ops::PlotCall{y_features, x_feature});
+  return area_stacked(y_features, x_feature, AreaStackedPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::area_stacked(
@@ -1264,38 +1226,13 @@ pluss::pl::Studio DataFramePlotAccessor::area_stacked(
 pluss::pl::Studio DataFramePlotAccessor::impl_area_stacked(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().area_stacked: at least one y feature is required");
-
-  const auto axis = resolve_plot_axis(frame_, resolve_x_feature(x_feature), "DataFrame::plot().area_stacked", options_);
-  auto fig = make_studio();
-  apply_figure_options(fig);
-  auto& pane = fig.pane2();
-  setup_pane(pane, y_features.size() > 1);
-  apply_axis(pane, axis, options_);
-  pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
-
-  auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
-  std::size_t feature_index = 0;
-  for (const auto y_name : y_features) {
-    auto heights = thread_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
-    require_plot_size(heights, frame_.ncases(), y_name);
-    auto tops = baselines.add(heights);
-    auto& trace = flash::areaplot(pane, axis.values, tops, 0.0);
-    trace.label(std::string(y_name));
-    style_trace(trace, feature_index, 0.7, 1.2);
-    baselines = tops;
-    ++feature_index;
-  }
-  return fig;
+  return area_stacked(y_features, x_feature, AreaStackedPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::scatter(std::string_view x_feature,
                                                  std::string_view y_feature,
                                                  std::optional<std::string_view> hue_feature) const {
-  return _ops::call(
-      *this,
-      _ops::PlotDispatch::Scatter,
-      _ops::PlotCall{{x_feature, y_feature}, std::nullopt, hue_feature});
+  return scatter(x_feature, y_feature, hue_feature, ScatterPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::scatter(
@@ -1339,43 +1276,13 @@ pluss::pl::Studio DataFramePlotAccessor::scatter(
 pluss::pl::Studio DataFramePlotAccessor::impl_scatter(std::string_view x_feature,
                                                       std::string_view y_feature,
                                                       std::optional<std::string_view> hue_feature) const {
-  const auto resolved_hue = resolve_hue_feature(hue_feature);
-  const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().scatter", options_);
-  const auto y_values = thread_to_plot_numeric_values(frame_.features(y_feature));
-  require_plot_size(y_values, frame_.ncases(), y_feature);
-
-  auto fig = make_studio();
-  apply_figure_options(fig);
-  auto& pane = fig.pane2();
-  setup_pane(pane, resolved_hue.has_value());
-  apply_axis(pane, axis, options_);
-  pane.y_label(std::string(y_feature));
-
-  if (!resolved_hue.has_value()) {
-    auto& trace = flash::scatterplot(pane, axis.values, y_values);
-    trace.label(std::string(y_feature));
-    style_trace(trace, 0, 0.92, 1.1);
-    return fig;
-  }
-
-  const auto hue_thread = frame_.features(*resolved_hue);
-  PLUSS_CHECK(thread_supports_hue(hue_thread),
-              "DataFrame::plot().scatter: hue feature '" + std::string(*resolved_hue) + "' must be note-like or time-like");
-  const auto hue_labels = thread_to_plot_labels(hue_thread, options_);
-  require_plot_size(hue_labels, frame_.ncases(), *resolved_hue, "DataFrame::plot().scatter");
-  const auto grouped = build_scatter_hue_groups(hue_labels, axis.values, y_values);
-  for (const auto group_index : std::views::iota(std::size_t{0}, grouped.labels.size())) {
-    auto& trace = flash::scatterplot(pane, grouped.x[group_index], grouped.y[group_index]);
-    trace.label(grouped.labels[group_index]);
-    style_trace(trace, group_index, 0.9, 1.1);
-  }
-  return fig;
+  return scatter(x_feature, y_feature, hue_feature, ScatterPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::bar(
     std::string_view y_feature,
     std::optional<std::string_view> x_feature) const {
-  return _ops::call(*this, _ops::PlotDispatch::Bar, _ops::PlotCall{{y_feature}, x_feature});
+  return bar(y_feature, x_feature, BarPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::bar(
@@ -1388,7 +1295,7 @@ pluss::pl::Studio DataFramePlotAccessor::bar(
 pluss::pl::Studio DataFramePlotAccessor::bar(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return _ops::call(*this, _ops::PlotDispatch::Bar, _ops::PlotCall{y_features, x_feature});
+  return bar(y_features, x_feature, BarPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::bar(
@@ -1482,7 +1389,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
 pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  return _ops::call(*this, _ops::PlotDispatch::BarStacked, _ops::PlotCall{y_features, x_feature});
+  return bar_stacked(y_features, x_feature, BarStackedPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
@@ -1517,33 +1424,11 @@ pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
 pluss::pl::Studio DataFramePlotAccessor::impl_bar_stacked(
     std::initializer_list<std::string_view> y_features,
     std::optional<std::string_view> x_feature) const {
-  PLUSS_CHECK(y_features.size() > 0, "DataFrame::plot().bar_stacked: at least one y feature is required");
-
-  const auto axis = resolve_plot_axis(frame_, resolve_x_feature(x_feature), "DataFrame::plot().bar_stacked", options_);
-  auto fig = make_studio();
-  apply_figure_options(fig);
-  auto& pane = fig.pane2();
-  setup_pane(pane, y_features.size() > 1);
-  apply_axis(pane, axis, options_);
-  pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
-
-  auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
-  std::size_t feature_index = 0;
-  for (const auto y_name : y_features) {
-    auto heights = thread_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
-    require_plot_size(heights, frame_.ncases(), y_name);
-    auto tops = baselines.add(heights);
-    auto& trace = flash::barplot(pane, axis.values, tops);
-    trace.label(std::string(y_name));
-    style_trace(trace, feature_index, 0.65, 1.0);
-    baselines = tops;
-    ++feature_index;
-  }
-  return fig;
+  return bar_stacked(y_features, x_feature, BarStackedPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::box(std::initializer_list<std::string_view> features) const {
-  return _ops::call(*this, _ops::PlotDispatch::Box, _ops::PlotCall{features});
+  return box(features, BoxPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::box(std::initializer_list<std::string_view> features,
@@ -1555,12 +1440,11 @@ pluss::pl::Studio DataFramePlotAccessor::box(std::initializer_list<std::string_v
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_box(std::initializer_list<std::string_view> features) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().box");
-  return box_from_names(frame_, names, BoxPlotOptions{});
+  return box(features, BoxPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::violin(std::initializer_list<std::string_view> features) const {
-  return _ops::call(*this, _ops::PlotDispatch::Violin, _ops::PlotCall{features});
+  return violin(features, ViolinPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::violin(std::initializer_list<std::string_view> features,
@@ -1573,7 +1457,7 @@ pluss::pl::Studio DataFramePlotAccessor::violin(std::initializer_list<std::strin
 
 pluss::pl::Studio DataFramePlotAccessor::violin(std::string_view value_feature,
                                                 std::string_view group_feature) const {
-  return _ops::call(*this, _ops::PlotDispatch::ViolinGrouped, _ops::PlotCall{{group_feature, value_feature}});
+  return violin(value_feature, group_feature, ViolinPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::violin(std::string_view value_feature,
@@ -1614,57 +1498,31 @@ pluss::pl::Studio DataFramePlotAccessor::violin(std::string_view value_feature,
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_violin(std::initializer_list<std::string_view> features) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().violin");
-  return violin_from_names(frame_, names, ViolinPlotOptions{});
+  return violin(features, ViolinPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_violin(std::string_view value_feature,
                                                      std::string_view group_feature) const {
-  const auto y_values = thread_to_plot_numeric_values(frame_.features(value_feature));
-  require_plot_size(y_values, frame_.ncases(), value_feature);
-  const auto y_series = pluss::make_series(y_values, {static_cast<std::int64_t>(y_values.size())});
-
-  auto fig = make_studio();
-  apply_figure_options(fig);
-  auto& pane = fig.pane2();
-  setup_pane(pane, false);
-
-  const auto group_thread = frame_.features(group_feature);
-  const ViolinPlotOptions options{};
-  if (thread_supports_hue(group_thread)) {
-    auto& trace = flash::violinplot(
-        pane,
-        pluss::make_note(thread_to_plot_labels(group_thread, options_)),
-        y_series,
-        to_core_violin_options(options));
-    trace.label(std::string(value_feature));
-    style_trace(trace, 0, options.alpha, options.line_width);
-  } else {
-    auto group_values = thread_to_plot_numeric_values(group_thread);
-    require_plot_size(group_values, frame_.ncases(), group_feature);
-    auto& trace = flash::violinplot(pane,
-                                    pluss::make_series(group_values, {static_cast<std::int64_t>(group_values.size())}),
-                                    y_series,
-                                    to_core_violin_options(options));
-    trace.label(std::string(value_feature));
-    style_trace(trace, 0, options.alpha, options.line_width);
-  }
-
-  pane.x_label(std::string(group_feature)).y_label(std::string(value_feature));
-  return fig;
+  return violin(value_feature, group_feature, ViolinPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, std::int64_t bins) const {
-  return _ops::call(*this, _ops::PlotDispatch::Hist, _ops::PlotCall{{feature}, std::nullopt, std::nullopt, bins});
+  HistPlotOptions options;
+  options.bins = bins;
+  return hist(feature, options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::hist(std::int64_t bins) const {
-  return impl_hist({}, bins);
+  HistPlotOptions options;
+  options.bins = bins;
+  return hist({}, options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::hist(std::initializer_list<std::string_view> features,
                                               std::int64_t bins) const {
-  return impl_hist(features, bins);
+  HistPlotOptions options;
+  options.bins = bins;
+  return hist(features, options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::hist(const HistPlotOptions& options) const {
@@ -1718,58 +1576,29 @@ pluss::pl::Studio DataFramePlotAccessor::hist(std::initializer_list<std::string_
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_hist(std::string_view feature, std::int64_t bins) const {
-  auto fig = make_studio();
-  apply_figure_options(fig);
-  auto& pane = fig.pane2();
-  setup_pane(pane, false);
-  auto& trace = flash::histplot(pane,
-                                thread_to_plot_numeric_values(frame_.features(feature)),
-                                static_cast<int>(std::max<std::int64_t>(1, resolve_bins(bins))));
-  trace.label(std::string(feature));
-  style_trace(trace, 0, 0.95, 1.0);
-  pane.x_label(std::string(feature)).y_label("count");
-  return fig;
+  HistPlotOptions options;
+  options.bins = bins;
+  return hist(feature, options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_hist(std::initializer_list<std::string_view> features,
                                                    std::int64_t bins) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().hist");
-  if (names.size() == 1) {
-    return impl_hist(names.front(), bins);
-  }
-
-  const auto resolved_bins = static_cast<int>(std::max<std::int64_t>(1, resolve_bins(bins)));
-  const auto n = static_cast<std::int64_t>(names.size());
-  const auto cols = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::ceil(std::sqrt(static_cast<double>(n)))));
-  const auto rows = (n + cols - 1) / cols;
-
-  auto fig = make_studio();
-  apply_figure_options(fig);
-  fig.mosaic(rows, cols, 8.0, 8.0);
-
-  for (std::int64_t i = 0; i < n; ++i) {
-    auto& pane = fig.pane2();
-    pane.place(i / cols, i % cols);
-    setup_pane(pane, false);
-    const auto& name = names[static_cast<std::size_t>(i)];
-    auto& trace = flash::histplot(pane,
-                                  frame_.features(name).as_series().to(pluss::codem::ScalarType::Float64),
-                                  resolved_bins);
-    trace.label(name);
-    style_trace(trace, static_cast<std::size_t>(i), 0.95, 1.0);
-    pane.x_label(name).y_label("count");
-  }
-
-  return fig;
+  HistPlotOptions options;
+  options.bins = bins;
+  return hist(features, options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::density(std::string_view feature, std::int64_t points) const {
-  return impl_density({feature}, points);
+  DensityPlotOptions options;
+  options.points = points;
+  return density(feature, options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::density(std::initializer_list<std::string_view> features,
                                                  std::int64_t points) const {
-  return impl_density(features, points);
+  DensityPlotOptions options;
+  options.points = points;
+  return density(features, options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::density(std::string_view feature, const DensityPlotOptions& options) const {
@@ -1797,21 +1626,9 @@ pluss::pl::Studio DataFramePlotAccessor::density(std::initializer_list<std::stri
 
 pluss::pl::Studio DataFramePlotAccessor::impl_density(std::initializer_list<std::string_view> features,
                                                       std::int64_t points) const {
-  const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().density");
-  auto fig = make_studio();
-  apply_figure_options(fig);
-  auto& pane = fig.pane2();
-  setup_pane(pane, names.size() > 1);
-  pane.x_label("value").y_label("density");
-
-  const auto resolved_points = std::max<std::int64_t>(16, points);
-  for (std::size_t i = 0; i < names.size(); ++i) {
-    auto values = frame_.features(names[i]).as_series().to(pluss::codem::ScalarType::Float64);
-    auto& trace = flash::kdeplot(pane, values, resolved_points);
-    trace.label(names[i]);
-    style_trace(trace, i, 1.0, 1.5);
-  }
-  return fig;
+  DensityPlotOptions options;
+  options.points = points;
+  return density(features, options);
 }
 
 pluss::pl::Studio DataFramePlotAccessor::pie(std::string_view value_feature,
@@ -1898,7 +1715,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_pie(std::string_view value_feature
 }
 
 pluss::pl::Studio DataFramePlotAccessor::heatmap(std::initializer_list<std::string_view> features) const {
-  return _ops::call(*this, _ops::PlotDispatch::Heatmap, _ops::PlotCall{features});
+  return heatmap(features, HeatmapPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::heatmap(
@@ -1949,10 +1766,7 @@ pluss::pl::Studio DataFramePlotAccessor::heatmap(std::string_view case_feature,
                                                  std::string_view feature_feature,
                                                  std::string_view value_feature,
                                                  DataFrame::GroupOp op) const {
-  return _ops::call(
-      *this,
-      _ops::PlotDispatch::HeatmapPivot,
-      _ops::PlotCall{{case_feature, feature_feature, value_feature}, std::nullopt, std::nullopt, 20, op});
+  return heatmap(case_feature, feature_feature, value_feature, op, HeatmapPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::heatmap(std::string_view case_feature,
@@ -2070,7 +1884,7 @@ PivotGrid3D build_pivot_grid_3d(const DataFrame& pivoted, std::string_view where
 }
 
 pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(std::initializer_list<std::string_view> features) const {
-  return _ops::call(*this, _ops::PlotDispatch::CorrHeatmap, _ops::PlotCall{features});
+  return corr_heatmap(features, CorrHeatmapPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_corr_heatmap(std::initializer_list<std::string_view> features) const {
@@ -2092,7 +1906,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_corr_heatmap(std::initializer_list
 }
 
 pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(std::initializer_list<std::string_view> features) const {
-  return _ops::call(*this, _ops::PlotDispatch::ScatterMatrix, _ops::PlotCall{features});
+  return scatter_matrix(features, ScatterMatrixPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::impl_scatter_matrix(std::initializer_list<std::string_view> features) const {
@@ -2295,7 +2109,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_brief(
 }
 
 pluss::pl::Studio DataFramePlotAccessor::auto_plot(std::initializer_list<std::string_view> features) const {
-  return _ops::call(*this, _ops::PlotDispatch::AutoPlot, _ops::PlotCall{features});
+  return auto_plot(features, AutoPlotOptions{});
 }
 
 pluss::pl::Studio DataFramePlotAccessor::auto_plot(

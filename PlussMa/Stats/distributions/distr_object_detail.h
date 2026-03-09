@@ -16,46 +16,48 @@
 
 namespace pluss::subsp::stat::distr::detail {
 
+using DistKind = ::pluss::subsp::stat::distr::dst::Kind;
+
 template <std::size_t N>
 std::span<const double> params_span(const std::array<double, N>& params) {
   return std::span<const double>(params.data(), params.size());
 }
 
 template <std::size_t N>
-Series sample_with_params(std::string_view name,
+Series sample_with_params(DistKind kind,
                           const std::array<double, N>& params,
                           std::span<const std::int64_t> sizes,
                           Config cfg,
                           std::uint64_t seed) {
-  return ::pluss::subsp::stat::distr::sample(name, params_span(params), sizes, cfg, seed);
+  return ::pluss::subsp::stat::distr::sample(kind, params_span(params), sizes, cfg, seed);
 }
 
 template <std::size_t N>
-Series sample_like_with_params(std::string_view name,
+Series sample_like_with_params(DistKind kind,
                                const std::array<double, N>& params,
                                const Series& like,
                                std::uint64_t seed) {
-  return ::pluss::subsp::stat::distr::sample_like(name, params_span(params), like, seed);
+  return ::pluss::subsp::stat::distr::sample_like(kind, params_span(params), like, seed);
 }
 
 template <std::size_t N>
-Series pdf_with_params(std::string_view name, const Series& x, const std::array<double, N>& params) {
-  return ::pluss::subsp::stat::distr::pdf(name, x, params_span(params));
+Series pdf_with_params(DistKind kind, const Series& x, const std::array<double, N>& params) {
+  return ::pluss::subsp::stat::distr::pdf(kind, x, params_span(params));
 }
 
 template <std::size_t N>
-Series logpdf_with_params(std::string_view name, const Series& x, const std::array<double, N>& params) {
-  return ::pluss::subsp::stat::distr::logpdf(name, x, params_span(params));
+Series logpdf_with_params(DistKind kind, const Series& x, const std::array<double, N>& params) {
+  return ::pluss::subsp::stat::distr::logpdf(kind, x, params_span(params));
 }
 
 template <std::size_t N>
-Series cdf_with_params(std::string_view name, const Series& x, const std::array<double, N>& params) {
-  return ::pluss::subsp::stat::distr::cdf(name, x, params_span(params));
+Series cdf_with_params(DistKind kind, const Series& x, const std::array<double, N>& params) {
+  return ::pluss::subsp::stat::distr::cdf(kind, x, params_span(params));
 }
 
 template <std::size_t N>
-Series logcdf_with_params(std::string_view name, const Series& x, const std::array<double, N>& params) {
-  return ::pluss::subsp::stat::distr::logcdf(name, x, params_span(params));
+Series logcdf_with_params(DistKind kind, const Series& x, const std::array<double, N>& params) {
+  return ::pluss::subsp::stat::distr::logcdf(kind, x, params_span(params));
 }
 
 inline Series preserve_like(Series x, const Series& like) {

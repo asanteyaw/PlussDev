@@ -101,7 +101,7 @@ double std_normal_pdf_scalar(double x) {
 }
 
 double std_normal_logcdf_scalar(double x) {
-  return ::pluss::subsp::stat::distr::logcdf("normal", detail::scalar_f64(x), std::initializer_list<double>{}).item<double>();
+  return ::pluss::subsp::stat::distr::logcdf(dst::Normal, detail::scalar_f64(x), std::initializer_list<double>{}).item<double>();
 }
 
 double logsubexp_scalar(double log_hi, double log_lo) {
@@ -437,7 +437,7 @@ NormalFit Normal::MLE(const Series& x) const {
 }
 
 Series Normal::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("normal", normal_params(mean, stddev), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Normal, normal_params(mean, stddev), sizes, cfg, seed);
 }
 
 Series Normal::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -445,20 +445,20 @@ Series Normal::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std
 }
 
 Series Normal::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("normal", normal_params(mean, stddev), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Normal, normal_params(mean, stddev), like, seed), like);
 }
 
-Series Normal::pdf(const Series& x) const { return detail::pdf_with_params("normal", x, normal_params(mean, stddev)); }
+Series Normal::pdf(const Series& x) const { return detail::pdf_with_params(dst::Normal, x, normal_params(mean, stddev)); }
 
 Series Normal::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("normal", x, normal_params(mean, stddev));
+  return detail::logpdf_with_params(dst::Normal, x, normal_params(mean, stddev));
 }
 
 Series Normal::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("normal", x, normal_params(mean, stddev));
+  return detail::logcdf_with_params(dst::Normal, x, normal_params(mean, stddev));
 }
 
-Series Normal::cdf(const Series& x) const { return detail::cdf_with_params("normal", x, normal_params(mean, stddev)); }
+Series Normal::cdf(const Series& x) const { return detail::cdf_with_params(dst::Normal, x, normal_params(mean, stddev)); }
 
 Series Normal::cgf(const Series& t) const {
   return t.mul(mean).add(t.mul(t).mul(0.5 * stddev * stddev));
@@ -472,7 +472,7 @@ Series Normal::cumulant(std::int64_t order) const {
 }
 
 Series Gamma::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("gamma", gamma_params(shape, scale, location), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Gamma, gamma_params(shape, scale, location), sizes, cfg, seed);
 }
 
 Series Gamma::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -480,20 +480,20 @@ Series Gamma::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std:
 }
 
 Series Gamma::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("gamma", gamma_params(shape, scale, location), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Gamma, gamma_params(shape, scale, location), like, seed), like);
 }
 
-Series Gamma::pdf(const Series& x) const { return detail::pdf_with_params("gamma", x, gamma_params(shape, scale, location)); }
+Series Gamma::pdf(const Series& x) const { return detail::pdf_with_params(dst::Gamma, x, gamma_params(shape, scale, location)); }
 
 Series Gamma::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("gamma", x, gamma_params(shape, scale, location));
+  return detail::logpdf_with_params(dst::Gamma, x, gamma_params(shape, scale, location));
 }
 
 Series Gamma::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("gamma", x, gamma_params(shape, scale, location));
+  return detail::logcdf_with_params(dst::Gamma, x, gamma_params(shape, scale, location));
 }
 
-Series Gamma::cdf(const Series& x) const { return detail::cdf_with_params("gamma", x, gamma_params(shape, scale, location)); }
+Series Gamma::cdf(const Series& x) const { return detail::cdf_with_params(dst::Gamma, x, gamma_params(shape, scale, location)); }
 
 Series Gamma::cgf(const Series& t) const {
   detail::require_all_true(t.lt(1.0 / scale), "Gamma::cgf requires every t element to satisfy t < 1 / scale");
@@ -509,7 +509,7 @@ Series Gamma::cumulant(std::int64_t order) const {
 }
 
 Series ChiSquare::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("chisq", chisq_params(degrees_of_freedom), sizes, cfg, seed);
+  return detail::sample_with_params(dst::ChiSquare, chisq_params(degrees_of_freedom), sizes, cfg, seed);
 }
 
 Series ChiSquare::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -517,20 +517,20 @@ Series ChiSquare::sample(std::initializer_list<std::int64_t> sizes, Config cfg, 
 }
 
 Series ChiSquare::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("chisq", chisq_params(degrees_of_freedom), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::ChiSquare, chisq_params(degrees_of_freedom), like, seed), like);
 }
 
-Series ChiSquare::pdf(const Series& x) const { return detail::pdf_with_params("chisq", x, chisq_params(degrees_of_freedom)); }
+Series ChiSquare::pdf(const Series& x) const { return detail::pdf_with_params(dst::ChiSquare, x, chisq_params(degrees_of_freedom)); }
 
 Series ChiSquare::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("chisq", x, chisq_params(degrees_of_freedom));
+  return detail::logpdf_with_params(dst::ChiSquare, x, chisq_params(degrees_of_freedom));
 }
 
 Series ChiSquare::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("chisq", x, chisq_params(degrees_of_freedom));
+  return detail::logcdf_with_params(dst::ChiSquare, x, chisq_params(degrees_of_freedom));
 }
 
-Series ChiSquare::cdf(const Series& x) const { return detail::cdf_with_params("chisq", x, chisq_params(degrees_of_freedom)); }
+Series ChiSquare::cdf(const Series& x) const { return detail::cdf_with_params(dst::ChiSquare, x, chisq_params(degrees_of_freedom)); }
 
 Series ChiSquare::cgf(const Series& t) const {
   const double half_df = 0.5 * static_cast<double>(degrees_of_freedom);
@@ -545,7 +545,7 @@ Series ChiSquare::cumulant(std::int64_t order) const {
 }
 
 Series InverseGaussian::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("ig", inverse_gaussian_params(theta, chi), sizes, cfg, seed);
+  return detail::sample_with_params(dst::InverseGaussian, inverse_gaussian_params(theta, chi), sizes, cfg, seed);
 }
 
 Series InverseGaussian::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -553,23 +553,23 @@ Series InverseGaussian::sample(std::initializer_list<std::int64_t> sizes, Config
 }
 
 Series InverseGaussian::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("ig", inverse_gaussian_params(theta, chi), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::InverseGaussian, inverse_gaussian_params(theta, chi), like, seed), like);
 }
 
 Series InverseGaussian::pdf(const Series& x) const {
-  return detail::pdf_with_params("ig", x, inverse_gaussian_params(theta, chi));
+  return detail::pdf_with_params(dst::InverseGaussian, x, inverse_gaussian_params(theta, chi));
 }
 
 Series InverseGaussian::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("ig", x, inverse_gaussian_params(theta, chi));
+  return detail::logpdf_with_params(dst::InverseGaussian, x, inverse_gaussian_params(theta, chi));
 }
 
 Series InverseGaussian::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("ig", x, inverse_gaussian_params(theta, chi));
+  return detail::logcdf_with_params(dst::InverseGaussian, x, inverse_gaussian_params(theta, chi));
 }
 
 Series InverseGaussian::cdf(const Series& x) const {
-  return detail::cdf_with_params("ig", x, inverse_gaussian_params(theta, chi));
+  return detail::cdf_with_params(dst::InverseGaussian, x, inverse_gaussian_params(theta, chi));
 }
 
 Series InverseGaussian::cgf(const Series& t) const {
@@ -583,7 +583,7 @@ Series InverseGaussian::cumulant(std::int64_t order) const {
 }
 
 Series Lognormal::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("lognormal", lognormal_params(mean_log, stddev_log), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Lognormal, lognormal_params(mean_log, stddev_log), sizes, cfg, seed);
 }
 
 Series Lognormal::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -591,20 +591,20 @@ Series Lognormal::sample(std::initializer_list<std::int64_t> sizes, Config cfg, 
 }
 
 Series Lognormal::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("lognormal", lognormal_params(mean_log, stddev_log), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Lognormal, lognormal_params(mean_log, stddev_log), like, seed), like);
 }
 
-Series Lognormal::pdf(const Series& x) const { return detail::pdf_with_params("lognormal", x, lognormal_params(mean_log, stddev_log)); }
+Series Lognormal::pdf(const Series& x) const { return detail::pdf_with_params(dst::Lognormal, x, lognormal_params(mean_log, stddev_log)); }
 
 Series Lognormal::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("lognormal", x, lognormal_params(mean_log, stddev_log));
+  return detail::logpdf_with_params(dst::Lognormal, x, lognormal_params(mean_log, stddev_log));
 }
 
 Series Lognormal::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("lognormal", x, lognormal_params(mean_log, stddev_log));
+  return detail::logcdf_with_params(dst::Lognormal, x, lognormal_params(mean_log, stddev_log));
 }
 
-Series Lognormal::cdf(const Series& x) const { return detail::cdf_with_params("lognormal", x, lognormal_params(mean_log, stddev_log)); }
+Series Lognormal::cdf(const Series& x) const { return detail::cdf_with_params(dst::Lognormal, x, lognormal_params(mean_log, stddev_log)); }
 
 Series Lognormal::cgf(const Series& t) const {
   const double mean_log_value = mean_log;
@@ -765,7 +765,7 @@ LognormalFit Lognormal::MLE(const Series& x) const {
 }
 
 Series Uniform::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("uniform", uniform_params(low, high), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Uniform, uniform_params(low, high), sizes, cfg, seed);
 }
 
 Series Uniform::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -773,20 +773,20 @@ Series Uniform::sample(std::initializer_list<std::int64_t> sizes, Config cfg, st
 }
 
 Series Uniform::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("uniform", uniform_params(low, high), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Uniform, uniform_params(low, high), like, seed), like);
 }
 
-Series Uniform::pdf(const Series& x) const { return detail::pdf_with_params("uniform", x, uniform_params(low, high)); }
+Series Uniform::pdf(const Series& x) const { return detail::pdf_with_params(dst::Uniform, x, uniform_params(low, high)); }
 
 Series Uniform::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("uniform", x, uniform_params(low, high));
+  return detail::logpdf_with_params(dst::Uniform, x, uniform_params(low, high));
 }
 
 Series Uniform::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("uniform", x, uniform_params(low, high));
+  return detail::logcdf_with_params(dst::Uniform, x, uniform_params(low, high));
 }
 
-Series Uniform::cdf(const Series& x) const { return detail::cdf_with_params("uniform", x, uniform_params(low, high)); }
+Series Uniform::cdf(const Series& x) const { return detail::cdf_with_params(dst::Uniform, x, uniform_params(low, high)); }
 
 Series Uniform::cgf(const Series& t) const {
   const double width = high - low;
@@ -903,7 +903,7 @@ UniformFit Uniform::MLE(const Series& x) const {
 }
 
 Series Exponential::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("exponential", exponential_params(rate), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Exponential, exponential_params(rate), sizes, cfg, seed);
 }
 
 Series Exponential::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -911,23 +911,23 @@ Series Exponential::sample(std::initializer_list<std::int64_t> sizes, Config cfg
 }
 
 Series Exponential::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("exponential", exponential_params(rate), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Exponential, exponential_params(rate), like, seed), like);
 }
 
 Series Exponential::pdf(const Series& x) const {
-  return detail::pdf_with_params("exponential", x, exponential_params(rate));
+  return detail::pdf_with_params(dst::Exponential, x, exponential_params(rate));
 }
 
 Series Exponential::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("exponential", x, exponential_params(rate));
+  return detail::logpdf_with_params(dst::Exponential, x, exponential_params(rate));
 }
 
 Series Exponential::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("exponential", x, exponential_params(rate));
+  return detail::logcdf_with_params(dst::Exponential, x, exponential_params(rate));
 }
 
 Series Exponential::cdf(const Series& x) const {
-  return detail::cdf_with_params("exponential", x, exponential_params(rate));
+  return detail::cdf_with_params(dst::Exponential, x, exponential_params(rate));
 }
 
 Series Exponential::cgf(const Series& t) const {
@@ -1008,7 +1008,7 @@ ExponentialFit Exponential::MLE(const Series& x) const {
 }
 
 Series Laplace::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("laplace", laplace_params(location, scale), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Laplace, laplace_params(location, scale), sizes, cfg, seed);
 }
 
 Series Laplace::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -1016,20 +1016,20 @@ Series Laplace::sample(std::initializer_list<std::int64_t> sizes, Config cfg, st
 }
 
 Series Laplace::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("laplace", laplace_params(location, scale), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Laplace, laplace_params(location, scale), like, seed), like);
 }
 
-Series Laplace::pdf(const Series& x) const { return detail::pdf_with_params("laplace", x, laplace_params(location, scale)); }
+Series Laplace::pdf(const Series& x) const { return detail::pdf_with_params(dst::Laplace, x, laplace_params(location, scale)); }
 
 Series Laplace::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("laplace", x, laplace_params(location, scale));
+  return detail::logpdf_with_params(dst::Laplace, x, laplace_params(location, scale));
 }
 
 Series Laplace::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("laplace", x, laplace_params(location, scale));
+  return detail::logcdf_with_params(dst::Laplace, x, laplace_params(location, scale));
 }
 
-Series Laplace::cdf(const Series& x) const { return detail::cdf_with_params("laplace", x, laplace_params(location, scale)); }
+Series Laplace::cdf(const Series& x) const { return detail::cdf_with_params(dst::Laplace, x, laplace_params(location, scale)); }
 
 Series Laplace::cgf(const Series& t) const {
   detail::require_all_true(t.abs().lt(1.0 / scale), "Laplace::cgf requires every t element to satisfy |t| < 1 / scale");
@@ -1046,7 +1046,7 @@ Series Laplace::cumulant(std::int64_t order) const {
 }
 
 Series Logistic::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("logistic", logistic_params(location, scale), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Logistic, logistic_params(location, scale), sizes, cfg, seed);
 }
 
 Series Logistic::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -1054,20 +1054,20 @@ Series Logistic::sample(std::initializer_list<std::int64_t> sizes, Config cfg, s
 }
 
 Series Logistic::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("logistic", logistic_params(location, scale), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Logistic, logistic_params(location, scale), like, seed), like);
 }
 
-Series Logistic::pdf(const Series& x) const { return detail::pdf_with_params("logistic", x, logistic_params(location, scale)); }
+Series Logistic::pdf(const Series& x) const { return detail::pdf_with_params(dst::Logistic, x, logistic_params(location, scale)); }
 
 Series Logistic::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("logistic", x, logistic_params(location, scale));
+  return detail::logpdf_with_params(dst::Logistic, x, logistic_params(location, scale));
 }
 
 Series Logistic::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("logistic", x, logistic_params(location, scale));
+  return detail::logcdf_with_params(dst::Logistic, x, logistic_params(location, scale));
 }
 
-Series Logistic::cdf(const Series& x) const { return detail::cdf_with_params("logistic", x, logistic_params(location, scale)); }
+Series Logistic::cdf(const Series& x) const { return detail::cdf_with_params(dst::Logistic, x, logistic_params(location, scale)); }
 
 Series Logistic::cgf(const Series& t) const {
   detail::require_all_true(t.mul(scale).abs().lt(1.0), "Logistic::cgf requires every t element to satisfy |scale * t| < 1");
@@ -1087,7 +1087,7 @@ Series Logistic::cumulant(std::int64_t order) const {
 }
 
 Series Rayleigh::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("rayleigh", rayleigh_params(sigma), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Rayleigh, rayleigh_params(sigma), sizes, cfg, seed);
 }
 
 Series Rayleigh::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -1095,20 +1095,20 @@ Series Rayleigh::sample(std::initializer_list<std::int64_t> sizes, Config cfg, s
 }
 
 Series Rayleigh::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("rayleigh", rayleigh_params(sigma), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Rayleigh, rayleigh_params(sigma), like, seed), like);
 }
 
-Series Rayleigh::pdf(const Series& x) const { return detail::pdf_with_params("rayleigh", x, rayleigh_params(sigma)); }
+Series Rayleigh::pdf(const Series& x) const { return detail::pdf_with_params(dst::Rayleigh, x, rayleigh_params(sigma)); }
 
 Series Rayleigh::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("rayleigh", x, rayleigh_params(sigma));
+  return detail::logpdf_with_params(dst::Rayleigh, x, rayleigh_params(sigma));
 }
 
 Series Rayleigh::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("rayleigh", x, rayleigh_params(sigma));
+  return detail::logcdf_with_params(dst::Rayleigh, x, rayleigh_params(sigma));
 }
 
-Series Rayleigh::cdf(const Series& x) const { return detail::cdf_with_params("rayleigh", x, rayleigh_params(sigma)); }
+Series Rayleigh::cdf(const Series& x) const { return detail::cdf_with_params(dst::Rayleigh, x, rayleigh_params(sigma)); }
 
 Series Rayleigh::cgf(const Series& t) const {
   const Series scaled = t.mul(sigma);
@@ -1608,7 +1608,7 @@ BetaFit Beta::MLE(const Series& x) const {
 }
 
 Series NormalTrunc::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("normaltrunc", normaltrunc_params(lower, upper, mean, stddev), sizes, cfg, seed);
+  return detail::sample_with_params(dst::NormalTrunc, normaltrunc_params(lower, upper, mean, stddev), sizes, cfg, seed);
 }
 
 Series NormalTrunc::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -1616,20 +1616,20 @@ Series NormalTrunc::sample(std::initializer_list<std::int64_t> sizes, Config cfg
 }
 
 Series NormalTrunc::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("normaltrunc", normaltrunc_params(lower, upper, mean, stddev), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::NormalTrunc, normaltrunc_params(lower, upper, mean, stddev), like, seed), like);
 }
 
-Series NormalTrunc::pdf(const Series& x) const { return detail::pdf_with_params("normaltrunc", x, normaltrunc_params(lower, upper, mean, stddev)); }
+Series NormalTrunc::pdf(const Series& x) const { return detail::pdf_with_params(dst::NormalTrunc, x, normaltrunc_params(lower, upper, mean, stddev)); }
 
 Series NormalTrunc::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("normaltrunc", x, normaltrunc_params(lower, upper, mean, stddev));
+  return detail::logpdf_with_params(dst::NormalTrunc, x, normaltrunc_params(lower, upper, mean, stddev));
 }
 
 Series NormalTrunc::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("normaltrunc", x, normaltrunc_params(lower, upper, mean, stddev));
+  return detail::logcdf_with_params(dst::NormalTrunc, x, normaltrunc_params(lower, upper, mean, stddev));
 }
 
-Series NormalTrunc::cdf(const Series& x) const { return detail::cdf_with_params("normaltrunc", x, normaltrunc_params(lower, upper, mean, stddev)); }
+Series NormalTrunc::cdf(const Series& x) const { return detail::cdf_with_params(dst::NormalTrunc, x, normaltrunc_params(lower, upper, mean, stddev)); }
 
 Series NormalTrunc::cgf(const Series& t) const {
   if (!(upper >= lower) || !(stddev > 0.0)) {
@@ -1674,7 +1674,7 @@ Series NormalTrunc::cumulant(std::int64_t order) const {
 }
 
 Series StudentT::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("t", student_t_params(degrees_of_freedom, location, scale), sizes, cfg, seed);
+  return detail::sample_with_params(dst::StudentT, student_t_params(degrees_of_freedom, location, scale), sizes, cfg, seed);
 }
 
 Series StudentT::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -1682,20 +1682,20 @@ Series StudentT::sample(std::initializer_list<std::int64_t> sizes, Config cfg, s
 }
 
 Series StudentT::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("t", student_t_params(degrees_of_freedom, location, scale), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::StudentT, student_t_params(degrees_of_freedom, location, scale), like, seed), like);
 }
 
-Series StudentT::pdf(const Series& x) const { return detail::pdf_with_params("t", x, student_t_params(degrees_of_freedom, location, scale)); }
+Series StudentT::pdf(const Series& x) const { return detail::pdf_with_params(dst::StudentT, x, student_t_params(degrees_of_freedom, location, scale)); }
 
 Series StudentT::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("t", x, student_t_params(degrees_of_freedom, location, scale));
+  return detail::logpdf_with_params(dst::StudentT, x, student_t_params(degrees_of_freedom, location, scale));
 }
 
 Series StudentT::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("t", x, student_t_params(degrees_of_freedom, location, scale));
+  return detail::logcdf_with_params(dst::StudentT, x, student_t_params(degrees_of_freedom, location, scale));
 }
 
-Series StudentT::cdf(const Series& x) const { return detail::cdf_with_params("t", x, student_t_params(degrees_of_freedom, location, scale)); }
+Series StudentT::cdf(const Series& x) const { return detail::cdf_with_params(dst::StudentT, x, student_t_params(degrees_of_freedom, location, scale)); }
 
 Series StudentT::cgf(const Series& t) const {
   return detail::zero_only_cgf(t, "StudentT");
@@ -1717,7 +1717,7 @@ Series StudentT::cumulant(std::int64_t order) const {
 }
 
 Series FDistribution::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("f", f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom), sizes, cfg, seed);
+  return detail::sample_with_params(dst::F, f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom), sizes, cfg, seed);
 }
 
 Series FDistribution::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -1725,23 +1725,23 @@ Series FDistribution::sample(std::initializer_list<std::int64_t> sizes, Config c
 }
 
 Series FDistribution::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("f", f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::F, f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom), like, seed), like);
 }
 
 Series FDistribution::pdf(const Series& x) const {
-  return detail::pdf_with_params("f", x, f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom));
+  return detail::pdf_with_params(dst::F, x, f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom));
 }
 
 Series FDistribution::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("f", x, f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom));
+  return detail::logpdf_with_params(dst::F, x, f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom));
 }
 
 Series FDistribution::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("f", x, f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom));
+  return detail::logcdf_with_params(dst::F, x, f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom));
 }
 
 Series FDistribution::cdf(const Series& x) const {
-  return detail::cdf_with_params("f", x, f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom));
+  return detail::cdf_with_params(dst::F, x, f_params(numerator_degrees_of_freedom, denominator_degrees_of_freedom));
 }
 
 Series FDistribution::cgf(const Series& t) const {
@@ -1760,7 +1760,7 @@ Series FDistribution::cumulant(std::int64_t order) const {
 }
 
 Series Weibull::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("weibull", weibull_params(shape, scale), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Weibull, weibull_params(shape, scale), sizes, cfg, seed);
 }
 
 Series Weibull::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -1768,20 +1768,20 @@ Series Weibull::sample(std::initializer_list<std::int64_t> sizes, Config cfg, st
 }
 
 Series Weibull::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("weibull", weibull_params(shape, scale), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Weibull, weibull_params(shape, scale), like, seed), like);
 }
 
-Series Weibull::pdf(const Series& x) const { return detail::pdf_with_params("weibull", x, weibull_params(shape, scale)); }
+Series Weibull::pdf(const Series& x) const { return detail::pdf_with_params(dst::Weibull, x, weibull_params(shape, scale)); }
 
 Series Weibull::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("weibull", x, weibull_params(shape, scale));
+  return detail::logpdf_with_params(dst::Weibull, x, weibull_params(shape, scale));
 }
 
 Series Weibull::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("weibull", x, weibull_params(shape, scale));
+  return detail::logcdf_with_params(dst::Weibull, x, weibull_params(shape, scale));
 }
 
-Series Weibull::cdf(const Series& x) const { return detail::cdf_with_params("weibull", x, weibull_params(shape, scale)); }
+Series Weibull::cdf(const Series& x) const { return detail::cdf_with_params(dst::Weibull, x, weibull_params(shape, scale)); }
 
 Series Weibull::cgf(const Series& t) const {
   const double shape_value = shape;
@@ -1822,7 +1822,7 @@ Series Weibull::cumulant(std::int64_t order) const {
 }
 
 Series Beta::sample(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
-  return detail::sample_with_params("beta", beta_params(low, high, alpha, beta), sizes, cfg, seed);
+  return detail::sample_with_params(dst::Beta, beta_params(low, high, alpha, beta), sizes, cfg, seed);
 }
 
 Series Beta::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed) const {
@@ -1830,20 +1830,20 @@ Series Beta::sample(std::initializer_list<std::int64_t> sizes, Config cfg, std::
 }
 
 Series Beta::sample_like(const Series& like, std::uint64_t seed) const {
-  return detail::preserve_like(detail::sample_like_with_params("beta", beta_params(low, high, alpha, beta), like, seed), like);
+  return detail::preserve_like(detail::sample_like_with_params(dst::Beta, beta_params(low, high, alpha, beta), like, seed), like);
 }
 
-Series Beta::pdf(const Series& x) const { return detail::pdf_with_params("beta", x, beta_params(low, high, alpha, beta)); }
+Series Beta::pdf(const Series& x) const { return detail::pdf_with_params(dst::Beta, x, beta_params(low, high, alpha, beta)); }
 
 Series Beta::logpdf(const Series& x) const {
-  return detail::logpdf_with_params("beta", x, beta_params(low, high, alpha, beta));
+  return detail::logpdf_with_params(dst::Beta, x, beta_params(low, high, alpha, beta));
 }
 
 Series Beta::logcdf(const Series& x) const {
-  return detail::logcdf_with_params("beta", x, beta_params(low, high, alpha, beta));
+  return detail::logcdf_with_params(dst::Beta, x, beta_params(low, high, alpha, beta));
 }
 
-Series Beta::cdf(const Series& x) const { return detail::cdf_with_params("beta", x, beta_params(low, high, alpha, beta)); }
+Series Beta::cdf(const Series& x) const { return detail::cdf_with_params(dst::Beta, x, beta_params(low, high, alpha, beta)); }
 
 Series Beta::cgf(const Series& t) const {
   const double low_value = low;

@@ -260,24 +260,24 @@ double beta_raw_moment_expected(double low, double high, double alpha, double be
 
 } // namespace
 
-static_assert(std::is_same_v<decltype(sample("normal",
+static_assert(std::is_same_v<decltype(sample(dst::Normal,
                                              std::initializer_list<double>{0.0, 1.0},
                                              std::initializer_list<std::int64_t>{2},
                                              Config{},
                                              0ULL)),
                              Series>);
-static_assert(std::is_same_v<decltype(sample_like("normal",
+static_assert(std::is_same_v<decltype(sample_like(dst::Normal,
                                                   std::initializer_list<double>{0.0, 1.0},
                                                   std::declval<const Series&>(),
                                                   0ULL)),
                              Series>);
-static_assert(std::is_same_v<decltype(pdf("normal", std::declval<const Series&>(), std::initializer_list<double>{0.0, 1.0})),
+static_assert(std::is_same_v<decltype(pdf(dst::Normal, std::declval<const Series&>(), std::initializer_list<double>{0.0, 1.0})),
                              Series>);
-static_assert(std::is_same_v<decltype(logpdf("normal", std::declval<const Series&>(), std::initializer_list<double>{0.0, 1.0})),
+static_assert(std::is_same_v<decltype(logpdf(dst::Normal, std::declval<const Series&>(), std::initializer_list<double>{0.0, 1.0})),
                              Series>);
-static_assert(std::is_same_v<decltype(cdf("normal", std::declval<const Series&>(), std::initializer_list<double>{0.0, 1.0})),
+static_assert(std::is_same_v<decltype(cdf(dst::Normal, std::declval<const Series&>(), std::initializer_list<double>{0.0, 1.0})),
                              Series>);
-static_assert(std::is_same_v<decltype(logcdf("normal", std::declval<const Series&>(), std::initializer_list<double>{0.0, 1.0})),
+static_assert(std::is_same_v<decltype(logcdf(dst::Normal, std::declval<const Series&>(), std::initializer_list<double>{0.0, 1.0})),
                              Series>);
 static_assert(std::is_same_v<decltype(mixture_normal_logcdf(std::declval<const Series&>(),
                                                             std::declval<const Series&>(),
@@ -700,10 +700,10 @@ TEST_CASE("functional and object normal logcdf stay finite in the far left tail"
   const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const Series x = pluss::make_series(-12.0, f64);
 
-  const double functional = as_f64_scalar(logcdf("normal", x, std::initializer_list<double>{}));
+  const double functional = as_f64_scalar(logcdf(dst::Normal, x, std::initializer_list<double>{}));
   const double object = as_f64_scalar(Normal{}.logcdf(x));
   const double shortcut = as_f64_scalar(x.logcdf());
-  const double naive = as_f64_scalar(cdf("normal", x, std::initializer_list<double>{}).log());
+  const double naive = as_f64_scalar(cdf(dst::Normal, x, std::initializer_list<double>{}).log());
 
   REQUIRE(std::isfinite(functional));
   REQUIRE(std::isfinite(object));
@@ -717,10 +717,10 @@ TEST_CASE("functional and object normal logcdf stay finite in the far left tail"
 TEST_CASE("additional functional logcdf routes and gaussian mixture logcdf avoid naive underflow", "[distr][objects][logcdf][mixture]") {
   const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
-  REQUIRE(std::isfinite(as_f64_scalar(logcdf("logistic", pluss::make_series(-50.0, f64), {0.0, 1.0}))));
-  REQUIRE(std::isfinite(as_f64_scalar(logcdf("laplace", pluss::make_series(-50.0, f64), {0.0, 1.0}))));
-  REQUIRE(std::isfinite(as_f64_scalar(logcdf("rayleigh", pluss::make_series(10.0, f64), {1.0}))));
-  REQUIRE(std::isfinite(as_f64_scalar(logcdf("normaltrunc", pluss::make_series(-0.999, f64), {-1.0, 1.0, 0.0, 1.0}))));
+  REQUIRE(std::isfinite(as_f64_scalar(logcdf(dst::Logistic, pluss::make_series(-50.0, f64), {0.0, 1.0}))));
+  REQUIRE(std::isfinite(as_f64_scalar(logcdf(dst::Laplace, pluss::make_series(-50.0, f64), {0.0, 1.0}))));
+  REQUIRE(std::isfinite(as_f64_scalar(logcdf(dst::Rayleigh, pluss::make_series(10.0, f64), {1.0}))));
+  REQUIRE(std::isfinite(as_f64_scalar(logcdf(dst::NormalTrunc, pluss::make_series(-0.999, f64), {-1.0, 1.0, 0.0, 1.0}))));
 
   const Series weights = pluss::make_series(std::vector<double>{1.0}, {1}, f64);
   const Series means = pluss::make_series(std::vector<double>{0.0}, {1}, f64);
@@ -732,7 +732,7 @@ TEST_CASE("additional functional logcdf routes and gaussian mixture logcdf avoid
   const double naive = as_f64_scalar(gm.cdf(x).log());
   REQUIRE(std::isfinite(stable));
   REQUIRE(std::isinf(naive));
-  REQUIRE(std::abs(stable - as_f64_scalar(logcdf("normal", x, std::initializer_list<double>{}))) <= 1e-5);
+  REQUIRE(std::abs(stable - as_f64_scalar(logcdf(dst::Normal, x, std::initializer_list<double>{}))) <= 1e-5);
 }
 
 TEST_CASE("gaussian mixture validates component metadata before delegation", "[distr][objects][mixture][validation]") {

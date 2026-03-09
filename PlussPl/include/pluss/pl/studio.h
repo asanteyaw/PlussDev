@@ -65,6 +65,15 @@ enum class GridStyle : std::uint8_t { None, Major, MajorMinor };
 enum class KeyPlace : std::uint8_t { None, Auto, NorthEast, NorthWest, SouthEast, SouthWest, OutsideEast };
 enum class KeyDock : std::uint8_t { None, East, South };
 enum class KeyFrame : std::uint8_t { Framed, Soft, None };
+enum class KeyShape : std::uint8_t { Auto, Horizontal, Vertical };
+
+// Compact typed shorthand for key-shape selection.
+namespace ks {
+inline constexpr KeyShape Auto = KeyShape::Auto;
+inline constexpr KeyShape Horizontal = KeyShape::Horizontal;
+inline constexpr KeyShape Vertical = KeyShape::Vertical;
+} // namespace ks
+
 enum class ScaleKind : std::uint8_t { Linear, Log10, SymLog };
 enum class LimitMode : std::uint8_t { AutoFit, Manual };
 enum class LimitMethod : std::uint8_t { TickAligned, Tight, Padded };
@@ -558,6 +567,7 @@ class Pane {
   [[nodiscard]] const AxisState& color_axis() const noexcept { return color_axis_; }
   [[nodiscard]] KeyPlace legend_place() const noexcept { return legend_place_; }
   [[nodiscard]] KeyFrame legend_frame() const noexcept { return legend_frame_; }
+  [[nodiscard]] KeyShape legend_shape() const noexcept { return legend_shape_; }
   [[nodiscard]] GridStyle grid_style() const noexcept { return grid_style_; }
   [[nodiscard]] const Lens& lens() const noexcept { return lens_; }
   [[nodiscard]] Lens& lens() noexcept { return lens_; }
@@ -649,6 +659,7 @@ class Pane {
   Pane& z_categories(std::vector<std::string> labels, double first = 1.0, double step = 1.0);
   Pane& legend(KeyPlace place) noexcept;
   Pane& legend_frame(KeyFrame frame) noexcept;
+  Pane& legend_shape(KeyShape shape) noexcept;
   Pane& grid(GridStyle style) noexcept;
   Pane& x_major_grid(bool enable = true) noexcept;
   Pane& y_major_grid(bool enable = true) noexcept;
@@ -1331,6 +1342,7 @@ class Pane {
   AxisState color_axis_{};
   KeyPlace legend_place_{KeyPlace::None};
   KeyFrame legend_frame_{KeyFrame::Soft};
+  KeyShape legend_shape_{KeyShape::Auto};
   GridStyle grid_style_{GridStyle::None};
   Lens lens_{Lens::spatial()};
   LightRig lights_{};
@@ -1369,6 +1381,7 @@ class Studio {
   [[nodiscard]] double default_axis_label_font_scale() const noexcept { return default_axis_label_font_scale_; }
   [[nodiscard]] KeyDock legend_dock() const noexcept { return legend_dock_; }
   [[nodiscard]] KeyFrame legend_frame() const noexcept { return legend_frame_; }
+  [[nodiscard]] KeyShape legend_shape() const noexcept { return legend_shape_; }
   [[nodiscard]] const std::map<std::string, std::string>& x_captions() const noexcept { return x_captions_; }
   [[nodiscard]] const std::map<std::string, std::string>& y_captions() const noexcept { return y_captions_; }
   [[nodiscard]] const std::map<std::string, std::string>& z_captions() const noexcept { return z_captions_; }
@@ -1384,6 +1397,7 @@ class Studio {
   Studio& tight_layout(bool enable = true, double padding = 6.0);
   Studio& legend(KeyDock dock) noexcept;
   Studio& legend_frame(KeyFrame frame) noexcept;
+  Studio& legend_shape(KeyShape shape) noexcept;
   Studio& x_caption(std::string group, std::string text);
   Studio& y_caption(std::string group, std::string text);
   Studio& z_caption(std::string group, std::string text);
@@ -1407,6 +1421,7 @@ class Studio {
   double tight_layout_padding_{6.0};
   KeyDock legend_dock_{KeyDock::None};
   KeyFrame legend_frame_{KeyFrame::Soft};
+  KeyShape legend_shape_{KeyShape::Auto};
   std::map<std::string, std::string> x_captions_{};
   std::map<std::string, std::string> y_captions_{};
   std::map<std::string, std::string> z_captions_{};
@@ -1416,6 +1431,9 @@ class Studio {
   Theme default_pane_theme_{Theme::paper()};
   bool default_axes_visible_{true};
   GridStyle default_grid_style_{GridStyle::None};
+  KeyPlace default_legend_place_{KeyPlace::None};
+  KeyFrame default_legend_frame_{KeyFrame::Soft};
+  KeyShape default_legend_shape_{KeyShape::Auto};
   bool default_x_major_grid_{false};
   bool default_y_major_grid_{false};
   bool default_z_major_grid_{false};

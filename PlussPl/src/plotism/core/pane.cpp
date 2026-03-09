@@ -947,6 +947,11 @@ Pane& Pane::legend_frame(KeyFrame frame) noexcept {
   return *this;
 }
 
+Pane& Pane::legend_shape(KeyShape shape) noexcept {
+  legend_shape_ = shape;
+  return *this;
+}
+
 Pane& Pane::grid(GridStyle style) noexcept {
   grid_style_ = style;
   sync_grid_flags_();

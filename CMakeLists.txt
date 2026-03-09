@@ -254,7 +254,20 @@ add_custom_target(pluss_sdk_consumer_smoke
     COMMENT "Building and running the standalone SDK consumer smoke test"
 )
 
+add_custom_target(alias_lint
+    COMMAND ${CMAKE_COMMAND} -E env python3 ${CMAKE_SOURCE_DIR}/tools/lint_alias_registry.py
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    USES_TERMINAL
+    COMMENT "Validating alias registry consistency and collisions"
+)
+
 if(BUILD_TESTING)
+    add_test(
+        NAME alias_registry_lint
+        COMMAND ${CMAKE_COMMAND} -E env python3 ${CMAKE_SOURCE_DIR}/tools/lint_alias_registry.py
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
     add_test(
         NAME pluss_sdk_consumer_smoke
         COMMAND ${CMAKE_COMMAND}
