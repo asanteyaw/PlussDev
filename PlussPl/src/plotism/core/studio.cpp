@@ -1,5 +1,6 @@
 #include "pluss/pl/plusspl.h"
 
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
@@ -113,6 +114,24 @@ Studio& Studio::z_caption(std::string group, std::string text) {
   return *this;
 }
 
+Studio& Studio::row_title(std::int64_t row, std::string text) {
+  if (row < 0) {
+    throw std::invalid_argument("row_title: row must be non-negative");
+  }
+  row_titles_[row] = std::move(text);
+  return *this;
+}
+
+Studio& Studio::clear_row_title(std::int64_t row) noexcept {
+  row_titles_.erase(row);
+  return *this;
+}
+
+Studio& Studio::clear_row_titles() noexcept {
+  row_titles_.clear();
+  return *this;
+}
+
 Pane& Studio::pane2(std::string title) {
   panes_.emplace_back(PaneKind::Planar, theme_, std::move(title));
   auto& pane = panes_.back();
@@ -153,6 +172,91 @@ Pane& Studio::pane3(std::string title) {
         .axes_visible(default_axes_visible_);
   }
   return panes_.back();
+}
+
+std::size_t Studio::pane_index(const Pane& pane) const {
+  const auto* target = &pane;
+  const auto it = std::find_if(panes_.begin(), panes_.end(), [&](const Pane& candidate) {
+    return &candidate == target;
+  });
+  if (it == panes_.end()) {
+    throw std::invalid_argument("pane_index: pane does not belong to this studio");
+  }
+  return static_cast<std::size_t>(std::distance(panes_.begin(), it));
+}
+
+Pane& Studio::subpane2(
+    std::size_t parent_index,
+    std::int64_t rows,
+    std::int64_t cols,
+    std::int64_t row,
+    std::int64_t col,
+    std::int64_t row_span,
+    std::int64_t col_span,
+    std::string title) {
+  if (parent_index >= panes_.size()) {
+    throw std::out_of_range("subpane2: parent_index out of range");
+  }
+  if (rows <= 0 || cols <= 0) {
+    throw std::invalid_argument("subpane2: rows and cols must be positive");
+  }
+  if (row < 0 || col < 0 || row_span <= 0 || col_span <= 0) {
+    throw std::invalid_argument("subpane2: row/col must be non-negative and spans must be positive");
+  }
+  if (row + row_span > rows || col + col_span > cols) {
+    throw std::invalid_argument("subpane2: requested slot exceeds local subgrid bounds");
+  }
+  Pane& pane = pane2(std::move(title));
+  pane.placement_ = PanePlacement{
+      row,
+      col,
+      row_span,
+      col_span,
+      true,
+      static_cast<std::int64_t>(parent_index),
+      rows,
+      cols,
+      12.0,
+      12.0,
+  };
+  return pane;
+}
+
+Pane& Studio::subpane3(
+    std::size_t parent_index,
+    std::int64_t rows,
+    std::int64_t cols,
+    std::int64_t row,
+    std::int64_t col,
+    std::int64_t row_span,
+    std::int64_t col_span,
+    std::string title) {
+  if (parent_index >= panes_.size()) {
+    throw std::out_of_range("subpane3: parent_index out of range");
+  }
+  if (rows <= 0 || cols <= 0) {
+    throw std::invalid_argument("subpane3: rows and cols must be positive");
+  }
+  if (row < 0 || col < 0 || row_span <= 0 || col_span <= 0) {
+    throw std::invalid_argument("subpane3: row/col must be non-negative and spans must be positive");
+  }
+  if (row + row_span > rows || col + col_span > cols) {
+    throw std::invalid_argument("subpane3: requested slot exceeds local subgrid bounds");
+  }
+  Pane& pane = pane3(std::move(title));
+  pane.placement_ = PanePlacement{
+      row,
+      col,
+      row_span,
+      col_span,
+      true,
+      static_cast<std::int64_t>(parent_index),
+      rows,
+      cols,
+      12.0,
+      12.0,
+  };
+  return pane;
 }
 
 Studio studio(std::string name) {

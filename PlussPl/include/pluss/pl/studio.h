@@ -424,6 +424,11 @@ struct PanePlacement {
   std::int64_t row_span{1};
   std::int64_t col_span{1};
   bool explicit_slot{false};
+  std::int64_t parent{-1};
+  std::int64_t local_rows{0};
+  std::int64_t local_cols{0};
+  double local_gutter_x{12.0};
+  double local_gutter_y{12.0};
 };
 
 struct MosaicLayout {
@@ -1327,6 +1332,8 @@ class Pane {
   }
 
  private:
+  friend class Studio;
+
   void ensure_planar_(std::string_view op) const;
   void ensure_volumetric_(std::string_view op) const;
   Trace& add_trace_(TraceKind kind, TracePayload payload);
@@ -1385,6 +1392,7 @@ class Studio {
   [[nodiscard]] const std::map<std::string, std::string>& x_captions() const noexcept { return x_captions_; }
   [[nodiscard]] const std::map<std::string, std::string>& y_captions() const noexcept { return y_captions_; }
   [[nodiscard]] const std::map<std::string, std::string>& z_captions() const noexcept { return z_captions_; }
+  [[nodiscard]] const std::map<std::int64_t, std::string>& row_titles() const noexcept { return row_titles_; }
 
   Studio& rename(std::string name);
   Studio& headline(std::string text);
@@ -1401,8 +1409,30 @@ class Studio {
   Studio& x_caption(std::string group, std::string text);
   Studio& y_caption(std::string group, std::string text);
   Studio& z_caption(std::string group, std::string text);
+  Studio& row_title(std::int64_t row, std::string text);
+  Studio& clear_row_title(std::int64_t row) noexcept;
+  Studio& clear_row_titles() noexcept;
   Pane& pane2(std::string title = {});
   Pane& pane3(std::string title = {});
+  [[nodiscard]] std::size_t pane_index(const Pane& pane) const;
+  Pane& subpane2(
+      std::size_t parent_index,
+      std::int64_t rows,
+      std::int64_t cols,
+      std::int64_t row,
+      std::int64_t col,
+      std::int64_t row_span = 1,
+      std::int64_t col_span = 1,
+      std::string title = {});
+  Pane& subpane3(
+      std::size_t parent_index,
+      std::int64_t rows,
+      std::int64_t cols,
+      std::int64_t row,
+      std::int64_t col,
+      std::int64_t row_span = 1,
+      std::int64_t col_span = 1,
+      std::string title = {});
   [[nodiscard]] std::string to_svg() const;
   [[nodiscard]] std::string to_pdf() const;
   void save_svg(std::string_view path) const;
@@ -1425,6 +1455,7 @@ class Studio {
   std::map<std::string, std::string> x_captions_{};
   std::map<std::string, std::string> y_captions_{};
   std::map<std::string, std::string> z_captions_{};
+  std::map<std::int64_t, std::string> row_titles_{};
   double default_tick_font_scale_{1.0};
   double default_axis_label_font_scale_{1.0};
   bool pane_style_defaults_enabled_{false};

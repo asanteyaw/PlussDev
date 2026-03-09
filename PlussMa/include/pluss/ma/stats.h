@@ -3,6 +3,7 @@
 #include "pluss/subsp/stat/distr.h"
 #include "pluss/subsp/stat/rng.h"
 #include "pluss/subsp/stat/stats.h"
+#include "pluss/subsp/stat/ts.h"
 
 namespace pluss {
 namespace stat = ::pluss::subsp::stat;

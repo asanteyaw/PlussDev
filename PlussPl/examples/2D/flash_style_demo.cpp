@@ -680,10 +680,49 @@ int main() {
   // joint_map_fig.save_svg(out_path("plusspl_flash_jointgrid_map_plot_demo.svg"));
   joint_map_fig.save_pdf(out_path("plusspl_flash_jointgrid_map_plot_demo.pdf"));
 
+  Studio nested_fig("flash_nested_subplot_demo", Theme::paper());
+  set_theme(nested_fig, FlashThemeOptions{
+                          .style = FlashStyle::Sandgrid,
+                          .context = FlashContext::Notebook,
+                          .width = 1280.0,
+                          .height = 860.0,
+                      });
+  nested_fig.mosaic(1, 1, 10.0, 10.0);
+  auto& root = nested_fig.pane2("root");
+  root.place(0, 0).hide();
+  const auto root_index = nested_fig.pane_index(root);
+
+  auto& top = nested_fig.subpane2(root_index, 2, 2, 0, 0, 1, 2, "top (span)");
+  top.grid(GridStyle::Major).x_label("x").y_label("y");
+  lineplot(top, x, y).label("trend");
+  lineplot(top, x, y2).label("trend-2");
+  move_legend(top, KeyPlace::OutsideEast);
+
+  auto& bottom_left = nested_fig.subpane2(root_index, 2, 2, 1, 0, 1, 1, "bottom-left");
+  bottom_left.grid(GridStyle::Major).x_label("x").y_label("density");
+  histplot(bottom_left, y, 20).label("hist");
+
+  auto& bottom_right = nested_fig.subpane3(root_index, 2, 2, 1, 1, 1, 1, "bottom-right (3D)");
+  bottom_right.grid(GridStyle::Major).x_label("x").y_label("y").z_label("z");
+  const auto z_small = pluss::make_series(
+      std::vector<double>{
+          0.2, 0.4, 0.6,
+          0.3, 0.5, 0.75,
+          0.35, 0.62, 0.86,
+      },
+      {3, 3});
+  sheet(
+      bottom_right,
+      std::array<double, 3>{0.0, 1.0, 2.0},
+      std::array<double, 3>{0.0, 1.0, 2.0},
+      z_small);
+  // nested_fig.save_svg(out_path("plusspl_flash_nested_subplot_demo.svg"));
+  nested_fig.save_pdf(out_path("plusspl_flash_nested_subplot_demo.pdf"));
+
 //   auto figz = pluss::pl::studio("demo");
 //   auto& ax = figz.pane2();
-//   ax.trend(std::array<double,3>{0,1,2}, std::array<double,3>{1,2,1});
-//   figz.show("Demo Plot", 1280, 820, true); // opens popup/viewer
+  //   ax.trend(std::array<double,3>{0,1,2}, std::array<double,3>{1,2,1});
+  //   figz.show("Demo Plot", 1280, 820, true); // opens popup/viewer
 
   return 0;
 }

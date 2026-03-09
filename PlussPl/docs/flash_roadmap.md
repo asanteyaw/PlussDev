@@ -162,6 +162,22 @@ Status:
 - Implemented in `PlussMic/src/table/plot/detail/Plot3DConfig.cpp`.
 - Demo delegation shown in `PlussMic/examples/table/sp500_eda_ml_prep_notebook_demo.cpp`.
 
+### Phase 5: 4D Geometry (Honest Labeling)
+
+1. 4D support is labeled as **geometric 4D projection rendering**:
+- Perform rotations in `R^4` planes (`XY`, `XZ`, `XW`, `YZ`, `YW`, `ZW`).
+- Then project `R^4 -> R^3` (perspective/orthographic in `w`) and render with existing 3D traces.
+- This is geometric 4D processing and projection, not a fake fourth channel (e.g., only color/time encoding).
+
+2. Current surface:
+- `flash::path4(...)`
+- `flash::cloud4(...)`
+- plus matrix overloads using the first four selected features.
+
+3. Animation stance (current):
+- No runtime animator API yet (no real-time timeline player in flash).
+- Recommended workflow today is frame-sequence rendering (vary 4D rotation/projection options per frame), then stitch externally if needed.
+
 ## Delegation Contract (Important)
 
 1. `DataFrame::plot()` should delegate to `flash` where a flash op exists.

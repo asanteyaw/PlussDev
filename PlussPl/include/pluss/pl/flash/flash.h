@@ -3,6 +3,7 @@
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/codeh.h"
 #include "pluss/pl/studio.h"
+#include "pluss/view/html_window.h"
 
 #include <algorithm>
 #include <cmath>
@@ -816,7 +817,7 @@ inline void downsample_columns(
     std::vector<double> values(case_count_us, 0.0);
     const auto offset = static_cast<std::size_t>(feature) * case_count_us;
     std::copy_n(flat.begin() + static_cast<std::ptrdiff_t>(offset), case_count_us, values.begin());
-    columns.push_back(pluss::make_series(std::move(values), {case_count}));
+    columns.push_back(::pluss::make_series(std::move(values), {case_count}));
   }
   return columns;
 }
@@ -853,7 +854,7 @@ inline void downsample_columns(
   const auto points = static_cast<std::int64_t>(t_values.size());
   std::vector<double> basis(static_cast<std::size_t>(std::max<std::int64_t>(0, ncols * points)), 0.0);
   if (ncols <= 0 || points <= 0) {
-    return pluss::make_series(basis, {ncols, points});
+    return ::pluss::make_series(basis, {ncols, points});
   }
   const double inv_sqrt2 = 1.0 / std::sqrt(2.0);
   for (const auto col : std::views::iota(std::int64_t{0}, ncols)) {
@@ -873,7 +874,7 @@ inline void downsample_columns(
           return use_sin ? std::sin(arg) : std::cos(arg);
         });
   }
-  return pluss::make_series(basis, {ncols, points});
+  return ::pluss::make_series(basis, {ncols, points});
 }
 
 [[nodiscard]] inline double pearson_corr(const Series& lhs, const Series& rhs) {
@@ -1006,7 +1007,7 @@ struct FieldmapGrid {
   FieldmapGrid out;
   out.x = linspace(x_min, x_max, bx);
   out.y = linspace(y_min, y_max, by);
-  out.z = pluss::make_series(std::move(counts)).reshape({by, bx});
+  out.z = ::pluss::make_series(std::move(counts)).reshape({by, bx});
   return out;
 }
 
@@ -1052,7 +1053,7 @@ struct FieldmapGrid {
     }
     curr.swap(next);
   }
-  return pluss::make_series(std::move(curr)).reshape({rows, cols});
+  return ::pluss::make_series(std::move(curr)).reshape({rows, cols});
 }
 
 [[nodiscard]] inline std::vector<std::size_t> argsort_indices(const std::vector<double>& values) {
@@ -1141,7 +1142,7 @@ struct FieldmapGrid {
   FieldmapGrid out;
   out.x = std::move(x_sorted);
   out.y = std::move(y_sorted);
-  out.z = pluss::make_series(std::move(z_sorted)).reshape({rows, cols});
+  out.z = ::pluss::make_series(std::move(z_sorted)).reshape({rows, cols});
   return out;
 }
 
@@ -1206,7 +1207,7 @@ struct MatrixJointOptions {
     PLUSS_CHECK(
         numeric_names.size() == data.numeric_values.size(),
         "flash::make_dataset: numeric_names size must match numeric_values size");
-    data.numeric_names = pluss::make_note(numeric_names);
+    data.numeric_names = ::pluss::make_note(numeric_names);
   }
   return data;
 }
@@ -1225,12 +1226,13 @@ struct MatrixJointOptions {
         feature_names.size() == data.numeric_values.size(),
         "flash::make_dataset(matrix): feature_names size must match matrix feature axis size");
   }
-  data.numeric_names = pluss::make_note(feature_names);
+  data.numeric_names = ::pluss::make_note(feature_names);
   return data;
 }
 
 #include "pluss/pl/flash/detail/flash_style.h"
 #include "pluss/pl/flash/detail/scene3d.h"
+#include "pluss/pl/flash/detail/hyper4d.h"
 
 template <class X, class Y, class Z>
 Trace& path3(Pane& pane, X&& x, Y&& y, Z&& z) {
@@ -1547,7 +1549,7 @@ Trace& scatterplot(Pane& pane, X&& x, Y&& y, const Note& hue) {
   const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
   const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
   const auto [encoded, labels] = detail::encode_categories(hue);
-  const Series hue_codes = pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())});
+  const Series hue_codes = ::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())});
   detail::require_equal_xy_hue_lengths("flash::scatterplot(..., hue)", sx, sy, hue_codes);
   return detail::draw_grouped_hue(
       pane,
@@ -1619,8 +1621,8 @@ Trace& stepplot(Pane& pane, X&& x, Y&& y) {
     step_x.push_back(vx[i]);
     step_y.push_back(vy[i]);
   }
-  return pane.trend(pluss::make_series(step_x, {static_cast<std::int64_t>(step_x.size())}),
-                    pluss::make_series(step_y, {static_cast<std::int64_t>(step_y.size())}));
+  return pane.trend(::pluss::make_series(step_x, {static_cast<std::int64_t>(step_x.size())}),
+                    ::pluss::make_series(step_y, {static_cast<std::int64_t>(step_y.size())}));
 }
 
 template <class X, class Y>
@@ -1628,7 +1630,7 @@ Trace& lineplot(Pane& pane, X&& x, Y&& y, const Note& hue) {
   const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
   const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
   const auto [encoded, labels] = detail::encode_categories(hue);
-  const Series hue_codes = pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())});
+  const Series hue_codes = ::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())});
   detail::require_equal_xy_hue_lengths("flash::lineplot(..., hue)", sx, sy, hue_codes);
   return detail::draw_grouped_hue(
       pane,
@@ -1766,13 +1768,13 @@ template <class Values>
 Trace& rugplot(Pane& pane, Values&& values, double height = 0.08) {
   const Series x = detail::to_series(std::forward<Values>(values));
   const std::vector<double> y(static_cast<std::size_t>(x.numel()), std::max(height, 1e-4));
-  return pane.spike(x, pluss::make_series(y, {x.numel()}), 0.0);
+  return pane.spike(x, ::pluss::make_series(y, {x.numel()}), 0.0);
 }
 
 inline Trace& stripplot(Pane& pane, const Note& categories, const Series& values) {
   const auto [encoded, labels] = detail::encode_categories(categories);
   pane.x_categories(labels);
-  return pane.cloud(pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
+  return pane.cloud(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
 template <class Group, class Values>
@@ -1795,7 +1797,7 @@ Trace& boxplot(Pane& pane, Values&& values) {
 inline Trace& boxplot(Pane& pane, const Note& categories, const Series& values) {
   const auto [encoded, labels] = detail::encode_categories(categories);
   pane.x_categories(labels);
-  return pane.quartet(pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
+  return pane.quartet(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
 template <class Group, class Values>
@@ -1818,13 +1820,13 @@ Trace& violinplot(Pane& pane, Values&& values, const ViolinOptions& options) {
 inline Trace& violinplot(Pane& pane, const Note& categories, const Series& values) {
   const auto [encoded, labels] = detail::encode_categories(categories);
   pane.x_categories(labels);
-  return pane.violin(pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
+  return pane.violin(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
 inline Trace& violinplot(Pane& pane, const Note& categories, const Series& values, const ViolinOptions& options) {
   const auto [encoded, labels] = detail::encode_categories(categories);
   pane.x_categories(labels);
-  return pane.violin(pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values, options);
+  return pane.violin(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values, options);
 }
 
 template <class Group, class Values>
@@ -1966,10 +1968,10 @@ inline Trace& barplot(Pane& pane, const Note& categories, const Series& values, 
   const auto [encoded, labels] = detail::encode_categories(categories);
   if (options.horizontal) {
     pane.y_categories(labels);
-    return pane.columns_h(values, pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}));
+    return pane.columns_h(values, ::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}));
   }
   pane.x_categories(labels);
-  return pane.columns(pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
+  return pane.columns(::pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
 
 template <class Values>
@@ -1992,7 +1994,7 @@ inline Trace& countplot(Pane& pane, const Note& categories) {
     y.push_back(count);
   }
   pane.x_categories(labels);
-  return pane.columns(pluss::make_series(y, {static_cast<std::int64_t>(y.size())}));
+  return pane.columns(::pluss::make_series(y, {static_cast<std::int64_t>(y.size())}));
 }
 
 template <class Values>
@@ -2145,8 +2147,8 @@ Trace& residplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options) {
   std::transform(vy.begin(), vy.end(), pred.begin(), vy.begin(), [](const double y_i, const double p_i) {
     return y_i - p_i;
   });
-  return pane.cloud(pluss::make_series(vx, {static_cast<std::int64_t>(vx.size())}),
-                    pluss::make_series(vy, {static_cast<std::int64_t>(vy.size())}));
+  return pane.cloud(::pluss::make_series(vx, {static_cast<std::int64_t>(vx.size())}),
+                    ::pluss::make_series(vy, {static_cast<std::int64_t>(vy.size())}));
 }
 
 template <class X, class Y>
@@ -2228,7 +2230,7 @@ Trace& resid_histplot(Pane& pane, X&& x, Y&& y, const ResidHistPlotOptions& opti
     return y_i - p_i;
   });
   auto& hist = pane.bucket(
-      pluss::make_series(vy, {static_cast<std::int64_t>(vy.size())}),
+      ::pluss::make_series(vy, {static_cast<std::int64_t>(vy.size())}),
       std::max(4, options.bins));
   hist.width(options.trace_width).label("residuals");
   pane.grid(GridStyle::Major).x_label("residual").y_label("count").rule_x(0.0, "zero");
@@ -2511,7 +2513,7 @@ inline Trace& catplot(
     const Note& group,
     const Series& values,
     const CatPlotOptions& options = {}) {
-  const auto empty_hue = pluss::make_note(std::vector<std::string>{});
+  const auto empty_hue = ::pluss::make_note(std::vector<std::string>{});
   return catplot(pane, group, values, empty_hue, options);
 }
 
@@ -2633,17 +2635,17 @@ inline Trace& catplot(
         y_pos.push_back(summary.has_error ? summary.err_pos : 0.0);
         any_err = any_err || summary.has_error;
       }
-      auto& trace = pane.columns(pluss::make_series(x_vals), pluss::make_series(y_vals));
+      auto& trace = pane.columns(::pluss::make_series(x_vals), ::pluss::make_series(y_vals));
       trace.width(options.trace_width);
       if (has_hue) {
         trace.label(hue_levels[h]);
       }
       if (options.kind != CatPlotKind::Count && options.errorbar != CatErrorBar::None && any_err) {
         pane.whisk(
-            pluss::make_series(x_vals),
-            pluss::make_series(y_vals),
-            pluss::make_series(y_neg),
-            pluss::make_series(y_pos));
+            ::pluss::make_series(x_vals),
+            ::pluss::make_series(y_vals),
+            ::pluss::make_series(y_neg),
+            ::pluss::make_series(y_pos));
       }
       last = &trace;
     }
@@ -2685,8 +2687,8 @@ inline Trace& catplot(
     if (per_hue_x[h].empty()) {
       continue;
     }
-    const Series sx = pluss::make_series(per_hue_x[h]);
-    const Series sy = pluss::make_series(per_hue_y[h]);
+    const Series sx = ::pluss::make_series(per_hue_x[h]);
+    const Series sy = ::pluss::make_series(per_hue_y[h]);
     Trace* trace = nullptr;
     switch (options.kind) {
       case CatPlotKind::Swarm:
@@ -3867,7 +3869,7 @@ inline Studio& andrews_curves(
   detail::downsample_columns(prepared, options.max_curves);
   const std::int64_t plotted_rows = detail::require_equal_lengths(prepared, "flash::andrews_curves");
 
-  const auto t = pluss::linspace(-3.14159265358979323846,
+  const auto t = ::pluss::linspace(-3.14159265358979323846,
                                  3.14159265358979323846,
                                  std::max<std::int64_t>(64, options.points),
                                  ScalarType::Float64);
@@ -3916,7 +3918,7 @@ inline Studio& andrews_curves(
   detail::downsample_columns(prepared, options.max_curves, &labels);
   const std::int64_t plotted_rows = detail::require_equal_lengths(prepared, "flash::andrews_curves");
 
-  const auto t = pluss::linspace(-3.14159265358979323846,
+  const auto t = ::pluss::linspace(-3.14159265358979323846,
                                  3.14159265358979323846,
                                  std::max<std::int64_t>(64, options.points),
                                  ScalarType::Float64);
@@ -4441,7 +4443,7 @@ Studio& resid_acfplot(Studio& studio, X&& x, Y&& y, const ResidAcfPlotOptions& o
   });
   return acfplot(
       studio,
-      pluss::make_series(vy, {static_cast<std::int64_t>(vy.size())}),
+      ::pluss::make_series(vy, {static_cast<std::int64_t>(vy.size())}),
       options.acf);
 }
 
@@ -4457,7 +4459,8 @@ Studio& bootstrapplot(Studio& studio, Values&& values, const BootstrapPlotOption
   std::vector<double> bootstrap_stats;
   bootstrap_stats.reserve(static_cast<std::size_t>(samples));
   for (const auto i : std::views::iota(std::int64_t{0}, samples)) {
-    const auto idx = pluss::randint(0, n, {draw_size}, ScalarType::Int64, options.seed + static_cast<std::uint64_t>(i + 1));
+    const auto idx =
+        ::pluss::randint(0, n, {draw_size}, ScalarType::Int64, options.seed + static_cast<std::uint64_t>(i + 1));
     const Series sample = base.take(idx);
     double stat = 0.0;
     switch (options.statistic) {
@@ -4986,33 +4989,33 @@ inline Studio& jointplot(
 }
 
 [[nodiscard]] inline Note get_dataset_names() {
-  return pluss::make_note({"tips", "flights"});
+  return ::pluss::make_note({"tips", "flights"});
 }
 
 [[nodiscard]] inline std::optional<Dataset> load_dataset(std::string_view name) {
   Dataset data;
   if (name == "tips") {
-    data.numeric_names = pluss::make_note({"total_bill", "tip", "size"});
+    data.numeric_names = ::pluss::make_note({"total_bill", "tip", "size"});
     data.numeric_values = {
-        pluss::make_series(std::vector<double>{16.99, 10.34, 21.01, 23.68}, {4}),
-        pluss::make_series(std::vector<double>{1.01, 1.66, 3.5, 3.31}, {4}),
-        pluss::make_series(std::vector<double>{2.0, 3.0, 3.0, 2.0}, {4}),
+        ::pluss::make_series(std::vector<double>{16.99, 10.34, 21.01, 23.68}, {4}),
+        ::pluss::make_series(std::vector<double>{1.01, 1.66, 3.5, 3.31}, {4}),
+        ::pluss::make_series(std::vector<double>{2.0, 3.0, 3.0, 2.0}, {4}),
     };
-    data.note_names = pluss::make_note({"day"});
+    data.note_names = ::pluss::make_note({"day"});
     data.note_values = {
-        pluss::make_note({"Sun", "Sun", "Sun", "Sun"}),
+        ::pluss::make_note({"Sun", "Sun", "Sun", "Sun"}),
     };
     return data;
   }
   if (name == "flights") {
-    data.numeric_names = pluss::make_note({"month", "passengers"});
+    data.numeric_names = ::pluss::make_note({"month", "passengers"});
     data.numeric_values = {
-        pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {6}),
-        pluss::make_series(std::vector<double>{112, 118, 132, 129, 121, 135}, {6}),
+        ::pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {6}),
+        ::pluss::make_series(std::vector<double>{112, 118, 132, 129, 121, 135}, {6}),
     };
-    data.note_names = pluss::make_note({"year"});
+    data.note_names = ::pluss::make_note({"year"});
     data.note_values = {
-        pluss::make_note({"1949", "1949", "1949", "1949", "1949", "1949"}),
+        ::pluss::make_note({"1949", "1949", "1949", "1949", "1949", "1949"}),
     };
     return data;
   }

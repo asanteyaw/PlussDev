@@ -2038,6 +2038,9 @@ struct FiniteMinMax {
 
   MosaicLayout layout{};
   for (const Pane& pane : studio.panes()) {
+    if (pane.placement().parent >= 0) {
+      continue;
+    }
     if (!pane.placement().explicit_slot) {
       continue;
     }
@@ -2167,8 +2170,27 @@ struct FiniteMinMax {
   const double inner_height = std::max(0.0, studio.extent().height - top_margin - bottom_margin);
   const MosaicLayout mosaic = resolved_mosaic_layout(studio);
 
-  layouts.reserve(studio.pane_count());
-  if (mosaic.active) {
+  layouts.resize(studio.pane_count());
+  std::vector<bool> assigned(studio.pane_count(), false);
+  std::vector<std::vector<std::size_t>> children(studio.pane_count());
+  std::vector<std::size_t> top_level_indices;
+  top_level_indices.reserve(studio.pane_count());
+  for (std::size_t i = 0; i < studio.pane_count(); ++i) {
+    const auto parent = studio.panes()[i].placement().parent;
+    if (parent < 0) {
+      top_level_indices.push_back(i);
+      continue;
+    }
+    if (parent >= static_cast<std::int64_t>(studio.pane_count())) {
+      throw std::invalid_argument("pane placement references an invalid parent pane index");
+    }
+    children[static_cast<std::size_t>(parent)].push_back(i);
+  }
+  if (top_level_indices.empty()) {
+    throw std::invalid_argument("layout requires at least one top-level pane");
+  }
+
+  auto place_top_level_mosaic = [&]() {
     const double gap_x = tight ? std::max(6.0, mosaic.gutter_x * 0.62) : mosaic.gutter_x;
     const double gap_y = tight ? std::max(6.0, mosaic.gutter_y * 0.62) : mosaic.gutter_y;
     const double cell_width =
@@ -2209,7 +2231,8 @@ struct FiniteMinMax {
       throw std::invalid_argument("mosaic has no free cells left for pane placement");
     };
 
-    for (const Pane& pane : studio.panes()) {
+    for (const auto pane_index : top_level_indices) {
+      const Pane& pane = studio.panes()[pane_index];
       PanePlacement placement = pane.placement();
       if (!placement.explicit_slot) {
         const auto [row, col] = next_open();
@@ -2221,32 +2244,149 @@ struct FiniteMinMax {
           placement.row_span,
           placement.col_span);
       const auto insets = pane_insets(pane);
-      layouts.push_back(PaneLayout{
+      layouts[pane_index] = PaneLayout{
           outer,
           inset(outer, insets[0], insets[1], insets[2], insets[3]),
-      });
+      };
+      assigned[pane_index] = true;
     }
-    return layouts;
+  };
+
+  auto place_top_level_stacked = [&]() {
+    const double gap = tight ? 12.0 : 18.0;
+    const double stacked_height =
+        std::max(0.0, inner_height - gap * static_cast<double>(top_level_indices.size() - 1));
+    const double pane_height = stacked_height / static_cast<double>(top_level_indices.size());
+    for (std::size_t slot = 0; slot < top_level_indices.size(); ++slot) {
+      const auto pane_index = top_level_indices[slot];
+      const Pane& pane = studio.panes()[pane_index];
+      Rect outer{
+          left_margin,
+          top_margin + static_cast<double>(slot) * (pane_height + gap),
+          inner_width,
+          pane_height,
+      };
+      const auto insets = pane_insets(pane);
+      layouts[pane_index] = PaneLayout{
+          outer,
+          inset(outer, insets[0], insets[1], insets[2], insets[3]),
+      };
+      assigned[pane_index] = true;
+    }
+  };
+
+  auto place_children = [&](std::size_t parent_index) {
+    const auto& child_indices = children[parent_index];
+    if (child_indices.empty()) {
+      return;
+    }
+    const Rect container = layouts[parent_index].plot;
+    std::int64_t rows = 0;
+    std::int64_t cols = 0;
+    double gutter_x = 12.0;
+    double gutter_y = 12.0;
+    for (const auto child_index : child_indices) {
+      const PanePlacement placement = studio.panes()[child_index].placement();
+      if (placement.local_rows <= 0 || placement.local_cols <= 0) {
+        throw std::invalid_argument("subpane placement requires positive local_rows/local_cols");
+      }
+      if (rows == 0) {
+        rows = placement.local_rows;
+        cols = placement.local_cols;
+        gutter_x = placement.local_gutter_x;
+        gutter_y = placement.local_gutter_y;
+      } else {
+        if (rows != placement.local_rows || cols != placement.local_cols) {
+          throw std::invalid_argument("all sibling subpanes must share the same local grid dimensions");
+        }
+      }
+    }
+    const double gap_x = tight ? std::max(4.0, gutter_x * 0.62) : gutter_x;
+    const double gap_y = tight ? std::max(4.0, gutter_y * 0.62) : gutter_y;
+    const double cell_width =
+        std::max(0.0, container.width - gap_x * static_cast<double>(std::max<std::int64_t>(cols - 1, 0))) /
+        static_cast<double>(cols);
+    const double cell_height =
+        std::max(0.0, container.height - gap_y * static_cast<double>(std::max<std::int64_t>(rows - 1, 0))) /
+        static_cast<double>(rows);
+    std::vector<bool> occupied(static_cast<std::size_t>(rows * cols), false);
+    auto claim = [&](std::int64_t row, std::int64_t col, std::int64_t row_span, std::int64_t col_span) {
+      if (row < 0 || col < 0 || row + row_span > rows || col + col_span > cols) {
+        throw std::invalid_argument("subpane placement exceeds local grid bounds");
+      }
+      for (std::int64_t r = row; r < row + row_span; ++r) {
+        for (std::int64_t c = col; c < col + col_span; ++c) {
+          const auto index = static_cast<std::size_t>(r * cols + c);
+          if (occupied[index]) {
+            throw std::invalid_argument("subpane placement overlaps an occupied local grid cell");
+          }
+          occupied[index] = true;
+        }
+      }
+      return Rect{
+          container.x + static_cast<double>(col) * (cell_width + gap_x),
+          container.y + static_cast<double>(row) * (cell_height + gap_y),
+          cell_width * static_cast<double>(col_span) + gap_x * static_cast<double>(col_span - 1),
+          cell_height * static_cast<double>(row_span) + gap_y * static_cast<double>(row_span - 1),
+      };
+    };
+    auto next_open = [&]() -> std::pair<std::int64_t, std::int64_t> {
+      for (std::int64_t row = 0; row < rows; ++row) {
+        for (std::int64_t col = 0; col < cols; ++col) {
+          if (!occupied[static_cast<std::size_t>(row * cols + col)]) {
+            return {row, col};
+          }
+        }
+      }
+      throw std::invalid_argument("local subgrid has no free cells left for subpane placement");
+    };
+
+    for (const auto child_index : child_indices) {
+      const Pane& pane = studio.panes()[child_index];
+      PanePlacement placement = pane.placement();
+      if (!placement.explicit_slot) {
+        const auto [row, col] = next_open();
+        placement = PanePlacement{
+            row,
+            col,
+            1,
+            1,
+            true,
+            placement.parent,
+            rows,
+            cols,
+            gutter_x,
+            gutter_y,
+        };
+      }
+      const Rect outer = claim(placement.row, placement.col, placement.row_span, placement.col_span);
+      const auto insets = pane_insets(pane);
+      layouts[child_index] = PaneLayout{
+          outer,
+          inset(outer, insets[0], insets[1], insets[2], insets[3]),
+      };
+      assigned[child_index] = true;
+    }
+  };
+
+  if (mosaic.active) {
+    place_top_level_mosaic();
+  } else {
+    place_top_level_stacked();
   }
 
-  const double gap = tight ? 12.0 : 18.0;
-  const double stacked_height =
-      std::max(0.0,
-               inner_height - gap * static_cast<double>(studio.pane_count() - 1));
-  const double pane_height = stacked_height / static_cast<double>(studio.pane_count());
-  for (std::size_t i = 0; i < studio.pane_count(); ++i) {
-    const Pane& pane = studio.panes()[i];
-    Rect outer{
-        left_margin,
-        top_margin + static_cast<double>(i) * (pane_height + gap),
-        inner_width,
-        pane_height,
-    };
-    const auto insets = pane_insets(pane);
-    layouts.push_back(PaneLayout{
-        outer,
-        inset(outer, insets[0], insets[1], insets[2], insets[3]),
-    });
+  std::vector<std::size_t> queue = top_level_indices;
+  for (std::size_t i = 0; i < queue.size(); ++i) {
+    const auto parent_index = queue[i];
+    place_children(parent_index);
+    const auto& child_indices = children[parent_index];
+    queue.insert(queue.end(), child_indices.begin(), child_indices.end());
+  }
+
+  for (std::size_t i = 0; i < assigned.size(); ++i) {
+    if (!assigned[i]) {
+      throw std::invalid_argument("pane layout contains an unreachable nested pane");
+    }
   }
   return layouts;
 }
@@ -3974,6 +4114,97 @@ void render_shared_captions(
           12.0,
           studio.theme_tokens().foreground());
     }
+  }
+}
+
+void render_row_titles(
+    DrawList& list,
+    const Studio& studio,
+    const std::vector<PaneLayout>& layouts) {
+  if (studio.row_titles().empty()) {
+    return;
+  }
+
+  std::vector<std::pair<double, std::size_t>> top_level_by_y;
+  top_level_by_y.reserve(studio.pane_count());
+  for (std::size_t i = 0; i < studio.pane_count(); ++i) {
+    const Pane& pane = studio.panes()[i];
+    if (!pane.visible()) {
+      continue;
+    }
+    const auto placement = pane.placement();
+    if (placement.parent >= 0) {
+      continue;
+    }
+    top_level_by_y.emplace_back(layouts[i].outer.y, i);
+  }
+  if (top_level_by_y.empty()) {
+    return;
+  }
+
+  std::sort(top_level_by_y.begin(), top_level_by_y.end(), [](const auto& a, const auto& b) {
+    if (a.first == b.first) {
+      return a.second < b.second;
+    }
+    return a.first < b.first;
+  });
+
+  std::vector<double> inferred_row_origins;
+  inferred_row_origins.reserve(top_level_by_y.size());
+  std::vector<std::int64_t> inferred_row_for_pane(studio.pane_count(), -1);
+  constexpr double row_eps = 1e-5;
+  for (const auto& [y, pane_index] : top_level_by_y) {
+    auto it = std::find_if(
+        inferred_row_origins.begin(),
+        inferred_row_origins.end(),
+        [&](const double origin) { return std::abs(origin - y) <= row_eps; });
+    if (it == inferred_row_origins.end()) {
+      inferred_row_origins.push_back(y);
+      inferred_row_for_pane[pane_index] = static_cast<std::int64_t>(inferred_row_origins.size() - 1);
+    } else {
+      inferred_row_for_pane[pane_index] = static_cast<std::int64_t>(std::distance(inferred_row_origins.begin(), it));
+    }
+  }
+
+  std::map<std::int64_t, GroupRect> row_rects;
+  for (std::size_t i = 0; i < studio.pane_count(); ++i) {
+    const Pane& pane = studio.panes()[i];
+    if (!pane.visible()) {
+      continue;
+    }
+    const auto placement = pane.placement();
+    if (placement.parent >= 0) {
+      continue;
+    }
+    const std::int64_t row_start = placement.explicit_slot ? placement.row : inferred_row_for_pane[i];
+    const std::int64_t row_span = placement.explicit_slot ? placement.row_span : 1;
+    if (row_start < 0 || row_span <= 0) {
+      continue;
+    }
+    for (const auto row : std::views::iota(row_start, row_start + row_span)) {
+      row_rects[row].include(layouts[i].outer);
+    }
+  }
+
+  const double font_size = 12.5 * studio.default_axis_label_font_scale();
+  const double min_y = studio.headline_text().empty() ? (font_size + 7.0) : (54.0 + font_size * 0.45);
+  for (const auto& [row, title] : studio.row_titles()) {
+    if (title.empty()) {
+      continue;
+    }
+    const auto it = row_rects.find(row);
+    if (it == row_rects.end() || !it->second.valid) {
+      continue;
+    }
+    const Rect& rect = it->second.rect;
+    const double y = std::max(min_y, rect.y - (font_size * 0.7 + 4.0));
+    add_text(
+        list,
+        {rect.x + rect.width * 0.5, y},
+        title,
+        font_size,
+        studio.theme_tokens().foreground(),
+        TextCommand::Align::Middle);
   }
 }
 
@@ -6057,6 +6288,7 @@ DrawList build_draw_list(const Studio& studio) {
   }
 
   render_shared_captions(list, studio, layouts);
+  render_row_titles(list, studio, layouts);
   render_legend_dock(list, studio, layouts);
 
   return list;

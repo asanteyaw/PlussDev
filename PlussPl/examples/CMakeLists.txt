@@ -20,12 +20,18 @@ plusspl_add_example(plusspl_2d_style_gallery_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/2D/style_gallery_demo.cpp)
 plusspl_add_example(plusspl_2d_flash_style_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/2D/flash_style_demo.cpp)
+plusspl_add_example(plusspl_2d_flash_subsub_plot_demo
+    ${CMAKE_CURRENT_SOURCE_DIR}/2D/flash_subsub_plot_demo.cpp)
 plusspl_add_example(plusspl_2d_returns_volatility_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/2D/returns_volatility_demo.cpp)
 plusspl_add_example(plusspl_2d_ngarch_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/2D/ngarch_demo.cpp)
 plusspl_add_example(plusspl_3d_flash_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/3D/flash_3d_demo.cpp)
+plusspl_add_example(plusspl_4d_geometry_demo
+    ${CMAKE_CURRENT_SOURCE_DIR}/4D/flash_4d_geometry_demo.cpp)
+plusspl_add_example(plusspl_4d_animation_demo
+    ${CMAKE_CURRENT_SOURCE_DIR}/4D/flash_4d_animation_demo.cpp)
 plusspl_add_example(plusspl_3d_gallery_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/3D/spatial_gallery.cpp)
 plusspl_add_example(plusspl_3d_option_surface_demo
@@ -50,9 +56,12 @@ add_custom_target(plusspl_gallery_outputs
     COMMAND plusspl_2d_all_families_demo
     COMMAND plusspl_2d_style_gallery_demo
     COMMAND plusspl_2d_flash_style_demo
+    COMMAND plusspl_2d_flash_subsub_plot_demo
     COMMAND plusspl_2d_returns_volatility_demo
     COMMAND plusspl_2d_ngarch_demo
     COMMAND plusspl_3d_flash_demo
+    COMMAND plusspl_4d_geometry_demo
+    COMMAND plusspl_4d_animation_demo
     COMMAND plusspl_3d_gallery_demo
     COMMAND plusspl_3d_option_surface_demo
     COMMAND plusspl_3d_wave_mesh_demo
@@ -68,9 +77,12 @@ add_custom_target(plusspl_gallery_outputs
         plusspl_2d_all_families_demo
         plusspl_2d_style_gallery_demo
         plusspl_2d_flash_style_demo
+        plusspl_2d_flash_subsub_plot_demo
         plusspl_2d_returns_volatility_demo
         plusspl_2d_ngarch_demo
         plusspl_3d_flash_demo
+        plusspl_4d_geometry_demo
+        plusspl_4d_animation_demo
         plusspl_3d_gallery_demo
         plusspl_3d_option_surface_demo
         plusspl_3d_wave_mesh_demo
