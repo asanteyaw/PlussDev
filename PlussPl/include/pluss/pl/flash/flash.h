@@ -1595,6 +1595,35 @@ Trace& lineplot(Pane& pane, X&& x, Y&& y) {
 }
 
 template <class X, class Y>
+Trace& stepplot(Pane& pane, X&& x, Y&& y) {
+  const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
+  const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
+  if (sx.numel() != sy.numel()) {
+    throw std::invalid_argument("flash::stepplot requires x and y with identical lengths");
+  }
+  if (sx.numel() == 0) {
+    return pane.trend(sx, sy);
+  }
+
+  const auto vx = detail::to_f64_vector(sx);
+  const auto vy = detail::to_f64_vector(sy);
+  std::vector<double> step_x;
+  std::vector<double> step_y;
+  step_x.reserve(vx.size() * 2 - 1);
+  step_y.reserve(vy.size() * 2 - 1);
+  step_x.push_back(vx.front());
+  step_y.push_back(vy.front());
+  for (const auto i : std::views::iota(std::size_t{1}, vx.size())) {
+    step_x.push_back(vx[i]);
+    step_y.push_back(vy[i - 1]);
+    step_x.push_back(vx[i]);
+    step_y.push_back(vy[i]);
+  }
+  return pane.trend(pluss::make_series(step_x, {static_cast<std::int64_t>(step_x.size())}),
+                    pluss::make_series(step_y, {static_cast<std::int64_t>(step_y.size())}));
+}
+
+template <class X, class Y>
 Trace& lineplot(Pane& pane, X&& x, Y&& y, const Note& hue) {
   const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
   const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
@@ -1726,6 +1755,13 @@ Trace& ecdfplot(Pane& pane, Values&& values) {
   return lineplot(pane, x, y);
 }
 
+template <class X, class Y>
+Trace& areaplot(Pane& pane, X&& x, Y&& y, double base = 0.0) {
+  return pane.ribbon(detail::to_series(std::forward<X>(x)),
+                     detail::to_series(std::forward<Y>(y)),
+                     base);
+}
+
 template <class Values>
 Trace& rugplot(Pane& pane, Values&& values, double height = 0.08) {
   const Series x = detail::to_series(std::forward<Values>(values));
@@ -1819,6 +1855,23 @@ Trace& pointplot(Pane& pane, X&& x, Y&& y, Err&& err) {
                     detail::to_series(std::forward<Err>(err)));
 }
 
+template <class X, class Y, class Err>
+Trace& whiskplot(Pane& pane, X&& x, Y&& y, Err&& err) {
+  return pane.whisk(detail::to_series(std::forward<X>(x)),
+                    detail::to_series(std::forward<Y>(y)),
+                    detail::to_series(std::forward<Err>(err)));
+}
+
+template <class X, class Y, class YNeg, class YPos, class XNeg, class XPos>
+Trace& whiskplot(Pane& pane, X&& x, Y&& y, YNeg&& yneg, YPos&& ypos, XNeg&& xneg, XPos&& xpos) {
+  return pane.whisk(detail::to_series(std::forward<X>(x)),
+                    detail::to_series(std::forward<Y>(y)),
+                    detail::to_series(std::forward<YNeg>(yneg)),
+                    detail::to_series(std::forward<YPos>(ypos)),
+                    detail::to_series(std::forward<XNeg>(xneg)),
+                    detail::to_series(std::forward<XPos>(xpos)));
+}
+
 struct RegPlotOptions {
   bool show_scatter{true};
   bool show_fit{true};
@@ -1896,15 +1949,25 @@ struct ClusterMapOptions {
   HeatmapOptions heatmap{};
 };
 
+struct BarPlotOptions {
+  bool horizontal{false};
+};
+
 template <class X, class Y>
   requires(!std::same_as<std::remove_cvref_t<X>, Note>)
-Trace& barplot(Pane& pane, X&& x, Y&& y) {
-  return pane.columns(detail::to_series(std::forward<X>(x)),
-                      detail::to_series(std::forward<Y>(y)));
+Trace& barplot(Pane& pane, X&& x, Y&& y, const BarPlotOptions& options = {}) {
+  return options.horizontal ? pane.columns_h(detail::to_series(std::forward<X>(x)),
+                                             detail::to_series(std::forward<Y>(y)))
+                            : pane.columns(detail::to_series(std::forward<X>(x)),
+                                           detail::to_series(std::forward<Y>(y)));
 }
 
-inline Trace& barplot(Pane& pane, const Note& categories, const Series& values) {
+inline Trace& barplot(Pane& pane, const Note& categories, const Series& values, const BarPlotOptions& options = {}) {
   const auto [encoded, labels] = detail::encode_categories(categories);
+  if (options.horizontal) {
+    pane.y_categories(labels);
+    return pane.columns_h(values, pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}));
+  }
   pane.x_categories(labels);
   return pane.columns(pluss::make_series(encoded, {static_cast<std::int64_t>(encoded.size())}), values);
 }
@@ -1930,6 +1993,16 @@ inline Trace& countplot(Pane& pane, const Note& categories) {
   }
   pane.x_categories(labels);
   return pane.columns(pluss::make_series(y, {static_cast<std::int64_t>(y.size())}));
+}
+
+template <class Values>
+Trace& pieplot(Pane& pane, Values&& values) {
+  return pane.wedge(detail::to_series(std::forward<Values>(values)));
+}
+
+template <class Values>
+Trace& pieplot(Pane& pane, Values&& values, std::vector<std::string> labels) {
+  return pane.wedge(detail::to_series(std::forward<Values>(values)), std::move(labels));
 }
 
 template <class X, class Y>

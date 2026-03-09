@@ -542,60 +542,25 @@ pluss::Series columns_to_matrix_series(const std::vector<pluss::Series>& columns
   return linear.reshape({static_cast<std::int64_t>(prepared.size()), rows}).transpose(0, 1).contiguous();
 }
 
-Trace& add_heatmap_columns(Pane& pane,
-                           const std::vector<pluss::Series>& columns,
-                           std::int64_t rows,
-                           std::string label,
-                           bool nonfinite_to_zero = false) {
-  const auto cols = static_cast<std::int64_t>(columns.size());
-  std::vector<double> x(static_cast<std::size_t>(std::max<std::int64_t>(0, cols)), 0.0);
-  std::vector<double> y(static_cast<std::size_t>(std::max<std::int64_t>(0, rows)), 0.0);
-  std::iota(x.begin(), x.end(), 0.0);
-  std::iota(y.begin(), y.end(), 0.0);
-
-  auto z = columns_to_matrix_series(columns, rows, nonfinite_to_zero);
-  auto& trace = pane.fieldmap(x, y, z);
-  trace.label(std::move(label));
-  trace.shade(pluss::pl::ShadeMode::Smooth);
-  return trace;
+flash::HeatmapOptions to_flash_options(const HeatmapPlotOptions& options) {
+  flash::HeatmapOptions out;
+  out.annotate_levels = options.annotate_levels;
+  out.scale_guide = options.scale_guide;
+  out.borderless = options.borderless;
+  return out;
 }
 
-void configure_heatmap(Pane& pane, Trace& trace, bool annotate_levels, bool scale_guide, bool borderless) {
-  trace.annotate_levels(annotate_levels);
-  pane.scale_guide(scale_guide);
-  if (borderless) {
-    pane.grid(pluss::pl::GridStyle::None).axes_visible(false);
-  } else {
-    pane.y_tick_rotation(30.0);
-  }
-}
-
-std::pair<std::vector<double>, std::vector<double>> make_step_xy(const std::vector<double>& x,
-                                                                  const std::vector<double>& y) {
-  const std::size_t n = std::min(x.size(), y.size());
-  std::vector<double> sx;
-  std::vector<double> sy;
-  if (n == 0) {
-    return {std::move(sx), std::move(sy)};
-  }
-  sx.reserve(n * 2 - 1);
-  sy.reserve(n * 2 - 1);
-  for (std::size_t i = 0; i < n; ++i) {
-    sx.push_back(x[i]);
-    sy.push_back(y[i]);
-    if (i + 1 < n) {
-      sx.push_back(x[i + 1]);
-      sy.push_back(y[i]);
-    }
-  }
-  return {std::move(sx), std::move(sy)};
+flash::HeatmapOptions to_flash_options(const CorrHeatmapPlotOptions& options) {
+  flash::HeatmapOptions out;
+  out.annotate_levels = options.annotate_levels;
+  out.scale_guide = options.scale_guide;
+  out.borderless = options.borderless;
+  return out;
 }
 
 Studio corr_heatmap_from_names(const DataFrame& frame,
                                const std::vector<std::string>& names,
-                               bool annotate_levels,
-                               bool scale_guide,
-                               bool borderless) {
+                               const CorrHeatmapPlotOptions& options) {
   const auto corr = frame.corr(false);
   const auto corr_names = corr.feature_names();
   std::unordered_map<std::string, std::size_t> corr_index;
@@ -635,11 +600,15 @@ Studio corr_heatmap_from_names(const DataFrame& frame,
   auto fig = make_studio();
   auto& pane = fig.pane2();
   setup_pane(pane, false);
-  auto& trace = add_heatmap_columns(pane, columns, static_cast<std::int64_t>(names.size()), "corr");
-  configure_heatmap(pane, trace, annotate_levels, scale_guide, borderless);
+  const auto axis_positions = positional_plot_x(static_cast<std::int64_t>(names.size()));
+  auto z = columns_to_matrix_series(columns, static_cast<std::int64_t>(names.size()), false);
+  auto& trace = flash::heatmap(pane, axis_positions, axis_positions, z, to_flash_options(options));
+  trace.label("corr").shade(pluss::pl::ShadeMode::Smooth);
+  if (!options.borderless) {
+    pane.y_tick_rotation(30.0);
+  }
 
-  const auto tick_pos = positional_plot_x(static_cast<std::int64_t>(names.size()));
-  pane.x_ticks(tick_pos, names).y_ticks(tick_pos, names);
+  pane.x_ticks(axis_positions, names).y_ticks(axis_positions, names);
   pane.x_label("feature").y_label("feature");
   return fig;
 }
@@ -1169,8 +1138,7 @@ pluss::pl::Studio DataFramePlotAccessor::step(
                                        const std::vector<double>& y_values,
                                        std::string_view name,
                                        std::size_t index) {
-                              auto [sx, sy] = make_step_xy(axis.values, y_values);
-                              auto& trace = pane.trend(sx, sy);
+                              auto& trace = flash::stepplot(pane, axis.values, y_values);
                               trace.label(std::string(name));
                               style_trace(trace, index, options.alpha, options.line_width);
                             },
@@ -1188,8 +1156,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_step(
                                const std::vector<double>& y_values,
                                std::string_view name,
                                std::size_t index) {
-                              auto [sx, sy] = make_step_xy(axis.values, y_values);
-                              auto& trace = pane.trend(sx, sy);
+                              auto& trace = flash::stepplot(pane, axis.values, y_values);
                               trace.label(std::string(name));
                               style_trace(trace, index, 1.0, 1.5);
                             },
@@ -1227,7 +1194,7 @@ pluss::pl::Studio DataFramePlotAccessor::area(
                                        const std::vector<double>& y_values,
                                        std::string_view name,
                                        std::size_t index) {
-                              auto& trace = pane.ribbon(axis.values, y_values, 0.0);
+                              auto& trace = flash::areaplot(pane, axis.values, y_values, 0.0);
                               trace.label(std::string(name));
                               style_trace(trace, index, options.alpha, options.line_width);
                             },
@@ -1245,7 +1212,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_area(
                                const std::vector<double>& y_values,
                                std::string_view name,
                                std::size_t index) {
-                              auto& trace = pane.ribbon(axis.values, y_values, 0.0);
+                              auto& trace = flash::areaplot(pane, axis.values, y_values, 0.0);
                               trace.label(std::string(name));
                               style_trace(trace, index, 0.88, 1.3);
                             },
@@ -1281,7 +1248,7 @@ pluss::pl::Studio DataFramePlotAccessor::area_stacked(
     require_plot_size(heights, frame_.ncases(), y_name);
     std::vector<double> tops(heights.size(), 0.0);
     std::transform(baselines.begin(), baselines.end(), heights.begin(), tops.begin(), std::plus<>{});
-    auto& trace = pane.ribbon(axis.values, tops, 0.0);
+    auto& trace = flash::areaplot(pane, axis.values, tops, 0.0);
     trace.label(std::string(y_name));
     style_trace(trace, feature_index, options.alpha, options.line_width);
     baselines = std::move(tops);
@@ -1310,7 +1277,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_area_stacked(
     require_plot_size(heights, frame_.ncases(), y_name);
     std::vector<double> tops(heights.size(), 0.0);
     std::transform(baselines.begin(), baselines.end(), heights.begin(), tops.begin(), std::plus<>{});
-    auto& trace = pane.ribbon(axis.values, tops, 0.0);
+    auto& trace = flash::areaplot(pane, axis.values, tops, 0.0);
     trace.label(std::string(y_name));
     style_trace(trace, feature_index, 0.7, 1.2);
     baselines = std::move(tops);
@@ -1472,14 +1439,18 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
     auto [centers, widths, labels] = grouped_bar_layout(ci_ready.axis, group_index, group_count);
     (void)widths;
     (void)labels;
-    auto& trace = options.horizontal ? pane.columns_h(ci_ready.mean, centers) : flash::barplot(pane, centers, ci_ready.mean);
+    flash::BarPlotOptions bar_options;
+    bar_options.horizontal = options.horizontal;
+    auto& trace = options.horizontal ? flash::barplot(pane, ci_ready.mean, centers, bar_options)
+                                     : flash::barplot(pane, centers, ci_ready.mean, bar_options);
     trace.label(std::string(y_name));
     style_trace(trace, group_index, 0.88, 1.0);
 
     if (options.ci_enabled) {
       if (options.horizontal) {
         std::vector<double> zero_yerr(ci_ready.ci_half_width.size(), 0.0);
-        auto& ci = pane.whisk(
+        auto& ci = flash::whiskplot(
+            pane,
             ci_ready.mean,
             centers,
             zero_yerr,
@@ -1489,7 +1460,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
         ci.label(std::string(y_name) + " CI");
         style_trace(ci, group_index, 0.7, 0.95);
       } else {
-        auto& ci = pane.whisk(centers, ci_ready.mean, ci_ready.ci_half_width);
+        auto& ci = flash::whiskplot(pane, centers, ci_ready.mean, ci_ready.ci_half_width);
         ci.label(std::string(y_name) + " CI");
         style_trace(ci, group_index, 0.7, 0.95);
       }
@@ -1919,7 +1890,8 @@ pluss::pl::Studio DataFramePlotAccessor::impl_pie(std::string_view value_feature
   auto& pane = fig.pane2();
   setup_pane(pane, true);
   pane.grid(pluss::pl::GridStyle::None).x_label("").y_label("");
-  auto& trace = render_label ? pane.wedge(filtered_values, rendered_labels) : pane.wedge(filtered_values);
+  auto& trace = render_label ? flash::pieplot(pane, filtered_values, rendered_labels)
+                             : flash::pieplot(pane, filtered_values);
   trace.label(std::string(value_feature));
   return fig;
 }
@@ -1958,8 +1930,14 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::initializer_list<std:
   apply_figure_options(fig);
   auto& pane = fig.pane2();
   setup_pane(pane, false);
-  auto& trace = add_heatmap_columns(pane, columns, frame_.ncases(), "value");
-  configure_heatmap(pane, trace, options.annotate_levels, options.scale_guide, options.borderless);
+  const auto x_positions = positional_plot_x(frame_.ncases());
+  const auto y_positions = positional_plot_x(static_cast<std::int64_t>(y_labels.size()));
+  auto z = columns_to_matrix_series(columns, frame_.ncases(), false).transpose(0, 1).contiguous();
+  auto& trace = flash::heatmap(pane, x_positions, y_positions, z, to_flash_options(options));
+  trace.label("value").shade(pluss::pl::ShadeMode::Smooth);
+  if (!options.borderless) {
+    pane.y_tick_rotation(30.0);
+  }
   pane.x_ticks(positional_plot_x(frame_.ncases()), labels_for_cases(frame_, "DataFrame::plot().heatmap", options_));
   pane.y_ticks(positional_plot_x(static_cast<std::int64_t>(y_labels.size())), y_labels);
   pane.x_label("case").y_label("feature");
@@ -2018,8 +1996,14 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::string_view case_feat
   apply_figure_options(fig);
   auto& pane = fig.pane2();
   setup_pane(pane, false);
-  auto& trace = add_heatmap_columns(pane, columns, pivoted.ncases(), std::string(value_feature));
-  configure_heatmap(pane, trace, options.annotate_levels, options.scale_guide, options.borderless);
+  const auto x_positions = positional_plot_x(static_cast<std::int64_t>(pivot_features.size()));
+  const auto y_positions = positional_plot_x(pivoted.ncases());
+  auto z = columns_to_matrix_series(columns, pivoted.ncases(), true);
+  auto& trace = flash::heatmap(pane, x_positions, y_positions, z, to_flash_options(options));
+  trace.label(std::string(value_feature)).shade(pluss::pl::ShadeMode::Smooth);
+  if (!options.borderless) {
+    pane.y_tick_rotation(30.0);
+  }
   pane.x_ticks(positional_plot_x(static_cast<std::int64_t>(pivot_features.size())),
                std::vector<std::string>(pivot_features.begin(), pivot_features.end()));
   pane.y_ticks(positional_plot_x(pivoted.ncases()),
@@ -2101,7 +2085,7 @@ pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(
 pluss::pl::Studio DataFramePlotAccessor::impl_corr_heatmap(std::initializer_list<std::string_view> features,
                                                            const CorrHeatmapPlotOptions& options) const {
   const auto names = correlation_feature_names(frame_, features);
-  auto fig = corr_heatmap_from_names(frame_, names, options.annotate_levels, options.scale_guide, options.borderless);
+  auto fig = corr_heatmap_from_names(frame_, names, options);
   apply_figure_options(fig);
   return fig;
 }
@@ -2359,10 +2343,14 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(std::initializer_list<st
     }
   }
   if (names.size() <= 5 && frame_.ncases() <= 256) {
-    return scatter_matrix_from_names(frame_, names, resolve_scatter_matrix_pair_options(ScatterMatrixPlotOptions{}));
+    auto fig = scatter_matrix_from_names(frame_, names, resolve_scatter_matrix_pair_options(ScatterMatrixPlotOptions{}));
+    apply_figure_options(fig);
+    return fig;
   }
   const CorrHeatmapPlotOptions corr_options{};
-  return corr_heatmap_from_names(frame_, names, corr_options.annotate_levels, corr_options.scale_guide, corr_options.borderless);
+  auto fig = corr_heatmap_from_names(frame_, names, corr_options);
+  apply_figure_options(fig);
+  return fig;
 }
 
 DataFramePlot3DAccessor::DataFramePlot3DAccessor(DataFrame frame, DataFramePlotOptions options)

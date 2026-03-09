@@ -27,6 +27,7 @@ struct FlashThemeOptions {
   FlashStyle style{FlashStyle::Lightgrid};
   FlashContext context{FlashContext::Notebook};
   bool borderless{false};
+  bool horizontal_grid{false};
   std::optional<double> width{std::nullopt};
   std::optional<double> height{std::nullopt};
 };
@@ -307,6 +308,15 @@ inline Pane& axes_style(Pane& pane, std::string_view style) {
   return set_style(pane, flash_style(style));
 }
 
+inline Pane& apply_horizontal_grid_policy(Pane& pane, bool enable) noexcept {
+  if (pane.kind() != PaneKind::Planar) {
+    return pane;
+  }
+  pane.grid(enable ? GridStyle::Major : GridStyle::None);
+  pane.x_major_grid(false).y_major_grid(enable).z_major_grid(false);
+  return pane;
+}
+
 inline Pane& set_theme(Pane& pane, const FlashThemeOptions& options) {
   set_style(pane, options.style);
   const auto [base_w, base_h, tick_scale, axis_scale] = flash_context_values(options.context);
@@ -316,19 +326,31 @@ inline Pane& set_theme(Pane& pane, const FlashThemeOptions& options) {
   if (options.borderless) {
     pane.axes_visible(false);
   }
+  apply_horizontal_grid_policy(pane, options.horizontal_grid);
   return pane;
 }
 
-inline Pane& set_theme(Pane& pane, FlashStyle style, FlashContext context = FlashContext::Notebook, bool borderless = false) {
+inline Pane& set_theme(
+    Pane& pane,
+    FlashStyle style,
+    FlashContext context = FlashContext::Notebook,
+    bool borderless = false,
+    bool horizontal_grid = false) {
   FlashThemeOptions options;
   options.style = style;
   options.context = context;
   options.borderless = borderless;
+  options.horizontal_grid = horizontal_grid;
   return set_theme(pane, options);
 }
 
-inline Pane& set_theme(Pane& pane, std::string_view style, std::string_view context = "notebook", bool borderless = false) {
-  return set_theme(pane, flash_style(style), flash_context(context), borderless);
+inline Pane& set_theme(
+    Pane& pane,
+    std::string_view style,
+    std::string_view context = "notebook",
+    bool borderless = false,
+    bool horizontal_grid = false) {
+  return set_theme(pane, flash_style(style), flash_context(context), borderless, horizontal_grid);
 }
 
 inline Studio& set_context(
@@ -386,6 +408,7 @@ inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
   if (options.borderless) {
     pane_defaults.axes_visible(false);
   }
+  apply_horizontal_grid_policy(pane_defaults, options.horizontal_grid);
   studio.pane_style_defaults(pane_defaults);
   for (const Pane& pane_const : studio.panes()) {
     auto& pane = const_cast<Pane&>(pane_const);
@@ -394,6 +417,7 @@ inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
     if (options.borderless) {
       pane.axes_visible(false);
     }
+    apply_horizontal_grid_policy(pane, options.horizontal_grid);
   }
   return studio;
 }
@@ -402,11 +426,13 @@ inline Studio& set_theme(
     Studio& studio,
     std::string_view style,
     std::string_view context = "notebook",
-    bool borderless = false) {
+    bool borderless = false,
+    bool horizontal_grid = false) {
   FlashThemeOptions options;
   options.style = flash_style(style);
   options.context = flash_context(context);
   options.borderless = borderless;
+  options.horizontal_grid = horizontal_grid;
   return set_theme(studio, options);
 }
 
@@ -428,9 +454,7 @@ inline Pane& tickless(Pane& pane, bool enable = true) {
 }
 
 inline Pane& horizontal_grid(Pane& pane, bool enable = true) noexcept {
-  pane.grid(enable ? GridStyle::Major : GridStyle::None);
-  pane.x_major_grid(false).y_major_grid(enable).z_major_grid(false);
-  return pane;
+  return apply_horizontal_grid_policy(pane, enable);
 }
 
 inline Pane& move_legend(Pane& pane, KeyPlace place) noexcept {

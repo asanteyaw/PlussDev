@@ -2069,7 +2069,7 @@ struct FiniteMinMax {
     return chars;
   };
   const auto pane_insets = [tight, &max_tick_label_chars](const Pane& pane) {
-    const double top = tight ? 44.0 : 58.0;
+    double top = tight ? 44.0 : 58.0;
     double left = tight ? 28.0 : 38.0;
     const bool axes_visible = pane.axes_visible();
     double right = pane.scale_guide_enabled() ? default_scale_guide_right_inset(axes_visible, tight)
@@ -2078,6 +2078,16 @@ struct FiniteMinMax {
       right = std::max(right, tight ? 176.0 : 212.0);
     }
     double bottom = tight ? 42.0 : 56.0;
+
+    const double tick_font = std::clamp(10.0 * pane.tick_font_scale(), 7.0, 32.0);
+    const double axis_font = std::clamp(11.0 * pane.axis_label_font_scale(), 8.0, 36.0);
+    const auto axis_text_extent = [&](const AxisState& axis, std::size_t fallback_chars) {
+      if (!axis.tick_labels_visible) {
+        return 0.0;
+      }
+      const auto chars = max_tick_label_chars(axis, fallback_chars);
+      return std::max(1.0, static_cast<double>(chars)) * tick_font * 0.56;
+    };
 
     if (pane.kind() == PaneKind::Planar) {
       if (!axes_visible) {
@@ -2094,8 +2104,6 @@ struct FiniteMinMax {
           }
         }
       }
-      const double tick_font = std::clamp(10.0 * pane.tick_font_scale(), 7.0, 32.0);
-      const double axis_font = std::clamp(11.0 * pane.axis_label_font_scale(), 8.0, 36.0);
       const auto axis_tick_depth = [&](const AxisState& axis, std::size_t fallback_chars, bool x_axis) {
         if (!axis.tick_labels_visible) {
           return axes_visible ? std::clamp(tick_font * 0.45, 4.0, 9.0) : 0.0;
@@ -2120,6 +2128,21 @@ struct FiniteMinMax {
       const double y_label_pad =
           pane.y_axis().label.empty() ? 6.0 : resolved_axis_label_gap(pane.y_axis(), axes_visible, axis_font, false);
       left = std::max(left, y_depth + y_label_pad + y_label_extent);
+    } else if (pane.kind() == PaneKind::Volumetric) {
+      const double x_extent = axis_text_extent(pane.x_axis(), 8);
+      const double y_extent = axis_text_extent(pane.y_axis(), 8);
+      const double z_extent = axis_text_extent(pane.z_axis(), 8);
+      const double x_label_extent = pane.x_axis().label.empty() ? 0.0 : axis_font;
+      const double y_label_extent = pane.y_axis().label.empty() ? 0.0 : axis_font;
+      const double z_label_extent = pane.z_axis().label.empty() ? 0.0 : axis_font;
+
+      const double near_pad = tight ? 8.0 : 12.0;
+      const double far_pad = tight ? 10.0 : 14.0;
+
+      left = std::max(left, near_pad + std::max(y_extent, z_extent) + 0.6 * std::max(y_label_extent, z_label_extent));
+      right = std::max(right, far_pad + std::max(x_extent, z_extent) + 0.65 * x_label_extent);
+      bottom = std::max(bottom, near_pad + 0.55 * (x_extent + y_extent) + 0.8 * x_label_extent);
+      top = std::max(top, near_pad + 0.45 * x_extent + (pane.title_text().empty() ? 0.0 : axis_font * 1.1));
     }
 
     return std::array<double, 4>{left, top, right, bottom};

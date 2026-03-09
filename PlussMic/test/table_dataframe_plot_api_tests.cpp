@@ -117,10 +117,10 @@ void test_object_plot_apis() {
          "plot().lag should emit cloud trace");
 
   const auto fig_acf = df.plot().act("x");
-  expect(fig_acf.panes().front().trace_count() >= 2,
-         "plot().act should emit trend + marker traces");
-  expect(fig_acf.panes().front().traces().front().kind() == TraceKind::Trend,
-         "plot().act should emit trend trace first");
+  expect(fig_acf.panes().front().trace_count() >= 1,
+         "plot().act should emit at least one spike trace");
+  expect(fig_acf.panes().front().traces().front().kind() == TraceKind::Spike,
+         "plot().act should emit spike trace first");
 
   const auto fig_bootstrap = df.plot().bootstrap("x");
   expect(fig_bootstrap.panes().front().trace_count() == 1,

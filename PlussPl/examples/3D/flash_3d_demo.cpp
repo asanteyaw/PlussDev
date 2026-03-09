@@ -189,8 +189,8 @@ int main() {
   camera_gallery.save_pdf(out_path("plusspl_flash_3d_camera_gallery.pdf"));
 
   Studio scene_gallery("flash_3d_scene_gallery", Theme::paper());
-  set_context(scene_gallery, 1580.0, 520.0, 1.0, 1.0);
-  scene_gallery.mosaic(1, 4, 10.0, 8.0);
+  set_context(scene_gallery, 1420.0, 980.0, 1.0, 1.0);
+  scene_gallery.mosaic(2, 2, 14.0, 12.0);
   const std::array<ScenePreset3D, 4> scene_presets{
       ScenePreset3D::Survey,
       ScenePreset3D::Presentation,
@@ -205,7 +205,9 @@ int main() {
   };
   for (std::size_t i = 0; i < scene_presets.size(); ++i) {
     auto& pane = scene_gallery.pane3(std::string(scene_names[i]));
-    pane.place(0, static_cast<std::int64_t>(i)).x_label("x").y_label("y").z_label("z");
+    const auto row = static_cast<std::int64_t>(i / 2);
+    const auto col = static_cast<std::int64_t>(i % 2);
+    pane.place(row, col).x_label("x").y_label("y").z_label("z");
     scene_preset3d(pane, scene_presets[i]);
     auto& trace = sheet(
         pane,

@@ -400,6 +400,44 @@ int main() {
   // style_gallery_fig.save_svg(out_path("plusspl_flash_style_gallery_demo.svg"));
   style_gallery_fig.save_pdf(out_path("plusspl_flash_style_gallery_demo.pdf"));
 
+  Studio style_hgrid_gallery_fig("flash_style_horizontal_grid_gallery_demo", Theme::paper());
+  set_theme(style_hgrid_gallery_fig, FlashThemeOptions{
+                                       .style = FlashStyle::Lightgrid,
+                                       .context = FlashContext::Notebook,
+                                       .horizontal_grid = true,
+                                       .width = 1740.0,
+                                       .height = 860.0});
+  style_hgrid_gallery_fig.mosaic(2, 4, 8.0, 8.0);
+  for (std::size_t i = 0; i < styles.size(); ++i) {
+    auto& pane = style_hgrid_gallery_fig.pane2(std::string(style_names[i]) + " (hgrid,borderless=false)");
+    pane.place(0, static_cast<std::int64_t>(i));
+    set_theme(
+        pane,
+        FlashThemeOptions{
+            .style = styles[i],
+            .context = FlashContext::Notebook,
+            .borderless = false,
+            .horizontal_grid = true,
+        });
+    lineplot(pane, x, y).label(std::string(style_names[i]));
+    pane.x_label("x").y_label("y");
+  }
+  for (std::size_t i = 0; i < styles.size(); ++i) {
+    auto& pane = style_hgrid_gallery_fig.pane2(std::string(style_names[i]) + " (hgrid,borderless=true)");
+    pane.place(1, static_cast<std::int64_t>(i));
+    set_theme(
+        pane,
+        FlashThemeOptions{
+            .style = styles[i],
+            .context = FlashContext::Notebook,
+            .borderless = true,
+            .horizontal_grid = true,
+        });
+    lineplot(pane, x, y).label(std::string(style_names[i]));
+    pane.x_label("x").y_label("y");
+  }
+  style_hgrid_gallery_fig.save_pdf(out_path("plusspl_flash_style_horizontal_grid_gallery_demo.pdf"));
+
   Studio jointplot_hex_fig("flash_jointplot_hex_demo", Theme::paper());
   JointPlotOptions joint_hex_opts;
   joint_hex_opts.kind = JointPlotKind::Hex;
@@ -536,6 +574,22 @@ int main() {
   disgridplot(dis_grid_fig, dis_values, dis_grid_opts);
   // dis_grid_fig.save_svg(out_path("plusspl_flash_disgridplot_demo.svg"));
   dis_grid_fig.save_pdf(out_path("plusspl_flash_disgridplot_demo.pdf"));
+
+  Studio facetgrid_direct_fig("flash_facetgrid_direct_demo", Theme::paper());
+  set_theme(facetgrid_direct_fig, "lightgrid", "notebook");
+  FacetGrid(facetgrid_direct_fig, 2, 2, 10.0, 10.0);
+  for (const auto row : std::views::iota(std::int64_t{0}, std::int64_t{2})) {
+    for (const auto col : std::views::iota(std::int64_t{0}, std::int64_t{2})) {
+      auto& pane = facetgrid_direct_fig.pane2("facet r" + std::to_string(row + 1) + "c" + std::to_string(col + 1));
+      pane.place(row, col).grid(GridStyle::Major).x_label("x").y_label("y");
+      const double slope = 0.24 + 0.08 * static_cast<double>(row);
+      const double freq = 0.70 + 0.16 * static_cast<double>(col);
+      auto y_local = x.mul(slope).sin().add(x.mul(freq).cos().mul(0.25));
+      lineplot(pane, x, y_local).label("facet");
+    }
+  }
+  // facetgrid_direct_fig.save_svg(out_path("plusspl_flash_facetgrid_direct_demo.svg"));
+  facetgrid_direct_fig.save_pdf(out_path("plusspl_flash_facetgrid_direct_demo.pdf"));
 
   Studio facet_map_fig("flash_facet_map_plot_demo", Theme::paper());
   facet_map_plot(

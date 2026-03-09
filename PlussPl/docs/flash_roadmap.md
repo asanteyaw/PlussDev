@@ -183,3 +183,19 @@ Status:
 
 ## Doctrine
 Loops(and nested loops) only when inevitable or needed for correctness. Linear passes preferred or vectorized Series/Note/Timeline ops where possible. Modernized cpp 20 semantics, when loops are needed and stl iterators and algos (they are not necessarily faster than classical loops but are cleaner and more compact) can do it, then they can be used rather than classical loops, other times you migh seek clarity so you can use traditional loops(they are more verbose but easier to understand), so you should manage it. Smart and vectorized delegations. No aliasing/unecessary bloat.
+
+## Doctrine Audit Snapshot (2026-03-08)
+
+Scope reviewed:
+- `PlussMic/src/table/plot/DataFramePlot.cpp`
+- `PlussPl/include/pluss/pl/flash/flash.h` (pairplot/triplot/parallelplot/andrews_curves/radviz/summaryplot families)
+
+Result summary:
+- Kept: structural nested loops required for panel grids (`pairplot`, `triplot`) and combinatorial feature selection.
+- Kept: linear passes for row-wise flattening/group assignment where matrix-level primitives are not directly available.
+- Fixed: DF heatmap/corr-heatmap render path now delegates to `flash::heatmap(...)` instead of direct `pane.fieldmap(...)`.
+- Fixed: `DataFrame::plot().auto_plot()` now preserves `DataFramePlotOptions` figure sizing/layout in scatter-matrix and corr-heatmap branches.
+
+Outstanding doctrine work (non-blocking):
+- `DataFramePlot.cpp` still has per-trace render loops in categorical/stacked builders; these are mostly structural but can be further reduced when additional flash kernels are added.
+- `flash.h` high-level families still use nested loops for panel/combination emission by design.
