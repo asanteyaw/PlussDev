@@ -161,15 +161,6 @@ int main() {
   fig_surface_heatmap.save_svg("plot_df_surface_heatmap.svg");
   fig_surface_heatmap.save_pdf("plot_df_surface_heatmap.pdf");
 
-  auto a0 = df.head(20, /*render=*/false);
-  auto a1 = df.tail(20, /*render=*/false);
-  pluss::table::Atlas atlas({a0, a1});
-
-  auto fig_atlas = atlas.plot(1).line("Agency Code");
-  fig_atlas.headline("Atlas frame(1): Agency Code");
-  fig_atlas.save_svg("plot_atlas_line.svg");
-  fig_atlas.save_pdf("plot_atlas_line.pdf");
-
   std::vector<double> z{0.2, 0.4, 0.1, 0.8, 0.6};
   auto fig3 = pluss::pl::studio("line3");
   fig3.headline("PlussPl 3D line");

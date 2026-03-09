@@ -45,6 +45,9 @@ add_executable(plussmic_sp500_eda_ml_prep_notebook_demo
 add_executable(plussmic_option_smile_skew_surface_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/option_smile_skew_surface_demo.cpp
 )
+add_executable(plussmic_atlas_plot_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/atlas_plot_demo.cpp
+)
 
 target_link_libraries(plussmic_dataframe_initial_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_view_demo PRIVATE PlussMic)
@@ -60,6 +63,7 @@ target_link_libraries(plussmic_loader_saver_parity_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_bike_sharing_eda_dfplot_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_sp500_eda_ml_prep_notebook_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_option_smile_skew_surface_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_atlas_plot_demo PRIVATE PlussMic)
 
 target_compile_definitions(plussmic_dataframe_initial_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
@@ -102,5 +106,8 @@ target_compile_definitions(plussmic_sp500_eda_ml_prep_notebook_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_option_smile_skew_surface_demo PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_atlas_plot_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )

@@ -865,17 +865,19 @@ auto out = atlas.ncases();
 #### Signature
 
 ```cpp
-DataFramePlotAccessor plot(self, std::int64_t frame_index = 0) const
+AtlasPlotAccessor plot(self) const
 ```
 
 #### Parameters
 
-`frame_index` : `std::int64_t`
-    See the signature for the supported argument form.
+This accessor now exposes both:
+
+1. Atlas-native depth plots (`surface`, `wireframe`, `cloud3`), and
+2. Frame-scoped DataFrame plots through `frames(i)`.
 
 #### Returns
 
-`DataFramePlotAccessor`
+`AtlasPlotAccessor`
     Value produced by this call.
 
 #### Notes
@@ -893,7 +895,7 @@ auto f1 = pluss::table::DataFrame({
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
-auto fig = atlas.plot(0).line("sales");
+auto fig = atlas.plot().frames(0).line("sales");
 ```
 
 #### Output

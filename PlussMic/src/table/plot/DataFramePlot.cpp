@@ -208,6 +208,11 @@ void require_plot_size(const std::vector<double>& values, std::int64_t expected,
               "DataFrame::plot: feature '" + std::string(feature_name) + "' length mismatch with cases");
 }
 
+void require_plot_size(const pluss::Series& values, std::int64_t expected, std::string_view feature_name) {
+  PLUSS_CHECK(values.numel() == expected,
+              "DataFrame::plot: feature '" + std::string(feature_name) + "' length mismatch with cases");
+}
+
 void require_plot_size(const std::vector<std::string>& values,
                        std::int64_t expected,
                        std::string_view feature_name,
@@ -1241,17 +1246,16 @@ pluss::pl::Studio DataFramePlotAccessor::area_stacked(
   apply_axis(pane, axis, options_);
   pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
 
-  std::vector<double> baselines(static_cast<std::size_t>(frame_.ncases()), 0.0);
+  auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
   std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
-    auto heights = thread_to_plot_numeric_values(frame_.features(y_name));
+    auto heights = thread_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
     require_plot_size(heights, frame_.ncases(), y_name);
-    std::vector<double> tops(heights.size(), 0.0);
-    std::transform(baselines.begin(), baselines.end(), heights.begin(), tops.begin(), std::plus<>{});
+    auto tops = baselines.add(heights);
     auto& trace = flash::areaplot(pane, axis.values, tops, 0.0);
     trace.label(std::string(y_name));
     style_trace(trace, feature_index, options.alpha, options.line_width);
-    baselines = std::move(tops);
+    baselines = tops;
     ++feature_index;
   }
   return fig;
@@ -1270,17 +1274,16 @@ pluss::pl::Studio DataFramePlotAccessor::impl_area_stacked(
   apply_axis(pane, axis, options_);
   pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
 
-  std::vector<double> baselines(static_cast<std::size_t>(frame_.ncases()), 0.0);
+  auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
   std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
-    auto heights = thread_to_plot_numeric_values(frame_.features(y_name));
+    auto heights = thread_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
     require_plot_size(heights, frame_.ncases(), y_name);
-    std::vector<double> tops(heights.size(), 0.0);
-    std::transform(baselines.begin(), baselines.end(), heights.begin(), tops.begin(), std::plus<>{});
+    auto tops = baselines.add(heights);
     auto& trace = flash::areaplot(pane, axis.values, tops, 0.0);
     trace.label(std::string(y_name));
     style_trace(trace, feature_index, 0.7, 1.2);
-    baselines = std::move(tops);
+    baselines = tops;
     ++feature_index;
   }
   return fig;
@@ -1496,17 +1499,16 @@ pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
   apply_axis(pane, axis, options_);
   pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
 
-  std::vector<double> baselines(static_cast<std::size_t>(frame_.ncases()), 0.0);
+  auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
   std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
-    auto heights = thread_to_plot_numeric_values(frame_.features(y_name));
+    auto heights = thread_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
     require_plot_size(heights, frame_.ncases(), y_name);
-    std::vector<double> tops(heights.size(), 0.0);
-    std::transform(baselines.begin(), baselines.end(), heights.begin(), tops.begin(), std::plus<>{});
+    auto tops = baselines.add(heights);
     auto& trace = flash::barplot(pane, axis.values, tops);
     trace.label(std::string(y_name));
     style_trace(trace, feature_index, options.alpha, options.line_width);
-    baselines = std::move(tops);
+    baselines = tops;
     ++feature_index;
   }
   return fig;
@@ -1525,17 +1527,16 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar_stacked(
   apply_axis(pane, axis, options_);
   pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
 
-  std::vector<double> baselines(static_cast<std::size_t>(frame_.ncases()), 0.0);
+  auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
   std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
-    auto heights = thread_to_plot_numeric_values(frame_.features(y_name));
+    auto heights = thread_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
     require_plot_size(heights, frame_.ncases(), y_name);
-    std::vector<double> tops(heights.size(), 0.0);
-    std::transform(baselines.begin(), baselines.end(), heights.begin(), tops.begin(), std::plus<>{});
+    auto tops = baselines.add(heights);
     auto& trace = flash::barplot(pane, axis.values, tops);
     trace.label(std::string(y_name));
     style_trace(trace, feature_index, 0.65, 1.0);
-    baselines = std::move(tops);
+    baselines = tops;
     ++feature_index;
   }
   return fig;

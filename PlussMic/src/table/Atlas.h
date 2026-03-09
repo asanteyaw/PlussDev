@@ -23,6 +23,8 @@ namespace detail {
 class AtlasImpl;
 }
 
+struct AtlasPlotOptions;
+
 class Atlas {
 public:
   Atlas();
@@ -47,7 +49,8 @@ public:
 
   DataFrame frame(std::int64_t index) const;
   DataFrame iloc(std::int64_t index) const;
-  DataFramePlotAccessor plot(std::int64_t frame_index = 0) const;
+  AtlasPlotAccessor plot() const;
+  AtlasPlotAccessor plot(const AtlasPlotOptions& options) const;
   DataFrame squeeze() const;
 
   DataFrame loc(std::string_view label) const;
@@ -83,3 +86,5 @@ private:
 std::ostream& operator<<(std::ostream& os, const Atlas& atlas);
 
 } // namespace pluss::table
+
+#include "table/plot/AtlasPlot.h"

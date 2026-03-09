@@ -415,10 +415,9 @@ inline Studio& set_context(
 }
 
 inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
-  const Theme theme_tokens = flash_theme(options.style);
-  studio.theme(theme_tokens);
+  const Theme base_theme = studio.theme_tokens();
   set_context(studio, options.context, options.width, options.height);
-  Pane pane_defaults(PaneKind::Planar, theme_tokens, {});
+  Pane pane_defaults(PaneKind::Planar, base_theme, {});
   set_style(pane_defaults, options.style);
   if (options.borderless) {
     pane_defaults.axes_visible(false);
@@ -427,7 +426,6 @@ inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
   studio.pane_style_defaults(pane_defaults);
   for (const Pane& pane_const : studio.panes()) {
     auto& pane = const_cast<Pane&>(pane_const);
-    pane.theme_tokens() = theme_tokens;
     set_style(pane, options.style);
     if (options.borderless) {
       pane.axes_visible(false);

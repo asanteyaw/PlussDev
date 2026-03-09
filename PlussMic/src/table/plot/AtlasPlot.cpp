@@ -1,10 +1,14 @@
 #include "table/Atlas.h"
-#include "table/plot/DataFramePlot.h"
+#include "table/plot/AtlasPlot.h"
 
 namespace pluss::table {
 
-DataFramePlotAccessor Atlas::plot(std::int64_t frame_index) const {
-  return frame(frame_index).plot();
+AtlasPlotAccessor Atlas::plot() const {
+  return AtlasPlotAccessor(frames(), axis0_labels());
+}
+
+AtlasPlotAccessor Atlas::plot(const AtlasPlotOptions& options) const {
+  return AtlasPlotAccessor(frames(), axis0_labels(), options);
 }
 
 } // namespace pluss::table

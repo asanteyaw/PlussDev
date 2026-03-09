@@ -44,6 +44,7 @@ class DataFrame;
 class DataFrameView;
 class DataFramePlotAccessor;
 class DataFramePlot3DAccessor;
+class AtlasPlotAccessor;
 struct DataFramePlotOptions;
 class DataFrameSqlAccessor;
 class DataFrameSqlPrepared;

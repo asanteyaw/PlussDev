@@ -14,11 +14,13 @@ target_sources(PlussMic PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/DataFramePlotOps.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/sql/DataFrameSql.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/AtlasPlot.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/plot/atlas/AtlasPlotAccessor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/display/Display.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Thread.h
   ${CMAKE_CURRENT_SOURCE_DIR}/DataFrame.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Atlas.h
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/DataFramePlot.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/plot/AtlasPlot.h
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/detail/Plot3DConfig.h
   ${CMAKE_CURRENT_SOURCE_DIR}/plot/DataFramePlotOps.h
   ${CMAKE_CURRENT_SOURCE_DIR}/sql/DataFrameSql.h

@@ -197,5 +197,10 @@ Result summary:
 - Fixed: `DataFrame::plot().auto_plot()` now preserves `DataFramePlotOptions` figure sizing/layout in scatter-matrix and corr-heatmap branches.
 
 Outstanding doctrine work (non-blocking):
-- `DataFramePlot.cpp` still has per-trace render loops in categorical/stacked builders; these are mostly structural but can be further reduced when additional flash kernels are added.
-- `flash.h` high-level families still use nested loops for panel/combination emission by design.
+- [x] Atlas plotting API modularized into dedicated Atlas plot files (`AtlasPlot.h`, `AtlasPlot.cpp`, `plot/atlas/AtlasPlotAccessor.cpp`) to keep `DataFramePlot` surface lean.
+- [x] Atlas tranche upgrade uses structural/linear passes only where needed:
+  - `atlas.plot().depth(...)` computes per-frame reductions directly from pluss-native feature values.
+  - `atlas.plot().triplot(...)` flattens selected features once, then delegates panel emission to `flash::triplot(...)`.
+  - No "loop relocation" from `DataFramePlot` into flash wrappers was used as a doctrine shortcut.
+- [ ] `DataFramePlot.cpp` still has per-trace render loops in categorical/stacked builders; these are mostly structural but can be further reduced when additional flash kernels are added.
+- [ ] `flash.h` high-level families still use nested loops for panel/combination emission by design.
