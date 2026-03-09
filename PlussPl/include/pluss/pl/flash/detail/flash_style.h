@@ -312,8 +312,37 @@ inline Pane& apply_horizontal_grid_policy(Pane& pane, bool enable) noexcept {
   if (pane.kind() != PaneKind::Planar) {
     return pane;
   }
-  pane.grid(enable ? GridStyle::Major : GridStyle::None);
-  pane.x_major_grid(false).y_major_grid(enable).z_major_grid(false);
+  const std::string_view theme_name = pane.theme_tokens().name();
+  const bool grid_style = theme_name.find("darkgrid") != std::string_view::npos ||
+                          theme_name.find("lightgrid") != std::string_view::npos;
+
+  if (!grid_style) {
+    // Dark/light styles remain gridless even when horizontal_grid=true.
+    pane.grid(GridStyle::None)
+        .x_major_grid(false)
+        .y_major_grid(false)
+        .z_major_grid(false)
+        .x_minor_grid(false)
+        .y_minor_grid(false)
+        .z_minor_grid(false);
+    return pane;
+  }
+
+  if (!enable) {
+    // Restore default grid-style behavior (both axes major grid on).
+    pane.grid(GridStyle::Major)
+        .x_major_grid(true)
+        .y_major_grid(true)
+        .z_major_grid(true);
+    return pane;
+  }
+
+  pane.grid(GridStyle::Major)
+      .x_major_grid(false)
+      .y_major_grid(true)
+      .z_major_grid(false)
+      .x_minor_grid(false)
+      .z_minor_grid(false);
   return pane;
 }
 

@@ -4258,6 +4258,23 @@ void render_planar_axes(
           {{y_axis_x, layout.plot.y}, {y_axis_x, layout.plot.y + layout.plot.height}},
           FillStroke{axis_color, {}, true, false, 1.0},
           false);
+
+      // For horizontal-grid panes (y-major only), close the top/right edge using grid tone,
+      // while keeping only left/bottom as axis-bold lines.
+      if (pane.y_axis().major_grid && !pane.x_axis().major_grid) {
+        const Rgba close_color = major_grid_color;
+        add_path(
+            list,
+            {{layout.plot.x + layout.plot.width, layout.plot.y},
+             {layout.plot.x + layout.plot.width, layout.plot.y + layout.plot.height}},
+            FillStroke{close_color, {}, true, false, 0.8},
+            false);
+        add_path(
+            list,
+            {{layout.plot.x, layout.plot.y}, {layout.plot.x + layout.plot.width, layout.plot.y}},
+            FillStroke{close_color, {}, true, false, 0.8},
+            false);
+      }
     }
     const auto x_tick_align = std::abs(x_tick_rotation) > 1e-9 ? TextCommand::Align::Start : TextCommand::Align::Middle;
     for (const auto& [value, label] : x_ticks) {
