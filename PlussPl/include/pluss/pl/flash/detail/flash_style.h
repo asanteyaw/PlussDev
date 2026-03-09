@@ -10,8 +10,10 @@ enum class FlashContext : std::uint8_t {
 enum class FlashStyle : std::uint8_t {
   Darkgrid,
   Lightgrid,
+  Sandgrid,
   Dark,
   Light,
+  Sand,
 };
 
 enum class FlashPalette : std::uint8_t {
@@ -31,21 +33,6 @@ struct FlashThemeOptions {
   std::optional<double> width{std::nullopt};
   std::optional<double> height{std::nullopt};
 };
-
-[[nodiscard]] inline FlashContext flash_context(std::string_view name) {
-  if (name == "paper") return FlashContext::Paper;
-  if (name == "talk") return FlashContext::Talk;
-  if (name == "poster") return FlashContext::Poster;
-  return FlashContext::Notebook;
-}
-
-[[nodiscard]] inline FlashStyle flash_style(std::string_view name) {
-  if (name == "darkgrid") return FlashStyle::Darkgrid;
-  if (name == "dark") return FlashStyle::Dark;
-  if (name == "light") return FlashStyle::Light;
-  if (name == "lightgrid") return FlashStyle::Lightgrid;
-  return FlashStyle::Lightgrid;
-}
 
 [[nodiscard]] inline FlashPalette flash_palette_kind(std::string_view name) {
   if (name == "muted") return FlashPalette::Muted;
@@ -191,6 +178,12 @@ struct FlashThemeOptions {
       foreground = Rgba::from_u8(34, 34, 34);
       theme_name = "flash_lightgrid";
       break;
+    case FlashStyle::Sandgrid:
+      // Sandgrid keeps the neutral panel and paints a warm plot face in the renderer.
+      background = Rgba::from_u8(255, 255, 255);
+      foreground = Rgba::from_u8(56, 52, 40);
+      theme_name = "flash_sandgrid";
+      break;
     case FlashStyle::Dark:
       // Dark style shades only the plot face; keep panel background neutral.
       background = Rgba::from_u8(255, 255, 255);
@@ -201,6 +194,11 @@ struct FlashThemeOptions {
       background = Rgba::from_u8(255, 255, 255);
       foreground = Rgba::from_u8(26, 26, 26);
       theme_name = "flash_light";
+      break;
+    case FlashStyle::Sand:
+      background = Rgba::from_u8(255, 255, 255);
+      foreground = Rgba::from_u8(56, 52, 40);
+      theme_name = "flash_sand";
       break;
   }
   return Theme{
@@ -256,6 +254,11 @@ inline Pane& set_style(Pane& pane, FlashStyle style) {
       fg = Rgba::from_u8(34, 34, 34);
       theme_name = "flash_style_lightgrid";
       break;
+    case FlashStyle::Sandgrid:
+      bg = Rgba::from_u8(255, 255, 255);
+      fg = Rgba::from_u8(56, 52, 40);
+      theme_name = "flash_style_sandgrid";
+      break;
     case FlashStyle::Dark:
       bg = Rgba::from_u8(255, 255, 255);
       fg = Rgba::from_u8(34, 34, 34);
@@ -266,11 +269,17 @@ inline Pane& set_style(Pane& pane, FlashStyle style) {
       fg = Rgba::from_u8(26, 26, 26);
       theme_name = "flash_style_light";
       break;
+    case FlashStyle::Sand:
+      bg = Rgba::from_u8(255, 255, 255);
+      fg = Rgba::from_u8(56, 52, 40);
+      theme_name = "flash_style_sand";
+      break;
   }
   pane.theme_tokens() = Theme{std::move(theme_name), base.accents(), bg, fg, base.surface_palette()};
   switch (style) {
     case FlashStyle::Darkgrid:
     case FlashStyle::Lightgrid:
+    case FlashStyle::Sandgrid:
       pane.axes_visible(true)
           .grid(GridStyle::Major)
           .x_major_grid(true)
@@ -279,6 +288,7 @@ inline Pane& set_style(Pane& pane, FlashStyle style) {
       break;
     case FlashStyle::Dark:
     case FlashStyle::Light:
+    case FlashStyle::Sand:
       pane.axes_visible(true)
           .grid(GridStyle::None)
           .x_major_grid(false)
@@ -292,10 +302,6 @@ inline Pane& set_style(Pane& pane, FlashStyle style) {
   return pane;
 }
 
-inline Pane& set_style(Pane& pane, std::string_view style) {
-  return set_style(pane, flash_style(style));
-}
-
 inline Pane& axes_style(Pane& pane, GridStyle style = GridStyle::Major) {
   return set_style(pane, style);
 }
@@ -304,17 +310,14 @@ inline Pane& axes_style(Pane& pane, FlashStyle style) {
   return set_style(pane, style);
 }
 
-inline Pane& axes_style(Pane& pane, std::string_view style) {
-  return set_style(pane, flash_style(style));
-}
-
 inline Pane& apply_horizontal_grid_policy(Pane& pane, bool enable) noexcept {
   if (pane.kind() != PaneKind::Planar) {
     return pane;
   }
   const std::string_view theme_name = pane.theme_tokens().name();
   const bool grid_style = theme_name.find("darkgrid") != std::string_view::npos ||
-                          theme_name.find("lightgrid") != std::string_view::npos;
+                          theme_name.find("lightgrid") != std::string_view::npos ||
+                          theme_name.find("sandgrid") != std::string_view::npos;
 
   if (!grid_style) {
     // Dark/light styles remain gridless even when horizontal_grid=true.
@@ -373,15 +376,6 @@ inline Pane& set_theme(
   return set_theme(pane, options);
 }
 
-inline Pane& set_theme(
-    Pane& pane,
-    std::string_view style,
-    std::string_view context = "notebook",
-    bool borderless = false,
-    bool horizontal_grid = false) {
-  return set_theme(pane, flash_style(style), flash_context(context), borderless, horizontal_grid);
-}
-
 inline Studio& set_context(
     Studio& studio,
     double width,
@@ -420,14 +414,6 @@ inline Studio& set_context(
       axis_scale);
 }
 
-inline Studio& set_context(
-    Studio& studio,
-    std::string_view context,
-    std::optional<double> width = std::nullopt,
-    std::optional<double> height = std::nullopt) {
-  return set_context(studio, flash_context(context), width, height);
-}
-
 inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
   const Theme theme_tokens = flash_theme(options.style);
   studio.theme(theme_tokens);
@@ -449,20 +435,6 @@ inline Studio& set_theme(Studio& studio, const FlashThemeOptions& options) {
     apply_horizontal_grid_policy(pane, options.horizontal_grid);
   }
   return studio;
-}
-
-inline Studio& set_theme(
-    Studio& studio,
-    std::string_view style,
-    std::string_view context = "notebook",
-    bool borderless = false,
-    bool horizontal_grid = false) {
-  FlashThemeOptions options;
-  options.style = flash_style(style);
-  options.context = flash_context(context);
-  options.borderless = borderless;
-  options.horizontal_grid = horizontal_grid;
-  return set_theme(studio, options);
 }
 
 inline Studio& tight_layout(Studio& studio, double padding = 6.0) {

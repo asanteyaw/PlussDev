@@ -4158,13 +4158,19 @@ void render_planar_axes(
     const Rgba bg = pane.theme_tokens().background();
     const std::string_view theme_name = pane.theme_tokens().name();
     const bool darkgrid_style = theme_name.find("darkgrid") != std::string_view::npos;
-    const bool dark_style = !darkgrid_style &&
+    const bool sandgrid_style = theme_name.find("sandgrid") != std::string_view::npos;
+    const bool dark_style = !darkgrid_style && !sandgrid_style &&
                             (theme_name.find("flash_style_dark") != std::string_view::npos ||
                              theme_name.find("flash_dark") != std::string_view::npos);
+    const bool sand_style = !sandgrid_style &&
+                            (theme_name.find("flash_style_sand") != std::string_view::npos ||
+                             theme_name.find("flash_sand") != std::string_view::npos);
     const double bg_luma = 0.2126 * bg.red + 0.7152 * bg.green + 0.0722 * bg.blue;
     const bool dark_background = bg_luma < 0.5;
-    if (darkgrid_style || dark_style) {
-      const Rgba plot_face = darkgrid_style ? Rgba::from_u8(239, 242, 246) : Rgba::from_u8(231, 236, 242);
+    if (darkgrid_style || sandgrid_style || dark_style || sand_style) {
+      const Rgba plot_face = darkgrid_style ? Rgba::from_u8(239, 242, 246)
+                                            : (sandgrid_style || sand_style ? Rgba::from_u8(250, 244, 225)
+                                                                            : Rgba::from_u8(231, 236, 242));
       add_path(
           list,
           {
@@ -4179,12 +4185,14 @@ void render_planar_axes(
     }
     const Rgba minor_grid_color = darkgrid_style
                                       ? Rgba::from_u8(184, 192, 204, 186)
-                                      : (dark_background ? Rgba::from_u8(73, 86, 104, 170)
-                                                         : Rgba::from_u8(234, 238, 244));
+                                      : (sandgrid_style ? Rgba::from_u8(222, 212, 182)
+                                                        : (dark_background ? Rgba::from_u8(73, 86, 104, 170)
+                                                                           : Rgba::from_u8(234, 238, 244)));
     const Rgba major_grid_color = darkgrid_style
                                       ? Rgba::from_u8(151, 163, 181, 210)
-                                      : (dark_background ? Rgba::from_u8(96, 111, 131, 190)
-                                                         : Rgba::from_u8(224, 229, 236));
+                                      : (sandgrid_style ? Rgba::from_u8(194, 178, 139)
+                                                        : (dark_background ? Rgba::from_u8(96, 111, 131, 190)
+                                                                           : Rgba::from_u8(224, 229, 236)));
 
     if (pane.x_axis().minor_grid) {
       for (const double value : x_minor) {

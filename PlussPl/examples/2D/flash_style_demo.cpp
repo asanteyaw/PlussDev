@@ -28,7 +28,10 @@ int main() {
   auto hue_numeric = x.mul(0.9).sin().add(1.0).mul(2.0).round();
 
   Studio fig("flash_flash_catalog", Theme::paper());
-  set_theme(fig, "lightgrid", "talk");
+  set_theme(fig, FlashThemeOptions{
+                     .style = FlashStyle::Lightgrid,
+                     .context = FlashContext::Talk,
+                 });
   set_context(fig, FlashContext::Talk, 1520.0, 980.0);
   fig.mosaic(3, 3, 16.0, 16.0);
 
@@ -363,25 +366,31 @@ int main() {
     context_fig.save_pdf(out_path("plusspl_flash_context_" + std::string(context_names[i]) + "_demo.pdf"));
   }
 
+  const std::array<FlashStyle, 6> styles{
+      FlashStyle::Darkgrid,
+      FlashStyle::Lightgrid,
+      FlashStyle::Sandgrid,
+      FlashStyle::Dark,
+      FlashStyle::Light,
+      FlashStyle::Sand,
+  };
+  const std::array<std::string_view, 6> style_names{
+      "darkgrid",
+      "lightgrid",
+      "sandgrid",
+      "dark",
+      "light",
+      "sand",
+  };
+  const double style_gallery_width = 430.0 * static_cast<double>(styles.size());
+
   Studio style_gallery_fig("flash_style_gallery_demo", Theme::paper());
   set_theme(style_gallery_fig, FlashThemeOptions{
                                  .style = FlashStyle::Lightgrid,
                                  .context = FlashContext::Notebook,
-                                 .width = 1740.0,
+                                 .width = style_gallery_width,
                                  .height = 860.0});
-  style_gallery_fig.mosaic(2, 4, 8.0, 8.0);
-  const std::array<FlashStyle, 4> styles{
-      FlashStyle::Darkgrid,
-      FlashStyle::Lightgrid,
-      FlashStyle::Dark,
-      FlashStyle::Light,
-  };
-  const std::array<std::string_view, 4> style_names{
-      "darkgrid",
-      "lightgrid",
-      "dark",
-      "light",
-  };
+  style_gallery_fig.mosaic(2, static_cast<std::int64_t>(styles.size()), 8.0, 8.0);
   for (std::size_t i = 0; i < styles.size(); ++i) {
     auto& pane = style_gallery_fig.pane2(std::string(style_names[i]) + " (borderless=false)");
     pane.place(0, static_cast<std::int64_t>(i));
@@ -405,9 +414,9 @@ int main() {
                                        .style = FlashStyle::Lightgrid,
                                        .context = FlashContext::Notebook,
                                        .horizontal_grid = true,
-                                       .width = 1740.0,
+                                       .width = style_gallery_width,
                                        .height = 860.0});
-  style_hgrid_gallery_fig.mosaic(2, 4, 8.0, 8.0);
+  style_hgrid_gallery_fig.mosaic(2, static_cast<std::int64_t>(styles.size()), 8.0, 8.0);
   for (std::size_t i = 0; i < styles.size(); ++i) {
     auto& pane = style_hgrid_gallery_fig.pane2(std::string(style_names[i]) + " (hgrid,borderless=false)");
     pane.place(0, static_cast<std::int64_t>(i));
@@ -576,7 +585,10 @@ int main() {
   dis_grid_fig.save_pdf(out_path("plusspl_flash_disgridplot_demo.pdf"));
 
   Studio facetgrid_direct_fig("flash_facetgrid_direct_demo", Theme::paper());
-  set_theme(facetgrid_direct_fig, "lightgrid", "notebook");
+  set_theme(facetgrid_direct_fig, FlashThemeOptions{
+                                    .style = FlashStyle::Lightgrid,
+                                    .context = FlashContext::Notebook,
+                                });
   FacetGrid(facetgrid_direct_fig, 2, 2, 10.0, 10.0);
   for (const auto row : std::views::iota(std::int64_t{0}, std::int64_t{2})) {
     for (const auto col : std::views::iota(std::int64_t{0}, std::int64_t{2})) {
