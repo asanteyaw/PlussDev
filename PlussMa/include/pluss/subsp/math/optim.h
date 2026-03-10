@@ -5282,6 +5282,35 @@ inline bool should_enter_feasibility_phase_(const InternalProtocolState& state,
   return state.evaluation.max_constraint_violation > threshold;
 }
 
+inline bool near_stationary_feasible_(const InternalProtocolState& state,
+                                      const InternalProtocolOptions& options) {
+  if (state.evaluation.status != EvalStatus::Ok) return false;
+  // Practical convergence gate: mirrors TolFun/TolX-style stopping behavior
+  // once feasibility is strong and barrier terms are sufficiently small.
+  const double barrier_gate =
+      std::max(1e4 * options.minimum_barrier_parameter, options.minimum_barrier_parameter);
+  if (!(state.barrier_parameter <= barrier_gate)) return false;
+
+  const double stationarity_gate = std::max(2000.0 * options.optimality_tolerance, 1e-12);
+  const double feasibility_gate = std::max(5.0 * options.constraint_tolerance, 1e-12);
+  const double complementarity_gate = std::max(25.0 * options.optimality_tolerance, 1e-12);
+
+  return state.evaluation.max_constraint_violation <= feasibility_gate &&
+         state.complementarity_residual <= complementarity_gate &&
+         state.barrier_gradient_norm <= stationarity_gate;
+}
+
+inline bool should_reduce_barrier_(const InternalProtocolState& state,
+                                   const InternalProtocolOptions& options) {
+  if (!(state.barrier_parameter > options.minimum_barrier_parameter)) return false;
+  return state.barrier_gradient_norm <=
+             std::max(10.0 * options.optimality_tolerance, 10.0 * state.barrier_parameter) &&
+         state.evaluation.max_constraint_violation <=
+             std::max(options.constraint_tolerance, 10.0 * state.barrier_parameter) &&
+         state.complementarity_residual <=
+             std::max(options.optimality_tolerance, 10.0 * state.barrier_parameter);
+}
+
 inline RecoveryResult advance_feasibility_phase_(const ConstrainedProblem& problem,
                                                  const ParameterPack<Series>& start_params,
                                                  const ProblemEvaluation& start_evaluation,
@@ -6641,7 +6670,9 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
     if (phase.success) {
       next.params = phase.params;
       next.evaluation = phase.evaluation;
-      next.iteration += std::max<std::int64_t>(phase.iterations, 1);
+      // Count one major internal-protocol iteration; feasibility substeps are
+      // tracked separately in function-evaluation counts.
+      next.iteration += 1;
       next.last_step_size = phase.last_step_size;
       next.message = phase.message;
       next.hessian = detail::identity_matrix_(
@@ -6663,9 +6694,12 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
           next.barrier_parameter,
           options.equality_penalty,
           next.normalization);
+      if (detail::should_reduce_barrier_(next, options)) {
+        detail::reduce_barrier_state_(next, next_system, options);
+      }
       next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
       detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
-      if (next.iteration >= options.max_iterations) {
+      if (next.iteration >= options.max_iterations && !next.converged) {
         next.converged = true;
         next.message = "maximum iterations reached";
       }
@@ -6705,7 +6739,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
       next.iteration += 1;
       detail::reduce_barrier_state_(next, system, options);
       detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
-      if (next.iteration >= options.max_iterations) {
+      if (next.iteration >= options.max_iterations && !next.converged) {
         next.converged = true;
         next.message = "maximum iterations reached";
       }
@@ -6716,7 +6750,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
       next.iteration += 1;
       next.in_feasibility_phase = true;
       next.message = "switching to feasibility phase";
-      if (next.iteration >= options.max_iterations) {
+      if (next.iteration >= options.max_iterations && !next.converged) {
         next.converged = true;
         next.message = "maximum iterations reached";
       }
@@ -7033,17 +7067,16 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
             state.normalization);
         next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
 
-        if (next.barrier_gradient_norm <= std::max(10.0 * options.optimality_tolerance, next.barrier_parameter) &&
-            next.evaluation.max_constraint_violation <=
-                std::max(options.constraint_tolerance, 10.0 * next.barrier_parameter) &&
-            next.complementarity_residual <=
-                std::max(options.optimality_tolerance, 10.0 * next.barrier_parameter) &&
-            next.barrier_parameter > options.minimum_barrier_parameter) {
+        if (detail::should_reduce_barrier_(next, options)) {
           detail::reduce_barrier_state_(next, next_system, options);
         }
 
         detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
-        if (next.iteration >= options.max_iterations) {
+        if (detail::near_stationary_feasible_(next, options)) {
+          next.converged = true;
+          next.message = "barrier progress below tolerance at a feasible point";
+        }
+        if (next.iteration >= options.max_iterations && !next.converged) {
           next.converged = true;
           next.message = "maximum iterations reached";
         }
@@ -7112,9 +7145,12 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
           next.barrier_parameter,
           options.equality_penalty,
           state.normalization);
+      if (detail::should_reduce_barrier_(next, options)) {
+        detail::reduce_barrier_state_(next, next_system, options);
+      }
       next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
       detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
-      if (next.iteration >= options.max_iterations) {
+      if (next.iteration >= options.max_iterations && !next.converged) {
         next.converged = true;
         next.message = "maximum iterations reached";
       }
@@ -7183,6 +7219,11 @@ inline InternalProtocolState solve_internal_protocol(const ConstrainedProblem& p
       break;
     }
   }
+  if (!state.converged && state.iteration >= options.max_iterations &&
+      detail::near_stationary_feasible_(state, options)) {
+    state.converged = true;
+    state.message = "iteration budget reached near-stationary feasible point";
+  }
   if (!state.converged && state.best_feasible.has_value()) {
     auto best_evaluation = evaluate_problem(problem, state.best_feasible->params);
     ++state.function_evaluations;
@@ -7198,9 +7239,12 @@ inline InternalProtocolState solve_internal_protocol(const ConstrainedProblem& p
           options.equality_penalty,
           best_state.normalization);
       if (best_state.evaluation.max_constraint_violation <= options.constraint_tolerance &&
-          best_state.barrier_gradient_norm <= options.optimality_tolerance) {
+          (best_state.barrier_gradient_norm <= options.optimality_tolerance ||
+           detail::near_stationary_feasible_(best_state, options))) {
         best_state.converged = true;
-        best_state.message = "returned best feasible point satisfying tolerances";
+        best_state.message = detail::near_stationary_feasible_(best_state, options)
+                                 ? "returned near-stationary best feasible point"
+                                 : "returned best feasible point satisfying tolerances";
         state = std::move(best_state);
       }
     }

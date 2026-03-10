@@ -1,116 +1,309 @@
 # Flash Theming API
 
-`flash` theming is typed (`enum class` + option structs), not string-driven for style/context selection.
+`pluss::pl::flash` style/context helpers for figure sizing, pane styling, and palette policy.
 
-## Core enums
+## API Reference Style
+
+### `flash::color_palette`
+
+#### Signature
 
 ```cpp
-enum class FlashContext : std::uint8_t {
-  Inherit,
-  Paper,
-  Notebook,
-  Talk,
-  Poster,
-};
-
-enum class FlashStyle : std::uint8_t {
-  Darkgrid,
-  Lightgrid,
-  Sandgrid,
-  Dark,
-  Light,
-  Sand,
-};
-
-enum class FlashPalette : std::uint8_t {
-  Deep,
-  Muted,
-  Pastel,
-  Bright,
-  Dark,
-  Colorblind,
-};
+PaletteRamp color_palette(name: std::string_view = "ocean");
 ```
 
-Shorthand namespaces are available:
+#### Notes
 
-```cpp
-fc::Talk      // FlashContext::Talk
-fs::Sandgrid  // FlashStyle::Sandgrid
-fp::Muted     // FlashPalette::Muted
+Returns a named palette ramp (`ocean`, `thermal`, `lagoon`, `meadow`, `neutral`, plus seaborn-like names).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "color_palette") {
+:end-at: return true;
 ```
 
-## Theme options
+#### Output
 
-```cpp
-struct FlashThemeOptions {
-  FlashStyle style{FlashStyle::Lightgrid};
-  FlashContext context{FlashContext::Inherit};
-  bool borderless{false};
-  bool horizontal_grid{false};
-  std::optional<KeyPlace> legend_place{std::nullopt};
-  std::optional<KeyDock> legend_dock{std::nullopt};
-  std::optional<KeyShape> legend_shape{std::nullopt};
-  std::optional<double> width{std::nullopt};
-  std::optional<double> height{std::nullopt};
-};
+```{only} html
+![color_palette output](_static/plots/methods/color_palette.svg)
 ```
 
-## Main theming functions
-
-```cpp
-Studio& set(Studio& studio, Theme theme = Theme::paper());
-Studio& set_theme(Studio& studio, Theme theme = Theme::paper());
-
-Pane& set_style(Pane& pane, GridStyle style = GridStyle::Major);
-Pane& set_style(Pane& pane, FlashStyle style);
-
-Studio& set_context(Studio& studio, ...);
-Studio& set_theme(Studio& studio, const FlashThemeOptions& options);
-Pane& set_theme(Pane& pane, const FlashThemeOptions& options);
-
-Pane& horizontal_grid(Pane& pane, bool enable = true);
-Pane& tickless(Pane& pane, bool enable = true);
-Pane& despine(Pane& pane, bool enable = true);
+```{only} not html
+![color_palette output](_static/plots/methods/color_palette.png)
 ```
 
-## Behavior and precedence
+### `flash::despine`
 
-`set_theme(studio, FlashThemeOptions)` applies:
-
-- context scaling (unless `context == FlashContext::Inherit`)
-- style policy defaults for panes in that studio
-- optional figure extent (`width`, `height`)
-- optional legend overrides
-
-Important:
-
-- `FlashContext::Inherit` means “do not reset context scales/extent from current studio state”.
-- `borderless` and `horizontal_grid` are style-policy toggles; they do not replace `Studio` theme object identity.
-- You can still set local pane-level overrides after studio-level theming.
-
-## Example
+#### Signature
 
 ```cpp
-#include <pluss/pl/flash.h>
+Pane& despine(self: Pane, enable: bool = true) noexcept;
+```
 
-using namespace pluss::pl;
-using namespace pluss::pl::flash;
+#### Notes
 
-Studio fig("flash_theme_demo", Theme::paper());
-set_theme(fig, FlashThemeOptions{
-    .style = FlashStyle::Sandgrid,
-    .context = FlashContext::Talk,
-    .borderless = true,
-    .horizontal_grid = true,
-    .legend_dock = KeyDock::East,
-    .width = 1320.0,
-    .height = 840.0,
-});
+Keeps the plotting content while removing pane-frame emphasis for cleaner minimalist charts.
 
-auto& p = fig.pane2("trend");
-lineplot(p,
-         std::vector<double>{0, 1, 2, 3, 4},
-         std::vector<double>{0.2, 0.7, 1.0, 0.4, -0.1});
-fig.save_pdf("flash_theme_demo.pdf");
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "despine") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![despine output](_static/plots/methods/despine.svg)
+```
+
+```{only} not html
+![despine output](_static/plots/methods/despine.png)
+```
+
+### `flash::horizontal_grid`
+
+#### Signature
+
+```cpp
+Pane& horizontal_grid(self: Pane, enable: bool = true) noexcept;
+```
+
+#### Notes
+
+Applies y-major grid only (with x-grid suppressed) for time-series readability.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "horizontal_grid") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![horizontal_grid output](_static/plots/methods/horizontal_grid.svg)
+```
+
+```{only} not html
+![horizontal_grid output](_static/plots/methods/horizontal_grid.png)
+```
+
+### `flash::load_dataset`
+
+#### Signature
+
+```cpp
+std::optional<Dataset> load_dataset(name: std::string_view);
+```
+
+#### Notes
+
+Loads built-in dataset bundles (currently `tips`, `flights`) for quick exploratory plotting flows.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "load_dataset") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![load_dataset output](_static/plots/methods/load_dataset.svg)
+```
+
+```{only} not html
+![load_dataset output](_static/plots/methods/load_dataset.png)
+```
+
+### `flash::plotting_context`
+
+#### Signature
+
+```cpp
+Studio& plotting_context(self: Studio, width: double, height: double, tick_font_scale: double = 1.0, axis_label_font_scale: double = 1.0);
+```
+
+#### Notes
+
+Alias of `set_context(...)`; applies figure extent and tick/label scaling.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "plotting_context") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![plotting_context output](_static/plots/methods/plotting_context.svg)
+```
+
+```{only} not html
+![plotting_context output](_static/plots/methods/plotting_context.png)
+```
+
+### `flash::set_context`
+
+#### Signature
+
+```cpp
+Studio& set_context(self: Studio, width: double, height: double, tick_font_scale: double = 1.0, axis_label_font_scale: double = 1.0);
+Studio& set_context(self: Studio, context: FlashContext, width: std::optional<double> = std::nullopt, height: std::optional<double> = std::nullopt);
+```
+
+#### Notes
+
+Primary context entry point. Use explicit dimensions or semantic context presets (`Paper`, `Notebook`, `Talk`, `Poster`).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "set_context") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![set_context output](_static/plots/methods/set_context.svg)
+```
+
+```{only} not html
+![set_context output](_static/plots/methods/set_context.png)
+```
+
+### `flash::set_style`
+
+#### Signature
+
+```cpp
+Pane& set_style(self: Pane, style: GridStyle = GridStyle::Major);
+Pane& set_style(self: Pane, style: FlashStyle);
+```
+
+#### Notes
+
+Low-level style primitive for a single pane (`Darkgrid`, `Lightgrid`, `Sandgrid`, `Dark`, `Light`, `Sand`).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "set_style") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![set_style output](_static/plots/methods/set_style.svg)
+```
+
+```{only} not html
+![set_style output](_static/plots/methods/set_style.png)
+```
+
+### `flash::set_theme` (Pane)
+
+#### Signature
+
+```cpp
+Pane& set_theme(self: Pane, options: FlashThemeOptions);
+Pane& set_theme(self: Pane, style: FlashStyle, context: FlashContext = FlashContext::Inherit, borderless: bool = false, horizontal_grid: bool = false);
+```
+
+#### Notes
+
+Applies local theme policy to one pane, including style, context font scales, and grid/border rules.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "set_theme_pane") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![set_theme_pane output](_static/plots/methods/set_theme_pane.svg)
+```
+
+```{only} not html
+![set_theme_pane output](_static/plots/methods/set_theme_pane.png)
+```
+
+### `flash::set_theme` (Studio)
+
+#### Signature
+
+```cpp
+Studio& set_theme(self: Studio, options: FlashThemeOptions);
+Studio& set_theme(self: Studio, theme: Theme = Theme::paper());
+```
+
+#### Notes
+
+Applies style defaults and context sizing across the full figure and existing panes.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "set_theme_studio") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![set_theme_studio output](_static/plots/methods/set_theme_studio.svg)
+```
+
+```{only} not html
+![set_theme_studio output](_static/plots/methods/set_theme_studio.png)
+```
+
+### `flash::tight_layout`
+
+#### Signature
+
+```cpp
+Studio& tight_layout(self: Studio, padding: double = 6.0);
+```
+
+#### Notes
+
+Compacts pane spacing after content has been placed in a mosaic.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "tight_layout") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![tight_layout output](_static/plots/methods/tight_layout.svg)
+```
+
+```{only} not html
+![tight_layout output](_static/plots/methods/tight_layout.png)
 ```

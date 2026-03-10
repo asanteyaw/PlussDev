@@ -70,16 +70,13 @@ pluss::Series encode_guess(
                                .clamp_min(1e-6)
                                .clamp_max(1.0 - 1e-6);
 
-  return pluss::suppose(omega_guess.log().reshape({1}))
-      .then([&](const pluss::Series& head) {
-        return head.unite(
-            std::vector<pluss::Series>{
-                logit_series(s1).reshape({1}),
-                logit_series(s2).reshape({1}),
-            },
-            0);
-      })
-      .value();
+  const pluss::Series head = omega_guess.log().reshape({1});
+  return head.unite(
+      std::vector<pluss::Series>{
+          logit_series(s1).reshape({1}),
+          logit_series(s2).reshape({1}),
+      },
+      0);
 }
 
 pluss::Series simulate_garch11(
@@ -136,20 +133,15 @@ double as_f64(const pluss::Series& x) {
 
 std::string to_string(pluss::subsp::math::optimization::PopulationSolverStatus status) {
   using pluss::subsp::math::optimization::PopulationSolverStatus;
-
-  return pluss::suppose(status)
-      .then([](PopulationSolverStatus s) {
-        switch (s) {
-          case PopulationSolverStatus::Converged:
-            return std::string("Converged");
-          case PopulationSolverStatus::ReachedIterationBudget:
-            return std::string("ReachedIterationBudget");
-          case PopulationSolverStatus::ReachedEvaluationBudget:
-            return std::string("ReachedEvaluationBudget");
-        }
-        return std::string("Unknown");
-      })
-      .value();
+  switch (status) {
+    case PopulationSolverStatus::Converged:
+      return "Converged";
+    case PopulationSolverStatus::ReachedIterationBudget:
+      return "ReachedIterationBudget";
+    case PopulationSolverStatus::ReachedEvaluationBudget:
+      return "ReachedEvaluationBudget";
+  }
+  return "Unknown";
 }
 
 void print_report(
@@ -157,23 +149,11 @@ void print_report(
     const pluss::subsp::math::optimization::PopulationSolverOutcome& out,
     const Garch11Params& truth,
     const Garch11Params& est) {
-  const auto abs_err = pluss::transmit(
-      [](const pluss::Series& a, const pluss::Series& b) {
-        return as_f64(a.sub(b).abs());
-      },
-      std::vector<pluss::Series>{est.omega, est.alpha, est.beta},
-      std::vector<pluss::Series>{truth.omega, truth.alpha, truth.beta});
-
-  const pluss::Series table = as_param_vector(truth).reshape({1, 3}).unite(
-      std::vector<pluss::Series>{as_param_vector(est).reshape({1, 3})},
-      0);
-
-  const auto row_persistence = pluss::transform_axis(
-      [](const pluss::Series& row) {
-        return row.select(0, 1).add(row.select(0, 2)).to_vec<double>(0);
-      },
-      table,
-      1);
+  const double err_omega = as_f64(est.omega.sub(truth.omega).abs());
+  const double err_alpha = as_f64(est.alpha.sub(truth.alpha).abs());
+  const double err_beta = as_f64(est.beta.sub(truth.beta).abs());
+  const double truth_persistence = as_f64(truth.alpha.add(truth.beta));
+  const double est_persistence = as_f64(est.alpha.add(est.beta));
 
   std::cout << name
             << " status=" << to_string(out.status)
@@ -185,11 +165,12 @@ void print_report(
   std::cout << "  fitted omega=" << as_f64(est.omega)
             << " alpha=" << as_f64(est.alpha)
             << " beta=" << as_f64(est.beta)
-            << " persistence=" << row_persistence.at(1) << "\n";
+            << " persistence=" << est_persistence
+            << " (truth=" << truth_persistence << ")\n";
 
-  std::cout << "  abs err omega=" << abs_err.at(0)
-            << " alpha=" << abs_err.at(1)
-            << " beta=" << abs_err.at(2)
+  std::cout << "  abs err omega=" << err_omega
+            << " alpha=" << err_alpha
+            << " beta=" << err_beta
             << "\n\n";
 }
 

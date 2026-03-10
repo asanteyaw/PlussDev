@@ -211,6 +211,10 @@ inline Trace& draw_grouped_hue(
   if (levels.empty() || levels.size() != labels.size()) {
     throw std::invalid_argument("flash::draw_grouped_hue requires aligned non-empty levels/labels");
   }
+  // Hue-driven plots should surface category labels by default.
+  if (pane.legend_place() == KeyPlace::None) {
+    pane.legend(KeyPlace::Auto);
+  }
   const auto colors = categorical_colors(static_cast<std::int64_t>(levels.size()));
   Trace* last = nullptr;
   for (const auto i : std::views::iota(std::size_t{0}, levels.size())) {

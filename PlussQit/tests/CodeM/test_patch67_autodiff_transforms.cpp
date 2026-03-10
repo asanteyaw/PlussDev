@@ -24,7 +24,6 @@ using pluss::subsp::math::diff::nth_derivative;
 using pluss::subsp::math::diff::trace;
 using pluss::subsp::math::diff::value_and_grad;
 using pluss::subsp::math::diff::vjp;
-using pluss::subsp::math::optim::ParameterPack;
 using Catch::Approx;
 
 Series make_f64(std::vector<double> data) {
@@ -230,46 +229,72 @@ TEST_CASE("nth_derivative delegates to first and second-order transforms", "[aut
   REQUIRE_THROWS(nth_derivative(poly, x, 3));
 }
 
-TEST_CASE("structured parameter packs preserve names and gradients", "[autodiff][params]") {
-  ParameterPack<Series> params({
-      {"w", make_series(0.25).to(ScalarType::Float64)},
-      {"b", make_series(-0.1).to(ScalarType::Float64)},
-  });
-
+TEST_CASE("vector parameter gradients preserve order and shape", "[autodiff][params]") {
+  std::vector<Series> params{
+      make_series(0.25).to(ScalarType::Float64),
+      make_series(-0.1).to(ScalarType::Float64),
+  };
   const Series x = pluss::linspace(-1.0, 1.0, 16, ScalarType::Float64);
   const Series y = x.mul(2.0).sub(0.5);
 
-  const auto [value, grads] = pluss::subsp::math::optim::value_and_grad(
-      [&](const ParameterPack<Trace>& p) -> Trace {
-        const auto pred = p.at("w") * trace(x, false) + p.at("b");
+  const auto [value, grads] = value_and_grad(
+      [&](const std::vector<Trace>& p) -> Trace {
+        const auto pred = p.at(0) * trace(x, false) + p.at(1);
         const auto err = pred - trace(y, false);
         return mean(err * err);
       },
       params);
 
   REQUIRE(value.numel() == 1);
-  REQUIRE(grads.contains("w"));
-  REQUIRE(grads.contains("b"));
   REQUIRE(grads.size() == 2);
-  REQUIRE(grads.at("w").numel() == 1);
-  REQUIRE(grads.at("b").numel() == 1);
+  REQUIRE(grads[0].numel() == 1);
+  REQUIRE(grads[1].numel() == 1);
+  REQUIRE(std::isfinite(grads[0].item<double>()));
+  REQUIRE(std::isfinite(grads[1].item<double>()));
+}
 
-  const auto layout = params.layout();
-  REQUIRE(layout.size() == 2);
-  REQUIRE(layout.total_numel() == 2);
-  REQUIRE(layout.contains("w"));
-  REQUIRE(layout.at("w").numel == 1);
+TEST_CASE("transform validation rejects invalid tangent shape", "[autodiff][validation]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const Series bad_tangent = make_series(std::vector<double>{1.0, -1.0}, {2}).to(ScalarType::Float64);
+  REQUIRE_THROWS(jvp(
+      [](const DualTrace& z) -> DualTrace { return vector_objective(z); },
+      x,
+      bad_tangent));
+}
 
-  const Series flat = params.flatten_values();
-  REQUIRE(flat.numel() == 2);
+TEST_CASE("hvp validation rejects non-scalar objectives", "[autodiff][validation]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const Series tangent = make_f64({0.1, 0.05, -0.2});
+  REQUIRE_THROWS(hvp(
+      [](const auto& z) { return vector_objective(z); },
+      x,
+      tangent));
+}
 
-  const auto rebuilt = pluss::subsp::math::optim::unflatten_values(layout, flat);
-  REQUIRE(rebuilt.same_layout(params));
-  REQUIRE(rebuilt.at("w").item<double>() == Approx(params.at("w").item<double>()));
-  REQUIRE(rebuilt.at("b").item<double>() == Approx(params.at("b").item<double>()));
+TEST_CASE("autodiff remains finite under repeated nonlinear training steps", "[autodiff][stability]") {
+  const Series x = pluss::linspace(-2.0, 2.0, 128, ScalarType::Float64);
+  const Series y = x.mul(1.8).add(0.25).tanh();
 
-  const auto zeros = params.zeros_like();
-  REQUIRE(params.same_layout(zeros));
-  REQUIRE(zeros.at("w").item<double>() == Approx(0.0));
-  REQUIRE(zeros.at("b").item<double>() == Approx(0.0));
+  std::vector<Series> params{
+      make_series(0.1).to(ScalarType::Float64),
+      make_series(-0.2).to(ScalarType::Float64),
+  };
+
+  for (int i = 0; i < 120; ++i) {
+    const auto [loss, grads] = value_and_grad(
+        [&](const std::vector<Trace>& p) -> Trace {
+          const Trace pred = tanh(p[0] * trace(x, false) + p[1]);
+          const Trace err = pred - trace(y, false);
+          return mean(square(err)) + 1e-3 * (square(p[0]) + square(p[1]));
+        },
+        params);
+
+    REQUIRE(std::isfinite(loss.item<double>()));
+    REQUIRE(std::isfinite(grads[0].item<double>()));
+    REQUIRE(std::isfinite(grads[1].item<double>()));
+
+    const double lr = 0.03;
+    params[0] = params[0].sub(grads[0].mul(lr));
+    params[1] = params[1].sub(grads[1].mul(lr));
+  }
 }

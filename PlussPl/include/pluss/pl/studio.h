@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -1013,7 +1014,9 @@ class Pane {
 
   template <class Values>
   Trace& violin(Values&& values) {
-    return violin(std::forward<Values>(values), ViolinOptions{});
+    ensure_planar_("violin");
+    return add_trace_(TraceKind::Violin,
+                      ViolinData{std::nullopt, detail::to_series(std::forward<Values>(values)), ViolinOptions{}});
   }
 
   template <class Values>
@@ -1024,6 +1027,7 @@ class Pane {
   }
 
   template <class Group, class Values>
+    requires (!std::same_as<std::remove_cvref_t<Values>, ViolinOptions>)
   Trace& violin(Group&& group, Values&& values) {
     return violin(std::forward<Group>(group), std::forward<Values>(values), ViolinOptions{});
   }

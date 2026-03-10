@@ -10,3 +10,13 @@ foreach(test_src ${OPTIMIZATION_TESTS})
 
     add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
+
+find_package(Catch2 3 QUIET)
+if(TARGET Catch2::Catch2WithMain)
+    add_executable(optima_robustness_catch2
+        optima_robustness_catch2.cpp
+    )
+    target_link_libraries(optima_robustness_catch2 PRIVATE pluss plussqit_codem Catch2::Catch2WithMain)
+    target_compile_features(optima_robustness_catch2 PRIVATE cxx_std_20)
+    add_test(NAME optima_robustness_catch2 COMMAND optima_robustness_catch2)
+endif()

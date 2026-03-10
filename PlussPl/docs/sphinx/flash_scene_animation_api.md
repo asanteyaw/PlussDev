@@ -1,250 +1,284 @@
-# Flash 3D And Geometric 4D Projection Rendering API
+# Flash 3D and 4D Scene API
 
-This page covers the scene/trace controls for 3D and the animation/projection helpers for 3D and geometric 4D projection rendering.
+Scene/camera helpers and high-dimensional motion/projection methods in `pluss::pl::flash`.
 
-Header:
+## API Reference Style
+
+### `flash::cloud3`
+
+#### Signature
 
 ```cpp
-#include <pluss/pl/flash.h>
+Trace& cloud3(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike);
+Trace& cloud3(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike, size: SeriesLike);
+Trace& cloud3(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike, size: SeriesLike, color: SeriesLike);
 ```
 
-## 3D scene controls
+#### Notes
 
-Types:
+3D scatter cloud with optional point size and color channels.
 
-```cpp
-enum class CameraPreset3D { Spatial, TopDown, Front, Side, Isometric };
-enum class ThemePreset3D { Paper, Ocean, Slate, Mist };
-enum class ScenePreset3D { Survey, Presentation, Studio, Topology };
-enum class TracePreset3D { Path, Cloud, Surface, Wireframe, Spire, Volume };
+#### Example
 
-struct Camera3DOptions {
-  double azimuth_deg;
-  double elevation_deg;
-  double view_angle_deg;
-  ProjectionKind projection;
-};
-
-struct Lighting3DOptions {
-  bool clear_first;
-  bool headlight;
-  bool lamp_left;
-  bool lamp_right;
-  bool sun_key;
-};
-
-struct Scene3DOptions {
-  std::optional<ScenePreset3D> preset;
-  std::optional<ThemePreset3D> theme;
-  std::optional<CameraPreset3D> camera_preset;
-  std::optional<Camera3DOptions> camera;
-  std::optional<Lighting3DOptions> lighting;
-  std::optional<GridStyle> grid_style;
-};
-
-struct Trace3DOptions {
-  std::optional<TracePreset3D> preset;
-  std::optional<ShadeMode> shade;
-  std::optional<LightingMode> lighting;
-  std::optional<MaterialProfile> material;
-  std::optional<float> line_width;
-  std::optional<bool> transparent;
-};
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "cloud3") {
+:end-at: return true;
 ```
 
-Functions:
+#### Output
 
-```cpp
-Pane& camera3d(Pane&, const Camera3DOptions&);
-Pane& camera3d(Pane&, double azimuth_deg, double elevation_deg,
-               ProjectionKind projection = ProjectionKind::Orthographic,
-               double view_angle_deg = 30.0);
-Pane& camera_preset3d(Pane&, CameraPreset3D);
-Pane& lighting3d(Pane&, const Lighting3DOptions&);
-Pane& theme_preset3d(Pane&, ThemePreset3D);
-Pane& scene_preset3d(Pane&, ScenePreset3D);
-Pane& scene3d(Pane&, const Scene3DOptions&);
-Trace& trace_preset3d(Trace&, TracePreset3D);
-Trace& trace3d(Trace&, const Trace3DOptions&);
+```{only} html
+![cloud3 output](_static/plots/methods/cloud3.svg)
 ```
 
-## 3D motion simulation
-
-Types:
-
-```cpp
-enum class Anim3SweepPlane { XY, XZ, YZ };
-
-struct Animation3Options {
-  std::string title;
-  std::int64_t width;
-  std::int64_t height;
-  Anim3SweepPlane sweep_plane;
-  double base_rot_xy_deg;
-  double base_rot_xz_deg;
-  double base_rot_yz_deg;
-  double sweep_speed_deg_per_sec;
-  double camera_distance;
-  double camera_yaw_deg;
-  double camera_pitch_deg;
-  double min_perspective_denom;
-  double plot_padding_fraction;
-  bool progressive_reveal;
-  double reveal_points_per_sec;
-  bool connect_path;
-  double line_width;
-  double point_radius;
-  bool enable_snapshot;
-  std::string snapshot_prefix;
-};
+```{only} not html
+![cloud3 output](_static/plots/methods/cloud3.png)
 ```
 
-Function:
+### `flash::cloud4`
+
+#### Signature
 
 ```cpp
-template <class X, class Y, class Z>
-bool animate3(X&& x, Y&& y, Z&& z, const Animation3Options& options = {});
+Trace& cloud4(self: Pane|Studio, x: SeriesLike, y: SeriesLike, z: SeriesLike, w: SeriesLike, options: HyperPlotOptions = {}, title: std::string = {});
 ```
 
-Behavior:
+#### Notes
 
-- renders live simulation in native webview backend used by `.show()`
-- supports play/pause, speed control, snapshot capture
-- intended for interactive exploration (not embedded into static PDF)
+Projects 4D samples into 3D and renders point clouds; supports rotation and w-slicing in `HyperPlotOptions`.
 
-## Geometric 4D projection rendering
+#### Example
 
-Types:
-
-```cpp
-enum class HyperProjection { Orthographic, PerspectiveW };
-
-struct HyperPlotOptions {
-  HyperProjection projection;
-  double rot_xy_deg;
-  double rot_xz_deg;
-  double rot_xw_deg;
-  double rot_yz_deg;
-  double rot_yw_deg;
-  double rot_zw_deg;
-  double w_perspective_distance;
-  std::optional<Range1d> w_slice;
-  double point_size;
-};
-
-enum class HyperSweepPlane { XY, XZ, XW, YZ, YW, ZW };
-struct HyperSweepOptions {
-  std::int64_t frames;
-  HyperSweepPlane plane;
-  double start_deg;
-  double end_deg;
-  bool include_endpoint;
-};
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "cloud4") {
+:end-at: return true;
 ```
 
-Functions:
+#### Output
 
-```cpp
-std::vector<HyperPlotOptions> hyper_animation_sequence(
-    const HyperPlotOptions& base,
-    const HyperSweepOptions& options = {});
-
-template <class X, class Y, class Z, class W>
-Trace& path4(Pane&, X&& x, Y&& y, Z&& z, W&& w,
-             const HyperPlotOptions& options = {}, std::string label = {});
-
-template <class X, class Y, class Z, class W>
-Trace& cloud4(Pane&, X&& x, Y&& y, Z&& z, W&& w,
-              const HyperPlotOptions& options = {}, std::string label = {});
+```{only} html
+![cloud4 output](_static/plots/methods/cloud4.svg)
 ```
 
-## Geometric 4D motion simulation and frame export
-
-Types:
-
-```cpp
-enum class HyperAnimateSweepPlane { XY, XZ, XW, YZ, YW, ZW };
-
-struct HyperAnimationOptions {
-  std::string title;
-  std::int64_t width;
-  std::int64_t height;
-  HyperProjection projection;
-  HyperAnimateSweepPlane sweep_plane;
-  double base_rot_xy_deg;
-  double base_rot_xz_deg;
-  double base_rot_xw_deg;
-  double base_rot_yz_deg;
-  double base_rot_yw_deg;
-  double base_rot_zw_deg;
-  double sweep_speed_deg_per_sec;
-  double w_perspective_distance;
-  double slice_min;
-  double slice_max;
-  double slice_default;
-  double camera_distance;
-  double camera_yaw_deg;
-  double camera_pitch_deg;
-  double min_perspective_denom;
-  double plot_padding_fraction;
-  double point_radius_base;
-  double point_radius_min;
-  double point_radius_max;
-  bool enable_snapshot;
-  std::string snapshot_prefix;
-};
-
-enum class AnimationFrameFormat { Png, Svg, Pdf };
-
-struct HyperFrameExportOptions {
-  std::filesystem::path output_dir;
-  std::string file_prefix;
-  std::string title;
-  AnimationFrameFormat format;
-  std::int64_t width;
-  std::int64_t height;
-  std::int64_t dpi;
-  Theme theme;
-  HyperPlotOptions plot;
-  HyperSweepOptions sweep;
-};
+```{only} not html
+![cloud4 output](_static/plots/methods/cloud4.png)
 ```
 
-Functions:
+### `flash::export4_frames`
+
+#### Signature
 
 ```cpp
-template <class X, class Y, class Z, class W>
-bool animate4(X&& x, Y&& y, Z&& z, W&& w,
-              const HyperAnimationOptions& options = {});
-
-template <class X, class Y, class Z, class W>
-std::int64_t export4_frames(X&& x, Y&& y, Z&& z, W&& w,
-                            const HyperFrameExportOptions& options = {});
+std::int64_t export4_frames(x: SeriesLike, y: SeriesLike, z: SeriesLike, w: SeriesLike, options: HyperFrameExportOptions = {});
 ```
 
-## Minimal usage
+#### Notes
+
+Exports a sweep of static frames (`png`/`svg`/`pdf`) for offline animation workflows.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "export4_frames") {
+:end-at: return !ec;
+```
+
+#### Output
+
+```{only} html
+![export4_frames output](_static/plots/methods/export4_frames.svg)
+```
+
+```{only} not html
+![export4_frames output](_static/plots/methods/export4_frames.png)
+```
+
+### `flash::path3`
+
+#### Signature
 
 ```cpp
-#include <pluss/pl/flash.h>
+Trace& path3(self: Pane|Studio, x: SeriesLike, y: SeriesLike, z: SeriesLike, title: std::string = {});
+```
 
-using namespace pluss::pl;
-using namespace pluss::pl::flash;
+#### Notes
 
-Studio fig("scene_demo", Theme::paper());
-auto& pane = fig.pane3("surface");
+Connected 3D trajectory through ordered samples.
 
-scene3d(pane, Scene3DOptions{
-                 .preset = ScenePreset3D::Presentation,
-             });
+#### Example
 
-auto& tr = sheet(
-    pane,
-    std::vector<double>{0, 1, 2, 0, 1, 2},
-    std::vector<double>{0, 0, 0, 1, 1, 1},
-    std::vector<double>{0.0, 0.2, 0.4, 0.3, 0.6, 0.8});
-trace3d(tr, Trace3DOptions{
-               .preset = TracePreset3D::Surface,
-           });
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "path3") {
+:end-at: return true;
+```
 
-fig.save_pdf("flash_scene_demo.pdf");
+#### Output
+
+```{only} html
+![path3 output](_static/plots/methods/path3.svg)
+```
+
+```{only} not html
+![path3 output](_static/plots/methods/path3.png)
+```
+
+### `flash::path4`
+
+#### Signature
+
+```cpp
+Trace& path4(self: Pane|Studio, x: SeriesLike, y: SeriesLike, z: SeriesLike, w: SeriesLike, options: HyperPlotOptions = {}, title: std::string = {});
+```
+
+#### Notes
+
+Projects a 4D trajectory into 3D and renders a connected path.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "path4") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![path4 output](_static/plots/methods/path4.svg)
+```
+
+```{only} not html
+![path4 output](_static/plots/methods/path4.png)
+```
+
+### `flash::scene3d`
+
+#### Signature
+
+```cpp
+Pane& scene3d(self: Pane, options: Scene3DOptions);
+```
+
+#### Notes
+
+Applies coordinated 3D scene configuration: camera, lighting, grid style, and scene presets.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "scene3d") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![scene3d output](_static/plots/methods/scene3d.svg)
+```
+
+```{only} not html
+![scene3d output](_static/plots/methods/scene3d.png)
+```
+
+### `flash::trace3d`
+
+#### Signature
+
+```cpp
+Trace& trace3d(self: Trace, options: Trace3DOptions);
+Trace& trace_preset3d(self: Trace, preset: TracePreset3D);
+```
+
+#### Notes
+
+Post-processes a 3D trace with shading/material/lighting presets.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "trace3d") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![trace3d output](_static/plots/methods/trace3d.svg)
+```
+
+```{only} not html
+![trace3d output](_static/plots/methods/trace3d.png)
+```
+
+### `flash::animate3`
+
+#### Signature
+
+```cpp
+bool animate3(x: SeriesLike, y: SeriesLike, z: SeriesLike, options: Animation3Options = {});
+```
+
+#### Notes
+
+Interactive webview animation (not a static render call). For doc previews, use `path3`/`cloud3` outputs with the same source data.
+
+#### Example
+
+```cpp
+pluss::pl::flash::Animation3Options options;
+options.title = "3D simulation";
+options.sweep_speed_deg_per_sec = 18.0;
+options.snapshot_prefix = "flash3d";
+
+const bool opened = pluss::pl::flash::animate3(x, y, z, options);
+```
+
+#### Output
+
+```{only} html
+![animate3 preview](_static/plots/methods/path3.svg)
+```
+
+```{only} not html
+![animate3 preview](_static/plots/methods/path3.png)
+```
+
+### `flash::animate4`
+
+#### Signature
+
+```cpp
+bool animate4(x: SeriesLike, y: SeriesLike, z: SeriesLike, w: SeriesLike, options: HyperAnimationOptions = {});
+```
+
+#### Notes
+
+Interactive geometric 4D animation in a webview with live sweep controls; use `export4_frames` for deterministic artifacts.
+
+#### Example
+
+```cpp
+pluss::pl::flash::HyperAnimationOptions options;
+options.title = "Geometric 4D simulation";
+options.sweep_plane = pluss::pl::flash::HyperAnimateSweepPlane::XW;
+options.sweep_speed_deg_per_sec = 22.0;
+
+const bool opened = pluss::pl::flash::animate4(x4, y4, z4, w4, options);
+```
+
+#### Output
+
+```{only} html
+![animate4 preview](_static/plots/methods/path4.svg)
+```
+
+```{only} not html
+![animate4 preview](_static/plots/methods/path4.png)
 ```

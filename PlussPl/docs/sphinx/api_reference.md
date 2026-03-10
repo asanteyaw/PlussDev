@@ -1,35 +1,44 @@
-# API Reference
+# API Reference Hub
 
-This page mirrors a seaborn-style API hub: grouped by interface family, with focused pages per major surface.
+This hub is organized by surface area.
 
-## Core interface
+## Core plotting engine
 
-- [PlussPl core API](plusspl_core_api.md)
-  `Studio`, `Pane`, `Trace`, rendering/export methods, pane nesting.
+- [PlussPl Core API](plusspl_core_api.md)
+  `Studio`, `Pane`, and `Trace` orchestration and export.
+- [PlussPl Core Controls API](plusspl_core_controls_api.md)
+  expanded per-method controls for axis/layout/legend/ticks/visibility and studio wiring.
+- [PlussPl Object/State API](plusspl_object_model_api.md)
+  accessors + state-manipulation methods for `Studio`, `Pane`, `Trace`, `Theme`, `PaletteRamp`, `Lens`, and `LightRig`.
 
-## Flash function interface
+## Flash high-level plotting
 
-- [Flash plotting API](flash_api.md)
-  relational, distribution, categorical, regression, grid/pair/joint helpers, matrix/dataset helpers.
+- [Flash Plotting API](flash_api.md)
+  2D/3D plotting families, matrix/dataset helpers, diagnostics.
 
-## Theme and context
+## Flash style and context
 
-- [Flash theming API](flash_theme_api.md)
-  style/context/palette controls and `set_theme` behavior.
+- [Flash Theming API](flash_theme_api.md)
+  context scaling, style presets, palette/theme application.
 
-## 3D and geometric 4D projection rendering
+## Flash 3D and 4D motion + frame export
 
 - [Flash 3D and 4D API](flash_scene_animation_api.md)
-  scene presets, trace presets, `animate3`, `animate4`, and frame export.
+  scene presets, trace presets, live simulation, frame export.
+
+## Generated Outputs Policy
+
+All output images shown in the API pages are produced from runnable snippets in:
+
+`PlussPl/examples/docs/flash_api_capture_demo.cpp`
+
+Generated artifacts are stored under:
+
+`PlussPl/docs/sphinx/_static/plots/methods/`
 
 ## Header entry points
 
 ```cpp
-#include <pluss/pl/studio.h>    // PlussPl core
-#include <pluss/pl/flash.h>     // Flash umbrella API
+#include <pluss/pl/studio.h>
+#include <pluss/pl/flash.h>
 ```
-
-## Notes
-
-- The API pages here are reference-first and intentionally concise.
-- Examples in this reference use existing demo style from `PlussPl/examples/*`.

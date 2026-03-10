@@ -3729,25 +3729,74 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
     return fallback;
   }
 
-  auto append_more_entry = [&](std::vector<KeyEntry>& candidate, std::size_t hidden) {
+  auto build_hidden_preview_label = [&](std::size_t visible_count) {
+    const std::size_t hidden_count = entries.size() - visible_count;
+    std::string label = "... +" + std::to_string(hidden_count) + " more";
+    if (hidden_count == 0) {
+      return label;
+    }
+
+    constexpr std::size_t kPreviewLimit = 3;
+    constexpr std::size_t kPreviewMaxChars = 10;
+    std::vector<std::string_view> preview;
+    preview.reserve(kPreviewLimit);
+
+    for (std::size_t i = visible_count; i < entries.size() && preview.size() < kPreviewLimit; ++i) {
+      const std::string_view candidate = entries[i].label;
+      if (candidate.empty()) {
+        continue;
+      }
+      const auto seen = std::find(preview.begin(), preview.end(), candidate);
+      if (seen == preview.end()) {
+        preview.push_back(candidate);
+      }
+    }
+    if (preview.empty()) {
+      return label;
+    }
+
+    label += ": ";
+    for (std::size_t i = 0; i < preview.size(); ++i) {
+      std::string_view token = preview[i];
+      const bool clipped = token.size() > kPreviewMaxChars;
+      if (clipped) {
+        token = token.substr(0, kPreviewMaxChars);
+      }
+      label.append(token.data(), token.size());
+      if (clipped) {
+        label += "...";
+      }
+      if (i + 1 < preview.size()) {
+        label += ", ";
+      }
+    }
+    if (hidden_count > preview.size()) {
+      label += ", ...";
+    }
+    return label;
+  };
+
+  auto append_more_entry = [&](std::vector<KeyEntry>& candidate, std::size_t visible_count) {
+    const std::size_t hidden = entries.size() - visible_count;
+    if (hidden == 0) {
+      return;
+    }
     KeyEntry more{};
-    more.label = "... +" + std::to_string(hidden) + " more";
+    more.label = build_hidden_preview_label(visible_count);
     more.stroke = mix(theme.foreground(), theme.background(), 0.25);
     more.stroke_width = 1.2;
     candidate.push_back(std::move(more));
   };
 
-  std::size_t hidden = entries.size() - trimmed.size();
   std::vector<KeyEntry> candidate = trimmed;
-  append_more_entry(candidate, hidden);
+  append_more_entry(candidate, trimmed.size());
   while (!candidate.empty() && !fits(candidate)) {
     if (trimmed.empty()) {
       break;
     }
     trimmed.pop_back();
-    hidden = entries.size() - trimmed.size();
     candidate = trimmed;
-    append_more_entry(candidate, hidden);
+    append_more_entry(candidate, trimmed.size());
   }
 
   if (!candidate.empty() && fits(candidate)) {
@@ -3994,7 +4043,7 @@ void render_legend_dock(
   }
 
   Rect box{};
-  std::string_view title{};
+  std::string_view title{"trace key"};
   std::vector<KeyEntry> fitted_entries;
   if (studio.legend_dock() == KeyDock::East) {
     const double min_width = 168.0;

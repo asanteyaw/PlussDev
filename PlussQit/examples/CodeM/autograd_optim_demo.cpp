@@ -9,7 +9,6 @@
 int main() {
   using namespace pluss;
   using namespace pluss::subsp::math::diff;
-  using namespace pluss::subsp::math::optim;
 
   const Series x = pluss::linspace(-1.0, 1.0, 256, ScalarType::Float64);
   const Series y = x.mul(2.0).sub(0.5);
@@ -19,9 +18,7 @@ int main() {
       pluss::make_series(0.0).to(ScalarType::Float64),
   };
 
-  AdamState state = adam_state_like(params);
-  AdamOptions opt;
-  opt.learning_rate = 0.08;
+  const double learning_rate = 0.08;
 
   for (std::int64_t step = 1; step <= 300; ++step) {
     auto [loss, sensitivities] = value_and_grad(
@@ -36,7 +33,9 @@ int main() {
         },
         params);
 
-    adam_step_inplace(params, sensitivities, state, opt);
+    for (std::size_t i = 0; i < params.size(); ++i) {
+      params[i] = params[i].sub(sensitivities[i].mul(learning_rate));
+    }
 
     if (step % 50 == 0 || step == 1) {
       std::cout << "step=" << step << " loss=" << loss.item<double>() << '\n';
@@ -73,10 +72,10 @@ int main() {
 
   {
     Series direct = pluss::make_series(1.25).to(ScalarType::Float64);
-    direct.requires_grad_(true);
-    Series direct_loss = direct.square().sum();
+    auto tracked_direct = trace(direct, true);
+    auto direct_loss = sum(square(tracked_direct));
     direct_loss.reverse();
-    const double direct_sens = direct.sensitivity().item<double>();
+    const double direct_sens = tracked_direct.sensitivity().item<double>();
     std::cout << "reverse sensitivity=" << direct_sens << '\n';
     if (!std::isfinite(direct_sens) || std::abs(direct_sens - 2.5) > 1e-9) {
       std::cerr << "Series::reverse smoke failed: expected sensitivity 2.5\n";
@@ -192,26 +191,22 @@ int main() {
   }
 
   {
-    ParameterPack<Series> pack({
-        {"w", pluss::make_series(0.0).to(ScalarType::Float64)},
-        {"b", pluss::make_series(0.0).to(ScalarType::Float64)},
-    });
-    auto [pack_value, pack_grads] = pluss::subsp::math::optim::value_and_grad(
-        [&](const ParameterPack<Trace>& p) -> Trace {
-          const Trace pred = p.at("w") * trace(x, false) + p.at("b");
+    std::vector<Series> bundle{
+        pluss::make_series(0.0).to(ScalarType::Float64),
+        pluss::make_series(0.0).to(ScalarType::Float64),
+    };
+    auto [bundle_value, bundle_grads] = value_and_grad(
+        [&](const std::vector<Trace>& p) -> Trace {
+          const Trace pred = p[0] * trace(x, false) + p[1];
           const Trace err = pred - trace(y, false);
           return mean(err * err);
         },
-        pack);
-    const auto pack_layout = pack.layout();
-    const Series flat_pack = pack.flatten_values();
-    std::cout << "pack loss=" << pack_value.item<double>()
-              << " dw=" << pack_grads.at("w").item<double>()
-              << " db=" << pack_grads.at("b").item<double>()
-              << " blocks=" << pack_layout.size()
-              << " flat_numel=" << flat_pack.numel() << '\n';
-    if (!pack_grads.contains("w") || !pack_grads.contains("b")) {
-      std::cerr << "parameter pack smoke failed: missing named gradients\n";
+        bundle);
+    std::cout << "bundle loss=" << bundle_value.item<double>()
+              << " dw=" << bundle_grads[0].item<double>()
+              << " db=" << bundle_grads[1].item<double>() << '\n';
+    if (bundle_grads.size() != 2) {
+      std::cerr << "bundle autodiff smoke failed: expected two gradients\n";
       return 10;
     }
   }
@@ -229,7 +224,7 @@ int main() {
   bool blocked_tracked_inplace = false;
   try {
     Series tracked = pluss::make_series(0.25).to(ScalarType::Float64);
-    tracked.requires_grad_(true);
+    (void)trace(tracked, true);
     tracked.add_(1.0);
   } catch (const std::exception&) {
     blocked_tracked_inplace = true;

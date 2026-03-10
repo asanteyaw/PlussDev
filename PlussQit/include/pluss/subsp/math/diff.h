@@ -2,6 +2,7 @@
 
 #include "pluss/codem/series_factory.h"
 #include "CodeM/compat/Invoke.h"
+#include "CodeM/core/SeriesTape.h"
 
 #include <cmath>
 #include <cstdint>
@@ -60,6 +61,13 @@ inline Series ones_like_(const Series& like) {
   return pluss::full_like(like, 1.0, like.scalar_type());
 }
 
+inline void set_tracks_slope_(const Series& value, bool enabled) {
+  pluss::codem::series_tape::set_tracks_slope(value, enabled);
+  if (!enabled) {
+    pluss::codem::series_tape::clear_sensitivity(value);
+  }
+}
+
 inline Series flat_basis_like_(const Series& like, std::int64_t index) {
   require_defined_(like, "flat_basis_like");
   PLUSS_CHECK(index >= 0 && index < like.numel(), "subsp::math::diff::flat_basis_like: index out of range");
@@ -97,7 +105,7 @@ public:
   Trace() = default;
   explicit Trace(const Series& value) : value_(value) {}
   Trace(const Series& value, bool tracks_slope) : value_(value) {
-    value_->requires_grad_(tracks_slope);
+    detail::set_tracks_slope_(value, tracks_slope);
   }
 
   bool defined() const noexcept { return value_.has_value() && value_->defined(); }
@@ -778,7 +786,7 @@ std::pair<Series, std::vector<Series>> hvp(Fn&& fn,
     tangent_consts.reserve(tangents.size());
     for (std::size_t i = 0; i < params.size(); ++i) {
       Series leaf = params[i].detach();
-      leaf.requires_grad_(true);
+      detail::set_tracks_slope_(leaf, true);
       leaf_params.push_back(std::move(leaf));
       tangent_consts.push_back(tangents[i].detach());
     }

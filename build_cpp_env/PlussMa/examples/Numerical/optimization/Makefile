@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
+	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -373,6 +373,20 @@ plussma_optima_clone_parity_bench: PlussMa/examples/Numerical/optimization/CMake
 plussma_optima_clone_parity_bench/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_bench.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_bench.dir/build
 .PHONY : plussma_optima_clone_parity_bench/fast
+
+# Convenience name for target.
+PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/rule
+.PHONY : PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/rule
+
+# Convenience name for target.
+plussma_optima_clone_parity_scorecard: PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/rule
+.PHONY : plussma_optima_clone_parity_scorecard
+
+# fast build rule for target.
+plussma_optima_clone_parity_scorecard/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/build
+.PHONY : plussma_optima_clone_parity_scorecard/fast
 
 # Convenience name for target.
 PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_structured_clone_parity_bench.dir/rule:
@@ -702,6 +716,30 @@ optima_clone_parity_bench.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_bench.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_bench.dir/optima_clone_parity_bench.cpp.s
 .PHONY : optima_clone_parity_bench.cpp.s
 
+optima_clone_parity_scorecard.o: optima_clone_parity_scorecard.cpp.o
+.PHONY : optima_clone_parity_scorecard.o
+
+# target to build an object file
+optima_clone_parity_scorecard.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/optima_clone_parity_scorecard.cpp.o
+.PHONY : optima_clone_parity_scorecard.cpp.o
+
+optima_clone_parity_scorecard.i: optima_clone_parity_scorecard.cpp.i
+.PHONY : optima_clone_parity_scorecard.i
+
+# target to preprocess a source file
+optima_clone_parity_scorecard.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/optima_clone_parity_scorecard.cpp.i
+.PHONY : optima_clone_parity_scorecard.cpp.i
+
+optima_clone_parity_scorecard.s: optima_clone_parity_scorecard.cpp.s
+.PHONY : optima_clone_parity_scorecard.s
+
+# target to generate assembly for a file
+optima_clone_parity_scorecard.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/optima_clone_parity_scorecard.cpp.s
+.PHONY : optima_clone_parity_scorecard.cpp.s
+
 optima_demo.o: optima_demo.cpp.o
 .PHONY : optima_demo.o
 
@@ -1014,6 +1052,7 @@ help:
 	@echo "... plussma_mads_blackbox_demo"
 	@echo "... plussma_mads_blackbox_native_demo"
 	@echo "... plussma_optima_clone_parity_bench"
+	@echo "... plussma_optima_clone_parity_scorecard"
 	@echo "... plussma_optima_demo"
 	@echo "... plussma_optima_internal_protocol_demo"
 	@echo "... plussma_optima_pathology_clone_parity_bench"
@@ -1053,6 +1092,9 @@ help:
 	@echo "... optima_clone_parity_bench.o"
 	@echo "... optima_clone_parity_bench.i"
 	@echo "... optima_clone_parity_bench.s"
+	@echo "... optima_clone_parity_scorecard.o"
+	@echo "... optima_clone_parity_scorecard.i"
+	@echo "... optima_clone_parity_scorecard.s"
 	@echo "... optima_demo.o"
 	@echo "... optima_demo.i"
 	@echo "... optima_demo.s"

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <filesystem>
+#include <fstream>
 #include <limits>
 #include <optional>
 #include <string>
@@ -485,7 +486,28 @@ TEST_CASE("PlussPl flash facade maps flash-like names to PlussPl traces", "[plus
   REQUIRE(book.pane_count() == 2);
   REQUIRE(book.panes().front().trace_count() >= 31);
   REQUIRE(book.panes().back().trace_count() >= 2);
+  std::string trace_labels;
+  for (const auto& tr : book.panes().front().traces()) {
+    if (tr.label_text().empty()) {
+      continue;
+    }
+    if (!trace_labels.empty()) {
+      trace_labels += " | ";
+    }
+    trace_labels += tr.label_text();
+  }
   const std::string svg = book.to_svg();
+  CAPTURE(trace_labels);
+  CAPTURE(svg.find("... +"), svg.find("hue=1"), svg.find("alpha"));
+  {
+    std::ofstream debug("plusspl_flash_facade_debug.svg");
+    debug << svg;
+  }
+  const std::size_t more_pos = svg.find("... +");
+  if (more_pos != std::string::npos) {
+    const std::size_t preview_len = std::min<std::size_t>(180, svg.size() - more_pos);
+    CAPTURE(svg.substr(more_pos, preview_len));
+  }
   REQUIRE(svg.find("<svg") != std::string::npos);
   REQUIRE(svg.find("alpha") != std::string::npos);
   REQUIRE(svg.find("hue=1") != std::string::npos);

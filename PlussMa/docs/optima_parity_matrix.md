@@ -26,6 +26,7 @@ Reference anchors:
 | GARCH clone-parity standing slice | real workload table with wall time, best-feasible, and solver comparisons | `SequentialQP`, `InternalProtocol`, and DFO baselines should be compared on the same seeded likelihood surface | `PlussMa/examples/Numerical/optimization/optima_clone_parity_bench.cpp`, `PlussMa/docs/optima_clone_parity_benchmarks.md` |
 | Structured banded family | larger structured problem with banded constraints and smooth chain objective | `SequentialQP` and `InternalProtocol` should be measured on tens-of-variables structured problems before sparse routing is added | `PlussMa/examples/Numerical/optimization/optima_structured_clone_parity_bench.cpp`, `PlussMa/docs/optima_structured_clone_parity_benchmarks.md` |
 | Pathological live stall suite | real solver-triggered non-finite, boundary, collapse, recovery, and feasibility failures | public diagnostics should match the actual live exit mode | `PlussMa/examples/Numerical/optimization/optima_pathology_clone_parity_bench.cpp`, `PlussMa/docs/optima_pathology_clone_parity_benchmarks.md`, `test_patch91_optima_pathology_suite.cpp` |
+| Clone-parity scorecard | executable pass/fail parity score from fixed high-impact checkpoints | strict mode should fail when any tracked checkpoint regresses | `PlussMa/examples/Numerical/optimization/optima_clone_parity_scorecard.cpp`, `PlussMa/docs/optima_clone_parity_scorecard.md` |
 
 ## Remaining Clone-Parity Focus
 

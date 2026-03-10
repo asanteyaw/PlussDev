@@ -18,6 +18,7 @@ autograd
 autograd_api_reference
 autodiff_architecture
 optimization_diff_contract
+dl_torch_maturity_blueprint
 series_api_reference
 series_all_methods_usage
 note

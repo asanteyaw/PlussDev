@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
+	/opt/homebrew/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	/opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
+	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -698,6 +698,19 @@ conv_test: cmake_check_build_system
 conv_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/conv_test.dir/build.make PlussAI/test/CMakeFiles/conv_test.dir/build
 .PHONY : conv_test/fast
+
+#=============================================================================
+# Target rules for targets named nn_optim_test
+
+# Build rule for target.
+nn_optim_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nn_optim_test
+.PHONY : nn_optim_test
+
+# fast build rule for target.
+nn_optim_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_test.dir/build
+.PHONY : nn_optim_test/fast
 
 #=============================================================================
 # Target rules for targets named nodej_neighbor_test
@@ -1610,6 +1623,71 @@ plusspl_3d_mpl3d_equivalence_demo/fast:
 .PHONY : plusspl_3d_mpl3d_equivalence_demo/fast
 
 #=============================================================================
+# Target rules for targets named plusspl_flash_api_capture_demo
+
+# Build rule for target.
+plusspl_flash_api_capture_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusspl_flash_api_capture_demo
+.PHONY : plusspl_flash_api_capture_demo
+
+# fast build rule for target.
+plusspl_flash_api_capture_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussPl/examples/CMakeFiles/plusspl_flash_api_capture_demo.dir/build.make PlussPl/examples/CMakeFiles/plusspl_flash_api_capture_demo.dir/build
+.PHONY : plusspl_flash_api_capture_demo/fast
+
+#=============================================================================
+# Target rules for targets named plusspl_3d_flash_3d_demo
+
+# Build rule for target.
+plusspl_3d_flash_3d_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusspl_3d_flash_3d_demo
+.PHONY : plusspl_3d_flash_3d_demo
+
+# fast build rule for target.
+plusspl_3d_flash_3d_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussPl/examples/CMakeFiles/plusspl_3d_flash_3d_demo.dir/build.make PlussPl/examples/CMakeFiles/plusspl_3d_flash_3d_demo.dir/build
+.PHONY : plusspl_3d_flash_3d_demo/fast
+
+#=============================================================================
+# Target rules for targets named plusspl_3d_flash_3d_animation_demo
+
+# Build rule for target.
+plusspl_3d_flash_3d_animation_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusspl_3d_flash_3d_animation_demo
+.PHONY : plusspl_3d_flash_3d_animation_demo
+
+# fast build rule for target.
+plusspl_3d_flash_3d_animation_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussPl/examples/CMakeFiles/plusspl_3d_flash_3d_animation_demo.dir/build.make PlussPl/examples/CMakeFiles/plusspl_3d_flash_3d_animation_demo.dir/build
+.PHONY : plusspl_3d_flash_3d_animation_demo/fast
+
+#=============================================================================
+# Target rules for targets named plusspl_4d_flash_4d_geometry_demo
+
+# Build rule for target.
+plusspl_4d_flash_4d_geometry_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusspl_4d_flash_4d_geometry_demo
+.PHONY : plusspl_4d_flash_4d_geometry_demo
+
+# fast build rule for target.
+plusspl_4d_flash_4d_geometry_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussPl/examples/CMakeFiles/plusspl_4d_flash_4d_geometry_demo.dir/build.make PlussPl/examples/CMakeFiles/plusspl_4d_flash_4d_geometry_demo.dir/build
+.PHONY : plusspl_4d_flash_4d_geometry_demo/fast
+
+#=============================================================================
+# Target rules for targets named plusspl_4d_flash_4d_animation_demo
+
+# Build rule for target.
+plusspl_4d_flash_4d_animation_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plusspl_4d_flash_4d_animation_demo
+.PHONY : plusspl_4d_flash_4d_animation_demo
+
+# fast build rule for target.
+plusspl_4d_flash_4d_animation_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussPl/examples/CMakeFiles/plusspl_4d_flash_4d_animation_demo.dir/build.make PlussPl/examples/CMakeFiles/plusspl_4d_flash_4d_animation_demo.dir/build
+.PHONY : plusspl_4d_flash_4d_animation_demo/fast
+
+#=============================================================================
 # Target rules for targets named plusspl_gallery_outputs
 
 # Build rule for target.
@@ -1712,6 +1790,19 @@ mads_nomad_parity_test: cmake_check_build_system
 mads_nomad_parity_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_nomad_parity_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_nomad_parity_test.dir/build
 .PHONY : mads_nomad_parity_test/fast
+
+#=============================================================================
+# Target rules for targets named optima_robustness_catch2
+
+# Build rule for target.
+optima_robustness_catch2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 optima_robustness_catch2
+.PHONY : optima_robustness_catch2
+
+# fast build rule for target.
+optima_robustness_catch2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/build
+.PHONY : optima_robustness_catch2/fast
 
 #=============================================================================
 # Target rules for targets named astro_test
@@ -2401,6 +2492,19 @@ plussma_optima_clone_parity_bench: cmake_check_build_system
 plussma_optima_clone_parity_bench/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_bench.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_bench.dir/build
 .PHONY : plussma_optima_clone_parity_bench/fast
+
+#=============================================================================
+# Target rules for targets named plussma_optima_clone_parity_scorecard
+
+# Build rule for target.
+plussma_optima_clone_parity_scorecard: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_optima_clone_parity_scorecard
+.PHONY : plussma_optima_clone_parity_scorecard
+
+# fast build rule for target.
+plussma_optima_clone_parity_scorecard/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_optima_clone_parity_scorecard.dir/build
+.PHONY : plussma_optima_clone_parity_scorecard/fast
 
 #=============================================================================
 # Target rules for targets named plussma_optima_structured_clone_parity_bench
@@ -4063,6 +4167,10 @@ help:
 	@echo "... pluss_sdk_archive"
 	@echo "... pluss_sdk_consumer_smoke"
 	@echo "... pluss_sdk_stage"
+	@echo "... plusspl_3d_flash_3d_animation_demo"
+	@echo "... plusspl_3d_flash_3d_demo"
+	@echo "... plusspl_4d_flash_4d_animation_demo"
+	@echo "... plusspl_4d_flash_4d_geometry_demo"
 	@echo "... plusspl_gallery_outputs"
 	@echo "... PlussMic"
 	@echo "... PlussPl"
@@ -4089,11 +4197,13 @@ help:
 	@echo "... mads_blackbox_minimizers_test"
 	@echo "... mads_nomad_parity_test"
 	@echo "... mechanics_test"
+	@echo "... nn_optim_test"
 	@echo "... nodej_neighbor_test"
 	@echo "... nodej_phase0_contract_test"
 	@echo "... nodej_prep_test"
 	@echo "... nodej_split_test"
 	@echo "... nodej_tree_test"
+	@echo "... optima_robustness_catch2"
 	@echo "... phys_quantum_quantum_test"
 	@echo "... pluss"
 	@echo "... plussai_func_conv_demo"
@@ -4115,6 +4225,7 @@ help:
 	@echo "... plussma_mads_blackbox_demo"
 	@echo "... plussma_mads_blackbox_native_demo"
 	@echo "... plussma_optima_clone_parity_bench"
+	@echo "... plussma_optima_clone_parity_scorecard"
 	@echo "... plussma_optima_demo"
 	@echo "... plussma_optima_internal_protocol_demo"
 	@echo "... plussma_optima_pathology_clone_parity_bench"
@@ -4181,6 +4292,7 @@ help:
 	@echo "... plusspl_4d_animation_demo"
 	@echo "... plusspl_4d_geometry_demo"
 	@echo "... plusspl_catch2"
+	@echo "... plusspl_flash_api_capture_demo"
 	@echo "... plussqit_codeh"
 	@echo "... plussqit_codeh_timeline_dataframe_timeindex_methods_demo"
 	@echo "... plussqit_codeh_timeline_non_generated_and_factory_methods_demo"

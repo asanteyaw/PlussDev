@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
+	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -275,6 +275,20 @@ mads_nomad_parity_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads
 mads_nomad_parity_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_nomad_parity_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_nomad_parity_test.dir/build
 .PHONY : mads_nomad_parity_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/rule
+
+# Convenience name for target.
+optima_robustness_catch2: PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/rule
+.PHONY : optima_robustness_catch2
+
+# fast build rule for target.
+optima_robustness_catch2/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/build
+.PHONY : optima_robustness_catch2/fast
 
 dfo_minimizers_test.o: dfo_minimizers_test.cpp.o
 .PHONY : dfo_minimizers_test.o
@@ -420,6 +434,30 @@ mads_nomad_parity_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_nomad_parity_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_nomad_parity_test.dir/mads_nomad_parity_test.cpp.s
 .PHONY : mads_nomad_parity_test.cpp.s
 
+optima_robustness_catch2.o: optima_robustness_catch2.cpp.o
+.PHONY : optima_robustness_catch2.o
+
+# target to build an object file
+optima_robustness_catch2.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/optima_robustness_catch2.cpp.o
+.PHONY : optima_robustness_catch2.cpp.o
+
+optima_robustness_catch2.i: optima_robustness_catch2.cpp.i
+.PHONY : optima_robustness_catch2.i
+
+# target to preprocess a source file
+optima_robustness_catch2.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/optima_robustness_catch2.cpp.i
+.PHONY : optima_robustness_catch2.cpp.i
+
+optima_robustness_catch2.s: optima_robustness_catch2.cpp.s
+.PHONY : optima_robustness_catch2.s
+
+# target to generate assembly for a file
+optima_robustness_catch2.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/optima_robustness_catch2.cpp.s
+.PHONY : optima_robustness_catch2.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -441,6 +479,7 @@ help:
 	@echo "... mads_blackbox_advanced_test"
 	@echo "... mads_blackbox_minimizers_test"
 	@echo "... mads_nomad_parity_test"
+	@echo "... optima_robustness_catch2"
 	@echo "... dfo_minimizers_test.o"
 	@echo "... dfo_minimizers_test.i"
 	@echo "... dfo_minimizers_test.s"
@@ -459,6 +498,9 @@ help:
 	@echo "... mads_nomad_parity_test.o"
 	@echo "... mads_nomad_parity_test.i"
 	@echo "... mads_nomad_parity_test.s"
+	@echo "... optima_robustness_catch2.o"
+	@echo "... optima_robustness_catch2.i"
+	@echo "... optima_robustness_catch2.s"
 .PHONY : help
 
 

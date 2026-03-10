@@ -3,4 +3,15 @@ nodej_phase0_contract_test 3 0.126818
 nodej_prep_test 3 0.002203
 nodej_split_test 3 0.00208
 nodej_tree_test 3 0.0721458
+autodiff 0 0
+jacrev 0 0
+nth_derivative 0 0
+hvp 0 0
+vjp 0 0
+autodiff 0 0
+jvp 0 0
+hvp 0 0
+nn_optim_test 1 0.278314
+conv_test 1 0.295535
+rnn_fusion_test 1 0.255271
 ---

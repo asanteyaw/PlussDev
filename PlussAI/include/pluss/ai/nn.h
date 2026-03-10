@@ -9,3 +9,4 @@
 #include "NodeK/NN/modules/rnn/LSTMImpl.h"
 #include "NodeK/NN/modules/cnn/NNconv1d.h"
 #include "NodeK/NN/modules/cnn/NNconvNd.h"
+#include "NodeK/NN/optim/optim.h"

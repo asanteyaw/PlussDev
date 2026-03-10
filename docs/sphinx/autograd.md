@@ -27,9 +27,10 @@ The transform layer is what you should prefer for reusable optimization code.
 ### Signature
 
 ```cpp
-x.requires_grad_(true);
+auto tx = trace(x, true);
+auto loss = sum(square(tx));
 loss.reverse();
-auto g = x.sensitivity();
+auto g = tx.sensitivity();
 ```
 
 ### Explanation
@@ -47,12 +48,12 @@ Use this when:
 
 ```cpp
 auto x = pluss::make_series(1.25).to(pluss::ScalarType::Float64);
-x.requires_grad_(true);
+auto tx = trace(x, true);
 
-auto loss = x.square().sum();
+auto loss = sum(square(tx));
 loss.reverse();
 
-auto grad = x.sensitivity();
+auto grad = tx.sensitivity();
 std::cout << grad.item<double>() << "\n";   // 2.5
 ```
 
@@ -465,10 +466,10 @@ They matter most in long-running eager workflows where you do not want stale sen
 
 ```cpp
 auto x = pluss::make_series(2.0).to(pluss::ScalarType::Float64);
-x.requires_grad_(true);
+auto tx = trace(x, true);
 x.retain_grad(true);
 
-auto loss = x.square();
+auto loss = square(tx);
 loss.reverse();
 std::cout << x.retains_grad().item<bool>() << "\n";
 std::cout << x.sensitivity().item<double>() << "\n";
@@ -491,7 +492,7 @@ auto after = x.storage_version();
 std::cout << before << " -> " << after << "\n";
 
 auto tracked = pluss::make_series(0.25).to(pluss::ScalarType::Float64);
-tracked.requires_grad_(true);
+(void)trace(tracked, true);
 
 try {
   tracked.add_(1.0);

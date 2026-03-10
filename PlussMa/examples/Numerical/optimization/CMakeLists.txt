@@ -77,6 +77,12 @@ if(TARGET pluss AND TARGET plussqit_codem)
   target_compile_features(plussma_optima_clone_parity_bench PRIVATE cxx_std_20)
   target_link_libraries(plussma_optima_clone_parity_bench PRIVATE pluss plussqit_codem)
 
+  add_executable(plussma_optima_clone_parity_scorecard
+    optima_clone_parity_scorecard.cpp
+  )
+  target_compile_features(plussma_optima_clone_parity_scorecard PRIVATE cxx_std_20)
+  target_link_libraries(plussma_optima_clone_parity_scorecard PRIVATE pluss plussqit_codem)
+
   add_executable(plussma_optima_structured_clone_parity_bench
     optima_structured_clone_parity_bench.cpp
   )

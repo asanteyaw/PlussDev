@@ -1,51 +1,48 @@
 #include <pluss/ma.h>
 
+#include <iomanip>
 #include <iostream>
-#include <vector>
+
+using pluss::ScalarType;
+using pluss::Series;
 
 int main() {
-  using namespace pluss;
-  using namespace pluss::subsp::math::optim;
+  const pluss::Config cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
-  auto make_vec2 = [](double x0, double x1) {
-    return pluss::make_series(std::vector<double>{x0, x1}, {2}).to(ScalarType::Float64);
-  };
+  const Series target = pluss::make_series({1.0, 2.0}, cfg);
+  const Series initial = pluss::make_series({1.0, 1.0}, cfg);
 
-  const Series target = make_vec2(1.0, 2.0);
+  const auto constraints = pluss::optim::constraints()
+                               .lbs(pluss::make_series({0.0, 0.0}, cfg))
+                               .ln_ineq(
+                                   pluss::make_series({1.0, 1.0}, cfg).reshape({1, 2}),
+                                   pluss::make_series({1.5}, cfg))
+                               .nl_ineq([](const pluss::optim::ParameterPack<pluss::optim::Trace>& p)
+                                            -> pluss::optim::Trace {
+                                 return pluss::optim::sum(pluss::optim::square(p.at("x"))) - 3.0;
+                               })
+                               .build();
 
-  ConstrainedProblem problem;
-  problem.objective.autodiff = [target](const ParameterPack<Trace>& p) -> Trace {
-    const auto err = p.at("x") - trace(target, false);
-    return sum(square(err));
-  };
-  problem.nonlinear.inequality = [](const ParameterPack<Trace>& p) -> Trace {
-    return sum(p.at("x")) - 1.5;
-  };
-  problem.bounds.lower = ParameterPack<Series>({
-      {"x", make_vec2(0.0, 0.0)},
-  });
+  pluss::optim::OptimaOptions options = pluss::optim::presets::sequential_qp();
+  options.algorithm = pluss::optim::OptimaAlgorithm::WorkingSet;
+  options.working_set.max_iterations = 60;
+  options.working_set.constraint_tolerance = 1e-8;
+  options.working_set.optimality_tolerance = 1e-6;
+  options.progress_hook = pluss::optim::reports::iter(std::cout);
 
-  ParameterPack<Series> initial({
-      {"x", make_vec2(1.0, 1.0)},
-  });
+  const auto result = pluss::optim::optima(
+      [target](const Series& x) -> Series {
+        return ((x - target) * (x - target)).sum();
+      },
+      initial,
+      options,
+      constraints);
 
-  OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::WorkingSet;
-  options.working_set.max_iterations = 40;
-  options.working_set.constraint_tolerance = 1e-6;
-  options.working_set.optimality_tolerance = 1e-5;
+  std::cout << std::fixed << std::setprecision(6);
+  pluss::optim::reports::compact_summary(std::cout, result) << '\n';
 
-  const auto result = optima(problem, initial, options);
-  const auto x = result.params.at("x").to_vec<double>();
-
-  std::cout << "algorithm=" << result.output.algorithm
-            << " iterations=" << result.iteration
-            << " f_evals=" << result.function_evaluations
-            << " message=" << result.message << '\n';
-  std::cout << "x=[" << x[0] << ", " << x[1] << "]"
-            << " value=" << result.evaluation.value.item<double>()
-            << " max_violation=" << result.evaluation.max_constraint_violation
-            << " stationarity=" << result.stationarity << '\n';
-
+  const Series x_hat = result.params.at("x").reshape({2});
+  std::cout << "x0=" << x_hat.select(0, 0) << '\n';
+  std::cout << "x1=" << x_hat.select(0, 1) << '\n';
   return 0;
 }

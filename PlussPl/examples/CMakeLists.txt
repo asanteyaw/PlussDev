@@ -50,6 +50,14 @@ plusspl_add_example(plusspl_3d_all_families_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/3D/all_3d_families_demo.cpp)
 plusspl_add_example(plusspl_3d_mpl3d_equivalence_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/3D/mpl3d_equivalence_demo.cpp)
+plusspl_add_example(plusspl_flash_api_capture_demo
+    ${CMAKE_CURRENT_SOURCE_DIR}/docs/flash_api_capture_demo.cpp)
+
+# Backward-compatible build target names for previously used flash demo invocations.
+add_custom_target(plusspl_3d_flash_3d_demo DEPENDS plusspl_3d_flash_demo)
+add_custom_target(plusspl_3d_flash_3d_animation_demo DEPENDS plusspl_3d_animation_demo)
+add_custom_target(plusspl_4d_flash_4d_geometry_demo DEPENDS plusspl_4d_geometry_demo)
+add_custom_target(plusspl_4d_flash_4d_animation_demo DEPENDS plusspl_4d_animation_demo)
 
 add_custom_target(plusspl_gallery_outputs
     COMMAND plusspl_2d_gallery_demo
@@ -93,6 +101,7 @@ add_custom_target(plusspl_gallery_outputs
         plusspl_3d_spire_demo
         plusspl_3d_all_families_demo
         plusspl_3d_mpl3d_equivalence_demo
+        plusspl_flash_api_capture_demo
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     USES_TERMINAL
     COMMENT "Generating PlussPl demo outputs"

@@ -51,12 +51,9 @@ void print_outcome(
     const std::string& name,
     const pluss::subsp::math::optimization::BlackboxSolverOutcome& out) {
   const pluss::Series x = out.minimizer.to(pluss::pCPU, pluss::ScalarType::Float64);
-  const auto summary = pluss::transmit(
-      [](double v) { return std::abs(v); },
-      x.to_vec<double>());
   double max_abs = 0.0;
-  for (double v : summary) {
-    max_abs = std::max(max_abs, v);
+  for (double v : x.to_vec<double>()) {
+    max_abs = std::max(max_abs, std::abs(v));
   }
 
   std::cout << name

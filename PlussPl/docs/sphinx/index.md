@@ -1,21 +1,19 @@
-# PlussPl Documentation
+# PlussPl User Documentation
 
-This Sphinx set focuses on API reference first.
+This set now follows the same usage-first API pattern used across the other Pluss docs:
 
-Current scope:
-
-- PlussPl core plotting interface (`Studio`, `Pane`, `Trace`)
-- Flash high-level plotting interface
-- Flash theming, context, and style controls
-- Flash 3D scene controls and geometric 4D projection rendering helpers
-
-A separate user guide/tutorial set can be added later.
+- practical signatures (not internal declarations)
+- short behavioral notes
+- runnable examples
+- concrete output artifacts (plots/frames)
 
 ```{toctree}
 :maxdepth: 2
 
 api_reference
 plusspl_core_api
+plusspl_core_controls_api
+plusspl_object_model_api
 flash_api
 flash_theme_api
 flash_scene_animation_api

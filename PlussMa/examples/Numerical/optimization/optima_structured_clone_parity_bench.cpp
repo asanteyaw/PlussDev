@@ -242,7 +242,7 @@ int main() {
   std::cout << "# Optima Clone-Parity Benchmark: Structured Banded Family\n\n";
 
   std::vector<StructuredBenchmarkRow> rows;
-  for (const std::int64_t n : {16, 32}) {
+  for (const std::int64_t n : {16, 32, 64}) {
     const auto target = make_target_profile(n);
     const auto initial_values = make_infeasible_start(n);
     const auto initial = make_scalar_blocks(initial_values);
@@ -250,7 +250,7 @@ int main() {
 
     OptimaOptions sqp_options;
     sqp_options.algorithm = OptimaAlgorithm::SequentialQP;
-    sqp_options.sequential_qp.max_iterations = 400;
+    sqp_options.sequential_qp.max_iterations = n >= 64 ? 550 : 400;
     sqp_options.sequential_qp.constraint_tolerance = 1e-8;
     sqp_options.sequential_qp.optimality_tolerance = 1e-6;
     sqp_options.sequential_qp.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
@@ -260,7 +260,7 @@ int main() {
 
     OptimaOptions ip_options;
     ip_options.algorithm = OptimaAlgorithm::InternalProtocol;
-    ip_options.internal_protocol.max_iterations = 400;
+    ip_options.internal_protocol.max_iterations = n >= 64 ? 650 : 400;
     ip_options.internal_protocol.constraint_tolerance = 1e-8;
     ip_options.internal_protocol.optimality_tolerance = 1e-6;
     ip_options.internal_protocol.initial_barrier_parameter = 1e-2;

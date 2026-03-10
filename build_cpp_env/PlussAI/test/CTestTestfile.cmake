@@ -6,6 +6,8 @@
 # testing this directory and lists subdirectories to be tested as well.
 add_test([=[conv_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/test/conv_test")
 set_tests_properties([=[conv_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;25;add_test;/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;0;")
+add_test([=[nn_optim_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/test/nn_optim_test")
+set_tests_properties([=[nn_optim_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;25;add_test;/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;0;")
 add_test([=[nodej_neighbor_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/test/nodej_neighbor_test")
 set_tests_properties([=[nodej_neighbor_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;25;add_test;/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;0;")
 add_test([=[nodej_phase0_contract_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/test/nodej_phase0_contract_test")

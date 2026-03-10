@@ -80,6 +80,11 @@ logs/
 # ===================================
 figures/
 plots/
+!PlussPl/docs/sphinx/_static/plots/
+!PlussPl/docs/sphinx/_static/plots/*.png
+!PlussPl/docs/sphinx/_static/plots/methods/
+!PlussPl/docs/sphinx/_static/plots/methods/*.png
+!PlussPl/docs/sphinx/_static/plots/methods/*.svg
 
 # ===================================
 # LaTeX (papers / thesis)

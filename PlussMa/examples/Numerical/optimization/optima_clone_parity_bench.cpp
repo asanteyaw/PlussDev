@@ -39,6 +39,8 @@ struct Garch11Params {
 };
 
 struct BenchmarkRow {
+  std::string family{};
+  std::int64_t sample_size{0};
   std::string solver{};
   std::string backend_family{};
   std::string exit{};
@@ -226,7 +228,9 @@ void fill_param_errors_(BenchmarkRow& row, const Garch11Params& truth, const Gar
   row.beta_abs_error = std::abs(as_f64(est.beta.sub(truth.beta)));
 }
 
-BenchmarkRow run_sequential_qp(const ConstrainedProblem& problem,
+BenchmarkRow run_sequential_qp(const std::string& family,
+                               std::int64_t sample_size,
+                               const ConstrainedProblem& problem,
                                const ParameterPack<Series>& initial,
                                const Garch11Params& truth,
                                const OptimaOptions& options) {
@@ -235,6 +239,8 @@ BenchmarkRow run_sequential_qp(const ConstrainedProblem& problem,
   const auto stop = std::chrono::steady_clock::now();
 
   BenchmarkRow row;
+  row.family = family;
+  row.sample_size = sample_size;
   row.solver = "SequentialQP";
   row.backend_family = "Optima";
   row.exit = to_string(result.exit_flag);
@@ -255,7 +261,9 @@ BenchmarkRow run_sequential_qp(const ConstrainedProblem& problem,
   return row;
 }
 
-BenchmarkRow run_internal_protocol(const ConstrainedProblem& problem,
+BenchmarkRow run_internal_protocol(const std::string& family,
+                                std::int64_t sample_size,
+                                const ConstrainedProblem& problem,
                                 const ParameterPack<Series>& initial,
                                 const Garch11Params& truth,
                                 const OptimaOptions& options) {
@@ -264,6 +272,8 @@ BenchmarkRow run_internal_protocol(const ConstrainedProblem& problem,
   const auto stop = std::chrono::steady_clock::now();
 
   BenchmarkRow row;
+  row.family = family;
+  row.sample_size = sample_size;
   row.solver = "InternalProtocol";
   row.backend_family = "Optima";
   row.exit = to_string(result.exit_flag);
@@ -284,7 +294,9 @@ BenchmarkRow run_internal_protocol(const ConstrainedProblem& problem,
   return row;
 }
 
-BenchmarkRow run_nelder_mead(const Series& x0,
+BenchmarkRow run_nelder_mead(const std::string& family,
+                             std::int64_t sample_size,
+                             const Series& x0,
                              const Garch11Params& truth,
                              const std::function<Series(const Series&)>& objective,
                              const NelderMeadConfig& options) {
@@ -293,6 +305,8 @@ BenchmarkRow run_nelder_mead(const Series& x0,
   const auto stop = std::chrono::steady_clock::now();
 
   BenchmarkRow row;
+  row.family = family;
+  row.sample_size = sample_size;
   row.solver = "NelderMead";
   row.backend_family = "DFO";
   row.exit = to_string(out.status);
@@ -306,7 +320,9 @@ BenchmarkRow run_nelder_mead(const Series& x0,
   return row;
 }
 
-BenchmarkRow run_de_prmm(const Series& x0,
+BenchmarkRow run_de_prmm(const std::string& family,
+                         std::int64_t sample_size,
+                         const Series& x0,
                          const Garch11Params& truth,
                          const std::function<Series(const Series&)>& objective,
                          const DifferentialEvolutionPrmmConfig& options) {
@@ -315,6 +331,8 @@ BenchmarkRow run_de_prmm(const Series& x0,
   const auto stop = std::chrono::steady_clock::now();
 
   BenchmarkRow row;
+  row.family = family;
+  row.sample_size = sample_size;
   row.solver = "DE_PRMM";
   row.backend_family = "DFO";
   row.exit = to_string(out.status);
@@ -329,10 +347,12 @@ BenchmarkRow run_de_prmm(const Series& x0,
 }
 
 void print_markdown_table(const std::vector<BenchmarkRow>& rows) {
-  std::cout << "| Solver | Family | Exit | Stall | Iter | Eval | Objective | Constr viol | First-order | Complementarity | Best feasible | Best feas viol | Time ms | Persistence | |omega err| |alpha err| |beta err| |\n";
-  std::cout << "|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n";
+  std::cout << "| Problem | N | Solver | Family | Exit | Stall | Iter | Eval | Objective | Constr viol | First-order | Complementarity | Best feasible | Best feas viol | Time ms | Persistence | |omega err| |alpha err| |beta err| |\n";
+  std::cout << "|---|---:|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n";
   for (const auto& row : rows) {
-    std::cout << "| " << row.solver
+    std::cout << "| " << row.family
+              << " | " << row.sample_size
+              << " | " << row.solver
               << " | " << row.backend_family
               << " | " << row.exit
               << " | " << row.stall
@@ -357,13 +377,19 @@ void print_markdown_table(const std::vector<BenchmarkRow>& rows) {
 void print_notes(const std::vector<BenchmarkRow>& rows) {
   std::cout << "\nNotes:\n";
   for (const auto& row : rows) {
-    std::cout << "- " << row.solver << ": " << row.note << "\n";
+    std::cout << "- " << row.family << " N=" << row.sample_size << " " << row.solver << ": " << row.note << "\n";
   }
 }
 
 } // namespace
 
 int main() {
+  struct GarchTier {
+    std::int64_t n{0};
+    std::uint64_t seed{0};
+    bool run_dfo{false};
+  };
+
   const pluss::Config cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const Garch11Params truth{
@@ -372,94 +398,106 @@ int main() {
       scalar(0.90, cfg),
   };
 
-  const Series returns = simulate_garch11(truth, 40, 20260225ULL, cfg);
-  const Series variance_guess = returns.var(false).maximum(1e-12);
-  const Series omega_guess = variance_guess.mul(0.05).maximum(1e-6);
-  const Series alpha_guess = scalar(0.15, cfg);
-  const Series beta_guess = scalar(0.70, cfg);
-  const Series x0 = encode_guess(omega_guess, alpha_guess, beta_guess);
-
-  ConstrainedProblem problem;
-  problem.objective.autodiff = [returns, cfg](const ParameterPack<Trace>& p) -> Trace {
-    using namespace pluss::subsp::math::optim;
-
-    const Trace omega = exp(p.at("log_omega"));
-    const Trace s1 = sigmoid(p.at("logit_alpha"));
-    const Trace s2 = sigmoid(p.at("logit_beta"));
-    const Trace alpha = 0.999 * s1;
-    const Trace beta = 0.999 * (1.0 - s1) * s2;
-
-    Trace variance = omega / clamp(1.0 - alpha - beta, 1e-8, 1e8);
-    Trace nll = trace(scalar(0.0, cfg), false);
-
-    for (std::int64_t t = 0; t < returns.numel(); ++t) {
-      if (t > 0) {
-        const Trace prev = trace(returns.select(0, t - 1), false);
-        variance = omega + alpha * prev * prev + beta * variance;
-      }
-
-      const Trace var_clamped = clamp(variance, 1e-12, 1e12);
-      const Trace r = trace(returns.select(0, t), false);
-      nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
-    }
-    return nll;
-  };
-
-  const ParameterPack<Series> initial({
-      {"log_omega", x0.select(0, 0).reshape({1})},
-      {"logit_alpha", x0.select(0, 1).reshape({1})},
-      {"logit_beta", x0.select(0, 2).reshape({1})},
-  });
-
-  OptimaOptions sqp_options;
-  sqp_options.algorithm = OptimaAlgorithm::SequentialQP;
-  sqp_options.sequential_qp.max_iterations = 400;
-  sqp_options.sequential_qp.constraint_tolerance = 1e-8;
-  sqp_options.sequential_qp.optimality_tolerance = 1e-6;
-  sqp_options.sequential_qp.active_set_tolerance = 1e-6;
-  sqp_options.sequential_qp.regularization = 1e-8;
-  sqp_options.sequential_qp.max_line_search_iterations = 16;
-  sqp_options.sequential_qp.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
-
-  OptimaOptions ip_options;
-  ip_options.algorithm = OptimaAlgorithm::InternalProtocol;
-  ip_options.internal_protocol.max_iterations = 60;
-  ip_options.internal_protocol.initial_barrier_parameter = 1e-2;
-  ip_options.internal_protocol.minimum_barrier_parameter = 1e-8;
-  ip_options.internal_protocol.barrier_decay = 0.2;
-  ip_options.internal_protocol.constraint_tolerance = 1e-8;
-  ip_options.internal_protocol.optimality_tolerance = 1e-6;
-  ip_options.internal_protocol.max_line_search_iterations = 20;
-  ip_options.internal_protocol.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
-
-  NelderMeadConfig nm_options;
-  nm_options.position_tolerance = 1e-8;
-  nm_options.value_tolerance = 1e-8;
-  nm_options.max_iterations = 500;
-  nm_options.max_evaluations = 1200;
-
-  DifferentialEvolutionPrmmConfig de_options;
-  de_options.population_size = 24;
-  de_options.elite_count = 8;
-  de_options.max_generations = 30;
-  de_options.max_evaluations = 0;
-  de_options.check_every = 5;
-  de_options.relative_improvement_tolerance = 1e-8;
-  de_options.display = pluss::subsp::math::optimization::PopulationSolverDisplay::None;
-  de_options.rng_seed = 20260226ULL;
-
-  const auto objective = [&](const Series& x_unconstrained) {
-    return garch11_negloglik(returns, decode_params(x_unconstrained));
-  };
-
   std::vector<BenchmarkRow> rows;
-  rows.push_back(run_sequential_qp(problem, initial, truth, sqp_options));
-  rows.push_back(run_internal_protocol(problem, initial, truth, ip_options));
-  rows.push_back(run_nelder_mead(x0, truth, objective, nm_options));
-  rows.push_back(run_de_prmm(x0, truth, objective, de_options));
+  const std::vector<GarchTier> tiers{
+      {40, 20260225ULL, true},
+      {200, 20260235ULL, false},
+      {800, 20260245ULL, false},
+  };
+
+  for (const GarchTier& tier : tiers) {
+    const Series returns = simulate_garch11(truth, tier.n, tier.seed, cfg);
+    const Series variance_guess = returns.var(false).maximum(1e-12);
+    const Series omega_guess = variance_guess.mul(0.05).maximum(1e-6);
+    const Series alpha_guess = scalar(0.15, cfg);
+    const Series beta_guess = scalar(0.70, cfg);
+    const Series x0 = encode_guess(omega_guess, alpha_guess, beta_guess);
+
+    ConstrainedProblem problem;
+    problem.objective.autodiff = [returns, cfg](const ParameterPack<Trace>& p) -> Trace {
+      using namespace pluss::subsp::math::optim;
+
+      const Trace omega = exp(p.at("log_omega"));
+      const Trace s1 = sigmoid(p.at("logit_alpha"));
+      const Trace s2 = sigmoid(p.at("logit_beta"));
+      const Trace alpha = 0.999 * s1;
+      const Trace beta = 0.999 * (1.0 - s1) * s2;
+
+      Trace variance = omega / clamp(1.0 - alpha - beta, 1e-8, 1e8);
+      Trace nll = trace(scalar(0.0, cfg), false);
+
+      for (std::int64_t t = 0; t < returns.numel(); ++t) {
+        if (t > 0) {
+          const Trace prev = trace(returns.select(0, t - 1), false);
+          variance = omega + alpha * prev * prev + beta * variance;
+        }
+
+        const Trace var_clamped = clamp(variance, 1e-12, 1e12);
+        const Trace r = trace(returns.select(0, t), false);
+        nll = nll + 0.5 * (log(var_clamped) + (r * r) / var_clamped);
+      }
+      return nll;
+    };
+
+    const ParameterPack<Series> initial({
+        {"log_omega", x0.select(0, 0).reshape({1})},
+        {"logit_alpha", x0.select(0, 1).reshape({1})},
+        {"logit_beta", x0.select(0, 2).reshape({1})},
+    });
+
+    OptimaOptions sqp_options;
+    sqp_options.algorithm = OptimaAlgorithm::SequentialQP;
+    sqp_options.sequential_qp.max_iterations = tier.n >= 800 ? 600 : 450;
+    sqp_options.sequential_qp.constraint_tolerance = 1e-8;
+    sqp_options.sequential_qp.optimality_tolerance = 1e-6;
+    sqp_options.sequential_qp.active_set_tolerance = 1e-6;
+    sqp_options.sequential_qp.regularization = 1e-8;
+    sqp_options.sequential_qp.max_line_search_iterations = 16;
+    sqp_options.sequential_qp.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
+
+    OptimaOptions ip_options;
+    ip_options.algorithm = OptimaAlgorithm::InternalProtocol;
+    ip_options.internal_protocol.max_iterations = tier.n >= 800 ? 260 : 160;
+    ip_options.internal_protocol.initial_barrier_parameter = 1e-2;
+    ip_options.internal_protocol.minimum_barrier_parameter = 1e-8;
+    ip_options.internal_protocol.barrier_decay = 0.2;
+    ip_options.internal_protocol.constraint_tolerance = 1e-8;
+    ip_options.internal_protocol.optimality_tolerance = 1e-6;
+    ip_options.internal_protocol.max_line_search_iterations = 20;
+    ip_options.internal_protocol.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
+
+    const std::string family = "Garch11";
+    rows.push_back(run_sequential_qp(family, tier.n, problem, initial, truth, sqp_options));
+    rows.push_back(run_internal_protocol(family, tier.n, problem, initial, truth, ip_options));
+
+    if (tier.run_dfo) {
+      NelderMeadConfig nm_options;
+      nm_options.position_tolerance = 1e-8;
+      nm_options.value_tolerance = 1e-8;
+      nm_options.max_iterations = 500;
+      nm_options.max_evaluations = 1200;
+
+      DifferentialEvolutionPrmmConfig de_options;
+      de_options.population_size = 24;
+      de_options.elite_count = 8;
+      de_options.max_generations = 30;
+      de_options.max_evaluations = 0;
+      de_options.check_every = 5;
+      de_options.relative_improvement_tolerance = 1e-8;
+      de_options.display = pluss::subsp::math::optimization::PopulationSolverDisplay::None;
+      de_options.rng_seed = tier.seed + 1ULL;
+
+      const auto objective = [&](const Series& x_unconstrained) {
+        return garch11_negloglik(returns, decode_params(x_unconstrained));
+      };
+
+      rows.push_back(run_nelder_mead(family, tier.n, x0, truth, objective, nm_options));
+      rows.push_back(run_de_prmm(family, tier.n, x0, truth, objective, de_options));
+    }
+  }
 
   std::cout << std::fixed << std::setprecision(6);
-  std::cout << "# Optima Clone-Parity Benchmark: GARCH(1,1)\n\n";
+  std::cout << "# Optima Clone-Parity Benchmark: High-Impact GARCH Tiers\n\n";
   std::cout << "Truth: omega=" << as_f64(truth.omega)
             << ", alpha=" << as_f64(truth.alpha)
             << ", beta=" << as_f64(truth.beta)
