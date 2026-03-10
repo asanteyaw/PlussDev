@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <cmath>
 #include <cstdint>
@@ -13,7 +13,7 @@ namespace {
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using namespace pluss::subsp::stat::distr;
+using namespace pluss::subsp::stats::distr;
 
 double as_f64_scalar(const Series& x) {
   if (!x.defined() || x.numel() != 1) {

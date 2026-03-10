@@ -1,7 +1,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <algorithm>
 #include <cmath>
@@ -14,12 +14,12 @@ using Catch::Approx;
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::stat::ts::Direction;
-using pluss::subsp::stat::ts::LagPlanOptions;
-using pluss::subsp::stat::ts::PartitionOptions;
-using pluss::subsp::stat::ts::TsPartition;
-using pluss::subsp::stat::ts::build_lag_plan;
-using pluss::subsp::stat::ts::build_lagged_predictors;
+using pluss::subsp::stats::ts::Direction;
+using pluss::subsp::stats::ts::LagPlanOptions;
+using pluss::subsp::stats::ts::PartitionOptions;
+using pluss::subsp::stats::ts::TsPartition;
+using pluss::subsp::stats::ts::build_lag_plan;
+using pluss::subsp::stats::ts::build_lagged_predictors;
 
 std::vector<std::int64_t> to_i64(const Series& x) {
   return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).to_vec<std::int64_t>();

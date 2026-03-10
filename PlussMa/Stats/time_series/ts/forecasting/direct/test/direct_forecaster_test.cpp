@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <cmath>
 #include <cstdint>
@@ -11,10 +11,10 @@ namespace {
 
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::stat::ts::DirectForecaster;
-using pluss::subsp::stat::ts::DirectForecasterOptions;
-using pluss::subsp::stat::ts::DirectLearnerKind;
-using pluss::subsp::stat::ts::RegressionLoss;
+using pluss::subsp::stats::ts::DirectForecaster;
+using pluss::subsp::stats::ts::DirectForecasterOptions;
+using pluss::subsp::stats::ts::DirectLearnerKind;
+using pluss::subsp::stats::ts::RegressionLoss;
 
 void expect(bool condition, const std::string& message) {
   if (!condition) {

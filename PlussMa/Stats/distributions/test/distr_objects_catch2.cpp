@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <cmath>
 #include <cstddef>
@@ -17,7 +17,7 @@ namespace {
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using namespace pluss::subsp::stat::distr;
+using namespace pluss::subsp::stats::distr;
 
 constexpr double kTol = 1e-12;
 
@@ -59,14 +59,15 @@ void require_allclose(std::string_view label, const Series& actual, const Series
 
 template <typename Dist, typename ParamArray>
 void require_functional_parity(const Dist& dist,
-                               std::string_view name,
+                               dst::Kind kind,
                                const Series& x,
                                const ParamArray& params,
                                double tol = kTol) {
-  require_allclose(std::string(name) + "::pdf", dist.pdf(x), pdf(name, x, params), tol);
-  require_allclose(std::string(name) + "::logpdf", dist.logpdf(x), logpdf(name, x, params), tol);
-  require_allclose(std::string(name) + "::cdf", dist.cdf(x), cdf(name, x, params), tol);
-  require_allclose(std::string(name) + "::logcdf", dist.logcdf(x), logcdf(name, x, params), tol);
+  const std::string label = "kind=" + std::to_string(static_cast<int>(kind));
+  require_allclose(label + "::pdf", dist.pdf(x), pdf(kind, x, params), tol);
+  require_allclose(label + "::logpdf", dist.logpdf(x), logpdf(kind, x, params), tol);
+  require_allclose(label + "::cdf", dist.cdf(x), cdf(kind, x, params), tol);
+  require_allclose(label + "::logcdf", dist.logcdf(x), logcdf(kind, x, params), tol);
 }
 
 double uniform_cgf_expected(double low, double high, double t) {
@@ -289,107 +290,107 @@ TEST_CASE("distribution objects stay aligned with functional pdf/logpdf/cdf rout
   const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   require_functional_parity(Normal{0.5, 1.25},
-                            "normal",
+                            dst::Normal,
                             pluss::make_series(std::vector<double>{-1.0, 0.0, 1.0}, {3}, f64),
                             std::initializer_list<double>{0.5, 1.25});
   require_functional_parity(Bernoulli{0.25},
-                            "bernoulli",
+                            dst::Bernoulli,
                             pluss::make_series(std::vector<double>{0.0, 1.0}, {2}, f64),
                             std::initializer_list<double>{0.25});
   require_functional_parity(Binomial{4, 0.25},
-                            "binomial",
+                            dst::Binomial,
                             pluss::make_series(std::vector<double>{0.0, 1.0, 2.0}, {3}, f64),
                             std::initializer_list<double>{4.0, 0.25});
   require_functional_parity(Gamma{2.0, 1.5, 0.25},
-                            "gamma",
+                            dst::Gamma,
                             pluss::make_series(std::vector<double>{0.5, 1.0, 2.0}, {3}, f64),
                             std::initializer_list<double>{0.25, 1.5, 2.0});
   require_functional_parity(ChiSquare{5},
-                            "chisq",
+                            dst::ChiSquare,
                             pluss::make_series(std::vector<double>{0.5, 2.0, 4.0}, {3}, f64),
                             std::initializer_list<double>{5.0});
   require_functional_parity(InverseGaussian{1.5, 3.0},
-                            "ig",
+                            dst::InverseGaussian,
                             pluss::make_series(std::vector<double>{0.5, 1.5, 3.0}, {3}, f64),
                             std::initializer_list<double>{1.5, 3.0},
                             1e-10);
   require_functional_parity(Lognormal{0.1, 0.4},
-                            "lognormal",
+                            dst::Lognormal,
                             pluss::make_series(std::vector<double>{0.5, 1.0, 2.0}, {3}, f64),
                             std::initializer_list<double>{0.1, 0.4},
                             1e-10);
   require_functional_parity(Uniform{-2.0, 3.0},
-                            "uniform",
+                            dst::Uniform,
                             pluss::make_series(std::vector<double>{-2.0, 0.0, 2.0}, {3}, f64),
                             std::initializer_list<double>{-2.0, 3.0});
   require_functional_parity(Exponential{2.0},
-                            "exponential",
+                            dst::Exponential,
                             pluss::make_series(std::vector<double>{0.0, 0.5, 1.0}, {3}, f64),
                             std::initializer_list<double>{2.0});
   require_functional_parity(Laplace{0.5, 0.75},
-                            "laplace",
+                            dst::Laplace,
                             pluss::make_series(std::vector<double>{-1.0, 0.5, 2.0}, {3}, f64),
                             std::initializer_list<double>{0.5, 0.75});
   require_functional_parity(Logistic{-0.25, 0.8},
-                            "logistic",
+                            dst::Logistic,
                             pluss::make_series(std::vector<double>{-2.0, 0.0, 2.0}, {3}, f64),
                             std::initializer_list<double>{-0.25, 0.8});
   require_functional_parity(Rayleigh{1.25},
-                            "rayleigh",
+                            dst::Rayleigh,
                             pluss::make_series(std::vector<double>{0.25, 1.0, 2.5}, {3}, f64),
                             std::initializer_list<double>{1.25});
   require_functional_parity(NormalTrunc{-1.0, 1.0, 0.0, 1.0},
-                            "normaltrunc",
+                            dst::NormalTrunc,
                             pluss::make_series(std::vector<double>{-1.0, 0.0, 0.5}, {3}, f64),
                             std::initializer_list<double>{-1.0, 1.0, 0.0, 1.0},
                             1e-10);
   require_functional_parity(StudentT{9.0, 0.25, 1.5},
-                            "t",
+                            dst::StudentT,
                             pluss::make_series(std::vector<double>{-1.0, 0.25, 2.0}, {3}, f64),
                             std::initializer_list<double>{9.0, 0.25, 1.5},
                             1e-10);
   require_functional_parity(FDistribution{5.0, 12.0},
-                            "f",
+                            dst::F,
                             pluss::make_series(std::vector<double>{0.25, 1.0, 3.0}, {3}, f64),
                             std::initializer_list<double>{5.0, 12.0},
                             1e-10);
   require_functional_parity(Weibull{2.0, 1.5},
-                            "weibull",
+                            dst::Weibull,
                             pluss::make_series(std::vector<double>{0.25, 1.0, 3.0}, {3}, f64),
                             std::initializer_list<double>{2.0, 1.5},
                             1e-10);
   require_functional_parity(Beta{0.0, 1.0, 2.0, 3.0},
-                            "beta",
+                            dst::Beta,
                             pluss::make_series(std::vector<double>{0.1, 0.5, 0.9}, {3}, f64),
                             std::initializer_list<double>{0.0, 1.0, 2.0, 3.0},
                             1e-10);
   require_functional_parity(Skellam{4.0, 1.5},
-                            "skellam",
+                            dst::Skellam,
                             pluss::make_series(std::vector<double>{-1.0, 0.0, 2.0}, {3}, f64),
                             std::initializer_list<double>{4.0, 1.5},
                             1e-9);
   require_functional_parity(Poisson{2.5},
-                            "poisson",
+                            dst::Poisson,
                             pluss::make_series(std::vector<double>{0.0, 1.0, 4.0}, {3}, f64),
                             std::initializer_list<double>{2.5},
                             1e-12);
   require_functional_parity(Geometric{0.25},
-                            "geometric",
+                            dst::Geometric,
                             pluss::make_series(std::vector<double>{1.0, 2.0, 5.0}, {3}, f64),
                             std::initializer_list<double>{0.25},
                             1e-12);
   require_functional_parity(NegativeBinomial{3.0, 0.4},
-                            "negbinom",
+                            dst::NegativeBinomial,
                             pluss::make_series(std::vector<double>{0.0, 1.0, 4.0}, {3}, f64),
                             std::initializer_list<double>{3.0, 0.4},
                             1e-12);
   require_functional_parity(Nig{2.0, 0.5, 0.0, 1.0},
-                            "nig",
+                            dst::Nig,
                             pluss::make_series(std::vector<double>{-1.0, 0.0, 1.0}, {3}, f64),
                             std::initializer_list<double>{2.0, 0.5, 0.0, 1.0},
                             1e-8);
   require_functional_parity(Gh{1.0, 2.0, 0.5, 0.0, 1.0},
-                            "gh",
+                            dst::Gh,
                             pluss::make_series(std::vector<double>{-1.0, 0.0, 1.0}, {3}, f64),
                             std::initializer_list<double>{1.0, 2.0, 0.5, 0.0, 1.0},
                             1e-8);

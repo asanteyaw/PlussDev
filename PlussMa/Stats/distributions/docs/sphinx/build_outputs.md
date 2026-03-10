@@ -61,8 +61,8 @@ The docs describe the production surface implemented in:
 - `PlussMa/Stats/distributions/distr_objects_continuous.cpp`
 - `PlussMa/Stats/distributions/distr_objects_discrete.cpp`
 - `PlussMa/Stats/distributions/distr_objects_special.cpp`
-- `PlussMa/include/pluss/subsp/stat/distr_fwd.h`
-- `PlussMa/include/pluss/subsp/stat/distr.h`
+- `PlussMa/include/pluss/subsp/stats/distr_fwd.h`
+- `PlussMa/include/pluss/subsp/stats/distr.h`
 - `PlussMa/include/pluss/ma/stats.h`
 - `PlussMa/examples/Numerical/distributions_demo.cpp`
 - `PlussMa/Stats/distributions/examples/distributions_objects_demo.cpp`

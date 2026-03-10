@@ -1,20 +1,20 @@
-#include "pluss/subsp/stat/stats.h"
+#include "pluss/subsp/stats/stats.h"
 
 #include "CodeM/core/Errors.h"
 
 #include <string>
 
-namespace pluss::subsp::stat {
+namespace pluss::subsp::stats {
 namespace {
 
 inline void require_defined_(const Series& x, const char* op) {
-  PLUSS_CHECK(x.defined(), std::string("subsp::stat::") + op + ": expected defined Series");
+  PLUSS_CHECK(x.defined(), std::string("subsp::stats::") + op + ": expected defined Series");
 }
 
 inline void require_same_platform_(const Series& x, const Series& y, const char* op) {
   PLUSS_CHECK(
       x.platform() == y.platform(),
-      std::string("subsp::stat::") + op + ": expected matching platforms");
+      std::string("subsp::stats::") + op + ": expected matching platforms");
 }
 
 inline Series invoke_self_(std::string_view op, const Series& x, const char* opname) {
@@ -136,4 +136,4 @@ Series cdist(const Series& x, const Series& y) {
   return invoke_pair_("cdist", "cdist", x, y);
 }
 
-} // namespace pluss::subsp::stat
+} // namespace pluss::subsp::stats

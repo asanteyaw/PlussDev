@@ -66,12 +66,12 @@ Keep explicit namespace access to avoid hidden collisions.
 
 ## Approved Aliases
 
-### `pluss::subsp::stat::distr::dst::Kind`
+### `pluss::subsp::stats::distr::dst::Kind`
 
 - `dst::Kind`
   - Distribution kind shorthand namespace (see header for full value list).
-  - Defined in: `PlussMa/include/pluss/subsp/stat/distr_fwd.h`
-  - Local opt-in alias header: `PlussMa/include/pluss/subsp/stat/dst_alias.h`
+  - Defined in: `PlussMa/include/pluss/subsp/stats/distr_fwd.h`
+  - Local opt-in alias header: `PlussMa/include/pluss/subsp/stats/dst_alias.h`
     - Exposes `pluss::ma::dst::Normal` (module-scoped alias, lower collision risk).
   - Library-wide alias umbrella: `PlussMa/include/pluss/ma/aliases.h`
     - Exposes `ma::dst::Normal` (adds `namespace ma = ::pluss::ma`).
@@ -128,7 +128,7 @@ namespace pq = ::pluss::subsp::math::optim;
 namespace pp = ::pluss::pl;
 
 // PlussMa distribution kinds
-namespace dist = ::pluss::subsp::stat::distr::dst;
+namespace dist = ::pluss::subsp::stats::distr::dst;
 ```
 
 Usage:

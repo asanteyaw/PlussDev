@@ -2,10 +2,10 @@
   "version": 1,
   "aliases": [
     {
-      "scope": "pluss::subsp::stat::distr",
+      "scope": "pluss::subsp::stats::distr",
       "alias": "dst",
       "target": "Kind",
-      "file": "PlussMa/include/pluss/subsp/stat/distr_fwd.h",
+      "file": "PlussMa/include/pluss/subsp/stats/distr_fwd.h",
       "values": [
         "Alpha",
         "Anglit",

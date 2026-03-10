@@ -1,10 +1,10 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <cstdint>
 #include <iostream>
 #include <vector>
 
-namespace ts = pluss::subsp::stat::ts;
+namespace ts = pluss::subsp::stats::ts;
 
 int main() {
   const pluss::Config f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);

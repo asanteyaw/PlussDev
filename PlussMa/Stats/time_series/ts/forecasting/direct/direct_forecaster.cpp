@@ -1,4 +1,4 @@
-#include "pluss/subsp/stat/ts.h"
+#include "pluss/subsp/stats/ts.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace pluss::subsp::stat::ts {
+namespace pluss::subsp::stats::ts {
 namespace {
 
 using pluss::Config;
@@ -26,25 +26,25 @@ Config work_cfg_(Config cfg) {
 }
 
 Series as_matrix_(const Series& x, const char* name) {
-  PLUSS_CHECK(x.defined(), std::string("subsp::stat::ts::") + name + ": expected defined Series");
+  PLUSS_CHECK(x.defined(), std::string("subsp::stats::ts::") + name + ": expected defined Series");
   const auto sizes = x.sizes();
-  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stat::ts::") + name + ": expected non-scalar Series");
+  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stats::ts::") + name + ": expected non-scalar Series");
   if (sizes.size() == 1) {
     return x.reshape({sizes[0], 1});
   }
-  PLUSS_CHECK(sizes.size() == 2, std::string("subsp::stat::ts::") + name + ": expected 1D or 2D Series");
+  PLUSS_CHECK(sizes.size() == 2, std::string("subsp::stats::ts::") + name + ": expected 1D or 2D Series");
   return x;
 }
 
 Series as_vector_(const Series& x, const char* name) {
-  PLUSS_CHECK(x.defined(), std::string("subsp::stat::ts::") + name + ": expected defined Series");
+  PLUSS_CHECK(x.defined(), std::string("subsp::stats::ts::") + name + ": expected defined Series");
   const auto sizes = x.sizes();
-  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stat::ts::") + name + ": expected non-scalar Series");
+  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stats::ts::") + name + ": expected non-scalar Series");
   if (sizes.size() == 1) {
     return x.reshape({sizes[0]});
   }
   PLUSS_CHECK(sizes.size() == 2 && sizes[1] == 1,
-              std::string("subsp::stat::ts::") + name + ": expected vector or Nx1 matrix");
+              std::string("subsp::stats::ts::") + name + ": expected vector or Nx1 matrix");
   return x.reshape({sizes[0]});
 }
 
@@ -67,14 +67,14 @@ std::vector<std::int64_t> active_columns_for_horizon_(const Series& mask, std::i
 }
 
 Series select_rows_(const Series& x, std::int64_t start, std::int64_t len, Config cfg) {
-  PLUSS_CHECK(start >= 0, "subsp::stat::ts::DirectForecaster: row start must be non-negative");
-  PLUSS_CHECK(len > 0, "subsp::stat::ts::DirectForecaster: row length must be positive");
-  PLUSS_CHECK(start + len <= x.sizes()[0], "subsp::stat::ts::DirectForecaster: row slice exceeds bounds");
+  PLUSS_CHECK(start >= 0, "subsp::stats::ts::DirectForecaster: row start must be non-negative");
+  PLUSS_CHECK(len > 0, "subsp::stats::ts::DirectForecaster: row length must be positive");
+  PLUSS_CHECK(start + len <= x.sizes()[0], "subsp::stats::ts::DirectForecaster: row slice exceeds bounds");
   return x.index_select(0, i64_range_(start, start + len, cfg));
 }
 
 Series select_columns_(const Series& x, const std::vector<std::int64_t>& cols, Config cfg) {
-  PLUSS_CHECK(!cols.empty(), "subsp::stat::ts::DirectForecaster: expected non-empty active feature set");
+  PLUSS_CHECK(!cols.empty(), "subsp::stats::ts::DirectForecaster: expected non-empty active feature set");
   const Config idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform).with_pinned(cfg.pinned);
   const Series col_idx = pluss::make_series(cols, {static_cast<std::int64_t>(cols.size())}, idx_cfg);
   return x.index_select(1, col_idx);
@@ -92,7 +92,7 @@ Series fit_beta_(const Series& x, const Series& y, const DirectForecasterOptions
   Series x_aug = x64;
   Series y_aug = y64;
   if (opts.learner == DirectLearnerKind::Ridge) {
-    PLUSS_CHECK(opts.ridge_lambda >= 0.0, "subsp::stat::ts::DirectForecaster: ridge_lambda must be >= 0");
+    PLUSS_CHECK(opts.ridge_lambda >= 0.0, "subsp::stats::ts::DirectForecaster: ridge_lambda must be >= 0");
     if (opts.ridge_lambda > 0.0) {
       Series penalty = pluss::eye(x64.sizes()[1], x64.sizes()[1], cfg).mul(std::sqrt(opts.ridge_lambda));
       if (opts.fit_intercept) {
@@ -116,7 +116,7 @@ Series fit_beta_(const Series& x, const Series& y, const DirectForecasterOptions
     }
   }
   PLUSS_CHECK(beta.isfinite().all().item<double>() == 1.0,
-              "subsp::stat::ts::DirectForecaster: failed to produce finite coefficients");
+              "subsp::stats::ts::DirectForecaster: failed to produce finite coefficients");
   return beta;
 }
 
@@ -136,7 +136,7 @@ std::int64_t observed_count_(const Series& x, const Series& y, const LagPlan& pl
     return as_vector_(y, "DirectForecaster").numel();
   }
   PLUSS_CHECK(plan.response_lags.empty(),
-              "subsp::stat::ts::DirectForecaster: response series is required when response_lags is non-empty");
+              "subsp::stats::ts::DirectForecaster: response series is required when response_lags is non-empty");
   return as_matrix_(x, "DirectForecaster").sizes()[0];
 }
 
@@ -148,7 +148,7 @@ bool leading_requires_future_(const LagPlan& plan) {
 
 const DirectStepModel& step_for_horizon_(const std::vector<DirectStepModel>& steps, std::int64_t horizon_step) {
   const auto it = std::find_if(steps.begin(), steps.end(), [horizon_step](const auto& s) { return s.horizon == horizon_step; });
-  PLUSS_CHECK(it != steps.end(), "subsp::stat::ts::DirectForecaster: requested horizon step is not in model");
+  PLUSS_CHECK(it != steps.end(), "subsp::stats::ts::DirectForecaster: requested horizon step is not in model");
   return *it;
 }
 
@@ -163,7 +163,7 @@ DirectForecaster DirectForecaster::fit(const Series& x, const Series& y, const D
   const Config out_cfg = work_cfg_(cfg);
   const Series yv = as_vector_(y, "DirectForecaster::fit").to(out_cfg.platform, out_cfg.dtype);
   const std::int64_t nobs = yv.numel();
-  PLUSS_CHECK(nobs > 0, "subsp::stat::ts::DirectForecaster::fit: expected positive observation count");
+  PLUSS_CHECK(nobs > 0, "subsp::stats::ts::DirectForecaster::fit: expected positive observation count");
 
   const std::int64_t num_predictors = x.defined() ? as_matrix_(x, "DirectForecaster::fit").sizes()[1] : 0;
   const LagPlan plan = build_lag_plan(num_predictors, options.lag);
@@ -193,7 +193,7 @@ DirectForecaster DirectForecaster::fit(const Series& x, const Series& y, const D
 }
 
 Series DirectForecaster::predict(const Series& x, const Series& y, Config cfg) const {
-  PLUSS_CHECK(!steps_.empty(), "subsp::stat::ts::DirectForecaster::predict: model has no fitted steps");
+  PLUSS_CHECK(!steps_.empty(), "subsp::stats::ts::DirectForecaster::predict: model has no fitted steps");
   const Config out_cfg = work_cfg_(cfg);
   const std::int64_t nobs = observed_count_(x, y, lag_plan_);
   const Series yv = y.defined() ? as_vector_(y, "DirectForecaster::predict").to(out_cfg.platform, out_cfg.dtype)
@@ -216,7 +216,7 @@ Series DirectForecaster::predict(const Series& x, const Series& y, Config cfg) c
 }
 
 Series DirectForecaster::prepared_predictors(const Series& x, const Series& y, std::int64_t horizon_step, Config cfg) const {
-  PLUSS_CHECK(!steps_.empty(), "subsp::stat::ts::DirectForecaster::prepared_predictors: model has no fitted steps");
+  PLUSS_CHECK(!steps_.empty(), "subsp::stats::ts::DirectForecaster::prepared_predictors: model has no fitted steps");
   const auto out_cfg = work_cfg_(cfg);
   const auto& step_model = step_for_horizon_(steps_, horizon_step);
   const std::int64_t nobs = observed_count_(x, y, lag_plan_);
@@ -233,9 +233,9 @@ Series DirectForecaster::prepared_predictors(const Series& x, const Series& y, s
 }
 
 Series DirectForecaster::forecast(const Series& x, const Series& y, Config cfg) const {
-  PLUSS_CHECK(!steps_.empty(), "subsp::stat::ts::DirectForecaster::forecast: model has no fitted steps");
+  PLUSS_CHECK(!steps_.empty(), "subsp::stats::ts::DirectForecaster::forecast: model has no fitted steps");
   PLUSS_CHECK(!leading_requires_future_(lag_plan_),
-              "subsp::stat::ts::DirectForecaster::forecast: future leading predictors are not supported yet; "
+              "subsp::stats::ts::DirectForecaster::forecast: future leading predictors are not supported yet; "
               "remove leading predictors or use predict with observed data");
   const auto out_cfg = work_cfg_(cfg);
   const auto idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(out_cfg.platform).with_pinned(out_cfg.pinned);
@@ -265,7 +265,7 @@ Series DirectForecaster::loss(const Series& x, const Series& y, RegressionLoss k
   const Series yv = as_vector_(y, "DirectForecaster::loss").to(out_cfg.platform, out_cfg.dtype);
   const std::int64_t nobs = yv.numel();
   const Series pred = predict(x, yv, out_cfg);
-  PLUSS_CHECK(pred.sizes()[0] == nobs, "subsp::stat::ts::DirectForecaster::loss: prediction length mismatch");
+  PLUSS_CHECK(pred.sizes()[0] == nobs, "subsp::stats::ts::DirectForecaster::loss: prediction length mismatch");
 
   const Series y_expanded = yv.reshape({nobs, 1}).expand(std::vector<std::int64_t>{nobs, pred.sizes()[1]});
   const Series residual = pred.sub(y_expanded);
@@ -284,8 +284,8 @@ Series DirectForecaster::loss(const Series& x, const Series& y, RegressionLoss k
 
 const DirectStepModel& DirectForecaster::step(std::int64_t i) const {
   PLUSS_CHECK(i >= 0 && i < static_cast<std::int64_t>(steps_.size()),
-              "subsp::stat::ts::DirectForecaster::step: step index out of bounds");
+              "subsp::stats::ts::DirectForecaster::step: step index out of bounds");
   return steps_[static_cast<std::size_t>(i)];
 }
 
-} // namespace pluss::subsp::stat::ts
+} // namespace pluss::subsp::stats::ts

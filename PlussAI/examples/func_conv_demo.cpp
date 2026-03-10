@@ -1,4 +1,5 @@
 #include <pluss/pluss.h>
+#include <pluss/ai.h>
 
 #include <iostream>
 #include <vector>
@@ -40,7 +41,7 @@ int main() {
   const Series tcn_stage2 = conv1d(tcn_stage1, temporal_kernel2, Series(), 1, 2, 2, 1);
 
   std::cout << "func_conv_demo\n";
-  std::cout << "surface: pluss::conv / pluss::conv1d via #include <pluss/pluss.h>\n";
+  std::cout << "surface: pluss::conv / pluss::conv1d via #include <pluss/pluss.h> + <pluss/ai.h>\n";
   std::cout << "classical 2d conv feature map: " << image_features << "\n";
   std::cout << "temporal signal: " << signal << "\n";
   std::cout << "TCN-style stage 1: " << tcn_stage1 << "\n";

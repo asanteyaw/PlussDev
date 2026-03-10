@@ -1,4 +1,4 @@
-#include "pluss/subsp/stat/ts.h"
+#include "pluss/subsp/stats/ts.h"
 
 #include "CodeM/core/Errors.h"
 #include "../../../../Math/Numerical/optimization/nelder_mead_minimizer.h"
@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace pluss::subsp::stat::ts {
+namespace pluss::subsp::stats::ts {
 namespace {
 
 using pluss::Config;
@@ -35,14 +35,14 @@ Config f64_cfg_(Config cfg) {
 }
 
 Series as_vector_(const Series& x, const char* name) {
-  PLUSS_CHECK(x.defined(), std::string("subsp::stat::ts::") + name + ": expected defined Series");
+  PLUSS_CHECK(x.defined(), std::string("subsp::stats::ts::") + name + ": expected defined Series");
   const auto sizes = x.sizes();
-  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stat::ts::") + name + ": expected non-scalar Series");
+  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stats::ts::") + name + ": expected non-scalar Series");
   if (sizes.size() == 1) {
     return x.reshape({sizes[0]});
   }
   PLUSS_CHECK(sizes.size() == 2 && sizes[1] == 1,
-              std::string("subsp::stat::ts::") + name + ": expected vector or Nx1 matrix");
+              std::string("subsp::stats::ts::") + name + ": expected vector or Nx1 matrix");
   return x.reshape({sizes[0]});
 }
 
@@ -62,7 +62,7 @@ double stable_logit_(double p) {
 
 std::pair<std::vector<double>, double> centered_(const Series& y, bool demean) {
   auto values = y.to(pluss::pCPU, ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
-  PLUSS_CHECK(!values.empty(), "subsp::stat::ts::Gjr: expected non-empty response series");
+  PLUSS_CHECK(!values.empty(), "subsp::stats::ts::Gjr: expected non-empty response series");
   const double mean = demean ? std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size()) : 0.0;
   if (demean) {
     std::transform(values.begin(), values.end(), values.begin(), [mean](const double v) { return v - mean; });
@@ -148,7 +148,7 @@ GjrParams decode_theta_(const std::vector<double>& theta,
   const std::int64_t k = 2 * m + q;
   const std::int64_t expected = (k == 0) ? 1 : (2 + (k - 1));
   PLUSS_CHECK(static_cast<std::int64_t>(theta.size()) == expected,
-              "subsp::stat::ts::Gjr: internal theta size mismatch");
+              "subsp::stats::ts::Gjr: internal theta size mismatch");
 
   GjrParams p;
   p.arch.resize(static_cast<std::size_t>(m));
@@ -211,14 +211,33 @@ std::vector<double> normalize_init_(const std::vector<double>& values,
                                     std::int64_t order,
                                     double default_value,
                                     const char* name) {
-  PLUSS_CHECK(order >= 0, std::string("subsp::stat::ts::Gjr::fit_mle: ") + name + " order must be >= 0");
+  PLUSS_CHECK(order >= 0, std::string("subsp::stats::ts::Gjr::fit_mle: ") + name + " order must be >= 0");
   if (order == 0) return {};
   if (values.empty()) return std::vector<double>(static_cast<std::size_t>(order), default_value);
   if (static_cast<std::int64_t>(values.size()) == 1) return std::vector<double>(static_cast<std::size_t>(order), values.front());
   PLUSS_CHECK(static_cast<std::int64_t>(values.size()) == order,
-              std::string("subsp::stat::ts::Gjr::fit_mle: ") + name +
+              std::string("subsp::stats::ts::Gjr::fit_mle: ") + name +
                   " initial size must be 1 or equal to order");
   return values;
+}
+
+std::vector<std::vector<double>> restart_thetas_(const std::vector<double>& base,
+                                                 std::int64_t restarts,
+                                                 double simplex_delta) {
+  PLUSS_CHECK(restarts > 0, "subsp::stats::ts::Gjr::fit_mle: nm_restarts must be > 0");
+  std::vector<std::vector<double>> starts;
+  starts.reserve(static_cast<std::size_t>(restarts));
+  starts.push_back(base);
+  for (std::int64_t r = 1; r < restarts; ++r) {
+    const double amp = simplex_delta * (0.5 + 0.5 * static_cast<double>(r) / static_cast<double>(restarts - 1));
+    std::vector<double> v = base;
+    for (std::size_t i = 0; i < v.size(); ++i) {
+      const double sign = (((static_cast<std::int64_t>(i) + r) % 2) == 0) ? 1.0 : -1.0;
+      v[i] += sign * amp * std::max(1.0, std::abs(base[i]));
+    }
+    starts.push_back(std::move(v));
+  }
+  return starts;
 }
 
 std::vector<double> sigma2_path_(const std::vector<double>& e,
@@ -394,16 +413,17 @@ std::vector<double> observed_inf_numeric_(const std::vector<double>& e, const Gj
 }
 
 GjrFit fit_gjr_(const Series& y, const GjrOptions& options, Config cfg) {
-  PLUSS_CHECK(options.arch_order >= 0, "subsp::stat::ts::Gjr::fit_mle: arch_order must be >= 0");
-  PLUSS_CHECK(options.garch_order >= 0, "subsp::stat::ts::Gjr::fit_mle: garch_order must be >= 0");
-  PLUSS_CHECK(options.variance_floor > 0.0, "subsp::stat::ts::Gjr::fit_mle: variance_floor must be > 0");
+  PLUSS_CHECK(options.arch_order >= 0, "subsp::stats::ts::Gjr::fit_mle: arch_order must be >= 0");
+  PLUSS_CHECK(options.garch_order >= 0, "subsp::stats::ts::Gjr::fit_mle: garch_order must be >= 0");
+  PLUSS_CHECK(options.variance_floor > 0.0, "subsp::stats::ts::Gjr::fit_mle: variance_floor must be > 0");
   PLUSS_CHECK(options.stationarity_margin > 0.0 && options.stationarity_margin < 1.0,
-              "subsp::stat::ts::Gjr::fit_mle: stationarity_margin must be in (0,1)");
+              "subsp::stats::ts::Gjr::fit_mle: stationarity_margin must be in (0,1)");
+  PLUSS_CHECK(options.nm_restarts > 0, "subsp::stats::ts::Gjr::fit_mle: nm_restarts must be > 0");
 
   const auto out_cfg = f64_cfg_(cfg);
   const Series yv = as_vector_(y, "Gjr::fit_mle").to(out_cfg.platform, out_cfg.dtype);
   const auto [centered, mean] = centered_(yv, options.demean);
-  PLUSS_CHECK(centered.size() >= 8, "subsp::stat::ts::Gjr::fit_mle: expected at least 8 observations");
+  PLUSS_CHECK(centered.size() >= 8, "subsp::stats::ts::Gjr::fit_mle: expected at least 8 observations");
 
   GjrParams init;
   init.omega = options.omega0;
@@ -416,8 +436,6 @@ GjrFit fit_gjr_(const Series& y, const GjrOptions& options, Config cfg) {
   init = clipped_params_(std::move(init), options.variance_floor, options.stationarity_margin);
 
   const auto theta0 = encode_theta_(init, options.variance_floor, options.stationarity_margin);
-  const Series initial = pluss::make_series(theta0, {static_cast<std::int64_t>(theta0.size())}, out_cfg);
-
   pluss::subsp::math::optimization::NelderMeadConfig nm;
   nm.max_iterations = options.max_iterations;
   nm.max_evaluations = options.max_evaluations;
@@ -435,13 +453,24 @@ GjrFit fit_gjr_(const Series& y, const GjrOptions& options, Config cfg) {
     return nll_centered_(centered, p, options.variance_floor, options.stationarity_margin);
   };
 
-  const auto out = pluss::subsp::math::optimization::nelder_mead_minimizer(objective, initial, nm);
-  const auto best = out.minimizer.to(pluss::pCPU, ScalarType::Float64).reshape({out.minimizer.numel()}).to_vec<double>();
-  const auto p = decode_theta_(best,
-                               options.arch_order,
-                               options.garch_order,
-                               options.variance_floor,
-                               options.stationarity_margin);
+  double best_nll = std::numeric_limits<double>::infinity();
+  GjrParams p = init;
+  for (const auto& start : restart_thetas_(theta0, options.nm_restarts, options.simplex_delta)) {
+    const Series initial = pluss::make_series(start, {static_cast<std::int64_t>(start.size())}, out_cfg);
+    const auto out = pluss::subsp::math::optimization::nelder_mead_minimizer(objective, initial, nm);
+    const auto theta_best = out.minimizer.to(pluss::pCPU, ScalarType::Float64).reshape({out.minimizer.numel()}).to_vec<double>();
+    const auto cand = decode_theta_(theta_best,
+                                    options.arch_order,
+                                    options.garch_order,
+                                    options.variance_floor,
+                                    options.stationarity_margin);
+    const double nll = nll_centered_(centered, cand, options.variance_floor, options.stationarity_margin);
+    if (std::isfinite(nll) && nll < best_nll) {
+      best_nll = nll;
+      p = cand;
+    }
+  }
+  PLUSS_CHECK(std::isfinite(best_nll), "subsp::stats::ts::Gjr::fit_mle: optimizer failed to find finite solution");
 
   return GjrFit{
       .mean = mean,
@@ -463,7 +492,7 @@ double GjrFit::persistence() const {
 
 double GjrFit::unconditional_var() const {
   const double den = 1.0 - persistence();
-  PLUSS_CHECK(den > 0.0, "subsp::stat::ts::GjrFit::unconditional_var: persistence must be < 1");
+  PLUSS_CHECK(den > 0.0, "subsp::stats::ts::GjrFit::unconditional_var: persistence must be < 1");
   return omega / den;
 }
 
@@ -507,7 +536,7 @@ Series GjrFit::observed_inf(const Series& y, Config cfg) const {
 }
 
 Series GjrFit::forecast(std::int64_t horizon, const Series& y, Config cfg) const {
-  PLUSS_CHECK(horizon > 0, "subsp::stat::ts::GjrFit::forecast: horizon must be > 0");
+  PLUSS_CHECK(horizon > 0, "subsp::stats::ts::GjrFit::forecast: horizon must be > 0");
   const auto out_cfg = f64_cfg_(cfg);
   const Series yv = as_vector_(y, "GjrFit::forecast").to(out_cfg.platform, out_cfg.dtype);
   const auto centered = centered_with_mean_(yv, mean);
@@ -557,7 +586,7 @@ Series GjrFit::forecast(std::int64_t horizon, const Series& y, Config cfg) const
 }
 
 Series GjrFit::simulate(std::int64_t num_observations, Config cfg, std::uint64_t seed) const {
-  PLUSS_CHECK(num_observations > 0, "subsp::stat::ts::GjrFit::simulate: num_observations must be > 0");
+  PLUSS_CHECK(num_observations > 0, "subsp::stats::ts::GjrFit::simulate: num_observations must be > 0");
   const auto out_cfg = f64_cfg_(cfg);
   const auto z = pluss::randn({num_observations}, out_cfg, seed).to_vec<double>();
   const auto p = to_params_(*this);
@@ -598,4 +627,4 @@ GjrFit Gjr::fit_mle(const Series& y, const GjrOptions& options, Config cfg) {
   return fit_gjr_(y, options, cfg);
 }
 
-} // namespace pluss::subsp::stat::ts
+} // namespace pluss::subsp::stats::ts

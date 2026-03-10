@@ -1,5 +1,5 @@
-#include "pluss/subsp/stat/distr.h"
-#include "pluss/subsp/stat/rng.h"
+#include "pluss/subsp/stats/distr.h"
+#include "pluss/subsp/stats/rng.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/codem.h"
@@ -17,13 +17,13 @@
 #include <string_view>
 #include <vector>
 
-namespace pluss::subsp::stat::distr {
+namespace pluss::subsp::stats::distr {
 namespace {
 
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using RngMethod = ::pluss::subsp::stat::rng::Method;
+using RngMethod = ::pluss::subsp::stats::rng::Method;
 
 constexpr double kEps = 1e-12;
 constexpr double kSqrt2 = 1.4142135623730950488;
@@ -183,14 +183,14 @@ Config natural_cfg_(Config cfg, ScalarType natural) {
 std::int64_t numel_from_sizes_(std::span<const std::int64_t> sizes) {
   std::int64_t out = 1;
   for (const std::int64_t s : sizes) {
-    PLUSS_CHECK(s >= 0, "subsp::stat::distr: sizes must be >= 0");
+    PLUSS_CHECK(s >= 0, "subsp::stats::distr: sizes must be >= 0");
     out *= s;
   }
   return out;
 }
 
 Series as_f64_(const Series& x, const char* op) {
-  PLUSS_CHECK(x.defined(), std::string("subsp::stat::distr::") + op + ": expected defined Series");
+  PLUSS_CHECK(x.defined(), std::string("subsp::stats::distr::") + op + ": expected defined Series");
   return x.to(ScalarType::Float64);
 }
 
@@ -218,7 +218,7 @@ Series unit_uniform_(std::span<const std::int64_t> sizes, Config cfg, std::uint6
           .clamp_min(kEps)
           .clamp_max(1.0 - kEps);
     default:
-      PLUSS_CHECK(false, "subsp::stat::distr::sample: unsupported rng method");
+      PLUSS_CHECK(false, "subsp::stats::distr::sample: unsupported rng method");
       return pluss::rand(sizes, out_cfg, seed).clamp_min(kEps).clamp_max(1.0 - kEps);
   }
 }
@@ -239,7 +239,7 @@ void expect_param_count_(std::string_view name,
   }
 
   PLUSS_CHECK(false,
-              "subsp::stat::distr::" + std::string(name) +
+              "subsp::stats::distr::" + std::string(name) +
                   ": expected " + counts + " parameters, got " + std::to_string(params.size()));
 }
 
@@ -477,7 +477,7 @@ double inverse_gaussian_cdf_scalar_(double y, double theta, double chi) {
 
 double logsubexp_scalar_(double a, double b) {
   if (b == -std::numeric_limits<double>::infinity()) return a;
-  PLUSS_CHECK(a >= b, "subsp::stat::distr::logsubexp: expected a >= b");
+  PLUSS_CHECK(a >= b, "subsp::stats::distr::logsubexp: expected a >= b");
   return a + std::log1p(-std::exp(b - a));
 }
 
@@ -551,14 +551,14 @@ double poisson_mix_scalar_(double lambda_half, Fn&& term_fn) {
 }
 
 Series normal_pdf_(const Series& x, double mean, double stddev) {
-  PLUSS_CHECK(stddev > 0.0, "subsp::stat::distr::normal pdf: std must be > 0");
+  PLUSS_CHECK(stddev > 0.0, "subsp::stats::distr::normal pdf: std must be > 0");
   const Series xx = as_f64_(x, "pdf");
   const Series z = xx.sub(mean).div(stddev);
   return z.square().mul(-0.5).exp().div(stddev * std::sqrt(2.0 * std::numbers::pi_v<double>));
 }
 
 Series normal_logpdf_(const Series& x, double mean, double stddev) {
-  PLUSS_CHECK(stddev > 0.0, "subsp::stat::distr::normal logpdf: std must be > 0");
+  PLUSS_CHECK(stddev > 0.0, "subsp::stats::distr::normal logpdf: std must be > 0");
   const Series xx = as_f64_(x, "logpdf");
   const Series z = xx.sub(mean).div(stddev);
   return z.square().mul(-0.5).sub(std::log(stddev)).sub(0.5 * kLog2Pi);
@@ -596,17 +596,17 @@ Series norm_logcdf_(const Series& x) {
 }
 
 Series normal_cdf_(const Series& x, double mean, double stddev) {
-  PLUSS_CHECK(stddev > 0.0, "subsp::stat::distr::normal cdf: std must be > 0");
+  PLUSS_CHECK(stddev > 0.0, "subsp::stats::distr::normal cdf: std must be > 0");
   return norm_cdf_(as_f64_(x, "cdf").sub(mean).div(stddev));
 }
 
 Series normal_logcdf_(const Series& x, double mean, double stddev) {
-  PLUSS_CHECK(stddev > 0.0, "subsp::stat::distr::normal logcdf: std must be > 0");
+  PLUSS_CHECK(stddev > 0.0, "subsp::stats::distr::normal logcdf: std must be > 0");
   return norm_logcdf_(as_f64_(x, "logcdf").sub(mean).div(stddev));
 }
 
 // Series normal_cdf_(const Series& x, double mean, double stddev) {
-//   PLUSS_CHECK(stddev > 0.0, "subsp::stat::distr::normal cdf: std must be > 0");
+//   PLUSS_CHECK(stddev > 0.0, "subsp::stats::distr::normal cdf: std must be > 0");
 //   const Series xx = as_f64_(x, "cdf");
 //   return xx.sub(mean).div(stddev * kSqrt2).erf().add(1.0).mul(0.5);
 // }
@@ -616,7 +616,7 @@ Series normal_sample_(double mean,
                       std::span<const std::int64_t> sizes,
                       Config cfg,
                       std::uint64_t seed) {
-  PLUSS_CHECK(stddev >= 0.0, "subsp::stat::distr::normal sample: std must be >= 0");
+  PLUSS_CHECK(stddev >= 0.0, "subsp::stats::distr::normal sample: std must be >= 0");
   if (g_sample_rng_method == RngMethod::Pseudo) {
     return pluss::normal(mean, stddev, sizes, cfg, seed);
   }
@@ -628,7 +628,7 @@ Series normal_sample_(double mean,
 }
 
 Series lognormal_pdf_(const Series& x, double mu, double sigma) {
-  PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::lognormal pdf: sigma must be > 0");
+  PLUSS_CHECK(sigma > 0.0, "subsp::stats::distr::lognormal pdf: sigma must be > 0");
   const Series xx = as_f64_(x, "pdf");
   const Series safe_x = xx.clamp_min(kEps);
   const Series z = safe_x.log().sub(mu).div(sigma);
@@ -638,7 +638,7 @@ Series lognormal_pdf_(const Series& x, double mu, double sigma) {
 }
 
 Series lognormal_logpdf_(const Series& x, double mu, double sigma) {
-  PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::lognormal logpdf: sigma must be > 0");
+  PLUSS_CHECK(sigma > 0.0, "subsp::stats::distr::lognormal logpdf: sigma must be > 0");
   const Series xx = as_f64_(x, "logpdf");
   const Series safe_x = xx.clamp_min(kEps);
   const Series z = safe_x.log().sub(mu).div(sigma);
@@ -647,7 +647,7 @@ Series lognormal_logpdf_(const Series& x, double mu, double sigma) {
 }
 
 Series lognormal_cdf_(const Series& x, double mu, double sigma) {
-  PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::lognormal cdf: sigma must be > 0");
+  PLUSS_CHECK(sigma > 0.0, "subsp::stats::distr::lognormal cdf: sigma must be > 0");
   const Series xx = as_f64_(x, "cdf");
   const Series safe_x = xx.clamp_min(kEps);
   const Series core = norm_cdf_(safe_x.log().sub(mu).div(sigma));
@@ -655,7 +655,7 @@ Series lognormal_cdf_(const Series& x, double mu, double sigma) {
 }
 
 Series lognormal_logcdf_(const Series& x, double mu, double sigma) {
-  PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::lognormal logcdf: sigma must be > 0");
+  PLUSS_CHECK(sigma > 0.0, "subsp::stats::distr::lognormal logcdf: sigma must be > 0");
   const Series xx = as_f64_(x, "logcdf");
   const Series safe_x = xx.clamp_min(kEps);
   const Series core = normal_logcdf_(safe_x.log(), mu, sigma);
@@ -671,14 +671,14 @@ Series lognormal_sample_(double mu,
 }
 
 Series uniform_pdf_(const Series& x, double lo, double hi) {
-  PLUSS_CHECK(hi > lo, "subsp::stat::distr::uniform pdf: expected hi > lo");
+  PLUSS_CHECK(hi > lo, "subsp::stats::distr::uniform pdf: expected hi > lo");
   const Series xx = as_f64_(x, "pdf");
   const Series mask = xx.ge(lo).logical_and(xx.le(hi));
   return mask.to(ScalarType::Float64).mul(1.0 / (hi - lo));
 }
 
 Series uniform_logpdf_(const Series& x, double lo, double hi) {
-  PLUSS_CHECK(hi > lo, "subsp::stat::distr::uniform logpdf: expected hi > lo");
+  PLUSS_CHECK(hi > lo, "subsp::stats::distr::uniform logpdf: expected hi > lo");
   const Series xx = as_f64_(x, "logpdf");
   const Series mask = xx.ge(lo).logical_and(xx.le(hi));
   return full_like_f64_(xx, -std::log(hi - lo))
@@ -686,13 +686,13 @@ Series uniform_logpdf_(const Series& x, double lo, double hi) {
 }
 
 Series uniform_cdf_(const Series& x, double lo, double hi) {
-  PLUSS_CHECK(hi > lo, "subsp::stat::distr::uniform cdf: expected hi > lo");
+  PLUSS_CHECK(hi > lo, "subsp::stats::distr::uniform cdf: expected hi > lo");
   const Series xx = as_f64_(x, "cdf");
   return xx.sub(lo).div(hi - lo).clamp_min(0.0).clamp_max(1.0);
 }
 
 Series uniform_logcdf_(const Series& x, double lo, double hi) {
-  PLUSS_CHECK(hi > lo, "subsp::stat::distr::uniform logcdf: expected hi > lo");
+  PLUSS_CHECK(hi > lo, "subsp::stats::distr::uniform logcdf: expected hi > lo");
   const Series xx = as_f64_(x, "logcdf");
   const Series below = xx.le(lo);
   const Series above = xx.ge(hi);
@@ -707,26 +707,26 @@ Series uniform_sample_(double lo,
                        std::span<const std::int64_t> sizes,
                        Config cfg,
                        std::uint64_t seed) {
-  PLUSS_CHECK(hi > lo, "subsp::stat::distr::uniform sample: expected hi > lo");
+  PLUSS_CHECK(hi > lo, "subsp::stats::distr::uniform sample: expected hi > lo");
   return pluss::rand(sizes, cfg, seed).mul(hi - lo).add(lo);
 }
 
 Series exponential_pdf_(const Series& x, double rate) {
-  PLUSS_CHECK(rate > 0.0, "subsp::stat::distr::exponential pdf: rate must be > 0");
+  PLUSS_CHECK(rate > 0.0, "subsp::stats::distr::exponential pdf: rate must be > 0");
   const Series xx = as_f64_(x, "pdf");
   const Series core = xx.mul(-rate).exp().mul(rate);
   return core.where(xx.ge(0.0), zeros_like_f64_(xx));
 }
 
 Series exponential_logpdf_(const Series& x, double rate) {
-  PLUSS_CHECK(rate > 0.0, "subsp::stat::distr::exponential logpdf: rate must be > 0");
+  PLUSS_CHECK(rate > 0.0, "subsp::stats::distr::exponential logpdf: rate must be > 0");
   const Series xx = as_f64_(x, "logpdf");
   const Series core = xx.mul(-rate).add(std::log(rate));
   return core.where(xx.ge(0.0), full_like_f64_(xx, -std::numeric_limits<double>::infinity()));
 }
 
 Series exponential_cdf_(const Series& x, double rate) {
-  PLUSS_CHECK(rate > 0.0, "subsp::stat::distr::exponential cdf: rate must be > 0");
+  PLUSS_CHECK(rate > 0.0, "subsp::stats::distr::exponential cdf: rate must be > 0");
   const Series xx = as_f64_(x, "cdf");
   const Series core = xx.mul(-rate).exp().mul(-1.0).add(1.0);
   return core.where(xx.ge(0.0), zeros_like_f64_(xx));
@@ -736,25 +736,25 @@ Series exponential_sample_(double rate,
                            std::span<const std::int64_t> sizes,
                            Config cfg,
                            std::uint64_t seed) {
-  PLUSS_CHECK(rate > 0.0, "subsp::stat::distr::exponential sample: rate must be > 0");
+  PLUSS_CHECK(rate > 0.0, "subsp::stats::distr::exponential sample: rate must be > 0");
   return unit_uniform_(sizes, cfg, seed).log().mul(-1.0 / rate).to(cfg.dtype);
 }
 
 Series bernoulli_pdf_(const Series& x, double p) {
-  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "subsp::stat::distr::bernoulli pdf: expected 0 <= p <= 1");
+  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "subsp::stats::distr::bernoulli pdf: expected 0 <= p <= 1");
   const Series xx = as_f64_(x, "pdf");
   return xx.eq(1.0).to(ScalarType::Float64).mul(p)
       .add(xx.eq(0.0).to(ScalarType::Float64).mul(1.0 - p));
 }
 
 Series bernoulli_logpdf_(const Series& x, double p) {
-  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "subsp::stat::distr::bernoulli logpdf: expected 0 <= p <= 1");
+  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "subsp::stats::distr::bernoulli logpdf: expected 0 <= p <= 1");
   const Series probs = bernoulli_pdf_(x, p);
   return probs.log().where(probs.gt(0.0), full_like_f64_(probs, -std::numeric_limits<double>::infinity()));
 }
 
 Series bernoulli_cdf_(const Series& x, double p) {
-  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "subsp::stat::distr::bernoulli cdf: expected 0 <= p <= 1");
+  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "subsp::stats::distr::bernoulli cdf: expected 0 <= p <= 1");
   const Series xx = as_f64_(x, "cdf");
   const Series zero = zeros_like_f64_(xx);
   const Series one = ones_like_f64_(xx);
@@ -766,32 +766,32 @@ Series bernoulli_sample_(double p,
                          std::span<const std::int64_t> sizes,
                          Config cfg,
                          std::uint64_t seed) {
-  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "subsp::stat::distr::bernoulli sample: expected 0 <= p <= 1");
+  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "subsp::stats::distr::bernoulli sample: expected 0 <= p <= 1");
   return pluss::bernoulli(sizes, p, natural_cfg_(cfg, ScalarType::Bool), seed);
 }
 
 Series cauchy_pdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::cauchy pdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::cauchy pdf: scale must be > 0");
   const Series xx = as_f64_(x, "pdf");
   const Series z2 = xx.sub(location).div(scale).square();
   return z2.add(1.0).mul(std::numbers::pi_v<double> * scale).reciprocal();
 }
 
 Series cauchy_logpdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::cauchy logpdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::cauchy logpdf: scale must be > 0");
   const Series xx = as_f64_(x, "logpdf");
   const Series z2 = xx.sub(location).div(scale).square();
   return z2.add(1.0).log().mul(-1.0).sub(std::log(std::numbers::pi_v<double> * scale));
 }
 
 Series cauchy_cdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::cauchy cdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::cauchy cdf: scale must be > 0");
   const Series xx = as_f64_(x, "cdf");
   return xx.sub(location).div(scale).atan().div(std::numbers::pi_v<double>).add(0.5);
 }
 
 Series cauchy_logcdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::cauchy logcdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::cauchy logcdf: scale must be > 0");
   return cauchy_cdf_(x, location, scale).log();
 }
 
@@ -800,24 +800,24 @@ Series cauchy_sample_(double location,
                       std::span<const std::int64_t> sizes,
                       Config cfg,
                       std::uint64_t seed) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::cauchy sample: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::cauchy sample: scale must be > 0");
   return unit_uniform_(sizes, cfg, seed).sub(0.5).mul(std::numbers::pi_v<double>).tan().mul(scale).add(location).to(cfg.dtype);
 }
 
 Series laplace_pdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::laplace pdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::laplace pdf: scale must be > 0");
   const Series xx = as_f64_(x, "pdf");
   return xx.sub(location).abs().div(scale).mul(-1.0).exp().mul(0.5 / scale);
 }
 
 Series laplace_logpdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::laplace logpdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::laplace logpdf: scale must be > 0");
   const Series xx = as_f64_(x, "logpdf");
   return xx.sub(location).abs().div(scale).mul(-1.0).sub(std::log(2.0 * scale));
 }
 
 Series laplace_cdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::laplace cdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::laplace cdf: scale must be > 0");
   const Series xx = as_f64_(x, "cdf");
   const Series centered = xx.sub(location);
   const Series left = centered.div(scale).exp().mul(0.5);
@@ -826,7 +826,7 @@ Series laplace_cdf_(const Series& x, double location, double scale) {
 }
 
 Series laplace_logcdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::laplace logcdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::laplace logcdf: scale must be > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < location) return -std::log(2.0) + (xv - location) / scale;
     return std::log1p(-0.5 * std::exp((location - xv) / scale));
@@ -838,7 +838,7 @@ Series laplace_sample_(double location,
                        std::span<const std::int64_t> sizes,
                        Config cfg,
                        std::uint64_t seed) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::laplace sample: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::laplace sample: scale must be > 0");
   const Series centered = unit_uniform_(sizes, cfg, seed).sub(0.5);
   const Series sign = centered.ge(0.0).to(ScalarType::Float64).mul(2.0).sub(1.0);
   return sign.mul(-scale)
@@ -848,26 +848,26 @@ Series laplace_sample_(double location,
 }
 
 Series logistic_pdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::logistic pdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::logistic pdf: scale must be > 0");
   const Series xx = as_f64_(x, "pdf");
   const Series sig = xx.sub(location).div(scale).sigmoid();
   return sig.mul(sig.mul(-1.0).add(1.0)).div(scale);
 }
 
 Series logistic_logpdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::logistic logpdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::logistic logpdf: scale must be > 0");
   const Series xx = as_f64_(x, "logpdf");
   const Series z = xx.sub(location).div(scale);
   return z.neg().softplus().mul(-2.0).sub(z).sub(std::log(scale));
 }
 
 Series logistic_cdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::logistic cdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::logistic cdf: scale must be > 0");
   return as_f64_(x, "cdf").sub(location).div(scale).sigmoid();
 }
 
 Series logistic_logcdf_(const Series& x, double location, double scale) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::logistic logcdf: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::logistic logcdf: scale must be > 0");
   return map_series_f64_(x, [=](double xv) {
     const double z = (xv - location) / scale;
     if (z >= 0.0) return -std::log1p(std::exp(-z));
@@ -880,13 +880,13 @@ Series logistic_sample_(double location,
                         std::span<const std::int64_t> sizes,
                         Config cfg,
                         std::uint64_t seed) {
-  PLUSS_CHECK(scale > 0.0, "subsp::stat::distr::logistic sample: scale must be > 0");
+  PLUSS_CHECK(scale > 0.0, "subsp::stats::distr::logistic sample: scale must be > 0");
   const Series u = unit_uniform_(sizes, cfg, seed);
   return u.log().sub(u.mul(-1.0).add(1.0).log()).mul(scale).add(location).to(cfg.dtype);
 }
 
 Series geometric_pdf_(const Series& x, double p) {
-  PLUSS_CHECK(p > 0.0 && p <= 1.0, "subsp::stat::distr::geometric pdf: expected 0 < p <= 1");
+  PLUSS_CHECK(p > 0.0 && p <= 1.0, "subsp::stats::distr::geometric pdf: expected 0 < p <= 1");
   const Series xx = as_f64_(x, "pdf");
   const Series k = xx.floor();
   const Series valid = xx.eq(k).logical_and(xx.ge(1.0));
@@ -895,7 +895,7 @@ Series geometric_pdf_(const Series& x, double p) {
 }
 
 Series geometric_logpdf_(const Series& x, double p) {
-  PLUSS_CHECK(p > 0.0 && p <= 1.0, "subsp::stat::distr::geometric logpdf: expected 0 < p <= 1");
+  PLUSS_CHECK(p > 0.0 && p <= 1.0, "subsp::stats::distr::geometric logpdf: expected 0 < p <= 1");
   const Series xx = as_f64_(x, "logpdf");
   const Series k = xx.floor();
   const Series valid = xx.eq(k).logical_and(xx.ge(1.0));
@@ -904,7 +904,7 @@ Series geometric_logpdf_(const Series& x, double p) {
 }
 
 Series geometric_cdf_(const Series& x, double p) {
-  PLUSS_CHECK(p > 0.0 && p <= 1.0, "subsp::stat::distr::geometric cdf: expected 0 < p <= 1");
+  PLUSS_CHECK(p > 0.0 && p <= 1.0, "subsp::stats::distr::geometric cdf: expected 0 < p <= 1");
   const Series xx = as_f64_(x, "cdf");
   const Series floored = xx.floor().clamp_min(0.0);
   const Series core = floored.mul(std::log1p(-p)).exp().mul(-1.0).add(1.0);
@@ -915,7 +915,7 @@ Series geometric_sample_(double p,
                          std::span<const std::int64_t> sizes,
                          Config cfg,
                          std::uint64_t seed) {
-  PLUSS_CHECK(p > 0.0 && p <= 1.0, "subsp::stat::distr::geometric sample: expected 0 < p <= 1");
+  PLUSS_CHECK(p > 0.0 && p <= 1.0, "subsp::stats::distr::geometric sample: expected 0 < p <= 1");
   return unit_uniform_(sizes, cfg, seed)
       .mul(-1.0)
       .add(1.0)
@@ -927,7 +927,7 @@ Series geometric_sample_(double p,
 }
 
 Series rayleigh_pdf_(const Series& x, double sigma) {
-  PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::rayleigh pdf: sigma must be > 0");
+  PLUSS_CHECK(sigma > 0.0, "subsp::stats::distr::rayleigh pdf: sigma must be > 0");
   const Series xx = as_f64_(x, "pdf");
   const double sigma2 = sigma * sigma;
   const Series core = xx.div(sigma2).mul(xx.square().div(2.0 * sigma2).mul(-1.0).exp());
@@ -935,7 +935,7 @@ Series rayleigh_pdf_(const Series& x, double sigma) {
 }
 
 Series rayleigh_logpdf_(const Series& x, double sigma) {
-  PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::rayleigh logpdf: sigma must be > 0");
+  PLUSS_CHECK(sigma > 0.0, "subsp::stats::distr::rayleigh logpdf: sigma must be > 0");
   const Series xx = as_f64_(x, "logpdf");
   const double sigma2 = sigma * sigma;
   const Series safe = xx.clamp_min(kEps);
@@ -944,7 +944,7 @@ Series rayleigh_logpdf_(const Series& x, double sigma) {
 }
 
 Series rayleigh_cdf_(const Series& x, double sigma) {
-  PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::rayleigh cdf: sigma must be > 0");
+  PLUSS_CHECK(sigma > 0.0, "subsp::stats::distr::rayleigh cdf: sigma must be > 0");
   const Series xx = as_f64_(x, "cdf");
   const double sigma2 = sigma * sigma;
   const Series core = xx.square().div(2.0 * sigma2).mul(-1.0).exp().mul(-1.0).add(1.0);
@@ -952,7 +952,7 @@ Series rayleigh_cdf_(const Series& x, double sigma) {
 }
 
 Series rayleigh_logcdf_(const Series& x, double sigma) {
-  PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::rayleigh logcdf: sigma must be > 0");
+  PLUSS_CHECK(sigma > 0.0, "subsp::stats::distr::rayleigh logcdf: sigma must be > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < 0.0) return -std::numeric_limits<double>::infinity();
     return std::log1p(-std::exp(-(xv * xv) / (2.0 * sigma * sigma)));
@@ -963,13 +963,13 @@ Series rayleigh_sample_(double sigma,
                         std::span<const std::int64_t> sizes,
                         Config cfg,
                         std::uint64_t seed) {
-  PLUSS_CHECK(sigma > 0.0, "subsp::stat::distr::rayleigh sample: sigma must be > 0");
+  PLUSS_CHECK(sigma > 0.0, "subsp::stats::distr::rayleigh sample: sigma must be > 0");
   return unit_uniform_(sizes, cfg, seed).log().mul(-2.0).sqrt().mul(sigma).to(cfg.dtype);
 }
 
 Series weibull_pdf_(const Series& x, double shape, double scale) {
   PLUSS_CHECK(shape > 0.0 && scale > 0.0,
-              "subsp::stat::distr::weibull pdf: shape and scale must be > 0");
+              "subsp::stats::distr::weibull pdf: shape and scale must be > 0");
   const Series xx = as_f64_(x, "pdf");
   const Series safe = xx.clamp_min(kEps);
   const Series z = safe.div(scale);
@@ -979,7 +979,7 @@ Series weibull_pdf_(const Series& x, double shape, double scale) {
 
 Series weibull_logpdf_(const Series& x, double shape, double scale) {
   PLUSS_CHECK(shape > 0.0 && scale > 0.0,
-              "subsp::stat::distr::weibull logpdf: shape and scale must be > 0");
+              "subsp::stats::distr::weibull logpdf: shape and scale must be > 0");
   const Series xx = as_f64_(x, "logpdf");
   const Series safe = xx.clamp_min(kEps);
   const Series z = safe.div(scale);
@@ -989,7 +989,7 @@ Series weibull_logpdf_(const Series& x, double shape, double scale) {
 
 Series weibull_cdf_(const Series& x, double shape, double scale) {
   PLUSS_CHECK(shape > 0.0 && scale > 0.0,
-              "subsp::stat::distr::weibull cdf: shape and scale must be > 0");
+              "subsp::stats::distr::weibull cdf: shape and scale must be > 0");
   const Series xx = as_f64_(x, "cdf");
   const Series core = xx.clamp_min(0.0).div(scale).pow(shape).mul(-1.0).exp().mul(-1.0).add(1.0);
   return core.where(xx.ge(0.0), zeros_like_f64_(xx));
@@ -1001,13 +1001,13 @@ Series weibull_sample_(double shape,
                        Config cfg,
                        std::uint64_t seed) {
   PLUSS_CHECK(shape > 0.0 && scale > 0.0,
-              "subsp::stat::distr::weibull sample: shape and scale must be > 0");
+              "subsp::stats::distr::weibull sample: shape and scale must be > 0");
   return unit_uniform_(sizes, cfg, seed).log().mul(-1.0).pow(1.0 / shape).mul(scale).to(cfg.dtype);
 }
 
 Series beta_pdf_(const Series& x, double lo, double hi, double a, double b) {
-  PLUSS_CHECK(hi >= lo, "subsp::stat::distr::beta pdf: expected hi >= lo");
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::beta pdf: expected a,b > 0");
+  PLUSS_CHECK(hi >= lo, "subsp::stats::distr::beta pdf: expected hi >= lo");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::beta pdf: expected a,b > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < lo || xv > hi) return 0.0;
     if (hi == lo) return 0.0;
@@ -1019,8 +1019,8 @@ Series beta_pdf_(const Series& x, double lo, double hi, double a, double b) {
 }
 
 Series beta_logpdf_(const Series& x, double lo, double hi, double a, double b) {
-  PLUSS_CHECK(hi >= lo, "subsp::stat::distr::beta logpdf: expected hi >= lo");
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::beta logpdf: expected a,b > 0");
+  PLUSS_CHECK(hi >= lo, "subsp::stats::distr::beta logpdf: expected hi >= lo");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::beta logpdf: expected a,b > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < lo || xv > hi || hi == lo) return -std::numeric_limits<double>::infinity();
     const double t = (xv - lo) / (hi - lo);
@@ -1030,8 +1030,8 @@ Series beta_logpdf_(const Series& x, double lo, double hi, double a, double b) {
 }
 
 Series beta_cdf_(const Series& x, double lo, double hi, double a, double b) {
-  PLUSS_CHECK(hi >= lo, "subsp::stat::distr::beta cdf: expected hi >= lo");
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::beta cdf: expected a,b > 0");
+  PLUSS_CHECK(hi >= lo, "subsp::stats::distr::beta cdf: expected hi >= lo");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::beta cdf: expected a,b > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv <= lo) return 0.0;
     if (xv >= hi) return 1.0;
@@ -1041,8 +1041,8 @@ Series beta_cdf_(const Series& x, double lo, double hi, double a, double b) {
 }
 
 Series beta_sample_(double lo, double hi, double a, double b, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(hi >= lo, "subsp::stat::distr::beta sample: expected hi >= lo");
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::beta sample: expected a,b > 0");
+  PLUSS_CHECK(hi >= lo, "subsp::stats::distr::beta sample: expected hi >= lo");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::beta sample: expected a,b > 0");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::gamma_distribution<double> ga(a, 1.0);
     std::gamma_distribution<double> gb(b, 1.0);
@@ -1054,7 +1054,7 @@ Series beta_sample_(double lo, double hi, double a, double b, std::span<const st
 }
 
 Series gamma_pdf_(const Series& x, double m, double b, double a) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::gamma pdf: expected a,b > 0");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::gamma pdf: expected a,b > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < m) return 0.0;
     const double z = (xv - m) / b;
@@ -1064,7 +1064,7 @@ Series gamma_pdf_(const Series& x, double m, double b, double a) {
 }
 
 Series gamma_logpdf_(const Series& x, double m, double b, double a) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::gamma logpdf: expected a,b > 0");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::gamma logpdf: expected a,b > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < m) return -std::numeric_limits<double>::infinity();
     const double z = (xv - m) / b;
@@ -1074,7 +1074,7 @@ Series gamma_logpdf_(const Series& x, double m, double b, double a) {
 }
 
 Series gamma_cdf_(const Series& x, double m, double b, double a) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::gamma cdf: expected a,b > 0");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::gamma cdf: expected a,b > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv <= m) return 0.0;
     return regularized_gamma_p_scalar_(a, (xv - m) / b);
@@ -1082,7 +1082,7 @@ Series gamma_cdf_(const Series& x, double m, double b, double a) {
 }
 
 Series gamma_sample_(double m, double b, double a, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::gamma sample: expected a,b > 0");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::gamma sample: expected a,b > 0");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::gamma_distribution<double> dist(a, b);
     return m + dist(rng);
@@ -1094,7 +1094,7 @@ double log_choose_scalar_(double n, double k) {
 }
 
 Series poisson_pdf_(const Series& x, double lambda) {
-  PLUSS_CHECK(lambda > 0.0, "subsp::stat::distr::poisson pdf: expected lambda > 0");
+  PLUSS_CHECK(lambda > 0.0, "subsp::stats::distr::poisson pdf: expected lambda > 0");
   return map_series_f64_(x, [=](double xv) {
     const double k = std::floor(xv);
     if (xv != k || k < 0.0) return 0.0;
@@ -1103,7 +1103,7 @@ Series poisson_pdf_(const Series& x, double lambda) {
 }
 
 Series poisson_logpdf_(const Series& x, double lambda) {
-  PLUSS_CHECK(lambda > 0.0, "subsp::stat::distr::poisson logpdf: expected lambda > 0");
+  PLUSS_CHECK(lambda > 0.0, "subsp::stats::distr::poisson logpdf: expected lambda > 0");
   return map_series_f64_(x, [=](double xv) {
     const double k = std::floor(xv);
     if (xv != k || k < 0.0) return -std::numeric_limits<double>::infinity();
@@ -1112,7 +1112,7 @@ Series poisson_logpdf_(const Series& x, double lambda) {
 }
 
 Series poisson_cdf_(const Series& x, double lambda) {
-  PLUSS_CHECK(lambda > 0.0, "subsp::stat::distr::poisson cdf: expected lambda > 0");
+  PLUSS_CHECK(lambda > 0.0, "subsp::stats::distr::poisson cdf: expected lambda > 0");
   return map_series_f64_(x, [=](double xv) {
     const int k = static_cast<int>(std::floor(xv));
     if (k < 0) return 0.0;
@@ -1127,7 +1127,7 @@ Series poisson_cdf_(const Series& x, double lambda) {
 }
 
 Series poisson_sample_(double lambda, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(lambda > 0.0, "subsp::stat::distr::poisson sample: expected lambda > 0");
+  PLUSS_CHECK(lambda > 0.0, "subsp::stats::distr::poisson sample: expected lambda > 0");
   return sample_host_<std::int64_t>(sizes, cfg, ScalarType::Int64, seed, [=](std::mt19937_64& rng) {
     std::poisson_distribution<std::int64_t> dist(lambda);
     return dist(rng);
@@ -1135,7 +1135,7 @@ Series poisson_sample_(double lambda, std::span<const std::int64_t> sizes, Confi
 }
 
 Series binom_pdf_(const Series& x, std::int64_t n, double p) {
-  PLUSS_CHECK(n > 0 && p > 0.0 && p < 1.0, "subsp::stat::distr::binomial pdf: invalid parameters");
+  PLUSS_CHECK(n > 0 && p > 0.0 && p < 1.0, "subsp::stats::distr::binomial pdf: invalid parameters");
   return map_series_f64_(x, [=](double xv) {
     const double k = std::floor(xv);
     if (xv != k || k < 0.0 || k > static_cast<double>(n)) return 0.0;
@@ -1145,7 +1145,7 @@ Series binom_pdf_(const Series& x, std::int64_t n, double p) {
 }
 
 Series binom_logpdf_(const Series& x, std::int64_t n, double p) {
-  PLUSS_CHECK(n > 0 && p > 0.0 && p < 1.0, "subsp::stat::distr::binomial logpdf: invalid parameters");
+  PLUSS_CHECK(n > 0 && p > 0.0 && p < 1.0, "subsp::stats::distr::binomial logpdf: invalid parameters");
   return map_series_f64_(x, [=](double xv) {
     const double k = std::floor(xv);
     if (xv != k || k < 0.0 || k > static_cast<double>(n)) return -std::numeric_limits<double>::infinity();
@@ -1155,7 +1155,7 @@ Series binom_logpdf_(const Series& x, std::int64_t n, double p) {
 }
 
 Series binom_cdf_(const Series& x, std::int64_t n, double p) {
-  PLUSS_CHECK(n > 0 && p > 0.0 && p < 1.0, "subsp::stat::distr::binomial cdf: invalid parameters");
+  PLUSS_CHECK(n > 0 && p > 0.0 && p < 1.0, "subsp::stats::distr::binomial cdf: invalid parameters");
   return map_series_f64_(x, [=](double xv) {
     const int k = static_cast<int>(std::floor(xv));
     if (k < 0) return 0.0;
@@ -1171,7 +1171,7 @@ Series binom_cdf_(const Series& x, std::int64_t n, double p) {
 }
 
 Series binom_sample_(std::int64_t n, double p, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(n > 0 && p > 0.0 && p < 1.0, "subsp::stat::distr::binomial sample: invalid parameters");
+  PLUSS_CHECK(n > 0 && p > 0.0 && p < 1.0, "subsp::stats::distr::binomial sample: invalid parameters");
   return sample_host_<std::int64_t>(sizes, cfg, ScalarType::Int64, seed, [=](std::mt19937_64& rng) {
     std::binomial_distribution<std::int64_t> dist(n, p);
     return dist(rng);
@@ -1186,7 +1186,7 @@ Series chisq_sample_(std::int64_t r, std::span<const std::int64_t> sizes, Config
 }
 
 Series student_t_pdf_(const Series& x, double nu, double chi, double eta) {
-  PLUSS_CHECK(nu > 0.0 && eta > 0.0, "subsp::stat::distr::t pdf: invalid parameters");
+  PLUSS_CHECK(nu > 0.0 && eta > 0.0, "subsp::stats::distr::t pdf: invalid parameters");
   const double log_norm = std::lgamma(0.5 * (nu + 1.0)) - std::lgamma(0.5 * nu) -
                           0.5 * std::log(nu * std::numbers::pi_v<double>) - std::log(eta);
   return map_series_f64_(x, [=](double xv) {
@@ -1196,7 +1196,7 @@ Series student_t_pdf_(const Series& x, double nu, double chi, double eta) {
 }
 
 Series student_t_logpdf_(const Series& x, double nu, double chi, double eta) {
-  PLUSS_CHECK(nu > 0.0 && eta > 0.0, "subsp::stat::distr::t logpdf: invalid parameters");
+  PLUSS_CHECK(nu > 0.0 && eta > 0.0, "subsp::stats::distr::t logpdf: invalid parameters");
   const double log_norm = std::lgamma(0.5 * (nu + 1.0)) - std::lgamma(0.5 * nu) -
                           0.5 * std::log(nu * std::numbers::pi_v<double>) - std::log(eta);
   return map_series_f64_(x, [=](double xv) {
@@ -1206,7 +1206,7 @@ Series student_t_logpdf_(const Series& x, double nu, double chi, double eta) {
 }
 
 Series student_t_cdf_(const Series& x, double nu, double chi, double eta) {
-  PLUSS_CHECK(nu > 0.0 && eta > 0.0, "subsp::stat::distr::t cdf: invalid parameters");
+  PLUSS_CHECK(nu > 0.0 && eta > 0.0, "subsp::stats::distr::t cdf: invalid parameters");
   return map_series_f64_(x, [=](double xv) {
     const double z = (xv - chi) / eta;
     const double t = (z * z) / (nu + z * z);
@@ -1216,7 +1216,7 @@ Series student_t_cdf_(const Series& x, double nu, double chi, double eta) {
 }
 
 Series student_t_sample_(double nu, double chi, double eta, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(nu > 0.0 && eta > 0.0, "subsp::stat::distr::t sample: invalid parameters");
+  PLUSS_CHECK(nu > 0.0 && eta > 0.0, "subsp::stats::distr::t sample: invalid parameters");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::student_t_distribution<double> dist(nu);
     return chi + eta * dist(rng);
@@ -1224,7 +1224,7 @@ Series student_t_sample_(double nu, double chi, double eta, std::span<const std:
 }
 
 Series triangular_pdf_(const Series& x, double a, double c, double b) {
-  PLUSS_CHECK(a < c && c < b, "subsp::stat::distr::triangular pdf: expected a < c < b");
+  PLUSS_CHECK(a < c && c < b, "subsp::stats::distr::triangular pdf: expected a < c < b");
   return map_series_f64_(x, [=](double xv) {
     if (xv < a || xv > b) return 0.0;
     if (xv <= c) return 2.0 * (xv - a) / ((b - a) * (c - a));
@@ -1233,7 +1233,7 @@ Series triangular_pdf_(const Series& x, double a, double c, double b) {
 }
 
 Series triangular_logpdf_(const Series& x, double a, double c, double b) {
-  PLUSS_CHECK(a < c && c < b, "subsp::stat::distr::triangular logpdf: expected a < c < b");
+  PLUSS_CHECK(a < c && c < b, "subsp::stats::distr::triangular logpdf: expected a < c < b");
   return map_series_f64_(x, [=](double xv) {
     const double pdf = (xv <= c)
                            ? ((xv < a || xv > b) ? 0.0 : 2.0 * (xv - a) / ((b - a) * (c - a)))
@@ -1243,7 +1243,7 @@ Series triangular_logpdf_(const Series& x, double a, double c, double b) {
 }
 
 Series triangular_cdf_(const Series& x, double a, double c, double b) {
-  PLUSS_CHECK(a < c && c < b, "subsp::stat::distr::triangular cdf: expected a < c < b");
+  PLUSS_CHECK(a < c && c < b, "subsp::stats::distr::triangular cdf: expected a < c < b");
   return map_series_f64_(x, [=](double xv) {
     if (xv <= a) return 0.0;
     if (xv >= b) return 1.0;
@@ -1253,7 +1253,7 @@ Series triangular_cdf_(const Series& x, double a, double c, double b) {
 }
 
 Series triangular_sample_(double a, double c, double b, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(a < c && c < b, "subsp::stat::distr::triangular sample: expected a < c < b");
+  PLUSS_CHECK(a < c && c < b, "subsp::stats::distr::triangular sample: expected a < c < b");
   const double t = (c - a) / (b - a);
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::uniform_real_distribution<double> uniform(0.0, 1.0);
@@ -1264,7 +1264,7 @@ Series triangular_sample_(double a, double c, double b, std::span<const std::int
 }
 
 Series pareto_pdf_(const Series& x, double k, double a) {
-  PLUSS_CHECK(k > 0.0 && a > 0.0, "subsp::stat::distr::pareto pdf: expected k,a > 0");
+  PLUSS_CHECK(k > 0.0 && a > 0.0, "subsp::stats::distr::pareto pdf: expected k,a > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < k) return 0.0;
     return a * std::pow(k, a) / std::pow(xv, a + 1.0);
@@ -1272,7 +1272,7 @@ Series pareto_pdf_(const Series& x, double k, double a) {
 }
 
 Series pareto_logpdf_(const Series& x, double k, double a) {
-  PLUSS_CHECK(k > 0.0 && a > 0.0, "subsp::stat::distr::pareto logpdf: expected k,a > 0");
+  PLUSS_CHECK(k > 0.0 && a > 0.0, "subsp::stats::distr::pareto logpdf: expected k,a > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < k) return -std::numeric_limits<double>::infinity();
     return std::log(a) + a * std::log(k) - (a + 1.0) * std::log(xv);
@@ -1280,7 +1280,7 @@ Series pareto_logpdf_(const Series& x, double k, double a) {
 }
 
 Series pareto_cdf_(const Series& x, double k, double a) {
-  PLUSS_CHECK(k > 0.0 && a > 0.0, "subsp::stat::distr::pareto cdf: expected k,a > 0");
+  PLUSS_CHECK(k > 0.0 && a > 0.0, "subsp::stats::distr::pareto cdf: expected k,a > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < k) return 0.0;
     return 1.0 - std::pow(k / xv, a);
@@ -1288,7 +1288,7 @@ Series pareto_cdf_(const Series& x, double k, double a) {
 }
 
 Series pareto_sample_(double k, double a, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(k > 0.0 && a > 0.0, "subsp::stat::distr::pareto sample: expected k,a > 0");
+  PLUSS_CHECK(k > 0.0 && a > 0.0, "subsp::stats::distr::pareto sample: expected k,a > 0");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::uniform_real_distribution<double> uniform(0.0, 1.0);
     return k * std::pow(uniform(rng), -1.0 / a);
@@ -1296,7 +1296,7 @@ Series pareto_sample_(double k, double a, std::span<const std::int64_t> sizes, C
 }
 
 Series lomax_pdf_(const Series& x, double k, double b) {
-  PLUSS_CHECK(k > 0.0 && b > 0.0, "subsp::stat::distr::lomax pdf: expected k,b > 0");
+  PLUSS_CHECK(k > 0.0 && b > 0.0, "subsp::stats::distr::lomax pdf: expected k,b > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < 0.0) return 0.0;
     return b * std::pow(k, b) / std::pow(k + xv, b + 1.0);
@@ -1304,7 +1304,7 @@ Series lomax_pdf_(const Series& x, double k, double b) {
 }
 
 Series lomax_logpdf_(const Series& x, double k, double b) {
-  PLUSS_CHECK(k > 0.0 && b > 0.0, "subsp::stat::distr::lomax logpdf: expected k,b > 0");
+  PLUSS_CHECK(k > 0.0 && b > 0.0, "subsp::stats::distr::lomax logpdf: expected k,b > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < 0.0) return -std::numeric_limits<double>::infinity();
     return std::log(b) + b * std::log(k) - (b + 1.0) * std::log(k + xv);
@@ -1312,7 +1312,7 @@ Series lomax_logpdf_(const Series& x, double k, double b) {
 }
 
 Series lomax_cdf_(const Series& x, double k, double b) {
-  PLUSS_CHECK(k > 0.0 && b > 0.0, "subsp::stat::distr::lomax cdf: expected k,b > 0");
+  PLUSS_CHECK(k > 0.0 && b > 0.0, "subsp::stats::distr::lomax cdf: expected k,b > 0");
   return map_series_f64_(x, [=](double xv) {
     if (xv < 0.0) return 0.0;
     return 1.0 - std::pow(k / (k + xv), b);
@@ -1320,7 +1320,7 @@ Series lomax_cdf_(const Series& x, double k, double b) {
 }
 
 Series lomax_sample_(double k, double b, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(k > 0.0 && b > 0.0, "subsp::stat::distr::lomax sample: expected k,b > 0");
+  PLUSS_CHECK(k > 0.0 && b > 0.0, "subsp::stats::distr::lomax sample: expected k,b > 0");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::uniform_real_distribution<double> uniform(0.0, 1.0);
     return k * (std::pow(uniform(rng), -1.0 / b) - 1.0);
@@ -1328,12 +1328,12 @@ Series lomax_sample_(double k, double b, std::span<const std::int64_t> sizes, Co
 }
 
 Series inverse_gaussian_pdf_(const Series& x, double theta, double chi) {
-  PLUSS_CHECK(theta > 0.0 && chi > 0.0, "subsp::stat::distr::ig pdf: expected theta,chi > 0");
+  PLUSS_CHECK(theta > 0.0 && chi > 0.0, "subsp::stats::distr::ig pdf: expected theta,chi > 0");
   return map_series_f64_(x, [=](double xv) { return inverse_gaussian_pdf_scalar_(xv, theta, chi); });
 }
 
 Series inverse_gaussian_logpdf_(const Series& x, double theta, double chi) {
-  PLUSS_CHECK(theta > 0.0 && chi > 0.0, "subsp::stat::distr::ig logpdf: expected theta,chi > 0");
+  PLUSS_CHECK(theta > 0.0 && chi > 0.0, "subsp::stats::distr::ig logpdf: expected theta,chi > 0");
   return map_series_f64_(x, [=](double xv) {
     const double pdf = inverse_gaussian_pdf_scalar_(xv, theta, chi);
     return (pdf <= 0.0) ? -std::numeric_limits<double>::infinity() : std::log(pdf);
@@ -1341,19 +1341,19 @@ Series inverse_gaussian_logpdf_(const Series& x, double theta, double chi) {
 }
 
 Series inverse_gaussian_cdf_(const Series& x, double theta, double chi) {
-  PLUSS_CHECK(theta > 0.0 && chi > 0.0, "subsp::stat::distr::ig cdf: expected theta,chi > 0");
+  PLUSS_CHECK(theta > 0.0 && chi > 0.0, "subsp::stats::distr::ig cdf: expected theta,chi > 0");
   return map_series_f64_(x, [=](double xv) { return inverse_gaussian_cdf_scalar_(xv, theta, chi); });
 }
 
 Series inverse_gaussian_sample_(double theta, double chi, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(theta > 0.0 && chi > 0.0, "subsp::stat::distr::ig sample: expected theta,chi > 0");
+  PLUSS_CHECK(theta > 0.0 && chi > 0.0, "subsp::stats::distr::ig sample: expected theta,chi > 0");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     return sample_inverse_gaussian_scalar_(theta, chi, rng);
   });
 }
 
 Series normaltrunc_pdf_(const Series& x, double a, double b, double mu, double sigma) {
-  PLUSS_CHECK(b >= a && sigma > 0.0, "subsp::stat::distr::normaltrunc pdf: invalid parameters");
+  PLUSS_CHECK(b >= a && sigma > 0.0, "subsp::stats::distr::normaltrunc pdf: invalid parameters");
   const double denom = normal_cdf_scalar_(b, mu, sigma) - normal_cdf_scalar_(a, mu, sigma);
   return map_series_f64_(x, [=](double xv) {
     if (xv < a || xv > b) return 0.0;
@@ -1362,7 +1362,7 @@ Series normaltrunc_pdf_(const Series& x, double a, double b, double mu, double s
 }
 
 Series normaltrunc_logpdf_(const Series& x, double a, double b, double mu, double sigma) {
-  PLUSS_CHECK(b >= a && sigma > 0.0, "subsp::stat::distr::normaltrunc logpdf: invalid parameters");
+  PLUSS_CHECK(b >= a && sigma > 0.0, "subsp::stats::distr::normaltrunc logpdf: invalid parameters");
   const double log_denom = std::log(normal_cdf_scalar_(b, mu, sigma) - normal_cdf_scalar_(a, mu, sigma));
   return map_series_f64_(x, [=](double xv) {
     if (xv < a || xv > b) return -std::numeric_limits<double>::infinity();
@@ -1372,7 +1372,7 @@ Series normaltrunc_logpdf_(const Series& x, double a, double b, double mu, doubl
 }
 
 Series normaltrunc_cdf_(const Series& x, double a, double b, double mu, double sigma) {
-  PLUSS_CHECK(b >= a && sigma > 0.0, "subsp::stat::distr::normaltrunc cdf: invalid parameters");
+  PLUSS_CHECK(b >= a && sigma > 0.0, "subsp::stats::distr::normaltrunc cdf: invalid parameters");
   const double left = normal_cdf_scalar_(a, mu, sigma);
   const double denom = normal_cdf_scalar_(b, mu, sigma) - left;
   return map_series_f64_(x, [=](double xv) {
@@ -1383,7 +1383,7 @@ Series normaltrunc_cdf_(const Series& x, double a, double b, double mu, double s
 }
 
 Series normaltrunc_logcdf_(const Series& x, double a, double b, double mu, double sigma) {
-  PLUSS_CHECK(b >= a && sigma > 0.0, "subsp::stat::distr::normaltrunc logcdf: invalid parameters");
+  PLUSS_CHECK(b >= a && sigma > 0.0, "subsp::stats::distr::normaltrunc logcdf: invalid parameters");
   const double log_left = normal_logcdf_scalar_(a, mu, sigma);
   const double log_right = normal_logcdf_scalar_(b, mu, sigma);
   const double log_denom = logsubexp_scalar_(log_right, log_left);
@@ -1395,7 +1395,7 @@ Series normaltrunc_logcdf_(const Series& x, double a, double b, double mu, doubl
 }
 
 Series normaltrunc_sample_(double a, double b, double mu, double sigma, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(b >= a && sigma > 0.0, "subsp::stat::distr::normaltrunc sample: invalid parameters");
+  PLUSS_CHECK(b >= a && sigma > 0.0, "subsp::stats::distr::normaltrunc sample: invalid parameters");
   const double left = normal_cdf_scalar_(a, mu, sigma);
   const double right = normal_cdf_scalar_(b, mu, sigma);
   const Series u = unit_uniform_(sizes, cfg, seed).mul(right - left).add(left);
@@ -1441,7 +1441,7 @@ Series hypergeom_cdf_(const Series& x, std::int64_t N, std::int64_t M, std::int6
 }
 
 Series hypergeom_sample_(std::int64_t N, std::int64_t M, std::int64_t n, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(N > 1 && M > 0 && M < N && n > 0 && n < N, "subsp::stat::distr::hypergeom sample: invalid parameters");
+  PLUSS_CHECK(N > 1 && M > 0 && M < N && n > 0 && n < N, "subsp::stats::distr::hypergeom sample: invalid parameters");
   return sample_host_<std::int64_t>(sizes, cfg, ScalarType::Int64, seed, [=](std::mt19937_64& rng) {
     std::int64_t remaining_success = M;
     std::int64_t remaining_total = N;
@@ -1497,7 +1497,7 @@ Series skellam_cdf_(const Series& x, double lambda1, double lambda2) {
 }
 
 Series skellam_sample_(double lambda1, double lambda2, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(lambda1 > 0.0 && lambda2 > 0.0, "subsp::stat::distr::skellam sample: invalid parameters");
+  PLUSS_CHECK(lambda1 > 0.0 && lambda2 > 0.0, "subsp::stats::distr::skellam sample: invalid parameters");
   return sample_host_<std::int64_t>(sizes, cfg, ScalarType::Int64, seed, [=](std::mt19937_64& rng) {
     std::poisson_distribution<std::int64_t> d1(lambda1);
     std::poisson_distribution<std::int64_t> d2(lambda2);
@@ -1506,7 +1506,7 @@ Series skellam_sample_(double lambda1, double lambda2, std::span<const std::int6
 }
 
 Series zeta_pdf_(const Series& x, double a) {
-  PLUSS_CHECK(a > 1.0, "subsp::stat::distr::zeta pdf: expected a > 1");
+  PLUSS_CHECK(a > 1.0, "subsp::stats::distr::zeta pdf: expected a > 1");
   const double zeta_a = zeta_scalar_(a);
   return map_series_f64_(x, [=](double xv) {
     const auto n = static_cast<std::int64_t>(std::floor(xv));
@@ -1516,7 +1516,7 @@ Series zeta_pdf_(const Series& x, double a) {
 }
 
 Series zeta_logpdf_(const Series& x, double a) {
-  PLUSS_CHECK(a > 1.0, "subsp::stat::distr::zeta logpdf: expected a > 1");
+  PLUSS_CHECK(a > 1.0, "subsp::stats::distr::zeta logpdf: expected a > 1");
   const double log_zeta_a = std::log(zeta_scalar_(a));
   return map_series_f64_(x, [=](double xv) {
     const auto n = static_cast<std::int64_t>(std::floor(xv));
@@ -1526,7 +1526,7 @@ Series zeta_logpdf_(const Series& x, double a) {
 }
 
 Series zeta_cdf_(const Series& x, double a) {
-  PLUSS_CHECK(a > 1.0, "subsp::stat::distr::zeta cdf: expected a > 1");
+  PLUSS_CHECK(a > 1.0, "subsp::stats::distr::zeta cdf: expected a > 1");
   const double zeta_a = zeta_scalar_(a);
   return map_series_f64_(x, [=](double xv) {
     const auto k = static_cast<std::int64_t>(std::floor(xv));
@@ -1538,7 +1538,7 @@ Series zeta_cdf_(const Series& x, double a) {
 }
 
 Series zeta_sample_(double a, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(a > 1.0, "subsp::stat::distr::zeta sample: expected a > 1");
+  PLUSS_CHECK(a > 1.0, "subsp::stats::distr::zeta sample: expected a > 1");
   return sample_host_<std::int64_t>(sizes, cfg, ScalarType::Int64, seed, [=](std::mt19937_64& rng) {
     std::uniform_real_distribution<double> uniform(0.0, 1.0);
     const double b = std::pow(2.0, a - 1.0);
@@ -1704,7 +1704,7 @@ Series gh_cdf_(const Series& x, double lambda, double alpha, double beta, double
 
 Series gh_sample_(double lambda, double alpha, double beta, double mu, double delta, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
   PLUSS_CHECK(alpha > 0.0 && delta > 0.0 && alpha > std::abs(beta),
-              "subsp::stat::distr::gh sample: invalid parameters");
+              "subsp::stats::distr::gh sample: invalid parameters");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::normal_distribution<double> normal(0.0, 1.0);
     const double w = sample_gig_scalar_(lambda, delta * delta, alpha * alpha - beta * beta, rng);
@@ -1726,7 +1726,7 @@ Series nig_cdf_(const Series& x, double alpha, double beta, double mu, double de
 
 Series nig_sample_(double alpha, double beta, double mu, double delta, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
   PLUSS_CHECK(alpha > 0.0 && delta > 0.0 && alpha > std::abs(beta),
-              "subsp::stat::distr::nig sample: invalid parameters");
+              "subsp::stats::distr::nig sample: invalid parameters");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::normal_distribution<double> normal(0.0, 1.0);
     const double w = sample_inverse_gaussian_scalar_(delta / std::sqrt(alpha * alpha - beta * beta), delta * delta, rng);
@@ -1735,7 +1735,7 @@ Series nig_sample_(double alpha, double beta, double mu, double delta, std::span
 }
 
 Series alpha_pdf_(const Series& x, double a, double b) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::alpha pdf: expected a,b > 0");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::alpha pdf: expected a,b > 0");
   const double norm_a = normal_cdf_scalar_(a, 0.0, 1.0);
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
@@ -1745,7 +1745,7 @@ Series alpha_pdf_(const Series& x, double a, double b) {
 }
 
 Series alpha_logpdf_(const Series& x, double a, double b) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::alpha logpdf: expected a,b > 0");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::alpha logpdf: expected a,b > 0");
   const double log_norm_a = std::log(normal_cdf_scalar_(a, 0.0, 1.0));
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return -std::numeric_limits<double>::infinity();
@@ -1755,7 +1755,7 @@ Series alpha_logpdf_(const Series& x, double a, double b) {
 }
 
 Series alpha_cdf_(const Series& x, double a, double b) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::alpha cdf: expected a,b > 0");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::alpha cdf: expected a,b > 0");
   const double norm_a = normal_cdf_scalar_(a, 0.0, 1.0);
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
@@ -1764,7 +1764,7 @@ Series alpha_cdf_(const Series& x, double a, double b) {
 }
 
 Series alpha_sample_(double a, double b, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::alpha sample: expected a,b > 0");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::alpha sample: expected a,b > 0");
   const double norm_a = normal_cdf_scalar_(a, 0.0, 1.0);
   return map_series_f64_(unit_uniform_(sizes, cfg, seed), [=](double u) {
     return b / (a - normal_inv_cdf_scalar_(norm_a * u));
@@ -1772,7 +1772,7 @@ Series alpha_sample_(double a, double b, std::span<const std::int64_t> sizes, Co
 }
 
 Series anglit_pdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::anglit pdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::anglit pdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     if (y < t - s || y > t + s) return 0.0;
     return std::sin((std::numbers::pi_v<double> * 0.5) * (y - t) / s + std::numbers::pi_v<double> * 0.5) / s;
@@ -1780,7 +1780,7 @@ Series anglit_pdf_(const Series& x, double t, double s) {
 }
 
 Series anglit_logpdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::anglit logpdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::anglit logpdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     if (y < t - s || y > t + s) return -std::numeric_limits<double>::infinity();
     return std::log(std::sin((std::numbers::pi_v<double> * 0.5) * (y - t) / s + std::numbers::pi_v<double> * 0.5)) - std::log(s);
@@ -1788,7 +1788,7 @@ Series anglit_logpdf_(const Series& x, double t, double s) {
 }
 
 Series anglit_cdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::anglit cdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::anglit cdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     if (y <= t - s) return 0.0;
     if (y >= t + s) return 1.0;
@@ -1797,7 +1797,7 @@ Series anglit_cdf_(const Series& x, double t, double s) {
 }
 
 Series anglit_sample_(double t, double s, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::anglit sample: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::anglit sample: expected s > 0");
   return map_series_f64_(unit_uniform_(sizes, cfg, seed), [=](double u) {
     return t + s * (4.0 / std::numbers::pi_v<double> * std::asin(std::sqrt(u)) - 1.0);
   }).to(cfg.platform, natural_cfg_(cfg, ScalarType::Float64).dtype);
@@ -1818,7 +1818,7 @@ double bessel_logpmf_scalar_(std::int64_t y, double nu, double a) {
 }
 
 Series bessel_pdf_(const Series& x, double nu, double a) {
-  PLUSS_CHECK(nu > -1.0 && a > 0.0, "subsp::stat::distr::bessel pdf: invalid parameters");
+  PLUSS_CHECK(nu > -1.0 && a > 0.0, "subsp::stats::distr::bessel pdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     const auto k = static_cast<std::int64_t>(std::floor(y));
     if (y != static_cast<double>(k)) return 0.0;
@@ -1828,7 +1828,7 @@ Series bessel_pdf_(const Series& x, double nu, double a) {
 }
 
 Series bessel_logpdf_(const Series& x, double nu, double a) {
-  PLUSS_CHECK(nu > -1.0 && a > 0.0, "subsp::stat::distr::bessel logpdf: invalid parameters");
+  PLUSS_CHECK(nu > -1.0 && a > 0.0, "subsp::stats::distr::bessel logpdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     const auto k = static_cast<std::int64_t>(std::floor(y));
     return (y != static_cast<double>(k)) ? -std::numeric_limits<double>::infinity() : bessel_logpmf_scalar_(k, nu, a);
@@ -1836,7 +1836,7 @@ Series bessel_logpdf_(const Series& x, double nu, double a) {
 }
 
 Series bessel_cdf_(const Series& x, double nu, double a) {
-  PLUSS_CHECK(nu > -1.0 && a > 0.0, "subsp::stat::distr::bessel cdf: invalid parameters");
+  PLUSS_CHECK(nu > -1.0 && a > 0.0, "subsp::stats::distr::bessel cdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     const auto k = static_cast<std::int64_t>(std::floor(y));
     if (k < 0) return 0.0;
@@ -1847,7 +1847,7 @@ Series bessel_cdf_(const Series& x, double nu, double a) {
 }
 
 Series bessel_sample_(double nu, double a, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(nu > -1.0 && a > 0.0, "subsp::stat::distr::bessel sample: invalid parameters");
+  PLUSS_CHECK(nu > -1.0 && a > 0.0, "subsp::stats::distr::bessel sample: invalid parameters");
   return sample_host_<std::int64_t>(sizes, cfg, ScalarType::Int64, seed, [=](std::mt19937_64& rng) {
     std::uniform_real_distribution<double> uniform(0.0, 1.0);
     const double u = uniform(rng);
@@ -1861,7 +1861,7 @@ Series bessel_sample_(double nu, double a, std::span<const std::int64_t> sizes, 
 }
 
 Series bradford_pdf_(const Series& x, double b) {
-  PLUSS_CHECK(b > -1.0 && std::abs(b) > kEps, "subsp::stat::distr::bradford pdf: invalid b");
+  PLUSS_CHECK(b > -1.0 && std::abs(b) > kEps, "subsp::stats::distr::bradford pdf: invalid b");
   const double den = std::log1p(b);
   return map_series_f64_(x, [=](double y) {
     if (y < 0.0 || y > 1.0) return 0.0;
@@ -1870,7 +1870,7 @@ Series bradford_pdf_(const Series& x, double b) {
 }
 
 Series bradford_logpdf_(const Series& x, double b) {
-  PLUSS_CHECK(b > -1.0 && std::abs(b) > kEps, "subsp::stat::distr::bradford logpdf: invalid b");
+  PLUSS_CHECK(b > -1.0 && std::abs(b) > kEps, "subsp::stats::distr::bradford logpdf: invalid b");
   const double den = std::log1p(b);
   return map_series_f64_(x, [=](double y) {
     if (y < 0.0 || y > 1.0) return -std::numeric_limits<double>::infinity();
@@ -1879,7 +1879,7 @@ Series bradford_logpdf_(const Series& x, double b) {
 }
 
 Series bradford_cdf_(const Series& x, double b) {
-  PLUSS_CHECK(b > -1.0 && std::abs(b) > kEps, "subsp::stat::distr::bradford cdf: invalid b");
+  PLUSS_CHECK(b > -1.0 && std::abs(b) > kEps, "subsp::stats::distr::bradford cdf: invalid b");
   const double den = std::log1p(b);
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
@@ -1889,14 +1889,14 @@ Series bradford_cdf_(const Series& x, double b) {
 }
 
 Series bradford_sample_(double b, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(b > -1.0 && std::abs(b) > kEps, "subsp::stat::distr::bradford sample: invalid b");
+  PLUSS_CHECK(b > -1.0 && std::abs(b) > kEps, "subsp::stats::distr::bradford sample: invalid b");
   return map_series_f64_(unit_uniform_(sizes, cfg, seed), [=](double u) {
     return (std::pow(1.0 + b, u) - 1.0) / b;
   }).to(cfg.platform, natural_cfg_(cfg, ScalarType::Float64).dtype);
 }
 
 Series burr_pdf_(const Series& x, double c, double d) {
-  PLUSS_CHECK(c > 0.0 && d > 0.0, "subsp::stat::distr::burr pdf: invalid parameters");
+  PLUSS_CHECK(c > 0.0 && d > 0.0, "subsp::stats::distr::burr pdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
     return c * d * std::pow(y, -c - 1.0) * std::pow(1.0 + std::pow(y, -c), -d - 1.0);
@@ -1904,7 +1904,7 @@ Series burr_pdf_(const Series& x, double c, double d) {
 }
 
 Series burr_logpdf_(const Series& x, double c, double d) {
-  PLUSS_CHECK(c > 0.0 && d > 0.0, "subsp::stat::distr::burr logpdf: invalid parameters");
+  PLUSS_CHECK(c > 0.0 && d > 0.0, "subsp::stats::distr::burr logpdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return -std::numeric_limits<double>::infinity();
     return std::log(c * d) + (-c - 1.0) * std::log(y) + (-d - 1.0) * std::log1p(std::pow(y, -c));
@@ -1912,7 +1912,7 @@ Series burr_logpdf_(const Series& x, double c, double d) {
 }
 
 Series burr_cdf_(const Series& x, double c, double d) {
-  PLUSS_CHECK(c > 0.0 && d > 0.0, "subsp::stat::distr::burr cdf: invalid parameters");
+  PLUSS_CHECK(c > 0.0 && d > 0.0, "subsp::stats::distr::burr cdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
     return std::pow(1.0 + std::pow(y, -c), -d);
@@ -1920,14 +1920,14 @@ Series burr_cdf_(const Series& x, double c, double d) {
 }
 
 Series burr_sample_(double c, double d, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(c > 0.0 && d > 0.0, "subsp::stat::distr::burr sample: invalid parameters");
+  PLUSS_CHECK(c > 0.0 && d > 0.0, "subsp::stats::distr::burr sample: invalid parameters");
   return map_series_f64_(unit_uniform_(sizes, cfg, seed), [=](double u) {
     return std::pow(std::pow(u, -1.0 / d) - 1.0, -1.0 / c);
   }).to(cfg.platform, natural_cfg_(cfg, ScalarType::Float64).dtype);
 }
 
 Series chi_pdf_(const Series& x, double a, double b, double nu) {
-  PLUSS_CHECK(b > 0.0 && nu > 0.0, "subsp::stat::distr::chi pdf: invalid parameters");
+  PLUSS_CHECK(b > 0.0 && nu > 0.0, "subsp::stats::distr::chi pdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= a) return 0.0;
     const double z = (y - a) / b;
@@ -1936,7 +1936,7 @@ Series chi_pdf_(const Series& x, double a, double b, double nu) {
 }
 
 Series chi_logpdf_(const Series& x, double a, double b, double nu) {
-  PLUSS_CHECK(b > 0.0 && nu > 0.0, "subsp::stat::distr::chi logpdf: invalid parameters");
+  PLUSS_CHECK(b > 0.0 && nu > 0.0, "subsp::stats::distr::chi logpdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= a) return -std::numeric_limits<double>::infinity();
     const double z = (y - a) / b;
@@ -1945,7 +1945,7 @@ Series chi_logpdf_(const Series& x, double a, double b, double nu) {
 }
 
 Series chi_cdf_(const Series& x, double a, double b, double nu) {
-  PLUSS_CHECK(b > 0.0 && nu > 0.0, "subsp::stat::distr::chi cdf: invalid parameters");
+  PLUSS_CHECK(b > 0.0 && nu > 0.0, "subsp::stats::distr::chi cdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= a) return 0.0;
     const double z = (y - a) / b;
@@ -1954,7 +1954,7 @@ Series chi_cdf_(const Series& x, double a, double b, double nu) {
 }
 
 Series chi_sample_(double a, double b, double nu, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(b > 0.0 && nu > 0.0, "subsp::stat::distr::chi sample: invalid parameters");
+  PLUSS_CHECK(b > 0.0 && nu > 0.0, "subsp::stats::distr::chi sample: invalid parameters");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::gamma_distribution<double> dist(0.5 * nu, 2.0);
     return a + b * std::sqrt(dist(rng));
@@ -1962,7 +1962,7 @@ Series chi_sample_(double a, double b, double nu, std::span<const std::int64_t> 
 }
 
 Series chisqnc_pdf_(const Series& x, double lambda, std::int64_t r) {
-  PLUSS_CHECK(lambda >= 0.0 && r > 0, "subsp::stat::distr::chisqnc pdf: invalid parameters");
+  PLUSS_CHECK(lambda >= 0.0 && r > 0, "subsp::stats::distr::chisqnc pdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
     return poisson_mix_scalar_(0.5 * lambda, [=](int j) {
@@ -1980,7 +1980,7 @@ Series chisqnc_logpdf_(const Series& x, double lambda, std::int64_t r) {
 }
 
 Series chisqnc_cdf_(const Series& x, double lambda, std::int64_t r) {
-  PLUSS_CHECK(lambda >= 0.0 && r > 0, "subsp::stat::distr::chisqnc cdf: invalid parameters");
+  PLUSS_CHECK(lambda >= 0.0 && r > 0, "subsp::stats::distr::chisqnc cdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
     return std::clamp(poisson_mix_scalar_(0.5 * lambda, [=](int j) {
@@ -1990,7 +1990,7 @@ Series chisqnc_cdf_(const Series& x, double lambda, std::int64_t r) {
 }
 
 Series chisqnc_sample_(double lambda, std::int64_t r, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(lambda >= 0.0 && r > 0, "subsp::stat::distr::chisqnc sample: invalid parameters");
+  PLUSS_CHECK(lambda >= 0.0 && r > 0, "subsp::stats::distr::chisqnc sample: invalid parameters");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::normal_distribution<double> normal(std::sqrt(lambda), 1.0);
     std::gamma_distribution<double> chisq(0.5 * static_cast<double>(r - 1), 2.0);
@@ -2000,7 +2000,7 @@ Series chisqnc_sample_(double lambda, std::int64_t r, std::span<const std::int64
 }
 
 Series cosine_pdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::cosine pdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::cosine pdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     if (y < t - s || y > t + s) return 0.0;
     return (1.0 + std::cos(std::numbers::pi_v<double> * (y - t) / s)) / (2.0 * s);
@@ -2008,7 +2008,7 @@ Series cosine_pdf_(const Series& x, double t, double s) {
 }
 
 Series cosine_logpdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::cosine logpdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::cosine logpdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     if (y < t - s || y > t + s) return -std::numeric_limits<double>::infinity();
     return std::log1p(std::cos(std::numbers::pi_v<double> * (y - t) / s)) - std::log(2.0 * s);
@@ -2016,7 +2016,7 @@ Series cosine_logpdf_(const Series& x, double t, double s) {
 }
 
 Series cosine_cdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::cosine cdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::cosine cdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     if (y <= t - s) return 0.0;
     if (y >= t + s) return 1.0;
@@ -2026,7 +2026,7 @@ Series cosine_cdf_(const Series& x, double t, double s) {
 }
 
 Series cosine_sample_(double t, double s, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::cosine sample: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::cosine sample: expected s > 0");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::uniform_real_distribution<double> uni_x(t - s, t + s);
     std::uniform_real_distribution<double> uni01(0.0, 1.0);
@@ -2045,7 +2045,7 @@ Series erlang_sample_(double a, std::int64_t n, std::span<const std::int64_t> si
 }
 
 Series extreme_value_pdf_(const Series& x, double mu, double b) {
-  PLUSS_CHECK(b > 0.0, "subsp::stat::distr::extrval pdf: expected b > 0");
+  PLUSS_CHECK(b > 0.0, "subsp::stats::distr::extrval pdf: expected b > 0");
   return map_series_f64_(x, [=](double y) {
     const double z = (mu - y) / b;
     return std::exp(z - std::exp(z)) / b;
@@ -2053,7 +2053,7 @@ Series extreme_value_pdf_(const Series& x, double mu, double b) {
 }
 
 Series extreme_value_logpdf_(const Series& x, double mu, double b) {
-  PLUSS_CHECK(b > 0.0, "subsp::stat::distr::extrval logpdf: expected b > 0");
+  PLUSS_CHECK(b > 0.0, "subsp::stats::distr::extrval logpdf: expected b > 0");
   return map_series_f64_(x, [=](double y) {
     const double z = (mu - y) / b;
     return z - std::exp(z) - std::log(b);
@@ -2061,18 +2061,18 @@ Series extreme_value_logpdf_(const Series& x, double mu, double b) {
 }
 
 Series extreme_value_cdf_(const Series& x, double mu, double b) {
-  PLUSS_CHECK(b > 0.0, "subsp::stat::distr::extrval cdf: expected b > 0");
+  PLUSS_CHECK(b > 0.0, "subsp::stats::distr::extrval cdf: expected b > 0");
   return map_series_f64_(x, [=](double y) { return std::exp(-std::exp((mu - y) / b)); });
 }
 
 Series extreme_value_sample_(double mu, double b, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(b > 0.0, "subsp::stat::distr::extrval sample: expected b > 0");
+  PLUSS_CHECK(b > 0.0, "subsp::stats::distr::extrval sample: expected b > 0");
   return map_series_f64_(unit_uniform_(sizes, cfg, seed), [=](double u) { return mu - b * std::log(-std::log(u)); })
       .to(cfg.platform, natural_cfg_(cfg, ScalarType::Float64).dtype);
 }
 
 Series f_pdf_(const Series& x, double d1, double d2) {
-  PLUSS_CHECK(d1 > 0.0 && d2 > 0.0, "subsp::stat::distr::f pdf: invalid parameters");
+  PLUSS_CHECK(d1 > 0.0 && d2 > 0.0, "subsp::stats::distr::f pdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
     const double z = d1 * y / (d1 * y + d2);
@@ -2081,7 +2081,7 @@ Series f_pdf_(const Series& x, double d1, double d2) {
 }
 
 Series f_logpdf_(const Series& x, double d1, double d2) {
-  PLUSS_CHECK(d1 > 0.0 && d2 > 0.0, "subsp::stat::distr::f logpdf: invalid parameters");
+  PLUSS_CHECK(d1 > 0.0 && d2 > 0.0, "subsp::stats::distr::f logpdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return -std::numeric_limits<double>::infinity();
     const double z = d1 * y / (d1 * y + d2);
@@ -2090,7 +2090,7 @@ Series f_logpdf_(const Series& x, double d1, double d2) {
 }
 
 Series f_cdf_(const Series& x, double d1, double d2) {
-  PLUSS_CHECK(d1 > 0.0 && d2 > 0.0, "subsp::stat::distr::f cdf: invalid parameters");
+  PLUSS_CHECK(d1 > 0.0 && d2 > 0.0, "subsp::stats::distr::f cdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
     return regularized_beta_scalar_(0.5 * d1, 0.5 * d2, d1 * y / (d1 * y + d2));
@@ -2098,7 +2098,7 @@ Series f_cdf_(const Series& x, double d1, double d2) {
 }
 
 Series f_sample_(double d1, double d2, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(d1 > 0.0 && d2 > 0.0, "subsp::stat::distr::f sample: invalid parameters");
+  PLUSS_CHECK(d1 > 0.0 && d2 > 0.0, "subsp::stats::distr::f sample: invalid parameters");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::gamma_distribution<double> g1(0.5 * d1, 2.0);
     std::gamma_distribution<double> g2(0.5 * d2, 2.0);
@@ -2132,7 +2132,7 @@ Series fnc_cdf_(const Series& x, double lambda, double d1, double d2) {
 }
 
 Series fnc_sample_(double lambda, double d1, double d2, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(lambda >= 0.0 && d1 > 0.0 && d2 > 0.0, "subsp::stat::distr::fnc sample: invalid parameters");
+  PLUSS_CHECK(lambda >= 0.0 && d1 > 0.0 && d2 > 0.0, "subsp::stats::distr::fnc sample: invalid parameters");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::normal_distribution<double> normal(std::sqrt(lambda), 1.0);
     std::gamma_distribution<double> nc_rest(0.5 * std::max(d1 - 1.0, 0.0), 2.0);
@@ -2144,7 +2144,7 @@ Series fnc_sample_(double lambda, double d1, double d2, std::span<const std::int
 }
 
 Series gompertz_pdf_(const Series& x, double b, double c) {
-  PLUSS_CHECK(b > 0.0 && c > 1.0, "subsp::stat::distr::gompertz pdf: invalid parameters");
+  PLUSS_CHECK(b > 0.0 && c > 1.0, "subsp::stats::distr::gompertz pdf: invalid parameters");
   const double logc = std::log(c);
   return map_series_f64_(x, [=](double y) {
     if (y < 0.0) return 0.0;
@@ -2153,7 +2153,7 @@ Series gompertz_pdf_(const Series& x, double b, double c) {
 }
 
 Series gompertz_logpdf_(const Series& x, double b, double c) {
-  PLUSS_CHECK(b > 0.0 && c > 1.0, "subsp::stat::distr::gompertz logpdf: invalid parameters");
+  PLUSS_CHECK(b > 0.0 && c > 1.0, "subsp::stats::distr::gompertz logpdf: invalid parameters");
   const double logc = std::log(c);
   return map_series_f64_(x, [=](double y) {
     if (y < 0.0) return -std::numeric_limits<double>::infinity();
@@ -2162,7 +2162,7 @@ Series gompertz_logpdf_(const Series& x, double b, double c) {
 }
 
 Series gompertz_cdf_(const Series& x, double b, double c) {
-  PLUSS_CHECK(b > 0.0 && c > 1.0, "subsp::stat::distr::gompertz cdf: invalid parameters");
+  PLUSS_CHECK(b > 0.0 && c > 1.0, "subsp::stats::distr::gompertz cdf: invalid parameters");
   const double logc = std::log(c);
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
@@ -2171,7 +2171,7 @@ Series gompertz_cdf_(const Series& x, double b, double c) {
 }
 
 Series gompertz_sample_(double b, double c, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(b > 0.0 && c > 1.0, "subsp::stat::distr::gompertz sample: invalid parameters");
+  PLUSS_CHECK(b > 0.0 && c > 1.0, "subsp::stats::distr::gompertz sample: invalid parameters");
   const double logc = std::log(c);
   return map_series_f64_(unit_uniform_(sizes, cfg, seed), [=](double u) {
     return std::log(1.0 - std::log1p(-u) * logc / b) / logc;
@@ -2179,7 +2179,7 @@ Series gompertz_sample_(double b, double c, std::span<const std::int64_t> sizes,
 }
 
 Series halfcosine_pdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::halfcosine pdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::halfcosine pdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     if (y < t - s || y > t + s) return 0.0;
     return (std::numbers::pi_v<double> / (4.0 * s)) * std::cos(std::numbers::pi_v<double> * (y - t) / (2.0 * s));
@@ -2187,7 +2187,7 @@ Series halfcosine_pdf_(const Series& x, double t, double s) {
 }
 
 Series halfcosine_logpdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::halfcosine logpdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::halfcosine logpdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     if (y < t - s || y > t + s) return -std::numeric_limits<double>::infinity();
     return std::log(std::numbers::pi_v<double> / (4.0 * s)) + std::log(std::cos(std::numbers::pi_v<double> * (y - t) / (2.0 * s)));
@@ -2195,7 +2195,7 @@ Series halfcosine_logpdf_(const Series& x, double t, double s) {
 }
 
 Series halfcosine_cdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::halfcosine cdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::halfcosine cdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     if (y <= t - s) return 0.0;
     if (y >= t + s) return 1.0;
@@ -2204,29 +2204,29 @@ Series halfcosine_cdf_(const Series& x, double t, double s) {
 }
 
 Series halfcosine_sample_(double t, double s, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::halfcosine sample: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::halfcosine sample: expected s > 0");
   return map_series_f64_(unit_uniform_(sizes, cfg, seed), [=](double u) {
     return t + s * 2.0 / std::numbers::pi_v<double> * std::asin(2.0 * u - 1.0);
   }).to(cfg.platform, natural_cfg_(cfg, ScalarType::Float64).dtype);
 }
 
 Series hsec_pdf_(const Series& x, double a, double b) {
-  PLUSS_CHECK(b > 0.0, "subsp::stat::distr::hsec pdf: expected b > 0");
+  PLUSS_CHECK(b > 0.0, "subsp::stats::distr::hsec pdf: expected b > 0");
   return map_series_f64_(x, [=](double y) { return 1.0 / (std::numbers::pi_v<double> * b * std::cosh((y - a) / b)); });
 }
 
 Series hsec_logpdf_(const Series& x, double a, double b) {
-  PLUSS_CHECK(b > 0.0, "subsp::stat::distr::hsec logpdf: expected b > 0");
+  PLUSS_CHECK(b > 0.0, "subsp::stats::distr::hsec logpdf: expected b > 0");
   return map_series_f64_(x, [=](double y) { return -std::log(std::numbers::pi_v<double> * b) - std::log(std::cosh((y - a) / b)); });
 }
 
 Series hsec_cdf_(const Series& x, double a, double b) {
-  PLUSS_CHECK(b > 0.0, "subsp::stat::distr::hsec cdf: expected b > 0");
+  PLUSS_CHECK(b > 0.0, "subsp::stats::distr::hsec cdf: expected b > 0");
   return map_series_f64_(x, [=](double y) { return 2.0 * std::atan(std::exp((y - a) / b)) / std::numbers::pi_v<double>; });
 }
 
 Series hsec_sample_(double a, double b, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(b > 0.0, "subsp::stat::distr::hsec sample: expected b > 0");
+  PLUSS_CHECK(b > 0.0, "subsp::stats::distr::hsec sample: expected b > 0");
   return map_series_f64_(unit_uniform_(sizes, cfg, seed), [=](double u) { return a + b * std::log(std::tan(std::numbers::pi_v<double> * 0.5 * u)); })
       .to(cfg.platform, natural_cfg_(cfg, ScalarType::Float64).dtype);
 }
@@ -2239,7 +2239,7 @@ Series maxwell_sample_(double a, std::span<const std::int64_t> sizes, Config cfg
 }
 
 Series nakagami_pdf_(const Series& x, double m, double omega) {
-  PLUSS_CHECK(m > 0.0 && omega > 0.0, "subsp::stat::distr::nakagami pdf: invalid parameters");
+  PLUSS_CHECK(m > 0.0 && omega > 0.0, "subsp::stats::distr::nakagami pdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y < 0.0) return 0.0;
     return 2.0 / std::tgamma(m) * std::pow(m / omega, m) * std::pow(y, 2.0 * m - 1.0) * std::exp(-m * y * y / omega);
@@ -2247,7 +2247,7 @@ Series nakagami_pdf_(const Series& x, double m, double omega) {
 }
 
 Series nakagami_logpdf_(const Series& x, double m, double omega) {
-  PLUSS_CHECK(m > 0.0 && omega > 0.0, "subsp::stat::distr::nakagami logpdf: invalid parameters");
+  PLUSS_CHECK(m > 0.0 && omega > 0.0, "subsp::stats::distr::nakagami logpdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y < 0.0) return -std::numeric_limits<double>::infinity();
     return std::log(2.0) - std::lgamma(m) + m * std::log(m / omega) + (2.0 * m - 1.0) * std::log(std::max(y, kEps)) - m * y * y / omega;
@@ -2255,7 +2255,7 @@ Series nakagami_logpdf_(const Series& x, double m, double omega) {
 }
 
 Series nakagami_cdf_(const Series& x, double m, double omega) {
-  PLUSS_CHECK(m > 0.0 && omega > 0.0, "subsp::stat::distr::nakagami cdf: invalid parameters");
+  PLUSS_CHECK(m > 0.0 && omega > 0.0, "subsp::stats::distr::nakagami cdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
     return regularized_gamma_p_scalar_(m, m * y * y / omega);
@@ -2263,7 +2263,7 @@ Series nakagami_cdf_(const Series& x, double m, double omega) {
 }
 
 Series nakagami_sample_(double m, double omega, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(m > 0.0 && omega > 0.0, "subsp::stat::distr::nakagami sample: invalid parameters");
+  PLUSS_CHECK(m > 0.0 && omega > 0.0, "subsp::stats::distr::nakagami sample: invalid parameters");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::gamma_distribution<double> dist(m, omega / m);
     return std::sqrt(dist(rng));
@@ -2271,7 +2271,7 @@ Series nakagami_sample_(double m, double omega, std::span<const std::int64_t> si
 }
 
 Series negbin_pdf_(const Series& x, double r, double p) {
-  PLUSS_CHECK(r > 0.0 && p > 0.0 && p < 1.0, "subsp::stat::distr::negbinom pdf: invalid parameters");
+  PLUSS_CHECK(r > 0.0 && p > 0.0 && p < 1.0, "subsp::stats::distr::negbinom pdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     const auto k = std::floor(y);
     if (y != k || k < 0.0) return 0.0;
@@ -2280,7 +2280,7 @@ Series negbin_pdf_(const Series& x, double r, double p) {
 }
 
 Series negbin_logpdf_(const Series& x, double r, double p) {
-  PLUSS_CHECK(r > 0.0 && p > 0.0 && p < 1.0, "subsp::stat::distr::negbinom logpdf: invalid parameters");
+  PLUSS_CHECK(r > 0.0 && p > 0.0 && p < 1.0, "subsp::stats::distr::negbinom logpdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     const auto k = std::floor(y);
     if (y != k || k < 0.0) return -std::numeric_limits<double>::infinity();
@@ -2289,7 +2289,7 @@ Series negbin_logpdf_(const Series& x, double r, double p) {
 }
 
 Series negbin_cdf_(const Series& x, double r, double p) {
-  PLUSS_CHECK(r > 0.0 && p > 0.0 && p < 1.0, "subsp::stat::distr::negbinom cdf: invalid parameters");
+  PLUSS_CHECK(r > 0.0 && p > 0.0 && p < 1.0, "subsp::stats::distr::negbinom cdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     const auto k = static_cast<int>(std::floor(y));
     if (k < 0) return 0.0;
@@ -2298,7 +2298,7 @@ Series negbin_cdf_(const Series& x, double r, double p) {
 }
 
 Series negbin_sample_(double r, double p, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(r > 0.0 && p > 0.0 && p < 1.0, "subsp::stat::distr::negbinom sample: invalid parameters");
+  PLUSS_CHECK(r > 0.0 && p > 0.0 && p < 1.0, "subsp::stats::distr::negbinom sample: invalid parameters");
   return sample_host_<std::int64_t>(sizes, cfg, ScalarType::Int64, seed, [=](std::mt19937_64& rng) {
     std::gamma_distribution<double> gamma(r, (1.0 - p) / p);
     std::poisson_distribution<std::int64_t> pois(gamma(rng));
@@ -2307,7 +2307,7 @@ Series negbin_sample_(double r, double p, std::span<const std::int64_t> sizes, C
 }
 
 Series planck_pdf_(const Series& x, double a, double b) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::planck pdf: invalid parameters");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::planck pdf: invalid parameters");
   const double log_norm = (a + 1.0) * std::log(b) - std::lgamma(a + 1.0) - std::log(zeta_scalar_(a + 1.0));
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
@@ -2316,7 +2316,7 @@ Series planck_pdf_(const Series& x, double a, double b) {
 }
 
 Series planck_logpdf_(const Series& x, double a, double b) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::planck logpdf: invalid parameters");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::planck logpdf: invalid parameters");
   const double log_norm = (a + 1.0) * std::log(b) - std::lgamma(a + 1.0) - std::log(zeta_scalar_(a + 1.0));
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return -std::numeric_limits<double>::infinity();
@@ -2325,7 +2325,7 @@ Series planck_logpdf_(const Series& x, double a, double b) {
 }
 
 Series planck_cdf_(const Series& x, double a, double b) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::planck cdf: invalid parameters");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::planck cdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
     const auto pdf = [=](double t) {
@@ -2338,7 +2338,7 @@ Series planck_cdf_(const Series& x, double a, double b) {
 }
 
 Series planck_sample_(double a, double b, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stat::distr::planck sample: invalid parameters");
+  PLUSS_CHECK(a > 0.0 && b > 0.0, "subsp::stats::distr::planck sample: invalid parameters");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::gamma_distribution<double> gamma(a + 1.0, 1.0);
     const double au = a + 1.0;
@@ -2358,7 +2358,7 @@ Series planck_sample_(double a, double b, std::span<const std::int64_t> sizes, C
 }
 
 Series quadratic_pdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::quadratic pdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::quadratic pdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     const double z = (y - t) / s;
     if (std::abs(z) > 1.0) return 0.0;
@@ -2367,7 +2367,7 @@ Series quadratic_pdf_(const Series& x, double t, double s) {
 }
 
 Series quadratic_logpdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::quadratic logpdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::quadratic logpdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     const double z = (y - t) / s;
     if (std::abs(z) > 1.0) return -std::numeric_limits<double>::infinity();
@@ -2376,7 +2376,7 @@ Series quadratic_logpdf_(const Series& x, double t, double s) {
 }
 
 Series quadratic_cdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::quadratic cdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::quadratic cdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     const double z = (y - t) / s;
     if (z <= -1.0) return 0.0;
@@ -2386,7 +2386,7 @@ Series quadratic_cdf_(const Series& x, double t, double s) {
 }
 
 Series quadratic_sample_(double t, double s, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::quadratic sample: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::quadratic sample: expected s > 0");
   return map_series_f64_(unit_uniform_(sizes, cfg, seed), [=](double u) {
     return t + s * 2.0 * std::sin(std::asin(2.0 * u - 1.0) / 3.0);
   }).to(cfg.platform, natural_cfg_(cfg, ScalarType::Float64).dtype);
@@ -2418,7 +2418,7 @@ Series rademacher_sample_(std::span<const std::int64_t> sizes, Config cfg, std::
 }
 
 Series rice_pdf_(const Series& x, double v, double sigma) {
-  PLUSS_CHECK(v >= 0.0 && sigma > 0.0, "subsp::stat::distr::rice pdf: invalid parameters");
+  PLUSS_CHECK(v >= 0.0 && sigma > 0.0, "subsp::stats::distr::rice pdf: invalid parameters");
   const double sigma2 = sigma * sigma;
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
@@ -2433,7 +2433,7 @@ Series rice_logpdf_(const Series& x, double v, double sigma) {
 }
 
 Series rice_cdf_(const Series& x, double v, double sigma) {
-  PLUSS_CHECK(v >= 0.0 && sigma > 0.0, "subsp::stat::distr::rice cdf: invalid parameters");
+  PLUSS_CHECK(v >= 0.0 && sigma > 0.0, "subsp::stats::distr::rice cdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
     const auto pdf = [=](double t) {
@@ -2446,7 +2446,7 @@ Series rice_cdf_(const Series& x, double v, double sigma) {
 }
 
 Series rice_sample_(double v, double sigma, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(v >= 0.0 && sigma > 0.0, "subsp::stat::distr::rice sample: invalid parameters");
+  PLUSS_CHECK(v >= 0.0 && sigma > 0.0, "subsp::stats::distr::rice sample: invalid parameters");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::normal_distribution<double> normal(0.0, 1.0);
     const double z1 = v + sigma * normal(rng);
@@ -2456,7 +2456,7 @@ Series rice_sample_(double v, double sigma, std::span<const std::int64_t> sizes,
 }
 
 Series semicircle_pdf_(const Series& x, double m, double R) {
-  PLUSS_CHECK(R > 0.0, "subsp::stat::distr::semicircle pdf: expected R > 0");
+  PLUSS_CHECK(R > 0.0, "subsp::stats::distr::semicircle pdf: expected R > 0");
   return map_series_f64_(x, [=](double y) {
     const double z = (y - m) / R;
     if (std::abs(z) > 1.0) return 0.0;
@@ -2465,7 +2465,7 @@ Series semicircle_pdf_(const Series& x, double m, double R) {
 }
 
 Series semicircle_logpdf_(const Series& x, double m, double R) {
-  PLUSS_CHECK(R > 0.0, "subsp::stat::distr::semicircle logpdf: expected R > 0");
+  PLUSS_CHECK(R > 0.0, "subsp::stats::distr::semicircle logpdf: expected R > 0");
   return map_series_f64_(x, [=](double y) {
     const double z = (y - m) / R;
     if (std::abs(z) > 1.0) return -std::numeric_limits<double>::infinity();
@@ -2474,7 +2474,7 @@ Series semicircle_logpdf_(const Series& x, double m, double R) {
 }
 
 Series semicircle_cdf_(const Series& x, double m, double R) {
-  PLUSS_CHECK(R > 0.0, "subsp::stat::distr::semicircle cdf: expected R > 0");
+  PLUSS_CHECK(R > 0.0, "subsp::stats::distr::semicircle cdf: expected R > 0");
   return map_series_f64_(x, [=](double y) {
     const double z = (y - m) / R;
     if (z <= -1.0) return 0.0;
@@ -2484,7 +2484,7 @@ Series semicircle_cdf_(const Series& x, double m, double R) {
 }
 
 Series semicircle_sample_(double m, double R, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(R > 0.0, "subsp::stat::distr::semicircle sample: expected R > 0");
+  PLUSS_CHECK(R > 0.0, "subsp::stats::distr::semicircle sample: expected R > 0");
   return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
     std::gamma_distribution<double> g(1.5, 1.0);
     const double x1 = g(rng);
@@ -2525,7 +2525,7 @@ Series tukeylambda_sample_(double lambda, std::span<const std::int64_t> sizes, C
 }
 
 Series ushape_pdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::u pdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::u pdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     const double z = (y - t) / s;
     if (std::abs(z) >= 1.0) return 0.0;
@@ -2534,7 +2534,7 @@ Series ushape_pdf_(const Series& x, double t, double s) {
 }
 
 Series ushape_logpdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::u logpdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::u logpdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     const double z = (y - t) / s;
     if (std::abs(z) >= 1.0) return -std::numeric_limits<double>::infinity();
@@ -2543,7 +2543,7 @@ Series ushape_logpdf_(const Series& x, double t, double s) {
 }
 
 Series ushape_cdf_(const Series& x, double t, double s) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::u cdf: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::u cdf: expected s > 0");
   return map_series_f64_(x, [=](double y) {
     const double z = (y - t) / s;
     if (z <= -1.0) return 0.0;
@@ -2553,14 +2553,14 @@ Series ushape_cdf_(const Series& x, double t, double s) {
 }
 
 Series ushape_sample_(double t, double s, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(s > 0.0, "subsp::stat::distr::u sample: expected s > 0");
+  PLUSS_CHECK(s > 0.0, "subsp::stats::distr::u sample: expected s > 0");
   return map_series_f64_(unit_uniform_(sizes, cfg, seed), [=](double u) {
     return t + s * std::sin(std::numbers::pi_v<double> * (u - 0.5));
   }).to(cfg.platform, natural_cfg_(cfg, ScalarType::Float64).dtype);
 }
 
 Series vonmises_pdf_(const Series& x, double a, double k) {
-  PLUSS_CHECK(k > 0.0, "subsp::stat::distr::vonmises pdf: expected k > 0");
+  PLUSS_CHECK(k > 0.0, "subsp::stats::distr::vonmises pdf: expected k > 0");
   const double norm = 2.0 * std::numbers::pi_v<double> * bessel_i_series_scalar_(0.0, k);
   return map_series_f64_(x, [=](double y) {
     return std::exp(k * std::cos(wrap_angle_scalar_(y - a))) / norm;
@@ -2568,7 +2568,7 @@ Series vonmises_pdf_(const Series& x, double a, double k) {
 }
 
 Series vonmises_logpdf_(const Series& x, double a, double k) {
-  PLUSS_CHECK(k > 0.0, "subsp::stat::distr::vonmises logpdf: expected k > 0");
+  PLUSS_CHECK(k > 0.0, "subsp::stats::distr::vonmises logpdf: expected k > 0");
   const double log_norm = std::log(2.0 * std::numbers::pi_v<double> * bessel_i_series_scalar_(0.0, k));
   return map_series_f64_(x, [=](double y) {
     return k * std::cos(wrap_angle_scalar_(y - a)) - log_norm;
@@ -2576,7 +2576,7 @@ Series vonmises_logpdf_(const Series& x, double a, double k) {
 }
 
 Series vonmises_cdf_(const Series& x, double a, double k) {
-  PLUSS_CHECK(k > 0.0, "subsp::stat::distr::vonmises cdf: expected k > 0");
+  PLUSS_CHECK(k > 0.0, "subsp::stats::distr::vonmises cdf: expected k > 0");
   const double left = a - std::numbers::pi_v<double>;
   const auto pdf = [=](double y) {
     return std::exp(k * std::cos(wrap_angle_scalar_(y - a))) /
@@ -2590,7 +2590,7 @@ Series vonmises_cdf_(const Series& x, double a, double k) {
 }
 
 Series vonmises_sample_(double a, double k, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(k > 0.0, "subsp::stat::distr::vonmises sample: expected k > 0");
+  PLUSS_CHECK(k > 0.0, "subsp::stats::distr::vonmises sample: expected k > 0");
   if (k > 700.0) {
     return normal_sample_(a, std::sqrt(1.0 / k), sizes, cfg, seed);
   }
@@ -2653,7 +2653,7 @@ Series weibull3_sample_(double theta, double alpha, double beta, std::span<const
 }
 
 Series yule_pdf_(const Series& x, double p) {
-  PLUSS_CHECK(p > 1.0, "subsp::stat::distr::yule pdf: expected p > 1");
+  PLUSS_CHECK(p > 1.0, "subsp::stats::distr::yule pdf: expected p > 1");
   return map_series_f64_(x, [=](double y) {
     const auto k = static_cast<std::int64_t>(std::floor(y));
     if (y != static_cast<double>(k) || k < 1) return 0.0;
@@ -2662,7 +2662,7 @@ Series yule_pdf_(const Series& x, double p) {
 }
 
 Series yule_logpdf_(const Series& x, double p) {
-  PLUSS_CHECK(p > 1.0, "subsp::stat::distr::yule logpdf: expected p > 1");
+  PLUSS_CHECK(p > 1.0, "subsp::stats::distr::yule logpdf: expected p > 1");
   return map_series_f64_(x, [=](double y) {
     const auto k = static_cast<std::int64_t>(std::floor(y));
     if (y != static_cast<double>(k) || k < 1) return -std::numeric_limits<double>::infinity();
@@ -2671,7 +2671,7 @@ Series yule_logpdf_(const Series& x, double p) {
 }
 
 Series yule_cdf_(const Series& x, double p) {
-  PLUSS_CHECK(p > 1.0, "subsp::stat::distr::yule cdf: expected p > 1");
+  PLUSS_CHECK(p > 1.0, "subsp::stats::distr::yule cdf: expected p > 1");
   return map_series_f64_(x, [=](double y) {
     const auto k = static_cast<std::int64_t>(std::floor(y));
     if (k < 1) return 0.0;
@@ -2680,7 +2680,7 @@ Series yule_cdf_(const Series& x, double p) {
 }
 
 Series yule_sample_(double p, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed) {
-  PLUSS_CHECK(p > 1.0, "subsp::stat::distr::yule sample: expected p > 1");
+  PLUSS_CHECK(p > 1.0, "subsp::stats::distr::yule sample: expected p > 1");
   return sample_host_<std::int64_t>(sizes, cfg, ScalarType::Int64, seed, [=](std::mt19937_64& rng) {
     std::uniform_real_distribution<double> uniform(0.0, 1.0);
     const double u1 = uniform(rng);
@@ -2704,7 +2704,7 @@ Series sample(dst::Kind kind,
   PLUSS_CHECK(
       method == RngMethod::Pseudo || method == RngMethod::Sobol || method == RngMethod::Halton ||
           method == RngMethod::Torus,
-      "subsp::stat::distr::sample: unsupported rng method");
+      "subsp::stats::distr::sample: unsupported rng method");
   const SampleRngMethodScope rng_scope(method);
 
   switch (resolve_(kind)) {
@@ -2943,7 +2943,7 @@ Series sample_like(dst::Kind kind,
                    const Series& like,
                    std::uint64_t seed,
                    RngMethod method) {
-  PLUSS_CHECK(like.defined(), "subsp::stat::distr::sample_like: expected defined Series");
+  PLUSS_CHECK(like.defined(), "subsp::stats::distr::sample_like: expected defined Series");
   const Config cfg = Config{}
                          .with_dtype(like.scalar_type())
                          .with_platform(like.platform())
@@ -2977,9 +2977,9 @@ MixtureNormalParams mixture_normal_params_(const Series& weights,
                                           Config cfg,
                                           const char* op,
                                           bool allow_zero_stddev) {
-  PLUSS_CHECK(weights.defined(), "subsp::stat::distr::mixture_normal: weights must be defined");
-  PLUSS_CHECK(means.defined(), "subsp::stat::distr::mixture_normal: means must be defined");
-  PLUSS_CHECK(stddevs.defined(), "subsp::stat::distr::mixture_normal: stddevs must be defined");
+  PLUSS_CHECK(weights.defined(), "subsp::stats::distr::mixture_normal: weights must be defined");
+  PLUSS_CHECK(means.defined(), "subsp::stats::distr::mixture_normal: means must be defined");
+  PLUSS_CHECK(stddevs.defined(), "subsp::stats::distr::mixture_normal: stddevs must be defined");
 
   const Series w = weights.to(pluss::pCPU, ScalarType::Float64).reshape({weights.numel()});
   const Series m_cpu = means.to(pluss::pCPU, ScalarType::Float64).reshape({means.numel()});
@@ -2987,14 +2987,14 @@ MixtureNormalParams mixture_normal_params_(const Series& weights,
 
   PLUSS_CHECK(
       w.numel() == m_cpu.numel() && w.numel() == s_cpu.numel(),
-      std::string("subsp::stat::distr::") + op + ": weights, means, stddevs must have same numel");
-  PLUSS_CHECK(w.numel() > 0, std::string("subsp::stat::distr::") + op + ": expected at least one component");
+      std::string("subsp::stats::distr::") + op + ": weights, means, stddevs must have same numel");
+  PLUSS_CHECK(w.numel() > 0, std::string("subsp::stats::distr::") + op + ": expected at least one component");
   PLUSS_CHECK(s_cpu.amin(0, false).item<double>() >= (allow_zero_stddev ? 0.0 : std::numeric_limits<double>::min()),
-              std::string("subsp::stat::distr::") + op + (allow_zero_stddev ? ": stddevs must be >= 0"
+              std::string("subsp::stats::distr::") + op + (allow_zero_stddev ? ": stddevs must be >= 0"
                                                                               : ": stddevs must be > 0"));
 
   const double total_weight = w.sum().item<double>();
-  PLUSS_CHECK(total_weight > 0.0, std::string("subsp::stat::distr::") + op + ": weights must sum to > 0");
+  PLUSS_CHECK(total_weight > 0.0, std::string("subsp::stats::distr::") + op + ": weights must sum to > 0");
   const Series probs_cpu = w.div(total_weight);
 
   return MixtureNormalParams{
@@ -3745,7 +3745,7 @@ Series logcdf(dst::Kind kind, const Series& x, std::span<const double> params) {
     case Family::Exponential: {
       expect_param_count_("exponential logcdf", params, {0, 1});
       const double rate = param_or_(params, 0, 1.0);
-      PLUSS_CHECK(rate > 0.0, "subsp::stat::distr::exponential logcdf: rate must be > 0");
+      PLUSS_CHECK(rate > 0.0, "subsp::stats::distr::exponential logcdf: rate must be > 0");
       const Series xx = as_f64_(x, "logcdf");
       const Series pos = xx.gt(0.0);
       const Series core = xx.mul(-rate).exp().neg().log1p();
@@ -3766,4 +3766,4 @@ Series logcdf(dst::Kind kind, const Series& x, std::initializer_list<double> par
   return logcdf(kind, x, std::span<const double>(params.begin(), params.size()));
 }
 
-} // namespace pluss::subsp::stat::distr
+} // namespace pluss::subsp::stats::distr

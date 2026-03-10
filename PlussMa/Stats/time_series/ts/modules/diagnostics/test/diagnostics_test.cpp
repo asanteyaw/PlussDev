@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <cmath>
 #include <cstdint>
@@ -11,10 +11,10 @@ namespace {
 
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::stat::ts::AcfNorm;
-using pluss::subsp::stat::ts::AcfOptions;
-using pluss::subsp::stat::ts::LjungBoxOptions;
-using pluss::subsp::stat::ts::PacfOptions;
+using pluss::subsp::stats::ts::AcfNorm;
+using pluss::subsp::stats::ts::AcfOptions;
+using pluss::subsp::stats::ts::LjungBoxOptions;
+using pluss::subsp::stats::ts::PacfOptions;
 
 void expect(bool condition, const std::string& message) {
   if (!condition) {
@@ -39,7 +39,7 @@ void test_acf_white_noise() {
   AcfOptions opt;
   opt.max_lag = 20;
   opt.norm = AcfNorm::Biased;
-  const auto out = pluss::subsp::stat::ts::acf(y, opt, cfg).to_vec<double>();
+  const auto out = pluss::subsp::stats::ts::acf(y, opt, cfg).to_vec<double>();
 
   expect(out.size() == 21, "acf size mismatch");
   expect(std::abs(out[0] - 1.0) < 1e-12, "acf lag-0 must be 1");
@@ -55,7 +55,7 @@ void test_pacf_ar1() {
   PacfOptions opt;
   opt.max_lag = 10;
   opt.norm = AcfNorm::Biased;
-  const auto out = pluss::subsp::stat::ts::pacf(y, opt, cfg).to_vec<double>();
+  const auto out = pluss::subsp::stats::ts::pacf(y, opt, cfg).to_vec<double>();
 
   expect(out.size() == 11, "pacf size mismatch");
   expect(std::abs(out[0] - 1.0) < 1e-12, "pacf lag-0 must be 1");
@@ -70,8 +70,8 @@ void test_ljung_box_signal_vs_noise() {
 
   LjungBoxOptions opt;
   opt.lags = {10, 20};
-  const auto lb_wn = pluss::subsp::stat::ts::ljung_box(wn, opt, cfg);
-  const auto lb_ar = pluss::subsp::stat::ts::ljung_box(ar, opt, cfg);
+  const auto lb_wn = pluss::subsp::stats::ts::ljung_box(wn, opt, cfg);
+  const auto lb_ar = pluss::subsp::stats::ts::ljung_box(ar, opt, cfg);
   const auto p_wn = lb_wn.pvalue.to_vec<double>();
   const auto p_ar = lb_ar.pvalue.to_vec<double>();
 
@@ -89,7 +89,7 @@ void test_error_paths() {
   try {
     AcfOptions bad;
     bad.max_lag = -1;
-    (void)pluss::subsp::stat::ts::acf(y, bad, cfg);
+    (void)pluss::subsp::stats::ts::acf(y, bad, cfg);
   } catch (...) {
     threw = true;
   }
@@ -99,7 +99,7 @@ void test_error_paths() {
   try {
     LjungBoxOptions bad;
     bad.lags = {0, 5};
-    (void)pluss::subsp::stat::ts::ljung_box(y, bad, cfg);
+    (void)pluss::subsp::stats::ts::ljung_box(y, bad, cfg);
   } catch (...) {
     threw = true;
   }

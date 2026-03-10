@@ -1,4 +1,4 @@
-#include "pluss/subsp/stat/ts.h"
+#include "pluss/subsp/stats/ts.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/codem.h"
@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace pluss::subsp::stat::ts {
+namespace pluss::subsp::stats::ts {
 namespace {
 
 using pluss::Config;
@@ -19,7 +19,7 @@ using pluss::ScalarType;
 using pluss::Series;
 
 void validate_non_negative_(std::int64_t value, const char* name) {
-  PLUSS_CHECK(value >= 0, std::string("subsp::stat::ts: expected ") + name + " >= 0");
+  PLUSS_CHECK(value >= 0, std::string("subsp::stats::ts: expected ") + name + " >= 0");
 }
 
 std::vector<std::int64_t> sort_unique_lags_(std::vector<std::int64_t> values, std::int64_t min_value, const char* name) {
@@ -30,7 +30,7 @@ std::vector<std::int64_t> sort_unique_lags_(std::vector<std::int64_t> values, st
     return v < min_value;
   });
   PLUSS_CHECK(invalid == values.end(),
-              std::string("subsp::stat::ts: expected all values in ") + name + " >= " + std::to_string(min_value));
+              std::string("subsp::stats::ts: expected all values in ") + name + " >= " + std::to_string(min_value));
   std::sort(values.begin(), values.end());
   values.erase(std::unique(values.begin(), values.end()), values.end());
   return values;
@@ -57,7 +57,7 @@ std::vector<std::vector<std::int64_t>> normalize_lag_matrix_(const std::vector<s
   }
 
   PLUSS_CHECK(static_cast<std::int64_t>(input.size()) == 1 || static_cast<std::int64_t>(input.size()) == expected_size,
-              std::string("subsp::stat::ts: expected ") + name +
+              std::string("subsp::stats::ts: expected ") + name +
                   " to have size 1 or " + std::to_string(expected_size));
 
   std::vector<std::vector<std::int64_t>> out;
@@ -108,33 +108,33 @@ Series matrix_with_shifted_source_(const Series& source, std::int64_t out_rows, 
   Series out = pluss::full({out_rows}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
   const std::int64_t nobs = source.numel();
   const std::int64_t start = shift + max_lead;
-  PLUSS_CHECK(start >= 0, "subsp::stat::ts::build_lagged_predictors: negative start offset");
-  PLUSS_CHECK(start + nobs <= out_rows, "subsp::stat::ts::build_lagged_predictors: shifted slice exceeds bounds");
+  PLUSS_CHECK(start >= 0, "subsp::stats::ts::build_lagged_predictors: negative start offset");
+  PLUSS_CHECK(start + nobs <= out_rows, "subsp::stats::ts::build_lagged_predictors: shifted slice exceeds bounds");
   const Series idx = int_idx_(start, start + nobs, cfg);
   out = pluss::index_put(out, std::vector<Series>{idx}, source.to(out_cfg.platform, out_cfg.dtype), false);
   return out.reshape({out_rows, 1});
 }
 
 Series as_matrix_(const Series& x, const char* name) {
-  PLUSS_CHECK(x.defined(), std::string("subsp::stat::ts::") + name + ": expected defined Series");
+  PLUSS_CHECK(x.defined(), std::string("subsp::stats::ts::") + name + ": expected defined Series");
   const auto sizes = x.sizes();
-  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stat::ts::") + name + ": expected non-scalar Series");
+  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stats::ts::") + name + ": expected non-scalar Series");
   if (sizes.size() == 1) {
     return x.reshape({sizes[0], 1});
   }
-  PLUSS_CHECK(sizes.size() == 2, std::string("subsp::stat::ts::") + name + ": expected 1D or 2D Series");
+  PLUSS_CHECK(sizes.size() == 2, std::string("subsp::stats::ts::") + name + ": expected 1D or 2D Series");
   return x;
 }
 
 Series as_vector_(const Series& x, const char* name) {
-  PLUSS_CHECK(x.defined(), std::string("subsp::stat::ts::") + name + ": expected defined Series");
+  PLUSS_CHECK(x.defined(), std::string("subsp::stats::ts::") + name + ": expected defined Series");
   const auto sizes = x.sizes();
-  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stat::ts::") + name + ": expected non-scalar Series");
+  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stats::ts::") + name + ": expected non-scalar Series");
   if (sizes.size() == 1) {
     return x.reshape({sizes[0]});
   }
   PLUSS_CHECK(sizes.size() == 2 && sizes[1] == 1,
-              std::string("subsp::stat::ts::") + name + ": expected vector or Nx1 matrix");
+              std::string("subsp::stats::ts::") + name + ": expected vector or Nx1 matrix");
   return x.reshape({sizes[0]});
 }
 
@@ -156,7 +156,7 @@ Series build_shifted_block_(const Series& matrix,
                             std::int64_t max_lead,
                             Config cfg) {
   PLUSS_CHECK(static_cast<std::size_t>(source_columns.size()) == shifts.size(),
-              "subsp::stat::ts::build_lagged_predictors: source_columns and shifts size mismatch");
+              "subsp::stats::ts::build_lagged_predictors: source_columns and shifts size mismatch");
   std::vector<Series> lagged_columns;
   const std::size_t total_lags =
       std::accumulate(shifts.begin(), shifts.end(), static_cast<std::size_t>(0), [](std::size_t acc, const auto& s) {
@@ -182,7 +182,7 @@ LagPlan build_lag_plan(std::int64_t num_predictors, const LagPlanOptions& option
 
   LagPlan plan;
   plan.horizon = sort_unique_lags_(options.horizon, 1, "horizon");
-  PLUSS_CHECK(!plan.horizon.empty(), "subsp::stat::ts::build_lag_plan: horizon must be non-empty");
+  PLUSS_CHECK(!plan.horizon.empty(), "subsp::stats::ts::build_lag_plan: horizon must be non-empty");
   plan.response_lags = sort_unique_lags_(options.response_lags, 1, "response_lags");
 
   plan.leading_predictor_indices = sort_unique_lags_(options.leading_predictors, 0, "leading_predictors");
@@ -190,7 +190,7 @@ LagPlan build_lag_plan(std::int64_t num_predictors, const LagPlanOptions& option
                                             plan.leading_predictor_indices.end(),
                                             [num_predictors](const std::int64_t idx) { return idx >= num_predictors; });
   PLUSS_CHECK(invalid_leading == plan.leading_predictor_indices.end(),
-              "subsp::stat::ts::build_lag_plan: leading predictor index out of range");
+              "subsp::stats::ts::build_lag_plan: leading predictor index out of range");
 
   plan.nonleading_predictor_indices = complement_indices_(num_predictors, plan.leading_predictor_indices);
 
@@ -302,7 +302,7 @@ Series build_lagged_predictors(const Series& x, const Series& y, const LagPlan& 
   Series x2 = Series::undefined();
   if (needs_x) {
     x2 = as_matrix_(x, "build_lagged_predictors");
-    PLUSS_CHECK(x2.sizes()[1] > 0, "subsp::stat::ts::build_lagged_predictors: expected X with at least one predictor column");
+    PLUSS_CHECK(x2.sizes()[1] > 0, "subsp::stats::ts::build_lagged_predictors: expected X with at least one predictor column");
     const std::int64_t max_index = std::max(
         plan.leading_predictor_indices.empty() ? static_cast<std::int64_t>(-1)
                                                : *std::max_element(plan.leading_predictor_indices.begin(), plan.leading_predictor_indices.end()),
@@ -310,7 +310,7 @@ Series build_lagged_predictors(const Series& x, const Series& y, const LagPlan& 
                                                   : *std::max_element(plan.nonleading_predictor_indices.begin(),
                                                                       plan.nonleading_predictor_indices.end()));
     PLUSS_CHECK(max_index < x2.sizes()[1],
-                "subsp::stat::ts::build_lagged_predictors: lag plan references predictor index outside X");
+                "subsp::stats::ts::build_lagged_predictors: lag plan references predictor index outside X");
   }
 
   Series y1 = Series::undefined();
@@ -319,10 +319,10 @@ Series build_lagged_predictors(const Series& x, const Series& y, const LagPlan& 
   }
 
   const std::int64_t nobs = needs_y ? y1.numel() : x2.sizes()[0];
-  PLUSS_CHECK(nobs > 0, "subsp::stat::ts::build_lagged_predictors: expected positive observation count");
+  PLUSS_CHECK(nobs > 0, "subsp::stats::ts::build_lagged_predictors: expected positive observation count");
   if (needs_x && needs_y) {
     PLUSS_CHECK(x2.sizes()[0] == y1.numel(),
-                "subsp::stat::ts::build_lagged_predictors: X and Y must have equal observation counts");
+                "subsp::stats::ts::build_lagged_predictors: X and Y must have equal observation counts");
   }
 
   const std::int64_t out_rows = nobs + plan.max_lag + plan.max_lead;
@@ -376,8 +376,8 @@ Series build_lagged_predictors(const Series& x, const Series& y, const LagPlan& 
   }
   Series out = concat_columns_(nonempty, out_rows, out_cfg);
   PLUSS_CHECK(out.sizes()[1] == plan.feature_count,
-              "subsp::stat::ts::build_lagged_predictors: output column count does not match lag plan");
+              "subsp::stats::ts::build_lagged_predictors: output column count does not match lag plan");
   return out;
 }
 
-} // namespace pluss::subsp::stat::ts
+} // namespace pluss::subsp::stats::ts

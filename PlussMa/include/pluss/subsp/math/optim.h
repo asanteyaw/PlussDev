@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/subsp/math/diff.h"
+#include "pluss/subsp/math/linalg.h"
 
 #include <algorithm>
 #include <array>

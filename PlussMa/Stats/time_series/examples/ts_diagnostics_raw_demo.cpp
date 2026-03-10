@@ -1,11 +1,11 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <cstdint>
 #include <iostream>
 #include <vector>
 
 int main() {
-  using namespace pluss::subsp::stat;
+  using namespace pluss::subsp::stats;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const std::int64_t n = 2000;

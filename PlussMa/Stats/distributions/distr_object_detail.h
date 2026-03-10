@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pluss/subsp/stat/distr.h"
+#include "pluss/subsp/stats/distr.h"
 
 #include <algorithm>
 #include <array>
@@ -14,9 +14,9 @@
 #include <type_traits>
 #include <vector>
 
-namespace pluss::subsp::stat::distr::detail {
+namespace pluss::subsp::stats::distr::detail {
 
-using DistKind = ::pluss::subsp::stat::distr::dst::Kind;
+using DistKind = ::pluss::subsp::stats::distr::dst::Kind;
 
 template <std::size_t N>
 std::span<const double> params_span(const std::array<double, N>& params) {
@@ -29,7 +29,7 @@ Series sample_with_params(DistKind kind,
                           std::span<const std::int64_t> sizes,
                           Config cfg,
                           std::uint64_t seed) {
-  return ::pluss::subsp::stat::distr::sample(kind, params_span(params), sizes, cfg, seed);
+  return ::pluss::subsp::stats::distr::sample(kind, params_span(params), sizes, cfg, seed);
 }
 
 template <std::size_t N>
@@ -37,27 +37,27 @@ Series sample_like_with_params(DistKind kind,
                                const std::array<double, N>& params,
                                const Series& like,
                                std::uint64_t seed) {
-  return ::pluss::subsp::stat::distr::sample_like(kind, params_span(params), like, seed);
+  return ::pluss::subsp::stats::distr::sample_like(kind, params_span(params), like, seed);
 }
 
 template <std::size_t N>
 Series pdf_with_params(DistKind kind, const Series& x, const std::array<double, N>& params) {
-  return ::pluss::subsp::stat::distr::pdf(kind, x, params_span(params));
+  return ::pluss::subsp::stats::distr::pdf(kind, x, params_span(params));
 }
 
 template <std::size_t N>
 Series logpdf_with_params(DistKind kind, const Series& x, const std::array<double, N>& params) {
-  return ::pluss::subsp::stat::distr::logpdf(kind, x, params_span(params));
+  return ::pluss::subsp::stats::distr::logpdf(kind, x, params_span(params));
 }
 
 template <std::size_t N>
 Series cdf_with_params(DistKind kind, const Series& x, const std::array<double, N>& params) {
-  return ::pluss::subsp::stat::distr::cdf(kind, x, params_span(params));
+  return ::pluss::subsp::stats::distr::cdf(kind, x, params_span(params));
 }
 
 template <std::size_t N>
 Series logcdf_with_params(DistKind kind, const Series& x, const std::array<double, N>& params) {
-  return ::pluss::subsp::stat::distr::logcdf(kind, x, params_span(params));
+  return ::pluss::subsp::stats::distr::logcdf(kind, x, params_span(params));
 }
 
 inline Series preserve_like(Series x, const Series& like) {
@@ -208,4 +208,4 @@ inline long double bernoulli_number(std::int64_t n) {
   return a.front();
 }
 
-} // namespace pluss::subsp::stat::distr::detail
+} // namespace pluss::subsp::stats::distr::detail

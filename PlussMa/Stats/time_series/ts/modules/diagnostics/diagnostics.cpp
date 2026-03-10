@@ -1,8 +1,8 @@
-#include "pluss/subsp/stat/ts.h"
+#include "pluss/subsp/stats/ts.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
-#include "pluss/subsp/stat/distr.h"
+#include "pluss/subsp/stats/distr.h"
 
 #include <algorithm>
 #include <cmath>
@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace pluss::subsp::stat::ts {
+namespace pluss::subsp::stats::ts {
 namespace {
 
 using pluss::Config;
@@ -31,20 +31,20 @@ Config i64_cfg_(Config cfg) {
 }
 
 Series as_vector_(const Series& x, const char* name) {
-  PLUSS_CHECK(x.defined(), std::string("subsp::stat::ts::") + name + ": expected defined Series");
+  PLUSS_CHECK(x.defined(), std::string("subsp::stats::ts::") + name + ": expected defined Series");
   const auto sizes = x.sizes();
-  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stat::ts::") + name + ": expected non-scalar Series");
+  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stats::ts::") + name + ": expected non-scalar Series");
   if (sizes.size() == 1) {
     return x.reshape({sizes[0]});
   }
   PLUSS_CHECK(sizes.size() == 2 && sizes[1] == 1,
-              std::string("subsp::stat::ts::") + name + ": expected vector or Nx1 matrix");
+              std::string("subsp::stats::ts::") + name + ": expected vector or Nx1 matrix");
   return x.reshape({sizes[0]});
 }
 
 std::vector<double> centered_values_(const Series& x, bool demean) {
   auto values = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
-  PLUSS_CHECK(!values.empty(), "subsp::stat::ts::diagnostics: expected non-empty input");
+  PLUSS_CHECK(!values.empty(), "subsp::stats::ts::diagnostics: expected non-empty input");
   if (demean) {
     const double mean = std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size());
     std::transform(values.begin(), values.end(), values.begin(), [mean](const double v) { return v - mean; });
@@ -53,8 +53,8 @@ std::vector<double> centered_values_(const Series& x, bool demean) {
 }
 
 std::int64_t resolve_max_lag_(std::int64_t requested, std::int64_t nobs, const char* name) {
-  PLUSS_CHECK(requested >= 0, std::string("subsp::stat::ts::") + name + ": max_lag must be >= 0");
-  PLUSS_CHECK(nobs >= 2, std::string("subsp::stat::ts::") + name + ": requires at least 2 observations");
+  PLUSS_CHECK(requested >= 0, std::string("subsp::stats::ts::") + name + ": max_lag must be >= 0");
+  PLUSS_CHECK(nobs >= 2, std::string("subsp::stats::ts::") + name + ": requires at least 2 observations");
   return std::min<std::int64_t>(requested, nobs - 1);
 }
 
@@ -82,23 +82,23 @@ Series to_f64_series_(const std::vector<double>& values, Config cfg) {
 }
 
 std::vector<std::int64_t> normalize_lags_(const std::vector<std::int64_t>& lags, std::int64_t nobs) {
-  PLUSS_CHECK(!lags.empty(), "subsp::stat::ts::ljung_box: lags must be non-empty");
+  PLUSS_CHECK(!lags.empty(), "subsp::stats::ts::ljung_box: lags must be non-empty");
   std::vector<std::int64_t> out = lags;
   PLUSS_CHECK(std::all_of(out.begin(), out.end(), [](const std::int64_t lag) { return lag > 0; }),
-              "subsp::stat::ts::ljung_box: all lags must be > 0");
+              "subsp::stats::ts::ljung_box: all lags must be > 0");
   std::transform(out.begin(), out.end(), out.begin(), [nobs](const std::int64_t lag) {
     return std::min<std::int64_t>(lag, nobs - 1);
   });
   std::sort(out.begin(), out.end());
   out.erase(std::unique(out.begin(), out.end()), out.end());
-  PLUSS_CHECK(!out.empty(), "subsp::stat::ts::ljung_box: no valid lag remains after clipping");
+  PLUSS_CHECK(!out.empty(), "subsp::stats::ts::ljung_box: no valid lag remains after clipping");
   return out;
 }
 
 double chisq_survival_(double stat, std::int64_t dof, Config cfg) {
   const auto out_cfg = f64_cfg_(cfg);
   const Series q = pluss::make_series(std::vector<double>{stat}, {1}, out_cfg);
-  const double cdf = pluss::subsp::stat::distr::ChiSquare{dof}.cdf(q).item<double>();
+  const double cdf = pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q).item<double>();
   const double p = 1.0 - cdf;
   return std::clamp(p, 0.0, 1.0);
 }
@@ -161,8 +161,8 @@ LjungBoxResult ljung_box(const Series& x, const LjungBoxOptions& options, Config
   const auto idx_cfg = i64_cfg_(cfg);
   const Series xv = as_vector_(x, "ljung_box").to(out_cfg.platform, out_cfg.dtype);
   const std::int64_t n = xv.numel();
-  PLUSS_CHECK(n >= 2, "subsp::stat::ts::ljung_box: requires at least 2 observations");
-  PLUSS_CHECK(options.model_df >= 0, "subsp::stat::ts::ljung_box: model_df must be >= 0");
+  PLUSS_CHECK(n >= 2, "subsp::stats::ts::ljung_box: requires at least 2 observations");
+  PLUSS_CHECK(options.model_df >= 0, "subsp::stats::ts::ljung_box: model_df must be >= 0");
 
   const auto lags = normalize_lags_(options.lags, n);
   const std::int64_t max_lag = lags.back();
@@ -199,4 +199,4 @@ LjungBoxResult ljung_box(const Series& x, const LjungBoxOptions& options, Config
   return out;
 }
 
-} // namespace pluss::subsp::stat::ts
+} // namespace pluss::subsp::stats::ts

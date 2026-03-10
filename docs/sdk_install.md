@@ -74,7 +74,7 @@ Minimal `main.cpp`:
 
 int main() {
   pluss::Series x = pluss::make_series({0.5});
-  pluss::subsp::stat::distr::Normal dist{0.0, 1.0};
+  pluss::subsp::stats::distr::Normal dist{0.0, 1.0};
   std::cout << dist.logpdf(x).item<double>() << '\n';
   return 0;
 }

@@ -26,10 +26,10 @@
 #include "pluss/subsp/math/diff.h"
 #endif
 
-#if __has_include("subsp/stat/stats.h")
-#include "subsp/stat/stats.h"
-#elif __has_include("pluss/subsp/stat/stats.h")
-#include "pluss/subsp/stat/stats.h"
+#if __has_include("subsp/stats/stats.h")
+#include "subsp/stats/stats.h"
+#elif __has_include("pluss/subsp/stats/stats.h")
+#include "pluss/subsp/stats/stats.h"
 #endif
 
 #include "pluss/queue.h"

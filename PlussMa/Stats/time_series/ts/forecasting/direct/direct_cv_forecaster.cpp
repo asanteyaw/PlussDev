@@ -1,4 +1,4 @@
-#include "pluss/subsp/stat/ts.h"
+#include "pluss/subsp/stats/ts.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace pluss::subsp::stat::ts {
+namespace pluss::subsp::stats::ts {
 namespace {
 
 using pluss::Config;
@@ -27,25 +27,25 @@ Config i64_cfg_(Config cfg) {
 }
 
 Series as_matrix_(const Series& x, const char* name) {
-  PLUSS_CHECK(x.defined(), std::string("subsp::stat::ts::") + name + ": expected defined Series");
+  PLUSS_CHECK(x.defined(), std::string("subsp::stats::ts::") + name + ": expected defined Series");
   const auto sizes = x.sizes();
-  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stat::ts::") + name + ": expected non-scalar Series");
+  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stats::ts::") + name + ": expected non-scalar Series");
   if (sizes.size() == 1) {
     return x.reshape({sizes[0], 1});
   }
-  PLUSS_CHECK(sizes.size() == 2, std::string("subsp::stat::ts::") + name + ": expected 1D or 2D Series");
+  PLUSS_CHECK(sizes.size() == 2, std::string("subsp::stats::ts::") + name + ": expected 1D or 2D Series");
   return x;
 }
 
 Series as_vector_(const Series& x, const char* name) {
-  PLUSS_CHECK(x.defined(), std::string("subsp::stat::ts::") + name + ": expected defined Series");
+  PLUSS_CHECK(x.defined(), std::string("subsp::stats::ts::") + name + ": expected defined Series");
   const auto sizes = x.sizes();
-  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stat::ts::") + name + ": expected non-scalar Series");
+  PLUSS_CHECK(!sizes.empty(), std::string("subsp::stats::ts::") + name + ": expected non-scalar Series");
   if (sizes.size() == 1) {
     return x.reshape({sizes[0]});
   }
   PLUSS_CHECK(sizes.size() == 2 && sizes[1] == 1,
-              std::string("subsp::stat::ts::") + name + ": expected vector or Nx1 matrix");
+              std::string("subsp::stats::ts::") + name + ": expected vector or Nx1 matrix");
   return x.reshape({sizes[0]});
 }
 
@@ -111,14 +111,14 @@ DirectCVForecaster DirectCVForecaster::fit(const Series& x,
   const Series yv = as_vector_(y, "DirectCVForecaster::fit").to(out_cfg.platform, out_cfg.dtype);
   const std::int64_t nobs = yv.numel();
   PLUSS_CHECK(nobs == partition.num_observations(),
-              "subsp::stat::ts::DirectCVForecaster::fit: partition observation count must match Y");
+              "subsp::stats::ts::DirectCVForecaster::fit: partition observation count must match Y");
 
   Series xm = Series::undefined();
   std::int64_t num_predictors = 0;
   if (x.defined()) {
     xm = as_matrix_(x, "DirectCVForecaster::fit").to(out_cfg.platform, out_cfg.dtype);
     PLUSS_CHECK(xm.sizes()[0] == nobs,
-                "subsp::stat::ts::DirectCVForecaster::fit: X and Y must have equal observation counts");
+                "subsp::stats::ts::DirectCVForecaster::fit: X and Y must have equal observation counts");
     num_predictors = xm.sizes()[1];
   }
 
@@ -126,9 +126,9 @@ DirectCVForecaster DirectCVForecaster::fit(const Series& x,
   for (std::int64_t i = 0; i < partition.num_test_sets(); ++i) {
     const auto& w = partition.window(i);
     PLUSS_CHECK(w.train_size() >= min_required,
-                "subsp::stat::ts::DirectCVForecaster::fit: train window too short for lag/horizon configuration");
+                "subsp::stats::ts::DirectCVForecaster::fit: train window too short for lag/horizon configuration");
     PLUSS_CHECK(w.test_size() >= min_required,
-                "subsp::stat::ts::DirectCVForecaster::fit: test window too short for lag/horizon configuration");
+                "subsp::stats::ts::DirectCVForecaster::fit: test window too short for lag/horizon configuration");
   }
 
   std::vector<DirectForecaster> models;
@@ -143,19 +143,19 @@ DirectCVForecaster DirectCVForecaster::fit(const Series& x,
 }
 
 Series DirectCVForecaster::cvpredict(const Series& x, const Series& y, Config cfg) const {
-  PLUSS_CHECK(!models_.empty(), "subsp::stat::ts::DirectCVForecaster::cvpredict: no fold models are available");
+  PLUSS_CHECK(!models_.empty(), "subsp::stats::ts::DirectCVForecaster::cvpredict: no fold models are available");
   const auto out_cfg = f64_cfg_(cfg);
   const auto idx_cfg = i64_cfg_(cfg);
 
   const Series yv = as_vector_(y, "DirectCVForecaster::cvpredict").to(out_cfg.platform, out_cfg.dtype);
   const std::int64_t nobs = yv.numel();
   PLUSS_CHECK(nobs == partition_.num_observations(),
-              "subsp::stat::ts::DirectCVForecaster::cvpredict: partition observation count must match Y");
+              "subsp::stats::ts::DirectCVForecaster::cvpredict: partition observation count must match Y");
   Series xm = Series::undefined();
   if (x.defined()) {
     xm = as_matrix_(x, "DirectCVForecaster::cvpredict").to(out_cfg.platform, out_cfg.dtype);
     PLUSS_CHECK(xm.sizes()[0] == nobs,
-                "subsp::stat::ts::DirectCVForecaster::cvpredict: X and Y must have equal observation counts");
+                "subsp::stats::ts::DirectCVForecaster::cvpredict: X and Y must have equal observation counts");
   }
 
   const std::int64_t h = models_.front().num_steps();
@@ -178,18 +178,18 @@ Series DirectCVForecaster::cvpredict(const Series& x, const Series& y, Config cf
 }
 
 Series DirectCVForecaster::cvloss(const Series& x, const Series& y, CVLossMode mode, RegressionLoss kind, Config cfg) const {
-  PLUSS_CHECK(!models_.empty(), "subsp::stat::ts::DirectCVForecaster::cvloss: no fold models are available");
+  PLUSS_CHECK(!models_.empty(), "subsp::stats::ts::DirectCVForecaster::cvloss: no fold models are available");
   const auto out_cfg = f64_cfg_(cfg);
   const auto idx_cfg = i64_cfg_(cfg);
   const Series yv = as_vector_(y, "DirectCVForecaster::cvloss").to(out_cfg.platform, out_cfg.dtype);
   const std::int64_t nobs = yv.numel();
   PLUSS_CHECK(nobs == partition_.num_observations(),
-              "subsp::stat::ts::DirectCVForecaster::cvloss: partition observation count must match Y");
+              "subsp::stats::ts::DirectCVForecaster::cvloss: partition observation count must match Y");
   Series xm = Series::undefined();
   if (x.defined()) {
     xm = as_matrix_(x, "DirectCVForecaster::cvloss").to(out_cfg.platform, out_cfg.dtype);
     PLUSS_CHECK(xm.sizes()[0] == nobs,
-                "subsp::stat::ts::DirectCVForecaster::cvloss: X and Y must have equal observation counts");
+                "subsp::stats::ts::DirectCVForecaster::cvloss: X and Y must have equal observation counts");
   }
 
   if (mode == CVLossMode::Average) {
@@ -219,8 +219,8 @@ std::int64_t DirectCVForecaster::num_steps() const noexcept {
 
 const DirectForecaster& DirectCVForecaster::fold_model(std::int64_t i) const {
   PLUSS_CHECK(i >= 0 && i < static_cast<std::int64_t>(models_.size()),
-              "subsp::stat::ts::DirectCVForecaster::fold_model: fold index out of bounds");
+              "subsp::stats::ts::DirectCVForecaster::fold_model: fold index out of bounds");
   return models_[static_cast<std::size_t>(i)];
 }
 
-} // namespace pluss::subsp::stat::ts
+} // namespace pluss::subsp::stats::ts

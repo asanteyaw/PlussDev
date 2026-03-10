@@ -18,7 +18,7 @@ It is inspired by behavior in MATLAB `toolbox/stats/timeseries` and related work
 1. Time-series scaffolding exists but core files were empty.
 2. `time_series/CMakeLists.txt` path wiring was mismatched and is now fixed to real folders.
 3. First production slice added:
-   - Public API: `pluss/subsp/stat/ts.h`
+   - Public API: `pluss/subsp/stats/ts.h`
    - Core object: `ts::TsPartition` with:
      - `ExpandingWindow`, `SlidingWindow`, `Holdout`
      - `Direction::{Forward, Reverse}`
@@ -258,22 +258,27 @@ Status (current production slice):
 4. Implemented `Gjr(m,n)` in `specialized/vol_models/gjr.cpp`:
    - `Gjr::fit_mle(...)`
    - `GjrFit::{persistence,unconditional_var,infer,loglik,loglik_per_obs,forecast,simulate,score,observed_inf}`
+   - constrained parameterization + deterministic Nelder-Mead multi-start (`nm_restarts`) for fitter robustness
 5. Implemented `Arima`/`Sarima` in `ts/modules/arima/arima.cpp`:
    - `Arima::fit_mle(...)`, `Sarima::fit_mle(...)`
    - `ArimaFit`/`SarimaFit::{infer,loglik,loglik_per_obs,forecast,simulate,score,observed_inf}`
-6. Added volatility test slice:
+6. Extended ARIMA lane with exogenous regressors (ARIMAX/SARIMAX) using typed overloads:
+   - `Arima::fit_mle(y, x, ...)`, `Sarima::fit_mle(y, x, ...)`
+   - exogenous-aware methods on fit objects (`infer/loglik/loglik_per_obs/score/observed_inf/forecast/simulate` with `x`)
+7. Added volatility test slice:
    - manual: `specialized/vol_models/test/garch11_test.cpp`
    - manual: `specialized/vol_models/test/egarch_gjr_test.cpp`
    - Catch2: `specialized/vol_models/test/ts_vol_catch2.cpp`
-7. Added ARIMA/SARIMA test slice:
+8. Added ARIMA/SARIMA test slice:
    - manual: `ts/modules/arima/test/arima_test.cpp`
    - Catch2: `ts/modules/arima/test/ts_arima_catch2.cpp`
-8. Added raw usage demos:
+9. Added raw usage demos:
    - `time_series/examples/ts_garch11_raw_demo.cpp`
    - `time_series/examples/ts_garchpq_raw_demo.cpp`
    - `time_series/examples/ts_egarch_gjr_raw_demo.cpp`
    - `time_series/examples/ts_arima_sarima_raw_demo.cpp`
-9. Added API reference coverage for GARCH/EGARCH/GJR/ARIMA/SARIMA signatures and outputs.
+   - `time_series/examples/ts_arimax_raw_demo.cpp`
+10. Added API reference coverage for GARCH/EGARCH/GJR/ARIMA/SARIMA/ARIMAX signatures and outputs.
 
 MATLAB references consulted for this phase:
 
@@ -327,6 +332,36 @@ MATLAB references consulted for this phase:
 1. Residual diagnostics overlays in `ts/modules/plotting`.
 2. Rolling loss and forecast-error diagnostics.
 3. Distributional diagnostics (Q-Q, tail checks, regime diagnostics).
+
+## Phase 9: Multivariate VAR/VARX Core
+
+Implement:
+
+1. `Var::fit_mle(...)` and `Var::fit_mle(y, x, ...)` (closed-form least-squares path).
+2. `VarFit::{infer,loglik,loglik_per_obs,forecast,simulate}`.
+3. `var_to_vecm(...)` and `vecm_to_var(...)` conversion utilities.
+
+Status (current production slice):
+
+1. Implemented in `ts/modules/var/var.cpp`.
+2. Added Catch2 coverage:
+   - `ts/modules/var/test/ts_var_catch2.cpp`
+3. Added raw demo:
+   - `time_series/examples/ts_var_raw_demo.cpp`
+4. Added API reference entries for `Var/VarFit` and VAR<->VEC utilities.
+
+MATLAB references consulted for this phase:
+
+1. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@varm/varm.m`
+2. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@varm/estimate.m`
+3. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@varm/infer.m`
+4. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@varm/forecast.m`
+5. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/var2vec.m`
+6. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/vec2var.m`
+7. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@varm/irf.m`
+8. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@varm/fevd.m`
+9. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@varm/gctest.m`
+10. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@ssm/kalman.m`
 
 ## Phase 8: Testing + Demos
 

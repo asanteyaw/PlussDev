@@ -3,7 +3,7 @@
 #include <array>
 #include <cstdint>
 
-namespace pluss::subsp::stat::rng::detail::sobol1111 {
+namespace pluss::subsp::stats::rng::detail::sobol1111 {
 
 inline constexpr std::size_t kMaxDim = 1111;
 inline constexpr std::size_t kMaxDeg = 13;
@@ -1349,4 +1349,4 @@ inline constexpr std::array<std::uint16_t, kMaxDim> kAllA = {
   3974,3980,3983,3986,3995,3998,4001,4002,4004,4008,
 };
 
-} // namespace pluss::subsp::stat::rng::detail::sobol1111
+} // namespace pluss::subsp::stats::rng::detail::sobol1111

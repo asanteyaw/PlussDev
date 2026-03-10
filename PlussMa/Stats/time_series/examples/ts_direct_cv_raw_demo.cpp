@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -21,30 +21,30 @@ int main() {
   }
   const auto y = pluss::make_series(yv, {n}, cfg);
 
-  pluss::subsp::stat::ts::PartitionOptions popts;
-  popts.direction = pluss::subsp::stat::ts::Direction::Forward;
+  pluss::subsp::stats::ts::PartitionOptions popts;
+  popts.direction = pluss::subsp::stats::ts::Direction::Forward;
   popts.train_size = 700;
   popts.test_size = 420;
   popts.step_size = 210;
   popts.max_lag = 8;
-  const auto part = pluss::subsp::stat::ts::TsPartition::sliding_window(n, 4, popts);
+  const auto part = pluss::subsp::stats::ts::TsPartition::sliding_window(n, 4, popts);
 
-  pluss::subsp::stat::ts::DirectForecasterOptions opts;
+  pluss::subsp::stats::ts::DirectForecasterOptions opts;
   opts.lag.horizon = {1, 2, 4};
   opts.lag.response_lags = {1, 2, 3};
   opts.lag.predictor_lags = {{1, 2}};
   opts.fit_intercept = true;
-  opts.learner = pluss::subsp::stat::ts::DirectLearnerKind::Ridge;
+  opts.learner = pluss::subsp::stats::ts::DirectLearnerKind::Ridge;
   opts.ridge_lambda = 1e-4;
 
-  const auto cv = pluss::subsp::stat::ts::DirectCVForecaster::fit(x, y, part, opts, cfg);
+  const auto cv = pluss::subsp::stats::ts::DirectCVForecaster::fit(x, y, part, opts, cfg);
   const auto pred = cv.cvpredict(x, y, cfg);
   const auto loss_avg = cv.cvloss(
-      x, y, pluss::subsp::stat::ts::CVLossMode::Average, pluss::subsp::stat::ts::RegressionLoss::MSE, cfg);
+      x, y, pluss::subsp::stats::ts::CVLossMode::Average, pluss::subsp::stats::ts::RegressionLoss::MSE, cfg);
   const auto loss_ind = cv.cvloss(
-      x, y, pluss::subsp::stat::ts::CVLossMode::Individual, pluss::subsp::stat::ts::RegressionLoss::MSE, cfg);
+      x, y, pluss::subsp::stats::ts::CVLossMode::Individual, pluss::subsp::stats::ts::RegressionLoss::MSE, cfg);
   const auto loss_avg_mae = cv.cvloss(
-      x, y, pluss::subsp::stat::ts::CVLossMode::Average, pluss::subsp::stat::ts::RegressionLoss::MAE, cfg);
+      x, y, pluss::subsp::stats::ts::CVLossMode::Average, pluss::subsp::stats::ts::RegressionLoss::MAE, cfg);
 
   std::cout << "DirectCVForecaster\n";
   std::cout << "num_folds=" << cv.num_folds() << " num_steps=" << cv.num_steps() << "\n";

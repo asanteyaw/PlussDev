@@ -1,11 +1,11 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <iostream>
 #include <vector>
 
 int main() {
   using namespace pluss;
-  using namespace pluss::subsp::stat::distr;
+  using namespace pluss::subsp::stats::distr;
 
   const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 

@@ -33,15 +33,13 @@
 // Core pluss surface (Series/Note/Timeline/TimeIndex + Queue/Dispense/Aux) lives in PlussQit.
 #include "pluss/core.h"
 
-#if __has_include("pluss/nn.h")
-#include "pluss/nn.h"
-#elif __has_include("pluss/ai.h")
-#include "pluss/ai.h"
-#endif
-
-#if __has_include("pluss/ma.h")
-#include "pluss/ma.h"
-#endif
+// PlussAI is intentionally opt-in:
+// - include <pluss/nn_func.h> for lightweight functional neural surfaces
+// - include <pluss/nn.h> for full neural module stack
+// - include <pluss/ai.h> for neural + classical ML (NodeJ) surface
+//
+// PlussMa is intentionally opt-in:
+// - include <pluss/ma.h> for PlussMa math/stat/time-series utilities
 
 #if __has_include("pluss/mic.h")
 #include "pluss/mic.h"

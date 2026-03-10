@@ -10,7 +10,7 @@
 #include <span>
 #include <string>
 
-namespace pluss::subsp::stat::distr {
+namespace pluss::subsp::stats::distr {
 namespace {
 
 std::array<double, 1> bernoulli_params(double p) {
@@ -745,4 +745,4 @@ NegativeBinomialFit NegativeBinomial::MLE(const Series& x) const {
   return NegativeBinomialFit{r_hat, p_hat};
 }
 
-} // namespace pluss::subsp::stat::distr
+} // namespace pluss::subsp::stats::distr

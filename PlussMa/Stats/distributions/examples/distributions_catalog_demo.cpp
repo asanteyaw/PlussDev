@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 #include "pluss/ma/aliases.h"
 
 #include <algorithm>
@@ -141,7 +141,7 @@ int main() {
   };
 
   std::cout << "PlussMa distribution catalog demo\n";
-  std::cout << "surface: pluss::distr via #include <pluss/pluss.h>\n\n";
+  std::cout << "surface: pluss::distr via #include <pluss/ma.h>\n\n";
 
   for (std::size_t i = 0; i < cases.size(); ++i) {
     run_case(cases[i], f64, 1000ULL + static_cast<std::uint64_t>(i));

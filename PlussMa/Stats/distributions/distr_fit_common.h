@@ -14,7 +14,7 @@
 #include <string_view>
 #include <vector>
 
-namespace pluss::subsp::stat::distr::fit_detail {
+namespace pluss::subsp::stats::distr::fit_detail {
 
 inline std::vector<double> data_f64(const Series& x, std::string_view op) {
   PLUSS_CHECK(x.defined(), std::string(op) + ": x must be defined");
@@ -119,4 +119,4 @@ inline std::vector<double> diag_inverse(const std::vector<double>& diag, std::st
   return inv;
 }
 
-} // namespace pluss::subsp::stat::distr::fit_detail
+} // namespace pluss::subsp::stats::distr::fit_detail

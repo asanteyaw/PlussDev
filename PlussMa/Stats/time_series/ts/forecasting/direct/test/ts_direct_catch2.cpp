@@ -1,7 +1,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <algorithm>
 #include <cmath>
@@ -14,14 +14,14 @@ using Catch::Approx;
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::stat::ts::CVLossMode;
-using pluss::subsp::stat::ts::DirectCVForecaster;
-using pluss::subsp::stat::ts::DirectForecaster;
-using pluss::subsp::stat::ts::DirectForecasterOptions;
-using pluss::subsp::stat::ts::DirectLearnerKind;
-using pluss::subsp::stat::ts::PartitionOptions;
-using pluss::subsp::stat::ts::RegressionLoss;
-using pluss::subsp::stat::ts::TsPartition;
+using pluss::subsp::stats::ts::CVLossMode;
+using pluss::subsp::stats::ts::DirectCVForecaster;
+using pluss::subsp::stats::ts::DirectForecaster;
+using pluss::subsp::stats::ts::DirectForecasterOptions;
+using pluss::subsp::stats::ts::DirectLearnerKind;
+using pluss::subsp::stats::ts::PartitionOptions;
+using pluss::subsp::stats::ts::RegressionLoss;
+using pluss::subsp::stats::ts::TsPartition;
 
 Series make_response(const Series& x, std::uint64_t seed, double noise_scale) {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -147,7 +147,7 @@ TEST_CASE("ts direct cv forecaster: overlap handling and average loss", "[ts][di
   const Series y = make_response(x, 20260402ULL, 0.03);
 
   PartitionOptions popts;
-  popts.direction = pluss::subsp::stat::ts::Direction::Forward;
+  popts.direction = pluss::subsp::stats::ts::Direction::Forward;
   popts.train_size = 700;
   popts.test_size = 420;
   popts.step_size = 210;
@@ -193,7 +193,7 @@ TEST_CASE("ts direct cv forecaster: stress and crash checks", "[ts][direct][cv][
       0.02);
 
   PartitionOptions popts;
-  popts.direction = pluss::subsp::stat::ts::Direction::Forward;
+  popts.direction = pluss::subsp::stats::ts::Direction::Forward;
   popts.train_size = 12000;
   popts.test_size = 9000;
   popts.step_size = 4000;

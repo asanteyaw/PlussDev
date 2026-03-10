@@ -20,7 +20,7 @@
 #include "MSharp/IntrusivePtr.h"
 #include "pluss/export.h"
 #include "pluss/subsp/linearalg/linearalg_fwd.h"
-#include "pluss/subsp/stat/stats_fwd.h"
+#include "pluss/subsp/stats/stats_fwd.h"
 // Compatibility invoke layer (method dispatch helpers). Included here so the
 // generated method surface can be included inside the class without bringing
 // the compat header into class scope (which would introduce nested
@@ -79,22 +79,22 @@ public:
         : self_(&self), peers_(others.begin(), others.end()) {}
 
     // Central tendency / spread
-    Series mean() const { return pluss::subsp::stat::mean(self()); }
+    Series mean() const { return pluss::subsp::stats::mean(self()); }
     Series mean(std::int64_t dim, bool keepdim = false) const {
-      return pluss::subsp::stat::mean(self(), dim, keepdim);
+      return pluss::subsp::stats::mean(self(), dim, keepdim);
     }
-    Series var(bool unbiased = true) const { return pluss::subsp::stat::var(self(), unbiased); }
+    Series var(bool unbiased = true) const { return pluss::subsp::stats::var(self(), unbiased); }
     Series var(std::int64_t dim, bool unbiased = true, bool keepdim = false) const {
-      return pluss::subsp::stat::var(self(), dim, unbiased, keepdim);
+      return pluss::subsp::stats::var(self(), dim, unbiased, keepdim);
     }
-    Series std(bool unbiased = true) const { return pluss::subsp::stat::std(self(), unbiased); }
+    Series std(bool unbiased = true) const { return pluss::subsp::stats::std(self(), unbiased); }
     Series std(std::int64_t dim, bool unbiased = true, bool keepdim = false) const {
-      return pluss::subsp::stat::std(self(), dim, unbiased, keepdim);
+      return pluss::subsp::stats::std(self(), dim, unbiased, keepdim);
     }
-    Series nanvar() const { return pluss::subsp::stat::nanvar(self()); }
-    Series nanstd() const { return pluss::subsp::stat::nanstd(self()); }
-    Series skewness() const { return pluss::subsp::stat::skewness(self()); }
-    Series kurtosis() const { return pluss::subsp::stat::kurtosis(self()); }
+    Series nanvar() const { return pluss::subsp::stats::nanvar(self()); }
+    Series nanstd() const { return pluss::subsp::stats::nanstd(self()); }
+    Series skewness() const { return pluss::subsp::stats::skewness(self()); }
+    Series kurtosis() const { return pluss::subsp::stats::kurtosis(self()); }
 
     // Rolling stats
     template <class... Args>
@@ -111,16 +111,16 @@ public:
     Series movvar(Args&&... args) const { return invoke_self_("movvar", std::forward<Args>(args)...); }
 
     // Normalization-style stats
-    Series normr() const { return pluss::subsp::stat::normr(self()); }
-    Series normc() const { return pluss::subsp::stat::normc(self()); }
-    Series standardize() const { return pluss::subsp::stat::standardize(self()); }
-    Series center() const { return pluss::subsp::stat::center(self()); }
+    Series normr() const { return pluss::subsp::stats::normr(self()); }
+    Series normc() const { return pluss::subsp::stats::normc(self()); }
+    Series standardize() const { return pluss::subsp::stats::standardize(self()); }
+    Series center() const { return pluss::subsp::stats::center(self()); }
 
     // Pairwise stats (require one peer Series either bound via stat(peer) or passed directly).
-    Series pdist2() const { return pluss::subsp::stat::pdist2(self(), peer1()); }
-    Series pdist2(const Series& other) const { return pluss::subsp::stat::pdist2(self(), other); }
-    Series cdist() const { return pluss::subsp::stat::cdist(self(), peer1()); }
-    Series cdist(const Series& other) const { return pluss::subsp::stat::cdist(self(), other); }
+    Series pdist2() const { return pluss::subsp::stats::pdist2(self(), peer1()); }
+    Series pdist2(const Series& other) const { return pluss::subsp::stats::pdist2(self(), other); }
+    Series cdist() const { return pluss::subsp::stats::cdist(self(), peer1()); }
+    Series cdist(const Series& other) const { return pluss::subsp::stats::cdist(self(), other); }
 
     // Escape hatch for quickly trying stat-family ops not yet sugar-wrapped here.
     template <class... Args>

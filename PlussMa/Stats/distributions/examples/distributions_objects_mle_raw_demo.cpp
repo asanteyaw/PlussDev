@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <iostream>
 
@@ -6,7 +6,7 @@ int main() {
   using pluss::Config;
   using pluss::ScalarType;
   using pluss::Series;
-  using namespace pluss::subsp::stat::distr;
+  using namespace pluss::subsp::stats::distr;
 
   const Config f64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const Series enum_draw = pluss::distr::sample(dst::Normal, {0.0, 1.0}, {6}, f64, 20260309ULL);

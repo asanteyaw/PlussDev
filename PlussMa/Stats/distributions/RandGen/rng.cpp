@@ -1,4 +1,4 @@
-#include "pluss/subsp/stat/rng.h"
+#include "pluss/subsp/stats/rng.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace pluss::subsp::stat::rng {
+namespace pluss::subsp::stats::rng {
 namespace {
 
 using pluss::Config;
@@ -695,4 +695,4 @@ Series standard_normal(std::span<const std::int64_t> sizes,
   }
 }
 
-} // namespace pluss::subsp::stat::rng
+} // namespace pluss::subsp::stats::rng

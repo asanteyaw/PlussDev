@@ -3,7 +3,7 @@
 ## Include Path
 
 ```cpp
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 ```
 
 The distribution layer is exposed as `pluss::distr`. No extra include is needed when PlussMa is part of the build.

@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <cmath>
 #include <cstdint>
@@ -11,12 +11,12 @@ namespace {
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::stat::ts::Egarch;
-using pluss::subsp::stat::ts::EgarchFit;
-using pluss::subsp::stat::ts::EgarchOptions;
-using pluss::subsp::stat::ts::Gjr;
-using pluss::subsp::stat::ts::GjrFit;
-using pluss::subsp::stat::ts::GjrOptions;
+using pluss::subsp::stats::ts::Egarch;
+using pluss::subsp::stats::ts::EgarchFit;
+using pluss::subsp::stats::ts::EgarchOptions;
+using pluss::subsp::stats::ts::Gjr;
+using pluss::subsp::stats::ts::GjrFit;
+using pluss::subsp::stats::ts::GjrOptions;
 
 void expect(bool condition, const std::string& message) {
   if (!condition) {

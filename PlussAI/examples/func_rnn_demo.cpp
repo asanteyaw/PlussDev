@@ -1,4 +1,5 @@
 #include <pluss/pluss.h>
+#include <pluss/ai.h>
 
 #include <cmath>
 #include <iostream>
@@ -76,7 +77,7 @@ int main() {
   const Series head = pluss::fusion(rnn_out, ff_weight, ff_bias);
 
   std::cout << "func_rnn_demo\n";
-  std::cout << "surface: pluss::fusion/pluss::rnn/pluss::gru/pluss::lstm via #include <pluss/pluss.h>\n";
+  std::cout << "surface: pluss::fusion/pluss::rnn/pluss::gru/pluss::lstm via #include <pluss/pluss.h> + <pluss/ai.h>\n";
   std::cout << "rnn output: " << rnn_out << "\n";
   std::cout << "rnn h_n: " << rnn_hn << "\n";
   std::cout << "gru output: " << gru_out << "\n";

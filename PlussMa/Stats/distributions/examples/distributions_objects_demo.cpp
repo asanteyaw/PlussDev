@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -13,7 +13,7 @@ namespace {
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using namespace pluss::subsp::stat::distr;
+using namespace pluss::subsp::stats::distr;
 
 std::vector<double> as_f64_vec(const Series& x) {
   return x.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();

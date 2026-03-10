@@ -1,7 +1,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <cmath>
 #include <cstdint>
@@ -12,17 +12,17 @@ using Catch::Approx;
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::stat::ts::Garch11;
-using pluss::subsp::stat::ts::Garch11Fit;
-using pluss::subsp::stat::ts::Garch11Options;
-using pluss::subsp::stat::ts::Garch;
-using pluss::subsp::stat::ts::GarchOptions;
-using pluss::subsp::stat::ts::Egarch;
-using pluss::subsp::stat::ts::EgarchFit;
-using pluss::subsp::stat::ts::EgarchOptions;
-using pluss::subsp::stat::ts::Gjr;
-using pluss::subsp::stat::ts::GjrFit;
-using pluss::subsp::stat::ts::GjrOptions;
+using pluss::subsp::stats::ts::Garch11;
+using pluss::subsp::stats::ts::Garch11Fit;
+using pluss::subsp::stats::ts::Garch11Options;
+using pluss::subsp::stats::ts::Garch;
+using pluss::subsp::stats::ts::GarchOptions;
+using pluss::subsp::stats::ts::Egarch;
+using pluss::subsp::stats::ts::EgarchFit;
+using pluss::subsp::stats::ts::EgarchOptions;
+using pluss::subsp::stats::ts::Gjr;
+using pluss::subsp::stats::ts::GjrFit;
+using pluss::subsp::stats::ts::GjrOptions;
 
 Series simulate_truth(std::int64_t n, std::uint64_t seed) {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);

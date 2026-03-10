@@ -20,7 +20,7 @@ NodeJ is built strictly on Pluss types and existing Pluss subsystems:
 - gradient/autodiff comes from `pluss::subsp::math::diff`.
 - constrained optimization and shared optimizer runtime come from `pluss::subsp::math::optim`.
 - derivative-free and black-box optimizers come from `PlussMa/Math/Numerical/optimization`.
-- statistical primitives are reused from `pluss::subsp::stat::distr` and `pluss::subsp::stat::ts`.
+- statistical primitives are reused from `pluss::subsp::stats::distr` and `pluss::subsp::stats::ts`.
 
 NodeJ should wrap these systems through thin adapters and orchestration layers rather than re-implementing parallel math cores.
 
@@ -34,14 +34,14 @@ Primary inspirations reviewed from:
 
 ## Pluss-Native API Direction
 Use this naming map for the public API:
-- estimator train: `train(...)` (not `fit`)
+- estimator learning: `learn(...)` (not `fit`)
 - estimator inference: `infer(...)` (not `predict`)
 - estimator evaluation: `assess(...)` (metric-driven)
 - transformer apply: `map(...)` (not `transform`)
-- transformer train+apply: `train_map(...)` (instead of `fit_transform`)
+- transformer learn+apply: `learn_map(...)` (instead of `fit_transform`)
 - holdout split: `holdout_split(...)` (instead of `train_test_split`)
 - k-fold planning: `fold_plan(...)`, `strat_fold_plan(...)`, `group_fold_plan(...)`
-- pipeline object: `Flow` with `train`, `infer`, `map`, `train_map`
+- pipeline object: `Flow` with `learn`, `infer`, `map`, `learn_map`
 - hyperparameter search: `sweep(...)` (grid), `probe(...)` (random), `guide(...)` (bayes/asha later)
 
 Standard technical terms remain unchanged where appropriate (`regression`, `classification`, `kernel`, `ensemble`).
@@ -56,7 +56,7 @@ Create these modules:
 - `metrics/`: classification/regression metrics and loss functions
 - `classifiers/`: linear, svm, tree, knn, naive bayes, ensemble, multiclass wrappers
 - `regressors/`: linear, svm, tree, knn, ensemble
-- `compose/`: `Flow`, column-wise routing, leakage-safe train/infer
+- `compose/`: `Flow`, column-wise routing, leakage-safe learn/infer
 - `tune/`: hyperparameter search + CV orchestration
 - `online/`: incremental learners and metric windows
 - `io/`: model serialization/versioning
@@ -69,7 +69,7 @@ Create these modules:
 - strict predictor count checks.
 
 2. Categorical pipeline
-- learned category ranges at train time;
+- learned category ranges at learn time;
 - deterministic encoding at infer time;
 - unknown category policy (`error`, `missing`, or mapped unknown bucket).
 
@@ -86,7 +86,7 @@ Create these modules:
 - Packed/compact model drops training storage and keeps inference state.
 
 6. Reproducibility
-- every split/search/stochastic train path uses explicit seed+stream state.
+- every split/search/stochastic learn path uses explicit seed+stream state.
 
 ## Phased Implementation Plan
 
@@ -135,10 +135,26 @@ Current status (implemented on 2026-03-10):
   - robust scaler
   - one-hot/frequency encoders
   - simple imputers
-- implement `train_map` lifecycle for transformers
+- implement `learn_map` lifecycle for transformers
 
 Exit criteria:
 - deterministic split behavior and transform round-trip/inference consistency.
+
+Current status (in progress):
+- implemented split/CV primitives in NodeJ:
+  - `holdout_split(sample_count, options)`
+  - `strat_holdout_split(labels, options)`
+  - `fold_plan(sample_count, options)`
+  - `strat_fold_plan(labels, options)`
+- added split contract tests for reproducibility, fold coverage, class-balance behavior, and argument validation.
+- implemented preprocessing transformers with NodeJ lifecycle contracts:
+  (`learn`, `map`, `learn_map`):
+  - `StandardScaler`
+  - `MinMaxScaler`
+  - `RobustScaler`
+  - `SimpleImputer` (mean/median/most-frequent/constant)
+  - `OneHotEncoder` (cardinality caps + unknown-category policy handling)
+  - `FrequencyEncoder` (category-frequency mapping with overflow/unknown policies)
 
 ### Phase 2: Baseline Estimators (MVP Classical Stack)
 - regressors:
@@ -151,10 +167,45 @@ Exit criteria:
   - tree classifier
   - knn classifier
   - naive bayes
-- consistent `train` / `infer` / `assess` across all models
+- consistent `learn` / `infer` / `assess` across all models
 
 Exit criteria:
-- end-to-end workflow works: split -> prep -> train -> infer -> assess.
+- end-to-end workflow works: split -> prep -> learn -> infer -> assess.
+
+Current status (in progress):
+- implemented high-impact linear families with shared `learn` / `infer` / `assess` contracts:
+  - `ModelFamily::Linear` regressor:
+    - least-squares objective with L2/none regularization
+    - robust ridge solve via pinv fallback schedule
+    - assess defaults: `Mse`, `Rmse`, `R2` (plus `Mae` support when explicitly requested)
+  - `ModelFamily::Linear` classifier:
+    - binary logistic objective with Adam optimization
+    - L2/none regularization and intercept handling
+    - `infer_scores` (raw log-odds), `infer` (class labels), assess defaults: `Accuracy`
+    - additional assess support: `BalancedAccuracy`, `LogLoss`
+- implemented `ModelFamily::Neighbor` baseline estimators:
+  - neighbor regressor:
+    - euclidean distance KNN with optional feature standardization
+    - supports equal or inverse-distance weighting
+    - assess defaults: `Mse`, `Rmse`, `R2` (plus `Mae` support when explicitly requested)
+  - neighbor classifier (binary):
+    - euclidean distance KNN with optional feature standardization
+    - supports equal or inverse-distance weighting
+    - `infer_scores` returns positive-class probability, `infer` returns class labels
+    - assess defaults: `Accuracy` (plus `BalancedAccuracy`, `LogLoss` support)
+- implemented `ModelFamily::Tree` baseline estimators (CART-style, deterministic):
+  - tree regressor:
+    - greedy axis-aligned binary splits using variance reduction (`TreeCriterion::Mse`)
+    - options support: `max_depth`, `min_samples_leaf`, `min_samples_split`
+    - leaf prediction is node mean response
+    - assess defaults: `Mse`, `Rmse`, `R2` (plus `Mae` support when explicitly requested)
+  - tree classifier (binary):
+    - greedy axis-aligned binary splits with impurity reduction (`TreeCriterion::Gini` or `TreeCriterion::Entropy`)
+    - options support: `max_depth`, `min_samples_leaf`, `min_samples_split`
+    - `infer_scores` returns positive-class probability from leaf class ratios
+    - assess defaults: `Accuracy` (plus `BalancedAccuracy`, `LogLoss` support)
+- preserved explicit `NotImplemented` behavior for remaining non-linear families (`Bayes`, `Kernel`, `Ensemble`) pending later Phase 2 slices.
+- upgraded estimator contract test coverage to validate concrete linear learn/infer/assess behavior while keeping fail-fast checks for not-yet-implemented families.
 
 ### Phase 3: Model Selection and Metrics Breadth
 - metrics package expansion:
@@ -172,7 +223,7 @@ Exit criteria:
 
 ### Phase 4: Composition and Ensembles
 - implement `Flow` (pipeline DAG-lite, series first)
-- add leakage-safe training semantics in composed pipelines
+- add leakage-safe learning semantics in composed pipelines
 - add ensembles:
   - bagging
   - random forest
@@ -186,7 +237,7 @@ Exit criteria:
 - online learners:
   - incremental linear classifier/regressor
   - metric warmup/window tracking
-  - update/train loop (`update_and_train`)
+  - update/learn loop (`update_and_learn`)
 - auto model selection:
   - first random/grid orchestrator
   - later bayes/asha style `guide(...)`
@@ -214,11 +265,11 @@ Exit criteria:
 
 ## Testing Strategy
 - unit tests per estimator/transformer/split/metric
-- contract tests for all estimators (`train`, `infer`, `assess`)
+- contract tests for all estimators (`learn`, `infer`, `assess`)
 - property tests:
   - split reproducibility with seed
   - consistent orientation handling
-  - encoder stability across train/infer
+  - encoder stability across learn/infer
 - numeric regression tests with golden fixtures
 - integration tests for full `Flow` and tuning loops
 - performance smoke tests on medium tabular data
@@ -226,7 +277,7 @@ Exit criteria:
 ## First Implementation Wave (Start Here)
 1. `core` type contract + bridge aliases (`Series`, `ParameterPack<Series>`, `optim`, `diff`, `distr`, `ts`) + CMake wiring.
 2. `split`: `holdout_split`, `fold_plan`, `strat_fold_plan`.
-3. `prep`: standard scaler + one-hot encoder with `train_map`.
+3. `prep`: standard scaler + one-hot/frequency encoders with `learn_map`.
 4. `regressors`: ridge linear regressor.
 5. `classifiers`: logistic linear classifier.
 6. `metrics`: accuracy + mse + rmse + r2.

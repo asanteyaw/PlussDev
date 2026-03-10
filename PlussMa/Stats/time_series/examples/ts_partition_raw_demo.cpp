@@ -1,9 +1,9 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <cstdint>
 #include <iostream>
 
-namespace ts = pluss::subsp::stat::ts;
+namespace ts = pluss::subsp::stats::ts;
 
 int main() {
   const pluss::Config cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(pluss::pCPU);

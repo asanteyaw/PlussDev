@@ -1,7 +1,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <algorithm>
 #include <cmath>
@@ -14,10 +14,10 @@ using Catch::Approx;
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::stat::ts::AcfNorm;
-using pluss::subsp::stat::ts::AcfOptions;
-using pluss::subsp::stat::ts::LjungBoxOptions;
-using pluss::subsp::stat::ts::PacfOptions;
+using pluss::subsp::stats::ts::AcfNorm;
+using pluss::subsp::stats::ts::AcfOptions;
+using pluss::subsp::stats::ts::LjungBoxOptions;
+using pluss::subsp::stats::ts::PacfOptions;
 
 Series make_ar1(std::int64_t n, double phi, std::uint64_t seed) {
   const auto cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -37,14 +37,14 @@ TEST_CASE("ts diagnostics: constant series is stable", "[ts][diagnostics][edge]"
 
   AcfOptions aopt;
   aopt.max_lag = 12;
-  const auto a = pluss::subsp::stat::ts::acf(y, aopt, cfg).to_vec<double>();
+  const auto a = pluss::subsp::stats::ts::acf(y, aopt, cfg).to_vec<double>();
   REQUIRE(a.size() == 13);
   REQUIRE(a[0] == Approx(1.0));
   REQUIRE(std::all_of(a.begin() + 1, a.end(), [](double v) { return std::abs(v) <= 1e-12; }));
 
   PacfOptions popt;
   popt.max_lag = 12;
-  const Series p = pluss::subsp::stat::ts::pacf(y, popt, cfg);
+  const Series p = pluss::subsp::stats::ts::pacf(y, popt, cfg);
   REQUIRE(p.isfinite().all().item<double>() == Approx(1.0));
 }
 
@@ -58,8 +58,8 @@ TEST_CASE("ts diagnostics: numerical stability and sensitivity", "[ts][diagnosti
   AcfOptions unbiased = biased;
   unbiased.norm = AcfNorm::Unbiased;
 
-  const Series a_b = pluss::subsp::stat::ts::acf(eps, biased, cfg);
-  const Series a_u = pluss::subsp::stat::ts::acf(eps, unbiased, cfg);
+  const Series a_b = pluss::subsp::stats::ts::acf(eps, biased, cfg);
+  const Series a_u = pluss::subsp::stats::ts::acf(eps, unbiased, cfg);
 
   REQUIRE(a_b.isfinite().all().item<double>() == Approx(1.0));
   REQUIRE(a_u.isfinite().all().item<double>() == Approx(1.0));
@@ -75,8 +75,8 @@ TEST_CASE("ts diagnostics: ljung-box distinguishes correlated process", "[ts][di
   LjungBoxOptions opt;
   opt.lags = {20};
 
-  const auto lb_wn = pluss::subsp::stat::ts::ljung_box(wn, opt, cfg);
-  const auto lb_ar = pluss::subsp::stat::ts::ljung_box(ar, opt, cfg);
+  const auto lb_wn = pluss::subsp::stats::ts::ljung_box(wn, opt, cfg);
+  const auto lb_ar = pluss::subsp::stats::ts::ljung_box(ar, opt, cfg);
 
   REQUIRE(lb_wn.pvalue.item<double>() > 1e-3);
   REQUIRE(lb_ar.pvalue.item<double>() < 1e-10);
@@ -88,19 +88,19 @@ TEST_CASE("ts diagnostics: stress and crash checks", "[ts][diagnostics][stress][
 
   AcfOptions aopt;
   aopt.max_lag = 40;
-  const Series a = pluss::subsp::stat::ts::acf(y, aopt, cfg);
+  const Series a = pluss::subsp::stats::ts::acf(y, aopt, cfg);
   REQUIRE(a.sizes()[0] == 41);
   REQUIRE(a.isfinite().all().item<double>() == Approx(1.0));
 
   PacfOptions popt;
   popt.max_lag = 40;
-  const Series p = pluss::subsp::stat::ts::pacf(y, popt, cfg);
+  const Series p = pluss::subsp::stats::ts::pacf(y, popt, cfg);
   REQUIRE(p.sizes()[0] == 41);
   REQUIRE(p.isfinite().all().item<double>() == Approx(1.0));
 
   LjungBoxOptions lopt;
   lopt.lags = {10, 20, 40};
-  const auto lb = pluss::subsp::stat::ts::ljung_box(y, lopt, cfg);
+  const auto lb = pluss::subsp::stats::ts::ljung_box(y, lopt, cfg);
   REQUIRE(lb.stat.sizes()[0] == 3);
   REQUIRE(lb.pvalue.sizes()[0] == 3);
   REQUIRE(lb.stat.isfinite().all().item<double>() == Approx(1.0));
@@ -108,9 +108,9 @@ TEST_CASE("ts diagnostics: stress and crash checks", "[ts][diagnostics][stress][
 
   AcfOptions bad_acf;
   bad_acf.max_lag = -1;
-  REQUIRE_THROWS(pluss::subsp::stat::ts::acf(y, bad_acf, cfg));
+  REQUIRE_THROWS(pluss::subsp::stats::ts::acf(y, bad_acf, cfg));
 
   LjungBoxOptions bad_lb;
   bad_lb.lags = {0, 5};
-  REQUIRE_THROWS(pluss::subsp::stat::ts::ljung_box(y, bad_lb, cfg));
+  REQUIRE_THROWS(pluss::subsp::stats::ts::ljung_box(y, bad_lb, cfg));
 }

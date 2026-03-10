@@ -1,4 +1,5 @@
 #include <pluss/pluss.h>
+#include <pluss/ai.h>
 
 #include <cmath>
 #include <iostream>
@@ -94,7 +95,7 @@ int main() {
   const Series prediction = head->forward(block3.transpose(1, 2)).transpose(1, 2);
 
   std::cout << "tcn_demo\n";
-  std::cout << "surface: pluss::nn::Conv1d + pluss::nn::Fusion via #include <pluss/pluss.h>\n";
+  std::cout << "surface: pluss::nn::Conv1d + pluss::nn::Fusion via #include <pluss/pluss.h> + <pluss/ai.h>\n";
   std::cout << "task: next-step time-series forecasting with a strictly causal, dilated torch-like TCN stack\n";
   std::cout << "user-defined hyperparameters: kernel_size, stride, padding or padding_lr, dilation, groups, bias, channels, depth\n";
   std::cout << "dilation schedule used here: [1, 2, 4]\n";

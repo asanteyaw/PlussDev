@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace pluss::subsp::stat::distr {
+namespace pluss::subsp::stats::distr {
 namespace {
 
 std::array<double, 2> normal_params(double mean, double stddev) {
@@ -101,7 +101,7 @@ double std_normal_pdf_scalar(double x) {
 }
 
 double std_normal_logcdf_scalar(double x) {
-  return ::pluss::subsp::stat::distr::logcdf(dst::Normal, detail::scalar_f64(x), std::initializer_list<double>{}).item<double>();
+  return ::pluss::subsp::stats::distr::logcdf(dst::Normal, detail::scalar_f64(x), std::initializer_list<double>{}).item<double>();
 }
 
 double logsubexp_scalar(double log_hi, double log_lo) {
@@ -1867,4 +1867,4 @@ Series Beta::cumulant(std::int64_t order) const {
   return detail::scalar_f64(detail::cumulants_from_raw_moments(raw)[static_cast<std::size_t>(order)]);
 }
 
-} // namespace pluss::subsp::stat::distr
+} // namespace pluss::subsp::stats::distr

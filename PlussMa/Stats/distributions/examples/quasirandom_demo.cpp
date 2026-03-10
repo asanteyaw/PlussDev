@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -9,7 +9,7 @@
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using namespace pluss::subsp::stat::distr;
+using namespace pluss::subsp::stats::distr;
 
 namespace {
 

@@ -13,3 +13,7 @@ endif()
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/diagnostics/CMakeLists.txt")
   add_subdirectory(modules/diagnostics)
 endif()
+
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/var/CMakeLists.txt")
+  add_subdirectory(modules/var)
+endif()

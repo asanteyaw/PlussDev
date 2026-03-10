@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace pluss::subsp::stat::distr {
+namespace pluss::subsp::stats::distr {
 namespace {
 
 std::array<double, 2> skellam_params(double lambda1, double lambda2) {
@@ -407,7 +407,7 @@ Series GaussianMixture::sample(std::span<const std::int64_t> sizes,
                                std::uint64_t seed,
                                bool use_sobol) const {
   require_mixture_shape_compatibility(weights, means, stddevs);
-  return ::pluss::subsp::stat::distr::mixture_normal(weights, means, stddevs, sizes, cfg, seed, use_sobol);
+  return ::pluss::subsp::stats::distr::mixture_normal(weights, means, stddevs, sizes, cfg, seed, use_sobol);
 }
 
 Series GaussianMixture::sample(std::initializer_list<std::int64_t> sizes,
@@ -419,27 +419,27 @@ Series GaussianMixture::sample(std::initializer_list<std::int64_t> sizes,
 
 Series GaussianMixture::sample_like(const Series& like, std::uint64_t seed, bool use_sobol) const {
   require_mixture_shape_compatibility(weights, means, stddevs);
-  return ::pluss::subsp::stat::distr::mixture_normal(weights, means, stddevs, like.sizes(), mixture_cfg_like(like), seed, use_sobol);
+  return ::pluss::subsp::stats::distr::mixture_normal(weights, means, stddevs, like.sizes(), mixture_cfg_like(like), seed, use_sobol);
 }
 
 Series GaussianMixture::pdf(const Series& x) const {
   require_mixture_shape_compatibility(weights, means, stddevs);
-  return ::pluss::subsp::stat::distr::mixture_normal_pdf(x, weights, means, stddevs);
+  return ::pluss::subsp::stats::distr::mixture_normal_pdf(x, weights, means, stddevs);
 }
 
 Series GaussianMixture::logpdf(const Series& x) const {
   require_mixture_shape_compatibility(weights, means, stddevs);
-  return ::pluss::subsp::stat::distr::mixture_normal_logpdf(x, weights, means, stddevs);
+  return ::pluss::subsp::stats::distr::mixture_normal_logpdf(x, weights, means, stddevs);
 }
 
 Series GaussianMixture::logcdf(const Series& x) const {
   require_mixture_shape_compatibility(weights, means, stddevs);
-  return ::pluss::subsp::stat::distr::mixture_normal_logcdf(x, weights, means, stddevs);
+  return ::pluss::subsp::stats::distr::mixture_normal_logcdf(x, weights, means, stddevs);
 }
 
 Series GaussianMixture::cdf(const Series& x) const {
   require_mixture_shape_compatibility(weights, means, stddevs);
-  return ::pluss::subsp::stat::distr::mixture_normal_cdf(x, weights, means, stddevs);
+  return ::pluss::subsp::stats::distr::mixture_normal_cdf(x, weights, means, stddevs);
 }
 
 Series GaussianMixture::cgf(const Series& t) const {
@@ -902,4 +902,4 @@ GaussianMixtureFit GaussianMixture::MLE(const Series& x) const {
       fit_detail::vec_series_cpu(s_fit, {static_cast<std::int64_t>(k)}).to(x.platform(), ScalarType::Float64)};
 }
 
-} // namespace pluss::subsp::stat::distr
+} // namespace pluss::subsp::stats::distr

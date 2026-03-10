@@ -1,16 +1,17 @@
 #pragma once
 
-#include "pluss/subsp/stat/distr.h"
-#include "pluss/subsp/stat/rng.h"
-#include "pluss/subsp/stat/stats.h"
-#include "pluss/subsp/stat/ts.h"
+#include "pluss/ma/stats/core.h"
+#include "pluss/ma/stats/distributions.h"
+#include "pluss/ma/stats/time_series.h"
 
 namespace pluss {
-namespace stat = ::pluss::subsp::stat;
-namespace distr = ::pluss::subsp::stat::distr;
+namespace stats = ::pluss::subsp::stats;
+namespace distr = ::pluss::subsp::stats::distr;
 }
 
 namespace pluss::ma {
-namespace stats = ::pluss::subsp::stat;
-namespace distr = ::pluss::subsp::stat::distr;
+namespace stats = ::pluss::subsp::stats;
+namespace distr = ::pluss::subsp::stats::distr;
+namespace rng = ::pluss::subsp::stats::rng;
+namespace ts = ::pluss::subsp::stats::ts;
 }

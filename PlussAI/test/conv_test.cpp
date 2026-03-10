@@ -1,4 +1,5 @@
 #include <pluss/pluss.h>
+#include <pluss/ai.h>
 
 #include <cmath>
 #include <iostream>

@@ -3,7 +3,7 @@
 The legacy Matlab `randraw.m` surface has been retired. Probability distributions now live in the C++ API as `pluss::distr`, available directly from:
 
 ```cpp
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 ```
 
 This manual is organized around how users actually consume the layer:

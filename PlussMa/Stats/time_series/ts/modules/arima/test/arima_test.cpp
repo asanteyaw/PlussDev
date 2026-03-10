@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <cmath>
 #include <cstdint>
@@ -11,11 +11,11 @@ namespace {
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::stat::ts::Arima;
-using pluss::subsp::stat::ts::ArimaFit;
-using pluss::subsp::stat::ts::ArimaOptions;
-using pluss::subsp::stat::ts::Sarima;
-using pluss::subsp::stat::ts::SarimaOptions;
+using pluss::subsp::stats::ts::Arima;
+using pluss::subsp::stats::ts::ArimaFit;
+using pluss::subsp::stats::ts::ArimaOptions;
+using pluss::subsp::stats::ts::Sarima;
+using pluss::subsp::stats::ts::SarimaOptions;
 
 void expect(bool condition, const std::string& message) {
   if (!condition) {
@@ -141,12 +141,60 @@ void test_error_paths() {
   expect(threw, "arima forecast should throw for non-positive horizon");
 }
 
+void test_arimax_slice() {
+  const auto cfg = f64_cpu();
+  const std::int64_t n = 2400;
+  const Series x = pluss::randn({n, 2}, cfg, 20260440ULL);
+  const ArimaFit truth{
+      .mean = 0.0,
+      .intercept = 0.08,
+      .sigma = 0.60,
+      .ar = {0.45},
+      .ma = {},
+      .sar = {},
+      .sma = {},
+      .beta = {0.70, -0.35},
+      .diff_order = 0,
+      .seasonal_diff_order = 0,
+      .seasonal_period = 0,
+      .variance_floor = 1e-12,
+      .stationarity_margin = 1e-6,
+      .finite_diff_eps = 1e-5,
+  };
+  const Series y = truth.simulate(x, cfg, 20260441ULL);
+
+  ArimaOptions opt;
+  opt.ar_order = 1;
+  opt.beta0 = {0.0, 0.0};
+  opt.max_iterations = 1200;
+  opt.max_evaluations = 12000;
+  const auto fit = Arima::fit_mle(y, x, opt, cfg);
+
+  expect(fit.beta.size() == 2, "arimax fit: expected two regression coefficients");
+  expect(std::isfinite(fit.loglik(y, x)), "arimax fit: finite loglik expected");
+  expect(fit.infer(y, x, cfg).isfinite().all().item<double>() == 1.0, "arimax infer must be finite");
+
+  const Series x_future = pluss::randn({12, 2}, cfg, 20260442ULL);
+  const Series f = fit.forecast(12, y, x, x_future, cfg);
+  expect(f.sizes()[0] == 12, "arimax forecast shape mismatch");
+  expect(f.isfinite().all().item<double>() == 1.0, "arimax forecast must be finite");
+
+  bool threw = false;
+  try {
+    (void)fit.loglik(y);
+  } catch (...) {
+    threw = true;
+  }
+  expect(threw, "arimax loglik(y) should throw when x is required");
+}
+
 } // namespace
 
 int main() {
   try {
     test_arima_fit_slice();
     test_sarima_fit_slice();
+    test_arimax_slice();
     test_error_paths();
     std::cout << "arima_test passed\n";
     return 0;

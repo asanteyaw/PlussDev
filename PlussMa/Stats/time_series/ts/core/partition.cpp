@@ -1,4 +1,4 @@
-#include "pluss/subsp/stat/ts.h"
+#include "pluss/subsp/stats/ts.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-namespace pluss::subsp::stat::ts {
+namespace pluss::subsp::stats::ts {
 namespace {
 
 using pluss::Config;
@@ -19,15 +19,15 @@ using pluss::Series;
 constexpr double kEps = 1e-12;
 
 void require_observations_(std::int64_t n) {
-  PLUSS_CHECK(n > 1, "subsp::stat::ts::TsPartition: num_observations must be > 1");
+  PLUSS_CHECK(n > 1, "subsp::stats::ts::TsPartition: num_observations must be > 1");
 }
 
 void require_non_negative_(std::int64_t v, const char* name) {
-  PLUSS_CHECK(v >= 0, std::string("subsp::stat::ts::TsPartition: expected ") + name + " >= 0");
+  PLUSS_CHECK(v >= 0, std::string("subsp::stats::ts::TsPartition: expected ") + name + " >= 0");
 }
 
 void require_positive_(std::int64_t v, const char* name) {
-  PLUSS_CHECK(v > 0, std::string("subsp::stat::ts::TsPartition: expected ") + name + " > 0");
+  PLUSS_CHECK(v > 0, std::string("subsp::stats::ts::TsPartition: expected ") + name + " > 0");
 }
 
 std::int64_t resolve_positive_size_(const std::optional<std::int64_t>& provided,
@@ -69,21 +69,21 @@ void validate_window_bounds_(const PartitionWindow& window,
                              std::int64_t gap_size,
                              const char* family) {
   PLUSS_CHECK(window.train_start >= 0,
-              std::string("subsp::stat::ts::TsPartition: invalid train_start for ") + family);
+              std::string("subsp::stats::ts::TsPartition: invalid train_start for ") + family);
   PLUSS_CHECK(window.train_end < num_observations,
-              std::string("subsp::stat::ts::TsPartition: invalid train_end for ") + family);
+              std::string("subsp::stats::ts::TsPartition: invalid train_end for ") + family);
   PLUSS_CHECK(window.test_start >= 0,
-              std::string("subsp::stat::ts::TsPartition: invalid test_start for ") + family);
+              std::string("subsp::stats::ts::TsPartition: invalid test_start for ") + family);
   PLUSS_CHECK(window.test_end < num_observations,
-              std::string("subsp::stat::ts::TsPartition: invalid test_end for ") + family);
+              std::string("subsp::stats::ts::TsPartition: invalid test_end for ") + family);
   PLUSS_CHECK(window.train_end >= window.train_start,
-              std::string("subsp::stat::ts::TsPartition: empty training set for ") + family);
+              std::string("subsp::stats::ts::TsPartition: empty training set for ") + family);
   PLUSS_CHECK(window.test_end >= window.test_start,
-              std::string("subsp::stat::ts::TsPartition: empty test set for ") + family);
+              std::string("subsp::stats::ts::TsPartition: empty test set for ") + family);
   PLUSS_CHECK(window.train_size() >= min_train_size,
-              std::string("subsp::stat::ts::TsPartition: training window too short for ") + family);
+              std::string("subsp::stats::ts::TsPartition: training window too short for ") + family);
   PLUSS_CHECK(window.test_start - window.train_end - 1 >= gap_size,
-              std::string("subsp::stat::ts::TsPartition: gap constraint violated for ") + family);
+              std::string("subsp::stats::ts::TsPartition: gap constraint violated for ") + family);
 }
 
 std::vector<PartitionWindow> build_expanding_windows_(std::int64_t num_observations,
@@ -103,9 +103,9 @@ std::vector<PartitionWindow> build_expanding_windows_(std::int64_t num_observati
       "max_train_size");
 
   PLUSS_CHECK(max_train_size >= min_train_size,
-              "subsp::stat::ts::TsPartition: expected max_train_size >= min_train_size");
+              "subsp::stats::ts::TsPartition: expected max_train_size >= min_train_size");
   PLUSS_CHECK(max_lag < min_train_size,
-              "subsp::stat::ts::TsPartition: expected max_lag < min_train_size");
+              "subsp::stats::ts::TsPartition: expected max_lag < min_train_size");
 
   std::vector<PartitionWindow> windows(static_cast<std::size_t>(num_test_sets));
   if (options.direction == Direction::Forward) {
@@ -155,7 +155,7 @@ std::vector<PartitionWindow> build_sliding_windows_(std::int64_t num_observation
   const std::int64_t step_size = resolve_positive_size_(options.step_size, block, "step_size");
 
   PLUSS_CHECK(max_lag < train_size,
-              "subsp::stat::ts::TsPartition: expected max_lag < train_size for sliding_window");
+              "subsp::stats::ts::TsPartition: expected max_lag < train_size for sliding_window");
 
   std::vector<PartitionWindow> windows(static_cast<std::size_t>(num_test_sets));
   if (options.direction == Direction::Forward) {
@@ -197,7 +197,7 @@ std::vector<PartitionWindow> build_holdout_window_(std::int64_t num_observations
                                                     const PartitionOptions& options) {
   const std::int64_t gap_size = options.gap_size;
   const std::int64_t max_lag = options.max_lag;
-  PLUSS_CHECK(holdout > 0.0, "subsp::stat::ts::TsPartition: holdout must be > 0");
+  PLUSS_CHECK(holdout > 0.0, "subsp::stats::ts::TsPartition: holdout must be > 0");
 
   std::int64_t test_size = 0;
   if (holdout < 1.0) {
@@ -205,7 +205,7 @@ std::vector<PartitionWindow> build_holdout_window_(std::int64_t num_observations
   } else {
     const auto rounded = static_cast<std::int64_t>(std::llround(holdout));
     PLUSS_CHECK(std::abs(holdout - static_cast<double>(rounded)) <= kEps,
-                "subsp::stat::ts::TsPartition: holdout >= 1 must be an integer count");
+                "subsp::stats::ts::TsPartition: holdout >= 1 must be an integer count");
     test_size = rounded;
   }
   test_size = std::max<std::int64_t>(1, test_size);
@@ -218,7 +218,7 @@ std::vector<PartitionWindow> build_holdout_window_(std::int64_t num_observations
   validate_window_bounds_(window, num_observations, 1, gap_size, "holdout");
 
   PLUSS_CHECK(max_lag < window.train_size(),
-              "subsp::stat::ts::TsPartition: expected max_lag < train_size for holdout");
+              "subsp::stats::ts::TsPartition: expected max_lag < train_size for holdout");
 
   return {window};
 }
@@ -313,7 +313,7 @@ TsPartition TsPartition::holdout(std::int64_t num_observations, double holdout, 
 
 const PartitionWindow& TsPartition::window(std::int64_t i) const {
   PLUSS_CHECK(i >= 0 && i < num_test_sets(),
-              "subsp::stat::ts::TsPartition: window index out of bounds");
+              "subsp::stats::ts::TsPartition: window index out of bounds");
   return windows_[static_cast<std::size_t>(i)];
 }
 
@@ -347,4 +347,4 @@ Series TsPartition::test_buffer_mask(std::int64_t i, Config cfg) const {
   return range_mask_(num_observations_, w.test_buffer_start, w.test_buffer_end, cfg);
 }
 
-} // namespace pluss::subsp::stat::ts
+} // namespace pluss::subsp::stats::ts

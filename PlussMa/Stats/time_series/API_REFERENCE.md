@@ -2,7 +2,7 @@
 
 This page documents the currently implemented time-series core APIs in:
 
-- `pluss::subsp::stat::ts`
+- `pluss::subsp::stats::ts`
 
 ## `TsPartition expanding_window(std::int64_t num_observations, std::int64_t num_test_sets, const PartitionOptions& options = {})`
 
@@ -232,14 +232,14 @@ Notes:
 Example usage:
 
 ```cpp
-pluss::subsp::stat::ts::DirectForecasterOptions opt;
+pluss::subsp::stats::ts::DirectForecasterOptions opt;
 opt.lag.horizon = {1, 2, 3};
 opt.lag.response_lags = {1, 2};
 opt.lag.predictor_lags = {{1, 2}};
-opt.learner = pluss::subsp::stat::ts::DirectLearnerKind::Ridge;
+opt.learner = pluss::subsp::stats::ts::DirectLearnerKind::Ridge;
 opt.ridge_lambda = 1e-4;
 
-auto mdl = pluss::subsp::stat::ts::DirectForecaster::fit(x, y, opt);
+auto mdl = pluss::subsp::stats::ts::DirectForecaster::fit(x, y, opt);
 ```
 
 Expected output:
@@ -621,6 +621,7 @@ Fits a general `GARCH(m,n)` conditional variance model by Gaussian QMLE.
 - `arch_order` (`m`) and `garch_order` (`n`).
 - initialization vectors (`arch0`, `garch0`).
 - numerical floors/margins and optimizer budget.
+- `nm_restarts`: deterministic multi-start count for Nelder-Mead (`>= 1`).
 
 `Config cfg`: execution/output config (`Float64` internal path is enforced).
 
@@ -787,6 +788,7 @@ Return -> `EgarchFit`: fitted object exposing `infer`, `loglik`, `loglik_per_obs
 Notes:
 
 - Uses log-variance recursion; loops are required for state recursion correctness.
+- EGARCH equation differs from standard GARCH: update is on `log(h_t)` with magnitude and asymmetry terms.
 - Stationarity guard is applied through `sum(garch) < 1 - stationarity_margin`.
 
 ## `GjrFit Gjr::fit_mle(const Series& y, const GjrOptions& options = {}, Config cfg = {})`
@@ -803,6 +805,7 @@ Return -> `GjrFit`: fitted object exposing `infer`, `loglik`, `loglik_per_obs`, 
 
 Notes:
 
+- GJR equation differs from standard GARCH: includes a negative-shock indicator asymmetry term.
 - Persistence is `sum(arch) + 0.5 * sum(asym) + sum(garch)`.
 - `unconditional_var()` returns `omega / (1 - persistence)` for stationary fits.
 
@@ -816,6 +819,7 @@ Fits typed ARIMA/SARIMA dynamics via Gaussian MLE.
 
 - non-seasonal: `ar_order`, `diff_order`, `ma_order`.
 - seasonal: `seasonal_ar_order`, `seasonal_diff_order`, `seasonal_ma_order`, `seasonal_period`.
+- optional regression: `beta0` (ARIMAX initial coefficients).
 - optimizer and numeric controls (`variance_floor`, `stationarity_margin`, `finite_diff_eps`, iterations/evaluations).
 
 `Config cfg`: execution/output config (`Float64` internal path is enforced).
@@ -835,6 +839,28 @@ Notes:
 - Recursive ARMA state updates are loop-based by necessity.
 - Differencing and inverse-differencing are handled internally for forecast/simulate.
 
+## `ArimaFit Arima::fit_mle(const Series& y, const Series& x, const ArimaOptions& options = {}, Config cfg = {})`
+
+Fits ARIMAX/SARIMAX-style regression-with-ARIMA-errors model.
+
+`const Series& y`: univariate response (`[n]` or `[n,1]`).
+
+`const Series& x`: exogenous predictor matrix (`[n,k]` or vector treated as `[n,1]`).
+
+`const ArimaOptions& options`: same as above; `beta0` is used as the exogenous coefficient initializer.
+
+`Config cfg`: execution/output config.
+
+Return -> `ArimaFit`: same object, with fitted `beta` coefficients populated.
+
+Notes:
+
+- When `beta` is non-empty, use exogenous-aware methods:
+  - `loglik(y, x)`, `loglik_per_obs(y, x)`, `infer(y, x)`, `score(y, x)`, `observed_inf(y, x)`.
+  - `forecast(h, y, x_hist, x_future)`.
+  - `simulate(x)`.
+- Non-exogenous method variants throw if `beta` is non-empty.
+
 ## `SarimaFit Sarima::fit_mle(const Series& y, const SarimaOptions& options = {}, Config cfg = {})`
 
 Convenience typed SARIMA wrapper over `Arima::fit_mle`.
@@ -849,6 +875,20 @@ Convenience typed SARIMA wrapper over `Arima::fit_mle`.
 `Config cfg`: execution/output config.
 
 Return -> `SarimaFit`: wrapper containing `core` (`ArimaFit`) and forwarding the same imperative methods.
+
+## `SarimaFit Sarima::fit_mle(const Series& y, const Series& x, const SarimaOptions& options = {}, Config cfg = {})`
+
+Fits seasonal ARIMAX model with compact `(p,d,q) x (P,D,Q,s)` notation and exogenous predictors.
+
+`const Series& y`: univariate response.
+
+`const Series& x`: exogenous predictor matrix (`[n,k]`).
+
+`const SarimaOptions& options`: seasonal options plus `beta0`.
+
+`Config cfg`: execution/output config.
+
+Return -> `SarimaFit`: wrapper whose `core.beta` contains fitted exogenous coefficients.
 
 Example usage:
 
@@ -870,4 +910,198 @@ Expected output:
 fit.core.ar.size() == 1
 fit.core.sar.size() == 1
 fit.forecast(12, y).sizes()[0] == 12
+```
+
+## `VarFit Var::fit_mle(const Series& y, const VarOptions& options = {}, Config cfg = {})`
+
+Fits a multivariate `VAR(p)` model by closed-form least squares.
+
+`const Series& y`: response matrix (`[n,k]`) or vector (`[n]` treated as `[n,1]`).
+
+`const VarOptions& options`: typed controls (`lag_order`, `include_intercept`, `include_trend`, `ridge`, `pinv_rcond`).
+
+`Config cfg`: execution/output config (`Float64` internal path is enforced).
+
+Return -> `VarFit`: fitted object exposing `infer`, `loglik`, `loglik_per_obs`, `forecast`, and `simulate`.
+
+Notes:
+
+- This is a reduced-form VAR with row-wise recursion semantics.
+- `ar` is stored with shape `[p,k,k]`.
+- Residual covariance is estimated as `(E^T E)/T` and numerically stabilized for likelihood evaluation.
+
+## `VarFit Var::fit_mle(const Series& y, const Series& x, const VarOptions& options = {}, Config cfg = {})`
+
+Fits a multivariate `VARX(p)` model.
+
+`const Series& y`: response matrix (`[n,k]`).
+
+`const Series& x`: predictor matrix (`[n,m]`).
+
+`const VarOptions& options`: same typed controls as above.
+
+`Config cfg`: execution/output config.
+
+Return -> `VarFit`: fitted object with `beta` coefficients shape `[m,k]`.
+
+Notes:
+
+- Exogenous terms are contemporaneous in the fitted equation.
+- Exogenous-aware methods must be used when `beta` is non-empty.
+
+## `Series VarFit::infer(const Series& y, Config cfg = {}) const`
+
+Infers reduced-form innovations (residuals) for a fitted `VAR`.
+
+`const Series& y`: response matrix.
+
+`Config cfg`: output config.
+
+Return -> `Series`: residual matrix `[n - p, k]`.
+
+## `Series VarFit::infer(const Series& y, const Series& x, Config cfg = {}) const`
+
+Infers residuals for fitted `VARX`.
+
+`const Series& y`: response matrix.
+
+`const Series& x`: predictor matrix.
+
+`Config cfg`: output config.
+
+Return -> `Series`: residual matrix `[n - p, k]`.
+
+## `double VarFit::loglik(const Series& y) const`
+
+Returns total Gaussian log-likelihood under fitted `VAR` parameters.
+
+`const Series& y`: response matrix.
+
+Return -> `double`: total log-likelihood.
+
+## `double VarFit::loglik(const Series& y, const Series& x) const`
+
+Returns total Gaussian log-likelihood under fitted `VARX` parameters.
+
+`const Series& y`: response matrix.
+
+`const Series& x`: predictor matrix.
+
+Return -> `double`: total log-likelihood.
+
+## `Series VarFit::loglik_per_obs(const Series& y, Config cfg = {}) const`
+
+Returns per-observation Gaussian log-likelihood contributions for `VAR`.
+
+`const Series& y`: response matrix.
+
+`Config cfg`: output config.
+
+Return -> `Series`: vector `[n - p]`.
+
+## `Series VarFit::loglik_per_obs(const Series& y, const Series& x, Config cfg = {}) const`
+
+Returns per-observation Gaussian log-likelihood contributions for `VARX`.
+
+`const Series& y`: response matrix.
+
+`const Series& x`: predictor matrix.
+
+`Config cfg`: output config.
+
+Return -> `Series`: vector `[n - p]`.
+
+## `Series VarFit::forecast(std::int64_t horizon, const Series& y, Config cfg = {}) const`
+
+Forecasts `horizon` periods ahead from response history for fitted `VAR`.
+
+`std::int64_t horizon`: forecast horizon (`> 0`).
+
+`const Series& y`: response history (`rows >= p`).
+
+`Config cfg`: output config.
+
+Return -> `Series`: forecast matrix `[horizon, k]`.
+
+## `Series VarFit::forecast(std::int64_t horizon, const Series& y, const Series& x_future, Config cfg = {}) const`
+
+Forecasts `VARX` responses using future exogenous predictors.
+
+`std::int64_t horizon`: forecast horizon (`> 0`).
+
+`const Series& y`: response history (`rows >= p`).
+
+`const Series& x_future`: future predictors (`[horizon, m]` or more rows).
+
+`Config cfg`: output config.
+
+Return -> `Series`: forecast matrix `[horizon, k]`.
+
+## `Series VarFit::simulate(std::int64_t num_observations, Config cfg = {}, std::uint64_t seed = 0) const`
+
+Simulates responses from fitted `VAR` with Gaussian innovations.
+
+`std::int64_t num_observations`: simulated length (`> 0`).
+
+`Config cfg`: output config.
+
+`std::uint64_t seed`: RNG seed.
+
+Return -> `Series`: simulated matrix `[num_observations, k]`.
+
+## `Series VarFit::simulate(const Series& x, Config cfg = {}, std::uint64_t seed = 0) const`
+
+Simulates responses from fitted `VARX` with provided exogenous path.
+
+`const Series& x`: exogenous path (`[n,m]`).
+
+`Config cfg`: output config.
+
+`std::uint64_t seed`: RNG seed.
+
+Return -> `Series`: simulated matrix `[n, k]`.
+
+## `std::pair<Series,Series> var_to_vecm(const Series& ar, Config cfg = {})`
+
+Converts `VAR` lag tensor to `VEC` short-run and impact representation.
+
+`const Series& ar`: lag tensor `[p,k,k]`.
+
+`Config cfg`: output config.
+
+Return -> `std::pair<Series,Series>`:
+
+- first: `short_run` tensor `[p-1,k,k]`.
+- second: `impact` matrix `[k,k]`.
+
+## `Series vecm_to_var(const Series& short_run, const Series& impact, Config cfg = {})`
+
+Converts `VEC` representation back to `VAR` lag tensor.
+
+`const Series& short_run`: tensor `[q,k,k]` where `q = p-1`.
+
+`const Series& impact`: impact matrix `[k,k]`.
+
+`Config cfg`: output config.
+
+Return -> `Series`: lag tensor `[p,k,k]`.
+
+Example usage:
+
+```cpp
+ts::VarOptions opt;
+opt.lag_order = 2;
+auto fit = ts::Var::fit_mle(y, opt);
+auto ll = fit.loglik(y);
+auto f = fit.forecast(12, y);
+auto vec = ts::var_to_vecm(fit.ar);
+auto ar_back = ts::vecm_to_var(vec.first, vec.second);
+```
+
+Expected output:
+
+```text
+f.sizes() == [12, k]
+fit.infer(y).sizes() == [n - p, k]
+ar_back has shape [p, k, k]
 ```

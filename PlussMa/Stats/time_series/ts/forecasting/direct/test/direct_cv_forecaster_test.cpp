@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <algorithm>
 #include <cmath>
@@ -13,12 +13,12 @@ namespace {
 
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::stat::ts::CVLossMode;
-using pluss::subsp::stat::ts::DirectCVForecaster;
-using pluss::subsp::stat::ts::DirectForecasterOptions;
-using pluss::subsp::stat::ts::PartitionOptions;
-using pluss::subsp::stat::ts::RegressionLoss;
-using pluss::subsp::stat::ts::TsPartition;
+using pluss::subsp::stats::ts::CVLossMode;
+using pluss::subsp::stats::ts::DirectCVForecaster;
+using pluss::subsp::stats::ts::DirectForecasterOptions;
+using pluss::subsp::stats::ts::PartitionOptions;
+using pluss::subsp::stats::ts::RegressionLoss;
+using pluss::subsp::stats::ts::TsPartition;
 
 void expect(bool condition, const std::string& message) {
   if (!condition) {
@@ -49,7 +49,7 @@ void test_cvpredict_and_losses() {
   const Series y = make_arx_response(x, 20260327ULL, 0.03);
 
   PartitionOptions popts;
-  popts.direction = pluss::subsp::stat::ts::Direction::Forward;
+  popts.direction = pluss::subsp::stats::ts::Direction::Forward;
   popts.train_size = 500;
   popts.test_size = 300;
   popts.step_size = 200;
@@ -87,7 +87,7 @@ void test_overlap_and_missing_rows_behavior() {
   const Series y = make_arx_response(x, 20260329ULL, 0.02);
 
   PartitionOptions popts;
-  popts.direction = pluss::subsp::stat::ts::Direction::Forward;
+  popts.direction = pluss::subsp::stats::ts::Direction::Forward;
   popts.train_size = 400;
   popts.test_size = 220;
   popts.step_size = 120;
@@ -119,7 +119,7 @@ void test_error_paths() {
   const Series y = make_arx_response(x, 20260331ULL, 0.05);
 
   PartitionOptions popts;
-  popts.direction = pluss::subsp::stat::ts::Direction::Forward;
+  popts.direction = pluss::subsp::stats::ts::Direction::Forward;
   popts.train_size = 200;
   popts.test_size = 100;
   popts.step_size = 100;

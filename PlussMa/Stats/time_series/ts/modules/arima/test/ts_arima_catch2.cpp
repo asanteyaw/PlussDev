@@ -1,7 +1,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <algorithm>
 #include <cmath>
@@ -14,11 +14,11 @@ using Catch::Approx;
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::stat::ts::Arima;
-using pluss::subsp::stat::ts::ArimaFit;
-using pluss::subsp::stat::ts::ArimaOptions;
-using pluss::subsp::stat::ts::Sarima;
-using pluss::subsp::stat::ts::SarimaOptions;
+using pluss::subsp::stats::ts::Arima;
+using pluss::subsp::stats::ts::ArimaFit;
+using pluss::subsp::stats::ts::ArimaOptions;
+using pluss::subsp::stats::ts::Sarima;
+using pluss::subsp::stats::ts::SarimaOptions;
 
 Config f64_cpu() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -155,4 +155,51 @@ TEST_CASE("ts arima: differencing edge path and crash checks", "[ts][arima][edge
   bad.seasonal_ar_order = 1;
   bad.seasonal_period = 1;
   REQUIRE_THROWS(Arima::fit_mle(y, bad, cfg));
+}
+
+TEST_CASE("ts arimax: exogenous regression path", "[ts][arimax][accuracy]") {
+  const auto cfg = f64_cpu();
+  const std::int64_t n = 3000;
+  const Series x = pluss::randn({n, 2}, cfg, 20260443ULL);
+  const ArimaFit truth{
+      .mean = 0.0,
+      .intercept = 0.08,
+      .sigma = 0.60,
+      .ar = {0.45},
+      .ma = {},
+      .sar = {},
+      .sma = {},
+      .beta = {0.70, -0.35},
+      .diff_order = 0,
+      .seasonal_diff_order = 0,
+      .seasonal_period = 0,
+      .variance_floor = 1e-12,
+      .stationarity_margin = 1e-6,
+      .finite_diff_eps = 1e-5,
+  };
+  const Series y = truth.simulate(x, cfg, 20260444ULL);
+
+  ArimaOptions opt;
+  opt.ar_order = 1;
+  opt.beta0 = {0.0, 0.0};
+  opt.max_iterations = 1200;
+  opt.max_evaluations = 12000;
+  const auto fit = Arima::fit_mle(y, x, opt, cfg);
+
+  REQUIRE(fit.beta.size() == 2);
+  REQUIRE(std::isfinite(fit.loglik(y, x)));
+  const auto lv = fit.loglik_per_obs(y, x, cfg).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto finite_count = static_cast<std::int64_t>(std::count_if(lv.begin(), lv.end(), [](double v) { return std::isfinite(v); }));
+  REQUIRE(finite_count > static_cast<std::int64_t>(lv.size() / 2));
+  REQUIRE(fit.infer(y, x, cfg).isfinite().all().item<double>() == Approx(1.0));
+  REQUIRE(fit.score(y, x, cfg).isfinite().all().item<double>() == Approx(1.0));
+  REQUIRE(fit.observed_inf(y, x, cfg).isfinite().all().item<double>() == Approx(1.0));
+
+  const Series x_future = pluss::randn({16, 2}, cfg, 20260445ULL);
+  const Series f = fit.forecast(16, y, x, x_future, cfg);
+  REQUIRE(f.sizes()[0] == 16);
+  REQUIRE(f.isfinite().all().item<double>() == Approx(1.0));
+
+  REQUIRE_THROWS(fit.loglik(y));
+  REQUIRE_THROWS(fit.forecast(16, y, cfg));
 }

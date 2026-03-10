@@ -1,3 +1,3 @@
 #pragma once
 
-#include "pluss/subsp/stat/ts.h"
+#include "pluss/subsp/stats/ts.h"

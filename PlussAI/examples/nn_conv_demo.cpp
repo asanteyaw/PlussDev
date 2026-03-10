@@ -1,4 +1,5 @@
 #include <pluss/pluss.h>
+#include <pluss/ai.h>
 
 #include <iostream>
 #include <vector>
@@ -68,7 +69,7 @@ int main() {
   const Series tcn_output = tcn_layer2->forward(tcn_features);
 
   std::cout << "nn_conv_demo\n";
-  std::cout << "surface: pluss::nn::Conv / pluss::nn::Conv1d via #include <pluss/pluss.h>\n";
+  std::cout << "surface: pluss::nn::Conv / pluss::nn::Conv1d via #include <pluss/pluss.h> + <pluss/ai.h>\n";
   std::cout << "2d conv module output: " << image_map << "\n";
   std::cout << "TCN layer 1 features: " << tcn_features << "\n";
   std::cout << "TCN layer 2 output: " << tcn_output << "\n";

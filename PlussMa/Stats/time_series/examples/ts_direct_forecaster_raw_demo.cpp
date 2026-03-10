@@ -1,4 +1,4 @@
-#include <pluss/pluss.h>
+#include <pluss/ma.h>
 
 #include <cstdint>
 #include <iostream>
@@ -20,18 +20,18 @@ int main() {
   }
   const auto y = pluss::make_series(yv, {n}, cfg);
 
-  pluss::subsp::stat::ts::DirectForecasterOptions options;
+  pluss::subsp::stats::ts::DirectForecasterOptions options;
   options.lag.horizon = {1, 2, 3};
   options.lag.response_lags = {1, 2};
   options.lag.predictor_lags = {{1, 2}};
   options.fit_intercept = true;
-  options.learner = pluss::subsp::stat::ts::DirectLearnerKind::Ridge;
+  options.learner = pluss::subsp::stats::ts::DirectLearnerKind::Ridge;
   options.ridge_lambda = 1e-4;
 
-  const auto model = pluss::subsp::stat::ts::DirectForecaster::fit(x, y, options, cfg);
+  const auto model = pluss::subsp::stats::ts::DirectForecaster::fit(x, y, options, cfg);
   const auto pred = model.predict(x, y, cfg);
-  const auto mse = model.loss(x, y, pluss::subsp::stat::ts::RegressionLoss::MSE, cfg);
-  const auto mae = model.loss(x, y, pluss::subsp::stat::ts::RegressionLoss::MAE, cfg);
+  const auto mse = model.loss(x, y, pluss::subsp::stats::ts::RegressionLoss::MSE, cfg);
+  const auto mae = model.loss(x, y, pluss::subsp::stats::ts::RegressionLoss::MAE, cfg);
   const auto prep_h2 = model.prepared_predictors(x, y, 2, cfg);
   const auto fcast = model.forecast(x, y, cfg);
 

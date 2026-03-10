@@ -2,7 +2,7 @@
 
 This file tracks the retired replacement surface for the legacy `randraw.m`.
 
-## Implemented in `pluss::subsp::stat::distr`
+## Implemented in `pluss::subsp::stats::distr`
 
 - `alpha`
 - `anglit`
