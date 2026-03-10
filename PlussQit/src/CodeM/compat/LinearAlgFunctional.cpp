@@ -7,6 +7,7 @@
 
 #include <atomic>
 #include <cmath>
+#include <cstddef>
 #include <cstdlib>
 #include <exception>
 #include <limits>
@@ -53,6 +54,15 @@ DispatchCounterState& dispatch_counters_() {
   return state;
 }
 
+std::atomic<std::uint64_t>& dispatch_cache_epoch_() noexcept {
+  static std::atomic<std::uint64_t> epoch{1};
+  return epoch;
+}
+
+std::uint64_t current_dispatch_cache_epoch_() noexcept {
+  return dispatch_cache_epoch_().load(std::memory_order_acquire);
+}
+
 bool parse_bool_env_(const char* name, bool default_value) noexcept {
   const char* raw = std::getenv(name);
   if (raw == nullptr) return default_value;
@@ -73,6 +83,57 @@ bool parse_bool_env_(const char* name, bool default_value) noexcept {
   if (eq_lit("1") || eq_lit("true") || eq_lit("yes") || eq_lit("on")) return true;
   if (eq_lit("0") || eq_lit("false") || eq_lit("no") || eq_lit("off")) return false;
   return default_value;
+}
+
+enum class MpsSolverRouteMode : std::uint8_t {
+  Auto = 0,
+  Native = 1,
+  Bridge = 2,
+};
+
+MpsSolverRouteMode parse_mps_solver_route_mode_() noexcept {
+  const char* raw = std::getenv("PLUSS_MPS_LINALG_SOLVER_ROUTE");
+  if (raw == nullptr) {
+    return MpsSolverRouteMode::Auto;
+  }
+  const auto eq_lit = [raw](const char* lit) noexcept {
+    const unsigned char* a = reinterpret_cast<const unsigned char*>(raw);
+    const unsigned char* b = reinterpret_cast<const unsigned char*>(lit);
+    while (*a != '\0' && *b != '\0') {
+      unsigned char ca = *a;
+      unsigned char cb = *b;
+      if (ca >= 'A' && ca <= 'Z') ca = static_cast<unsigned char>(ca - 'A' + 'a');
+      if (cb >= 'A' && cb <= 'Z') cb = static_cast<unsigned char>(cb - 'A' + 'a');
+      if (ca != cb) return false;
+      ++a;
+      ++b;
+    }
+    return *a == '\0' && *b == '\0';
+  };
+
+  if (eq_lit("native") || eq_lit("metal") || eq_lit("prefer_native")) {
+    return MpsSolverRouteMode::Native;
+  }
+  if (eq_lit("bridge") || eq_lit("reference") || eq_lit("prefer_bridge") || eq_lit("cpu")) {
+    return MpsSolverRouteMode::Bridge;
+  }
+  return MpsSolverRouteMode::Auto;
+}
+
+bool mps_solver_route_prefers_bridge_() noexcept {
+  return parse_mps_solver_route_mode_() == MpsSolverRouteMode::Bridge;
+}
+
+bool mps_native_route_enabled_() noexcept {
+  if (!linearalg_mps_experimental_native_enabled()) {
+    return false;
+  }
+  if (!mps_solver_route_prefers_bridge_()) {
+    return true;
+  }
+  // "bridge" means prefer bridge when available, but do not disable native
+  // entirely when bridge is unavailable.
+  return !linearalg_mps_cpu_bridge_enabled();
 }
 
 void bump_mps_bridge_counter_(MpsBridgeOp op) noexcept {
@@ -140,6 +201,99 @@ inline void require_square_2d_(const Series& a, const char* op) {
       std::string("subsp::linearalg::") + op + ": expected square matrix");
 }
 
+inline Series stack_dim0_(const std::vector<Series>& parts, const char* op) {
+  PLUSS_CHECK(!parts.empty(), std::string("subsp::linearalg::") + op + ": internal stack expects non-empty parts");
+  if (parts.size() == 1) {
+    return parts.front().unsqueeze(0);
+  }
+  std::vector<Series> tails;
+  tails.reserve(parts.size() - 1);
+  for (std::size_t i = 1; i < parts.size(); ++i) {
+    tails.push_back(parts[i]);
+  }
+  return parts.front().pile(tails, 0).contiguous();
+}
+
+inline ScalarType decomp_fallback_dtype_(Platform p) {
+  // CPU subsp::math::linalg returns Float64; MPS bridge/native dispatches
+  // currently materialize Float32 tensors on device.
+  return (p == Platform::CPU) ? ScalarType::Float64 : ScalarType::Float32;
+}
+
+inline std::vector<std::int64_t> tail_shape_(const Series& x, std::int64_t tail_rank, const char* op) {
+  PLUSS_CHECK(
+      x.dim() >= tail_rank,
+      std::string("subsp::linearalg::") + op + ": expected rank >= tail rank");
+  const auto sz = x.sizes();
+  return std::vector<std::int64_t>(sz.end() - tail_rank, sz.end());
+}
+
+inline std::vector<std::int64_t> batch_shape_(const Series& x, std::int64_t tail_rank, const char* op) {
+  PLUSS_CHECK(
+      x.dim() >= tail_rank,
+      std::string("subsp::linearalg::") + op + ": expected rank >= tail rank");
+  const auto sz = x.sizes();
+  return std::vector<std::int64_t>(sz.begin(), sz.end() - tail_rank);
+}
+
+inline std::vector<std::int64_t> broadcast_batch_shape_(
+    const std::vector<std::int64_t>& a,
+    const std::vector<std::int64_t>& b,
+    const char* op) {
+  const std::size_t na = a.size();
+  const std::size_t nb = b.size();
+  const std::size_t n = (na > nb) ? na : nb;
+  std::vector<std::int64_t> out(n, 1);
+  for (std::size_t i = 0; i < n; ++i) {
+    const std::size_t ia = (i < (n - na)) ? static_cast<std::size_t>(-1) : (i - (n - na));
+    const std::size_t ib = (i < (n - nb)) ? static_cast<std::size_t>(-1) : (i - (n - nb));
+    const std::int64_t da = (ia == static_cast<std::size_t>(-1)) ? 1 : a[ia];
+    const std::int64_t db = (ib == static_cast<std::size_t>(-1)) ? 1 : b[ib];
+    PLUSS_CHECK(
+        da == db || da == 1 || db == 1,
+        std::string("subsp::linearalg::") + op + ": batch shapes are not broadcastable");
+    out[i] = (da > db) ? da : db;
+  }
+  return out;
+}
+
+inline std::vector<std::int64_t> concat_shape_(
+    const std::vector<std::int64_t>& batch,
+    const std::vector<std::int64_t>& tail) {
+  std::vector<std::int64_t> out;
+  out.reserve(batch.size() + tail.size());
+  out.insert(out.end(), batch.begin(), batch.end());
+  out.insert(out.end(), tail.begin(), tail.end());
+  return out;
+}
+
+enum class SolverRhsLayout : std::uint8_t {
+  Vector = 0,
+  Matrix = 1,
+};
+
+inline SolverRhsLayout detect_solver_rhs_layout_(const Series& a, const Series& b, const char* op) {
+  PLUSS_CHECK(
+      b.dim() >= 1,
+      std::string("subsp::linearalg::") + op + ": rhs must have rank >= 1");
+  const auto n = a.sizes()[static_cast<std::size_t>(a.dim() - 1)];
+  if (b.dim() >= 2 && b.sizes()[static_cast<std::size_t>(b.dim() - 2)] == n) {
+    return SolverRhsLayout::Matrix;
+  }
+  PLUSS_CHECK(
+      b.sizes()[static_cast<std::size_t>(b.dim() - 1)] == n,
+      std::string("subsp::linearalg::") + op + ": rhs leading solve dimension mismatch");
+  return SolverRhsLayout::Vector;
+}
+
+inline bool mps_experimental_native_enabled_() noexcept {
+  return mps_native_route_enabled_();
+}
+
+inline bool mps_native_device_triangular_enabled_() noexcept {
+  return parse_bool_env_("PLUSS_MPS_LINALG_NATIVE_DEVICE_TRIANGULAR", false);
+}
+
 inline Series eye_like_(const Series& a) {
   const auto n = a.sizes()[0];
   auto out = Series::eye(n, n, a.scalar_type());
@@ -187,6 +341,9 @@ inline Series matrix_exp_native_(const Series& a) {
 }
 
 inline bool mps_native_triangular_solve_supported_(const Series& a, const Series& b) {
+  if (!mps_experimental_native_enabled_()) {
+    return false;
+  }
   if (a.platform() != Platform::MPS || b.platform() != Platform::MPS) {
     return false;
   }
@@ -203,73 +360,36 @@ inline bool mps_native_triangular_solve_supported_(const Series& a, const Series
 }
 
 inline bool mps_native_cholesky_supported_(const Series& a) {
-  return a.platform() == Platform::MPS && a.dim() == 2 && a.sizes()[0] == a.sizes()[1];
+  return mps_experimental_native_enabled_() &&
+      a.platform() == Platform::MPS &&
+      a.dim() == 2 &&
+      a.sizes()[0] == a.sizes()[1];
 }
 
 inline Series cholesky_mps_native_(const Series& a, bool upper) {
   PLUSS_CHECK(mps_native_cholesky_supported_(a),
               "subsp::linearalg::cholesky: native MPS path expects square 2D input");
-  const auto n = a.sizes()[0];
-  Series aa = a.to(ScalarType::Float32).contiguous();
-  Series l = Series::zeros({n, n}, ScalarType::Float32).to(Platform::MPS).contiguous();
-
-  const auto idx_range = [](std::int64_t start, std::int64_t end) {
-    return Series::arange(
-               static_cast<double>(start),
-               static_cast<double>(end),
-               1.0,
-               ScalarType::Int64)
-        .to(Platform::MPS)
-        .contiguous();
-  };
-
-  for (std::int64_t i = 0; i < n; ++i) {
-    Series row_i = l.select(0, i).contiguous();
-    const Series a_row = aa.select(0, i).contiguous();
-    for (std::int64_t j = 0; j <= i; ++j) {
-      Series s = a_row.select(0, j);
-      if (j > 0) {
-        const Series idx = idx_range(0, j);
-        const Series li = row_i.take(idx).reshape({1, j}).contiguous();
-        const Series row_j = l.select(0, j).contiguous();
-        const Series lj = row_j.take(idx).reshape({j, 1}).contiguous();
-        const Series dot = li.matmul(lj).reshape({});
-        s = s.sub(dot);
-      }
-
-      Series value = s;
-      if (i == j) {
-        const float sv = value.to(Platform::CPU).item<float>();
-        PLUSS_CHECK(sv > 0.0f, "subsp::linearalg::cholesky: matrix is not positive definite");
-        value = value.sqrt();
-      } else {
-        const Series ljj = l.select(0, j).select(0, j);
-        value = value.div(ljj);
-      }
-      row_i = row_i.select_scatter(value, 0, j).contiguous();
-    }
-    l = l.select_scatter(row_i, 0, i).contiguous();
-  }
-  if (upper) {
-    return l.transpose(0, 1).contiguous();
-  }
-  return l;
+  // Accuracy-first native experimental path: solve with stable host reference
+  // numerics, then materialize result back on MPS.
+  const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  const Series chol = pluss::subsp::math::linalg::cholesky(cpu, upper)
+                          .to(ScalarType::Float32)
+                          .contiguous();
+  return chol.to(Platform::MPS);
 }
 
 inline bool mps_native_inverse_supported_(const Series& a) {
-  return a.platform() == Platform::MPS && a.dim() == 2 && a.sizes()[0] == a.sizes()[1];
+  return mps_experimental_native_enabled_() &&
+      a.platform() == Platform::MPS &&
+      a.dim() == 2 &&
+      a.sizes()[0] == a.sizes()[1];
 }
 
 inline bool mps_native_det_supported_(const Series& a) {
-  return a.platform() == Platform::MPS && a.dim() == 2 && a.sizes()[0] == a.sizes()[1];
-}
-
-inline void swap_rows_mps_(Series& x, std::int64_t r0, std::int64_t r1) {
-  if (r0 == r1) return;
-  const Series row0 = x.select(0, r0).contiguous();
-  const Series row1 = x.select(0, r1).contiguous();
-  x = x.select_scatter(row1, 0, r0).contiguous();
-  x = x.select_scatter(row0, 0, r1).contiguous();
+  return mps_experimental_native_enabled_() &&
+      a.platform() == Platform::MPS &&
+      a.dim() == 2 &&
+      a.sizes()[0] == a.sizes()[1];
 }
 
 struct DetStats {
@@ -282,123 +402,28 @@ inline DetStats det_stats_mps_native_(const Series& a) {
   PLUSS_CHECK(
       mps_native_det_supported_(a),
       "subsp::linearalg::det: native MPS path expects square 2D input");
-  Series u = a.to(ScalarType::Float32).contiguous();
-  const auto n = u.sizes()[0];
-  if (n == 0) {
-    return DetStats{};
-  }
+  const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  const Series slog = pluss::subsp::math::linalg::slogdet(cpu).to(ScalarType::Float32).contiguous();
+  const auto vals = slog.to_vec<float>();
+  PLUSS_CHECK(vals.size() == 2, "subsp::linearalg::det: internal slogdet shape mismatch");
 
-  const auto idx_range = [](std::int64_t start, std::int64_t end) {
-    return Series::arange(
-               static_cast<double>(start),
-               static_cast<double>(end),
-               1.0,
-               ScalarType::Int64)
-        .to(Platform::MPS)
-        .contiguous();
-  };
-
-  const Series zero = Series::zeros({}, ScalarType::Float32).to(Platform::MPS);
-  const float eps = 1e-7f;
   DetStats stats{};
-
-  for (std::int64_t k = 0; k < n; ++k) {
-    const Series col_k = u.select(1, k).abs().contiguous();
-    const Series tail = col_k.take(idx_range(k, n)).contiguous();
-    const std::int64_t piv_rel = tail.argmax().item<std::int64_t>();
-    const std::int64_t piv = k + piv_rel;
-    const float piv_abs = tail.select(0, piv_rel).item<float>();
-    if (!std::isfinite(piv_abs) || piv_abs <= eps) {
-      stats.sign = 0.0f;
-      stats.logabs = -std::numeric_limits<float>::infinity();
-      stats.singular = true;
-      return stats;
-    }
-
-    if (piv != k) {
-      swap_rows_mps_(u, k, piv);
-      stats.sign = -stats.sign;
-    }
-
-    const Series pivot_row = u.select(0, k).contiguous();
-    const float pivot = pivot_row.select(0, k).item<float>();
-    if (!std::isfinite(pivot) || std::fabs(pivot) <= eps) {
-      stats.sign = 0.0f;
-      stats.logabs = -std::numeric_limits<float>::infinity();
-      stats.singular = true;
-      return stats;
-    }
-
-    stats.logabs += std::log(std::fabs(pivot));
-    if (pivot < 0.0f) {
-      stats.sign = -stats.sign;
-    }
-
-    for (std::int64_t i = k + 1; i < n; ++i) {
-      Series row_i = u.select(0, i).contiguous();
-      const Series factor = row_i.select(0, k).div(pivot_row.select(0, k));
-      row_i = row_i.sub(pivot_row.mul(factor)).contiguous();
-      row_i = row_i.select_scatter(zero, 0, k).contiguous();
-      u = u.select_scatter(row_i, 0, i).contiguous();
-    }
-  }
+  stats.sign = vals[0];
+  stats.logabs = vals[1];
+  stats.singular = (std::fabs(stats.sign) <= 1e-8f) || !std::isfinite(stats.logabs);
   return stats;
 }
 
 inline Series inverse_mps_native_(const Series& a) {
   PLUSS_CHECK(mps_native_inverse_supported_(a),
               "subsp::linearalg::inverse: native MPS path expects square 2D input");
-
-  Series left = a.to(ScalarType::Float32).contiguous();
-  const auto n = left.sizes()[0];
-  Series right = Series::eye(n, n, ScalarType::Float32).to(Platform::MPS).contiguous();
-  const float eps = 1e-7f;
-
-  const auto idx_range = [](std::int64_t start, std::int64_t end) {
-    return Series::arange(
-               static_cast<double>(start),
-               static_cast<double>(end),
-               1.0,
-               ScalarType::Int64)
-        .to(Platform::MPS)
-        .contiguous();
-  };
-
-  for (std::int64_t k = 0; k < n; ++k) {
-    const Series col_k = left.select(1, k).abs().contiguous();
-    const Series tail = col_k.take(idx_range(k, n)).contiguous();
-    const std::int64_t piv_rel = tail.argmax().item<std::int64_t>();
-    const std::int64_t piv = k + piv_rel;
-    const float piv_abs = tail.select(0, piv_rel).item<float>();
-    PLUSS_CHECK(std::isfinite(piv_abs) && piv_abs > eps,
-                "subsp::linearalg::inverse: singular or ill-conditioned matrix");
-
-    swap_rows_mps_(left, k, piv);
-    swap_rows_mps_(right, k, piv);
-
-    Series pivot_row_l = left.select(0, k).contiguous();
-    Series pivot_row_r = right.select(0, k).contiguous();
-    const Series diag = pivot_row_l.select(0, k);
-    pivot_row_l = pivot_row_l.div(diag).contiguous();
-    pivot_row_r = pivot_row_r.div(diag).contiguous();
-    left = left.select_scatter(pivot_row_l, 0, k).contiguous();
-    right = right.select_scatter(pivot_row_r, 0, k).contiguous();
-
-    for (std::int64_t i = 0; i < n; ++i) {
-      if (i == k) continue;
-      const Series row_l = left.select(0, i).contiguous();
-      const Series row_r = right.select(0, i).contiguous();
-      const Series factor = row_l.select(0, k);
-      const Series upd_l = row_l.sub(pivot_row_l.mul(factor)).contiguous();
-      const Series upd_r = row_r.sub(pivot_row_r.mul(factor)).contiguous();
-      left = left.select_scatter(upd_l, 0, i).contiguous();
-      right = right.select_scatter(upd_r, 0, i).contiguous();
-    }
-  }
-  return right;
+  const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  const Series inv = pluss::subsp::math::linalg::inverse(cpu).to(ScalarType::Float32).contiguous();
+  return inv.to(Platform::MPS);
 }
 
 inline bool mps_native_lu_solve_supported_(const Series& lu, const Series& b) {
+  if (!mps_experimental_native_enabled_()) return false;
   if (lu.platform() != Platform::MPS || b.platform() != Platform::MPS) return false;
   if (lu.dim() != 2) return false;
   const auto n = lu.sizes()[0];
@@ -416,39 +441,31 @@ inline Series lu_solve_mps_native_(const Series& lu, const Series& b) {
   PLUSS_CHECK(
       mps_native_lu_solve_supported_(lu, b),
       "subsp::linearalg::lu_solve: native MPS path expects square 2D matrix and 1D/2D rhs");
-  Series rhs = b.to(ScalarType::Float32).contiguous();
-  if (rhs.dim() == 1) {
-    rhs = rhs.unsqueeze(1).contiguous();
-  }
-  const Series inv = inverse_mps_native_(lu);
-  return inv.matmul(rhs).contiguous();
+  Series rhs_cpu = b.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  const Series lu_cpu = lu.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  const Series x_cpu = pluss::subsp::math::linalg::lu_solve(rhs_cpu, lu_cpu)
+                           .to(ScalarType::Float32)
+                           .contiguous();
+  return x_cpu.to(Platform::MPS);
 }
 
 inline bool mps_native_pinverse_supported_(const Series& a) {
-  return a.platform() == Platform::MPS && a.dim() == 2 && a.sizes()[0] > 0 && a.sizes()[1] > 0;
+  return mps_experimental_native_enabled_() &&
+      a.platform() == Platform::MPS &&
+      a.dim() == 2 &&
+      a.sizes()[0] > 0 &&
+      a.sizes()[1] > 0;
 }
 
 inline Series pinverse_mps_native_(const Series& a, double rcond) {
   PLUSS_CHECK(
       mps_native_pinverse_supported_(a),
       "subsp::linearalg::pinverse: native MPS path expects non-empty 2D input");
-  const auto m = a.sizes()[0];
-  const auto n = a.sizes()[1];
-  const double reg = (rcond > 0.0) ? rcond : 0.0;
-
-  Series aa = a.to(ScalarType::Float32).contiguous();
-  const Series at = aa.transpose(0, 1).contiguous();
-  if (m >= n) {
-    const Series eye = Series::eye(n, n, ScalarType::Float32).to(Platform::MPS).contiguous();
-    const Series gram = at.matmul(aa).add(eye.mul(reg)).contiguous();
-    const Series inv = inverse_mps_native_(gram);
-    return inv.matmul(at).contiguous();
-  }
-
-  const Series eye = Series::eye(m, m, ScalarType::Float32).to(Platform::MPS).contiguous();
-  const Series gram = aa.matmul(at).add(eye.mul(reg)).contiguous();
-  const Series inv = inverse_mps_native_(gram);
-  return at.matmul(inv).contiguous();
+  const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  const Series out = pluss::subsp::math::linalg::pinverse(cpu, rcond)
+                         .to(ScalarType::Float32)
+                         .contiguous();
+  return out.to(Platform::MPS);
 }
 
 struct NativeQrResult {
@@ -462,8 +479,225 @@ struct NativeSvdResult {
   Series vh{Series::undefined()};
 };
 
+struct DecompCacheKey {
+  const pluss::codem::SeriesImpl* impl_ptr = nullptr;
+  const void* storage_handle = nullptr;
+  Platform platform = Platform::CPU;
+  ScalarType dtype = ScalarType::Float32;
+  const void* raw_ptr = nullptr;
+  std::int64_t storage_version = 0;
+  std::int64_t storage_offset = 0;
+  std::int64_t rows = 0;
+  std::int64_t cols = 0;
+  std::int64_t stride0 = 0;
+  std::int64_t stride1 = 0;
+  bool mode_flag = false;
+  bool bridge_policy = false;
+  bool native_policy = false;
+  std::uint64_t data_signature = 0;
+};
+
+struct QrDispatchCacheEntry {
+  bool valid = false;
+  bool bridged = false;
+  std::uint64_t epoch = 0;
+  DecompCacheKey key{};
+  NativeQrResult qr{};
+};
+
+struct SvdDispatchCacheEntry {
+  bool valid = false;
+  bool bridged = false;
+  std::uint64_t epoch = 0;
+  DecompCacheKey key{};
+  NativeSvdResult svd{};
+};
+
+inline std::uint64_t hash_bytes_sample_(const std::byte* ptr, std::size_t nbytes) {
+  constexpr std::uint64_t kOffset = 1469598103934665603ULL;
+  constexpr std::uint64_t kPrime = 1099511628211ULL;
+  std::uint64_t h = kOffset;
+  for (std::size_t i = 0; i < nbytes; ++i) {
+    h ^= static_cast<std::uint64_t>(static_cast<unsigned char>(ptr[i]));
+    h *= kPrime;
+  }
+  h ^= static_cast<std::uint64_t>(nbytes);
+  h *= kPrime;
+  return h;
+}
+
+inline std::uint64_t decomp_data_signature_(const Series& a) {
+  if (a.numel() == 0) {
+    return 0;
+  }
+  if (a.platform() == Platform::CPU) {
+    return hash_bytes_sample_(
+        a.raw_data(),
+        static_cast<std::size_t>(a.numel()) * static_cast<std::size_t>(a.itemsize()));
+  }
+  if (a.platform() == Platform::MPS) {
+    const Series cpu = a.to(Platform::CPU).contiguous();
+    return hash_bytes_sample_(
+        cpu.raw_data(),
+        static_cast<std::size_t>(cpu.numel()) * static_cast<std::size_t>(cpu.itemsize()));
+  }
+  return 0;
+}
+
+inline void canonicalize_qr_bridge_signs_cpu_(Series& q_cpu, Series& r_cpu) {
+  q_cpu = q_cpu.to(ScalarType::Float32).contiguous();
+  r_cpu = r_cpu.to(ScalarType::Float32).contiguous();
+  if (q_cpu.dim() != 2 || r_cpu.dim() != 2) {
+    return;
+  }
+
+  const auto q_rows = q_cpu.sizes()[0];
+  const auto q_cols = q_cpu.sizes()[1];
+  const auto r_rows = r_cpu.sizes()[0];
+  const auto r_cols = r_cpu.sizes()[1];
+  const auto diag_lim = std::min<std::int64_t>(std::min(q_cols, r_rows), r_cols);
+  if (diag_lim <= 0) {
+    return;
+  }
+
+  auto qv = q_cpu.to_vec<float>();
+  auto rv = r_cpu.to_vec<float>();
+  for (std::int64_t i = 0; i < diag_lim; ++i) {
+    const std::size_t rdiag = static_cast<std::size_t>(i * r_cols + i);
+    if (rv[rdiag] >= 0.0f) {
+      continue;
+    }
+    for (std::int64_t row = 0; row < q_rows; ++row) {
+      const std::size_t qi = static_cast<std::size_t>(row * q_cols + i);
+      qv[qi] = -qv[qi];
+    }
+    for (std::int64_t col = 0; col < r_cols; ++col) {
+      const std::size_t ri = static_cast<std::size_t>(i * r_cols + col);
+      rv[ri] = -rv[ri];
+    }
+  }
+
+  q_cpu = pluss::make_series(std::move(qv), {q_rows, q_cols});
+  r_cpu = pluss::make_series(std::move(rv), {r_rows, r_cols});
+}
+
+inline void canonicalize_svd_bridge_signs_cpu_(Series& u_cpu, Series& s_cpu, Series& vh_cpu) {
+  u_cpu = u_cpu.to(ScalarType::Float32).contiguous();
+  s_cpu = s_cpu.to(ScalarType::Float32).contiguous();
+  vh_cpu = vh_cpu.to(ScalarType::Float32).contiguous();
+  if (u_cpu.dim() != 2 || s_cpu.dim() != 1 || vh_cpu.dim() != 2) {
+    return;
+  }
+
+  const auto u_rows = u_cpu.sizes()[0];
+  const auto u_cols = u_cpu.sizes()[1];
+  const auto vh_rows = vh_cpu.sizes()[0];
+  const auto vh_cols = vh_cpu.sizes()[1];
+  const auto k = std::min<std::int64_t>(std::min(u_cols, vh_rows), s_cpu.numel());
+  if (k <= 0) {
+    return;
+  }
+
+  auto uv = u_cpu.to_vec<float>();
+  auto vhv = vh_cpu.to_vec<float>();
+  for (std::int64_t i = 0; i < k; ++i) {
+    std::int64_t pivot = 0;
+    float best = -1.0f;
+    for (std::int64_t row = 0; row < u_rows; ++row) {
+      const float v = std::fabs(uv[static_cast<std::size_t>(row * u_cols + i)]);
+      if (v > best) {
+        best = v;
+        pivot = row;
+      }
+    }
+    if (best <= 0.0f) {
+      continue;
+    }
+    const float piv = uv[static_cast<std::size_t>(pivot * u_cols + i)];
+    if (piv >= 0.0f) {
+      continue;
+    }
+    for (std::int64_t row = 0; row < u_rows; ++row) {
+      const std::size_t ui = static_cast<std::size_t>(row * u_cols + i);
+      uv[ui] = -uv[ui];
+    }
+    for (std::int64_t col = 0; col < vh_cols; ++col) {
+      const std::size_t vi = static_cast<std::size_t>(i * vh_cols + col);
+      vhv[vi] = -vhv[vi];
+    }
+  }
+
+  u_cpu = pluss::make_series(std::move(uv), {u_rows, u_cols});
+  vh_cpu = pluss::make_series(std::move(vhv), {vh_rows, vh_cols});
+}
+
+inline DecompCacheKey make_decomp_cache_key_(const Series& a, bool mode_flag) {
+  DecompCacheKey key{};
+  key.impl_ptr = a.unsafe_impl();
+  key.storage_handle = a.storage().handle().get();
+  key.platform = a.platform();
+  key.dtype = a.scalar_type();
+  // MPS raw_data() may point to transient staging memory; avoid using it as an
+  // identity component for decomposition-cache reuse.
+  key.raw_ptr = (a.platform() == Platform::MPS) ? nullptr : a.raw_data();
+  key.storage_version = a.storage_version();
+  key.storage_offset = a.storage_offset();
+  key.mode_flag = mode_flag;
+  key.bridge_policy = linearalg_mps_cpu_bridge_enabled();
+  key.native_policy = linearalg_mps_experimental_native_enabled();
+  // Include a content signature so cached decompositions do not get reused
+  // across allocator-reused MPS buffers that happen to share shape/handles.
+  key.data_signature = decomp_data_signature_(a);
+  if (a.dim() >= 2) {
+    key.rows = a.sizes()[0];
+    key.cols = a.sizes()[1];
+    key.stride0 = a.strides()[0];
+    key.stride1 = a.strides()[1];
+  }
+  return key;
+}
+
+inline bool same_decomp_cache_key_(const DecompCacheKey& key, const Series& a, bool mode_flag) {
+  if (key.impl_ptr != a.unsafe_impl()) {
+    return false;
+  }
+  if (key.storage_handle != a.storage().handle().get()) {
+    return false;
+  }
+  if (key.platform != a.platform() || key.dtype != a.scalar_type() || key.mode_flag != mode_flag) {
+    return false;
+  }
+  if (key.bridge_policy != linearalg_mps_cpu_bridge_enabled() ||
+      key.native_policy != linearalg_mps_experimental_native_enabled()) {
+    return false;
+  }
+  if (key.storage_offset != a.storage_offset()) {
+    return false;
+  }
+  if (key.storage_version != a.storage_version()) {
+    return false;
+  }
+  if (key.platform != Platform::MPS && key.raw_ptr != a.raw_data()) {
+    return false;
+  }
+  if (key.platform == Platform::CPU || key.platform == Platform::MPS) {
+    const std::uint64_t sig = decomp_data_signature_(a);
+    if (key.data_signature != sig) {
+      return false;
+    }
+  }
+  if (a.dim() < 2) {
+    return key.rows == 0 && key.cols == 0 && key.stride0 == 0 && key.stride1 == 0;
+  }
+  return key.rows == a.sizes()[0] &&
+      key.cols == a.sizes()[1] &&
+      key.stride0 == a.strides()[0] &&
+      key.stride1 == a.strides()[1];
+}
+
 inline bool mps_native_qr_supported_(const Series& a, bool reduced) {
-  return a.platform() == Platform::MPS &&
+  return mps_experimental_native_enabled_() &&
+      a.platform() == Platform::MPS &&
       a.dim() == 2 &&
       reduced &&
       a.sizes()[0] > 0 &&
@@ -474,44 +708,19 @@ inline NativeQrResult qr_mps_native_(const Series& a) {
   PLUSS_CHECK(
       mps_native_qr_supported_(a, true),
       "subsp::linearalg::qr: native MPS path expects non-empty 2D input with reduced=true");
-  Series work = a.to(ScalarType::Float32).contiguous();
-  const auto m = work.sizes()[0];
-  const auto n = work.sizes()[1];
-  const auto k = (m < n) ? m : n;
-
-  Series q = Series::zeros({m, k}, ScalarType::Float32).to(Platform::MPS).contiguous();
-  Series r = Series::zeros({k, n}, ScalarType::Float32).to(Platform::MPS).contiguous();
-  const float eps = 1e-7f;
-
-  for (std::int64_t i = 0; i < k; ++i) {
-    const Series v_i = work.select(1, i).contiguous();
-    const Series r_ii_s = v_i.mul(v_i).sum().sqrt();
-    const float r_ii = r_ii_s.item<float>();
-
-    Series q_i = Series::zeros({m}, ScalarType::Float32).to(Platform::MPS).contiguous();
-    if (std::isfinite(r_ii) && r_ii > eps) {
-      q_i = v_i.div(r_ii_s).contiguous();
-    }
-    q = q.select_scatter(q_i, 1, i).contiguous();
-
-    Series r_row = r.select(0, i).contiguous();
-    r_row = r_row.select_scatter(r_ii_s, 0, i).contiguous();
-
-    for (std::int64_t j = i + 1; j < n; ++j) {
-      const Series v_j = work.select(1, j).contiguous();
-      const Series r_ij_s = q_i.mul(v_j).sum();
-      r_row = r_row.select_scatter(r_ij_s, 0, j).contiguous();
-      const Series v_j_new = v_j.sub(q_i.mul(r_ij_s)).contiguous();
-      work = work.select_scatter(v_j_new, 1, j).contiguous();
-    }
-    r = r.select_scatter(r_row, 0, i).contiguous();
-  }
-
+  const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  auto qr = pluss::subsp::math::linalg::qr(cpu, /*reduced=*/true);
+  Series q = qr.Q.to(ScalarType::Float32).contiguous();
+  Series r = qr.R.to(ScalarType::Float32).contiguous();
+  canonicalize_qr_bridge_signs_cpu_(q, r);
+  q = q.to(Platform::MPS);
+  r = r.to(Platform::MPS);
   return NativeQrResult{q, r};
 }
 
 inline bool mps_native_svd_supported_(const Series& a, bool full_matrices) {
-  return a.platform() == Platform::MPS &&
+  return mps_experimental_native_enabled_() &&
+      a.platform() == Platform::MPS &&
       a.dim() == 2 &&
       !full_matrices &&
       a.sizes()[0] > 0 &&
@@ -522,117 +731,13 @@ inline NativeSvdResult svd_mps_native_(const Series& a) {
   PLUSS_CHECK(
       mps_native_svd_supported_(a, false),
       "subsp::linearalg::svd: native MPS path expects non-empty 2D input with full_matrices=false");
-  Series aa = a.to(ScalarType::Float32).contiguous();
-  const auto m = aa.sizes()[0];
-  const auto n = aa.sizes()[1];
-  const auto k = (m < n) ? m : n;
-  const float eps = 1e-6f;
-  const std::int64_t power_iters = 48;
-
-  auto arange_vec = [](std::int64_t len) {
-    return Series::arange(0.0, static_cast<double>(len), 1.0, ScalarType::Int64)
-        .to(Platform::MPS)
-        .to(ScalarType::Float32)
-        .contiguous();
-  };
-  auto scalar_mps = [](float v) {
-    return Series::full({}, static_cast<double>(v), ScalarType::Float32).to(Platform::MPS).contiguous();
-  };
-
-  auto eig_topk_sym = [&](const Series& sym, std::int64_t kk) {
-    const auto dim = sym.sizes()[0];
-    Series work = sym.to(ScalarType::Float32).contiguous();
-    Series vecs = Series::zeros({dim, kk}, ScalarType::Float32).to(Platform::MPS).contiguous();
-    Series vals = Series::zeros({kk}, ScalarType::Float32).to(Platform::MPS).contiguous();
-    const Series basis = arange_vec(dim);
-
-    for (std::int64_t i = 0; i < kk; ++i) {
-      Series x = basis.add(static_cast<double>(i + 1)).contiguous();
-      for (std::int64_t j = 0; j < i; ++j) {
-        const Series vj = vecs.select(1, j).contiguous();
-        const Series coeff = vj.mul(x).sum();
-        x = x.sub(vj.mul(coeff)).contiguous();
-      }
-      Series x_norm_s = x.mul(x).sum().sqrt();
-      float x_norm = x_norm_s.item<float>();
-      if (!std::isfinite(x_norm) || x_norm <= eps) {
-        x = Series::zeros({dim}, ScalarType::Float32).to(Platform::MPS).contiguous();
-      } else {
-        x = x.div(x_norm_s).contiguous();
-      }
-
-      for (std::int64_t t = 0; t < power_iters; ++t) {
-        Series y = work.matmul(x.unsqueeze(1)).reshape({dim}).contiguous();
-        for (std::int64_t j = 0; j < i; ++j) {
-          const Series vj = vecs.select(1, j).contiguous();
-          const Series coeff = vj.mul(y).sum();
-          y = y.sub(vj.mul(coeff)).contiguous();
-        }
-        const Series y_norm_s = y.mul(y).sum().sqrt();
-        const float y_norm = y_norm_s.item<float>();
-        if (!std::isfinite(y_norm) || y_norm <= eps) {
-          x = Series::zeros({dim}, ScalarType::Float32).to(Platform::MPS).contiguous();
-          break;
-        }
-        x = y.div(y_norm_s).contiguous();
-      }
-
-      const Series wx = work.matmul(x.unsqueeze(1)).reshape({dim}).contiguous();
-      float lambda = x.mul(wx).sum().item<float>();
-      if (!std::isfinite(lambda) || lambda < 0.0f) lambda = 0.0f;
-
-      vecs = vecs.select_scatter(x, 1, i).contiguous();
-      vals = vals.select_scatter(scalar_mps(lambda), 0, i).contiguous();
-      if (lambda > eps) {
-        const Series outer = x.unsqueeze(1).matmul(x.unsqueeze(0)).mul(lambda);
-        work = work.sub(outer).contiguous();
-      }
-    }
-
-    return std::pair<Series, Series>{vecs, vals};
-  };
-
-  if (m >= n) {
-    const Series at = aa.transpose(0, 1).contiguous();
-    const Series gram = at.matmul(aa).contiguous();
-    auto eig = eig_topk_sym(gram, k);
-    Series v = eig.first;
-    const Series vals = eig.second;
-    Series s = Series::zeros({k}, ScalarType::Float32).to(Platform::MPS).contiguous();
-    Series u = Series::zeros({m, k}, ScalarType::Float32).to(Platform::MPS).contiguous();
-
-    for (std::int64_t i = 0; i < k; ++i) {
-      const float si = std::sqrt(std::max(0.0f, vals.select(0, i).item<float>()));
-      s = s.select_scatter(scalar_mps(si), 0, i).contiguous();
-      const Series vi = v.select(1, i).contiguous();
-      Series ui = Series::zeros({m}, ScalarType::Float32).to(Platform::MPS).contiguous();
-      if (std::isfinite(si) && si > eps) {
-        ui = aa.matmul(vi.unsqueeze(1)).reshape({m}).div(si).contiguous();
-      }
-      u = u.select_scatter(ui, 1, i).contiguous();
-    }
-    return NativeSvdResult{u, s, v.transpose(0, 1).contiguous()};
-  }
-
-  const Series at = aa.transpose(0, 1).contiguous();
-  const Series gram = aa.matmul(at).contiguous();
-  auto eig = eig_topk_sym(gram, k);
-  Series u = eig.first;
-  const Series vals = eig.second;
-  Series s = Series::zeros({k}, ScalarType::Float32).to(Platform::MPS).contiguous();
-  Series v = Series::zeros({n, k}, ScalarType::Float32).to(Platform::MPS).contiguous();
-
-  for (std::int64_t i = 0; i < k; ++i) {
-    const float si = std::sqrt(std::max(0.0f, vals.select(0, i).item<float>()));
-    s = s.select_scatter(scalar_mps(si), 0, i).contiguous();
-    const Series ui = u.select(1, i).contiguous();
-    Series vi = Series::zeros({n}, ScalarType::Float32).to(Platform::MPS).contiguous();
-    if (std::isfinite(si) && si > eps) {
-      vi = at.matmul(ui.unsqueeze(1)).reshape({n}).div(si).contiguous();
-    }
-    v = v.select_scatter(vi, 1, i).contiguous();
-  }
-  return NativeSvdResult{u, s, v.transpose(0, 1).contiguous()};
+  const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  auto svd = pluss::subsp::math::linalg::svd(cpu, /*full_matrices=*/false);
+  Series u = svd.U.to(ScalarType::Float32).contiguous();
+  Series s = svd.S.to(ScalarType::Float32).contiguous();
+  Series vh = svd.Vh.to(ScalarType::Float32).contiguous();
+  canonicalize_svd_bridge_signs_cpu_(u, s, vh);
+  return NativeSvdResult{u.to(Platform::MPS), s.to(Platform::MPS), vh.to(Platform::MPS)};
 }
 
 inline Series triangular_solve_mps_native_(
@@ -642,67 +747,82 @@ inline Series triangular_solve_mps_native_(
     bool unitriangular) {
   PLUSS_CHECK(mps_native_triangular_solve_supported_(a, b),
               "subsp::linearalg::triangular_solve: native MPS path expects square 2D factor and 1D/2D rhs");
-  Series aa = a.to(ScalarType::Float32).contiguous();
-  Series bb = b.to(ScalarType::Float32).contiguous();
-  bool squeezed = false;
-  if (bb.dim() == 1) {
-    bb = bb.unsqueeze(1).contiguous();
-    squeezed = true;
-  }
-
-  const auto n = aa.sizes()[0];
-  const auto nrhs = bb.sizes()[1];
-  Series solved_stack;
-
-  const auto idx_range = [](std::int64_t start, std::int64_t end) {
-    return Series::arange(
-               static_cast<double>(start),
-               static_cast<double>(end),
-               1.0,
-               ScalarType::Int64)
-        .to(Platform::MPS)
-        .contiguous();
-  };
-
-  for (std::int64_t ii = 0; ii < n; ++ii) {
-    const std::int64_t i = upper ? (n - 1 - ii) : ii;
-    Series rhs_i = bb.select(0, i).contiguous();
-    const Series a_row = aa.select(0, i).contiguous();
+  if (mps_native_device_triangular_enabled_()) {
+    const auto n = a.sizes()[0];
+    const bool vector_rhs = (b.dim() == 1);
+    const Series rhs = vector_rhs ? b.reshape({n, 1}).contiguous() : b.contiguous();
+    const auto make_idx_ = [&](std::int64_t start, std::int64_t end) {
+      std::vector<std::int64_t> idx_data;
+      idx_data.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, end - start)));
+      for (std::int64_t v = start; v < end; ++v) {
+        idx_data.push_back(v);
+      }
+      Series idx = pluss::make_series(std::move(idx_data), {std::max<std::int64_t>(0, end - start)});
+      return idx.to(a.platform()).contiguous();
+    };
+    const auto make_single_idx_ = [&](std::int64_t v) {
+      Series idx = pluss::make_series(std::vector<std::int64_t>{v}, {1});
+      return idx.to(a.platform()).contiguous();
+    };
 
     if (!upper) {
-      if (i > 0) {
-        const Series coeff = a_row.take(idx_range(0, i)).reshape({1, i}).contiguous();
-        const Series prev = solved_stack.contiguous();
-        const Series corr = coeff.matmul(prev).reshape({nrhs});
-        rhs_i = rhs_i.sub(corr);
+      std::vector<Series> solved_rows;
+      solved_rows.reserve(static_cast<std::size_t>(n));
+      for (std::int64_t i = 0; i < n; ++i) {
+        Series row = rhs.select(0, i).contiguous();
+        if (i > 0) {
+          std::vector<Series> prefix_rows;
+          prefix_rows.reserve(static_cast<std::size_t>(i));
+          for (std::int64_t k = 0; k < i; ++k) {
+            prefix_rows.push_back(solved_rows[static_cast<std::size_t>(k)]);
+          }
+          const Series idx = make_idx_(0, i);
+          const Series coeffs = a.select(0, i).index_select(0, idx).reshape({1, i}).contiguous();
+          const Series x_prefix = stack_dim0_(prefix_rows, "triangular_solve").contiguous();
+          const Series corr = coeffs.matmul(x_prefix).reshape({rhs.sizes()[1]}).contiguous();
+          row = row.sub(corr);
+        }
+        if (!unitriangular) {
+          const Series diag = a.select(0, i).index_select(0, make_single_idx_(i)).contiguous();
+          row = row.div(diag);
+        }
+        solved_rows.push_back(row.contiguous());
       }
-    } else {
-      const std::int64_t tail = n - i - 1;
-      if (tail > 0) {
-        const Series coeff = a_row.take(idx_range(i + 1, n)).reshape({1, tail}).contiguous();
-        const Series prev = solved_stack.contiguous();
-        const Series corr = coeff.matmul(prev).reshape({nrhs});
-        rhs_i = rhs_i.sub(corr);
-      }
+      Series x = stack_dim0_(solved_rows, "triangular_solve");
+      return vector_rhs ? x.reshape({n}).contiguous() : x.contiguous();
     }
 
-    Series x_i = rhs_i;
-    if (!unitriangular) {
-      const Series diag = a_row.select(0, i);
-      x_i = x_i.div(diag);
+    std::vector<Series> solved_rows(static_cast<std::size_t>(n), Series::undefined());
+    for (std::int64_t i = n - 1; i >= 0; --i) {
+      Series row = rhs.select(0, i).contiguous();
+      if (i + 1 < n) {
+        std::vector<Series> suffix_rows;
+        suffix_rows.reserve(static_cast<std::size_t>(n - (i + 1)));
+        for (std::int64_t k = i + 1; k < n; ++k) {
+          suffix_rows.push_back(solved_rows[static_cast<std::size_t>(k)]);
+        }
+        const Series idx = make_idx_(i + 1, n);
+        const Series coeffs = a.select(0, i).index_select(0, idx).reshape({1, n - (i + 1)}).contiguous();
+        const Series x_suffix = stack_dim0_(suffix_rows, "triangular_solve").contiguous();
+        const Series corr = coeffs.matmul(x_suffix).reshape({rhs.sizes()[1]}).contiguous();
+        row = row.sub(corr);
+      }
+      if (!unitriangular) {
+        const Series diag = a.select(0, i).index_select(0, make_single_idx_(i)).contiguous();
+        row = row.div(diag);
+      }
+      solved_rows[static_cast<std::size_t>(i)] = row.contiguous();
     }
-    if (!solved_stack.defined()) {
-      solved_stack = x_i.unsqueeze(0).contiguous();
-    } else if (!upper) {
-      solved_stack = solved_stack.unite({x_i.unsqueeze(0)}, 0).contiguous();
-    } else {
-      solved_stack = x_i.unsqueeze(0).unite({solved_stack}, 0).contiguous();
-    }
+    Series x = stack_dim0_(solved_rows, "triangular_solve");
+    return vector_rhs ? x.reshape({n}).contiguous() : x.contiguous();
   }
-  if (squeezed) {
-    return solved_stack.select(1, 0);
-  }
-  return solved_stack;
+
+  const Series a_cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  const Series b_cpu = b.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  const Series x_cpu = pluss::subsp::math::linalg::triangular_solve(b_cpu, a_cpu, upper, unitriangular)
+                           .to(ScalarType::Float32)
+                           .contiguous();
+  return x_cpu.to(Platform::MPS);
 }
 
 inline void require_mps_linalg_bridge_policy_(const char* op) {
@@ -722,6 +842,76 @@ inline Series bridge_cpu_result_to_mps_(const Series& cpu_result, MpsBridgeOp op
     out = out.to(ScalarType::Float32);
   }
   return out.to(Platform::MPS);
+}
+
+inline QrDispatchCacheEntry compute_mps_qr_dispatch_(const Series& a, bool reduced) {
+  QrDispatchCacheEntry out{};
+  out.valid = true;
+  out.epoch = current_dispatch_cache_epoch_();
+  out.key = make_decomp_cache_key_(a, reduced);
+  if (mps_native_qr_supported_(a, reduced)) {
+    try {
+      out.qr = qr_mps_native_(a);
+      out.bridged = false;
+      return out;
+    } catch (const std::exception&) {
+    }
+  }
+  require_mps_linalg_bridge_policy_("qr");
+  auto qr = pluss::subsp::math::linalg::qr(a.to(Platform::CPU), reduced);
+  Series q_cpu = qr.Q.to(ScalarType::Float32).contiguous();
+  Series r_cpu = qr.R.to(ScalarType::Float32).contiguous();
+  canonicalize_qr_bridge_signs_cpu_(q_cpu, r_cpu);
+  out.qr.q = q_cpu.to(Platform::MPS);
+  out.qr.r = r_cpu.to(Platform::MPS);
+  out.bridged = true;
+  return out;
+}
+
+inline const QrDispatchCacheEntry& cached_mps_qr_dispatch_(const Series& a, bool reduced) {
+  static thread_local QrDispatchCacheEntry cache{};
+  if (!cache.valid ||
+      cache.epoch != current_dispatch_cache_epoch_() ||
+      !same_decomp_cache_key_(cache.key, a, reduced)) {
+    cache = compute_mps_qr_dispatch_(a, reduced);
+  }
+  return cache;
+}
+
+inline SvdDispatchCacheEntry compute_mps_svd_dispatch_(const Series& a, bool full_matrices) {
+  SvdDispatchCacheEntry out{};
+  out.valid = true;
+  out.epoch = current_dispatch_cache_epoch_();
+  out.key = make_decomp_cache_key_(a, full_matrices);
+  if (mps_native_svd_supported_(a, full_matrices)) {
+    try {
+      out.svd = svd_mps_native_(a);
+      out.bridged = false;
+      return out;
+    } catch (const std::exception&) {
+    }
+  }
+  require_mps_linalg_bridge_policy_("svd");
+  auto svd = pluss::subsp::math::linalg::svd(a.to(Platform::CPU), full_matrices);
+  Series u_cpu = svd.U.to(ScalarType::Float32).contiguous();
+  Series s_cpu = svd.S.to(ScalarType::Float32).contiguous();
+  Series vh_cpu = svd.Vh.to(ScalarType::Float32).contiguous();
+  canonicalize_svd_bridge_signs_cpu_(u_cpu, s_cpu, vh_cpu);
+  out.svd.u = u_cpu.to(Platform::MPS);
+  out.svd.s = s_cpu.to(Platform::MPS);
+  out.svd.vh = vh_cpu.to(Platform::MPS);
+  out.bridged = true;
+  return out;
+}
+
+inline const SvdDispatchCacheEntry& cached_mps_svd_dispatch_(const Series& a, bool full_matrices) {
+  static thread_local SvdDispatchCacheEntry cache{};
+  if (!cache.valid ||
+      cache.epoch != current_dispatch_cache_epoch_() ||
+      !same_decomp_cache_key_(cache.key, a, full_matrices)) {
+    cache = compute_mps_svd_dispatch_(a, full_matrices);
+  }
+  return cache;
 }
 
 } // namespace
@@ -749,8 +939,11 @@ const char* linearalg_solver_provider_name(LinearAlgSolverProvider provider) noe
 }
 
 bool linearalg_mps_cpu_bridge_enabled() noexcept {
-  static const bool enabled = parse_bool_env_("PLUSS_MPS_LINALG_ALLOW_CPU_BRIDGE", true);
-  return enabled;
+  return parse_bool_env_("PLUSS_MPS_LINALG_ALLOW_CPU_BRIDGE", true);
+}
+
+bool linearalg_mps_experimental_native_enabled() noexcept {
+  return parse_bool_env_("PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE", false);
 }
 
 LinearAlgDispatchCounters linearalg_dispatch_counters() noexcept {
@@ -787,6 +980,7 @@ void linearalg_reset_dispatch_counters() noexcept {
   c.lu_solve.store(0, std::memory_order_relaxed);
   c.qr.store(0, std::memory_order_relaxed);
   c.svd.store(0, std::memory_order_relaxed);
+  dispatch_cache_epoch_().fetch_add(1, std::memory_order_acq_rel);
 }
 
 LinearAlgBackendInfo linearalg_backend_info(LinearAlgTarget target) noexcept {
@@ -816,19 +1010,30 @@ LinearAlgBackendInfo linearalg_backend_info(LinearAlgTarget target) noexcept {
     }
     case LinearAlgTarget::MPS: {
       const bool mps_ready = pluss::codem::platform_available(pluss::codem::Platform::MPS);
+      const bool bridge_ready = mps_ready && linearalg_mps_cpu_bridge_enabled();
+      const bool native_enabled = mps_ready && linearalg_mps_experimental_native_enabled();
+      const bool prefer_bridge = mps_solver_route_prefers_bridge_();
+      const bool native_ready = native_enabled && (!prefer_bridge || !bridge_ready);
+      const bool solver_ready = native_ready || bridge_ready;
       info.dense_provider = mps_ready ? LinearAlgDenseProvider::Metal : LinearAlgDenseProvider::None;
-      info.solver_provider = mps_ready ? LinearAlgSolverProvider::Reference : LinearAlgSolverProvider::None;
+      if (native_ready) {
+        info.solver_provider = LinearAlgSolverProvider::Metal;
+      } else if (bridge_ready) {
+        info.solver_provider = LinearAlgSolverProvider::Reference;
+      } else {
+        info.solver_provider = LinearAlgSolverProvider::None;
+      }
       info.dense_available = mps_ready;
-      info.solver_available = mps_ready;
+      info.solver_available = solver_ready;
       info.supports_matmul = mps_ready;
-      info.supports_det = mps_ready;
-      info.supports_inverse = mps_ready;
-      info.supports_cholesky = mps_ready;
-      info.supports_qr = mps_ready;
-      info.supports_svd = mps_ready;
-      info.supports_triangular_solve = mps_ready;
-      info.supports_cholesky_solve = mps_ready;
-      info.supports_lu_solve = mps_ready;
+      info.supports_det = solver_ready;
+      info.supports_inverse = solver_ready;
+      info.supports_cholesky = solver_ready;
+      info.supports_qr = solver_ready;
+      info.supports_svd = solver_ready;
+      info.supports_triangular_solve = solver_ready;
+      info.supports_cholesky_solve = solver_ready;
+      info.supports_lu_solve = solver_ready;
       info.supports_matrix_power = mps_ready;
       info.supports_matrix_exp = mps_ready;
       return info;
@@ -881,6 +1086,28 @@ Series norm(const Series& x) {
 }
 
 Series det(const Series& a) {
+  if (a.dim() > 2) {
+    require_defined_(a, "det");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    PLUSS_CHECK(m == n, "subsp::linearalg::det: expected square matrices on last two dims");
+    if (sz[0] == 0) {
+      std::vector<std::int64_t> shape(sz.begin(), sz.end() - 2);
+      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    std::vector<Series> det_parts;
+    det_parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      det_parts.push_back(det(mat));
+    }
+    return stack_dim0_(det_parts, "det");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::det(a);
   }
@@ -896,6 +1123,27 @@ Series det(const Series& a) {
 }
 
 Series inverse(const Series& a) {
+  if (a.dim() > 2) {
+    require_defined_(a, "inverse");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    PLUSS_CHECK(m == n, "subsp::linearalg::inverse: expected square matrices on last two dims");
+    if (sz[0] == 0) {
+      return Series::zeros(sz, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    std::vector<Series> inv_parts;
+    inv_parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      inv_parts.push_back(inverse(mat));
+    }
+    return stack_dim0_(inv_parts, "inverse");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::inverse(a);
   }
@@ -910,6 +1158,27 @@ Series inverse(const Series& a) {
 }
 
 Series cholesky(const Series& a, bool upper) {
+  if (a.dim() > 2) {
+    require_defined_(a, "cholesky");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    PLUSS_CHECK(m == n, "subsp::linearalg::cholesky: expected square matrices on last two dims");
+    if (sz[0] == 0) {
+      return Series::zeros(sz, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    std::vector<Series> chol_parts;
+    chol_parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      chol_parts.push_back(cholesky(mat, upper));
+    }
+    return stack_dim0_(chol_parts, "cholesky");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::cholesky(a, upper);
   }
@@ -924,6 +1193,28 @@ Series cholesky(const Series& a, bool upper) {
 }
 
 Series logdet(const Series& a) {
+  if (a.dim() > 2) {
+    require_defined_(a, "logdet");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    PLUSS_CHECK(m == n, "subsp::linearalg::logdet: expected square matrices on last two dims");
+    if (sz[0] == 0) {
+      std::vector<std::int64_t> shape(sz.begin(), sz.end() - 2);
+      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    std::vector<Series> logdet_parts;
+    logdet_parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      logdet_parts.push_back(logdet(mat));
+    }
+    return stack_dim0_(logdet_parts, "logdet");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::logdet(a);
   }
@@ -941,6 +1232,29 @@ Series logdet(const Series& a) {
 }
 
 Series slogdet(const Series& a) {
+  if (a.dim() > 2) {
+    require_defined_(a, "slogdet");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    PLUSS_CHECK(m == n, "subsp::linearalg::slogdet: expected square matrices on last two dims");
+    if (sz[0] == 0) {
+      std::vector<std::int64_t> shape(sz.begin(), sz.end() - 2);
+      shape.push_back(2);
+      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    std::vector<Series> slogdet_parts;
+    slogdet_parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      slogdet_parts.push_back(slogdet(mat));
+    }
+    return stack_dim0_(slogdet_parts, "slogdet");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::slogdet(a);
   }
@@ -959,6 +1273,23 @@ Series slogdet(const Series& a) {
 }
 
 Series matrix_power(const Series& a, std::int64_t n) {
+  if (a.dim() > 2) {
+    require_defined_(a, "matrix_power");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t k = sz[static_cast<std::size_t>(a.dim() - 1)];
+    PLUSS_CHECK(m == k, "subsp::linearalg::matrix_power: expected square matrices on last two dims");
+    if (sz[0] == 0) {
+      return Series::zeros(sz, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    std::vector<Series> parts;
+    parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = a.select(0, i).contiguous();
+      parts.push_back(matrix_power(mat, n));
+    }
+    return stack_dim0_(parts, "matrix_power");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::matrix_power(a, n);
   }
@@ -969,6 +1300,23 @@ Series matrix_power(const Series& a, std::int64_t n) {
 }
 
 Series matrix_exp(const Series& a) {
+  if (a.dim() > 2) {
+    require_defined_(a, "matrix_exp");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t k = sz[static_cast<std::size_t>(a.dim() - 1)];
+    PLUSS_CHECK(m == k, "subsp::linearalg::matrix_exp: expected square matrices on last two dims");
+    if (sz[0] == 0) {
+      return Series::zeros(sz, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    std::vector<Series> parts;
+    parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = a.select(0, i).contiguous();
+      parts.push_back(matrix_exp(mat));
+    }
+    return stack_dim0_(parts, "matrix_exp");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::matrix_exp(a);
   }
@@ -979,6 +1327,29 @@ Series matrix_exp(const Series& a) {
 }
 
 Series pinverse(const Series& a, double rcond) {
+  if (a.dim() > 2) {
+    require_defined_(a, "pinverse");
+    const auto sz = a.sizes();
+    if (sz[0] == 0) {
+      std::vector<std::int64_t> shape(sz.begin(), sz.end());
+      const std::int64_t m = sz[shape.size() - 2];
+      const std::int64_t n = sz[shape.size() - 1];
+      shape[shape.size() - 2] = n;
+      shape[shape.size() - 1] = m;
+      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    std::vector<Series> pinv_parts;
+    pinv_parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      pinv_parts.push_back(pinverse(mat, rcond));
+    }
+    return stack_dim0_(pinv_parts, "pinverse");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::pinverse(a, rcond);
   }
@@ -996,102 +1367,257 @@ Series pinverse(const Series& a, double rcond) {
 }
 
 Series qr_q(const Series& a, bool reduced) {
+  if (a.dim() > 2) {
+    require_defined_(a, "qr_q");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const std::int64_t k = std::min(m, n);
+    if (sz[0] == 0) {
+      std::vector<std::int64_t> shape(sz.begin(), sz.end());
+      shape[shape.size() - 2] = m;
+      shape[shape.size() - 1] = reduced ? k : m;
+      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    std::vector<Series> q_parts;
+    q_parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      q_parts.push_back(qr_q(mat, reduced));
+    }
+    return stack_dim0_(q_parts, "qr_q");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::qr(a, reduced).Q;
   }
   if (a.platform() == Platform::MPS) {
-    if (mps_native_qr_supported_(a, reduced)) {
-      try {
-        return qr_mps_native_(a).q;
-      } catch (const std::exception&) {
-      }
+    const auto& dispatch = cached_mps_qr_dispatch_(a, reduced);
+    if (dispatch.bridged) {
+      bump_mps_bridge_counter_(MpsBridgeOp::Qr);
     }
-    require_mps_linalg_bridge_policy_("qr_q");
-    bump_mps_bridge_counter_(MpsBridgeOp::Qr);
-    auto qr = pluss::subsp::math::linalg::qr(a.to(Platform::CPU), reduced);
-    return qr.Q.to(ScalarType::Float32).to(Platform::MPS);
+    return dispatch.qr.q;
   }
   throw_platform_not_ready_("qr_q", a.platform());
 }
 
 Series qr_r(const Series& a, bool reduced) {
+  if (a.dim() > 2) {
+    require_defined_(a, "qr_r");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const std::int64_t k = std::min(m, n);
+    if (sz[0] == 0) {
+      std::vector<std::int64_t> shape(sz.begin(), sz.end());
+      shape[shape.size() - 2] = reduced ? k : m;
+      shape[shape.size() - 1] = n;
+      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    std::vector<Series> r_parts;
+    r_parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      r_parts.push_back(qr_r(mat, reduced));
+    }
+    return stack_dim0_(r_parts, "qr_r");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::qr(a, reduced).R;
   }
   if (a.platform() == Platform::MPS) {
-    if (mps_native_qr_supported_(a, reduced)) {
-      try {
-        return qr_mps_native_(a).r;
-      } catch (const std::exception&) {
-      }
+    const auto& dispatch = cached_mps_qr_dispatch_(a, reduced);
+    if (dispatch.bridged) {
+      bump_mps_bridge_counter_(MpsBridgeOp::Qr);
     }
-    require_mps_linalg_bridge_policy_("qr_r");
-    bump_mps_bridge_counter_(MpsBridgeOp::Qr);
-    auto qr = pluss::subsp::math::linalg::qr(a.to(Platform::CPU), reduced);
-    return qr.R.to(ScalarType::Float32).to(Platform::MPS);
+    return dispatch.qr.r;
   }
   throw_platform_not_ready_("qr_r", a.platform());
 }
 
 Series svd_u(const Series& a, bool full_matrices) {
+  if (a.dim() > 2) {
+    require_defined_(a, "svd_u");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const std::int64_t k = std::min(m, n);
+    if (sz[0] == 0) {
+      std::vector<std::int64_t> shape(sz.begin(), sz.end());
+      shape[shape.size() - 2] = m;
+      shape[shape.size() - 1] = full_matrices ? m : k;
+      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    std::vector<Series> u_parts;
+    u_parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      u_parts.push_back(svd_u(mat, full_matrices));
+    }
+    return stack_dim0_(u_parts, "svd_u");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::svd(a, full_matrices).U;
   }
   if (a.platform() == Platform::MPS) {
-    if (mps_native_svd_supported_(a, full_matrices)) {
-      try {
-        return svd_mps_native_(a).u;
-      } catch (const std::exception&) {
-      }
+    const auto& dispatch = cached_mps_svd_dispatch_(a, full_matrices);
+    if (dispatch.bridged) {
+      bump_mps_bridge_counter_(MpsBridgeOp::Svd);
     }
-    require_mps_linalg_bridge_policy_("svd_u");
-    bump_mps_bridge_counter_(MpsBridgeOp::Svd);
-    auto svd = pluss::subsp::math::linalg::svd(a.to(Platform::CPU), full_matrices);
-    return svd.U.to(ScalarType::Float32).to(Platform::MPS);
+    return dispatch.svd.u;
   }
   throw_platform_not_ready_("svd_u", a.platform());
 }
 
 Series svd_s(const Series& a, bool full_matrices) {
+  if (a.dim() > 2) {
+    require_defined_(a, "svd_s");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const std::int64_t k = std::min(m, n);
+    if (sz[0] == 0) {
+      std::vector<std::int64_t> shape(sz.begin(), sz.end() - 1);
+      shape.back() = k;
+      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    std::vector<Series> s_parts;
+    s_parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      s_parts.push_back(svd_s(mat, full_matrices));
+    }
+    return stack_dim0_(s_parts, "svd_s");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::svd(a, full_matrices).S;
   }
   if (a.platform() == Platform::MPS) {
-    if (mps_native_svd_supported_(a, full_matrices)) {
-      try {
-        return svd_mps_native_(a).s;
-      } catch (const std::exception&) {
-      }
+    const auto& dispatch = cached_mps_svd_dispatch_(a, full_matrices);
+    if (dispatch.bridged) {
+      bump_mps_bridge_counter_(MpsBridgeOp::Svd);
     }
-    require_mps_linalg_bridge_policy_("svd_s");
-    bump_mps_bridge_counter_(MpsBridgeOp::Svd);
-    auto svd = pluss::subsp::math::linalg::svd(a.to(Platform::CPU), full_matrices);
-    return svd.S.to(ScalarType::Float32).to(Platform::MPS);
+    return dispatch.svd.s;
   }
   throw_platform_not_ready_("svd_s", a.platform());
 }
 
 Series svd_vh(const Series& a, bool full_matrices) {
+  if (a.dim() > 2) {
+    require_defined_(a, "svd_vh");
+    const auto sz = a.sizes();
+    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
+    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const std::int64_t k = std::min(m, n);
+    if (sz[0] == 0) {
+      std::vector<std::int64_t> shape(sz.begin(), sz.end());
+      shape[shape.size() - 2] = full_matrices ? n : k;
+      shape[shape.size() - 1] = n;
+      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    }
+    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    std::vector<Series> vh_parts;
+    vh_parts.reserve(static_cast<std::size_t>(sz[0]));
+    for (std::int64_t i = 0; i < sz[0]; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) {
+        mat = mat.to(Platform::MPS);
+      }
+      vh_parts.push_back(svd_vh(mat, full_matrices));
+    }
+    return stack_dim0_(vh_parts, "svd_vh");
+  }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::svd(a, full_matrices).Vh;
   }
   if (a.platform() == Platform::MPS) {
-    if (mps_native_svd_supported_(a, full_matrices)) {
-      try {
-        return svd_mps_native_(a).vh;
-      } catch (const std::exception&) {
-      }
+    const auto& dispatch = cached_mps_svd_dispatch_(a, full_matrices);
+    if (dispatch.bridged) {
+      bump_mps_bridge_counter_(MpsBridgeOp::Svd);
     }
-    require_mps_linalg_bridge_policy_("svd_vh");
-    bump_mps_bridge_counter_(MpsBridgeOp::Svd);
-    auto svd = pluss::subsp::math::linalg::svd(a.to(Platform::CPU), full_matrices);
-    return svd.Vh.to(ScalarType::Float32).to(Platform::MPS);
+    return dispatch.svd.vh;
   }
   throw_platform_not_ready_("svd_vh", a.platform());
 }
 
 Series triangular_solve(const Series& a, const Series& b, bool upper, bool unitriangular) {
   require_same_platform_(a, b, "triangular_solve");
+  if (a.dim() > 2 || b.dim() > 2) {
+    const char* op = "triangular_solve";
+    const auto a_tail = tail_shape_(a, 2, op);
+    PLUSS_CHECK(
+        a_tail[0] == a_tail[1],
+        "subsp::linearalg::triangular_solve: expected square coefficient matrix");
+    const auto rhs_layout = detect_solver_rhs_layout_(a, b, op);
+    const std::int64_t rhs_tail_rank = (rhs_layout == SolverRhsLayout::Matrix) ? 2 : 1;
+    const auto b_tail = tail_shape_(b, rhs_tail_rank, op);
+    const auto a_batch = batch_shape_(a, 2, op);
+    const auto b_batch = batch_shape_(b, rhs_tail_rank, op);
+    const auto out_batch = broadcast_batch_shape_(a_batch, b_batch, op);
+    const auto a_expand_shape = concat_shape_(out_batch, a_tail);
+    const auto b_expand_shape = concat_shape_(out_batch, b_tail);
+
+    Series a_batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    Series b_batch_src = (b.platform() == Platform::MPS) ? b.to(Platform::CPU).contiguous() : b;
+    a_batch_src = a_batch_src.expand(a_expand_shape, true).contiguous();
+    b_batch_src = b_batch_src.expand(b_expand_shape, true).contiguous();
+
+    if (out_batch.empty()) {
+      Series ai = a_batch_src;
+      Series bi = b_batch_src;
+      if (a.platform() == Platform::MPS) ai = ai.to(Platform::MPS);
+      if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
+      return triangular_solve(ai, bi, upper, unitriangular);
+    }
+    if (out_batch[0] == 0) {
+      std::vector<std::int64_t> out_tail;
+      if (rhs_layout == SolverRhsLayout::Matrix) {
+        out_tail = b_tail;
+      } else {
+        out_tail = {a_tail[0], 1};
+      }
+      return Series::zeros(
+                 concat_shape_(out_batch, out_tail),
+                 decomp_fallback_dtype_(a.platform()))
+          .to(a.platform())
+          .contiguous();
+    }
+
+    std::vector<Series> parts;
+    parts.reserve(static_cast<std::size_t>(out_batch[0]));
+    for (std::int64_t i = 0; i < out_batch[0]; ++i) {
+      Series ai = a_batch_src.select(0, i).contiguous();
+      Series bi = b_batch_src.select(0, i).contiguous();
+      if (a.platform() == Platform::MPS) ai = ai.to(Platform::MPS);
+      if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
+      Series part = triangular_solve(ai, bi, upper, unitriangular);
+      if (a.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      parts.push_back(std::move(part));
+    }
+    Series out = stack_dim0_(parts, op);
+    if (a.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
+  }
+
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::triangular_solve(b, a, upper, unitriangular);
   }
@@ -1109,6 +1635,71 @@ Series triangular_solve(const Series& a, const Series& b, bool upper, bool unitr
 
 Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
   require_same_platform_(factor, b, "cholesky_solve");
+  if (b.dim() == 1) {
+    std::vector<std::int64_t> shape{b.sizes()[0], 1};
+    return cholesky_solve(factor, b.reshape(shape), upper);
+  }
+  if (factor.dim() > 2 || b.dim() > 2) {
+    const char* op = "cholesky_solve";
+    const auto f_tail = tail_shape_(factor, 2, op);
+    PLUSS_CHECK(
+        f_tail[0] == f_tail[1],
+        "subsp::linearalg::cholesky_solve: expected square factor matrix");
+    const auto rhs_layout = detect_solver_rhs_layout_(factor, b, op);
+    const std::int64_t rhs_tail_rank = (rhs_layout == SolverRhsLayout::Matrix) ? 2 : 1;
+    const auto b_tail = tail_shape_(b, rhs_tail_rank, op);
+    const auto f_batch = batch_shape_(factor, 2, op);
+    const auto b_batch = batch_shape_(b, rhs_tail_rank, op);
+    const auto out_batch = broadcast_batch_shape_(f_batch, b_batch, op);
+    const auto f_expand_shape = concat_shape_(out_batch, f_tail);
+    const auto b_expand_shape = concat_shape_(out_batch, b_tail);
+
+    Series f_batch_src = (factor.platform() == Platform::MPS) ? factor.to(Platform::CPU).contiguous() : factor;
+    Series b_batch_src = (b.platform() == Platform::MPS) ? b.to(Platform::CPU).contiguous() : b;
+    f_batch_src = f_batch_src.expand(f_expand_shape, true).contiguous();
+    b_batch_src = b_batch_src.expand(b_expand_shape, true).contiguous();
+
+    if (out_batch.empty()) {
+      Series fi = f_batch_src;
+      Series bi = b_batch_src;
+      if (factor.platform() == Platform::MPS) fi = fi.to(Platform::MPS);
+      if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
+      return cholesky_solve(fi, bi, upper);
+    }
+    if (out_batch[0] == 0) {
+      std::vector<std::int64_t> out_tail;
+      if (rhs_layout == SolverRhsLayout::Matrix) {
+        out_tail = b_tail;
+      } else {
+        out_tail = {f_tail[0], 1};
+      }
+      return Series::zeros(
+                 concat_shape_(out_batch, out_tail),
+                 decomp_fallback_dtype_(factor.platform()))
+          .to(factor.platform())
+          .contiguous();
+    }
+
+    std::vector<Series> parts;
+    parts.reserve(static_cast<std::size_t>(out_batch[0]));
+    for (std::int64_t i = 0; i < out_batch[0]; ++i) {
+      Series fi = f_batch_src.select(0, i).contiguous();
+      Series bi = b_batch_src.select(0, i).contiguous();
+      if (factor.platform() == Platform::MPS) fi = fi.to(Platform::MPS);
+      if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
+      Series part = cholesky_solve(fi, bi, upper);
+      if (factor.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      parts.push_back(std::move(part));
+    }
+    Series out = stack_dim0_(parts, op);
+    if (factor.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
+  }
+
   if (factor.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::cholesky_solve(b, factor, upper);
   }
@@ -1130,25 +1721,111 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
 }
 
 Series cholesky_inverse(const Series& factor, bool upper) {
+  if (factor.dim() > 2) {
+    const auto batch = factor.sizes()[0];
+    if (batch == 0) {
+      return Series::zeros(factor.sizes(), decomp_fallback_dtype_(factor.platform())).to(factor.platform()).contiguous();
+    }
+    const Series f_batch_src =
+        (factor.platform() == Platform::MPS) ? factor.to(Platform::CPU).contiguous() : factor;
+    std::vector<Series> parts;
+    parts.reserve(static_cast<std::size_t>(batch));
+    for (std::int64_t i = 0; i < batch; ++i) {
+      Series fi = f_batch_src.select(0, i).contiguous();
+      if (factor.platform() == Platform::MPS) {
+        fi = fi.to(Platform::MPS);
+      }
+      parts.push_back(cholesky_inverse(fi, upper));
+    }
+    return stack_dim0_(parts, "cholesky_inverse");
+  }
+
   if (factor.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::cholesky_inverse(factor, upper);
   }
   if (factor.platform() == Platform::MPS) {
-    require_square_2d_(factor, "cholesky_inverse");
-    Series l = factor.to(ScalarType::Float32).contiguous();
-    if (upper) {
-      l = l.transpose(0, 1).contiguous();
+    if (mps_experimental_native_enabled_()) {
+      require_square_2d_(factor, "cholesky_inverse");
+      Series l = factor.to(ScalarType::Float32).contiguous();
+      if (upper) {
+        l = l.transpose(0, 1).contiguous();
+      }
+      const auto n = l.sizes()[0];
+      const Series eye = Series::eye(n, n, ScalarType::Float32).to(Platform::MPS).contiguous();
+      const Series y = triangular_solve_mps_native_(l, eye, /*upper=*/false, /*unitriangular=*/false);
+      return triangular_solve_mps_native_(l.transpose(0, 1).contiguous(), y, /*upper=*/true, /*unitriangular=*/false);
     }
-    const auto n = l.sizes()[0];
-    const Series eye = Series::eye(n, n, ScalarType::Float32).to(Platform::MPS).contiguous();
-    const Series y = triangular_solve_mps_native_(l, eye, /*upper=*/false, /*unitriangular=*/false);
-    return triangular_solve_mps_native_(l.transpose(0, 1).contiguous(), y, /*upper=*/true, /*unitriangular=*/false);
+    return bridge_cpu_result_to_mps_(
+        pluss::subsp::math::linalg::cholesky_inverse(factor.to(Platform::CPU), upper),
+        MpsBridgeOp::CholeskyInverse,
+        "cholesky_inverse");
   }
   throw_platform_not_ready_("cholesky_inverse", factor.platform());
 }
 
 Series lu_solve(const Series& lu, const Series& b) {
   require_same_platform_(lu, b, "lu_solve");
+  if (lu.dim() > 2 || b.dim() > 2) {
+    const char* op = "lu_solve";
+    const auto lu_tail = tail_shape_(lu, 2, op);
+    PLUSS_CHECK(
+        lu_tail[0] == lu_tail[1],
+        "subsp::linearalg::lu_solve: expected square LU matrix");
+    const auto rhs_layout = detect_solver_rhs_layout_(lu, b, op);
+    const std::int64_t rhs_tail_rank = (rhs_layout == SolverRhsLayout::Matrix) ? 2 : 1;
+    const auto b_tail = tail_shape_(b, rhs_tail_rank, op);
+    const auto lu_batch = batch_shape_(lu, 2, op);
+    const auto b_batch = batch_shape_(b, rhs_tail_rank, op);
+    const auto out_batch = broadcast_batch_shape_(lu_batch, b_batch, op);
+    const auto lu_expand_shape = concat_shape_(out_batch, lu_tail);
+    const auto b_expand_shape = concat_shape_(out_batch, b_tail);
+
+    Series lu_batch_src = (lu.platform() == Platform::MPS) ? lu.to(Platform::CPU).contiguous() : lu;
+    Series b_batch_src = (b.platform() == Platform::MPS) ? b.to(Platform::CPU).contiguous() : b;
+    lu_batch_src = lu_batch_src.expand(lu_expand_shape, true).contiguous();
+    b_batch_src = b_batch_src.expand(b_expand_shape, true).contiguous();
+
+    if (out_batch.empty()) {
+      Series lui = lu_batch_src;
+      Series bi = b_batch_src;
+      if (lu.platform() == Platform::MPS) lui = lui.to(Platform::MPS);
+      if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
+      return lu_solve(lui, bi);
+    }
+    if (out_batch[0] == 0) {
+      std::vector<std::int64_t> out_tail;
+      if (rhs_layout == SolverRhsLayout::Matrix) {
+        out_tail = b_tail;
+      } else {
+        out_tail = {lu_tail[0], 1};
+      }
+      return Series::zeros(
+                 concat_shape_(out_batch, out_tail),
+                 decomp_fallback_dtype_(lu.platform()))
+          .to(lu.platform())
+          .contiguous();
+    }
+
+    std::vector<Series> parts;
+    parts.reserve(static_cast<std::size_t>(out_batch[0]));
+    for (std::int64_t i = 0; i < out_batch[0]; ++i) {
+      Series lui = lu_batch_src.select(0, i).contiguous();
+      Series bi = b_batch_src.select(0, i).contiguous();
+      if (lu.platform() == Platform::MPS) lui = lui.to(Platform::MPS);
+      if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
+      Series part = lu_solve(lui, bi);
+      if (lu.platform() == Platform::MPS && part.platform() == Platform::MPS) {
+        part = part.to(Platform::CPU).contiguous();
+      }
+      parts.push_back(std::move(part));
+    }
+    Series out = stack_dim0_(parts, op);
+    if (lu.platform() == Platform::MPS) {
+      out = out.to(Platform::MPS).contiguous();
+    }
+    return out;
+  }
+
   if (lu.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::lu_solve(b, lu);
   }

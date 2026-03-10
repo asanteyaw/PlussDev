@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <vector>
 
@@ -12,9 +13,9 @@ using pluss::ScalarType;
 using pluss::Series;
 using pluss::make_series;
 using pluss::subsp::math::optim::ConstrainedProblem;
-using pluss::subsp::math::optim::InteriorPointOptions;
+using pluss::subsp::math::optim::InternalProtocolOptions;
 using pluss::subsp::math::optim::ParameterPack;
-using pluss::subsp::math::optim::solve_interior_point;
+using pluss::subsp::math::optim::solve_internal_protocol;
 using pluss::subsp::math::optim::square;
 using pluss::subsp::math::optim::sum;
 using pluss::subsp::math::optim::trace;
@@ -49,7 +50,7 @@ TEST_CASE("phase3 interior point approaches the active constrained solution from
       {"x", make_vec2(0.60, 0.60)},
   });
 
-  InteriorPointOptions options;
+  InternalProtocolOptions options;
   options.max_iterations = 80;
   options.initial_barrier_parameter = 0.1;
   options.minimum_barrier_parameter = 1e-7;
@@ -57,7 +58,7 @@ TEST_CASE("phase3 interior point approaches the active constrained solution from
   options.constraint_tolerance = 1e-6;
   options.optimality_tolerance = 1e-5;
 
-  const auto result = solve_interior_point(problem, initial, options);
+  const auto result = solve_internal_protocol(problem, initial, options);
   const auto x = result.params.at("x").to_vec<double>();
 
   REQUIRE(result.function_evaluations >= 1);

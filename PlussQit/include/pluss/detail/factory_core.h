@@ -2,6 +2,7 @@
 
 #include "pluss/config.h"
 #include "pluss/codem/codem.h"
+#include "aux/rng_seed.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -49,12 +50,7 @@ struct FactoryCore final {
   }
 
   static std::mt19937_64 make_rng(std::uint64_t seed) {
-    if (seed != 0) {
-      return std::mt19937_64(seed);
-    }
-    std::random_device rd;
-    return std::mt19937_64(
-        ((static_cast<std::uint64_t>(rd()) << 32) ^ static_cast<std::uint64_t>(rd())));
+    return std::mt19937_64(pluss::aux::seed_or_next(seed));
   }
 
   static bool same_shape(std::span<const std::int64_t> a, std::span<const std::int64_t> b) {

@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <limits>
 #include <vector>
@@ -173,14 +174,14 @@ TEST_CASE("optima classifies live SQP recovery failures", "[optim][optima][patho
 
 TEST_CASE("optima classifies live interior-point feasibility failures", "[optim][optima][pathology][feasibility]") {
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 5;
-  options.interior_point.max_line_search_iterations = 0;
-  options.interior_point.enable_restoration = false;
-  options.interior_point.enable_feasibility_phase = true;
-  options.interior_point.max_restoration_iterations = 0;
-  options.interior_point.initial_barrier_parameter = 0.01;
-  options.interior_point.minimum_barrier_parameter = 1e-6;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 5;
+  options.internal_protocol.max_line_search_iterations = 0;
+  options.internal_protocol.enable_restoration = false;
+  options.internal_protocol.enable_feasibility_phase = true;
+  options.internal_protocol.max_restoration_iterations = 0;
+  options.internal_protocol.initial_barrier_parameter = 0.01;
+  options.internal_protocol.minimum_barrier_parameter = 1e-6;
 
   const auto result = optima(make_feasibility_phase_problem(), ParameterPack<Series>({{"x", scalar(1.0)}}), options);
 
@@ -191,13 +192,13 @@ TEST_CASE("optima classifies live interior-point feasibility failures", "[optim]
 TEST_CASE("optima can expose live complementarity-dominated interior-point stalls",
           "[optim][optima][pathology][complementarity]") {
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 1;
-  options.interior_point.initial_barrier_parameter = 0.1;
-  options.interior_point.minimum_barrier_parameter = 1e-10;
-  options.interior_point.constraint_tolerance = 1e-6;
-  options.interior_point.optimality_tolerance = 1e-6;
-  options.interior_point.dual_recentering_fraction = 0.0;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 1;
+  options.internal_protocol.initial_barrier_parameter = 0.1;
+  options.internal_protocol.minimum_barrier_parameter = 1e-10;
+  options.internal_protocol.constraint_tolerance = 1e-6;
+  options.internal_protocol.optimality_tolerance = 1e-6;
+  options.internal_protocol.dual_recentering_fraction = 0.0;
 
   const auto result = optima(
       make_complementarity_probe_problem(),

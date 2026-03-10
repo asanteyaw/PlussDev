@@ -71,6 +71,7 @@ CODEM_API const char* linearalg_dense_provider_name(LinearAlgDenseProvider provi
 CODEM_API const char* linearalg_solver_provider_name(LinearAlgSolverProvider provider) noexcept;
 CODEM_API LinearAlgBackendInfo linearalg_backend_info(LinearAlgTarget target = LinearAlgTarget::CPU) noexcept;
 CODEM_API bool linearalg_mps_cpu_bridge_enabled() noexcept;
+CODEM_API bool linearalg_mps_experimental_native_enabled() noexcept;
 CODEM_API LinearAlgDispatchCounters linearalg_dispatch_counters() noexcept;
 CODEM_API void linearalg_reset_dispatch_counters() noexcept;
 

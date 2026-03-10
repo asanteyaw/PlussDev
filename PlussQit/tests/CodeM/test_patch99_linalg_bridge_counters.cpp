@@ -30,6 +30,7 @@ TEST_CASE("Linear algebra MPS bridge counters reset and track usage", "[linearal
   const auto b_cpu = pluss::make_series(std::vector<float>{1.0f, 0.0f, 1.0f}, {3, 1});
   const auto a_mps = a_cpu.to(pluss::pMPS);
   const auto b_mps = b_cpu.to(pluss::pMPS);
+  const bool native_enabled = linearalg_mps_experimental_native_enabled();
 
   const auto d = det(a_mps);
   const auto inv = inverse(a_mps);
@@ -39,11 +40,19 @@ TEST_CASE("Linear algebra MPS bridge counters reset and track usage", "[linearal
   REQUIRE(tri.platform() == pluss::pMPS);
 
   auto c1 = linearalg_dispatch_counters();
-  REQUIRE(c1.mps_bridge_total == 0);
-  REQUIRE(c1.mps_bridge_det == 0);
-  REQUIRE(c1.mps_bridge_inverse == 0);
-  REQUIRE(c1.mps_bridge_cholesky == 0);
-  REQUIRE(c1.mps_bridge_triangular_solve == 0);
+  if (native_enabled) {
+    REQUIRE(c1.mps_bridge_total == 0);
+    REQUIRE(c1.mps_bridge_det == 0);
+    REQUIRE(c1.mps_bridge_inverse == 0);
+    REQUIRE(c1.mps_bridge_cholesky == 0);
+    REQUIRE(c1.mps_bridge_triangular_solve == 0);
+  } else {
+    REQUIRE(c1.mps_bridge_total >= 4);
+    REQUIRE(c1.mps_bridge_det >= 1);
+    REQUIRE(c1.mps_bridge_inverse >= 1);
+    REQUIRE(c1.mps_bridge_cholesky >= 1);
+    REQUIRE(c1.mps_bridge_triangular_solve >= 1);
+  }
 
   linearalg_reset_dispatch_counters();
   auto c2 = linearalg_dispatch_counters();

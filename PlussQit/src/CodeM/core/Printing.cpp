@@ -887,7 +887,7 @@ static void append_metadata_(std::ostringstream& oss, const Series& s, const Pri
     std::ostringstream v;
     v << "[";
     for (std::size_t i = 0; i < s.sizes().size(); ++i) {
-      if (i) v << ", ";
+      if (i) v << ",";
       v << s.sizes()[i];
     }
     v << "]";
@@ -909,7 +909,7 @@ static void append_metadata_(std::ostringstream& oss, const Series& s, const Pri
       std::ostringstream v;
       v << "[";
       for (std::size_t i = 0; i < s.strides().size(); ++i) {
-        if (i) v << ", ";
+        if (i) v << ",";
         v << s.strides()[i];
       }
       v << "]";
@@ -979,7 +979,7 @@ std::ostream& print_series(std::ostream& os, const Series& s, const PrintOptions
 }
 
 std::ostream& operator<<(std::ostream& os, const Series& s) {
-  os << to_string(s);
+  os << "pluss::" << to_string(s);
   return os;
 }
 

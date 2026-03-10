@@ -18,8 +18,18 @@ void require_close_vec_(const std::vector<float>& got, const std::vector<float>&
 } // namespace
 
 TEST_CASE("MPS linalg bridge deterministic parity", "[mps][linearalg][bridge]") {
+  using namespace pluss::subsp::linearalg;
+
   if (!pluss::mps::is_ready()) {
     SUCCEED("MPS runtime unavailable on this host");
+    return;
+  }
+  if (!linearalg_mps_cpu_bridge_enabled()) {
+    SUCCEED("MPS linalg CPU bridge disabled by policy");
+    return;
+  }
+  if (linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Bridge parity test expects PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=0");
     return;
   }
 
@@ -88,8 +98,18 @@ TEST_CASE("MPS linalg bridge deterministic parity", "[mps][linearalg][bridge]") 
 }
 
 TEST_CASE("MPS linalg bridge stress and stability", "[mps][linearalg][bridge][stress]") {
+  using namespace pluss::subsp::linearalg;
+
   if (!pluss::mps::is_ready()) {
     SUCCEED("MPS runtime unavailable on this host");
+    return;
+  }
+  if (!linearalg_mps_cpu_bridge_enabled()) {
+    SUCCEED("MPS linalg CPU bridge disabled by policy");
+    return;
+  }
+  if (linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Bridge stress test expects PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=0");
     return;
   }
 

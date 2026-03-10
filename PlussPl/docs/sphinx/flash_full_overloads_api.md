@@ -5106,3 +5106,1070 @@ Post-processes a 3D trace with shading/material/lighting presets.
 
 `Source section`: `flash_scene_animation_api.md`
 
+
+## Expanded Helper Overload Catalog
+
+This appendix adds helper/style/scene-preset overload entries from the new helper pages so the overload catalog stays comprehensive.
+
+### `flash::axes_style (expanded helper form)`
+
+#### Signature
+
+```cpp
+Pane& axes_style(self: Pane, style: GridStyle = GridStyle::Major);
+Pane& axes_style(self: Pane, style: FlashStyle);
+```
+
+#### Notes
+
+Alias helper for `set_style(...)` when you want axis-grid style changes without changing plotting calls.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/axes_style.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::blend_palette (expanded helper form)`
+
+#### Signature
+
+```cpp
+PaletteRamp blend_palette(colors: std::vector<Rgba>, name: std::string = "blend");
+```
+
+#### Notes
+
+Builds a custom palette ramp from explicit color stops.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/blend_palette.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::camera3d (expanded helper form)`
+
+#### Signature
+
+```cpp
+Pane& camera3d(self: Pane, options: Camera3DOptions);
+Pane& camera3d(self: Pane, azimuth_deg: double, elevation_deg: double, projection: ProjectionKind = ProjectionKind::Orthographic, view_angle_deg: double = 30.0);
+```
+
+#### Notes
+
+Sets camera orientation/projection on a 3D pane.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/camera3d.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_scene_presets_api.md`
+
+### `flash::camera_preset3d (expanded helper form)`
+
+#### Signature
+
+```cpp
+Pane& camera_preset3d(self: Pane, preset: CameraPreset3D);
+```
+
+#### Notes
+
+Applies a named camera setup (`Spatial`, `TopDown`, `Front`, `Side`, `Isometric`).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/camera_preset3d.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_scene_presets_api.md`
+
+### `flash::catplot_kind (expanded helper form)`
+
+#### Signature
+
+```cpp
+CatPlotKind catplot_kind(kind: std::string_view);
+```
+
+#### Notes
+
+Parses a categorical plot kind string (`strip`, `swarm`, `box`, `violin`, `bar`, `count`) into the typed enum used by `CatPlotOptions`.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/catplot_kind.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::crayon_palette (expanded helper form)`
+
+#### Signature
+
+```cpp
+PaletteRamp crayon_palette();
+```
+
+#### Notes
+
+Returns a fixed high-contrast crayon-like palette ramp.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/crayon_palette.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::cubehelix_palette (expanded helper form)`
+
+#### Signature
+
+```cpp
+PaletteRamp cubehelix_palette(n: std::int64_t = 6);
+```
+
+#### Notes
+
+Returns a cubehelix-style palette ramp with controllable stop count.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/cubehelix_palette.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::dark_palette (expanded helper form)`
+
+#### Signature
+
+```cpp
+PaletteRamp dark_palette(color: Rgba, n: std::int64_t = 6);
+```
+
+#### Notes
+
+Builds a ramp from black toward the supplied anchor color.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/dark_palette.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::disgrid_kind (expanded helper form)`
+
+#### Signature
+
+```cpp
+DisGridKind disgrid_kind(kind: std::string_view);
+```
+
+#### Notes
+
+Parses distribution-grid mode (`hist`, `density`, `ecdf`, `rug`) into `DisGridKind`.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/disgrid_kind.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::diverging_palette (expanded helper form)`
+
+#### Signature
+
+```cpp
+PaletteRamp diverging_palette(left: Rgba, right: Rgba, n: std::int64_t = 7);
+```
+
+#### Notes
+
+Creates a left-white-right diverging palette for signed fields.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/diverging_palette.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::flash_palette (expanded helper form)`
+
+#### Signature
+
+```cpp
+FlashPalette flash_palette_kind(name: std::string_view);
+PaletteRamp flash_palette(palette: FlashPalette = FlashPalette::Deep);
+PaletteRamp flash_palette(name: std::string_view);
+```
+
+#### Notes
+
+Maps style names (`deep`, `muted`, `pastel`, `bright`, `dark`, `colorblind`) to palette enums and ramps.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/flash_palette_kind.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::flash_save_png (expanded helper form)`
+
+#### Signature
+
+```cpp
+void save_png(self: Studio, path: std::string_view, dpi: std::int64_t = 144);
+```
+
+#### Notes
+
+Writes a raster PNG artifact from the current studio scene.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/flash_save_png.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::flash_set (expanded helper form)`
+
+#### Signature
+
+```cpp
+Studio& set(self: Studio, theme: Theme = Theme::paper());
+```
+
+#### Notes
+
+Applies a base theme to the studio with a short helper call.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/flash_set.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::flash_show (expanded helper form)`
+
+#### Signature
+
+```cpp
+bool show(self: Studio, title: std::string_view = {}, width: std::int64_t = 1280, height: std::int64_t = 820, launch: bool = true);
+```
+
+#### Notes
+
+Displays a studio in the HTML viewer (in docs example, `launch=false` to keep capture deterministic).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/flash_show.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::flash_theme (expanded helper form)`
+
+#### Signature
+
+```cpp
+Theme flash_theme(style: FlashStyle = FlashStyle::Lightgrid, palette: FlashPalette = FlashPalette::Deep);
+```
+
+#### Notes
+
+Constructs a theme object from flash style + palette presets.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/flash_theme.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::get_dataset_names (expanded helper form)`
+
+#### Signature
+
+```cpp
+Note get_dataset_names();
+```
+
+#### Notes
+
+Returns names of built-in demo datasets available via `load_dataset(...)`.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/get_dataset_names.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::hls_palette (expanded helper form)`
+
+#### Signature
+
+```cpp
+PaletteRamp hls_palette(n: std::int64_t = 6, saturation: double = 0.68, lightness: double = 0.52);
+```
+
+#### Notes
+
+Programmatic HLS wheel palette builder.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/hls_palette.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::husl_palette (expanded helper form)`
+
+#### Signature
+
+```cpp
+PaletteRamp husl_palette(n: std::int64_t = 6);
+```
+
+#### Notes
+
+HUSL-like palette shortcut.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/husl_palette.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::light_palette (expanded helper form)`
+
+#### Signature
+
+```cpp
+PaletteRamp light_palette(color: Rgba, n: std::int64_t = 6);
+```
+
+#### Notes
+
+Builds a ramp from white toward the supplied anchor color.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/light_palette.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::lighting3d (expanded helper form)`
+
+#### Signature
+
+```cpp
+Pane& lighting3d(self: Pane, options: Lighting3DOptions);
+```
+
+#### Notes
+
+Configures directional/light-rig composition for 3D traces.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/lighting3d.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_scene_presets_api.md`
+
+### `flash::make_dataset (expanded helper form)`
+
+#### Signature
+
+```cpp
+Dataset make_dataset(numeric_values: std::vector<Series>, numeric_names: std::vector<std::string> = {});
+Dataset make_dataset(matrix: Series, feature_names: std::vector<std::string> = {}, feature_axis: Axis = Axis::Cols);
+```
+
+#### Notes
+
+Creates a typed flash dataset from either explicit feature vectors or a feature matrix.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/make_dataset.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::move_legend (expanded helper form)`
+
+#### Signature
+
+```cpp
+Pane& move_legend(self: Pane, place: KeyPlace) noexcept;
+Studio& move_legend(self: Studio, dock: KeyDock) noexcept;
+```
+
+#### Notes
+
+Repositions legend per-pane or globally per-studio.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/move_legend.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::mpl_palette (expanded helper form)`
+
+#### Signature
+
+```cpp
+PaletteRamp mpl_palette(name: std::string_view = "viridis");
+```
+
+#### Notes
+
+Matplotlib-style palette compatibility helper.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/mpl_palette.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::relgrid_kind (expanded helper form)`
+
+#### Signature
+
+```cpp
+RelGridKind relgrid_kind(kind: std::string_view);
+```
+
+#### Notes
+
+Parses relation-grid mode (`scatter`, `line`, `reg`) into `RelGridKind`.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/relgrid_kind.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::scene_preset3d (expanded helper form)`
+
+#### Signature
+
+```cpp
+Pane& scene_preset3d(self: Pane, preset: ScenePreset3D);
+```
+
+#### Notes
+
+Applies coordinated camera/theme/lighting defaults (`Survey`, `Presentation`, `Studio`, `Topology`).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/scene_preset3d.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_scene_presets_api.md`
+
+### `flash::theme_preset3d (expanded helper form)`
+
+#### Signature
+
+```cpp
+Pane& theme_preset3d(self: Pane, preset: ThemePreset3D);
+```
+
+#### Notes
+
+Applies a 3D-focused theme preset (`Paper`, `Ocean`, `Slate`, `Mist`).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/theme_preset3d.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_scene_presets_api.md`
+
+### `flash::tickless (expanded helper form)`
+
+#### Signature
+
+```cpp
+Pane& tickless(self: Pane, enable: bool = true);
+```
+
+#### Notes
+
+Suppresses axis framing while keeping data traces visible.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/tickless.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+### `flash::trace_preset3d (expanded helper form)`
+
+#### Signature
+
+```cpp
+Trace& trace_preset3d(self: Trace, preset: TracePreset3D);
+```
+
+#### Notes
+
+Applies trace-level 3D material/shading profile (`Path`, `Cloud`, `Surface`, `Wireframe`, `Spire`, `Volume`).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/trace_preset3d.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_scene_presets_api.md`
+
+### `flash::xkcd_palette (expanded helper form)`
+
+#### Signature
+
+```cpp
+PaletteRamp xkcd_palette();
+```
+
+#### Notes
+
+Returns a fixed playful palette ramp.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/xkcd_palette.cpp
+:language: cpp
+```
+
+#### Output
+
+Output is visualized by running the example snippet.
+
+`Source section`: `flash_helpers_expanded_api.md`
+
+
+## Canonical Name Coverage Addendum
+
+### `contour3D`
+
+#### Signature
+
+```cpp
+Trace& contour3D(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike, level_count: int = 8);
+```
+
+#### Notes
+
+3D contour-like ridges (alias over `ridge3`).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/contour3D.cpp
+:language: cpp
+```
+
+#### Output
+
+```{only} html
+![contour3D output](_static/plots/methods/contour3D.svg)
+```
+
+```{only} not html
+![contour3D output](_static/plots/methods/contour3D.png)
+```
+
+_Source section: `flash_api.md`._
+
+### `plot3D`
+
+#### Signature
+
+```cpp
+Trace& plot3D(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike);
+```
+
+#### Notes
+
+Matplotlib-style alias for 3D path plotting.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/plot3D.cpp
+:language: cpp
+```
+
+#### Output
+
+```{only} html
+![plot3D output](_static/plots/methods/plot3D.svg)
+```
+
+```{only} not html
+![plot3D output](_static/plots/methods/plot3D.png)
+```
+
+_Source section: `flash_api.md`._
+
+### `scatter3D`
+
+#### Signature
+
+```cpp
+Trace& scatter3D(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike);
+```
+
+#### Notes
+
+Matplotlib-style alias for `cloud3`.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/scatter3D.cpp
+:language: cpp
+```
+
+#### Output
+
+```{only} html
+![scatter3D output](_static/plots/methods/scatter3D.svg)
+```
+
+```{only} not html
+![scatter3D output](_static/plots/methods/scatter3D.png)
+```
+
+_Source section: `flash_api.md`._
+
+### `FacetGrid`
+
+#### Signature
+
+```cpp
+Studio& FacetGrid(self: Studio, int64_t rows, int64_t cols, double gx = 18.0, double gy = 18.0);
+```
+
+#### Notes
+
+Allocates a faceted 2D grid layout. You then populate panes manually.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/facetgrid.cpp
+:language: cpp
+```
+
+#### Output
+
+```{only} html
+![facetgrid output](_static/plots/methods/facetgrid.svg)
+```
+
+```{only} not html
+![facetgrid output](_static/plots/methods/facetgrid.png)
+```
+
+_Source section: `flash_api.md`._
+
+### `PairGrid`
+
+#### Signature
+
+```cpp
+Studio& PairGrid(self: Studio, int64_t dimensions, double gx = 14.0, double gy = 14.0);
+```
+
+#### Notes
+
+Creates an NxN grid intended for pairwise matrix views.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/pairgrid.cpp
+:language: cpp
+```
+
+#### Output
+
+```{only} html
+![pairgrid output](_static/plots/methods/pairgrid.svg)
+```
+
+```{only} not html
+![pairgrid output](_static/plots/methods/pairgrid.png)
+```
+
+_Source section: `flash_api.md`._
+
+### `JointGrid`
+
+#### Signature
+
+```cpp
+Studio& JointGrid(self: Studio, double gx = 14.0, double gy = 14.0);
+```
+
+#### Notes
+
+Creates the standard joint-layout scaffold (joint pane + top/right marginals).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/snippets/keys/jointgrid.cpp
+:language: cpp
+```
+
+#### Output
+
+```{only} html
+![jointgrid output](_static/plots/methods/jointgrid.svg)
+```
+
+```{only} not html
+![jointgrid output](_static/plots/methods/jointgrid.png)
+```
+
+_Source section: `flash_api.md`._
+
+### `flash::animate3`
+
+#### Signature
+
+```cpp
+bool animate3(x: SeriesLike, y: SeriesLike, z: SeriesLike, options: Animation3Options = {});
+```
+
+#### Notes
+
+Interactive webview animation (not a static render call). For doc previews, use `path3`/`cloud3` outputs with the same source data.
+
+#### Example
+
+```cpp
+pluss::pl::flash::Animation3Options options;
+options.title = "3D simulation";
+options.sweep_speed_deg_per_sec = 18.0;
+options.snapshot_prefix = "flash3d";
+
+const bool opened = pluss::pl::flash::animate3(x, y, z, options);
+```
+
+#### Output
+
+```{only} html
+![animate3 preview](_static/plots/methods/path3.svg)
+```
+
+```{only} not html
+![animate3 preview](_static/plots/methods/path3.png)
+```
+
+_Source section: `flash_scene_animation_api.md`._
+
+### `flash::animate4`
+
+#### Signature
+
+```cpp
+bool animate4(x: SeriesLike, y: SeriesLike, z: SeriesLike, w: SeriesLike, options: HyperAnimationOptions = {});
+```
+
+#### Notes
+
+Interactive geometric 4D animation in a webview with live sweep controls; use `export4_frames` for deterministic artifacts.
+
+#### Example
+
+```cpp
+pluss::pl::flash::HyperAnimationOptions options;
+options.title = "Geometric 4D simulation";
+options.sweep_plane = pluss::pl::flash::HyperAnimateSweepPlane::XW;
+options.sweep_speed_deg_per_sec = 22.0;
+
+const bool opened = pluss::pl::flash::animate4(x4, y4, z4, w4, options);
+```
+
+#### Output
+
+```{only} html
+![animate4 preview](_static/plots/methods/path4.svg)
+```
+
+```{only} not html
+![animate4 preview](_static/plots/methods/path4.png)
+```
+
+_Source section: `flash_scene_animation_api.md`._
+
+
+## Dataset Accessor Coverage Addendum
+
+### `Dataset::numeric`
+
+#### Signature
+
+```cpp
+std::optional<Series> Dataset::numeric(self, std::string_view name) const;
+```
+
+#### Notes
+
+Returns the numeric feature column with the requested name when present. If the dataset does not include
+numeric names (or the name is unknown), the result is `std::nullopt`.
+
+#### Example
+
+```cpp
+auto ds = flash::make_dataset(
+    std::vector<Series>{
+        pluss::make_series({1.0, 2.0, 3.0}),
+        pluss::make_series({10.0, 20.0, 30.0})
+    },
+    {"id", "sales"});
+
+auto sales = ds.numeric("sales");
+```
+
+#### Output
+
+```text
+sales.has_value() == true
+sales->numel() == 3
+```
+
+### `Dataset::note`
+
+#### Signature
+
+```cpp
+std::optional<Note> Dataset::note(self, std::string_view name) const;
+```
+
+#### Notes
+
+Returns the note (categorical/text) feature column with the requested name when present. If the dataset does not
+include note names (or the name is unknown), the result is `std::nullopt`.
+
+#### Example
+
+```cpp
+flash::Dataset ds;
+ds.note_names = pluss::make_note({"city"});
+ds.note_values = {pluss::make_note({"Accra", "Tema", "Kumasi"})};
+
+auto city = ds.note("city");
+```
+
+#### Output
+
+```text
+city.has_value() == true
+city->numel() == 3
+```
+
+
+
+### `flash::set_theme`
+
+#### Signature
+
+```cpp
+Pane& flash::set_theme(self: Pane, theme: Theme);
+Studio& flash::set_theme(self: Studio, theme: Theme);
+```
+
+#### Notes
+
+Applies theme tokens (background, accents, surface palette, foreground) to an existing pane or entire studio.
+Use the pane form when you want local overrides; use the studio form when you want global consistency.
+
+#### Example
+
+Pane form:
+
+```{literalinclude} ../../examples/docs/snippets/keys/set_theme_pane.cpp
+:language: cpp
+```
+
+Studio form:
+
+```{literalinclude} ../../examples/docs/snippets/keys/set_theme_studio.cpp
+:language: cpp
+```
+
+#### Output
+
+```{only} html
+![set_theme (pane) output](_static/plots/methods/set_theme_pane.svg)
+![set_theme (studio) output](_static/plots/methods/set_theme_studio.svg)
+```
+
+```{only} not html
+![set_theme (pane) output](_static/plots/methods/set_theme_pane.png)
+![set_theme (studio) output](_static/plots/methods/set_theme_studio.png)
+```

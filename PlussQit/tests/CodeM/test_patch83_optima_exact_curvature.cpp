@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <string>
 
@@ -56,13 +57,13 @@ ParameterPack<Series> make_initial() {
 TEST_CASE("interior-point exact curvature converges on nonlinear barrier objective",
           "[exact][interior-point][optim][optima]") {
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 100;
-  options.interior_point.constraint_tolerance = 1e-7;
-  options.interior_point.optimality_tolerance = 1e-7;
-  options.interior_point.minimum_barrier_parameter = 1e-10;
-  options.interior_point.hessian_approximation = OptimaHessianApproximation::Exact;
-  options.interior_point.linear_system_solver = OptimaLinearSystemSolver::Cholesky;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 100;
+  options.internal_protocol.constraint_tolerance = 1e-7;
+  options.internal_protocol.optimality_tolerance = 1e-7;
+  options.internal_protocol.minimum_barrier_parameter = 1e-10;
+  options.internal_protocol.hessian_approximation = OptimaHessianApproximation::Exact;
+  options.internal_protocol.linear_system_solver = OptimaLinearSystemSolver::Cholesky;
 
   const auto result = optima(make_problem(), make_initial(), options);
   CAPTURE(static_cast<int>(result.exit_flag));
@@ -86,14 +87,14 @@ TEST_CASE("interior-point exact curvature converges on nonlinear barrier objecti
 TEST_CASE("interior-point HessianVector mode works with conjugate gradient",
           "[hvp][cg][interior-point][optim][optima]") {
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 100;
-  options.interior_point.constraint_tolerance = 1e-6;
-  options.interior_point.optimality_tolerance = 1e-6;
-  options.interior_point.minimum_barrier_parameter = 1e-10;
-  options.interior_point.hessian_approximation = OptimaHessianApproximation::HessianVector;
-  options.interior_point.linear_system_solver = OptimaLinearSystemSolver::ConjugateGradient;
-  options.interior_point.max_krylov_iterations = 20;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 100;
+  options.internal_protocol.constraint_tolerance = 1e-6;
+  options.internal_protocol.optimality_tolerance = 1e-6;
+  options.internal_protocol.minimum_barrier_parameter = 1e-10;
+  options.internal_protocol.hessian_approximation = OptimaHessianApproximation::HessianVector;
+  options.internal_protocol.linear_system_solver = OptimaLinearSystemSolver::ConjugateGradient;
+  options.internal_protocol.max_krylov_iterations = 20;
 
   const auto result = optima(make_problem(), make_initial(), options);
 
@@ -116,8 +117,8 @@ TEST_CASE("interior-point exact curvature requires dual autodiff callbacks",
   });
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.hessian_approximation = OptimaHessianApproximation::Exact;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.hessian_approximation = OptimaHessianApproximation::Exact;
 
   const auto result = optima(problem, initial, options);
 

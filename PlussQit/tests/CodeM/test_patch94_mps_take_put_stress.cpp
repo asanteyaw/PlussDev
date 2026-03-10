@@ -93,3 +93,39 @@ TEST_CASE("MPS put parity and stress", "[mps][put][stress]") {
     require_close_vec_(out_accum.to(pluss::pCPU).to_vec<float>(), ref_accum.to_vec<float>());
   }
 }
+
+TEST_CASE("MPS put duplicate-index semantics match CPU for accumulate modes", "[mps][put][duplicates][stress]") {
+  if (!pluss::mps::is_ready()) {
+    SUCCEED("MPS runtime unavailable on this host");
+    return;
+  }
+
+  const auto base_cpu = pluss::make_series(
+      std::vector<float>{0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f},
+      {8});
+  const auto idx_cpu = pluss::make_series(
+      std::vector<std::int64_t>{1, -7, 1, -7, 3, 3, -5},
+      {7});
+  const auto src_cpu = pluss::make_series(
+      std::vector<float>{10.0f, 20.0f, -3.0f, 5.0f, 9.0f, -2.0f, 4.0f},
+      {7});
+
+  auto ref_plain = base_cpu.clone();
+  ref_plain.put_(idx_cpu, src_cpu, /*accumulate=*/false);
+  auto ref_accum = base_cpu.clone();
+  ref_accum.put_(idx_cpu, src_cpu, /*accumulate=*/true);
+
+  const auto idx_mps = idx_cpu.to(pluss::pMPS);
+  const auto src_mps = src_cpu.to(pluss::pMPS);
+
+  for (std::int64_t iter = 0; iter < 120; ++iter) {
+    auto out_plain = base_cpu.to(pluss::pMPS);
+    out_plain.put_(idx_mps, src_mps, /*accumulate=*/false);
+
+    auto out_accum = base_cpu.to(pluss::pMPS);
+    out_accum.put_(idx_mps, src_mps, /*accumulate=*/true);
+
+    require_close_vec_(out_plain.to(pluss::pCPU).to_vec<float>(), ref_plain.to_vec<float>());
+    require_close_vec_(out_accum.to(pluss::pCPU).to_vec<float>(), ref_accum.to_vec<float>());
+  }
+}

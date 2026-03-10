@@ -2,6 +2,7 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/Half.h"
+#include "CodeM/core/Complex.h"
 #include <algorithm>
 #include <cstdint>
 
@@ -99,8 +100,65 @@ static void dispatch_cmp(const Series& a, const Series& b, const Series& out, Pr
   throw_error(std::string(name) + ": dtype not implemented");
 }
 
-void eq(const Series& a, const Series& b, const Series& out) { dispatch_cmp(a,b,out,[](auto x, auto y){return x==y;}, "eq"); }
-void ne(const Series& a, const Series& b, const Series& out) { dispatch_cmp(a,b,out,[](auto x, auto y){return x!=y;}, "ne"); }
+static void cmp_complex_eq_ne_(const Series& a, const Series& b, const Series& out, bool eq_mode) {
+  PLUSS_CHECK(out.scalar_type() == ScalarType::Bool, "compare: out must be Bool");
+  const bool is_c64 = a.scalar_type() == ScalarType::Complex64;
+  PLUSS_CHECK(is_c64 || a.scalar_type() == ScalarType::Complex128, "compare: expected complex dtype");
+
+  if (fast_contiguous_cmp_ok_(a, b, out)) {
+    auto* outp = reinterpret_cast<std::uint8_t*>(const_cast<std::byte*>(out.raw_data()));
+    const auto n = out.numel();
+    if (is_c64) {
+      const auto* ap = reinterpret_cast<const Complex64*>(a.raw_data());
+      const auto* bp = reinterpret_cast<const Complex64*>(b.raw_data());
+      for (std::int64_t i = 0; i < n; ++i) {
+        const bool same = (ap[i] == bp[i]);
+        outp[i] = (eq_mode ? same : !same) ? 1 : 0;
+      }
+    } else {
+      const auto* ap = reinterpret_cast<const Complex128*>(a.raw_data());
+      const auto* bp = reinterpret_cast<const Complex128*>(b.raw_data());
+      for (std::int64_t i = 0; i < n; ++i) {
+        const bool same = (ap[i] == bp[i]);
+        outp[i] = (eq_mode ? same : !same) ? 1 : 0;
+      }
+    }
+    return;
+  }
+
+  SeriesIterator it = SeriesIterator::binary(a, b, out);
+  auto* outp = reinterpret_cast<std::uint8_t*>(const_cast<std::byte*>(out.raw_data()));
+  if (is_c64) {
+    const auto* ap = reinterpret_cast<const Complex64*>(a.raw_data());
+    const auto* bp = reinterpret_cast<const Complex64*>(b.raw_data());
+    it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t bo, std::int64_t) {
+      const bool same = (ap[ao] == bp[bo]);
+      outp[lin] = (eq_mode ? same : !same) ? 1 : 0;
+    });
+  } else {
+    const auto* ap = reinterpret_cast<const Complex128*>(a.raw_data());
+    const auto* bp = reinterpret_cast<const Complex128*>(b.raw_data());
+    it.for_each_index([&](std::int64_t lin, std::int64_t ao, std::int64_t bo, std::int64_t) {
+      const bool same = (ap[ao] == bp[bo]);
+      outp[lin] = (eq_mode ? same : !same) ? 1 : 0;
+    });
+  }
+}
+
+void eq(const Series& a, const Series& b, const Series& out) {
+  if (a.scalar_type() == ScalarType::Complex64 || a.scalar_type() == ScalarType::Complex128) {
+    cmp_complex_eq_ne_(a, b, out, /*eq_mode=*/true);
+    return;
+  }
+  dispatch_cmp(a,b,out,[](auto x, auto y){return x==y;}, "eq");
+}
+void ne(const Series& a, const Series& b, const Series& out) {
+  if (a.scalar_type() == ScalarType::Complex64 || a.scalar_type() == ScalarType::Complex128) {
+    cmp_complex_eq_ne_(a, b, out, /*eq_mode=*/false);
+    return;
+  }
+  dispatch_cmp(a,b,out,[](auto x, auto y){return x!=y;}, "ne");
+}
 void lt(const Series& a, const Series& b, const Series& out) { dispatch_cmp(a,b,out,[](auto x, auto y){return x< y;}, "lt"); }
 void le(const Series& a, const Series& b, const Series& out) { dispatch_cmp(a,b,out,[](auto x, auto y){return x<=y;}, "le"); }
 void gt(const Series& a, const Series& b, const Series& out) { dispatch_cmp(a,b,out,[](auto x, auto y){return x> y;}, "gt"); }

@@ -22,6 +22,10 @@ TEST_CASE("MPS native det family avoids bridge counters", "[mps][linearalg][nati
     SUCCEED("MPS runtime unavailable on this host");
     return;
   }
+  if (!linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Native det test requires PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=1");
+    return;
+  }
 
   const auto a_cpu = pluss::make_series(
       std::vector<float>{

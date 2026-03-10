@@ -54,6 +54,10 @@ TEST_CASE("MPS native svd avoids bridge counters on deterministic cases", "[mps]
     SUCCEED("MPS runtime unavailable on this host");
     return;
   }
+  if (!linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Native SVD test requires PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=1");
+    return;
+  }
 
   const auto a_cpu = pluss::make_series(
       std::vector<float>{
@@ -86,6 +90,10 @@ TEST_CASE("MPS native svd stress/repeat stability", "[mps][linearalg][native][sv
 
   if (!pluss::mps::is_ready()) {
     SUCCEED("MPS runtime unavailable on this host");
+    return;
+  }
+  if (!linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Native SVD stress test requires PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=1");
     return;
   }
 

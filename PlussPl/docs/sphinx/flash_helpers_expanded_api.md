@@ -681,3 +681,67 @@ Returns a fixed playful palette ramp.
 ```{only} not html
 ![xkcd_palette output](_static/plots/methods/xkcd_palette.png)
 ```
+
+### `Dataset::numeric`
+
+#### Signature
+
+```cpp
+std::optional<Series> Dataset::numeric(self, std::string_view name) const;
+```
+
+#### Notes
+
+Returns the numeric feature column with the requested name when present. If the dataset does not include
+numeric names (or the name is unknown), the result is `std::nullopt`.
+
+#### Example
+
+```cpp
+auto ds = flash::make_dataset(
+    std::vector<Series>{
+        pluss::make_series({1.0, 2.0, 3.0}),
+        pluss::make_series({10.0, 20.0, 30.0})
+    },
+    {"id", "sales"});
+
+auto sales = ds.numeric("sales");
+```
+
+#### Output
+
+```text
+sales.has_value() == true
+sales->numel() == 3
+```
+
+
+### `Dataset::note`
+
+#### Signature
+
+```cpp
+std::optional<Note> Dataset::note(self, std::string_view name) const;
+```
+
+#### Notes
+
+Returns the note (categorical/text) feature column with the requested name when present. If the dataset does not
+include note names (or the name is unknown), the result is `std::nullopt`.
+
+#### Example
+
+```cpp
+flash::Dataset ds;
+ds.note_names = pluss::make_note({"city"});
+ds.note_values = {pluss::make_note({"Accra", "Tema", "Kumasi"})};
+
+auto city = ds.note("city");
+```
+
+#### Output
+
+```text
+city.has_value() == true
+city->numel() == 3
+```

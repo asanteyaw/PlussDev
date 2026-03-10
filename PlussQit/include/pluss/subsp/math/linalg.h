@@ -588,17 +588,20 @@ inline SVDResult svd(const Series& a, bool full_matrices = true) {
   std::vector<double> s(static_cast<std::size_t>(k), 0.0);
   int u_cols = (job == 'A') ? m : k;
   int vt_rows = (job == 'A') ? n : k;
+  int ldvt = (job == 'A') ? n : vt_rows;
   std::vector<double> ucol(static_cast<std::size_t>(m * u_cols), 0.0);
-  std::vector<double> vtcol(static_cast<std::size_t>(n * vt_rows), 0.0);
+  std::vector<double> vtcol(static_cast<std::size_t>(ldvt * n), 0.0);
   int info = 0;
 
   int lwork = -1;
   double wkopt = 0.0;
-  dgesvd_(&job, &job, &m, &n, col.data(), &m, s.data(), ucol.data(), &m, vtcol.data(), &n, &wkopt, &lwork, &info);
+  dgesvd_(
+      &job, &job, &m, &n, col.data(), &m, s.data(), ucol.data(), &m, vtcol.data(), &ldvt, &wkopt, &lwork, &info);
   if (info != 0) throw std::runtime_error("subsp::math::linalg::svd: workspace query failed");
   lwork = std::max(1, static_cast<int>(wkopt));
   std::vector<double> work(static_cast<std::size_t>(lwork), 0.0);
-  dgesvd_(&job, &job, &m, &n, col.data(), &m, s.data(), ucol.data(), &m, vtcol.data(), &n, work.data(), &lwork, &info);
+  dgesvd_(
+      &job, &job, &m, &n, col.data(), &m, s.data(), ucol.data(), &m, vtcol.data(), &ldvt, work.data(), &lwork, &info);
   if (info != 0) throw std::runtime_error("subsp::math::linalg::svd: dgesvd failed");
 
   return SVDResult{

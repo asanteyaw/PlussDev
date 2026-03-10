@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <unordered_set>
 
 namespace pluss::codem::native::cpu {
 
@@ -196,7 +197,85 @@ static Series expand_int64_to_shape_contig(const Series& idx, const std::vector<
   return out;
 }
 
+static Series expand_bool_to_shape_contig(const Series& mask, const std::vector<std::int64_t>& shape) {
+  PLUSS_CHECK(mask.scalar_type() == ScalarType::Bool, "expand_bool_to_shape_contig: expects bool");
+  auto mc = mask.contiguous();
+  if ((std::int64_t)mc.dim() == (std::int64_t)shape.size()) {
+    bool same = true;
+    for (std::size_t i = 0; i < shape.size(); ++i) {
+      if (mc.sizes()[i] != shape[i]) {
+        same = false;
+        break;
+      }
+    }
+    if (same) return mc;
+  }
+
+  Series out = Series::empty(shape, ScalarType::Bool);
+  const auto nd = (std::int64_t)shape.size();
+  std::vector<std::int64_t> sizes_src(mc.sizes().begin(), mc.sizes().end());
+  std::vector<std::int64_t> strides_src(mc.strides().begin(), mc.strides().end());
+
+  std::vector<std::int64_t> sizes_pad((std::size_t)nd, 1);
+  std::vector<std::int64_t> strides_pad((std::size_t)nd, 0);
+  const auto sd = (std::int64_t)sizes_src.size();
+  for (std::int64_t i = 0; i < sd; ++i) {
+    sizes_pad[(std::size_t)(nd - sd + i)] = sizes_src[(std::size_t)i];
+    strides_pad[(std::size_t)(nd - sd + i)] = strides_src[(std::size_t)i];
+  }
+  std::vector<std::int64_t> bstride((std::size_t)nd);
+  for (std::int64_t k = 0; k < nd; ++k) {
+    bstride[(std::size_t)k] = (sizes_pad[(std::size_t)k] == 1) ? 0 : strides_pad[(std::size_t)k];
+  }
+
+  const auto numel = out.numel();
+  const auto* sp = reinterpret_cast<const std::uint8_t*>(mc.raw_data());
+  auto* op = reinterpret_cast<std::uint8_t*>(out.raw_data());
+  std::vector<std::int64_t> idx((std::size_t)nd, 0);
+
+  for (std::int64_t lin = 0; lin < numel; ++lin) {
+    std::int64_t off = 0;
+    for (std::int64_t k = 0; k < nd; ++k) off += idx[(std::size_t)k] * bstride[(std::size_t)k];
+    op[lin] = sp[off];
+
+    for (std::int64_t k = nd - 1; k >= 0; --k) {
+      idx[(std::size_t)k] += 1;
+      if (idx[(std::size_t)k] < shape[(std::size_t)k]) break;
+      idx[(std::size_t)k] = 0;
+    }
+  }
+  return out;
+}
+
 static std::vector<Series> broadcast_advanced_indices(const std::vector<Series>& adv) {
+  if (adv.size() > 1) {
+    bool all_1d = true;
+    for (const auto& t : adv) {
+      if (t.dim() != 1) {
+        all_1d = false;
+        break;
+      }
+    }
+    if (all_1d) {
+      // Treat independent 1D advanced indices as an outer-product selection:
+      // idx0:[N], idx1:[M] => broadcast to [N,M] instead of elementwise [max(N,M)].
+      std::vector<Series> reshaped;
+      reshaped.reserve(adv.size());
+      for (std::size_t i = 0; i < adv.size(); ++i) {
+        std::vector<std::int64_t> shape(adv.size(), 1);
+        shape[i] = adv[i].sizes()[0];
+        reshaped.push_back(adv[i].reshape(shape).contiguous());
+      }
+      std::vector<std::vector<std::int64_t>> shapes;
+      shapes.reserve(reshaped.size());
+      for (auto& t : reshaped) shapes.push_back(std::vector<std::int64_t>(t.sizes().begin(), t.sizes().end()));
+      auto out_shape = broadcast_shape(shapes);
+      std::vector<Series> out;
+      out.reserve(reshaped.size());
+      for (auto& t : reshaped) out.push_back(expand_int64_to_shape_contig(t, out_shape));
+      return out;
+    }
+  }
   std::vector<std::vector<std::int64_t>> shapes;
   shapes.reserve(adv.size());
   for (auto& t : adv) shapes.push_back(std::vector<std::int64_t>(t.sizes().begin(), t.sizes().end()));
@@ -635,7 +714,7 @@ Series index_put(const Series& a, const std::vector<Series>& indices, const Seri
       throw_error("index_put: mask must broadcast to a.shape");
     if (mask.sizes().size() != a.sizes().size() ||
         !std::equal(mask.sizes().begin(), mask.sizes().end(), a.sizes().begin())) {
-      throw_error("index_put: broadcasted bool mask requires expand support; provide exact-shape mask");
+      mask = expand_bool_to_shape_contig(mask, shape);
     }
 
     auto aa = a.contiguous();
@@ -697,10 +776,12 @@ Series index_put(const Series& a, const std::vector<Series>& indices, const Seri
           if (!(ms == 1 || ms == as)) { ok = false; break; }
         }
         if (ok) {
-          PLUSS_CHECK(mask.sizes().size() == a.sizes().size() &&
-                          std::equal(mask.sizes().begin(), mask.sizes().end(), a.sizes().begin()),
-                      "index_put: full-rank bool mask broadcast requires expand support");
-          auto em = mask.contiguous();
+          auto em = mask;
+          if (mask.sizes().size() != a.sizes().size() ||
+              !std::equal(mask.sizes().begin(), mask.sizes().end(), a.sizes().begin())) {
+            em = expand_bool_to_shape_contig(mask, std::vector<std::int64_t>(a.sizes().begin(), a.sizes().end()));
+          }
+          em = em.contiguous();
           auto cols = bool_mask_to_multi_indices(em);
           for (std::int64_t k=0; k<nd; ++k) {
             adv_dims.push_back(k);
@@ -760,14 +841,22 @@ if (adv_dims.empty()) throw_error("index_put: no indices");
   }
   const std::int64_t tail_total = compute_numel(tail_sizes);
 
-  auto out = a.contiguous();
+  auto out = a.contiguous().clone();
   if (values.scalar_type() != out.scalar_type()) throw_error("index_put: values dtype mismatch");
 
   const auto vnum = values.numel();
   const bool v_scalar = (vnum == 1);
   const bool v_head   = (vnum == head_total);
+  const bool v_tail   = (vnum == tail_total);
   const bool v_full   = (vnum == head_total * tail_total);
-  if (!(v_scalar || v_head || v_full)) throw_error("index_put: values must be scalar, head_total, or full output match");
+  // Compatibility mode for legacy callers that pass an extra packed suffix
+  // (e.g. [head, tail, ...]). We consume the first packed block.
+  const bool v_packed = (head_total > 0 && tail_total > 0 &&
+                         vnum > (head_total * tail_total) &&
+                         (vnum % (head_total * tail_total) == 0));
+  if (!(v_scalar || v_head || v_tail || v_full || v_packed)) {
+    throw_error("index_put: values must be scalar, head_total, tail_total, or full output match");
+  }
 
 
   std::vector<std::vector<std::int64_t>> idx_es;
@@ -779,10 +868,15 @@ if (adv_dims.empty()) throw_error("index_put: no indices");
   Series vv = values.contiguous();
   if (storage_aliases(out, vv)) vv = vv.clone().contiguous();
 
-  std::vector<std::int64_t> touched;
-  if (!accumulate) {
-    const std::int64_t total_updates = head_total * tail_total;
-    if (total_updates <= 1'000'000) touched.reserve((std::size_t)total_updates);
+  const std::int64_t total_updates = head_total * tail_total;
+  const bool track_overlap = (!accumulate &&
+                              indices.size() == 1 &&
+                              nd == 1 &&
+                              tail_total == 1 &&
+                              total_updates <= 1'000'000);
+  std::unordered_set<std::int64_t> touched;
+  if (track_overlap) {
+    touched.reserve((std::size_t)total_updates);
   }
 
   const auto dt = out.dtype();
@@ -795,8 +889,34 @@ if (adv_dims.empty()) throw_error("index_put: no indices");
   auto add_inplace = [&](std::int64_t out_off, std::int64_t v_off){
     if (out.scalar_type() == ScalarType::Float64) { reinterpret_cast<double*>(op)[out_off] += reinterpret_cast<const double*>(vp)[v_off]; return; }
     if (out.scalar_type() == ScalarType::Float32) { reinterpret_cast<float*>(op)[out_off] += reinterpret_cast<const float*>(vp)[v_off]; return; }
+    if (out.scalar_type() == ScalarType::Float16) {
+      auto* outp = reinterpret_cast<Float16*>(op);
+      const auto* srcp = reinterpret_cast<const Float16*>(vp);
+      outp[out_off] = float16_from_float(float16_to_float(outp[out_off]) + float16_to_float(srcp[v_off]));
+      return;
+    }
+    if (out.scalar_type() == ScalarType::BFloat16) {
+      auto* outp = reinterpret_cast<BFloat16*>(op);
+      const auto* srcp = reinterpret_cast<const BFloat16*>(vp);
+      outp[out_off] = bfloat16_from_float(bfloat16_to_float(outp[out_off]) + bfloat16_to_float(srcp[v_off]));
+      return;
+    }
     if (out.scalar_type() == ScalarType::Int64)   { reinterpret_cast<std::int64_t*>(op)[out_off] += reinterpret_cast<const std::int64_t*>(vp)[v_off]; return; }
     if (out.scalar_type() == ScalarType::Int32)   { reinterpret_cast<std::int32_t*>(op)[out_off] += reinterpret_cast<const std::int32_t*>(vp)[v_off]; return; }
+    if (out.scalar_type() == ScalarType::Int16)   { reinterpret_cast<std::int16_t*>(op)[out_off] += reinterpret_cast<const std::int16_t*>(vp)[v_off]; return; }
+    if (out.scalar_type() == ScalarType::Int8)    { reinterpret_cast<std::int8_t*>(op)[out_off] += reinterpret_cast<const std::int8_t*>(vp)[v_off]; return; }
+    if (out.scalar_type() == ScalarType::UInt64)  { reinterpret_cast<std::uint64_t*>(op)[out_off] += reinterpret_cast<const std::uint64_t*>(vp)[v_off]; return; }
+    if (out.scalar_type() == ScalarType::UInt32)  { reinterpret_cast<std::uint32_t*>(op)[out_off] += reinterpret_cast<const std::uint32_t*>(vp)[v_off]; return; }
+    if (out.scalar_type() == ScalarType::UInt16)  { reinterpret_cast<std::uint16_t*>(op)[out_off] += reinterpret_cast<const std::uint16_t*>(vp)[v_off]; return; }
+    if (out.scalar_type() == ScalarType::UInt8)   { reinterpret_cast<std::uint8_t*>(op)[out_off] += reinterpret_cast<const std::uint8_t*>(vp)[v_off]; return; }
+    if (out.scalar_type() == ScalarType::Complex64) {
+      reinterpret_cast<Complex64*>(op)[out_off] += reinterpret_cast<const Complex64*>(vp)[v_off];
+      return;
+    }
+    if (out.scalar_type() == ScalarType::Complex128) {
+      reinterpret_cast<Complex128*>(op)[out_off] += reinterpret_cast<const Complex128*>(vp)[v_off];
+      return;
+    }
     throw_error("index_put: accumulate dtype not implemented");
   };
 
@@ -820,10 +940,17 @@ if (adv_dims.empty()) throw_error("index_put: no indices");
       for (std::size_t q=0; q<tail_sizes.size(); ++q) tail_off += tidx[q] * tail_strides[q];
 
       const std::int64_t out_off = base_off + tail_off;
-      if (!accumulate && !touched.empty()) touched.push_back(out_off);
+      if (track_overlap) {
+        const auto inserted = touched.insert(out_off);
+        if (!inserted.second) {
+          throw_error("index_put: overlapping indices with accumulate=false");
+        }
+      }
       const std::int64_t v_off = [&](){
         if (v_scalar) return (std::int64_t)0;
         if (v_head) return lin;
+        if (v_tail) return tj;
+        if (v_packed) return lin*tail_total + tj;
         if (!adv_contiguous) return lin*tail_total + tj;
 
         const std::int64_t first_adv = adv_dims.front();

@@ -4,6 +4,7 @@
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/TypePromotion.h"
 #include "CodeM/core/Half.h"
+#include "CodeM/core/Complex.h"
 
 #include <vector>
 #include <algorithm>
@@ -210,6 +211,54 @@ static void scatter_reduce_half_contig(Series& a, std::int64_t dim, const Series
   }
 }
 
+template <class ComplexT>
+static void scatter_reduce_complex_sum_contig(
+    Series& a,
+    std::int64_t dim,
+    const Series& index,
+    const Series& src,
+    const std::string& reduce,
+    bool include_self,
+    bool has_initial,
+    double initial) {
+  PLUSS_CHECK(a.is_contiguous() && index.is_contiguous() && src.is_contiguous(), "scatter_reduce: requires contiguous");
+  PLUSS_CHECK(reduce == "sum", "scatter_reduce_: complex dtype supports sum only");
+  auto sh = compute_shape(a, dim, index, "scatter_reduce");
+
+  if (has_initial) {
+    Series self_backup = Series::undefined();
+    if (include_self) self_backup = a.clone();
+    auto* ap0 = reinterpret_cast<ComplexT*>(const_cast<std::byte*>(a.raw_data()));
+    const ComplexT init(static_cast<typename ComplexT::value_type>(initial), static_cast<typename ComplexT::value_type>(0));
+    for (std::int64_t i = 0; i < a.numel(); ++i) ap0[i] = init;
+    if (include_self) {
+      const auto* bp = reinterpret_cast<const ComplexT*>(self_backup.raw_data());
+      for (std::int64_t i = 0; i < a.numel(); ++i) ap0[i] += bp[i];
+    }
+  } else if (!include_self) {
+    auto* ap0 = reinterpret_cast<ComplexT*>(const_cast<std::byte*>(a.raw_data()));
+    const ComplexT zero(static_cast<typename ComplexT::value_type>(0), static_cast<typename ComplexT::value_type>(0));
+    for (std::int64_t i = 0; i < a.numel(); ++i) ap0[i] = zero;
+  }
+
+  auto* ap = reinterpret_cast<ComplexT*>(const_cast<std::byte*>(a.raw_data()));
+  const auto* sp = reinterpret_cast<const ComplexT*>(src.raw_data());
+  const std::int64_t* ip = reinterpret_cast<const std::int64_t*>(index.raw_data());
+
+  for (std::int64_t o = 0; o < sh.outer; ++o) {
+    for (std::int64_t d = 0; d < sh.scat_dim; ++d) {
+      for (std::int64_t in = 0; in < sh.inner; ++in) {
+        const std::int64_t idx = (o * sh.scat_dim * sh.inner + d * sh.inner + in);
+        std::int64_t dst = ip[idx];
+        if (dst < 0) dst += sh.in_dim;
+        PLUSS_CHECK(dst >= 0 && dst < sh.in_dim, "scatter_reduce: index out of range");
+        const std::int64_t out_idx = (o * sh.in_dim * sh.inner + dst * sh.inner + in);
+        ap[out_idx] += sp[idx];
+      }
+    }
+  }
+}
+
 Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, const Series& src,
                       const std::string& reduce, bool include_self) {
   std::int64_t d = dim;
@@ -263,6 +312,10 @@ void scatter_reduce_inplace(Series& a, std::int64_t dim, const Series& index, co
   switch (a.scalar_type()) {
     case ScalarType::Float32: scatter_reduce_impl_contig<float>(a,d,index,src,reduce,include_self,has_initial,initial); return;
     case ScalarType::Float64: scatter_reduce_impl_contig<double>(a,d,index,src,reduce,include_self,has_initial,initial); return;
+    case ScalarType::UInt64: scatter_reduce_impl_contig<std::uint64_t>(a,d,index,src,reduce,include_self,has_initial,initial); return;
+    case ScalarType::UInt32: scatter_reduce_impl_contig<std::uint32_t>(a,d,index,src,reduce,include_self,has_initial,initial); return;
+    case ScalarType::UInt16: scatter_reduce_impl_contig<std::uint16_t>(a,d,index,src,reduce,include_self,has_initial,initial); return;
+    case ScalarType::UInt8: scatter_reduce_impl_contig<std::uint8_t>(a,d,index,src,reduce,include_self,has_initial,initial); return;
     case ScalarType::Int64: scatter_reduce_impl_contig<std::int64_t>(a,d,index,src,reduce,include_self,has_initial,initial); return;
     case ScalarType::Int32: scatter_reduce_impl_contig<std::int32_t>(a,d,index,src,reduce,include_self,has_initial,initial); return;
     case ScalarType::Int16: scatter_reduce_impl_contig<std::int16_t>(a,d,index,src,reduce,include_self,has_initial,initial); return;
@@ -276,6 +329,12 @@ void scatter_reduce_inplace(Series& a, std::int64_t dim, const Series& index, co
       scatter_reduce_half_contig<BFloat16>(a,d,index,src,reduce,include_self,has_initial,initial,
         [](BFloat16 h){ return bfloat16_to_float(h); },
         [](float f){ return bfloat16_from_float(f); });
+      return;
+    case ScalarType::Complex64:
+      scatter_reduce_complex_sum_contig<Complex64>(a,d,index,src,reduce,include_self,has_initial,initial);
+      return;
+    case ScalarType::Complex128:
+      scatter_reduce_complex_sum_contig<Complex128>(a,d,index,src,reduce,include_self,has_initial,initial);
       return;
     default: break;
   }

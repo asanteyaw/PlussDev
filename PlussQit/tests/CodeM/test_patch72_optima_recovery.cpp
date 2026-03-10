@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <limits>
 #include <vector>
@@ -13,15 +14,15 @@ using pluss::ScalarType;
 using pluss::Series;
 using pluss::make_series;
 using pluss::subsp::math::optim::ConstrainedProblem;
-using pluss::subsp::math::optim::InteriorPointOptions;
+using pluss::subsp::math::optim::InternalProtocolOptions;
 using pluss::subsp::math::optim::OptimaAlgorithm;
 using pluss::subsp::math::optim::OptimaExitFlag;
 using pluss::subsp::math::optim::OptimaOptions;
 using pluss::subsp::math::optim::ParameterPack;
 using pluss::subsp::math::optim::SequentialQPOptions;
-using pluss::subsp::math::optim::init_interior_point_state;
+using pluss::subsp::math::optim::init_internal_protocol_state;
 using pluss::subsp::math::optim::init_sequential_qp_state;
-using pluss::subsp::math::optim::interior_point_step;
+using pluss::subsp::math::optim::internal_protocol_step;
 using pluss::subsp::math::optim::optima;
 using pluss::subsp::math::optim::sequential_qp_step;
 using pluss::subsp::math::optim::trace;
@@ -94,13 +95,13 @@ TEST_CASE("optima interior point recovers from non-finite trial evaluations by s
   });
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 80;
-  options.interior_point.initial_step_size = 4.0;
-  options.interior_point.initial_barrier_parameter = 0.1;
-  options.interior_point.minimum_barrier_parameter = 1e-7;
-  options.interior_point.constraint_tolerance = 1e-6;
-  options.interior_point.optimality_tolerance = 1e-5;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 80;
+  options.internal_protocol.initial_step_size = 4.0;
+  options.internal_protocol.initial_barrier_parameter = 0.1;
+  options.internal_protocol.minimum_barrier_parameter = 1e-7;
+  options.internal_protocol.constraint_tolerance = 1e-6;
+  options.internal_protocol.optimality_tolerance = 1e-5;
 
   const auto result = optima(problem, initial, options);
   const auto x = result.params.at("x").to_vec<double>();
@@ -144,7 +145,7 @@ TEST_CASE("interior point uses barrier recovery when the main line search path i
       {"x", make_vec2(0.60, 0.60)},
   });
 
-  InteriorPointOptions options;
+  InternalProtocolOptions options;
   options.max_line_search_iterations = 0;
   options.max_restoration_iterations = 4;
   options.max_restoration_line_search_iterations = 20;
@@ -152,8 +153,8 @@ TEST_CASE("interior point uses barrier recovery when the main line search path i
   options.minimum_barrier_parameter = 1e-7;
   options.initialization_margin = 1e-4;
 
-  const auto state = init_interior_point_state(problem, initial, options);
-  const auto next = interior_point_step(problem, state, options);
+  const auto state = init_internal_protocol_state(problem, initial, options);
+  const auto next = internal_protocol_step(problem, state, options);
 
   REQUIRE(state.evaluation.status == pluss::subsp::math::optim::EvalStatus::Ok);
   REQUIRE(next.iteration == state.iteration + 1);

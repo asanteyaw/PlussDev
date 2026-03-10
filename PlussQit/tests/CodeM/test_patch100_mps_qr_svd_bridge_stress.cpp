@@ -77,6 +77,14 @@ TEST_CASE("MPS linalg qr/svd bridge deterministic parity and counters", "[mps][l
     SUCCEED("MPS runtime unavailable on this host");
     return;
   }
+  if (!linearalg_mps_cpu_bridge_enabled()) {
+    SUCCEED("MPS linalg CPU bridge disabled by policy");
+    return;
+  }
+  if (linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Bridge parity test expects PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=0");
+    return;
+  }
 
   const auto a_cpu = pluss::make_series(
       std::vector<float>{
@@ -108,9 +116,9 @@ TEST_CASE("MPS linalg qr/svd bridge deterministic parity and counters", "[mps][l
   require_close_vec_(svd_reconstruct_reduced_(u_cpu, s_cpu, vh_cpu), a_ref, 7e-3f);
 
   const auto c = linearalg_dispatch_counters();
-  REQUIRE(c.mps_bridge_qr == 0);
-  REQUIRE(c.mps_bridge_svd == 0);
-  REQUIRE(c.mps_bridge_total == 0);
+  REQUIRE(c.mps_bridge_qr >= 2);
+  REQUIRE(c.mps_bridge_svd >= 3);
+  REQUIRE(c.mps_bridge_total >= 5);
 }
 
 TEST_CASE("MPS linalg qr/svd bridge stress stability", "[mps][linearalg][bridge][qr][svd][stress]") {
@@ -118,6 +126,14 @@ TEST_CASE("MPS linalg qr/svd bridge stress stability", "[mps][linearalg][bridge]
 
   if (!pluss::mps::is_ready()) {
     SUCCEED("MPS runtime unavailable on this host");
+    return;
+  }
+  if (!linearalg_mps_cpu_bridge_enabled()) {
+    SUCCEED("MPS linalg CPU bridge disabled by policy");
+    return;
+  }
+  if (linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Bridge stress test expects PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=0");
     return;
   }
 
@@ -129,6 +145,7 @@ TEST_CASE("MPS linalg qr/svd bridge stress stability", "[mps][linearalg][bridge]
   for (std::int64_t iter = 0; iter < 80; ++iter) {
     const auto m = m_dist(rng);
     const auto n = n_dist(rng);
+    CAPTURE(iter, m, n);
     std::vector<float> data(static_cast<std::size_t>(m * n), 0.0f);
     for (auto& v : data) v = val_dist(rng);
 

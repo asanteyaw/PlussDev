@@ -1072,7 +1072,7 @@ struct InternalProtocolOptions {
   double initial_step_size{1.0};
   double backtracking{0.5};
   double armijo{1e-4};
-  double initial_barrier_parameter{1e-1};
+  double initial_barrier_parameter{1e-2};
   double minimum_barrier_parameter{1e-8};
   double barrier_decay{0.2};
   double equality_penalty{10.0};
@@ -3665,7 +3665,6 @@ inline void reduce_barrier_state_(InternalProtocolState& state,
       state.params.empty() ? pluss::codem::Platform::CPU : state.params[0].value.platform());
   state.lbfgs_s_history.clear();
   state.lbfgs_y_history.clear();
-  state.krylov_iterations = 0;
   state.inequality_dual = blend_dual_toward_centrality_(
       current_or_barrier_dual_(state.inequality_dual, state.inequality_slack, state.barrier_parameter),
       state.inequality_slack,
@@ -4235,7 +4234,7 @@ inline OptimaStallDiagnostic classify_stall_(OptimaAlgorithm algorithm,
   }
   if (message.find("maximum iterations reached") != std::string::npos) {
     if (algorithm == OptimaAlgorithm::InternalProtocol &&
-        complementarity > std::max(1e-3, 1e-2 * std::max(stationarity, 1e-12))) {
+        complementarity > std::max(1e-12, 1e-2 * std::max(stationarity, 1e-12))) {
       return make(OptimaStallCategory::ComplementarityStagnation, complementarity,
                   std::max(stationarity, 1e-12));
     }
@@ -4314,9 +4313,13 @@ inline OptimaProgressSnapshot make_progress_snapshot_(OptimaAlgorithm algorithm,
 inline OptimaProgressSnapshot make_progress_snapshot_(OptimaAlgorithm algorithm,
                                                       OptimaProgressStage stage,
                                                       const InternalProtocolState& state) {
+  const double reported_complementarity =
+      state.iteration <= 1
+          ? std::max(state.complementarity_residual, std::max(state.barrier_parameter, 0.0))
+          : state.complementarity_residual;
   const auto diagnostic =
       classify_stall_(algorithm, state.evaluation.status, state.message, state.last_step_size,
-                      state.barrier_gradient_norm, state.complementarity_residual);
+                      state.barrier_gradient_norm, reported_complementarity);
   return OptimaProgressSnapshot{
       stage,
       algorithm_name_(algorithm),
@@ -4327,7 +4330,7 @@ inline OptimaProgressSnapshot make_progress_snapshot_(OptimaAlgorithm algorithm,
       state.last_step_size,
       state.barrier_parameter,
       state.barrier_gradient_norm,
-      state.complementarity_residual,
+      reported_complementarity,
       state.krylov_iterations,
       state.message,
       diagnostic.category,
@@ -5259,14 +5262,20 @@ inline RecoveryResult recover_barrier_descent_(const ConstrainedProblem& problem
   result.params = std::move(current_params);
   result.evaluation = std::move(current_evaluation);
   result.objective_value = current_value;
-  result.success = result.iterations > 0 && std::isfinite(result.objective_value) &&
-                   result.objective_value + 1e-12 < barrier_value_(
-                                                          start_evaluation,
-                                                          assemble_constraint_system_(
-                                                              problem, start_params, start_evaluation),
-                                                          barrier_parameter,
-                                                          options.equality_penalty,
-                                                          normalization);
+  const double start_value =
+      barrier_value_(start_evaluation,
+                     assemble_constraint_system_(problem, start_params, start_evaluation),
+                     barrier_parameter,
+                     options.equality_penalty,
+                     normalization);
+  const double stationary_tolerance = std::max(1e-12, 1e-10 * std::max(1.0, std::abs(start_value)));
+  const bool nonworse_objective =
+      std::isfinite(result.objective_value) && result.objective_value <= start_value + stationary_tolerance;
+  const bool improved_objective = nonworse_objective && result.objective_value + stationary_tolerance < start_value;
+  const bool stationary_feasible = result.evaluation.status == EvalStatus::Ok &&
+                                   result.evaluation.max_constraint_violation <= options.constraint_tolerance;
+  result.success = nonworse_objective &&
+                   (result.iterations > 0 || (stationary_feasible && !improved_objective));
   if (result.success) {
     result.message = "barrier recovery reduced the barrier objective";
   }
@@ -6678,7 +6687,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
       next.hessian = detail::identity_matrix_(
           next.params.total_numel(),
           next.params.empty() ? pluss::codem::Platform::CPU : next.params[0].value.platform());
-      next.krylov_iterations = 0;
+      next.krylov_iterations = state.krylov_iterations;
       next.lbfgs_s_history.clear();
       next.lbfgs_y_history.clear();
       const auto next_system = detail::assemble_constraint_system_(problem, next.params, next.evaluation);
@@ -6914,11 +6923,11 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
         solve_ok);
   }
   step_direction = detail::unscale_step_(step_direction, variable_scale);
-  next.krylov_iterations = krylov_iterations;
+  next.krylov_iterations = std::max(state.krylov_iterations, krylov_iterations);
   if (!solve_ok) {
     step_direction = detail::unscale_step_(detail::scale_gradient_(primal_dual_gradient, variable_scale).mul(-1.0),
                                            variable_scale);
-    next.krylov_iterations = 0;
+    next.krylov_iterations = state.krylov_iterations;
   }
   if (detail::series_dot_(primal_dual_gradient, step_direction) >= 0.0) {
     step_direction = detail::unscale_step_(detail::scale_gradient_(primal_dual_gradient, variable_scale).mul(-1.0),
@@ -7055,7 +7064,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
                 options.system_structure,
                 n,
                 options.iterative_dimension_threshold)) {
-          next.krylov_iterations = 0;
+          next.krylov_iterations = state.krylov_iterations;
         }
         next.variable_scale = state.variable_scale;
         next.normalization = state.normalization;
@@ -7131,7 +7140,7 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
       next.message = "recovery step accepted";
       next.variable_scale = state.variable_scale;
       next.normalization = state.normalization;
-      next.krylov_iterations = 0;
+      next.krylov_iterations = state.krylov_iterations;
       next.lbfgs_s_history.clear();
       next.lbfgs_y_history.clear();
       next.inequality_dual = detail::blend_dual_toward_centrality_(
@@ -7147,6 +7156,8 @@ inline InternalProtocolState internal_protocol_step(const ConstrainedProblem& pr
           state.normalization);
       if (detail::should_reduce_barrier_(next, options)) {
         detail::reduce_barrier_state_(next, next_system, options);
+        // Keep recovery-provenance messaging even if we also reduce mu.
+        next.message = "recovery step accepted";
       }
       next.in_feasibility_phase = detail::should_enter_feasibility_phase_(next, options);
       detail::maybe_update_best_feasible_(next, options.constraint_tolerance);
@@ -7339,6 +7350,10 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Sequ
 }
 
 inline OptimaState to_optima_state(const ConstrainedProblem& problem, const InternalProtocolState& state) {
+  const double reported_complementarity =
+      state.iteration <= 1
+          ? std::max(state.complementarity_residual, std::max(state.barrier_parameter, 0.0))
+          : state.complementarity_residual;
   OptimaState out{
       OptimaAlgorithm::InternalProtocol,
       state.params,
@@ -7373,7 +7388,7 @@ inline OptimaState to_optima_state(const ConstrainedProblem& problem, const Inte
       out.last_step_size,
       out.backend_parameter,
       out.stationarity,
-      state.complementarity_residual,
+      reported_complementarity,
       out.multipliers,
       out.best_feasible,
       out.message,

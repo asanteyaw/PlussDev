@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aux/let.h"
+#include "aux/rng_seed.h"
 #include "aux/transmit.h"
 #include "aux/translate.h"
 
@@ -12,6 +13,7 @@ using aux::transmit_options;
 using aux::transform_axis;
 using aux::transform_axis_options;
 using aux::suppose;
+using aux::rng_seed;
 } // namespace pluss
 
 // Convenience unqualified aliases for end users.

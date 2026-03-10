@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <vector>
 
@@ -13,7 +14,7 @@ using pluss::Series;
 using pluss::make_series;
 using pluss::subsp::math::optim::ConstrainedProblem;
 using pluss::subsp::math::optim::EvalStatus;
-using pluss::subsp::math::optim::InteriorPointState;
+using pluss::subsp::math::optim::InternalProtocolState;
 using pluss::subsp::math::optim::OptimaAlgorithm;
 using pluss::subsp::math::optim::OptimaProgressStage;
 using pluss::subsp::math::optim::OptimaStallCategory;
@@ -79,7 +80,7 @@ TEST_CASE("optima exposes boundary-limited stall diagnostics for SQP output and 
 
 TEST_CASE("optima exposes complementarity stagnation diagnostics for interior-point iteration limits",
           "[optim][optima][stall][ip][complementarity]") {
-  InteriorPointState state;
+  InternalProtocolState state;
   state.params = make_params();
   state.iteration = 40;
   state.function_evaluations = 97;
@@ -101,7 +102,7 @@ TEST_CASE("optima exposes complementarity stagnation diagnostics for interior-po
   state.evaluation.first_order_opt = 1e-6;
 
   const auto result = to_optima_state(ConstrainedProblem{}, state);
-  const auto snapshot = make_progress_snapshot_(OptimaAlgorithm::InteriorPoint, OptimaProgressStage::Done, state);
+  const auto snapshot = make_progress_snapshot_(OptimaAlgorithm::InternalProtocol, OptimaProgressStage::Done, state);
 
   REQUIRE(result.output.stall_category == OptimaStallCategory::ComplementarityStagnation);
   REQUIRE(result.output.stall_measure == Approx(2e-2).margin(1e-12));

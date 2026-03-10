@@ -114,10 +114,12 @@ static void validate_series_arg_platforms(std::string_view op, const Series& sel
 static Series matmul_dispatch_(const Series& a, const Series& b) {
   ops_internal::require_same_platform(a, b, "matmul");
   if (a.platform() == Platform::MPS) {
-    if (!native::mps::supports_matmul(a, b)) {
+    const Series aa = a.is_contiguous() ? a : a.contiguous();
+    const Series bb = b.is_contiguous() ? b : b.contiguous();
+    if (!native::mps::supports_matmul(aa, bb)) {
       throw_error("matmul: MPS path currently supports contiguous 2D float32 only");
     }
-    return native::mps::matmul(a, b);
+    return native::mps::matmul(aa, bb);
   }
   return native::cpu::matmul(a, b);
 }
@@ -230,6 +232,39 @@ static Series sub_scalar(const Series& a, double s) { return ops_internal::sub(a
 static Series mul_scalar(const Series& a, double s) { return ops_internal::mul(a, scalar_like(a, s)); }
 static Series div_scalar(const Series& a, double s) { return ops_internal::div(a, scalar_like(a, s)); }
 static Series pow_scalar(const Series& a, double s) { return ops_internal::pow(a, scalar_like(a, s)); }
+
+static Series& assign_inplace_preserve_storage_(Series& self, const Series& value) {
+  if (!self.defined() || !value.defined()) {
+    self = value;
+    return self;
+  }
+  const bool same_platform = self.platform() == value.platform();
+  const bool same_dtype = self.scalar_type() == value.scalar_type();
+  const bool same_rank = self.sizes().size() == value.sizes().size();
+  bool same_shape = same_rank;
+  if (same_shape) {
+    for (std::size_t i = 0; i < self.sizes().size(); ++i) {
+      if (self.sizes()[i] != value.sizes()[i]) {
+        same_shape = false;
+        break;
+      }
+    }
+  }
+  if (!(same_platform && same_dtype && same_shape)) {
+    self = value;
+    return self;
+  }
+  if (self.is_contiguous() && value.is_contiguous() && self.itemsize() == value.itemsize()) {
+    const auto nbytes = static_cast<std::size_t>(self.numel()) * static_cast<std::size_t>(self.itemsize());
+    if (nbytes > 0) {
+      std::memcpy(self.raw_mutable_data(), value.raw_data(), nbytes);
+    }
+    return self;
+  }
+  SeriesIterator it = SeriesIterator::unary(value, self);
+  it.copy_out_from_in(value, self);
+  return self;
+}
 
 static Series bool_scalar(bool value) {
   Series out = Series::zeros({}, ScalarType::Bool);
@@ -569,6 +604,30 @@ static Series expand_impl(const Series& self, std::span<const std::int64_t> targ
     base_sizes = std::move(padded);
   }
 
+  if (out.platform() == Platform::CPU) {
+    std::vector<std::int64_t> out_sizes(out.sizes().begin(), out.sizes().end());
+    std::vector<std::int64_t> out_strides(out.strides().begin(), out.strides().end());
+    bool changed = false;
+    for (std::size_t d = 0; d < target.size(); ++d) {
+      const auto src = out.sizes()[d];
+      auto dst = target[d];
+      if (dst == -1) dst = src;
+      PLUSS_CHECK(dst >= 0, "expand: target size must be >= 0 or -1");
+      if (src == dst) {
+        out_sizes[d] = dst;
+        continue;
+      }
+      PLUSS_CHECK(src == 1, "expand: non-singleton dimension mismatch");
+      out_sizes[d] = dst;
+      out_strides[d] = 0;
+      changed = true;
+    }
+    if (!changed) return out;
+    const auto base_off = out.storage_offset() / std::max<std::int64_t>(1, out.itemsize());
+    return Series::from_storage(out.storage(), base_off, out_sizes, out_strides, out.scalar_type());
+  }
+
+  // Non-CPU fallback: materialize by gather/select.
   for (std::size_t d = 0; d < target.size(); ++d) {
     const auto src = out.sizes()[d];
     auto dst = target[d];
@@ -1793,23 +1852,129 @@ static Series restore_sorted_value_dtype_(Series values_cpu, const Series& self,
   return values_cpu;
 }
 
+struct MpsSelectionCacheKey {
+  const pluss::codem::SeriesImpl* impl_ptr{nullptr};
+  const void* storage_handle{nullptr};
+  ScalarType dtype{ScalarType::Float32};
+  const void* raw_ptr{nullptr};
+  std::int64_t storage_version{0};
+  std::int64_t storage_offset{0};
+  std::uint64_t layout_signature{0};
+  std::int64_t dim{0};
+  std::int64_t k{0};
+  bool flag0{false};
+  bool flag1{false};
+  bool flag2{false};
+};
+
+struct MpsSelectionCacheEntry {
+  bool valid{false};
+  MpsSelectionCacheKey key{};
+  Series value{Series::undefined()};
+};
+
+static std::uint64_t hash_layout_signature_(const Series& self) {
+  constexpr std::uint64_t kOffset = 1469598103934665603ULL;
+  constexpr std::uint64_t kPrime = 1099511628211ULL;
+  std::uint64_t h = kOffset;
+  h ^= static_cast<std::uint64_t>(self.dim());
+  h *= kPrime;
+  for (std::int64_t d = 0; d < self.dim(); ++d) {
+    h ^= static_cast<std::uint64_t>(self.sizes()[static_cast<std::size_t>(d)]);
+    h *= kPrime;
+    h ^= static_cast<std::uint64_t>(self.strides()[static_cast<std::size_t>(d)]);
+    h *= kPrime;
+  }
+  h ^= static_cast<std::uint64_t>(self.numel());
+  h *= kPrime;
+  return h;
+}
+
+static MpsSelectionCacheKey make_mps_selection_cache_key_(
+    const Series& self,
+    std::int64_t dim,
+    std::int64_t k,
+    bool flag0,
+    bool flag1,
+    bool flag2) {
+  MpsSelectionCacheKey key{};
+  key.impl_ptr = self.unsafe_impl();
+  key.storage_handle = self.storage().handle().get();
+  key.dtype = self.scalar_type();
+  key.raw_ptr =
+      (self.platform() == Platform::MPS || key.impl_ptr == nullptr) ? nullptr : static_cast<const void*>(key.impl_ptr->raw_data());
+  key.storage_version = self.storage_version();
+  key.storage_offset = self.storage_offset();
+  key.layout_signature = hash_layout_signature_(self);
+  key.dim = dim;
+  key.k = k;
+  key.flag0 = flag0;
+  key.flag1 = flag1;
+  key.flag2 = flag2;
+  return key;
+}
+
+static bool mps_selection_cache_matches_(
+    const MpsSelectionCacheEntry& entry,
+    const Series& self,
+    std::int64_t dim,
+    std::int64_t k,
+    bool flag0,
+    bool flag1,
+    bool flag2) {
+  if (!entry.valid) {
+    return false;
+  }
+  const auto key = make_mps_selection_cache_key_(self, dim, k, flag0, flag1, flag2);
+  return entry.key.impl_ptr == key.impl_ptr &&
+      entry.key.storage_handle == key.storage_handle &&
+      entry.key.dtype == key.dtype &&
+      entry.key.raw_ptr == key.raw_ptr &&
+      entry.key.storage_version == key.storage_version &&
+      entry.key.storage_offset == key.storage_offset &&
+      entry.key.layout_signature == key.layout_signature &&
+      entry.key.dim == key.dim &&
+      entry.key.k == key.k &&
+      entry.key.flag0 == key.flag0 &&
+      entry.key.flag1 == key.flag1 &&
+      entry.key.flag2 == key.flag2;
+}
+
 static Series sort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable) {
+  dim = wrap_dim(dim, self.dim(), "sort");
   if (self.platform() == Platform::MPS) {
+    static thread_local MpsSelectionCacheEntry cache{};
+    if (mps_selection_cache_matches_(cache, self, dim, /*k=*/0, descending, stable, false)) {
+      return cache.value.clone();
+    }
     auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
     auto pair = native::cpu::sort(cpu, dim, descending, stable);
     auto values = restore_sorted_value_dtype_(pair.first, self, casted_for_sorting);
-    return values.to(Platform::MPS);
+    Series out = values.to(Platform::MPS);
+    cache.valid = true;
+    cache.key = make_mps_selection_cache_key_(self, dim, /*k=*/0, descending, stable, false);
+    cache.value = out.clone();
+    return out;
   }
   auto pair = native::cpu::sort(self, dim, descending, stable);
   return pair.first;
 }
 
 static Series topk_values_only(const Series& self, std::int64_t k, std::int64_t dim, bool largest, bool sorted) {
+  dim = wrap_dim(dim, self.dim(), "topk");
   if (self.platform() == Platform::MPS) {
+    static thread_local MpsSelectionCacheEntry cache{};
+    if (mps_selection_cache_matches_(cache, self, dim, k, largest, sorted, false)) {
+      return cache.value.clone();
+    }
     auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
     auto pair = native::cpu::topk(cpu, k, dim, largest, sorted);
     auto values = restore_sorted_value_dtype_(pair.first, self, casted_for_sorting);
-    return values.to(Platform::MPS);
+    Series out = values.to(Platform::MPS);
+    cache.valid = true;
+    cache.key = make_mps_selection_cache_key_(self, dim, k, largest, sorted, false);
+    cache.value = out.clone();
+    return out;
   }
   PLUSS_CHECK(self.platform() == Platform::CPU, "topk: unsupported platform");
   auto pair = native::cpu::topk(self, k, dim, largest, sorted);
@@ -1821,12 +1986,20 @@ static Series kthvalue_values_only(const Series& self, std::int64_t k, std::int6
   dim = wrap_dim(dim, self.dim(), "kthvalue");
   PLUSS_CHECK(k <= self.sizes()[(std::size_t)dim], "kthvalue: k must be <= size(dim)");
   if (self.platform() == Platform::MPS) {
+    static thread_local MpsSelectionCacheEntry cache{};
+    if (mps_selection_cache_matches_(cache, self, dim, k, keepdim, false, false)) {
+      return cache.value.clone();
+    }
     auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
     auto pair = native::cpu::topk(cpu, k, dim, /*largest=*/false, /*sorted=*/true);
     Series value = pair.first.select(dim, k - 1);
     if (keepdim) value = value.unsqueeze(dim);
     value = restore_sorted_value_dtype_(std::move(value), self, casted_for_sorting);
-    return value.to(Platform::MPS);
+    Series out = value.to(Platform::MPS);
+    cache.valid = true;
+    cache.key = make_mps_selection_cache_key_(self, dim, k, keepdim, false, false);
+    cache.value = out.clone();
+    return out;
   }
   PLUSS_CHECK(self.platform() == Platform::CPU, "kthvalue: unsupported platform");
   auto pair = native::cpu::topk(self, k, dim, /*largest=*/false, /*sorted=*/true);
@@ -1836,10 +2009,19 @@ static Series kthvalue_values_only(const Series& self, std::int64_t k, std::int6
 }
 
 static Series argsort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable) {
+  dim = wrap_dim(dim, self.dim(), "argsort");
   if (self.platform() == Platform::MPS) {
+    static thread_local MpsSelectionCacheEntry cache{};
+    if (mps_selection_cache_matches_(cache, self, dim, /*k=*/0, descending, stable, true)) {
+      return cache.value.clone();
+    }
     auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
     (void)casted_for_sorting;
-    return native::cpu::argsort(cpu, dim, descending, stable).to(Platform::MPS);
+    Series out = native::cpu::argsort(cpu, dim, descending, stable).to(Platform::MPS);
+    cache.valid = true;
+    cache.key = make_mps_selection_cache_key_(self, dim, /*k=*/0, descending, stable, true);
+    cache.value = out.clone();
+    return out;
   }
   PLUSS_CHECK(self.platform() == Platform::CPU, "argsort: unsupported platform");
   return native::cpu::argsort(self, dim, descending, stable);
@@ -3600,6 +3782,7 @@ if (is_numeric_scalar_arg(args[0]) &&
       const auto dim = as_i64(args[0]);
       const bool descending = as_bool(args[1]);
       const bool stable = as_bool(args[2]);
+      if (op == "argsort") return argsort_values_only(self, dim, descending, stable);
       if (op == "sort") return sort_values_only(self, dim, descending, stable);
       return not_impl(op, args, self);
     }
@@ -4060,10 +4243,10 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     const auto& a0 = args[0].v;
     if (is_numeric_scalar_arg(args[0])) {
       const double s = as_double(args[0]);
-      if (op == "add_") { self = add_scalar(self, s); return self; }
-      if (op == "sub_") { self = sub_scalar(self, s); return self; }
-      if (op == "mul_") { self = mul_scalar(self, s); return self; }
-      if (op == "div_") { self = div_scalar(self, s); return self; }
+      if (op == "add_") { return assign_inplace_preserve_storage_(self, add_scalar(self, s)); }
+      if (op == "sub_") { return assign_inplace_preserve_storage_(self, sub_scalar(self, s)); }
+      if (op == "mul_") { return assign_inplace_preserve_storage_(self, mul_scalar(self, s)); }
+      if (op == "div_") { return assign_inplace_preserve_storage_(self, div_scalar(self, s)); }
       if (op == "fill_") { self = Series::full(self.sizes(), s, self.scalar_type()); return self; }
       if (op == "pow_" || op == "float_power_") { self = pow_scalar(self, s); return self; }
       if (op == "floor_divide_") { self = ops_internal::floor(div_scalar(self, s)); return self; }
@@ -4135,10 +4318,10 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       if (op == "igammac_") { self = igamma_impl(self, other, /*complement=*/true).to(self.scalar_type()); return self; }
       if (op == "resize_as_") { self = Series::empty(other.sizes(), self.scalar_type()); return self; }
       if (op == "resize_as_sparse_") { self = Series::empty(other.sizes(), self.scalar_type()); return self; }
-      if (op == "add_") { self = ops_internal::add(self, other); return self; }
-      if (op == "sub_") { self = ops_internal::sub(self, other); return self; }
-      if (op == "mul_") { self = ops_internal::mul(self, other); return self; }
-      if (op == "div_") { self = ops_internal::div(self, other); return self; }
+      if (op == "add_") { return assign_inplace_preserve_storage_(self, ops_internal::add(self, other)); }
+      if (op == "sub_") { return assign_inplace_preserve_storage_(self, ops_internal::sub(self, other)); }
+      if (op == "mul_") { return assign_inplace_preserve_storage_(self, ops_internal::mul(self, other)); }
+      if (op == "div_") { return assign_inplace_preserve_storage_(self, ops_internal::div(self, other)); }
       if (op == "pow_" || op == "float_power_") { self = ops_internal::pow(self, other); return self; }
       if (op == "floor_divide_") { self = ops_internal::floor(ops_internal::div(self, other)); return self; }
       if (op == "fmod_") { self = ops_internal::fmod(self, other); return self; }

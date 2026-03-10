@@ -37,3 +37,29 @@ TEST_CASE("rand/randn deterministic with seed", "[factory]") {
   auto* n1p = reinterpret_cast<const double*>(n1.raw_data());
   REQUIRE(n0p[2] == n1p[2]);
 }
+
+TEST_CASE("rng_seed drives deterministic zero-seed factory stream", "[factory][rng_seed]") {
+  pluss::rng_seed(424242u);
+  const auto seed0 = pluss::rng_seed();
+  REQUIRE(seed0 == 424242u);
+
+  const auto a0 = rand({8}, ScalarType::Float32);
+  const auto a1 = rand({8}, ScalarType::Float32);
+  REQUIRE(a0.to_vec<float>() != a1.to_vec<float>());
+
+  pluss::rng_seed(424242u);
+  const auto b0 = rand({8}, ScalarType::Float32);
+  const auto b1 = rand({8}, ScalarType::Float32);
+  REQUIRE(b0.to_vec<float>() == a0.to_vec<float>());
+  REQUIRE(b1.to_vec<float>() == a1.to_vec<float>());
+
+  pluss::rng_seed(999u);
+  const auto c0 = randn({8}, ScalarType::Float32);
+  pluss::rng_seed(999u);
+  const auto c1 = randn({8}, ScalarType::Float32);
+  REQUIRE(c0.to_vec<float>() == c1.to_vec<float>());
+
+  const auto explicit_seed_a = rand({8}, ScalarType::Float32, 7u);
+  const auto explicit_seed_b = rand({8}, ScalarType::Float32, 7u);
+  REQUIRE(explicit_seed_a.to_vec<float>() == explicit_seed_b.to_vec<float>());
+}

@@ -1,7 +1,46 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
+#include <cstdlib>
 #include <string>
+
+namespace {
+
+enum class SolverRouteMode : std::uint8_t {
+  Auto = 0,
+  Native = 1,
+  Bridge = 2,
+};
+
+SolverRouteMode solver_route_mode_() {
+  const char* raw = std::getenv("PLUSS_MPS_LINALG_SOLVER_ROUTE");
+  if (raw == nullptr) {
+    return SolverRouteMode::Auto;
+  }
+  const auto eq_lit = [raw](const char* lit) noexcept {
+    const unsigned char* a = reinterpret_cast<const unsigned char*>(raw);
+    const unsigned char* b = reinterpret_cast<const unsigned char*>(lit);
+    while (*a != '\0' && *b != '\0') {
+      unsigned char ca = *a;
+      unsigned char cb = *b;
+      if (ca >= 'A' && ca <= 'Z') ca = static_cast<unsigned char>(ca - 'A' + 'a');
+      if (cb >= 'A' && cb <= 'Z') cb = static_cast<unsigned char>(cb - 'A' + 'a');
+      if (ca != cb) return false;
+      ++a;
+      ++b;
+    }
+    return *a == '\0' && *b == '\0';
+  };
+  if (eq_lit("bridge") || eq_lit("reference") || eq_lit("prefer_bridge") || eq_lit("cpu")) {
+    return SolverRouteMode::Bridge;
+  }
+  if (eq_lit("native") || eq_lit("metal") || eq_lit("prefer_native")) {
+    return SolverRouteMode::Native;
+  }
+  return SolverRouteMode::Auto;
+}
+
+} // namespace
 
 TEST_CASE("Linear algebra backend info reports CPU capabilities", "[linearalg][backend][cpu]") {
   using namespace pluss::subsp::linearalg;
@@ -57,21 +96,29 @@ TEST_CASE("Linear algebra backend info reports MPS and CUDA coherently", "[linea
     REQUIRE_FALSE(mps.supports_qr);
     REQUIRE_FALSE(mps.supports_svd);
   } else {
+    const bool bridge_ready = linearalg_mps_cpu_bridge_enabled();
+    const bool native_enabled = linearalg_mps_experimental_native_enabled();
+    const bool prefer_bridge = (solver_route_mode_() == SolverRouteMode::Bridge);
+    const bool native_ready = native_enabled && (!prefer_bridge || !bridge_ready);
+    const bool solver_ready = native_ready || bridge_ready;
+    const auto expected_provider = native_ready
+        ? LinearAlgSolverProvider::Metal
+        : (bridge_ready ? LinearAlgSolverProvider::Reference : LinearAlgSolverProvider::None);
     REQUIRE(mps.dense_provider == LinearAlgDenseProvider::Metal);
-    REQUIRE(mps.solver_provider == LinearAlgSolverProvider::Reference);
+    REQUIRE(mps.solver_provider == expected_provider);
     REQUIRE(mps.dense_available);
-    REQUIRE(mps.solver_available);
+    REQUIRE(mps.solver_available == solver_ready);
     REQUIRE(mps.supports_matmul);
-    REQUIRE(mps.supports_det);
-    REQUIRE(mps.supports_inverse);
-    REQUIRE(mps.supports_cholesky);
-    REQUIRE(mps.supports_triangular_solve);
-    REQUIRE(mps.supports_cholesky_solve);
-    REQUIRE(mps.supports_lu_solve);
     REQUIRE(mps.supports_matrix_power);
     REQUIRE(mps.supports_matrix_exp);
-    REQUIRE(mps.supports_qr);
-    REQUIRE(mps.supports_svd);
+    REQUIRE(mps.supports_det == solver_ready);
+    REQUIRE(mps.supports_inverse == solver_ready);
+    REQUIRE(mps.supports_cholesky == solver_ready);
+    REQUIRE(mps.supports_triangular_solve == solver_ready);
+    REQUIRE(mps.supports_cholesky_solve == solver_ready);
+    REQUIRE(mps.supports_lu_solve == solver_ready);
+    REQUIRE(mps.supports_qr == solver_ready);
+    REQUIRE(mps.supports_svd == solver_ready);
   }
 
   const auto cuda = linearalg_backend_info(LinearAlgTarget::CUDA);

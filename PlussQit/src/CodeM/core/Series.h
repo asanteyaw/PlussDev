@@ -587,6 +587,10 @@ private:
 
   template <class T>
   std::vector<T> detail_materialize_vec_() const {
+    if (platform() != Platform::CPU) {
+      return to(Platform::CPU).template detail_materialize_vec_<T>();
+    }
+
     const ScalarType want = detail_scalar_type_for_<T>();
     if (scalar_type() != want) {
       // User-facing extraction supports dtype conversion (promotion/demotion)

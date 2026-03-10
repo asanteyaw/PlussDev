@@ -627,6 +627,14 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp
       tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp
       tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp
+      tests/CodeM/test_patch111_mps_cast_coverage.cpp
+      tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp
+      tests/CodeM/test_patch118_mps_cache_strict_regression.cpp
+      tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp
+      tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp
+      tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp
+      tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp
+      tests/CodeM/test_patch125_mps_solver_route_policy.cpp
     )
     target_link_libraries(plussqit_codem_mps_selection_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_mps_selection_tests PRIVATE cxx_std_20)

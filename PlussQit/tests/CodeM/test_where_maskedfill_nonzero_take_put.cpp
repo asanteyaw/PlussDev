@@ -18,7 +18,7 @@ TEST_CASE("where broadcast + type promotion", "[indexing]") {
   auto* bp = reinterpret_cast<double*>(b.raw_data());
   bp[0]=1; bp[1]=2; bp[2]=3;
 
-  auto out = where(cond, a, b);
+  auto out = cond.where(a, b);
   REQUIRE(out.sizes()[0] == 2);
   REQUIRE(out.sizes()[1] == 3);
   auto* op = reinterpret_cast<const double*>(out.raw_data());
@@ -40,12 +40,12 @@ TEST_CASE("masked_fill and nonzero", "[indexing]") {
   auto* mp = reinterpret_cast<std::uint8_t*>(m.raw_data());
   mp[0]=1; mp[5]=1;
 
-  auto b = masked_fill(a, m, 99.0);
+  auto b = a.masked_fill(m, 99.0);
   auto* bp = reinterpret_cast<const float*>(b.raw_data());
   REQUIRE(bp[0] == 99.0f);
   REQUIRE(bp[5] == 99.0f);
 
-  auto nz = nonzero(m);
+  auto nz = m.nonzero();
   REQUIRE(nz.sizes()[1] == 2);
   REQUIRE(nz.sizes()[0] == 2);
   auto* ip = reinterpret_cast<const std::int64_t*>(nz.raw_data());

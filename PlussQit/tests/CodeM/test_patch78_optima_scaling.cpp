@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <vector>
 
@@ -64,9 +65,9 @@ TEST_CASE("optima scaling path converges on an ill-scaled bounded problem",
   REQUIRE(sqp.params.at("x").select(0, 1).item<double>() == Approx(1.0e-3).margin(1e-6));
 
   OptimaOptions ip_options;
-  ip_options.algorithm = OptimaAlgorithm::InteriorPoint;
-  ip_options.interior_point.max_iterations = 50;
-  ip_options.interior_point.problem_scaling = OptimaProblemScaling::InitialPoint;
+  ip_options.algorithm = OptimaAlgorithm::InternalProtocol;
+  ip_options.internal_protocol.max_iterations = 50;
+  ip_options.internal_protocol.problem_scaling = OptimaProblemScaling::InitialPoint;
 
   const auto ip = optima(problem, initial, ip_options);
   REQUIRE(ip.converged);

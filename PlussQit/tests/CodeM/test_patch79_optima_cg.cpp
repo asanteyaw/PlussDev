@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <algorithm>
 #include <vector>
@@ -50,14 +51,14 @@ TEST_CASE("interior-point can use conjugate-gradient subproblem solves", "[optim
   });
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 80;
-  options.interior_point.linear_system_solver = OptimaLinearSystemSolver::ConjugateGradient;
-  options.interior_point.max_krylov_iterations = 128;
-  options.interior_point.krylov_tolerance = 1e-6;
-  options.interior_point.krylov_absolute_tolerance = 1e-10;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 80;
+  options.internal_protocol.linear_system_solver = OptimaLinearSystemSolver::ConjugateGradient;
+  options.internal_protocol.max_krylov_iterations = 128;
+  options.internal_protocol.krylov_tolerance = 1e-6;
+  options.internal_protocol.krylov_absolute_tolerance = 1e-10;
   std::int64_t max_krylov_seen = 0;
-  options.interior_point.progress_hook = [&max_krylov_seen](const auto& snapshot) {
+  options.internal_protocol.progress_hook = [&max_krylov_seen](const auto& snapshot) {
     max_krylov_seen = std::max(max_krylov_seen, snapshot.krylov_iterations);
     return false;
   };

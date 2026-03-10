@@ -10,6 +10,10 @@ TEST_CASE("MPS native inverse and lu_solve avoid bridge counters", "[mps][linear
     SUCCEED("MPS runtime unavailable on this host");
     return;
   }
+  if (!linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Native inverse/lu test requires PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=1");
+    return;
+  }
 
   const auto a_cpu = pluss::make_series(
       std::vector<float>{

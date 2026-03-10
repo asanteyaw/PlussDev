@@ -3368,6 +3368,87 @@ tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.cpp.s
 .PHONY : tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.cpp.s
 
+tests/CodeM/test_patch111_mps_cast_coverage.o: tests/CodeM/test_patch111_mps_cast_coverage.cpp.o
+.PHONY : tests/CodeM/test_patch111_mps_cast_coverage.o
+
+# target to build an object file
+tests/CodeM/test_patch111_mps_cast_coverage.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch111_mps_cast_coverage.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch111_mps_cast_coverage.cpp.o
+.PHONY : tests/CodeM/test_patch111_mps_cast_coverage.cpp.o
+
+tests/CodeM/test_patch111_mps_cast_coverage.i: tests/CodeM/test_patch111_mps_cast_coverage.cpp.i
+.PHONY : tests/CodeM/test_patch111_mps_cast_coverage.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch111_mps_cast_coverage.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch111_mps_cast_coverage.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch111_mps_cast_coverage.cpp.i
+.PHONY : tests/CodeM/test_patch111_mps_cast_coverage.cpp.i
+
+tests/CodeM/test_patch111_mps_cast_coverage.s: tests/CodeM/test_patch111_mps_cast_coverage.cpp.s
+.PHONY : tests/CodeM/test_patch111_mps_cast_coverage.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch111_mps_cast_coverage.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch111_mps_cast_coverage.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch111_mps_cast_coverage.cpp.s
+.PHONY : tests/CodeM/test_patch111_mps_cast_coverage.cpp.s
+
+tests/CodeM/test_patch114_mps_linalg_policy_runtime.o: tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.o
+.PHONY : tests/CodeM/test_patch114_mps_linalg_policy_runtime.o
+
+# target to build an object file
+tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.o
+.PHONY : tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.o
+
+tests/CodeM/test_patch114_mps_linalg_policy_runtime.i: tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.i
+.PHONY : tests/CodeM/test_patch114_mps_linalg_policy_runtime.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.i
+.PHONY : tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.i
+
+tests/CodeM/test_patch114_mps_linalg_policy_runtime.s: tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.s
+.PHONY : tests/CodeM/test_patch114_mps_linalg_policy_runtime.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.s
+.PHONY : tests/CodeM/test_patch114_mps_linalg_policy_runtime.cpp.s
+
+tests/CodeM/test_patch118_mps_cache_strict_regression.o: tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.o
+.PHONY : tests/CodeM/test_patch118_mps_cache_strict_regression.o
+
+# target to build an object file
+tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.o
+.PHONY : tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.o
+
+tests/CodeM/test_patch118_mps_cache_strict_regression.i: tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.i
+.PHONY : tests/CodeM/test_patch118_mps_cache_strict_regression.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.i
+.PHONY : tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.i
+
+tests/CodeM/test_patch118_mps_cache_strict_regression.s: tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.s
+.PHONY : tests/CodeM/test_patch118_mps_cache_strict_regression.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.s
+.PHONY : tests/CodeM/test_patch118_mps_cache_strict_regression.cpp.s
+
 tests/CodeM/test_patch11_int_types_and_inplace.o: tests/CodeM/test_patch11_int_types_and_inplace.cpp.o
 .PHONY : tests/CodeM/test_patch11_int_types_and_inplace.o
 
@@ -3391,6 +3472,141 @@ tests/CodeM/test_patch11_int_types_and_inplace.s: tests/CodeM/test_patch11_int_t
 tests/CodeM/test_patch11_int_types_and_inplace.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch11_int_types_and_inplace.cpp.s
 .PHONY : tests/CodeM/test_patch11_int_types_and_inplace.cpp.s
+
+tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.o: tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.o
+.PHONY : tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.o
+
+# target to build an object file
+tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.o
+.PHONY : tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.o
+
+tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.i: tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.i
+.PHONY : tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.i
+.PHONY : tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.i
+
+tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.s: tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.s
+.PHONY : tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.s
+.PHONY : tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.cpp.s
+
+tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.o: tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.o
+.PHONY : tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.o
+
+# target to build an object file
+tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.o
+.PHONY : tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.o
+
+tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.i: tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.i
+.PHONY : tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.i
+.PHONY : tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.i
+
+tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.s: tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.s
+.PHONY : tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.s
+.PHONY : tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.cpp.s
+
+tests/CodeM/test_patch123_mps_batched_solver_bridge.o: tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.o
+.PHONY : tests/CodeM/test_patch123_mps_batched_solver_bridge.o
+
+# target to build an object file
+tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.o
+.PHONY : tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.o
+
+tests/CodeM/test_patch123_mps_batched_solver_bridge.i: tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.i
+.PHONY : tests/CodeM/test_patch123_mps_batched_solver_bridge.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.i
+.PHONY : tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.i
+
+tests/CodeM/test_patch123_mps_batched_solver_bridge.s: tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.s
+.PHONY : tests/CodeM/test_patch123_mps_batched_solver_bridge.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.s
+.PHONY : tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp.s
+
+tests/CodeM/test_patch124_mps_batched_solver_broadcast.o: tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.o
+.PHONY : tests/CodeM/test_patch124_mps_batched_solver_broadcast.o
+
+# target to build an object file
+tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.o
+.PHONY : tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.o
+
+tests/CodeM/test_patch124_mps_batched_solver_broadcast.i: tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.i
+.PHONY : tests/CodeM/test_patch124_mps_batched_solver_broadcast.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.i
+.PHONY : tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.i
+
+tests/CodeM/test_patch124_mps_batched_solver_broadcast.s: tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.s
+.PHONY : tests/CodeM/test_patch124_mps_batched_solver_broadcast.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.s
+.PHONY : tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp.s
+
+tests/CodeM/test_patch125_mps_solver_route_policy.o: tests/CodeM/test_patch125_mps_solver_route_policy.cpp.o
+.PHONY : tests/CodeM/test_patch125_mps_solver_route_policy.o
+
+# target to build an object file
+tests/CodeM/test_patch125_mps_solver_route_policy.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch125_mps_solver_route_policy.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch125_mps_solver_route_policy.cpp.o
+.PHONY : tests/CodeM/test_patch125_mps_solver_route_policy.cpp.o
+
+tests/CodeM/test_patch125_mps_solver_route_policy.i: tests/CodeM/test_patch125_mps_solver_route_policy.cpp.i
+.PHONY : tests/CodeM/test_patch125_mps_solver_route_policy.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch125_mps_solver_route_policy.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch125_mps_solver_route_policy.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch125_mps_solver_route_policy.cpp.i
+.PHONY : tests/CodeM/test_patch125_mps_solver_route_policy.cpp.i
+
+tests/CodeM/test_patch125_mps_solver_route_policy.s: tests/CodeM/test_patch125_mps_solver_route_policy.cpp.s
+.PHONY : tests/CodeM/test_patch125_mps_solver_route_policy.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch125_mps_solver_route_policy.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch125_mps_solver_route_policy.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch125_mps_solver_route_policy.cpp.s
+.PHONY : tests/CodeM/test_patch125_mps_solver_route_policy.cpp.s
 
 tests/CodeM/test_patch12_factories.o: tests/CodeM/test_patch12_factories.cpp.o
 .PHONY : tests/CodeM/test_patch12_factories.o
@@ -6372,9 +6588,33 @@ help:
 	@echo "... tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.o"
 	@echo "... tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.i"
 	@echo "... tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.s"
+	@echo "... tests/CodeM/test_patch111_mps_cast_coverage.o"
+	@echo "... tests/CodeM/test_patch111_mps_cast_coverage.i"
+	@echo "... tests/CodeM/test_patch111_mps_cast_coverage.s"
+	@echo "... tests/CodeM/test_patch114_mps_linalg_policy_runtime.o"
+	@echo "... tests/CodeM/test_patch114_mps_linalg_policy_runtime.i"
+	@echo "... tests/CodeM/test_patch114_mps_linalg_policy_runtime.s"
+	@echo "... tests/CodeM/test_patch118_mps_cache_strict_regression.o"
+	@echo "... tests/CodeM/test_patch118_mps_cache_strict_regression.i"
+	@echo "... tests/CodeM/test_patch118_mps_cache_strict_regression.s"
 	@echo "... tests/CodeM/test_patch11_int_types_and_inplace.o"
 	@echo "... tests/CodeM/test_patch11_int_types_and_inplace.i"
 	@echo "... tests/CodeM/test_patch11_int_types_and_inplace.s"
+	@echo "... tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.o"
+	@echo "... tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.i"
+	@echo "... tests/CodeM/test_patch121_mps_batched_qr_svd_bridge.s"
+	@echo "... tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.o"
+	@echo "... tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.i"
+	@echo "... tests/CodeM/test_patch122_mps_batched_unary_linalg_bridge.s"
+	@echo "... tests/CodeM/test_patch123_mps_batched_solver_bridge.o"
+	@echo "... tests/CodeM/test_patch123_mps_batched_solver_bridge.i"
+	@echo "... tests/CodeM/test_patch123_mps_batched_solver_bridge.s"
+	@echo "... tests/CodeM/test_patch124_mps_batched_solver_broadcast.o"
+	@echo "... tests/CodeM/test_patch124_mps_batched_solver_broadcast.i"
+	@echo "... tests/CodeM/test_patch124_mps_batched_solver_broadcast.s"
+	@echo "... tests/CodeM/test_patch125_mps_solver_route_policy.o"
+	@echo "... tests/CodeM/test_patch125_mps_solver_route_policy.i"
+	@echo "... tests/CodeM/test_patch125_mps_solver_route_policy.s"
 	@echo "... tests/CodeM/test_patch12_factories.o"
 	@echo "... tests/CodeM/test_patch12_factories.i"
 	@echo "... tests/CodeM/test_patch12_factories.s"

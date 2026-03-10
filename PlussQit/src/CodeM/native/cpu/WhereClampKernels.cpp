@@ -38,6 +38,70 @@ void clamp_inplace(const Series& a, double minv, double maxv) {
       for (std::int64_t i=0;i<n;++i) p[i] = std::min(mx, std::max(mn, p[i]));
       return;
     }
+    case ScalarType::Int32: {
+      std::int32_t* p = reinterpret_cast<std::int32_t*>(const_cast<std::byte*>(a.raw_data()));
+      const std::int32_t mn = (std::int32_t)minv, mx = (std::int32_t)maxv;
+      for (std::int64_t i=0;i<n;++i) p[i] = std::min(mx, std::max(mn, p[i]));
+      return;
+    }
+    case ScalarType::Int16: {
+      std::int16_t* p = reinterpret_cast<std::int16_t*>(const_cast<std::byte*>(a.raw_data()));
+      const std::int16_t mn = (std::int16_t)minv, mx = (std::int16_t)maxv;
+      for (std::int64_t i=0;i<n;++i) p[i] = std::min(mx, std::max(mn, p[i]));
+      return;
+    }
+    case ScalarType::Int8: {
+      std::int8_t* p = reinterpret_cast<std::int8_t*>(const_cast<std::byte*>(a.raw_data()));
+      const std::int8_t mn = (std::int8_t)minv, mx = (std::int8_t)maxv;
+      for (std::int64_t i=0;i<n;++i) p[i] = std::min(mx, std::max(mn, p[i]));
+      return;
+    }
+    case ScalarType::UInt64: {
+      std::uint64_t* p = reinterpret_cast<std::uint64_t*>(const_cast<std::byte*>(a.raw_data()));
+      const std::uint64_t mn = (std::uint64_t)std::max(0.0, minv);
+      const std::uint64_t mx = (std::uint64_t)std::max(0.0, maxv);
+      for (std::int64_t i=0;i<n;++i) p[i] = std::min(mx, std::max(mn, p[i]));
+      return;
+    }
+    case ScalarType::UInt32: {
+      std::uint32_t* p = reinterpret_cast<std::uint32_t*>(const_cast<std::byte*>(a.raw_data()));
+      const std::uint32_t mn = (std::uint32_t)std::max(0.0, minv);
+      const std::uint32_t mx = (std::uint32_t)std::max(0.0, maxv);
+      for (std::int64_t i=0;i<n;++i) p[i] = std::min(mx, std::max(mn, p[i]));
+      return;
+    }
+    case ScalarType::UInt16: {
+      std::uint16_t* p = reinterpret_cast<std::uint16_t*>(const_cast<std::byte*>(a.raw_data()));
+      const std::uint16_t mn = (std::uint16_t)std::max(0.0, minv);
+      const std::uint16_t mx = (std::uint16_t)std::max(0.0, maxv);
+      for (std::int64_t i=0;i<n;++i) p[i] = std::min(mx, std::max(mn, p[i]));
+      return;
+    }
+    case ScalarType::UInt8: {
+      std::uint8_t* p = reinterpret_cast<std::uint8_t*>(const_cast<std::byte*>(a.raw_data()));
+      const std::uint8_t mn = (std::uint8_t)std::max(0.0, minv);
+      const std::uint8_t mx = (std::uint8_t)std::max(0.0, maxv);
+      for (std::int64_t i=0;i<n;++i) p[i] = std::min(mx, std::max(mn, p[i]));
+      return;
+    }
+    case ScalarType::Float16: {
+      Float16* p = reinterpret_cast<Float16*>(const_cast<std::byte*>(a.raw_data()));
+      const float mn = (float)minv, mx = (float)maxv;
+      for (std::int64_t i=0;i<n;++i) {
+        const float x = float16_to_float(p[i]);
+        p[i] = float16_from_float(std::min(mx, std::max(mn, x)));
+      }
+      return;
+    }
+    case ScalarType::BFloat16: {
+      BFloat16* p = reinterpret_cast<BFloat16*>(const_cast<std::byte*>(a.raw_data()));
+      const float mn = (float)minv, mx = (float)maxv;
+      for (std::int64_t i=0;i<n;++i) {
+        const float x = bfloat16_to_float(p[i]);
+        p[i] = bfloat16_from_float(std::min(mx, std::max(mn, x)));
+      }
+      return;
+    }
     default:
       throw_error("clamp_inplace: dtype not implemented");
   }

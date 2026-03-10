@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <string>
 #include <vector>
@@ -45,11 +46,11 @@ TEST_CASE("interior-point feasibility phase improves an infeasible start",
   });
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 80;
-  options.interior_point.enable_feasibility_phase = true;
-  options.interior_point.constraint_tolerance = 1e-6;
-  options.interior_point.optimality_tolerance = 1e-6;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 80;
+  options.internal_protocol.enable_feasibility_phase = true;
+  options.internal_protocol.constraint_tolerance = 1e-6;
+  options.internal_protocol.optimality_tolerance = 1e-6;
 
   const auto result = optima(problem, initial, options);
   const auto x = result.params.at("x").to_vec<double>();

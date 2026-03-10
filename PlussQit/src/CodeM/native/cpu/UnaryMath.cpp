@@ -3,6 +3,7 @@
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "CodeM/core/Half.h"
+#include "CodeM/core/Float8.h"
 #include "CodeM/core/Complex.h"
 #include "MSharp/Parallel.h"
 
@@ -106,6 +107,20 @@ static void unary_apply(const Series& a, Series& out, Fn&& fn) {
             [](float y) { return bfloat16_from_float(y); }, \
             [](float x) { return static_cast<float>(EXPR_F); }); \
         return; \
+      case ScalarType::Float8E4M3FN: \
+        unary_apply_convert<Float8E4M3FN, Float8E4M3FN>( \
+            a, out, \
+            [](Float8E4M3FN x) { return float8e4m3fn_to_float(x); }, \
+            [](float y) { return float8e4m3fn_from_float(y); }, \
+            [](float x) { return static_cast<float>(EXPR_F); }); \
+        return; \
+      case ScalarType::Float8E5M2: \
+        unary_apply_convert<Float8E5M2, Float8E5M2>( \
+            a, out, \
+            [](Float8E5M2 x) { return float8e5m2_to_float(x); }, \
+            [](float y) { return float8e5m2_from_float(y); }, \
+            [](float x) { return static_cast<float>(EXPR_F); }); \
+        return; \
       case ScalarType::Complex64: \
         unary_apply<Complex64>(a, out, [](Complex64 x) { return static_cast<Complex64>(EXPR_D); }); \
         return; \
@@ -172,6 +187,20 @@ void exp(const Series& a, Series& out) {
           a, out,
           [](BFloat16 x) { return bfloat16_to_float(x); },
           [](float y) { return bfloat16_from_float(y); },
+          [](float x) { return std::exp(x); });
+      return;
+    case ScalarType::Float8E4M3FN:
+      unary_apply_convert<Float8E4M3FN, Float8E4M3FN>(
+          a, out,
+          [](Float8E4M3FN x) { return float8e4m3fn_to_float(x); },
+          [](float y) { return float8e4m3fn_from_float(y); },
+          [](float x) { return std::exp(x); });
+      return;
+    case ScalarType::Float8E5M2:
+      unary_apply_convert<Float8E5M2, Float8E5M2>(
+          a, out,
+          [](Float8E5M2 x) { return float8e5m2_to_float(x); },
+          [](float y) { return float8e5m2_from_float(y); },
           [](float x) { return std::exp(x); });
       return;
     case ScalarType::Complex64:

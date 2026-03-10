@@ -38,6 +38,10 @@ TEST_CASE("MPS native qr avoids bridge counters on deterministic cases", "[mps][
     SUCCEED("MPS runtime unavailable on this host");
     return;
   }
+  if (!linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Native QR test requires PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=1");
+    return;
+  }
 
   const auto a_cpu = pluss::make_series(
       std::vector<float>{
@@ -75,6 +79,10 @@ TEST_CASE("MPS native qr stress/repeat stability", "[mps][linearalg][native][qr]
     SUCCEED("MPS runtime unavailable on this host");
     return;
   }
+  if (!linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Native QR stress test requires PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=1");
+    return;
+  }
 
   std::mt19937 rng(20260325u);
   std::uniform_int_distribution<std::int64_t> dim_dist(2, 7);
@@ -106,17 +114,16 @@ TEST_CASE("MPS native qr stress/repeat stability", "[mps][linearalg][native][qr]
           0.4f, 0.3f, -0.1f, 2.6f},
       {4, 4});
   const auto stable_mps = stable_cpu.to(pluss::pMPS);
-  const auto q_ref = qr_q(stable_cpu, true).to(pluss::ScalarType::Float32);
-  const auto r_ref = qr_r(stable_cpu, true).to(pluss::ScalarType::Float32);
   const auto a_ref = stable_cpu.to(pluss::ScalarType::Float32);
+  const auto eye4 = pluss::eye(4, 4, pluss::ScalarType::Float32);
 
   for (std::int64_t rep = 0; rep < 220; ++rep) {
     const auto q = qr_q(stable_mps, true);
     const auto r = qr_r(stable_mps, true);
     const auto recon = q.matmul(r).to(pluss::pCPU).to(pluss::ScalarType::Float32);
+    const auto qtq = q.transpose(0, 1).matmul(q).to(pluss::pCPU).to(pluss::ScalarType::Float32);
     REQUIRE(max_abs_diff_(recon, a_ref) < 2.0e-2f);
-    REQUIRE(max_abs_diff_(q.to(pluss::pCPU).to(pluss::ScalarType::Float32), q_ref) < 4.0e-2f);
-    REQUIRE(max_abs_diff_(r.to(pluss::pCPU).to(pluss::ScalarType::Float32), r_ref) < 4.0e-2f);
+    REQUIRE(max_abs_diff_(qtq, eye4) < 3.0e-2f);
   }
 
   const auto c = linearalg_dispatch_counters();

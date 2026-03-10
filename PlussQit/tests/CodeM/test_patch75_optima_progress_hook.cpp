@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <stdexcept>
 #include <vector>
@@ -85,8 +86,8 @@ TEST_CASE("optima progress hook failures are contained and reported", "[optim][o
   bool done_seen = false;
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 40;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 40;
   options.progress_hook = [&](const OptimaProgressSnapshot& snapshot) {
     if (snapshot.stage == OptimaProgressStage::Done) {
       done_seen = true;

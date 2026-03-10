@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <vector>
 
@@ -101,11 +102,11 @@ TEST_CASE("optima interior point honors objective limit on feasible points",
   });
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 80;
-  options.interior_point.initial_barrier_parameter = 0.1;
-  options.interior_point.minimum_barrier_parameter = 1e-7;
-  options.interior_point.objective_limit = 1.2;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 80;
+  options.internal_protocol.initial_barrier_parameter = 0.1;
+  options.internal_protocol.minimum_barrier_parameter = 1e-7;
+  options.internal_protocol.objective_limit = 1.2;
 
   const auto result = optima(problem, initial, options);
 
@@ -141,10 +142,10 @@ TEST_CASE("optima interior point reports locally stationary infeasible constrain
   });
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 20;
-  options.interior_point.initial_barrier_parameter = 0.1;
-  options.interior_point.minimum_barrier_parameter = 1e-7;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 20;
+  options.internal_protocol.initial_barrier_parameter = 0.1;
+  options.internal_protocol.minimum_barrier_parameter = 1e-7;
 
   const auto result = optima(problem, initial, options);
 

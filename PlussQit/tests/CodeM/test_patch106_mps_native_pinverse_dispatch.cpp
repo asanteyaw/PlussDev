@@ -38,6 +38,10 @@ TEST_CASE("MPS native pinverse avoids bridge counters on deterministic cases", "
     SUCCEED("MPS runtime unavailable on this host");
     return;
   }
+  if (!linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Native pinverse test requires PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=1");
+    return;
+  }
 
   const auto tall_cpu = pluss::make_series(
       std::vector<float>{
@@ -77,6 +81,10 @@ TEST_CASE("MPS native pinverse stress/repeat stability", "[mps][linearalg][nativ
 
   if (!pluss::mps::is_ready()) {
     SUCCEED("MPS runtime unavailable on this host");
+    return;
+  }
+  if (!linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Native pinverse stress test requires PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=1");
     return;
   }
 

@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
-TEST_CASE("scatter_add basic", "[scatter]") {
+TEST_CASE("scatter_add basic (float reduce suite)", "[scatter]") {
   auto a = pluss::zeros({2,3}, pluss::config({{"dtype","float32"}}));
   auto index = pluss::make_series(std::vector<std::int64_t>{0,1,2,  2,1,0}, {2,3});
   auto src = pluss::make_series(std::vector<float>{1,2,3,  4,5,6}, {2,3});

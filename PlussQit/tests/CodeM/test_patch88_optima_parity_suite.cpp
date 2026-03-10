@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <array>
 #include <vector>
@@ -33,11 +34,11 @@ OptimaOptions make_options(OptimaAlgorithm algorithm) {
   options.sequential_qp.max_iterations = 120;
   options.sequential_qp.constraint_tolerance = 1e-6;
   options.sequential_qp.optimality_tolerance = 1e-5;
-  options.interior_point.max_iterations = 180;
-  options.interior_point.initial_barrier_parameter = 0.1;
-  options.interior_point.minimum_barrier_parameter = 1e-7;
-  options.interior_point.constraint_tolerance = 1e-6;
-  options.interior_point.optimality_tolerance = 1e-5;
+  options.internal_protocol.max_iterations = 180;
+  options.internal_protocol.initial_barrier_parameter = 0.1;
+  options.internal_protocol.minimum_barrier_parameter = 1e-7;
+  options.internal_protocol.constraint_tolerance = 1e-6;
+  options.internal_protocol.optimality_tolerance = 1e-5;
   return options;
 }
 
@@ -110,7 +111,7 @@ TEST_CASE("optima handles infeasible mixed nonlinear starts across sqp and inter
   });
 
   for (const auto algorithm :
-       std::array{OptimaAlgorithm::SequentialQP, OptimaAlgorithm::InteriorPoint}) {
+       std::array{OptimaAlgorithm::SequentialQP, OptimaAlgorithm::InternalProtocol}) {
     auto options = make_options(algorithm);
     const auto result = optima(problem, initial, options);
     const auto x = result.params.at("x").to_vec<double>();
@@ -129,7 +130,7 @@ TEST_CASE("optima handles active bounds and active inequalities across sqp and i
   });
 
   for (const auto algorithm :
-       std::array{OptimaAlgorithm::SequentialQP, OptimaAlgorithm::InteriorPoint}) {
+       std::array{OptimaAlgorithm::SequentialQP, OptimaAlgorithm::InternalProtocol}) {
     auto options = make_options(algorithm);
     const auto result = optima(problem, initial, options);
     const auto x = result.params.at("x").to_vec<double>();
@@ -150,10 +151,10 @@ TEST_CASE("optima handles ill-conditioned scaling with normalization across sqp 
   const auto initial_eval = evaluate_problem(problem, initial);
 
   for (const auto algorithm :
-       std::array{OptimaAlgorithm::SequentialQP, OptimaAlgorithm::InteriorPoint}) {
+       std::array{OptimaAlgorithm::SequentialQP, OptimaAlgorithm::InternalProtocol}) {
     auto options = make_options(algorithm);
     options.sequential_qp.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
-    options.interior_point.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
+    options.internal_protocol.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
 
     const auto result = optima(problem, initial, options);
 

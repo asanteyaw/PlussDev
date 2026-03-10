@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <vector>
 
@@ -78,17 +79,17 @@ TEST_CASE("optima dispatch routes interior point correctly", "[optim][optima][di
   });
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 80;
-  options.interior_point.initial_barrier_parameter = 0.1;
-  options.interior_point.minimum_barrier_parameter = 1e-7;
-  options.interior_point.constraint_tolerance = 1e-6;
-  options.interior_point.optimality_tolerance = 1e-5;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 80;
+  options.internal_protocol.initial_barrier_parameter = 0.1;
+  options.internal_protocol.minimum_barrier_parameter = 1e-7;
+  options.internal_protocol.constraint_tolerance = 1e-6;
+  options.internal_protocol.optimality_tolerance = 1e-5;
 
   const auto result = optima(problem, initial, options);
   const auto x = result.params.at("x").to_vec<double>();
 
-  REQUIRE(result.algorithm == OptimaAlgorithm::InteriorPoint);
+  REQUIRE(result.algorithm == OptimaAlgorithm::InternalProtocol);
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
   REQUIRE(result.evaluation.value.item<double>() == Approx(1.125).margin(8e-2));
   REQUIRE(result.output.line_search_fraction == Approx(result.last_step_size));
@@ -159,19 +160,19 @@ TEST_CASE("optima interior point supports explicit pseudoinverse solve and ident
   });
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 120;
-  options.interior_point.initial_barrier_parameter = 0.1;
-  options.interior_point.minimum_barrier_parameter = 1e-7;
-  options.interior_point.constraint_tolerance = 1e-6;
-  options.interior_point.optimality_tolerance = 1e-5;
-  options.interior_point.linear_system_solver = OptimaLinearSystemSolver::PseudoInverse;
-  options.interior_point.hessian_approximation = OptimaHessianApproximation::Identity;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 120;
+  options.internal_protocol.initial_barrier_parameter = 0.1;
+  options.internal_protocol.minimum_barrier_parameter = 1e-7;
+  options.internal_protocol.constraint_tolerance = 1e-6;
+  options.internal_protocol.optimality_tolerance = 1e-5;
+  options.internal_protocol.linear_system_solver = OptimaLinearSystemSolver::PseudoInverse;
+  options.internal_protocol.hessian_approximation = OptimaHessianApproximation::Identity;
 
   const auto result = optima(problem, initial, options);
   const auto x = result.params.at("x").to_vec<double>();
 
-  REQUIRE(result.algorithm == OptimaAlgorithm::InteriorPoint);
+  REQUIRE(result.algorithm == OptimaAlgorithm::InternalProtocol);
   REQUIRE(result.evaluation.max_constraint_violation <= 1e-4);
   REQUIRE(result.evaluation.value.item<double>() == Approx(1.125).margin(1e-1));
   REQUIRE(x[0] == Approx(0.25).margin(9e-2));

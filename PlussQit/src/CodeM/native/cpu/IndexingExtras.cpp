@@ -239,7 +239,7 @@ Series put(const Series& a, const Series& index, const Series& src, bool accumul
 
   if (!a.defined() || !index.defined() || !src.defined()) throw_error("put: undefined");
   if (index.scalar_type() != ScalarType::Int64 || index.dim() != 1) throw_error("put: index must be int64 1D");
-  auto out = a.contiguous();
+  auto out = a.contiguous().clone();
   auto idx = index.contiguous();
   auto ss = src.contiguous();
 

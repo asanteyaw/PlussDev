@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <vector>
 
@@ -20,7 +21,7 @@ using pluss::subsp::math::optim::OptimaProblemScaling;
 using pluss::subsp::math::optim::ParameterPack;
 using pluss::subsp::math::optim::SequentialQPOptions;
 using pluss::subsp::math::optim::Trace;
-using pluss::subsp::math::optim::init_interior_point_state;
+using pluss::subsp::math::optim::init_internal_protocol_state;
 using pluss::subsp::math::optim::init_sequential_qp_state;
 using pluss::subsp::math::optim::optima;
 using pluss::subsp::math::optim::square;
@@ -85,10 +86,10 @@ TEST_CASE("interior point computes objective and equality normalization on an il
   });
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
 
-  const auto state = init_interior_point_state(problem, initial, options.interior_point);
+  const auto state = init_internal_protocol_state(problem, initial, options.internal_protocol);
 
   REQUIRE(state.normalization.objective_scale < 1e-3);
   REQUIRE(state.normalization.equality_row_scale.defined());
@@ -141,10 +142,10 @@ TEST_CASE("optima uses normalization to solve ill-scaled sqp and interior-point 
   };
 
   OptimaOptions ip_options;
-  ip_options.algorithm = OptimaAlgorithm::InteriorPoint;
-  ip_options.interior_point.max_iterations = 80;
-  ip_options.interior_point.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
-  ip_options.interior_point.minimum_barrier_parameter = 1e-10;
+  ip_options.algorithm = OptimaAlgorithm::InternalProtocol;
+  ip_options.internal_protocol.max_iterations = 80;
+  ip_options.internal_protocol.problem_scaling = OptimaProblemScaling::ObjectiveAndConstraints;
+  ip_options.internal_protocol.minimum_barrier_parameter = 1e-10;
 
   const auto ip_result = optima(ip_problem,
                                 ParameterPack<Series>({

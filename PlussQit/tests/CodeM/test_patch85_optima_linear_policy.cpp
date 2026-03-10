@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <vector>
 
@@ -84,12 +85,12 @@ TEST_CASE("interior point auto routing can prefer Krylov for sparse-structured p
   });
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 60;
-  options.interior_point.system_structure = OptimaLinearSystemStructure::Sparse;
-  options.interior_point.linear_system_solver = OptimaLinearSystemSolver::Auto;
-  options.interior_point.iterative_dimension_threshold = 1000;
-  options.interior_point.max_krylov_iterations = 25;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 60;
+  options.internal_protocol.system_structure = OptimaLinearSystemStructure::Sparse;
+  options.internal_protocol.linear_system_solver = OptimaLinearSystemSolver::Auto;
+  options.internal_protocol.iterative_dimension_threshold = 1000;
+  options.internal_protocol.max_krylov_iterations = 25;
 
   const auto result = optima(problem, initial, options);
 

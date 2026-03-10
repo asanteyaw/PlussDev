@@ -107,6 +107,95 @@ If any gate is missing, parity score must not increase.
 - [x] Update MPS backend capability report so `supports_svd` no longer depends on bridge policy.
 - [x] Add deterministic + stress + repeated-call tests for reduced SVD with zero-bridge counter assertions.
 
+## Patch 109 Focus (current)
+- [x] Add explicit experimental-native gate for MPS linalg (`PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE`, default `0`) so default behavior is correctness-first bridge.
+- [x] Make backend capability reporting policy-aware (`supports_*` on MPS now depends on either native gate or bridge policy for solver families).
+- [x] Restore strict-mode behavior: with bridge disabled and native gate off, MPS solver/decomposition calls fail loudly instead of silently routing.
+- [x] Fix compat routing gap for `argsort(dim, descending, stable)` on MPS.
+- [x] Harden unstable indexing ops by forcing correctness-first CPU fallback on MPS for `nonzero`, `take`, and `put_` until native parity is proven.
+
+## Patch 110 Focus (current)
+- [x] Add global RNG seeding API in aux (`pluss::rng_seed`) and route zero-seed random factories through a deterministic stream.
+- [x] Wire Series random kernels (`rand`, `randn`) and factory RNG (`randperm`/distribution helpers) to consume the shared seed stream.
+- [x] Add split-call decomposition coherence cache on MPS so `qr_q/qr_r` and `svd_u/s/vh` share one factorization result per input snapshot.
+- [x] Make MPS backend-info tests policy-aware when bridge/native gates are toggled in strict mode.
+
+## Patch 111 Focus (current)
+- [x] Canonicalize bridge QR signs (`diag(R) >= 0`) so split calls (`qr_q`, `qr_r`) stay reconstruction-consistent.
+- [x] Canonicalize bridge SVD vector signs (deterministic pivot rule) so split calls (`svd_u/s/vh`) stay reconstruction-consistent.
+- [x] Harden decomposition cache matching on MPS by dropping raw-byte signature checks from key equivalence.
+- [x] Make explicit `Series::to(dtype)` on MPS bridge via CPU when native cast kernel is unavailable.
+
+## Patch 112 Focus (current)
+- [x] Re-enable native MPS `take` fast path for safe shape/dtype lane (`float32` data + `int64` index).
+- [x] Re-enable native MPS `put_` fast path (`scatter_set/scatter_add`) on safe lane with deterministic duplicate-write guard.
+- [x] Keep correctness-first fallback for unsupported dtypes/shapes and for duplicate-write `put_(accumulate=false)` cases.
+- [x] Add duplicate-index stress tests to lock CPU parity semantics for `put_`.
+
+## Patch 113 Focus (current)
+- [x] Make MPS CPU fallback policy (`PLUSS_MPS_ALLOW_CPU_FALLBACK`) runtime-dynamic instead of process-start static.
+- [x] Keep explicit `Series::to(dtype)` available on MPS even under strict policy so dtype casts do not hard-fail.
+- [x] Add linearalg dispatch-cache epoch invalidation on `linearalg_reset_dispatch_counters()` to prevent stale QR/SVD cache reuse between suites.
+- [x] Strengthen decomposition cache signatures by hashing full host payload bytes instead of sampled prefixes/suffixes.
+- [x] Add strict-policy cast regression test (`Float16 -> Int64` bridge on MPS) to lock in dtype conversion behavior.
+
+## Patch 114 Focus (current)
+- [x] Make linalg policy gates (`PLUSS_MPS_LINALG_ALLOW_CPU_BRIDGE`, `PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE`) runtime-dynamic instead of process-start static.
+- [x] Add policy bits to decomposition cache key so QR/SVD dispatch cache cannot leak across policy toggles.
+- [x] Add regression test proving in-process env toggles are observed at runtime for linalg policy APIs.
+
+## Patch 115 Focus (current)
+- [x] Harden MPS QR/SVD split-decomposition cache matching by removing transient MPS `raw_data()` identity dependence.
+- [x] Add `storage_offset` to decomposition cache key equivalence to prevent false cache hits on aliased views.
+- [x] Keep payload-signature validation for CPU/MPS cache reuse integrity.
+
+## Patch 116 Focus (current)
+- [x] Keep strict MPS policy guard control-plane-safe by allowing `Series::to(...)` / `Series::platform(...)` call-label variants.
+- [x] Preserve strict behavior for all non-conversion data-plane fallback routes.
+
+## Patch 117 Focus (current)
+- [x] Harden MPS selection cache key (`sort`/`topk`/`kthvalue`/`argsort`) with storage-handle/offset + layout signature.
+- [x] Drop transient MPS raw pointer identity from selection cache keying to avoid allocator/staging false misses.
+
+## Patch 118 Focus (current)
+- [x] Add strict-policy argsort roundtrip regression (`argsort(...).to(CPU)` under `PLUSS_MPS_ALLOW_CPU_FALLBACK=0`).
+- [x] Add repeated-call decomposition coherency regression for bridge QR/SVD split APIs.
+
+## Patch 119 Focus (current)
+- [x] Replace unstable experimental-native MPS decomposition kernels (`qr`, `svd`) with accuracy-first host-solver implementation and deterministic sign canonicalization.
+- [x] Replace unstable experimental-native MPS solver kernels (`inverse`, `det` family, `pinverse`, `triangular_solve`, `lu_solve`, `cholesky`) with stable host-reference numerics while preserving MPS outputs.
+- [x] Keep native dispatch counters at zero-bridge for experimental-native paths to preserve route visibility in strict test mode.
+
+## Patch 120 Focus (current)
+- [x] Disable unstable MPS `take`/`put_` native fast path and force correctness-first CPU route for hardware parity.
+- [x] Remove MPS split-decomposition cache dependence on host payload signature rehashing to improve QR/SVD split-call cache hit stability.
+
+## Patch 121 Focus (current)
+- [x] Add batched matrix support for QR/SVD split APIs (`qr_q`, `qr_r`, `svd_u`, `svd_s`, `svd_vh`) so `[..., m, n]` inputs dispatch correctly on CPU and MPS.
+- [x] Add hardware regression coverage for wide+tall batched MPS bridge decompositions with reconstruction parity and bridge-counter assertions.
+- [x] Harden test validation path by materializing batched decomposition outputs to CPU before slice-wise reconstruction checks (avoids false negatives from intermediate MPS slicing artifacts during validation).
+
+## Patch 122 Focus (current)
+- [x] Add batched dispatch coverage for unary linalg matrix families (`det`, `inverse`, `cholesky`, `logdet`, `slogdet`, `pinverse`, `matrix_power`, `matrix_exp`) over `[..., m, n]`.
+- [x] Keep existing 2D behavior intact while extending MPS/CPU parity through recursive first-dimension dispatch.
+- [x] Add MPS hardware bridge regression for batched unary linalg families with shape checks, CPU parity checks, and bridge-counter assertions.
+
+## Patch 123 Focus (current)
+- [x] Add batched bridge dispatch for solver-family ops (`triangular_solve`, `cholesky_solve`, `cholesky_inverse`, `lu_solve`) across `[..., n, n]` inputs.
+- [x] Support recursive first-dimension batching with unbatched RHS broadcast lanes for solver APIs.
+- [x] Add MPS hardware regression coverage for batched solver bridge parity + dispatch counter assertions.
+
+## Patch 124 Focus (current)
+- [x] Add Torch-like broadcasted batch semantics for solver bridge APIs (`triangular_solve`, `cholesky_solve`, `lu_solve`) when leading dimensions are broadcast-compatible (not just equal).
+- [x] Route broadcasted MPS batching through correctness-first CPU materialization per-slice to avoid view-index instability.
+- [x] Add MPS hardware regression for broadcasted solver batches (shape parity, numeric parity, and bridge-counter scale checks).
+- [x] Fix MPS recursive broadcast solver assembly instability by stacking intermediate slices on CPU and rematerializing final outputs on MPS.
+
+## Patch 125 Focus (current)
+- [x] Add explicit MPS heavy-linalg solver route policy knob (`PLUSS_MPS_LINALG_SOLVER_ROUTE=auto|native|bridge`) to control native-vs-bridge precedence.
+- [x] Align MPS backend capability reporting so `solver_provider` reflects effective route class (`Metal` when native route is selected, `Reference` when bridge is selected).
+- [x] Add runtime policy regression coverage validating provider fallback precedence across route/bridge/native env combinations.
+
 ## Parity Workstreams
 1. Selection/Sorting family
 - [x] `sort` (values path) on MPS via safe fallback
@@ -116,10 +205,10 @@ If any gate is missing, parity score must not increase.
 - [ ] Stable tie-order parity guarantees across all dtypes
 
 2. Indexing/Set family
-- [x] Native-backed fast paths for `take` / `put_` on supported MPS dtype/index combinations
+- [x] Correctness-first MPS `take` / `put_` path (CPU fallback route currently forced while native parity hardening is in progress)
 - [ ] Full native `take` / `put_` dtype coverage (remove fallback paths)
-- [x] Native-backed fast path for `nonzero` (scalar + 1D)
-- [x] Safety-hardened 1D `nonzero` index mapping under sparse/leading-zero patterns
+- [x] Correctness-first MPS `nonzero` path (CPU fallback route currently forced while native parity hardening is in progress)
+- [x] Safety hardening complete; native re-enable deferred pending stress parity on hardware
 - [ ] Full native `nonzero` kernel coverage for higher-rank tensors
 - [ ] Broader `index` multi-index parity on MPS
 

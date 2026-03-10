@@ -49,13 +49,20 @@ namespace detail {
     for (auto& ch : v) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
     if (v=="float16" || v=="half" ) return pluss::codem::ScalarType::Float16;
     if (v=="bfloat16") return pluss::codem::ScalarType::BFloat16;
+    if (v=="float8_e4m3fn" || v=="float8e4m3fn" || v=="float8") return pluss::codem::ScalarType::Float8E4M3FN;
+    if (v=="float8_e5m2" || v=="float8e5m2") return pluss::codem::ScalarType::Float8E5M2;
     if (v=="float32" || v=="float") return pluss::codem::ScalarType::Float32;
     if (v=="float64" || v=="double") return pluss::codem::ScalarType::Float64;
     if (v=="int64" || v=="long") return pluss::codem::ScalarType::Int64;
     if (v=="int32" || v=="int") return pluss::codem::ScalarType::Int32;
     if (v=="int16") return pluss::codem::ScalarType::Int16;
     if (v=="int8") return pluss::codem::ScalarType::Int8;
+    if (v=="uint64") return pluss::codem::ScalarType::UInt64;
+    if (v=="uint32") return pluss::codem::ScalarType::UInt32;
+    if (v=="uint16") return pluss::codem::ScalarType::UInt16;
     if (v=="uint8" || v=="byte") return pluss::codem::ScalarType::UInt8;
+    if (v=="complex64" || v=="cfloat") return pluss::codem::ScalarType::Complex64;
+    if (v=="complex128" || v=="cdouble") return pluss::codem::ScalarType::Complex128;
     if (v=="bool") return pluss::codem::ScalarType::Bool;
     pluss::codem::throw_error("Invalid dtype string: " + s);
   }

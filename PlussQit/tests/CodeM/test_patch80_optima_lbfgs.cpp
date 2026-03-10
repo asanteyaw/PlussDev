@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <pluss/pluss.h>
+#include <pluss/subsp/math/optim.h>
 
 #include <vector>
 
@@ -49,10 +50,10 @@ TEST_CASE("interior-point can use lbfgs Hessian approximation", "[lbfgs][optim][
   });
 
   OptimaOptions options;
-  options.algorithm = OptimaAlgorithm::InteriorPoint;
-  options.interior_point.max_iterations = 120;
-  options.interior_point.hessian_approximation = OptimaHessianApproximation::Lbfgs;
-  options.interior_point.lbfgs_memory = 5;
+  options.algorithm = OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 120;
+  options.internal_protocol.hessian_approximation = OptimaHessianApproximation::Lbfgs;
+  options.internal_protocol.lbfgs_memory = 5;
 
   const auto result = optima(problem, initial, options);
 

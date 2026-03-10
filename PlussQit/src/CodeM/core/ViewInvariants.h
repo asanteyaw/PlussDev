@@ -26,6 +26,8 @@ inline bool is_non_overlapping_and_dense(const std::vector<std::int64_t>& sizes,
   for (auto d : perm) {
     if (sizes[d] == 1) continue;
     auto st = strides[d] < 0 ? -strides[d] : strides[d];
+    // Allow broadcasted views (e.g. expand) with zero stride.
+    if (st == 0) continue;
     if (st != expected) return false;
     expected *= sizes[d];
   }

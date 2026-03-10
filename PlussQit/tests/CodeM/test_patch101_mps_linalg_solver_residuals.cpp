@@ -76,6 +76,10 @@ TEST_CASE("MPS linalg solver bridge deterministic residual checks", "[mps][linea
     SUCCEED("MPS linalg CPU bridge disabled by policy");
     return;
   }
+  if (linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Bridge residual test expects PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=0");
+    return;
+  }
 
   const auto l_cpu = pluss::make_series(
       std::vector<float>{
@@ -128,6 +132,10 @@ TEST_CASE("MPS linalg solver bridge stress stability residuals", "[mps][linearal
   }
   if (!linearalg_mps_cpu_bridge_enabled()) {
     SUCCEED("MPS linalg CPU bridge disabled by policy");
+    return;
+  }
+  if (linearalg_mps_experimental_native_enabled()) {
+    SUCCEED("Bridge stress test expects PLUSS_MPS_LINALG_EXPERIMENTAL_NATIVE=0");
     return;
   }
 

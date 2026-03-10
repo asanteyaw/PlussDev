@@ -426,6 +426,12 @@ void mean_all(const Series& a, Series& out) {
     case ScalarType::Float32: *reinterpret_cast<float*>(out.raw_data()) /= (float)a.numel(); return;
     case ScalarType::Float16: *reinterpret_cast<Float16*>(out.raw_data()) = float16_from_float(float16_to_float(*reinterpret_cast<Float16*>(out.raw_data())) / (float)a.numel()); return;
     case ScalarType::BFloat16: *reinterpret_cast<BFloat16*>(out.raw_data()) = bfloat16_from_float(bfloat16_to_float(*reinterpret_cast<BFloat16*>(out.raw_data())) / (float)a.numel()); return;
+    case ScalarType::Complex64:
+      *reinterpret_cast<Complex64*>(out.raw_data()) /= static_cast<float>(a.numel());
+      return;
+    case ScalarType::Complex128:
+      *reinterpret_cast<Complex128*>(out.raw_data()) /= static_cast<double>(a.numel());
+      return;
     default: break;
   }
   throw_error("mean_all: dtype not implemented");
