@@ -2834,3 +2834,243 @@ Hides a trace without removing it from pane state.
 ```{only} not html
 ![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.png)
 ```
+
+### `Pane::scale_x`
+
+#### Signature
+
+```cpp
+Pane& scale_x(self: Pane, scale: ScalePolicy);
+```
+
+#### Notes
+
+Sets the X-axis scaling policy (`linear`, `log10`, or `symlog`).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "core_studio_exhaustive") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.svg)
+```
+
+```{only} not html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.png)
+```
+
+### `Pane::x_limits`
+
+#### Signature
+
+```cpp
+Pane& x_limits(self: Pane, limits: Range1d);
+```
+
+#### Notes
+
+Pins the visible X range to manual limits.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "core_studio_exhaustive") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.svg)
+```
+
+```{only} not html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.png)
+```
+
+### `Pane::x_tick_format`
+
+#### Signature
+
+```cpp
+Pane& x_tick_format(self: Pane, format: TickFormat);
+```
+
+#### Notes
+
+Selects numeric formatting style for X tick labels.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "core_studio_exhaustive") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.svg)
+```
+
+```{only} not html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.png)
+```
+
+### `Pane::x_tick_rotation`
+
+#### Signature
+
+```cpp
+Pane& x_tick_rotation(self: Pane, degrees: double);
+```
+
+#### Notes
+
+Rotates X tick labels to improve readability for dense or long labels.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "core_studio_exhaustive") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.svg)
+```
+
+```{only} not html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.png)
+```
+
+### `Pane::x_ticks`
+
+#### Signature
+
+```cpp
+Pane& x_ticks(self: Pane, positions: Series, labels: std::vector<std::string>);
+```
+
+#### Notes
+
+Sets explicit X tick locations and labels.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "core_studio_exhaustive") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.svg)
+```
+
+```{only} not html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.png)
+```
+
+### `Pane::grid`
+
+#### Signature
+
+```cpp
+Pane& grid(self: Pane, style: GridStyle);
+```
+
+#### Notes
+
+Sets pane grid style (`None`, `Major`, `MajorMinor`).
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "core_studio_exhaustive") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.svg)
+```
+
+```{only} not html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.png)
+```
+
+### `Studio::to_svg`
+
+#### Signature
+
+```cpp
+std::string to_svg(self: Studio) const;
+```
+
+#### Notes
+
+Returns an in-memory SVG payload of the fully composed figure.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "core_studio_exhaustive") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.svg)
+```
+
+```{only} not html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.png)
+```
+
+### `Studio::to_pdf`
+
+#### Signature
+
+```cpp
+std::string to_pdf(self: Studio) const;
+```
+
+#### Notes
+
+Returns an in-memory PDF payload of the fully composed figure.
+
+#### Example
+
+```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+:language: cpp
+:start-at: if (key == "core_studio_exhaustive") {
+:end-at: return true;
+```
+
+#### Output
+
+```{only} html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.svg)
+```
+
+```{only} not html
+![core_studio_exhaustive output](_static/plots/methods/core_studio_exhaustive.png)
+```

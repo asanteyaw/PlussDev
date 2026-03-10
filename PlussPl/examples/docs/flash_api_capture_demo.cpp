@@ -1154,8 +1154,18 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     const auto& fig_y_captions = fig.y_captions();
     const auto& fig_z_captions = fig.z_captions();
     const auto& fig_row_titles = fig.row_titles();
+    const auto fig_svg = fig.to_svg();
+    const auto fig_pdf = fig.to_pdf();
     fig.mosaic(2, 2, 14.0, 14.0);
     fig.row_title(0, "Top Row");
+
+    Pane scratch(PaneKind::Planar, Theme::paper(), "scratch");
+    scratch.scale_x(ScalePolicy::linear())
+        .x_limits({-0.2, 12.2})
+        .x_tick_format(TickFormat::Auto)
+        .x_tick_rotation(0.0)
+        .x_ticks(make_series({0.0, 6.0, 12.0}), {"start", "mid", "end"})
+        .grid(GridStyle::Major);
 
     const auto pane_kind = p00.kind();
     const auto& pane_title = p00.title_text();
@@ -1233,6 +1243,8 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     (void)fig_y_captions;
     (void)fig_z_captions;
     (void)fig_row_titles;
+    (void)fig_svg;
+    (void)fig_pdf;
     (void)pane_kind;
     (void)pane_title;
     (void)pane_theme;

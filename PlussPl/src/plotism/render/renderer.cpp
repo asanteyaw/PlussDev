@@ -3736,20 +3736,38 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
       return label;
     }
 
-    constexpr std::size_t kPreviewLimit = 3;
+    constexpr std::size_t kPreviewLimit = 5;
     constexpr std::size_t kPreviewMaxChars = 10;
     std::vector<std::string_view> preview;
     preview.reserve(kPreviewLimit);
 
-    for (std::size_t i = visible_count; i < entries.size() && preview.size() < kPreviewLimit; ++i) {
-      const std::string_view candidate = entries[i].label;
+    const auto push_preview_label = [&](std::size_t absolute_index) {
+      if (absolute_index >= entries.size() || preview.size() >= kPreviewLimit) {
+        return;
+      }
+      const std::string_view candidate = entries[absolute_index].label;
       if (candidate.empty()) {
-        continue;
+        return;
       }
       const auto seen = std::find(preview.begin(), preview.end(), candidate);
       if (seen == preview.end()) {
         preview.push_back(candidate);
       }
+    };
+
+    const std::size_t middle = hidden_count / 2;
+    const std::array<std::size_t, 5> anchor_offsets{
+        0,
+        middle > 0 ? middle - 1 : 0,
+        middle,
+        hidden_count > 1 ? hidden_count - 2 : 0,
+        hidden_count - 1,
+    };
+    for (const std::size_t offset : anchor_offsets) {
+      push_preview_label(visible_count + offset);
+    }
+    for (std::size_t i = visible_count; i < entries.size() && preview.size() < kPreviewLimit; ++i) {
+      push_preview_label(i);
     }
     if (preview.empty()) {
       return label;
