@@ -18,14 +18,28 @@ int main() {
   const auto z4 = t.mul(2.0).cos().mul(0.72);
   const auto w4 = t.mul(3.0).sin().mul(0.58);
 
-  HyperSimulationOptions options;
+  HyperAnimationOptions options;
   options.title = "Geometric 4D simulation";
-  options.sweep_plane = HyperSimSweepPlane::XW;
+  options.sweep_plane = HyperAnimateSweepPlane::XW;
   options.sweep_speed_deg_per_sec = 22.0;
   options.slice_default = 0.82;
   options.width = 1280;
   options.height = 860;
+  options.snapshot_prefix = "plusspl_flash_4d_live";
 
-  const bool opened = simulate4(x4, y4, z4, w4, options);
-  return opened ? 0 : 1;
+  const bool opened = animate4(x4, y4, z4, w4, options);
+  if (!opened) {
+    return 1;
+  }
+
+  HyperFrameExportOptions export_opts;
+  export_opts.output_dir = "PlussPl/examples/outputs/4D/plusspl_flash_4d_frame_export";
+  export_opts.file_prefix = "hyper4d";
+  export_opts.title = "Geometric 4D frame";
+  export_opts.width = 1280;
+  export_opts.height = 860;
+  export_opts.sweep.frames = 16;
+  export_opts.sweep.plane = HyperSweepPlane::XW;
+  export4_frames(x4, y4, z4, w4, export_opts);
+  return 0;
 }

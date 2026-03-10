@@ -277,4 +277,297 @@ CODEM_API LjungBoxResult ljung_box(const pluss::codem::Series& x,
                                    const LjungBoxOptions& options = {},
                                    pluss::codem::Config cfg = {});
 
+struct GarchOptions {
+  std::int64_t arch_order = 1;
+  std::int64_t garch_order = 1;
+  bool demean = true;
+  double omega0 = 0.02;
+  std::vector<double> arch0{0.08};
+  std::vector<double> garch0{0.90};
+  double variance_floor = 1e-12;
+  double stationarity_margin = 1e-6;
+  double finite_diff_eps = 1e-5;
+  std::int64_t max_iterations = 800;
+  std::int64_t max_evaluations = 6000;
+  double simplex_delta = 0.05;
+};
+
+struct GarchFit {
+  double mean = 0.0;
+  double omega = 0.02;
+  std::vector<double> arch{0.08};
+  std::vector<double> garch{0.90};
+  double variance_floor = 1e-12;
+  double stationarity_margin = 1e-6;
+  double finite_diff_eps = 1e-5;
+
+  [[nodiscard]] double persistence() const;
+  [[nodiscard]] double unconditional_var() const;
+  [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
+  [[nodiscard]] pluss::codem::Series loglik_per_obs(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series score(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series observed_inf(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series forecast(std::int64_t horizon,
+                                              const pluss::codem::Series& y,
+                                              pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series simulate(std::int64_t num_observations,
+                                              pluss::codem::Config cfg = {},
+                                              std::uint64_t seed = 0) const;
+};
+
+class CODEM_API Garch {
+ public:
+  static GarchFit fit_mle(const pluss::codem::Series& y,
+                          const GarchOptions& options = {},
+                          pluss::codem::Config cfg = {});
+};
+
+struct Garch11Options {
+  bool demean = true;
+  double omega0 = 0.02;
+  double alpha0 = 0.08;
+  double beta0 = 0.90;
+  double variance_floor = 1e-12;
+  double stationarity_margin = 1e-6;
+  double finite_diff_eps = 1e-5;
+  std::int64_t max_iterations = 800;
+  std::int64_t max_evaluations = 6000;
+  double simplex_delta = 0.05;
+};
+
+struct Garch11Fit {
+  double mean = 0.0;
+  double omega = 0.02;
+  double alpha = 0.08;
+  double beta = 0.90;
+  double variance_floor = 1e-12;
+  double stationarity_margin = 1e-6;
+  double finite_diff_eps = 1e-5;
+
+  [[nodiscard]] double unconditional_var() const;
+  [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
+  [[nodiscard]] pluss::codem::Series loglik_per_obs(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series score(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series observed_inf(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series forecast(std::int64_t horizon,
+                                              const pluss::codem::Series& y,
+                                              pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series simulate(std::int64_t num_observations,
+                                              pluss::codem::Config cfg = {},
+                                              std::uint64_t seed = 0) const;
+};
+
+class CODEM_API Garch11 {
+ public:
+  static Garch11Fit fit_mle(const pluss::codem::Series& y,
+                            const Garch11Options& options = {},
+                            pluss::codem::Config cfg = {});
+};
+
+struct EgarchOptions {
+  std::int64_t arch_order = 1;
+  std::int64_t garch_order = 1;
+  bool demean = true;
+  double omega0 = -0.1;
+  std::vector<double> arch0{0.10};
+  std::vector<double> asym0{0.00};
+  std::vector<double> garch0{0.90};
+  double variance_floor = 1e-12;
+  double stationarity_margin = 1e-6;
+  double finite_diff_eps = 1e-5;
+  std::int64_t max_iterations = 800;
+  std::int64_t max_evaluations = 6000;
+  double simplex_delta = 0.05;
+};
+
+struct EgarchFit {
+  double mean = 0.0;
+  double omega = -0.1;
+  std::vector<double> arch{0.10};
+  std::vector<double> asym{0.00};
+  std::vector<double> garch{0.90};
+  double variance_floor = 1e-12;
+  double stationarity_margin = 1e-6;
+  double finite_diff_eps = 1e-5;
+
+  [[nodiscard]] double persistence() const;
+  [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
+  [[nodiscard]] pluss::codem::Series loglik_per_obs(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series score(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series observed_inf(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series forecast(std::int64_t horizon,
+                                              const pluss::codem::Series& y,
+                                              pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series simulate(std::int64_t num_observations,
+                                              pluss::codem::Config cfg = {},
+                                              std::uint64_t seed = 0) const;
+};
+
+class CODEM_API Egarch {
+ public:
+  static EgarchFit fit_mle(const pluss::codem::Series& y,
+                           const EgarchOptions& options = {},
+                           pluss::codem::Config cfg = {});
+};
+
+struct GjrOptions {
+  std::int64_t arch_order = 1;
+  std::int64_t garch_order = 1;
+  bool demean = true;
+  double omega0 = 0.02;
+  std::vector<double> arch0{0.08};
+  std::vector<double> asym0{0.04};
+  std::vector<double> garch0{0.86};
+  double variance_floor = 1e-12;
+  double stationarity_margin = 1e-6;
+  double finite_diff_eps = 1e-5;
+  std::int64_t max_iterations = 800;
+  std::int64_t max_evaluations = 6000;
+  double simplex_delta = 0.05;
+};
+
+struct GjrFit {
+  double mean = 0.0;
+  double omega = 0.02;
+  std::vector<double> arch{0.08};
+  std::vector<double> asym{0.04};
+  std::vector<double> garch{0.86};
+  double variance_floor = 1e-12;
+  double stationarity_margin = 1e-6;
+  double finite_diff_eps = 1e-5;
+
+  [[nodiscard]] double persistence() const;
+  [[nodiscard]] double unconditional_var() const;
+  [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
+  [[nodiscard]] pluss::codem::Series loglik_per_obs(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series score(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series observed_inf(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series forecast(std::int64_t horizon,
+                                              const pluss::codem::Series& y,
+                                              pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series simulate(std::int64_t num_observations,
+                                              pluss::codem::Config cfg = {},
+                                              std::uint64_t seed = 0) const;
+};
+
+class CODEM_API Gjr {
+ public:
+  static GjrFit fit_mle(const pluss::codem::Series& y,
+                        const GjrOptions& options = {},
+                        pluss::codem::Config cfg = {});
+};
+
+struct ArimaOptions {
+  std::int64_t ar_order = 1;
+  std::int64_t diff_order = 0;
+  std::int64_t ma_order = 0;
+  std::int64_t seasonal_ar_order = 0;
+  std::int64_t seasonal_diff_order = 0;
+  std::int64_t seasonal_ma_order = 0;
+  std::int64_t seasonal_period = 0;
+  bool demean = true;
+  double intercept0 = 0.0;
+  std::vector<double> ar0{};
+  std::vector<double> ma0{};
+  std::vector<double> sar0{};
+  std::vector<double> sma0{};
+  double variance_floor = 1e-12;
+  double stationarity_margin = 1e-6;
+  double finite_diff_eps = 1e-5;
+  std::int64_t max_iterations = 800;
+  std::int64_t max_evaluations = 6000;
+  double simplex_delta = 0.05;
+};
+
+struct ArimaFit {
+  double mean = 0.0;
+  double intercept = 0.0;
+  double sigma = 1.0;
+  std::vector<double> ar{};
+  std::vector<double> ma{};
+  std::vector<double> sar{};
+  std::vector<double> sma{};
+  std::int64_t diff_order = 0;
+  std::int64_t seasonal_diff_order = 0;
+  std::int64_t seasonal_period = 0;
+  double variance_floor = 1e-12;
+  double stationarity_margin = 1e-6;
+  double finite_diff_eps = 1e-5;
+
+  [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
+  [[nodiscard]] pluss::codem::Series loglik_per_obs(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series score(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series observed_inf(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series forecast(std::int64_t horizon,
+                                              const pluss::codem::Series& y,
+                                              pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series simulate(std::int64_t num_observations,
+                                              pluss::codem::Config cfg = {},
+                                              std::uint64_t seed = 0) const;
+};
+
+class CODEM_API Arima {
+ public:
+  static ArimaFit fit_mle(const pluss::codem::Series& y,
+                          const ArimaOptions& options = {},
+                          pluss::codem::Config cfg = {});
+};
+
+struct SarimaOptions {
+  std::int64_t p = 1;
+  std::int64_t d = 0;
+  std::int64_t q = 0;
+  std::int64_t P = 0;
+  std::int64_t D = 0;
+  std::int64_t Q = 0;
+  std::int64_t s = 0;
+  bool demean = true;
+  double intercept0 = 0.0;
+  std::vector<double> ar0{};
+  std::vector<double> ma0{};
+  std::vector<double> sar0{};
+  std::vector<double> sma0{};
+  double variance_floor = 1e-12;
+  double stationarity_margin = 1e-6;
+  double finite_diff_eps = 1e-5;
+  std::int64_t max_iterations = 800;
+  std::int64_t max_evaluations = 6000;
+  double simplex_delta = 0.05;
+};
+
+struct SarimaFit {
+  ArimaFit core{};
+  std::int64_t p = 0;
+  std::int64_t d = 0;
+  std::int64_t q = 0;
+  std::int64_t P = 0;
+  std::int64_t D = 0;
+  std::int64_t Q = 0;
+  std::int64_t s = 0;
+
+  [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
+  [[nodiscard]] pluss::codem::Series loglik_per_obs(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series score(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series observed_inf(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series forecast(std::int64_t horizon,
+                                              const pluss::codem::Series& y,
+                                              pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series simulate(std::int64_t num_observations,
+                                              pluss::codem::Config cfg = {},
+                                              std::uint64_t seed = 0) const;
+};
+
+class CODEM_API Sarima {
+ public:
+  static SarimaFit fit_mle(const pluss::codem::Series& y,
+                           const SarimaOptions& options = {},
+                           pluss::codem::Config cfg = {});
+};
+
 } // namespace pluss::subsp::stat::ts

@@ -36,7 +36,7 @@ enum class HyperSweepPlane : std::uint8_t {
   ZW,
 };
 
-struct HyperAnimationOptions {
+struct HyperSweepOptions {
   std::int64_t frames{96};
   HyperSweepPlane plane{HyperSweepPlane::XW};
   double start_deg{0.0};
@@ -46,7 +46,7 @@ struct HyperAnimationOptions {
 
 [[nodiscard]] inline std::vector<HyperPlotOptions> hyper_animation_sequence(
     const HyperPlotOptions& base,
-    const HyperAnimationOptions& options = {}) {
+    const HyperSweepOptions& options = {}) {
   PLUSS_CHECK(options.frames > 1, "flash::hyper_animation_sequence: frames must be > 1");
   std::vector<HyperPlotOptions> out;
   out.reserve(static_cast<std::size_t>(options.frames));
@@ -68,7 +68,7 @@ struct HyperAnimationOptions {
   return out;
 }
 
-enum class HyperSimSweepPlane : std::uint8_t {
+enum class HyperAnimateSweepPlane : std::uint8_t {
   XY,
   XZ,
   XW,
@@ -77,13 +77,13 @@ enum class HyperSimSweepPlane : std::uint8_t {
   ZW,
 };
 
-struct HyperSimulationOptions {
+struct HyperAnimationOptions {
   std::string title{"PlussPl 4D Simulation"};
   std::int64_t width{1280};
   std::int64_t height{860};
 
   HyperProjection projection{HyperProjection::PerspectiveW};
-  HyperSimSweepPlane sweep_plane{HyperSimSweepPlane::XW};
+  HyperAnimateSweepPlane sweep_plane{HyperAnimateSweepPlane::XW};
 
   double base_rot_xy_deg{8.0};
   double base_rot_xz_deg{0.0};
@@ -107,6 +107,27 @@ struct HyperSimulationOptions {
   double point_radius_base{2.1};
   double point_radius_min{1.0};
   double point_radius_max{5.0};
+  bool enable_snapshot{true};
+  std::string snapshot_prefix{"plusspl_4d_frame"};
+};
+
+enum class AnimationFrameFormat : std::uint8_t {
+  Png,
+  Svg,
+  Pdf,
+};
+
+struct HyperFrameExportOptions {
+  std::filesystem::path output_dir{"PlussPl/examples/outputs/4D/plusspl_flash_4d_frame_export"};
+  std::string file_prefix{"frame"};
+  std::string title{"Geometric 4D frame"};
+  AnimationFrameFormat format{AnimationFrameFormat::Png};
+  std::int64_t width{1280};
+  std::int64_t height{860};
+  std::int64_t dpi{144};
+  Theme theme{Theme::paper()};
+  HyperPlotOptions plot{};
+  HyperSweepOptions sweep{};
 };
 
 namespace detail {
@@ -160,14 +181,30 @@ namespace detail {
   return out.str();
 }
 
-[[nodiscard]] inline std::int64_t sweep_plane_index(HyperSimSweepPlane plane) noexcept {
+[[nodiscard]] inline std::string js_string_literal(std::string_view value) {
+  std::string out;
+  out.reserve(value.size() + 8);
+  for (const char c : value) {
+    switch (c) {
+      case '\\': out += "\\\\"; break;
+      case '\'': out += "\\'"; break;
+      case '\n': out += "\\n"; break;
+      case '\r': out += "\\r"; break;
+      case '\t': out += "\\t"; break;
+      default: out.push_back(c); break;
+    }
+  }
+  return out;
+}
+
+[[nodiscard]] inline std::int64_t sweep_plane_index(HyperAnimateSweepPlane plane) noexcept {
   switch (plane) {
-    case HyperSimSweepPlane::XY: return 0;
-    case HyperSimSweepPlane::XZ: return 1;
-    case HyperSimSweepPlane::XW: return 2;
-    case HyperSimSweepPlane::YZ: return 3;
-    case HyperSimSweepPlane::YW: return 4;
-    case HyperSimSweepPlane::ZW: return 5;
+    case HyperAnimateSweepPlane::XY: return 0;
+    case HyperAnimateSweepPlane::XZ: return 1;
+    case HyperAnimateSweepPlane::XW: return 2;
+    case HyperAnimateSweepPlane::YZ: return 3;
+    case HyperAnimateSweepPlane::YW: return 4;
+    case HyperAnimateSweepPlane::ZW: return 5;
   }
   return 2;
 }
@@ -177,7 +214,7 @@ namespace detail {
     const std::vector<double>& y4,
     const std::vector<double>& z4,
     const std::vector<double>& w4,
-    const HyperSimulationOptions& options) {
+    const HyperAnimationOptions& options) {
   std::ostringstream html;
   html << "<!doctype html><html><head><meta charset='utf-8'>\n";
   html << "<title>" << options.title << "</title>\n";
@@ -195,8 +232,11 @@ namespace detail {
   html << "<div class='wrap'>\n";
   html << "<h2>" << options.title << "</h2>\n";
   html << "<div class='row'>"
-          "<button id='play'>Pause</button>"
-          "<label>Speed <input id='speed' type='range' min='0.2' max='3.0' step='0.1' value='1.0'></label>"
+          "<button id='play'>Pause</button>";
+  if (options.enable_snapshot) {
+    html << "<button id='snap'>Save PNG</button>";
+  }
+  html << "<label>Speed <input id='speed' type='range' min='0.2' max='3.0' step='0.1' value='1.0'></label>"
           "<label>Slice <input id='slice' type='range' min='"
        << options.slice_min << "' max='" << options.slice_max << "' step='0.01' value='" << options.slice_default
        << "'></label>"
@@ -229,7 +269,8 @@ namespace detail {
           "plotPadFrac:" << options.plot_padding_fraction << ","
           "pointRadiusBase:" << options.point_radius_base << ","
           "pointRadiusMin:" << options.point_radius_min << ","
-          "pointRadiusMax:" << options.point_radius_max
+          "pointRadiusMax:" << options.point_radius_max << ","
+          "snapshotPrefix:'" << js_string_literal(options.snapshot_prefix) << "'"
        << "};\n";
   html << "const deg2rad=(d)=>d*Math.PI/180.0;\n";
   html << "const rot2=(a,b,deg)=>{const r=deg2rad(deg),c=Math.cos(r),s=Math.sin(r);return [c*a-s*b,s*a+c*b];};\n";
@@ -239,10 +280,19 @@ namespace detail {
   html << "const playBtn=document.getElementById('play');\n";
   html << "const speedCtrl=document.getElementById('speed');\n";
   html << "const sliceCtrl=document.getElementById('slice');\n";
+  html << "const snapBtn=document.getElementById('snap');\n";
   html << "const meta=document.getElementById('meta');\n";
   html << "let playing=true;\n";
   html << "let t0=null;\n";
   html << "playBtn.onclick=()=>{playing=!playing;playBtn.textContent=playing?'Pause':'Play';};\n";
+  html << "const saveSnapshot=()=>{"
+          "const a=document.createElement('a');"
+          "a.href=canvas.toDataURL('image/png');"
+          "a.download=`${cfg.snapshotPrefix}_${Date.now()}.png`;"
+          "a.click();"
+       "};\n";
+  html << "if(snapBtn){snapBtn.onclick=saveSnapshot;}\n";
+  html << "window.addEventListener('keydown',(e)=>{if((e.key==='s'||e.key==='S')&&!e.repeat){saveSnapshot();}});\n";
   html << "const applySweep=(rots,deg)=>{switch(cfg.sweepPlane){"
           "case 0: rots.xy=deg; break;"
           "case 1: rots.xz=deg; break;"
@@ -293,6 +343,29 @@ namespace detail {
   html << "draw(0);requestAnimationFrame(tick);\n";
   html << "</script></body></html>\n";
   return html.str();
+}
+
+[[nodiscard]] inline std::string frame_extension(AnimationFrameFormat format) {
+  switch (format) {
+    case AnimationFrameFormat::Png: return "png";
+    case AnimationFrameFormat::Svg: return "svg";
+    case AnimationFrameFormat::Pdf: return "pdf";
+  }
+  return "png";
+}
+
+inline void save_studio_frame(const Studio& studio, const std::filesystem::path& path, const HyperFrameExportOptions& options) {
+  switch (options.format) {
+    case AnimationFrameFormat::Png:
+      studio.save_png(path.string(), std::max<std::int64_t>(72, options.dpi));
+      return;
+    case AnimationFrameFormat::Svg:
+      studio.save_svg(path.string());
+      return;
+    case AnimationFrameFormat::Pdf:
+      studio.save_pdf(path.string());
+      return;
+  }
 }
 
 } // namespace detail
@@ -411,35 +484,35 @@ Trace& cloud4(
 }
 
 template <class X, class Y, class Z, class W>
-bool simulate4(
+bool animate4(
     X&& x,
     Y&& y,
     Z&& z,
     W&& w,
-    const HyperSimulationOptions& options = {}) {
+    const HyperAnimationOptions& options = {}) {
   const Series sx = detail::to_series(std::forward<X>(x));
   const Series sy = detail::to_series(std::forward<Y>(y));
   const Series sz = detail::to_series(std::forward<Z>(z));
   const Series sw = detail::to_series(std::forward<W>(w));
-  detail::require_rank_at_most(sx, 3, "flash::simulate4");
-  detail::require_rank_at_most(sy, 3, "flash::simulate4");
-  detail::require_rank_at_most(sz, 3, "flash::simulate4");
-  detail::require_rank_at_most(sw, 3, "flash::simulate4");
+  detail::require_rank_at_most(sx, 3, "flash::animate4");
+  detail::require_rank_at_most(sy, 3, "flash::animate4");
+  detail::require_rank_at_most(sz, 3, "flash::animate4");
+  detail::require_rank_at_most(sw, 3, "flash::animate4");
   PLUSS_CHECK(
       sx.numel() == sy.numel() && sx.numel() == sz.numel() && sx.numel() == sw.numel(),
-      "flash::simulate4: x, y, z, w must have identical lengths");
-  PLUSS_CHECK(options.width >= 640 && options.height >= 420, "flash::simulate4: window size too small");
+      "flash::animate4: x, y, z, w must have identical lengths");
+  PLUSS_CHECK(options.width >= 640 && options.height >= 420, "flash::animate4: window size too small");
   PLUSS_CHECK(
       options.slice_min > 0.0 && options.slice_max >= options.slice_min && options.slice_default >= options.slice_min &&
           options.slice_default <= options.slice_max,
-      "flash::simulate4: invalid slice range/default");
-  PLUSS_CHECK(options.w_perspective_distance > 0.0, "flash::simulate4: w_perspective_distance must be positive");
-  PLUSS_CHECK(options.camera_distance > 0.0, "flash::simulate4: camera_distance must be positive");
-  PLUSS_CHECK(options.min_perspective_denom > 0.0, "flash::simulate4: min_perspective_denom must be positive");
-  PLUSS_CHECK(options.plot_padding_fraction >= 0.0 && options.plot_padding_fraction < 0.45, "flash::simulate4: invalid plot_padding_fraction");
+      "flash::animate4: invalid slice range/default");
+  PLUSS_CHECK(options.w_perspective_distance > 0.0, "flash::animate4: w_perspective_distance must be positive");
+  PLUSS_CHECK(options.camera_distance > 0.0, "flash::animate4: camera_distance must be positive");
+  PLUSS_CHECK(options.min_perspective_denom > 0.0, "flash::animate4: min_perspective_denom must be positive");
+  PLUSS_CHECK(options.plot_padding_fraction >= 0.0 && options.plot_padding_fraction < 0.45, "flash::animate4: invalid plot_padding_fraction");
   PLUSS_CHECK(
       options.point_radius_min > 0.0 && options.point_radius_max >= options.point_radius_min,
-      "flash::simulate4: invalid point radius range");
+      "flash::animate4: invalid point radius range");
 
   const std::string html = detail::build_hyper_simulation_html(
       detail::to_f64_vector(detail::flatten_f64(sx)),
@@ -453,4 +526,44 @@ bool simulate4(
   window_options.width = options.width;
   window_options.height = options.height;
   return ::pluss::view::show_html_window(html, window_options);
+}
+
+template <class X, class Y, class Z, class W>
+std::int64_t export4_frames(
+    X&& x,
+    Y&& y,
+    Z&& z,
+    W&& w,
+    const HyperFrameExportOptions& options = {}) {
+  const Series sx = detail::to_series(std::forward<X>(x));
+  const Series sy = detail::to_series(std::forward<Y>(y));
+  const Series sz = detail::to_series(std::forward<Z>(z));
+  const Series sw = detail::to_series(std::forward<W>(w));
+  detail::require_rank_at_most(sx, 3, "flash::export4_frames");
+  detail::require_rank_at_most(sy, 3, "flash::export4_frames");
+  detail::require_rank_at_most(sz, 3, "flash::export4_frames");
+  detail::require_rank_at_most(sw, 3, "flash::export4_frames");
+  PLUSS_CHECK(
+      sx.numel() == sy.numel() && sx.numel() == sz.numel() && sx.numel() == sw.numel(),
+      "flash::export4_frames: x, y, z, w must have identical lengths");
+  PLUSS_CHECK(options.width >= 480 && options.height >= 320, "flash::export4_frames: invalid frame extent");
+  PLUSS_CHECK(!options.output_dir.empty(), "flash::export4_frames: output_dir must be non-empty");
+
+  const auto frames = hyper_animation_sequence(options.plot, options.sweep);
+  PLUSS_CHECK(!frames.empty(), "flash::export4_frames: animation sequence is empty");
+  std::filesystem::create_directories(options.output_dir);
+  const auto digits = static_cast<int>(std::to_string(frames.size() - 1).size());
+  const std::string ext = detail::frame_extension(options.format);
+
+  for (const auto i : std::views::iota(std::size_t{0}, frames.size())) {
+    Studio fig("flash_animate4_frame_export", options.theme);
+    fig.size(static_cast<double>(options.width), static_cast<double>(options.height));
+    cloud4(fig, sx, sy, sz, sw, frames[i], options.title);
+
+    std::ostringstream stem;
+    stem << options.file_prefix << '_' << std::setw(digits) << std::setfill('0') << i << '.' << ext;
+    const auto out = options.output_dir / stem.str();
+    detail::save_studio_frame(fig, out, options);
+  }
+  return static_cast<std::int64_t>(frames.size());
 }

@@ -28,6 +28,8 @@ plusspl_add_example(plusspl_2d_ngarch_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/2D/ngarch_demo.cpp)
 plusspl_add_example(plusspl_3d_flash_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/3D/flash_3d_demo.cpp)
+plusspl_add_example(plusspl_3d_animation_demo
+    ${CMAKE_CURRENT_SOURCE_DIR}/3D/flash_3d_animation_demo.cpp)
 plusspl_add_example(plusspl_4d_geometry_demo
     ${CMAKE_CURRENT_SOURCE_DIR}/4D/flash_4d_geometry_demo.cpp)
 plusspl_add_example(plusspl_4d_animation_demo

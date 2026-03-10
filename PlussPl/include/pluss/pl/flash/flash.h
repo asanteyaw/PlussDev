@@ -9,6 +9,7 @@
 #include <cmath>
 #include <concepts>
 #include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <iomanip>
 #include <iterator>
@@ -1232,6 +1233,7 @@ struct MatrixJointOptions {
 
 #include "pluss/pl/flash/detail/flash_style.h"
 #include "pluss/pl/flash/detail/scene3d.h"
+#include "pluss/pl/flash/detail/animate3d.h"
 #include "pluss/pl/flash/detail/hyper4d.h"
 
 template <class X, class Y, class Z>

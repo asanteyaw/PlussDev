@@ -609,3 +609,265 @@ lb.stat.sizes()[0] == 2
 lb.pvalue.sizes()[0] == 2
 lb.dof.sizes()[0] == 2
 ```
+
+## `GarchFit Garch::fit_mle(const Series& y, const GarchOptions& options = {}, Config cfg = {})`
+
+Fits a general `GARCH(m,n)` conditional variance model by Gaussian QMLE.
+
+`const Series& y`: univariate response / return series (`[n]` or `[n,1]`).
+
+`const GarchOptions& options`: typed fit options including:
+
+- `arch_order` (`m`) and `garch_order` (`n`).
+- initialization vectors (`arch0`, `garch0`).
+- numerical floors/margins and optimizer budget.
+
+`Config cfg`: execution/output config (`Float64` internal path is enforced).
+
+Return -> `GarchFit`: fitted object with imperative methods.
+
+Notes:
+
+- Supports `GARCH(m,n)` including mixed lag orders.
+- Stationarity is enforced through constrained parameterization (`sum(coeffs) < 1 - stationarity_margin`).
+- Recursive variance filtering is used (loop is required for correctness).
+
+Example usage:
+
+```cpp
+ts::GarchOptions opt;
+opt.arch_order = 2;
+opt.garch_order = 1;
+opt.arch0 = {0.05, 0.05};
+opt.garch0 = {0.85};
+auto fit = ts::Garch::fit_mle(y, opt);
+```
+
+Expected output:
+
+```text
+fit.arch.size() == 2
+fit.garch.size() == 1
+fit.persistence() < 1
+```
+
+## `Garch11Fit Garch11::fit_mle(const Series& y, const Garch11Options& options = {}, Config cfg = {})`
+
+Fits a `GARCH(1,1)` conditional variance model by Gaussian QMLE.
+
+`const Series& y`: univariate response / return series (`[n]` or `[n,1]`).
+
+`const Garch11Options& options`: typed fit options (`demean`, initial values, floors/margins, optimizer budget).
+
+`Config cfg`: execution/output config (`Float64` internal path is enforced).
+
+Return -> `Garch11Fit`: fitted object with imperative methods.
+
+Notes:
+
+- Stationarity is enforced through parameterization (`alpha + beta < 1 - stationarity_margin`).
+- Recursive variance filtering is used (loop is required for correctness).
+- This is a compact convenience wrapper over the general `Garch::fit_mle` path for `(m,n)=(1,1)`.
+
+Example usage:
+
+```cpp
+ts::Garch11Options opt;
+opt.max_iterations = 1200;
+opt.max_evaluations = 12000;
+auto fit = ts::Garch11::fit_mle(y, opt);
+```
+
+Expected output:
+
+```text
+fit.alpha >= 0
+fit.beta >= 0
+fit.alpha + fit.beta < 1
+```
+
+## `double GarchFit::persistence() const`
+
+Returns total persistence (`sum(arch) + sum(garch)`).
+
+Return -> `double`: persistence value.
+
+Notes:
+
+- Stationary fitted models satisfy `persistence() < 1`.
+
+## `double GarchFit::loglik(const Series& y) const`
+
+Returns total log-likelihood for `y` under fitted parameters.
+
+Notes:
+
+- `Garch11Fit` exposes the same method signature for the `(1,1)` convenience object.
+
+`const Series& y`: evaluation series.
+
+Return -> `double`: total log-likelihood.
+
+## `Series GarchFit::loglik_per_obs(const Series& y, Config cfg = {}) const`
+
+Returns per-observation log-likelihood contributions.
+
+`const Series& y`: evaluation series.
+
+`Config cfg`: output config.
+
+Return -> `Series`: vector `[n]`.
+
+## `Series GarchFit::infer(const Series& y, Config cfg = {}) const`
+
+Infers conditional variances along `y`.
+
+`const Series& y`: evaluation series.
+
+`Config cfg`: output config.
+
+Return -> `Series`: positive variance vector `[n]`.
+
+## `Series GarchFit::forecast(std::int64_t horizon, const Series& y, Config cfg = {}) const`
+
+Forecasts future conditional variances.
+
+`std::int64_t horizon`: forecast horizon (`> 0`).
+
+`const Series& y`: observed history used for initialization.
+
+`Config cfg`: output config.
+
+Return -> `Series`: variance forecast vector `[horizon]`.
+
+## `Series GarchFit::simulate(std::int64_t num_observations, Config cfg = {}, std::uint64_t seed = 0) const`
+
+Simulates response paths from fitted `GARCH(1,1)` dynamics.
+
+`std::int64_t num_observations`: output length (`> 0`).
+
+`Config cfg`: output config.
+
+`std::uint64_t seed`: RNG seed.
+
+Return -> `Series`: simulated response vector `[num_observations]`.
+
+## `Series GarchFit::score(const Series& y, Config cfg = {}) const`
+
+Returns numerical score (gradient of `loglik`) w.r.t. all fitted natural parameters.
+
+`const Series& y`: evaluation series.
+
+`Config cfg`: output config.
+
+Return -> `Series`: vector `[k]`, where `k = 1 + arch.size() + garch.size()`.
+
+## `Series GarchFit::observed_inf(const Series& y, Config cfg = {}) const`
+
+Returns numerical observed information matrix (`-Hessian(loglik)`).
+
+`const Series& y`: evaluation series.
+
+`Config cfg`: output config.
+
+Return -> `Series`: matrix `[k,k]`, where `k = 1 + arch.size() + garch.size()`.
+
+## `EgarchFit Egarch::fit_mle(const Series& y, const EgarchOptions& options = {}, Config cfg = {})`
+
+Fits `EGARCH(m,n)` by Gaussian QMLE with log-variance recursion.
+
+`const Series& y`: univariate response / return series (`[n]` or `[n,1]`).
+
+`const EgarchOptions& options`: typed fit options (`arch_order`, `garch_order`, `arch0`, `asym0`, `garch0`, stability controls, optimizer budget).
+
+`Config cfg`: execution/output config (`Float64` internal path is enforced).
+
+Return -> `EgarchFit`: fitted object exposing `infer`, `loglik`, `loglik_per_obs`, `score`, `observed_inf`, `forecast`, and `simulate`.
+
+Notes:
+
+- Uses log-variance recursion; loops are required for state recursion correctness.
+- Stationarity guard is applied through `sum(garch) < 1 - stationarity_margin`.
+
+## `GjrFit Gjr::fit_mle(const Series& y, const GjrOptions& options = {}, Config cfg = {})`
+
+Fits `GJR(m,n)` by Gaussian QMLE with leverage asymmetry.
+
+`const Series& y`: univariate response / return series (`[n]` or `[n,1]`).
+
+`const GjrOptions& options`: typed fit options (`arch_order`, `garch_order`, `arch0`, `asym0`, `garch0`, stability controls, optimizer budget).
+
+`Config cfg`: execution/output config (`Float64` internal path is enforced).
+
+Return -> `GjrFit`: fitted object exposing `infer`, `loglik`, `loglik_per_obs`, `score`, `observed_inf`, `forecast`, and `simulate`.
+
+Notes:
+
+- Persistence is `sum(arch) + 0.5 * sum(asym) + sum(garch)`.
+- `unconditional_var()` returns `omega / (1 - persistence)` for stationary fits.
+
+## `ArimaFit Arima::fit_mle(const Series& y, const ArimaOptions& options = {}, Config cfg = {})`
+
+Fits typed ARIMA/SARIMA dynamics via Gaussian MLE.
+
+`const Series& y`: univariate series (`[n]` or `[n,1]`).
+
+`const ArimaOptions& options`: typed orders and controls:
+
+- non-seasonal: `ar_order`, `diff_order`, `ma_order`.
+- seasonal: `seasonal_ar_order`, `seasonal_diff_order`, `seasonal_ma_order`, `seasonal_period`.
+- optimizer and numeric controls (`variance_floor`, `stationarity_margin`, `finite_diff_eps`, iterations/evaluations).
+
+`Config cfg`: execution/output config (`Float64` internal path is enforced).
+
+Return -> `ArimaFit`: fitted object exposing:
+
+- `infer`: innovations path.
+- `loglik`: total log-likelihood.
+- `loglik_per_obs`: per-observation contributions (warmup/differencing entries are `NaN`).
+- `score`: numerical gradient.
+- `observed_inf`: numerical observed information.
+- `forecast`: horizon forecasts on original level scale.
+- `simulate`: simulated path on original level scale.
+
+Notes:
+
+- Recursive ARMA state updates are loop-based by necessity.
+- Differencing and inverse-differencing are handled internally for forecast/simulate.
+
+## `SarimaFit Sarima::fit_mle(const Series& y, const SarimaOptions& options = {}, Config cfg = {})`
+
+Convenience typed SARIMA wrapper over `Arima::fit_mle`.
+
+`const Series& y`: univariate series (`[n]` or `[n,1]`).
+
+`const SarimaOptions& options`: compact seasonal notation:
+
+- non-seasonal `(p,d,q)`.
+- seasonal `(P,D,Q,s)`.
+
+`Config cfg`: execution/output config.
+
+Return -> `SarimaFit`: wrapper containing `core` (`ArimaFit`) and forwarding the same imperative methods.
+
+Example usage:
+
+```cpp
+ts::SarimaOptions opt;
+opt.p = 1;
+opt.d = 1;
+opt.q = 1;
+opt.P = 1;
+opt.D = 0;
+opt.Q = 1;
+opt.s = 12;
+auto fit = ts::Sarima::fit_mle(y, opt);
+```
+
+Expected output:
+
+```text
+fit.core.ar.size() == 1
+fit.core.sar.size() == 1
+fit.forecast(12, y).sizes()[0] == 12
+```

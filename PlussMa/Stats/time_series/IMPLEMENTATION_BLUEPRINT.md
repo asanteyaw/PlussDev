@@ -244,6 +244,84 @@ Implement object-oriented models with imperative methods:
 
 Use recursion loops where mathematically unavoidable; vectorize all surrounding transformations.
 
+Status (current production slice):
+
+1. Implemented `Garch(m,n)` core in `specialized/vol_models/garch.cpp`:
+   - `Garch::fit_mle(...)`
+   - `GarchFit::{persistence,unconditional_var,infer,loglik,loglik_per_obs,forecast,simulate,score,observed_inf}`
+2. Added `Garch11` convenience wrapper on top of the generic core:
+   - `Garch11::fit_mle(...)`
+   - `Garch11Fit::{infer,loglik,loglik_per_obs,forecast,simulate,score,observed_inf}`
+3. Implemented `Egarch(m,n)` in `specialized/vol_models/egarch.cpp`:
+   - `Egarch::fit_mle(...)`
+   - `EgarchFit::{persistence,infer,loglik,loglik_per_obs,forecast,simulate,score,observed_inf}`
+4. Implemented `Gjr(m,n)` in `specialized/vol_models/gjr.cpp`:
+   - `Gjr::fit_mle(...)`
+   - `GjrFit::{persistence,unconditional_var,infer,loglik,loglik_per_obs,forecast,simulate,score,observed_inf}`
+5. Implemented `Arima`/`Sarima` in `ts/modules/arima/arima.cpp`:
+   - `Arima::fit_mle(...)`, `Sarima::fit_mle(...)`
+   - `ArimaFit`/`SarimaFit::{infer,loglik,loglik_per_obs,forecast,simulate,score,observed_inf}`
+6. Added volatility test slice:
+   - manual: `specialized/vol_models/test/garch11_test.cpp`
+   - manual: `specialized/vol_models/test/egarch_gjr_test.cpp`
+   - Catch2: `specialized/vol_models/test/ts_vol_catch2.cpp`
+7. Added ARIMA/SARIMA test slice:
+   - manual: `ts/modules/arima/test/arima_test.cpp`
+   - Catch2: `ts/modules/arima/test/ts_arima_catch2.cpp`
+8. Added raw usage demos:
+   - `time_series/examples/ts_garch11_raw_demo.cpp`
+   - `time_series/examples/ts_garchpq_raw_demo.cpp`
+   - `time_series/examples/ts_egarch_gjr_raw_demo.cpp`
+   - `time_series/examples/ts_arima_sarima_raw_demo.cpp`
+9. Added API reference coverage for GARCH/EGARCH/GJR/ARIMA/SARIMA signatures and outputs.
+
+MATLAB references consulted for this phase:
+
+1. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@garch/garch.m`
+   - core variance recursion contract and unconditional variance definition.
+2. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@garch/estimate.m`
+   - MLE flow, parameter constraints, initialization conventions.
+3. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@garch/infer.m`
+   - inferred conditional variance path behavior.
+4. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@garch/forecast.m`
+   - multi-step conditional variance forecasting behavior.
+5. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@garch/simulate.m`
+   - simulation pathway and presample initialization expectations.
+6. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@egarch/egarch.m`
+   - EGARCH log-variance model contract and coefficient roles.
+7. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@egarch/estimate.m`
+   - EGARCH MLE flow, initialization and constraints expectations.
+8. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@egarch/infer.m`
+   - conditional variance inference behavior for EGARCH.
+9. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@egarch/forecast.m`
+   - multi-step EGARCH variance forecasting behavior.
+10. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@egarch/simulate.m`
+    - EGARCH simulation and presample behavior.
+11. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@gjr/gjr.m`
+    - GJR asymmetry/leverage model contract.
+12. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@gjr/estimate.m`
+    - GJR MLE flow and parameterization behavior.
+13. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@gjr/infer.m`
+    - GJR conditional variance inference behavior.
+14. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@gjr/forecast.m`
+    - GJR forecast recursion behavior.
+15. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@gjr/simulate.m`
+    - GJR simulation behavior.
+16. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@arima/arima.m`
+    - ARIMA object contracts for non-seasonal/seasonal terms.
+17. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@arima/estimate.m`
+    - ARIMA/SARIMA MLE contracts and options surface.
+18. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@arima/infer.m`
+    - innovations inference behavior.
+19. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@arima/forecast.m`
+    - multi-step forecast behavior with seasonal terms.
+20. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@arima/simulate.m`
+    - ARIMA/SARIMA simulation conventions.
+21. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/+internal/+econ/arimaLinearConstraints.m`
+    - linear stationarity/invertibility constraint formulation reference.
+22. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/+internal/+econ/arimaNonLinearConstraints.m`
+    - nonlinear constraint behavior reference.
+
 ## Phase 7: Advanced Diagnostics + Plotting
 
 1. Residual diagnostics overlays in `ts/modules/plotting`.
@@ -274,10 +352,10 @@ Demos:
 
 ## Immediate Next Execution Slice
 
-1. Extend Phase 3 to deploy/compact and forecast APIs:
-   - add explicit forecasting path beyond observed span
-   - add prepared-predictor extraction by horizon step
-2. Add loss-function extensibility beyond MSE with typed loss enum.
-3. Harden CV diagnostics:
-   - test-fold coverage reporting
-   - fold-level residual outputs
+1. Phase 6 hardening:
+   - add exogenous regressors (ARIMAX) with typed options.
+   - add Student-t likelihood option for volatility and ARIMA lanes.
+2. Phase 7 diagnostics:
+   - residual diagnostics overlays and rolling error diagnostics in `ts/modules/plotting`.
+3. Phase 8 expansion:
+   - add more deterministic stress and sensitivity suites for ARIMA/SARIMA/EGARCH/GJR.
