@@ -20,10 +20,8 @@ Sets stroke width for the active trace.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__width.cpp
 :language: cpp
-:start-at: if (key == "core_trace_style_2d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -50,10 +48,8 @@ Overrides the trace stroke color.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__stroke.cpp
 :language: cpp
-:start-at: if (key == "core_trace_style_2d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -80,10 +76,8 @@ Assigns a palette ramp used for continuous color mapping.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__palette.cpp
 :language: cpp
-:start-at: if (key == "core_trace_style_2d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -110,10 +104,8 @@ Fixes color normalization bounds for comparable panels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__color_limits.cpp
 :language: cpp
-:start-at: if (key == "core_trace_style_2d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -140,10 +132,8 @@ Sets lighting model for 3D surfaces.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__lighting.cpp
 :language: cpp
-:start-at: if (key == "core_trace_style_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -170,10 +160,8 @@ Sets material profile for 3D rendering.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__material.cpp
 :language: cpp
-:start-at: if (key == "core_trace_style_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -200,10 +188,8 @@ Toggles trace alpha/transparency mode.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__transparent.cpp
 :language: cpp
-:start-at: if (key == "core_trace_style_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -230,10 +216,8 @@ Turns contour/level annotations on or off.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__annotate_levels.cpp
 :language: cpp
-:start-at: if (key == "core_trace_style_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -260,10 +244,8 @@ Makes a previously hidden trace visible again.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__show.cpp
 :language: cpp
-:start-at: if (key == "core_trace_visibility") {
-:end-at: return true;
 ```
 
 #### Output
@@ -290,10 +272,8 @@ Sets or updates pane title text.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__title.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -320,10 +300,8 @@ Applies scale policy on Y axis.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__scale_y.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -350,10 +328,8 @@ Applies scale policy on Z axis (3D panes).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__scale_z.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -380,10 +356,8 @@ Sets explicit Y-axis limits.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_limits.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -410,10 +384,8 @@ Sets explicit Z-axis limits.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_limits.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -440,10 +412,8 @@ Sets explicit color-axis limits.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__color_limits.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -470,10 +440,8 @@ Chooses X-axis auto-limit strategy.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_limit_method.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -500,10 +468,8 @@ Chooses Y-axis auto-limit strategy.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_limit_method.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -530,10 +496,8 @@ Chooses Z-axis auto-limit strategy.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_limit_method.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -560,10 +524,8 @@ Chooses color-axis auto-limit strategy.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__color_limit_method.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -590,10 +552,8 @@ Sets Y tick label format.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_tick_format.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -620,10 +580,8 @@ Sets Z tick label format.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_tick_format.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -650,10 +608,8 @@ Hints decimal precision for X ticks.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_auto_tick_decimals.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -680,10 +636,8 @@ Hints decimal precision for Y ticks.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_auto_tick_decimals.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -710,10 +664,8 @@ Hints decimal precision for Z ticks.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_auto_tick_decimals.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -740,10 +692,8 @@ Clears X decimal override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_x_auto_tick_decimals.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -770,10 +720,8 @@ Clears Y decimal override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_y_auto_tick_decimals.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -800,10 +748,8 @@ Clears Z decimal override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_z_auto_tick_decimals.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -830,10 +776,8 @@ Scales tick font size for this pane.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__tick_font_scale.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -860,10 +804,8 @@ Scales axis label font size for this pane.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__axis_label_font_scale.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -890,10 +832,8 @@ Rotates Y tick labels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_tick_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -920,10 +860,8 @@ Rotates Z tick labels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_tick_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -950,10 +888,8 @@ Sets X tick-label distance from axis.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_tick_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -980,10 +916,8 @@ Sets Y tick-label distance from axis.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_tick_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1010,10 +944,8 @@ Sets Z tick-label distance from axis.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_tick_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1040,10 +972,8 @@ Sets X axis-label gap.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1070,10 +1000,8 @@ Sets Y axis-label gap.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1100,10 +1028,8 @@ Sets Z axis-label gap.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1130,10 +1056,8 @@ Rotates X axis label.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_label_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1160,10 +1084,8 @@ Rotates Y axis label.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_label_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1190,10 +1112,8 @@ Rotates Z axis label.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_label_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1220,10 +1140,8 @@ Centers Y label along the axis span.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_label_centered.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1250,10 +1168,8 @@ Clears custom X tick rotation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_x_tick_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1280,10 +1196,8 @@ Clears custom Y tick rotation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_y_tick_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1310,10 +1224,8 @@ Clears custom Z tick rotation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_z_tick_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1340,10 +1252,8 @@ Clears X tick-label gap override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_x_tick_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1370,10 +1280,8 @@ Clears Y tick-label gap override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_y_tick_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1400,10 +1308,8 @@ Clears Z tick-label gap override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_z_tick_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1430,10 +1336,8 @@ Clears X label gap override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_x_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1460,10 +1364,8 @@ Clears Y label gap override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_y_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1490,10 +1392,8 @@ Clears Z label gap override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_z_label_gap.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1520,10 +1420,8 @@ Shows or hides X tick labels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_tick_labels.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1550,10 +1448,8 @@ Shows or hides Y tick labels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_tick_labels.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1580,10 +1476,8 @@ Shows or hides Z tick labels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_tick_labels.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1610,10 +1504,8 @@ Clears X label rotation override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_x_label_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1640,10 +1532,8 @@ Clears Y label rotation override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_y_label_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1670,10 +1560,8 @@ Clears Z label rotation override.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_z_label_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1700,10 +1588,8 @@ Restores automatic X-axis limits.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__auto_x.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1730,10 +1616,8 @@ Restores automatic Y-axis limits.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__auto_y.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1760,10 +1644,8 @@ Restores automatic Z-axis limits.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__auto_z.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1790,10 +1672,8 @@ Restores automatic color-axis limits.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__auto_color.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1820,10 +1700,8 @@ Sets X axis label text.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_label.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1850,10 +1728,8 @@ Sets Y axis label text.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_label.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1880,10 +1756,8 @@ Sets Z axis label text.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_label.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1910,10 +1784,8 @@ Sets explicit Y tick positions and labels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_ticks.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1940,10 +1812,8 @@ Sets explicit Z tick positions and labels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_ticks.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1970,10 +1840,8 @@ Clears custom X ticks.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_x_ticks.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2000,10 +1868,8 @@ Clears custom Y ticks.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_y_ticks.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2030,10 +1896,8 @@ Clears custom Z ticks.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_z_ticks.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2060,10 +1924,8 @@ Assigns categorical labels on the Z axis.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_categories.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2090,10 +1952,8 @@ Sets pane-level legend placement.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__legend.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2120,10 +1980,8 @@ Sets pane-level legend frame style.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__legend_frame.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2150,10 +2008,8 @@ Sets pane-level legend orientation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__legend_shape.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2180,10 +2036,8 @@ Toggles major X grid lines.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_major_grid.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2210,10 +2064,8 @@ Toggles major Y grid lines.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_major_grid.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2240,10 +2092,8 @@ Toggles major Z grid lines.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_major_grid.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2270,10 +2120,8 @@ Toggles minor X grid lines.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_minor_grid.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2300,10 +2148,8 @@ Toggles minor Y grid lines.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_minor_grid.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2330,10 +2176,8 @@ Toggles minor Z grid lines.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_minor_grid.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2360,10 +2204,8 @@ Shows color scale guide when supported by trace type.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__scale_guide.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2390,10 +2232,8 @@ Adds a Z-axis reference line.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__rule_z.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2420,10 +2260,8 @@ Adds a Z-axis highlighted band.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__band_z.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2450,10 +2288,8 @@ Aligns Z-axis limits with panes in the same group.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__align_z.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2480,10 +2316,8 @@ Aligns X, Y, and Z limits with panes in the same group.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__align_xyz.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2510,10 +2344,8 @@ Shows/hides axis chrome while keeping data visible.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__axes_visible.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2540,10 +2372,8 @@ Hides pane output.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__hide.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2570,10 +2400,8 @@ Shows a previously hidden pane.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__show.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2600,10 +2428,8 @@ Clears X-axis alignment group.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_x_align.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2630,10 +2456,8 @@ Clears Y-axis alignment group.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_y_align.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2660,10 +2484,8 @@ Clears Z-axis alignment group.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_z_align.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2690,10 +2512,8 @@ Clears all alignment groups.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__clear_align.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2720,10 +2540,8 @@ Renames the figure/session handle.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__rename.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2750,10 +2568,8 @@ Sets top headline text.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__headline.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2780,10 +2596,8 @@ Stops applying template defaults to new panes.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__clear_pane_style_defaults.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2810,10 +2624,8 @@ Sets figure pixel extent.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__size.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2840,10 +2652,8 @@ Sets figure-level legend docking.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__legend.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2870,10 +2680,8 @@ Sets figure-level legend frame style.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__legend_frame.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2900,10 +2708,8 @@ Sets figure-level legend orientation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__legend_shape.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2930,10 +2736,8 @@ Sets shared X caption for alignment group.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__x_caption.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2960,10 +2764,8 @@ Sets shared Y caption for alignment group.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__y_caption.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2990,10 +2792,8 @@ Sets shared Z caption for alignment group.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__z_caption.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3020,10 +2820,8 @@ Clears one row title.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__clear_row_title.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3050,10 +2848,8 @@ Clears all row titles.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__clear_row_titles.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3080,10 +2876,8 @@ Creates a new 2D pane in this studio.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__pane2.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3110,10 +2904,8 @@ Creates a new 3D pane in this studio.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__pane3.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3140,10 +2932,8 @@ Renders an HTML viewer payload (optionally launches a window).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__show.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3170,10 +2960,8 @@ Assigns categorical labels on the X axis.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_categories.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3200,10 +2988,8 @@ Assigns categorical labels on the Y axis.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_categories.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3230,10 +3016,8 @@ Sets pane footer/caption text.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__caption.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3260,10 +3044,8 @@ Adds an X-axis reference line.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__rule_x.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3290,10 +3072,8 @@ Adds a Y-axis reference line.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__rule_y.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3320,10 +3100,8 @@ Adds a highlighted X-axis span.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__band_x.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3350,10 +3128,8 @@ Adds a highlighted Y-axis span.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__band_y.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3381,10 +3157,8 @@ Adds text callouts anchored to 2D or 3D coordinates.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__pin.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive_3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3411,10 +3185,8 @@ Aligns X-axis range with other panes in the same group.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__align_x.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3441,10 +3213,8 @@ Aligns Y-axis range with other panes in the same group.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__align_y.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3471,10 +3241,8 @@ Controls alignment strategy for shared X/Y labels in grouped panes.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__parallel_xy_labels.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3502,10 +3270,8 @@ Assigns pane position in the active mosaic cell grid.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__place.cpp
 :language: cpp
-:start-at: if (key == "core_axis_layout_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output

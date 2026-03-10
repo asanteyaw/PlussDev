@@ -496,6 +496,258 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     save(fig);
     return true;
   }
+  if (key == "flash_palette") {
+    Studio fig("flash_palette", Theme::paper());
+    auto& pane = fig.pane2("flash_palette");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    trace.palette(flash_palette(FlashPalette::Muted));
+    save(fig);
+    return true;
+  }
+  if (key == "flash_theme") {
+    Studio fig("flash_theme", Theme::paper());
+    fig.theme(flash_theme(FlashStyle::Sandgrid, FlashPalette::Bright));
+    auto& pane = fig.pane2("flash_theme");
+    lineplot(pane, x, y).label("flash_theme");
+    save(fig);
+    return true;
+  }
+  if (key == "flash_palette_kind") {
+    Studio fig("flash_palette_kind", Theme::paper());
+    auto& pane = fig.pane2("flash_palette_kind");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    const auto palette_kind = flash_palette_kind("colorblind");
+    trace.palette(flash_palette(palette_kind));
+    save(fig);
+    return true;
+  }
+  if (key == "blend_palette") {
+    Studio fig("blend_palette", Theme::paper());
+    auto& pane = fig.pane2("blend_palette");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    trace.palette(blend_palette(
+        {Rgba::from_u8(42, 95, 153), Rgba::from_u8(242, 178, 109), Rgba::from_u8(181, 80, 54)},
+        "blend_demo"));
+    save(fig);
+    return true;
+  }
+  if (key == "hls_palette") {
+    Studio fig("hls_palette", Theme::paper());
+    auto& pane = fig.pane2("hls_palette");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    trace.palette(hls_palette(8, 0.72, 0.54));
+    save(fig);
+    return true;
+  }
+  if (key == "husl_palette") {
+    Studio fig("husl_palette", Theme::paper());
+    auto& pane = fig.pane2("husl_palette");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    trace.palette(husl_palette(8));
+    save(fig);
+    return true;
+  }
+  if (key == "cubehelix_palette") {
+    Studio fig("cubehelix_palette", Theme::paper());
+    auto& pane = fig.pane2("cubehelix_palette");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    trace.palette(cubehelix_palette(8));
+    save(fig);
+    return true;
+  }
+  if (key == "light_palette") {
+    Studio fig("light_palette", Theme::paper());
+    auto& pane = fig.pane2("light_palette");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    trace.palette(light_palette(Rgba::from_u8(42, 95, 153), 8));
+    save(fig);
+    return true;
+  }
+  if (key == "dark_palette") {
+    Studio fig("dark_palette", Theme::paper());
+    auto& pane = fig.pane2("dark_palette");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    trace.palette(dark_palette(Rgba::from_u8(42, 95, 153), 8));
+    save(fig);
+    return true;
+  }
+  if (key == "diverging_palette") {
+    Studio fig("diverging_palette", Theme::paper());
+    auto& pane = fig.pane2("diverging_palette");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    trace.palette(diverging_palette(Rgba::from_u8(42, 95, 153), Rgba::from_u8(181, 80, 54), 9));
+    save(fig);
+    return true;
+  }
+  if (key == "mpl_palette") {
+    Studio fig("mpl_palette", Theme::paper());
+    auto& pane = fig.pane2("mpl_palette");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    trace.palette(mpl_palette("viridis"));
+    save(fig);
+    return true;
+  }
+  if (key == "xkcd_palette") {
+    Studio fig("xkcd_palette", Theme::paper());
+    auto& pane = fig.pane2("xkcd_palette");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    trace.palette(xkcd_palette());
+    save(fig);
+    return true;
+  }
+  if (key == "crayon_palette") {
+    Studio fig("crayon_palette", Theme::paper());
+    auto& pane = fig.pane2("crayon_palette");
+    const auto gx = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gy = linspace(-3.0, 3.0, 40, ScalarType::Float64);
+    const auto gz = make_grid_surface(40, 40);
+    auto& trace = heatmap(pane, gx, gy, gz, HeatmapOptions{.scale_guide = true});
+    trace.palette(crayon_palette());
+    save(fig);
+    return true;
+  }
+  if (key == "axes_style") {
+    Studio fig("axes_style", Theme::paper());
+    auto& pane = fig.pane2("axes_style");
+    axes_style(pane, FlashStyle::Darkgrid);
+    lineplot(pane, x, y).label("axes_style");
+    save(fig);
+    return true;
+  }
+  if (key == "tickless") {
+    Studio fig("tickless", Theme::paper());
+    auto& pane = fig.pane2("tickless");
+    set_style(pane, FlashStyle::Lightgrid);
+    tickless(pane, true);
+    lineplot(pane, x, y).label("tickless");
+    save(fig);
+    return true;
+  }
+  if (key == "move_legend") {
+    Studio fig("move_legend", Theme::paper());
+    auto& pane = fig.pane2("move_legend");
+    lineplot(pane, x, y).label("signal");
+    lineplot(pane, x, y.mul(0.8).add(0.2)).label("baseline");
+    move_legend(pane, KeyPlace::NorthEast);
+    move_legend(fig, KeyDock::East);
+    save(fig);
+    return true;
+  }
+  if (key == "flash_set") {
+    Studio fig("flash_set", Theme::paper());
+    set(fig, Theme::ocean());
+    auto& pane = fig.pane2("flash_set");
+    lineplot(pane, x, y).label("flash_set");
+    save(fig);
+    return true;
+  }
+  if (key == "flash_show") {
+    Studio fig("flash_show", Theme::paper());
+    auto& pane = fig.pane2("flash_show");
+    lineplot(pane, x, y).label("flash_show");
+    const bool ok = show(fig, "flash_show", 920, 620, false);
+    pane.caption(ok ? "show() call succeeded" : "show() call returned false");
+    save(fig);
+    return true;
+  }
+  if (key == "flash_save_png") {
+    Studio fig("flash_save_png", Theme::paper());
+    auto& pane = fig.pane2("flash_save_png");
+    lineplot(pane, x, y).label("flash_save_png");
+    const auto png_out = out_svg.parent_path() / "flash_save_png_tmp.png";
+    save_png(fig, png_out.string(), 144);
+    save(fig);
+    return true;
+  }
+  if (key == "make_dataset") {
+    Studio fig("make_dataset", Theme::paper());
+    const auto ds = make_dataset(matrix, {"f1", "f2", "f3", "f4", "f5"}, Axis::Cols);
+    auto& pane = fig.pane2("make_dataset");
+    if (ds.numeric_values.size() >= 2) {
+      scatterplot(pane, ds.numeric_values[0], ds.numeric_values[1]).label("dataset features");
+    } else {
+      lineplot(pane, x, y).label("fallback");
+    }
+    save(fig);
+    return true;
+  }
+  if (key == "get_dataset_names") {
+    Studio fig("get_dataset_names", Theme::paper());
+    auto& pane = fig.pane2("get_dataset_names");
+    const auto names = get_dataset_names();
+    const std::vector<double> counts(static_cast<std::size_t>(names.numel()), 1.0);
+    barplot(pane, names, make_series(counts)).label("datasets");
+    save(fig);
+    return true;
+  }
+  if (key == "catplot_kind") {
+    Studio fig("catplot_kind", Theme::paper());
+    auto& pane = fig.pane2("catplot_kind");
+    CatPlotOptions options;
+    options.kind = catplot_kind("bar");
+    options.errorbar = CatErrorBar::SE;
+    catplot(
+        pane,
+        make_note({"A", "A", "A", "B", "B", "B", "C", "C", "C"}),
+        make_series({0.9, 1.2, 1.4, 1.1, 1.6, 1.9, 0.7, 0.8, 1.0}),
+        options)
+        .label("catplot_kind");
+    save(fig);
+    return true;
+  }
+  if (key == "relgrid_kind") {
+    Studio fig("relgrid_kind", Theme::paper());
+    RelGridPlotOptions options;
+    options.kind = relgrid_kind("line");
+    relgridplot(
+        fig,
+        {x, x, x},
+        {y, y.mul(0.8), y.mul(0.6).add(0.2)},
+        options);
+    save(fig);
+    return true;
+  }
+  if (key == "disgrid_kind") {
+    Studio fig("disgrid_kind", Theme::paper());
+    DisGridPlotOptions options;
+    options.kind = disgrid_kind("ecdf");
+    disgridplot(fig, {y, y.add(0.25), y.sub(0.3)}, options);
+    save(fig);
+    return true;
+  }
   if (key == "load_dataset") {
     Studio fig("load_dataset", Theme::paper());
     if (auto data = load_dataset("tips")) {
@@ -521,6 +773,76 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     save(fig);
     return true;
   }
+  if (key == "camera3d") {
+    Studio fig("camera3d", Theme::paper());
+    auto& pane = fig.pane3("camera3d");
+    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    camera3d(
+        pane,
+        Camera3DOptions{
+            .azimuth_deg = -28.0,
+            .elevation_deg = 22.0,
+            .view_angle_deg = 26.0,
+            .projection = ProjectionKind::Perspective,
+        });
+    sheet(pane, gx, gy, gz).label("camera3d");
+    save(fig);
+    return true;
+  }
+  if (key == "camera_preset3d") {
+    Studio fig("camera_preset3d", Theme::paper());
+    auto& pane = fig.pane3("camera_preset3d");
+    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    camera_preset3d(pane, CameraPreset3D::Isometric);
+    sheet(pane, gx, gy, gz).label("camera_preset3d");
+    save(fig);
+    return true;
+  }
+  if (key == "lighting3d") {
+    Studio fig("lighting3d", Theme::paper());
+    auto& pane = fig.pane3("lighting3d");
+    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    lighting3d(
+        pane,
+        Lighting3DOptions{
+            .clear_first = true,
+            .headlight = true,
+            .lamp_left = true,
+            .lamp_right = true,
+            .sun_key = false,
+        });
+    sheet(pane, gx, gy, gz).label("lighting3d");
+    save(fig);
+    return true;
+  }
+  if (key == "theme_preset3d") {
+    Studio fig("theme_preset3d", Theme::paper());
+    auto& pane = fig.pane3("theme_preset3d");
+    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    theme_preset3d(pane, ThemePreset3D::Slate);
+    sheet(pane, gx, gy, gz).label("theme_preset3d");
+    save(fig);
+    return true;
+  }
+  if (key == "scene_preset3d") {
+    Studio fig("scene_preset3d", Theme::paper());
+    auto& pane = fig.pane3("scene_preset3d");
+    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    scene_preset3d(pane, ScenePreset3D::Studio);
+    sheet(pane, gx, gy, gz).label("scene_preset3d");
+    save(fig);
+    return true;
+  }
   if (key == "trace3d") {
     Studio fig("trace3d", Theme::paper());
     auto& pane = fig.pane3("trace3d");
@@ -529,6 +851,17 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     const auto gz = make_grid_surface(24, 24);
     auto& tr = sheet(pane, gx, gy, gz).label("sheet");
     trace3d(tr, Trace3DOptions{.preset = TracePreset3D::Surface});
+    save(fig);
+    return true;
+  }
+  if (key == "trace_preset3d") {
+    Studio fig("trace_preset3d", Theme::paper());
+    auto& pane = fig.pane3("trace_preset3d");
+    const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
+    const auto gz = make_grid_surface(24, 24);
+    auto& tr = sheet(pane, gx, gy, gz).label("sheet");
+    trace_preset3d(tr, TracePreset3D::Surface);
     save(fig);
     return true;
   }

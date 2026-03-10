@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /opt/homebrew/bin/cmake
+CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
 
 # The command to remove a file.
-RM = /opt/homebrew/bin/cmake -E rm -f
+RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -597,6 +597,20 @@ plussqit_codem_autodiff_tests: PlussQit/CMakeFiles/plussqit_codem_autodiff_tests
 plussqit_codem_autodiff_tests/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_autodiff_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_autodiff_tests.dir/build
 .PHONY : plussqit_codem_autodiff_tests/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/rule
+
+# Convenience name for target.
+plussqit_codem_mps_selection_tests: PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/rule
+.PHONY : plussqit_codem_mps_selection_tests
+
+# fast build rule for target.
+plussqit_codem_mps_selection_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build
+.PHONY : plussqit_codem_mps_selection_tests/fast
 
 # Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/rule:
@@ -3114,6 +3128,222 @@ tests/CodeM/test_patch09_fp16_bf16.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch09_fp16_bf16.cpp.s
 .PHONY : tests/CodeM/test_patch09_fp16_bf16.cpp.s
 
+tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.o: tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.o
+.PHONY : tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.o
+
+# target to build an object file
+tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.o
+.PHONY : tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.o
+
+tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.i: tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.i
+.PHONY : tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.i
+.PHONY : tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.i
+
+tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.s: tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.s
+.PHONY : tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.s
+.PHONY : tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp.s
+
+tests/CodeM/test_patch101_mps_linalg_solver_residuals.o: tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.o
+.PHONY : tests/CodeM/test_patch101_mps_linalg_solver_residuals.o
+
+# target to build an object file
+tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.o
+.PHONY : tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.o
+
+tests/CodeM/test_patch101_mps_linalg_solver_residuals.i: tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.i
+.PHONY : tests/CodeM/test_patch101_mps_linalg_solver_residuals.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.i
+.PHONY : tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.i
+
+tests/CodeM/test_patch101_mps_linalg_solver_residuals.s: tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.s
+.PHONY : tests/CodeM/test_patch101_mps_linalg_solver_residuals.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.s
+.PHONY : tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp.s
+
+tests/CodeM/test_patch102_mps_native_solver_dispatch.o: tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch102_mps_native_solver_dispatch.o
+
+# target to build an object file
+tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.o
+
+tests/CodeM/test_patch102_mps_native_solver_dispatch.i: tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch102_mps_native_solver_dispatch.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.i
+
+tests/CodeM/test_patch102_mps_native_solver_dispatch.s: tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch102_mps_native_solver_dispatch.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp.s
+
+tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.o: tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.o
+
+# target to build an object file
+tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.o
+
+tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.i: tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.i
+
+tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.s: tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp.s
+
+tests/CodeM/test_patch105_mps_native_det_dispatch.o: tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch105_mps_native_det_dispatch.o
+
+# target to build an object file
+tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.o
+
+tests/CodeM/test_patch105_mps_native_det_dispatch.i: tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch105_mps_native_det_dispatch.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.i
+
+tests/CodeM/test_patch105_mps_native_det_dispatch.s: tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch105_mps_native_det_dispatch.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch105_mps_native_det_dispatch.cpp.s
+
+tests/CodeM/test_patch106_mps_native_pinverse_dispatch.o: tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch106_mps_native_pinverse_dispatch.o
+
+# target to build an object file
+tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.o
+
+tests/CodeM/test_patch106_mps_native_pinverse_dispatch.i: tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch106_mps_native_pinverse_dispatch.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.i
+
+tests/CodeM/test_patch106_mps_native_pinverse_dispatch.s: tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch106_mps_native_pinverse_dispatch.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp.s
+
+tests/CodeM/test_patch107_mps_native_qr_dispatch.o: tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch107_mps_native_qr_dispatch.o
+
+# target to build an object file
+tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.o
+
+tests/CodeM/test_patch107_mps_native_qr_dispatch.i: tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch107_mps_native_qr_dispatch.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.i
+
+tests/CodeM/test_patch107_mps_native_qr_dispatch.s: tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch107_mps_native_qr_dispatch.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp.s
+
+tests/CodeM/test_patch108_mps_native_svd_dispatch.o: tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch108_mps_native_svd_dispatch.o
+
+# target to build an object file
+tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.o
+.PHONY : tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.o
+
+tests/CodeM/test_patch108_mps_native_svd_dispatch.i: tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch108_mps_native_svd_dispatch.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.i
+.PHONY : tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.i
+
+tests/CodeM/test_patch108_mps_native_svd_dispatch.s: tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch108_mps_native_svd_dispatch.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.s
+.PHONY : tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp.s
+
 tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.o: tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.cpp.o
 .PHONY : tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.o
 
@@ -5187,6 +5417,168 @@ tests/CodeM/test_patch92_optima_working_set.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/tests/CodeM/test_patch92_optima_working_set.cpp.s
 .PHONY : tests/CodeM/test_patch92_optima_working_set.cpp.s
 
+tests/CodeM/test_patch93_mps_sorting_selection_stress.o: tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.o
+.PHONY : tests/CodeM/test_patch93_mps_sorting_selection_stress.o
+
+# target to build an object file
+tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.o
+.PHONY : tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.o
+
+tests/CodeM/test_patch93_mps_sorting_selection_stress.i: tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.i
+.PHONY : tests/CodeM/test_patch93_mps_sorting_selection_stress.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.i
+.PHONY : tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.i
+
+tests/CodeM/test_patch93_mps_sorting_selection_stress.s: tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.s
+.PHONY : tests/CodeM/test_patch93_mps_sorting_selection_stress.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.s
+.PHONY : tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp.s
+
+tests/CodeM/test_patch94_mps_take_put_stress.o: tests/CodeM/test_patch94_mps_take_put_stress.cpp.o
+.PHONY : tests/CodeM/test_patch94_mps_take_put_stress.o
+
+# target to build an object file
+tests/CodeM/test_patch94_mps_take_put_stress.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch94_mps_take_put_stress.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch94_mps_take_put_stress.cpp.o
+.PHONY : tests/CodeM/test_patch94_mps_take_put_stress.cpp.o
+
+tests/CodeM/test_patch94_mps_take_put_stress.i: tests/CodeM/test_patch94_mps_take_put_stress.cpp.i
+.PHONY : tests/CodeM/test_patch94_mps_take_put_stress.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch94_mps_take_put_stress.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch94_mps_take_put_stress.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch94_mps_take_put_stress.cpp.i
+.PHONY : tests/CodeM/test_patch94_mps_take_put_stress.cpp.i
+
+tests/CodeM/test_patch94_mps_take_put_stress.s: tests/CodeM/test_patch94_mps_take_put_stress.cpp.s
+.PHONY : tests/CodeM/test_patch94_mps_take_put_stress.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch94_mps_take_put_stress.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch94_mps_take_put_stress.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch94_mps_take_put_stress.cpp.s
+.PHONY : tests/CodeM/test_patch94_mps_take_put_stress.cpp.s
+
+tests/CodeM/test_patch95_mps_nonzero_stress.o: tests/CodeM/test_patch95_mps_nonzero_stress.cpp.o
+.PHONY : tests/CodeM/test_patch95_mps_nonzero_stress.o
+
+# target to build an object file
+tests/CodeM/test_patch95_mps_nonzero_stress.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch95_mps_nonzero_stress.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch95_mps_nonzero_stress.cpp.o
+.PHONY : tests/CodeM/test_patch95_mps_nonzero_stress.cpp.o
+
+tests/CodeM/test_patch95_mps_nonzero_stress.i: tests/CodeM/test_patch95_mps_nonzero_stress.cpp.i
+.PHONY : tests/CodeM/test_patch95_mps_nonzero_stress.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch95_mps_nonzero_stress.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch95_mps_nonzero_stress.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch95_mps_nonzero_stress.cpp.i
+.PHONY : tests/CodeM/test_patch95_mps_nonzero_stress.cpp.i
+
+tests/CodeM/test_patch95_mps_nonzero_stress.s: tests/CodeM/test_patch95_mps_nonzero_stress.cpp.s
+.PHONY : tests/CodeM/test_patch95_mps_nonzero_stress.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch95_mps_nonzero_stress.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch95_mps_nonzero_stress.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch95_mps_nonzero_stress.cpp.s
+.PHONY : tests/CodeM/test_patch95_mps_nonzero_stress.cpp.s
+
+tests/CodeM/test_patch97_linalg_backend_info.o: tests/CodeM/test_patch97_linalg_backend_info.cpp.o
+.PHONY : tests/CodeM/test_patch97_linalg_backend_info.o
+
+# target to build an object file
+tests/CodeM/test_patch97_linalg_backend_info.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.o
+.PHONY : tests/CodeM/test_patch97_linalg_backend_info.cpp.o
+
+tests/CodeM/test_patch97_linalg_backend_info.i: tests/CodeM/test_patch97_linalg_backend_info.cpp.i
+.PHONY : tests/CodeM/test_patch97_linalg_backend_info.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch97_linalg_backend_info.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.i
+.PHONY : tests/CodeM/test_patch97_linalg_backend_info.cpp.i
+
+tests/CodeM/test_patch97_linalg_backend_info.s: tests/CodeM/test_patch97_linalg_backend_info.cpp.s
+.PHONY : tests/CodeM/test_patch97_linalg_backend_info.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch97_linalg_backend_info.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.s
+.PHONY : tests/CodeM/test_patch97_linalg_backend_info.cpp.s
+
+tests/CodeM/test_patch98_mps_linalg_bridge_stress.o: tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.o
+.PHONY : tests/CodeM/test_patch98_mps_linalg_bridge_stress.o
+
+# target to build an object file
+tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.o
+.PHONY : tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.o
+
+tests/CodeM/test_patch98_mps_linalg_bridge_stress.i: tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.i
+.PHONY : tests/CodeM/test_patch98_mps_linalg_bridge_stress.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.i
+.PHONY : tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.i
+
+tests/CodeM/test_patch98_mps_linalg_bridge_stress.s: tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.s
+.PHONY : tests/CodeM/test_patch98_mps_linalg_bridge_stress.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.s
+.PHONY : tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.s
+
+tests/CodeM/test_patch99_linalg_bridge_counters.o: tests/CodeM/test_patch99_linalg_bridge_counters.cpp.o
+.PHONY : tests/CodeM/test_patch99_linalg_bridge_counters.o
+
+# target to build an object file
+tests/CodeM/test_patch99_linalg_bridge_counters.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch99_linalg_bridge_counters.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch99_linalg_bridge_counters.cpp.o
+.PHONY : tests/CodeM/test_patch99_linalg_bridge_counters.cpp.o
+
+tests/CodeM/test_patch99_linalg_bridge_counters.i: tests/CodeM/test_patch99_linalg_bridge_counters.cpp.i
+.PHONY : tests/CodeM/test_patch99_linalg_bridge_counters.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch99_linalg_bridge_counters.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch99_linalg_bridge_counters.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch99_linalg_bridge_counters.cpp.i
+.PHONY : tests/CodeM/test_patch99_linalg_bridge_counters.cpp.i
+
+tests/CodeM/test_patch99_linalg_bridge_counters.s: tests/CodeM/test_patch99_linalg_bridge_counters.cpp.s
+.PHONY : tests/CodeM/test_patch99_linalg_bridge_counters.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch99_linalg_bridge_counters.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch99_linalg_bridge_counters.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch99_linalg_bridge_counters.cpp.s
+.PHONY : tests/CodeM/test_patch99_linalg_bridge_counters.cpp.s
+
 tests/CodeM/test_promotion_scatter_add.o: tests/CodeM/test_promotion_scatter_add.cpp.o
 .PHONY : tests/CodeM/test_promotion_scatter_add.o
 
@@ -5622,6 +6014,7 @@ help:
 	@echo "... plussqit_codem_data_reader_parity_demo"
 	@echo "... plussqit_codem_linear_alg_demo"
 	@echo "... plussqit_codem_mps_bulk_bench_demo"
+	@echo "... plussqit_codem_mps_selection_tests"
 	@echo "... plussqit_codem_mps_vs_cpu_demo"
 	@echo "... plussqit_codem_optim_tests"
 	@echo "... plussqit_codem_series_methods_demo"
@@ -5952,6 +6345,30 @@ help:
 	@echo "... tests/CodeM/test_patch09_fp16_bf16.o"
 	@echo "... tests/CodeM/test_patch09_fp16_bf16.i"
 	@echo "... tests/CodeM/test_patch09_fp16_bf16.s"
+	@echo "... tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.o"
+	@echo "... tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.i"
+	@echo "... tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.s"
+	@echo "... tests/CodeM/test_patch101_mps_linalg_solver_residuals.o"
+	@echo "... tests/CodeM/test_patch101_mps_linalg_solver_residuals.i"
+	@echo "... tests/CodeM/test_patch101_mps_linalg_solver_residuals.s"
+	@echo "... tests/CodeM/test_patch102_mps_native_solver_dispatch.o"
+	@echo "... tests/CodeM/test_patch102_mps_native_solver_dispatch.i"
+	@echo "... tests/CodeM/test_patch102_mps_native_solver_dispatch.s"
+	@echo "... tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.o"
+	@echo "... tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.i"
+	@echo "... tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.s"
+	@echo "... tests/CodeM/test_patch105_mps_native_det_dispatch.o"
+	@echo "... tests/CodeM/test_patch105_mps_native_det_dispatch.i"
+	@echo "... tests/CodeM/test_patch105_mps_native_det_dispatch.s"
+	@echo "... tests/CodeM/test_patch106_mps_native_pinverse_dispatch.o"
+	@echo "... tests/CodeM/test_patch106_mps_native_pinverse_dispatch.i"
+	@echo "... tests/CodeM/test_patch106_mps_native_pinverse_dispatch.s"
+	@echo "... tests/CodeM/test_patch107_mps_native_qr_dispatch.o"
+	@echo "... tests/CodeM/test_patch107_mps_native_qr_dispatch.i"
+	@echo "... tests/CodeM/test_patch107_mps_native_qr_dispatch.s"
+	@echo "... tests/CodeM/test_patch108_mps_native_svd_dispatch.o"
+	@echo "... tests/CodeM/test_patch108_mps_native_svd_dispatch.i"
+	@echo "... tests/CodeM/test_patch108_mps_native_svd_dispatch.s"
 	@echo "... tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.o"
 	@echo "... tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.i"
 	@echo "... tests/CodeM/test_patch10_arithmetic_and_scalar_reductions.s"
@@ -6201,6 +6618,24 @@ help:
 	@echo "... tests/CodeM/test_patch92_optima_working_set.o"
 	@echo "... tests/CodeM/test_patch92_optima_working_set.i"
 	@echo "... tests/CodeM/test_patch92_optima_working_set.s"
+	@echo "... tests/CodeM/test_patch93_mps_sorting_selection_stress.o"
+	@echo "... tests/CodeM/test_patch93_mps_sorting_selection_stress.i"
+	@echo "... tests/CodeM/test_patch93_mps_sorting_selection_stress.s"
+	@echo "... tests/CodeM/test_patch94_mps_take_put_stress.o"
+	@echo "... tests/CodeM/test_patch94_mps_take_put_stress.i"
+	@echo "... tests/CodeM/test_patch94_mps_take_put_stress.s"
+	@echo "... tests/CodeM/test_patch95_mps_nonzero_stress.o"
+	@echo "... tests/CodeM/test_patch95_mps_nonzero_stress.i"
+	@echo "... tests/CodeM/test_patch95_mps_nonzero_stress.s"
+	@echo "... tests/CodeM/test_patch97_linalg_backend_info.o"
+	@echo "... tests/CodeM/test_patch97_linalg_backend_info.i"
+	@echo "... tests/CodeM/test_patch97_linalg_backend_info.s"
+	@echo "... tests/CodeM/test_patch98_mps_linalg_bridge_stress.o"
+	@echo "... tests/CodeM/test_patch98_mps_linalg_bridge_stress.i"
+	@echo "... tests/CodeM/test_patch98_mps_linalg_bridge_stress.s"
+	@echo "... tests/CodeM/test_patch99_linalg_bridge_counters.o"
+	@echo "... tests/CodeM/test_patch99_linalg_bridge_counters.i"
+	@echo "... tests/CodeM/test_patch99_linalg_bridge_counters.s"
 	@echo "... tests/CodeM/test_promotion_scatter_add.o"
 	@echo "... tests/CodeM/test_promotion_scatter_add.i"
 	@echo "... tests/CodeM/test_promotion_scatter_add.s"

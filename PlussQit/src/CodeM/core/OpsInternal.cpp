@@ -2709,7 +2709,39 @@ Series histc(const Series& a, std::int64_t bins, double min, double max) {
 
 Series nonzero(const Series& a) {
   if (a.platform() == Platform::MPS) {
-    // Correctness-first route for MPS until dedicated nonzero kernel lands.
+    constexpr std::int64_t kMaxExactF32Int = (1LL << 24);
+    if (a.dim() == 0) {
+      const Series m = a.ne(0.0);
+      const auto mh = m.to_host<bool>();
+      const bool nz = (!mh.data.empty() && mh.data[0]);
+      return Series::empty(nz ? std::vector<std::int64_t>{1, 0} : std::vector<std::int64_t>{0, 0},
+                           ScalarType::Int64,
+                           Platform::MPS);
+    }
+    if (a.dim() == 1 && a.numel() <= kMaxExactF32Int) {
+      const Series mask_f = a.ne(0.0).to(ScalarType::Float32).contiguous();
+      const Series count_s = sum(mask_f);
+      const auto count_h = count_s.to_host<float>();
+      PLUSS_CHECK(!count_h.data.empty(), "nonzero: internal scalar extraction failure");
+      const auto count = static_cast<std::int64_t>(std::llround(static_cast<double>(count_h.data[0])));
+      if (count == 0) {
+        return Series::empty({0, 1}, ScalarType::Int64, Platform::MPS);
+      }
+
+      const auto n = a.numel();
+      const Series prefix = mask_f.cumsum(0, false);
+      const Series pos_raw_f = sub(prefix, scalar_like_(prefix, 1.0));
+      const Series pos_safe_f = where(mask_f.to(ScalarType::Bool), pos_raw_f, scalar_like_(prefix, 0.0));
+      const Series pos_i64 = pos_safe_f.to(ScalarType::Int64).contiguous();
+      const Series idx_all_f =
+          Series::arange(0, static_cast<double>(n), 1.0, ScalarType::Int64).to(Platform::MPS).to(ScalarType::Float32);
+      const Series src = mul(idx_all_f, mask_f).contiguous();
+      Series out_f = Series::zeros({count}, ScalarType::Float32).to(Platform::MPS);
+      out_f = scatter_add(out_f, 0, pos_i64, src);
+      const std::array<std::int64_t, 2> out_shape{{count, 1}};
+      return out_f.to(ScalarType::Int64).reshape(std::span<const std::int64_t>(out_shape.data(), out_shape.size()));
+    }
+    // Correctness-first route for unsupported MPS cases until dedicated kernel lands.
     const Series cpu = a.to(Platform::CPU);
     return nonzero(cpu).to(Platform::MPS);
   }
@@ -3930,7 +3962,13 @@ Series Series::index(const std::vector<Series>& indices) const {
 Series Series::take(const Series& index) const {
   require_same_platform(*this, index, "take");
   if (platform() == Platform::MPS) {
-    // Correctness-first route for MPS until dedicated take kernel lands.
+    if (index.scalar_type() == ScalarType::Int64 && index.dim() == 1 &&
+        native::mps::supports_gather(this->scalar_type(), index.scalar_type())) {
+      const Series flat = this->contiguous().flatten(0, -1);
+      const Series idx = index.contiguous();
+      return ops_internal::gather(flat, 0, idx);
+    }
+    // Correctness-first fallback for unsupported dtype/index combinations.
     const Series cpu_self = this->to(Platform::CPU);
     const Series cpu_idx = index.to(Platform::CPU);
     return pluss::codem::native::cpu::take(cpu_self, cpu_idx).to(Platform::MPS);
@@ -3943,7 +3981,30 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
   require_same_platform(*this, index, "put_");
   require_same_platform(*this, source, "put_");
   if (platform() == Platform::MPS) {
-    // Correctness-first route for MPS until dedicated put_ kernel lands.
+    if (scalar_type() == ScalarType::Float32 && index.scalar_type() == ScalarType::Int64 && index.dim() == 1 &&
+        source.scalar_type() == scalar_type() &&
+        native::mps::supports_scatter(scalar_type(), index.scalar_type(), source.scalar_type()) &&
+        native::mps::supports_scatter_reduce(scalar_type(), index.scalar_type(), source.scalar_type())) {
+      const auto n = index.numel();
+      PLUSS_CHECK(source.numel() == 1 || source.numel() == n, "put: src must be scalar or same numel as index");
+
+      const Series idx = index.contiguous();
+      const std::array<std::int64_t, 1> flat_n{{n}};
+      Series src_flat = (source.numel() == 1)
+                          ? source.expand(std::span<const std::int64_t>(flat_n.data(), flat_n.size()), true).contiguous()
+                          : source.reshape(std::span<const std::int64_t>(flat_n.data(), flat_n.size())).contiguous();
+
+      Series out_flat = this->contiguous().flatten(0, -1);
+      if (!accumulate) {
+        ops_internal::scatter_(out_flat, 0, idx, src_flat);
+      } else {
+        ops_internal::scatter_add_(out_flat, 0, idx, src_flat);
+      }
+      std::vector<std::int64_t> out_sizes(this->sizes().begin(), this->sizes().end());
+      copy_(out_flat.reshape(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size())));
+      return finish_direct_inplace_value_op_(*this);
+    }
+    // Correctness-first fallback for unsupported dtype/index combinations.
     const Series cpu_self = this->to(Platform::CPU);
     const Series cpu_idx = index.to(Platform::CPU);
     const Series cpu_src = source.to(Platform::CPU);

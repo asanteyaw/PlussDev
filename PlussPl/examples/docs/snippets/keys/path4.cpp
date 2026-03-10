@@ -1,0 +1,15 @@
+    Studio fig("path4", Theme::paper());
+    auto& pane = fig.pane3("path4");
+    const auto t = linspace(0.0, 2.0 * kPi, 480, ScalarType::Float64);
+    const auto hx = t.cos();
+    const auto hy = t.sin();
+    const auto hz = t.mul(2.0).cos().mul(0.72);
+    const auto hw = t.mul(3.0).sin().mul(0.58);
+    HyperPlotOptions opts;
+    opts.projection = HyperProjection::PerspectiveW;
+    opts.rot_xw_deg = 30.0;
+    opts.rot_yz_deg = 15.0;
+    opts.rot_zw_deg = 22.0;
+    opts.w_perspective_distance = 3.4;
+    path4(pane, hx, hy, hz, hw, opts).label("path4");
+    save(fig);

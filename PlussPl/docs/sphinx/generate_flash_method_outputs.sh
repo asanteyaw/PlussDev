@@ -28,6 +28,12 @@ keys=(
   resid_histplot residplot ridge3 rugplot scatter3D scatterplot scene3d set_context set_style
   set_theme_pane set_theme_studio sheet spire3 stepplot stripplot summaryplot swarmplot
   tight_layout trace3d triplot violinplot whiskplot jointgrid jointgrid_map_plot
+  axes_style blend_palette camera3d camera_preset3d catplot_kind crayon_palette
+  cubehelix_palette dark_palette disgrid_kind diverging_palette flash_palette
+  flash_palette_kind flash_save_png flash_set flash_show flash_theme
+  get_dataset_names hls_palette husl_palette light_palette lighting3d
+  make_dataset move_legend mpl_palette relgrid_kind scene_preset3d
+  theme_preset3d tickless trace_preset3d xkcd_palette
 )
 
 mkdir -p "${OUT_DIR}"

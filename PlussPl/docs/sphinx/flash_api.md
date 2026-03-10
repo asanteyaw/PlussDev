@@ -25,10 +25,8 @@ Autocorrelation bars across lags; useful for seasonality and persistence checks.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/acfplot.cpp
 :language: cpp
-:start-at: if (key == "acfplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -55,10 +53,8 @@ Convenience autocorrelation wrapper with a compact options surface.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/actplot.cpp
 :language: cpp
-:start-at: if (key == "actplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -85,10 +81,8 @@ Maps each row to a smooth periodic curve for multivariate separation analysis.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/andrews_curves.cpp
 :language: cpp
-:start-at: if (key == "andrews_curves") {
-:end-at: return true;
 ```
 
 #### Output
@@ -115,10 +109,8 @@ Fills the area between the signal and a baseline.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/areaplot.cpp
 :language: cpp
-:start-at: if (key == "areaplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -145,10 +137,8 @@ Trace& bar3d(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike);
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/bar3d.cpp
 :language: cpp
-:start-at: if (key == "bar3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -175,10 +165,8 @@ Categorical or numeric bars, with optional horizontal orientation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/barplot.cpp
 :language: cpp
-:start-at: if (key == "barplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -205,10 +193,8 @@ Resampling-based distribution of a summary statistic (mean/median/std).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/bootstrapplot.cpp
 :language: cpp
-:start-at: if (key == "bootstrapplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -235,10 +221,8 @@ Letter-value style alias currently routed through boxplot behavior.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/boxenplot.cpp
 :language: cpp
-:start-at: if (key == "boxenplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -265,10 +249,8 @@ Quartile/whisker summary for distribution comparison.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/boxplot.cpp
 :language: cpp
-:start-at: if (key == "boxplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -295,10 +277,8 @@ Facet grid for repeated categorical comparisons across slices.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/catgridplot.cpp
 :language: cpp
-:start-at: if (key == "catgridplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -325,10 +305,8 @@ Unified categorical interface (`strip`, `swarm`, `box`, `violin`, `bar`, `count`
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/catplot.cpp
 :language: cpp
-:start-at: if (key == "catplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -355,10 +333,8 @@ Cross-correlation against positive/negative lags for two signals.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/ccfplot.cpp
 :language: cpp
-:start-at: if (key == "ccfplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -385,10 +361,8 @@ Trace& cloud3(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike[, size, co
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/cloud3.cpp
 :language: cpp
-:start-at: if (key == "cloud3") {
-:end-at: return true;
 ```
 
 #### Output
@@ -415,10 +389,8 @@ Studio, x: SeriesLike, y: SeriesLike, z: SeriesLike, w: SeriesLike, options: Hyp
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/cloud4.cpp
 :language: cpp
-:start-at: if (key == "cloud4") {
-:end-at: return true;
 ```
 
 #### Output
@@ -445,10 +417,8 @@ Cluster-aware heatmap that reorders rows/columns by similarity.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/clustermap.cpp
 :language: cpp
-:start-at: if (key == "clustermap") {
-:end-at: return true;
 ```
 
 #### Output
@@ -475,10 +445,8 @@ Trace& contour3D(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike, level_
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/contour3D.cpp
 :language: cpp
-:start-at: if (key == "contour3D") {
-:end-at: return true;
 ```
 
 #### Output
@@ -505,10 +473,8 @@ Frequency chart for numeric bins or category counts.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/countplot.cpp
 :language: cpp
-:start-at: if (key == "countplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -535,10 +501,8 @@ Facet grid for distribution views (`hist`, `density`, `ecdf`, `rug`).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/disgridplot.cpp
 :language: cpp
-:start-at: if (key == "disgridplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -565,10 +529,8 @@ Distribution shortcut alias for histogram.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/displot.cpp
 :language: cpp
-:start-at: if (key == "displot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -595,10 +557,8 @@ Empirical cumulative distribution function.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/ecdfplot.cpp
 :language: cpp
-:start-at: if (key == "ecdfplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -625,10 +585,8 @@ Trace& heatmap(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike[, color_o
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/heatmap.cpp
 :language: cpp
-:start-at: if (key == "heatmap") {
-:end-at: return true;
 ```
 
 #### Output
@@ -655,10 +613,8 @@ Studio, x: SeriesLike, y: SeriesLike, options: Hist3DOptions = {});
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/hist3d.cpp
 :language: cpp
-:start-at: if (key == "hist3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -685,10 +641,8 @@ Univariate histogram.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/histplot.cpp
 :language: cpp
-:start-at: if (key == "histplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -715,10 +669,8 @@ Isosurface-style shell extraction from volumetric grids.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/isoshell.cpp
 :language: cpp
-:start-at: if (key == "isoshell") {
-:end-at: return true;
 ```
 
 #### Output
@@ -745,10 +697,8 @@ Joint + marginals composition for bivariate diagnostics.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/jointplot.cpp
 :language: cpp
-:start-at: if (key == "jointplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -775,10 +725,8 @@ Kernel density estimate rendered as a smooth curve.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/kdeplot.cpp
 :language: cpp
-:start-at: if (key == "kdeplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -805,10 +753,8 @@ Scatter of `x_t` vs `x_{t-lag}` for serial dependence.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/lagplot.cpp
 :language: cpp
-:start-at: if (key == "lagplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -835,10 +781,8 @@ Studio, x: SeriesLike, y: SeriesLike, z: SeriesLike[, color]);
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/lattice.cpp
 :language: cpp
-:start-at: if (key == "lattice") {
-:end-at: return true;
 ```
 
 #### Output
@@ -865,10 +809,8 @@ Line chart with optional grouped hue handling.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/lineplot.cpp
 :language: cpp
-:start-at: if (key == "lineplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -895,10 +837,8 @@ Regression convenience wrapper that allocates its own pane.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/lmplot.cpp
 :language: cpp
-:start-at: if (key == "lmplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -925,10 +865,8 @@ Partial autocorrelation for AR order identification.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/pacfplot.cpp
 :language: cpp
-:start-at: if (key == "pacfplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -955,10 +893,8 @@ Pairwise matrix of feature relationships.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/pairplot.cpp
 :language: cpp
-:start-at: if (key == "pairplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -985,10 +921,8 @@ Parallel coordinates for high-dimensional row comparisons.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/parallelplot.cpp
 :language: cpp
-:start-at: if (key == "parallelplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1015,10 +949,8 @@ Studio, x: SeriesLike, y: SeriesLike, z: SeriesLike);
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/path3.cpp
 :language: cpp
-:start-at: if (key == "path3") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1045,10 +977,8 @@ Studio, x: SeriesLike, y: SeriesLike, z: SeriesLike, w: SeriesLike, options: Hyp
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/path4.cpp
 :language: cpp
-:start-at: if (key == "path4") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1075,10 +1005,8 @@ Pie wedges from part-to-whole values.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/pieplot.cpp
 :language: cpp
-:start-at: if (key == "pieplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1105,10 +1033,8 @@ Matplotlib-style alias for 3D path plotting.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/plot3D.cpp
 :language: cpp
-:start-at: if (key == "plot3D") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1135,10 +1061,8 @@ Matplotlib-style alias for surface plotting (`sheet`).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/plot_surface.cpp
 :language: cpp
-:start-at: if (key == "plot_surface") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1165,10 +1089,8 @@ Matplotlib-style alias for wireframe plotting (`lattice`).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/plot_wireframe.cpp
 :language: cpp
-:start-at: if (key == "plot_wireframe") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1195,10 +1117,8 @@ Mean/point trend with error whiskers.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/pointplot.cpp
 :language: cpp
-:start-at: if (key == "pointplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1225,10 +1145,8 @@ Studio, values: SeriesLike, options: QqPlotOptions = {});
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/qqplot.cpp
 :language: cpp
-:start-at: if (key == "qqplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1255,10 +1173,8 @@ Projects features to anchors on a circle for class separation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/radviz.cpp
 :language: cpp
-:start-at: if (key == "radviz") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1285,10 +1201,8 @@ Scatter + fitted regression (optionally CI bands).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/regplot.cpp
 :language: cpp
-:start-at: if (key == "regplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1315,10 +1229,8 @@ Facet grid for relational plots (scatter/line/reg).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/relgridplot.cpp
 :language: cpp
-:start-at: if (key == "relgridplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1345,10 +1257,8 @@ Studio, x: SeriesLike, y: SeriesLike[, hue], kind = "scatter");
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/relplot.cpp
 :language: cpp
-:start-at: if (key == "relplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1375,10 +1285,8 @@ Fits regression, then runs ACF on residuals.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/resid_acfplot.cpp
 :language: cpp
-:start-at: if (key == "resid_acfplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1405,10 +1313,8 @@ Studio, x: SeriesLike, y: SeriesLike, options: ResidHistPlotOptions = {});
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/resid_histplot.cpp
 :language: cpp
-:start-at: if (key == "resid_histplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1435,10 +1341,8 @@ Residual scatter against predictor axis.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/residplot.cpp
 :language: cpp
-:start-at: if (key == "residplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1465,10 +1369,8 @@ Trace& ridge3(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike, level_cou
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/ridge3.cpp
 :language: cpp
-:start-at: if (key == "ridge3") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1495,10 +1397,8 @@ Matplotlib-style alias for `cloud3`.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/scatter3D.cpp
 :language: cpp
-:start-at: if (key == "scatter3D") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1525,10 +1425,8 @@ Trace& scatterplot(self: Pane, x: SeriesLike, y: SeriesLike[, hue]);
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/scatterplot.cpp
 :language: cpp
-:start-at: if (key == "scatterplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1555,10 +1453,8 @@ Applies camera, lighting, theme, and preset orchestration for 3D panes.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/scene3d.cpp
 :language: cpp
-:start-at: if (key == "scene3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1585,10 +1481,8 @@ Studio, x: SeriesLike, y: SeriesLike, z: SeriesLike[, color]);
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/sheet.cpp
 :language: cpp
-:start-at: if (key == "sheet") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1615,10 +1509,8 @@ Trace& spire3(self: Pane, z_or_xyz[, color]);
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/spire3.cpp
 :language: cpp
-:start-at: if (key == "spire3") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1645,10 +1537,8 @@ Converts line input into right-step segments.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/stepplot.cpp
 :language: cpp
-:start-at: if (key == "stepplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1675,10 +1565,8 @@ Raw points per category with minimal aggregation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/stripplot.cpp
 :language: cpp
-:start-at: if (key == "stripplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1705,10 +1593,8 @@ Statistical summary tables rendered into a figure layout.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/summaryplot.cpp
 :language: cpp
-:start-at: if (key == "summaryplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1735,10 +1621,8 @@ Alias of stripplot for dense categorical point clouds.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/swarmplot.cpp
 :language: cpp
-:start-at: if (key == "swarmplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1765,10 +1649,8 @@ Enumerates 3-feature combinations into small-multiple 3D panels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/triplot.cpp
 :language: cpp
-:start-at: if (key == "triplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1795,10 +1677,8 @@ Density-shape distribution view, optionally grouped.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/violinplot.cpp
 :language: cpp
-:start-at: if (key == "violinplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1825,10 +1705,8 @@ Error-whisker plotting with symmetric or explicit bounds.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/whiskplot.cpp
 :language: cpp
-:start-at: if (key == "whiskplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1855,10 +1733,8 @@ Draws small tick marks along an axis to visualize sample concentration.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/rugplot.cpp
 :language: cpp
-:start-at: if (key == "rugplot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1885,10 +1761,8 @@ Allocates a faceted 2D grid layout. You then populate panes manually.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/facetgrid.cpp
 :language: cpp
-:start-at: if (key == "facetgrid") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1915,10 +1789,8 @@ Creates an NxN grid intended for pairwise matrix views.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/pairgrid.cpp
 :language: cpp
-:start-at: if (key == "pairgrid") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1945,10 +1817,8 @@ Creates the standard joint-layout scaffold (joint pane + top/right marginals).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/jointgrid.cpp
 :language: cpp
-:start-at: if (key == "jointgrid") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1975,10 +1845,8 @@ Runs a user mapper callback over each facet cell for custom per-pane drawing.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/facet_map_plot.cpp
 :language: cpp
-:start-at: if (key == "facet_map_plot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2005,10 +1873,8 @@ Runs a callback over all pair-grid cells and flags diagonal cells for specialize
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/pairgrid_map_plot.cpp
 :language: cpp
-:start-at: if (key == "pairgrid_map_plot") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2035,10 +1901,8 @@ Runs separate callbacks for the central joint pane and marginal panes in a joint
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/jointgrid_map_plot.cpp
 :language: cpp
-:start-at: if (key == "jointgrid_map_plot") {
-:end-at: return true;
 ```
 
 #### Output

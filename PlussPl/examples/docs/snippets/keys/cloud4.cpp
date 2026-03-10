@@ -1,0 +1,18 @@
+    Studio fig("cloud4", Theme::paper());
+    auto& pane = fig.pane3("cloud4");
+    const auto t = linspace(0.0, 2.0 * kPi, 480, ScalarType::Float64);
+    const auto hx = t.cos();
+    const auto hy = t.sin();
+    const auto hz = t.mul(2.0).cos().mul(0.72);
+    const auto hw = t.mul(3.0).sin().mul(0.58);
+    HyperPlotOptions opts;
+    opts.projection = HyperProjection::PerspectiveW;
+    opts.rot_xy_deg = 12.0;
+    opts.rot_xw_deg = 26.0;
+    opts.rot_yw_deg = 20.0;
+    opts.rot_zw_deg = 35.0;
+    opts.w_perspective_distance = 3.8;
+    opts.w_slice = Range1d{-0.55, 0.55};
+    opts.point_size = 14.0;
+    cloud4(pane, hx, hy, hz, hw, opts).label("cloud4");
+    save(fig);

@@ -410,40 +410,89 @@ inline Series triangular_solve(const Series& b, const Series& a, bool upper = tr
     if (bb.sizes()[0] != n) throw std::runtime_error("subsp::math::linalg::triangular_solve: rhs mismatch");
     nrhs = bb.sizes()[1];
   }
+#if defined(__APPLE__)
+  int ni = static_cast<int>(n);
+  int nrhsi = static_cast<int>(nrhs);
+  auto a_col = detail::row_to_col_major_(aa.to_vec<double>(), n, n);
+  auto b_col = detail::row_to_col_major_(bb.to_vec<double>(), n, nrhs);
+  char uplo = upper ? 'U' : 'L';
+  char trans = 'N';
+  char diag = unitriangular ? 'U' : 'N';
+  int info = 0;
+  dtrtrs_(&uplo, &trans, &diag, &ni, &nrhsi, a_col.data(), &ni, b_col.data(), &ni, &info);
+  if (info != 0) throw std::runtime_error("subsp::math::linalg::triangular_solve: LAPACK dtrtrs failed");
+  return detail::matrix_from_row_major_(detail::col_to_row_major_(b_col, n, nrhs), n, nrhs);
+#else
   const auto xr = detail::triangular_solve_(bb.to_vec<double>(), aa.to_vec<double>(), n, nrhs, upper, unitriangular);
   return detail::matrix_from_row_major_(xr, n, nrhs);
+#endif
 }
 
 inline Series cholesky_solve(const Series& b, const Series& factor, bool upper = false) {
   detail::require_square_(factor, "subsp::math::linalg::cholesky_solve");
   auto l = factor.to(pluss::pCPU, ScalarType::Float64).contiguous();
-  if (upper) l = l.transpose(0, 1).contiguous();
   auto rhs = b.to(pluss::pCPU, ScalarType::Float64).contiguous();
   const auto n = l.sizes()[0];
   if (rhs.dim() != 2 || rhs.sizes()[0] != n) {
     throw std::runtime_error("subsp::math::linalg::cholesky_solve: rhs must be 2D with matching first dim");
   }
   const auto nrhs = rhs.sizes()[1];
+#if defined(__APPLE__)
+  int ni = static_cast<int>(n);
+  int nrhsi = static_cast<int>(nrhs);
+  auto l_col = detail::row_to_col_major_(l.to_vec<double>(), n, n);
+  auto rhs_col = detail::row_to_col_major_(rhs.to_vec<double>(), n, nrhs);
+  char uplo = upper ? 'U' : 'L';
+  int info = 0;
+  dpotrs_(&uplo, &ni, &nrhsi, l_col.data(), &ni, rhs_col.data(), &ni, &info);
+  if (info != 0) throw std::runtime_error("subsp::math::linalg::cholesky_solve: LAPACK dpotrs failed");
+  return detail::matrix_from_row_major_(detail::col_to_row_major_(rhs_col, n, nrhs), n, nrhs);
+#else
+  if (upper) l = l.transpose(0, 1).contiguous();
   const auto lrow = l.to_vec<double>();
   auto y = detail::triangular_solve_(rhs.to_vec<double>(), lrow, n, nrhs, /*upper=*/false, /*unitriangular=*/false);
   auto x = detail::triangular_solve_(y, lrow, n, nrhs, /*upper=*/true, /*unitriangular=*/false);
   return detail::matrix_from_row_major_(x, n, nrhs);
+#endif
 }
 
 inline Series cholesky_inverse(const Series& factor, bool upper = false) {
   detail::require_square_(factor, "subsp::math::linalg::cholesky_inverse");
   auto l = factor.to(pluss::pCPU, ScalarType::Float64).contiguous();
-  if (upper) l = l.transpose(0, 1).contiguous();
   const auto n = l.sizes()[0];
+#if defined(__APPLE__)
+  int ni = static_cast<int>(n);
+  auto l_col = detail::row_to_col_major_(l.to_vec<double>(), n, n);
+  char uplo = upper ? 'U' : 'L';
+  int info = 0;
+  dpotri_(&uplo, &ni, l_col.data(), &ni, &info);
+  if (info != 0) throw std::runtime_error("subsp::math::linalg::cholesky_inverse: LAPACK dpotri failed");
+  for (std::int64_t c = 0; c < n; ++c) {
+    for (std::int64_t r = 0; r < n; ++r) {
+      if (upper) {
+        if (r > c) {
+          l_col[static_cast<std::size_t>(c * n + r)] =
+              l_col[static_cast<std::size_t>(r * n + c)];
+        }
+      } else if (r < c) {
+        l_col[static_cast<std::size_t>(c * n + r)] =
+            l_col[static_cast<std::size_t>(r * n + c)];
+      }
+    }
+  }
+  return detail::matrix_from_row_major_(detail::col_to_row_major_(l_col, n, n), n, n);
+#else
+  if (upper) l = l.transpose(0, 1).contiguous();
   const auto lr = l.to_vec<double>();
   auto a = detail::matmul_(lr, n, n, detail::transpose_(lr, n, n), n);
   return detail::matrix_from_row_major_(detail::inverse_gauss_(a, n), n, n);
+#endif
 }
 
 inline Series lu_solve(const Series& b, const Series& lu) {
   detail::require_square_(lu, "subsp::math::linalg::lu_solve");
-  auto inv = inverse(lu);
-  auto invr = inv.to_vec<double>();
+  auto a = lu.to(pluss::pCPU, ScalarType::Float64).contiguous();
+  const auto n = a.sizes()[0];
   auto rhs = b.to(pluss::pCPU, ScalarType::Float64).contiguous();
   if (rhs.dim() == 1) {
     const std::vector<std::int64_t> shape{lu.sizes()[0], 1};
@@ -451,9 +500,25 @@ inline Series lu_solve(const Series& b, const Series& lu) {
   }
   detail::require_2d_(rhs, "subsp::math::linalg::lu_solve");
   if (rhs.sizes()[0] != lu.sizes()[0]) throw std::runtime_error("subsp::math::linalg::lu_solve: rhs mismatch");
+#if defined(__APPLE__)
+  const auto nrhs = rhs.sizes()[1];
+  int ni = static_cast<int>(n);
+  int nrhsi = static_cast<int>(nrhs);
+  auto a_col = detail::row_to_col_major_(a.to_vec<double>(), n, n);
+  auto b_col = detail::row_to_col_major_(rhs.to_vec<double>(), n, nrhs);
+  std::vector<int> ipiv(static_cast<std::size_t>(n), 0);
+  int info = 0;
+  dgesv_(&ni, &nrhsi, a_col.data(), &ni, ipiv.data(), b_col.data(), &ni, &info);
+  if (info < 0) throw std::runtime_error("subsp::math::linalg::lu_solve: invalid LAPACK arg");
+  if (info > 0) throw std::runtime_error("subsp::math::linalg::lu_solve: singular matrix");
+  return detail::matrix_from_row_major_(detail::col_to_row_major_(b_col, n, nrhs), n, nrhs);
+#else
   const auto rr = rhs.to_vec<double>();
-  const auto out = detail::matmul_(invr, lu.sizes()[0], lu.sizes()[1], rr, rhs.sizes()[1]);
+  auto inv = inverse(lu);
+  auto invr = inv.to_vec<double>();
+  const auto out = detail::matmul_(invr, n, n, rr, rhs.sizes()[1]);
   return detail::matrix_from_row_major_(out, lu.sizes()[0], rhs.sizes()[1]);
+#endif
 }
 
 inline QRResult qr(const Series& a, bool reduced = true) {

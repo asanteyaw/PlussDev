@@ -20,10 +20,8 @@ Trace& cloud3(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike, size: Ser
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/cloud3.cpp
 :language: cpp
-:start-at: if (key == "cloud3") {
-:end-at: return true;
 ```
 
 #### Output
@@ -50,10 +48,8 @@ Projects 4D samples into 3D and renders point clouds; supports rotation and w-sl
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/cloud4.cpp
 :language: cpp
-:start-at: if (key == "cloud4") {
-:end-at: return true;
 ```
 
 #### Output
@@ -80,10 +76,8 @@ Exports a sweep of static frames (`png`/`svg`/`pdf`) for offline animation workf
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/export4_frames.cpp
 :language: cpp
-:start-at: if (key == "export4_frames") {
-:end-at: return !ec;
 ```
 
 #### Output
@@ -110,10 +104,8 @@ Connected 3D trajectory through ordered samples.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/path3.cpp
 :language: cpp
-:start-at: if (key == "path3") {
-:end-at: return true;
 ```
 
 #### Output
@@ -140,10 +132,8 @@ Projects a 4D trajectory into 3D and renders a connected path.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/path4.cpp
 :language: cpp
-:start-at: if (key == "path4") {
-:end-at: return true;
 ```
 
 #### Output
@@ -170,10 +160,8 @@ Applies coordinated 3D scene configuration: camera, lighting, grid style, and sc
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/scene3d.cpp
 :language: cpp
-:start-at: if (key == "scene3d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -201,10 +189,8 @@ Post-processes a 3D trace with shading/material/lighting presets.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/trace3d.cpp
 :language: cpp
-:start-at: if (key == "trace3d") {
-:end-at: return true;
 ```
 
 #### Output

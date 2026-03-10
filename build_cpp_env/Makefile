@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /opt/homebrew/bin/cmake
+CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
 
 # The command to remove a file.
-RM = /opt/homebrew/bin/cmake -E rm -f
+RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	/opt/homebrew/bin/cpack --config ./CPackConfig.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	/opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -1166,6 +1166,19 @@ plussqit_codem_autodiff_tests: cmake_check_build_system
 plussqit_codem_autodiff_tests/fast:
 	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_autodiff_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_autodiff_tests.dir/build
 .PHONY : plussqit_codem_autodiff_tests/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_mps_selection_tests
+
+# Build rule for target.
+plussqit_codem_mps_selection_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_mps_selection_tests
+.PHONY : plussqit_codem_mps_selection_tests
+
+# fast build rule for target.
+plussqit_codem_mps_selection_tests/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build
+.PHONY : plussqit_codem_mps_selection_tests/fast
 
 #=============================================================================
 # Target rules for targets named plussqit_codem_optim_tests
@@ -3088,6 +3101,30 @@ PlussAI/NodeK/NN/optim/adam.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/adam.cpp.s
 .PHONY : PlussAI/NodeK/NN/optim/adam.cpp.s
 
+PlussAI/NodeK/NN/optim/adamw.o: PlussAI/NodeK/NN/optim/adamw.cpp.o
+.PHONY : PlussAI/NodeK/NN/optim/adamw.o
+
+# target to build an object file
+PlussAI/NodeK/NN/optim/adamw.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/adamw.cpp.o
+.PHONY : PlussAI/NodeK/NN/optim/adamw.cpp.o
+
+PlussAI/NodeK/NN/optim/adamw.i: PlussAI/NodeK/NN/optim/adamw.cpp.i
+.PHONY : PlussAI/NodeK/NN/optim/adamw.i
+
+# target to preprocess a source file
+PlussAI/NodeK/NN/optim/adamw.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/adamw.cpp.i
+.PHONY : PlussAI/NodeK/NN/optim/adamw.cpp.i
+
+PlussAI/NodeK/NN/optim/adamw.s: PlussAI/NodeK/NN/optim/adamw.cpp.s
+.PHONY : PlussAI/NodeK/NN/optim/adamw.s
+
+# target to generate assembly for a file
+PlussAI/NodeK/NN/optim/adamw.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/adamw.cpp.s
+.PHONY : PlussAI/NodeK/NN/optim/adamw.cpp.s
+
 PlussAI/NodeK/NN/optim/minimax.o: PlussAI/NodeK/NN/optim/minimax.cpp.o
 .PHONY : PlussAI/NodeK/NN/optim/minimax.o
 
@@ -4305,6 +4342,7 @@ help:
 	@echo "... plussqit_codem_data_reader_parity_demo"
 	@echo "... plussqit_codem_linear_alg_demo"
 	@echo "... plussqit_codem_mps_bulk_bench_demo"
+	@echo "... plussqit_codem_mps_selection_tests"
 	@echo "... plussqit_codem_mps_vs_cpu_demo"
 	@echo "... plussqit_codem_optim_tests"
 	@echo "... plussqit_codem_series_methods_demo"
@@ -4367,6 +4405,9 @@ help:
 	@echo "... PlussAI/NodeK/NN/optim/adam.o"
 	@echo "... PlussAI/NodeK/NN/optim/adam.i"
 	@echo "... PlussAI/NodeK/NN/optim/adam.s"
+	@echo "... PlussAI/NodeK/NN/optim/adamw.o"
+	@echo "... PlussAI/NodeK/NN/optim/adamw.i"
+	@echo "... PlussAI/NodeK/NN/optim/adamw.s"
 	@echo "... PlussAI/NodeK/NN/optim/minimax.o"
 	@echo "... PlussAI/NodeK/NN/optim/minimax.i"
 	@echo "... PlussAI/NodeK/NN/optim/minimax.s"

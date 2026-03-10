@@ -612,6 +612,25 @@ if (PLUSSQIT_BUILD_TESTS)
     target_link_libraries(plussqit_codem_autodiff_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_autodiff_tests PRIVATE cxx_std_20)
 
+    add_executable(plussqit_codem_mps_selection_tests
+      tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp
+      tests/CodeM/test_patch94_mps_take_put_stress.cpp
+      tests/CodeM/test_patch95_mps_nonzero_stress.cpp
+      tests/CodeM/test_patch97_linalg_backend_info.cpp
+      tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp
+      tests/CodeM/test_patch99_linalg_bridge_counters.cpp
+      tests/CodeM/test_patch100_mps_qr_svd_bridge_stress.cpp
+      tests/CodeM/test_patch101_mps_linalg_solver_residuals.cpp
+      tests/CodeM/test_patch102_mps_native_solver_dispatch.cpp
+      tests/CodeM/test_patch104_mps_native_inverse_lu_dispatch.cpp
+      tests/CodeM/test_patch105_mps_native_det_dispatch.cpp
+      tests/CodeM/test_patch106_mps_native_pinverse_dispatch.cpp
+      tests/CodeM/test_patch107_mps_native_qr_dispatch.cpp
+      tests/CodeM/test_patch108_mps_native_svd_dispatch.cpp
+    )
+    target_link_libraries(plussqit_codem_mps_selection_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
+    target_compile_features(plussqit_codem_mps_selection_tests PRIVATE cxx_std_20)
+
     add_executable(plussqit_codem_optim_tests
       tests/CodeM/test_patch67_autodiff_transforms.cpp
       tests/CodeM/test_patch68_constrained_optim_phase1.cpp
@@ -661,6 +680,7 @@ if (PLUSSQIT_BUILD_TESTS)
     include(Catch)
     catch_discover_tests(plussqit_tests)
     catch_discover_tests(plussqit_codem_autodiff_tests)
+    catch_discover_tests(plussqit_codem_mps_selection_tests)
     catch_discover_tests(plussqit_codem_optim_tests)
     catch_discover_tests(plussqit_coden_tests)
     if (PLUSSQIT_BUILD_CODEH AND TARGET plussqit_codeh_tests)

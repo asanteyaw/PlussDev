@@ -29,10 +29,8 @@ Returns the palette name token (for example `ocean` or `thermal`).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/paletteramp__name.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -59,10 +57,8 @@ Returns the color stops used by interpolation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/paletteramp__stops.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -89,10 +85,8 @@ Checks whether the palette has no stops.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/paletteramp__empty.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -119,10 +113,8 @@ Samples a color at normalized position `position` in `[0, 1]`.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/paletteramp__sample.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -149,10 +141,8 @@ Builds the neutral grayscale-like palette.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/paletteramp__neutral.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -179,10 +169,8 @@ Builds the thermal warm-cool palette.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/paletteramp__thermal.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -209,10 +197,8 @@ Builds a teal/cyan-focused palette.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/paletteramp__lagoon.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -239,10 +225,8 @@ Builds the ocean palette used by several defaults.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/paletteramp__ocean.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -269,10 +253,8 @@ Builds the green-forward meadow palette.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/paletteramp__meadow.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -299,10 +281,8 @@ Returns the theme name token.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/theme__name.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -329,10 +309,8 @@ Returns the accent color sequence used for trace cycling.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/theme__accents.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -359,10 +337,8 @@ Returns the figure/pane background color.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/theme__background.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -389,10 +365,8 @@ Returns the primary text/foreground color.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/theme__foreground.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -419,10 +393,8 @@ Returns the default continuous palette for surfaces and fields.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/theme__surface_palette.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -449,10 +421,8 @@ Returns one accent color by index (cycled internally).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/theme__accent.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -479,10 +449,8 @@ Creates the built-in ocean theme preset.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/theme__ocean.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -509,10 +477,8 @@ Creates the built-in paper/light theme preset.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/theme__paper.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -539,10 +505,8 @@ Reads current azimuth camera angle in degrees.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__azimuth_deg.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -569,10 +533,8 @@ Reads current elevation camera angle in degrees.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__elevation_deg.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -599,10 +561,8 @@ Reads current field-of-view angle in degrees.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__view_angle_deg.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -629,10 +589,8 @@ Reads current projection model (perspective or orthographic).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__projection.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -659,10 +617,8 @@ Reads current camera target point.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__target.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -689,10 +645,8 @@ Reads camera up-vector.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__up_vector.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -719,10 +673,8 @@ Sets camera orientation using absolute azimuth/elevation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__look.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -749,10 +701,8 @@ Applies incremental camera rotation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__spin.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -779,10 +729,8 @@ Sets camera target point.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__target_at.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -809,10 +757,8 @@ Sets camera up-vector.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__up.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -839,10 +785,8 @@ Chooses projection mode.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__project.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -869,10 +813,8 @@ Sets field-of-view angle in degrees.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__view_angle.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -899,10 +841,8 @@ Returns a lens preset suited for planar scenes.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__planar.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -929,10 +869,8 @@ Returns a lens preset suited for volumetric/3D scenes.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lens__spatial.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -959,10 +897,8 @@ Returns configured light sources.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lightrig__lights.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -989,10 +925,8 @@ Checks whether any lights are configured.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lightrig__empty.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1019,10 +953,8 @@ Removes all configured lights.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lightrig__clear.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1049,10 +981,8 @@ Appends a custom light specification.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lightrig__add.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1079,10 +1009,8 @@ Adds a camera-facing key light preset.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lightrig__headlight.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1109,10 +1037,8 @@ Adds a right-side fill light preset.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lightrig__lamp_right.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1139,10 +1065,8 @@ Adds a left-side fill light preset.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lightrig__lamp_left.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1169,10 +1093,8 @@ Adds a top/key directional light preset.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/lightrig__sun_key.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1199,10 +1121,8 @@ Returns the studio identifier used for exported artifacts.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__name.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1229,10 +1149,8 @@ Returns the figure headline/title string.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__headline_text.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1259,10 +1177,8 @@ Returns the active theme object.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__theme_tokens.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1289,10 +1205,8 @@ Returns all panes currently attached to the figure.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__panes.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1319,10 +1233,8 @@ Returns number of panes in the figure.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__pane_count.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1349,10 +1261,8 @@ Returns figure width/height in rendering units.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__extent.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1379,10 +1289,8 @@ Returns current mosaic grid layout metadata.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__mosaic_layout.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1409,10 +1317,8 @@ Reads whether tight layout packing is enabled.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__tight_layout_enabled.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1439,10 +1345,8 @@ Reads tight-layout padding.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__tight_layout_padding.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1469,10 +1373,8 @@ Reads default tick font scale applied to panes.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__default_tick_font_scale.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1499,10 +1401,8 @@ Reads default axis-label font scale applied to panes.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__default_axis_label_font_scale.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1529,10 +1429,8 @@ Reads legend docking configuration at figure level.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__legend_dock.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1559,10 +1457,8 @@ Reads stored shared-X caption map.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__x_captions.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1589,10 +1485,8 @@ Reads stored shared-Y caption map.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__y_captions.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1619,10 +1513,8 @@ Reads stored shared-Z caption map.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__z_captions.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1649,10 +1541,8 @@ Reads row-title labels currently configured for the mosaic.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__row_titles.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1679,10 +1569,8 @@ Defines or redefines figure mosaic layout.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__mosaic.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1709,10 +1597,8 @@ Sets a per-row title in the mosaic.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__row_title.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1739,10 +1625,8 @@ Returns the index of a pane in the studio pane list.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__pane_index.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1769,10 +1653,8 @@ Returns whether pane is planar or volumetric.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__kind.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1799,10 +1681,8 @@ Returns pane title text.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__title_text.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1829,10 +1709,8 @@ Returns pane theme snapshot.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__theme_tokens.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1859,10 +1737,8 @@ Returns current X-axis state object.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_axis.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1889,10 +1765,8 @@ Returns current Y-axis state object.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_axis.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1919,10 +1793,8 @@ Returns current Z-axis state object.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_axis.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1949,10 +1821,8 @@ Returns current color-axis state object.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__color_axis.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1979,10 +1849,8 @@ Returns pane legend placement.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__legend_place.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2009,10 +1877,8 @@ Returns grid style mode.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__grid_style.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2039,10 +1905,8 @@ Returns pane camera/lens state (for 3D panes).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__lens.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2069,10 +1933,8 @@ Returns pane lighting rig state.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__lights.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2099,10 +1961,8 @@ Returns traces currently attached to pane.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__traces.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2129,10 +1989,8 @@ Returns number of traces in pane.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__trace_count.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2159,10 +2017,8 @@ Returns whether color-scale guide is enabled.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__scale_guide_enabled.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2189,10 +2045,8 @@ Returns pane caption text.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__caption_text.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2219,10 +2073,8 @@ Returns rule overlays configured on pane.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__rules.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2249,10 +2101,8 @@ Returns band overlays configured on pane.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__bands.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2279,10 +2129,8 @@ Returns annotation pins configured on pane.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__pins.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2309,10 +2157,8 @@ Returns X alignment group key.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_align_group.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2339,10 +2185,8 @@ Returns Y alignment group key.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__y_align_group.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2369,10 +2213,8 @@ Returns Z alignment group key.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__z_align_group.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2399,10 +2241,8 @@ Returns pane placement coordinates/spans in mosaic.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__placement.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2429,10 +2269,8 @@ Returns pane visibility state.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__visible.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2459,10 +2297,8 @@ Returns the low-level trace kind enum.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__kind.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2489,10 +2325,8 @@ Returns payload variant storing trace data vectors/fields.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__payload.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2519,10 +2353,8 @@ Returns legend label text currently attached to trace.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__label_text.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2549,10 +2381,8 @@ Returns current stroke width.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__stroke_width.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2579,10 +2409,8 @@ Returns current stroke color.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__stroke_color.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2609,10 +2437,8 @@ Returns palette used for scalar-mapped rendering.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__palette_ramp.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2639,10 +2465,8 @@ Returns surface shading mode.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__shade_mode.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2669,10 +2493,8 @@ Returns lighting algorithm mode.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__lighting_mode.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2699,10 +2521,8 @@ Returns active material profile.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__material_profile.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2729,10 +2549,8 @@ Returns trace visibility state.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__visible.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2759,10 +2577,8 @@ Sets legend/display label for the trace.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__label.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2789,10 +2605,8 @@ Sets trace shading mode.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__shade.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2819,10 +2633,8 @@ Hides a trace without removing it from pane state.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/trace__hide.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2849,10 +2661,8 @@ Sets the X-axis scaling policy (`linear`, `log10`, or `symlog`).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__scale_x.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2879,10 +2689,8 @@ Pins the visible X range to manual limits.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_limits.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2909,10 +2717,8 @@ Selects numeric formatting style for X tick labels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_tick_format.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2939,10 +2745,8 @@ Rotates X tick labels to improve readability for dense or long labels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_tick_rotation.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2969,10 +2773,8 @@ Sets explicit X tick locations and labels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__x_ticks.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -2999,10 +2801,8 @@ Sets pane grid style (`None`, `Major`, `MajorMinor`).
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/pane__grid.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3029,10 +2829,8 @@ Returns an in-memory SVG payload of the fully composed figure.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__to_svg.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output
@@ -3059,10 +2857,8 @@ Returns an in-memory PDF payload of the fully composed figure.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/methods/studio__to_pdf.cpp
 :language: cpp
-:start-at: if (key == "core_studio_exhaustive") {
-:end-at: return true;
 ```
 
 #### Output

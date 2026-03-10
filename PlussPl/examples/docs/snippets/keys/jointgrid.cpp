@@ -1,0 +1,13 @@
+    Studio fig("jointgrid", Theme::paper());
+    JointGrid(fig, 12.0, 12.0);
+    auto& top = fig.pane2();
+    top.place(0, 0);
+    histplot(top, x, 18).label("top");
+    auto& joint = fig.pane2();
+    joint.place(1, 0);
+    scatterplot(joint, x, y).label("joint");
+    auto& right = fig.pane2();
+    right.place(1, 1);
+    histplot(right, y, 18).label("right");
+    fig.pane2().place(0, 1).hide();
+    save(fig);

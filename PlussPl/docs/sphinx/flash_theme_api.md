@@ -18,10 +18,8 @@ Returns a named palette ramp (`ocean`, `thermal`, `lagoon`, `meadow`, `neutral`,
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/color_palette.cpp
 :language: cpp
-:start-at: if (key == "color_palette") {
-:end-at: return true;
 ```
 
 #### Output
@@ -48,10 +46,8 @@ Keeps the plotting content while removing pane-frame emphasis for cleaner minima
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/despine.cpp
 :language: cpp
-:start-at: if (key == "despine") {
-:end-at: return true;
 ```
 
 #### Output
@@ -78,10 +74,8 @@ Applies y-major grid only (with x-grid suppressed) for time-series readability.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/horizontal_grid.cpp
 :language: cpp
-:start-at: if (key == "horizontal_grid") {
-:end-at: return true;
 ```
 
 #### Output
@@ -108,10 +102,8 @@ Loads built-in dataset bundles (currently `tips`, `flights`) for quick explorato
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/load_dataset.cpp
 :language: cpp
-:start-at: if (key == "load_dataset") {
-:end-at: return true;
 ```
 
 #### Output
@@ -138,10 +130,8 @@ Alias of `set_context(...)`; applies figure extent and tick/label scaling.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/plotting_context.cpp
 :language: cpp
-:start-at: if (key == "plotting_context") {
-:end-at: return true;
 ```
 
 #### Output
@@ -169,10 +159,8 @@ Primary context entry point. Use explicit dimensions or semantic context presets
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/set_context.cpp
 :language: cpp
-:start-at: if (key == "set_context") {
-:end-at: return true;
 ```
 
 #### Output
@@ -200,10 +188,8 @@ Low-level style primitive for a single pane (`Darkgrid`, `Lightgrid`, `Sandgrid`
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/set_style.cpp
 :language: cpp
-:start-at: if (key == "set_style") {
-:end-at: return true;
 ```
 
 #### Output
@@ -231,10 +217,8 @@ Applies local theme policy to one pane, including style, context font scales, an
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/set_theme_pane.cpp
 :language: cpp
-:start-at: if (key == "set_theme_pane") {
-:end-at: return true;
 ```
 
 #### Output
@@ -262,10 +246,8 @@ Applies style defaults and context sizing across the full figure and existing pa
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/set_theme_studio.cpp
 :language: cpp
-:start-at: if (key == "set_theme_studio") {
-:end-at: return true;
 ```
 
 #### Output
@@ -292,10 +274,8 @@ Compacts pane spacing after content has been placed in a mosaic.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/tight_layout.cpp
 :language: cpp
-:start-at: if (key == "tight_layout") {
-:end-at: return true;
 ```
 
 #### Output

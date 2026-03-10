@@ -25,10 +25,8 @@ Links X and Y autoscaling across panes in the same group so comparisons stay on 
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_pane_alignment.cpp
 :language: cpp
-:start-at: if (key == "core_pane_alignment") {
-:end-at: return true;
 ```
 
 #### Output
@@ -56,10 +54,8 @@ Builds histogram bars from raw numeric values.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_bucket.cpp
 :language: cpp
-:start-at: if (key == "core_bucket") {
-:end-at: return true;
 ```
 
 #### Output
@@ -88,10 +84,8 @@ Trace& cloud(self: Pane, x: SeriesLike, y: SeriesLike, size: SeriesLike, color: 
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_cloud.cpp
 :language: cpp
-:start-at: if (key == "core_cloud") {
-:end-at: return true;
 ```
 
 #### Output
@@ -120,10 +114,8 @@ Trace& cloud3(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike, size: Ser
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_cloud3.cpp
 :language: cpp
-:start-at: if (key == "core_cloud3") {
-:end-at: return true;
 ```
 
 #### Output
@@ -151,10 +143,8 @@ Vertical bar primitive. Use note/category labels on `x` for named groups.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_columns.cpp
 :language: cpp
-:start-at: if (key == "core_columns") {
-:end-at: return true;
 ```
 
 #### Output
@@ -182,10 +172,8 @@ Horizontal bar primitive; useful for ranking displays.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_columns_h.cpp
 :language: cpp
-:start-at: if (key == "core_columns_h") {
-:end-at: return true;
 ```
 
 #### Output
@@ -214,10 +202,8 @@ Isoline surface slices in 3D space.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_contour.cpp
 :language: cpp
-:start-at: if (key == "core_contour") {
-:end-at: return true;
 ```
 
 #### Output
@@ -245,10 +231,8 @@ Heatmap-like rectilinear field for 2D scalar surfaces.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_fieldmap.cpp
 :language: cpp
-:start-at: if (key == "core_fieldmap") {
-:end-at: return true;
 ```
 
 #### Output
@@ -278,10 +262,8 @@ Controls pane-level grid and legend placement/styling.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_pane_grid_legend.cpp
 :language: cpp
-:start-at: if (key == "core_pane_grid_legend") {
-:end-at: return true;
 ```
 
 #### Output
@@ -310,10 +292,8 @@ Filled contour bands in planar coordinates.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_isoband.cpp
 :language: cpp
-:start-at: if (key == "core_isoband") {
-:end-at: return true;
 ```
 
 #### Output
@@ -342,10 +322,8 @@ Extracts 3D iso-surfaces from volumetric scalar fields.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_isoshell.cpp
 :language: cpp
-:start-at: if (key == "core_isoshell") {
-:end-at: return true;
 ```
 
 #### Output
@@ -373,10 +351,8 @@ Wireframe-style surface for gridded 3D data.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_lattice.cpp
 :language: cpp
-:start-at: if (key == "core_lattice") {
-:end-at: return true;
 ```
 
 #### Output
@@ -403,10 +379,8 @@ Trace& path3(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike);
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_path3.cpp
 :language: cpp
-:start-at: if (key == "core_path3") {
-:end-at: return true;
 ```
 
 #### Output
@@ -434,10 +408,8 @@ Box-and-whisker-style summary distribution marks, optionally grouped.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_quartet.cpp
 :language: cpp
-:start-at: if (key == "core_quartet") {
-:end-at: return true;
 ```
 
 #### Output
@@ -464,10 +436,8 @@ Polar-coordinate trace primitive.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_radial.cpp
 :language: cpp
-:start-at: if (key == "core_radial") {
-:end-at: return true;
 ```
 
 #### Output
@@ -495,10 +465,8 @@ Area-under-curve primitive with explicit baseline.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_ribbon.cpp
 :language: cpp
-:start-at: if (key == "core_ribbon") {
-:end-at: return true;
 ```
 
 #### Output
@@ -527,10 +495,8 @@ Layered 3D ridge representation of gridded scalar surfaces.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_ridge3.cpp
 :language: cpp
-:start-at: if (key == "core_ridge3") {
-:end-at: return true;
 ```
 
 #### Output
@@ -562,10 +528,8 @@ Adds reference lines, highlighted ranges, annotations, and pane captions without
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_pane_guides_annotations.cpp
 :language: cpp
-:start-at: if (key == "core_pane_guides_annotations") {
-:end-at: return true;
 ```
 
 #### Output
@@ -593,10 +557,8 @@ Applies logarithmic/symlog/linear scale policies at axis level.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_pane_scales.cpp
 :language: cpp
-:start-at: if (key == "core_pane_scales") {
-:end-at: return true;
 ```
 
 #### Output
@@ -624,10 +586,8 @@ Filled 3D surface primitive.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_sheet.cpp
 :language: cpp
-:start-at: if (key == "core_sheet") {
-:end-at: return true;
 ```
 
 #### Output
@@ -655,10 +615,8 @@ Stem/impulse rendering from baseline.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_spike.cpp
 :language: cpp
-:start-at: if (key == "core_spike") {
-:end-at: return true;
 ```
 
 #### Output
@@ -688,10 +646,8 @@ Trace& spire3(self: Pane, x: SeriesLike, y: SeriesLike, z: SeriesLike, color: Se
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_spire3.cpp
 :language: cpp
-:start-at: if (key == "core_spire3") {
-:end-at: return true;
 ```
 
 #### Output
@@ -718,10 +674,8 @@ Base 2D line primitive used under many high-level wrappers.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_trend.cpp
 :language: cpp
-:start-at: if (key == "core_trend") {
-:end-at: return true;
 ```
 
 #### Output
@@ -751,10 +705,8 @@ Kernel-density distribution shape with optional grouping and configurable inner 
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_violin.cpp
 :language: cpp
-:start-at: if (key == "core_violin") {
-:end-at: return true;
 ```
 
 #### Output
@@ -784,10 +736,8 @@ Controls pane and axis chrome visibility independently.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_pane_visibility.cpp
 :language: cpp
-:start-at: if (key == "core_pane_visibility") {
-:end-at: return true;
 ```
 
 #### Output
@@ -816,10 +766,8 @@ Pie/wedge primitive with optional explode offsets.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_wedge.cpp
 :language: cpp
-:start-at: if (key == "core_wedge") {
-:end-at: return true;
 ```
 
 #### Output
@@ -849,10 +797,8 @@ Error-bar primitive with symmetric or asymmetric intervals.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_whisk.cpp
 :language: cpp
-:start-at: if (key == "core_whisk") {
-:end-at: return true;
 ```
 
 #### Output
@@ -882,10 +828,8 @@ Sets explicit axis windows and autoscale policy for limit computation.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_pane_axes_limits.cpp
 :language: cpp
-:start-at: if (key == "core_pane_axes_limits") {
-:end-at: return true;
 ```
 
 #### Output
@@ -915,10 +859,8 @@ Forces label formatting for readability and consistency in reports.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_pane_tick_format.cpp
 :language: cpp
-:start-at: if (key == "core_pane_tick_format") {
-:end-at: return true;
 ```
 
 #### Output
@@ -948,10 +890,8 @@ Controls tick/label spacing and angle to prevent overlaps in dense dashboards.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_pane_tick_rotation_gaps.cpp
 :language: cpp
-:start-at: if (key == "core_pane_tick_rotation_gaps") {
-:end-at: return true;
 ```
 
 #### Output
@@ -980,10 +920,8 @@ Switches between explicit numeric tick positions and category-axis labels.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_pane_ticks_categories.cpp
 :language: cpp
-:start-at: if (key == "core_pane_ticks_categories") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1010,10 +948,8 @@ Sets global text scale defaults applied to newly created panes.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_studio_context_scales.cpp
 :language: cpp
-:start-at: if (key == "core_studio_context_scales") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1042,10 +978,8 @@ Primary layout path for 2D dashboards.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_studio_mosaic.cpp
 :language: cpp
-:start-at: if (key == "core_studio_mosaic") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1073,10 +1007,8 @@ Copies style defaults from a template `Pane` into future panes.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_studio_pane_style_defaults.cpp
 :language: cpp
-:start-at: if (key == "core_studio_pane_style_defaults") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1106,10 +1038,8 @@ Adds shared row and axis-group labeling for multi-pane reports.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_studio_captions_row_titles.cpp
 :language: cpp
-:start-at: if (key == "core_studio_captions_row_titles") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1136,10 +1066,8 @@ Writes deterministic vector output suitable for docs and version control.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_save_svg.cpp
 :language: cpp
-:start-at: if (key == "core_save_svg") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1166,10 +1094,8 @@ Raster export path for slides and reports requiring pixel images.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_save_png.cpp
 :language: cpp
-:start-at: if (key == "core_save_png") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1196,10 +1122,8 @@ Print/PDF export with backend selection.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_save_pdf.cpp
 :language: cpp
-:start-at: if (key == "core_save_pdf") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1226,10 +1150,8 @@ Creates nested 2D panes inside a parent pane cell.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_studio_subpane2.cpp
 :language: cpp
-:start-at: if (key == "core_studio_subpane2") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1256,10 +1178,8 @@ Creates nested 3D panes inside a parent pane cell.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_studio_subpane3.cpp
 :language: cpp
-:start-at: if (key == "core_studio_subpane3") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1288,10 +1208,8 @@ Applies figure tokens and top-level identity metadata.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_studio_theme.cpp
 :language: cpp
-:start-at: if (key == "core_studio_theme") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1318,10 +1236,8 @@ Compacts pane geometry to reduce overlaps and dead space.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_studio_tight_layout.cpp
 :language: cpp
-:start-at: if (key == "core_studio_tight_layout") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1349,10 +1265,8 @@ Allows toggling traces in chained construction flows without deleting geometry.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_trace_visibility.cpp
 :language: cpp
-:start-at: if (key == "core_trace_visibility") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1383,10 +1297,8 @@ Primary 2D/continuous styling controls for line/scatter/surface traces.
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_trace_style_2d.cpp
 :language: cpp
-:start-at: if (key == "core_trace_style_2d") {
-:end-at: return true;
 ```
 
 #### Output
@@ -1416,10 +1328,8 @@ Trace& transparent(self: Trace, enable: bool = true);
 
 #### Example
 
-```{literalinclude} ../../examples/docs/flash_api_capture_demo.cpp
+```{literalinclude} ../../examples/docs/snippets/keys/core_trace_style_3d.cpp
 :language: cpp
-:start-at: if (key == "core_trace_style_3d") {
-:end-at: return true;
 ```
 
 #### Output

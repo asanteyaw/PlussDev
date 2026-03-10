@@ -1,0 +1,10 @@
+    Studio fig("tight_layout", Theme::paper());
+    fig.mosaic(1, 2, 12.0, 12.0);
+    auto& left = fig.pane2("left");
+    left.place(0, 0);
+    lineplot(left, x, y).label("left");
+    auto& right = fig.pane2("right");
+    right.place(0, 1);
+    lineplot(right, x, y.mul(0.6).add(0.2)).label("right");
+    tight_layout(fig, 8.0);
+    save(fig);

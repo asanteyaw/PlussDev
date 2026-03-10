@@ -253,6 +253,11 @@ public:
     Series matrix_power(std::int64_t n) const { return pluss::subsp::linearalg::matrix_power(self(), n); }
     Series matrix_exp() const { return pluss::subsp::linearalg::matrix_exp(self()); }
     Series pinverse(double rcond = 1e-12) const { return pluss::subsp::linearalg::pinverse(self(), rcond); }
+    Series qr_q(bool reduced = true) const { return pluss::subsp::linearalg::qr_q(self(), reduced); }
+    Series qr_r(bool reduced = true) const { return pluss::subsp::linearalg::qr_r(self(), reduced); }
+    Series svd_u(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_u(self(), full_matrices); }
+    Series svd_s(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_s(self(), full_matrices); }
+    Series svd_vh(bool full_matrices = true) const { return pluss::subsp::linearalg::svd_vh(self(), full_matrices); }
 
     Series triangular_solve(const Series& b, bool upper = true, bool unitriangular = false) const {
       return pluss::subsp::linearalg::triangular_solve(self(), b, upper, unitriangular);
@@ -322,6 +327,11 @@ public:
     Series matrix_power(std::int64_t n) const { return (*this)().matrix_power(n); }
     Series matrix_exp() const { return (*this)().matrix_exp(); }
     Series pinverse(double rcond = 1e-12) const { return (*this)().pinverse(rcond); }
+    Series qr_q(bool reduced = true) const { return (*this)().qr_q(reduced); }
+    Series qr_r(bool reduced = true) const { return (*this)().qr_r(reduced); }
+    Series svd_u(bool full_matrices = true) const { return (*this)().svd_u(full_matrices); }
+    Series svd_s(bool full_matrices = true) const { return (*this)().svd_s(full_matrices); }
+    Series svd_vh(bool full_matrices = true) const { return (*this)().svd_vh(full_matrices); }
     Series triangular_solve(const Series& b, bool upper = true, bool unitriangular = false) const {
       return (*this)().triangular_solve(b, upper, unitriangular);
     }

@@ -1756,54 +1756,79 @@ static Series sum_to_size_impl(const Series& self, std::span<const std::int64_t>
   return out.reshape(target);
 }
 
+static bool cpu_sorting_kernel_supports_dtype_(ScalarType st) {
+  switch (st) {
+    case ScalarType::Float64:
+    case ScalarType::Float32:
+    case ScalarType::Int64:
+    case ScalarType::Int32:
+    case ScalarType::Int16:
+    case ScalarType::Int8:
+    case ScalarType::UInt8:
+    case ScalarType::UInt16:
+    case ScalarType::UInt32:
+    case ScalarType::UInt64:
+    case ScalarType::Bool:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static std::pair<Series, bool> prepare_cpu_sort_input_(const Series& self) {
+  auto cpu = self.to(Platform::CPU);
+  if (cpu_sorting_kernel_supports_dtype_(cpu.scalar_type())) {
+    return {cpu, false};
+  }
+  PLUSS_CHECK(
+      dtype_of(cpu.scalar_type()).is_floating() && !dtype_of(cpu.scalar_type()).is_complex(),
+      std::string("sorting fallback: unsupported dtype ") + std::string(dtype_of(cpu.scalar_type()).name));
+  return {cpu.to(ScalarType::Float32), true};
+}
+
+static Series restore_sorted_value_dtype_(Series values_cpu, const Series& self, bool casted_for_sorting) {
+  if (casted_for_sorting) {
+    values_cpu = values_cpu.to(self.scalar_type());
+  }
+  return values_cpu;
+}
+
 static Series sort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable) {
   if (self.platform() == Platform::MPS) {
-    (void)stable;
-    dim = wrap_dim(dim, self.dim(), "sort");
-    PLUSS_CHECK(self.dim() == 1 || (self.dim() == 2 && dim == 1),
-                "sort: MPS fallback currently supports rank-1 tensors (or rank-2 along dim=1)");
-    auto x = self.contiguous();
-    if (self.dim() == 1) {
-      const auto n = x.numel();
-      auto out = Series::empty(x.sizes(), x.scalar_type(), x.platform());
-      if (x.scalar_type() == ScalarType::Float32) {
-        std::vector<float> vals((std::size_t)n);
-        const auto* ip = reinterpret_cast<const float*>(x.raw_data());
-        for (std::int64_t i = 0; i < n; ++i) vals[(std::size_t)i] = ip[i];
-        if (descending) std::sort(vals.begin(), vals.end(), std::greater<float>());
-        else std::sort(vals.begin(), vals.end());
-        auto* op = reinterpret_cast<float*>(out.raw_mutable_data());
-        for (std::int64_t i = 0; i < n; ++i) op[i] = vals[(std::size_t)i];
-        return out;
-      }
-      if (x.scalar_type() == ScalarType::Int64) {
-        std::vector<std::int64_t> vals((std::size_t)n);
-        const auto* ip = reinterpret_cast<const std::int64_t*>(x.raw_data());
-        for (std::int64_t i = 0; i < n; ++i) vals[(std::size_t)i] = ip[i];
-        if (descending) std::sort(vals.begin(), vals.end(), std::greater<std::int64_t>());
-        else std::sort(vals.begin(), vals.end());
-        auto* op = reinterpret_cast<std::int64_t*>(out.raw_mutable_data());
-        for (std::int64_t i = 0; i < n; ++i) op[i] = vals[(std::size_t)i];
-        return out;
-      }
-      return sort_values_only(x.to(ScalarType::Float32), dim, descending, stable).to(self.scalar_type());
-    }
+    auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
+    auto pair = native::cpu::sort(cpu, dim, descending, stable);
+    auto values = restore_sorted_value_dtype_(pair.first, self, casted_for_sorting);
+    return values.to(Platform::MPS);
   }
   auto pair = native::cpu::sort(self, dim, descending, stable);
   return pair.first;
 }
 
 static Series topk_values_only(const Series& self, std::int64_t k, std::int64_t dim, bool largest, bool sorted) {
-  PLUSS_CHECK(self.platform() == Platform::CPU, "topk: no native MPS implementation yet");
+  if (self.platform() == Platform::MPS) {
+    auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
+    auto pair = native::cpu::topk(cpu, k, dim, largest, sorted);
+    auto values = restore_sorted_value_dtype_(pair.first, self, casted_for_sorting);
+    return values.to(Platform::MPS);
+  }
+  PLUSS_CHECK(self.platform() == Platform::CPU, "topk: unsupported platform");
   auto pair = native::cpu::topk(self, k, dim, largest, sorted);
   return pair.first;
 }
 
 static Series kthvalue_values_only(const Series& self, std::int64_t k, std::int64_t dim, bool keepdim) {
-  PLUSS_CHECK(self.platform() == Platform::CPU, "kthvalue: no native MPS implementation yet");
   PLUSS_CHECK(k >= 1, "kthvalue: k must be >= 1");
   dim = wrap_dim(dim, self.dim(), "kthvalue");
   PLUSS_CHECK(k <= self.sizes()[(std::size_t)dim], "kthvalue: k must be <= size(dim)");
+  if (self.platform() == Platform::MPS) {
+    auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
+    auto pair = native::cpu::topk(cpu, k, dim, /*largest=*/false, /*sorted=*/true);
+    Series value = pair.first.select(dim, k - 1);
+    if (keepdim) value = value.unsqueeze(dim);
+    value = restore_sorted_value_dtype_(std::move(value), self, casted_for_sorting);
+    return value.to(Platform::MPS);
+  }
+  PLUSS_CHECK(self.platform() == Platform::CPU, "kthvalue: unsupported platform");
   auto pair = native::cpu::topk(self, k, dim, /*largest=*/false, /*sorted=*/true);
   Series value = pair.first.select(dim, k - 1);
   if (keepdim) value = value.unsqueeze(dim);
@@ -1811,7 +1836,12 @@ static Series kthvalue_values_only(const Series& self, std::int64_t k, std::int6
 }
 
 static Series argsort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable) {
-  PLUSS_CHECK(self.platform() == Platform::CPU, "argsort: no native MPS implementation yet");
+  if (self.platform() == Platform::MPS) {
+    auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
+    (void)casted_for_sorting;
+    return native::cpu::argsort(cpu, dim, descending, stable).to(Platform::MPS);
+  }
+  PLUSS_CHECK(self.platform() == Platform::CPU, "argsort: unsupported platform");
   return native::cpu::argsort(self, dim, descending, stable);
 }
 
