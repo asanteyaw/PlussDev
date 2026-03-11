@@ -126,6 +126,48 @@ bool run_nodej_phase0_contract_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  const ModelSpec cls_hinge_spec{
+      .task = TaskKind::Classification,
+      .family = ModelFamily::Linear,
+      .options = LinearFamilyOptions{
+          .objective = pluss::ai::nodej::LinearObjective::Hinge,
+          .regularization = pluss::ai::nodej::RegularizationKind::L2,
+          .regularization_strength = 1e-6,
+          .fit_intercept = true,
+      },
+  };
+  auto cls_hinge_or = pluss::ai::nodej::make_classifier(cls_hinge_spec);
+  if (!cls_hinge_or.ok()) {
+    if (err) *err << "make_classifier should succeed for classification/linear hinge\n";
+    return false;
+  }
+  auto cls_hinge = cls_hinge_or.move_value();
+  if (!cls_hinge->learn(cls_batch, train_opts).ok()) {
+    if (err) *err << "linear hinge classifier learn should succeed\n";
+    return false;
+  }
+  auto cls_hinge_pred = cls_hinge->infer(features);
+  if (!cls_hinge_pred.ok()) {
+    if (err) *err << "linear hinge classifier infer should succeed\n";
+    return false;
+  }
+  const auto hinge_pred_vec = cls_hinge_pred.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  if (!(approx(hinge_pred_vec[0], 0.0) && approx(hinge_pred_vec[1], 0.0)
+        && approx(hinge_pred_vec[2], 1.0) && approx(hinge_pred_vec[3], 1.0))) {
+    if (err) *err << "linear hinge classifier predictions should match separable training labels\n";
+    return false;
+  }
+  auto cls_hinge_metrics = cls_hinge->assess(cls_batch);
+  if (!cls_hinge_metrics.ok()) {
+    if (err) *err << "linear hinge classifier assess should succeed\n";
+    return false;
+  }
+  const auto cls_hinge_metric_vec = cls_hinge_metrics.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  if (cls_hinge_metric_vec.empty() || cls_hinge_metric_vec[0] < 0.99) {
+    if (err) *err << "linear hinge classifier default assess metric (accuracy) should be near perfect\n";
+    return false;
+  }
+
   auto cls_shape = cls->infer(bad_features);
   if (cls_shape.ok() || cls_shape.status().code != StatusCode::ShapeMismatch) {
     if (err) *err << "classifier infer should enforce learn-time feature count\n";

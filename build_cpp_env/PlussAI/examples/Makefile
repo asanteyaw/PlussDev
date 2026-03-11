@@ -262,6 +262,44 @@ plussai_tcn_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/build
 .PHONY : plussai_tcn_demo/fast
 
+# Convenience name for target.
+PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/rule
+.PHONY : PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/rule
+
+# Convenience name for target.
+plussai_adam_oop_demo: PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/rule
+.PHONY : plussai_adam_oop_demo
+
+# fast build rule for target.
+plussai_adam_oop_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build
+.PHONY : plussai_adam_oop_demo/fast
+
+adam_oop_demo.o: adam_oop_demo.cpp.o
+.PHONY : adam_oop_demo.o
+
+# target to build an object file
+adam_oop_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/adam_oop_demo.cpp.o
+.PHONY : adam_oop_demo.cpp.o
+
+adam_oop_demo.i: adam_oop_demo.cpp.i
+.PHONY : adam_oop_demo.i
+
+# target to preprocess a source file
+adam_oop_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/adam_oop_demo.cpp.i
+.PHONY : adam_oop_demo.cpp.i
+
+adam_oop_demo.s: adam_oop_demo.cpp.s
+.PHONY : adam_oop_demo.s
+
+# target to generate assembly for a file
+adam_oop_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/adam_oop_demo.cpp.s
+.PHONY : adam_oop_demo.cpp.s
+
 func_conv_demo.o: func_conv_demo.cpp.o
 .PHONY : func_conv_demo.o
 
@@ -397,11 +435,15 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... plussai_adam_oop_demo"
 	@echo "... plussai_func_conv_demo"
 	@echo "... plussai_func_rnn_demo"
 	@echo "... plussai_nn_conv_demo"
 	@echo "... plussai_nn_rnn_demo"
 	@echo "... plussai_tcn_demo"
+	@echo "... adam_oop_demo.o"
+	@echo "... adam_oop_demo.i"
+	@echo "... adam_oop_demo.s"
 	@echo "... func_conv_demo.o"
 	@echo "... func_conv_demo.i"
 	@echo "... func_conv_demo.s"

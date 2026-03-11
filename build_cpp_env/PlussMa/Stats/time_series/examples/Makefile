@@ -263,6 +263,20 @@ plussma_ts_diagnostics_raw_demo/fast:
 .PHONY : plussma_ts_diagnostics_raw_demo/fast
 
 # Convenience name for target.
+PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/rule
+.PHONY : PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/rule
+
+# Convenience name for target.
+plussma_ts_plotting_raw_demo: PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/rule
+.PHONY : plussma_ts_plotting_raw_demo
+
+# fast build rule for target.
+plussma_ts_plotting_raw_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/build
+.PHONY : plussma_ts_plotting_raw_demo/fast
+
+# Convenience name for target.
 PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_garch11_raw_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_garch11_raw_demo.dir/rule
 .PHONY : PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_garch11_raw_demo.dir/rule
@@ -303,6 +317,20 @@ plussma_ts_egarch_gjr_raw_demo: PlussMa/Stats/time_series/examples/CMakeFiles/pl
 plussma_ts_egarch_gjr_raw_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_egarch_gjr_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_egarch_gjr_raw_demo.dir/build
 .PHONY : plussma_ts_egarch_gjr_raw_demo/fast
+
+# Convenience name for target.
+PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/rule
+.PHONY : PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/rule
+
+# Convenience name for target.
+plussma_ts_mv_vol_raw_demo: PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/rule
+.PHONY : plussma_ts_mv_vol_raw_demo
+
+# fast build rule for target.
+plussma_ts_mv_vol_raw_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/build
+.PHONY : plussma_ts_mv_vol_raw_demo/fast
 
 # Convenience name for target.
 PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_arima_sarima_raw_demo.dir/rule:
@@ -562,6 +590,30 @@ ts_lag_features_raw_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_lag_features_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_lag_features_raw_demo.dir/ts_lag_features_raw_demo.cpp.s
 .PHONY : ts_lag_features_raw_demo.cpp.s
 
+ts_mv_vol_raw_demo.o: ts_mv_vol_raw_demo.cpp.o
+.PHONY : ts_mv_vol_raw_demo.o
+
+# target to build an object file
+ts_mv_vol_raw_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/ts_mv_vol_raw_demo.cpp.o
+.PHONY : ts_mv_vol_raw_demo.cpp.o
+
+ts_mv_vol_raw_demo.i: ts_mv_vol_raw_demo.cpp.i
+.PHONY : ts_mv_vol_raw_demo.i
+
+# target to preprocess a source file
+ts_mv_vol_raw_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/ts_mv_vol_raw_demo.cpp.i
+.PHONY : ts_mv_vol_raw_demo.cpp.i
+
+ts_mv_vol_raw_demo.s: ts_mv_vol_raw_demo.cpp.s
+.PHONY : ts_mv_vol_raw_demo.s
+
+# target to generate assembly for a file
+ts_mv_vol_raw_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_mv_vol_raw_demo.dir/ts_mv_vol_raw_demo.cpp.s
+.PHONY : ts_mv_vol_raw_demo.cpp.s
+
 ts_partition_raw_demo.o: ts_partition_raw_demo.cpp.o
 .PHONY : ts_partition_raw_demo.o
 
@@ -585,6 +637,30 @@ ts_partition_raw_demo.s: ts_partition_raw_demo.cpp.s
 ts_partition_raw_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_partition_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_partition_raw_demo.dir/ts_partition_raw_demo.cpp.s
 .PHONY : ts_partition_raw_demo.cpp.s
+
+ts_plotting_raw_demo.o: ts_plotting_raw_demo.cpp.o
+.PHONY : ts_plotting_raw_demo.o
+
+# target to build an object file
+ts_plotting_raw_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/ts_plotting_raw_demo.cpp.o
+.PHONY : ts_plotting_raw_demo.cpp.o
+
+ts_plotting_raw_demo.i: ts_plotting_raw_demo.cpp.i
+.PHONY : ts_plotting_raw_demo.i
+
+# target to preprocess a source file
+ts_plotting_raw_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/ts_plotting_raw_demo.cpp.i
+.PHONY : ts_plotting_raw_demo.cpp.i
+
+ts_plotting_raw_demo.s: ts_plotting_raw_demo.cpp.s
+.PHONY : ts_plotting_raw_demo.s
+
+# target to generate assembly for a file
+ts_plotting_raw_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_plotting_raw_demo.dir/ts_plotting_raw_demo.cpp.s
+.PHONY : ts_plotting_raw_demo.cpp.s
 
 ts_var_raw_demo.o: ts_var_raw_demo.cpp.o
 .PHONY : ts_var_raw_demo.o
@@ -634,7 +710,9 @@ help:
 	@echo "... plussma_ts_garch11_raw_demo"
 	@echo "... plussma_ts_garchpq_raw_demo"
 	@echo "... plussma_ts_lag_features_raw_demo"
+	@echo "... plussma_ts_mv_vol_raw_demo"
 	@echo "... plussma_ts_partition_raw_demo"
+	@echo "... plussma_ts_plotting_raw_demo"
 	@echo "... plussma_ts_var_raw_demo"
 	@echo "... ts_arima_sarima_raw_demo.o"
 	@echo "... ts_arima_sarima_raw_demo.i"
@@ -663,9 +741,15 @@ help:
 	@echo "... ts_lag_features_raw_demo.o"
 	@echo "... ts_lag_features_raw_demo.i"
 	@echo "... ts_lag_features_raw_demo.s"
+	@echo "... ts_mv_vol_raw_demo.o"
+	@echo "... ts_mv_vol_raw_demo.i"
+	@echo "... ts_mv_vol_raw_demo.s"
 	@echo "... ts_partition_raw_demo.o"
 	@echo "... ts_partition_raw_demo.i"
 	@echo "... ts_partition_raw_demo.s"
+	@echo "... ts_plotting_raw_demo.o"
+	@echo "... ts_plotting_raw_demo.i"
+	@echo "... ts_plotting_raw_demo.s"
 	@echo "... ts_var_raw_demo.o"
 	@echo "... ts_var_raw_demo.i"
 	@echo "... ts_var_raw_demo.s"

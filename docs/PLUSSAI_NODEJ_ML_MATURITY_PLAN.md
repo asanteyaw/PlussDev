@@ -62,6 +62,10 @@ Create these modules:
 - `io/`: model serialization/versioning
 - `optim/`: shared optimization kernels
 
+Companion abstraction layer:
+- `PlussAI/Lymph`: convenience wrappers built on top of NodeJ for one-call
+  make+learn flows while preserving NodeJ's explicit core contracts.
+
 ## Cross-Cutting Contracts (Must-Have)
 1. Data orientation
 - support observations-in-rows by default;
@@ -180,6 +184,7 @@ Current status (in progress):
     - assess defaults: `Mse`, `Rmse`, `R2` (plus `Mae` support when explicitly requested)
   - `ModelFamily::Linear` classifier:
     - binary logistic objective with Adam optimization
+    - binary hinge objective (linear SVM-style) with Adam optimization
     - L2/none regularization and intercept handling
     - `infer_scores` (raw log-odds), `infer` (class labels), assess defaults: `Accuracy`
     - additional assess support: `BalancedAccuracy`, `LogLoss`
@@ -204,8 +209,43 @@ Current status (in progress):
     - options support: `max_depth`, `min_samples_leaf`, `min_samples_split`
     - `infer_scores` returns positive-class probability from leaf class ratios
     - assess defaults: `Accuracy` (plus `BalancedAccuracy`, `LogLoss` support)
-- preserved explicit `NotImplemented` behavior for remaining non-linear families (`Bayes`, `Kernel`, `Ensemble`) pending later Phase 2 slices.
+- implemented `ModelFamily::Bayes` baseline classifier:
+  - gaussian naive Bayes for binary classification
+  - options support: `BayesFamilyOptions.use_gaussian`, `BayesFamilyOptions.smoothing`
+  - `infer_scores` returns log-odds, `infer` returns class labels
+  - assess defaults: `Accuracy` (plus `BalancedAccuracy`, `LogLoss` support)
+- implemented `ModelFamily::Kernel` baseline estimators:
+  - kernel regressor:
+    - kernel ridge regression in dual form with regularization from `KernelFamilyOptions.c`
+    - supports `Linear`, `Rbf`, `Polynomial`, `Sigmoid` kernels
+    - assess defaults: `Mse`, `Rmse`, `R2` (plus `Mae` support when explicitly requested)
+  - kernel classifier (binary):
+    - dual kernel classifier (ridge-style) with thresholded decision scores
+    - supports `Linear`, `Rbf`, `Polynomial`, `Sigmoid` kernels
+    - assess defaults: `Accuracy` (plus `BalancedAccuracy`, `LogLoss` support)
+- implemented `ModelFamily::Ensemble` baseline estimators:
+  - ensemble classifier (binary):
+    - bagging/random-forest style tree aggregation with bootstrap row sampling
+    - random subspace support in random-forest mode
+    - class-diverse bootstrap retry logic to avoid degenerate one-class base learners
+    - assess defaults: `Accuracy` (plus `BalancedAccuracy`, `LogLoss` support)
+  - ensemble regressor:
+    - bagging/random-forest style tree averaging
+    - bootstrap row sampling and random subspace support in random-forest mode
+    - assess defaults: `Mse`, `Rmse`, `R2` (plus `Mae` support when explicitly requested)
+- implemented `ModelFamily::Bayes` baseline regressor:
+  - gaussian-prior linear bayes regression baseline (closed-form with smoothing regularization)
+  - options support: `BayesFamilyOptions.use_gaussian`, `BayesFamilyOptions.smoothing`
+  - assess defaults: `Mse`, `Rmse`, `R2` (plus `Mae` support when explicitly requested)
 - upgraded estimator contract test coverage to validate concrete linear learn/infer/assess behavior while keeping fail-fast checks for not-yet-implemented families.
+- added comprehensive NodeJ demos:
+  - core demos in `PlussAI/examples/NodeJ/core` for split/prep and full family workflows
+  - convenience demos in `PlussAI/examples/NodeJ/lymph` for one-call make+learn wrappers and preset shortcuts
+- evolved Lymph convenience surface with preset wrappers for fast starts:
+  - classification presets: `linear_logistic_classifier`, `linear_hinge_classifier`, `forest_classifier`, `rbf_kernel_classifier`, `gaussian_bayes_classifier`
+  - regression presets: `ridge_regressor`, `forest_regressor`, `rbf_kernel_regressor`, `gaussian_bayes_regressor`
+- expanded rigorous regression/stability coverage:
+  - `PlussAI/test/nodej_rigorous_suite_test.cpp` (stress, numerical-finiteness, split determinism, prep edge cases)
 
 ### Phase 3: Model Selection and Metrics Breadth
 - metrics package expansion:

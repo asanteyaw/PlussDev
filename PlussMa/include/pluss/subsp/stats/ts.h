@@ -10,6 +10,10 @@
 #include <utility>
 #include <vector>
 
+namespace pluss::pl {
+class Studio;
+}
+
 namespace pluss::subsp::stats::ts {
 
 enum class PartitionType : std::uint8_t {
@@ -278,6 +282,127 @@ CODEM_API pluss::codem::Series pacf(const pluss::codem::Series& x,
 CODEM_API LjungBoxResult ljung_box(const pluss::codem::Series& x,
                                    const LjungBoxOptions& options = {},
                                    pluss::codem::Config cfg = {});
+
+struct ArchLmOptions {
+  std::int64_t lags = 1;
+  bool demean = true;
+  double alpha = 0.05;
+};
+
+struct ArchLmResult {
+  double stat = 0.0;
+  double pvalue = 1.0;
+  double critical = 0.0;
+  bool reject = false;
+  std::int64_t dof = 0;
+  std::int64_t effective_n = 0;
+};
+
+CODEM_API ArchLmResult arch_lm(const pluss::codem::Series& x,
+                               const ArchLmOptions& options = {},
+                               pluss::codem::Config cfg = {});
+
+enum class AdfModel : std::uint8_t {
+  AR = 0,
+  ARD = 1,
+  TS = 2,
+};
+
+struct AdfOptions {
+  std::int64_t lags = 0;
+  AdfModel model = AdfModel::ARD;
+  double alpha = 0.05;
+};
+
+struct AdfResult {
+  double stat = 0.0;
+  double pvalue = 1.0;
+  double critical = 0.0;
+  bool reject = false;
+  std::int64_t lags = 0;
+  std::int64_t effective_n = 0;
+};
+
+CODEM_API AdfResult adf_test(const pluss::codem::Series& y,
+                             const AdfOptions& options = {},
+                             pluss::codem::Config cfg = {});
+
+struct KpssOptions {
+  std::int64_t lags = 0;
+  bool trend = true;
+  double alpha = 0.05;
+};
+
+struct KpssResult {
+  double stat = 0.0;
+  double pvalue = 1.0;
+  double critical = 0.0;
+  bool reject = false;
+  double long_run_var = 0.0;
+  std::int64_t lags = 0;
+  std::int64_t effective_n = 0;
+};
+
+CODEM_API KpssResult kpss_test(const pluss::codem::Series& y,
+                               const KpssOptions& options = {},
+                               pluss::codem::Config cfg = {});
+
+namespace plot {
+
+struct CorrPlotOptions {
+  std::int64_t max_lag = 20;
+  AcfNorm norm = AcfNorm::Biased;
+  bool demean = true;
+  bool include_zero_lag = false;
+  bool show_confidence_band = true;
+  double confidence_level = 0.95;
+  float trace_width = 1.2F;
+};
+
+struct CorrPlotPayload {
+  pluss::codem::Series lags = pluss::codem::Series::undefined();
+  pluss::codem::Series values = pluss::codem::Series::undefined();
+  double conf_low = 0.0;
+  double conf_high = 0.0;
+};
+
+struct ResidualPlotOptions {
+  bool show_zero_line = true;
+  float trace_width = 1.2F;
+};
+
+struct ResidualPlotPayload {
+  pluss::codem::Series index = pluss::codem::Series::undefined();
+  pluss::codem::Series residuals = pluss::codem::Series::undefined();
+};
+
+CODEM_API CorrPlotPayload acf_payload(const pluss::codem::Series& x,
+                                      const CorrPlotOptions& options = {},
+                                      pluss::codem::Config cfg = {});
+
+CODEM_API CorrPlotPayload pacf_payload(const pluss::codem::Series& x,
+                                       const CorrPlotOptions& options = {},
+                                       pluss::codem::Config cfg = {});
+
+CODEM_API ResidualPlotPayload residuals_payload(const pluss::codem::Series& residuals,
+                                                pluss::codem::Config cfg = {});
+
+CODEM_API pluss::pl::Studio& acf(pluss::pl::Studio& studio,
+                                 const pluss::codem::Series& x,
+                                 const CorrPlotOptions& options = {},
+                                 pluss::codem::Config cfg = {});
+
+CODEM_API pluss::pl::Studio& pacf(pluss::pl::Studio& studio,
+                                  const pluss::codem::Series& x,
+                                  const CorrPlotOptions& options = {},
+                                  pluss::codem::Config cfg = {});
+
+CODEM_API pluss::pl::Studio& residuals(pluss::pl::Studio& studio,
+                                       const pluss::codem::Series& residuals,
+                                       const ResidualPlotOptions& options = {},
+                                       pluss::codem::Config cfg = {});
+
+} // namespace plot
 
 struct GarchOptions {
   std::int64_t arch_order = 1;
@@ -715,6 +840,51 @@ struct VarOptions {
   double pinv_rcond = 1e-12;
 };
 
+enum class IrfMethod : std::uint8_t {
+  Orthogonalized = 0,
+  Generalized = 1,
+};
+
+struct IrfOptions {
+  std::int64_t horizon = 20;
+  IrfMethod method = IrfMethod::Orthogonalized;
+};
+
+struct FevdOptions {
+  std::int64_t horizon = 20;
+  IrfMethod method = IrfMethod::Orthogonalized;
+};
+
+enum class GrangerType : std::uint8_t {
+  LeaveOneOut = 0,
+  ExcludeAll = 1,
+  BlockWise = 2,
+};
+
+enum class GrangerStat : std::uint8_t {
+  ChiSquare = 0,
+  F = 1,
+};
+
+struct GrangerOptions {
+  GrangerType type = GrangerType::LeaveOneOut;
+  GrangerStat stat = GrangerStat::ChiSquare;
+  double alpha = 0.05;
+  std::vector<std::int64_t> cause{};
+  std::vector<std::int64_t> effect{};
+};
+
+struct GrangerResult {
+  pluss::codem::Series cause = pluss::codem::Series::undefined();
+  pluss::codem::Series effect = pluss::codem::Series::undefined();
+  pluss::codem::Series stat = pluss::codem::Series::undefined();
+  pluss::codem::Series pvalue = pluss::codem::Series::undefined();
+  pluss::codem::Series critical = pluss::codem::Series::undefined();
+  pluss::codem::Series dof1 = pluss::codem::Series::undefined();
+  pluss::codem::Series dof2 = pluss::codem::Series::undefined();
+  pluss::codem::Series reject = pluss::codem::Series::undefined();
+};
+
 struct VarFit {
   std::int64_t lag_order = 1;
   bool include_intercept = true;
@@ -744,6 +914,17 @@ struct VarFit {
                                               const pluss::codem::Series& y,
                                               const pluss::codem::Series& x_future,
                                               pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series irf(const IrfOptions& options = {},
+                                         pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series fevd(const FevdOptions& options = {},
+                                          pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] GrangerResult granger_test(const pluss::codem::Series& y,
+                                           const GrangerOptions& options = {},
+                                           pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] GrangerResult granger_test(const pluss::codem::Series& y,
+                                           const pluss::codem::Series& x,
+                                           const GrangerOptions& options = {},
+                                           pluss::codem::Config cfg = {}) const;
   [[nodiscard]] pluss::codem::Series simulate(std::int64_t num_observations,
                                               pluss::codem::Config cfg = {},
                                               std::uint64_t seed = 0) const;

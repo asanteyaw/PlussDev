@@ -610,6 +610,171 @@ lb.pvalue.sizes()[0] == 2
 lb.dof.sizes()[0] == 2
 ```
 
+## `ArchLmResult arch_lm(const Series& x, const ArchLmOptions& options = {}, Config cfg = {})`
+
+Runs Engle's ARCH-LM test by regressing squared residuals on lagged squared residuals.
+
+`const Series& x`: residual series (`[n]` or `[n,1]`).
+
+`const ArchLmOptions& options`: test controls (`lags`, `demean`, `alpha`).
+
+`Config cfg`: execution/output config (`Float64` internal path is enforced).
+
+Return -> `ArchLmResult`: scalar test result with:
+
+- `stat`: LM statistic (`T * R^2`).
+- `pvalue`: chi-square upper-tail p-value.
+- `critical`: chi-square critical value at `alpha`.
+- `reject`: `true` when `pvalue < alpha`.
+- `dof`: chi-square degrees of freedom (`lags`).
+- `effective_n`: regression sample size (`n - lags`).
+
+Example usage:
+
+```cpp
+ts::ArchLmOptions aopt;
+aopt.lags = 8;
+auto lm = ts::arch_lm(residuals, aopt);
+```
+
+Expected output:
+
+```text
+lm.dof == 8
+0 <= lm.pvalue <= 1
+```
+
+## `AdfResult adf_test(const Series& y, const AdfOptions& options = {}, Config cfg = {})`
+
+Runs an Augmented Dickey-Fuller unit-root test (t-stat form on the lagged level coefficient).
+
+`const Series& y`: univariate time series (`[n]` or `[n,1]`).
+
+`const AdfOptions& options`: test controls:
+
+- `lags`: number of lagged first-difference regressors.
+- `model`: deterministic specification (`AdfModel::AR`, `AdfModel::ARD`, `AdfModel::TS`).
+- `alpha`: nominal significance level.
+
+`Config cfg`: execution/output config.
+
+Return -> `AdfResult`: scalar test result with:
+
+- `stat`: ADF t-statistic.
+- `pvalue`: approximate left-tail p-value.
+- `critical`: interpolated critical value for `alpha`.
+- `reject`: `true` when unit-root null is rejected.
+- `lags`: lag count used.
+- `effective_n`: effective regression sample size.
+
+Notes:
+
+- This implementation uses asymptotic-style critical-value interpolation by model variant.
+- `lags` must satisfy `lags <= n - 3`.
+
+Example usage:
+
+```cpp
+ts::AdfOptions adf_opt;
+adf_opt.lags = 1;
+adf_opt.model = ts::AdfModel::ARD;
+auto adf = ts::adf_test(y, adf_opt);
+```
+
+Expected output:
+
+```text
+adf.effective_n > 0
+0 < adf.pvalue < 1
+```
+
+## `KpssResult kpss_test(const Series& y, const KpssOptions& options = {}, Config cfg = {})`
+
+Runs the KPSS stationarity test using a Newey-West long-run variance estimate.
+
+`const Series& y`: univariate time series (`[n]` or `[n,1]`).
+
+`const KpssOptions& options`: test controls (`lags`, `trend`, `alpha`).
+
+`Config cfg`: execution/output config.
+
+Return -> `KpssResult`: scalar test result with:
+
+- `stat`: KPSS statistic.
+- `pvalue`: approximate right-tail p-value.
+- `critical`: interpolated critical value for `alpha`.
+- `reject`: `true` when stationarity null is rejected.
+- `long_run_var`: Newey-West long-run variance estimate.
+- `lags`: truncation lag used.
+- `effective_n`: finite-sample size after filtering non-finite values.
+
+Notes:
+
+- `trend=true` uses trend-stationary critical values.
+- `trend=false` uses level-stationary critical values.
+
+Example usage:
+
+```cpp
+ts::KpssOptions kopt;
+kopt.lags = 8;
+kopt.trend = false;
+auto kpss = ts::kpss_test(y, kopt);
+```
+
+Expected output:
+
+```text
+kpss.long_run_var > 0
+0 < kpss.pvalue <= 0.1
+```
+
+## `ts::plot` APIs
+
+Notes:
+
+- `ts::plot` rendering helpers rely on Flash/Studio primitives, so link `PlussPl` in addition to `pluss` when using these APIs.
+
+### `CorrPlotPayload ts::plot::acf_payload(const Series& x, const CorrPlotOptions& options = {}, Config cfg = {})`
+
+Computes ACF plotting payload (`lags`, `values`, and confidence band bounds) using `ts::acf`.
+
+### `CorrPlotPayload ts::plot::pacf_payload(const Series& x, const CorrPlotOptions& options = {}, Config cfg = {})`
+
+Computes PACF plotting payload (`lags`, `values`, and confidence band bounds) using `ts::pacf`.
+
+### `ResidualPlotPayload ts::plot::residuals_payload(const Series& residuals, Config cfg = {})`
+
+Builds plotting payload for residual traces (`index`, `residuals`).
+
+### `pl::Studio& ts::plot::acf(pl::Studio& studio, const Series& x, const CorrPlotOptions& options = {}, Config cfg = {})`
+
+Delegates final ACF rendering to Flash/Studio primitives using payload from `acf_payload`.
+
+### `pl::Studio& ts::plot::pacf(pl::Studio& studio, const Series& x, const CorrPlotOptions& options = {}, Config cfg = {})`
+
+Delegates final PACF rendering to Flash/Studio primitives using payload from `pacf_payload`.
+
+### `pl::Studio& ts::plot::residuals(pl::Studio& studio, const Series& residuals, const ResidualPlotOptions& options = {}, Config cfg = {})`
+
+Delegates final residual trace rendering to Flash/Studio primitives.
+
+Example usage:
+
+```cpp
+pluss::pl::Studio fig("ts-plot", pluss::pl::Theme::paper());
+ts::plot::CorrPlotOptions opt;
+opt.max_lag = 20;
+ts::plot::acf(fig, y, opt);
+```
+
+Expected output:
+
+```text
+no exception
+figure contains ACF spikes and confidence guides
+```
+
 ## `GarchFit Garch::fit_mle(const Series& y, const GarchOptions& options = {}, Config cfg = {})`
 
 Fits a general `GARCH(m,n)` conditional variance model by Gaussian QMLE.
@@ -1165,6 +1330,82 @@ Simulates responses from fitted `VARX` with provided exogenous path.
 `std::uint64_t seed`: RNG seed.
 
 Return -> `Series`: simulated matrix `[n, k]`.
+
+## `Series VarFit::irf(const IrfOptions& options = {}, Config cfg = {}) const`
+
+Computes impulse responses for fitted `VAR` using typed shock method.
+
+`const IrfOptions& options`: impulse-response controls.
+
+- `horizon`: number of response periods (`> 0`), includes impact period.
+- `method`:
+  - `IrfMethod::Orthogonalized`: Cholesky-orthogonalized shocks.
+  - `IrfMethod::Generalized`: order-invariant generalized shocks.
+
+`Config cfg`: output config.
+
+Return -> `Series`: tensor `[horizon, k, k]` with indexing `[t, shock, response]`.
+
+## `Series VarFit::fevd(const FevdOptions& options = {}, Config cfg = {}) const`
+
+Computes forecast error variance decomposition from fitted `VAR`.
+
+`const FevdOptions& options`: FEVD controls.
+
+- `horizon`: forecast horizon (`> 0`).
+- `method`: `Orthogonalized` or `Generalized` (same semantics as IRF).
+
+`Config cfg`: output config.
+
+Return -> `Series`: tensor `[horizon, k, k]` with indexing `[t, shock, response]`.
+
+Notes:
+
+- Orthogonalized FEVD row sums across `shock` are approximately 1.
+- Generalized FEVD is order-invariant and does not generally row-sum to 1.
+
+## `GrangerResult VarFit::granger_test(const Series& y, const GrangerOptions& options = {}, Config cfg = {}) const`
+
+Runs Granger-causality style zero-restriction tests for fitted `VAR`.
+
+`const Series& y`: response matrix used for design reconstruction (`[n,k]`).
+
+`const GrangerOptions& options`: test controls.
+
+- `type`:
+  - `GrangerType::LeaveOneOut`: one source variable at a time.
+  - `GrangerType::ExcludeAll`: all non-self lagged sources per equation.
+  - `GrangerType::BlockWise`: user-specified cause block on effect equations.
+- `stat`:
+  - `GrangerStat::ChiSquare`: Wald chi-square.
+  - `GrangerStat::F`: finite-sample style F transform of Wald.
+- `alpha`: significance level in `(0,1)`.
+- `cause`: optional zero-based cause indices (defaults to all variables).
+- `effect`: optional zero-based effect equation indices (defaults to all variables).
+
+`Config cfg`: output config.
+
+Return -> `GrangerResult`:
+
+- `cause`, `effect`: tested cause/effect indices per row (`[n_tests]`).
+- In `ExcludeAll` and `BlockWise`, `cause` is `-1` to denote grouped source restrictions.
+- `stat`, `pvalue`, `critical`: test outputs (`[n_tests]`).
+- `dof1`, `dof2`: test degrees of freedom (`[n_tests]`).
+- `reject`: integer mask (`1` reject, `0` fail to reject).
+
+## `GrangerResult VarFit::granger_test(const Series& y, const Series& x, const GrangerOptions& options = {}, Config cfg = {}) const`
+
+Runs the same Granger tests for fitted `VARX`.
+
+`const Series& y`: response matrix (`[n,k]`).
+
+`const Series& x`: exogenous matrix (`[n,m]`) used by fitted model.
+
+`const GrangerOptions& options`: same as univariate overload.
+
+`Config cfg`: output config.
+
+Return -> `GrangerResult` with the same fields as above.
 
 ## `std::pair<Series,Series> var_to_vecm(const Series& ar, Config cfg = {})`
 

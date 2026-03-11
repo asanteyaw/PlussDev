@@ -221,6 +221,20 @@ garch11_test/fast:
 .PHONY : garch11_test/fast
 
 # Convenience name for target.
+PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/rule
+.PHONY : PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/rule
+
+# Convenience name for target.
+mv_vol_test: PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/rule
+.PHONY : mv_vol_test
+
+# fast build rule for target.
+mv_vol_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/build.make PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/build
+.PHONY : mv_vol_test/fast
+
+# Convenience name for target.
 PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/ts_vol_catch2.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/ts_vol_catch2.dir/rule
 .PHONY : PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/ts_vol_catch2.dir/rule
@@ -282,6 +296,30 @@ garch11_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/garch11_test.dir/build.make PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/garch11_test.dir/garch11_test.cpp.s
 .PHONY : garch11_test.cpp.s
 
+mv_vol_test.o: mv_vol_test.cpp.o
+.PHONY : mv_vol_test.o
+
+# target to build an object file
+mv_vol_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/build.make PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/mv_vol_test.cpp.o
+.PHONY : mv_vol_test.cpp.o
+
+mv_vol_test.i: mv_vol_test.cpp.i
+.PHONY : mv_vol_test.i
+
+# target to preprocess a source file
+mv_vol_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/build.make PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/mv_vol_test.cpp.i
+.PHONY : mv_vol_test.cpp.i
+
+mv_vol_test.s: mv_vol_test.cpp.s
+.PHONY : mv_vol_test.s
+
+# target to generate assembly for a file
+mv_vol_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/build.make PlussMa/Stats/time_series/specialized/vol_models/test/CMakeFiles/mv_vol_test.dir/mv_vol_test.cpp.s
+.PHONY : mv_vol_test.cpp.s
+
 ts_vol_catch2.o: ts_vol_catch2.cpp.o
 .PHONY : ts_vol_catch2.o
 
@@ -323,6 +361,7 @@ help:
 	@echo "... test"
 	@echo "... egarch_gjr_test"
 	@echo "... garch11_test"
+	@echo "... mv_vol_test"
 	@echo "... ts_vol_catch2"
 	@echo "... egarch_gjr_test.o"
 	@echo "... egarch_gjr_test.i"
@@ -330,6 +369,9 @@ help:
 	@echo "... garch11_test.o"
 	@echo "... garch11_test.i"
 	@echo "... garch11_test.s"
+	@echo "... mv_vol_test.o"
+	@echo "... mv_vol_test.i"
+	@echo "... mv_vol_test.s"
 	@echo "... ts_vol_catch2.o"
 	@echo "... ts_vol_catch2.i"
 	@echo "... ts_vol_catch2.s"

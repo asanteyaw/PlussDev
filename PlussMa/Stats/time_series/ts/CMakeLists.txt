@@ -14,6 +14,14 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/diagnostics/CMakeLists.txt")
   add_subdirectory(modules/diagnostics)
 endif()
 
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/hypothesis/CMakeLists.txt")
+  add_subdirectory(modules/hypothesis)
+endif()
+
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/plotting/CMakeLists.txt")
+  add_subdirectory(modules/plotting)
+endif()
+
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/var/CMakeLists.txt")
   add_subdirectory(modules/var)
 endif()

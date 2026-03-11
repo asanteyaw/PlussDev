@@ -48,7 +48,7 @@ struct DenseMatrix {
   matrix.original_platform = batch.x.platform();
   matrix.original_dtype = batch.x.scalar_type();
 
-  const Series x64 = batch.x.to(pluss::pCPU, ScalarType::Float64);
+  const Series x64 = batch.x.to(ScalarType::Float64);
   matrix.values = x64.to_vec<double>();
   if (static_cast<std::int64_t>(matrix.values.size()) != matrix.sample_count * matrix.feature_count) {
     return StatusOr<DenseMatrix>(

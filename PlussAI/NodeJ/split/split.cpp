@@ -99,10 +99,10 @@ namespace {
   if (labels.numel() < 2) return StatusOr<std::vector<double>>(Status::invalid_argument("labels must contain at least 2 observations."));
 
   const Series flat = labels.to(ScalarType::Float64).reshape({labels.numel()});
-  std::vector<double> values = flat.to_vec<double>();
-  for (double v : values) {
-    if (std::isnan(v)) return StatusOr<std::vector<double>>(Status::invalid_argument("labels must not contain NaN."));
+  if (flat.isnan().any().item<bool>()) {
+    return StatusOr<std::vector<double>>(Status::invalid_argument("labels must not contain NaN."));
   }
+  std::vector<double> values = flat.to_vec<double>();
   return StatusOr<std::vector<double>>(std::move(values));
 }
 

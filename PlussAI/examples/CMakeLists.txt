@@ -1,4 +1,8 @@
 if(TARGET pluss)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ")
+    add_subdirectory(NodeJ)
+  endif()
+
   add_executable(plussai_nn_rnn_demo
     nn_rnn_demo.cpp
   )

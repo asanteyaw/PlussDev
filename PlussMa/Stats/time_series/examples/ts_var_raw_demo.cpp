@@ -52,6 +52,22 @@ int main() {
   std::cout << "loglik_per_obs=" << fit.loglik_per_obs(y, cfg) << "\n";
   std::cout << "infer=" << fit.infer(y, cfg) << "\n";
   std::cout << "forecast=" << fit.forecast(12, y, cfg) << "\n";
+  std::cout << "irf=" << fit.irf(pluss::subsp::stats::ts::IrfOptions{.horizon = 12, .method = pluss::subsp::stats::ts::IrfMethod::Orthogonalized}, cfg)
+            << "\n";
+  std::cout << "fevd=" << fit.fevd(pluss::subsp::stats::ts::FevdOptions{.horizon = 12, .method = pluss::subsp::stats::ts::IrfMethod::Orthogonalized}, cfg)
+            << "\n";
+
+  pluss::subsp::stats::ts::GrangerOptions gopt;
+  gopt.type = pluss::subsp::stats::ts::GrangerType::LeaveOneOut;
+  gopt.stat = pluss::subsp::stats::ts::GrangerStat::ChiSquare;
+  gopt.alpha = 0.05;
+  const auto g = fit.granger_test(y, gopt, cfg);
+  std::cout << "granger_cause=" << g.cause << "\n";
+  std::cout << "granger_effect=" << g.effect << "\n";
+  std::cout << "granger_stat=" << g.stat << "\n";
+  std::cout << "granger_pvalue=" << g.pvalue << "\n";
+  std::cout << "granger_critical=" << g.critical << "\n";
+  std::cout << "granger_reject=" << g.reject << "\n";
 
   const auto vecm = var_to_vecm(fit.ar, cfg);
   std::cout << "vec_short_run=" << vecm.first << "\n";

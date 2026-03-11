@@ -500,6 +500,44 @@ plussma_dfo_unified_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_dfo_unified_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_dfo_unified_demo.dir/build
 .PHONY : plussma_dfo_unified_demo/fast
 
+# Convenience name for target.
+PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/rule
+.PHONY : PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/rule
+
+# Convenience name for target.
+plussma_adam_functional_demo: PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/rule
+.PHONY : plussma_adam_functional_demo
+
+# fast build rule for target.
+plussma_adam_functional_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/build
+.PHONY : plussma_adam_functional_demo/fast
+
+adam_functional_demo.o: adam_functional_demo.cpp.o
+.PHONY : adam_functional_demo.o
+
+# target to build an object file
+adam_functional_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/adam_functional_demo.cpp.o
+.PHONY : adam_functional_demo.cpp.o
+
+adam_functional_demo.i: adam_functional_demo.cpp.i
+.PHONY : adam_functional_demo.i
+
+# target to preprocess a source file
+adam_functional_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/adam_functional_demo.cpp.i
+.PHONY : adam_functional_demo.cpp.i
+
+adam_functional_demo.s: adam_functional_demo.cpp.s
+.PHONY : adam_functional_demo.s
+
+# target to generate assembly for a file
+adam_functional_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/adam_functional_demo.cpp.s
+.PHONY : adam_functional_demo.cpp.s
+
 dfo_suite_demo.o: dfo_suite_demo.cpp.o
 .PHONY : dfo_suite_demo.o
 
@@ -1043,6 +1081,7 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... plussma_adam_functional_demo"
 	@echo "... plussma_dfo_suite_demo"
 	@echo "... plussma_dfo_unified_demo"
 	@echo "... plussma_garch11_dfo_demo"
@@ -1065,6 +1104,9 @@ help:
 	@echo "... plussma_simple_garch11_objective_first_demo"
 	@echo "... plussma_simple_garch11_optim_demo"
 	@echo "... plussma_trace_objective_autodiff_demo"
+	@echo "... adam_functional_demo.o"
+	@echo "... adam_functional_demo.i"
+	@echo "... adam_functional_demo.s"
 	@echo "... dfo_suite_demo.o"
 	@echo "... dfo_suite_demo.i"
 	@echo "... dfo_suite_demo.s"

@@ -63,6 +63,10 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/io")
     add_subdirectory(NodeJ/io)
 endif()
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Lymph")
+    add_subdirectory(Lymph)
+endif()
+
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeK/NN/optim")
     add_subdirectory(NodeK/NN/optim)
 endif()

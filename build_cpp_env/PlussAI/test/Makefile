@@ -207,6 +207,20 @@ conv_test/fast:
 .PHONY : conv_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/lymph_quick_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/lymph_quick_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/lymph_quick_test.dir/rule
+
+# Convenience name for target.
+lymph_quick_test: PlussAI/test/CMakeFiles/lymph_quick_test.dir/rule
+.PHONY : lymph_quick_test
+
+# fast build rule for target.
+lymph_quick_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_quick_test.dir/build.make PlussAI/test/CMakeFiles/lymph_quick_test.dir/build
+.PHONY : lymph_quick_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nn_optim_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_optim_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nn_optim_test.dir/rule
@@ -219,6 +233,34 @@ nn_optim_test: PlussAI/test/CMakeFiles/nn_optim_test.dir/rule
 nn_optim_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_test.dir/build
 .PHONY : nn_optim_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/rule
+
+# Convenience name for target.
+nodej_bayes_kernel_test: PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/rule
+.PHONY : nodej_bayes_kernel_test
+
+# fast build rule for target.
+nodej_bayes_kernel_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/build.make PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/build
+.PHONY : nodej_bayes_kernel_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/rule
+
+# Convenience name for target.
+nodej_ensemble_bayes_regression_test: PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/rule
+.PHONY : nodej_ensemble_bayes_regression_test
+
+# fast build rule for target.
+nodej_ensemble_bayes_regression_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/build.make PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/build
+.PHONY : nodej_ensemble_bayes_regression_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_neighbor_test.dir/rule:
@@ -261,6 +303,20 @@ nodej_prep_test: PlussAI/test/CMakeFiles/nodej_prep_test.dir/rule
 nodej_prep_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_prep_test.dir/build.make PlussAI/test/CMakeFiles/nodej_prep_test.dir/build
 .PHONY : nodej_prep_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/rule
+
+# Convenience name for target.
+nodej_rigorous_suite_test: PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/rule
+.PHONY : nodej_rigorous_suite_test
+
+# fast build rule for target.
+nodej_rigorous_suite_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/build.make PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/build
+.PHONY : nodej_rigorous_suite_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_split_test.dir/rule:
@@ -328,6 +384,30 @@ conv_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/conv_test.dir/build.make PlussAI/test/CMakeFiles/conv_test.dir/conv_test.cpp.s
 .PHONY : conv_test.cpp.s
 
+lymph_quick_test.o: lymph_quick_test.cpp.o
+.PHONY : lymph_quick_test.o
+
+# target to build an object file
+lymph_quick_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_quick_test.dir/build.make PlussAI/test/CMakeFiles/lymph_quick_test.dir/lymph_quick_test.cpp.o
+.PHONY : lymph_quick_test.cpp.o
+
+lymph_quick_test.i: lymph_quick_test.cpp.i
+.PHONY : lymph_quick_test.i
+
+# target to preprocess a source file
+lymph_quick_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_quick_test.dir/build.make PlussAI/test/CMakeFiles/lymph_quick_test.dir/lymph_quick_test.cpp.i
+.PHONY : lymph_quick_test.cpp.i
+
+lymph_quick_test.s: lymph_quick_test.cpp.s
+.PHONY : lymph_quick_test.s
+
+# target to generate assembly for a file
+lymph_quick_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_quick_test.dir/build.make PlussAI/test/CMakeFiles/lymph_quick_test.dir/lymph_quick_test.cpp.s
+.PHONY : lymph_quick_test.cpp.s
+
 nn_optim_test.o: nn_optim_test.cpp.o
 .PHONY : nn_optim_test.o
 
@@ -351,6 +431,54 @@ nn_optim_test.s: nn_optim_test.cpp.s
 nn_optim_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_test.dir/nn_optim_test.cpp.s
 .PHONY : nn_optim_test.cpp.s
+
+nodej_bayes_kernel_test.o: nodej_bayes_kernel_test.cpp.o
+.PHONY : nodej_bayes_kernel_test.o
+
+# target to build an object file
+nodej_bayes_kernel_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/build.make PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/nodej_bayes_kernel_test.cpp.o
+.PHONY : nodej_bayes_kernel_test.cpp.o
+
+nodej_bayes_kernel_test.i: nodej_bayes_kernel_test.cpp.i
+.PHONY : nodej_bayes_kernel_test.i
+
+# target to preprocess a source file
+nodej_bayes_kernel_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/build.make PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/nodej_bayes_kernel_test.cpp.i
+.PHONY : nodej_bayes_kernel_test.cpp.i
+
+nodej_bayes_kernel_test.s: nodej_bayes_kernel_test.cpp.s
+.PHONY : nodej_bayes_kernel_test.s
+
+# target to generate assembly for a file
+nodej_bayes_kernel_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/build.make PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/nodej_bayes_kernel_test.cpp.s
+.PHONY : nodej_bayes_kernel_test.cpp.s
+
+nodej_ensemble_bayes_regression_test.o: nodej_ensemble_bayes_regression_test.cpp.o
+.PHONY : nodej_ensemble_bayes_regression_test.o
+
+# target to build an object file
+nodej_ensemble_bayes_regression_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/build.make PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/nodej_ensemble_bayes_regression_test.cpp.o
+.PHONY : nodej_ensemble_bayes_regression_test.cpp.o
+
+nodej_ensemble_bayes_regression_test.i: nodej_ensemble_bayes_regression_test.cpp.i
+.PHONY : nodej_ensemble_bayes_regression_test.i
+
+# target to preprocess a source file
+nodej_ensemble_bayes_regression_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/build.make PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/nodej_ensemble_bayes_regression_test.cpp.i
+.PHONY : nodej_ensemble_bayes_regression_test.cpp.i
+
+nodej_ensemble_bayes_regression_test.s: nodej_ensemble_bayes_regression_test.cpp.s
+.PHONY : nodej_ensemble_bayes_regression_test.s
+
+# target to generate assembly for a file
+nodej_ensemble_bayes_regression_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/build.make PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/nodej_ensemble_bayes_regression_test.cpp.s
+.PHONY : nodej_ensemble_bayes_regression_test.cpp.s
 
 nodej_neighbor_test.o: nodej_neighbor_test.cpp.o
 .PHONY : nodej_neighbor_test.o
@@ -423,6 +551,30 @@ nodej_prep_test.s: nodej_prep_test.cpp.s
 nodej_prep_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_prep_test.dir/build.make PlussAI/test/CMakeFiles/nodej_prep_test.dir/nodej_prep_test.cpp.s
 .PHONY : nodej_prep_test.cpp.s
+
+nodej_rigorous_suite_test.o: nodej_rigorous_suite_test.cpp.o
+.PHONY : nodej_rigorous_suite_test.o
+
+# target to build an object file
+nodej_rigorous_suite_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/build.make PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/nodej_rigorous_suite_test.cpp.o
+.PHONY : nodej_rigorous_suite_test.cpp.o
+
+nodej_rigorous_suite_test.i: nodej_rigorous_suite_test.cpp.i
+.PHONY : nodej_rigorous_suite_test.i
+
+# target to preprocess a source file
+nodej_rigorous_suite_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/build.make PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/nodej_rigorous_suite_test.cpp.i
+.PHONY : nodej_rigorous_suite_test.cpp.i
+
+nodej_rigorous_suite_test.s: nodej_rigorous_suite_test.cpp.s
+.PHONY : nodej_rigorous_suite_test.s
+
+# target to generate assembly for a file
+nodej_rigorous_suite_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/build.make PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/nodej_rigorous_suite_test.cpp.s
+.PHONY : nodej_rigorous_suite_test.cpp.s
 
 nodej_split_test.o: nodej_split_test.cpp.o
 .PHONY : nodej_split_test.o
@@ -512,19 +664,32 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... conv_test"
+	@echo "... lymph_quick_test"
 	@echo "... nn_optim_test"
+	@echo "... nodej_bayes_kernel_test"
+	@echo "... nodej_ensemble_bayes_regression_test"
 	@echo "... nodej_neighbor_test"
 	@echo "... nodej_phase0_contract_test"
 	@echo "... nodej_prep_test"
+	@echo "... nodej_rigorous_suite_test"
 	@echo "... nodej_split_test"
 	@echo "... nodej_tree_test"
 	@echo "... rnn_fusion_test"
 	@echo "... conv_test.o"
 	@echo "... conv_test.i"
 	@echo "... conv_test.s"
+	@echo "... lymph_quick_test.o"
+	@echo "... lymph_quick_test.i"
+	@echo "... lymph_quick_test.s"
 	@echo "... nn_optim_test.o"
 	@echo "... nn_optim_test.i"
 	@echo "... nn_optim_test.s"
+	@echo "... nodej_bayes_kernel_test.o"
+	@echo "... nodej_bayes_kernel_test.i"
+	@echo "... nodej_bayes_kernel_test.s"
+	@echo "... nodej_ensemble_bayes_regression_test.o"
+	@echo "... nodej_ensemble_bayes_regression_test.i"
+	@echo "... nodej_ensemble_bayes_regression_test.s"
 	@echo "... nodej_neighbor_test.o"
 	@echo "... nodej_neighbor_test.i"
 	@echo "... nodej_neighbor_test.s"
@@ -534,6 +699,9 @@ help:
 	@echo "... nodej_prep_test.o"
 	@echo "... nodej_prep_test.i"
 	@echo "... nodej_prep_test.s"
+	@echo "... nodej_rigorous_suite_test.o"
+	@echo "... nodej_rigorous_suite_test.i"
+	@echo "... nodej_rigorous_suite_test.s"
 	@echo "... nodej_split_test.o"
 	@echo "... nodej_split_test.i"
 	@echo "... nodej_split_test.s"

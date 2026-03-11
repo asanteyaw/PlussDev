@@ -25,6 +25,8 @@ option(PLUSSMA_MATH_NUMERICAL_ENABLE_SPECTRAL_METHODS "Build PlussMa Math::Numer
 
 # Math::Finance modules
 option(PLUSSMA_MATH_FINANCE_ENABLE_CALIBRATION "Build PlussMa Math::Finance::calibration" ON)
+option(PLUSSMA_MATH_FINANCE_ENABLE_PRICING "Build PlussMa Math::Finance::pricing" ON)
+option(PLUSSMA_MATH_FINANCE_ENABLE_HEDGING "Build PlussMa Math::Finance::hedging" ON)
 option(PLUSSMA_MATH_FINANCE_ENABLE_FILTERING "Build PlussMa Math::Finance::filtering" ON)
 option(PLUSSMA_MATH_FINANCE_ENABLE_STOCHASTIC_PROCESSES "Build PlussMa Math::Finance::stochastic_processes" ON)
 
@@ -63,6 +65,9 @@ if(PLUSSMA_ENABLE_MATH AND PLUSSMA_MATH_ENABLE_FINANCE AND PLUSSMA_MATH_FINANCE_
     if(NOT PLUSSMA_ENABLE_STATS OR NOT PLUSSMA_STATS_ENABLE_TIME_SERIES)
         message(FATAL_ERROR "PlussMa config invalid: Math::Finance::calibration requires Stats::time_series")
     endif()
+endif()
+if(PLUSSMA_ENABLE_MATH AND PLUSSMA_MATH_ENABLE_FINANCE AND PLUSSMA_MATH_FINANCE_ENABLE_HEDGING AND NOT PLUSSMA_MATH_FINANCE_ENABLE_PRICING)
+    message(FATAL_ERROR "PlussMa config invalid: Math::Finance::hedging requires Math::Finance::pricing")
 endif()
 
 if(PLUSSMA_ENABLE_ENG)
