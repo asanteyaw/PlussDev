@@ -1854,6 +1854,7 @@ static Series restore_sorted_value_dtype_(Series values_cpu, const Series& self,
 
 struct MpsSelectionCacheKey {
   const pluss::codem::SeriesImpl* impl_ptr{nullptr};
+  std::uint64_t impl_instance_id{0};
   const void* storage_handle{nullptr};
   ScalarType dtype{ScalarType::Float32};
   const void* raw_ptr{nullptr};
@@ -1899,6 +1900,7 @@ static MpsSelectionCacheKey make_mps_selection_cache_key_(
     bool flag2) {
   MpsSelectionCacheKey key{};
   key.impl_ptr = self.unsafe_impl();
+  key.impl_instance_id = (key.impl_ptr != nullptr) ? key.impl_ptr->instance_id() : 0;
   key.storage_handle = self.storage().handle().get();
   key.dtype = self.scalar_type();
   key.raw_ptr =
@@ -1927,6 +1929,7 @@ static bool mps_selection_cache_matches_(
   }
   const auto key = make_mps_selection_cache_key_(self, dim, k, flag0, flag1, flag2);
   return entry.key.impl_ptr == key.impl_ptr &&
+      entry.key.impl_instance_id == key.impl_instance_id &&
       entry.key.storage_handle == key.storage_handle &&
       entry.key.dtype == key.dtype &&
       entry.key.raw_ptr == key.raw_ptr &&

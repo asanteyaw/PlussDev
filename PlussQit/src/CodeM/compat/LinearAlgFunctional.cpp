@@ -2,6 +2,7 @@
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/native/cpu/BlasGemm.h"
+#include "CodeM/native/mps/Linalg.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
 
@@ -303,6 +304,20 @@ inline Series eye_like_(const Series& a) {
   return out;
 }
 
+inline Series canonical_mps_native_f32_(const Series& x) {
+  Series out = x;
+  if (out.platform() != Platform::MPS) {
+    out = out.to(Platform::MPS);
+  }
+  if (out.scalar_type() != ScalarType::Float32) {
+    out = out.to(ScalarType::Float32);
+  }
+  if (!out.is_contiguous()) {
+    out = out.contiguous();
+  }
+  return out;
+}
+
 [[noreturn]] inline void throw_platform_not_ready_(const char* op, Platform p) {
   const char* pstr = (p == Platform::CPU) ? "CPU" : (p == Platform::MPS) ? "MPS" : "Unknown";
   pluss::codem::throw_error(
@@ -360,22 +375,20 @@ inline bool mps_native_triangular_solve_supported_(const Series& a, const Series
 }
 
 inline bool mps_native_cholesky_supported_(const Series& a) {
-  return mps_experimental_native_enabled_() &&
-      a.platform() == Platform::MPS &&
-      a.dim() == 2 &&
-      a.sizes()[0] == a.sizes()[1];
+  if (!mps_experimental_native_enabled_()) {
+    return false;
+  }
+  if (a.platform() != Platform::MPS || a.dim() != 2 || a.sizes()[0] != a.sizes()[1]) {
+    return false;
+  }
+  return pluss::codem::native::mps::supports_cholesky_factor(canonical_mps_native_f32_(a));
 }
 
 inline Series cholesky_mps_native_(const Series& a, bool upper) {
   PLUSS_CHECK(mps_native_cholesky_supported_(a),
               "subsp::linearalg::cholesky: native MPS path expects square 2D input");
-  // Accuracy-first native experimental path: solve with stable host reference
-  // numerics, then materialize result back on MPS.
-  const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
-  const Series chol = pluss::subsp::math::linalg::cholesky(cpu, upper)
-                          .to(ScalarType::Float32)
-                          .contiguous();
-  return chol.to(Platform::MPS);
+  const Series native_a = canonical_mps_native_f32_(a);
+  return pluss::codem::native::mps::cholesky_factor(native_a, upper);
 }
 
 inline bool mps_native_inverse_supported_(const Series& a) {
@@ -402,6 +415,11 @@ inline DetStats det_stats_mps_native_(const Series& a) {
   PLUSS_CHECK(
       mps_native_det_supported_(a),
       "subsp::linearalg::det: native MPS path expects square 2D input");
+  const Series native_a = canonical_mps_native_f32_(a);
+  if (pluss::codem::native::mps::supports_lu_solver(native_a)) {
+    const auto stats = pluss::codem::native::mps::lu_det_stats(native_a);
+    return DetStats{stats.sign, stats.logabs, stats.singular};
+  }
   const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
   const Series slog = pluss::subsp::math::linalg::slogdet(cpu).to(ScalarType::Float32).contiguous();
   const auto vals = slog.to_vec<float>();
@@ -417,6 +435,10 @@ inline DetStats det_stats_mps_native_(const Series& a) {
 inline Series inverse_mps_native_(const Series& a) {
   PLUSS_CHECK(mps_native_inverse_supported_(a),
               "subsp::linearalg::inverse: native MPS path expects square 2D input");
+  const Series native_a = canonical_mps_native_f32_(a);
+  if (pluss::codem::native::mps::supports_lu_solver(native_a)) {
+    return pluss::codem::native::mps::lu_inverse(native_a);
+  }
   const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
   const Series inv = pluss::subsp::math::linalg::inverse(cpu).to(ScalarType::Float32).contiguous();
   return inv.to(Platform::MPS);
@@ -441,6 +463,11 @@ inline Series lu_solve_mps_native_(const Series& lu, const Series& b) {
   PLUSS_CHECK(
       mps_native_lu_solve_supported_(lu, b),
       "subsp::linearalg::lu_solve: native MPS path expects square 2D matrix and 1D/2D rhs");
+  const Series native_lu = canonical_mps_native_f32_(lu);
+  const Series native_b = canonical_mps_native_f32_(b);
+  if (pluss::codem::native::mps::supports_lu_solve(native_lu, native_b)) {
+    return pluss::codem::native::mps::lu_solve(native_lu, native_b);
+  }
   Series rhs_cpu = b.to(Platform::CPU).to(ScalarType::Float32).contiguous();
   const Series lu_cpu = lu.to(Platform::CPU).to(ScalarType::Float32).contiguous();
   const Series x_cpu = pluss::subsp::math::linalg::lu_solve(rhs_cpu, lu_cpu)
@@ -461,11 +488,33 @@ inline Series pinverse_mps_native_(const Series& a, double rcond) {
   PLUSS_CHECK(
       mps_native_pinverse_supported_(a),
       "subsp::linearalg::pinverse: native MPS path expects non-empty 2D input");
-  const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
-  const Series out = pluss::subsp::math::linalg::pinverse(cpu, rcond)
-                         .to(ScalarType::Float32)
-                         .contiguous();
-  return out.to(Platform::MPS);
+  const auto m = a.sizes()[0];
+  const auto n = a.sizes()[1];
+  const Series at = a.transpose(0, 1).contiguous();
+  const double rc = (rcond > 0.0) ? rcond : 0.0;
+  // Tikhonov regularization keeps the solve stable on near-rank-deficient
+  // matrices while remaining close to Moore-Penrose for well-conditioned ones.
+  const double lambda = std::max(1e-7, rc * rc);
+
+  if (m >= n) {
+    Series gram = at.matmul(a).to(ScalarType::Float32).contiguous();
+    Series ridge = Series::eye(n, n, ScalarType::Float32)
+                       .to(Platform::MPS)
+                       .mul(lambda)
+                       .contiguous();
+    gram = gram.add(ridge).contiguous();
+    const Series inv = inverse_mps_native_(gram);
+    return inv.matmul(at).to(ScalarType::Float32).contiguous();
+  }
+
+  Series gram = a.matmul(at).to(ScalarType::Float32).contiguous();
+  Series ridge = Series::eye(m, m, ScalarType::Float32)
+                     .to(Platform::MPS)
+                     .mul(lambda)
+                     .contiguous();
+  gram = gram.add(ridge).contiguous();
+  const Series inv = inverse_mps_native_(gram);
+  return at.matmul(inv).to(ScalarType::Float32).contiguous();
 }
 
 struct NativeQrResult {
@@ -481,6 +530,7 @@ struct NativeSvdResult {
 
 struct DecompCacheKey {
   const pluss::codem::SeriesImpl* impl_ptr = nullptr;
+  std::uint64_t impl_instance_id = 0;
   const void* storage_handle = nullptr;
   Platform platform = Platform::CPU;
   ScalarType dtype = ScalarType::Float32;
@@ -634,6 +684,7 @@ inline void canonicalize_svd_bridge_signs_cpu_(Series& u_cpu, Series& s_cpu, Ser
 inline DecompCacheKey make_decomp_cache_key_(const Series& a, bool mode_flag) {
   DecompCacheKey key{};
   key.impl_ptr = a.unsafe_impl();
+  key.impl_instance_id = (key.impl_ptr != nullptr) ? key.impl_ptr->instance_id() : 0;
   key.storage_handle = a.storage().handle().get();
   key.platform = a.platform();
   key.dtype = a.scalar_type();
@@ -658,7 +709,12 @@ inline DecompCacheKey make_decomp_cache_key_(const Series& a, bool mode_flag) {
 }
 
 inline bool same_decomp_cache_key_(const DecompCacheKey& key, const Series& a, bool mode_flag) {
-  if (key.impl_ptr != a.unsafe_impl()) {
+  const auto* impl = a.unsafe_impl();
+  if (key.impl_ptr != impl) {
+    return false;
+  }
+  const std::uint64_t impl_instance_id = (impl != nullptr) ? impl->instance_id() : 0;
+  if (key.impl_instance_id != impl_instance_id) {
     return false;
   }
   if (key.storage_handle != a.storage().handle().get()) {
@@ -704,18 +760,107 @@ inline bool mps_native_qr_supported_(const Series& a, bool reduced) {
       a.sizes()[1] > 0;
 }
 
-inline NativeQrResult qr_mps_native_(const Series& a) {
-  PLUSS_CHECK(
-      mps_native_qr_supported_(a, true),
-      "subsp::linearalg::qr: native MPS path expects non-empty 2D input with reduced=true");
+inline bool mps_native_device_qr_enabled_() noexcept {
+  return parse_bool_env_("PLUSS_MPS_LINALG_NATIVE_DEVICE_QR", true);
+}
+
+inline bool mps_native_device_svd_enabled_() noexcept {
+  return parse_bool_env_("PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD", false);
+}
+
+inline float max_abs_diff_scalar_(const Series& a, const Series& b) {
+  return a.sub(b).abs().amax().item<float>();
+}
+
+inline Series range_index_mps_(std::int64_t n) {
+  std::vector<std::int64_t> idx;
+  idx.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, n)));
+  for (std::int64_t i = 0; i < n; ++i) {
+    idx.push_back(i);
+  }
+  return pluss::make_series(std::move(idx), {std::max<std::int64_t>(0, n)}).to(Platform::MPS).contiguous();
+}
+
+inline NativeQrResult qr_mps_cpu_reference_(const Series& a) {
   const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
   auto qr = pluss::subsp::math::linalg::qr(cpu, /*reduced=*/true);
   Series q = qr.Q.to(ScalarType::Float32).contiguous();
   Series r = qr.R.to(ScalarType::Float32).contiguous();
   canonicalize_qr_bridge_signs_cpu_(q, r);
-  q = q.to(Platform::MPS);
-  r = r.to(Platform::MPS);
+  return NativeQrResult{q.to(Platform::MPS), r.to(Platform::MPS)};
+}
+
+inline NativeSvdResult svd_mps_cpu_reference_(const Series& a) {
+  const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  auto svd = pluss::subsp::math::linalg::svd(cpu, /*full_matrices=*/false);
+  Series u = svd.U.to(ScalarType::Float32).contiguous();
+  Series s = svd.S.to(ScalarType::Float32).contiguous();
+  Series vh = svd.Vh.to(ScalarType::Float32).contiguous();
+  canonicalize_svd_bridge_signs_cpu_(u, s, vh);
+  return NativeSvdResult{u.to(Platform::MPS), s.to(Platform::MPS), vh.to(Platform::MPS)};
+}
+
+inline NativeQrResult qr_mps_device_mgs_(const Series& a) {
+  const Series x = canonical_mps_native_f32_(a);
+  const auto m = x.sizes()[0];
+  const auto n = x.sizes()[1];
+  const auto k = std::min(m, n);
+  PLUSS_CHECK(k > 0, "subsp::linearalg::qr: expected non-empty matrix");
+
+  std::vector<Series> q_cols;
+  q_cols.reserve(static_cast<std::size_t>(k));
+  std::vector<Series> r_rows;
+  r_rows.reserve(static_cast<std::size_t>(k));
+
+  for (std::int64_t i = 0; i < k; ++i) {
+    const Series a_i = x.select(1, i).contiguous();
+    Series v = a_i;
+    for (std::int64_t t = 0; t < i; ++t) {
+      const Series& q_t = q_cols[static_cast<std::size_t>(t)];
+      const Series r_ti = q_t.reshape({1, m}).matmul(a_i.reshape({m, 1})).reshape({}).contiguous();
+      v = v.sub(q_t.mul(r_ti)).contiguous();
+    }
+
+    const Series r_ii = v.norm(2.0).to(ScalarType::Float32).contiguous();
+    const Series q_i = v.div(r_ii.add(1e-12)).to(ScalarType::Float32).contiguous();
+    q_cols.push_back(q_i);
+
+    std::vector<Series> row_scalars;
+    row_scalars.reserve(static_cast<std::size_t>(n));
+    for (std::int64_t j = 0; j < n; ++j) {
+      if (j < i) {
+        row_scalars.push_back(Series::full({}, 0.0, ScalarType::Float32).to(Platform::MPS).contiguous());
+      } else if (j == i) {
+        row_scalars.push_back(r_ii);
+      } else {
+        const Series a_j = x.select(1, j).contiguous();
+        const Series r_ij = q_i.reshape({1, m}).matmul(a_j.reshape({m, 1})).reshape({}).contiguous();
+        row_scalars.push_back(r_ij);
+      }
+    }
+    r_rows.push_back(stack_dim0_(row_scalars, "qr_native_row").reshape({n}).contiguous());
+  }
+
+  Series q = stack_dim0_(q_cols, "qr_native_q").transpose(0, 1).contiguous();
+  Series r = stack_dim0_(r_rows, "qr_native_r").contiguous();
   return NativeQrResult{q, r};
+}
+
+inline NativeQrResult qr_mps_native_(const Series& a) {
+  PLUSS_CHECK(
+      mps_native_qr_supported_(a, true),
+      "subsp::linearalg::qr: native MPS path expects non-empty 2D input with reduced=true");
+  if (mps_native_device_qr_enabled_()) {
+    try {
+      auto out = qr_mps_device_mgs_(a);
+      const float recon_err = max_abs_diff_scalar_(out.q.matmul(out.r), canonical_mps_native_f32_(a));
+      if (recon_err <= 2.5e-2f) {
+        return out;
+      }
+    } catch (const std::exception&) {
+    }
+  }
+  return qr_mps_cpu_reference_(a);
 }
 
 inline bool mps_native_svd_supported_(const Series& a, bool full_matrices) {
@@ -731,13 +876,47 @@ inline NativeSvdResult svd_mps_native_(const Series& a) {
   PLUSS_CHECK(
       mps_native_svd_supported_(a, false),
       "subsp::linearalg::svd: native MPS path expects non-empty 2D input with full_matrices=false");
-  const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
-  auto svd = pluss::subsp::math::linalg::svd(cpu, /*full_matrices=*/false);
-  Series u = svd.U.to(ScalarType::Float32).contiguous();
-  Series s = svd.S.to(ScalarType::Float32).contiguous();
-  Series vh = svd.Vh.to(ScalarType::Float32).contiguous();
-  canonicalize_svd_bridge_signs_cpu_(u, s, vh);
-  return NativeSvdResult{u.to(Platform::MPS), s.to(Platform::MPS), vh.to(Platform::MPS)};
+  if (mps_native_device_svd_enabled_()) {
+    try {
+      const Series x = canonical_mps_native_f32_(a);
+      const auto m = x.sizes()[0];
+      const auto n = x.sizes()[1];
+      const auto k = std::min(m, n);
+      PLUSS_CHECK(k > 0, "subsp::linearalg::svd: expected non-empty matrix");
+
+      const Series gram = x.transpose(0, 1).contiguous().matmul(x).contiguous();
+      Series v = Series::eye(n, n, ScalarType::Float32).to(Platform::MPS).contiguous();
+      for (int iter = 0; iter < 10; ++iter) {
+        const Series z = gram.matmul(v).contiguous();
+        v = qr_mps_device_mgs_(z).q.contiguous();
+      }
+
+      const Series b = x.matmul(v).contiguous();
+      std::vector<Series> u_cols;
+      u_cols.reserve(static_cast<std::size_t>(k));
+      std::vector<Series> s_scalars;
+      s_scalars.reserve(static_cast<std::size_t>(k));
+      for (std::int64_t j = 0; j < k; ++j) {
+        const Series b_j = b.select(1, j).contiguous();
+        const Series s_j = b_j.norm(2.0).to(ScalarType::Float32).contiguous();
+        const Series u_j = b_j.div(s_j.add(1e-12)).to(ScalarType::Float32).contiguous();
+        u_cols.push_back(u_j);
+        s_scalars.push_back(s_j);
+      }
+
+      const Series u = stack_dim0_(u_cols, "svd_native_u").transpose(0, 1).contiguous();
+      const Series s = stack_dim0_(s_scalars, "svd_native_s").reshape({k}).contiguous();
+      const Series vh = v.transpose(0, 1).contiguous().index_select(0, range_index_mps_(k)).contiguous();
+
+      const Series recon = u.matmul(vh.mul(s.reshape({k, 1})));
+      const float recon_err = max_abs_diff_scalar_(recon, x);
+      if (recon_err <= 8.0e-2f) {
+        return NativeSvdResult{u, s, vh};
+      }
+    } catch (const std::exception&) {
+    }
+  }
+  return svd_mps_cpu_reference_(a);
 }
 
 inline Series triangular_solve_mps_native_(
@@ -869,6 +1048,11 @@ inline QrDispatchCacheEntry compute_mps_qr_dispatch_(const Series& a, bool reduc
 }
 
 inline const QrDispatchCacheEntry& cached_mps_qr_dispatch_(const Series& a, bool reduced) {
+  if (a.platform() == Platform::MPS) {
+    static thread_local QrDispatchCacheEntry uncached{};
+    uncached = compute_mps_qr_dispatch_(a, reduced);
+    return uncached;
+  }
   static thread_local QrDispatchCacheEntry cache{};
   if (!cache.valid ||
       cache.epoch != current_dispatch_cache_epoch_() ||
@@ -905,6 +1089,11 @@ inline SvdDispatchCacheEntry compute_mps_svd_dispatch_(const Series& a, bool ful
 }
 
 inline const SvdDispatchCacheEntry& cached_mps_svd_dispatch_(const Series& a, bool full_matrices) {
+  if (a.platform() == Platform::MPS) {
+    static thread_local SvdDispatchCacheEntry uncached{};
+    uncached = compute_mps_svd_dispatch_(a, full_matrices);
+    return uncached;
+  }
   static thread_local SvdDispatchCacheEntry cache{};
   if (!cache.valid ||
       cache.epoch != current_dispatch_cache_epoch_() ||
@@ -1096,14 +1285,11 @@ Series det(const Series& a) {
       std::vector<std::int64_t> shape(sz.begin(), sz.end() - 2);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = a.contiguous();
     std::vector<Series> det_parts;
     det_parts.reserve(static_cast<std::size_t>(sz[0]));
     for (std::int64_t i = 0; i < sz[0]; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      if (a.platform() == Platform::MPS) {
-        mat = mat.to(Platform::MPS);
-      }
       det_parts.push_back(det(mat));
     }
     return stack_dim0_(det_parts, "det");
@@ -1132,14 +1318,11 @@ Series inverse(const Series& a) {
     if (sz[0] == 0) {
       return Series::zeros(sz, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = a.contiguous();
     std::vector<Series> inv_parts;
     inv_parts.reserve(static_cast<std::size_t>(sz[0]));
     for (std::int64_t i = 0; i < sz[0]; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      if (a.platform() == Platform::MPS) {
-        mat = mat.to(Platform::MPS);
-      }
       inv_parts.push_back(inverse(mat));
     }
     return stack_dim0_(inv_parts, "inverse");
@@ -1167,14 +1350,11 @@ Series cholesky(const Series& a, bool upper) {
     if (sz[0] == 0) {
       return Series::zeros(sz, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = a.contiguous();
     std::vector<Series> chol_parts;
     chol_parts.reserve(static_cast<std::size_t>(sz[0]));
     for (std::int64_t i = 0; i < sz[0]; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      if (a.platform() == Platform::MPS) {
-        mat = mat.to(Platform::MPS);
-      }
       chol_parts.push_back(cholesky(mat, upper));
     }
     return stack_dim0_(chol_parts, "cholesky");
@@ -1203,14 +1383,11 @@ Series logdet(const Series& a) {
       std::vector<std::int64_t> shape(sz.begin(), sz.end() - 2);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = a.contiguous();
     std::vector<Series> logdet_parts;
     logdet_parts.reserve(static_cast<std::size_t>(sz[0]));
     for (std::int64_t i = 0; i < sz[0]; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      if (a.platform() == Platform::MPS) {
-        mat = mat.to(Platform::MPS);
-      }
       logdet_parts.push_back(logdet(mat));
     }
     return stack_dim0_(logdet_parts, "logdet");
@@ -1243,14 +1420,11 @@ Series slogdet(const Series& a) {
       shape.push_back(2);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = a.contiguous();
     std::vector<Series> slogdet_parts;
     slogdet_parts.reserve(static_cast<std::size_t>(sz[0]));
     for (std::int64_t i = 0; i < sz[0]; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      if (a.platform() == Platform::MPS) {
-        mat = mat.to(Platform::MPS);
-      }
       slogdet_parts.push_back(slogdet(mat));
     }
     return stack_dim0_(slogdet_parts, "slogdet");
@@ -1338,14 +1512,11 @@ Series pinverse(const Series& a, double rcond) {
       shape[shape.size() - 1] = m;
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = a.contiguous();
     std::vector<Series> pinv_parts;
     pinv_parts.reserve(static_cast<std::size_t>(sz[0]));
     for (std::int64_t i = 0; i < sz[0]; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      if (a.platform() == Platform::MPS) {
-        mat = mat.to(Platform::MPS);
-      }
       pinv_parts.push_back(pinverse(mat, rcond));
     }
     return stack_dim0_(pinv_parts, "pinverse");
@@ -1379,14 +1550,11 @@ Series qr_q(const Series& a, bool reduced) {
       shape[shape.size() - 1] = reduced ? k : m;
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = a.contiguous();
     std::vector<Series> q_parts;
     q_parts.reserve(static_cast<std::size_t>(sz[0]));
     for (std::int64_t i = 0; i < sz[0]; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      if (a.platform() == Platform::MPS) {
-        mat = mat.to(Platform::MPS);
-      }
       q_parts.push_back(qr_q(mat, reduced));
     }
     return stack_dim0_(q_parts, "qr_q");
@@ -1417,14 +1585,11 @@ Series qr_r(const Series& a, bool reduced) {
       shape[shape.size() - 1] = n;
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = a.contiguous();
     std::vector<Series> r_parts;
     r_parts.reserve(static_cast<std::size_t>(sz[0]));
     for (std::int64_t i = 0; i < sz[0]; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      if (a.platform() == Platform::MPS) {
-        mat = mat.to(Platform::MPS);
-      }
       r_parts.push_back(qr_r(mat, reduced));
     }
     return stack_dim0_(r_parts, "qr_r");
@@ -1455,14 +1620,11 @@ Series svd_u(const Series& a, bool full_matrices) {
       shape[shape.size() - 1] = full_matrices ? m : k;
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = a.contiguous();
     std::vector<Series> u_parts;
     u_parts.reserve(static_cast<std::size_t>(sz[0]));
     for (std::int64_t i = 0; i < sz[0]; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      if (a.platform() == Platform::MPS) {
-        mat = mat.to(Platform::MPS);
-      }
       u_parts.push_back(svd_u(mat, full_matrices));
     }
     return stack_dim0_(u_parts, "svd_u");
@@ -1492,14 +1654,11 @@ Series svd_s(const Series& a, bool full_matrices) {
       shape.back() = k;
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = a.contiguous();
     std::vector<Series> s_parts;
     s_parts.reserve(static_cast<std::size_t>(sz[0]));
     for (std::int64_t i = 0; i < sz[0]; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      if (a.platform() == Platform::MPS) {
-        mat = mat.to(Platform::MPS);
-      }
       s_parts.push_back(svd_s(mat, full_matrices));
     }
     return stack_dim0_(s_parts, "svd_s");
@@ -1530,14 +1689,11 @@ Series svd_vh(const Series& a, bool full_matrices) {
       shape[shape.size() - 1] = n;
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    const Series batch_src = a.contiguous();
     std::vector<Series> vh_parts;
     vh_parts.reserve(static_cast<std::size_t>(sz[0]));
     for (std::int64_t i = 0; i < sz[0]; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
-      if (a.platform() == Platform::MPS) {
-        mat = mat.to(Platform::MPS);
-      }
       vh_parts.push_back(svd_vh(mat, full_matrices));
     }
     return stack_dim0_(vh_parts, "svd_vh");
@@ -1704,6 +1860,13 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
     return pluss::subsp::math::linalg::cholesky_solve(b, factor, upper);
   }
   if (factor.platform() == Platform::MPS) {
+    if (mps_experimental_native_enabled_()) {
+      const Series native_factor = canonical_mps_native_f32_(factor);
+      const Series native_b = canonical_mps_native_f32_(b);
+      if (pluss::codem::native::mps::supports_cholesky_solve(native_factor, native_b)) {
+        return pluss::codem::native::mps::cholesky_solve(native_factor, native_b, upper);
+      }
+    }
     if (mps_native_triangular_solve_supported_(factor, b)) {
       Series l = factor.to(ScalarType::Float32).contiguous();
       if (upper) {
@@ -1744,6 +1907,14 @@ Series cholesky_inverse(const Series& factor, bool upper) {
     return pluss::subsp::math::linalg::cholesky_inverse(factor, upper);
   }
   if (factor.platform() == Platform::MPS) {
+    if (mps_experimental_native_enabled_()) {
+      const Series native_factor = canonical_mps_native_f32_(factor);
+      if (pluss::codem::native::mps::supports_cholesky_factor(native_factor)) {
+        const auto n = native_factor.sizes()[0];
+        const Series eye = Series::eye(n, n, ScalarType::Float32).to(Platform::MPS).contiguous();
+        return pluss::codem::native::mps::cholesky_solve(native_factor, eye, upper);
+      }
+    }
     if (mps_experimental_native_enabled_()) {
       require_square_2d_(factor, "cholesky_inverse");
       Series l = factor.to(ScalarType::Float32).contiguous();

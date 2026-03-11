@@ -105,6 +105,10 @@ bool mps_cpu_fallback_enabled_() noexcept {
   return parse_bool_env_("PLUSS_MPS_ALLOW_CPU_FALLBACK", false);
 }
 
+bool mps_native_take_put_enabled_() noexcept {
+  return parse_bool_env_("PLUSS_MPS_NATIVE_TAKE_PUT", false);
+}
+
 void require_mps_native_dispatch_supported_(std::string_view op) {
   if (mps_cpu_fallback_enabled_()) {
     return;
@@ -4070,7 +4074,7 @@ Series Series::index(const std::vector<Series>& indices) const {
 Series Series::take(const Series& index) const {
   require_same_platform(*this, index, "take");
   if (platform() == Platform::MPS) {
-    if (mps_take_fast_path_supported_(*this, index)) {
+    if (mps_native_take_put_enabled_() && mps_take_fast_path_supported_(*this, index)) {
       const std::array<std::int64_t, 1> flat_shape{{numel()}};
       const std::array<std::int64_t, 1> out_shape{{index.numel()}};
       const Series flat_self = this->contiguous().reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()));
@@ -4095,7 +4099,8 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
   require_same_platform(*this, index, "put_");
   require_same_platform(*this, source, "put_");
   if (platform() == Platform::MPS) {
-    if (mps_put_fast_path_supported_(*this, index, source) &&
+    if (mps_native_take_put_enabled_() &&
+        mps_put_fast_path_supported_(*this, index, source) &&
         (source.numel() == 1 || source.numel() == index.numel())) {
       const std::array<std::int64_t, 1> flat_shape{{numel()}};
       const Series flat_idx = index.contiguous();

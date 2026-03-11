@@ -196,6 +196,30 @@ If any gate is missing, parity score must not increase.
 - [x] Align MPS backend capability reporting so `solver_provider` reflects effective route class (`Metal` when native route is selected, `Reference` when bridge is selected).
 - [x] Add runtime policy regression coverage validating provider fallback precedence across route/bridge/native env combinations.
 
+## Patch 126 Focus (current)
+- [x] Route native MPS `lu_solve` dispatch through the LU Metal backend (`MPSMatrixDecompositionLU` + `MPSMatrixSolveLU`) when available, with stable CPU fallback retained.
+- [x] Remove MPS bridge decomposition split-cache reuse risk by forcing per-call QR/SVD dispatch materialization on MPS (correctness-first coherency guard).
+- [x] Default MPS `take`/`put_` to correctness-first bridge route and gate native gather/scatter path behind opt-in env (`PLUSS_MPS_NATIVE_TAKE_PUT=1`) until full hardware stress hardening.
+- [x] Validate on-device hardware gates (`default`, `no-bridge`, `native`, focused `take/put`, focused `qr/svd bridge`, focused `cache/coherency`) with full assertion counts.
+
+## Patch 127 Focus (current)
+- [x] Add true device-native MPS Cholesky factorization path in `native/mps/Linalg.mm` using `MPSMatrixDecompositionCholesky`.
+- [x] Add true device-native MPS Cholesky solve path using `MPSMatrixSolveCholesky` for `[n]` and `[n,k]` RHS.
+- [x] Route `subsp::linearalg::cholesky`, `cholesky_solve`, and `cholesky_inverse` native MPS dispatch through the new device solver path when experimental-native is enabled and inputs are supported.
+- [x] Re-run full hardware gates (default/no-bridge/native/focused-native-dispatch) with all assertions passing.
+
+## Patch 128 Focus (current)
+- [x] Canonicalize native MPS solver/decomp inputs to `float32 + contiguous` before LU/Cholesky backend calls so non-ideal layout/dtype inputs still hit native device routes.
+- [x] Route native `det/logdet/slogdet`, `inverse`, and `lu_solve` through LU Metal backend using canonicalized MPS inputs first.
+- [x] Route native `cholesky`, `cholesky_solve`, and `cholesky_inverse` through canonicalized MPS inputs first, then fallback paths only when backend support is unavailable.
+- [x] Re-run on-device selection/linalg gates (default, strict no-bridge, native-only filter, bridge QR/SVD filter, sorting filter, cache-coherency filter) with all cases passing.
+
+## Patch 129 Focus (current)
+- [x] Add device-first native MPS QR path (modified Gram-Schmidt on MPS tensors) for reduced QR dispatch.
+- [x] Add device-first native MPS reduced-SVD prototype path (orthogonal-iteration on MPS tensors) for `full_matrices=false`, gated behind opt-in env while stability hardening continues.
+- [x] Add reconstruction-quality guardrails so unstable device results automatically fall back to the existing stable reference route without bridge-counter regressions.
+- [x] Re-run hardware gates (`default`, `strict no-bridge`, `native-only`, focused bridge QR/SVD, focused sorting-selection) with all assertions passing.
+
 ## Parity Workstreams
 1. Selection/Sorting family
 - [x] `sort` (values path) on MPS via safe fallback

@@ -4,9 +4,23 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/native/mps/BufferCache.h"
 
+#include <atomic>
 #include <cstddef>
 
 namespace pluss::codem {
+
+namespace {
+
+std::atomic<std::uint64_t>& next_series_impl_id_() noexcept {
+  static std::atomic<std::uint64_t> id{1};
+  return id;
+}
+
+std::uint64_t allocate_series_impl_id_() noexcept {
+  return next_series_impl_id_().fetch_add(1, std::memory_order_relaxed);
+}
+
+} // namespace
 
 SeriesImpl::~SeriesImpl() {
   native::mps::erase_series_entry(this);
@@ -43,7 +57,8 @@ SeriesImpl::SeriesImpl(Storage storage,
     sizes_(std::move(sizes)),
     strides_(std::move(strides)),
     st_(st),
-    platform_(platform) {
+    platform_(platform),
+    instance_id_(allocate_series_impl_id_()) {
   if (sizes_.size() != strides_.size()) throw_error("SeriesImpl: sizes/strides rank mismatch");
   for (auto s: sizes_) if (s < 0) throw_error("SeriesImpl: negative size");
 

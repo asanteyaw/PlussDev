@@ -2600,6 +2600,14 @@ src/CodeM/native/mps/Gather.mm.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/mps/Gather.mm.o
 .PHONY : src/CodeM/native/mps/Gather.mm.o
 
+src/CodeM/native/mps/Linalg.o: src/CodeM/native/mps/Linalg.mm.o
+.PHONY : src/CodeM/native/mps/Linalg.o
+
+# target to build an object file
+src/CodeM/native/mps/Linalg.mm.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/mps/Linalg.mm.o
+.PHONY : src/CodeM/native/mps/Linalg.mm.o
+
 src/CodeM/native/mps/MPSAllocator.o: src/CodeM/native/mps/MPSAllocator.mm.o
 .PHONY : src/CodeM/native/mps/MPSAllocator.o
 
@@ -6495,6 +6503,7 @@ help:
 	@echo "... src/CodeM/native/mps/Cum.o"
 	@echo "... src/CodeM/native/mps/Elementwise.o"
 	@echo "... src/CodeM/native/mps/Gather.o"
+	@echo "... src/CodeM/native/mps/Linalg.o"
 	@echo "... src/CodeM/native/mps/MPSAllocator.o"
 	@echo "... src/CodeM/native/mps/MPSGraphCache.o"
 	@echo "... src/CodeM/native/mps/MPSRuntime.o"

@@ -36,6 +36,7 @@ public:
   std::byte* raw_data() noexcept;
   const std::byte* raw_data() const noexcept;
   Platform platform() const noexcept { return platform_; }
+  std::uint64_t instance_id() const noexcept { return instance_id_; }
 
   const Storage& storage() const noexcept { return storage_; }
   std::int64_t storage_offset() const noexcept { return storage_offset_elems_ * static_cast<std::int64_t>(dtype_of(st_).itemsize); }
@@ -48,6 +49,7 @@ private:
   std::vector<std::int64_t> strides_{};
   ScalarType st_{ScalarType::Float32};
   Platform platform_{Platform::CPU};
+  std::uint64_t instance_id_{0};
 };
 
 std::vector<std::int64_t> contiguous_strides(std::span<const std::int64_t> sizes);

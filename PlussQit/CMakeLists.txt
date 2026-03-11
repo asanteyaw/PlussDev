@@ -189,6 +189,7 @@ if(APPLE)
     src/CodeM/native/mps/Cum.mm
     src/CodeM/native/mps/Elementwise.mm
     src/CodeM/native/mps/Gather.mm
+    src/CodeM/native/mps/Linalg.mm
     src/CodeM/native/mps/Matmul.mm
     src/CodeM/native/mps/Reductions.mm
     src/CodeM/native/mps/Scatter.mm
@@ -203,6 +204,7 @@ else()
     src/CodeM/native/mps/CumStub.cpp
     src/CodeM/native/mps/ElementwiseStub.cpp
     src/CodeM/native/mps/GatherStub.cpp
+    src/CodeM/native/mps/LinalgStub.cpp
     src/CodeM/native/mps/MatmulStub.cpp
     src/CodeM/native/mps/ReductionsStub.cpp
     src/CodeM/native/mps/ScatterStub.cpp
