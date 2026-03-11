@@ -75,11 +75,70 @@ std::array<double, 4> beta_params(double low, double high, double alpha, double 
   return {low, high, alpha, beta};
 }
 
+Series pack_2x2_(const Series& a, const Series& b, const Series& c, const Series& d) {
+  const auto platform = a.platform();
+  const Series row0 = a.reshape({1}).unite({b.reshape({1})}, 0).reshape({1, 2});
+  const Series row1 = c.reshape({1}).unite({d.reshape({1})}, 0).reshape({1, 2});
+  return row0.unite({row1}, 0).to(platform, ScalarType::Float64);
+}
+
+Series matrix_2x2_inverse_(const Series& m, const char* op) {
+  const Series m64 = m.to(m.platform(), ScalarType::Float64);
+  PLUSS_CHECK(m64.dim() == 2 && m64.sizes()[0] == 2 && m64.sizes()[1] == 2,
+              std::string(op) + ": expected a 2x2 matrix");
+  const Series row0 = m64.select(0, 0).reshape({2});
+  const Series row1 = m64.select(0, 1).reshape({2});
+  const Series a = row0.select(0, 0).reshape({1});
+  const Series b = row0.select(0, 1).reshape({1});
+  const Series c = row1.select(0, 0).reshape({1});
+  const Series d = row1.select(0, 1).reshape({1});
+  const Series det = a.mul(d).sub(b.mul(c));
+  PLUSS_CHECK(det.item<double>() > 0.0,
+              std::string(op) + ": expected positive-definite 2x2 matrix");
+  const Series inv_det = det.reciprocal();
+  return pack_2x2_(
+      d.mul(inv_det),
+      b.mul(inv_det).mul(-1.0),
+      c.mul(inv_det).mul(-1.0),
+      a.mul(inv_det));
+}
+
+Series stderr_from_cov_2x2_(const Series& cov, const char* op) {
+  const Series cov64 = cov.to(cov.platform(), ScalarType::Float64);
+  PLUSS_CHECK(cov64.dim() == 2 && cov64.sizes()[0] == 2 && cov64.sizes()[1] == 2,
+              std::string(op) + ": expected a 2x2 covariance matrix");
+  const Series row0 = cov64.select(0, 0).reshape({2});
+  const Series row1 = cov64.select(0, 1).reshape({2});
+  const Series se0 = row0.select(0, 0).reshape({1}).clamp_min(0.0).sqrt();
+  const Series se1 = row1.select(0, 1).reshape({1}).clamp_min(0.0).sqrt();
+  return se0.unite({se1}, 0).reshape({2}).to(cov64.platform(), ScalarType::Float64);
+}
+
+Series confint_from_params_se_2_(const Series& params,
+                                 const Series& se,
+                                 double level,
+                                 const char* op,
+                                 bool clamp_second_lower = false) {
+  const Series params64 = params.to(params.platform(), ScalarType::Float64).reshape({2});
+  const Series se64 = se.to(params.platform(), ScalarType::Float64).reshape({2});
+  const double z = fit_detail::wald_z(level, op);
+  const Series delta = se64.mul(z);
+  Series lower = params64.sub(delta);
+  const Series upper = params64.add(delta);
+  if (clamp_second_lower) {
+    const Series idx = Series::arange(0, 2, 1, ScalarType::Int64)
+                           .to(params64.platform(), ScalarType::Int64);
+    const Series second = idx.eq(1);
+    lower = second.where(lower.clamp_min(0.0), lower);
+  }
+  return lower.reshape({2, 1}).unite({upper.reshape({2, 1})}, 1).to(params64.platform(), ScalarType::Float64);
+}
+
 Series stable_log_expm1_over_x(const Series& x) {
   const Series small = x.abs().lt(1e-5);
   const Series general = x.expm1().div(x).log();
   const Series series = x.mul(0.5).add(x.mul(x).div(24.0));
-  return general.where(small.logical_not(), series);
+  return small.logical_not().where(general, series);
 }
 
 Series stable_log_x_over_sin_x(const Series& x) {
@@ -87,7 +146,7 @@ Series stable_log_x_over_sin_x(const Series& x) {
   const Series x2 = x.square();
   const Series series = x2.div(6.0).add(x2.square().div(180.0)).add(x2.square().mul(x2).div(2835.0));
   const Series general = x.div(x.sin()).log();
-  return general.where(small.logical_not(), series);
+  return small.logical_not().where(general, series);
 }
 
 double rayleigh_raw_moment(double sigma, std::int64_t order) {
@@ -382,43 +441,21 @@ Series NormalFit::observed_inf(const Series& x) const {
 }
 
 Series NormalFit::vcov(const Series& x) const {
-  const auto fisher = fisher_inf(x).to(ScalarType::Float64).to_vec<double>();
-  PLUSS_CHECK(fisher.size() == 4, "NormalFit::vcov: fisher_inf must return a 2x2 matrix");
-  const double a = fisher[0];
-  const double b = fisher[1];
-  const double c = fisher[2];
-  const double d = fisher[3];
-  const double det = a * d - b * c;
-  PLUSS_CHECK(det > 0.0, "NormalFit::vcov: fisher_inf must be positive definite");
-  const std::array<double, 4> cov = {d / det, -b / det, -c / det, a / det};
-  return pluss::codem::make_series(std::span<const double>(cov.data(), cov.size()),
-                                   {2, 2},
-                                   Config{}.with_dtype(ScalarType::Float64))
-      .to(x.platform(), ScalarType::Float64);
+  return matrix_2x2_inverse_(fisher_inf(x), "NormalFit::vcov").to(x.platform(), ScalarType::Float64);
 }
 
 Series NormalFit::stderr(const Series& x) const {
-  const auto cov = vcov(x).to(ScalarType::Float64).to_vec<double>();
-  PLUSS_CHECK(cov.size() == 4, "NormalFit::stderr: vcov must return a 2x2 matrix");
-  const std::array<double, 2> se = {std::sqrt(std::max(0.0, cov[0])), std::sqrt(std::max(0.0, cov[3]))};
-  return pluss::codem::make_series(std::span<const double>(se.data(), se.size()),
-                                   {2},
-                                   Config{}.with_dtype(ScalarType::Float64))
-      .to(x.platform(), ScalarType::Float64);
+  return stderr_from_cov_2x2_(vcov(x), "NormalFit::stderr").to(x.platform(), ScalarType::Float64);
 }
 
 Series NormalFit::confint(const Series& x, double level) const {
-  const auto se = stderr(x).to(ScalarType::Float64).to_vec<double>();
-  PLUSS_CHECK(se.size() == 2, "NormalFit::confint: stderr must return length-2 vector");
-  const double z = wald_z_value_(level, "NormalFit::confint");
-  const double mu_lo = mean - z * se[0];
-  const double mu_hi = mean + z * se[0];
-  const double sd_lo = std::max(0.0, stddev - z * se[1]);
-  const double sd_hi = stddev + z * se[1];
-  const std::array<double, 4> ci = {mu_lo, mu_hi, sd_lo, sd_hi};
-  return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
-                                   {2, 2},
-                                   Config{}.with_dtype(ScalarType::Float64))
+  const Series params = fit_detail::vec_series(std::vector<double>{mean, stddev}, {2}, x);
+  return confint_from_params_se_2_(
+             params,
+             stderr(x),
+             level,
+             "NormalFit::confint",
+             true)
       .to(x.platform(), ScalarType::Float64);
 }
 
@@ -702,43 +739,24 @@ Series LognormalFit::observed_inf(const Series& x) const {
 }
 
 Series LognormalFit::vcov(const Series& x) const {
-  const auto fisher = fisher_inf(x).to(ScalarType::Float64).to_vec<double>();
-  PLUSS_CHECK(fisher.size() == 4, "LognormalFit::vcov: fisher_inf must return a 2x2 matrix");
-  const double a = fisher[0];
-  const double b = fisher[1];
-  const double c = fisher[2];
-  const double d = fisher[3];
-  const double det = a * d - b * c;
-  PLUSS_CHECK(det > 0.0, "LognormalFit::vcov: fisher_inf must be positive definite");
-  const std::array<double, 4> cov = {d / det, -b / det, -c / det, a / det};
-  return pluss::codem::make_series(std::span<const double>(cov.data(), cov.size()),
-                                   {2, 2},
-                                   Config{}.with_dtype(ScalarType::Float64))
-      .to(x.platform(), ScalarType::Float64);
+  return matrix_2x2_inverse_(fisher_inf(x), "LognormalFit::vcov").to(x.platform(), ScalarType::Float64);
 }
 
 Series LognormalFit::stderr(const Series& x) const {
-  const auto cov = vcov(x).to(ScalarType::Float64).to_vec<double>();
-  PLUSS_CHECK(cov.size() == 4, "LognormalFit::stderr: vcov must return a 2x2 matrix");
-  const std::array<double, 2> se = {std::sqrt(std::max(0.0, cov[0])), std::sqrt(std::max(0.0, cov[3]))};
-  return pluss::codem::make_series(std::span<const double>(se.data(), se.size()),
-                                   {2},
-                                   Config{}.with_dtype(ScalarType::Float64))
-      .to(x.platform(), ScalarType::Float64);
+  return stderr_from_cov_2x2_(vcov(x), "LognormalFit::stderr").to(x.platform(), ScalarType::Float64);
 }
 
 Series LognormalFit::confint(const Series& x, double level) const {
-  const auto se = stderr(x).to(ScalarType::Float64).to_vec<double>();
-  PLUSS_CHECK(se.size() == 2, "LognormalFit::confint: stderr must return length-2 vector");
-  const double z = wald_z_value_(level, "LognormalFit::confint");
-  const double mu_lo = mean_log - z * se[0];
-  const double mu_hi = mean_log + z * se[0];
-  const double sd_lo = std::max(0.0, stddev_log - z * se[1]);
-  const double sd_hi = stddev_log + z * se[1];
-  const std::array<double, 4> ci = {mu_lo, mu_hi, sd_lo, sd_hi};
-  return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
-                                   {2, 2},
-                                   Config{}.with_dtype(ScalarType::Float64))
+  const Series params = fit_detail::vec_series(
+      std::vector<double>{mean_log, stddev_log},
+      {2},
+      x);
+  return confint_from_params_se_2_(
+             params,
+             stderr(x),
+             level,
+             "LognormalFit::confint",
+             true)
       .to(x.platform(), ScalarType::Float64);
 }
 
@@ -838,19 +856,7 @@ Series UniformFit::score(const Series& x) const {
 }
 
 Series UniformFit::fisher_inf(const Series& x) const {
-  const auto cov = vcov(x).to(ScalarType::Float64).to_vec<double>();
-  PLUSS_CHECK(cov.size() == 4, "UniformFit::fisher_inf: vcov must return a 2x2 matrix");
-  const double a = cov[0];
-  const double b = cov[1];
-  const double c = cov[2];
-  const double d = cov[3];
-  const double det = a * d - b * c;
-  PLUSS_CHECK(det > 0.0, "UniformFit::fisher_inf: vcov must be positive definite");
-  const std::array<double, 4> info = {d / det, -b / det, -c / det, a / det};
-  return pluss::codem::make_series(std::span<const double>(info.data(), info.size()),
-                                   {2, 2},
-                                   Config{}.with_dtype(ScalarType::Float64))
-      .to(x.platform(), ScalarType::Float64);
+  return matrix_2x2_inverse_(vcov(x), "UniformFit::fisher_inf").to(x.platform(), ScalarType::Float64);
 }
 
 Series UniformFit::observed_inf(const Series& x) const {
@@ -873,23 +879,16 @@ Series UniformFit::vcov(const Series& x) const {
 }
 
 Series UniformFit::stderr(const Series& x) const {
-  const auto cov = vcov(x).to(ScalarType::Float64).to_vec<double>();
-  PLUSS_CHECK(cov.size() == 4, "UniformFit::stderr: vcov must return a 2x2 matrix");
-  const std::array<double, 2> se = {std::sqrt(std::max(0.0, cov[0])), std::sqrt(std::max(0.0, cov[3]))};
-  return pluss::codem::make_series(std::span<const double>(se.data(), se.size()),
-                                   {2},
-                                   Config{}.with_dtype(ScalarType::Float64))
-      .to(x.platform(), ScalarType::Float64);
+  return stderr_from_cov_2x2_(vcov(x), "UniformFit::stderr").to(x.platform(), ScalarType::Float64);
 }
 
 Series UniformFit::confint(const Series& x, double level) const {
-  const auto se = stderr(x).to(ScalarType::Float64).to_vec<double>();
-  PLUSS_CHECK(se.size() == 2, "UniformFit::confint: stderr must return length-2 vector");
-  const double z = wald_z_value_(level, "UniformFit::confint");
-  const std::array<double, 4> ci = {low - z * se[0], low + z * se[0], high - z * se[1], high + z * se[1]};
-  return pluss::codem::make_series(std::span<const double>(ci.data(), ci.size()),
-                                   {2, 2},
-                                   Config{}.with_dtype(ScalarType::Float64))
+  const Series params = fit_detail::vec_series(std::vector<double>{low, high}, {2}, x);
+  return confint_from_params_se_2_(
+             params,
+             stderr(x),
+             level,
+             "UniformFit::confint")
       .to(x.platform(), ScalarType::Float64);
 }
 
@@ -1475,10 +1474,20 @@ Series LaplaceFit::confint(const Series& x, double level) const {
     return Laplace{p[0], p[1]}.logpdf(xs).sum().item<double>();
   };
   const std::vector<double> p = {location, scale};
-  auto ci = confint_matrix_series_(p, stderr_from_info_diag_(info_diag_from_loglik_(p, fn)), x, level, "LaplaceFit::confint");
-  auto flat = ci.to(ScalarType::Float64).to_vec<double>();
-  flat[2] = std::max(0.0, flat[2]);
-  return fit_detail::vec_series_cpu(flat, {2, 2}).to(x.platform(), ScalarType::Float64);
+  const Series ci = confint_matrix_series_(
+      p,
+      stderr_from_info_diag_(info_diag_from_loglik_(p, fn)),
+      x,
+      level,
+      "LaplaceFit::confint")
+                        .to(x.platform(), ScalarType::Float64);
+  Series lower = ci.select(1, 0).reshape({2}).to(x.platform(), ScalarType::Float64);
+  const Series upper = ci.select(1, 1).reshape({2}).to(x.platform(), ScalarType::Float64);
+  const Series idx = Series::arange(0, 2, 1, ScalarType::Int64)
+                         .to(x.platform(), ScalarType::Int64);
+  const Series second = idx.eq(1);
+  lower = second.where(lower.clamp_min(0.0), lower);
+  return lower.reshape({2, 1}).unite({upper.reshape({2, 1})}, 1).to(x.platform(), ScalarType::Float64);
 }
 
 LaplaceFit Laplace::MLE(const Series& x) const {
@@ -1638,16 +1647,23 @@ Series NormalTrunc::cgf(const Series& t) const {
   const double alpha = (lower - mean) / stddev;
   const double beta = (upper - mean) / stddev;
   const double log_denom = logsubexp_scalar(std_normal_logcdf_scalar(beta), std_normal_logcdf_scalar(alpha));
-  const auto t_vals = t.to(ScalarType::Float64).to_vec<double>();
-  std::vector<double> out;
-  out.reserve(t_vals.size());
-  for (double tv : t_vals) {
-    const double log_num_scalar =
-        logsubexp_scalar(std_normal_logcdf_scalar(beta - stddev * tv), std_normal_logcdf_scalar(alpha - stddev * tv));
-    out.push_back(mean * tv + 0.5 * stddev * stddev * tv * tv + log_num_scalar - log_denom);
-  }
-  return pluss::codem::make_series(out, t.sizes(), Config{}.with_dtype(ScalarType::Float64).with_platform(t.platform()))
-      .to(t.platform(), ScalarType::Float64);
+  const Series t64 = t.to(t.platform(), ScalarType::Float64);
+  const std::array<double, 0> normal_params{};
+  const Series log_hi = detail::logcdf_with_params(
+      dst::Normal,
+      t64.mul(-stddev).add(beta),
+      normal_params);
+  const Series log_lo = detail::logcdf_with_params(
+      dst::Normal,
+      t64.mul(-stddev).add(alpha),
+      normal_params);
+  const Series exp_delta = log_lo.sub(log_hi).exp().clamp_max(1.0 - 1e-15);
+  const Series log_num = log_hi.add(exp_delta.mul(-1.0).add(1.0).log());
+  return t64.mul(mean)
+      .add(t64.square().mul(0.5 * stddev * stddev))
+      .add(log_num)
+      .sub(log_denom)
+      .reshape(t.sizes());
 }
 
 Series NormalTrunc::cumulant(std::int64_t order) const {

@@ -63,11 +63,6 @@ Series active_columns_index_for_horizon_(const Series& mask, std::int64_t hidx, 
   return nz.select(1, 0).reshape({nz.sizes()[0]}).to(out_cfg.platform, ScalarType::Int64);
 }
 
-std::vector<std::int64_t> active_columns_from_index_(const Series& col_idx) {
-  if (!col_idx.defined() || col_idx.numel() == 0) return {};
-  return col_idx.to(ScalarType::Int64).to_vec<std::int64_t>();
-}
-
 Series select_rows_(const Series& x, std::int64_t start, std::int64_t len, Config cfg) {
   PLUSS_CHECK(start >= 0, "subsp::stats::ts::DirectForecaster: row start must be non-negative");
   PLUSS_CHECK(len > 0, "subsp::stats::ts::DirectForecaster: row length must be positive");
@@ -191,7 +186,6 @@ DirectForecaster DirectForecaster::fit(const Series& x, const Series& y, const D
     const std::int64_t row_start = plan.max_lead - (h - 1);
     Series x_step = select_rows_(design, row_start, nobs, out_cfg);
     const Series active_cols_idx = active_columns_index_for_horizon_(mask, static_cast<std::int64_t>(i), out_cfg);
-    const auto cols = active_columns_from_index_(active_cols_idx);
     x_step = select_columns_(x_step, active_cols_idx, out_cfg);
     if (options.fit_intercept) {
       x_step = prepend_intercept_(x_step, out_cfg);
@@ -199,7 +193,7 @@ DirectForecaster DirectForecaster::fit(const Series& x, const Series& y, const D
     x_step = x_step.nan_to_num(0.0, 0.0, 0.0);
     steps.push_back(DirectStepModel{
         .horizon = h,
-        .active_columns = cols,
+        .active_columns = {},
         .active_columns_index = active_cols_idx,
         .beta = fit_beta_(x_step, yv, options, out_cfg),
     });

@@ -467,6 +467,84 @@ class CODEM_API Gjr {
                         pluss::codem::Config cfg = {});
 };
 
+struct MvGarchOptions {
+  GarchOptions marginal{};
+  double corr_shrinkage = 1e-6;
+  double corr_jitter = 1e-9;
+};
+
+struct MvGarchFit {
+  std::vector<GarchFit> marginals{};
+  pluss::codem::Series mean = pluss::codem::Series::undefined();
+  pluss::codem::Series corr = pluss::codem::Series::undefined();
+
+  [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
+  [[nodiscard]] pluss::codem::Series loglik_per_obs(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series forecast(std::int64_t horizon,
+                                              const pluss::codem::Series& y,
+                                              pluss::codem::Config cfg = {}) const;
+};
+
+class CODEM_API MvGarch {
+ public:
+  static MvGarchFit fit_mle(const pluss::codem::Series& y,
+                            const MvGarchOptions& options = {},
+                            pluss::codem::Config cfg = {});
+};
+
+struct MvEgarchOptions {
+  EgarchOptions marginal{};
+  double corr_shrinkage = 1e-6;
+  double corr_jitter = 1e-9;
+};
+
+struct MvEgarchFit {
+  std::vector<EgarchFit> marginals{};
+  pluss::codem::Series mean = pluss::codem::Series::undefined();
+  pluss::codem::Series corr = pluss::codem::Series::undefined();
+
+  [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
+  [[nodiscard]] pluss::codem::Series loglik_per_obs(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series forecast(std::int64_t horizon,
+                                              const pluss::codem::Series& y,
+                                              pluss::codem::Config cfg = {}) const;
+};
+
+class CODEM_API MvEgarch {
+ public:
+  static MvEgarchFit fit_mle(const pluss::codem::Series& y,
+                             const MvEgarchOptions& options = {},
+                             pluss::codem::Config cfg = {});
+};
+
+struct MvGjrOptions {
+  GjrOptions marginal{};
+  double corr_shrinkage = 1e-6;
+  double corr_jitter = 1e-9;
+};
+
+struct MvGjrFit {
+  std::vector<GjrFit> marginals{};
+  pluss::codem::Series mean = pluss::codem::Series::undefined();
+  pluss::codem::Series corr = pluss::codem::Series::undefined();
+
+  [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
+  [[nodiscard]] pluss::codem::Series loglik_per_obs(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series forecast(std::int64_t horizon,
+                                              const pluss::codem::Series& y,
+                                              pluss::codem::Config cfg = {}) const;
+};
+
+class CODEM_API MvGjr {
+ public:
+  static MvGjrFit fit_mle(const pluss::codem::Series& y,
+                          const MvGjrOptions& options = {},
+                          pluss::codem::Config cfg = {});
+};
+
 struct ArimaOptions {
   std::int64_t ar_order = 1;
   std::int64_t diff_order = 0;

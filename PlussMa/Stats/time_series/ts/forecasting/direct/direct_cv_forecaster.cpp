@@ -63,10 +63,10 @@ Series average_with_counts_(const Series& sum, const Series& count, Config cfg) 
   const auto out_cfg = f64_cfg_(cfg);
   const Series count_f64 = count.to(out_cfg.platform, out_cfg.dtype);
   const Series valid = count_f64.gt(0.0);
-  const Series safe_denom = count_f64.where(valid, pluss::ones(count_f64.sizes(), out_cfg));
+  const Series safe_denom = valid.where(count_f64, pluss::ones(count_f64.sizes(), out_cfg));
   const Series mean = sum.to(out_cfg.platform, out_cfg.dtype).div(safe_denom);
   const Series nan_fill = pluss::full(sum.sizes(), std::numeric_limits<double>::quiet_NaN(), out_cfg);
-  return mean.where(valid, nan_fill);
+  return valid.where(mean, nan_fill);
 }
 
 Series loss_by_column_(const Series& pred, const Series& y, RegressionLoss kind, Config cfg) {
@@ -79,10 +79,10 @@ Series loss_by_column_(const Series& pred, const Series& y, RegressionLoss kind,
   const Series den = value.isfinite().to(out_cfg.platform, out_cfg.dtype).sum(0, false).reshape({h});
   const Series num = value.nan_to_num(0.0, 0.0, 0.0).sum(0, false).reshape({h});
   const Series valid = den.gt(0.0);
-  const Series safe_denom = den.where(valid, pluss::ones({h}, out_cfg));
+  const Series safe_denom = valid.where(den, pluss::ones({h}, out_cfg));
   const Series mean = num.div(safe_denom);
   const Series nan_fill = pluss::full({h}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
-  return mean.where(valid, nan_fill);
+  return valid.where(mean, nan_fill);
 }
 
 } // namespace

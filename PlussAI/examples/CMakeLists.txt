@@ -28,4 +28,10 @@ if(TARGET pluss)
   )
   target_link_libraries(plussai_tcn_demo PRIVATE pluss)
   target_compile_features(plussai_tcn_demo PRIVATE cxx_std_20)
+
+  add_executable(plussai_adam_oop_demo
+    adam_oop_demo.cpp
+  )
+  target_link_libraries(plussai_adam_oop_demo PRIVATE pluss)
+  target_compile_features(plussai_adam_oop_demo PRIVATE cxx_std_20)
 endif()

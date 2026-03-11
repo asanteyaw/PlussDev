@@ -11,11 +11,17 @@ namespace {
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
-using pluss::subsp::math::finance::JointLikelihoodWeights;
-using pluss::subsp::math::finance::returns_metrics;
-using pluss::subsp::math::finance::variance_forecast;
-using pluss::subsp::math::finance::weighted_joint_loglik;
-using pluss::subsp::math::finance::weighted_joint_nll;
+using pluss::subsp::math::finance::calibration::JointLikelihoodWeights;
+using pluss::subsp::math::finance::calibration::returns_metrics;
+using pluss::subsp::math::finance::calibration::variance_forecast;
+using pluss::subsp::math::finance::calibration::weighted_joint_loglik;
+using pluss::subsp::math::finance::calibration::weighted_joint_nll;
+using pluss::subsp::math::finance::pricing::pricing_metrics;
+using pluss::subsp::math::finance::pricing::pricing_variance_forecast;
+using pluss::subsp::math::finance::volatility::Garch11Params;
+using pluss::subsp::math::finance::volatility::Ngarch11Params;
+using pluss::subsp::math::finance::volatility::to_pricing_params;
+using pluss::subsp::math::finance::volatility::unconditional_variance;
 using pluss::subsp::stats::ts::EgarchFit;
 using pluss::subsp::stats::ts::GarchFit;
 using pluss::subsp::stats::ts::GjrFit;
@@ -108,6 +114,74 @@ void test_joint_likelihood() {
   expect(threw, "joint loglik should throw on negative weights");
 }
 
+void test_ngarch_pricing_side() {
+  const auto cfg = f64_cpu();
+  const Ngarch11Params np{
+      .omega = 0.02,
+      .alpha = 0.08,
+      .beta = 0.88,
+      .gamma = -0.25,
+      .lambda = 0.15,
+      .r = 0.01,
+      .variance_floor = 1e-12,
+      .stationarity_margin = 1e-6,
+  };
+
+  const Series y = pluss::randn({1800}, cfg, 20260503ULL).mul(0.25);
+  const auto nm = pricing_metrics(y, np, cfg);
+  expect(std::isfinite(nm.loglik), "ngarch pricing: finite loglik expected");
+  expect(nm.loglik_per_obs.sizes()[0] == y.numel(), "ngarch pricing: per-obs shape mismatch");
+  expect(nm.variance.sizes()[0] == y.numel(), "ngarch pricing: variance shape mismatch");
+  expect(nm.mean.sizes()[0] == y.numel(), "ngarch pricing: mean shape mismatch");
+  expect(nm.standardized_innovation.sizes()[0] == y.numel(), "ngarch pricing: z shape mismatch");
+  expect(nm.variance.min().item<double>() > 0.0, "ngarch pricing: variance must be positive");
+
+  const Series nf = pricing_variance_forecast(16, y, np, cfg);
+  expect(nf.sizes()[0] == 16, "ngarch pricing: forecast shape mismatch");
+  expect(nf.min().item<double>() > 0.0, "ngarch pricing: forecast must be positive");
+
+  const double unc_ng = unconditional_variance(np);
+  const double theo_ng = np.omega / (1.0 - np.beta - np.alpha * (1.0 + np.gamma * np.gamma));
+  expect(std::abs(unc_ng - theo_ng) < 1e-12, "ngarch pricing: unconditional variance mismatch");
+}
+
+void test_garch_pricing_side_and_conversion() {
+  const auto cfg = f64_cpu();
+  const GarchFit ts_fit{
+      .mean = 0.0,
+      .omega = 1.0e-6,
+      .arch = {0.08},
+      .garch = {0.90},
+      .variance_floor = 1e-12,
+      .stationarity_margin = 1e-6,
+      .finite_diff_eps = 1e-5,
+  };
+
+  const auto p = to_pricing_params(ts_fit, 0.02, 0.10);
+  const Garch11Params gp{
+      .omega = p.omega,
+      .alpha = p.alpha,
+      .beta = p.beta,
+      .lambda = p.lambda,
+      .r = p.r,
+      .variance_floor = p.variance_floor,
+      .stationarity_margin = p.stationarity_margin,
+  };
+
+  const Series y = ts_fit.simulate(1600, cfg, 20260504ULL);
+  const auto gm = pricing_metrics(y, gp, cfg);
+  expect(std::isfinite(gm.loglik), "garch pricing: finite loglik expected");
+  expect(gm.variance.min().item<double>() > 0.0, "garch pricing: variance must be positive");
+
+  const Series gf = pricing_variance_forecast(12, y, gp, cfg);
+  expect(gf.sizes()[0] == 12, "garch pricing: forecast shape mismatch");
+  expect(gf.min().item<double>() > 0.0, "garch pricing: forecast must be positive");
+
+  const double unc_g = unconditional_variance(gp);
+  const double theo_g = gp.omega / (1.0 - gp.alpha - gp.beta);
+  expect(std::abs(unc_g - theo_g) < 1e-12, "garch pricing: unconditional variance mismatch");
+}
+
 } // namespace
 
 int main() {
@@ -115,6 +189,8 @@ int main() {
     test_garch_bridge();
     test_egarch_gjr_bridge();
     test_joint_likelihood();
+    test_ngarch_pricing_side();
+    test_garch_pricing_side_and_conversion();
     std::cout << "vol_bridge_test passed\n";
     return 0;
   } catch (const std::exception& e) {

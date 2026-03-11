@@ -23,6 +23,20 @@ using pluss::Series;
 constexpr double kLog2Pi = 1.83787706640934533908;
 constexpr double kHuge = 1e200;
 
+std::vector<double> flat_f64_values_(const Series& x) {
+  const ScalarType work_dtype = (x.platform() == pluss::Platform::MPS) ? ScalarType::Float32 : ScalarType::Float64;
+  const Series flat = x.to(work_dtype).reshape({x.numel()}).contiguous();
+  std::vector<double> out(static_cast<std::size_t>(flat.numel()), 0.0);
+  if (flat.scalar_type() == ScalarType::Float32) {
+    const auto* src = reinterpret_cast<const float*>(flat.raw_data());
+    std::transform(src, src + flat.numel(), out.begin(), [](float v) { return static_cast<double>(v); });
+  } else {
+    const auto* src = reinterpret_cast<const double*>(flat.raw_data());
+    std::copy(src, src + flat.numel(), out.begin());
+  }
+  return out;
+}
+
 struct ArimaParams {
   double intercept = 0.0;
   std::vector<double> ar{};
@@ -94,7 +108,7 @@ ExogMatrix as_exog_(const Series& x, std::int64_t expected_rows, const char* nam
   const auto sizes = xm.sizes();
   PLUSS_CHECK(static_cast<std::int64_t>(sizes[0]) == expected_rows,
               std::string("subsp::stats::ts::") + name + ": expected row count to match y");
-  const auto flat = xm.to(ScalarType::Float64).reshape({xm.numel()}).to_vec<double>();
+  const auto flat = flat_f64_values_(xm);
   return ExogMatrix{
       .values = flat,
       .n = static_cast<std::int64_t>(sizes[0]),
@@ -144,7 +158,7 @@ double stable_logit_(double p) {
 }
 
 std::pair<std::vector<double>, double> centered_(const Series& y, bool demean) {
-  auto values = y.to(ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
+  auto values = flat_f64_values_(y);
   PLUSS_CHECK(!values.empty(), "subsp::stats::ts::Arima: expected non-empty response series");
   const double mean = demean ? std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size()) : 0.0;
   if (demean) {
@@ -154,7 +168,7 @@ std::pair<std::vector<double>, double> centered_(const Series& y, bool demean) {
 }
 
 std::vector<double> centered_with_mean_(const Series& y, double mean) {
-  auto values = y.to(ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
+  auto values = flat_f64_values_(y);
   std::transform(values.begin(), values.end(), values.begin(), [mean](const double v) { return v - mean; });
   return values;
 }
@@ -562,7 +576,7 @@ ArimaFit fit_arima_(const Series& y, const Series* x_opt, const ArimaOptions& op
   nm.value_tolerance = 1e-7;
 
   const auto objective = [&](const Series& theta) -> double {
-    const auto tv = theta.to(ScalarType::Float64).reshape({theta.numel()}).to_vec<double>();
+    const auto tv = flat_f64_values_(theta);
     const auto p = decode_theta_(tv,
                                  options.ar_order,
                                  options.ma_order,
@@ -574,7 +588,7 @@ ArimaFit fit_arima_(const Series& y, const Series* x_opt, const ArimaOptions& op
   };
 
   const auto out = pluss::subsp::math::optimization::nelder_mead_minimizer(objective, initial, nm);
-  const auto best = out.minimizer.to(ScalarType::Float64).reshape({out.minimizer.numel()}).to_vec<double>();
+  const auto best = flat_f64_values_(out.minimizer);
   auto best_p = decode_theta_(best,
                               options.ar_order,
                               options.ma_order,
@@ -782,7 +796,7 @@ std::vector<double> arma_simulate_transformed_(std::int64_t n,
     PLUSS_CHECK(fit.beta.empty(), "subsp::stats::ts::ArimaFit::simulate: exogenous coefficients require x");
   }
   const auto out_cfg = f64_cfg_(cfg);
-  const auto z = pluss::randn({n}, out_cfg, seed).to_vec<double>();
+  const auto z = flat_f64_values_(pluss::randn({n}, out_cfg, seed));
   const double sigma = std::max(fit.sigma, std::sqrt(fit.variance_floor));
 
   std::vector<double> y_state(static_cast<std::size_t>(n), 0.0);
@@ -992,7 +1006,7 @@ Series ArimaFit::simulate(const Series& x, Config cfg, std::uint64_t seed) const
   const Series xm = as_matrix_(x, "ArimaFit::simulate").to(out_cfg.platform, out_cfg.dtype);
   const auto sizes = xm.sizes();
   const std::int64_t n = static_cast<std::int64_t>(sizes[0]);
-  const auto flat = xm.to(ScalarType::Float64).reshape({xm.numel()}).to_vec<double>();
+  const auto flat = flat_f64_values_(xm);
   const ExogMatrix ex{
       .values = flat,
       .n = n,

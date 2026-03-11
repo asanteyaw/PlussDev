@@ -809,6 +809,111 @@ Notes:
 - Persistence is `sum(arch) + 0.5 * sum(asym) + sum(garch)`.
 - `unconditional_var()` returns `omega / (1 - persistence)` for stationary fits.
 
+## `MvGarchFit MvGarch::fit_mle(const Series& y, const MvGarchOptions& options = {}, Config cfg = {})`
+
+Fits multivariate conditional variance using column-wise `GARCH(m,n)` marginals and a constant conditional correlation matrix.
+
+`const Series& y`: response matrix (`[n,k]`) or vector (`[n]` treated as `[n,1]`).
+
+`const MvGarchOptions& options`: typed controls:
+
+- `marginal`: univariate `GarchOptions` applied per column.
+- `corr_shrinkage`: optional diagonal shrinkage in `[0,1]`.
+- `corr_jitter`: stabilization jitter used if correlation is near-singular.
+
+`Config cfg`: execution/output config (`Float64` internal path is enforced, platform follows input/config).
+
+Return -> `MvGarchFit`: fitted object with:
+
+- `marginals`: per-column univariate fits.
+- `mean`: unconditional mean vector `[k]`.
+- `corr`: estimated constant correlation matrix `[k,k]`.
+
+Notes:
+
+- This is a CCC-style multivariate volatility model (not DCC/BEKK).
+- `infer(y)` returns conditional variance matrix `[n,k]`.
+- `loglik_per_obs(y)` returns vector `[n]` from multivariate Gaussian likelihood using `corr`.
+
+## `MvEgarchFit MvEgarch::fit_mle(const Series& y, const MvEgarchOptions& options = {}, Config cfg = {})`
+
+Fits multivariate conditional variance using column-wise `EGARCH(m,n)` marginals and constant conditional correlation.
+
+`const Series& y`: response matrix (`[n,k]`) or vector (`[n]` treated as `[n,1]`).
+
+`const MvEgarchOptions& options`: typed controls (`marginal`, `corr_shrinkage`, `corr_jitter`).
+
+`Config cfg`: execution/output config.
+
+Return -> `MvEgarchFit`: fitted object with `marginals`, `mean`, and `corr`.
+
+Notes:
+
+- EGARCH recursion remains per-column and loop-based by necessity.
+- Correlation estimation and multivariate log-likelihood are shared with `MvGarch`.
+
+## `MvGjrFit MvGjr::fit_mle(const Series& y, const MvGjrOptions& options = {}, Config cfg = {})`
+
+Fits multivariate conditional variance using column-wise `GJR(m,n)` marginals and constant conditional correlation.
+
+`const Series& y`: response matrix (`[n,k]`) or vector (`[n]` treated as `[n,1]`).
+
+`const MvGjrOptions& options`: typed controls (`marginal`, `corr_shrinkage`, `corr_jitter`).
+
+`Config cfg`: execution/output config.
+
+Return -> `MvGjrFit`: fitted object with `marginals`, `mean`, and `corr`.
+
+Notes:
+
+- GJR asymmetry remains in each marginal recursion.
+- Correlation and likelihood aggregation are multivariate Gaussian with CCC correlation.
+
+## `Series MvGarchFit::infer(const Series& y, Config cfg = {}) const`
+
+Infers per-series conditional variances.
+
+`const Series& y`: matrix `[n,k]` (or vector treated as `[n,1]`).
+
+`Config cfg`: output config.
+
+Return -> `Series`: variance matrix `[n,k]`.
+
+## `double MvGarchFit::loglik(const Series& y) const`
+
+Returns total multivariate log-likelihood.
+
+`const Series& y`: matrix `[n,k]`.
+
+Return -> `double`: total log-likelihood across all observations.
+
+## `Series MvGarchFit::loglik_per_obs(const Series& y, Config cfg = {}) const`
+
+Returns per-observation multivariate log-likelihood contributions.
+
+`const Series& y`: matrix `[n,k]`.
+
+`Config cfg`: output config.
+
+Return -> `Series`: vector `[n]`.
+
+## `Series MvGarchFit::forecast(std::int64_t horizon, const Series& y, Config cfg = {}) const`
+
+Forecasts conditional variances horizon-ahead for each series.
+
+`std::int64_t horizon`: forecast horizon (`> 0`).
+
+`const Series& y`: history matrix `[n,k]`.
+
+`Config cfg`: output config.
+
+Return -> `Series`: forecast matrix `[horizon,k]`.
+
+Notes:
+
+- `MvEgarchFit` and `MvGjrFit` expose the same method signatures:
+  - `infer`, `loglik`, `loglik_per_obs`, `forecast`.
+
 ## `ArimaFit Arima::fit_mle(const Series& y, const ArimaOptions& options = {}, Config cfg = {})`
 
 Fits typed ARIMA/SARIMA dynamics via Gaussian MLE.

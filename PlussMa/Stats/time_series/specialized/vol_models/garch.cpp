@@ -23,6 +23,20 @@ using pluss::Series;
 constexpr double kLog2Pi = 1.83787706640934533908;
 constexpr double kHuge = 1e200;
 
+std::vector<double> flat_f64_values_(const Series& x) {
+  const ScalarType work_dtype = (x.platform() == pluss::Platform::MPS) ? ScalarType::Float32 : ScalarType::Float64;
+  const Series flat = x.to(work_dtype).reshape({x.numel()}).contiguous();
+  std::vector<double> out(static_cast<std::size_t>(flat.numel()), 0.0);
+  if (flat.scalar_type() == ScalarType::Float32) {
+    const auto* src = reinterpret_cast<const float*>(flat.raw_data());
+    std::transform(src, src + flat.numel(), out.begin(), [](float v) { return static_cast<double>(v); });
+  } else {
+    const auto* src = reinterpret_cast<const double*>(flat.raw_data());
+    std::copy(src, src + flat.numel(), out.begin());
+  }
+  return out;
+}
+
 struct GarchParams {
   double omega = 0.02;
   std::vector<double> arch{0.08};
@@ -72,7 +86,7 @@ double sample_var_(const std::vector<double>& x) {
 }
 
 std::pair<std::vector<double>, double> centered_(const Series& y, bool demean) {
-  auto values = y.to(ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
+  auto values = flat_f64_values_(y);
   PLUSS_CHECK(!values.empty(), "subsp::stats::ts::Garch: expected non-empty response series");
   const double mean = demean ? std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size()) : 0.0;
   if (demean) {
@@ -82,7 +96,7 @@ std::pair<std::vector<double>, double> centered_(const Series& y, bool demean) {
 }
 
 std::vector<double> centered_with_mean_(const Series& y, double mean) {
-  auto values = y.to(ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
+  auto values = flat_f64_values_(y);
   std::transform(values.begin(), values.end(), values.begin(), [mean](const double v) { return v - mean; });
   return values;
 }
@@ -461,7 +475,7 @@ std::vector<double> simulate_series_(std::int64_t n,
                                      std::uint64_t seed) {
   PLUSS_CHECK(n > 0, "subsp::stats::ts::GarchFit::simulate: num_observations must be > 0");
   const auto out_cfg = f64_cfg_(cfg);
-  const auto z = pluss::randn({n}, out_cfg, seed).to_vec<double>();
+  const auto z = flat_f64_values_(pluss::randn({n}, out_cfg, seed));
 
   GarchParams p{fit.omega, fit.arch, fit.garch};
   const double sum = coeff_sum_(p);
@@ -597,7 +611,7 @@ GarchFit fit_garch_(const Series& y, const GarchOptions& options, Config cfg) {
   nm.value_tolerance = 1e-7;
 
   const auto objective = [&](const Series& theta) -> double {
-    const auto tv = theta.to(ScalarType::Float64).reshape({theta.numel()}).to_vec<double>();
+    const auto tv = flat_f64_values_(theta);
     const auto p = decode_theta_(tv,
                                  options.arch_order,
                                  options.garch_order,
@@ -611,7 +625,7 @@ GarchFit fit_garch_(const Series& y, const GarchOptions& options, Config cfg) {
   for (const auto& start : restart_thetas_(theta0, options.nm_restarts, options.simplex_delta)) {
     const Series initial = pluss::make_series(start, {static_cast<std::int64_t>(start.size())}, out_cfg);
     const auto out = pluss::subsp::math::optimization::nelder_mead_minimizer(objective, initial, nm);
-    const auto theta_best = out.minimizer.to(ScalarType::Float64).reshape({out.minimizer.numel()}).to_vec<double>();
+    const auto theta_best = flat_f64_values_(out.minimizer);
     const auto p = decode_theta_(theta_best,
                                  options.arch_order,
                                  options.garch_order,

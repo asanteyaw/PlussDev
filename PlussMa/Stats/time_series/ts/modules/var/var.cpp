@@ -61,7 +61,17 @@ Series as_matrix_(const Series& x, const char* name) {
 }
 
 std::vector<double> row_major_(const Series& x) {
-  return x.to(ScalarType::Float64).contiguous().to_vec<double>();
+  const ScalarType work_dtype = (x.platform() == pluss::Platform::MPS) ? ScalarType::Float32 : ScalarType::Float64;
+  const Series flat = x.to(work_dtype).reshape({x.numel()}).contiguous();
+  std::vector<double> out(static_cast<std::size_t>(flat.numel()), 0.0);
+  if (flat.scalar_type() == ScalarType::Float32) {
+    const auto* src = reinterpret_cast<const float*>(flat.raw_data());
+    std::transform(src, src + flat.numel(), out.begin(), [](float v) { return static_cast<double>(v); });
+  } else {
+    const auto* src = reinterpret_cast<const double*>(flat.raw_data());
+    std::copy(src, src + flat.numel(), out.begin());
+  }
+  return out;
 }
 
 std::int64_t idx2_(std::int64_t row, std::int64_t col, std::int64_t ncols) {
@@ -195,10 +205,10 @@ Series stabilize_cov_(Series covariance) {
 
 Series compose_coeff_(const VarFit& fit, const ModelDims& dims) {
   const auto cpu_cfg = cpu_f64_cfg_();
-  const auto c = fit.constant.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto tr = fit.trend.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto ar = fit.ar.to(ScalarType::Float64).reshape({dims.p, dims.k, dims.k}).to_vec<double>();
-  const auto beta = (dims.m > 0) ? as_matrix_(fit.beta, "Var").to(ScalarType::Float64).to_vec<double>()
+  const auto c = row_major_(fit.constant.reshape({dims.k}));
+  const auto tr = row_major_(fit.trend.reshape({dims.k}));
+  const auto ar = row_major_(fit.ar.reshape({dims.p, dims.k, dims.k}));
+  const auto beta = (dims.m > 0) ? row_major_(as_matrix_(fit.beta, "Var"))
                                  : std::vector<double>{};
   const std::int64_t d = (fit.include_intercept ? 1 : 0) + (fit.include_trend ? 1 : 0) + dims.p * dims.k + dims.m;
   std::vector<double> values(static_cast<std::size_t>(d * dims.k), 0.0);
@@ -288,10 +298,10 @@ Series run_forecast_impl_(const VarFit& fit,
                 std::string("subsp::stats::ts::") + op_name + ": model has no predictor coefficients");
   }
 
-  const auto c = fit.constant.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto tr = fit.trend.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto ar = fit.ar.to(ScalarType::Float64).reshape({dims.p, dims.k, dims.k}).to_vec<double>();
-  const auto beta = (dims.m > 0) ? as_matrix_(fit.beta, op_name).to(ScalarType::Float64).to_vec<double>()
+  const auto c = row_major_(fit.constant.reshape({dims.k}));
+  const auto tr = row_major_(fit.trend.reshape({dims.k}));
+  const auto ar = row_major_(fit.ar.reshape({dims.p, dims.k, dims.k}));
+  const auto beta = (dims.m > 0) ? row_major_(as_matrix_(fit.beta, op_name))
                                  : std::vector<double>{};
 
   const auto y_hist = row_major_(y_mat.to(ScalarType::Float64));
@@ -348,16 +358,16 @@ Series run_sim_impl_(const VarFit& fit, std::int64_t n, const Series* x, Config 
                 std::string("subsp::stats::ts::") + op_name + ": model has no predictor coefficients");
   }
 
-  const auto c = fit.constant.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto tr = fit.trend.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto ar = fit.ar.to(ScalarType::Float64).reshape({dims.p, dims.k, dims.k}).to_vec<double>();
-  const auto beta = (dims.m > 0) ? as_matrix_(fit.beta, op_name).to(ScalarType::Float64).to_vec<double>()
+  const auto c = row_major_(fit.constant.reshape({dims.k}));
+  const auto tr = row_major_(fit.trend.reshape({dims.k}));
+  const auto ar = row_major_(fit.ar.reshape({dims.p, dims.k, dims.k}));
+  const auto beta = (dims.m > 0) ? row_major_(as_matrix_(fit.beta, op_name))
                                  : std::vector<double>{};
 
   const Series cov = stabilize_cov_(fit.covariance);
   const Series chol = pluss::subsp::math::linalg::cholesky(cov).to(ScalarType::Float64).contiguous();
-  const auto lvals = chol.to_vec<double>();
-  const auto z = pluss::randn({n, dims.k}, cpu_f64_cfg_(), seed).to_vec<double>();
+  const auto lvals = row_major_(chol);
+  const auto z = row_major_(pluss::randn({n, dims.k}, cpu_f64_cfg_(), seed));
 
   std::vector<double> eps(static_cast<std::size_t>(n * dims.k), 0.0);
   for (std::int64_t i = 0; i < n; ++i) {
@@ -415,7 +425,7 @@ VarFit fit_impl_(const Series& y, const Series* x, const VarOptions& options, Co
   if (options.ridge > 0.0) {
     Series penalty = pluss::eye(design.d, design.d, cpu_f64_cfg_()).mul(std::sqrt(options.ridge));
     if (options.include_intercept || options.include_trend) {
-      auto pvals = penalty.to_vec<double>();
+      auto pvals = row_major_(penalty);
       const std::int64_t protected_cols = (options.include_intercept ? 1 : 0) + (options.include_trend ? 1 : 0);
       for (std::int64_t c = 0; c < protected_cols; ++c) {
         pvals[static_cast<std::size_t>(c * design.d + c)] = 0.0;
@@ -441,7 +451,7 @@ VarFit fit_impl_(const Series& y, const Series* x, const VarOptions& options, Co
   Series covariance = resid.transpose(0, 1).matmul(resid).div(static_cast<double>(std::max<std::int64_t>(1, design.t)));
   covariance = stabilize_cov_(covariance);
 
-  const auto cv = coeff.to_vec<double>();
+  const auto cv = row_major_(coeff);
   std::int64_t row = 0;
   std::vector<double> cvals(static_cast<std::size_t>(design.k), 0.0);
   std::vector<double> tvals(static_cast<std::size_t>(design.k), 0.0);
@@ -557,7 +567,7 @@ std::pair<Series, Series> var_to_vecm(const Series& ar, Config cfg) {
   const auto sizes = ar3.sizes();
   const std::int64_t p = sizes[0];
   const std::int64_t k = sizes[1];
-  const auto arv = ar3.to(ScalarType::Float64).to_vec<double>();
+  const auto arv = row_major_(ar3);
 
   std::vector<double> impact(static_cast<std::size_t>(k * k), 0.0);
   for (std::int64_t lag = 0; lag < p; ++lag) {
@@ -612,10 +622,10 @@ Series vecm_to_var(const Series& short_run, const Series& impact, Config cfg) {
     PLUSS_CHECK(ss[1] == k && ss[2] == k,
                 "subsp::stats::ts::vecm_to_var: short_run dimensions must match impact");
     q = ss[0];
-    srv = sr.to_vec<double>();
+    srv = row_major_(sr);
   }
   const std::int64_t p = q + 1;
-  const auto piv = imp.to_vec<double>();
+  const auto piv = row_major_(imp);
 
   std::vector<double> arv(static_cast<std::size_t>(p * k * k), 0.0);
   std::vector<double> suffix(static_cast<std::size_t>(k * k), 0.0);
