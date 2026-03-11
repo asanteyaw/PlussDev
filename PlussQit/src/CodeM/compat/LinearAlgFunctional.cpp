@@ -48,6 +48,10 @@ struct DispatchCounterState {
   std::atomic<std::uint64_t> lu_solve{0};
   std::atomic<std::uint64_t> qr{0};
   std::atomic<std::uint64_t> svd{0};
+  std::atomic<std::uint64_t> native_qr_device_success{0};
+  std::atomic<std::uint64_t> native_qr_device_fallback{0};
+  std::atomic<std::uint64_t> native_svd_device_success{0};
+  std::atomic<std::uint64_t> native_svd_device_fallback{0};
 };
 
 DispatchCounterState& dispatch_counters_() {
@@ -155,6 +159,22 @@ void bump_mps_bridge_counter_(MpsBridgeOp op) noexcept {
     case MpsBridgeOp::Svd: c.svd.fetch_add(1, std::memory_order_relaxed); break;
     default: break;
   }
+}
+
+inline void bump_mps_native_qr_device_success_() noexcept {
+  dispatch_counters_().native_qr_device_success.fetch_add(1, std::memory_order_relaxed);
+}
+
+inline void bump_mps_native_qr_device_fallback_() noexcept {
+  dispatch_counters_().native_qr_device_fallback.fetch_add(1, std::memory_order_relaxed);
+}
+
+inline void bump_mps_native_svd_device_success_() noexcept {
+  dispatch_counters_().native_svd_device_success.fetch_add(1, std::memory_order_relaxed);
+}
+
+inline void bump_mps_native_svd_device_fallback_() noexcept {
+  dispatch_counters_().native_svd_device_fallback.fetch_add(1, std::memory_order_relaxed);
 }
 
 LinearAlgDenseProvider dense_provider_from_cpu_blas_(pluss::codem::native::cpu::blas::Provider provider) noexcept {
@@ -768,17 +788,21 @@ inline bool mps_native_device_svd_enabled_() noexcept {
   return parse_bool_env_("PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD", false);
 }
 
+inline bool mps_native_device_svd_unsafe_enabled_() noexcept {
+  return parse_bool_env_("PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD_UNSAFE", false);
+}
+
 inline float max_abs_diff_scalar_(const Series& a, const Series& b) {
   return a.sub(b).abs().amax().item<float>();
 }
 
-inline Series range_index_mps_(std::int64_t n) {
-  std::vector<std::int64_t> idx;
-  idx.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, n)));
-  for (std::int64_t i = 0; i < n; ++i) {
-    idx.push_back(i);
+inline Series safe_normalize_vec_(const Series& v) {
+  const Series n = v.norm(2.0).to(ScalarType::Float32).contiguous();
+  const float nv = n.item<float>();
+  if (!std::isfinite(nv) || nv <= 1e-12f) {
+    return Series::zeros(v.sizes(), ScalarType::Float32).to(v.platform()).contiguous();
   }
-  return pluss::make_series(std::move(idx), {std::max<std::int64_t>(0, n)}).to(Platform::MPS).contiguous();
+  return v.div(n).to(ScalarType::Float32).contiguous();
 }
 
 inline NativeQrResult qr_mps_cpu_reference_(const Series& a) {
@@ -855,10 +879,12 @@ inline NativeQrResult qr_mps_native_(const Series& a) {
       auto out = qr_mps_device_mgs_(a);
       const float recon_err = max_abs_diff_scalar_(out.q.matmul(out.r), canonical_mps_native_f32_(a));
       if (recon_err <= 2.5e-2f) {
+        bump_mps_native_qr_device_success_();
         return out;
       }
     } catch (const std::exception&) {
     }
+    bump_mps_native_qr_device_fallback_();
   }
   return qr_mps_cpu_reference_(a);
 }
@@ -877,6 +903,12 @@ inline NativeSvdResult svd_mps_native_(const Series& a) {
       mps_native_svd_supported_(a, false),
       "subsp::linearalg::svd: native MPS path expects non-empty 2D input with full_matrices=false");
   if (mps_native_device_svd_enabled_()) {
+    if (!mps_native_device_svd_unsafe_enabled_()) {
+      // Keep the prototype lane crash-safe by default: the unsafe on-device
+      // algorithm remains opt-in while we harden it.
+      bump_mps_native_svd_device_fallback_();
+      return svd_mps_cpu_reference_(a);
+    }
     try {
       const Series x = canonical_mps_native_f32_(a);
       const auto m = x.sizes()[0];
@@ -884,37 +916,93 @@ inline NativeSvdResult svd_mps_native_(const Series& a) {
       const auto k = std::min(m, n);
       PLUSS_CHECK(k > 0, "subsp::linearalg::svd: expected non-empty matrix");
 
-      const Series gram = x.transpose(0, 1).contiguous().matmul(x).contiguous();
-      Series v = Series::eye(n, n, ScalarType::Float32).to(Platform::MPS).contiguous();
-      for (int iter = 0; iter < 10; ++iter) {
-        const Series z = gram.matmul(v).contiguous();
-        v = qr_mps_device_mgs_(z).q.contiguous();
-      }
-
-      const Series b = x.matmul(v).contiguous();
+      Series work = x;
       std::vector<Series> u_cols;
       u_cols.reserve(static_cast<std::size_t>(k));
+      std::vector<Series> v_cols;
+      v_cols.reserve(static_cast<std::size_t>(k));
       std::vector<Series> s_scalars;
       s_scalars.reserve(static_cast<std::size_t>(k));
+
       for (std::int64_t j = 0; j < k; ++j) {
-        const Series b_j = b.select(1, j).contiguous();
-        const Series s_j = b_j.norm(2.0).to(ScalarType::Float32).contiguous();
-        const Series u_j = b_j.div(s_j.add(1e-12)).to(ScalarType::Float32).contiguous();
-        u_cols.push_back(u_j);
-        s_scalars.push_back(s_j);
+        Series v = Series::ones({n}, ScalarType::Float32).to(Platform::MPS).contiguous();
+        if (j > 0) {
+          v = v.add(static_cast<double>(j) * 1e-3).contiguous();
+        }
+
+        for (int iter = 0; iter < 16; ++iter) {
+          Series u = work.matmul(v.reshape({n, 1})).reshape({m}).contiguous();
+          u = safe_normalize_vec_(u);
+
+          Series vt = work.transpose(0, 1).contiguous().matmul(u.reshape({m, 1})).reshape({n}).contiguous();
+          v = safe_normalize_vec_(vt);
+        }
+
+        Series u = work.matmul(v.reshape({n, 1})).reshape({m}).contiguous();
+        Series s = u.norm(2.0).to(ScalarType::Float32).contiguous();
+        u = safe_normalize_vec_(u);
+
+        // Re-orthogonalize against previously extracted vectors for stability.
+        for (std::size_t t = 0; t < u_cols.size(); ++t) {
+          const Series& u_prev = u_cols[t];
+          const Series proj_u = u_prev.reshape({1, m}).matmul(u.reshape({m, 1})).reshape({}).contiguous();
+          u = u.sub(u_prev.mul(proj_u)).contiguous();
+        }
+        u = safe_normalize_vec_(u);
+
+        for (std::size_t t = 0; t < v_cols.size(); ++t) {
+          const Series& v_prev = v_cols[t];
+          const Series proj_v = v_prev.reshape({1, n}).matmul(v.reshape({n, 1})).reshape({}).contiguous();
+          v = v.sub(v_prev.mul(proj_v)).contiguous();
+        }
+        v = safe_normalize_vec_(v);
+
+        Series sigma = u.reshape({1, m})
+                           .matmul(x.matmul(v.reshape({n, 1})))
+                           .reshape({})
+                           .to(ScalarType::Float32)
+                           .contiguous();
+        float sigma_v = sigma.item<float>();
+        if (!std::isfinite(sigma_v)) {
+          sigma = Series::full({}, 0.0, ScalarType::Float32).to(Platform::MPS).contiguous();
+          u = Series::zeros({m}, ScalarType::Float32).to(Platform::MPS).contiguous();
+          v = Series::zeros({n}, ScalarType::Float32).to(Platform::MPS).contiguous();
+          sigma_v = 0.0f;
+        }
+        if (sigma_v < 0.0f) {
+          sigma = sigma.neg().contiguous();
+          v = v.neg().contiguous();
+        }
+
+        const Series outer = u.reshape({m, 1}).matmul(v.reshape({1, n})).contiguous();
+        work = work.sub(outer.mul(sigma)).contiguous();
+
+        u_cols.push_back(u);
+        v_cols.push_back(v);
+        s_scalars.push_back(sigma);
       }
 
       const Series u = stack_dim0_(u_cols, "svd_native_u").transpose(0, 1).contiguous();
       const Series s = stack_dim0_(s_scalars, "svd_native_s").reshape({k}).contiguous();
-      const Series vh = v.transpose(0, 1).contiguous().index_select(0, range_index_mps_(k)).contiguous();
+      const Series vh = stack_dim0_(v_cols, "svd_native_v").contiguous();
 
       const Series recon = u.matmul(vh.mul(s.reshape({k, 1})));
       const float recon_err = max_abs_diff_scalar_(recon, x);
-      if (recon_err <= 8.0e-2f) {
+      const auto s_host = s.to(Platform::CPU).to(ScalarType::Float32).to_vec<float>();
+      bool s_finite_nonneg = true;
+      for (const auto sv : s_host) {
+        if (!std::isfinite(sv) || sv < -1e-6f) {
+          s_finite_nonneg = false;
+          break;
+        }
+      }
+      if (std::isfinite(recon_err) && s_finite_nonneg && recon_err <= 8.0e-2f) {
+        bump_mps_native_svd_device_success_();
         return NativeSvdResult{u, s, vh};
       }
     } catch (const std::exception&) {
     }
+    bump_mps_native_svd_device_fallback_();
   }
   return svd_mps_cpu_reference_(a);
 }
@@ -1151,6 +1239,10 @@ LinearAlgDispatchCounters linearalg_dispatch_counters() noexcept {
   out.mps_bridge_lu_solve = c.lu_solve.load(std::memory_order_relaxed);
   out.mps_bridge_qr = c.qr.load(std::memory_order_relaxed);
   out.mps_bridge_svd = c.svd.load(std::memory_order_relaxed);
+  out.mps_native_qr_device_success = c.native_qr_device_success.load(std::memory_order_relaxed);
+  out.mps_native_qr_device_fallback = c.native_qr_device_fallback.load(std::memory_order_relaxed);
+  out.mps_native_svd_device_success = c.native_svd_device_success.load(std::memory_order_relaxed);
+  out.mps_native_svd_device_fallback = c.native_svd_device_fallback.load(std::memory_order_relaxed);
   return out;
 }
 
@@ -1169,6 +1261,10 @@ void linearalg_reset_dispatch_counters() noexcept {
   c.lu_solve.store(0, std::memory_order_relaxed);
   c.qr.store(0, std::memory_order_relaxed);
   c.svd.store(0, std::memory_order_relaxed);
+  c.native_qr_device_success.store(0, std::memory_order_relaxed);
+  c.native_qr_device_fallback.store(0, std::memory_order_relaxed);
+  c.native_svd_device_success.store(0, std::memory_order_relaxed);
+  c.native_svd_device_fallback.store(0, std::memory_order_relaxed);
   dispatch_cache_epoch_().fetch_add(1, std::memory_order_acq_rel);
 }
 

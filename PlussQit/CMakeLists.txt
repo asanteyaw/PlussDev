@@ -193,6 +193,7 @@ if(APPLE)
     src/CodeM/native/mps/Matmul.mm
     src/CodeM/native/mps/Reductions.mm
     src/CodeM/native/mps/Scatter.mm
+    src/CodeM/native/mps/Sorting.mm
   )
 else()
   set(PLUSSQIT_CODEM_MPS_SRC
@@ -208,6 +209,7 @@ else()
     src/CodeM/native/mps/MatmulStub.cpp
     src/CodeM/native/mps/ReductionsStub.cpp
     src/CodeM/native/mps/ScatterStub.cpp
+    src/CodeM/native/mps/SortingStub.cpp
   )
 endif()
 
@@ -637,6 +639,8 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch123_mps_batched_solver_bridge.cpp
       tests/CodeM/test_patch124_mps_batched_solver_broadcast.cpp
       tests/CodeM/test_patch125_mps_solver_route_policy.cpp
+      tests/CodeM/test_patch130_mps_native_device_telemetry.cpp
+      tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp
     )
     target_link_libraries(plussqit_codem_mps_selection_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_mps_selection_tests PRIVATE cxx_std_20)
@@ -865,6 +869,7 @@ if(PLUSSQIT_BUILD_CODEM)
     find_library(PLUSS_ACCELERATE_FRAMEWORK Accelerate)
     find_library(PLUSS_METAL_FRAMEWORK Metal)
     find_library(PLUSS_MPS_FRAMEWORK MetalPerformanceShaders)
+    find_library(PLUSS_MPS_GRAPH_FRAMEWORK MetalPerformanceShadersGraph)
     find_library(PLUSS_FOUNDATION_FRAMEWORK Foundation)
     if(PLUSS_ACCELERATE_FRAMEWORK)
       target_link_libraries(plussqit_codem PUBLIC ${PLUSS_ACCELERATE_FRAMEWORK})
@@ -873,6 +878,9 @@ if(PLUSSQIT_BUILD_CODEM)
     endif()
     if(PLUSS_METAL_FRAMEWORK AND PLUSS_MPS_FRAMEWORK AND PLUSS_FOUNDATION_FRAMEWORK)
       target_link_libraries(plussqit_codem PUBLIC ${PLUSS_METAL_FRAMEWORK} ${PLUSS_MPS_FRAMEWORK} ${PLUSS_FOUNDATION_FRAMEWORK})
+      if(PLUSS_MPS_GRAPH_FRAMEWORK)
+        target_link_libraries(plussqit_codem PUBLIC ${PLUSS_MPS_GRAPH_FRAMEWORK})
+      endif()
       set(_pluss_has_mps 1)
     endif()
   endif()

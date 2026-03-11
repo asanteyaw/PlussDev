@@ -2656,6 +2656,14 @@ src/CodeM/native/mps/Scatter.mm.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/mps/Scatter.mm.o
 .PHONY : src/CodeM/native/mps/Scatter.mm.o
 
+src/CodeM/native/mps/Sorting.o: src/CodeM/native/mps/Sorting.mm.o
+.PHONY : src/CodeM/native/mps/Sorting.o
+
+# target to build an object file
+src/CodeM/native/mps/Sorting.mm.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/mps/Sorting.mm.o
+.PHONY : src/CodeM/native/mps/Sorting.mm.o
+
 src/CodeN/compat/Dispatch.o: src/CodeN/compat/Dispatch.cpp.o
 .PHONY : src/CodeN/compat/Dispatch.o
 
@@ -3639,6 +3647,60 @@ tests/CodeM/test_patch12_factories.s: tests/CodeM/test_patch12_factories.cpp.s
 tests/CodeM/test_patch12_factories.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch12_factories.cpp.s
 .PHONY : tests/CodeM/test_patch12_factories.cpp.s
+
+tests/CodeM/test_patch130_mps_native_device_telemetry.o: tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.o
+.PHONY : tests/CodeM/test_patch130_mps_native_device_telemetry.o
+
+# target to build an object file
+tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.o
+.PHONY : tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.o
+
+tests/CodeM/test_patch130_mps_native_device_telemetry.i: tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.i
+.PHONY : tests/CodeM/test_patch130_mps_native_device_telemetry.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.i
+.PHONY : tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.i
+
+tests/CodeM/test_patch130_mps_native_device_telemetry.s: tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.s
+.PHONY : tests/CodeM/test_patch130_mps_native_device_telemetry.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.s
+.PHONY : tests/CodeM/test_patch130_mps_native_device_telemetry.cpp.s
+
+tests/CodeM/test_patch131_mps_native_sort_selection_strict.o: tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.o
+.PHONY : tests/CodeM/test_patch131_mps_native_sort_selection_strict.o
+
+# target to build an object file
+tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.o
+.PHONY : tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.o
+
+tests/CodeM/test_patch131_mps_native_sort_selection_strict.i: tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.i
+.PHONY : tests/CodeM/test_patch131_mps_native_sort_selection_strict.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.i
+.PHONY : tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.i
+
+tests/CodeM/test_patch131_mps_native_sort_selection_strict.s: tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.s
+.PHONY : tests/CodeM/test_patch131_mps_native_sort_selection_strict.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.s
+.PHONY : tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.s
 
 tests/CodeM/test_patch13_inplace_alias_views.o: tests/CodeM/test_patch13_inplace_alias_views.cpp.o
 .PHONY : tests/CodeM/test_patch13_inplace_alias_views.o
@@ -6510,6 +6572,7 @@ help:
 	@echo "... src/CodeM/native/mps/Matmul.o"
 	@echo "... src/CodeM/native/mps/Reductions.o"
 	@echo "... src/CodeM/native/mps/Scatter.o"
+	@echo "... src/CodeM/native/mps/Sorting.o"
 	@echo "... src/CodeN/compat/Dispatch.o"
 	@echo "... src/CodeN/compat/Dispatch.i"
 	@echo "... src/CodeN/compat/Dispatch.s"
@@ -6627,6 +6690,12 @@ help:
 	@echo "... tests/CodeM/test_patch12_factories.o"
 	@echo "... tests/CodeM/test_patch12_factories.i"
 	@echo "... tests/CodeM/test_patch12_factories.s"
+	@echo "... tests/CodeM/test_patch130_mps_native_device_telemetry.o"
+	@echo "... tests/CodeM/test_patch130_mps_native_device_telemetry.i"
+	@echo "... tests/CodeM/test_patch130_mps_native_device_telemetry.s"
+	@echo "... tests/CodeM/test_patch131_mps_native_sort_selection_strict.o"
+	@echo "... tests/CodeM/test_patch131_mps_native_sort_selection_strict.i"
+	@echo "... tests/CodeM/test_patch131_mps_native_sort_selection_strict.s"
 	@echo "... tests/CodeM/test_patch13_inplace_alias_views.o"
 	@echo "... tests/CodeM/test_patch13_inplace_alias_views.i"
 	@echo "... tests/CodeM/test_patch13_inplace_alias_views.s"

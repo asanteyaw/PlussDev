@@ -220,12 +220,27 @@ If any gate is missing, parity score must not increase.
 - [x] Add reconstruction-quality guardrails so unstable device results automatically fall back to the existing stable reference route without bridge-counter regressions.
 - [x] Re-run hardware gates (`default`, `strict no-bridge`, `native-only`, focused bridge QR/SVD, focused sorting-selection) with all assertions passing.
 
+## Patch 130 Focus (current)
+- [x] Add native QR/SVD device-path telemetry counters (success/fallback) to dispatch observability API.
+- [x] Add crash-safe SVD prototype gate (`PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD_UNSAFE=1`) so enabling device-SVD no longer risks strict native suite stability by default.
+- [x] Add hardware regression tests for native telemetry (`qr` device lane observed, `svd` safe fallback lane observed).
+- [x] Re-run full hardware gates (`default`, `strict no-bridge`, `native-only`) and explicit strict native SVD with device-SVD env enabled; all passed.
+
+## Patch 131 Focus (current)
+- [x] Add native MPSGraph-backed `sort` + `argsort` dispatch lane on MPS (device execution, Series output remains on MPS).
+- [x] Add strict routing policy knobs for validation (`PLUSS_MPS_NATIVE_SORT_SELECTION`, `PLUSS_MPS_NATIVE_SORT_SELECTION_STRICT`).
+- [x] Add native strict regression test for `sort/argsort` parity on hardware.
+- [x] Keep `topk/kthvalue` native lane implemented but default-off behind opt-in gate (`PLUSS_MPS_NATIVE_TOPK_SELECTION=1`) until stress-hardening is complete.
+- [x] Re-run hardware gates (`sort` focus, full default, strict no-bridge, strict native linalg subset) with all passing.
+
 ## Parity Workstreams
 1. Selection/Sorting family
 - [x] `sort` (values path) on MPS via safe fallback
 - [x] `argsort` values-only API on MPS via safe fallback
 - [x] `topk` values-only API on MPS via safe fallback
 - [x] `kthvalue` values-only API on MPS via safe fallback
+- [x] Native MPSGraph route for `sort/argsort` on stable last-dimension lane
+- [x] Native `topk/kthvalue` MPSGraph route exists but remains opt-in (`PLUSS_MPS_NATIVE_TOPK_SELECTION=1`) pending stress hardening
 - [ ] Stable tie-order parity guarantees across all dtypes
 
 2. Indexing/Set family
@@ -237,7 +252,7 @@ If any gate is missing, parity score must not increase.
 - [ ] Broader `index` multi-index parity on MPS
 
 3. Shape/Reduction completeness
-- [ ] Broaden sort/topk native MPS kernels beyond fallback routes
+- [ ] Broaden native sort/topk coverage beyond current last-dimension stable lane and remove opt-in status for topk/kthvalue
 - [ ] Expand dtype support and promotion parity gates
 - [ ] Add out-parameter compatibility checks
 

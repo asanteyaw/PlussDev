@@ -16,6 +16,7 @@
 #include "CodeM/native/cpu/SignalDistanceKernels.h"
 #include "CodeM/native/cpu/SortingKernels.h"
 #include "CodeM/native/mps/Matmul.h"
+#include "CodeM/native/mps/Sorting.h"
 
 #include <sstream>
 #include <array>
@@ -1834,6 +1835,42 @@ static bool cpu_sorting_kernel_supports_dtype_(ScalarType st) {
   }
 }
 
+static bool parse_bool_env_(const char* name, bool default_value) {
+  const char* raw = std::getenv(name);
+  if (raw == nullptr) {
+    return default_value;
+  }
+  const auto eq = [raw](const char* lit) {
+    const unsigned char* a = reinterpret_cast<const unsigned char*>(raw);
+    const unsigned char* b = reinterpret_cast<const unsigned char*>(lit);
+    while (*a != '\0' && *b != '\0') {
+      unsigned char ca = *a;
+      unsigned char cb = *b;
+      if (ca >= 'A' && ca <= 'Z') ca = static_cast<unsigned char>(ca - 'A' + 'a');
+      if (cb >= 'A' && cb <= 'Z') cb = static_cast<unsigned char>(cb - 'A' + 'a');
+      if (ca != cb) return false;
+      ++a;
+      ++b;
+    }
+    return *a == '\0' && *b == '\0';
+  };
+  if (eq("1") || eq("true") || eq("yes") || eq("on")) return true;
+  if (eq("0") || eq("false") || eq("no") || eq("off")) return false;
+  return default_value;
+}
+
+static bool mps_native_sort_selection_enabled_() {
+  return parse_bool_env_("PLUSS_MPS_NATIVE_SORT_SELECTION", true);
+}
+
+static bool mps_native_sort_selection_strict_() {
+  return parse_bool_env_("PLUSS_MPS_NATIVE_SORT_SELECTION_STRICT", false);
+}
+
+static bool mps_native_topk_selection_enabled_() {
+  return parse_bool_env_("PLUSS_MPS_NATIVE_TOPK_SELECTION", false);
+}
+
 static std::pair<Series, bool> prepare_cpu_sort_input_(const Series& self) {
   auto cpu = self.to(Platform::CPU);
   if (cpu_sorting_kernel_supports_dtype_(cpu.scalar_type())) {
@@ -1950,6 +1987,27 @@ static Series sort_values_only(const Series& self, std::int64_t dim, bool descen
     if (mps_selection_cache_matches_(cache, self, dim, /*k=*/0, descending, stable, false)) {
       return cache.value.clone();
     }
+    const bool native_enabled = mps_native_sort_selection_enabled_();
+    const bool native_strict = mps_native_sort_selection_strict_();
+    if (native_enabled && native::mps::supports_sort_selection(self, dim, stable)) {
+      try {
+        Series out = native::mps::sort_with_indices(self, dim, descending).first;
+        cache.valid = true;
+        cache.key = make_mps_selection_cache_key_(self, dim, /*k=*/0, descending, stable, false);
+        cache.value = out.clone();
+        return out;
+      } catch (const std::exception& e) {
+        if (native_strict) {
+          throw_error(std::string("sort: strict native MPS route failed: ") + e.what());
+        }
+      } catch (...) {
+        if (native_strict) {
+          throw_error("sort: strict native MPS route failed");
+        }
+      }
+    } else if (native_strict) {
+      throw_error("sort: strict native MPS route requested but kernel is unsupported");
+    }
     auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
     auto pair = native::cpu::sort(cpu, dim, descending, stable);
     auto values = restore_sorted_value_dtype_(pair.first, self, casted_for_sorting);
@@ -1969,6 +2027,29 @@ static Series topk_values_only(const Series& self, std::int64_t k, std::int64_t 
     static thread_local MpsSelectionCacheEntry cache{};
     if (mps_selection_cache_matches_(cache, self, dim, k, largest, sorted, false)) {
       return cache.value.clone();
+    }
+    const bool native_enabled = mps_native_sort_selection_enabled_();
+    const bool native_topk_enabled = mps_native_topk_selection_enabled_();
+    const bool native_strict = mps_native_sort_selection_strict_();
+    if (native_enabled && native_topk_enabled && sorted && k > 0 &&
+        native::mps::supports_sort_selection(self, dim, /*stable=*/false)) {
+      try {
+        Series out = native::mps::topk_with_indices(self, k, dim, largest).first;
+        cache.valid = true;
+        cache.key = make_mps_selection_cache_key_(self, dim, k, largest, sorted, false);
+        cache.value = out.clone();
+        return out;
+      } catch (const std::exception& e) {
+        if (native_strict) {
+          throw_error(std::string("topk: strict native MPS route failed: ") + e.what());
+        }
+      } catch (...) {
+        if (native_strict) {
+          throw_error("topk: strict native MPS route failed");
+        }
+      }
+    } else if (native_strict && native_topk_enabled && sorted && k > 0) {
+      throw_error("topk: strict native MPS route requested but kernel is unsupported");
     }
     auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
     auto pair = native::cpu::topk(cpu, k, dim, largest, sorted);
@@ -1992,6 +2073,28 @@ static Series kthvalue_values_only(const Series& self, std::int64_t k, std::int6
     static thread_local MpsSelectionCacheEntry cache{};
     if (mps_selection_cache_matches_(cache, self, dim, k, keepdim, false, false)) {
       return cache.value.clone();
+    }
+    const bool native_enabled = mps_native_sort_selection_enabled_();
+    const bool native_topk_enabled = mps_native_topk_selection_enabled_();
+    const bool native_strict = mps_native_sort_selection_strict_();
+    if (native_enabled && native_topk_enabled && native::mps::supports_sort_selection(self, dim, /*stable=*/false)) {
+      try {
+        Series value = native::mps::kthvalue(self, k, dim, keepdim);
+        cache.valid = true;
+        cache.key = make_mps_selection_cache_key_(self, dim, k, keepdim, false, false);
+        cache.value = value.clone();
+        return value;
+      } catch (const std::exception& e) {
+        if (native_strict) {
+          throw_error(std::string("kthvalue: strict native MPS route failed: ") + e.what());
+        }
+      } catch (...) {
+        if (native_strict) {
+          throw_error("kthvalue: strict native MPS route failed");
+        }
+      }
+    } else if (native_strict && native_topk_enabled) {
+      throw_error("kthvalue: strict native MPS route requested but kernel is unsupported");
     }
     auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
     auto pair = native::cpu::topk(cpu, k, dim, /*largest=*/false, /*sorted=*/true);
@@ -2017,6 +2120,27 @@ static Series argsort_values_only(const Series& self, std::int64_t dim, bool des
     static thread_local MpsSelectionCacheEntry cache{};
     if (mps_selection_cache_matches_(cache, self, dim, /*k=*/0, descending, stable, true)) {
       return cache.value.clone();
+    }
+    const bool native_enabled = mps_native_sort_selection_enabled_();
+    const bool native_strict = mps_native_sort_selection_strict_();
+    if (native_enabled && !stable && native::mps::supports_sort_selection(self, dim, stable)) {
+      try {
+        Series out = native::mps::argsort(self, dim, descending);
+        cache.valid = true;
+        cache.key = make_mps_selection_cache_key_(self, dim, /*k=*/0, descending, stable, true);
+        cache.value = out.clone();
+        return out;
+      } catch (const std::exception& e) {
+        if (native_strict) {
+          throw_error(std::string("argsort: strict native MPS route failed: ") + e.what());
+        }
+      } catch (...) {
+        if (native_strict) {
+          throw_error("argsort: strict native MPS route failed");
+        }
+      }
+    } else if (native_strict) {
+      throw_error("argsort: strict native MPS route requested but kernel is unsupported");
     }
     auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
     (void)casted_for_sorting;

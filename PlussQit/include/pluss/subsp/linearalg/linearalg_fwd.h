@@ -65,6 +65,10 @@ struct LinearAlgDispatchCounters {
   std::uint64_t mps_bridge_lu_solve = 0;
   std::uint64_t mps_bridge_qr = 0;
   std::uint64_t mps_bridge_svd = 0;
+  std::uint64_t mps_native_qr_device_success = 0;
+  std::uint64_t mps_native_qr_device_fallback = 0;
+  std::uint64_t mps_native_svd_device_success = 0;
+  std::uint64_t mps_native_svd_device_fallback = 0;
 };
 
 CODEM_API const char* linearalg_dense_provider_name(LinearAlgDenseProvider provider) noexcept;
