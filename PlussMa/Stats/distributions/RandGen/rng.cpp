@@ -54,7 +54,7 @@ Config float64_cfg_(Config cfg) {
 }
 
 Config f64_cpu_cfg_() {
-  return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  return Config{}.with_dtype(ScalarType::Float64);
 }
 
 std::int64_t checked_mul_(std::int64_t a, std::int64_t b, const char* op) {

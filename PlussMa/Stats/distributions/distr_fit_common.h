@@ -18,7 +18,7 @@ namespace pluss::subsp::stats::distr::fit_detail {
 
 inline std::vector<double> data_f64(const Series& x, std::string_view op) {
   PLUSS_CHECK(x.defined(), std::string(op) + ": x must be defined");
-  const auto values = x.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto values = x.to(ScalarType::Float64).to_vec<double>();
   PLUSS_CHECK(!values.empty(), std::string(op) + ": x must contain at least one observation");
   PLUSS_CHECK(std::all_of(values.begin(), values.end(), [](double v) { return std::isfinite(v); }),
               std::string(op) + ": x must contain finite values only");

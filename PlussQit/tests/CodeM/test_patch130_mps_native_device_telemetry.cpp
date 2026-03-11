@@ -71,7 +71,7 @@ TEST_CASE("MPS native QR device telemetry is reported", "[mps][linearalg][native
   REQUIRE((c.mps_native_qr_device_success + c.mps_native_qr_device_fallback) >= 1);
 }
 
-TEST_CASE("MPS native SVD safe gate telemetry reports fallback lane", "[mps][linearalg][native][telemetry][svd]") {
+TEST_CASE("MPS native SVD device telemetry is reported", "[mps][linearalg][native][telemetry][svd]") {
   using namespace pluss::subsp::linearalg;
 
   if (!pluss::mps::is_ready()) {
@@ -84,7 +84,6 @@ TEST_CASE("MPS native SVD safe gate telemetry reports fallback lane", "[mps][lin
   }
 
   const ScopedEnvVar enable_svd_device("PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD", "1");
-  const ScopedEnvVar safe_mode("PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD_UNSAFE", "0");
 
   linearalg_reset_dispatch_counters();
 
@@ -107,7 +106,5 @@ TEST_CASE("MPS native SVD safe gate telemetry reports fallback lane", "[mps][lin
   const auto c = linearalg_dispatch_counters();
   REQUIRE(c.mps_bridge_svd == 0);
   REQUIRE(c.mps_bridge_total == 0);
-  REQUIRE(c.mps_native_svd_device_success == 0);
-  REQUIRE(c.mps_native_svd_device_fallback >= 1);
+  REQUIRE(c.mps_native_svd_device_success >= 1);
 }
-

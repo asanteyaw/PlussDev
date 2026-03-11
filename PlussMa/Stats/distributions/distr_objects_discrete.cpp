@@ -719,7 +719,7 @@ Series NegativeBinomialFit::confint(const Series& x, double level) const {
   };
   const std::vector<double> params = {r, p};
   auto ci = confint_matrix_series_(params, stderr_from_info_diag_(info_diag_from_loglik_(params, fn)), x, level, "NegativeBinomialFit::confint");
-  auto flat = ci.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  auto flat = ci.to(ScalarType::Float64).to_vec<double>();
   flat[2] = std::clamp(flat[2], 0.0, 1.0);
   flat[3] = std::clamp(flat[3], 0.0, 1.0);
   return fit_detail::vec_series_cpu(flat, {2, 2}).to(x.platform(), ScalarType::Float64);

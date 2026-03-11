@@ -133,7 +133,7 @@ double gh_raw_moment(double lambda,
 
 Series normalized_mixture_weights(const Series& weights) {
   PLUSS_CHECK(weights.defined(), "GaussianMixture: weights must be defined");
-  const Series w = weights.to(pluss::pCPU, ScalarType::Float64).reshape({weights.numel()});
+  const Series w = weights.to(ScalarType::Float64).reshape({weights.numel()});
   PLUSS_CHECK(w.numel() > 0, "GaussianMixture: expected at least one component");
   const double total = w.sum().item<double>();
   PLUSS_CHECK(total > 0.0, "GaussianMixture: weights must sum to > 0");
@@ -460,8 +460,8 @@ Series GaussianMixture::cumulant(std::int64_t order) const {
   detail::require_positive_order(order, "GaussianMixture::cumulant");
   require_mixture_shape_compatibility(weights, means, stddevs);
   const auto probs = normalized_mixture_weights(weights).to_vec<double>();
-  const auto mean_vals = means.to(pluss::pCPU, ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
-  const auto stddev_vals = stddevs.to(pluss::pCPU, ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
+  const auto mean_vals = means.to(ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
+  const auto stddev_vals = stddevs.to(ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
   std::vector<double> raw(static_cast<std::size_t>(order) + 1, 0.0);
   raw[0] = 1.0;
   for (std::int64_t n = 1; n <= order; ++n) {
@@ -543,7 +543,7 @@ Series NigFit::confint(const Series& x, double level) const {
   };
   const std::vector<double> p = {alpha, beta, location, scale};
   auto ci = confint_matrix_series_(p, stderr_from_info_diag_(info_diag_from_loglik_(p, fn)), x, level, "NigFit::confint");
-  auto flat = ci.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  auto flat = ci.to(ScalarType::Float64).to_vec<double>();
   flat[6] = std::max(0.0, flat[6]);
   return fit_detail::vec_series_cpu(flat, {4, 2}).to(x.platform(), ScalarType::Float64);
 }
@@ -675,7 +675,7 @@ Series GhFit::confint(const Series& x, double level) const {
   };
   const std::vector<double> p = {lambda, alpha, beta, location, scale};
   auto ci = confint_matrix_series_(p, stderr_from_info_diag_(info_diag_from_loglik_(p, fn)), x, level, "GhFit::confint");
-  auto flat = ci.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  auto flat = ci.to(ScalarType::Float64).to_vec<double>();
   flat[8] = std::max(0.0, flat[8]);
   return fit_detail::vec_series_cpu(flat, {5, 2}).to(x.platform(), ScalarType::Float64);
 }
@@ -760,8 +760,8 @@ Series GaussianMixtureFit::score(const Series& x) const {
   require_mixture_shape_compatibility(weights, means, stddevs);
   const std::size_t k = static_cast<std::size_t>(weights.numel());
   const auto w = normalized_mixture_weights(weights).to_vec<double>();
-  const auto m = means.to(pluss::pCPU, ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
-  const auto s = stddevs.to(pluss::pCPU, ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
+  const auto m = means.to(ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
+  const auto s = stddevs.to(ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
 
   std::vector<double> theta;
   theta.reserve((k - 1) + k + k);
@@ -800,8 +800,8 @@ Series GaussianMixtureFit::observed_inf(const Series& x) const {
   require_mixture_shape_compatibility(weights, means, stddevs);
   const std::size_t k = static_cast<std::size_t>(weights.numel());
   const auto w = normalized_mixture_weights(weights).to_vec<double>();
-  const auto m = means.to(pluss::pCPU, ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
-  const auto s = stddevs.to(pluss::pCPU, ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
+  const auto m = means.to(ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
+  const auto s = stddevs.to(ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
   std::vector<double> theta;
   theta.reserve((k - 1) + k + k);
   for (std::size_t i = 0; i + 1 < k; ++i) theta.push_back(std::log(std::max(w[i], 1e-12) / std::max(w[k - 1], 1e-12)));
@@ -829,7 +829,7 @@ Series GaussianMixtureFit::observed_inf(const Series& x) const {
 }
 
 Series GaussianMixtureFit::vcov(const Series& x) const {
-  const auto info = observed_inf(x).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto info = observed_inf(x).to(ScalarType::Float64).to_vec<double>();
   const std::int64_t n = static_cast<std::int64_t>(std::sqrt(static_cast<double>(info.size())));
   std::vector<double> diag(static_cast<std::size_t>(n), kMinInfo);
   for (std::int64_t i = 0; i < n; ++i) diag[static_cast<std::size_t>(i)] = std::max(info[static_cast<std::size_t>(i * n + i)], kMinInfo);
@@ -837,7 +837,7 @@ Series GaussianMixtureFit::vcov(const Series& x) const {
 }
 
 Series GaussianMixtureFit::stderr(const Series& x) const {
-  const auto info = observed_inf(x).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto info = observed_inf(x).to(ScalarType::Float64).to_vec<double>();
   const std::int64_t n = static_cast<std::int64_t>(std::sqrt(static_cast<double>(info.size())));
   std::vector<double> diag(static_cast<std::size_t>(n), kMinInfo);
   for (std::int64_t i = 0; i < n; ++i) diag[static_cast<std::size_t>(i)] = std::max(info[static_cast<std::size_t>(i * n + i)], kMinInfo);
@@ -848,8 +848,8 @@ Series GaussianMixtureFit::confint(const Series& x, double level) const {
   require_mixture_shape_compatibility(weights, means, stddevs);
   const std::size_t k = static_cast<std::size_t>(weights.numel());
   const auto w = normalized_mixture_weights(weights).to_vec<double>();
-  const auto m = means.to(pluss::pCPU, ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
-  const auto s = stddevs.to(pluss::pCPU, ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
+  const auto m = means.to(ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
+  const auto s = stddevs.to(ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
   std::vector<double> params;
   params.reserve((k - 1) + k + k);
   for (std::size_t i = 0; i + 1 < k; ++i) {
@@ -857,7 +857,7 @@ Series GaussianMixtureFit::confint(const Series& x, double level) const {
   }
   params.insert(params.end(), m.begin(), m.end());
   std::transform(s.begin(), s.end(), std::back_inserter(params), [](double v) { return std::log(std::max(v, 1e-6)); });
-  const auto se = stderr(x).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto se = stderr(x).to(ScalarType::Float64).to_vec<double>();
   return confint_matrix_series_(params, se, x, level, "GaussianMixtureFit::confint");
 }
 
@@ -867,8 +867,8 @@ GaussianMixtureFit GaussianMixture::MLE(const Series& x) const {
   const std::size_t k = static_cast<std::size_t>(weights.numel());
   PLUSS_CHECK(k > 0, "GaussianMixture::MLE: need at least one component");
   auto w = normalized_mixture_weights(weights).to_vec<double>();
-  auto m = means.to(pluss::pCPU, ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
-  auto s = stddevs.to(pluss::pCPU, ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
+  auto m = means.to(ScalarType::Float64).reshape({means.numel()}).to_vec<double>();
+  auto s = stddevs.to(ScalarType::Float64).reshape({stddevs.numel()}).to_vec<double>();
 
   if (m.size() != k) m.assign(k, 0.0);
   if (s.size() != k) s.assign(k, 1.0);

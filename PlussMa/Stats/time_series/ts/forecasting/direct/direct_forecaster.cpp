@@ -53,17 +53,19 @@ Series i64_range_(std::int64_t start, std::int64_t end_exclusive, Config cfg) {
   return pluss::arange(start, end_exclusive, idx_cfg);
 }
 
-std::vector<std::int64_t> active_columns_for_horizon_(const Series& mask, std::int64_t hidx) {
-  const auto row = mask.select(0, hidx).to(pluss::pCPU, ScalarType::Bool).reshape({mask.sizes()[1]});
-  const auto values = row.to_vec<std::uint8_t>();
-  std::vector<std::int64_t> cols;
-  cols.reserve(values.size());
-  for (std::size_t i = 0; i < values.size(); ++i) {
-    if (values[i] != 0) {
-      cols.push_back(static_cast<std::int64_t>(i));
-    }
+Series active_columns_index_for_horizon_(const Series& mask, std::int64_t hidx, Config cfg) {
+  const auto out_cfg = work_cfg_(cfg);
+  const Series row = mask.select(0, hidx).to(out_cfg.platform, ScalarType::Bool).reshape({mask.sizes()[1]});
+  const Series nz = row.nonzero();
+  if (!nz.defined() || nz.numel() == 0) {
+    return pluss::empty({0}, Config{}.with_dtype(ScalarType::Int64).with_platform(out_cfg.platform));
   }
-  return cols;
+  return nz.select(1, 0).reshape({nz.sizes()[0]}).to(out_cfg.platform, ScalarType::Int64);
+}
+
+std::vector<std::int64_t> active_columns_from_index_(const Series& col_idx) {
+  if (!col_idx.defined() || col_idx.numel() == 0) return {};
+  return col_idx.to(ScalarType::Int64).to_vec<std::int64_t>();
 }
 
 Series select_rows_(const Series& x, std::int64_t start, std::int64_t len, Config cfg) {
@@ -73,11 +75,11 @@ Series select_rows_(const Series& x, std::int64_t start, std::int64_t len, Confi
   return x.index_select(0, i64_range_(start, start + len, cfg));
 }
 
-Series select_columns_(const Series& x, const std::vector<std::int64_t>& cols, Config cfg) {
-  PLUSS_CHECK(!cols.empty(), "subsp::stats::ts::DirectForecaster: expected non-empty active feature set");
-  const Config idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform).with_pinned(cfg.pinned);
-  const Series col_idx = pluss::make_series(cols, {static_cast<std::int64_t>(cols.size())}, idx_cfg);
-  return x.index_select(1, col_idx);
+Series select_columns_(const Series& x, const Series& col_idx, Config cfg) {
+  PLUSS_CHECK(col_idx.defined() && col_idx.numel() > 0,
+              "subsp::stats::ts::DirectForecaster: expected non-empty active feature set");
+  const auto idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform).with_pinned(cfg.pinned);
+  return x.index_select(1, col_idx.to(idx_cfg.platform, idx_cfg.dtype));
 }
 
 Series prepend_intercept_(const Series& x, Config cfg) {
@@ -152,6 +154,18 @@ const DirectStepModel& step_for_horizon_(const std::vector<DirectStepModel>& ste
   return *it;
 }
 
+Series step_active_columns_index_(const DirectStepModel& step_model, Config cfg) {
+  const auto idx_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(cfg.platform).with_pinned(cfg.pinned);
+  if (step_model.active_columns_index.defined() && step_model.active_columns_index.numel() > 0) {
+    return step_model.active_columns_index.to(idx_cfg.platform, idx_cfg.dtype);
+  }
+  PLUSS_CHECK(!step_model.active_columns.empty(),
+              "subsp::stats::ts::DirectForecaster: expected non-empty active feature set");
+  return pluss::make_series(step_model.active_columns,
+                            {static_cast<std::int64_t>(step_model.active_columns.size())},
+                            idx_cfg);
+}
+
 } // namespace
 
 DirectForecaster::DirectForecaster(LagPlan lag_plan, DirectForecasterOptions options, std::vector<DirectStepModel> steps)
@@ -168,7 +182,7 @@ DirectForecaster DirectForecaster::fit(const Series& x, const Series& y, const D
   const std::int64_t num_predictors = x.defined() ? as_matrix_(x, "DirectForecaster::fit").sizes()[1] : 0;
   const LagPlan plan = build_lag_plan(num_predictors, options.lag);
   const Series design = build_lagged_predictors(x, yv, plan, out_cfg);
-  const Series mask = plan.prepared_predictors_per_horizon.to(pluss::pCPU, ScalarType::Bool);
+  const Series mask = plan.prepared_predictors_per_horizon.to(out_cfg.platform, ScalarType::Bool);
 
   std::vector<DirectStepModel> steps;
   steps.reserve(plan.horizon.size());
@@ -176,8 +190,9 @@ DirectForecaster DirectForecaster::fit(const Series& x, const Series& y, const D
     const std::int64_t h = plan.horizon[i];
     const std::int64_t row_start = plan.max_lead - (h - 1);
     Series x_step = select_rows_(design, row_start, nobs, out_cfg);
-    const auto cols = active_columns_for_horizon_(mask, static_cast<std::int64_t>(i));
-    x_step = select_columns_(x_step, cols, out_cfg);
+    const Series active_cols_idx = active_columns_index_for_horizon_(mask, static_cast<std::int64_t>(i), out_cfg);
+    const auto cols = active_columns_from_index_(active_cols_idx);
+    x_step = select_columns_(x_step, active_cols_idx, out_cfg);
     if (options.fit_intercept) {
       x_step = prepend_intercept_(x_step, out_cfg);
     }
@@ -185,6 +200,7 @@ DirectForecaster DirectForecaster::fit(const Series& x, const Series& y, const D
     steps.push_back(DirectStepModel{
         .horizon = h,
         .active_columns = cols,
+        .active_columns_index = active_cols_idx,
         .beta = fit_beta_(x_step, yv, options, out_cfg),
     });
   }
@@ -205,7 +221,7 @@ Series DirectForecaster::predict(const Series& x, const Series& y, Config cfg) c
   for (const auto& step_model : steps_) {
     const std::int64_t row_start = lag_plan_.max_lead - (step_model.horizon - 1);
     Series x_step = select_rows_(design, row_start, nobs, out_cfg);
-    x_step = select_columns_(x_step, step_model.active_columns, out_cfg);
+    x_step = select_columns_(x_step, step_active_columns_index_(step_model, out_cfg), out_cfg);
     if (options_.fit_intercept) {
       x_step = prepend_intercept_(x_step, out_cfg);
     }
@@ -225,7 +241,7 @@ Series DirectForecaster::prepared_predictors(const Series& x, const Series& y, s
   const Series design = build_lagged_predictors(x, yv, lag_plan_, out_cfg);
   const std::int64_t row_start = lag_plan_.max_lead - (step_model.horizon - 1);
   Series x_step = select_rows_(design, row_start, nobs, out_cfg);
-  x_step = select_columns_(x_step, step_model.active_columns, out_cfg);
+  x_step = select_columns_(x_step, step_active_columns_index_(step_model, out_cfg), out_cfg);
   if (options_.fit_intercept) {
     x_step = prepend_intercept_(x_step, out_cfg);
   }
@@ -243,21 +259,29 @@ Series DirectForecaster::forecast(const Series& x, const Series& y, Config cfg) 
   const std::int64_t nobs = yv.numel();
   const Series design = build_lagged_predictors(x, yv, lag_plan_, out_cfg);
 
-  std::vector<double> out;
-  out.reserve(steps_.size());
+  std::vector<Series> out_cols;
+  out_cols.reserve(steps_.size());
   for (const auto& step_model : steps_) {
     const std::int64_t row_start = lag_plan_.max_lead - (step_model.horizon - 1);
     const std::int64_t row_idx_value = row_start + nobs - 1;
     const Series row_idx = pluss::make_series(std::vector<std::int64_t>{row_idx_value}, {1}, idx_cfg);
     Series x_row = design.index_select(0, row_idx);
-    x_row = select_columns_(x_row, step_model.active_columns, out_cfg);
+    x_row = select_columns_(x_row, step_active_columns_index_(step_model, out_cfg), out_cfg);
     if (options_.fit_intercept) {
       x_row = prepend_intercept_(x_row, out_cfg);
     }
     x_row = x_row.nan_to_num(0.0, 0.0, 0.0);
-    out.push_back(x_row.matmul(step_model.beta.reshape({step_model.beta.numel(), 1})).item<double>());
+    out_cols.push_back(x_row.matmul(step_model.beta.reshape({step_model.beta.numel(), 1})));
   }
-  return pluss::make_series(out, {static_cast<std::int64_t>(out.size())}, out_cfg);
+  if (out_cols.empty()) {
+    return pluss::empty({0}, out_cfg);
+  }
+  if (out_cols.size() == 1) {
+    return out_cols.front().reshape({1});
+  }
+  const Series forecast_2d =
+      out_cols.front().unite(std::vector<Series>(out_cols.begin() + 1, out_cols.end()), 1);
+  return forecast_2d.reshape({forecast_2d.sizes()[1]});
 }
 
 Series DirectForecaster::loss(const Series& x, const Series& y, RegressionLoss kind, Config cfg) const {
@@ -269,17 +293,10 @@ Series DirectForecaster::loss(const Series& x, const Series& y, RegressionLoss k
 
   const Series y_expanded = yv.reshape({nobs, 1}).expand(std::vector<std::int64_t>{nobs, pred.sizes()[1]});
   const Series residual = pred.sub(y_expanded);
-  std::vector<double> out;
-  out.reserve(static_cast<std::size_t>(pred.sizes()[1]));
-  for (std::int64_t c = 0; c < pred.sizes()[1]; ++c) {
-    const Series col = residual.select(1, c);
-    if (kind == RegressionLoss::MSE) {
-      out.push_back(col.mul(col).mean().item<double>());
-    } else {
-      out.push_back(col.abs().mean().item<double>());
-    }
+  if (kind == RegressionLoss::MSE) {
+    return residual.mul(residual).mean(0, false).reshape({pred.sizes()[1]});
   }
-  return pluss::make_series(out, {static_cast<std::int64_t>(out.size())}, out_cfg);
+  return residual.abs().mean(0, false).reshape({pred.sizes()[1]});
 }
 
 const DirectStepModel& DirectForecaster::step(std::int64_t i) const {

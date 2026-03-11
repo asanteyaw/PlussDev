@@ -233,6 +233,17 @@ If any gate is missing, parity score must not increase.
 - [x] Keep `topk/kthvalue` native lane implemented but default-off behind opt-in gate (`PLUSS_MPS_NATIVE_TOPK_SELECTION=1`) until stress-hardening is complete.
 - [x] Re-run hardware gates (`sort` focus, full default, strict no-bridge, strict native linalg subset) with all passing.
 
+## Patch 132 Focus (current)
+- [x] Stabilize and graduate true device-native reduced SVD on MPS (`full_matrices=false`) and enable the native device lane by default.
+- [x] Remove the unsafe prototype gate (`PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD_UNSAFE`) from reduced-SVD native routing.
+- [x] Enforce strict native policy for reduced SVD: when bridge is disabled, no host-assisted fallback is allowed.
+- [x] Add strict-native reduced-SVD regression coverage (deterministic parity, stress/repeat crash-free stability, strict policy rejection when device lane is disabled).
+- [x] Re-run hardware gates (`default` `[mps]`, `strict no-bridge` `[strict]`, `native-only` `[mps][linearalg][native]`, focused strict-native SVD `[mps][linearalg][native][strict][svd]`) with all passing.
+
+Next highest-impact aggressive family:
+- [ ] Run final mega hardware gate sweep and lock report artifacts.
+- [ ] Transition to CUDA tranche planning/execution.
+
 ## Parity Workstreams
 1. Selection/Sorting family
 - [x] `sort` (values path) on MPS via safe fallback

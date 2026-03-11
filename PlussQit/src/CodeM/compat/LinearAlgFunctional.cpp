@@ -785,11 +785,11 @@ inline bool mps_native_device_qr_enabled_() noexcept {
 }
 
 inline bool mps_native_device_svd_enabled_() noexcept {
-  return parse_bool_env_("PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD", false);
+  return parse_bool_env_("PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD", true);
 }
 
-inline bool mps_native_device_svd_unsafe_enabled_() noexcept {
-  return parse_bool_env_("PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD_UNSAFE", false);
+inline bool mps_native_strict_mode_() noexcept {
+  return mps_experimental_native_enabled_() && !linearalg_mps_cpu_bridge_enabled();
 }
 
 inline float max_abs_diff_scalar_(const Series& a, const Series& b) {
@@ -902,107 +902,112 @@ inline NativeSvdResult svd_mps_native_(const Series& a) {
   PLUSS_CHECK(
       mps_native_svd_supported_(a, false),
       "subsp::linearalg::svd: native MPS path expects non-empty 2D input with full_matrices=false");
-  if (mps_native_device_svd_enabled_()) {
-    if (!mps_native_device_svd_unsafe_enabled_()) {
-      // Keep the prototype lane crash-safe by default: the unsafe on-device
-      // algorithm remains opt-in while we harden it.
-      bump_mps_native_svd_device_fallback_();
-      return svd_mps_cpu_reference_(a);
-    }
-    try {
-      const Series x = canonical_mps_native_f32_(a);
-      const auto m = x.sizes()[0];
-      const auto n = x.sizes()[1];
-      const auto k = std::min(m, n);
-      PLUSS_CHECK(k > 0, "subsp::linearalg::svd: expected non-empty matrix");
-
-      Series work = x;
-      std::vector<Series> u_cols;
-      u_cols.reserve(static_cast<std::size_t>(k));
-      std::vector<Series> v_cols;
-      v_cols.reserve(static_cast<std::size_t>(k));
-      std::vector<Series> s_scalars;
-      s_scalars.reserve(static_cast<std::size_t>(k));
-
-      for (std::int64_t j = 0; j < k; ++j) {
-        Series v = Series::ones({n}, ScalarType::Float32).to(Platform::MPS).contiguous();
-        if (j > 0) {
-          v = v.add(static_cast<double>(j) * 1e-3).contiguous();
-        }
-
-        for (int iter = 0; iter < 16; ++iter) {
-          Series u = work.matmul(v.reshape({n, 1})).reshape({m}).contiguous();
-          u = safe_normalize_vec_(u);
-
-          Series vt = work.transpose(0, 1).contiguous().matmul(u.reshape({m, 1})).reshape({n}).contiguous();
-          v = safe_normalize_vec_(vt);
-        }
-
-        Series u = work.matmul(v.reshape({n, 1})).reshape({m}).contiguous();
-        Series s = u.norm(2.0).to(ScalarType::Float32).contiguous();
-        u = safe_normalize_vec_(u);
-
-        // Re-orthogonalize against previously extracted vectors for stability.
-        for (std::size_t t = 0; t < u_cols.size(); ++t) {
-          const Series& u_prev = u_cols[t];
-          const Series proj_u = u_prev.reshape({1, m}).matmul(u.reshape({m, 1})).reshape({}).contiguous();
-          u = u.sub(u_prev.mul(proj_u)).contiguous();
-        }
-        u = safe_normalize_vec_(u);
-
-        for (std::size_t t = 0; t < v_cols.size(); ++t) {
-          const Series& v_prev = v_cols[t];
-          const Series proj_v = v_prev.reshape({1, n}).matmul(v.reshape({n, 1})).reshape({}).contiguous();
-          v = v.sub(v_prev.mul(proj_v)).contiguous();
-        }
-        v = safe_normalize_vec_(v);
-
-        Series sigma = u.reshape({1, m})
-                           .matmul(x.matmul(v.reshape({n, 1})))
-                           .reshape({})
-                           .to(ScalarType::Float32)
-                           .contiguous();
-        float sigma_v = sigma.item<float>();
-        if (!std::isfinite(sigma_v)) {
-          sigma = Series::full({}, 0.0, ScalarType::Float32).to(Platform::MPS).contiguous();
-          u = Series::zeros({m}, ScalarType::Float32).to(Platform::MPS).contiguous();
-          v = Series::zeros({n}, ScalarType::Float32).to(Platform::MPS).contiguous();
-          sigma_v = 0.0f;
-        }
-        if (sigma_v < 0.0f) {
-          sigma = sigma.neg().contiguous();
-          v = v.neg().contiguous();
-        }
-
-        const Series outer = u.reshape({m, 1}).matmul(v.reshape({1, n})).contiguous();
-        work = work.sub(outer.mul(sigma)).contiguous();
-
-        u_cols.push_back(u);
-        v_cols.push_back(v);
-        s_scalars.push_back(sigma);
-      }
-
-      const Series u = stack_dim0_(u_cols, "svd_native_u").transpose(0, 1).contiguous();
-      const Series s = stack_dim0_(s_scalars, "svd_native_s").reshape({k}).contiguous();
-      const Series vh = stack_dim0_(v_cols, "svd_native_v").contiguous();
-
-      const Series recon = u.matmul(vh.mul(s.reshape({k, 1})));
-      const float recon_err = max_abs_diff_scalar_(recon, x);
-      const auto s_host = s.to(Platform::CPU).to(ScalarType::Float32).to_vec<float>();
-      bool s_finite_nonneg = true;
-      for (const auto sv : s_host) {
-        if (!std::isfinite(sv) || sv < -1e-6f) {
-          s_finite_nonneg = false;
-          break;
-        }
-      }
-      if (std::isfinite(recon_err) && s_finite_nonneg && recon_err <= 8.0e-2f) {
-        bump_mps_native_svd_device_success_();
-        return NativeSvdResult{u, s, vh};
-      }
-    } catch (const std::exception&) {
+  const bool strict_native = mps_native_strict_mode_();
+  if (!mps_native_device_svd_enabled_()) {
+    if (strict_native) {
+      pluss::codem::throw_error(
+          "subsp::linearalg::svd: strict native MPS route requires PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD=1");
     }
     bump_mps_native_svd_device_fallback_();
+    return svd_mps_cpu_reference_(a);
+  }
+  try {
+    const Series x = canonical_mps_native_f32_(a);
+    const auto m = x.sizes()[0];
+    const auto n = x.sizes()[1];
+    const auto k = std::min(m, n);
+    PLUSS_CHECK(k > 0, "subsp::linearalg::svd: expected non-empty matrix");
+
+    Series work = x;
+    std::vector<Series> u_cols;
+    u_cols.reserve(static_cast<std::size_t>(k));
+    std::vector<Series> v_cols;
+    v_cols.reserve(static_cast<std::size_t>(k));
+    std::vector<Series> s_scalars;
+    s_scalars.reserve(static_cast<std::size_t>(k));
+
+    for (std::int64_t j = 0; j < k; ++j) {
+      Series v = Series::ones({n}, ScalarType::Float32).to(Platform::MPS).contiguous();
+      if (j > 0) {
+        v = v.add(static_cast<double>(j) * 1e-3).contiguous();
+      }
+
+      for (int iter = 0; iter < 16; ++iter) {
+        Series u = work.matmul(v.reshape({n, 1})).reshape({m}).contiguous();
+        u = safe_normalize_vec_(u);
+
+        Series vt = work.transpose(0, 1).contiguous().matmul(u.reshape({m, 1})).reshape({n}).contiguous();
+        v = safe_normalize_vec_(vt);
+      }
+
+      Series u = work.matmul(v.reshape({n, 1})).reshape({m}).contiguous();
+      Series s = u.norm(2.0).to(ScalarType::Float32).contiguous();
+      u = safe_normalize_vec_(u);
+
+      // Re-orthogonalize against previously extracted vectors for stability.
+      for (std::size_t t = 0; t < u_cols.size(); ++t) {
+        const Series& u_prev = u_cols[t];
+        const Series proj_u = u_prev.reshape({1, m}).matmul(u.reshape({m, 1})).reshape({}).contiguous();
+        u = u.sub(u_prev.mul(proj_u)).contiguous();
+      }
+      u = safe_normalize_vec_(u);
+
+      for (std::size_t t = 0; t < v_cols.size(); ++t) {
+        const Series& v_prev = v_cols[t];
+        const Series proj_v = v_prev.reshape({1, n}).matmul(v.reshape({n, 1})).reshape({}).contiguous();
+        v = v.sub(v_prev.mul(proj_v)).contiguous();
+      }
+      v = safe_normalize_vec_(v);
+
+      Series sigma = u.reshape({1, m})
+                         .matmul(x.matmul(v.reshape({n, 1})))
+                         .reshape({})
+                         .to(ScalarType::Float32)
+                         .contiguous();
+      float sigma_v = sigma.item<float>();
+      if (!std::isfinite(sigma_v)) {
+        sigma = Series::full({}, 0.0, ScalarType::Float32).to(Platform::MPS).contiguous();
+        u = Series::zeros({m}, ScalarType::Float32).to(Platform::MPS).contiguous();
+        v = Series::zeros({n}, ScalarType::Float32).to(Platform::MPS).contiguous();
+        sigma_v = 0.0f;
+      }
+      if (sigma_v < 0.0f) {
+        sigma = sigma.neg().contiguous();
+        v = v.neg().contiguous();
+      }
+
+      const Series outer = u.reshape({m, 1}).matmul(v.reshape({1, n})).contiguous();
+      work = work.sub(outer.mul(sigma)).contiguous();
+
+      u_cols.push_back(u);
+      v_cols.push_back(v);
+      s_scalars.push_back(sigma);
+    }
+
+    const Series u = stack_dim0_(u_cols, "svd_native_u").transpose(0, 1).contiguous();
+    const Series s = stack_dim0_(s_scalars, "svd_native_s").reshape({k}).contiguous();
+    const Series vh = stack_dim0_(v_cols, "svd_native_v").contiguous();
+
+    const Series recon = u.matmul(vh.mul(s.reshape({k, 1})));
+    const float recon_err = max_abs_diff_scalar_(recon, x);
+    const auto s_host = s.to(Platform::CPU).to(ScalarType::Float32).to_vec<float>();
+    bool s_finite_nonneg = true;
+    for (const auto sv : s_host) {
+      if (!std::isfinite(sv) || sv < -1e-6f) {
+        s_finite_nonneg = false;
+        break;
+      }
+    }
+    if (std::isfinite(recon_err) && s_finite_nonneg && recon_err <= 8.0e-2f) {
+      bump_mps_native_svd_device_success_();
+      return NativeSvdResult{u, s, vh};
+    }
+  } catch (const std::exception&) {
+  }
+  bump_mps_native_svd_device_fallback_();
+  if (strict_native) {
+    pluss::codem::throw_error(
+        "subsp::linearalg::svd: strict native MPS route failed reconstruction/stability checks");
   }
   return svd_mps_cpu_reference_(a);
 }
@@ -1156,6 +1161,11 @@ inline SvdDispatchCacheEntry compute_mps_svd_dispatch_(const Series& a, bool ful
   out.epoch = current_dispatch_cache_epoch_();
   out.key = make_decomp_cache_key_(a, full_matrices);
   if (mps_native_svd_supported_(a, full_matrices)) {
+    if (mps_native_strict_mode_()) {
+      out.svd = svd_mps_native_(a);
+      out.bridged = false;
+      return out;
+    }
     try {
       out.svd = svd_mps_native_(a);
       out.bridged = false;

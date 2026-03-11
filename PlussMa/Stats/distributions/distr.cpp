@@ -249,7 +249,7 @@ double param_or_(std::span<const double> params, std::size_t idx, double default
 
 template <class Fn>
 Series map_series_f64_(const Series& x, Fn&& fn) {
-  const Series cpu = x.to(pluss::pCPU, ScalarType::Float64);
+  const Series cpu = x.to(ScalarType::Float64);
   const auto in = cpu.to_vec<double>();
   std::vector<double> out(in.size());
   std::transform(in.begin(), in.end(), out.begin(), std::forward<Fn>(fn));
@@ -2981,9 +2981,9 @@ MixtureNormalParams mixture_normal_params_(const Series& weights,
   PLUSS_CHECK(means.defined(), "subsp::stats::distr::mixture_normal: means must be defined");
   PLUSS_CHECK(stddevs.defined(), "subsp::stats::distr::mixture_normal: stddevs must be defined");
 
-  const Series w = weights.to(pluss::pCPU, ScalarType::Float64).reshape({weights.numel()});
-  const Series m_cpu = means.to(pluss::pCPU, ScalarType::Float64).reshape({means.numel()});
-  const Series s_cpu = stddevs.to(pluss::pCPU, ScalarType::Float64).reshape({stddevs.numel()});
+  const Series w = weights.to(ScalarType::Float64).reshape({weights.numel()});
+  const Series m_cpu = means.to(ScalarType::Float64).reshape({means.numel()});
+  const Series s_cpu = stddevs.to(ScalarType::Float64).reshape({stddevs.numel()});
 
   PLUSS_CHECK(
       w.numel() == m_cpu.numel() && w.numel() == s_cpu.numel(),

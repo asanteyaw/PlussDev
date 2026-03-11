@@ -57,7 +57,7 @@ double scalar_as_f64(const Series& x, const char* op) {
   if (!x.defined() || x.numel() != 1) {
     throw std::runtime_error(std::string(op) + ": expected scalar Series");
   }
-  return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
+  return x.to(ScalarType::Float64).item<double>();
 }
 
 void require_valid_initial(const Series& initial, const char* op) {
@@ -186,8 +186,8 @@ HostBoundsPack to_host_bounds(
   if (!out.enabled) {
     return out;
   }
-  out.lower = bounds.lower.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  out.upper = bounds.upper.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  out.lower = bounds.lower.to(ScalarType::Float64).to_vec<double>();
+  out.upper = bounds.upper.to(ScalarType::Float64).to_vec<double>();
   if (static_cast<std::int64_t>(out.lower.size()) != n_dim ||
       static_cast<std::int64_t>(out.upper.size()) != n_dim) {
     throw std::runtime_error("dfo_minimizers: invalid bounds host conversion");
@@ -282,7 +282,7 @@ std::vector<std::vector<double>> sample_population_host(
     std::mt19937_64* rng) {
   const std::int64_t n_dim = setup.dimension;
   std::vector<double> center =
-      setup.flat_initial.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+      setup.flat_initial.to(ScalarType::Float64).to_vec<double>();
   if (static_cast<std::int64_t>(center.size()) != n_dim) {
     throw std::runtime_error("dfo_minimizers: invalid host initial conversion");
   }
@@ -373,7 +373,7 @@ Series eval_population(
 }
 
 std::int64_t argmin_index(const Series& x) {
-  return x.argmin(0, false).to(pluss::pCPU, ScalarType::Int64).item<std::int64_t>();
+  return x.argmin(0, false).to(ScalarType::Int64).item<std::int64_t>();
 }
 
 Series row_by_index(const Series& m, std::int64_t row) {
@@ -1210,9 +1210,9 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(
       best_best = best_best_candidate;
 
       if (best_best_val < best_main_val) {
-        const auto best_best_host = best_best_candidate.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto xchg_host = xchg_vec.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-        const auto min_host = pop_old.amin(0, false).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+        const auto best_best_host = best_best_candidate.to(ScalarType::Float64).to_vec<double>();
+        const auto xchg_host = xchg_vec.to(ScalarType::Float64).to_vec<double>();
+        const auto min_host = pop_old.amin(0, false).to(ScalarType::Float64).to_vec<double>();
 
         double ratio_sum = 0.0;
         for (std::size_t j = 0; j < best_best_host.size(); ++j) {
@@ -1817,7 +1817,7 @@ PopulationSolverOutcome particle_swarm_dv_minimizer(
     stagnation = pluss::zeros({n_pop}, setup.idx_cfg).where(improved, stagnation_inc);
 
     const Series reset = stagnation.ge(config.stagnation_limit);
-    const auto reset_host = reset.to(pluss::pCPU, ScalarType::Bool).to_vec<bool>();
+    const auto reset_host = reset.to(ScalarType::Bool).to_vec<bool>();
     if (std::any_of(reset_host.begin(), reset_host.end(), [](bool v) { return v; })) {
       const Series reseed = pmin.add(pluss::rand({n_pop, n_dim}, setup.work_cfg, rng.next()).mul(pmax.sub(pmin)));
       const Series reset_2d = reset.reshape({n_pop, 1}).expand(std::vector<std::int64_t>{n_pop, n_dim});

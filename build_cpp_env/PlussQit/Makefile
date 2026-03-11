@@ -3702,6 +3702,33 @@ tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.s
 .PHONY : tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp.s
 
+tests/CodeM/test_patch132_mps_native_svd_strict_graduation.o: tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.o
+.PHONY : tests/CodeM/test_patch132_mps_native_svd_strict_graduation.o
+
+# target to build an object file
+tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.o
+.PHONY : tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.o
+
+tests/CodeM/test_patch132_mps_native_svd_strict_graduation.i: tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.i
+.PHONY : tests/CodeM/test_patch132_mps_native_svd_strict_graduation.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.i
+.PHONY : tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.i
+
+tests/CodeM/test_patch132_mps_native_svd_strict_graduation.s: tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.s
+.PHONY : tests/CodeM/test_patch132_mps_native_svd_strict_graduation.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.s
+.PHONY : tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp.s
+
 tests/CodeM/test_patch13_inplace_alias_views.o: tests/CodeM/test_patch13_inplace_alias_views.cpp.o
 .PHONY : tests/CodeM/test_patch13_inplace_alias_views.o
 
@@ -6696,6 +6723,9 @@ help:
 	@echo "... tests/CodeM/test_patch131_mps_native_sort_selection_strict.o"
 	@echo "... tests/CodeM/test_patch131_mps_native_sort_selection_strict.i"
 	@echo "... tests/CodeM/test_patch131_mps_native_sort_selection_strict.s"
+	@echo "... tests/CodeM/test_patch132_mps_native_svd_strict_graduation.o"
+	@echo "... tests/CodeM/test_patch132_mps_native_svd_strict_graduation.i"
+	@echo "... tests/CodeM/test_patch132_mps_native_svd_strict_graduation.s"
 	@echo "... tests/CodeM/test_patch13_inplace_alias_views.o"
 	@echo "... tests/CodeM/test_patch13_inplace_alias_views.i"
 	@echo "... tests/CodeM/test_patch13_inplace_alias_views.s"

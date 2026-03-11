@@ -94,7 +94,7 @@ ExogMatrix as_exog_(const Series& x, std::int64_t expected_rows, const char* nam
   const auto sizes = xm.sizes();
   PLUSS_CHECK(static_cast<std::int64_t>(sizes[0]) == expected_rows,
               std::string("subsp::stats::ts::") + name + ": expected row count to match y");
-  const auto flat = xm.to(pluss::pCPU, ScalarType::Float64).reshape({xm.numel()}).to_vec<double>();
+  const auto flat = xm.to(ScalarType::Float64).reshape({xm.numel()}).to_vec<double>();
   return ExogMatrix{
       .values = flat,
       .n = static_cast<std::int64_t>(sizes[0]),
@@ -144,7 +144,7 @@ double stable_logit_(double p) {
 }
 
 std::pair<std::vector<double>, double> centered_(const Series& y, bool demean) {
-  auto values = y.to(pluss::pCPU, ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
+  auto values = y.to(ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
   PLUSS_CHECK(!values.empty(), "subsp::stats::ts::Arima: expected non-empty response series");
   const double mean = demean ? std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size()) : 0.0;
   if (demean) {
@@ -154,7 +154,7 @@ std::pair<std::vector<double>, double> centered_(const Series& y, bool demean) {
 }
 
 std::vector<double> centered_with_mean_(const Series& y, double mean) {
-  auto values = y.to(pluss::pCPU, ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
+  auto values = y.to(ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
   std::transform(values.begin(), values.end(), values.begin(), [mean](const double v) { return v - mean; });
   return values;
 }
@@ -562,7 +562,7 @@ ArimaFit fit_arima_(const Series& y, const Series* x_opt, const ArimaOptions& op
   nm.value_tolerance = 1e-7;
 
   const auto objective = [&](const Series& theta) -> double {
-    const auto tv = theta.to(pluss::pCPU, ScalarType::Float64).reshape({theta.numel()}).to_vec<double>();
+    const auto tv = theta.to(ScalarType::Float64).reshape({theta.numel()}).to_vec<double>();
     const auto p = decode_theta_(tv,
                                  options.ar_order,
                                  options.ma_order,
@@ -574,7 +574,7 @@ ArimaFit fit_arima_(const Series& y, const Series* x_opt, const ArimaOptions& op
   };
 
   const auto out = pluss::subsp::math::optimization::nelder_mead_minimizer(objective, initial, nm);
-  const auto best = out.minimizer.to(pluss::pCPU, ScalarType::Float64).reshape({out.minimizer.numel()}).to_vec<double>();
+  const auto best = out.minimizer.to(ScalarType::Float64).reshape({out.minimizer.numel()}).to_vec<double>();
   auto best_p = decode_theta_(best,
                               options.ar_order,
                               options.ma_order,
@@ -846,7 +846,7 @@ Series ArimaFit::infer(const Series& y, const Series& x, Config cfg) const {
 
 double ArimaFit::loglik(const Series& y) const {
   PLUSS_CHECK(beta.empty(), "subsp::stats::ts::ArimaFit::loglik: fitted model requires exogenous x");
-  const Series yv = as_vector_(y, "ArimaFit::loglik").to(pluss::pCPU, ScalarType::Float64);
+  const Series yv = as_vector_(y, "ArimaFit::loglik").to(ScalarType::Float64);
   const auto centered = centered_with_mean_(yv, mean);
   const auto pipe = build_pipeline_(centered, diff_order, seasonal_diff_order, seasonal_period);
   return loglik_transformed_(pipe.transformed, nullptr, to_params_(*this), seasonal_period, variance_floor);
@@ -992,7 +992,7 @@ Series ArimaFit::simulate(const Series& x, Config cfg, std::uint64_t seed) const
   const Series xm = as_matrix_(x, "ArimaFit::simulate").to(out_cfg.platform, out_cfg.dtype);
   const auto sizes = xm.sizes();
   const std::int64_t n = static_cast<std::int64_t>(sizes[0]);
-  const auto flat = xm.to(pluss::pCPU, ScalarType::Float64).reshape({xm.numel()}).to_vec<double>();
+  const auto flat = xm.to(ScalarType::Float64).reshape({xm.numel()}).to_vec<double>();
   const ExogMatrix ex{
       .values = flat,
       .n = n,

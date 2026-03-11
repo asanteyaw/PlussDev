@@ -43,7 +43,7 @@ Series as_vector_(const Series& x, const char* name) {
 }
 
 std::vector<double> centered_values_(const Series& x, bool demean) {
-  auto values = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  auto values = x.to(ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
   PLUSS_CHECK(!values.empty(), "subsp::stats::ts::diagnostics: expected non-empty input");
   if (demean) {
     const double mean = std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size());

@@ -155,6 +155,7 @@ struct DirectForecasterOptions {
 struct DirectStepModel {
   std::int64_t horizon = 1;
   std::vector<std::int64_t> active_columns{};
+  pluss::codem::Series active_columns_index = pluss::codem::Series::undefined();
   pluss::codem::Series beta = pluss::codem::Series::undefined();
 };
 

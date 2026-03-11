@@ -251,15 +251,15 @@ LagPlan build_lag_plan(std::int64_t num_predictors, const LagPlanOptions& option
                                                      });
   plan.feature_count = nonleading_count + response_count + leading_count;
 
-  const Config cpu_cfg = Config{}.with_dtype(ScalarType::Bool).with_platform(pluss::pCPU);
-  Series mask = bool_mask_matrix_(static_cast<std::int64_t>(plan.horizon.size()), plan.feature_count, cpu_cfg);
+  const Config mask_cfg = Config{}.with_dtype(ScalarType::Bool);
+  Series mask = bool_mask_matrix_(static_cast<std::int64_t>(plan.horizon.size()), plan.feature_count, mask_cfg);
   const std::int64_t always_on_prefix = nonleading_count + response_count;
 
   if (always_on_prefix > 0) {
     const std::int64_t rows = static_cast<std::int64_t>(plan.horizon.size());
-    const Series row_idx = int_idx_(0, rows, cpu_cfg).reshape({rows, 1}).expand(std::vector<std::int64_t>{rows, always_on_prefix}).reshape({rows * always_on_prefix});
-    const Series col_idx = int_idx_(0, always_on_prefix, cpu_cfg).reshape({1, always_on_prefix}).expand(std::vector<std::int64_t>{rows, always_on_prefix}).reshape({rows * always_on_prefix});
-    mask = pluss::index_put(mask, std::vector<Series>{row_idx, col_idx}, bool_ones_(rows * always_on_prefix, cpu_cfg), false);
+    const Series row_idx = int_idx_(0, rows, mask_cfg).reshape({rows, 1}).expand(std::vector<std::int64_t>{rows, always_on_prefix}).reshape({rows * always_on_prefix});
+    const Series col_idx = int_idx_(0, always_on_prefix, mask_cfg).reshape({1, always_on_prefix}).expand(std::vector<std::int64_t>{rows, always_on_prefix}).reshape({rows * always_on_prefix});
+    mask = pluss::index_put(mask, std::vector<Series>{row_idx, col_idx}, bool_ones_(rows * always_on_prefix, mask_cfg), false);
   }
 
   std::int64_t leading_col_offset = always_on_prefix;
@@ -281,11 +281,11 @@ LagPlan build_lag_plan(std::int64_t num_predictors, const LagPlanOptions& option
       if (!active_cols.empty()) {
         const Series row_idx = pluss::full({static_cast<std::int64_t>(active_cols.size())},
                                            static_cast<double>(hidx),
-                                           Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+                                           Config{}.with_dtype(ScalarType::Int64).with_platform(mask_cfg.platform));
         const Series col_idx = pluss::make_series(active_cols,
                                                   {static_cast<std::int64_t>(active_cols.size())},
-                                                  Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
-        mask = pluss::index_put(mask, std::vector<Series>{row_idx, col_idx}, bool_ones_(static_cast<std::int64_t>(active_cols.size()), cpu_cfg), false);
+                                                  Config{}.with_dtype(ScalarType::Int64).with_platform(mask_cfg.platform));
+        mask = pluss::index_put(mask, std::vector<Series>{row_idx, col_idx}, bool_ones_(static_cast<std::int64_t>(active_cols.size()), mask_cfg), false);
       }
     }
     leading_col_offset += static_cast<std::int64_t>(unique_actual.size());

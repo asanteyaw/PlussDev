@@ -60,15 +60,13 @@ std::int64_t required_observations_(const DirectForecasterOptions& options, std:
 }
 
 Series average_with_counts_(const Series& sum, const Series& count, Config cfg) {
-  const auto sum_vec = sum.to(pluss::pCPU, ScalarType::Float64).reshape({sum.numel()}).to_vec<double>();
-  const auto cnt_vec = count.to(pluss::pCPU, ScalarType::Float64).reshape({count.numel()}).to_vec<double>();
-  std::vector<double> out(sum_vec.size(), std::numeric_limits<double>::quiet_NaN());
-  for (std::size_t i = 0; i < out.size(); ++i) {
-    if (cnt_vec[i] > 0.0) {
-      out[i] = sum_vec[i] / cnt_vec[i];
-    }
-  }
-  return pluss::make_series(out, sum.sizes(), f64_cfg_(cfg));
+  const auto out_cfg = f64_cfg_(cfg);
+  const Series count_f64 = count.to(out_cfg.platform, out_cfg.dtype);
+  const Series valid = count_f64.gt(0.0);
+  const Series safe_denom = count_f64.where(valid, pluss::ones(count_f64.sizes(), out_cfg));
+  const Series mean = sum.to(out_cfg.platform, out_cfg.dtype).div(safe_denom);
+  const Series nan_fill = pluss::full(sum.sizes(), std::numeric_limits<double>::quiet_NaN(), out_cfg);
+  return mean.where(valid, nan_fill);
 }
 
 Series loss_by_column_(const Series& pred, const Series& y, RegressionLoss kind, Config cfg) {
@@ -78,18 +76,13 @@ Series loss_by_column_(const Series& pred, const Series& y, RegressionLoss kind,
   const Series y_expanded = y.reshape({n, 1}).expand(std::vector<std::int64_t>{n, h});
   const Series residual = pred.sub(y_expanded);
   const Series value = (kind == RegressionLoss::MSE) ? residual.mul(residual) : residual.abs();
-
-  std::vector<double> out(static_cast<std::size_t>(h), std::numeric_limits<double>::quiet_NaN());
-  for (std::int64_t c = 0; c < h; ++c) {
-    const Series col = value.select(1, c);
-    const Series mask = col.isfinite().to(out_cfg.platform, out_cfg.dtype);
-    const double den = mask.sum().item<double>();
-    if (den > 0.0) {
-      const double num = col.nan_to_num(0.0, 0.0, 0.0).sum().item<double>();
-      out[static_cast<std::size_t>(c)] = num / den;
-    }
-  }
-  return pluss::make_series(out, {h}, out_cfg);
+  const Series den = value.isfinite().to(out_cfg.platform, out_cfg.dtype).sum(0, false).reshape({h});
+  const Series num = value.nan_to_num(0.0, 0.0, 0.0).sum(0, false).reshape({h});
+  const Series valid = den.gt(0.0);
+  const Series safe_denom = den.where(valid, pluss::ones({h}, out_cfg));
+  const Series mean = num.div(safe_denom);
+  const Series nan_fill = pluss::full({h}, std::numeric_limits<double>::quiet_NaN(), out_cfg);
+  return mean.where(valid, nan_fill);
 }
 
 } // namespace
@@ -198,16 +191,22 @@ Series DirectCVForecaster::cvloss(const Series& x, const Series& y, CVLossMode m
 
   const std::int64_t f = partition_.num_test_sets();
   const std::int64_t h = models_.front().num_steps();
-  std::vector<double> values(static_cast<std::size_t>(f * h), std::numeric_limits<double>::quiet_NaN());
+  std::vector<Series> fold_losses;
+  fold_losses.reserve(static_cast<std::size_t>(f));
   for (std::int64_t i = 0; i < f; ++i) {
     const Series test_idx = partition_.test(i, idx_cfg);
     const Series pred_all = models_[static_cast<std::size_t>(i)].predict(xm, yv, out_cfg);
     const Series pred_test = pred_all.index_select(0, test_idx);
     const Series y_test = yv.index_select(0, test_idx);
-    const auto loss = loss_by_column_(pred_test, y_test, kind, out_cfg).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    std::copy(loss.begin(), loss.end(), values.begin() + static_cast<std::size_t>(i * h));
+    fold_losses.push_back(loss_by_column_(pred_test, y_test, kind, out_cfg).reshape({1, h}));
   }
-  return pluss::make_series(values, {f, h}, out_cfg);
+  if (fold_losses.empty()) {
+    return pluss::empty({0, h}, out_cfg);
+  }
+  if (fold_losses.size() == 1) {
+    return fold_losses.front();
+  }
+  return fold_losses.front().unite(std::vector<Series>(fold_losses.begin() + 1, fold_losses.end()), 0);
 }
 
 std::int64_t DirectCVForecaster::num_steps() const noexcept {

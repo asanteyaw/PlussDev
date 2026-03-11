@@ -46,7 +46,7 @@ Config f64_cfg_(Config cfg) {
 }
 
 Config cpu_f64_cfg_() {
-  return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  return Config{}.with_dtype(ScalarType::Float64);
 }
 
 Series as_matrix_(const Series& x, const char* name) {
@@ -61,7 +61,7 @@ Series as_matrix_(const Series& x, const char* name) {
 }
 
 std::vector<double> row_major_(const Series& x) {
-  return x.to(pluss::pCPU, ScalarType::Float64).contiguous().to_vec<double>();
+  return x.to(ScalarType::Float64).contiguous().to_vec<double>();
 }
 
 std::int64_t idx2_(std::int64_t row, std::int64_t col, std::int64_t ncols) {
@@ -174,15 +174,17 @@ ModelDims validate_model_dims_(const VarFit& fit, const char* op_name) {
 }
 
 Series stabilize_cov_(Series covariance) {
-  Series cov = covariance.to(pluss::pCPU, ScalarType::Float64).contiguous();
+  Series cov = covariance.to(ScalarType::Float64).contiguous();
   const auto sizes = cov.sizes();
   PLUSS_CHECK(sizes.size() == 2 && sizes[0] == sizes[1], "subsp::stats::ts::Var: covariance must be square");
   const std::int64_t k = sizes[0];
   Series eye = pluss::eye(k, k, cpu_f64_cfg_());
   double jitter = 1e-12;
   for (std::int64_t i = 0; i < 8; ++i) {
-    const auto slogdet = pluss::subsp::math::linalg::slogdet(cov).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-    if (slogdet.size() == 2 && slogdet[0] > 0.0 && std::isfinite(slogdet[1])) {
+    const Series slogdet = pluss::subsp::math::linalg::slogdet(cov).to(ScalarType::Float64).reshape({2});
+    const double sign = slogdet.select(0, 0).item<double>();
+    const double logdet = slogdet.select(0, 1).item<double>();
+    if (sign > 0.0 && std::isfinite(logdet)) {
       return cov;
     }
     cov = cov.add(eye.mul(jitter));
@@ -193,10 +195,10 @@ Series stabilize_cov_(Series covariance) {
 
 Series compose_coeff_(const VarFit& fit, const ModelDims& dims) {
   const auto cpu_cfg = cpu_f64_cfg_();
-  const auto c = fit.constant.to(pluss::pCPU, ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto tr = fit.trend.to(pluss::pCPU, ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto ar = fit.ar.to(pluss::pCPU, ScalarType::Float64).reshape({dims.p, dims.k, dims.k}).to_vec<double>();
-  const auto beta = (dims.m > 0) ? as_matrix_(fit.beta, "Var").to(pluss::pCPU, ScalarType::Float64).to_vec<double>()
+  const auto c = fit.constant.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
+  const auto tr = fit.trend.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
+  const auto ar = fit.ar.to(ScalarType::Float64).reshape({dims.p, dims.k, dims.k}).to_vec<double>();
+  const auto beta = (dims.m > 0) ? as_matrix_(fit.beta, "Var").to(ScalarType::Float64).to_vec<double>()
                                  : std::vector<double>{};
   const std::int64_t d = (fit.include_intercept ? 1 : 0) + (fit.include_trend ? 1 : 0) + dims.p * dims.k + dims.m;
   std::vector<double> values(static_cast<std::size_t>(d * dims.k), 0.0);
@@ -244,13 +246,14 @@ Series infer_impl_(const VarFit& fit, const Series& y, const Series* x, Config c
 }
 
 Series per_obs_loglik_(const Series& residuals, const Series& covariance) {
-  const auto res = as_matrix_(residuals, "Var::loglik_per_obs").to(pluss::pCPU, ScalarType::Float64).contiguous();
+  const auto res = as_matrix_(residuals, "Var::loglik_per_obs").to(ScalarType::Float64).contiguous();
   const auto cov = stabilize_cov_(covariance);
   const auto inv_cov = pluss::subsp::math::linalg::pinverse(cov, 1e-12);
-  const auto slogdet = pluss::subsp::math::linalg::slogdet(cov).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
-  PLUSS_CHECK(slogdet.size() == 2 && slogdet[0] > 0.0 && std::isfinite(slogdet[1]),
+  const Series slogdet = pluss::subsp::math::linalg::slogdet(cov).to(ScalarType::Float64).reshape({2});
+  const double sign = slogdet.select(0, 0).item<double>();
+  const double logdet = slogdet.select(0, 1).item<double>();
+  PLUSS_CHECK(sign > 0.0 && std::isfinite(logdet),
               "subsp::stats::ts::Var::loglik_per_obs: covariance must be positive definite");
-  const double logdet = slogdet[1];
   const double offset = -0.5 * (static_cast<double>(res.sizes()[1]) * kLog2Pi + logdet);
   return res.matmul(inv_cov).mul(res).sum(1, false).mul(-0.5).add(offset);
 }
@@ -285,13 +288,13 @@ Series run_forecast_impl_(const VarFit& fit,
                 std::string("subsp::stats::ts::") + op_name + ": model has no predictor coefficients");
   }
 
-  const auto c = fit.constant.to(pluss::pCPU, ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto tr = fit.trend.to(pluss::pCPU, ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto ar = fit.ar.to(pluss::pCPU, ScalarType::Float64).reshape({dims.p, dims.k, dims.k}).to_vec<double>();
-  const auto beta = (dims.m > 0) ? as_matrix_(fit.beta, op_name).to(pluss::pCPU, ScalarType::Float64).to_vec<double>()
+  const auto c = fit.constant.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
+  const auto tr = fit.trend.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
+  const auto ar = fit.ar.to(ScalarType::Float64).reshape({dims.p, dims.k, dims.k}).to_vec<double>();
+  const auto beta = (dims.m > 0) ? as_matrix_(fit.beta, op_name).to(ScalarType::Float64).to_vec<double>()
                                  : std::vector<double>{};
 
-  const auto y_hist = row_major_(y_mat.to(pluss::pCPU, ScalarType::Float64));
+  const auto y_hist = row_major_(y_mat.to(ScalarType::Float64));
   const std::int64_t n = y_mat.sizes()[0];
   std::vector<double> all;
   all.reserve(static_cast<std::size_t>((n + horizon) * dims.k));
@@ -345,14 +348,14 @@ Series run_sim_impl_(const VarFit& fit, std::int64_t n, const Series* x, Config 
                 std::string("subsp::stats::ts::") + op_name + ": model has no predictor coefficients");
   }
 
-  const auto c = fit.constant.to(pluss::pCPU, ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto tr = fit.trend.to(pluss::pCPU, ScalarType::Float64).reshape({dims.k}).to_vec<double>();
-  const auto ar = fit.ar.to(pluss::pCPU, ScalarType::Float64).reshape({dims.p, dims.k, dims.k}).to_vec<double>();
-  const auto beta = (dims.m > 0) ? as_matrix_(fit.beta, op_name).to(pluss::pCPU, ScalarType::Float64).to_vec<double>()
+  const auto c = fit.constant.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
+  const auto tr = fit.trend.to(ScalarType::Float64).reshape({dims.k}).to_vec<double>();
+  const auto ar = fit.ar.to(ScalarType::Float64).reshape({dims.p, dims.k, dims.k}).to_vec<double>();
+  const auto beta = (dims.m > 0) ? as_matrix_(fit.beta, op_name).to(ScalarType::Float64).to_vec<double>()
                                  : std::vector<double>{};
 
   const Series cov = stabilize_cov_(fit.covariance);
-  const Series chol = pluss::subsp::math::linalg::cholesky(cov).to(pluss::pCPU, ScalarType::Float64).contiguous();
+  const Series chol = pluss::subsp::math::linalg::cholesky(cov).to(ScalarType::Float64).contiguous();
   const auto lvals = chol.to_vec<double>();
   const auto z = pluss::randn({n, dims.k}, cpu_f64_cfg_(), seed).to_vec<double>();
 
@@ -483,7 +486,7 @@ VarFit fit_impl_(const Series& y, const Series* x, const VarOptions& options, Co
 
 Series ar_tensor_(const Series& ar, Config cfg, const char* op_name) {
   PLUSS_CHECK(ar.defined(), std::string("subsp::stats::ts::") + op_name + ": ar tensor is undefined");
-  const auto ar3 = ar.to(pluss::pCPU, ScalarType::Float64).contiguous();
+  const auto ar3 = ar.to(ScalarType::Float64).contiguous();
   const auto sizes = ar3.sizes();
   PLUSS_CHECK(sizes.size() == 3, std::string("subsp::stats::ts::") + op_name + ": ar tensor must be [p,k,k]");
   PLUSS_CHECK(sizes[0] > 0, std::string("subsp::stats::ts::") + op_name + ": p must be > 0");
@@ -554,7 +557,7 @@ std::pair<Series, Series> var_to_vecm(const Series& ar, Config cfg) {
   const auto sizes = ar3.sizes();
   const std::int64_t p = sizes[0];
   const std::int64_t k = sizes[1];
-  const auto arv = ar3.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  const auto arv = ar3.to(ScalarType::Float64).to_vec<double>();
 
   std::vector<double> impact(static_cast<std::size_t>(k * k), 0.0);
   for (std::int64_t lag = 0; lag < p; ++lag) {
@@ -594,7 +597,7 @@ std::pair<Series, Series> var_to_vecm(const Series& ar, Config cfg) {
 
 Series vecm_to_var(const Series& short_run, const Series& impact, Config cfg) {
   const auto out_cfg = f64_cfg_(cfg);
-  const auto imp = as_matrix_(impact, "vecm_to_var").to(pluss::pCPU, ScalarType::Float64).contiguous();
+  const auto imp = as_matrix_(impact, "vecm_to_var").to(ScalarType::Float64).contiguous();
   const auto is = imp.sizes();
   PLUSS_CHECK(is[0] == is[1], "subsp::stats::ts::vecm_to_var: impact must be square");
   const std::int64_t k = is[0];
@@ -603,7 +606,7 @@ Series vecm_to_var(const Series& short_run, const Series& impact, Config cfg) {
   std::int64_t q = 0;
   std::vector<double> srv;
   if (short_run.defined()) {
-    sr = short_run.to(pluss::pCPU, ScalarType::Float64).contiguous();
+    sr = short_run.to(ScalarType::Float64).contiguous();
     const auto ss = sr.sizes();
     PLUSS_CHECK(ss.size() == 3, "subsp::stats::ts::vecm_to_var: short_run must be [q,k,k]");
     PLUSS_CHECK(ss[1] == k && ss[2] == k,

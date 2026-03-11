@@ -28,7 +28,7 @@ double scalar_as_f64(const Series& x, const char* op) {
   if (!x.defined() || x.numel() != 1) {
     throw std::runtime_error(std::string(op) + ": expected scalar Series");
   }
-  return x.to(pluss::pCPU, ScalarType::Float64).item<double>();
+  return x.to(ScalarType::Float64).item<double>();
 }
 
 void require_valid_initial(const Series& initial) {

@@ -62,7 +62,7 @@ double stable_logit_(double p) {
 }
 
 std::pair<std::vector<double>, double> centered_(const Series& y, bool demean) {
-  auto values = y.to(pluss::pCPU, ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
+  auto values = y.to(ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
   PLUSS_CHECK(!values.empty(), "subsp::stats::ts::Egarch: expected non-empty response series");
   const double mean = demean ? std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size()) : 0.0;
   if (demean) {
@@ -72,7 +72,7 @@ std::pair<std::vector<double>, double> centered_(const Series& y, bool demean) {
 }
 
 std::vector<double> centered_with_mean_(const Series& y, double mean) {
-  auto values = y.to(pluss::pCPU, ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
+  auto values = y.to(ScalarType::Float64).reshape({y.numel()}).to_vec<double>();
   std::transform(values.begin(), values.end(), values.begin(), [mean](const double v) { return v - mean; });
   return values;
 }
@@ -432,7 +432,7 @@ EgarchFit fit_egarch_(const Series& y, const EgarchOptions& options, Config cfg)
   nm.value_tolerance = 1e-7;
 
   const auto objective = [&](const Series& theta) -> double {
-    const auto tv = theta.to(pluss::pCPU, ScalarType::Float64).reshape({theta.numel()}).to_vec<double>();
+    const auto tv = theta.to(ScalarType::Float64).reshape({theta.numel()}).to_vec<double>();
     const auto p = decode_theta_(tv, options.arch_order, options.garch_order, options.stationarity_margin);
     return nll_centered_(centered, p, options.variance_floor, options.stationarity_margin);
   };
@@ -442,7 +442,7 @@ EgarchFit fit_egarch_(const Series& y, const EgarchOptions& options, Config cfg)
   for (const auto& start : restart_thetas_(theta0, options.nm_restarts, options.simplex_delta)) {
     const Series initial = pluss::make_series(start, {static_cast<std::int64_t>(start.size())}, out_cfg);
     const auto out = pluss::subsp::math::optimization::nelder_mead_minimizer(objective, initial, nm);
-    const auto theta_best = out.minimizer.to(pluss::pCPU, ScalarType::Float64).reshape({out.minimizer.numel()}).to_vec<double>();
+    const auto theta_best = out.minimizer.to(ScalarType::Float64).reshape({out.minimizer.numel()}).to_vec<double>();
     const auto cand = decode_theta_(theta_best, options.arch_order, options.garch_order, options.stationarity_margin);
     const double nll = nll_centered_(centered, cand, options.variance_floor, options.stationarity_margin);
     if (std::isfinite(nll) && nll < best_nll) {
@@ -479,7 +479,7 @@ Series EgarchFit::infer(const Series& y, Config cfg) const {
 }
 
 double EgarchFit::loglik(const Series& y) const {
-  const Series yv = as_vector_(y, "EgarchFit::loglik").to(pluss::pCPU, ScalarType::Float64);
+  const Series yv = as_vector_(y, "EgarchFit::loglik").to(ScalarType::Float64);
   const auto centered = centered_with_mean_(yv, mean);
   return loglik_centered_(centered, to_params_(*this), variance_floor, stationarity_margin);
 }

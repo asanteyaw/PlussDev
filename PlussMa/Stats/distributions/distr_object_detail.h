@@ -93,7 +93,7 @@ inline Series scalar_f64(double value) {
 
 template <class Fn>
 Series map_f64_like(const Series& x, Fn&& fn) {
-  const Series cpu = x.to(pluss::pCPU, ScalarType::Float64);
+  const Series cpu = x.to(ScalarType::Float64);
   const auto in = cpu.to_vec<double>();
   std::vector<double> out(in.size());
   std::transform(in.begin(), in.end(), out.begin(), std::forward<Fn>(fn));

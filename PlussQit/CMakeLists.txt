@@ -641,6 +641,7 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch125_mps_solver_route_policy.cpp
       tests/CodeM/test_patch130_mps_native_device_telemetry.cpp
       tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp
+      tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp
     )
     target_link_libraries(plussqit_codem_mps_selection_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_mps_selection_tests PRIVATE cxx_std_20)
