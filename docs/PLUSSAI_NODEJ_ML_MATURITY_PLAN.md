@@ -273,6 +273,30 @@ Exit criteria:
 Exit criteria:
 - strong parity with common sklearn workflows for tabular ML.
 
+Current status (in progress):
+- implemented first-class `nodej::Flow` composition for sequential transforms + estimator:
+  - supports transform stages: `StandardScaler`, `MinMaxScaler`, `RobustScaler`,
+    `SimpleImputer`, `OneHotEncoder`, `FrequencyEncoder`
+  - lifecycle methods:
+    - `learn(...)`: learns transform stages in order and then learns final estimator
+    - `map(...)` / `learn_map(...)`: transform-only execution path
+    - `infer(...)`, `infer_scores(...)` (classification), `assess(...)`
+  - enforces leakage-safe semantics by learning each transformer only from upstream
+    training outputs during `learn(...)`
+  - shape contract guardrails: each stage must preserve sample count and emit valid feature matrices
+- added `make_flow(ModelSpec)` builder path.
+- added Lymph convenience wrappers:
+  - `learn_flow(...)`
+  - `linear_classifier_flow(...)`
+  - `ridge_regressor_flow(...)`
+- added compose coverage in tests and demos:
+  - tests: `nodej_flow_test`, extended `lymph_quick_test`
+  - demos: `nodej_flow_demo`, `lymph_flow_demo`
+- implemented multiclass decomposition wrappers (one-vs-rest) across existing binary classifier families:
+  - enabled multiclass `learn`/`infer`/`infer_scores`/`assess` through a unified wrapper in `make_classifier(...)`
+  - binary paths remain shape-compatible (`infer_scores` stays 1-D for two-class models)
+  - multiclass metrics support added for `Accuracy`, `BalancedAccuracy`, `Precision`, `Recall`, `F1`, `LogLoss`
+
 ### Phase 5: Online/Incremental and Auto-Selection
 - online learners:
   - incremental linear classifier/regressor
@@ -284,6 +308,18 @@ Exit criteria:
 
 Exit criteria:
 - stable streaming update path and automated model candidate selection.
+
+Current status (in progress):
+- implemented NodeJ online baseline in `nodej::online`:
+  - `OnlineLinearClassifier` (binary logistic/hinge) with `learn`, `advance`, `infer_scores`, `infer`, `assess`
+  - `OnlineLinearRegressor` (least-squares) with `learn`, `advance`, `infer`, `assess`
+  - platform-aware Series-native update path (no forced CPU transfer in online compute path)
+- added lymph wrappers:
+  - `lymph::online_linear_classifier(...)`
+  - `lymph::online_linear_regressor(...)`
+- added online demos and tests:
+  - tests: `nodej_online_test`
+  - demos: `nodej_online_demo`, `lymph_online_demo`
 
 ### Phase 6: Maturity Hardening
 - serialization with schema/version guardrails

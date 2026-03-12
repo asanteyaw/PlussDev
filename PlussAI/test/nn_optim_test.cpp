@@ -237,6 +237,107 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  Series minimax_param = pluss::make_series(std::vector<double>{2.0, -1.0}, {2}, cfg);
+  const Series minimax_target = pluss::make_series(std::vector<double>{3.0, 3.0}, {2}, cfg);
+  pluss::nn::optim::MinimaxOptions minimax_opt{};
+  minimax_opt.learning_rate = 0.05;
+  minimax_opt.dual_learning_rate = 0.1;
+  minimax_opt.inequality_penalty = 10.0;
+
+  pluss::nn::optim::MinimaxConstraints minimax_constraints{};
+  minimax_constraints.lower_bounds = {pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg)};
+  minimax_constraints.inequalities = [](const std::vector<Series>& p) {
+    return std::vector<Series>{p[0].sum().sub(4.0)};
+  };
+  minimax_constraints.inequalities_trace = [](const std::vector<pluss::subsp::math::diff::Trace>& p) {
+    return std::vector<pluss::subsp::math::diff::Trace>{pluss::subsp::math::diff::sum(p[0]) - 4.0};
+  };
+
+  pluss::nn::optim::Minimax minimax(std::vector<Series*>{&minimax_param}, minimax_opt, minimax_constraints);
+  for (int i = 0; i < 120; ++i) {
+    minimax.step(std::vector<Series>{minimax_param.sub(minimax_target)});
+  }
+  const auto minimax_v = vec_f64(minimax_param);
+  if (!(minimax_v[0] >= -1e-8 && minimax_v[1] >= -1e-8 && minimax_v[0] + minimax_v[1] <= 4.05)) {
+    if (err) *err << "Minimax explicit-gradient constrained step mismatch\n";
+    return false;
+  }
+
+  Series minimax_tape_param = pluss::make_series(std::vector<double>{2.0, -1.0}, {2}, cfg);
+  pluss::nn::optim::Minimax minimax_tape(std::vector<Series*>{&minimax_tape_param}, minimax_opt, minimax_constraints);
+  for (int i = 0; i < 120; ++i) {
+    auto tx = pluss::subsp::math::diff::trace(minimax_tape_param, true);
+    const Series loss = tx.value().sub(minimax_target).square().sum().mul(0.5);
+    tx.clear_sensitivity();
+    loss.reverse();
+    minimax_tape.step();
+  }
+  const auto minimax_tape_v = vec_f64(minimax_tape_param);
+  if (!(minimax_tape_v[0] >= -1e-8 && minimax_tape_v[1] >= -1e-8 &&
+        minimax_tape_v[0] + minimax_tape_v[1] <= 4.05)) {
+    if (err) *err << "Minimax tape-gradient constrained step mismatch\n";
+    return false;
+  }
+
+  for (const auto method : {pluss::nn::optim::MinimaxPrimalMethod::Adam,
+                            pluss::nn::optim::MinimaxPrimalMethod::AdamW,
+                            pluss::nn::optim::MinimaxPrimalMethod::SGD,
+                            pluss::nn::optim::MinimaxPrimalMethod::RMSprop}) {
+    Series method_param = pluss::make_series(std::vector<double>{0.5, -0.5}, {2}, cfg);
+    pluss::nn::optim::MinimaxOptions method_opt = minimax_opt;
+    method_opt.primal_method = method;
+    method_opt.learning_rate = 0.03;
+    method_opt.momentum = 0.8;
+    pluss::nn::optim::Minimax method_optim(std::vector<Series*>{&method_param}, method_opt, minimax_constraints);
+    for (int i = 0; i < 60; ++i) {
+      method_optim.step(std::vector<Series>{method_param.sub(minimax_target)});
+    }
+    const auto pv = vec_f64(method_param);
+    if (!(std::isfinite(pv[0]) && std::isfinite(pv[1]) && pv[0] >= -1e-8 && pv[1] >= -1e-8)) {
+      if (err) *err << "Minimax primal-method switch produced non-finite or infeasible values\n";
+      return false;
+    }
+  }
+
+  Series group_a = pluss::make_series(1.0, cfg);
+  Series group_b = pluss::make_series(1.0, cfg);
+  pluss::nn::optim::MinimaxOptions gopt_fast = minimax_opt;
+  pluss::nn::optim::MinimaxOptions gopt_slow = minimax_opt;
+  gopt_fast.learning_rate = 0.10;
+  gopt_slow.learning_rate = 0.01;
+  gopt_fast.primal_method = pluss::nn::optim::MinimaxPrimalMethod::Adam;
+  gopt_slow.primal_method = pluss::nn::optim::MinimaxPrimalMethod::Adam;
+  pluss::nn::optim::Minimax group_minimax(
+      std::vector<pluss::nn::optim::MinimaxGroup>{
+          pluss::nn::optim::MinimaxGroup{std::vector<Series*>{&group_a}, gopt_fast},
+          pluss::nn::optim::MinimaxGroup{std::vector<Series*>{&group_b}, gopt_slow},
+      },
+      {});
+  group_minimax.step(std::vector<Series>{pluss::make_series(1.0, cfg), pluss::make_series(1.0, cfg)});
+  if (!(std::abs(scalar_f64(group_a) - 1.0) > std::abs(scalar_f64(group_b) - 1.0))) {
+    if (err) *err << "Minimax parameter-group learning-rate behavior mismatch\n";
+    return false;
+  }
+
+  Series scheduled_param = pluss::make_series(std::vector<double>{2.0, -1.0}, {2}, cfg);
+  pluss::nn::optim::MinimaxOptions scheduled_opt = minimax_opt;
+  scheduled_opt.primal_method = pluss::nn::optim::MinimaxPrimalMethod::AdamW;
+  scheduled_opt.dual_schedule = pluss::nn::optim::MinimaxSchedule::ViolationAdaptive;
+  scheduled_opt.penalty_schedule = pluss::nn::optim::MinimaxSchedule::Exponential;
+  scheduled_opt.penalty_exponential_growth = 1.002;
+  pluss::nn::optim::Minimax scheduled_minimax(
+      std::vector<Series*>{&scheduled_param},
+      scheduled_opt,
+      minimax_constraints);
+  for (int i = 0; i < 80; ++i) {
+    scheduled_minimax.step(std::vector<Series>{scheduled_param.sub(minimax_target)});
+  }
+  const auto sv = vec_f64(scheduled_param);
+  if (!(std::isfinite(sv[0]) && std::isfinite(sv[1]))) {
+    if (err) *err << "Minimax adaptive schedule path produced non-finite values\n";
+    return false;
+  }
+
   Series tape_param = pluss::make_series(2.0, cfg);
   auto tracked = pluss::subsp::math::diff::trace(tape_param, true);
   const Series tape_loss = tracked.value().square();

@@ -174,7 +174,8 @@ struct DenseFeatureMatrix {
 
 [[nodiscard]] StatusOr<Series> regression_metrics(const Series& truth,
                                                   const Series& prediction,
-                                                  const std::vector<MetricKind>& requested) {
+                                                  const std::vector<MetricKind>& requested,
+                                                  double quantile) {
   const Series y = truth.to(ScalarType::Float64).reshape({truth.numel()});
   const Series yhat = prediction.to(ScalarType::Float64).reshape({prediction.numel()});
   if (y.numel() != yhat.numel()) {
@@ -183,11 +184,17 @@ struct DenseFeatureMatrix {
   if (y.numel() == 0) {
     return StatusOr<Series>(Status::invalid_argument("assess regression metrics require at least one sample."));
   }
+  if (!(quantile > 0.0 && quantile < 1.0)) {
+    return StatusOr<Series>(Status::invalid_argument("AssessOptions.regression_quantile must satisfy 0 < q < 1."));
+  }
 
   const Series err = yhat.sub(y);
+  const Series residual = y.sub(yhat);
   const Series sse = err.square().sum();
   const Series mse = err.square().mean();
   const Series mae = err.abs().mean();
+  const Series neg_indicator = residual.lt(0.0).to(ScalarType::Float64);
+  const Series quantile_loss = residual.mul(quantile).sub(residual.mul(neg_indicator)).mean();
   const Series y_centered = y.sub(y.mean());
   const Series sst = y_centered.square().sum();
   const Series zero = pluss::zeros_like(sst, ScalarType::Float64);
@@ -212,6 +219,9 @@ struct DenseFeatureMatrix {
         break;
       case MetricKind::R2:
         out.push_back(r2.reshape({1}));
+        break;
+      case MetricKind::QuantileLoss:
+        out.push_back(quantile_loss.reshape({1}));
         break;
       default:
         return StatusOr<Series>(Status::invalid_argument("Unsupported regression metric in assess()."));
@@ -433,7 +443,7 @@ public:
     if (metrics.empty()) {
       metrics = {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
     }
-    return regression_metrics(truth, pred_or.value(), metrics);
+    return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
   }
 
 private:
@@ -557,7 +567,7 @@ public:
     if (metrics.empty()) {
       metrics = {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
     }
-    return regression_metrics(truth, pred_or.value(), metrics);
+    return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
   }
 
 private:
@@ -804,7 +814,7 @@ public:
     if (metrics.empty()) {
       metrics = {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
     }
-    return regression_metrics(truth, pred_or.value(), metrics);
+    return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
   }
 
 private:
@@ -978,7 +988,7 @@ public:
     if (metrics.empty()) {
       metrics = {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
     }
-    return regression_metrics(truth, pred_or.value(), metrics);
+    return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
   }
 
 private:
@@ -1139,7 +1149,7 @@ public:
     if (metrics.empty()) {
       metrics = {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
     }
-    return regression_metrics(truth, pred_or.value(), metrics);
+    return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
   }
 
 private:
@@ -1252,7 +1262,7 @@ public:
     if (metrics.empty()) {
       metrics = {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
     }
-    return regression_metrics(truth, pred_or.value(), metrics);
+    return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
   }
 
 private:

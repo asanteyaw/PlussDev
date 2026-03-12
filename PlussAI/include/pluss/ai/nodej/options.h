@@ -44,6 +44,7 @@ enum class MetricKind : std::uint8_t {
   Rmse = 8,
   Mae = 9,
   R2 = 10,
+  QuantileLoss = 11,
 };
 
 enum class CVPlanKind : std::uint8_t {
@@ -77,6 +78,10 @@ struct TrainOptions {
   bool track_diagnostics = true;
   RandomState random{};
   Series sample_weights = Series::undefined();
+  // Optional coefficient bounds used by minimax-constrained updates in
+  // gradient-based learners (currently linear classification).
+  Series parameter_lower_bounds = Series::undefined();
+  Series parameter_upper_bounds = Series::undefined();
 };
 
 struct InferOptions {
@@ -89,6 +94,8 @@ struct AssessOptions {
   ObservationLayout layout = ObservationLayout::Rows;
   std::vector<MetricKind> metrics{};
   Series sample_weights = Series::undefined();
+  // Quantile used when MetricKind::QuantileLoss is requested (0 < q < 1).
+  double regression_quantile = 0.5;
 };
 
 struct SplitOptions {

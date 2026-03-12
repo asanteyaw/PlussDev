@@ -38,6 +38,9 @@
 #include "CodeM/native/cpu/UnaryExtraMathKernels.h"
 #include "CodeM/native/cpu/BinaryExtraMathKernels.h"
 #include "CodeM/native/mps/Elementwise.h"
+#include "CodeM/native/cuda/CUDARuntime.h"
+#include "CodeM/native/cuda/IndexingOps.h"
+#include "CodeM/native/cuda/ScatterGatherOps.h"
 #include "CodeM/native/mps/Gather.h"
 #include "CodeM/native/mps/MPSRuntime.h"
 #include "CodeM/native/mps/Cast.h"
@@ -106,7 +109,7 @@ bool mps_cpu_fallback_enabled_() noexcept {
 }
 
 bool mps_native_take_put_enabled_() noexcept {
-  return parse_bool_env_("PLUSS_MPS_NATIVE_TAKE_PUT", false);
+  return parse_bool_env_("PLUSS_MPS_NATIVE_TAKE_PUT", true);
 }
 
 void require_mps_native_dispatch_supported_(std::string_view op) {
@@ -133,6 +136,15 @@ void require_backend_dispatch_supported_(Platform platform, std::string_view op)
       require_mps_native_dispatch_supported_(op);
       return;
     case Platform::CUDA:
+      if (!native::cuda::runtime_available()) {
+        throw_error(
+            std::string(op) +
+            ": CUDA runtime unavailable (" +
+            native::cuda::runtime_error_cstr() + ")");
+      }
+      if (native::cuda::cpu_bridge_enabled()) {
+        return;
+      }
       throw_error(
           std::string(op) +
           ": no native CUDA kernel yet. CPU fallback is not enabled for CUDA backend.");
@@ -146,6 +158,94 @@ void require_mps_support_or_policy_(bool supported, std::string_view op) {
     return;
   }
   require_mps_native_dispatch_supported_(op);
+}
+
+[[noreturn]] void throw_cuda_indexing_unavailable_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported) {
+  if (native_strict && (!native_enabled || !route_supported)) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native_enabled && route_supported) {
+    throw_error(
+        std::string(op) +
+        ": CUDA native indexing route declared but kernel is not implemented yet");
+  }
+  throw_error(
+      std::string(op) +
+      ": CUDA indexing path unavailable in this tranche; no CPU fallback allowed. "
+      "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
+}
+
+template <class CpuRouteFn>
+Series cuda_indexing_route_or_bridge_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported,
+    CpuRouteFn&& cpu_route) {
+  if (native_strict) {
+    if (!native_enabled || !route_supported) {
+      throw_error(
+          std::string(op) +
+          ": strict native CUDA route requested but kernel is unsupported");
+    }
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is not implemented yet");
+  }
+  if (native::cuda::cpu_bridge_enabled()) {
+    return cpu_route();
+  }
+  throw_cuda_indexing_unavailable_(op, native_enabled, native_strict, route_supported);
+}
+
+[[noreturn]] void throw_cuda_scatter_gather_unavailable_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported) {
+  if (native_strict && (!native_enabled || !route_supported)) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native_enabled && route_supported) {
+    throw_error(
+        std::string(op) +
+        ": CUDA native scatter/gather route declared but kernel is not implemented yet");
+  }
+  throw_error(
+      std::string(op) +
+      ": CUDA scatter/gather path unavailable in this tranche; no CPU fallback allowed. "
+      "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
+}
+
+template <class CpuRouteFn>
+Series cuda_scatter_gather_route_or_bridge_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported,
+    CpuRouteFn&& cpu_route) {
+  if (native_strict) {
+    if (!native_enabled || !route_supported) {
+      throw_error(
+          std::string(op) +
+          ": strict native CUDA route requested but kernel is unsupported");
+    }
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is not implemented yet");
+  }
+  if (native::cuda::cpu_bridge_enabled()) {
+    return cpu_route();
+  }
+  throw_cuda_scatter_gather_unavailable_(op, native_enabled, native_strict, route_supported);
 }
 
 } // namespace
@@ -1979,6 +2079,17 @@ Series scatter(const Series& a, std::int64_t dim, const Series& index, const Ser
       return out_f.to(a.scalar_type());
     }
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_scatter_gather_enabled();
+    const bool native_strict = native::cuda::native_scatter_gather_strict();
+    const bool route_supported = native::cuda::supports_scatter(a, dim, index, src);
+    return cuda_scatter_gather_route_or_bridge_(
+        "scatter",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return native::cpu::scatter(a, dim, index, src); });
+  }
   require_backend_dispatch_supported_(a.platform(), "scatter");
   return native::cpu::scatter(a, dim, index, src);
 }
@@ -1987,6 +2098,18 @@ Series& scatter_(Series& a, std::int64_t dim, const Series& index, const Series&
   require_same_platform(a, src, "scatter_");
   if (a.platform() == Platform::MPS) {
     a = scatter(a, dim, index, src);
+    return a;
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_scatter_gather_enabled();
+    const bool native_strict = native::cuda::native_scatter_gather_strict();
+    const bool route_supported = native::cuda::supports_scatter(a, dim, index, src);
+    a = cuda_scatter_gather_route_or_bridge_(
+        "scatter_",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return native::cpu::scatter(a, dim, index, src); });
     return a;
   }
   require_backend_dispatch_supported_(a.platform(), "scatter_");
@@ -2031,6 +2154,17 @@ Series scatter_add(const Series& a, std::int64_t dim, const Series& index, const
       return out_f.to(out_dt);
     }
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_scatter_gather_enabled();
+    const bool native_strict = native::cuda::native_scatter_gather_strict();
+    const bool route_supported = native::cuda::supports_scatter_add(a, dim, index, src);
+    return cuda_scatter_gather_route_or_bridge_(
+        "scatter_add",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return native::cpu::scatter_add(a, dim, index, src); });
+  }
   require_backend_dispatch_supported_(a.platform(), "scatter_add");
   return native::cpu::scatter_add(a, dim, index, src);
 }
@@ -2039,6 +2173,19 @@ Series& scatter_add_(Series& a, std::int64_t dim, const Series& index, const Ser
   require_same_platform(a, src, "scatter_add_");
   if (a.platform() == Platform::MPS) {
     a = scatter_add(a, dim, index, src).to(a.scalar_type());
+    return a;
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_scatter_gather_enabled();
+    const bool native_strict = native::cuda::native_scatter_gather_strict();
+    const bool route_supported = native::cuda::supports_scatter_add(a, dim, index, src);
+    a = cuda_scatter_gather_route_or_bridge_(
+            "scatter_add_",
+            native_enabled,
+            native_strict,
+            route_supported,
+            [&]() { return native::cpu::scatter_add(a, dim, index, src); })
+            .to(a.scalar_type());
     return a;
   }
   require_backend_dispatch_supported_(a.platform(), "scatter_add_");
@@ -2074,6 +2221,17 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
       native::mps::scatter_reduce_(out_f, dim, idx, ss_f, rop);
       return out_f.to(out_dt);
     }
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_scatter_gather_enabled();
+    const bool native_strict = native::cuda::native_scatter_gather_strict();
+    const bool route_supported = native::cuda::supports_scatter_reduce(a, dim, index, src, reduce);
+    return cuda_scatter_gather_route_or_bridge_(
+        "scatter_reduce",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return native::cpu::scatter_reduce(a, dim, index, src, reduce, include_self); });
   }
   require_backend_dispatch_supported_(a.platform(), "scatter_reduce");
   return native::cpu::scatter_reduce(a, dim, index, src, reduce, include_self);
@@ -2126,6 +2284,17 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
       return out_f.to(out_dt);
     }
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_scatter_gather_enabled();
+    const bool native_strict = native::cuda::native_scatter_gather_strict();
+    const bool route_supported = native::cuda::supports_scatter_reduce(a, dim, index, src, reduce);
+    return cuda_scatter_gather_route_or_bridge_(
+        "scatter_reduce",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return native::cpu::scatter_reduce(a, dim, index, src, reduce, include_self, has_initial, initial); });
+  }
   require_backend_dispatch_supported_(a.platform(), "scatter_reduce");
   return native::cpu::scatter_reduce(a, dim, index, src, reduce, include_self, has_initial, initial);
 }
@@ -2134,6 +2303,19 @@ Series& scatter_reduce_(Series& a, std::int64_t dim, const Series& index, const 
   require_same_platform(a, src, "scatter_reduce_");
   if (a.platform() == Platform::MPS) {
     a = scatter_reduce(a, dim, index, src, reduce, include_self).to(a.scalar_type());
+    return a;
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_scatter_gather_enabled();
+    const bool native_strict = native::cuda::native_scatter_gather_strict();
+    const bool route_supported = native::cuda::supports_scatter_reduce(a, dim, index, src, reduce);
+    a = cuda_scatter_gather_route_or_bridge_(
+            "scatter_reduce_",
+            native_enabled,
+            native_strict,
+            route_supported,
+            [&]() { return native::cpu::scatter_reduce(a, dim, index, src, reduce, include_self); })
+            .to(a.scalar_type());
     return a;
   }
   require_backend_dispatch_supported_(a.platform(), "scatter_reduce_");
@@ -2145,6 +2327,19 @@ Series& scatter_reduce_(Series& a, std::int64_t dim, const Series& index, const 
   require_same_platform(a, src, "scatter_reduce_");
   if (a.platform() == Platform::MPS) {
     a = scatter_reduce(a, dim, index, src, reduce, include_self, has_initial, initial).to(a.scalar_type());
+    return a;
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_scatter_gather_enabled();
+    const bool native_strict = native::cuda::native_scatter_gather_strict();
+    const bool route_supported = native::cuda::supports_scatter_reduce(a, dim, index, src, reduce);
+    a = cuda_scatter_gather_route_or_bridge_(
+            "scatter_reduce_",
+            native_enabled,
+            native_strict,
+            route_supported,
+            [&]() { return native::cpu::scatter_reduce(a, dim, index, src, reduce, include_self, has_initial, initial); })
+            .to(a.scalar_type());
     return a;
   }
   require_backend_dispatch_supported_(a.platform(), "scatter_reduce_");
@@ -2174,6 +2369,17 @@ Series gather(const Series& input, std::int64_t dim, const Series& index) {
       native::mps::gather(in_f, dim, idx, out_f);
       return out_f.to(input.scalar_type());
     }
+  }
+  if (input.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_scatter_gather_enabled();
+    const bool native_strict = native::cuda::native_scatter_gather_strict();
+    const bool route_supported = native::cuda::supports_gather(input, dim, index);
+    return cuda_scatter_gather_route_or_bridge_(
+        "gather",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return native::cpu::gather(in, dim, idx); });
   }
   require_backend_dispatch_supported_(input.platform(), "gather");
   return native::cpu::gather(in, dim, idx);
@@ -2723,6 +2929,20 @@ Series nonzero(const Series& a) {
     const Series cpu = a.to(Platform::CPU);
     return nonzero(cpu).to(Platform::MPS);
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_indexing_enabled();
+    const bool native_strict = native::cuda::native_indexing_strict();
+    const bool route_supported = native::cuda::supports_nonzero(a);
+    return cuda_indexing_route_or_bridge_(
+        "nonzero",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          const Series cpu = a.to(Platform::CPU);
+          return nonzero(cpu).to(Platform::CUDA);
+        });
+  }
 
   // Torch returns a 2D int64 tensor of indices (nnz x ndim). For scalar, returns either (1 x 0)??;
   // We'll follow: if scalar and nonzero -> (1 x 0), else (0 x 0).
@@ -2853,7 +3073,16 @@ Series Series::empty(std::span<const std::int64_t> sizes, ScalarType st) {
 
 Series Series::empty(std::span<const std::int64_t> sizes, ScalarType st, Platform platform) {
   if (platform == Platform::CUDA) {
-    throw_error("Series::empty(..., CUDA): CUDA backend not built yet");
+    if (!native::cuda::runtime_available()) {
+      throw_error(
+          std::string("Series::empty(..., CUDA): CUDA runtime unavailable: ") +
+          native::cuda::runtime_error_cstr());
+    }
+    if (!native::cuda::cpu_bridge_enabled()) {
+      throw_error(
+          "Series::empty(..., CUDA): CUDA storage path is unavailable in strict mode; "
+          "set PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 for bridge-backed staging storage");
+    }
   }
   if (platform == Platform::MPS) {
     if (!native::mps::runtime_available()) {
@@ -3345,7 +3574,17 @@ Series Series::platform(Platform target) const {
     case Platform::CPU:
       break;
     case Platform::CUDA:
-      throw_error("Series::platform(CUDA): CUDA backend not built yet");
+      if (!native::cuda::runtime_available()) {
+        throw_error(
+            std::string("Series::platform(CUDA): CUDA runtime unavailable: ") +
+            native::cuda::runtime_error_cstr());
+      }
+      if (!native::cuda::cpu_bridge_enabled()) {
+        throw_error(
+            "Series::platform(CUDA): CUDA transfer path unavailable in strict mode; "
+            "set PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 for bridge-backed staging transfers");
+      }
+      break;
     case Platform::MPS:
       if (!native::mps::runtime_available()) {
         throw_error(
@@ -3787,21 +4026,73 @@ static bool is_integral_or_bool_dtype_(ScalarType dt) noexcept {
   }
 }
 
-static bool mps_take_fast_path_supported_(const Series& self, const Series& index) noexcept {
-  (void)self;
-  (void)index;
-  // Keep take on correctness-first CPU path until native gather parity is proven
-  // stable for negative-index and stress semantics on real MPS hardware.
-  return false;
+static bool mps_take_put_exact_f32_roundtrip_dtype_(ScalarType dtype) noexcept {
+  switch (dtype) {
+    case ScalarType::Float32:
+    case ScalarType::Float16:
+    case ScalarType::BFloat16:
+    case ScalarType::Bool:
+    case ScalarType::Int8:
+    case ScalarType::UInt8:
+    case ScalarType::Int16:
+    case ScalarType::UInt16:
+      return true;
+    default:
+      return false;
+  }
 }
 
-static bool mps_put_fast_path_supported_(const Series& self, const Series& index, const Series& source) noexcept {
-  (void)self;
-  (void)index;
-  (void)source;
-  // Keep put_ on correctness-first CPU path until native scatter parity is proven
-  // stable for duplicate/negative-index semantics on real MPS hardware.
-  return false;
+static bool mps_take_put_accumulate_native_dtype_(ScalarType dtype) noexcept {
+  switch (dtype) {
+    case ScalarType::Float32:
+    case ScalarType::Float16:
+    case ScalarType::BFloat16:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static bool mps_take_fast_path_supported_(const Series& self, const Series& index) noexcept {
+  if (self.platform() != Platform::MPS || index.platform() != Platform::MPS) {
+    return false;
+  }
+  if (!self.is_contiguous() || !index.is_contiguous()) {
+    return false;
+  }
+  if (index.scalar_type() != ScalarType::Int64) {
+    return false;
+  }
+  if (!mps_take_put_exact_f32_roundtrip_dtype_(self.scalar_type())) {
+    return false;
+  }
+  return native::mps::supports_gather(ScalarType::Float32, ScalarType::Int64);
+}
+
+static bool mps_put_fast_path_supported_(
+    const Series& self,
+    const Series& index,
+    const Series& source,
+    bool accumulate) noexcept {
+  if (self.platform() != Platform::MPS || index.platform() != Platform::MPS || source.platform() != Platform::MPS) {
+    return false;
+  }
+  if (!self.is_contiguous() || !index.is_contiguous() || !source.is_contiguous()) {
+    return false;
+  }
+  if (index.scalar_type() != ScalarType::Int64) {
+    return false;
+  }
+  if (!mps_take_put_exact_f32_roundtrip_dtype_(self.scalar_type())) {
+    return false;
+  }
+  if (accumulate && !mps_take_put_accumulate_native_dtype_(self.scalar_type())) {
+    return false;
+  }
+  if (source.scalar_type() != self.scalar_type()) {
+    return false;
+  }
+  return native::mps::supports_scatter(ScalarType::Float32, ScalarType::Int64, ScalarType::Float32);
 }
 
 static bool has_duplicate_linear_indices_(const Series& index_cpu_i64_contig, std::int64_t total_numel) {
@@ -4068,6 +4359,17 @@ Series Series::index(const std::vector<Series>& indices) const {
     PLUSS_CHECK(indices.size() == 1, "index: MPS path currently supports exactly one index tensor");
     return take(indices.front());
   }
+  if (platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_indexing_enabled();
+    const bool native_strict = native::cuda::native_indexing_strict();
+    const bool route_supported = native::cuda::supports_index(*this, indices);
+    return cuda_indexing_route_or_bridge_(
+        "index",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::codem::native::cpu::index(*this, indices); });
+  }
   require_backend_dispatch_supported_(platform(), "index");
   return pluss::codem::native::cpu::index(*this, indices);
 }
@@ -4076,20 +4378,39 @@ Series Series::take(const Series& index) const {
   if (platform() == Platform::MPS) {
     if (mps_native_take_put_enabled_() && mps_take_fast_path_supported_(*this, index)) {
       const std::array<std::int64_t, 1> flat_shape{{numel()}};
-      const std::array<std::int64_t, 1> out_shape{{index.numel()}};
-      const Series flat_self = this->contiguous().reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()));
-      const Series flat_idx = index.contiguous();
-      Series out = Series::empty(std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
-                                 ScalarType::Float32,
-                                 Platform::MPS);
-      native::mps::gather(flat_self, /*dim=*/0, flat_idx, out);
+      const std::array<std::int64_t, 1> out_flat_shape{{index.numel()}};
+      const Series flat_self_f32 =
+          (scalar_type() == ScalarType::Float32 ? this->contiguous() : this->to(ScalarType::Float32).contiguous())
+              .reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()));
+      const Series flat_idx = index.contiguous().reshape(std::span<const std::int64_t>(out_flat_shape.data(), out_flat_shape.size()));
+      Series out_flat = Series::empty(
+          std::span<const std::int64_t>(out_flat_shape.data(), out_flat_shape.size()),
+          ScalarType::Float32,
+          Platform::MPS);
+      native::mps::gather(flat_self_f32, /*dim=*/0, flat_idx, out_flat);
+      Series out = out_flat.reshape(index.sizes());
+      if (scalar_type() != ScalarType::Float32) {
+        out = out.to(scalar_type());
+      }
       return out;
     }
+    require_mps_native_dispatch_supported_("take");
 
     // Correctness-first fallback for unsupported dtype/index combinations.
     const Series cpu_self = this->to(Platform::CPU);
     const Series cpu_idx = index.to(Platform::CPU);
     return pluss::codem::native::cpu::take(cpu_self, cpu_idx).to(Platform::MPS);
+  }
+  if (platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_indexing_enabled();
+    const bool native_strict = native::cuda::native_indexing_strict();
+    const bool route_supported = native::cuda::supports_take(*this, index);
+    return cuda_indexing_route_or_bridge_(
+        "take",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::codem::native::cpu::take(*this, index); });
   }
   require_backend_dispatch_supported_(platform(), "take");
   return pluss::codem::native::cpu::take(*this, index);
@@ -4100,10 +4421,11 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
   require_same_platform(*this, source, "put_");
   if (platform() == Platform::MPS) {
     if (mps_native_take_put_enabled_() &&
-        mps_put_fast_path_supported_(*this, index, source) &&
+        mps_put_fast_path_supported_(*this, index, source, accumulate) &&
         (source.numel() == 1 || source.numel() == index.numel())) {
       const std::array<std::int64_t, 1> flat_shape{{numel()}};
-      const Series flat_idx = index.contiguous();
+      const std::array<std::int64_t, 1> idx_shape{{index.numel()}};
+      const Series flat_idx = index.contiguous().reshape(std::span<const std::int64_t>(idx_shape.data(), idx_shape.size()));
       const Series idx_cpu = flat_idx.to(Platform::CPU);
 
       // scatter_set is not deterministic for duplicate writes; preserve CPU last-write semantics.
@@ -4116,7 +4438,7 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
         return finish_direct_inplace_value_op_(*this);
       }
 
-      Series flat_src = source.contiguous();
+      Series flat_src = source.to(ScalarType::Float32).contiguous();
       if (flat_src.numel() == 1 && flat_idx.numel() != 1) {
         const std::array<std::int64_t, 1> src_expand{{flat_idx.numel()}};
         flat_src = flat_src.expand(std::span<const std::int64_t>(src_expand.data(), src_expand.size()), true).contiguous();
@@ -4125,16 +4447,23 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
         flat_src = flat_src.reshape(std::span<const std::int64_t>(src_shape.data(), src_shape.size())).contiguous();
       }
 
-      Series flat_out = this->contiguous().reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size())).clone();
+      Series flat_out = (scalar_type() == ScalarType::Float32 ? this->contiguous() : this->to(ScalarType::Float32).contiguous())
+                            .reshape(std::span<const std::int64_t>(flat_shape.data(), flat_shape.size()))
+                            .clone();
       if (accumulate) {
         native::mps::scatter_reduce_(flat_out, /*dim=*/0, flat_idx, flat_src, native::mps::ScatterReduceOp::Sum);
       } else {
         native::mps::scatter_set_(flat_out, /*dim=*/0, flat_idx, flat_src);
       }
 
-      copy_(flat_out.reshape(sizes()));
+      Series out = flat_out.reshape(sizes());
+      if (scalar_type() != ScalarType::Float32) {
+        out = out.to(scalar_type());
+      }
+      copy_(out);
       return finish_direct_inplace_value_op_(*this);
     }
+    require_mps_native_dispatch_supported_("put_");
 
     // Correctness-first fallback for unsupported dtype/index/source combinations.
     const Series cpu_self = this->to(Platform::CPU);
@@ -4142,6 +4471,19 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
     const Series cpu_src = source.to(Platform::CPU);
     const Series cpu_out = pluss::codem::native::cpu::put(cpu_self, cpu_idx, cpu_src, accumulate);
     copy_(cpu_out.to(Platform::MPS));
+    return finish_direct_inplace_value_op_(*this);
+  }
+  if (platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_indexing_enabled();
+    const bool native_strict = native::cuda::native_indexing_strict();
+    const bool route_supported = native::cuda::supports_put(*this, index, source, accumulate);
+    Series out = cuda_indexing_route_or_bridge_(
+        "put_",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::codem::native::cpu::put(*this, index, source, accumulate); });
+    this->copy_(out);
     return finish_direct_inplace_value_op_(*this);
   }
   require_backend_dispatch_supported_(platform(), "put_");

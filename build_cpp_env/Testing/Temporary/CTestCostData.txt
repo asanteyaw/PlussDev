@@ -1,8 +1,8 @@
-nodej_neighbor_test 20 0.000919785
-nodej_phase0_contract_test 20 0.0113481
-nodej_prep_test 20 0.000824765
-nodej_split_test 20 0.000919177
-nodej_tree_test 20 0.0196065
+nodej_neighbor_test 28 0.000274095
+nodej_phase0_contract_test 23 0.00860678
+nodej_prep_test 28 0.000263881
+nodej_split_test 29 0.000270036
+nodej_tree_test 28 0.0121589
 autodiff 0 0
 jacrev 0 0
 nth_derivative 0 0
@@ -14,8 +14,13 @@ hvp 0 0
 nn_optim_test 5 0.00208442
 conv_test 4 0.00165058
 rnn_fusion_test 4 0.0017161
-lymph_quick_test 15 0.0185834
-nodej_bayes_kernel_test 16 0.00122561
-nodej_ensemble_bayes_regression_test 11 0.00332147
-nodej_rigorous_suite_test 2 0.829
+lymph_quick_test 21 0.0110237
+nodej_bayes_kernel_test 24 0.000320809
+nodej_ensemble_bayes_regression_test 14 0.00200965
+nodej_rigorous_suite_test 11 0.134231
+nodej_cv_tune_test 9 0.0138343
+nodej_dataframe_bridge_test 4 0.0246698
+nodej_flow_test 6 0.0195861
+nodej_multiclass_test 3 0.0530798
+nodej_online_test 2 0.018598
 ---

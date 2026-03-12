@@ -122,20 +122,31 @@ TEST_CASE("Linear algebra backend info reports MPS and CUDA coherently", "[linea
   }
 
   const auto cuda = linearalg_backend_info(LinearAlgTarget::CUDA);
+  const bool cuda_ready = pluss::cuda::is_ready();
+  const bool cublas_ready = pluss::cuda::cublas_available();
+  const bool cusolver_ready = pluss::cuda::cusolver_available();
   REQUIRE(cuda.target == LinearAlgTarget::CUDA);
-  REQUIRE(cuda.dense_provider == LinearAlgDenseProvider::None);
-  REQUIRE(cuda.solver_provider == LinearAlgSolverProvider::None);
-  REQUIRE_FALSE(cuda.dense_available);
-  REQUIRE_FALSE(cuda.solver_available);
-  REQUIRE_FALSE(cuda.supports_matmul);
-  REQUIRE_FALSE(cuda.supports_det);
-  REQUIRE_FALSE(cuda.supports_inverse);
-  REQUIRE_FALSE(cuda.supports_cholesky);
-  REQUIRE_FALSE(cuda.supports_qr);
-  REQUIRE_FALSE(cuda.supports_svd);
-  REQUIRE_FALSE(cuda.supports_triangular_solve);
-  REQUIRE_FALSE(cuda.supports_cholesky_solve);
-  REQUIRE_FALSE(cuda.supports_lu_solve);
-  REQUIRE_FALSE(cuda.supports_matrix_power);
-  REQUIRE_FALSE(cuda.supports_matrix_exp);
+  REQUIRE(cuda.dense_provider == (cublas_ready ? LinearAlgDenseProvider::CuBLAS : LinearAlgDenseProvider::None));
+  REQUIRE(cuda.solver_provider == (cusolver_ready ? LinearAlgSolverProvider::CuSolver : LinearAlgSolverProvider::None));
+  REQUIRE(cuda.dense_available == cublas_ready);
+  REQUIRE(cuda.solver_available == cusolver_ready);
+  REQUIRE(cuda.supports_matmul == pluss::cuda::supports_matmul_baseline(
+      pluss::ScalarType::Float32, pluss::ScalarType::Float32));
+  REQUIRE(cuda.supports_det == pluss::cuda::supports_det_linalg_baseline(pluss::ScalarType::Float32));
+  REQUIRE(cuda.supports_inverse == pluss::cuda::supports_inverse_linalg_baseline(pluss::ScalarType::Float32));
+  REQUIRE(cuda.supports_cholesky == pluss::cuda::supports_cholesky_linalg_baseline(pluss::ScalarType::Float32));
+  REQUIRE(cuda.supports_qr == pluss::cuda::supports_qr_linalg_baseline(pluss::ScalarType::Float32, /*reduced=*/true));
+  REQUIRE(cuda.supports_svd == pluss::cuda::supports_svd_linalg_baseline(pluss::ScalarType::Float32, /*full_matrices=*/false));
+  REQUIRE(
+      cuda.supports_triangular_solve ==
+      pluss::cuda::supports_triangular_solve_linalg_baseline(pluss::ScalarType::Float32, pluss::ScalarType::Float32));
+  REQUIRE(
+      cuda.supports_cholesky_solve ==
+      pluss::cuda::supports_cholesky_solve_linalg_baseline(pluss::ScalarType::Float32, pluss::ScalarType::Float32));
+  REQUIRE(
+      cuda.supports_lu_solve ==
+      pluss::cuda::supports_lu_solve_linalg_baseline(pluss::ScalarType::Float32, pluss::ScalarType::Float32));
+  REQUIRE(cuda.supports_matrix_power == pluss::cuda::supports_matrix_power_linalg_baseline(pluss::ScalarType::Float32));
+  REQUIRE(cuda.supports_matrix_exp == pluss::cuda::supports_matrix_exp_linalg_baseline(pluss::ScalarType::Float32));
+  REQUIRE(pluss::platform_available(pluss::codem::Platform::CUDA) == cuda_ready);
 }

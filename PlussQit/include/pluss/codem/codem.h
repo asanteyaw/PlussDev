@@ -3,9 +3,12 @@
 #include "pluss/msharp/msharp.h"
 #include "CodeM/CodeM.h"
 #include "CodeM/core/Printing.h"
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <span>
+#include <string_view>
+#include <vector>
 
 // Optional: LibTorch interop (enable PLUSS_ENABLE_TORCH)
 #ifdef PLUSS_ENABLE_TORCH
@@ -23,10 +26,108 @@ inline Series make_scalar_like(const Series& like, double value) {
 }
 
 enum class TernaryCompareOp : std::uint8_t { Eq, Ne, Lt, Le, Gt, Ge };
+enum class CudaTransferPolicy : std::uint8_t { Strict = 0, AllowCpuBridge = 1 };
 
 using BlobDeleter = std::function<void(void*)>;
 
 CODEM_API bool mps_backend_available() noexcept;
+CODEM_API bool cuda_backend_available() noexcept;
+CODEM_API CudaTransferPolicy cuda_transfer_policy() noexcept;
+CODEM_API bool cuda_cpu_bridge_enabled() noexcept;
+CODEM_API const char* cuda_transfer_policy_name(CudaTransferPolicy policy) noexcept;
+CODEM_API std::int32_t cuda_device_count() noexcept;
+CODEM_API std::int32_t cuda_runtime_version() noexcept;
+CODEM_API std::int32_t cuda_driver_version() noexcept;
+CODEM_API const char* cuda_primary_device_name() noexcept;
+CODEM_API std::int32_t cuda_primary_device_cc_major() noexcept;
+CODEM_API std::int32_t cuda_primary_device_cc_minor() noexcept;
+CODEM_API std::size_t cuda_primary_device_global_memory_bytes() noexcept;
+CODEM_API bool cuda_cublas_provider_available() noexcept;
+CODEM_API const char* cuda_cublas_provider_error_cstr() noexcept;
+CODEM_API bool cuda_cusolver_provider_available() noexcept;
+CODEM_API const char* cuda_cusolver_provider_error_cstr() noexcept;
+CODEM_API bool cuda_cudnn_provider_available() noexcept;
+CODEM_API const char* cuda_cudnn_provider_error_cstr() noexcept;
+CODEM_API bool cuda_native_baseline_enabled() noexcept;
+CODEM_API bool cuda_supports_elementwise_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_reduction_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_matmul_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept;
+CODEM_API bool cuda_native_selection_enabled() noexcept;
+CODEM_API bool cuda_native_selection_strict() noexcept;
+CODEM_API bool cuda_supports_sort_selection_baseline(ScalarType dtype, bool stable) noexcept;
+CODEM_API bool cuda_supports_topk_selection_baseline(ScalarType dtype, bool sorted) noexcept;
+CODEM_API bool cuda_supports_kthvalue_selection_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_argsort_selection_baseline(ScalarType dtype, bool stable) noexcept;
+CODEM_API bool cuda_supports_sort_selection(const Series& a, std::int64_t dim, bool stable) noexcept;
+CODEM_API bool cuda_supports_topk_selection(const Series& a, std::int64_t k, std::int64_t dim, bool sorted) noexcept;
+CODEM_API bool cuda_supports_kthvalue_selection(const Series& a, std::int64_t k, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_argsort_selection(const Series& a, std::int64_t dim, bool stable) noexcept;
+CODEM_API bool cuda_native_linalg_enabled() noexcept;
+CODEM_API bool cuda_native_linalg_strict() noexcept;
+CODEM_API bool cuda_supports_det_linalg_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_inverse_linalg_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_cholesky_linalg_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_logdet_linalg_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_slogdet_linalg_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_pinverse_linalg_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_triangular_solve_linalg_baseline(ScalarType a_dtype, ScalarType b_dtype) noexcept;
+CODEM_API bool cuda_supports_cholesky_solve_linalg_baseline(ScalarType factor_dtype, ScalarType b_dtype) noexcept;
+CODEM_API bool cuda_supports_cholesky_inverse_linalg_baseline(ScalarType factor_dtype) noexcept;
+CODEM_API bool cuda_supports_lu_solve_linalg_baseline(ScalarType lu_dtype, ScalarType b_dtype) noexcept;
+CODEM_API bool cuda_supports_qr_linalg_baseline(ScalarType dtype, bool reduced) noexcept;
+CODEM_API bool cuda_supports_svd_linalg_baseline(ScalarType dtype, bool full_matrices) noexcept;
+CODEM_API bool cuda_supports_matrix_power_linalg_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_matrix_exp_linalg_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_det_linalg(const Series& a) noexcept;
+CODEM_API bool cuda_supports_inverse_linalg(const Series& a) noexcept;
+CODEM_API bool cuda_supports_cholesky_linalg(const Series& a) noexcept;
+CODEM_API bool cuda_supports_logdet_linalg(const Series& a) noexcept;
+CODEM_API bool cuda_supports_slogdet_linalg(const Series& a) noexcept;
+CODEM_API bool cuda_supports_pinverse_linalg(const Series& a) noexcept;
+CODEM_API bool cuda_supports_triangular_solve_linalg(const Series& a, const Series& b) noexcept;
+CODEM_API bool cuda_supports_cholesky_solve_linalg(const Series& factor, const Series& b) noexcept;
+CODEM_API bool cuda_supports_cholesky_inverse_linalg(const Series& factor) noexcept;
+CODEM_API bool cuda_supports_lu_solve_linalg(const Series& lu, const Series& b) noexcept;
+CODEM_API bool cuda_supports_qr_linalg(const Series& a, bool reduced) noexcept;
+CODEM_API bool cuda_supports_svd_linalg(const Series& a, bool full_matrices) noexcept;
+CODEM_API bool cuda_supports_matrix_power_linalg(const Series& a) noexcept;
+CODEM_API bool cuda_supports_matrix_exp_linalg(const Series& a) noexcept;
+CODEM_API bool cuda_native_indexing_enabled() noexcept;
+CODEM_API bool cuda_native_indexing_strict() noexcept;
+CODEM_API bool cuda_supports_take_put_indexing_baseline(ScalarType value_dtype, ScalarType index_dtype) noexcept;
+CODEM_API bool cuda_supports_nonzero_indexing_baseline(ScalarType value_dtype) noexcept;
+CODEM_API bool cuda_supports_index_indexing_baseline(ScalarType value_dtype, ScalarType index_dtype) noexcept;
+CODEM_API bool cuda_supports_take_indexing(const Series& self, const Series& index) noexcept;
+CODEM_API bool cuda_supports_put_indexing(const Series& self, const Series& index, const Series& source, bool accumulate) noexcept;
+CODEM_API bool cuda_supports_nonzero_indexing(const Series& self) noexcept;
+CODEM_API bool cuda_supports_index_indexing(const Series& self, const std::vector<Series>& indices) noexcept;
+CODEM_API bool cuda_native_matmul_enabled() noexcept;
+CODEM_API bool cuda_native_matmul_strict() noexcept;
+CODEM_API bool cuda_supports_matmul_native_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept;
+CODEM_API bool cuda_supports_matmul_native(const Series& a, const Series& b) noexcept;
+CODEM_API bool cuda_native_scatter_gather_enabled() noexcept;
+CODEM_API bool cuda_native_scatter_gather_strict() noexcept;
+CODEM_API bool cuda_supports_scatter_baseline(ScalarType self_dtype, ScalarType index_dtype, ScalarType src_dtype) noexcept;
+CODEM_API bool cuda_supports_scatter_add_baseline(ScalarType self_dtype, ScalarType index_dtype, ScalarType src_dtype) noexcept;
+CODEM_API bool cuda_supports_scatter_reduce_baseline(
+    ScalarType self_dtype,
+    ScalarType index_dtype,
+    ScalarType src_dtype,
+    std::string_view reduce) noexcept;
+CODEM_API bool cuda_supports_gather_baseline(ScalarType input_dtype, ScalarType index_dtype) noexcept;
+CODEM_API bool cuda_supports_scatter_native(const Series& self, std::int64_t dim, const Series& index, const Series& src) noexcept;
+CODEM_API bool cuda_supports_scatter_add_native(
+    const Series& self,
+    std::int64_t dim,
+    const Series& index,
+    const Series& src) noexcept;
+CODEM_API bool cuda_supports_scatter_reduce_native(
+    const Series& self,
+    std::int64_t dim,
+    const Series& index,
+    const Series& src,
+    std::string_view reduce) noexcept;
+CODEM_API bool cuda_supports_gather_native(const Series& input, std::int64_t dim, const Series& index) noexcept;
 Series from_buffer(void* data,
                    std::span<const std::int64_t> sizes,
                    std::span<const std::int64_t> strides,
@@ -158,7 +259,7 @@ inline bool platform_available(Platform p) noexcept {
     case Platform::CPU:
       return true;
     case Platform::CUDA:
-      return false;
+      return cuda_backend_available();
     case Platform::MPS:
       return mps_backend_available();
     default:
@@ -174,6 +275,7 @@ namespace pluss {
   using ScalarType = codem::ScalarType;
   using Platform = codem::Platform;
   inline constexpr Platform pCPU = Platform::CPU;
+  inline constexpr Platform pCUDA = Platform::CUDA;
   inline constexpr Platform pMPS = Platform::MPS;
   using BlobDeleter = codem::BlobDeleter;
   using PrintOptions = codem::PrintOptions;
@@ -207,3 +309,362 @@ inline bool is_usable() noexcept {
 }
 
 } // namespace pluss::mps
+
+namespace pluss::cuda {
+
+using TransferPolicy = codem::CudaTransferPolicy;
+
+inline bool is_ready() noexcept {
+  return codem::platform_available(codem::Platform::CUDA);
+}
+
+inline bool is_usable() noexcept {
+  return is_ready();
+}
+
+inline TransferPolicy transfer_policy() noexcept {
+  return codem::cuda_transfer_policy();
+}
+
+inline bool cpu_bridge_enabled() noexcept {
+  return codem::cuda_cpu_bridge_enabled();
+}
+
+inline const char* transfer_policy_name(TransferPolicy policy) noexcept {
+  return codem::cuda_transfer_policy_name(policy);
+}
+
+inline std::int32_t device_count() noexcept {
+  return codem::cuda_device_count();
+}
+
+inline std::int32_t runtime_version() noexcept {
+  return codem::cuda_runtime_version();
+}
+
+inline std::int32_t driver_version() noexcept {
+  return codem::cuda_driver_version();
+}
+
+inline const char* primary_device_name() noexcept {
+  return codem::cuda_primary_device_name();
+}
+
+inline std::int32_t primary_compute_capability_major() noexcept {
+  return codem::cuda_primary_device_cc_major();
+}
+
+inline std::int32_t primary_compute_capability_minor() noexcept {
+  return codem::cuda_primary_device_cc_minor();
+}
+
+inline std::size_t primary_global_memory_bytes() noexcept {
+  return codem::cuda_primary_device_global_memory_bytes();
+}
+
+inline bool cublas_available() noexcept {
+  return codem::cuda_cublas_provider_available();
+}
+
+inline const char* cublas_error() noexcept {
+  return codem::cuda_cublas_provider_error_cstr();
+}
+
+inline bool cusolver_available() noexcept {
+  return codem::cuda_cusolver_provider_available();
+}
+
+inline const char* cusolver_error() noexcept {
+  return codem::cuda_cusolver_provider_error_cstr();
+}
+
+inline bool cudnn_available() noexcept {
+  return codem::cuda_cudnn_provider_available();
+}
+
+inline const char* cudnn_error() noexcept {
+  return codem::cuda_cudnn_provider_error_cstr();
+}
+
+inline bool native_baseline_enabled() noexcept {
+  return codem::cuda_native_baseline_enabled();
+}
+
+inline bool supports_elementwise_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_elementwise_baseline(dtype);
+}
+
+inline bool supports_reduction_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_reduction_baseline(dtype);
+}
+
+inline bool supports_matmul_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept {
+  return codem::cuda_supports_matmul_baseline(lhs_dtype, rhs_dtype);
+}
+
+inline bool native_selection_enabled() noexcept {
+  return codem::cuda_native_selection_enabled();
+}
+
+inline bool native_selection_strict() noexcept {
+  return codem::cuda_native_selection_strict();
+}
+
+inline bool supports_sort_selection_baseline(ScalarType dtype, bool stable) noexcept {
+  return codem::cuda_supports_sort_selection_baseline(dtype, stable);
+}
+
+inline bool supports_topk_selection_baseline(ScalarType dtype, bool sorted) noexcept {
+  return codem::cuda_supports_topk_selection_baseline(dtype, sorted);
+}
+
+inline bool supports_kthvalue_selection_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_kthvalue_selection_baseline(dtype);
+}
+
+inline bool supports_argsort_selection_baseline(ScalarType dtype, bool stable) noexcept {
+  return codem::cuda_supports_argsort_selection_baseline(dtype, stable);
+}
+
+inline bool supports_sort_selection(const Series& a, std::int64_t dim, bool stable) noexcept {
+  return codem::cuda_supports_sort_selection(a, dim, stable);
+}
+
+inline bool supports_topk_selection(const Series& a, std::int64_t k, std::int64_t dim, bool sorted) noexcept {
+  return codem::cuda_supports_topk_selection(a, k, dim, sorted);
+}
+
+inline bool supports_kthvalue_selection(const Series& a, std::int64_t k, std::int64_t dim) noexcept {
+  return codem::cuda_supports_kthvalue_selection(a, k, dim);
+}
+
+inline bool supports_argsort_selection(const Series& a, std::int64_t dim, bool stable) noexcept {
+  return codem::cuda_supports_argsort_selection(a, dim, stable);
+}
+
+inline bool native_linalg_enabled() noexcept {
+  return codem::cuda_native_linalg_enabled();
+}
+
+inline bool native_linalg_strict() noexcept {
+  return codem::cuda_native_linalg_strict();
+}
+
+inline bool supports_det_linalg_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_det_linalg_baseline(dtype);
+}
+
+inline bool supports_inverse_linalg_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_inverse_linalg_baseline(dtype);
+}
+
+inline bool supports_cholesky_linalg_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_cholesky_linalg_baseline(dtype);
+}
+
+inline bool supports_logdet_linalg_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_logdet_linalg_baseline(dtype);
+}
+
+inline bool supports_slogdet_linalg_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_slogdet_linalg_baseline(dtype);
+}
+
+inline bool supports_pinverse_linalg_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_pinverse_linalg_baseline(dtype);
+}
+
+inline bool supports_triangular_solve_linalg_baseline(ScalarType a_dtype, ScalarType b_dtype) noexcept {
+  return codem::cuda_supports_triangular_solve_linalg_baseline(a_dtype, b_dtype);
+}
+
+inline bool supports_cholesky_solve_linalg_baseline(ScalarType factor_dtype, ScalarType b_dtype) noexcept {
+  return codem::cuda_supports_cholesky_solve_linalg_baseline(factor_dtype, b_dtype);
+}
+
+inline bool supports_cholesky_inverse_linalg_baseline(ScalarType factor_dtype) noexcept {
+  return codem::cuda_supports_cholesky_inverse_linalg_baseline(factor_dtype);
+}
+
+inline bool supports_lu_solve_linalg_baseline(ScalarType lu_dtype, ScalarType b_dtype) noexcept {
+  return codem::cuda_supports_lu_solve_linalg_baseline(lu_dtype, b_dtype);
+}
+
+inline bool supports_qr_linalg_baseline(ScalarType dtype, bool reduced) noexcept {
+  return codem::cuda_supports_qr_linalg_baseline(dtype, reduced);
+}
+
+inline bool supports_svd_linalg_baseline(ScalarType dtype, bool full_matrices) noexcept {
+  return codem::cuda_supports_svd_linalg_baseline(dtype, full_matrices);
+}
+
+inline bool supports_matrix_power_linalg_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_matrix_power_linalg_baseline(dtype);
+}
+
+inline bool supports_matrix_exp_linalg_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_matrix_exp_linalg_baseline(dtype);
+}
+
+inline bool supports_det_linalg(const Series& a) noexcept {
+  return codem::cuda_supports_det_linalg(a);
+}
+
+inline bool supports_inverse_linalg(const Series& a) noexcept {
+  return codem::cuda_supports_inverse_linalg(a);
+}
+
+inline bool supports_cholesky_linalg(const Series& a) noexcept {
+  return codem::cuda_supports_cholesky_linalg(a);
+}
+
+inline bool supports_logdet_linalg(const Series& a) noexcept {
+  return codem::cuda_supports_logdet_linalg(a);
+}
+
+inline bool supports_slogdet_linalg(const Series& a) noexcept {
+  return codem::cuda_supports_slogdet_linalg(a);
+}
+
+inline bool supports_pinverse_linalg(const Series& a) noexcept {
+  return codem::cuda_supports_pinverse_linalg(a);
+}
+
+inline bool supports_triangular_solve_linalg(const Series& a, const Series& b) noexcept {
+  return codem::cuda_supports_triangular_solve_linalg(a, b);
+}
+
+inline bool supports_cholesky_solve_linalg(const Series& factor, const Series& b) noexcept {
+  return codem::cuda_supports_cholesky_solve_linalg(factor, b);
+}
+
+inline bool supports_cholesky_inverse_linalg(const Series& factor) noexcept {
+  return codem::cuda_supports_cholesky_inverse_linalg(factor);
+}
+
+inline bool supports_lu_solve_linalg(const Series& lu, const Series& b) noexcept {
+  return codem::cuda_supports_lu_solve_linalg(lu, b);
+}
+
+inline bool supports_qr_linalg(const Series& a, bool reduced) noexcept {
+  return codem::cuda_supports_qr_linalg(a, reduced);
+}
+
+inline bool supports_svd_linalg(const Series& a, bool full_matrices) noexcept {
+  return codem::cuda_supports_svd_linalg(a, full_matrices);
+}
+
+inline bool supports_matrix_power_linalg(const Series& a) noexcept {
+  return codem::cuda_supports_matrix_power_linalg(a);
+}
+
+inline bool supports_matrix_exp_linalg(const Series& a) noexcept {
+  return codem::cuda_supports_matrix_exp_linalg(a);
+}
+
+inline bool native_indexing_enabled() noexcept {
+  return codem::cuda_native_indexing_enabled();
+}
+
+inline bool native_indexing_strict() noexcept {
+  return codem::cuda_native_indexing_strict();
+}
+
+inline bool supports_take_put_indexing_baseline(ScalarType value_dtype, ScalarType index_dtype) noexcept {
+  return codem::cuda_supports_take_put_indexing_baseline(value_dtype, index_dtype);
+}
+
+inline bool supports_nonzero_indexing_baseline(ScalarType value_dtype) noexcept {
+  return codem::cuda_supports_nonzero_indexing_baseline(value_dtype);
+}
+
+inline bool supports_index_indexing_baseline(ScalarType value_dtype, ScalarType index_dtype) noexcept {
+  return codem::cuda_supports_index_indexing_baseline(value_dtype, index_dtype);
+}
+
+inline bool supports_take_indexing(const Series& self, const Series& index) noexcept {
+  return codem::cuda_supports_take_indexing(self, index);
+}
+
+inline bool supports_put_indexing(const Series& self, const Series& index, const Series& source, bool accumulate) noexcept {
+  return codem::cuda_supports_put_indexing(self, index, source, accumulate);
+}
+
+inline bool supports_nonzero_indexing(const Series& self) noexcept {
+  return codem::cuda_supports_nonzero_indexing(self);
+}
+
+inline bool supports_index_indexing(const Series& self, const std::vector<Series>& indices) noexcept {
+  return codem::cuda_supports_index_indexing(self, indices);
+}
+
+inline bool native_matmul_enabled() noexcept {
+  return codem::cuda_native_matmul_enabled();
+}
+
+inline bool native_matmul_strict() noexcept {
+  return codem::cuda_native_matmul_strict();
+}
+
+inline bool supports_matmul_native_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept {
+  return codem::cuda_supports_matmul_native_baseline(lhs_dtype, rhs_dtype);
+}
+
+inline bool supports_matmul_native(const Series& a, const Series& b) noexcept {
+  return codem::cuda_supports_matmul_native(a, b);
+}
+
+inline bool native_scatter_gather_enabled() noexcept {
+  return codem::cuda_native_scatter_gather_enabled();
+}
+
+inline bool native_scatter_gather_strict() noexcept {
+  return codem::cuda_native_scatter_gather_strict();
+}
+
+inline bool supports_scatter_baseline(ScalarType self_dtype, ScalarType index_dtype, ScalarType src_dtype) noexcept {
+  return codem::cuda_supports_scatter_baseline(self_dtype, index_dtype, src_dtype);
+}
+
+inline bool supports_scatter_add_baseline(ScalarType self_dtype, ScalarType index_dtype, ScalarType src_dtype) noexcept {
+  return codem::cuda_supports_scatter_add_baseline(self_dtype, index_dtype, src_dtype);
+}
+
+inline bool supports_scatter_reduce_baseline(
+    ScalarType self_dtype,
+    ScalarType index_dtype,
+    ScalarType src_dtype,
+    std::string_view reduce) noexcept {
+  return codem::cuda_supports_scatter_reduce_baseline(self_dtype, index_dtype, src_dtype, reduce);
+}
+
+inline bool supports_gather_baseline(ScalarType input_dtype, ScalarType index_dtype) noexcept {
+  return codem::cuda_supports_gather_baseline(input_dtype, index_dtype);
+}
+
+inline bool supports_scatter_native(const Series& self, std::int64_t dim, const Series& index, const Series& src) noexcept {
+  return codem::cuda_supports_scatter_native(self, dim, index, src);
+}
+
+inline bool supports_scatter_add_native(
+    const Series& self,
+    std::int64_t dim,
+    const Series& index,
+    const Series& src) noexcept {
+  return codem::cuda_supports_scatter_add_native(self, dim, index, src);
+}
+
+inline bool supports_scatter_reduce_native(
+    const Series& self,
+    std::int64_t dim,
+    const Series& index,
+    const Series& src,
+    std::string_view reduce) noexcept {
+  return codem::cuda_supports_scatter_reduce_native(self, dim, index, src, reduce);
+}
+
+inline bool supports_gather_native(const Series& input, std::int64_t dim, const Series& index) noexcept {
+  return codem::cuda_supports_gather_native(input, dim, index);
+}
+
+} // namespace pluss::cuda

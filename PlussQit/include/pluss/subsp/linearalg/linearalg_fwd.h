@@ -23,6 +23,7 @@ enum class LinearAlgDenseProvider : std::uint8_t {
   OneMKL = 3,
   CBLAS = 4,
   Metal = 5,
+  CuBLAS = 6,
 };
 
 enum class LinearAlgSolverProvider : std::uint8_t {
@@ -30,6 +31,7 @@ enum class LinearAlgSolverProvider : std::uint8_t {
   Accelerate = 1,
   Reference = 2,
   Metal = 3,
+  CuSolver = 4,
 };
 
 struct LinearAlgBackendInfo {

@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
+	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -514,6 +514,62 @@ plussma_adam_functional_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_adam_functional_demo.dir/build
 .PHONY : plussma_adam_functional_demo/fast
 
+# Convenience name for target.
+PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/rule
+.PHONY : PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/rule
+
+# Convenience name for target.
+plussma_minimax_functional_demo: PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/rule
+.PHONY : plussma_minimax_functional_demo
+
+# fast build rule for target.
+plussma_minimax_functional_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build
+.PHONY : plussma_minimax_functional_demo/fast
+
+# Convenience name for target.
+PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/rule
+.PHONY : PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/rule
+
+# Convenience name for target.
+plussma_minimax_functional_multiblock_demo: PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/rule
+.PHONY : plussma_minimax_functional_multiblock_demo
+
+# fast build rule for target.
+plussma_minimax_functional_multiblock_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build
+.PHONY : plussma_minimax_functional_multiblock_demo/fast
+
+# Convenience name for target.
+PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/rule
+.PHONY : PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/rule
+
+# Convenience name for target.
+plussma_simple_minimax_functional_demo: PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/rule
+.PHONY : plussma_simple_minimax_functional_demo
+
+# fast build rule for target.
+plussma_simple_minimax_functional_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build
+.PHONY : plussma_simple_minimax_functional_demo/fast
+
+# Convenience name for target.
+PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/rule
+.PHONY : PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/rule
+
+# Convenience name for target.
+plussma_simple_minimax_functional_multiblock_demo: PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/rule
+.PHONY : plussma_simple_minimax_functional_multiblock_demo
+
+# fast build rule for target.
+plussma_simple_minimax_functional_multiblock_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build
+.PHONY : plussma_simple_minimax_functional_multiblock_demo/fast
+
 adam_functional_demo.o: adam_functional_demo.cpp.o
 .PHONY : adam_functional_demo.o
 
@@ -729,6 +785,54 @@ mads_blackbox_native_demo.s: mads_blackbox_native_demo.cpp.s
 mads_blackbox_native_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_mads_blackbox_native_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_mads_blackbox_native_demo.dir/mads_blackbox_native_demo.cpp.s
 .PHONY : mads_blackbox_native_demo.cpp.s
+
+minimax_functional_demo.o: minimax_functional_demo.cpp.o
+.PHONY : minimax_functional_demo.o
+
+# target to build an object file
+minimax_functional_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/minimax_functional_demo.cpp.o
+.PHONY : minimax_functional_demo.cpp.o
+
+minimax_functional_demo.i: minimax_functional_demo.cpp.i
+.PHONY : minimax_functional_demo.i
+
+# target to preprocess a source file
+minimax_functional_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/minimax_functional_demo.cpp.i
+.PHONY : minimax_functional_demo.cpp.i
+
+minimax_functional_demo.s: minimax_functional_demo.cpp.s
+.PHONY : minimax_functional_demo.s
+
+# target to generate assembly for a file
+minimax_functional_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/minimax_functional_demo.cpp.s
+.PHONY : minimax_functional_demo.cpp.s
+
+minimax_functional_multiblock_demo.o: minimax_functional_multiblock_demo.cpp.o
+.PHONY : minimax_functional_multiblock_demo.o
+
+# target to build an object file
+minimax_functional_multiblock_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/minimax_functional_multiblock_demo.cpp.o
+.PHONY : minimax_functional_multiblock_demo.cpp.o
+
+minimax_functional_multiblock_demo.i: minimax_functional_multiblock_demo.cpp.i
+.PHONY : minimax_functional_multiblock_demo.i
+
+# target to preprocess a source file
+minimax_functional_multiblock_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/minimax_functional_multiblock_demo.cpp.i
+.PHONY : minimax_functional_multiblock_demo.cpp.i
+
+minimax_functional_multiblock_demo.s: minimax_functional_multiblock_demo.cpp.s
+.PHONY : minimax_functional_multiblock_demo.s
+
+# target to generate assembly for a file
+minimax_functional_multiblock_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/minimax_functional_multiblock_demo.cpp.s
+.PHONY : minimax_functional_multiblock_demo.cpp.s
 
 optima_clone_parity_bench.o: optima_clone_parity_bench.cpp.o
 .PHONY : optima_clone_parity_bench.o
@@ -1042,6 +1146,54 @@ simple_garch11_optim_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_garch11_optim_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_garch11_optim_demo.dir/simple_garch11_optim_demo.cpp.s
 .PHONY : simple_garch11_optim_demo.cpp.s
 
+simple_minimax_functional_demo.o: simple_minimax_functional_demo.cpp.o
+.PHONY : simple_minimax_functional_demo.o
+
+# target to build an object file
+simple_minimax_functional_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/simple_minimax_functional_demo.cpp.o
+.PHONY : simple_minimax_functional_demo.cpp.o
+
+simple_minimax_functional_demo.i: simple_minimax_functional_demo.cpp.i
+.PHONY : simple_minimax_functional_demo.i
+
+# target to preprocess a source file
+simple_minimax_functional_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/simple_minimax_functional_demo.cpp.i
+.PHONY : simple_minimax_functional_demo.cpp.i
+
+simple_minimax_functional_demo.s: simple_minimax_functional_demo.cpp.s
+.PHONY : simple_minimax_functional_demo.s
+
+# target to generate assembly for a file
+simple_minimax_functional_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/simple_minimax_functional_demo.cpp.s
+.PHONY : simple_minimax_functional_demo.cpp.s
+
+simple_minimax_functional_multiblock_demo.o: simple_minimax_functional_multiblock_demo.cpp.o
+.PHONY : simple_minimax_functional_multiblock_demo.o
+
+# target to build an object file
+simple_minimax_functional_multiblock_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/simple_minimax_functional_multiblock_demo.cpp.o
+.PHONY : simple_minimax_functional_multiblock_demo.cpp.o
+
+simple_minimax_functional_multiblock_demo.i: simple_minimax_functional_multiblock_demo.cpp.i
+.PHONY : simple_minimax_functional_multiblock_demo.i
+
+# target to preprocess a source file
+simple_minimax_functional_multiblock_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/simple_minimax_functional_multiblock_demo.cpp.i
+.PHONY : simple_minimax_functional_multiblock_demo.cpp.i
+
+simple_minimax_functional_multiblock_demo.s: simple_minimax_functional_multiblock_demo.cpp.s
+.PHONY : simple_minimax_functional_multiblock_demo.s
+
+# target to generate assembly for a file
+simple_minimax_functional_multiblock_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/simple_minimax_functional_multiblock_demo.cpp.s
+.PHONY : simple_minimax_functional_multiblock_demo.cpp.s
+
 trace_objective_autodiff_demo.o: trace_objective_autodiff_demo.cpp.o
 .PHONY : trace_objective_autodiff_demo.o
 
@@ -1090,6 +1242,8 @@ help:
 	@echo "... plussma_garch11_optima_demo"
 	@echo "... plussma_mads_blackbox_demo"
 	@echo "... plussma_mads_blackbox_native_demo"
+	@echo "... plussma_minimax_functional_demo"
+	@echo "... plussma_minimax_functional_multiblock_demo"
 	@echo "... plussma_optima_clone_parity_bench"
 	@echo "... plussma_optima_clone_parity_scorecard"
 	@echo "... plussma_optima_demo"
@@ -1103,6 +1257,8 @@ help:
 	@echo "... plussma_series_objective_analytic_grad_demo"
 	@echo "... plussma_simple_garch11_objective_first_demo"
 	@echo "... plussma_simple_garch11_optim_demo"
+	@echo "... plussma_simple_minimax_functional_demo"
+	@echo "... plussma_simple_minimax_functional_multiblock_demo"
 	@echo "... plussma_trace_objective_autodiff_demo"
 	@echo "... adam_functional_demo.o"
 	@echo "... adam_functional_demo.i"
@@ -1131,6 +1287,12 @@ help:
 	@echo "... mads_blackbox_native_demo.o"
 	@echo "... mads_blackbox_native_demo.i"
 	@echo "... mads_blackbox_native_demo.s"
+	@echo "... minimax_functional_demo.o"
+	@echo "... minimax_functional_demo.i"
+	@echo "... minimax_functional_demo.s"
+	@echo "... minimax_functional_multiblock_demo.o"
+	@echo "... minimax_functional_multiblock_demo.i"
+	@echo "... minimax_functional_multiblock_demo.s"
 	@echo "... optima_clone_parity_bench.o"
 	@echo "... optima_clone_parity_bench.i"
 	@echo "... optima_clone_parity_bench.s"
@@ -1170,6 +1332,12 @@ help:
 	@echo "... simple_garch11_optim_demo.o"
 	@echo "... simple_garch11_optim_demo.i"
 	@echo "... simple_garch11_optim_demo.s"
+	@echo "... simple_minimax_functional_demo.o"
+	@echo "... simple_minimax_functional_demo.i"
+	@echo "... simple_minimax_functional_demo.s"
+	@echo "... simple_minimax_functional_multiblock_demo.o"
+	@echo "... simple_minimax_functional_multiblock_demo.i"
+	@echo "... simple_minimax_functional_multiblock_demo.s"
 	@echo "... trace_objective_autodiff_demo.o"
 	@echo "... trace_objective_autodiff_demo.i"
 	@echo "... trace_objective_autodiff_demo.s"

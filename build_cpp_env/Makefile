@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
+	/opt/homebrew/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	/opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
+	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -700,6 +700,32 @@ plussai_adam_oop_demo/fast:
 .PHONY : plussai_adam_oop_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussai_minimax_demo
+
+# Build rule for target.
+plussai_minimax_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_minimax_demo
+.PHONY : plussai_minimax_demo
+
+# fast build rule for target.
+plussai_minimax_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_minimax_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_minimax_demo.dir/build
+.PHONY : plussai_minimax_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_minimax_multiblock_constraints_demo
+
+# Build rule for target.
+plussai_minimax_multiblock_constraints_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_minimax_multiblock_constraints_demo
+.PHONY : plussai_minimax_multiblock_constraints_demo
+
+# fast build rule for target.
+plussai_minimax_multiblock_constraints_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_minimax_multiblock_constraints_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_minimax_multiblock_constraints_demo.dir/build
+.PHONY : plussai_minimax_multiblock_constraints_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussai_nodej_prep_split_demo
 
 # Build rule for target.
@@ -724,6 +750,71 @@ plussai_nodej_model_families_demo: cmake_check_build_system
 plussai_nodej_model_families_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_model_families_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_model_families_demo.dir/build
 .PHONY : plussai_nodej_model_families_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nodej_cv_tune_demo
+
+# Build rule for target.
+plussai_nodej_cv_tune_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nodej_cv_tune_demo
+.PHONY : plussai_nodej_cv_tune_demo
+
+# fast build rule for target.
+plussai_nodej_cv_tune_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/build
+.PHONY : plussai_nodej_cv_tune_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nodej_dataframe_bridge_demo
+
+# Build rule for target.
+plussai_nodej_dataframe_bridge_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nodej_dataframe_bridge_demo
+.PHONY : plussai_nodej_dataframe_bridge_demo
+
+# fast build rule for target.
+plussai_nodej_dataframe_bridge_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/build
+.PHONY : plussai_nodej_dataframe_bridge_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nodej_flow_demo
+
+# Build rule for target.
+plussai_nodej_flow_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nodej_flow_demo
+.PHONY : plussai_nodej_flow_demo
+
+# fast build rule for target.
+plussai_nodej_flow_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/build
+.PHONY : plussai_nodej_flow_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nodej_multiclass_demo
+
+# Build rule for target.
+plussai_nodej_multiclass_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nodej_multiclass_demo
+.PHONY : plussai_nodej_multiclass_demo
+
+# fast build rule for target.
+plussai_nodej_multiclass_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/build
+.PHONY : plussai_nodej_multiclass_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nodej_online_demo
+
+# Build rule for target.
+plussai_nodej_online_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nodej_online_demo
+.PHONY : plussai_nodej_online_demo
+
+# fast build rule for target.
+plussai_nodej_online_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/build
+.PHONY : plussai_nodej_online_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussai_lymph_quick_classification_demo
@@ -763,6 +854,58 @@ plussai_lymph_presets_demo: cmake_check_build_system
 plussai_lymph_presets_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_presets_demo.dir/build
 .PHONY : plussai_lymph_presets_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_cv_tune_demo
+
+# Build rule for target.
+plussai_lymph_cv_tune_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_cv_tune_demo
+.PHONY : plussai_lymph_cv_tune_demo
+
+# fast build rule for target.
+plussai_lymph_cv_tune_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/build
+.PHONY : plussai_lymph_cv_tune_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_flow_demo
+
+# Build rule for target.
+plussai_lymph_flow_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_flow_demo
+.PHONY : plussai_lymph_flow_demo
+
+# fast build rule for target.
+plussai_lymph_flow_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_flow_demo.dir/build
+.PHONY : plussai_lymph_flow_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_multiclass_demo
+
+# Build rule for target.
+plussai_lymph_multiclass_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_multiclass_demo
+.PHONY : plussai_lymph_multiclass_demo
+
+# fast build rule for target.
+plussai_lymph_multiclass_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_multiclass_demo.dir/build
+.PHONY : plussai_lymph_multiclass_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_lymph_online_demo
+
+# Build rule for target.
+plussai_lymph_online_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_lymph_online_demo
+.PHONY : plussai_lymph_online_demo
+
+# fast build rule for target.
+plussai_lymph_online_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/build
+.PHONY : plussai_lymph_online_demo/fast
 
 #=============================================================================
 # Target rules for targets named conv_test
@@ -817,6 +960,32 @@ nodej_bayes_kernel_test/fast:
 .PHONY : nodej_bayes_kernel_test/fast
 
 #=============================================================================
+# Target rules for targets named nodej_cv_tune_test
+
+# Build rule for target.
+nodej_cv_tune_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodej_cv_tune_test
+.PHONY : nodej_cv_tune_test
+
+# fast build rule for target.
+nodej_cv_tune_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/build.make PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/build
+.PHONY : nodej_cv_tune_test/fast
+
+#=============================================================================
+# Target rules for targets named nodej_dataframe_bridge_test
+
+# Build rule for target.
+nodej_dataframe_bridge_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodej_dataframe_bridge_test
+.PHONY : nodej_dataframe_bridge_test
+
+# fast build rule for target.
+nodej_dataframe_bridge_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/build.make PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/build
+.PHONY : nodej_dataframe_bridge_test/fast
+
+#=============================================================================
 # Target rules for targets named nodej_ensemble_bayes_regression_test
 
 # Build rule for target.
@@ -830,6 +999,32 @@ nodej_ensemble_bayes_regression_test/fast:
 .PHONY : nodej_ensemble_bayes_regression_test/fast
 
 #=============================================================================
+# Target rules for targets named nodej_flow_test
+
+# Build rule for target.
+nodej_flow_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodej_flow_test
+.PHONY : nodej_flow_test
+
+# fast build rule for target.
+nodej_flow_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_flow_test.dir/build.make PlussAI/test/CMakeFiles/nodej_flow_test.dir/build
+.PHONY : nodej_flow_test/fast
+
+#=============================================================================
+# Target rules for targets named nodej_multiclass_test
+
+# Build rule for target.
+nodej_multiclass_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodej_multiclass_test
+.PHONY : nodej_multiclass_test
+
+# fast build rule for target.
+nodej_multiclass_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/build.make PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/build
+.PHONY : nodej_multiclass_test/fast
+
+#=============================================================================
 # Target rules for targets named nodej_neighbor_test
 
 # Build rule for target.
@@ -841,6 +1036,19 @@ nodej_neighbor_test: cmake_check_build_system
 nodej_neighbor_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_neighbor_test.dir/build.make PlussAI/test/CMakeFiles/nodej_neighbor_test.dir/build
 .PHONY : nodej_neighbor_test/fast
+
+#=============================================================================
+# Target rules for targets named nodej_online_test
+
+# Build rule for target.
+nodej_online_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nodej_online_test
+.PHONY : nodej_online_test
+
+# fast build rule for target.
+nodej_online_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_online_test.dir/build.make PlussAI/test/CMakeFiles/nodej_online_test.dir/build
+.PHONY : nodej_online_test/fast
 
 #=============================================================================
 # Target rules for targets named nodej_phase0_contract_test
@@ -2897,6 +3105,58 @@ plussma_adam_functional_demo/fast:
 .PHONY : plussma_adam_functional_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussma_minimax_functional_demo
+
+# Build rule for target.
+plussma_minimax_functional_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_minimax_functional_demo
+.PHONY : plussma_minimax_functional_demo
+
+# fast build rule for target.
+plussma_minimax_functional_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_demo.dir/build
+.PHONY : plussma_minimax_functional_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_minimax_functional_multiblock_demo
+
+# Build rule for target.
+plussma_minimax_functional_multiblock_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_minimax_functional_multiblock_demo
+.PHONY : plussma_minimax_functional_multiblock_demo
+
+# fast build rule for target.
+plussma_minimax_functional_multiblock_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_minimax_functional_multiblock_demo.dir/build
+.PHONY : plussma_minimax_functional_multiblock_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_simple_minimax_functional_demo
+
+# Build rule for target.
+plussma_simple_minimax_functional_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_simple_minimax_functional_demo
+.PHONY : plussma_simple_minimax_functional_demo
+
+# fast build rule for target.
+plussma_simple_minimax_functional_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_demo.dir/build
+.PHONY : plussma_simple_minimax_functional_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_simple_minimax_functional_multiblock_demo
+
+# Build rule for target.
+plussma_simple_minimax_functional_multiblock_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_simple_minimax_functional_multiblock_demo
+.PHONY : plussma_simple_minimax_functional_multiblock_demo
+
+# fast build rule for target.
+plussma_simple_minimax_functional_multiblock_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build.make PlussMa/examples/Numerical/optimization/CMakeFiles/plussma_simple_minimax_functional_multiblock_demo.dir/build
+.PHONY : plussma_simple_minimax_functional_multiblock_demo/fast
+
+#=============================================================================
 # Target rules for targets named PlussMic
 
 # Build rule for target.
@@ -3230,6 +3490,30 @@ PlussAI/NodeJ/classifiers/family_classifier.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/classifiers/family_classifier.cpp.s
 .PHONY : PlussAI/NodeJ/classifiers/family_classifier.cpp.s
 
+PlussAI/NodeJ/compose/flow.o: PlussAI/NodeJ/compose/flow.cpp.o
+.PHONY : PlussAI/NodeJ/compose/flow.o
+
+# target to build an object file
+PlussAI/NodeJ/compose/flow.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/compose/flow.cpp.o
+.PHONY : PlussAI/NodeJ/compose/flow.cpp.o
+
+PlussAI/NodeJ/compose/flow.i: PlussAI/NodeJ/compose/flow.cpp.i
+.PHONY : PlussAI/NodeJ/compose/flow.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/compose/flow.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/compose/flow.cpp.i
+.PHONY : PlussAI/NodeJ/compose/flow.cpp.i
+
+PlussAI/NodeJ/compose/flow.s: PlussAI/NodeJ/compose/flow.cpp.s
+.PHONY : PlussAI/NodeJ/compose/flow.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/compose/flow.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/compose/flow.cpp.s
+.PHONY : PlussAI/NodeJ/compose/flow.cpp.s
+
 PlussAI/NodeJ/core/nodej_contract.o: PlussAI/NodeJ/core/nodej_contract.cpp.o
 .PHONY : PlussAI/NodeJ/core/nodej_contract.o
 
@@ -3253,6 +3537,78 @@ PlussAI/NodeJ/core/nodej_contract.s: PlussAI/NodeJ/core/nodej_contract.cpp.s
 PlussAI/NodeJ/core/nodej_contract.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/core/nodej_contract.cpp.s
 .PHONY : PlussAI/NodeJ/core/nodej_contract.cpp.s
+
+PlussAI/NodeJ/data/dataframe_bridge.o: PlussAI/NodeJ/data/dataframe_bridge.cpp.o
+.PHONY : PlussAI/NodeJ/data/dataframe_bridge.o
+
+# target to build an object file
+PlussAI/NodeJ/data/dataframe_bridge.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/data/dataframe_bridge.cpp.o
+.PHONY : PlussAI/NodeJ/data/dataframe_bridge.cpp.o
+
+PlussAI/NodeJ/data/dataframe_bridge.i: PlussAI/NodeJ/data/dataframe_bridge.cpp.i
+.PHONY : PlussAI/NodeJ/data/dataframe_bridge.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/data/dataframe_bridge.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/data/dataframe_bridge.cpp.i
+.PHONY : PlussAI/NodeJ/data/dataframe_bridge.cpp.i
+
+PlussAI/NodeJ/data/dataframe_bridge.s: PlussAI/NodeJ/data/dataframe_bridge.cpp.s
+.PHONY : PlussAI/NodeJ/data/dataframe_bridge.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/data/dataframe_bridge.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/data/dataframe_bridge.cpp.s
+.PHONY : PlussAI/NodeJ/data/dataframe_bridge.cpp.s
+
+PlussAI/NodeJ/metrics/cross_assess.o: PlussAI/NodeJ/metrics/cross_assess.cpp.o
+.PHONY : PlussAI/NodeJ/metrics/cross_assess.o
+
+# target to build an object file
+PlussAI/NodeJ/metrics/cross_assess.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/metrics/cross_assess.cpp.o
+.PHONY : PlussAI/NodeJ/metrics/cross_assess.cpp.o
+
+PlussAI/NodeJ/metrics/cross_assess.i: PlussAI/NodeJ/metrics/cross_assess.cpp.i
+.PHONY : PlussAI/NodeJ/metrics/cross_assess.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/metrics/cross_assess.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/metrics/cross_assess.cpp.i
+.PHONY : PlussAI/NodeJ/metrics/cross_assess.cpp.i
+
+PlussAI/NodeJ/metrics/cross_assess.s: PlussAI/NodeJ/metrics/cross_assess.cpp.s
+.PHONY : PlussAI/NodeJ/metrics/cross_assess.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/metrics/cross_assess.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/metrics/cross_assess.cpp.s
+.PHONY : PlussAI/NodeJ/metrics/cross_assess.cpp.s
+
+PlussAI/NodeJ/online/online_linear.o: PlussAI/NodeJ/online/online_linear.cpp.o
+.PHONY : PlussAI/NodeJ/online/online_linear.o
+
+# target to build an object file
+PlussAI/NodeJ/online/online_linear.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/online/online_linear.cpp.o
+.PHONY : PlussAI/NodeJ/online/online_linear.cpp.o
+
+PlussAI/NodeJ/online/online_linear.i: PlussAI/NodeJ/online/online_linear.cpp.i
+.PHONY : PlussAI/NodeJ/online/online_linear.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/online/online_linear.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/online/online_linear.cpp.i
+.PHONY : PlussAI/NodeJ/online/online_linear.cpp.i
+
+PlussAI/NodeJ/online/online_linear.s: PlussAI/NodeJ/online/online_linear.cpp.s
+.PHONY : PlussAI/NodeJ/online/online_linear.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/online/online_linear.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/online/online_linear.cpp.s
+.PHONY : PlussAI/NodeJ/online/online_linear.cpp.s
 
 PlussAI/NodeJ/optim/optimize.o: PlussAI/NodeJ/optim/optimize.cpp.o
 .PHONY : PlussAI/NodeJ/optim/optimize.o
@@ -3349,6 +3705,30 @@ PlussAI/NodeJ/split/split.s: PlussAI/NodeJ/split/split.cpp.s
 PlussAI/NodeJ/split/split.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/split/split.cpp.s
 .PHONY : PlussAI/NodeJ/split/split.cpp.s
+
+PlussAI/NodeJ/tune/tune.o: PlussAI/NodeJ/tune/tune.cpp.o
+.PHONY : PlussAI/NodeJ/tune/tune.o
+
+# target to build an object file
+PlussAI/NodeJ/tune/tune.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/tune/tune.cpp.o
+.PHONY : PlussAI/NodeJ/tune/tune.cpp.o
+
+PlussAI/NodeJ/tune/tune.i: PlussAI/NodeJ/tune/tune.cpp.i
+.PHONY : PlussAI/NodeJ/tune/tune.i
+
+# target to preprocess a source file
+PlussAI/NodeJ/tune/tune.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/tune/tune.cpp.i
+.PHONY : PlussAI/NodeJ/tune/tune.cpp.i
+
+PlussAI/NodeJ/tune/tune.s: PlussAI/NodeJ/tune/tune.cpp.s
+.PHONY : PlussAI/NodeJ/tune/tune.s
+
+# target to generate assembly for a file
+PlussAI/NodeJ/tune/tune.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeJ/tune/tune.cpp.s
+.PHONY : PlussAI/NodeJ/tune/tune.cpp.s
 
 PlussAI/NodeK/NN/optim/SGD.o: PlussAI/NodeK/NN/optim/SGD.cpp.o
 .PHONY : PlussAI/NodeK/NN/optim/SGD.o
@@ -4730,8 +5110,13 @@ help:
 	@echo "... mv_vol_test"
 	@echo "... nn_optim_test"
 	@echo "... nodej_bayes_kernel_test"
+	@echo "... nodej_cv_tune_test"
+	@echo "... nodej_dataframe_bridge_test"
 	@echo "... nodej_ensemble_bayes_regression_test"
+	@echo "... nodej_flow_test"
+	@echo "... nodej_multiclass_test"
 	@echo "... nodej_neighbor_test"
+	@echo "... nodej_online_test"
 	@echo "... nodej_phase0_contract_test"
 	@echo "... nodej_prep_test"
 	@echo "... nodej_rigorous_suite_test"
@@ -4743,12 +5128,23 @@ help:
 	@echo "... plussai_adam_oop_demo"
 	@echo "... plussai_func_conv_demo"
 	@echo "... plussai_func_rnn_demo"
+	@echo "... plussai_lymph_cv_tune_demo"
+	@echo "... plussai_lymph_flow_demo"
+	@echo "... plussai_lymph_multiclass_demo"
+	@echo "... plussai_lymph_online_demo"
 	@echo "... plussai_lymph_presets_demo"
 	@echo "... plussai_lymph_quick_classification_demo"
 	@echo "... plussai_lymph_quick_regression_demo"
+	@echo "... plussai_minimax_demo"
+	@echo "... plussai_minimax_multiblock_constraints_demo"
 	@echo "... plussai_nn_conv_demo"
 	@echo "... plussai_nn_rnn_demo"
+	@echo "... plussai_nodej_cv_tune_demo"
+	@echo "... plussai_nodej_dataframe_bridge_demo"
+	@echo "... plussai_nodej_flow_demo"
 	@echo "... plussai_nodej_model_families_demo"
+	@echo "... plussai_nodej_multiclass_demo"
+	@echo "... plussai_nodej_online_demo"
 	@echo "... plussai_nodej_prep_split_demo"
 	@echo "... plussai_tcn_demo"
 	@echo "... plussma_adam_functional_demo"
@@ -4765,6 +5161,8 @@ help:
 	@echo "... plussma_garch11_optima_demo"
 	@echo "... plussma_mads_blackbox_demo"
 	@echo "... plussma_mads_blackbox_native_demo"
+	@echo "... plussma_minimax_functional_demo"
+	@echo "... plussma_minimax_functional_multiblock_demo"
 	@echo "... plussma_optima_clone_parity_bench"
 	@echo "... plussma_optima_clone_parity_scorecard"
 	@echo "... plussma_optima_demo"
@@ -4778,6 +5176,8 @@ help:
 	@echo "... plussma_series_objective_analytic_grad_demo"
 	@echo "... plussma_simple_garch11_objective_first_demo"
 	@echo "... plussma_simple_garch11_optim_demo"
+	@echo "... plussma_simple_minimax_functional_demo"
+	@echo "... plussma_simple_minimax_functional_multiblock_demo"
 	@echo "... plussma_trace_objective_autodiff_demo"
 	@echo "... plussma_ts_arima_sarima_raw_demo"
 	@echo "... plussma_ts_arimax_raw_demo"
@@ -4897,9 +5297,21 @@ help:
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.o"
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.i"
 	@echo "... PlussAI/NodeJ/classifiers/family_classifier.s"
+	@echo "... PlussAI/NodeJ/compose/flow.o"
+	@echo "... PlussAI/NodeJ/compose/flow.i"
+	@echo "... PlussAI/NodeJ/compose/flow.s"
 	@echo "... PlussAI/NodeJ/core/nodej_contract.o"
 	@echo "... PlussAI/NodeJ/core/nodej_contract.i"
 	@echo "... PlussAI/NodeJ/core/nodej_contract.s"
+	@echo "... PlussAI/NodeJ/data/dataframe_bridge.o"
+	@echo "... PlussAI/NodeJ/data/dataframe_bridge.i"
+	@echo "... PlussAI/NodeJ/data/dataframe_bridge.s"
+	@echo "... PlussAI/NodeJ/metrics/cross_assess.o"
+	@echo "... PlussAI/NodeJ/metrics/cross_assess.i"
+	@echo "... PlussAI/NodeJ/metrics/cross_assess.s"
+	@echo "... PlussAI/NodeJ/online/online_linear.o"
+	@echo "... PlussAI/NodeJ/online/online_linear.i"
+	@echo "... PlussAI/NodeJ/online/online_linear.s"
 	@echo "... PlussAI/NodeJ/optim/optimize.o"
 	@echo "... PlussAI/NodeJ/optim/optimize.i"
 	@echo "... PlussAI/NodeJ/optim/optimize.s"
@@ -4912,6 +5324,9 @@ help:
 	@echo "... PlussAI/NodeJ/split/split.o"
 	@echo "... PlussAI/NodeJ/split/split.i"
 	@echo "... PlussAI/NodeJ/split/split.s"
+	@echo "... PlussAI/NodeJ/tune/tune.o"
+	@echo "... PlussAI/NodeJ/tune/tune.i"
+	@echo "... PlussAI/NodeJ/tune/tune.s"
 	@echo "... PlussAI/NodeK/NN/optim/SGD.o"
 	@echo "... PlussAI/NodeK/NN/optim/SGD.i"
 	@echo "... PlussAI/NodeK/NN/optim/SGD.s"

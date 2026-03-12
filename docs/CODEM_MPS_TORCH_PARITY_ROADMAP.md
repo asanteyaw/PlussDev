@@ -240,9 +240,88 @@ If any gate is missing, parity score must not increase.
 - [x] Add strict-native reduced-SVD regression coverage (deterministic parity, stress/repeat crash-free stability, strict policy rejection when device lane is disabled).
 - [x] Re-run hardware gates (`default` `[mps]`, `strict no-bridge` `[strict]`, `native-only` `[mps][linearalg][native]`, focused strict-native SVD `[mps][linearalg][native][strict][svd]`) with all passing.
 
+## Patch 149 Focus (current)
+- [x] Add torch-family MPS parity suite for core operation families (elementwise, reductions, selection, indexing/set, gather/scatter, and linalg baseline parity checks).
+- [x] Add strict no-fallback torch-family lane checks for native-safe MPS routes (`sort/argsort/take`) under strict policy.
+- [x] Add fixed-seed stress parity loop to harden repeated-call stability on MPS.
+- [x] Extend hardware-gate runner with torch-family parity gates (`[mps][parity][torch]`, `[mps][parity][torch][strict]`).
+
+## Patch 150 Focus (current)
+- [x] Promote native MPS top-k selection lane to default-on policy (`PLUSS_MPS_NATIVE_TOPK_SELECTION=1` by default).
+- [x] Expand strict torch-family lane checks to include `topk` and `kthvalue`.
+- [x] Add strict native linalg no-bridge assertion in torch-family strict suite (`linearalg_dispatch_counters().mps_bridge_total == 0`).
+
 Next highest-impact aggressive family:
-- [ ] Run final mega hardware gate sweep and lock report artifacts.
-- [ ] Transition to CUDA tranche planning/execution.
+- [x] Run final mega hardware gate sweep and lock report artifacts (`2026-03-11`, `outputs/mps_mega_gate_20260311_171843/`).
+- [x] Transition to CUDA tranche planning/execution (bootstrap contract tests + tranche blueprint + gate runner script).
+
+## Patch 133 Focus (current)
+- [x] Add CUDA bootstrap contract coverage in Catch2 (`[cuda][bootstrap]`) for fail-loud Series behavior and backend capability coherence.
+- [x] Add reusable hardware gate runner script (`tools/run_codem_hardware_gates.sh`) with compact one-page + TSV artifacts to avoid large raw output dumps.
+- [x] Publish CUDA tranche blueprint with doctrine alignment, PyTorch CUDA reference audit, phased implementation plan, and maturity baseline.
+
+## Patch 134 Focus (current)
+- [x] Add explicit CUDA readiness API (`pluss::cuda::is_ready` / `is_usable`) and wire `platform_available(Platform::CUDA)` to runtime probe.
+- [x] Add CMake CUDA probe gate (`PLUSSQIT_ENABLE_CUDA`) with `CUDAToolkit` detection and `PLUSS_HAS_CUDA` compile definition.
+- [x] Keep fail-loud CUDA Series semantics until native kernels exist (`Series::empty(..., CUDA)` / `Series::platform(CUDA)` still hard-fail by contract).
+- [x] Make CUDA backend-info and bootstrap tests runtime-aware so suites pass coherently on both CUDA and non-CUDA hosts.
+
+## Patch 135 Focus (current)
+- [x] Add CUDA native runtime/policy module scaffold (`native/cuda/CUDARuntime.*`) with runtime probe status, device-count reporting, and transfer-policy parsing.
+- [x] Add CUDA transfer policy surface (`pluss::cuda::transfer_policy`, `pluss::cuda::cpu_bridge_enabled`) and runtime-dynamic coverage tests.
+- [x] Harden CUDA fail-loud errors to report runtime vs missing-storage/missing-transfer path distinctly.
+- [x] Add stable latest-artifact pointers in gate runner (`outputs/latest_{mps,cuda}_mega_gate*`) for low-noise review workflows.
+
+## Patch 136 Focus (current)
+- [x] Add CUDA baseline capability surface (`native/cuda/BaselineOps.*`) for elementwise/reduction/matmul lane gating with runtime-dynamic env control (`PLUSS_CUDA_NATIVE_BASELINE`).
+- [x] Extend CUDA backend provider contracts to report `cuBLAS`/`cuSOLVER` readiness in backend-info APIs.
+- [x] Keep strict correctness posture: baseline capability reporting is explicit, but unsupported CUDA ops still fail loudly unless true native lanes are implemented.
+- [x] Add Catch2 runtime coverage for CUDA baseline gating and provider coherence (`[cuda][baseline][runtime]`).
+
+## Patch 140 Focus (current)
+- [x] Add CUDA indexing capability/policy surface (`native/cuda/IndexingOps.*`) with runtime-dynamic env control:
+  - `PLUSS_CUDA_NATIVE_INDEXING`
+  - `PLUSS_CUDA_NATIVE_INDEXING_STRICT`
+- [x] Enforce strict/bridge CUDA routing in core Series indexing paths (`index`, `take`, `put_`, `nonzero`) with fail-loud strict-native precedence.
+- [x] Add Catch2 runtime + policy contracts for CUDA indexing baseline lanes (`[cuda][indexing][runtime]`, `[cuda][indexing][policy]`).
+- [x] Add CUDA bridge parity contracts for indexing fallback (`[cuda][bridge][indexing]`).
+- [x] Expand CUDA mega-gate matrix to include indexing runtime/policy/bridge families (now `15` CUDA gates total).
+
+## Patch 141 Focus (current)
+- [x] Add CUDA matmul capability/policy surface (`native/cuda/MatmulOps.*`) with runtime-dynamic env control:
+  - `PLUSS_CUDA_NATIVE_MATMUL`
+  - `PLUSS_CUDA_NATIVE_MATMUL_STRICT`
+- [x] Add CUDA scatter/gather capability/policy surface (`native/cuda/ScatterGatherOps.*`) with runtime-dynamic env control:
+  - `PLUSS_CUDA_NATIVE_SCATTER_GATHER`
+  - `PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT`
+- [x] Enforce strict/bridge CUDA routing in core dispatch for `matmul` and scatter/gather family (`scatter`, `scatter_add`, `scatter_reduce`, `gather`, and inplace variants).
+- [x] Add Catch2 runtime + policy contracts for CUDA matmul family (`[cuda][matmul][runtime]`, `[cuda][matmul][policy]`).
+- [x] Add Catch2 runtime + policy contracts for CUDA scatter/gather family (`[cuda][scatter][runtime]`, `[cuda][scatter][policy]`).
+- [x] Add CUDA bridge parity + strict override contracts for matmul/scatter families (`[cuda][bridge][matmul]`, `[cuda][bridge][scatter]`).
+- [x] Expand CUDA mega-gate matrix to include matmul/scatter runtime + strict + bridge families (now `20` CUDA gates total).
+
+## Patch 144 Focus (current)
+- [x] Graduate real native MPS `take/put_` fast-path support (replacing hard-disabled path) for float32 lanes.
+- [x] Add fp16/bf16 MPS `take/put_` support via float32 work-lane casting with dtype roundtrip on return.
+- [x] Enforce strict fail-loud semantics for unsupported MPS take/put lanes when `PLUSS_MPS_ALLOW_CPU_FALLBACK=0`.
+- [x] Add strict-native Catch2 coverage for MPS take/put graduation and policy rejection (`[mps][take][native][strict]`, `[mps][put][native][strict]`, `[mps][take][native][strict][policy]`).
+- [x] Expand MPS mega-gate matrix with strict-native take/put focus gates (now `12` MPS gates total).
+
+## Patch 145 Focus (current)
+- [x] Expand native MPS `take/put_` strict lane coverage to exact float32-roundtrip dtypes:
+  - `bool`, `int8/uint8`, `int16/uint16`, `float16`, `bfloat16`, `float32`.
+- [x] Keep strict fail-loud semantics for unsupported accumulate lanes (for example integer `put_(accumulate=true)` with no fallback policy).
+- [x] Add strict-policy Catch2 coverage for native `put_` policy rejection (`[mps][put][native][strict][policy]`).
+- [x] Expand MPS mega-gate matrix to include strict native `put_` policy focus gate (now `13` MPS gates total).
+
+## Patch 146 Focus (current)
+- [x] Add CUDA runtime/provider inventory APIs:
+  - device count, runtime/driver version, primary device metadata,
+  - provider readiness probes for `cuBLAS`, `cuSOLVER`, `cuDNN` with explicit error surfaces.
+- [x] Wire CUDA backend info provider reporting to real provider readiness (not runtime-only assumption).
+- [x] Add Catch2 CUDA provider + inventory coherence contracts (`[cuda][bootstrap][inventory]`, `[cuda][providers][runtime]`, `[cuda][providers][backend]`).
+- [x] Add cluster hardware sweep automation script (`tools/run_codem_cuda_cluster_hardware.sh`) with compact upload-ready artifacts.
+- [x] Expand CUDA mega-gate matrix from `20` to `22` gates.
 
 ## Parity Workstreams
 1. Selection/Sorting family
@@ -255,8 +334,8 @@ Next highest-impact aggressive family:
 - [ ] Stable tie-order parity guarantees across all dtypes
 
 2. Indexing/Set family
-- [x] Correctness-first MPS `take` / `put_` path (CPU fallback route currently forced while native parity hardening is in progress)
-- [ ] Full native `take` / `put_` dtype coverage (remove fallback paths)
+- [x] Native strict lane for `take` / `put_` is active for float32 + exact float32-roundtrip dtypes (`bool`, `int8/uint8`, `int16/uint16`, `float16`, `bfloat16`)
+- [ ] Full native `take` / `put_` dtype coverage (remaining lanes: int32/int64/uint32/uint64/float64/complex)
 - [x] Correctness-first MPS `nonzero` path (CPU fallback route currently forced while native parity hardening is in progress)
 - [x] Safety hardening complete; native re-enable deferred pending stress parity on hardware
 - [ ] Full native `nonzero` kernel coverage for higher-rank tensors

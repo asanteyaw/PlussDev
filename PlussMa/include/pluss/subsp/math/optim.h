@@ -7544,4 +7544,392 @@ inline std::vector<Series> adam_step(std::vector<Series> params,
   return params;
 }
 
+struct MinimaxOptions {
+  AdamOptions adam{};
+  double dual_learning_rate{1e-2};
+  double equality_penalty{10.0};
+  double inequality_penalty{10.0};
+  bool project_bounds{true};
+  bool enable_constraint_autodiff{true};
+  std::int64_t nan_recovery_attempts{2};
+  double nan_recovery_shrink{0.5};
+};
+
+struct MinimaxConstraints {
+  using ResidualFn = std::function<std::vector<Series>(const std::vector<Series>&)>;
+  using TraceResidualFn = std::function<std::vector<Trace>(const std::vector<Trace>&)>;
+
+  ResidualFn equalities{};
+  ResidualFn inequalities{};
+  TraceResidualFn equalities_trace{};
+  TraceResidualFn inequalities_trace{};
+  std::vector<Series> lbs{};
+  std::vector<Series> ubs{};
+
+  bool empty() const noexcept {
+    return !equalities && !inequalities && lbs.empty() && ubs.empty();
+  }
+};
+
+struct MinimaxState {
+  AdamState adam{};
+  std::vector<Series> lambda_equalities{};
+  std::vector<Series> lambda_inequalities{};
+  std::int64_t step{0};
+};
+
+namespace detail {
+
+inline bool minimax_finite_(const Series& x) {
+  return x.isfinite().all().item<bool>();
+}
+
+inline bool minimax_finite_(const std::vector<Series>& xs) {
+  return std::all_of(xs.begin(), xs.end(), [](const Series& x) { return minimax_finite_(x); });
+}
+
+inline void minimax_validate_options_(const MinimaxOptions& options) {
+  if (!(options.adam.learning_rate > 0.0) || !std::isfinite(options.adam.learning_rate)) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: learning_rate must be positive and finite");
+  }
+  if (!(options.adam.beta1 >= 0.0 && options.adam.beta1 < 1.0) || !std::isfinite(options.adam.beta1)) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: beta1 must be in [0,1)");
+  }
+  if (!(options.adam.beta2 >= 0.0 && options.adam.beta2 < 1.0) || !std::isfinite(options.adam.beta2)) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: beta2 must be in [0,1)");
+  }
+  if (!(options.adam.eps > 0.0) || !std::isfinite(options.adam.eps)) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: eps must be positive and finite");
+  }
+  if (options.adam.weight_decay < 0.0 || !std::isfinite(options.adam.weight_decay)) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: weight_decay must be finite and >= 0");
+  }
+  if (options.dual_learning_rate < 0.0 || !std::isfinite(options.dual_learning_rate)) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: dual_learning_rate must be finite and >= 0");
+  }
+  if (options.equality_penalty < 0.0 || !std::isfinite(options.equality_penalty)) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: equality_penalty must be finite and >= 0");
+  }
+  if (options.inequality_penalty < 0.0 || !std::isfinite(options.inequality_penalty)) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: inequality_penalty must be finite and >= 0");
+  }
+  if (options.nan_recovery_attempts < 0) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: nan_recovery_attempts must be >= 0");
+  }
+  if (!(options.nan_recovery_shrink > 0.0 && options.nan_recovery_shrink < 1.0) ||
+      !std::isfinite(options.nan_recovery_shrink)) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: nan_recovery_shrink must be in (0,1)");
+  }
+}
+
+inline void minimax_validate_params_(const std::vector<Series>& params) {
+  if (params.empty()) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: expected non-empty params");
+  }
+  for (const auto& p : params) {
+    require_defined_(p, "minimax_step_inplace");
+    require_float_dtype_(p, "minimax_step_inplace");
+  }
+}
+
+inline void minimax_validate_constraints_(const std::vector<Series>& params,
+                                          const MinimaxConstraints& constraints,
+                                          bool require_trace_callbacks) {
+  if (!constraints.lbs.empty() && constraints.lbs.size() != params.size()) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: lbs size mismatch");
+  }
+  if (!constraints.ubs.empty() && constraints.ubs.size() != params.size()) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: ubs size mismatch");
+  }
+
+  for (std::size_t i = 1; i < params.size(); ++i) {
+    if (params[i].platform() != params[0].platform()) {
+      throw std::runtime_error(
+          "subsp::math::optim::minimax_step_inplace: constrained updates require params on one platform");
+    }
+  }
+
+  if (!constraints.equalities && constraints.equalities_trace) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: equalities_trace requires equalities");
+  }
+  if (!constraints.inequalities && constraints.inequalities_trace) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: inequalities_trace requires inequalities");
+  }
+  if (require_trace_callbacks && constraints.equalities && !constraints.equalities_trace) {
+    throw std::runtime_error(
+        "subsp::math::optim::minimax_step_inplace: equalities callback requires equalities_trace");
+  }
+  if (require_trace_callbacks && constraints.inequalities && !constraints.inequalities_trace) {
+    throw std::runtime_error(
+        "subsp::math::optim::minimax_step_inplace: inequalities callback requires inequalities_trace");
+  }
+
+  auto check_bound = [&](const std::vector<Series>& bounds, const char* name) {
+    for (std::size_t i = 0; i < bounds.size(); ++i) {
+      if (!bounds[i].defined()) continue;
+      require_same_platform_(params[i], bounds[i], "minimax_step_inplace");
+      if (!same_shape_(params[i], bounds[i])) {
+        if (!(params[i].numel() == 1 && bounds[i].numel() == 1)) {
+          throw std::runtime_error(std::string("subsp::math::optim::minimax_step_inplace: ") + name +
+                                   " shape mismatch");
+        }
+      }
+    }
+  };
+  check_bound(constraints.lbs, "lbs");
+  check_bound(constraints.ubs, "ubs");
+}
+
+inline std::vector<Series> minimax_evaluate_residuals_(
+    const std::vector<Series>& params,
+    const MinimaxConstraints::ResidualFn& fn,
+    const char* name) {
+  if (!fn) return {};
+  const auto out = fn(params);
+  for (const auto& r : out) {
+    require_defined_(r, "minimax_step_inplace");
+    require_same_platform_(params.front(), r, "minimax_step_inplace");
+    require_float_dtype_(r, "minimax_step_inplace");
+  }
+  if (out.empty()) {
+    throw std::runtime_error(std::string("subsp::math::optim::minimax_step_inplace: empty ") + name +
+                             " residual vector");
+  }
+  return out;
+}
+
+inline std::vector<Series> minimax_zero_like_(const std::vector<Series>& residuals) {
+  std::vector<Series> lambda;
+  lambda.reserve(residuals.size());
+  for (const auto& r : residuals) {
+    lambda.push_back(pluss::zeros_like(r, r.scalar_type()));
+  }
+  return lambda;
+}
+
+inline void minimax_align_multipliers_(std::vector<Series>& lambda, const std::vector<Series>& residuals) {
+  if (lambda.size() != residuals.size()) {
+    lambda = minimax_zero_like_(residuals);
+    return;
+  }
+  for (std::size_t i = 0; i < residuals.size(); ++i) {
+    if (!same_shape_(lambda[i], residuals[i]) ||
+        lambda[i].platform() != residuals[i].platform() ||
+        lambda[i].scalar_type() != residuals[i].scalar_type()) {
+      lambda[i] = pluss::zeros_like(residuals[i], residuals[i].scalar_type());
+    }
+  }
+}
+
+inline void minimax_project_bounds_(std::vector<Series>& params, const MinimaxConstraints& constraints) {
+  for (std::size_t i = 0; i < params.size(); ++i) {
+    if (!constraints.lbs.empty() && constraints.lbs[i].defined()) {
+      params[i] = params[i].maximum(constraints.lbs[i]);
+    }
+    if (!constraints.ubs.empty() && constraints.ubs[i].defined()) {
+      params[i] = params[i].minimum(constraints.ubs[i]);
+    }
+  }
+}
+
+inline Trace minimax_constraint_objective_trace_(const std::vector<Trace>& vars,
+                                                 const MinimaxState& state,
+                                                 const MinimaxConstraints& constraints,
+                                                 const MinimaxOptions& options) {
+  Trace objective = sum(vars.front() * 0.0);
+
+  if (constraints.equalities_trace) {
+    const auto residuals = constraints.equalities_trace(vars);
+    if (residuals.size() != state.lambda_equalities.size()) {
+      throw std::runtime_error("subsp::math::optim::minimax_step_inplace: equality multiplier size mismatch");
+    }
+    for (std::size_t i = 0; i < residuals.size(); ++i) {
+      objective = objective +
+                  sum(fixed(state.lambda_equalities[i]) * residuals[i]) +
+                  0.5 * options.equality_penalty * sum(square(residuals[i]));
+    }
+  }
+
+  if (constraints.inequalities_trace) {
+    const auto residuals = constraints.inequalities_trace(vars);
+    if (residuals.size() != state.lambda_inequalities.size()) {
+      throw std::runtime_error("subsp::math::optim::minimax_step_inplace: inequality multiplier size mismatch");
+    }
+    for (std::size_t i = 0; i < residuals.size(); ++i) {
+      const Trace violation = relu(residuals[i]);
+      objective = objective +
+                  sum(fixed(state.lambda_inequalities[i]) * violation) +
+                  0.5 * options.inequality_penalty * sum(square(violation));
+    }
+  }
+
+  return objective;
+}
+
+} // namespace detail
+
+inline MinimaxState minimax_state_like(const std::vector<Series>& params,
+                                       const MinimaxConstraints& constraints = {}) {
+  detail::minimax_validate_params_(params);
+  detail::minimax_validate_constraints_(params, constraints, false);
+
+  MinimaxState state;
+  state.adam = adam_state_like(params);
+
+  if (constraints.equalities) {
+    const auto residuals = detail::minimax_evaluate_residuals_(params, constraints.equalities, "equalities");
+    state.lambda_equalities = detail::minimax_zero_like_(residuals);
+  }
+  if (constraints.inequalities) {
+    const auto residuals = detail::minimax_evaluate_residuals_(params, constraints.inequalities, "inequalities");
+    state.lambda_inequalities = detail::minimax_zero_like_(residuals);
+  }
+  return state;
+}
+
+inline void minimax_step_inplace(std::vector<Series>& params,
+                                 const std::vector<Series>& sensitivities,
+                                 MinimaxState& state,
+                                 const MinimaxOptions& options = {},
+                                 const MinimaxConstraints& constraints = {}) {
+  detail::minimax_validate_options_(options);
+  detail::minimax_validate_params_(params);
+  detail::minimax_validate_constraints_(params, constraints, options.enable_constraint_autodiff);
+
+  if (sensitivities.size() != params.size()) {
+    throw std::runtime_error("subsp::math::optim::minimax_step_inplace: params/sensitivities size mismatch");
+  }
+  if (state.adam.m.size() != params.size() || state.adam.v.size() != params.size()) {
+    state = minimax_state_like(params, constraints);
+  }
+
+  std::vector<Series> grads;
+  grads.reserve(params.size());
+  for (std::size_t i = 0; i < params.size(); ++i) {
+    detail::require_defined_(sensitivities[i], "minimax_step_inplace");
+    detail::require_same_platform_(params[i], sensitivities[i], "minimax_step_inplace");
+    detail::require_float_dtype_(sensitivities[i], "minimax_step_inplace");
+
+    Series g = sensitivities[i];
+    if (!detail::same_shape_(params[i], g)) {
+      if (params[i].numel() == 1 && g.numel() == 1) {
+        g = g.sum();
+      } else {
+        throw std::runtime_error("subsp::math::optim::minimax_step_inplace: sensitivity shape mismatch");
+      }
+    }
+    grads.push_back(std::move(g));
+  }
+
+  if (constraints.equalities) {
+    const auto residuals = detail::minimax_evaluate_residuals_(params, constraints.equalities, "equalities");
+    detail::minimax_align_multipliers_(state.lambda_equalities, residuals);
+  }
+  if (constraints.inequalities) {
+    const auto residuals = detail::minimax_evaluate_residuals_(params, constraints.inequalities, "inequalities");
+    detail::minimax_align_multipliers_(state.lambda_inequalities, residuals);
+  }
+
+  if (options.enable_constraint_autodiff && (constraints.equalities || constraints.inequalities)) {
+    const auto [constraint_loss, constraint_grads] = value_and_grad(
+        [&](const std::vector<Trace>& vars) -> Trace {
+          return detail::minimax_constraint_objective_trace_(vars, state, constraints, options);
+        },
+        params);
+    (void)constraint_loss;
+
+    if (constraint_grads.size() != grads.size()) {
+      throw std::runtime_error("subsp::math::optim::minimax_step_inplace: constraint gradient size mismatch");
+    }
+    for (std::size_t i = 0; i < grads.size(); ++i) {
+      grads[i] = grads[i].add(constraint_grads[i]);
+    }
+  }
+
+  const auto params_backup = params;
+  const AdamState adam_backup = state.adam;
+  bool accepted = false;
+
+  for (std::int64_t attempt = 0; attempt <= options.nan_recovery_attempts; ++attempt) {
+    params = params_backup;
+    state.adam = adam_backup;
+
+    AdamOptions step_options = options.adam;
+    if (attempt > 0) {
+      step_options.learning_rate *= std::pow(options.nan_recovery_shrink, static_cast<double>(attempt));
+    }
+
+    adam_step_inplace(params, grads, state.adam, step_options);
+    if (options.project_bounds) {
+      detail::minimax_project_bounds_(params, constraints);
+    }
+
+    if (detail::minimax_finite_(params) &&
+        detail::minimax_finite_(state.adam.m) &&
+        detail::minimax_finite_(state.adam.v)) {
+      accepted = true;
+      break;
+    }
+  }
+
+  if (!accepted) {
+    params = params_backup;
+    state.adam = adam_backup;
+    return;
+  }
+
+  if (constraints.equalities) {
+    const auto residuals = detail::minimax_evaluate_residuals_(params, constraints.equalities, "equalities");
+    detail::minimax_align_multipliers_(state.lambda_equalities, residuals);
+    for (std::size_t i = 0; i < residuals.size(); ++i) {
+      state.lambda_equalities[i] = state.lambda_equalities[i].add(residuals[i].mul(options.dual_learning_rate));
+    }
+  }
+
+  if (constraints.inequalities) {
+    const auto residuals = detail::minimax_evaluate_residuals_(params, constraints.inequalities, "inequalities");
+    detail::minimax_align_multipliers_(state.lambda_inequalities, residuals);
+    for (std::size_t i = 0; i < residuals.size(); ++i) {
+      const Series violation = residuals[i].maximum(0.0);
+      state.lambda_inequalities[i] =
+          state.lambda_inequalities[i].add(violation.mul(options.dual_learning_rate)).maximum(0.0);
+    }
+  }
+
+  ++state.step;
+}
+
+inline void minimax_step_inplace(std::vector<Series>& params,
+                                 MinimaxState& state,
+                                 const MinimaxOptions& options = {},
+                                 const MinimaxConstraints& constraints = {}) {
+  std::vector<Series> sensitivities;
+  sensitivities.reserve(params.size());
+  for (const auto& p : params) {
+    const Series g = p.sensitivity();
+    if (!g.defined()) {
+      throw std::runtime_error("subsp::math::optim::minimax_step_inplace: undefined sensitivity in params");
+    }
+    sensitivities.push_back(g);
+  }
+  minimax_step_inplace(params, sensitivities, state, options, constraints);
+}
+
+inline std::vector<Series> minimax_step(std::vector<Series> params,
+                                        const std::vector<Series>& sensitivities,
+                                        MinimaxState& state,
+                                        const MinimaxOptions& options = {},
+                                        const MinimaxConstraints& constraints = {}) {
+  minimax_step_inplace(params, sensitivities, state, options, constraints);
+  return params;
+}
+
+inline std::vector<Series> minimax_step(std::vector<Series> params,
+                                        MinimaxState& state,
+                                        const MinimaxOptions& options = {},
+                                        const MinimaxConstraints& constraints = {}) {
+  minimax_step_inplace(params, state, options, constraints);
+  return params;
+}
+
 } // namespace pluss::subsp::math::optim

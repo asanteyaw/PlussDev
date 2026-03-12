@@ -3,6 +3,8 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/native/cpu/BlasGemm.h"
 #include "CodeM/native/mps/Linalg.h"
+#include "CodeM/native/cuda/CUDARuntime.h"
+#include "CodeM/native/cuda/LinalgOps.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/subsp/math/linalg.h"
 
@@ -339,11 +341,80 @@ inline Series canonical_mps_native_f32_(const Series& x) {
 }
 
 [[noreturn]] inline void throw_platform_not_ready_(const char* op, Platform p) {
-  const char* pstr = (p == Platform::CPU) ? "CPU" : (p == Platform::MPS) ? "MPS" : "Unknown";
+  const char* pstr = (p == Platform::CPU) ? "CPU" : (p == Platform::MPS) ? "MPS" : (p == Platform::CUDA) ? "CUDA" : "Unknown";
   pluss::codem::throw_error(
       std::string("subsp::linearalg::") + op +
       ": no native implementation on " + pstr +
       " yet; use CPU input for now");
+}
+
+[[noreturn]] inline void throw_cuda_linalg_unavailable_(
+    const char* op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported) {
+  if (native_strict && (!native_enabled || !route_supported)) {
+    pluss::codem::throw_error(
+        std::string("subsp::linearalg::") + op +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native_enabled && route_supported) {
+    pluss::codem::throw_error(
+        std::string("subsp::linearalg::") + op +
+        ": CUDA native linalg route declared but kernel is not implemented yet");
+  }
+  pluss::codem::throw_error(
+      std::string("subsp::linearalg::") + op +
+      ": CUDA path unavailable in this tranche; no CPU fallback allowed. "
+      "Move Series to CPU explicitly or implement CUDA linalg kernel.");
+}
+
+inline void require_cuda_linalg_bridge_policy_(const char* op) {
+  if (pluss::codem::native::cuda::cpu_bridge_enabled() &&
+      !pluss::codem::native::cuda::native_linalg_strict()) {
+    return;
+  }
+  pluss::codem::throw_error(
+      std::string("subsp::linearalg::") + op +
+      ": CUDA bridge fallback disabled by policy "
+      "(set PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 and PLUSS_CUDA_NATIVE_LINALG_STRICT=0)");
+}
+
+inline Series bridge_cpu_result_to_cuda_(const Series& cpu_result, const char* op_name) {
+  require_cuda_linalg_bridge_policy_(op_name);
+  Series out = cpu_result;
+  if (out.platform() != Platform::CPU) {
+    out = out.to(Platform::CPU);
+  }
+  return out.to(Platform::CUDA);
+}
+
+template <class CpuRouteFn>
+inline Series cuda_linalg_route_or_bridge_(
+    const char* op_name,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported,
+    CpuRouteFn&& cpu_route) {
+  if (native_strict) {
+    if (!native_enabled || !route_supported) {
+      pluss::codem::throw_error(
+          std::string("subsp::linearalg::") + op_name +
+          ": strict native CUDA route requested but kernel is unsupported");
+    }
+    pluss::codem::throw_error(
+        std::string("subsp::linearalg::") + op_name +
+        ": strict native CUDA route requested but kernel is not implemented yet");
+  }
+  if (pluss::codem::cuda_cpu_bridge_enabled()) {
+    return bridge_cpu_result_to_cuda_(cpu_route(), op_name);
+  }
+  if (native_enabled && route_supported) {
+    pluss::codem::throw_error(
+        std::string("subsp::linearalg::") + op_name +
+        ": CUDA native linalg route declared but kernel is not implemented yet");
+  }
+  throw_cuda_linalg_unavailable_(op_name, native_enabled, native_strict, route_supported);
 }
 
 inline Series matrix_power_native_(const Series& a, std::int64_t exp) {
@@ -1210,6 +1281,7 @@ const char* linearalg_dense_provider_name(LinearAlgDenseProvider provider) noexc
     case LinearAlgDenseProvider::OneMKL: return "oneMKL";
     case LinearAlgDenseProvider::CBLAS: return "CBLAS";
     case LinearAlgDenseProvider::Metal: return "Metal";
+    case LinearAlgDenseProvider::CuBLAS: return "cuBLAS";
     case LinearAlgDenseProvider::None:
     default: return "None";
   }
@@ -1220,6 +1292,7 @@ const char* linearalg_solver_provider_name(LinearAlgSolverProvider provider) noe
     case LinearAlgSolverProvider::Accelerate: return "Accelerate";
     case LinearAlgSolverProvider::Reference: return "Reference";
     case LinearAlgSolverProvider::Metal: return "Metal";
+    case LinearAlgSolverProvider::CuSolver: return "cuSOLVER";
     case LinearAlgSolverProvider::None:
     default: return "None";
   }
@@ -1335,21 +1408,27 @@ LinearAlgBackendInfo linearalg_backend_info(LinearAlgTarget target) noexcept {
     }
     case LinearAlgTarget::CUDA:
     default: {
-      info.dense_provider = LinearAlgDenseProvider::None;
-      info.solver_provider = LinearAlgSolverProvider::None;
-      info.dense_available = false;
-      info.solver_available = false;
-      info.supports_matmul = false;
-      info.supports_det = false;
-      info.supports_inverse = false;
-      info.supports_cholesky = false;
-      info.supports_qr = false;
-      info.supports_svd = false;
-      info.supports_triangular_solve = false;
-      info.supports_cholesky_solve = false;
-      info.supports_lu_solve = false;
-      info.supports_matrix_power = false;
-      info.supports_matrix_exp = false;
+      const bool cublas_ready = pluss::codem::cuda_cublas_provider_available();
+      const bool cusolver_ready = pluss::codem::cuda_cusolver_provider_available();
+      info.dense_provider = cublas_ready ? LinearAlgDenseProvider::CuBLAS : LinearAlgDenseProvider::None;
+      info.solver_provider = cusolver_ready ? LinearAlgSolverProvider::CuSolver : LinearAlgSolverProvider::None;
+      info.dense_available = cublas_ready;
+      info.solver_available = cusolver_ready;
+      info.supports_matmul =
+          pluss::codem::cuda_supports_matmul_baseline(ScalarType::Float32, ScalarType::Float32);
+      info.supports_det = pluss::codem::cuda_supports_det_linalg_baseline(ScalarType::Float32);
+      info.supports_inverse = pluss::codem::cuda_supports_inverse_linalg_baseline(ScalarType::Float32);
+      info.supports_cholesky = pluss::codem::cuda_supports_cholesky_linalg_baseline(ScalarType::Float32);
+      info.supports_qr = pluss::codem::cuda_supports_qr_linalg_baseline(ScalarType::Float32, /*reduced=*/true);
+      info.supports_svd = pluss::codem::cuda_supports_svd_linalg_baseline(ScalarType::Float32, /*full_matrices=*/false);
+      info.supports_triangular_solve = pluss::codem::cuda_supports_triangular_solve_linalg_baseline(
+          ScalarType::Float32, ScalarType::Float32);
+      info.supports_cholesky_solve = pluss::codem::cuda_supports_cholesky_solve_linalg_baseline(
+          ScalarType::Float32, ScalarType::Float32);
+      info.supports_lu_solve = pluss::codem::cuda_supports_lu_solve_linalg_baseline(
+          ScalarType::Float32, ScalarType::Float32);
+      info.supports_matrix_power = pluss::codem::cuda_supports_matrix_power_linalg_baseline(ScalarType::Float32);
+      info.supports_matrix_exp = pluss::codem::cuda_supports_matrix_exp_linalg_baseline(ScalarType::Float32);
       return info;
     }
   }
@@ -1411,6 +1490,17 @@ Series det(const Series& a) {
     }
     return bridge_cpu_result_to_mps_(pluss::subsp::math::linalg::det(a.to(Platform::CPU)), MpsBridgeOp::Det, "det");
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_det(a);
+    return cuda_linalg_route_or_bridge_(
+        "det",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::det(a.to(Platform::CPU)); });
+  }
   throw_platform_not_ready_("det", a.platform());
 }
 
@@ -1443,6 +1533,17 @@ Series inverse(const Series& a) {
     return bridge_cpu_result_to_mps_(
         pluss::subsp::math::linalg::inverse(a.to(Platform::CPU)), MpsBridgeOp::Inverse, "inverse");
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_inverse(a);
+    return cuda_linalg_route_or_bridge_(
+        "inverse",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::inverse(a.to(Platform::CPU)); });
+  }
   throw_platform_not_ready_("inverse", a.platform());
 }
 
@@ -1474,6 +1575,17 @@ Series cholesky(const Series& a, bool upper) {
     }
     return bridge_cpu_result_to_mps_(
         pluss::subsp::math::linalg::cholesky(a.to(Platform::CPU), upper), MpsBridgeOp::Cholesky, "cholesky");
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_cholesky(a);
+    return cuda_linalg_route_or_bridge_(
+        "cholesky",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::cholesky(a.to(Platform::CPU), upper); });
   }
   throw_platform_not_ready_("cholesky", a.platform());
 }
@@ -1510,6 +1622,17 @@ Series logdet(const Series& a) {
     }
     return bridge_cpu_result_to_mps_(
         pluss::subsp::math::linalg::logdet(a.to(Platform::CPU)), MpsBridgeOp::Logdet, "logdet");
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_logdet(a);
+    return cuda_linalg_route_or_bridge_(
+        "logdet",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::logdet(a.to(Platform::CPU)); });
   }
   throw_platform_not_ready_("logdet", a.platform());
 }
@@ -1549,6 +1672,17 @@ Series slogdet(const Series& a) {
     return bridge_cpu_result_to_mps_(
         pluss::subsp::math::linalg::slogdet(a.to(Platform::CPU)), MpsBridgeOp::Slogdet, "slogdet");
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_slogdet(a);
+    return cuda_linalg_route_or_bridge_(
+        "slogdet",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::slogdet(a.to(Platform::CPU)); });
+  }
   throw_platform_not_ready_("slogdet", a.platform());
 }
 
@@ -1576,6 +1710,17 @@ Series matrix_power(const Series& a, std::int64_t n) {
   if (a.platform() == Platform::MPS) {
     return matrix_power_native_(a, n);
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_matrix_power(a);
+    return cuda_linalg_route_or_bridge_(
+        "matrix_power",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::matrix_power(a.to(Platform::CPU), n); });
+  }
   throw_platform_not_ready_("matrix_power", a.platform());
 }
 
@@ -1602,6 +1747,17 @@ Series matrix_exp(const Series& a) {
   }
   if (a.platform() == Platform::MPS) {
     return matrix_exp_native_(a);
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_matrix_exp(a);
+    return cuda_linalg_route_or_bridge_(
+        "matrix_exp",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::matrix_exp(a.to(Platform::CPU)); });
   }
   throw_platform_not_ready_("matrix_exp", a.platform());
 }
@@ -1640,6 +1796,17 @@ Series pinverse(const Series& a, double rcond) {
     return bridge_cpu_result_to_mps_(
         pluss::subsp::math::linalg::pinverse(a.to(Platform::CPU), rcond), MpsBridgeOp::Pinverse, "pinverse");
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_pinverse(a);
+    return cuda_linalg_route_or_bridge_(
+        "pinverse",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::pinverse(a.to(Platform::CPU), rcond); });
+  }
   throw_platform_not_ready_("pinverse", a.platform());
 }
 
@@ -1674,6 +1841,17 @@ Series qr_q(const Series& a, bool reduced) {
       bump_mps_bridge_counter_(MpsBridgeOp::Qr);
     }
     return dispatch.qr.q;
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_qr(a, reduced);
+    return cuda_linalg_route_or_bridge_(
+        "qr_q",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::qr(a.to(Platform::CPU), reduced).Q; });
   }
   throw_platform_not_ready_("qr_q", a.platform());
 }
@@ -1710,6 +1888,17 @@ Series qr_r(const Series& a, bool reduced) {
     }
     return dispatch.qr.r;
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_qr(a, reduced);
+    return cuda_linalg_route_or_bridge_(
+        "qr_r",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::qr(a.to(Platform::CPU), reduced).R; });
+  }
   throw_platform_not_ready_("qr_r", a.platform());
 }
 
@@ -1745,6 +1934,17 @@ Series svd_u(const Series& a, bool full_matrices) {
     }
     return dispatch.svd.u;
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_svd(a, full_matrices);
+    return cuda_linalg_route_or_bridge_(
+        "svd_u",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::svd(a.to(Platform::CPU), full_matrices).U; });
+  }
   throw_platform_not_ready_("svd_u", a.platform());
 }
 
@@ -1778,6 +1978,17 @@ Series svd_s(const Series& a, bool full_matrices) {
       bump_mps_bridge_counter_(MpsBridgeOp::Svd);
     }
     return dispatch.svd.s;
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_svd(a, full_matrices);
+    return cuda_linalg_route_or_bridge_(
+        "svd_s",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::svd(a.to(Platform::CPU), full_matrices).S; });
   }
   throw_platform_not_ready_("svd_s", a.platform());
 }
@@ -1813,6 +2024,17 @@ Series svd_vh(const Series& a, bool full_matrices) {
       bump_mps_bridge_counter_(MpsBridgeOp::Svd);
     }
     return dispatch.svd.vh;
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_svd(a, full_matrices);
+    return cuda_linalg_route_or_bridge_(
+        "svd_vh",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::svd(a.to(Platform::CPU), full_matrices).Vh; });
   }
   throw_platform_not_ready_("svd_vh", a.platform());
 }
@@ -1891,6 +2113,20 @@ Series triangular_solve(const Series& a, const Series& b, bool upper, bool unitr
         pluss::subsp::math::linalg::triangular_solve(b.to(Platform::CPU), a.to(Platform::CPU), upper, unitriangular),
         MpsBridgeOp::TriangularSolve,
         "triangular_solve");
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_triangular_solve(a, b);
+    return cuda_linalg_route_or_bridge_(
+        "triangular_solve",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          return pluss::subsp::math::linalg::triangular_solve(
+              b.to(Platform::CPU), a.to(Platform::CPU), upper, unitriangular);
+        });
   }
   throw_platform_not_ready_("triangular_solve", a.platform());
 }
@@ -1986,6 +2222,20 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
         MpsBridgeOp::CholeskySolve,
         "cholesky_solve");
   }
+  if (factor.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_cholesky_solve(factor, b);
+    return cuda_linalg_route_or_bridge_(
+        "cholesky_solve",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          return pluss::subsp::math::linalg::cholesky_solve(
+              b.to(Platform::CPU), factor.to(Platform::CPU), upper);
+        });
+  }
   throw_platform_not_ready_("cholesky_solve", factor.platform());
 }
 
@@ -2036,6 +2286,17 @@ Series cholesky_inverse(const Series& factor, bool upper) {
         pluss::subsp::math::linalg::cholesky_inverse(factor.to(Platform::CPU), upper),
         MpsBridgeOp::CholeskyInverse,
         "cholesky_inverse");
+  }
+  if (factor.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_cholesky_inverse(factor);
+    return cuda_linalg_route_or_bridge_(
+        "cholesky_inverse",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::cholesky_inverse(factor.to(Platform::CPU), upper); });
   }
   throw_platform_not_ready_("cholesky_inverse", factor.platform());
 }
@@ -2114,6 +2375,17 @@ Series lu_solve(const Series& lu, const Series& b) {
         pluss::subsp::math::linalg::lu_solve(b.to(Platform::CPU), lu.to(Platform::CPU)),
         MpsBridgeOp::LuSolve,
         "lu_solve");
+  }
+  if (lu.platform() == Platform::CUDA) {
+    const bool native_enabled = pluss::codem::native::cuda::native_linalg_enabled();
+    const bool native_strict = pluss::codem::native::cuda::native_linalg_strict();
+    const bool route_supported = pluss::codem::native::cuda::supports_lu_solve(lu, b);
+    return cuda_linalg_route_or_bridge_(
+        "lu_solve",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return pluss::subsp::math::linalg::lu_solve(b.to(Platform::CPU), lu.to(Platform::CPU)); });
   }
   throw_platform_not_ready_("lu_solve", lu.platform());
 }

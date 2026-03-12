@@ -11,6 +11,7 @@
 #include <memory>
 #include <numeric>
 #include <random>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -218,10 +219,65 @@ struct BinaryLabelEncoding {
   ScalarType label_dtype = ScalarType::Float64;
 };
 
+[[nodiscard]] StatusOr<Series> extract_sorted_classes(const LabeledBatch& batch,
+                                                      std::int64_t expected_samples,
+                                                      const char* where) {
+  if (!batch.y.defined()) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires a defined label vector."));
+  }
+  if (batch.y.numel() != expected_samples) {
+    return StatusOr<Series>(Status::shape_mismatch(std::string(where) + " label count must match sample count."));
+  }
+
+  const Series y64 = batch.y.to(ScalarType::Float64).reshape({batch.y.numel()});
+  if (has_nan(y64)) {
+    return StatusOr<Series>(
+        Status::invalid_argument(std::string(where) + " does not support NaN labels."));
+  }
+
+  const Series classes_raw = y64.unique().sort(0, false, false);
+  const Series classes = classes_raw.reshape({classes_raw.numel()});
+  if (classes.numel() < 2) {
+    return StatusOr<Series>(
+        Status::invalid_argument(std::string(where) + " requires at least two distinct classes."));
+  }
+  return StatusOr<Series>(classes);
+}
+
+[[nodiscard]] bool same_sorted_classes(const Series& a, const Series& b) {
+  if (a.numel() != b.numel()) return false;
+  return a.eq(b).all().item<bool>();
+}
+
 [[nodiscard]] StatusOr<Series> classification_metrics(const Series& truth01,
                                                       const Series& labels01,
                                                       const Series& probs,
                                                       const std::vector<MetricKind>& requested);
+[[nodiscard]] StatusOr<Series> classification_metrics_multiclass(const Series& truth_labels,
+                                                                 const Series& pred_labels,
+                                                                 const Series& score_matrix,
+                                                                 const Series& classes,
+                                                                 const std::vector<MetricKind>& requested);
+
+[[nodiscard]] StatusOr<Series> resolve_parameter_bounds(const Series& raw_bounds,
+                                                        std::int64_t param_count,
+                                                        Platform platform,
+                                                        const char* where) {
+  if (!raw_bounds.defined()) return StatusOr<Series>(Series::undefined());
+
+  Series bounds = raw_bounds.to(platform, ScalarType::Float64).reshape({raw_bounds.numel()});
+  if (bounds.numel() == 1) {
+    bounds = bounds.reshape({1}).expand(std::vector<std::int64_t>{param_count}).reshape({param_count});
+  } else if (bounds.numel() != param_count) {
+    return StatusOr<Series>(Status::shape_mismatch(
+        std::string(where) + " bounds must be scalar or length equal to parameter count."));
+  }
+
+  if (!all_finite(bounds)) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " bounds must be finite."));
+  }
+  return StatusOr<Series>(std::move(bounds));
+}
 
 [[nodiscard]] Series labels_from_scores(const Series& scores,
                                         double negative_label,
@@ -1454,7 +1510,56 @@ private:
   const Series tpr = tpr_den.gt(0.0).where(tp.div(tpr_den), zero);
   const Series tnr = tnr_den.gt(0.0).where(tn.div(tnr_den), zero);
   const Series bal_accuracy = tpr.add(tnr).mul(0.5);
+  const Series precision_den = tp.add(fp);
+  const Series precision = precision_den.gt(0.0).where(tp.div(precision_den), zero);
+  const Series recall = tpr;
+  const Series f1_den = precision.add(recall);
+  const Series f1 = f1_den.gt(0.0).where(precision.mul(recall).mul(2.0).div(f1_den), zero);
   const Series logloss = yb.mul(clipped.log()).add(yb.mul(-1.0).add(1.0).mul(clipped.mul(-1.0).add(1.0).log())).mul(-1.0).mean();
+
+  const Series pos_count = yb.sum();
+  const Series neg_count = yb.mul(-1.0).add(1.0).sum();
+  const Series has_both = pos_count.gt(0.0).to(ScalarType::Float64).mul(neg_count.gt(0.0).to(ScalarType::Float64));
+  const Series pos_safe = pos_count.clamp_min(1.0);
+  const Series neg_safe = neg_count.clamp_min(1.0);
+  const std::int64_t n = p.numel();
+  const Platform platform = p.platform();
+  const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(platform);
+  const Series order = p.argsort(0, true, true);
+  const Series p_sorted = p.index_select(0, order);
+  const Series y_sorted = yb.index_select(0, order);
+  const Series one_vec = pluss::ones({n}, f64_on(platform));
+  const Series tp_cum = y_sorted.cumsum(0, false);
+  const Series fp_cum = one_vec.sub(y_sorted).cumsum(0, false);
+
+  Series idx_next = pluss::arange(1, n, i64_cfg);
+  if (idx_next.numel() == 0) {
+    idx_next = pluss::make_series(std::vector<std::int64_t>{0}, {1}, i64_cfg);
+  }
+  Series p_next = p_sorted.index_select(0, idx_next).reshape({idx_next.numel()});
+  if (n == 1) {
+    p_next = p_sorted.add(1.0);
+  } else {
+    p_next = p_next.unite({p_sorted.reshape({n}).index_select(0, pluss::arange(n - 1, n, i64_cfg)).add(1.0)}, 0);
+  }
+  const Series boundary = p_sorted.ne(p_next).reshape({n});
+  const Series tpr_curve = tp_cum.div(pos_safe);
+  const Series fpr_curve = fp_cum.div(neg_safe);
+  const Series tpr_u = tpr_curve.masked_select(boundary);
+  const Series fpr_u = fpr_curve.masked_select(boundary);
+  const std::int64_t m = fpr_u.numel();
+  const Series tpr_prev = (m > 1)
+                              ? pluss::zeros({1}, f64_on(platform)).unite(
+                                    {tpr_u.index_select(0, pluss::arange(0, m - 1, i64_cfg))},
+                                    0)
+                              : pluss::zeros({1}, f64_on(platform));
+  const Series fpr_prev = (m > 1)
+                              ? pluss::zeros({1}, f64_on(platform)).unite(
+                                    {fpr_u.index_select(0, pluss::arange(0, m - 1, i64_cfg))},
+                                    0)
+                              : pluss::zeros({1}, f64_on(platform));
+  const Series roc_auc_raw = fpr_u.sub(fpr_prev).mul(tpr_u.add(tpr_prev)).mul(0.5).sum().clamp(0.0, 1.0).reshape({1});
+  const Series roc_auc = has_both.gt(0.5).where(roc_auc_raw, pluss::ones({1}, f64_on(platform)).mul(0.5));
 
   std::vector<Series> out{};
   out.reserve(requested.size());
@@ -1465,6 +1570,18 @@ private:
         break;
       case MetricKind::BalancedAccuracy:
         out.push_back(bal_accuracy.reshape({1}));
+        break;
+      case MetricKind::Precision:
+        out.push_back(precision.reshape({1}));
+        break;
+      case MetricKind::Recall:
+        out.push_back(recall.reshape({1}));
+        break;
+      case MetricKind::F1:
+        out.push_back(f1.reshape({1}));
+        break;
+      case MetricKind::RocAuc:
+        out.push_back(roc_auc.reshape({1}));
         break;
       case MetricKind::LogLoss:
         out.push_back(logloss.reshape({1}));
@@ -1481,6 +1598,109 @@ private:
     merged = merged.unite({out[i]}, 0);
   }
   return StatusOr<Series>(merged.reshape({static_cast<std::int64_t>(out.size())}).to(y.platform(), ScalarType::Float64));
+}
+
+[[nodiscard]] StatusOr<Series> classification_metrics_multiclass(const Series& truth_labels,
+                                                                 const Series& pred_labels,
+                                                                 const Series& score_matrix,
+                                                                 const Series& classes,
+                                                                 const std::vector<MetricKind>& requested) {
+  const Series y = truth_labels.to(ScalarType::Float64).reshape({truth_labels.numel()});
+  const Series yh = pred_labels.to(ScalarType::Float64).reshape({pred_labels.numel()});
+  const Series cls = classes.to(ScalarType::Float64).reshape({classes.numel()});
+  const std::int64_t n = y.numel();
+  const std::int64_t k = cls.numel();
+  const Platform platform = y.platform();
+  if (n == 0 || yh.numel() != n || k < 2) {
+    return StatusOr<Series>(Status::shape_mismatch("multiclass assess requires non-empty equal-size label vectors."));
+  }
+
+  Series logits = score_matrix.to(platform, ScalarType::Float64);
+  if (logits.dim() != 2 || logits.sizes()[0] != n || logits.sizes()[1] != k) {
+    return StatusOr<Series>(Status::shape_mismatch("multiclass assess expects score matrix shape [samples, classes]."));
+  }
+
+  const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(platform);
+  const Series k_scalar = pluss::ones({1}, f64_on(platform)).mul(static_cast<double>(k));
+  Series precision_sum = pluss::zeros({1}, f64_on(platform));
+  Series recall_sum = pluss::zeros({1}, f64_on(platform));
+  Series f1_sum = pluss::zeros({1}, f64_on(platform));
+
+  for (std::int64_t ci = 0; ci < k; ++ci) {
+    const Series idx = pluss::arange(ci, ci + 1, i64_cfg);
+    const Series cls_value = cls.index_select(0, idx).reshape({1});
+    const Series y_c = y.eq(cls_value).to(ScalarType::Float64);
+    const Series yh_c = yh.eq(cls_value).to(ScalarType::Float64);
+    const Series tp = y_c.mul(yh_c).sum();
+    const Series fp = y_c.mul(-1.0).add(1.0).mul(yh_c).sum();
+    const Series fn = y_c.mul(yh_c.mul(-1.0).add(1.0)).sum();
+    const Series zero = pluss::zeros_like(tp, ScalarType::Float64);
+    const Series precision_den = tp.add(fp);
+    const Series recall_den = tp.add(fn);
+    const Series precision = precision_den.gt(0.0).where(tp.div(precision_den), zero);
+    const Series recall = recall_den.gt(0.0).where(tp.div(recall_den), zero);
+    const Series f1_den = precision.add(recall);
+    const Series f1 = f1_den.gt(0.0).where(precision.mul(recall).mul(2.0).div(f1_den), zero);
+    precision_sum = precision_sum.add(precision.reshape({1}));
+    recall_sum = recall_sum.add(recall.reshape({1}));
+    f1_sum = f1_sum.add(f1.reshape({1}));
+  }
+
+  const Series accuracy = y.eq(yh).to(ScalarType::Float64).mean().reshape({1});
+  const Series macro_precision = precision_sum.div(k_scalar).reshape({1});
+  const Series macro_recall = recall_sum.div(k_scalar).reshape({1});
+  const Series macro_f1 = f1_sum.div(k_scalar).reshape({1});
+  const Series balanced_accuracy = macro_recall.reshape({1});
+
+  constexpr double eps = 1e-12;
+  const Series probs = logits.softmax(1);
+  Series one_hot = Series::undefined();
+  for (std::int64_t ci = 0; ci < k; ++ci) {
+    const Series idx = pluss::arange(ci, ci + 1, i64_cfg);
+    const Series cls_value = cls.index_select(0, idx).reshape({1});
+    const Series col = y.eq(cls_value).to(ScalarType::Float64).reshape({n, 1});
+    one_hot = one_hot.defined() ? one_hot.unite({col}, 1) : col;
+  }
+  const Series logloss = probs.mul(one_hot).sum(1, false).clamp(eps, 1.0).log().mul(-1.0).mean().reshape({1});
+
+  std::vector<Series> out{};
+  out.reserve(requested.size());
+  for (MetricKind metric : requested) {
+    switch (metric) {
+      case MetricKind::Accuracy:
+        out.push_back(accuracy);
+        break;
+      case MetricKind::BalancedAccuracy:
+        out.push_back(balanced_accuracy);
+        break;
+      case MetricKind::Precision:
+        out.push_back(macro_precision);
+        break;
+      case MetricKind::Recall:
+        out.push_back(macro_recall);
+        break;
+      case MetricKind::F1:
+        out.push_back(macro_f1);
+        break;
+      case MetricKind::LogLoss:
+        out.push_back(logloss);
+        break;
+      case MetricKind::RocAuc:
+        return StatusOr<Series>(
+            Status::not_implemented("multiclass RocAuc is not implemented yet; use one-vs-rest externally if needed."));
+      default:
+        return StatusOr<Series>(Status::invalid_argument("Unsupported classification metric in multiclass assess()."));
+    }
+  }
+
+  if (out.empty()) {
+    return StatusOr<Series>(pluss::make_series(std::vector<double>{}, {0}, f64_on(platform)));
+  }
+  Series merged = out.front();
+  for (std::size_t i = 1; i < out.size(); ++i) {
+    merged = merged.unite({out[i]}, 0);
+  }
+  return StatusOr<Series>(merged.reshape({static_cast<std::int64_t>(out.size())}).to(platform, ScalarType::Float64));
 }
 
 class LinearClassifier final : public ClassifierBase {
@@ -1525,6 +1745,33 @@ public:
     adam_opt.learning_rate = 0.05;
     adam_opt.weight_decay = 0.0;
 
+    const bool use_parameter_bounds = options.parameter_lower_bounds.defined() || options.parameter_upper_bounds.defined();
+    optim::MinimaxConstraints minimax_constraints{};
+    optim::MinimaxOptions minimax_options{};
+    optim::MinimaxState minimax_state{};
+
+    if (use_parameter_bounds) {
+      StatusOr<Series> lb_or =
+          resolve_parameter_bounds(options.parameter_lower_bounds, param_count, design.platform(), "LinearClassifier::learn lower");
+      if (!lb_or.ok()) return lb_or.status();
+      StatusOr<Series> ub_or =
+          resolve_parameter_bounds(options.parameter_upper_bounds, param_count, design.platform(), "LinearClassifier::learn upper");
+      if (!ub_or.ok()) return ub_or.status();
+
+      Series lower = lb_or.move_value();
+      Series upper = ub_or.move_value();
+      if (lower.defined() && upper.defined() && !lower.le(upper).all().item<bool>()) {
+        return Status::invalid_argument("LinearClassifier::learn lower bounds must be <= upper bounds.");
+      }
+
+      if (lower.defined()) minimax_constraints.lbs = {lower};
+      if (upper.defined()) minimax_constraints.ubs = {upper};
+      minimax_options.adam = adam_opt;
+      minimax_options.project_bounds = true;
+      minimax_options.enable_constraint_autodiff = false;
+      minimax_state = optim::minimax_state_like(std::vector<Series>{weights}, minimax_constraints);
+    }
+
     double prev_loss = std::numeric_limits<double>::infinity();
     for (std::int64_t iter = 0; iter < options.max_iterations; ++iter) {
       Series grad = Series::undefined();
@@ -1538,7 +1785,15 @@ public:
       }
 
       std::vector<Series> params{weights};
-      optim::adam_step_inplace(params, std::vector<Series>{grad}, adam, adam_opt);
+      try {
+        if (use_parameter_bounds) {
+          optim::minimax_step_inplace(params, std::vector<Series>{grad}, minimax_state, minimax_options, minimax_constraints);
+        } else {
+          optim::adam_step_inplace(params, std::vector<Series>{grad}, adam, adam_opt);
+        }
+      } catch (const std::exception& ex) {
+        return Status::numerical_failure(std::string("LinearClassifier::learn optimizer failure: ") + ex.what());
+      }
       weights = params[0];
 
       const double loss = options_.objective == LinearObjective::Logistic
@@ -1721,16 +1976,7 @@ private:
   std::int64_t features_{0};
 };
 
-} // namespace
-
-StatusOr<std::unique_ptr<ClassifierBase>> make_classifier(const ModelSpec& spec) {
-  if (spec.task != TaskKind::Classification) {
-    return StatusOr<std::unique_ptr<ClassifierBase>>(
-        Status::invalid_argument("make_classifier requires ModelSpec.task = TaskKind::Classification."));
-  }
-  if (!is_phase0_family(spec.family)) {
-    return StatusOr<std::unique_ptr<ClassifierBase>>(Status::invalid_argument("Unsupported classifier family."));
-  }
+[[nodiscard]] StatusOr<std::unique_ptr<ClassifierBase>> make_binary_classifier_impl(const ModelSpec& spec) {
   if (spec.family == ModelFamily::Linear) {
     const auto* options = std::get_if<LinearFamilyOptions>(&spec.options);
     if (options == nullptr) {
@@ -1780,6 +2026,171 @@ StatusOr<std::unique_ptr<ClassifierBase>> make_classifier(const ModelSpec& spec)
     return StatusOr<std::unique_ptr<ClassifierBase>>(std::make_unique<KernelClassifier>(*options));
   }
   return StatusOr<std::unique_ptr<ClassifierBase>>(std::make_unique<FamilyClassifier>(spec.family));
+}
+
+class OvRClassifier final : public ClassifierBase {
+public:
+  explicit OvRClassifier(ModelSpec spec) : spec_(std::move(spec)) {}
+
+  [[nodiscard]] bool trained() const noexcept override { return trained_; }
+
+  Status learn(const LabeledBatch& batch, const TrainOptions& options = {}) override {
+    Status data_status = validate_labeled(batch);
+    if (!data_status.ok()) return data_status;
+    if (options.max_iterations <= 0) return Status::invalid_argument("TrainOptions.max_iterations must be positive.");
+    if (!(options.tolerance > 0.0)) return Status::invalid_argument("TrainOptions.tolerance must be positive.");
+
+    StatusOr<Series> classes_or = extract_sorted_classes(batch, batch.features.sample_count(), "OvRClassifier::learn");
+    if (!classes_or.ok()) return classes_or.status();
+    const Series classes = classes_or.move_value();
+    const std::int64_t class_count = classes.numel();
+    const std::int64_t sample_count = batch.features.sample_count();
+    const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(classes.platform());
+
+    std::vector<std::unique_ptr<ClassifierBase>> models{};
+    models.reserve(static_cast<std::size_t>(class_count));
+
+    if (class_count == 2) {
+      StatusOr<std::unique_ptr<ClassifierBase>> model_or = make_binary_classifier_impl(spec_);
+      if (!model_or.ok()) return model_or.status();
+      std::unique_ptr<ClassifierBase> model = model_or.move_value();
+      Status learn_status = model->learn(batch, options);
+      if (!learn_status.ok()) return learn_status;
+      models.push_back(std::move(model));
+      multiclass_ = false;
+    } else {
+      const Series y64 = batch.y.to(ScalarType::Float64).reshape({sample_count});
+      for (std::int64_t ci = 0; ci < class_count; ++ci) {
+        const Series idx = pluss::arange(ci, ci + 1, i64_cfg);
+        const Series cls_value = classes.index_select(0, idx).reshape({1});
+        const Series y01 = y64.eq(cls_value).to(ScalarType::Float64);
+        const LabeledBatch binary_batch{
+            .features = batch.features,
+            .y = y01,
+        };
+        StatusOr<std::unique_ptr<ClassifierBase>> model_or = make_binary_classifier_impl(spec_);
+        if (!model_or.ok()) return model_or.status();
+        std::unique_ptr<ClassifierBase> model = model_or.move_value();
+        Status learn_status = model->learn(binary_batch, options);
+        if (!learn_status.ok()) return learn_status;
+        models.push_back(std::move(model));
+      }
+      multiclass_ = true;
+    }
+
+    models_ = std::move(models);
+    classes_ = classes.to(ScalarType::Float64).reshape({class_count});
+    label_dtype_ = batch.y.scalar_type();
+    feature_count_ = batch.features.feature_count();
+    trained_ = true;
+    return Status::success();
+  }
+
+  [[nodiscard]] StatusOr<Series> infer_scores(const FeatureBatch& batch,
+                                              const InferOptions& options = {}) const override {
+    Status ready_status = validate_ready(batch, "infer_scores");
+    if (!ready_status.ok()) return StatusOr<Series>(std::move(ready_status));
+
+    if (!multiclass_) {
+      return models_.front()->infer_scores(batch, options);
+    }
+
+    const std::int64_t sample_count = batch.sample_count();
+    Series scores = Series::undefined();
+    for (const std::unique_ptr<ClassifierBase>& model : models_) {
+      StatusOr<Series> score_or = model->infer_scores(batch, options);
+      if (!score_or.ok()) return StatusOr<Series>(score_or.status());
+      const Series col = score_or.value().to(batch.x.platform(), ScalarType::Float64).reshape({sample_count, 1});
+      scores = scores.defined() ? scores.unite({col}, 1) : col;
+    }
+    if (!scores.defined()) {
+      return StatusOr<Series>(Status::internal("OvRClassifier::infer_scores has no trained learners."));
+    }
+    return StatusOr<Series>(scores.reshape({sample_count, static_cast<std::int64_t>(models_.size())}));
+  }
+
+  [[nodiscard]] StatusOr<Series> infer(const FeatureBatch& batch,
+                                       const InferOptions& options = {}) const override {
+    Status ready_status = validate_ready(batch, "infer");
+    if (!ready_status.ok()) return StatusOr<Series>(std::move(ready_status));
+
+    if (!multiclass_) {
+      return models_.front()->infer(batch, options);
+    }
+
+    StatusOr<Series> score_or = infer_scores(batch, options);
+    if (!score_or.ok()) return StatusOr<Series>(score_or.status());
+    const Series scores = score_or.value().reshape({batch.sample_count(), classes_.numel()});
+    const Series idx = scores.argmax(1, false).reshape({batch.sample_count()}).to(ScalarType::Int64);
+    const Series labels = classes_.to(scores.platform(), ScalarType::Float64).index_select(0, idx);
+    return StatusOr<Series>(labels.to(batch.x.platform(), label_dtype_).reshape({batch.sample_count()}));
+  }
+
+  [[nodiscard]] StatusOr<Series> assess(const LabeledBatch& batch,
+                                        const AssessOptions& options = {}) const override {
+    Status data_status = validate_labeled(batch);
+    if (!data_status.ok()) return StatusOr<Series>(std::move(data_status));
+
+    Status ready_status = validate_ready(batch.features, "assess");
+    if (!ready_status.ok()) return StatusOr<Series>(std::move(ready_status));
+
+    if (!multiclass_) {
+      return models_.front()->assess(batch, options);
+    }
+
+    StatusOr<Series> classes_or = extract_sorted_classes(batch, batch.features.sample_count(), "OvRClassifier::assess");
+    if (!classes_or.ok()) return StatusOr<Series>(classes_or.status());
+    if (!same_sorted_classes(classes_or.value().to(ScalarType::Float64), classes_)) {
+      return StatusOr<Series>(Status::invalid_argument(
+          "OvRClassifier::assess class labels must match classes seen during learn()."));
+    }
+
+    StatusOr<Series> pred_or = infer(batch.features);
+    if (!pred_or.ok()) return StatusOr<Series>(pred_or.status());
+    StatusOr<Series> scores_or = infer_scores(batch.features);
+    if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
+
+    std::vector<MetricKind> metrics = options.metrics;
+    if (metrics.empty()) metrics = {MetricKind::Accuracy};
+    return classification_metrics_multiclass(batch.y, pred_or.value(), scores_or.value(), classes_, metrics);
+  }
+
+private:
+  [[nodiscard]] Status validate_ready(const FeatureBatch& batch, const char* where) const {
+    Status data_status = validate_features(batch);
+    if (!data_status.ok()) return data_status;
+    if (!trained_) return Status::precondition(std::string("Estimator must be learned before ") + where + "().");
+    if (batch.feature_count() != feature_count_) {
+      return Status::shape_mismatch("Feature count mismatch between learn and inference batch.");
+    }
+    if (models_.empty()) {
+      return Status::precondition("Estimator must hold at least one trained learner.");
+    }
+    return Status::success();
+  }
+
+  ModelSpec spec_{};
+  bool trained_{false};
+  bool multiclass_{false};
+  std::int64_t feature_count_{0};
+  ScalarType label_dtype_{ScalarType::Float64};
+  Series classes_ = Series::undefined();
+  std::vector<std::unique_ptr<ClassifierBase>> models_{};
+};
+
+} // namespace
+
+StatusOr<std::unique_ptr<ClassifierBase>> make_classifier(const ModelSpec& spec) {
+  if (spec.task != TaskKind::Classification) {
+    return StatusOr<std::unique_ptr<ClassifierBase>>(
+        Status::invalid_argument("make_classifier requires ModelSpec.task = TaskKind::Classification."));
+  }
+  if (!is_phase0_family(spec.family)) {
+    return StatusOr<std::unique_ptr<ClassifierBase>>(Status::invalid_argument("Unsupported classifier family."));
+  }
+  StatusOr<std::unique_ptr<ClassifierBase>> check_or = make_binary_classifier_impl(spec);
+  if (!check_or.ok()) return StatusOr<std::unique_ptr<ClassifierBase>>(check_or.status());
+  return StatusOr<std::unique_ptr<ClassifierBase>>(std::make_unique<OvRClassifier>(spec));
 }
 
 } // namespace pluss::ai::nodej

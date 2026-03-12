@@ -53,6 +53,146 @@ StatusOr<std::unique_ptr<nodej::RegressorBase>> learn_regressor(const nodej::Mod
   return StatusOr<std::unique_ptr<nodej::RegressorBase>>(std::move(model));
 }
 
+StatusOr<nodej::Flow> learn_flow(nodej::Flow flow,
+                                  const nodej::LabeledBatch& train,
+                                  const nodej::TrainOptions& options) {
+  nodej::Status status = flow.learn(train, options);
+  if (!status.ok()) return StatusOr<nodej::Flow>(std::move(status));
+  return StatusOr<nodej::Flow>(std::move(flow));
+}
+
+StatusOr<nodej::Flow> linear_classifier_flow(const nodej::LabeledBatch& train,
+                                             double regularization_strength,
+                                             bool with_standard_scaler,
+                                             bool with_mean_imputer,
+                                             const nodej::TrainOptions& options) {
+  nodej::ModelSpec spec{
+      .task = nodej::TaskKind::Classification,
+      .family = nodej::ModelFamily::Linear,
+      .options = nodej::LinearFamilyOptions{
+          .objective = nodej::LinearObjective::Logistic,
+          .regularization = nodej::RegularizationKind::L2,
+          .regularization_strength = regularization_strength,
+          .fit_intercept = true,
+      },
+  };
+  StatusOr<nodej::Flow> flow_or = nodej::make_flow(spec);
+  if (!flow_or.ok()) return StatusOr<nodej::Flow>(flow_or.status());
+  nodej::Flow flow = flow_or.move_value();
+
+  if (with_mean_imputer) {
+    nodej::Status s = flow.add_simple_imputer(nodej::prep::SimpleImputerOptions{
+        .strategy = nodej::prep::SimpleImputerStrategy::Mean,
+    });
+    if (!s.ok()) return StatusOr<nodej::Flow>(std::move(s));
+  }
+  if (with_standard_scaler) {
+    nodej::Status s = flow.add_standard_scaler();
+    if (!s.ok()) return StatusOr<nodej::Flow>(std::move(s));
+  }
+  return learn_flow(std::move(flow), train, options);
+}
+
+StatusOr<nodej::Flow> ridge_regressor_flow(const nodej::LabeledBatch& train,
+                                           double regularization_strength,
+                                           bool with_standard_scaler,
+                                           bool with_mean_imputer,
+                                           const nodej::TrainOptions& options) {
+  nodej::ModelSpec spec{
+      .task = nodej::TaskKind::Regression,
+      .family = nodej::ModelFamily::Linear,
+      .options = nodej::LinearFamilyOptions{
+          .objective = nodej::LinearObjective::LeastSquares,
+          .regularization = nodej::RegularizationKind::L2,
+          .regularization_strength = regularization_strength,
+          .fit_intercept = true,
+      },
+  };
+  StatusOr<nodej::Flow> flow_or = nodej::make_flow(spec);
+  if (!flow_or.ok()) return StatusOr<nodej::Flow>(flow_or.status());
+  nodej::Flow flow = flow_or.move_value();
+
+  if (with_mean_imputer) {
+    nodej::Status s = flow.add_simple_imputer(nodej::prep::SimpleImputerOptions{
+        .strategy = nodej::prep::SimpleImputerStrategy::Mean,
+    });
+    if (!s.ok()) return StatusOr<nodej::Flow>(std::move(s));
+  }
+  if (with_standard_scaler) {
+    nodej::Status s = flow.add_standard_scaler();
+    if (!s.ok()) return StatusOr<nodej::Flow>(std::move(s));
+  }
+  return learn_flow(std::move(flow), train, options);
+}
+
+StatusOr<nodej::online::OnlineLinearClassifier> online_linear_classifier(
+    const nodej::LabeledBatch& warm_start,
+    const nodej::online::OnlineLinearOptions& online_options,
+    const nodej::TrainOptions& train_options) {
+  auto model_or = nodej::online::make_online_linear_classifier(online_options);
+  if (!model_or.ok()) return StatusOr<nodej::online::OnlineLinearClassifier>(model_or.status());
+  nodej::online::OnlineLinearClassifier model = model_or.move_value();
+  nodej::Status status = model.learn(warm_start, train_options);
+  if (!status.ok()) return StatusOr<nodej::online::OnlineLinearClassifier>(std::move(status));
+  return StatusOr<nodej::online::OnlineLinearClassifier>(std::move(model));
+}
+
+StatusOr<nodej::online::OnlineLinearRegressor> online_linear_regressor(
+    const nodej::LabeledBatch& warm_start,
+    const nodej::online::OnlineLinearOptions& online_options,
+    const nodej::TrainOptions& train_options) {
+  auto model_or = nodej::online::make_online_linear_regressor(online_options);
+  if (!model_or.ok()) return StatusOr<nodej::online::OnlineLinearRegressor>(model_or.status());
+  nodej::online::OnlineLinearRegressor model = model_or.move_value();
+  nodej::Status status = model.learn(warm_start, train_options);
+  if (!status.ok()) return StatusOr<nodej::online::OnlineLinearRegressor>(std::move(status));
+  return StatusOr<nodej::online::OnlineLinearRegressor>(std::move(model));
+}
+
+StatusOr<nodej::CrossAssessReport> assess_cv(const nodej::ModelSpec& spec,
+                                             const nodej::LabeledBatch& batch,
+                                             const nodej::SplitOptions& split,
+                                             const nodej::TrainOptions& train_options,
+                                             const nodej::AssessOptions& assess_options) {
+  return nodej::cross_assess(spec, batch, split, train_options, assess_options);
+}
+
+StatusOr<nodej::TuneReport> tune_sweep(const std::vector<nodej::ModelSpec>& candidates,
+                                       const nodej::LabeledBatch& batch,
+                                       const nodej::SplitOptions& split,
+                                       const nodej::TrainOptions& train_options,
+                                       const nodej::AssessOptions& assess_options,
+                                       nodej::MetricKind objective_metric,
+                                       nodej::TuneObjectivePolicy objective_policy) {
+  return nodej::sweep(candidates,
+                      batch,
+                      split,
+                      train_options,
+                      assess_options,
+                      objective_metric,
+                      objective_policy);
+}
+
+StatusOr<nodej::TuneReport> tune_probe(const nodej::ProbeSpecSampler& sampler,
+                                       std::int64_t trials,
+                                       const nodej::LabeledBatch& batch,
+                                       const nodej::SplitOptions& split,
+                                       const nodej::TrainOptions& train_options,
+                                       const nodej::AssessOptions& assess_options,
+                                       nodej::MetricKind objective_metric,
+                                       nodej::TuneObjectivePolicy objective_policy,
+                                       nodej::RandomState random) {
+  return nodej::probe(sampler,
+                      trials,
+                      batch,
+                      split,
+                      train_options,
+                      assess_options,
+                      objective_metric,
+                      objective_policy,
+                      random);
+}
+
 StatusOr<std::unique_ptr<nodej::ClassifierBase>> linear_classifier(const nodej::LabeledBatch& train,
                                                                    const nodej::LinearFamilyOptions& family_options,
                                                                    const nodej::TrainOptions& options) {

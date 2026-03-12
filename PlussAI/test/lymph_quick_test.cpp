@@ -223,6 +223,77 @@ bool run_lymph_quick_checks(std::ostream* err = nullptr) {
     }
   }
 
+  {
+    const Series x = pluss::make_series(std::vector<double>{
+                                            -3.0, -1.0,
+                                            -2.0, -1.0,
+                                            -1.0, -0.5,
+                                             1.0,  0.5,
+                                             2.0,  1.0,
+                                             3.0,  1.0},
+                                        {6, 2},
+                                        f64());
+    const Series y = pluss::make_series(std::vector<double>{0.0, 0.0, 0.0, 1.0, 1.0, 1.0}, {6}, f64());
+    const LabeledBatch train{
+        .features = FeatureBatch{.x = x, .layout = ObservationLayout::Rows},
+        .y = y,
+    };
+
+    auto flow_or = pluss::ai::lymph::linear_classifier_flow(train, 1e-6, true, false);
+    if (!flow_or.ok()) {
+      if (err) *err << "lymph::linear_classifier_flow should return a learned flow\n";
+      return false;
+    }
+    auto metrics_or =
+        flow_or.value().assess(train, pluss::ai::nodej::AssessOptions{.metrics = {pluss::ai::nodej::MetricKind::Accuracy}});
+    if (!metrics_or.ok()) {
+      if (err) *err << "lymph linear flow assess should succeed\n";
+      return false;
+    }
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (metrics.empty() || metrics[0] < 0.9) {
+      if (err) *err << "lymph linear flow should fit separable data\n";
+      return false;
+    }
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{
+                                            -2.0, 0.0,
+                                            -1.0, 1.0,
+                                             0.0, 0.0,
+                                             1.0, 1.0,
+                                             2.0, 0.0,
+                                             3.0, 1.0},
+                                        {6, 2},
+                                        f64());
+    const Series y = pluss::make_series(std::vector<double>{-3.0, -1.0, 1.0, 3.0, 5.0, 7.0}, {6}, f64());
+    const LabeledBatch train{
+        .features = FeatureBatch{.x = x, .layout = ObservationLayout::Rows},
+        .y = y,
+    };
+
+    auto flow_or = pluss::ai::lymph::ridge_regressor_flow(train, 1e-8, true, false);
+    if (!flow_or.ok()) {
+      if (err) *err << "lymph::ridge_regressor_flow should return a learned flow\n";
+      return false;
+    }
+    auto metrics_or = flow_or.value().assess(
+        train,
+        pluss::ai::nodej::AssessOptions{
+            .metrics = {pluss::ai::nodej::MetricKind::Mse, pluss::ai::nodej::MetricKind::R2},
+        });
+    if (!metrics_or.ok()) {
+      if (err) *err << "lymph ridge flow assess should succeed\n";
+      return false;
+    }
+    const auto metrics = metrics_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    if (metrics.size() < 2 || metrics[1] < 0.95) {
+      if (err) *err << "lymph ridge flow should produce strong fit quality\n";
+      return false;
+    }
+  }
+
   return true;
 }
 

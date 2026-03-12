@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
+	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -249,6 +249,34 @@ nodej_bayes_kernel_test/fast:
 .PHONY : nodej_bayes_kernel_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/rule
+
+# Convenience name for target.
+nodej_cv_tune_test: PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/rule
+.PHONY : nodej_cv_tune_test
+
+# fast build rule for target.
+nodej_cv_tune_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/build.make PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/build
+.PHONY : nodej_cv_tune_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/rule
+
+# Convenience name for target.
+nodej_dataframe_bridge_test: PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/rule
+.PHONY : nodej_dataframe_bridge_test
+
+# fast build rule for target.
+nodej_dataframe_bridge_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/build.make PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/build
+.PHONY : nodej_dataframe_bridge_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/rule
@@ -263,6 +291,34 @@ nodej_ensemble_bayes_regression_test/fast:
 .PHONY : nodej_ensemble_bayes_regression_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_flow_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_flow_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_flow_test.dir/rule
+
+# Convenience name for target.
+nodej_flow_test: PlussAI/test/CMakeFiles/nodej_flow_test.dir/rule
+.PHONY : nodej_flow_test
+
+# fast build rule for target.
+nodej_flow_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_flow_test.dir/build.make PlussAI/test/CMakeFiles/nodej_flow_test.dir/build
+.PHONY : nodej_flow_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/rule
+
+# Convenience name for target.
+nodej_multiclass_test: PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/rule
+.PHONY : nodej_multiclass_test
+
+# fast build rule for target.
+nodej_multiclass_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/build.make PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/build
+.PHONY : nodej_multiclass_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_neighbor_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_neighbor_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nodej_neighbor_test.dir/rule
@@ -275,6 +331,20 @@ nodej_neighbor_test: PlussAI/test/CMakeFiles/nodej_neighbor_test.dir/rule
 nodej_neighbor_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_neighbor_test.dir/build.make PlussAI/test/CMakeFiles/nodej_neighbor_test.dir/build
 .PHONY : nodej_neighbor_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_online_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_online_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_online_test.dir/rule
+
+# Convenience name for target.
+nodej_online_test: PlussAI/test/CMakeFiles/nodej_online_test.dir/rule
+.PHONY : nodej_online_test
+
+# fast build rule for target.
+nodej_online_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_online_test.dir/build.make PlussAI/test/CMakeFiles/nodej_online_test.dir/build
+.PHONY : nodej_online_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_phase0_contract_test.dir/rule:
@@ -456,6 +526,54 @@ nodej_bayes_kernel_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/build.make PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/nodej_bayes_kernel_test.cpp.s
 .PHONY : nodej_bayes_kernel_test.cpp.s
 
+nodej_cv_tune_test.o: nodej_cv_tune_test.cpp.o
+.PHONY : nodej_cv_tune_test.o
+
+# target to build an object file
+nodej_cv_tune_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/build.make PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/nodej_cv_tune_test.cpp.o
+.PHONY : nodej_cv_tune_test.cpp.o
+
+nodej_cv_tune_test.i: nodej_cv_tune_test.cpp.i
+.PHONY : nodej_cv_tune_test.i
+
+# target to preprocess a source file
+nodej_cv_tune_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/build.make PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/nodej_cv_tune_test.cpp.i
+.PHONY : nodej_cv_tune_test.cpp.i
+
+nodej_cv_tune_test.s: nodej_cv_tune_test.cpp.s
+.PHONY : nodej_cv_tune_test.s
+
+# target to generate assembly for a file
+nodej_cv_tune_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/build.make PlussAI/test/CMakeFiles/nodej_cv_tune_test.dir/nodej_cv_tune_test.cpp.s
+.PHONY : nodej_cv_tune_test.cpp.s
+
+nodej_dataframe_bridge_test.o: nodej_dataframe_bridge_test.cpp.o
+.PHONY : nodej_dataframe_bridge_test.o
+
+# target to build an object file
+nodej_dataframe_bridge_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/build.make PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/nodej_dataframe_bridge_test.cpp.o
+.PHONY : nodej_dataframe_bridge_test.cpp.o
+
+nodej_dataframe_bridge_test.i: nodej_dataframe_bridge_test.cpp.i
+.PHONY : nodej_dataframe_bridge_test.i
+
+# target to preprocess a source file
+nodej_dataframe_bridge_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/build.make PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/nodej_dataframe_bridge_test.cpp.i
+.PHONY : nodej_dataframe_bridge_test.cpp.i
+
+nodej_dataframe_bridge_test.s: nodej_dataframe_bridge_test.cpp.s
+.PHONY : nodej_dataframe_bridge_test.s
+
+# target to generate assembly for a file
+nodej_dataframe_bridge_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/build.make PlussAI/test/CMakeFiles/nodej_dataframe_bridge_test.dir/nodej_dataframe_bridge_test.cpp.s
+.PHONY : nodej_dataframe_bridge_test.cpp.s
+
 nodej_ensemble_bayes_regression_test.o: nodej_ensemble_bayes_regression_test.cpp.o
 .PHONY : nodej_ensemble_bayes_regression_test.o
 
@@ -480,6 +598,54 @@ nodej_ensemble_bayes_regression_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/build.make PlussAI/test/CMakeFiles/nodej_ensemble_bayes_regression_test.dir/nodej_ensemble_bayes_regression_test.cpp.s
 .PHONY : nodej_ensemble_bayes_regression_test.cpp.s
 
+nodej_flow_test.o: nodej_flow_test.cpp.o
+.PHONY : nodej_flow_test.o
+
+# target to build an object file
+nodej_flow_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_flow_test.dir/build.make PlussAI/test/CMakeFiles/nodej_flow_test.dir/nodej_flow_test.cpp.o
+.PHONY : nodej_flow_test.cpp.o
+
+nodej_flow_test.i: nodej_flow_test.cpp.i
+.PHONY : nodej_flow_test.i
+
+# target to preprocess a source file
+nodej_flow_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_flow_test.dir/build.make PlussAI/test/CMakeFiles/nodej_flow_test.dir/nodej_flow_test.cpp.i
+.PHONY : nodej_flow_test.cpp.i
+
+nodej_flow_test.s: nodej_flow_test.cpp.s
+.PHONY : nodej_flow_test.s
+
+# target to generate assembly for a file
+nodej_flow_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_flow_test.dir/build.make PlussAI/test/CMakeFiles/nodej_flow_test.dir/nodej_flow_test.cpp.s
+.PHONY : nodej_flow_test.cpp.s
+
+nodej_multiclass_test.o: nodej_multiclass_test.cpp.o
+.PHONY : nodej_multiclass_test.o
+
+# target to build an object file
+nodej_multiclass_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/build.make PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/nodej_multiclass_test.cpp.o
+.PHONY : nodej_multiclass_test.cpp.o
+
+nodej_multiclass_test.i: nodej_multiclass_test.cpp.i
+.PHONY : nodej_multiclass_test.i
+
+# target to preprocess a source file
+nodej_multiclass_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/build.make PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/nodej_multiclass_test.cpp.i
+.PHONY : nodej_multiclass_test.cpp.i
+
+nodej_multiclass_test.s: nodej_multiclass_test.cpp.s
+.PHONY : nodej_multiclass_test.s
+
+# target to generate assembly for a file
+nodej_multiclass_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/build.make PlussAI/test/CMakeFiles/nodej_multiclass_test.dir/nodej_multiclass_test.cpp.s
+.PHONY : nodej_multiclass_test.cpp.s
+
 nodej_neighbor_test.o: nodej_neighbor_test.cpp.o
 .PHONY : nodej_neighbor_test.o
 
@@ -503,6 +669,30 @@ nodej_neighbor_test.s: nodej_neighbor_test.cpp.s
 nodej_neighbor_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_neighbor_test.dir/build.make PlussAI/test/CMakeFiles/nodej_neighbor_test.dir/nodej_neighbor_test.cpp.s
 .PHONY : nodej_neighbor_test.cpp.s
+
+nodej_online_test.o: nodej_online_test.cpp.o
+.PHONY : nodej_online_test.o
+
+# target to build an object file
+nodej_online_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_online_test.dir/build.make PlussAI/test/CMakeFiles/nodej_online_test.dir/nodej_online_test.cpp.o
+.PHONY : nodej_online_test.cpp.o
+
+nodej_online_test.i: nodej_online_test.cpp.i
+.PHONY : nodej_online_test.i
+
+# target to preprocess a source file
+nodej_online_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_online_test.dir/build.make PlussAI/test/CMakeFiles/nodej_online_test.dir/nodej_online_test.cpp.i
+.PHONY : nodej_online_test.cpp.i
+
+nodej_online_test.s: nodej_online_test.cpp.s
+.PHONY : nodej_online_test.s
+
+# target to generate assembly for a file
+nodej_online_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_online_test.dir/build.make PlussAI/test/CMakeFiles/nodej_online_test.dir/nodej_online_test.cpp.s
+.PHONY : nodej_online_test.cpp.s
 
 nodej_phase0_contract_test.o: nodej_phase0_contract_test.cpp.o
 .PHONY : nodej_phase0_contract_test.o
@@ -667,8 +857,13 @@ help:
 	@echo "... lymph_quick_test"
 	@echo "... nn_optim_test"
 	@echo "... nodej_bayes_kernel_test"
+	@echo "... nodej_cv_tune_test"
+	@echo "... nodej_dataframe_bridge_test"
 	@echo "... nodej_ensemble_bayes_regression_test"
+	@echo "... nodej_flow_test"
+	@echo "... nodej_multiclass_test"
 	@echo "... nodej_neighbor_test"
+	@echo "... nodej_online_test"
 	@echo "... nodej_phase0_contract_test"
 	@echo "... nodej_prep_test"
 	@echo "... nodej_rigorous_suite_test"
@@ -687,12 +882,27 @@ help:
 	@echo "... nodej_bayes_kernel_test.o"
 	@echo "... nodej_bayes_kernel_test.i"
 	@echo "... nodej_bayes_kernel_test.s"
+	@echo "... nodej_cv_tune_test.o"
+	@echo "... nodej_cv_tune_test.i"
+	@echo "... nodej_cv_tune_test.s"
+	@echo "... nodej_dataframe_bridge_test.o"
+	@echo "... nodej_dataframe_bridge_test.i"
+	@echo "... nodej_dataframe_bridge_test.s"
 	@echo "... nodej_ensemble_bayes_regression_test.o"
 	@echo "... nodej_ensemble_bayes_regression_test.i"
 	@echo "... nodej_ensemble_bayes_regression_test.s"
+	@echo "... nodej_flow_test.o"
+	@echo "... nodej_flow_test.i"
+	@echo "... nodej_flow_test.s"
+	@echo "... nodej_multiclass_test.o"
+	@echo "... nodej_multiclass_test.i"
+	@echo "... nodej_multiclass_test.s"
 	@echo "... nodej_neighbor_test.o"
 	@echo "... nodej_neighbor_test.i"
 	@echo "... nodej_neighbor_test.s"
+	@echo "... nodej_online_test.o"
+	@echo "... nodej_online_test.i"
+	@echo "... nodej_online_test.s"
 	@echo "... nodej_phase0_contract_test.o"
 	@echo "... nodej_phase0_contract_test.i"
 	@echo "... nodej_phase0_contract_test.s"

@@ -12,6 +12,7 @@ foreach(test_src ${AI_TEST_SOURCES})
     add_executable(${test_name} ${test_src})
 
     target_link_libraries(${test_name} PRIVATE pluss)
+    target_link_libraries(${test_name} PRIVATE $<TARGET_NAME_IF_EXISTS:PlussMic>)
     if(Catch2_FOUND)
         target_link_libraries(${test_name} PRIVATE Catch2::Catch2WithMain)
         target_compile_definitions(${test_name} PRIVATE PLUSS_AI_HAS_CATCH2=1)
@@ -20,6 +21,8 @@ foreach(test_src ${AI_TEST_SOURCES})
 
     target_include_directories(${test_name} PRIVATE
         ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/PlussMic/include
+        ${PROJECT_SOURCE_DIR}/PlussMic/src
     )
 
     add_test(NAME ${test_name} COMMAND ${test_name})

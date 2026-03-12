@@ -27,6 +27,7 @@ option(PLUSSQIT_BUILD_CODEM "Build CodeM (Series/Tensor)" OFF)
 option(PLUSSQIT_BUILD_CODEH "Build CodeH (Timeline/Duration/TimeIndex)" ${PLUSSQIT_BUILD_CODEM})
 option(PLUSSQIT_BUILD_CODEM_SMOKE_TESTS "Build ad-hoc CodeM smoke executables" OFF)
 option(PLUSSQIT_CODEN_ENABLE_SERIES_INTEROP "Enable CodeN helpers that return CodeM::Series" OFF)
+option(PLUSSQIT_ENABLE_CUDA "Enable CUDA runtime probing for CodeM (kernels still WIP)" OFF)
 option(BUILD_BENCHMARKS "Build benchmark executables" OFF)
 set(PLUSSQIT_CPU_BLAS_BACKEND "AUTO" CACHE STRING
     "CodeM CPU BLAS backend for dense matmul: AUTO|ACCELERATE|OPENBLAS|ONEMKL|NONE")
@@ -174,6 +175,7 @@ file(GLOB_RECURSE PLUSSQIT_CODEM_CORE_CPP CONFIGURE_DEPENDS
   "src/CodeM/core/ops_impl/*.cpp"
   "src/CodeM/compat/*.cpp"
   "src/CodeM/native/cpu/*.cpp"
+  "src/CodeM/native/cuda/*.cpp"
 )
 list(REMOVE_ITEM PLUSSQIT_CODEM_CORE_CPP "${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/SeriesTorchAlignedStubs.cpp") # optional stub file remains explicit below
 # Duplicate compare implementation; keep CompareOps.cpp as canonical kernel entry.
@@ -642,6 +644,18 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch130_mps_native_device_telemetry.cpp
       tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp
       tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp
+      tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp
+      tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp
+      tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp
+      tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp
+      tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp
+      tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp
+      tests/CodeM/test_patch142_cuda_matmul_contract.cpp
+      tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp
+      tests/CodeM/test_patch144_mps_native_take_put_graduation.cpp
+      tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp
+      tests/CodeM/test_patch148_cuda_torch_family_parity.cpp
+      tests/CodeM/test_patch149_mps_torch_family_parity.cpp
     )
     target_link_libraries(plussqit_codem_mps_selection_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_mps_selection_tests PRIVATE cxx_std_20)
@@ -864,6 +878,7 @@ if(PLUSSQIT_BUILD_CODEM)
   set(_pluss_cpu_blas_provider_macro 0)
   set(_pluss_has_accelerate 0)
   set(_pluss_has_mps 0)
+  set(_pluss_has_cuda 0)
   set(_pluss_has_accelerate_new_lapack 0)
 
   if(APPLE)
@@ -950,15 +965,28 @@ if(PLUSSQIT_BUILD_CODEM)
   else()
     set(_pluss_cpu_blas_provider_macro 0)
   endif()
+
+  if(PLUSSQIT_ENABLE_CUDA)
+    find_package(CUDAToolkit QUIET)
+    if(CUDAToolkit_FOUND)
+      target_link_libraries(plussqit_codem PRIVATE CUDA::cudart)
+      set(_pluss_has_cuda 1)
+    else()
+      message(WARNING "PLUSSQIT_ENABLE_CUDA=ON requested but CUDAToolkit was not found. CUDA runtime probe disabled.")
+    endif()
+  endif()
+
   target_compile_definitions(plussqit_codem PUBLIC
     PLUSS_HAS_ACCELERATE=${_pluss_has_accelerate}
     PLUSS_HAS_MPS=${_pluss_has_mps}
+    PLUSS_HAS_CUDA=${_pluss_has_cuda}
   )
   if(_pluss_has_accelerate_new_lapack EQUAL 1)
     target_compile_definitions(plussqit_codem PUBLIC ACCELERATE_NEW_LAPACK=1)
   endif()
   target_compile_definitions(plussqit_codem PRIVATE PLUSSQIT_CPU_BLAS_PROVIDER=${_pluss_cpu_blas_provider_macro})
   message(STATUS "CodeM CPU BLAS provider: ${_pluss_cpu_blas_provider} (request=${_pluss_cpu_blas_backend})")
+  message(STATUS "CodeM CUDA runtime probe: ${_pluss_has_cuda} (requested=${PLUSSQIT_ENABLE_CUDA})")
 endif()
 
 if(BUILD_BENCHMARKS)

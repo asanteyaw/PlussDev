@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
+	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -220,6 +220,148 @@ plussai_nodej_model_families_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_model_families_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_model_families_demo.dir/build
 .PHONY : plussai_nodej_model_families_demo/fast
 
+# Convenience name for target.
+PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/rule
+
+# Convenience name for target.
+plussai_nodej_cv_tune_demo: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/rule
+.PHONY : plussai_nodej_cv_tune_demo
+
+# fast build rule for target.
+plussai_nodej_cv_tune_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/build
+.PHONY : plussai_nodej_cv_tune_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/rule
+
+# Convenience name for target.
+plussai_nodej_dataframe_bridge_demo: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/rule
+.PHONY : plussai_nodej_dataframe_bridge_demo
+
+# fast build rule for target.
+plussai_nodej_dataframe_bridge_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/build
+.PHONY : plussai_nodej_dataframe_bridge_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/rule
+
+# Convenience name for target.
+plussai_nodej_flow_demo: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/rule
+.PHONY : plussai_nodej_flow_demo
+
+# fast build rule for target.
+plussai_nodej_flow_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/build
+.PHONY : plussai_nodej_flow_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/rule
+
+# Convenience name for target.
+plussai_nodej_multiclass_demo: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/rule
+.PHONY : plussai_nodej_multiclass_demo
+
+# fast build rule for target.
+plussai_nodej_multiclass_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/build
+.PHONY : plussai_nodej_multiclass_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/rule
+
+# Convenience name for target.
+plussai_nodej_online_demo: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/rule
+.PHONY : plussai_nodej_online_demo
+
+# fast build rule for target.
+plussai_nodej_online_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/build
+.PHONY : plussai_nodej_online_demo/fast
+
+nodej_cv_tune_demo.o: nodej_cv_tune_demo.cpp.o
+.PHONY : nodej_cv_tune_demo.o
+
+# target to build an object file
+nodej_cv_tune_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/nodej_cv_tune_demo.cpp.o
+.PHONY : nodej_cv_tune_demo.cpp.o
+
+nodej_cv_tune_demo.i: nodej_cv_tune_demo.cpp.i
+.PHONY : nodej_cv_tune_demo.i
+
+# target to preprocess a source file
+nodej_cv_tune_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/nodej_cv_tune_demo.cpp.i
+.PHONY : nodej_cv_tune_demo.cpp.i
+
+nodej_cv_tune_demo.s: nodej_cv_tune_demo.cpp.s
+.PHONY : nodej_cv_tune_demo.s
+
+# target to generate assembly for a file
+nodej_cv_tune_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_cv_tune_demo.dir/nodej_cv_tune_demo.cpp.s
+.PHONY : nodej_cv_tune_demo.cpp.s
+
+nodej_dataframe_bridge_demo.o: nodej_dataframe_bridge_demo.cpp.o
+.PHONY : nodej_dataframe_bridge_demo.o
+
+# target to build an object file
+nodej_dataframe_bridge_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/nodej_dataframe_bridge_demo.cpp.o
+.PHONY : nodej_dataframe_bridge_demo.cpp.o
+
+nodej_dataframe_bridge_demo.i: nodej_dataframe_bridge_demo.cpp.i
+.PHONY : nodej_dataframe_bridge_demo.i
+
+# target to preprocess a source file
+nodej_dataframe_bridge_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/nodej_dataframe_bridge_demo.cpp.i
+.PHONY : nodej_dataframe_bridge_demo.cpp.i
+
+nodej_dataframe_bridge_demo.s: nodej_dataframe_bridge_demo.cpp.s
+.PHONY : nodej_dataframe_bridge_demo.s
+
+# target to generate assembly for a file
+nodej_dataframe_bridge_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/nodej_dataframe_bridge_demo.cpp.s
+.PHONY : nodej_dataframe_bridge_demo.cpp.s
+
+nodej_flow_demo.o: nodej_flow_demo.cpp.o
+.PHONY : nodej_flow_demo.o
+
+# target to build an object file
+nodej_flow_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/nodej_flow_demo.cpp.o
+.PHONY : nodej_flow_demo.cpp.o
+
+nodej_flow_demo.i: nodej_flow_demo.cpp.i
+.PHONY : nodej_flow_demo.i
+
+# target to preprocess a source file
+nodej_flow_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/nodej_flow_demo.cpp.i
+.PHONY : nodej_flow_demo.cpp.i
+
+nodej_flow_demo.s: nodej_flow_demo.cpp.s
+.PHONY : nodej_flow_demo.s
+
+# target to generate assembly for a file
+nodej_flow_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_demo.dir/nodej_flow_demo.cpp.s
+.PHONY : nodej_flow_demo.cpp.s
+
 nodej_model_families_demo.o: nodej_model_families_demo.cpp.o
 .PHONY : nodej_model_families_demo.o
 
@@ -243,6 +385,54 @@ nodej_model_families_demo.s: nodej_model_families_demo.cpp.s
 nodej_model_families_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_model_families_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_model_families_demo.dir/nodej_model_families_demo.cpp.s
 .PHONY : nodej_model_families_demo.cpp.s
+
+nodej_multiclass_demo.o: nodej_multiclass_demo.cpp.o
+.PHONY : nodej_multiclass_demo.o
+
+# target to build an object file
+nodej_multiclass_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/nodej_multiclass_demo.cpp.o
+.PHONY : nodej_multiclass_demo.cpp.o
+
+nodej_multiclass_demo.i: nodej_multiclass_demo.cpp.i
+.PHONY : nodej_multiclass_demo.i
+
+# target to preprocess a source file
+nodej_multiclass_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/nodej_multiclass_demo.cpp.i
+.PHONY : nodej_multiclass_demo.cpp.i
+
+nodej_multiclass_demo.s: nodej_multiclass_demo.cpp.s
+.PHONY : nodej_multiclass_demo.s
+
+# target to generate assembly for a file
+nodej_multiclass_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/nodej_multiclass_demo.cpp.s
+.PHONY : nodej_multiclass_demo.cpp.s
+
+nodej_online_demo.o: nodej_online_demo.cpp.o
+.PHONY : nodej_online_demo.o
+
+# target to build an object file
+nodej_online_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/nodej_online_demo.cpp.o
+.PHONY : nodej_online_demo.cpp.o
+
+nodej_online_demo.i: nodej_online_demo.cpp.i
+.PHONY : nodej_online_demo.i
+
+# target to preprocess a source file
+nodej_online_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/nodej_online_demo.cpp.i
+.PHONY : nodej_online_demo.cpp.i
+
+nodej_online_demo.s: nodej_online_demo.cpp.s
+.PHONY : nodej_online_demo.s
+
+# target to generate assembly for a file
+nodej_online_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/nodej_online_demo.cpp.s
+.PHONY : nodej_online_demo.cpp.s
 
 nodej_prep_split_demo.o: nodej_prep_split_demo.cpp.o
 .PHONY : nodej_prep_split_demo.o
@@ -283,11 +473,31 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... plussai_nodej_cv_tune_demo"
+	@echo "... plussai_nodej_dataframe_bridge_demo"
+	@echo "... plussai_nodej_flow_demo"
 	@echo "... plussai_nodej_model_families_demo"
+	@echo "... plussai_nodej_multiclass_demo"
+	@echo "... plussai_nodej_online_demo"
 	@echo "... plussai_nodej_prep_split_demo"
+	@echo "... nodej_cv_tune_demo.o"
+	@echo "... nodej_cv_tune_demo.i"
+	@echo "... nodej_cv_tune_demo.s"
+	@echo "... nodej_dataframe_bridge_demo.o"
+	@echo "... nodej_dataframe_bridge_demo.i"
+	@echo "... nodej_dataframe_bridge_demo.s"
+	@echo "... nodej_flow_demo.o"
+	@echo "... nodej_flow_demo.i"
+	@echo "... nodej_flow_demo.s"
 	@echo "... nodej_model_families_demo.o"
 	@echo "... nodej_model_families_demo.i"
 	@echo "... nodej_model_families_demo.s"
+	@echo "... nodej_multiclass_demo.o"
+	@echo "... nodej_multiclass_demo.i"
+	@echo "... nodej_multiclass_demo.s"
+	@echo "... nodej_online_demo.o"
+	@echo "... nodej_online_demo.i"
+	@echo "... nodej_online_demo.s"
 	@echo "... nodej_prep_split_demo.o"
 	@echo "... nodej_prep_split_demo.i"
 	@echo "... nodej_prep_split_demo.s"

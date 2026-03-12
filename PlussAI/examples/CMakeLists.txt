@@ -38,4 +38,16 @@ if(TARGET pluss)
   )
   target_link_libraries(plussai_adam_oop_demo PRIVATE pluss)
   target_compile_features(plussai_adam_oop_demo PRIVATE cxx_std_20)
+
+  add_executable(plussai_minimax_demo
+    minimax_demo.cpp
+  )
+  target_link_libraries(plussai_minimax_demo PRIVATE pluss)
+  target_compile_features(plussai_minimax_demo PRIVATE cxx_std_20)
+
+  add_executable(plussai_minimax_multiblock_constraints_demo
+    minimax_multiblock_constraints_demo.cpp
+  )
+  target_link_libraries(plussai_minimax_multiblock_constraints_demo PRIVATE pluss)
+  target_compile_features(plussai_minimax_multiblock_constraints_demo PRIVATE cxx_std_20)
 endif()
