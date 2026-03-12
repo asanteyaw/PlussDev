@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /opt/homebrew/bin/cmake
+CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
 
 # The command to remove a file.
-RM = /opt/homebrew/bin/cmake -E rm -f
+RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -373,6 +373,20 @@ nodej_prep_test: PlussAI/test/CMakeFiles/nodej_prep_test.dir/rule
 nodej_prep_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_prep_test.dir/build.make PlussAI/test/CMakeFiles/nodej_prep_test.dir/build
 .PHONY : nodej_prep_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/rule
+
+# Convenience name for target.
+nodej_reliability_io_unsupervised_test: PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/rule
+.PHONY : nodej_reliability_io_unsupervised_test
+
+# fast build rule for target.
+nodej_reliability_io_unsupervised_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/build.make PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/build
+.PHONY : nodej_reliability_io_unsupervised_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_rigorous_suite_test.dir/rule:
@@ -742,6 +756,30 @@ nodej_prep_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_prep_test.dir/build.make PlussAI/test/CMakeFiles/nodej_prep_test.dir/nodej_prep_test.cpp.s
 .PHONY : nodej_prep_test.cpp.s
 
+nodej_reliability_io_unsupervised_test.o: nodej_reliability_io_unsupervised_test.cpp.o
+.PHONY : nodej_reliability_io_unsupervised_test.o
+
+# target to build an object file
+nodej_reliability_io_unsupervised_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/build.make PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/nodej_reliability_io_unsupervised_test.cpp.o
+.PHONY : nodej_reliability_io_unsupervised_test.cpp.o
+
+nodej_reliability_io_unsupervised_test.i: nodej_reliability_io_unsupervised_test.cpp.i
+.PHONY : nodej_reliability_io_unsupervised_test.i
+
+# target to preprocess a source file
+nodej_reliability_io_unsupervised_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/build.make PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/nodej_reliability_io_unsupervised_test.cpp.i
+.PHONY : nodej_reliability_io_unsupervised_test.cpp.i
+
+nodej_reliability_io_unsupervised_test.s: nodej_reliability_io_unsupervised_test.cpp.s
+.PHONY : nodej_reliability_io_unsupervised_test.s
+
+# target to generate assembly for a file
+nodej_reliability_io_unsupervised_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/build.make PlussAI/test/CMakeFiles/nodej_reliability_io_unsupervised_test.dir/nodej_reliability_io_unsupervised_test.cpp.s
+.PHONY : nodej_reliability_io_unsupervised_test.cpp.s
+
 nodej_rigorous_suite_test.o: nodej_rigorous_suite_test.cpp.o
 .PHONY : nodej_rigorous_suite_test.o
 
@@ -866,6 +904,7 @@ help:
 	@echo "... nodej_online_test"
 	@echo "... nodej_phase0_contract_test"
 	@echo "... nodej_prep_test"
+	@echo "... nodej_reliability_io_unsupervised_test"
 	@echo "... nodej_rigorous_suite_test"
 	@echo "... nodej_split_test"
 	@echo "... nodej_tree_test"
@@ -909,6 +948,9 @@ help:
 	@echo "... nodej_prep_test.o"
 	@echo "... nodej_prep_test.i"
 	@echo "... nodej_prep_test.s"
+	@echo "... nodej_reliability_io_unsupervised_test.o"
+	@echo "... nodej_reliability_io_unsupervised_test.i"
+	@echo "... nodej_reliability_io_unsupervised_test.s"
 	@echo "... nodej_rigorous_suite_test.o"
 	@echo "... nodej_rigorous_suite_test.i"
 	@echo "... nodej_rigorous_suite_test.s"

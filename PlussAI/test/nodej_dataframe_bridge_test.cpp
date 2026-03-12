@@ -2,6 +2,7 @@
 #include <pluss/mic.h>
 
 #include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -38,6 +39,26 @@ DataFrame make_regression_frame() {
       {"x1", Thread(x1)},
       {"target", Thread(y)},
       {"weight", Thread(w)},
+  });
+}
+
+DataFrame make_mixed_frame() {
+  const Series x0 = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0}, {6}, f64());
+  const auto note = pluss::make_note({"red", "blue", "red", "green", "blue", "red"});
+  const Series epoch_nanos = pluss::make_series(
+      std::vector<std::int64_t>{
+          1'700'000'000'000'000'000LL, 1'700'000'001'000'000'000LL, 1'700'000'002'000'000'000LL,
+          1'700'000'003'000'000'000LL, 1'700'000'004'000'000'000LL, 1'700'000'005'000'000'000LL},
+      {6},
+      Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+  const Thread ts = Thread(epoch_nanos).cast(pluss::table::ThreadCastTarget::Timeline);
+  const Series y = x0.mul(0.75).add(2.0);
+
+  return DataFrame({
+      {"x0", Thread(x0)},
+      {"color", Thread(note)},
+      {"ts", ts},
+      {"target", Thread(y)},
   });
 }
 
@@ -106,6 +127,42 @@ bool run_nodej_dataframe_bridge_checks(std::ostream* err = nullptr) {
   auto bad_or = labeled_batch_from_dataframe(frame, bad_options);
   if (bad_or.ok() || bad_or.status().code != StatusCode::InvalidArgument) {
     if (err) *err << "adapter should reject unknown label feature names\n";
+    return false;
+  }
+
+  const DataFrame mixed = make_mixed_frame();
+  DataFrameBatchOptions mixed_options{};
+  mixed_options.feature_names = {"x0", "color", "ts", "target"};
+  mixed_options.label_feature = "target";
+  mixed_options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+  mixed_options.note_policy = DataNotePolicy::Hash;
+  auto mixed_or = labeled_batch_from_dataframe(mixed, mixed_options);
+  if (!mixed_or.ok()) {
+    if (err) *err << "mixed-schema adapter should hash Note columns and cast temporal columns\n";
+    return false;
+  }
+  if (mixed_or.value().features.feature_count() != 3 || mixed_or.value().features.sample_count() != 6) {
+    if (err) *err << "mixed-schema adapter should emit three routed features\n";
+    return false;
+  }
+  if (!mixed_or.value().features.x.isfinite().all().item<bool>()) {
+    if (err) *err << "mixed-schema adapter should emit finite hashed/casted features\n";
+    return false;
+  }
+
+  DataFrameBatchOptions drop_note = mixed_options;
+  drop_note.note_policy = DataNotePolicy::Drop;
+  auto drop_or = labeled_batch_from_dataframe(mixed, drop_note);
+  if (!drop_or.ok() || drop_or.value().features.feature_count() != 2) {
+    if (err) *err << "note drop policy should remove Note-backed predictors\n";
+    return false;
+  }
+
+  DataFrameBatchOptions reject_note = mixed_options;
+  reject_note.note_policy = DataNotePolicy::Reject;
+  auto reject_or = labeled_batch_from_dataframe(mixed, reject_note);
+  if (reject_or.ok() || reject_or.status().code != StatusCode::InvalidArgument) {
+    if (err) *err << "note reject policy should fail on Note-backed predictors\n";
     return false;
   }
 

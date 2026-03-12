@@ -121,7 +121,7 @@ TEST_CASE("CUDA bridge enables linalg fallback when strict native is off", "[cud
   require_close_(inv_cuda.to(pluss::pCPU).to_vec<float>(), inv_cpu.to_vec<float>(), 2e-3f);
 }
 
-TEST_CASE("CUDA strict native linalg overrides bridge fallback", "[cuda][bridge][policy]") {
+TEST_CASE("CUDA strict native linalg executes supported native route", "[cuda][bridge][policy]") {
   const ScopedEnvVar bridge_on("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
   const ScopedEnvVar baseline_on("PLUSS_CUDA_NATIVE_BASELINE", "1");
   const ScopedEnvVar linalg_on("PLUSS_CUDA_NATIVE_LINALG", "1");
@@ -132,11 +132,10 @@ TEST_CASE("CUDA strict native linalg overrides bridge fallback", "[cuda][bridge]
     return;
   }
 
-  const auto a_cuda = pluss::make_series(std::vector<float>{2.f, 0.f, 0.f, 2.f}, {2, 2}).to(pluss::pCUDA);
-  try {
-    (void)pluss::subsp::linearalg::det(a_cuda);
-    FAIL("Strict native linalg should fail until CUDA kernel is implemented");
-  } catch (const std::exception& e) {
-    REQUIRE(std::string(e.what()).find("strict native CUDA route requested") != std::string::npos);
-  }
+  const auto a_cpu = pluss::make_series(std::vector<float>{2.f, 0.f, 0.f, 2.f}, {2, 2});
+  const auto a_cuda = a_cpu.to(pluss::pCUDA);
+  const auto det_cpu = pluss::subsp::linearalg::det(a_cpu);
+  const auto det_cuda = pluss::subsp::linearalg::det(a_cuda);
+  REQUIRE(det_cuda.platform() == pluss::pCUDA);
+  require_close_(det_cuda.to(pluss::pCPU).to_vec<float>(), det_cpu.to_vec<float>(), 2e-3f);
 }

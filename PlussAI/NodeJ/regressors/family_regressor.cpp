@@ -35,6 +35,10 @@ const char* family_name(ModelFamily family) {
       return "Kernel";
     case ModelFamily::Bayes:
       return "Bayes";
+    case ModelFamily::Cluster:
+      return "Cluster";
+    case ModelFamily::Decompose:
+      return "Decompose";
   }
   return "Unknown";
 }
@@ -48,6 +52,9 @@ bool is_phase0_family(ModelFamily family) {
     case ModelFamily::Kernel:
     case ModelFamily::Bayes:
       return true;
+    case ModelFamily::Cluster:
+    case ModelFamily::Decompose:
+      return false;
   }
   return false;
 }
@@ -62,6 +69,26 @@ bool is_phase0_family(ModelFamily family) {
 
 [[nodiscard]] Config f64_on(Platform platform) {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(platform);
+}
+
+[[nodiscard]] Series state_f64(std::vector<double> values) {
+  const std::int64_t n = static_cast<std::int64_t>(values.size());
+  return pluss::make_series(std::move(values), {n}, f64_cpu());
+}
+
+[[nodiscard]] Series state_i64(std::vector<std::int64_t> values) {
+  const std::int64_t n = static_cast<std::int64_t>(values.size());
+  return pluss::make_series(std::move(values), {n}, i64_cpu());
+}
+
+[[nodiscard]] std::vector<double> vec_f64(const Series& x) {
+  if (!x.defined()) return {};
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+}
+
+[[nodiscard]] std::vector<std::int64_t> vec_i64(const Series& x) {
+  if (!x.defined()) return {};
+  return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).to_vec<std::int64_t>();
 }
 
 [[nodiscard]] Series make_index_series(const std::vector<std::int64_t>& indices, Platform platform) {
@@ -446,6 +473,34 @@ public:
     return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
   }
 
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0,
+                   static_cast<double>(feature_count_),
+                   static_cast<double>(sample_count_),
+                   static_cast<double>(k_)}),
+        x_train_,
+        y_train_,
+        mean_,
+        scale_,
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.size() < 5) return Status::invalid_argument("NeighborRegressor::load_state expects 5 tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 4) return Status::invalid_argument("NeighborRegressor::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    feature_count_ = static_cast<std::int64_t>(meta[1]);
+    sample_count_ = static_cast<std::int64_t>(meta[2]);
+    k_ = static_cast<std::int64_t>(meta[3]);
+    x_train_ = state[1];
+    y_train_ = state[2];
+    mean_ = state[3];
+    scale_ = state[4];
+    return Status::success();
+  }
+
 private:
   [[nodiscard]] Status validate_ready(const FeatureBatch& batch, const char* where) const {
     Status data_status = validate_features(batch);
@@ -568,6 +623,53 @@ public:
       metrics = {MetricKind::Mse, MetricKind::Rmse, MetricKind::R2};
     }
     return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
+  }
+
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    std::vector<double> flat{};
+    flat.reserve(nodes_.size() * 6);
+    for (const auto& node : nodes_) {
+      flat.push_back(node.is_leaf ? 1.0 : 0.0);
+      flat.push_back(static_cast<double>(node.feature));
+      flat.push_back(node.threshold);
+      flat.push_back(static_cast<double>(node.left));
+      flat.push_back(static_cast<double>(node.right));
+      flat.push_back(node.leaf_value);
+    }
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0,
+                   static_cast<double>(feature_count_),
+                   static_cast<double>(sample_count_),
+                   static_cast<double>(nodes_.size())}),
+        state_f64(std::move(flat)),
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.size() < 2) return Status::invalid_argument("TreeRegressor::load_state expects 2 tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 4) return Status::invalid_argument("TreeRegressor::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    feature_count_ = static_cast<std::int64_t>(meta[1]);
+    sample_count_ = static_cast<std::int64_t>(meta[2]);
+    const std::size_t node_count = static_cast<std::size_t>(std::max<double>(0.0, meta[3]));
+    const auto flat = vec_f64(state[1]);
+    nodes_.assign(node_count, TreeNode{});
+    for (std::size_t i = 0; i < node_count; ++i) {
+      const std::size_t base = i * 6;
+      if (base + 5 >= flat.size()) break;
+      TreeNode node{};
+      node.is_leaf = flat[base] > 0.5;
+      node.feature = static_cast<std::int64_t>(flat[base + 1]);
+      node.threshold = flat[base + 2];
+      node.left = static_cast<std::int64_t>(flat[base + 3]);
+      node.right = static_cast<std::int64_t>(flat[base + 4]);
+      node.leaf_value = flat[base + 5];
+      nodes_[i] = node;
+    }
+    x_train_ = Series::undefined();
+    y_train_ = Series::undefined();
+    return Status::success();
   }
 
 private:
@@ -817,6 +919,26 @@ public:
     return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
   }
 
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0,
+                   static_cast<double>(feature_count_),
+                   pinv_rcond_}),
+        beta_,
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.size() < 2) return Status::invalid_argument("BayesRegressor::load_state expects 2 tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 3) return Status::invalid_argument("BayesRegressor::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    feature_count_ = static_cast<std::int64_t>(meta[1]);
+    pinv_rcond_ = meta[2];
+    beta_ = state[1];
+    return Status::success();
+  }
+
 private:
   [[nodiscard]] Status validate_ready(const FeatureBatch& batch, const char* where) const {
     Status data_status = validate_features(batch);
@@ -991,6 +1113,66 @@ public:
     return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
   }
 
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    std::vector<Series> out{};
+    out.reserve(2 + learners_.size() * 4);
+    out.push_back(state_f64({trained_ ? 1.0 : 0.0,
+                             static_cast<double>(sample_count_),
+                             static_cast<double>(feature_count_),
+                             static_cast<double>(learners_.size())}));
+    for (const auto& member : learners_) {
+      out.push_back(state_i64(member.feature_ids));
+      if (!member.tree) {
+        out.push_back(state_i64({0}));
+        continue;
+      }
+      StatusOr<std::vector<Series>> tree_state_or = member.tree->dump_state();
+      if (!tree_state_or.ok()) return StatusOr<std::vector<Series>>(tree_state_or.status());
+      const auto& tree_state = tree_state_or.value();
+      out.push_back(state_i64({static_cast<std::int64_t>(tree_state.size())}));
+      out.insert(out.end(), tree_state.begin(), tree_state.end());
+    }
+    return StatusOr<std::vector<Series>>(std::move(out));
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.empty()) return Status::invalid_argument("EnsembleRegressor::load_state expects metadata tensor.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 4) return Status::invalid_argument("EnsembleRegressor::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    sample_count_ = static_cast<std::int64_t>(meta[1]);
+    feature_count_ = static_cast<std::int64_t>(meta[2]);
+    const std::int64_t learner_count = static_cast<std::int64_t>(meta[3]);
+
+    learners_.clear();
+    learners_.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, learner_count)));
+    std::size_t cursor = 1;
+    for (std::int64_t li = 0; li < learner_count; ++li) {
+      if (cursor >= state.size()) return Status::invalid_argument("EnsembleRegressor::load_state truncated state.");
+      EnsembleMember member{};
+      member.feature_ids = vec_i64(state[cursor++]);
+      if (cursor >= state.size()) return Status::invalid_argument("EnsembleRegressor::load_state missing tree state size.");
+      const auto size_vec = vec_i64(state[cursor++]);
+      const std::int64_t tree_items = size_vec.empty() ? 0 : size_vec.front();
+      if (tree_items <= 0) {
+        learners_.push_back(std::move(member));
+        continue;
+      }
+      std::vector<Series> tree_state{};
+      tree_state.reserve(static_cast<std::size_t>(tree_items));
+      for (std::int64_t ti = 0; ti < tree_items; ++ti) {
+        if (cursor >= state.size()) return Status::invalid_argument("EnsembleRegressor::load_state truncated tree state.");
+        tree_state.push_back(state[cursor++]);
+      }
+      auto tree = std::make_unique<TreeRegressor>(TreeFamilyOptions{.criterion = TreeCriterion::Mse});
+      Status load_status = tree->load_state(tree_state);
+      if (!load_status.ok()) return load_status;
+      member.tree = std::move(tree);
+      learners_.push_back(std::move(member));
+    }
+    return Status::success();
+  }
+
 private:
   struct EnsembleMember {
     std::unique_ptr<TreeRegressor> tree{};
@@ -1152,6 +1334,32 @@ public:
     return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
   }
 
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0,
+                   static_cast<double>(sample_count_),
+                   static_cast<double>(feature_count_),
+                   gamma_,
+                   lambda_}),
+        x_train_,
+        alpha_,
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.size() < 3) return Status::invalid_argument("KernelRegressor::load_state expects 3 tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 5) return Status::invalid_argument("KernelRegressor::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    sample_count_ = static_cast<std::int64_t>(meta[1]);
+    feature_count_ = static_cast<std::int64_t>(meta[2]);
+    gamma_ = meta[3];
+    lambda_ = meta[4];
+    x_train_ = state[1];
+    alpha_ = state[2];
+    return Status::success();
+  }
+
 private:
   [[nodiscard]] Status validate_ready(const FeatureBatch& batch, const char* where) const {
     Status data_status = validate_features(batch);
@@ -1265,6 +1473,24 @@ public:
     return regression_metrics(truth, pred_or.value(), metrics, options.regression_quantile);
   }
 
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(feature_count_), pinv_rcond_}),
+        beta_,
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.size() < 2) return Status::invalid_argument("LinearRegressor::load_state expects 2 tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 3) return Status::invalid_argument("LinearRegressor::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    feature_count_ = static_cast<std::int64_t>(meta[1]);
+    pinv_rcond_ = meta[2];
+    beta_ = state[1];
+    return Status::success();
+  }
+
 private:
   [[nodiscard]] Status validate_ready(const FeatureBatch& batch, const char* where) const {
     Status data_status = validate_features(batch);
@@ -1320,6 +1546,21 @@ public:
     }
     return StatusOr<Series>(
         Status::not_implemented(std::string(family_name(family_)) + " regressor assess() is scheduled after Phase 0."));
+  }
+
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(features_)}),
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.empty()) return Status::invalid_argument("FamilyRegressor::load_state expects metadata tensor.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 2) return Status::invalid_argument("FamilyRegressor::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    features_ = static_cast<std::int64_t>(meta[1]);
+    return Status::success();
   }
 
 private:

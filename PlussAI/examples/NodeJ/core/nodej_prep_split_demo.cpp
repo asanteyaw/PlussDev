@@ -16,14 +16,32 @@ using pluss::ai::nodej::SplitOptions;
 using pluss::ai::nodej::prep::CategoryOverflowPolicy;
 using pluss::ai::nodej::prep::FrequencyEncoder;
 using pluss::ai::nodej::prep::FrequencyEncoderOptions;
+using pluss::ai::nodej::prep::IterativeImputer;
+using pluss::ai::nodej::prep::IterativeImputerOptions;
+using pluss::ai::nodej::prep::MaxAbsScaler;
 using pluss::ai::nodej::prep::MinMaxScaler;
+using pluss::ai::nodej::prep::NeighborImputer;
+using pluss::ai::nodej::prep::NeighborImputerOptions;
 using pluss::ai::nodej::prep::OneHotEncoder;
 using pluss::ai::nodej::prep::OneHotEncoderOptions;
+using pluss::ai::nodej::prep::PolynomialLift;
+using pluss::ai::nodej::prep::PolynomialLiftOptions;
+using pluss::ai::nodej::prep::PowerMap;
+using pluss::ai::nodej::prep::PowerMapOptions;
+using pluss::ai::nodej::prep::PowerMapMode;
+using pluss::ai::nodej::prep::QuantileMap;
+using pluss::ai::nodej::prep::QuantileMapOptions;
+using pluss::ai::nodej::prep::QuantileMapOutput;
 using pluss::ai::nodej::prep::RobustScaler;
 using pluss::ai::nodej::prep::SimpleImputer;
 using pluss::ai::nodej::prep::SimpleImputerOptions;
 using pluss::ai::nodej::prep::SimpleImputerStrategy;
 using pluss::ai::nodej::prep::StandardScaler;
+using pluss::ai::nodej::prep::ThresholdBinarizer;
+using pluss::ai::nodej::prep::ThresholdBinarizerOptions;
+using pluss::ai::nodej::prep::VectorNorm;
+using pluss::ai::nodej::prep::VectorNormalizer;
+using pluss::ai::nodej::prep::VectorNormalizerOptions;
 
 Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -114,6 +132,57 @@ int main() {
   if (!require_ok(rb_or, "RobustScaler.learn_map")) return 1;
   const Series x_rb = rb_or.move_value();
   print_shape("robust", x_rb);
+
+  NeighborImputer knn_imp(NeighborImputerOptions{.neighbors = 2});
+  auto knn_or = knn_imp.learn_map(dense);
+  if (!require_ok(knn_or, "NeighborImputer.learn_map")) return 1;
+  print_shape("neighbor-imputed", knn_or.value());
+
+  IterativeImputer it_imp(IterativeImputerOptions{.rounds = 6, .ridge = 1e-8});
+  auto it_or = it_imp.learn_map(dense);
+  if (!require_ok(it_or, "IterativeImputer.learn_map")) return 1;
+  print_shape("iterative-imputed", it_or.value());
+
+  VectorNormalizer norm(VectorNormalizerOptions{.norm = VectorNorm::L2});
+  auto norm_or = norm.learn_map(FeatureBatch{.x = x_imputed, .layout = ObservationLayout::Rows});
+  if (!require_ok(norm_or, "VectorNormalizer.learn_map")) return 1;
+  print_shape("vector-normalized", norm_or.value());
+
+  MaxAbsScaler maxabs{};
+  auto maxabs_or = maxabs.learn_map(FeatureBatch{.x = x_imputed, .layout = ObservationLayout::Rows});
+  if (!require_ok(maxabs_or, "MaxAbsScaler.learn_map")) return 1;
+  print_shape("maxabs", maxabs_or.value());
+
+  QuantileMap qmap(QuantileMapOptions{.output = QuantileMapOutput::Uniform});
+  auto qmap_or = qmap.learn_map(FeatureBatch{.x = x_imputed, .layout = ObservationLayout::Rows});
+  if (!require_ok(qmap_or, "QuantileMap.learn_map")) return 1;
+  print_shape("quantile-map", qmap_or.value());
+
+  PowerMap pmap(PowerMapOptions{
+      .mode = PowerMapMode::YeoJohnson,
+      .standardize = true,
+  });
+  auto pmap_or = pmap.learn_map(FeatureBatch{.x = x_imputed, .layout = ObservationLayout::Rows});
+  if (!require_ok(pmap_or, "PowerMap.learn_map")) return 1;
+  print_shape("power-map", pmap_or.value());
+
+  ThresholdBinarizer bin(ThresholdBinarizerOptions{
+      .threshold = 0.0,
+      .low_value = 0.0,
+      .high_value = 1.0,
+  });
+  auto bin_or = bin.learn_map(FeatureBatch{.x = x_z, .layout = ObservationLayout::Rows});
+  if (!require_ok(bin_or, "ThresholdBinarizer.learn_map")) return 1;
+  print_shape("binarized", bin_or.value());
+
+  PolynomialLift poly(PolynomialLiftOptions{
+      .degree = 2,
+      .interactions_only = false,
+      .include_bias = true,
+  });
+  auto poly_or = poly.learn_map(FeatureBatch{.x = x_imputed, .layout = ObservationLayout::Rows});
+  if (!require_ok(poly_or, "PolynomialLift.learn_map")) return 1;
+  print_shape("polynomial-lift", poly_or.value());
 
   const Series x_query = pluss::make_series(std::vector<double>{
                                                 7.0, 5.0, 1.0,

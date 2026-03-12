@@ -1,6 +1,6 @@
 #include "pluss/ai/lymph/quick.h"
 
-namespace pluss::ai::lymph {
+namespace pluss::ai::lymph::quick {
 namespace {
 
 template <class FamilyOptionsT>
@@ -53,12 +53,65 @@ StatusOr<std::unique_ptr<nodej::RegressorBase>> learn_regressor(const nodej::Mod
   return StatusOr<std::unique_ptr<nodej::RegressorBase>>(std::move(model));
 }
 
+StatusOr<std::unique_ptr<nodej::TransformerBase>> learn_transformer(const nodej::ModelSpec& spec,
+                                                                     const nodej::FeatureBatch& train,
+                                                                     const nodej::TrainOptions& options) {
+  StatusOr<std::unique_ptr<nodej::TransformerBase>> model_or = nodej::make_transformer(spec);
+  if (!model_or.ok()) return StatusOr<std::unique_ptr<nodej::TransformerBase>>(model_or.status());
+  std::unique_ptr<nodej::TransformerBase> model = model_or.move_value();
+  nodej::Status status = model->learn(train, options);
+  if (!status.ok()) return StatusOr<std::unique_ptr<nodej::TransformerBase>>(std::move(status));
+  return StatusOr<std::unique_ptr<nodej::TransformerBase>>(std::move(model));
+}
+
 StatusOr<nodej::Flow> learn_flow(nodej::Flow flow,
                                   const nodej::LabeledBatch& train,
                                   const nodej::TrainOptions& options) {
   nodej::Status status = flow.learn(train, options);
   if (!status.ok()) return StatusOr<nodej::Flow>(std::move(status));
   return StatusOr<nodej::Flow>(std::move(flow));
+}
+
+StatusOr<nodej::Flow> learn_flow(nodej::Flow flow,
+                                  const pluss::table::DataFrame& frame,
+                                  const nodej::DataFrameBatchOptions& data_options,
+                                  const nodej::TrainOptions& options) {
+  nodej::Status status = flow.learn(frame, data_options, options);
+  if (!status.ok()) return StatusOr<nodej::Flow>(std::move(status));
+  return StatusOr<nodej::Flow>(std::move(flow));
+}
+
+StatusOr<FrameFlowArtifact> fit_evaluate_save(const nodej::ModelSpec& spec,
+                                              const pluss::table::DataFrame& frame,
+                                              const nodej::DataFrameBatchOptions& data_options,
+                                              const nodej::TrainOptions& train_options,
+                                              const nodej::AssessOptions& assess_options,
+                                              const std::string& save_path,
+                                              nodej::io::FlowBundleMetadata metadata) {
+  auto flow_or = nodej::make_flow(spec);
+  if (!flow_or.ok()) return StatusOr<FrameFlowArtifact>(flow_or.status());
+  nodej::Flow flow = flow_or.move_value();
+
+  auto batch_or = nodej::labeled_batch_from_dataframe(frame, data_options);
+  if (!batch_or.ok()) return StatusOr<FrameFlowArtifact>(batch_or.status());
+  nodej::LabeledBatch batch = batch_or.move_value();
+
+  nodej::Status learn_status = flow.learn(batch, train_options);
+  if (!learn_status.ok()) return StatusOr<FrameFlowArtifact>(std::move(learn_status));
+
+  auto metrics_or = flow.assess(batch, assess_options);
+  if (!metrics_or.ok()) return StatusOr<FrameFlowArtifact>(metrics_or.status());
+
+  if (!save_path.empty()) {
+    nodej::Status save_status = nodej::io::save(save_path, flow, batch, train_options, std::move(metadata));
+    if (!save_status.ok()) return StatusOr<FrameFlowArtifact>(std::move(save_status));
+  }
+
+  FrameFlowArtifact artifact{};
+  artifact.flow = std::move(flow);
+  artifact.metrics = metrics_or.move_value();
+  artifact.train_batch = std::move(batch);
+  return StatusOr<FrameFlowArtifact>(std::move(artifact));
 }
 
 StatusOr<nodej::Flow> linear_classifier_flow(const nodej::LabeledBatch& train,
@@ -120,6 +173,61 @@ StatusOr<nodej::Flow> ridge_regressor_flow(const nodej::LabeledBatch& train,
   }
   if (with_standard_scaler) {
     nodej::Status s = flow.add_standard_scaler();
+    if (!s.ok()) return StatusOr<nodej::Flow>(std::move(s));
+  }
+  return learn_flow(std::move(flow), train, options);
+}
+
+StatusOr<nodej::Flow> linear_regressor_flow(const nodej::LabeledBatch& train,
+                                            const nodej::LinearFamilyOptions& family_options,
+                                            bool with_standard_scaler,
+                                            bool with_mean_imputer,
+                                            const nodej::TrainOptions& options) {
+  nodej::LinearFamilyOptions resolved = family_options;
+  resolved.objective = nodej::LinearObjective::LeastSquares;
+  nodej::ModelSpec spec{
+      .task = nodej::TaskKind::Regression,
+      .family = nodej::ModelFamily::Linear,
+      .options = resolved,
+  };
+  StatusOr<nodej::Flow> flow_or = nodej::make_flow(spec);
+  if (!flow_or.ok()) return StatusOr<nodej::Flow>(flow_or.status());
+  nodej::Flow flow = flow_or.move_value();
+
+  if (with_mean_imputer) {
+    nodej::Status s = flow.add_simple_imputer(nodej::prep::SimpleImputerOptions{
+        .strategy = nodej::prep::SimpleImputerStrategy::Mean,
+    });
+    if (!s.ok()) return StatusOr<nodej::Flow>(std::move(s));
+  }
+  if (with_standard_scaler) {
+    nodej::Status s = flow.add_standard_scaler();
+    if (!s.ok()) return StatusOr<nodej::Flow>(std::move(s));
+  }
+  return learn_flow(std::move(flow), train, options);
+}
+
+StatusOr<nodej::Flow> tree_regressor_flow(const nodej::LabeledBatch& train,
+                                          const nodej::TreeFamilyOptions& family_options,
+                                          bool with_mean_imputer,
+                                          const nodej::TrainOptions& options) {
+  nodej::TreeFamilyOptions resolved = family_options;
+  if (resolved.criterion == nodej::TreeCriterion::Gini || resolved.criterion == nodej::TreeCriterion::Entropy) {
+    resolved.criterion = nodej::TreeCriterion::Mse;
+  }
+  nodej::ModelSpec spec{
+      .task = nodej::TaskKind::Regression,
+      .family = nodej::ModelFamily::Tree,
+      .options = resolved,
+  };
+  StatusOr<nodej::Flow> flow_or = nodej::make_flow(spec);
+  if (!flow_or.ok()) return StatusOr<nodej::Flow>(flow_or.status());
+  nodej::Flow flow = flow_or.move_value();
+
+  if (with_mean_imputer) {
+    nodej::Status s = flow.add_simple_imputer(nodej::prep::SimpleImputerOptions{
+        .strategy = nodej::prep::SimpleImputerStrategy::Mean,
+    });
     if (!s.ok()) return StatusOr<nodej::Flow>(std::move(s));
   }
   return learn_flow(std::move(flow), train, options);
@@ -396,4 +504,44 @@ StatusOr<std::unique_ptr<nodej::RegressorBase>> rbf_kernel_regressor(const nodej
       options);
 }
 
-} // namespace pluss::ai::lymph
+StatusOr<std::unique_ptr<nodej::TransformerBase>> kmeans_clusterer(const nodej::FeatureBatch& train,
+                                                                    std::int64_t clusters,
+                                                                    std::int64_t restarts,
+                                                                    std::int64_t max_iterations,
+                                                                    double tolerance,
+                                                                    const nodej::TrainOptions& options) {
+  const nodej::ModelSpec spec{
+      .task = nodej::TaskKind::Transform,
+      .family = nodej::ModelFamily::Cluster,
+      .options = nodej::ClusterFamilyOptions{
+          .method = nodej::ClusterMethod::KMeans,
+          .clusters = clusters,
+          .max_iterations = max_iterations,
+          .restarts = restarts,
+          .tolerance = tolerance,
+      },
+  };
+  return learn_transformer(spec, train, options);
+}
+
+StatusOr<std::unique_ptr<nodej::TransformerBase>> pca_mapper(const nodej::FeatureBatch& train,
+                                                              std::int64_t components,
+                                                              bool whiten,
+                                                              std::int64_t max_iterations,
+                                                              double tolerance,
+                                                              const nodej::TrainOptions& options) {
+  const nodej::ModelSpec spec{
+      .task = nodej::TaskKind::Transform,
+      .family = nodej::ModelFamily::Decompose,
+      .options = nodej::DecomposeFamilyOptions{
+          .method = nodej::DecomposeMethod::Pca,
+          .components = components,
+          .whiten = whiten,
+          .max_iterations = max_iterations,
+          .tolerance = tolerance,
+      },
+  };
+  return learn_transformer(spec, train, options);
+}
+
+} // namespace pluss::ai::lymph::quick

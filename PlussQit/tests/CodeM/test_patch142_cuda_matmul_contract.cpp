@@ -73,6 +73,9 @@ TEST_CASE("CUDA matmul baseline capability is runtime-dynamic", "[cuda][matmul][
     REQUIRE(
         pluss::cuda::supports_matmul_native_baseline(pluss::ScalarType::Float32, pluss::ScalarType::Float32) ==
         cuda_ready);
+    REQUIRE(
+        pluss::cuda::supports_matmul_native_baseline(pluss::ScalarType::Float64, pluss::ScalarType::Float64) ==
+        cuda_ready);
     REQUIRE_FALSE(pluss::cuda::supports_matmul_native_baseline(pluss::ScalarType::Int64, pluss::ScalarType::Int64));
   }
 }
@@ -116,7 +119,7 @@ TEST_CASE("CUDA bridge enables matmul fallback when strict native is off", "[cud
   require_close_(got.to(pluss::pCPU).to_vec<float>(), a_cpu.matmul(b_cpu).to_vec<float>());
 }
 
-TEST_CASE("CUDA strict native matmul overrides bridge fallback", "[cuda][bridge][policy][matmul]") {
+TEST_CASE("CUDA strict native matmul executes supported native route", "[cuda][bridge][policy][matmul]") {
   const ScopedEnvVar bridge_on("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
   const ScopedEnvVar baseline_on("PLUSS_CUDA_NATIVE_BASELINE", "1");
   const ScopedEnvVar matmul_on("PLUSS_CUDA_NATIVE_MATMUL", "1");
@@ -127,12 +130,11 @@ TEST_CASE("CUDA strict native matmul overrides bridge fallback", "[cuda][bridge]
     return;
   }
 
-  const auto a_cuda = pluss::make_series(std::vector<float>{1.f, 2.f, 3.f, 4.f}, {2, 2}).to(pluss::pCUDA);
-  const auto b_cuda = pluss::make_series(std::vector<float>{2.f, 0.f, 1.f, 3.f}, {2, 2}).to(pluss::pCUDA);
-  try {
-    (void)a_cuda.matmul(b_cuda);
-    FAIL("Strict native matmul should fail until CUDA kernel is implemented");
-  } catch (const std::exception& e) {
-    REQUIRE(std::string(e.what()).find("strict native CUDA route requested") != std::string::npos);
-  }
+  const auto a_cpu = pluss::make_series(std::vector<float>{1.f, 2.f, 3.f, 4.f}, {2, 2});
+  const auto b_cpu = pluss::make_series(std::vector<float>{2.f, 0.f, 1.f, 3.f}, {2, 2});
+  const auto a_cuda = a_cpu.to(pluss::pCUDA);
+  const auto b_cuda = b_cpu.to(pluss::pCUDA);
+  const auto got = a_cuda.matmul(b_cuda);
+  REQUIRE(got.platform() == pluss::pCUDA);
+  require_close_(got.to(pluss::pCPU).to_vec<float>(), a_cpu.matmul(b_cpu).to_vec<float>());
 }

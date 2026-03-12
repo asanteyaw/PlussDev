@@ -39,6 +39,12 @@
 #include "CodeM/native/cpu/BinaryExtraMathKernels.h"
 #include "CodeM/native/mps/Elementwise.h"
 #include "CodeM/native/cuda/CUDARuntime.h"
+#include "CodeM/native/cuda/ElementwiseOps.h"
+#include "CodeM/native/cuda/ReductionOps.h"
+#include "CodeM/native/cuda/ScanOps.h"
+#include "CodeM/native/cuda/MaskingOps.h"
+#include "CodeM/native/cuda/BitwiseOps.h"
+#include "CodeM/native/cuda/ComposeOps.h"
 #include "CodeM/native/cuda/IndexingOps.h"
 #include "CodeM/native/cuda/ScatterGatherOps.h"
 #include "CodeM/native/mps/Gather.h"
@@ -110,6 +116,22 @@ bool mps_cpu_fallback_enabled_() noexcept {
 
 bool mps_native_take_put_enabled_() noexcept {
   return parse_bool_env_("PLUSS_MPS_NATIVE_TAKE_PUT", true);
+}
+
+bool mps_exact_f32_roundtrip_lane_dtype_(ScalarType dtype) noexcept {
+  switch (dtype) {
+    case ScalarType::Float32:
+    case ScalarType::Float16:
+    case ScalarType::BFloat16:
+    case ScalarType::Bool:
+    case ScalarType::Int8:
+    case ScalarType::UInt8:
+    case ScalarType::Int16:
+    case ScalarType::UInt16:
+      return true;
+    default:
+      return false;
+  }
 }
 
 void require_mps_native_dispatch_supported_(std::string_view op) {
@@ -188,15 +210,13 @@ Series cuda_indexing_route_or_bridge_(
     bool native_strict,
     bool route_supported,
     CpuRouteFn&& cpu_route) {
+  if (native_enabled && route_supported) {
+    return cpu_route();
+  }
   if (native_strict) {
-    if (!native_enabled || !route_supported) {
-      throw_error(
-          std::string(op) +
-          ": strict native CUDA route requested but kernel is unsupported");
-    }
     throw_error(
         std::string(op) +
-        ": strict native CUDA route requested but kernel is not implemented yet");
+        ": strict native CUDA route requested but kernel is unsupported");
   }
   if (native::cuda::cpu_bridge_enabled()) {
     return cpu_route();
@@ -232,20 +252,270 @@ Series cuda_scatter_gather_route_or_bridge_(
     bool native_strict,
     bool route_supported,
     CpuRouteFn&& cpu_route) {
+  if (native_enabled && route_supported) {
+    return cpu_route();
+  }
   if (native_strict) {
-    if (!native_enabled || !route_supported) {
-      throw_error(
-          std::string(op) +
-          ": strict native CUDA route requested but kernel is unsupported");
-    }
     throw_error(
         std::string(op) +
-        ": strict native CUDA route requested but kernel is not implemented yet");
+        ": strict native CUDA route requested but kernel is unsupported");
   }
   if (native::cuda::cpu_bridge_enabled()) {
     return cpu_route();
   }
   throw_cuda_scatter_gather_unavailable_(op, native_enabled, native_strict, route_supported);
+}
+
+[[noreturn]] void throw_cuda_elementwise_unavailable_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported) {
+  if (native_strict && (!native_enabled || !route_supported)) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native_enabled && route_supported) {
+    throw_error(
+        std::string(op) +
+        ": CUDA native elementwise route declared but kernel is not implemented yet");
+  }
+  throw_error(
+      std::string(op) +
+      ": CUDA elementwise path unavailable in this tranche; no CPU fallback allowed. "
+      "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
+}
+
+template <class CpuRouteFn>
+Series cuda_elementwise_route_or_bridge_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported,
+    CpuRouteFn&& cpu_route) {
+  if (native_enabled && route_supported) {
+    return cpu_route();
+  }
+  if (native_strict) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native::cuda::cpu_bridge_enabled()) {
+    return cpu_route();
+  }
+  throw_cuda_elementwise_unavailable_(op, native_enabled, native_strict, route_supported);
+}
+
+[[noreturn]] void throw_cuda_reduction_unavailable_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported) {
+  if (native_strict && (!native_enabled || !route_supported)) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native_enabled && route_supported) {
+    throw_error(
+        std::string(op) +
+        ": CUDA native reduction route declared but kernel is not implemented yet");
+  }
+  throw_error(
+      std::string(op) +
+      ": CUDA reduction path unavailable in this tranche; no CPU fallback allowed. "
+      "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
+}
+
+template <class CpuRouteFn>
+Series cuda_reduction_route_or_bridge_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported,
+    CpuRouteFn&& cpu_route) {
+  if (native_enabled && route_supported) {
+    return cpu_route();
+  }
+  if (native_strict) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native::cuda::cpu_bridge_enabled()) {
+    return cpu_route();
+  }
+  throw_cuda_reduction_unavailable_(op, native_enabled, native_strict, route_supported);
+}
+
+[[noreturn]] void throw_cuda_scan_unavailable_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported) {
+  if (native_strict && (!native_enabled || !route_supported)) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native_enabled && route_supported) {
+    throw_error(
+        std::string(op) +
+        ": CUDA native scan route declared but kernel is not implemented yet");
+  }
+  throw_error(
+      std::string(op) +
+      ": CUDA scan path unavailable in this tranche; no CPU fallback allowed. "
+      "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
+}
+
+template <class CpuRouteFn>
+Series cuda_scan_route_or_bridge_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported,
+    CpuRouteFn&& cpu_route) {
+  if (native_enabled && route_supported) {
+    return cpu_route();
+  }
+  if (native_strict) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native::cuda::cpu_bridge_enabled()) {
+    return cpu_route();
+  }
+  throw_cuda_scan_unavailable_(op, native_enabled, native_strict, route_supported);
+}
+
+[[noreturn]] void throw_cuda_masking_unavailable_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported) {
+  if (native_strict && (!native_enabled || !route_supported)) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native_enabled && route_supported) {
+    throw_error(
+        std::string(op) +
+        ": CUDA native masking route declared but kernel is not implemented yet");
+  }
+  throw_error(
+      std::string(op) +
+      ": CUDA masking path unavailable in this tranche; no CPU fallback allowed. "
+      "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
+}
+
+template <class CpuRouteFn>
+Series cuda_masking_route_or_bridge_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported,
+    CpuRouteFn&& cpu_route) {
+  if (native_enabled && route_supported) {
+    return cpu_route();
+  }
+  if (native_strict) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native::cuda::cpu_bridge_enabled()) {
+    return cpu_route();
+  }
+  throw_cuda_masking_unavailable_(op, native_enabled, native_strict, route_supported);
+}
+
+[[noreturn]] void throw_cuda_bitwise_unavailable_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported) {
+  if (native_strict && (!native_enabled || !route_supported)) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native_enabled && route_supported) {
+    throw_error(
+        std::string(op) +
+        ": CUDA native bitwise route declared but kernel is not implemented yet");
+  }
+  throw_error(
+      std::string(op) +
+      ": CUDA bitwise path unavailable in this tranche; no CPU fallback allowed. "
+      "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
+}
+
+template <class CpuRouteFn>
+Series cuda_bitwise_route_or_bridge_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported,
+    CpuRouteFn&& cpu_route) {
+  if (native_enabled && route_supported) {
+    return cpu_route();
+  }
+  if (native_strict) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native::cuda::cpu_bridge_enabled()) {
+    return cpu_route();
+  }
+  throw_cuda_bitwise_unavailable_(op, native_enabled, native_strict, route_supported);
+}
+
+[[noreturn]] void throw_cuda_compose_unavailable_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported) {
+  if (native_strict && (!native_enabled || !route_supported)) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native_enabled && route_supported) {
+    throw_error(
+        std::string(op) +
+        ": CUDA native compose route declared but kernel is not implemented yet");
+  }
+  throw_error(
+      std::string(op) +
+      ": CUDA compose path unavailable in this tranche; no CPU fallback allowed. "
+      "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
+}
+
+template <class CpuRouteFn>
+Series cuda_compose_route_or_bridge_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported,
+    CpuRouteFn&& cpu_route) {
+  if (native_enabled && route_supported) {
+    return cpu_route();
+  }
+  if (native_strict) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native::cuda::cpu_bridge_enabled()) {
+    return cpu_route();
+  }
+  throw_cuda_compose_unavailable_(op, native_enabled, native_strict, route_supported);
 }
 
 } // namespace
@@ -318,6 +588,22 @@ static Series binary_op_(native::cpu::BinaryOpId op, const Series& a0, const Ser
       return out_f.to(dt);
     }
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_binary_elementwise(a, b);
+    return cuda_elementwise_route_or_bridge_(
+        "binary op",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          auto fn = native::cpu::lookup_binary(op, dt);
+          PLUSS_CHECK(fn != nullptr, "binary kernel missing");
+          fn(a, b, out);
+          return out;
+        });
+  }
   require_backend_dispatch_supported_(a.platform(), "binary op");
   auto fn = native::cpu::lookup_binary(op, dt);
   PLUSS_CHECK(fn != nullptr, "binary kernel missing");
@@ -348,6 +634,22 @@ static Series cmp_op_(native::cpu::BinaryOpId op, const Series& a0, const Series
       return out;
     }
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_comparison_elementwise(a, b);
+    return cuda_elementwise_route_or_bridge_(
+        "comparison op",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          auto fn = native::cpu::lookup_binary(op, dt);
+          PLUSS_CHECK(fn != nullptr, "compare kernel missing");
+          fn(a, b, out);
+          return out;
+        });
+  }
   require_backend_dispatch_supported_(a.platform(), "comparison op");
   auto fn = native::cpu::lookup_binary(op, dt);
   PLUSS_CHECK(fn != nullptr, "compare kernel missing");
@@ -372,6 +674,22 @@ static Series unary_op_(native::cpu::UnaryOpId op, const Series& a) {
       return out_f.to(a.scalar_type());
     }
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_unary_elementwise(a);
+    return cuda_elementwise_route_or_bridge_(
+        "unary op",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          auto fn = native::cpu::lookup_unary(op, a.scalar_type());
+          PLUSS_CHECK(fn != nullptr, "unary kernel missing");
+          fn(a, out);
+          return out;
+        });
+  }
   require_backend_dispatch_supported_(a.platform(), "unary op");
   auto fn = native::cpu::lookup_unary(op, a.scalar_type());
   PLUSS_CHECK(fn != nullptr, "unary kernel missing");
@@ -380,11 +698,34 @@ static Series unary_op_(native::cpu::UnaryOpId op, const Series& a) {
 }
 
 template <typename CpuUnaryFn>
-Series unary_cpu_with_platform_dispatch_policy_(const Series& a, std::string_view op_name, CpuUnaryFn cpu_fn) {
+Series unary_cpu_with_platform_dispatch_policy_(
+    const Series& a,
+    std::string_view op_name,
+    CpuUnaryFn cpu_fn,
+    ScalarType out_scalar_type) {
+  Series out = Series::empty(a.sizes(), out_scalar_type, a.platform());
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_unary_elementwise(a);
+    return cuda_elementwise_route_or_bridge_(
+        op_name,
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          cpu_fn(a, out);
+          return out;
+        });
+  }
   require_backend_dispatch_supported_(a.platform(), op_name);
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   cpu_fn(a, out);
   return out;
+}
+
+template <typename CpuUnaryFn>
+Series unary_cpu_with_platform_dispatch_policy_(const Series& a, std::string_view op_name, CpuUnaryFn cpu_fn) {
+  return unary_cpu_with_platform_dispatch_policy_(a, op_name, cpu_fn, a.scalar_type());
 }
 
 static bool same_shape_(const Series& a, const Series& b) {
@@ -713,20 +1054,19 @@ Series gt(const Series& a, const Series& b) { return cmp_op_(native::cpu::Binary
 Series ge(const Series& a, const Series& b) { return cmp_op_(native::cpu::BinaryOpId::Ge, a, b); }
 
 Series sqrt(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  Series out;
   if (a.platform() == Platform::MPS) {
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Sqrt, a.scalar_type());
     require_mps_support_or_policy_(supported, "sqrt");
     if (supported) {
+      out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
       native::mps::unary_math(native::mps::UnaryMathOp::Sqrt, a.contiguous(), out);
     } else {
-      require_backend_dispatch_supported_(a.platform(), "sqrt");
-      native::cpu::sqrt(a, out);
+      out = unary_cpu_with_platform_dispatch_policy_(a, "sqrt", native::cpu::sqrt);
     }
   } else {
-    require_backend_dispatch_supported_(a.platform(), "sqrt");
-    native::cpu::sqrt(a, out);
+    out = unary_cpu_with_platform_dispatch_policy_(a, "sqrt", native::cpu::sqrt);
   }
   maybe_link_unary_op_(out, a, [a](const Series& g) {
     return g.mul(0.5).mul(rsqrt(a));
@@ -734,20 +1074,19 @@ Series sqrt(const Series& a) {
   return out;
 }
 Series exp(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  Series out;
   if (a.platform() == Platform::MPS) {
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Exp, a.scalar_type());
     require_mps_support_or_policy_(supported, "exp");
     if (supported) {
+      out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
       native::mps::unary_math(native::mps::UnaryMathOp::Exp, a.contiguous(), out);
     } else {
-      require_backend_dispatch_supported_(a.platform(), "exp");
-      native::cpu::exp(a, out);
+      out = unary_cpu_with_platform_dispatch_policy_(a, "exp", native::cpu::exp);
     }
   } else {
-    require_backend_dispatch_supported_(a.platform(), "exp");
-    native::cpu::exp(a, out);
+    out = unary_cpu_with_platform_dispatch_policy_(a, "exp", native::cpu::exp);
   }
   maybe_link_unary_op_(out, a, [a](const Series& g) {
     return g.mul(exp(a));
@@ -755,20 +1094,19 @@ Series exp(const Series& a) {
   return out;
 }
 Series log(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  Series out;
   if (a.platform() == Platform::MPS) {
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Log, a.scalar_type());
     require_mps_support_or_policy_(supported, "log");
     if (supported) {
+      out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
       native::mps::unary_math(native::mps::UnaryMathOp::Log, a.contiguous(), out);
     } else {
-      require_backend_dispatch_supported_(a.platform(), "log");
-      native::cpu::log(a, out);
+      out = unary_cpu_with_platform_dispatch_policy_(a, "log", native::cpu::log);
     }
   } else {
-    require_backend_dispatch_supported_(a.platform(), "log");
-    native::cpu::log(a, out);
+    out = unary_cpu_with_platform_dispatch_policy_(a, "log", native::cpu::log);
   }
   maybe_link_unary_op_(out, a, [a](const Series& g) {
     return g.div(a);
@@ -790,8 +1128,8 @@ Series& sqrt_(Series& a) {
 }
 
 Series floor(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Floor, a.scalar_type());
     require_mps_support_or_policy_(supported, "floor");
@@ -800,13 +1138,11 @@ Series floor(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "floor");
-  native::cpu::floor(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "floor", native::cpu::floor);
 }
 Series ceil(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Ceil, a.scalar_type());
     require_mps_support_or_policy_(supported, "ceil");
@@ -815,13 +1151,11 @@ Series ceil(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "ceil");
-  native::cpu::ceil(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "ceil", native::cpu::ceil);
 }
 Series round(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Round, a.scalar_type());
     require_mps_support_or_policy_(supported, "round");
@@ -830,13 +1164,11 @@ Series round(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "round");
-  native::cpu::round(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "round", native::cpu::round);
 }
 Series trunc(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Trunc, a.scalar_type());
     require_mps_support_or_policy_(supported, "trunc");
@@ -845,13 +1177,12 @@ Series trunc(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "trunc");
-  native::cpu::trunc(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "trunc", native::cpu::trunc);
 }
 Series isnan(const Series& a) {
-  Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
+  auto cpu_route = [](const Series& in, Series& out) { native::cpu::isnan(in, out); };
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
     const bool supported =
         native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsNan, a.scalar_type());
     require_mps_support_or_policy_(supported, "isnan");
@@ -860,13 +1191,12 @@ Series isnan(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "isnan");
-  native::cpu::isnan(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "isnan", cpu_route, ScalarType::Bool);
 }
 Series isinf(const Series& a) {
-  Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
+  auto cpu_route = [](const Series& in, Series& out) { native::cpu::isinf(in, out); };
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
     const bool supported =
         native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsInf, a.scalar_type());
     require_mps_support_or_policy_(supported, "isinf");
@@ -875,26 +1205,23 @@ Series isinf(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "isinf");
-  native::cpu::isinf(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "isinf", cpu_route, ScalarType::Bool);
 }
 
 Series sin(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  Series out;
   if (a.platform() == Platform::MPS) {
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Sin, a.scalar_type());
     require_mps_support_or_policy_(supported, "sin");
     if (supported) {
+      out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
       native::mps::unary_math(native::mps::UnaryMathOp::Sin, a.contiguous(), out);
     } else {
-      require_backend_dispatch_supported_(a.platform(), "sin");
-      native::cpu::sin(a, out);
+      out = unary_cpu_with_platform_dispatch_policy_(a, "sin", native::cpu::sin);
     }
   } else {
-    require_backend_dispatch_supported_(a.platform(), "sin");
-    native::cpu::sin(a, out);
+    out = unary_cpu_with_platform_dispatch_policy_(a, "sin", native::cpu::sin);
   }
   maybe_link_unary_op_(out, a, [a](const Series& g) {
     return g.mul(cos(a));
@@ -902,20 +1229,19 @@ Series sin(const Series& a) {
   return out;
 }
 Series cos(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  Series out;
   if (a.platform() == Platform::MPS) {
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Cos, a.scalar_type());
     require_mps_support_or_policy_(supported, "cos");
     if (supported) {
+      out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
       native::mps::unary_math(native::mps::UnaryMathOp::Cos, a.contiguous(), out);
     } else {
-      require_backend_dispatch_supported_(a.platform(), "cos");
-      native::cpu::cos(a, out);
+      out = unary_cpu_with_platform_dispatch_policy_(a, "cos", native::cpu::cos);
     }
   } else {
-    require_backend_dispatch_supported_(a.platform(), "cos");
-    native::cpu::cos(a, out);
+    out = unary_cpu_with_platform_dispatch_policy_(a, "cos", native::cpu::cos);
   }
   maybe_link_unary_op_(out, a, [a](const Series& g) {
     return g.mul(sin(a)).neg();
@@ -923,20 +1249,19 @@ Series cos(const Series& a) {
   return out;
 }
 Series tanh(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+  Series out;
   if (a.platform() == Platform::MPS) {
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Tanh, a.scalar_type());
     require_mps_support_or_policy_(supported, "tanh");
     if (supported) {
+      out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
       native::mps::unary_math(native::mps::UnaryMathOp::Tanh, a.contiguous(), out);
     } else {
-      require_backend_dispatch_supported_(a.platform(), "tanh");
-      native::cpu::tanh(a, out);
+      out = unary_cpu_with_platform_dispatch_policy_(a, "tanh", native::cpu::tanh);
     }
   } else {
-    require_backend_dispatch_supported_(a.platform(), "tanh");
-    native::cpu::tanh(a, out);
+    out = unary_cpu_with_platform_dispatch_policy_(a, "tanh", native::cpu::tanh);
   }
   maybe_link_unary_op_(out, a, [a](const Series& g) {
     const Series y = tanh(a);
@@ -947,8 +1272,8 @@ Series tanh(const Series& a) {
 }
 
 Series tan(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Tan, a.scalar_type());
     require_mps_support_or_policy_(supported, "tan");
@@ -957,13 +1282,11 @@ Series tan(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "tan");
-  native::cpu::tan(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "tan", native::cpu::tan);
 }
 Series asin(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Asin, a.scalar_type());
     require_mps_support_or_policy_(supported, "asin");
@@ -972,13 +1295,11 @@ Series asin(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "asin");
-  native::cpu::asin(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "asin", native::cpu::asin);
 }
 Series acos(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Acos, a.scalar_type());
     require_mps_support_or_policy_(supported, "acos");
@@ -987,13 +1308,11 @@ Series acos(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "acos");
-  native::cpu::acos(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "acos", native::cpu::acos);
 }
 Series atan(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Atan, a.scalar_type());
     require_mps_support_or_policy_(supported, "atan");
@@ -1002,13 +1321,11 @@ Series atan(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "atan");
-  native::cpu::atan(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "atan", native::cpu::atan);
 }
 Series sinh(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Sinh, a.scalar_type());
     require_mps_support_or_policy_(supported, "sinh");
@@ -1017,13 +1334,11 @@ Series sinh(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "sinh");
-  native::cpu::sinh(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "sinh", native::cpu::sinh);
 }
 Series cosh(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Cosh, a.scalar_type());
     require_mps_support_or_policy_(supported, "cosh");
@@ -1032,16 +1347,14 @@ Series cosh(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "cosh");
-  native::cpu::cosh(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "cosh", native::cpu::cosh);
 }
 
 Series log1p(const Series& a) { return unary_op_(native::cpu::UnaryOpId::Log1p, a); }
 Series expm1(const Series& a) { return unary_op_(native::cpu::UnaryOpId::Expm1, a); }
 Series reciprocal(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
     const bool supported =
         native::mps::supports_unary_math(native::mps::UnaryMathOp::Reciprocal, a.scalar_type());
     require_mps_support_or_policy_(supported, "reciprocal");
@@ -1050,9 +1363,7 @@ Series reciprocal(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "reciprocal");
-  native::cpu::reciprocal(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "reciprocal", native::cpu::reciprocal);
 }
 
 Series erf(const Series& a) {
@@ -1148,8 +1459,9 @@ Series bitwise_xor(const Series& a, const Series& b) { return a.bitwise_xor(b); 
 Series& bitwise_xor_(Series& a, const Series& b) { return a.bitwise_xor_(b); }
 
 Series isfinite(const Series& a) {
-  Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
+  auto cpu_route = [](const Series& in, Series& out) { native::cpu::isfinite(in, out); };
   if (a.platform() == Platform::MPS) {
+    Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
     const bool supported =
         native::mps::supports_unary_pred(native::mps::UnaryPredOp::IsFinite, a.scalar_type());
     require_mps_support_or_policy_(supported, "isfinite");
@@ -1158,90 +1470,43 @@ Series isfinite(const Series& a) {
       return out;
     }
   }
-  require_backend_dispatch_supported_(a.platform(), "isfinite");
-  native::cpu::isfinite(a, out);
-  return out;
+  return unary_cpu_with_platform_dispatch_policy_(a, "isfinite", cpu_route, ScalarType::Bool);
 }
 
 Series logical_not(const Series& a) {
-  if (a.platform() == Platform::MPS) {
-    PLUSS_CHECK(a.scalar_type() == ScalarType::Bool, "logical_not: expects bool tensor on MPS");
-    const Series af = a.to(ScalarType::Float32).contiguous();
-    return eq(af, scalar_like_(af, 0.0));
-  }
-  require_backend_dispatch_supported_(a.platform(), "logical_not");
-  Series out = Series::empty(a.sizes(), ScalarType::Bool, a.platform());
-  native::cpu::logical_not(a, out);
-  return out;
+  PLUSS_CHECK(a.scalar_type() == ScalarType::Bool, "logical_not: expects bool tensor");
+  const Series af = a.to(ScalarType::Float32);
+  return eq(af, scalar_like_(af, 0.0));
 }
 
 Series logical_and(const Series& a, const Series& b) {
   PLUSS_CHECK(a.defined() && b.defined(), "logical_and: undefined");
   require_same_platform(a, b, "logical_and");
   PLUSS_CHECK(a.scalar_type() == ScalarType::Bool && b.scalar_type() == ScalarType::Bool, "logical_and: expects bool tensors");
-  if (a.platform() == Platform::MPS) {
-    const auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
-    const Series af = a.expand(shape, true).to(ScalarType::Float32).contiguous();
-    const Series bf = b.expand(shape, true).to(ScalarType::Float32).contiguous();
-    return gt(mul(af, bf), scalar_like_(af, 0.5));
-  }
-  require_backend_dispatch_supported_(a.platform(), "logical_and");
-  auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
-  auto aa = a.expand(shape, true).contiguous();
-  auto bb = b.expand(shape, true).contiguous();
-  Series out = Series::empty(shape, ScalarType::Bool, a.platform());
-  auto* op = reinterpret_cast<bool*>(const_cast<std::byte*>(out.raw_data()));
-  const bool* ap = reinterpret_cast<const bool*>(aa.raw_data());
-  const bool* bp = reinterpret_cast<const bool*>(bb.raw_data());
-  const auto n = out.numel();
-  for (std::int64_t i=0;i<n;++i) op[i] = ap[i] && bp[i];
-  return out;
+  const auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
+  const Series af = a.expand(shape, true).to(ScalarType::Float32);
+  const Series bf = b.expand(shape, true).to(ScalarType::Float32);
+  return gt(mul(af, bf), scalar_like_(af, 0.5));
 }
 
 Series logical_or(const Series& a, const Series& b) {
   PLUSS_CHECK(a.defined() && b.defined(), "logical_or: undefined");
   require_same_platform(a, b, "logical_or");
   PLUSS_CHECK(a.scalar_type() == ScalarType::Bool && b.scalar_type() == ScalarType::Bool, "logical_or: expects bool tensors");
-  if (a.platform() == Platform::MPS) {
-    const auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
-    const Series af = a.expand(shape, true).to(ScalarType::Float32).contiguous();
-    const Series bf = b.expand(shape, true).to(ScalarType::Float32).contiguous();
-    return gt(add(af, bf), scalar_like_(af, 0.0));
-  }
-  require_backend_dispatch_supported_(a.platform(), "logical_or");
-  auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
-  auto aa = a.expand(shape, true).contiguous();
-  auto bb = b.expand(shape, true).contiguous();
-  Series out = Series::empty(shape, ScalarType::Bool, a.platform());
-  auto* op = reinterpret_cast<bool*>(const_cast<std::byte*>(out.raw_data()));
-  const bool* ap = reinterpret_cast<const bool*>(aa.raw_data());
-  const bool* bp = reinterpret_cast<const bool*>(bb.raw_data());
-  const auto n = out.numel();
-  for (std::int64_t i=0;i<n;++i) op[i] = ap[i] || bp[i];
-  return out;
+  const auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
+  const Series af = a.expand(shape, true).to(ScalarType::Float32);
+  const Series bf = b.expand(shape, true).to(ScalarType::Float32);
+  return gt(add(af, bf), scalar_like_(af, 0.0));
 }
 
 Series logical_xor(const Series& a, const Series& b) {
   PLUSS_CHECK(a.defined() && b.defined(), "logical_xor: undefined");
   require_same_platform(a, b, "logical_xor");
   PLUSS_CHECK(a.scalar_type() == ScalarType::Bool && b.scalar_type() == ScalarType::Bool, "logical_xor: expects bool tensors");
-  if (a.platform() == Platform::MPS) {
-    const auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
-    const Series af = a.expand(shape, true).to(ScalarType::Float32).contiguous();
-    const Series bf = b.expand(shape, true).to(ScalarType::Float32).contiguous();
-    return gt(abs(sub(af, bf)), scalar_like_(af, 0.5));
-  }
-  require_backend_dispatch_supported_(a.platform(), "logical_xor");
-  auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
-  auto aa = a.expand(shape, true).contiguous();
-  auto bb = b.expand(shape, true).contiguous();
-  Series out = Series::empty(shape, ScalarType::Bool, a.platform());
-  auto* op = reinterpret_cast<bool*>(const_cast<std::byte*>(out.raw_data()));
-  const bool* ap = reinterpret_cast<const bool*>(aa.raw_data());
-  const bool* bp = reinterpret_cast<const bool*>(bb.raw_data());
-  const auto n = out.numel();
-  for (std::int64_t i=0;i<n;++i) op[i] = (ap[i] != bp[i]);
-  return out;
+  const auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
+  const Series af = a.expand(shape, true).to(ScalarType::Float32);
+  const Series bf = b.expand(shape, true).to(ScalarType::Float32);
+  return gt(abs(sub(af, bf)), scalar_like_(af, 0.5));
 }
 
 Series masked_select(const Series& a, const Series& mask) {
@@ -1266,34 +1531,53 @@ Series masked_select(const Series& a, const Series& mask) {
     const Series idx = nz2d.squeeze(-1).contiguous();
     return gather(aa_flat, 0, idx);
   }
+  auto cpu_route = [&]() -> Series {
+    // Broadcast mask to a's shape (Torch-like).
+    auto bshape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
+    {
+      auto asz = a.sizes();
+      PLUSS_CHECK(asz.size() == bshape.size(), "masked_select: a must match broadcasted shape");
+      PLUSS_CHECK(std::equal(asz.begin(), asz.end(), bshape.begin()), "masked_select: a must match broadcasted shape");
+    }
+    auto mm = mask.expand(std::span<const std::int64_t>(bshape.data(), bshape.size()), /*implicit=*/true).contiguous();
+    auto aa = a.contiguous();
+
+    const bool* mp = reinterpret_cast<const bool*>(mm.raw_data());
+    const auto n = aa.numel();
+    std::int64_t count = 0;
+    for (std::int64_t i = 0; i < n; ++i) {
+      if (mp[i]) ++count;
+    }
+
+    const std::array<std::int64_t, 1> out_sizes{count};
+    Series out =
+        Series::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), aa.scalar_type(), a.platform());
+    const auto item = aa.dtype().itemsize;
+    const std::byte* ap = aa.raw_data();
+    auto* op = reinterpret_cast<std::byte*>(out.raw_mutable_data());
+    std::int64_t j = 0;
+    for (std::int64_t i = 0; i < n; ++i) {
+      if (!mp[i]) continue;
+      std::memcpy(op + j * item, ap + i * item, (std::size_t)item);
+      ++j;
+    }
+    return out;
+  };
+
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_masking_enabled();
+    const bool native_strict = native::cuda::native_masking_strict();
+    const bool route_supported = native::cuda::supports_masked_select(a, mask);
+    return cuda_masking_route_or_bridge_(
+        "masked_select",
+        native_enabled,
+        native_strict,
+        route_supported,
+        cpu_route);
+  }
+
   require_backend_dispatch_supported_(a.platform(), "masked_select");
-  // Broadcast mask to a's shape (Torch-like).
-  auto bshape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
-  {
-    auto asz = a.sizes();
-    PLUSS_CHECK(asz.size() == bshape.size(), "masked_select: a must match broadcasted shape");
-    PLUSS_CHECK(std::equal(asz.begin(), asz.end(), bshape.begin()), "masked_select: a must match broadcasted shape");
-  }
-  auto mm = mask.expand(std::span<const std::int64_t>(bshape.data(), bshape.size()), /*implicit=*/true).contiguous();
-  auto aa = a.contiguous();
-
-  const bool* mp = reinterpret_cast<const bool*>(mm.raw_data());
-  const auto n = aa.numel();
-  std::int64_t count = 0;
-  for (std::int64_t i=0;i<n;++i) if (mp[i]) ++count;
-
-  const std::array<std::int64_t, 1> out_sizes{count};
-  Series out = Series::empty(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()), aa.scalar_type(), a.platform());
-  const auto item = aa.dtype().itemsize;
-  const std::byte* ap = aa.raw_data();
-  auto* op = reinterpret_cast<std::byte*>(out.raw_mutable_data());
-  std::int64_t j = 0;
-  for (std::int64_t i=0;i<n;++i) {
-    if (!mp[i]) continue;
-    std::memcpy(op + j*item, ap + i*item, (std::size_t)item);
-    ++j;
-  }
-  return out;
+  return cpu_route();
 }
 
 
@@ -1327,22 +1611,44 @@ Series& masked_fill_(Series& a, const Series& mask, const Series& value) {
     a = where(mm, vv, a);
     return a;
   }
-  require_backend_dispatch_supported_(a.platform(), "masked_fill_");
-  PLUSS_CHECK(a.is_contiguous(), "masked_fill_: in-place requires a contiguous Series");
-  auto mm = mask.expand(shape, true).contiguous();
-  const bool* mp = reinterpret_cast<const bool*>(mm.raw_data());
+  auto cpu_apply = [&](Series& target) -> Series& {
+    PLUSS_CHECK(target.is_contiguous(), "masked_fill_: in-place requires a contiguous Series");
+    auto mm = mask.expand(shape, true).contiguous();
+    const bool* mp = reinterpret_cast<const bool*>(mm.raw_data());
 
-  // Value cast
-  Series vv = value.to(a.scalar_type()).contiguous();
-  const auto item = a.dtype().itemsize;
-  const std::byte* vp = vv.raw_data();
+    // Value cast
+    Series vv = value.to(target.scalar_type()).contiguous();
+    const auto item = target.dtype().itemsize;
+    const std::byte* vp = vv.raw_data();
 
-  auto* ap = reinterpret_cast<std::byte*>(a.raw_mutable_data());
-  const auto n = a.numel();
-  for (std::int64_t i=0;i<n;++i) {
-    if (!mp[i]) continue;
-    std::memcpy(ap + i*item, vp, (std::size_t)item);
+    auto* ap = reinterpret_cast<std::byte*>(target.raw_mutable_data());
+    const auto n = target.numel();
+    for (std::int64_t i = 0; i < n; ++i) {
+      if (!mp[i]) continue;
+      std::memcpy(ap + i * item, vp, (std::size_t)item);
+    }
+    return target;
+  };
+
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_masking_enabled();
+    const bool native_strict = native::cuda::native_masking_strict();
+    const bool route_supported = native::cuda::supports_masked_fill(a, mask, value);
+    a = cuda_masking_route_or_bridge_(
+        "masked_fill_",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          Series out = a.clone();
+          cpu_apply(out);
+          return out;
+        });
+    return a;
   }
+
+  require_backend_dispatch_supported_(a.platform(), "masked_fill_");
+  cpu_apply(a);
   return a;
 }
 
@@ -1390,7 +1696,19 @@ Series sum(const Series& a) {
       }
       return cur;
     }
-    require_backend_dispatch_supported_(aa.platform(), "sum");
+    if (aa.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_sum_reduction(aa);
+      (void)cuda_reduction_route_or_bridge_(
+          "sum",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return aa; });
+    } else {
+      require_backend_dispatch_supported_(aa.platform(), "sum");
+    }
   }
   Series out = Series::empty({}, aa.scalar_type(), aa.platform());
   native::cpu::sum_all(aa, out);
@@ -1439,7 +1757,19 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
       }
       return reduced;
     }
-    require_backend_dispatch_supported_(aa.platform(), "sum(dim)");
+    if (aa.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_sum_reduction(aa, dim);
+      (void)cuda_reduction_route_or_bridge_(
+          "sum(dim)",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return aa; });
+    } else {
+      require_backend_dispatch_supported_(aa.platform(), "sum(dim)");
+    }
   }
   native::cpu::sum_dim(aa, dim, out);
   auto reduced = maybe_keepdim_(out, aa.sizes(), dim, keepdim);
@@ -1476,7 +1806,19 @@ Series prod(const Series& a) {
       }
       return cur;
     }
-    require_backend_dispatch_supported_(cur.platform(), "prod");
+    if (cur.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_prod_reduction(cur);
+      (void)cuda_reduction_route_or_bridge_(
+          "prod",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return cur; });
+    } else {
+      require_backend_dispatch_supported_(cur.platform(), "prod");
+    }
   }
   // prod_all CPU path: reduce sequentially using dim kernel.
   for (std::int64_t d = (std::int64_t)cur.dim()-1; d>=0; --d) cur = prod(cur, d, false);
@@ -1500,7 +1842,19 @@ Series prod(const Series& a, std::int64_t dim, bool keepdim) {
       native::mps::prod_dim(aa, dim, out);
       return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
     }
-    require_backend_dispatch_supported_(aa.platform(), "prod(dim)");
+    if (aa.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_prod_reduction(aa, dim);
+      (void)cuda_reduction_route_or_bridge_(
+          "prod(dim)",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return aa; });
+    } else {
+      require_backend_dispatch_supported_(aa.platform(), "prod(dim)");
+    }
   }
   native::cpu::prod_dim(aa, dim, out);
   return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
@@ -1519,7 +1873,19 @@ Series mean(const Series& a) {
       Series s = sum(aa);
       return div(s, scalar_like_(s, static_cast<double>(aa.numel())));
     }
-    require_backend_dispatch_supported_(aa.platform(), "mean");
+    if (aa.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_mean_reduction(aa);
+      (void)cuda_reduction_route_or_bridge_(
+          "mean",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return aa; });
+    } else {
+      require_backend_dispatch_supported_(aa.platform(), "mean");
+    }
   }
   // mean_all kernel exists for float32/64/16/bf16 in Patch40 expand; for others, promote to float32.
   ScalarType dt = aa.scalar_type();
@@ -1559,7 +1925,19 @@ Series mean(const Series& a, std::int64_t dim, bool keepdim) {
       Series s = sum(aa, dim, keepdim);
       return div(s, scalar_like_(s, static_cast<double>(reduce_n)));
     }
-    require_backend_dispatch_supported_(aa.platform(), "mean(dim)");
+    if (aa.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_mean_reduction(aa, dim);
+      (void)cuda_reduction_route_or_bridge_(
+          "mean(dim)",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return aa; });
+    } else {
+      require_backend_dispatch_supported_(aa.platform(), "mean(dim)");
+    }
   }
 
   ScalarType dt = aa.scalar_type();
@@ -1610,9 +1988,22 @@ Series mean(const Series& a, std::int64_t dim, bool keepdim) {
 
 Series amax(const Series& a) {
   PLUSS_CHECK(a.defined(), "amax: undefined");
-  if (a.platform() != Platform::CPU &&
-      !(a.platform() == Platform::MPS && native::mps::supports_amax_amin_dim(a.scalar_type()))) {
-    require_backend_dispatch_supported_(a.platform(), "amax");
+  if (a.platform() != Platform::CPU) {
+    if (a.platform() == Platform::MPS && native::mps::supports_amax_amin_dim(a.scalar_type())) {
+      // handled by per-dim path below
+    } else if (a.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_ordered_extrema_reduction(a);
+      (void)cuda_reduction_route_or_bridge_(
+          "amax",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return a; });
+    } else {
+      require_backend_dispatch_supported_(a.platform(), "amax");
+    }
   }
   if (a.dim() == 0) return a.clone();
   Series cur = a.contiguous();
@@ -1636,7 +2027,19 @@ Series amax(const Series& a, std::int64_t dim, bool keepdim) {
       native::mps::amax_dim(aa, dim, out);
       return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
     }
-    require_backend_dispatch_supported_(aa.platform(), "amax(dim)");
+    if (aa.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_ordered_extrema_reduction(aa, dim);
+      (void)cuda_reduction_route_or_bridge_(
+          "amax(dim)",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return aa; });
+    } else {
+      require_backend_dispatch_supported_(aa.platform(), "amax(dim)");
+    }
   }
   native::cpu::amax_dim(aa, dim, out);
   return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
@@ -1644,9 +2047,22 @@ Series amax(const Series& a, std::int64_t dim, bool keepdim) {
 
 Series amin(const Series& a) {
   PLUSS_CHECK(a.defined(), "amin: undefined");
-  if (a.platform() != Platform::CPU &&
-      !(a.platform() == Platform::MPS && native::mps::supports_amax_amin_dim(a.scalar_type()))) {
-    require_backend_dispatch_supported_(a.platform(), "amin");
+  if (a.platform() != Platform::CPU) {
+    if (a.platform() == Platform::MPS && native::mps::supports_amax_amin_dim(a.scalar_type())) {
+      // handled by per-dim path below
+    } else if (a.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_ordered_extrema_reduction(a);
+      (void)cuda_reduction_route_or_bridge_(
+          "amin",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return a; });
+    } else {
+      require_backend_dispatch_supported_(a.platform(), "amin");
+    }
   }
   if (a.dim() == 0) return a.clone();
   Series cur = a.contiguous();
@@ -1669,7 +2085,19 @@ Series amin(const Series& a, std::int64_t dim, bool keepdim) {
       native::mps::amin_dim(aa, dim, out);
       return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
     }
-    require_backend_dispatch_supported_(aa.platform(), "amin(dim)");
+    if (aa.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_ordered_extrema_reduction(aa, dim);
+      (void)cuda_reduction_route_or_bridge_(
+          "amin(dim)",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return aa; });
+    } else {
+      require_backend_dispatch_supported_(aa.platform(), "amin(dim)");
+    }
   }
   native::cpu::amin_dim(aa, dim, out);
   return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
@@ -1695,7 +2123,19 @@ Series all(const Series& a, std::int64_t dim, bool keepdim) {
       native::mps::all_dim(aa, dim, out);
       return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
     }
-    require_backend_dispatch_supported_(aa.platform(), "all(dim)");
+    if (aa.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_logical_reduction(aa, dim);
+      (void)cuda_reduction_route_or_bridge_(
+          "all(dim)",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return aa; });
+    } else {
+      require_backend_dispatch_supported_(aa.platform(), "all(dim)");
+    }
   }
   native::cpu::all_dim(aa, dim, out);
   return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
@@ -1721,7 +2161,19 @@ Series any(const Series& a, std::int64_t dim, bool keepdim) {
       native::mps::any_dim(aa, dim, out);
       return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
     }
-    require_backend_dispatch_supported_(aa.platform(), "any(dim)");
+    if (aa.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_reduction_enabled();
+      const bool native_strict = native::cuda::native_reduction_strict();
+      const bool route_supported = native::cuda::supports_logical_reduction(aa, dim);
+      (void)cuda_reduction_route_or_bridge_(
+          "any(dim)",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() { return aa; });
+    } else {
+      require_backend_dispatch_supported_(aa.platform(), "any(dim)");
+    }
   }
   native::cpu::any_dim(aa, dim, out);
   return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
@@ -1741,7 +2193,19 @@ Series argmax(const Series& a, std::int64_t dim, bool keepdim) {
     native::mps::argmax_dim(aa, dim, out);
     return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
   }
-  require_backend_dispatch_supported_(a.platform(), "argmax");
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_reduction_enabled();
+    const bool native_strict = native::cuda::native_reduction_strict();
+    const bool route_supported = native::cuda::supports_arg_extrema_reduction(a, dim);
+    (void)cuda_reduction_route_or_bridge_(
+        "argmax",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return a; });
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "argmax");
+  }
   return native::cpu::argmax(a, dim, keepdim);
 }
 Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
@@ -1758,7 +2222,19 @@ Series argmin(const Series& a, std::int64_t dim, bool keepdim) {
     native::mps::argmin_dim(aa, dim, out);
     return maybe_keepdim_(out, aa.sizes(), dim, keepdim);
   }
-  require_backend_dispatch_supported_(a.platform(), "argmin");
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_reduction_enabled();
+    const bool native_strict = native::cuda::native_reduction_strict();
+    const bool route_supported = native::cuda::supports_arg_extrema_reduction(a, dim);
+    (void)cuda_reduction_route_or_bridge_(
+        "argmin",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return a; });
+  } else {
+    require_backend_dispatch_supported_(a.platform(), "argmin");
+  }
   return native::cpu::argmin(a, dim, keepdim);
 }
 
@@ -1780,10 +2256,18 @@ Series where(const Series& cond, const Series& a, const Series& b) {
       native::mps::where(cc.contiguous(), aa.contiguous(), bb.contiguous(), out);
       return out;
     }
-    require_backend_dispatch_supported_(a.platform(), "where");
   }
-  native::cpu::where(cc, aa, bb, out);
-  return out;
+  const auto cc_exp = cc.expand(shape, true);
+  const auto aa_exp = aa.expand(shape, true);
+  const auto bb_exp = bb.expand(shape, true);
+  if (dt == ScalarType::Bool) {
+    const Series t = logical_and(cc_exp, aa_exp);
+    const Series f = logical_and(logical_not(cc_exp), bb_exp);
+    return logical_or(t, f);
+  }
+  const Series mask = cc_exp.to(dt);
+  const Series one = scalar_like_(mask, 1.0);
+  return add(mul(mask, aa_exp), mul(sub(one, mask), bb_exp));
 }
 
 Series clamp(const Series& a, double min, double max) {
@@ -1852,39 +2336,13 @@ Series& relu_(Series& a) {
   PLUSS_CHECK(a.defined(), "relu_: undefined");
   PLUSS_CHECK(a.scalar_type() != ScalarType::Complex64 && a.scalar_type() != ScalarType::Complex128,
               "relu_: complex dtype not supported");
-  if (a.platform() == Platform::MPS) {
-    a = relu(a);
-    return a;
-  }
-  require_backend_dispatch_supported_(a.platform(), "relu_");
-  auto aa = a.contiguous();
-  native::cpu::relu_inplace(aa);
-  if (a.is_contiguous()) {
-    std::memcpy(a.raw_mutable_data(), aa.raw_data(), (std::size_t)(aa.dtype().itemsize * aa.numel()));
-    return a;
-  }
-
-  throw_error("relu_: non-contiguous target not supported yet");
+  a = relu(a);
+  return a;
 }
 
 Series sigmoid(const Series& a) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  if (a.platform() == Platform::MPS) {
-    const bool supported =
-        native::mps::supports_unary_math(native::mps::UnaryMathOp::Sigmoid, a.scalar_type());
-    require_mps_support_or_policy_(supported, "sigmoid");
-    if (supported) {
-      native::mps::unary_math(native::mps::UnaryMathOp::Sigmoid, a.contiguous(), out);
-    } else {
-      require_backend_dispatch_supported_(a.platform(), "sigmoid");
-      auto aa = a.contiguous();
-      native::cpu::sigmoid(aa, out);
-    }
-  } else {
-    require_backend_dispatch_supported_(a.platform(), "sigmoid");
-    auto aa = a.contiguous();
-    native::cpu::sigmoid(aa, out);
-  }
+  const Series one = scalar_like_(a, 1.0);
+  Series out = div(one, add(one, exp(neg(a))));
   maybe_link_unary_op_(out, a, [a](const Series& g) {
     const Series y = sigmoid(a);
     const Series one = scalar_like_(a, 1.0);
@@ -1893,32 +2351,17 @@ Series sigmoid(const Series& a) {
   return out;
 }
 Series& sigmoid_(Series& a) {
-  if (a.platform() == Platform::MPS) {
-    a = sigmoid(a);
-    return a;
-  }
-  require_backend_dispatch_supported_(a.platform(), "sigmoid_");
-  PLUSS_CHECK(a.is_contiguous(), "sigmoid_: requires contiguous");
-  native::cpu::sigmoid_inplace(a);
+  a = sigmoid(a);
   return a;
 }
 
 Series softplus(const Series& a, double beta, double threshold) {
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    const Series aa = a.contiguous();
-    const Series beta_s = scalar_like_(aa, beta);
-    const Series thresh_s = scalar_like_(aa, threshold);
-    const Series bz = mul(aa, beta_s);
-    const Series use_linear = gt(bz, thresh_s);
-    const Series smooth = div(log1p(exp(bz)), beta_s);
-    out = where(use_linear, aa, smooth);
-  } else {
-    require_backend_dispatch_supported_(a.platform(), "softplus");
-    out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-    auto aa = a.contiguous();
-    native::cpu::softplus(aa, out, beta, threshold);
-  }
+  const Series beta_s = scalar_like_(a, beta);
+  const Series thresh_s = scalar_like_(a, threshold);
+  const Series bz = mul(a, beta_s);
+  const Series use_linear = gt(bz, thresh_s);
+  const Series smooth = div(log1p(exp(bz)), beta_s);
+  Series out = where(use_linear, a, smooth);
   maybe_link_unary_op_(out, a, [a, beta, threshold](const Series& g) {
     const Series beta_s = scalar_like_(a, beta);
     const Series thresh_s = scalar_like_(a, threshold);
@@ -1931,141 +2374,159 @@ Series softplus(const Series& a, double beta, double threshold) {
   return out;
 }
 Series& softplus_(Series& a, double beta, double threshold) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    a = softplus(a, beta, threshold);
-    return a;
-  }
-  require_backend_dispatch_supported_(a.platform(), "softplus_");
-  PLUSS_CHECK(a.is_contiguous(), "softplus_: requires contiguous");
-  native::cpu::softplus_inplace(a, beta, threshold);
+  a = softplus(a, beta, threshold);
   return a;
 }
 
 Series silu(const Series& a) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    const Series aa = a.contiguous();
-    return mul(aa, sigmoid(aa));
-  }
-  require_backend_dispatch_supported_(a.platform(), "silu");
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  auto aa = a.contiguous();
-  native::cpu::silu(aa, out);
-  return out;
+  return mul(a, sigmoid(a));
 }
 Series& silu_(Series& a) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    a = silu(a);
-    return a;
-  }
-  require_backend_dispatch_supported_(a.platform(), "silu_");
-  PLUSS_CHECK(a.is_contiguous(), "silu_: requires contiguous");
-  native::cpu::silu_inplace(a);
+  a = silu(a);
   return a;
 }
 
 Series gelu(const Series& a, bool approximate) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32 && approximate) {
-    const Series aa = a.contiguous();
-    const Series half = scalar_like_(aa, 0.5);
-    const Series one = scalar_like_(aa, 1.0);
-    const Series c0 = scalar_like_(aa, 0.7978845608028654); // sqrt(2/pi)
-    const Series c1 = scalar_like_(aa, 0.044715);
-    const Series x2 = mul(aa, aa);
-    const Series x3 = mul(x2, aa);
-    const Series inner = mul(c0, add(aa, mul(c1, x3)));
-    return mul(mul(half, aa), add(one, tanh(inner)));
+  if (approximate) {
+    const Series half = scalar_like_(a, 0.5);
+    const Series one = scalar_like_(a, 1.0);
+    const Series c0 = scalar_like_(a, 0.7978845608028654); // sqrt(2/pi)
+    const Series c1 = scalar_like_(a, 0.044715);
+    const Series x2 = mul(a, a);
+    const Series x3 = mul(x2, a);
+    const Series inner = mul(c0, add(a, mul(c1, x3)));
+    return mul(mul(half, a), add(one, tanh(inner)));
   }
-  require_backend_dispatch_supported_(a.platform(), "gelu");
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  auto aa = a.contiguous();
-  native::cpu::gelu(aa, out, approximate);
-  return out;
+  const Series half = scalar_like_(a, 0.5);
+  const Series one = scalar_like_(a, 1.0);
+  const Series inv_sqrt2 = scalar_like_(a, 0.7071067811865475);
+  return mul(mul(half, a), add(one, erf(mul(a, inv_sqrt2))));
 }
 Series& gelu_(Series& a, bool approximate) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32 && approximate) {
-    a = gelu(a, approximate);
-    return a;
-  }
-  require_backend_dispatch_supported_(a.platform(), "gelu_");
-  PLUSS_CHECK(a.is_contiguous(), "gelu_: requires contiguous");
-  native::cpu::gelu_inplace(a, approximate);
+  a = gelu(a, approximate);
   return a;
 }
 
 Series leaky_relu(const Series& a, double negative_slope) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    const Series aa = a.contiguous();
-    const Series zero = scalar_like_(aa, 0.0);
-    const Series slope = scalar_like_(aa, negative_slope);
-    return where(ge(aa, zero), aa, mul(aa, slope));
-  }
-  require_backend_dispatch_supported_(a.platform(), "leaky_relu");
-  Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-  auto aa = a.contiguous();
-  native::cpu::leaky_relu(aa, out, negative_slope);
-  return out;
+  const Series zero = scalar_like_(a, 0.0);
+  const Series slope = scalar_like_(a, negative_slope);
+  return where(ge(a, zero), a, mul(a, slope));
 }
 Series& leaky_relu_(Series& a, double negative_slope) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    a = leaky_relu(a, negative_slope);
-    return a;
-  }
-  require_backend_dispatch_supported_(a.platform(), "leaky_relu_");
-  PLUSS_CHECK(a.is_contiguous(), "leaky_relu_: requires contiguous");
-  native::cpu::leaky_relu_inplace(a, negative_slope);
+  a = leaky_relu(a, negative_slope);
   return a;
 }
 
 Series softmax(const Series& a, std::int64_t dim) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    const auto nd = a.dim();
-    if (dim < 0) dim += nd;
-    const Series aa = a.contiguous();
-    const Series m = amax(aa, dim, true);
-    const Series z = sub(aa, m);
-    const Series e = exp(z);
-    const Series s = sum(e, dim, true);
-    return div(e, s);
-  }
-  require_backend_dispatch_supported_(a.platform(), "softmax");
-  return native::cpu::softmax(a, dim);
+  const auto nd = a.dim();
+  if (dim < 0) dim += nd;
+  const Series aa = a.contiguous();
+  const Series m = amax(aa, dim, true);
+  const Series z = sub(aa, m);
+  const Series e = exp(z);
+  const Series s = sum(e, dim, true);
+  return div(e, s);
 }
 Series log_softmax(const Series& a, std::int64_t dim) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    const auto nd = a.dim();
-    if (dim < 0) dim += nd;
-    const Series aa = a.contiguous();
-    const Series m = amax(aa, dim, true);
-    const Series z = sub(aa, m);
-    const Series lse = log(sum(exp(z), dim, true));
-    return sub(z, lse);
-  }
-  require_backend_dispatch_supported_(a.platform(), "log_softmax");
-  return native::cpu::log_softmax(a, dim);
+  const auto nd = a.dim();
+  if (dim < 0) dim += nd;
+  const Series aa = a.contiguous();
+  const Series m = amax(aa, dim, true);
+  const Series z = sub(aa, m);
+  const Series lse = log(sum(exp(z), dim, true));
+  return sub(z, lse);
 }
 Series logsumexp(const Series& a, std::int64_t dim, bool keepdim) {
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    const auto nd = a.dim();
-    if (dim < 0) dim += nd;
-    const Series aa = a.contiguous();
-    const Series m = amax(aa, dim, true);
-    Series out = add(log(sum(exp(sub(aa, m)), dim, true)), m);
-    if (!keepdim) out = out.squeeze(dim);
-    return out;
+  const auto nd = a.dim();
+  if (dim < 0) dim += nd;
+  const Series aa = a.contiguous();
+  const Series m = amax(aa, dim, true);
+  Series out = add(log(sum(exp(sub(aa, m)), dim, true)), m);
+  if (!keepdim) out = out.squeeze(dim);
+  return out;
+}
+
+static bool mps_scatter_has_duplicate_targets_(
+    const Series& out_contig,
+    std::int64_t dim,
+    const Series& index_i64_contig) {
+  PLUSS_CHECK(out_contig.is_contiguous(), "scatter duplicate-check: expected contiguous output");
+  PLUSS_CHECK(index_i64_contig.scalar_type() == ScalarType::Int64, "scatter duplicate-check: expected int64 index");
+  if (index_i64_contig.numel() <= 1) {
+    return false;
   }
-  require_backend_dispatch_supported_(a.platform(), "logsumexp");
-  return native::cpu::logsumexp(a, dim, keepdim);
+
+  const auto out_sizes = out_contig.sizes();
+  const auto out_strides = out_contig.strides();
+  const auto idx_sizes = index_i64_contig.sizes();
+  const auto nd = static_cast<std::int64_t>(out_sizes.size());
+  if (dim < 0) {
+    dim += nd;
+  }
+  PLUSS_CHECK(dim >= 0 && dim < nd, "scatter duplicate-check: dim out of range");
+  PLUSS_CHECK(
+      idx_sizes.size() == out_sizes.size(),
+      "scatter duplicate-check: rank mismatch between index and output");
+
+  const Series idx_cpu = index_i64_contig.to(Platform::CPU).contiguous();
+  const auto* ip = reinterpret_cast<const std::int64_t*>(idx_cpu.raw_data());
+  const auto n = idx_cpu.numel();
+
+  std::vector<std::int64_t> offsets;
+  offsets.reserve(static_cast<std::size_t>(n));
+  for (std::int64_t gid = 0; gid < n; ++gid) {
+    std::int64_t rem = gid;
+    std::int64_t off = 0;
+    for (std::int64_t d = nd - 1; d >= 0; --d) {
+      const auto sz = idx_sizes[static_cast<std::size_t>(d)];
+      std::int64_t coord = (sz == 0) ? 0 : (rem % sz);
+      rem = (sz == 0) ? 0 : (rem / sz);
+      if (d == dim) {
+        std::int64_t pick = ip[gid];
+        const auto dim_sz = out_sizes[static_cast<std::size_t>(d)];
+        if (pick < 0) pick += dim_sz;
+        if (pick < 0 || pick >= dim_sz) {
+          // Defer exact error behavior to canonical CPU scatter implementation.
+          return true;
+        }
+        coord = pick;
+      }
+      off += coord * out_strides[static_cast<std::size_t>(d)];
+    }
+    offsets.push_back(off);
+  }
+
+  std::sort(offsets.begin(), offsets.end());
+  for (std::size_t i = 1; i < offsets.size(); ++i) {
+    if (offsets[i] == offsets[i - 1]) {
+      return true;
+    }
+  }
+  return false;
 }
 
 Series scatter(const Series& a, std::int64_t dim, const Series& index, const Series& src) {
   require_same_platform(a, index, "scatter");
   require_same_platform(a, src, "scatter");
   if (a.platform() == Platform::MPS) {
+    const bool strict_native = !mps_cpu_fallback_enabled_();
+    if (strict_native &&
+        (index.scalar_type() != ScalarType::Int64 ||
+         !mps_exact_f32_roundtrip_lane_dtype_(a.scalar_type()) ||
+         !mps_exact_f32_roundtrip_lane_dtype_(src.scalar_type()))) {
+      require_mps_native_dispatch_supported_("scatter");
+    }
     const Series idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
     if (a.scalar_type() == ScalarType::Float32 && src.scalar_type() == ScalarType::Float32 &&
         native::mps::supports_scatter(a.scalar_type(), idx.scalar_type(), src.scalar_type())) {
       Series out = a.contiguous();
-      native::mps::scatter_set_(out, dim, idx, src.contiguous());
+      const Series ss = src.expand(idx.sizes(), true).contiguous();
+      if (mps_scatter_has_duplicate_targets_(out, dim, idx)) {
+        const Series cpu_out =
+            native::cpu::scatter(out.to(Platform::CPU), dim, idx.to(Platform::CPU), ss.to(Platform::CPU));
+        return cpu_out.to(Platform::MPS);
+      }
+      native::mps::scatter_set_(out, dim, idx, ss);
       return out;
     }
     const bool supports_f32 =
@@ -2074,6 +2535,11 @@ Series scatter(const Series& a, std::int64_t dim, const Series& index, const Ser
     if (supports_f32) {
       Series out_f = a.to(ScalarType::Float32).contiguous();
       Series src_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
+      if (mps_scatter_has_duplicate_targets_(out_f, dim, idx)) {
+        const Series cpu_out =
+            native::cpu::scatter(out_f.to(Platform::CPU), dim, idx.to(Platform::CPU), src_f.to(Platform::CPU));
+        return cpu_out.to(Platform::MPS).to(a.scalar_type());
+      }
       native::mps::scatter_set_(out_f, dim, idx, src_f);
       if (a.scalar_type() == ScalarType::Float32) return out_f;
       return out_f.to(a.scalar_type());
@@ -2136,14 +2602,13 @@ Series scatter_add(const Series& a, std::int64_t dim, const Series& index, const
   require_same_platform(a, src, "scatter_add");
   const auto out_dt = promote_types(a.scalar_type(), src.scalar_type());
   if (a.platform() == Platform::MPS) {
-    const Series idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
-    if (out_dt == ScalarType::Float32 &&
-        native::mps::supports_scatter_reduce(out_dt, idx.scalar_type(), out_dt)) {
-      Series out = a.to(out_dt).contiguous();
-      const Series ss = src.expand(idx.sizes(), true).to(out_dt).contiguous();
-      native::mps::scatter_reduce_(out, dim, idx, ss, native::mps::ScatterReduceOp::Sum);
-      return out;
+    const bool strict_native = !mps_cpu_fallback_enabled_();
+    if (strict_native &&
+        (index.scalar_type() != ScalarType::Int64 ||
+         !mps_exact_f32_roundtrip_lane_dtype_(out_dt))) {
+      require_mps_native_dispatch_supported_("scatter_add");
     }
+    const Series idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
     const bool supports_f32 = native::mps::supports_scatter_reduce(
         ScalarType::Float32, idx.scalar_type(), ScalarType::Float32);
     require_mps_support_or_policy_(supports_f32, "scatter_add");
@@ -2151,8 +2616,12 @@ Series scatter_add(const Series& a, std::int64_t dim, const Series& index, const
       Series out_f = a.to(ScalarType::Float32).contiguous();
       const Series ss_f = src.expand(idx.sizes(), true).to(ScalarType::Float32).contiguous();
       native::mps::scatter_reduce_(out_f, dim, idx, ss_f, native::mps::ScatterReduceOp::Sum);
-      return out_f.to(out_dt);
+      return (out_dt == ScalarType::Float32) ? out_f : out_f.to(out_dt);
     }
+    Series out_cpu = a.to(out_dt).contiguous().to(Platform::CPU);
+    const Series ss_cpu = src.expand(idx.sizes(), true).to(out_dt).contiguous().to(Platform::CPU);
+    out_cpu = native::cpu::scatter_add(out_cpu, dim, idx.to(Platform::CPU), ss_cpu);
+    return out_cpu.to(Platform::MPS);
   }
   if (a.platform() == Platform::CUDA) {
     const bool native_enabled = native::cuda::native_scatter_gather_enabled();
@@ -2197,6 +2666,12 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
   require_same_platform(a, src, "scatter_reduce");
   const auto out_dt = promote_types(a.scalar_type(), src.scalar_type());
   if (a.platform() == Platform::MPS) {
+    const bool strict_native = !mps_cpu_fallback_enabled_();
+    if (strict_native &&
+        (index.scalar_type() != ScalarType::Int64 ||
+         !mps_exact_f32_roundtrip_lane_dtype_(out_dt))) {
+      require_mps_native_dispatch_supported_("scatter_reduce");
+    }
     const Series idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
     const auto rop = mps_scatter_reduce_op_(reduce);
     if (out_dt == ScalarType::Float32 &&
@@ -2241,6 +2716,12 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
   require_same_platform(a, src, "scatter_reduce");
   const auto out_dt = promote_types(a.scalar_type(), src.scalar_type());
   if (a.platform() == Platform::MPS) {
+    const bool strict_native = !mps_cpu_fallback_enabled_();
+    if (strict_native &&
+        (index.scalar_type() != ScalarType::Int64 ||
+         !mps_exact_f32_roundtrip_lane_dtype_(out_dt))) {
+      require_mps_native_dispatch_supported_("scatter_reduce");
+    }
     const Series idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
     const auto rop = mps_scatter_reduce_op_(reduce);
     if (out_dt == ScalarType::Float32 &&
@@ -2349,6 +2830,14 @@ Series& scatter_reduce_(Series& a, std::int64_t dim, const Series& index, const 
 
 Series gather(const Series& input, std::int64_t dim, const Series& index) {
   require_same_platform(input, index, "gather");
+  if (input.platform() == Platform::MPS) {
+    const bool strict_native = !mps_cpu_fallback_enabled_();
+    if (strict_native &&
+        (index.scalar_type() != ScalarType::Int64 ||
+         !mps_exact_f32_roundtrip_lane_dtype_(input.scalar_type()))) {
+      require_mps_native_dispatch_supported_("gather");
+    }
+  }
   auto in = input.contiguous();
   auto idx = (index.scalar_type() == ScalarType::Int64 ? index : index.to(ScalarType::Int64)).contiguous();
   if (input.platform() == Platform::MPS) {
@@ -2395,6 +2884,20 @@ Series maximum(const Series& a, const Series& b) {
     native::mps::maximum(aa, bb, out);
     return out;
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_binary_elementwise(aa, bb);
+    return cuda_elementwise_route_or_bridge_(
+        "maximum",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          native::cpu::maximum(aa, bb, out);
+          return out;
+        });
+  }
   require_backend_dispatch_supported_(a.platform(), "maximum");
   native::cpu::maximum(aa, bb, out);
   return out;
@@ -2408,6 +2911,20 @@ Series minimum(const Series& a, const Series& b) {
   if (a.platform() == Platform::MPS && out.scalar_type() == ScalarType::Float32) {
     native::mps::minimum(aa, bb, out);
     return out;
+  }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_binary_elementwise(aa, bb);
+    return cuda_elementwise_route_or_bridge_(
+        "minimum",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          native::cpu::minimum(aa, bb, out);
+          return out;
+        });
   }
   require_backend_dispatch_supported_(a.platform(), "minimum");
   native::cpu::minimum(aa, bb, out);
@@ -2432,8 +2949,24 @@ Series atan2(const Series& a, const Series& b) {
     out = where(logical_and(eq(bb, zero), eq(aa, zero)), zero, out);
     return out;
   }
-  require_backend_dispatch_supported_(a.platform(), "atan2");
   auto out = Series::empty(SeriesIterator::broadcast_shape(a.sizes(), b.sizes()), promote_types(a.scalar_type(), b.scalar_type()), a.platform());
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const Series aa = a.contiguous().to(out.scalar_type());
+    const Series bb = b.contiguous().to(out.scalar_type());
+    const bool route_supported = native::cuda::supports_binary_elementwise(aa, bb);
+    return cuda_elementwise_route_or_bridge_(
+        "atan2",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          native::cpu::atan2(aa, bb, out);
+          return out;
+        });
+  }
+  require_backend_dispatch_supported_(a.platform(), "atan2");
   auto aa = a.contiguous().to(out.scalar_type());
   auto bb = b.contiguous().to(out.scalar_type());
   native::cpu::atan2(aa, bb, out);
@@ -2447,8 +2980,24 @@ Series fmod(const Series& a, const Series& b) {
     auto bb = b.contiguous().to(ScalarType::Float32);
     return sub(aa, mul(trunc(div(aa, bb)), bb));
   }
-  require_backend_dispatch_supported_(a.platform(), "fmod");
   auto out = Series::empty(SeriesIterator::broadcast_shape(a.sizes(), b.sizes()), promote_types(a.scalar_type(), b.scalar_type()), a.platform());
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const Series aa = a.contiguous().to(out.scalar_type());
+    const Series bb = b.contiguous().to(out.scalar_type());
+    const bool route_supported = native::cuda::supports_binary_elementwise(aa, bb);
+    return cuda_elementwise_route_or_bridge_(
+        "fmod",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          native::cpu::fmod(aa, bb, out);
+          return out;
+        });
+  }
+  require_backend_dispatch_supported_(a.platform(), "fmod");
   auto aa = a.contiguous().to(out.scalar_type());
   auto bb = b.contiguous().to(out.scalar_type());
   native::cpu::fmod(aa, bb, out);
@@ -2462,8 +3011,24 @@ Series remainder(const Series& a, const Series& b) {
     auto bb = b.contiguous().to(ScalarType::Float32);
     return sub(aa, mul(floor(div(aa, bb)), bb));
   }
-  require_backend_dispatch_supported_(a.platform(), "remainder");
   auto out = Series::empty(SeriesIterator::broadcast_shape(a.sizes(), b.sizes()), promote_types(a.scalar_type(), b.scalar_type()), a.platform());
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const Series aa = a.contiguous().to(out.scalar_type());
+    const Series bb = b.contiguous().to(out.scalar_type());
+    const bool route_supported = native::cuda::supports_binary_elementwise(aa, bb);
+    return cuda_elementwise_route_or_bridge_(
+        "remainder",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          native::cpu::remainder(aa, bb, out);
+          return out;
+        });
+  }
+  require_backend_dispatch_supported_(a.platform(), "remainder");
   auto aa = a.contiguous().to(out.scalar_type());
   auto bb = b.contiguous().to(out.scalar_type());
   native::cpu::remainder(aa, bb, out);
@@ -2475,9 +3040,25 @@ Series rsqrt(const Series& a) {
                    ? reciprocal(sqrt(a.contiguous().to(ScalarType::Float32)))
                    : Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32), a.platform());
   if (a.platform() != Platform::MPS) {
-    require_backend_dispatch_supported_(a.platform(), "rsqrt");
-    auto aa = a.contiguous().to(out.scalar_type());
-    native::cpu::rsqrt(aa, out);
+    if (a.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_elementwise_enabled();
+      const bool native_strict = native::cuda::native_elementwise_strict();
+      const bool route_supported = native::cuda::supports_unary_elementwise(a);
+      out = cuda_elementwise_route_or_bridge_(
+          "rsqrt",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() {
+            const Series aa = a.contiguous().to(out.scalar_type());
+            native::cpu::rsqrt(aa, out);
+            return out;
+          });
+    } else {
+      require_backend_dispatch_supported_(a.platform(), "rsqrt");
+      auto aa = a.contiguous().to(out.scalar_type());
+      native::cpu::rsqrt(aa, out);
+    }
   }
   maybe_link_unary_op_(out, a, [a](const Series& g) {
     const Series y = rsqrt(a);
@@ -2491,8 +3072,23 @@ Series log2(const Series& a) {
     const Series ln2 = scalar_like_(aa, 0.69314718055994530942);
     return div(log(aa), ln2);
   }
-  require_backend_dispatch_supported_(a.platform(), "log2");
   auto out = Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32), a.platform());
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_unary_elementwise(a);
+    return cuda_elementwise_route_or_bridge_(
+        "log2",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          const Series aa = a.contiguous().to(out.scalar_type());
+          native::cpu::log2(aa, out);
+          return out;
+        });
+  }
+  require_backend_dispatch_supported_(a.platform(), "log2");
   auto aa = a.contiguous().to(out.scalar_type());
   native::cpu::log2(aa, out);
   return out;
@@ -2503,8 +3099,23 @@ Series log10(const Series& a) {
     const Series ln10 = scalar_like_(aa, 2.30258509299404568402);
     return div(log(aa), ln10);
   }
-  require_backend_dispatch_supported_(a.platform(), "log10");
   auto out = Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32), a.platform());
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_unary_elementwise(a);
+    return cuda_elementwise_route_or_bridge_(
+        "log10",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          const Series aa = a.contiguous().to(out.scalar_type());
+          native::cpu::log10(aa, out);
+          return out;
+        });
+  }
+  require_backend_dispatch_supported_(a.platform(), "log10");
   auto aa = a.contiguous().to(out.scalar_type());
   native::cpu::log10(aa, out);
   return out;
@@ -2515,8 +3126,23 @@ Series exp2(const Series& a) {
     const Series ln2 = scalar_like_(aa, 0.69314718055994530942);
     return exp(mul(aa, ln2));
   }
-  require_backend_dispatch_supported_(a.platform(), "exp2");
   auto out = Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32), a.platform());
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_unary_elementwise(a);
+    return cuda_elementwise_route_or_bridge_(
+        "exp2",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          const Series aa = a.contiguous().to(out.scalar_type());
+          native::cpu::exp2(aa, out);
+          return out;
+        });
+  }
+  require_backend_dispatch_supported_(a.platform(), "exp2");
   auto aa = a.contiguous().to(out.scalar_type());
   native::cpu::exp2(aa, out);
   return out;
@@ -2527,8 +3153,23 @@ Series cbrt(const Series& a) {
     const Series one_third = scalar_like_(aa, 0.33333333333333333333);
     return pow(aa, one_third);
   }
-  require_backend_dispatch_supported_(a.platform(), "cbrt");
   auto out = Series::empty(a.sizes(), promote_types(a.scalar_type(), ScalarType::Float32), a.platform());
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_unary_elementwise(a);
+    return cuda_elementwise_route_or_bridge_(
+        "cbrt",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          const Series aa = a.contiguous().to(out.scalar_type());
+          native::cpu::cbrt(aa, out);
+          return out;
+        });
+  }
+  require_backend_dispatch_supported_(a.platform(), "cbrt");
   auto aa = a.contiguous().to(out.scalar_type());
   native::cpu::cbrt(aa, out);
   return out;
@@ -2539,10 +3180,27 @@ Series square(const Series& a) {
     auto aa = a.contiguous();
     out = mul(aa, aa);
   } else {
-    require_backend_dispatch_supported_(a.platform(), "square");
-    out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
-    auto aa = a.contiguous();
-    native::cpu::square(aa, out);
+    if (a.platform() == Platform::CUDA) {
+      const bool native_enabled = native::cuda::native_elementwise_enabled();
+      const bool native_strict = native::cuda::native_elementwise_strict();
+      const bool route_supported = native::cuda::supports_unary_elementwise(a);
+      out = cuda_elementwise_route_or_bridge_(
+          "square",
+          native_enabled,
+          native_strict,
+          route_supported,
+          [&]() {
+            Series out_local = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+            auto aa = a.contiguous();
+            native::cpu::square(aa, out_local);
+            return out_local;
+          });
+    } else {
+      require_backend_dispatch_supported_(a.platform(), "square");
+      out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+      auto aa = a.contiguous();
+      native::cpu::square(aa, out);
+    }
   }
   maybe_link_unary_op_(out, a, [a](const Series& g) {
     return g.mul(2.0).mul(a);
@@ -2564,6 +3222,22 @@ Series nan_to_num(const Series& a, double nan, double posinf, double neginf) {
     out = where(logical_and(inf_mask, lt(aa, zero)), neginf_s, out);
     return out;
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_unary_elementwise(a);
+    return cuda_elementwise_route_or_bridge_(
+        "nan_to_num",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+          auto aa = a.contiguous();
+          native::cpu::nan_to_num(aa, nan, posinf, neginf, out);
+          return out;
+        });
+  }
   require_backend_dispatch_supported_(a.platform(), "nan_to_num");
   auto out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   auto aa = a.contiguous();
@@ -2572,6 +3246,10 @@ Series nan_to_num(const Series& a, double nan, double posinf, double neginf) {
 }
 Series& nan_to_num_(Series& a, double nan, double posinf, double neginf) {
   if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
+    a = nan_to_num(a, nan, posinf, neginf);
+    return a;
+  }
+  if (a.platform() == Platform::CUDA) {
     a = nan_to_num(a, nan, posinf, neginf);
     return a;
   }
@@ -2589,6 +3267,22 @@ Series clamp_min(const Series& a, double lo) {
   if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
     return maximum(a, scalar_like_(a, lo));
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_unary_elementwise(a);
+    return cuda_elementwise_route_or_bridge_(
+        "clamp_min",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+          auto aa = a.contiguous();
+          native::cpu::clamp_min(aa, lo, out);
+          return out;
+        });
+  }
   require_backend_dispatch_supported_(a.platform(), "clamp_min");
   auto out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   auto aa = a.contiguous();
@@ -2597,6 +3291,10 @@ Series clamp_min(const Series& a, double lo) {
 }
 Series& clamp_min_(Series& a, double lo) {
   if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
+    a = clamp_min(a, lo);
+    return a;
+  }
+  if (a.platform() == Platform::CUDA) {
     a = clamp_min(a, lo);
     return a;
   }
@@ -2613,6 +3311,22 @@ Series clamp_max(const Series& a, double hi) {
   if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
     return minimum(a, scalar_like_(a, hi));
   }
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_elementwise_enabled();
+    const bool native_strict = native::cuda::native_elementwise_strict();
+    const bool route_supported = native::cuda::supports_unary_elementwise(a);
+    return cuda_elementwise_route_or_bridge_(
+        "clamp_max",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
+          auto aa = a.contiguous();
+          native::cpu::clamp_max(aa, hi, out);
+          return out;
+        });
+  }
   require_backend_dispatch_supported_(a.platform(), "clamp_max");
   auto out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
   auto aa = a.contiguous();
@@ -2621,6 +3335,10 @@ Series clamp_max(const Series& a, double hi) {
 }
 Series& clamp_max_(Series& a, double hi) {
   if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
+    a = clamp_max(a, hi);
+    return a;
+  }
+  if (a.platform() == Platform::CUDA) {
     a = clamp_max(a, hi);
     return a;
   }
@@ -2637,12 +3355,6 @@ Series& clamp_max_(Series& a, double hi) {
 Series masked_scatter(const Series& a, const Series& mask, const Series& src) {
   require_same_platform(a, mask, "masked_scatter");
   require_same_platform(a, src, "masked_scatter");
-  if (a.platform() == Platform::MPS && a.scalar_type() == ScalarType::Float32) {
-    Series out = a.clone();
-    masked_scatter_(out, mask, src);
-    return out;
-  }
-  require_backend_dispatch_supported_(a.platform(), "masked_scatter");
   Series out = a.clone();
   masked_scatter_(out, mask, src);
   return out;
@@ -2673,27 +3385,51 @@ Series& masked_scatter_(Series& a, const Series& mask, const Series& src) {
     a = a_flat.reshape(shape);
     return a;
   }
-  require_backend_dispatch_supported_(a.platform(), "masked_scatter_");
-  auto shape = SeriesIterator::broadcast_shape(a.sizes(), mask.sizes());
-  PLUSS_CHECK(std::equal(a.sizes().begin(), a.sizes().end(), shape.begin(), shape.end()),
-              "masked_scatter_: shape mismatch (require a already broadcasted)");
-  auto mm = mask.expand(shape, true).contiguous();
-  const bool* mp = reinterpret_cast<const bool*>(mm.raw_data());
-  const auto n = a.numel();
-  std::int64_t count = 0;
-  for (std::int64_t i=0;i<n;++i) if (mp[i]) ++count;
-  PLUSS_CHECK(src.numel() == count, "masked_scatter_: src numel must match number of True in mask");
-  auto ss = src.contiguous().to(a.scalar_type());
+  auto cpu_apply = [&](Series& target) -> Series& {
+    auto shape = SeriesIterator::broadcast_shape(target.sizes(), mask.sizes());
+    PLUSS_CHECK(std::equal(target.sizes().begin(), target.sizes().end(), shape.begin(), shape.end()),
+                "masked_scatter_: shape mismatch (require a already broadcasted)");
+    auto mm = mask.expand(shape, true).contiguous();
+    const bool* mp = reinterpret_cast<const bool*>(mm.raw_data());
+    const auto n = target.numel();
+    std::int64_t count = 0;
+    for (std::int64_t i = 0; i < n; ++i) {
+      if (mp[i]) ++count;
+    }
+    PLUSS_CHECK(src.numel() == count, "masked_scatter_: src numel must match number of True in mask");
+    auto ss = src.contiguous().to(target.scalar_type());
 
-  const auto item = a.dtype().itemsize;
-  std::byte* ap = reinterpret_cast<std::byte*>(a.raw_mutable_data());
-  const std::byte* sp = ss.raw_data();
-  std::int64_t j = 0;
-  for (std::int64_t i=0;i<n;++i) {
-    if (!mp[i]) continue;
-    std::memcpy(ap + i*item, sp + j*item, (std::size_t)item);
-    ++j;
+    const auto item = target.dtype().itemsize;
+    std::byte* ap = reinterpret_cast<std::byte*>(target.raw_mutable_data());
+    const std::byte* sp = ss.raw_data();
+    std::int64_t j = 0;
+    for (std::int64_t i = 0; i < n; ++i) {
+      if (!mp[i]) continue;
+      std::memcpy(ap + i * item, sp + j * item, (std::size_t)item);
+      ++j;
+    }
+    return target;
+  };
+
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_masking_enabled();
+    const bool native_strict = native::cuda::native_masking_strict();
+    const bool route_supported = native::cuda::supports_masked_scatter(a, mask, src);
+    a = cuda_masking_route_or_bridge_(
+        "masked_scatter_",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          Series out = a.clone();
+          cpu_apply(out);
+          return out;
+        });
+    return a;
   }
+
+  require_backend_dispatch_supported_(a.platform(), "masked_scatter_");
+  cpu_apply(a);
   return a;
 }
 
@@ -3997,14 +4733,31 @@ Series Series::from_storage(const Storage& storage, std::int64_t storage_offset,
       pluss::msharp::make_intrusive<SeriesImpl>(storage, storage_offset, sizes, strides, dtype, Platform::CPU));
 }
 
-static Series bitwise_binary_(const Series& a, const Series& b,
-                              void(*fn)(const Series&, const Series&, const Series&)) {
+static Series bitwise_binary_(
+    const Series& a,
+    const Series& b,
+    void(*fn)(const Series&, const Series&, const Series&),
+    std::string_view op_name) {
   require_same_platform(a, b, "bitwise op");
-  require_backend_dispatch_supported_(a.platform(), "bitwise op");
-  auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
-  Series out = Series::empty(shape, a.scalar_type(), a.platform());
-  fn(a.expand(out.sizes()), b.expand(out.sizes()), out);
-  return out;
+  auto cpu_route = [&]() -> Series {
+    auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
+    Series out = Series::empty(shape, a.scalar_type(), a.platform());
+    fn(a.expand(out.sizes()), b.expand(out.sizes()), out);
+    return out;
+  };
+  if (a.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_bitwise_enabled();
+    const bool native_strict = native::cuda::native_bitwise_strict();
+    const bool route_supported = native::cuda::supports_bitwise_binary(a, b);
+    return cuda_bitwise_route_or_bridge_(
+        op_name,
+        native_enabled,
+        native_strict,
+        route_supported,
+        cpu_route);
+  }
+  require_backend_dispatch_supported_(a.platform(), op_name);
+  return cpu_route();
 }
 
 enum class MpsBitwiseOp : std::uint8_t { And, Or, Xor };
@@ -4054,19 +4807,11 @@ static bool mps_take_put_accumulate_native_dtype_(ScalarType dtype) noexcept {
 }
 
 static bool mps_take_fast_path_supported_(const Series& self, const Series& index) noexcept {
-  if (self.platform() != Platform::MPS || index.platform() != Platform::MPS) {
-    return false;
-  }
-  if (!self.is_contiguous() || !index.is_contiguous()) {
-    return false;
-  }
-  if (index.scalar_type() != ScalarType::Int64) {
-    return false;
-  }
-  if (!mps_take_put_exact_f32_roundtrip_dtype_(self.scalar_type())) {
-    return false;
-  }
-  return native::mps::supports_gather(ScalarType::Float32, ScalarType::Int64);
+  (void)self;
+  (void)index;
+  // Native MPS take/put fast path remains flaky on real hardware for strict lanes.
+  // Keep correctness-first CPU route for now.
+  return false;
 }
 
 static bool mps_put_fast_path_supported_(
@@ -4074,25 +4819,13 @@ static bool mps_put_fast_path_supported_(
     const Series& index,
     const Series& source,
     bool accumulate) noexcept {
-  if (self.platform() != Platform::MPS || index.platform() != Platform::MPS || source.platform() != Platform::MPS) {
-    return false;
-  }
-  if (!self.is_contiguous() || !index.is_contiguous() || !source.is_contiguous()) {
-    return false;
-  }
-  if (index.scalar_type() != ScalarType::Int64) {
-    return false;
-  }
-  if (!mps_take_put_exact_f32_roundtrip_dtype_(self.scalar_type())) {
-    return false;
-  }
-  if (accumulate && !mps_take_put_accumulate_native_dtype_(self.scalar_type())) {
-    return false;
-  }
-  if (source.scalar_type() != self.scalar_type()) {
-    return false;
-  }
-  return native::mps::supports_scatter(ScalarType::Float32, ScalarType::Int64, ScalarType::Float32);
+  (void)self;
+  (void)index;
+  (void)source;
+  (void)accumulate;
+  // Native MPS take/put fast path remains flaky on real hardware for strict lanes.
+  // Keep correctness-first CPU route for now.
+  return false;
 }
 
 static bool has_duplicate_linear_indices_(const Series& index_cpu_i64_contig, std::int64_t total_numel) {
@@ -4177,7 +4910,7 @@ Series Series::bitwise_and(const Series& rhs) const {
     }
     return bitwise_binary_mps_(*this, rhs, MpsBitwiseOp::And);
   }
-  return bitwise_binary_(*this, rhs, native::cpu::bitwise_and);
+  return bitwise_binary_(*this, rhs, native::cpu::bitwise_and, "bitwise_and");
 }
 Series Series::bitwise_or(const Series& rhs) const {
   if (platform() == Platform::MPS) {
@@ -4187,7 +4920,7 @@ Series Series::bitwise_or(const Series& rhs) const {
     }
     return bitwise_binary_mps_(*this, rhs, MpsBitwiseOp::Or);
   }
-  return bitwise_binary_(*this, rhs, native::cpu::bitwise_or);
+  return bitwise_binary_(*this, rhs, native::cpu::bitwise_or, "bitwise_or");
 }
 Series Series::bitwise_xor(const Series& rhs) const {
   if (platform() == Platform::MPS) {
@@ -4197,17 +4930,31 @@ Series Series::bitwise_xor(const Series& rhs) const {
     }
     return bitwise_binary_mps_(*this, rhs, MpsBitwiseOp::Xor);
   }
-  return bitwise_binary_(*this, rhs, native::cpu::bitwise_xor);
+  return bitwise_binary_(*this, rhs, native::cpu::bitwise_xor, "bitwise_xor");
 }
 
 Series Series::bitwise_not() const {
   if (platform() == Platform::MPS) {
     return bitwise_not_mps_(*this);
   }
+  auto cpu_route = [&]() -> Series {
+    Series out = Series::empty(sizes(), scalar_type(), platform());
+    native::cpu::bitwise_not(*this, out);
+    return out;
+  };
+  if (platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_bitwise_enabled();
+    const bool native_strict = native::cuda::native_bitwise_strict();
+    const bool route_supported = native::cuda::supports_bitwise_unary(*this);
+    return cuda_bitwise_route_or_bridge_(
+        "bitwise_not",
+        native_enabled,
+        native_strict,
+        route_supported,
+        cpu_route);
+  }
   require_backend_dispatch_supported_(platform(), "bitwise_not");
-  Series out = Series::empty(sizes(), scalar_type(), platform());
-  native::cpu::bitwise_not(*this, out);
-  return out;
+  return cpu_route();
 }
 
 Series Series::logical_and(const Series& rhs) const { return as_bool(*this).bitwise_and(as_bool(rhs)); }
@@ -4240,12 +4987,26 @@ Series Series::unite(const std::vector<Series>& others, std::int64_t dim) const 
     for (const auto& t : others) xs.push_back(t);
     return ops_internal::mps_cat_along_dim_(xs, dim, "unite");
   }
+  auto cpu_route = [&]() -> Series {
+    std::vector<Series> xs;
+    xs.reserve(others.size() + 1);
+    xs.push_back(*this);
+    for (auto& t : others) xs.push_back(t);
+    return native::cpu::cat(xs, dim);
+  };
+  if (platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_compose_enabled();
+    const bool native_strict = native::cuda::native_compose_strict();
+    const bool route_supported = native::cuda::supports_unite_compose(*this, others, dim);
+    return cuda_compose_route_or_bridge_(
+        "unite",
+        native_enabled,
+        native_strict,
+        route_supported,
+        cpu_route);
+  }
   require_backend_dispatch_supported_(platform(), "unite");
-  std::vector<Series> xs;
-  xs.reserve(others.size() + 1);
-  xs.push_back(*this);
-  for (auto& t : others) xs.push_back(t);
-  return native::cpu::cat(xs, dim);
+  return cpu_route();
 }
 
 Series Series::pile(const std::vector<Series>& others, std::int64_t dim) const {
@@ -4262,12 +5023,26 @@ Series Series::pile(const std::vector<Series>& others, std::int64_t dim) const {
     for (const auto& t : others) xs.push_back(t.unsqueeze(dim).contiguous());
     return ops_internal::mps_cat_along_dim_(xs, dim, "pile");
   }
+  auto cpu_route = [&]() -> Series {
+    std::vector<Series> xs;
+    xs.reserve(others.size() + 1);
+    xs.push_back(*this);
+    for (auto& t : others) xs.push_back(t);
+    return native::cpu::stack(xs, dim);
+  };
+  if (platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_compose_enabled();
+    const bool native_strict = native::cuda::native_compose_strict();
+    const bool route_supported = native::cuda::supports_pile_compose(*this, others, dim);
+    return cuda_compose_route_or_bridge_(
+        "pile",
+        native_enabled,
+        native_strict,
+        route_supported,
+        cpu_route);
+  }
   require_backend_dispatch_supported_(platform(), "pile");
-  std::vector<Series> xs;
-  xs.reserve(others.size() + 1);
-  xs.push_back(*this);
-  for (auto& t : others) xs.push_back(t);
-  return native::cpu::stack(xs, dim);
+  return cpu_route();
 }
 
 Series Series::gather(std::int64_t dim, const Series& index) const {
@@ -4376,6 +5151,7 @@ Series Series::index(const std::vector<Series>& indices) const {
 Series Series::take(const Series& index) const {
   require_same_platform(*this, index, "take");
   if (platform() == Platform::MPS) {
+    const bool strict_native = !mps_cpu_fallback_enabled_();
     if (mps_native_take_put_enabled_() && mps_take_fast_path_supported_(*this, index)) {
       const std::array<std::int64_t, 1> flat_shape{{numel()}};
       const std::array<std::int64_t, 1> out_flat_shape{{index.numel()}};
@@ -4394,7 +5170,11 @@ Series Series::take(const Series& index) const {
       }
       return out;
     }
-    require_mps_native_dispatch_supported_("take");
+    if (strict_native &&
+        (index.scalar_type() != ScalarType::Int64 ||
+         !mps_take_put_exact_f32_roundtrip_dtype_(scalar_type()))) {
+      require_mps_native_dispatch_supported_("take");
+    }
 
     // Correctness-first fallback for unsupported dtype/index combinations.
     const Series cpu_self = this->to(Platform::CPU);
@@ -4420,6 +5200,7 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
   require_same_platform(*this, index, "put_");
   require_same_platform(*this, source, "put_");
   if (platform() == Platform::MPS) {
+    const bool strict_native = !mps_cpu_fallback_enabled_();
     if (mps_native_take_put_enabled_() &&
         mps_put_fast_path_supported_(*this, index, source, accumulate) &&
         (source.numel() == 1 || source.numel() == index.numel())) {
@@ -4463,7 +5244,13 @@ Series Series::put_(const Series& index, const Series& source, bool accumulate) 
       copy_(out);
       return finish_direct_inplace_value_op_(*this);
     }
-    require_mps_native_dispatch_supported_("put_");
+    if (strict_native &&
+        (index.scalar_type() != ScalarType::Int64 ||
+         !mps_take_put_exact_f32_roundtrip_dtype_(scalar_type()) ||
+         source.scalar_type() != scalar_type() ||
+         (accumulate && !mps_take_put_accumulate_native_dtype_(scalar_type())))) {
+      require_mps_native_dispatch_supported_("put_");
+    }
 
     // Correctness-first fallback for unsupported dtype/index/source combinations.
     const Series cpu_self = this->to(Platform::CPU);
@@ -4787,12 +5574,28 @@ Series Series::cumsum(std::int64_t dim, bool keepdim) const {
   ops_internal::PlatformScope platform_scope{platform()};
   (void)keepdim; // same shape output; keepdim for API parity
   Series a = is_contiguous() ? *this : contiguous();
-  Series out = Series::empty(a.sizes(), a.scalar_type(), platform());
   if (platform() == Platform::MPS && native::mps::supports_cumsum_dim(a.scalar_type())) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), platform());
     native::mps::cumsum_dim(a, dim, out);
     return out;
   }
+  if (platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_scan_enabled();
+    const bool native_strict = native::cuda::native_scan_strict();
+    const bool route_supported = native::cuda::supports_cumsum_scan(a, dim);
+    return cuda_scan_route_or_bridge_(
+        "cumsum",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          Series out = Series::empty(a.sizes(), a.scalar_type(), platform());
+          native::cpu::cumsum_dim(a, dim, out);
+          return out;
+        });
+  }
   require_backend_dispatch_supported_(platform(), "cumsum");
+  Series out = Series::empty(a.sizes(), a.scalar_type(), platform());
   native::cpu::cumsum_dim(a, dim, out);
   return out;
 }
@@ -4814,12 +5617,28 @@ Series Series::cumprod(std::int64_t dim, bool keepdim) const {
   ops_internal::PlatformScope platform_scope{platform()};
   (void)keepdim;
   Series a = is_contiguous() ? *this : contiguous();
-  Series out = Series::empty(a.sizes(), a.scalar_type(), platform());
   if (platform() == Platform::MPS && native::mps::supports_cumprod_dim(a.scalar_type())) {
+    Series out = Series::empty(a.sizes(), a.scalar_type(), platform());
     native::mps::cumprod_dim(a, dim, out);
     return out;
   }
+  if (platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_scan_enabled();
+    const bool native_strict = native::cuda::native_scan_strict();
+    const bool route_supported = native::cuda::supports_cumprod_scan(a, dim);
+    return cuda_scan_route_or_bridge_(
+        "cumprod",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          Series out = Series::empty(a.sizes(), a.scalar_type(), platform());
+          native::cpu::cumprod_dim(a, dim, out);
+          return out;
+        });
+  }
   require_backend_dispatch_supported_(platform(), "cumprod");
+  Series out = Series::empty(a.sizes(), a.scalar_type(), platform());
   native::cpu::cumprod_dim(a, dim, out);
   return out;
 }

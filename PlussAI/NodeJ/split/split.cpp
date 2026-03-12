@@ -315,4 +315,46 @@ StatusOr<SplitPlan> strat_fold_plan(const Series& labels, const SplitOptions& op
   return StatusOr<SplitPlan>(std::move(plan));
 }
 
+StatusOr<FeatureBatch> slice_feature_batch(const FeatureBatch& in, const Series& indices) {
+  Status check = validate_features(in);
+  if (!check.ok()) return StatusOr<FeatureBatch>(std::move(check));
+  if (!indices.defined()) {
+    return StatusOr<FeatureBatch>(Status::invalid_argument("slice_feature_batch requires defined indices."));
+  }
+
+  const Series idx = indices.to(in.x.platform(), ScalarType::Int64).reshape({indices.numel()});
+  FeatureBatch out = in;
+  if (in.layout == ObservationLayout::Rows) {
+    out.x = in.x.index_select(0, idx);
+  } else {
+    out.x = in.x.index_select(1, idx);
+  }
+  Status out_check = validate_features(out);
+  if (!out_check.ok()) return StatusOr<FeatureBatch>(std::move(out_check));
+  return StatusOr<FeatureBatch>(std::move(out));
+}
+
+StatusOr<LabeledBatch> slice_labeled_batch(const LabeledBatch& in, const Series& indices) {
+  Status check = validate_labeled(in);
+  if (!check.ok()) return StatusOr<LabeledBatch>(std::move(check));
+  if (!indices.defined()) {
+    return StatusOr<LabeledBatch>(Status::invalid_argument("slice_labeled_batch requires defined indices."));
+  }
+
+  StatusOr<FeatureBatch> features_or = slice_feature_batch(in.features, indices);
+  if (!features_or.ok()) return StatusOr<LabeledBatch>(features_or.status());
+
+  const Series y_idx = indices.to(in.y.platform(), ScalarType::Int64).reshape({indices.numel()});
+  LabeledBatch out{};
+  out.features = features_or.move_value();
+  out.y = in.y.reshape({in.y.numel()}).index_select(0, y_idx);
+  if (in.sample_weights.defined()) {
+    const Series w_idx = indices.to(in.sample_weights.platform(), ScalarType::Int64).reshape({indices.numel()});
+    out.sample_weights = in.sample_weights.reshape({in.sample_weights.numel()}).index_select(0, w_idx);
+  }
+  Status out_check = validate_labeled(out);
+  if (!out_check.ok()) return StatusOr<LabeledBatch>(std::move(out_check));
+  return StatusOr<LabeledBatch>(std::move(out));
+}
+
 } // namespace pluss::ai::nodej

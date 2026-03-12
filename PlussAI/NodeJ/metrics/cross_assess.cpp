@@ -14,38 +14,6 @@ namespace {
   return {};
 }
 
-[[nodiscard]] StatusOr<FeatureBatch> slice_features(const FeatureBatch& in, const Series& indices) {
-  Status check = validate_features(in);
-  if (!check.ok()) return StatusOr<FeatureBatch>(std::move(check));
-
-  const Series idx = indices.to(in.x.platform(), ScalarType::Int64).reshape({indices.numel()});
-  FeatureBatch out = in;
-  if (in.layout == ObservationLayout::Rows) {
-    out.x = in.x.index_select(0, idx);
-  } else {
-    out.x = in.x.index_select(1, idx);
-  }
-  return StatusOr<FeatureBatch>(std::move(out));
-}
-
-[[nodiscard]] StatusOr<LabeledBatch> slice_labeled(const LabeledBatch& in, const Series& indices) {
-  Status check = validate_labeled(in);
-  if (!check.ok()) return StatusOr<LabeledBatch>(std::move(check));
-
-  StatusOr<FeatureBatch> features_or = slice_features(in.features, indices);
-  if (!features_or.ok()) return StatusOr<LabeledBatch>(features_or.status());
-
-  const Series y_idx = indices.to(in.y.platform(), ScalarType::Int64).reshape({indices.numel()});
-  LabeledBatch out{};
-  out.features = features_or.move_value();
-  out.y = in.y.reshape({in.y.numel()}).index_select(0, y_idx);
-  if (in.sample_weights.defined()) {
-    const Series w_idx = indices.to(in.sample_weights.platform(), ScalarType::Int64).reshape({indices.numel()});
-    out.sample_weights = in.sample_weights.reshape({in.sample_weights.numel()}).index_select(0, w_idx);
-  }
-  return StatusOr<LabeledBatch>(std::move(out));
-}
-
 [[nodiscard]] StatusOr<SplitPlan> make_cross_plan(const ModelSpec& spec,
                                                   const LabeledBatch& batch,
                                                   const SplitOptions& split) {
@@ -76,6 +44,30 @@ namespace {
     return StatusOr<SplitPlan>(Status::not_implemented("cross_assess currently supports Holdout, KFold, StratifiedKFold."));
   }
   return StatusOr<SplitPlan>(Status::invalid_argument("cross_assess received unknown SplitOptions.plan."));
+}
+
+[[nodiscard]] SplitOptions resolved_split_defaults(const ModelSpec& spec, SplitOptions split) {
+  if (!split.reliability_defaults) return split;
+  if (spec.task != TaskKind::Classification) return split;
+  if (!split.stratified
+      && (split.plan == CVPlanKind::Holdout || split.plan == CVPlanKind::KFold)) {
+    split.stratified = true;
+  }
+  return split;
+}
+
+[[nodiscard]] Status with_fold_context(Status status,
+                                       std::int64_t fold_index,
+                                       std::int64_t fold_count,
+                                       std::int64_t train_samples,
+                                       std::int64_t test_samples) {
+  if (status.ok()) return status;
+  const std::string prefix = "cross_assess fold "
+                             + std::to_string(fold_index + 1) + "/" + std::to_string(fold_count)
+                             + " (train=" + std::to_string(train_samples)
+                             + ", test=" + std::to_string(test_samples) + "): ";
+  status.message = prefix + status.message;
+  return status;
 }
 
 template <class ModelT>
@@ -112,7 +104,8 @@ StatusOr<CrossAssessReport> cross_assess(const ModelSpec& spec,
   Status data_status = validate_labeled(batch);
   if (!data_status.ok()) return StatusOr<CrossAssessReport>(std::move(data_status));
 
-  StatusOr<SplitPlan> plan_or = make_cross_plan(spec, batch, split);
+  const SplitOptions effective_split = resolved_split_defaults(spec, split);
+  StatusOr<SplitPlan> plan_or = make_cross_plan(spec, batch, effective_split);
   if (!plan_or.ok()) return StatusOr<CrossAssessReport>(plan_or.status());
   SplitPlan plan = plan_or.move_value();
   if (plan.folds.empty()) {
@@ -128,27 +121,64 @@ StatusOr<CrossAssessReport> cross_assess(const ModelSpec& spec,
   fold_assess_options.metrics = report.metrics;
   report.folds.reserve(plan.folds.size());
 
-  for (const auto& fold : plan.folds) {
-    StatusOr<LabeledBatch> train_or = slice_labeled(batch, fold.train_indices);
-    if (!train_or.ok()) return StatusOr<CrossAssessReport>(train_or.status());
-    StatusOr<LabeledBatch> test_or = slice_labeled(batch, fold.test_indices);
-    if (!test_or.ok()) return StatusOr<CrossAssessReport>(test_or.status());
+  for (std::size_t fi = 0; fi < plan.folds.size(); ++fi) {
+    const auto& fold = plan.folds[fi];
+    StatusOr<LabeledBatch> train_or = slice_labeled_batch(batch, fold.train_indices);
+    if (!train_or.ok()) {
+      return StatusOr<CrossAssessReport>(with_fold_context(train_or.status(),
+                                                           static_cast<std::int64_t>(fi),
+                                                           static_cast<std::int64_t>(plan.folds.size()),
+                                                           fold.train_indices.numel(),
+                                                           fold.test_indices.numel()));
+    }
+    StatusOr<LabeledBatch> test_or = slice_labeled_batch(batch, fold.test_indices);
+    if (!test_or.ok()) {
+      return StatusOr<CrossAssessReport>(with_fold_context(test_or.status(),
+                                                           static_cast<std::int64_t>(fi),
+                                                           static_cast<std::int64_t>(plan.folds.size()),
+                                                           fold.train_indices.numel(),
+                                                           fold.test_indices.numel()));
+    }
 
     if (spec.task == TaskKind::Classification) {
       StatusOr<std::unique_ptr<ClassifierBase>> model_or = make_classifier(spec);
-      if (!model_or.ok()) return StatusOr<CrossAssessReport>(model_or.status());
+      if (!model_or.ok()) {
+        return StatusOr<CrossAssessReport>(with_fold_context(model_or.status(),
+                                                             static_cast<std::int64_t>(fi),
+                                                             static_cast<std::int64_t>(plan.folds.size()),
+                                                             fold.train_indices.numel(),
+                                                             fold.test_indices.numel()));
+      }
       std::unique_ptr<ClassifierBase> model = model_or.move_value();
       StatusOr<FoldAssessResult> fold_or =
           learn_and_assess_fold(*model, train_or.value(), test_or.value(), train_options, fold_assess_options, fold);
-      if (!fold_or.ok()) return StatusOr<CrossAssessReport>(fold_or.status());
+      if (!fold_or.ok()) {
+        return StatusOr<CrossAssessReport>(with_fold_context(fold_or.status(),
+                                                             static_cast<std::int64_t>(fi),
+                                                             static_cast<std::int64_t>(plan.folds.size()),
+                                                             fold.train_indices.numel(),
+                                                             fold.test_indices.numel()));
+      }
       report.folds.push_back(fold_or.move_value());
     } else {
       StatusOr<std::unique_ptr<RegressorBase>> model_or = make_regressor(spec);
-      if (!model_or.ok()) return StatusOr<CrossAssessReport>(model_or.status());
+      if (!model_or.ok()) {
+        return StatusOr<CrossAssessReport>(with_fold_context(model_or.status(),
+                                                             static_cast<std::int64_t>(fi),
+                                                             static_cast<std::int64_t>(plan.folds.size()),
+                                                             fold.train_indices.numel(),
+                                                             fold.test_indices.numel()));
+      }
       std::unique_ptr<RegressorBase> model = model_or.move_value();
       StatusOr<FoldAssessResult> fold_or =
           learn_and_assess_fold(*model, train_or.value(), test_or.value(), train_options, fold_assess_options, fold);
-      if (!fold_or.ok()) return StatusOr<CrossAssessReport>(fold_or.status());
+      if (!fold_or.ok()) {
+        return StatusOr<CrossAssessReport>(with_fold_context(fold_or.status(),
+                                                             static_cast<std::int64_t>(fi),
+                                                             static_cast<std::int64_t>(plan.folds.size()),
+                                                             fold.train_indices.numel(),
+                                                             fold.test_indices.numel()));
+      }
       report.folds.push_back(fold_or.move_value());
     }
   }

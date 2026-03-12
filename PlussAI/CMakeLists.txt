@@ -31,6 +31,10 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/regressors")
     add_subdirectory(NodeJ/regressors)
 endif()
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/transformers")
+    add_subdirectory(NodeJ/transformers)
+endif()
+
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/NodeJ/data")
     add_subdirectory(NodeJ/data)
 endif()

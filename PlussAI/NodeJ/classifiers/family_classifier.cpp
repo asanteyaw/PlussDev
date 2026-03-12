@@ -36,6 +36,10 @@ const char* family_name(ModelFamily family) {
       return "Kernel";
     case ModelFamily::Bayes:
       return "Bayes";
+    case ModelFamily::Cluster:
+      return "Cluster";
+    case ModelFamily::Decompose:
+      return "Decompose";
   }
   return "Unknown";
 }
@@ -49,6 +53,9 @@ bool is_phase0_family(ModelFamily family) {
     case ModelFamily::Kernel:
     case ModelFamily::Bayes:
       return true;
+    case ModelFamily::Cluster:
+    case ModelFamily::Decompose:
+      return false;
   }
   return false;
 }
@@ -63,6 +70,26 @@ bool is_phase0_family(ModelFamily family) {
 
 [[nodiscard]] Config f64_on(Platform platform) {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(platform);
+}
+
+[[nodiscard]] Series state_f64(std::vector<double> values) {
+  const std::int64_t n = static_cast<std::int64_t>(values.size());
+  return pluss::make_series(std::move(values), {n}, f64_cpu());
+}
+
+[[nodiscard]] Series state_i64(std::vector<std::int64_t> values) {
+  const std::int64_t n = static_cast<std::int64_t>(values.size());
+  return pluss::make_series(std::move(values), {n}, i64_cpu());
+}
+
+[[nodiscard]] std::vector<double> vec_f64(const Series& x) {
+  if (!x.defined()) return {};
+  return x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+}
+
+[[nodiscard]] std::vector<std::int64_t> vec_i64(const Series& x) {
+  if (!x.defined()) return {};
+  return x.to(pluss::pCPU, ScalarType::Int64).reshape({x.numel()}).to_vec<std::int64_t>();
 }
 
 [[nodiscard]] Series make_index_series(const std::vector<std::int64_t>& indices, Platform platform) {
@@ -282,11 +309,13 @@ struct BinaryLabelEncoding {
 [[nodiscard]] Series labels_from_scores(const Series& scores,
                                         double negative_label,
                                         double positive_label,
+                                        double positive_threshold,
                                         Platform out_platform,
                                         ScalarType out_dtype);
 [[nodiscard]] Series labels_from_probabilities(const Series& probs,
                                                double negative_label,
                                                double positive_label,
+                                               double positive_threshold,
                                                Platform out_platform,
                                                ScalarType out_dtype);
 
@@ -324,6 +353,155 @@ struct BinaryLabelEncoding {
   out.positive = positive;
   out.label_dtype = batch.y.scalar_type();
   return StatusOr<BinaryLabelEncoding>(std::move(out));
+}
+
+[[nodiscard]] Status validate_positive_threshold(double threshold, const char* where) {
+  if (!std::isfinite(threshold) || threshold < 0.0 || threshold > 1.0) {
+    return Status::invalid_argument(std::string(where) + " requires positive_threshold in [0, 1].");
+  }
+  return Status::success();
+}
+
+[[nodiscard]] StatusOr<Series> resolve_training_weights(const LabeledBatch& batch,
+                                                        const TrainOptions& options,
+                                                        const BinaryLabelEncoding& labels,
+                                                        const char* where) {
+  const std::int64_t n = labels.y01.numel();
+  if (n <= 0) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires at least one training sample."));
+  }
+  const Platform platform = labels.y01.platform();
+  Series weights = pluss::ones({n}, f64_on(platform));
+
+  auto apply_sample_weight = [&](const Series& src, const char* label) -> Status {
+    if (!src.defined()) return Status::success();
+    if (src.numel() != n) {
+      return Status::shape_mismatch(std::string(where) + " " + label + " length must match sample count.");
+    }
+    Series w = src.to(platform, ScalarType::Float64).reshape({n});
+    if (!all_finite(w)) {
+      return Status::invalid_argument(std::string(where) + " " + label + " must be finite.");
+    }
+    if (w.le(0.0).any().item<bool>()) {
+      return Status::invalid_argument(std::string(where) + " " + label + " must be strictly positive.");
+    }
+    weights = weights.mul(w);
+    return Status::success();
+  };
+
+  Status sample_status = apply_sample_weight(batch.sample_weights, "batch.sample_weights");
+  if (!sample_status.ok()) return StatusOr<Series>(std::move(sample_status));
+  sample_status = apply_sample_weight(options.sample_weights, "TrainOptions.sample_weights");
+  if (!sample_status.ok()) return StatusOr<Series>(std::move(sample_status));
+
+  if (options.class_weight == ClassWeightMode::Balanced) {
+    const double pos = labels.y01.sum().item<double>();
+    const double neg = static_cast<double>(n) - pos;
+    if (!(pos > 0.0 && neg > 0.0)) {
+      return StatusOr<Series>(
+          Status::invalid_argument(std::string(where) + " balanced class weights require both classes to be present."));
+    }
+    const double w_pos = static_cast<double>(n) / (2.0 * pos);
+    const double w_neg = static_cast<double>(n) / (2.0 * neg);
+    const Series cw = labels.y01.mul(w_pos).add(labels.y01.mul(-1.0).add(1.0).mul(w_neg));
+    weights = weights.mul(cw);
+  } else if (options.class_weight == ClassWeightMode::Custom) {
+    if (!options.class_weights.defined()) {
+      return StatusOr<Series>(Status::invalid_argument(
+          std::string(where) + " TrainOptions.class_weights must be provided for ClassWeightMode::Custom."));
+    }
+    Series cw = options.class_weights.to(platform, ScalarType::Float64).reshape({options.class_weights.numel()});
+    if (cw.numel() != 2) {
+      return StatusOr<Series>(Status::shape_mismatch(
+          std::string(where) + " TrainOptions.class_weights must be length 2: [negative, positive]."));
+    }
+    if (!all_finite(cw) || cw.le(0.0).any().item<bool>()) {
+      return StatusOr<Series>(Status::invalid_argument(
+          std::string(where) + " TrainOptions.class_weights values must be finite and > 0."));
+    }
+    const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, platform);
+    const Series idx1 = make_index_series(std::vector<std::int64_t>{1}, platform);
+    const double w_neg = cw.index_select(0, idx0).reshape({1}).item<double>();
+    const double w_pos = cw.index_select(0, idx1).reshape({1}).item<double>();
+    const Series per_sample = labels.y01.mul(w_pos).add(labels.y01.mul(-1.0).add(1.0).mul(w_neg));
+    weights = weights.mul(per_sample);
+  }
+
+  if (!all_finite(weights)) {
+    return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite training weights."));
+  }
+  if (weights.le(0.0).all().item<bool>()) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " produced zero total training weight."));
+  }
+
+  const double mean_w = weights.mean().item<double>();
+  if (std::isfinite(mean_w) && mean_w > 0.0) {
+    weights = weights.div(mean_w);
+  }
+  return StatusOr<Series>(weights);
+}
+
+[[nodiscard]] StatusOr<Series> fit_platt_calibrator(const Series& scores,
+                                                    const Series& y01,
+                                                    const Series& sample_weights,
+                                                    std::int64_t max_iterations,
+                                                    double tolerance,
+                                                    const char* where) {
+  if (scores.numel() != y01.numel() || scores.numel() != sample_weights.numel()) {
+    return StatusOr<Series>(Status::shape_mismatch(std::string(where) + " expects equal scores/labels/weights lengths."));
+  }
+  if (scores.numel() == 0) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires non-empty scores."));
+  }
+  if (max_iterations <= 0 || !(tolerance > 0.0)) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires positive iterations and tolerance."));
+  }
+
+  const Platform platform = scores.platform();
+  Series params = pluss::make_series(std::vector<double>{1.0, 0.0}, {2}, f64_on(platform));
+  const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, platform);
+  const Series idx1 = make_index_series(std::vector<std::int64_t>{1}, platform);
+  const double weight_sum = sample_weights.sum().item<double>();
+  if (!(weight_sum > 0.0) || !std::isfinite(weight_sum)) {
+    return StatusOr<Series>(Status::invalid_argument(std::string(where) + " requires strictly positive total sample weight."));
+  }
+
+  constexpr double eps = 1e-12;
+  double prev_loss = std::numeric_limits<double>::infinity();
+  for (std::int64_t iter = 0; iter < max_iterations; ++iter) {
+    const double a = params.index_select(0, idx0).reshape({1}).item<double>();
+    const double b = params.index_select(0, idx1).reshape({1}).item<double>();
+
+    const Series logits = scores.mul(a).add(b);
+    const Series probs = logits.sigmoid();
+    const Series err = probs.sub(y01);
+    const Series weighted_err = err.mul(sample_weights);
+    const Series grad_a = weighted_err.mul(scores).sum().div(weight_sum);
+    const Series grad_b = weighted_err.sum().div(weight_sum);
+    const Series grad = grad_a.reshape({1}).unite({grad_b.reshape({1})}, 0);
+    if (!all_finite(grad)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite calibration gradient."));
+    }
+
+    const double lr = 0.05;
+    params = params.sub(grad.mul(lr));
+
+    const Series clipped = probs.clamp(eps, 1.0 - eps);
+    const Series loss_terms = y01.mul(clipped.log()).add(y01.mul(-1.0).add(1.0).mul(clipped.mul(-1.0).add(1.0).log())).mul(-1.0);
+    const double loss = loss_terms.mul(sample_weights).sum().div(weight_sum).item<double>();
+    if (!std::isfinite(loss)) {
+      return StatusOr<Series>(Status::numerical_failure(std::string(where) + " encountered non-finite calibration objective."));
+    }
+    if (std::abs(prev_loss - loss) <= tolerance) {
+      break;
+    }
+    prev_loss = loss;
+  }
+
+  if (!all_finite(params)) {
+    return StatusOr<Series>(Status::numerical_failure(std::string(where) + " produced non-finite calibration parameters."));
+  }
+  return StatusOr<Series>(params);
 }
 
 class NeighborClassifier final : public ClassifierBase {
@@ -425,12 +603,16 @@ public:
 
   [[nodiscard]] StatusOr<Series> infer(const FeatureBatch& batch,
                                        const InferOptions& options = {}) const override {
+    Status threshold_status =
+        validate_positive_threshold(options.positive_threshold, "NeighborClassifier::infer");
+    if (!threshold_status.ok()) return StatusOr<Series>(std::move(threshold_status));
     StatusOr<Series> probs_or = infer_scores(batch, options);
     if (!probs_or.ok()) return StatusOr<Series>(probs_or.status());
     return StatusOr<Series>(
         labels_from_probabilities(probs_or.value().reshape({probs_or.value().numel()}),
                                   negative_label_,
                                   positive_label_,
+                                  options.positive_threshold,
                                   batch.x.platform(),
                                   label_dtype_));
   }
@@ -454,7 +636,13 @@ public:
     StatusOr<Series> probs_or = infer_scores(batch.features);
     if (!probs_or.ok()) return StatusOr<Series>(probs_or.status());
 
-    StatusOr<Series> pred_or = infer(batch.features);
+    const InferOptions infer_options{
+        .layout = options.layout,
+        .missing = MissingPolicy::KeepNaN,
+        .unknown_categorical = UnknownCategoryPolicy::Ignore,
+        .positive_threshold = options.positive_threshold,
+    };
+    StatusOr<Series> pred_or = infer(batch.features, infer_options);
     if (!pred_or.ok()) return StatusOr<Series>(pred_or.status());
     const Series pred01 = pred_or.value()
                               .to(ScalarType::Float64)
@@ -467,6 +655,40 @@ public:
       metrics = {MetricKind::Accuracy};
     }
     return classification_metrics(truth.y01, pred01, probs_or.value(), metrics);
+  }
+
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0,
+                   static_cast<double>(sample_count_),
+                   static_cast<double>(feature_count_),
+                   static_cast<double>(k_),
+                   negative_label_,
+                   positive_label_,
+                   static_cast<double>(static_cast<std::int64_t>(label_dtype_))}),
+        x_train_,
+        y_train_,
+        mean_,
+        scale_,
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.size() < 5) return Status::invalid_argument("NeighborClassifier::load_state expects 5 tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 7) return Status::invalid_argument("NeighborClassifier::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    sample_count_ = static_cast<std::int64_t>(meta[1]);
+    feature_count_ = static_cast<std::int64_t>(meta[2]);
+    k_ = static_cast<std::int64_t>(meta[3]);
+    negative_label_ = meta[4];
+    positive_label_ = meta[5];
+    label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[6]));
+    x_train_ = state[1];
+    y_train_ = state[2];
+    mean_ = state[3];
+    scale_ = state[4];
+    return Status::success();
   }
 
 private:
@@ -597,12 +819,16 @@ public:
 
   [[nodiscard]] StatusOr<Series> infer(const FeatureBatch& batch,
                                        const InferOptions& options = {}) const override {
+    Status threshold_status =
+        validate_positive_threshold(options.positive_threshold, "TreeClassifier::infer");
+    if (!threshold_status.ok()) return StatusOr<Series>(std::move(threshold_status));
     StatusOr<Series> probs_or = infer_scores(batch, options);
     if (!probs_or.ok()) return StatusOr<Series>(probs_or.status());
     return StatusOr<Series>(
         labels_from_probabilities(probs_or.value().reshape({probs_or.value().numel()}),
                                   negative_label_,
                                   positive_label_,
+                                  options.positive_threshold,
                                   batch.x.platform(),
                                   label_dtype_));
   }
@@ -626,7 +852,13 @@ public:
     StatusOr<Series> probs_or = infer_scores(batch.features);
     if (!probs_or.ok()) return StatusOr<Series>(probs_or.status());
 
-    StatusOr<Series> pred_or = infer(batch.features);
+    const InferOptions infer_options{
+        .layout = options.layout,
+        .missing = MissingPolicy::KeepNaN,
+        .unknown_categorical = UnknownCategoryPolicy::Ignore,
+        .positive_threshold = options.positive_threshold,
+    };
+    StatusOr<Series> pred_or = infer(batch.features, infer_options);
     if (!pred_or.ok()) return StatusOr<Series>(pred_or.status());
     const Series pred01 = pred_or.value()
                               .to(ScalarType::Float64)
@@ -639,6 +871,59 @@ public:
       metrics = {MetricKind::Accuracy};
     }
     return classification_metrics(truth.y01, pred01, probs_or.value(), metrics);
+  }
+
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    std::vector<double> flat{};
+    flat.reserve(nodes_.size() * 6);
+    for (const auto& node : nodes_) {
+      flat.push_back(node.is_leaf ? 1.0 : 0.0);
+      flat.push_back(static_cast<double>(node.feature));
+      flat.push_back(node.threshold);
+      flat.push_back(static_cast<double>(node.left));
+      flat.push_back(static_cast<double>(node.right));
+      flat.push_back(node.leaf_positive_probability);
+    }
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0,
+                   static_cast<double>(sample_count_),
+                   static_cast<double>(feature_count_),
+                   negative_label_,
+                   positive_label_,
+                   static_cast<double>(static_cast<std::int64_t>(label_dtype_)),
+                   static_cast<double>(nodes_.size())}),
+        state_f64(std::move(flat)),
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.size() < 2) return Status::invalid_argument("TreeClassifier::load_state expects 2 tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 7) return Status::invalid_argument("TreeClassifier::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    sample_count_ = static_cast<std::int64_t>(meta[1]);
+    feature_count_ = static_cast<std::int64_t>(meta[2]);
+    negative_label_ = meta[3];
+    positive_label_ = meta[4];
+    label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[5]));
+    const std::size_t node_count = static_cast<std::size_t>(std::max<double>(0.0, meta[6]));
+    const auto flat = vec_f64(state[1]);
+    nodes_.assign(node_count, TreeNode{});
+    for (std::size_t i = 0; i < node_count; ++i) {
+      const std::size_t base = i * 6;
+      if (base + 5 >= flat.size()) break;
+      TreeNode node{};
+      node.is_leaf = flat[base] > 0.5;
+      node.feature = static_cast<std::int64_t>(flat[base + 1]);
+      node.threshold = flat[base + 2];
+      node.left = static_cast<std::int64_t>(flat[base + 3]);
+      node.right = static_cast<std::int64_t>(flat[base + 4]);
+      node.leaf_positive_probability = flat[base + 5];
+      nodes_[i] = node;
+    }
+    x_train_ = Series::undefined();
+    y_train_ = Series::undefined();
+    return Status::success();
   }
 
 private:
@@ -948,10 +1233,18 @@ public:
 
   [[nodiscard]] StatusOr<Series> infer(const FeatureBatch& batch,
                                        const InferOptions& options = {}) const override {
+    Status threshold_status =
+        validate_positive_threshold(options.positive_threshold, "EnsembleClassifier::infer");
+    if (!threshold_status.ok()) return StatusOr<Series>(std::move(threshold_status));
     StatusOr<Series> scores_or = infer_scores(batch, options);
     if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
     const Series out =
-        labels_from_scores(scores_or.value().reshape({scores_or.value().numel()}), negative_label_, positive_label_, batch.x.platform(), label_dtype_);
+        labels_from_scores(scores_or.value().reshape({scores_or.value().numel()}),
+                           negative_label_,
+                           positive_label_,
+                           options.positive_threshold,
+                           batch.x.platform(),
+                           label_dtype_);
     return StatusOr<Series>(out);
   }
 
@@ -975,7 +1268,13 @@ public:
     if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
     const Series prob_series = scores_or.value().sigmoid();
 
-    StatusOr<Series> pred_or = infer(batch.features);
+    const InferOptions infer_options{
+        .layout = options.layout,
+        .missing = MissingPolicy::KeepNaN,
+        .unknown_categorical = UnknownCategoryPolicy::Ignore,
+        .positive_threshold = options.positive_threshold,
+    };
+    StatusOr<Series> pred_or = infer(batch.features, infer_options);
     if (!pred_or.ok()) return StatusOr<Series>(pred_or.status());
     const Series pred01 = pred_or.value()
                               .to(ScalarType::Float64)
@@ -988,6 +1287,72 @@ public:
       metrics = {MetricKind::Accuracy};
     }
     return classification_metrics(truth.y01, pred01, prob_series, metrics);
+  }
+
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    std::vector<Series> out{};
+    out.reserve(2 + learners_.size() * 4);
+    out.push_back(state_f64({trained_ ? 1.0 : 0.0,
+                             static_cast<double>(sample_count_),
+                             static_cast<double>(feature_count_),
+                             negative_label_,
+                             positive_label_,
+                             static_cast<double>(static_cast<std::int64_t>(label_dtype_)),
+                             static_cast<double>(learners_.size())}));
+    for (const auto& member : learners_) {
+      out.push_back(state_i64(member.feature_ids));
+      if (!member.tree) {
+        out.push_back(state_i64({0}));
+        continue;
+      }
+      StatusOr<std::vector<Series>> tree_state_or = member.tree->dump_state();
+      if (!tree_state_or.ok()) return StatusOr<std::vector<Series>>(tree_state_or.status());
+      const auto& tree_state = tree_state_or.value();
+      out.push_back(state_i64({static_cast<std::int64_t>(tree_state.size())}));
+      out.insert(out.end(), tree_state.begin(), tree_state.end());
+    }
+    return StatusOr<std::vector<Series>>(std::move(out));
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.empty()) return Status::invalid_argument("EnsembleClassifier::load_state expects metadata tensor.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 7) return Status::invalid_argument("EnsembleClassifier::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    sample_count_ = static_cast<std::int64_t>(meta[1]);
+    feature_count_ = static_cast<std::int64_t>(meta[2]);
+    negative_label_ = meta[3];
+    positive_label_ = meta[4];
+    label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[5]));
+    const std::int64_t learner_count = static_cast<std::int64_t>(meta[6]);
+
+    learners_.clear();
+    learners_.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, learner_count)));
+    std::size_t cursor = 1;
+    for (std::int64_t li = 0; li < learner_count; ++li) {
+      if (cursor >= state.size()) return Status::invalid_argument("EnsembleClassifier::load_state truncated state.");
+      EnsembleMember member{};
+      member.feature_ids = vec_i64(state[cursor++]);
+      if (cursor >= state.size()) return Status::invalid_argument("EnsembleClassifier::load_state missing tree state size.");
+      const auto size_vec = vec_i64(state[cursor++]);
+      const std::int64_t tree_items = size_vec.empty() ? 0 : size_vec.front();
+      if (tree_items <= 0) {
+        learners_.push_back(std::move(member));
+        continue;
+      }
+      std::vector<Series> tree_state{};
+      tree_state.reserve(static_cast<std::size_t>(tree_items));
+      for (std::int64_t ti = 0; ti < tree_items; ++ti) {
+        if (cursor >= state.size()) return Status::invalid_argument("EnsembleClassifier::load_state truncated tree state.");
+        tree_state.push_back(state[cursor++]);
+      }
+      auto tree = std::make_unique<TreeClassifier>(TreeFamilyOptions{.criterion = TreeCriterion::Gini});
+      Status load_status = tree->load_state(tree_state);
+      if (!load_status.ok()) return load_status;
+      member.tree = std::move(tree);
+      learners_.push_back(std::move(member));
+    }
+    return Status::success();
   }
 
 private:
@@ -1019,9 +1384,12 @@ private:
 [[nodiscard]] Series labels_from_scores(const Series& scores,
                                         double negative_label,
                                         double positive_label,
+                                        double positive_threshold,
                                         Platform out_platform,
                                         ScalarType out_dtype) {
-  const Series mask = scores.ge(0.0).to(ScalarType::Float64);
+  const double t = std::clamp(positive_threshold, 1e-9, 1.0 - 1e-9);
+  const double score_threshold = std::log(t / (1.0 - t));
+  const Series mask = scores.ge(score_threshold).to(ScalarType::Float64);
   const Series labels = mask.mul(positive_label - negative_label).add(negative_label);
   return labels.to(out_platform, out_dtype);
 }
@@ -1029,9 +1397,10 @@ private:
 [[nodiscard]] Series labels_from_probabilities(const Series& probs,
                                                double negative_label,
                                                double positive_label,
+                                               double positive_threshold,
                                                Platform out_platform,
                                                ScalarType out_dtype) {
-  const Series mask = probs.ge(0.5).to(ScalarType::Float64);
+  const Series mask = probs.ge(positive_threshold).to(ScalarType::Float64);
   const Series labels = mask.mul(positive_label - negative_label).add(negative_label);
   return labels.to(out_platform, out_dtype);
 }
@@ -1188,11 +1557,19 @@ public:
 
   [[nodiscard]] StatusOr<Series> infer(const FeatureBatch& batch,
                                        const InferOptions& options = {}) const override {
+    Status threshold_status =
+        validate_positive_threshold(options.positive_threshold, "BayesClassifier::infer");
+    if (!threshold_status.ok()) return StatusOr<Series>(std::move(threshold_status));
     StatusOr<Series> scores_or = infer_scores(batch, options);
     if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
 
     const Series out =
-        labels_from_scores(scores_or.value().reshape({scores_or.value().numel()}), negative_label_, positive_label_, batch.x.platform(), label_dtype_);
+        labels_from_scores(scores_or.value().reshape({scores_or.value().numel()}),
+                           negative_label_,
+                           positive_label_,
+                           options.positive_threshold,
+                           batch.x.platform(),
+                           label_dtype_);
     return StatusOr<Series>(out);
   }
 
@@ -1216,7 +1593,13 @@ public:
     if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
     const Series prob_series = scores_or.value().sigmoid();
 
-    StatusOr<Series> pred_or = infer(batch.features);
+    const InferOptions infer_options{
+        .layout = options.layout,
+        .missing = MissingPolicy::KeepNaN,
+        .unknown_categorical = UnknownCategoryPolicy::Ignore,
+        .positive_threshold = options.positive_threshold,
+    };
+    StatusOr<Series> pred_or = infer(batch.features, infer_options);
     if (!pred_or.ok()) return StatusOr<Series>(pred_or.status());
     const Series pred01 = pred_or.value()
                               .to(ScalarType::Float64)
@@ -1229,6 +1612,42 @@ public:
       metrics = {MetricKind::Accuracy};
     }
     return classification_metrics(truth.y01, pred01, prob_series, metrics);
+  }
+
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0,
+                   static_cast<double>(sample_count_),
+                   static_cast<double>(feature_count_),
+                   prior0_,
+                   prior1_,
+                   negative_label_,
+                   positive_label_,
+                   static_cast<double>(static_cast<std::int64_t>(label_dtype_))}),
+        mean0_,
+        mean1_,
+        var0_,
+        var1_,
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.size() < 5) return Status::invalid_argument("BayesClassifier::load_state expects 5 tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 8) return Status::invalid_argument("BayesClassifier::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    sample_count_ = static_cast<std::int64_t>(meta[1]);
+    feature_count_ = static_cast<std::int64_t>(meta[2]);
+    prior0_ = meta[3];
+    prior1_ = meta[4];
+    negative_label_ = meta[5];
+    positive_label_ = meta[6];
+    label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[7]));
+    mean0_ = state[1];
+    mean1_ = state[2];
+    var0_ = state[3];
+    var1_ = state[4];
+    return Status::success();
   }
 
 private:
@@ -1326,11 +1745,19 @@ public:
 
   [[nodiscard]] StatusOr<Series> infer(const FeatureBatch& batch,
                                        const InferOptions& options = {}) const override {
+    Status threshold_status =
+        validate_positive_threshold(options.positive_threshold, "KernelClassifier::infer");
+    if (!threshold_status.ok()) return StatusOr<Series>(std::move(threshold_status));
     StatusOr<Series> scores_or = infer_scores(batch, options);
     if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
 
     const Series out =
-        labels_from_scores(scores_or.value().reshape({scores_or.value().numel()}), negative_label_, positive_label_, batch.x.platform(), label_dtype_);
+        labels_from_scores(scores_or.value().reshape({scores_or.value().numel()}),
+                           negative_label_,
+                           positive_label_,
+                           options.positive_threshold,
+                           batch.x.platform(),
+                           label_dtype_);
     return StatusOr<Series>(out);
   }
 
@@ -1354,7 +1781,13 @@ public:
     if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
     const Series prob_series = scores_or.value().sigmoid();
 
-    StatusOr<Series> pred_or = infer(batch.features);
+    const InferOptions infer_options{
+        .layout = options.layout,
+        .missing = MissingPolicy::KeepNaN,
+        .unknown_categorical = UnknownCategoryPolicy::Ignore,
+        .positive_threshold = options.positive_threshold,
+    };
+    StatusOr<Series> pred_or = infer(batch.features, infer_options);
     if (!pred_or.ok()) return StatusOr<Series>(pred_or.status());
     const Series pred01 = pred_or.value()
                               .to(ScalarType::Float64)
@@ -1367,6 +1800,38 @@ public:
       metrics = {MetricKind::Accuracy};
     }
     return classification_metrics(truth.y01, pred01, prob_series, metrics);
+  }
+
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0,
+                   static_cast<double>(sample_count_),
+                   static_cast<double>(feature_count_),
+                   gamma_,
+                   lambda_,
+                   negative_label_,
+                   positive_label_,
+                   static_cast<double>(static_cast<std::int64_t>(label_dtype_))}),
+        x_train_,
+        alpha_,
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.size() < 3) return Status::invalid_argument("KernelClassifier::load_state expects 3 tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 8) return Status::invalid_argument("KernelClassifier::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    sample_count_ = static_cast<std::int64_t>(meta[1]);
+    feature_count_ = static_cast<std::int64_t>(meta[2]);
+    gamma_ = meta[3];
+    lambda_ = meta[4];
+    negative_label_ = meta[5];
+    positive_label_ = meta[6];
+    label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[7]));
+    x_train_ = state[1];
+    alpha_ = state[2];
+    return Status::success();
   }
 
 private:
@@ -1395,14 +1860,16 @@ private:
 
 [[nodiscard]] Series logistic_gradient(const Series& design,
                                        const Series& y01,
+                                       const Series& sample_weight,
                                        const Series& weights,
                                        bool fit_intercept,
                                        double lambda) {
   const std::int64_t n = design.sizes()[0];
   const Series logits = design.matmul(weights.reshape({weights.numel(), 1})).reshape({n});
   const Series probs = logits.sigmoid();
-  const Series error = probs.sub(y01);
-  Series grad = design.transpose(0, 1).matmul(error.reshape({n, 1})).div(static_cast<double>(n)).reshape({weights.numel()});
+  const Series error = probs.sub(y01).mul(sample_weight);
+  const double denom = sample_weight.sum().item<double>();
+  Series grad = design.transpose(0, 1).matmul(error.reshape({n, 1})).div(denom).reshape({weights.numel()});
 
   if (lambda > 0.0) {
     Series ridge = weights;
@@ -1417,13 +1884,15 @@ private:
 
 [[nodiscard]] double logistic_objective(const Series& design,
                                         const Series& y01,
+                                        const Series& sample_weight,
                                         const Series& weights,
                                         bool fit_intercept,
                                         double lambda) {
   const std::int64_t n = design.sizes()[0];
   const Series logits = design.matmul(weights.reshape({weights.numel(), 1})).reshape({n});
   const Series loss_terms = logits.softplus().sub(y01.mul(logits));
-  double loss = loss_terms.mean().item<double>();
+  const double denom = sample_weight.sum().item<double>();
+  double loss = loss_terms.mul(sample_weight).sum().div(denom).item<double>();
 
   if (lambda > 0.0) {
     Series ridge = weights;
@@ -1438,6 +1907,7 @@ private:
 
 [[nodiscard]] Series hinge_gradient(const Series& design,
                                     const Series& y01,
+                                    const Series& sample_weight,
                                     const Series& weights,
                                     bool fit_intercept,
                                     double lambda) {
@@ -1446,8 +1916,9 @@ private:
   const Series ypm = y01.mul(2.0).sub(1.0);
   const Series margin = ypm.mul(scores).mul(-1.0).add(1.0);
   const Series active = margin.gt(0.0).to(ScalarType::Float64);
-  const Series coeff = ypm.mul(active).mul(-1.0);
-  Series grad = design.transpose(0, 1).matmul(coeff.reshape({n, 1})).div(static_cast<double>(n)).reshape({weights.numel()});
+  const Series coeff = ypm.mul(active).mul(-1.0).mul(sample_weight);
+  const double denom = sample_weight.sum().item<double>();
+  Series grad = design.transpose(0, 1).matmul(coeff.reshape({n, 1})).div(denom).reshape({weights.numel()});
 
   if (lambda > 0.0) {
     Series ridge = weights;
@@ -1462,6 +1933,7 @@ private:
 
 [[nodiscard]] double hinge_objective(const Series& design,
                                      const Series& y01,
+                                     const Series& sample_weight,
                                      const Series& weights,
                                      bool fit_intercept,
                                      double lambda) {
@@ -1469,7 +1941,8 @@ private:
   const Series scores = design.matmul(weights.reshape({weights.numel(), 1})).reshape({n});
   const Series ypm = y01.mul(2.0).sub(1.0);
   const Series margin = ypm.mul(scores).mul(-1.0).add(1.0);
-  double loss = margin.relu().mean().item<double>();
+  const double denom = sample_weight.sum().item<double>();
+  double loss = margin.relu().mul(sample_weight).sum().div(denom).item<double>();
 
   if (lambda > 0.0) {
     Series ridge = weights;
@@ -1714,6 +2187,11 @@ public:
     if (!data_status.ok()) return data_status;
     if (options.max_iterations <= 0) return Status::invalid_argument("TrainOptions.max_iterations must be positive.");
     if (!(options.tolerance > 0.0)) return Status::invalid_argument("TrainOptions.tolerance must be positive.");
+    if (options.calibration == ScoreCalibration::Platt
+        && (options.calibration_iterations <= 0 || !(options.calibration_tolerance > 0.0))) {
+      return Status::invalid_argument(
+          "LinearClassifier::learn with ScoreCalibration::Platt requires positive calibration iterations and tolerance.");
+    }
 
     Status option_status = validate_linear_classifier_options(options_);
     if (!option_status.ok()) return option_status;
@@ -1729,6 +2207,10 @@ public:
     StatusOr<BinaryLabelEncoding> labels_or = encode_binary_labels(batch, matrix.sample_count, "LinearClassifier::learn");
     if (!labels_or.ok()) return labels_or.status();
     const BinaryLabelEncoding labels = labels_or.move_value();
+    StatusOr<Series> sample_weight_or =
+        resolve_training_weights(batch, options, labels, "LinearClassifier::learn");
+    if (!sample_weight_or.ok()) return sample_weight_or.status();
+    const Series sample_weight = sample_weight_or.move_value();
 
     Series design = matrix.x_rows;
     if (options_.fit_intercept) {
@@ -1776,9 +2258,9 @@ public:
     for (std::int64_t iter = 0; iter < options.max_iterations; ++iter) {
       Series grad = Series::undefined();
       if (options_.objective == LinearObjective::Logistic) {
-        grad = logistic_gradient(design, labels.y01, weights, options_.fit_intercept, lambda);
+        grad = logistic_gradient(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
       } else {
-        grad = hinge_gradient(design, labels.y01, weights, options_.fit_intercept, lambda);
+        grad = hinge_gradient(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
       }
       if (!all_finite(grad)) {
         return Status::numerical_failure("LinearClassifier::learn encountered non-finite gradient.");
@@ -1797,8 +2279,8 @@ public:
       weights = params[0];
 
       const double loss = options_.objective == LinearObjective::Logistic
-                              ? logistic_objective(design, labels.y01, weights, options_.fit_intercept, lambda)
-                              : hinge_objective(design, labels.y01, weights, options_.fit_intercept, lambda);
+                              ? logistic_objective(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda)
+                              : hinge_objective(design, labels.y01, sample_weight, weights, options_.fit_intercept, lambda);
       if (!std::isfinite(loss)) {
         return Status::numerical_failure("LinearClassifier::learn encountered non-finite objective.");
       }
@@ -1810,6 +2292,26 @@ public:
 
     if (!all_finite(weights)) {
       return Status::numerical_failure("LinearClassifier::learn produced non-finite coefficients.");
+    }
+
+    calibrated_scores_ = false;
+    calibration_a_ = 1.0;
+    calibration_b_ = 0.0;
+    if (options.calibration == ScoreCalibration::Platt) {
+      const Series train_scores = design.matmul(weights.reshape({weights.numel(), 1})).reshape({matrix.sample_count});
+      StatusOr<Series> params_or = fit_platt_calibrator(train_scores,
+                                                        labels.y01,
+                                                        sample_weight,
+                                                        options.calibration_iterations,
+                                                        options.calibration_tolerance,
+                                                        "LinearClassifier::learn");
+      if (!params_or.ok()) return params_or.status();
+      const Series params = params_or.move_value();
+      const Series idx0 = make_index_series(std::vector<std::int64_t>{0}, params.platform());
+      const Series idx1 = make_index_series(std::vector<std::int64_t>{1}, params.platform());
+      calibration_a_ = params.index_select(0, idx0).reshape({1}).item<double>();
+      calibration_b_ = params.index_select(0, idx1).reshape({1}).item<double>();
+      calibrated_scores_ = true;
     }
 
     weights_ = std::move(weights);
@@ -1849,11 +2351,15 @@ public:
 
   [[nodiscard]] StatusOr<Series> infer(const FeatureBatch& batch,
                                        const InferOptions& options = {}) const override {
+    Status threshold_status =
+        validate_positive_threshold(options.positive_threshold, "LinearClassifier::infer");
+    if (!threshold_status.ok()) return StatusOr<Series>(std::move(threshold_status));
     StatusOr<Series> scores_or = infer_scores(batch, options);
     if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
+    const Series probs = probabilities_from_scores(scores_or.value().reshape({scores_or.value().numel()}));
 
     const Series out =
-        labels_from_scores(scores_or.value().reshape({scores_or.value().numel()}), negative_label_, positive_label_, batch.x.platform(), label_dtype_);
+        labels_from_probabilities(probs, negative_label_, positive_label_, options.positive_threshold, batch.x.platform(), label_dtype_);
     return StatusOr<Series>(out);
   }
 
@@ -1875,9 +2381,15 @@ public:
 
     StatusOr<Series> scores_or = infer_scores(batch.features);
     if (!scores_or.ok()) return StatusOr<Series>(scores_or.status());
-    const Series probs = scores_or.value().sigmoid();
+    const Series probs = probabilities_from_scores(scores_or.value().reshape({scores_or.value().numel()}));
 
-    StatusOr<Series> pred_or = infer(batch.features);
+    const InferOptions infer_options{
+        .layout = options.layout,
+        .missing = MissingPolicy::KeepNaN,
+        .unknown_categorical = UnknownCategoryPolicy::Ignore,
+        .positive_threshold = options.positive_threshold,
+    };
+    StatusOr<Series> pred_or = infer(batch.features, infer_options);
     if (!pred_or.ok()) return StatusOr<Series>(pred_or.status());
     const Series pred01 = pred_or.value()
                               .to(ScalarType::Float64)
@@ -1892,6 +2404,36 @@ public:
     return classification_metrics(truth.y01, pred01, probs, metrics);
   }
 
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0,
+                   static_cast<double>(feature_count_),
+                   calibrated_scores_ ? 1.0 : 0.0,
+                   calibration_a_,
+                   calibration_b_,
+                   negative_label_,
+                   positive_label_,
+                   static_cast<double>(static_cast<std::int64_t>(label_dtype_))}),
+        weights_,
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.size() < 2) return Status::invalid_argument("LinearClassifier::load_state expects 2 tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 8) return Status::invalid_argument("LinearClassifier::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    feature_count_ = static_cast<std::int64_t>(meta[1]);
+    calibrated_scores_ = meta[2] > 0.5;
+    calibration_a_ = meta[3];
+    calibration_b_ = meta[4];
+    negative_label_ = meta[5];
+    positive_label_ = meta[6];
+    label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[7]));
+    weights_ = state[1];
+    return Status::success();
+  }
+
 private:
   [[nodiscard]] Status validate_ready(const FeatureBatch& batch, const char* where) const {
     Status data_status = validate_features(batch);
@@ -1903,10 +2445,18 @@ private:
     return Status::success();
   }
 
+  [[nodiscard]] Series probabilities_from_scores(const Series& scores) const {
+    if (!calibrated_scores_) return scores.sigmoid();
+    return scores.mul(calibration_a_).add(calibration_b_).sigmoid();
+  }
+
   LinearFamilyOptions options_{};
   bool trained_{false};
   std::int64_t feature_count_{0};
   Series weights_ = Series::undefined();
+  bool calibrated_scores_{false};
+  double calibration_a_{1.0};
+  double calibration_b_{0.0};
   double negative_label_{0.0};
   double positive_label_{1.0};
   ScalarType label_dtype_{ScalarType::Float64};
@@ -1958,6 +2508,21 @@ public:
     }
     return StatusOr<Series>(
         Status::not_implemented(std::string(family_name(family_)) + " classifier assess() is scheduled after Phase 0."));
+  }
+
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    return StatusOr<std::vector<Series>>(std::vector<Series>{
+        state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(features_)}),
+    });
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.empty()) return Status::invalid_argument("FamilyClassifier::load_state expects metadata tensor.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 2) return Status::invalid_argument("FamilyClassifier::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    features_ = static_cast<std::int64_t>(meta[1]);
+    return Status::success();
   }
 
 private:
@@ -2153,6 +2718,65 @@ public:
     std::vector<MetricKind> metrics = options.metrics;
     if (metrics.empty()) metrics = {MetricKind::Accuracy};
     return classification_metrics_multiclass(batch.y, pred_or.value(), scores_or.value(), classes_, metrics);
+  }
+
+  [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override {
+    std::vector<Series> out{};
+    out.reserve(2 + models_.size() * 2);
+    out.push_back(state_f64({trained_ ? 1.0 : 0.0,
+                             multiclass_ ? 1.0 : 0.0,
+                             static_cast<double>(feature_count_),
+                             static_cast<double>(static_cast<std::int64_t>(label_dtype_)),
+                             static_cast<double>(models_.size())}));
+    out.push_back(classes_);
+    for (const auto& model : models_) {
+      if (!model) {
+        out.push_back(state_i64({0}));
+        continue;
+      }
+      StatusOr<std::vector<Series>> child_or = model->dump_state();
+      if (!child_or.ok()) return StatusOr<std::vector<Series>>(child_or.status());
+      const auto& child = child_or.value();
+      out.push_back(state_i64({static_cast<std::int64_t>(child.size())}));
+      out.insert(out.end(), child.begin(), child.end());
+    }
+    return StatusOr<std::vector<Series>>(std::move(out));
+  }
+
+  Status load_state(const std::vector<Series>& state) override {
+    if (state.size() < 2) return Status::invalid_argument("OvRClassifier::load_state expects metadata + classes tensors.");
+    const auto meta = vec_f64(state[0]);
+    if (meta.size() < 5) return Status::invalid_argument("OvRClassifier::load_state invalid metadata.");
+    trained_ = meta[0] > 0.5;
+    multiclass_ = meta[1] > 0.5;
+    feature_count_ = static_cast<std::int64_t>(meta[2]);
+    label_dtype_ = static_cast<ScalarType>(static_cast<std::int64_t>(meta[3]));
+    const std::int64_t model_count = static_cast<std::int64_t>(meta[4]);
+    classes_ = state[1];
+
+    models_.clear();
+    models_.reserve(static_cast<std::size_t>(std::max<std::int64_t>(0, model_count)));
+    std::size_t cursor = 2;
+    for (std::int64_t mi = 0; mi < model_count; ++mi) {
+      if (cursor >= state.size()) return Status::invalid_argument("OvRClassifier::load_state truncated child state.");
+      const auto size_vec = vec_i64(state[cursor++]);
+      const std::int64_t child_items = size_vec.empty() ? 0 : size_vec.front();
+      StatusOr<std::unique_ptr<ClassifierBase>> model_or = make_binary_classifier_impl(spec_);
+      if (!model_or.ok()) return model_or.status();
+      std::unique_ptr<ClassifierBase> model = model_or.move_value();
+      if (child_items > 0) {
+        std::vector<Series> child{};
+        child.reserve(static_cast<std::size_t>(child_items));
+        for (std::int64_t si = 0; si < child_items; ++si) {
+          if (cursor >= state.size()) return Status::invalid_argument("OvRClassifier::load_state truncated child tensors.");
+          child.push_back(state[cursor++]);
+        }
+        Status load_status = model->load_state(child);
+        if (!load_status.ok()) return load_status;
+      }
+      models_.push_back(std::move(model));
+    }
+    return Status::success();
   }
 
 private:

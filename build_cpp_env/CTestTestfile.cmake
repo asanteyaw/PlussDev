@@ -4,9 +4,9 @@
 # 
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
-add_test([=[alias_registry_lint]=] "/opt/homebrew/bin/cmake" "-E" "env" "python3" "/Users/yawasante/software/cxx/PlussDev/tools/lint_alias_registry.py")
+add_test([=[alias_registry_lint]=] "/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake" "-E" "env" "python3" "/Users/yawasante/software/cxx/PlussDev/tools/lint_alias_registry.py")
 set_tests_properties([=[alias_registry_lint]=] PROPERTIES  WORKING_DIRECTORY "/Users/yawasante/software/cxx/PlussDev" _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/CMakeLists.txt;265;add_test;/Users/yawasante/software/cxx/PlussDev/CMakeLists.txt;0;")
-add_test([=[pluss_sdk_consumer_smoke]=] "/opt/homebrew/bin/cmake" "-DTOP_LEVEL_BUILD_DIR=/Users/yawasante/software/cxx/PlussDev/build_cpp_env" "-DSDK_STAGE_DIR=/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64" "-DSDK_CONSUMER_SOURCE_DIR=/Users/yawasante/software/cxx/PlussDev/examples/sdk_consumer" "-DSDK_CONSUMER_BUILD_DIR=/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk_consumer_smoke" "-P" "/Users/yawasante/software/cxx/PlussDev/cmake/RunSdkConsumerSmoke.cmake")
+add_test([=[pluss_sdk_consumer_smoke]=] "/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake" "-DTOP_LEVEL_BUILD_DIR=/Users/yawasante/software/cxx/PlussDev/build_cpp_env" "-DSDK_STAGE_DIR=/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk/pluss-sdk-0.1.0-Darwin-arm64" "-DSDK_CONSUMER_SOURCE_DIR=/Users/yawasante/software/cxx/PlussDev/examples/sdk_consumer" "-DSDK_CONSUMER_BUILD_DIR=/Users/yawasante/software/cxx/PlussDev/build_cpp_env/sdk_consumer_smoke" "-P" "/Users/yawasante/software/cxx/PlussDev/cmake/RunSdkConsumerSmoke.cmake")
 set_tests_properties([=[pluss_sdk_consumer_smoke]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/CMakeLists.txt;271;add_test;/Users/yawasante/software/cxx/PlussDev/CMakeLists.txt;0;")
 subdirs("PlussAI")
 subdirs("PlussQit")

@@ -92,7 +92,7 @@ TEST_CASE("CUDA bridge enables indexing fallback when strict native is off", "[c
   require_close_(index_cuda.to(pluss::pCPU).to_vec<float>(), index_cpu.to_vec<float>());
 }
 
-TEST_CASE("CUDA strict native indexing overrides bridge fallback", "[cuda][bridge][policy][indexing]") {
+TEST_CASE("CUDA strict native indexing executes supported native route", "[cuda][bridge][policy][indexing]") {
   const ScopedEnvVar bridge_on("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
   const ScopedEnvVar baseline_on("PLUSS_CUDA_NATIVE_BASELINE", "1");
   const ScopedEnvVar indexing_on("PLUSS_CUDA_NATIVE_INDEXING", "1");
@@ -103,12 +103,12 @@ TEST_CASE("CUDA strict native indexing overrides bridge fallback", "[cuda][bridg
     return;
   }
 
-  const auto x_cuda = pluss::make_series(std::vector<float>{1.f, 2.f, 3.f, 4.f}, {4}).to(pluss::pCUDA);
-  const auto idx_cuda = pluss::make_series(std::vector<std::int64_t>{3, 1}, {2}).to(pluss::pCUDA);
-  try {
-    (void)x_cuda.take(idx_cuda);
-    FAIL("Strict native indexing should fail until CUDA kernel is implemented");
-  } catch (const std::exception& e) {
-    REQUIRE(std::string(e.what()).find("strict native CUDA route requested") != std::string::npos);
-  }
+  const auto x_cpu = pluss::make_series(std::vector<float>{1.f, 2.f, 3.f, 4.f}, {4});
+  const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{3, 1}, {2});
+  const auto x_cuda = x_cpu.to(pluss::pCUDA);
+  const auto idx_cuda = idx_cpu.to(pluss::pCUDA);
+  const auto take_cpu = x_cpu.take(idx_cpu);
+  const auto take_cuda = x_cuda.take(idx_cuda);
+  REQUIRE(take_cuda.platform() == pluss::pCUDA);
+  require_close_(take_cuda.to(pluss::pCPU).to_vec<float>(), take_cpu.to_vec<float>());
 }

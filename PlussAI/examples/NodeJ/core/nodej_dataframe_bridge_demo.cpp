@@ -1,6 +1,7 @@
 #include <pluss/ml.h>
 #include <pluss/mic.h>
 
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -35,12 +36,22 @@ void print_metrics(const std::string& label, const Series& metrics) {
 DataFrame make_frame() {
   const Series x0 = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0}, {6}, f64());
   const Series x1 = pluss::make_series(std::vector<double>{1.0, 0.0, 2.0, 1.0, 3.0, 2.0}, {6}, f64());
+  const auto category = pluss::make_note({"red", "blue", "red", "green", "blue", "red"});
+  const Series epoch_nanos = pluss::make_series(
+      std::vector<std::int64_t>{
+          1'700'000'000'000'000'000LL, 1'700'000'001'000'000'000LL, 1'700'000'002'000'000'000LL,
+          1'700'000'003'000'000'000LL, 1'700'000'004'000'000'000LL, 1'700'000'005'000'000'000LL},
+      {6},
+      Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+  const Thread ts = Thread(epoch_nanos).cast(pluss::table::ThreadCastTarget::Timeline);
   const Series y = x0.mul(2.0).sub(x1.mul(0.5)).add(1.0);
   const Series w = pluss::make_series(std::vector<double>{1.0, 1.0, 0.8, 1.2, 1.0, 0.9}, {6}, f64());
 
   return DataFrame({
       {"x0", Thread(x0)},
       {"x1", Thread(x1)},
+      {"category", Thread(category)},
+      {"ts", ts},
       {"target", Thread(y)},
       {"weight", Thread(w)},
   });
@@ -54,9 +65,11 @@ int main() {
   const DataFrame frame = make_frame();
 
   DataFrameBatchOptions options{};
-  options.feature_names = {"x0", "x1", "target", "weight"};
+  options.feature_names = {"x0", "x1", "category", "ts", "target", "weight"};
   options.label_feature = "target";
   options.sample_weight_feature = "weight";
+  options.note_policy = DataNotePolicy::Hash;
+  options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
 
   auto batch_or = labeled_batch_from_dataframe(frame, options);
   if (!require_ok(batch_or, "labeled_batch_from_dataframe")) return 1;

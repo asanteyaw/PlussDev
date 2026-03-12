@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -1432,6 +1433,21 @@ void test_versatile_dataframe_families() {
   expect(numeric_only.nfeats() == 3 && numeric_only.has_feature("age")
              && numeric_only.has_feature("balance") && numeric_only.has_feature("duration"),
          "series_features() should retain Series-backed features");
+
+  const auto matrix_vals = df.matrix();
+  expect(std::get<0>(matrix_vals).size() == 1 && std::get<1>(matrix_vals).size() == 1
+             && std::get<2>(matrix_vals).empty() && std::get<3>(matrix_vals).empty(),
+         "matrix() should group frame values into typed matrix blocks");
+
+  const auto numeric_matrix = std::get<0>(matrix_vals).front();
+  const auto numeric_shape = numeric_matrix.sizes();
+  expect(numeric_shape.size() == 2 && numeric_shape[0] == df.ncases() && numeric_shape[1] == 3,
+         "matrix() numeric block should have [ncases, n_series_features] shape");
+
+  const auto note_matrix = std::get<1>(matrix_vals).front();
+  const auto note_shape = note_matrix.sizes();
+  expect(note_shape.size() == 2 && note_shape[0] == df.ncases() && note_shape[1] == 1,
+         "matrix() note block should have [ncases, n_note_features] shape");
 
   const auto age_thread = df.features("age");
   const auto mean_scalar = age_thread.mean();

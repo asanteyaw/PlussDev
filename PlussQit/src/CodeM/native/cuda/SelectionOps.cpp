@@ -38,6 +38,16 @@ bool parse_bool_env_(const char* name, bool default_value) noexcept {
 
 bool supports_selection_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
+    case ScalarType::Bool:
+    case ScalarType::UInt8:
+    case ScalarType::UInt16:
+    case ScalarType::UInt32:
+    case ScalarType::UInt64:
+    case ScalarType::Int8:
+    case ScalarType::Int16:
+    case ScalarType::Int32:
+    case ScalarType::Int64:
+    case ScalarType::Float64:
     case ScalarType::Float32:
     case ScalarType::Float16:
     case ScalarType::BFloat16:
@@ -61,15 +71,8 @@ bool supports_selection_common_(const Series& a, std::int64_t dim) noexcept {
   if (a.platform() != Platform::CUDA) {
     return false;
   }
-  if (!a.is_contiguous()) {
-    return false;
-  }
   const auto rank = a.dim();
-  const auto normalized = normalize_dim_(dim, rank);
-  if (normalized < 0) {
-    return false;
-  }
-  return normalized == (rank - 1);
+  return normalize_dim_(dim, rank) >= 0;
 }
 
 } // namespace
@@ -83,9 +86,7 @@ bool native_selection_strict() noexcept {
 }
 
 bool supports_sort_selection_baseline(ScalarType dtype, bool stable) noexcept {
-  if (stable) {
-    return false;
-  }
+  (void)stable;
   return runtime_available() &&
       native_baseline_enabled() &&
       native_selection_enabled() &&
@@ -93,9 +94,7 @@ bool supports_sort_selection_baseline(ScalarType dtype, bool stable) noexcept {
 }
 
 bool supports_topk_selection_baseline(ScalarType dtype, bool sorted) noexcept {
-  if (!sorted) {
-    return false;
-  }
+  (void)sorted;
   return runtime_available() &&
       native_baseline_enabled() &&
       native_selection_enabled() &&
@@ -110,9 +109,7 @@ bool supports_kthvalue_selection_baseline(ScalarType dtype) noexcept {
 }
 
 bool supports_argsort_selection_baseline(ScalarType dtype, bool stable) noexcept {
-  if (stable) {
-    return false;
-  }
+  (void)stable;
   return runtime_available() &&
       native_baseline_enabled() &&
       native_selection_enabled() &&

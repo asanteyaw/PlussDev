@@ -183,7 +183,7 @@ bool run_nodej_multiclass_checks(std::ostream* err = nullptr) {
 
   {
     const LabeledBatch binary = make_binary_batch();
-    auto cls_or = pluss::ai::lymph::linear_logistic_classifier(binary, 1e-6);
+    auto cls_or = pluss::ai::lymph::quick::linear_logistic_classifier(binary, 1e-6);
     if (!cls_or.ok()) {
       if (err) *err << "lymph linear_logistic_classifier should train for binary data\n";
       return false;

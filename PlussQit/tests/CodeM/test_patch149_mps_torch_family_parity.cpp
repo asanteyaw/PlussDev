@@ -46,9 +46,14 @@ private:
   std::optional<std::string> old_;
 };
 
-void require_close_(const std::vector<float>& got, const std::vector<float>& want, float tol = 1e-4f) {
+void require_close_(
+    const std::vector<float>& got,
+    const std::vector<float>& want,
+    const char* label,
+    float tol = 1e-4f) {
   REQUIRE(got.size() == want.size());
   for (std::size_t i = 0; i < got.size(); ++i) {
+    INFO(label << " i=" << i << " got=" << got[i] << " want=" << want[i] << " tol=" << tol);
     REQUIRE(std::fabs(got[i] - want[i]) <= tol);
   }
 }
@@ -80,15 +85,17 @@ TEST_CASE("MPS parity covers torch-like core families", "[mps][parity][torch]") 
   const auto expr_cpu = a_cpu.mul(1.25).add(0.4).square();
   const auto expr_mps = a_mps.mul(1.25).add(0.4).square();
   REQUIRE(expr_mps.platform() == pluss::pMPS);
-  require_close_(expr_mps.to(pluss::pCPU).to_vec<float>(), expr_cpu.to_vec<float>());
+  require_close_(expr_mps.to(pluss::pCPU).to_vec<float>(), expr_cpu.to_vec<float>(), "expr");
 
   require_close_(
       a_mps.matmul(b_mps).to(pluss::pCPU).to_vec<float>(),
-      a_cpu.matmul(b_cpu).to_vec<float>());
+      a_cpu.matmul(b_cpu).to_vec<float>(),
+      "matmul");
 
   require_close_(
       a_mps.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to(pluss::pCPU).to_vec<float>(),
-      a_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to_vec<float>());
+      a_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to_vec<float>(),
+      "sort");
 
   require_equal_(
       a_mps.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
@@ -96,13 +103,17 @@ TEST_CASE("MPS parity covers torch-like core families", "[mps][parity][torch]") 
 
   require_close_(
       a_mps.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to(pluss::pCPU).to_vec<float>(),
-      a_cpu.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to_vec<float>());
+      a_cpu.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to_vec<float>(),
+      "topk");
 
   const auto flat_cpu = a_cpu.reshape({a_cpu.numel()});
   const auto flat_mps = a_mps.reshape({a_mps.numel()});
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{5, 0, 3, 2}, {4});
   const auto idx_mps = idx_cpu.to(pluss::pMPS);
-  require_close_(flat_mps.take(idx_mps).to(pluss::pCPU).to_vec<float>(), flat_cpu.take(idx_cpu).to_vec<float>());
+  require_close_(
+      flat_mps.take(idx_mps).to(pluss::pCPU).to_vec<float>(),
+      flat_cpu.take(idx_cpu).to_vec<float>(),
+      "take");
 
   auto put_cpu = pluss::Series::zeros({flat_cpu.numel()}, pluss::ScalarType::Float32);
   auto put_mps = put_cpu.to(pluss::pMPS);
@@ -111,7 +122,7 @@ TEST_CASE("MPS parity covers torch-like core families", "[mps][parity][torch]") 
   auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_);
   put_cpu = (put_cpu.*put_fn)(idx_cpu, src_cpu, /*accumulate=*/false);
   put_mps = (put_mps.*put_fn)(idx_mps, src_mps, /*accumulate=*/false);
-  require_close_(put_mps.to(pluss::pCPU).to_vec<float>(), put_cpu.to_vec<float>());
+  require_close_(put_mps.to(pluss::pCPU).to_vec<float>(), put_cpu.to_vec<float>(), "put");
 
   require_equal_(
       a_mps.nonzero().to(pluss::pCPU).to_vec<std::int64_t>(),
@@ -122,22 +133,26 @@ TEST_CASE("MPS parity covers torch-like core families", "[mps][parity][torch]") 
   const auto gather_idx_mps = gather_idx_cpu.to(pluss::pMPS);
   require_close_(
       a_mps.gather(1, gather_idx_mps).to(pluss::pCPU).to_vec<float>(),
-      a_cpu.gather(1, gather_idx_cpu).to_vec<float>());
+      a_cpu.gather(1, gather_idx_cpu).to_vec<float>(),
+      "gather");
 
   const auto scatter_base_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float32);
   const auto scatter_base_mps = scatter_base_cpu.to(pluss::pMPS);
   require_close_(
       scatter_base_mps.scatter(1, gather_idx_mps, a_mps).to(pluss::pCPU).to_vec<float>(),
-      scatter_base_cpu.scatter(1, gather_idx_cpu, a_cpu).to_vec<float>());
+      scatter_base_cpu.scatter(1, gather_idx_cpu, a_cpu).to_vec<float>(),
+      "scatter");
 
   const auto linalg_cpu = pluss::make_series(std::vector<float>{4.f, 1.f, 1.f, 3.f}, {2, 2});
   const auto linalg_mps = linalg_cpu.to(pluss::pMPS);
   require_close_(
       pluss::subsp::linearalg::det(linalg_mps).to(pluss::pCPU).to_vec<float>(),
-      pluss::subsp::linearalg::det(linalg_cpu).to_vec<float>());
+      pluss::subsp::linearalg::det(linalg_cpu).to_vec<float>(),
+      "det");
   require_close_(
       pluss::subsp::linearalg::inverse(linalg_mps).to(pluss::pCPU).to_vec<float>(),
       pluss::subsp::linearalg::inverse(linalg_cpu).to_vec<float>(),
+      "inverse",
       2e-3f);
 }
 
@@ -166,10 +181,12 @@ TEST_CASE("MPS parity stress loop stays stable", "[mps][parity][torch][stress]")
     require_close_(
         x_mps.matmul(y_mps).to(pluss::pCPU).to_vec<float>(),
         x_cpu.matmul(y_cpu).to_vec<float>(),
+        "stress-matmul",
         2e-4f);
     require_close_(
         x_mps.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to(pluss::pCPU).to_vec<float>(),
         x_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to_vec<float>(),
+        "stress-sort",
         2e-4f);
   }
 }
@@ -197,19 +214,23 @@ TEST_CASE("MPS strict parity lane works without CPU fallback", "[mps][parity][to
 
   require_close_(
       x_mps.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to_vec<float>());
+      x_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to_vec<float>(),
+      "strict-sort");
   require_equal_(
       x_mps.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
       x_cpu.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false).to_vec<std::int64_t>());
   require_close_(
       x_mps.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to_vec<float>());
+      x_cpu.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true).to_vec<float>(),
+      "strict-topk");
   require_close_(
       x_mps.kthvalue(/*k=*/2, /*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.kthvalue(/*k=*/2, /*dim=*/1, /*keepdim=*/false).to_vec<float>());
+      x_cpu.kthvalue(/*k=*/2, /*dim=*/1, /*keepdim=*/false).to_vec<float>(),
+      "strict-kthvalue");
   require_close_(
       x_mps.reshape({x_mps.numel()}).take(idx_mps).to(pluss::pCPU).to_vec<float>(),
-      x_cpu.reshape({x_cpu.numel()}).take(idx_cpu).to_vec<float>());
+      x_cpu.reshape({x_cpu.numel()}).take(idx_cpu).to_vec<float>(),
+      "strict-take");
 
   using namespace pluss::subsp::linearalg;
   linearalg_reset_dispatch_counters();
@@ -217,10 +238,12 @@ TEST_CASE("MPS strict parity lane works without CPU fallback", "[mps][parity][to
   const auto l_mps = l_cpu.to(pluss::pMPS);
   require_close_(
       det(l_mps).to(pluss::pCPU).to_vec<float>(),
-      det(l_cpu).to_vec<float>());
+      det(l_cpu).to_vec<float>(),
+      "strict-det");
   require_close_(
       inverse(l_mps).to(pluss::pCPU).to_vec<float>(),
       inverse(l_cpu).to_vec<float>(),
+      "strict-inverse",
       2e-3f);
   const auto counters = linearalg_dispatch_counters();
   REQUIRE(counters.mps_bridge_total == 0);

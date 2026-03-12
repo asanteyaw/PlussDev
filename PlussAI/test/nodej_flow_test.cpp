@@ -1,6 +1,8 @@
 #include <pluss/ai/ml.h>
+#include <pluss/mic.h>
 
 #include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <limits>
 #include <vector>
@@ -14,6 +16,8 @@ namespace {
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
+using pluss::table::DataFrame;
+using pluss::table::Thread;
 using namespace pluss::ai::nodej;
 
 Config f64() {
@@ -26,6 +30,28 @@ std::vector<double> as_f64(const Series& x) {
 
 bool finite_series(const Series& x) {
   return x.isfinite().all().item<bool>();
+}
+
+DataFrame make_mixed_flow_frame() {
+  const Series x0 = pluss::make_series(std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0}, {6}, f64());
+  const Series x1 = pluss::make_series(std::vector<double>{1.0, 1.0, 2.0, 0.0, 2.0, 1.0}, {6}, f64());
+  const auto note = pluss::make_note({"red", "blue", "red", "green", "blue", "red"});
+  const Series epoch_nanos = pluss::make_series(
+      std::vector<std::int64_t>{
+          1'700'000'000'000'000'000LL, 1'700'000'001'000'000'000LL, 1'700'000'002'000'000'000LL,
+          1'700'000'003'000'000'000LL, 1'700'000'004'000'000'000LL, 1'700'000'005'000'000'000LL},
+      {6},
+      Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+  const Thread ts = Thread(epoch_nanos).cast(pluss::table::ThreadCastTarget::Timeline);
+  const Series y = x0.mul(2.0).sub(x1.mul(0.5)).add(1.0);
+
+  return DataFrame({
+      {"x0", Thread(x0)},
+      {"x1", Thread(x1)},
+      {"category", Thread(note)},
+      {"ts", ts},
+      {"target", Thread(y)},
+  });
 }
 
 bool run_nodej_flow_checks(std::ostream* err = nullptr) {
@@ -65,6 +91,77 @@ bool run_nodej_flow_checks(std::ostream* err = nullptr) {
     }
     if (!finite_series(learned_or.value()) || !finite_series(mapped_or.value())) {
       if (err) *err << "Flow transform-only outputs should be finite\n";
+      return false;
+    }
+  }
+
+  {
+    Flow flow{};
+    if (!flow.add_one_hot_encoder(prep::OneHotEncoderOptions{}, std::vector<std::int64_t>{1}).ok()) {
+      if (err) *err << "Flow routed one-hot stage should be accepted\n";
+      return false;
+    }
+    const FeatureBatch features{
+        .x = pluss::make_series(std::vector<double>{
+                                    10.0, 0.0, 100.0,
+                                    20.0, 1.0, 200.0,
+                                    30.0, 0.0, 300.0,
+                                    40.0, 2.0, 400.0},
+                                {4, 3},
+                                f64()),
+        .layout = ObservationLayout::Rows,
+    };
+    auto out_or = flow.learn_map(features);
+    if (!out_or.ok()) {
+      if (err) *err << "Flow routed one-hot learn_map should succeed\n";
+      return false;
+    }
+    const Series out = out_or.value().reshape({4, out_or.value().sizes()[1]});
+    if (out.sizes().size() != 2 || out.sizes()[0] != 4 || out.sizes()[1] <= 3) {
+      if (err) *err << "Flow routed one-hot should expand only the routed column\n";
+      return false;
+    }
+    const Series idx0 = pluss::make_series(std::vector<std::int64_t>{0}, {1}, Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+    const Series last = pluss::make_series(std::vector<std::int64_t>{out.sizes()[1] - 1}, {1}, Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+    const Series left = out.index_select(1, idx0).reshape({4});
+    const Series right = out.index_select(1, last).reshape({4});
+    if (!left.eq(features.x.index_select(1, idx0).reshape({4})).all().item<bool>()
+        || !right.eq(features.x.index_select(1, pluss::make_series(std::vector<std::int64_t>{2}, {1}, Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU))).reshape({4})).all().item<bool>()) {
+      if (err) *err << "Flow routed stage should preserve non-routed columns\n";
+      return false;
+    }
+  }
+
+  {
+    Flow flow{};
+    if (!flow.add_neighbor_imputer(prep::NeighborImputerOptions{.neighbors = 1}).ok()
+        || !flow.add_power_map(prep::PowerMapOptions{.mode = prep::PowerMapMode::YeoJohnson, .standardize = false, .lambda = 1.0}).ok()
+        || !flow.add_quantile_map(prep::QuantileMapOptions{.output = prep::QuantileMapOutput::Uniform}).ok()
+        || !flow.add_vector_normalizer(prep::VectorNormalizerOptions{.norm = prep::VectorNorm::L2}).ok()
+        || !flow.add_polynomial_lift(prep::PolynomialLiftOptions{.degree = 2, .include_bias = false}).ok()
+        || !flow.add_maxabs_scaler().ok()
+        || !flow.add_threshold_binarizer(prep::ThresholdBinarizerOptions{.threshold = 0.5, .low_value = 0.0, .high_value = 1.0}).ok()) {
+      if (err) *err << "Flow should accept all new prep stage builders\n";
+      return false;
+    }
+
+    const FeatureBatch features{
+        .x = pluss::make_series(std::vector<double>{
+                                    1.0, std::numeric_limits<double>::quiet_NaN(),
+                                    2.0, 2.0,
+                                    3.0, 3.0,
+                                    4.0, 4.0},
+                                {4, 2},
+                                f64()),
+        .layout = ObservationLayout::Rows,
+    };
+    auto out_or = flow.learn_map(features);
+    if (!out_or.ok()) {
+      if (err) *err << "Flow learn_map should succeed with new prep stack\n";
+      return false;
+    }
+    if (!finite_series(out_or.value())) {
+      if (err) *err << "Flow outputs from new prep stack should be finite\n";
       return false;
     }
   }
@@ -206,6 +303,47 @@ bool run_nodej_flow_checks(std::ostream* err = nullptr) {
     auto scores_or = flow.infer_scores(train.features);
     if (scores_or.ok() || scores_or.status().code != StatusCode::InvalidArgument) {
       if (err) *err << "Flow::infer_scores should reject regression flows\n";
+      return false;
+    }
+  }
+
+  {
+    const DataFrame frame = make_mixed_flow_frame();
+    DataFrameBatchOptions data_options{};
+    data_options.feature_names = {"x0", "x1", "category", "ts", "target"};
+    data_options.label_feature = "target";
+    data_options.note_policy = DataNotePolicy::Hash;
+    data_options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+
+    ModelSpec spec{
+        .task = TaskKind::Regression,
+        .family = ModelFamily::Linear,
+        .options = LinearFamilyOptions{
+            .objective = LinearObjective::LeastSquares,
+            .regularization = RegularizationKind::L2,
+            .regularization_strength = 1e-8,
+            .fit_intercept = true,
+        },
+    };
+    auto flow_or = make_flow(spec);
+    if (!flow_or.ok()) {
+      if (err) *err << "make_flow(regression) should succeed for dataframe overloads\n";
+      return false;
+    }
+    Flow flow = flow_or.move_value();
+    if (!flow.learn(frame, data_options).ok()) {
+      if (err) *err << "Flow::learn(DataFrame) should succeed for mixed-schema frame\n";
+      return false;
+    }
+
+    auto pred_or = flow.infer(frame, data_options);
+    auto metrics_or = flow.assess(frame, data_options, AssessOptions{.metrics = {MetricKind::Mse, MetricKind::R2}});
+    if (!pred_or.ok() || !metrics_or.ok()) {
+      if (err) *err << "Flow dataframe infer/assess overloads should succeed\n";
+      return false;
+    }
+    if (!finite_series(pred_or.value()) || !finite_series(metrics_or.value())) {
+      if (err) *err << "Flow dataframe overload outputs should be finite\n";
       return false;
     }
   }

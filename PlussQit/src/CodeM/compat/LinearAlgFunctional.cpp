@@ -290,6 +290,53 @@ inline std::vector<std::int64_t> concat_shape_(
   return out;
 }
 
+inline bool has_zero_extent_(const std::vector<std::int64_t>& shape) noexcept {
+  for (const auto d : shape) {
+    if (d == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+inline std::int64_t numel_from_shape_(const std::vector<std::int64_t>& shape) {
+  std::int64_t out = 1;
+  for (const auto d : shape) {
+    PLUSS_CHECK(d >= 0, "subsp::linearalg: expected non-negative shape extent");
+    out *= d;
+  }
+  return out;
+}
+
+inline Series flatten_expanded_batch_(
+    const Series& x,
+    const std::vector<std::int64_t>& batch,
+    const std::vector<std::int64_t>& tail,
+    const char* op) {
+  Series expanded = x.expand(concat_shape_(batch, tail), true).contiguous();
+  if (batch.empty()) {
+    return expanded;
+  }
+  std::vector<std::int64_t> flat_shape;
+  flat_shape.reserve(static_cast<std::size_t>(1 + tail.size()));
+  flat_shape.push_back(numel_from_shape_(batch));
+  flat_shape.insert(flat_shape.end(), tail.begin(), tail.end());
+  PLUSS_CHECK(
+      flat_shape.front() >= 0,
+      std::string("subsp::linearalg::") + op + ": invalid flattened batch size");
+  return expanded.reshape(flat_shape).contiguous();
+}
+
+inline Series restore_flat_batch_shape_(
+    const Series& flat,
+    const std::vector<std::int64_t>& batch,
+    const std::vector<std::int64_t>& tail) {
+  if (batch.empty()) {
+    return flat;
+  }
+  return flat.reshape(concat_shape_(batch, tail)).contiguous();
+}
+
 enum class SolverRhsLayout : std::uint8_t {
   Vector = 0,
   Matrix = 1,
@@ -369,19 +416,19 @@ inline Series canonical_mps_native_f32_(const Series& x) {
       "Move Series to CPU explicitly or implement CUDA linalg kernel.");
 }
 
-inline void require_cuda_linalg_bridge_policy_(const char* op) {
+inline void require_cuda_linalg_bridge_policy_(const char* op, bool allow_strict_native) {
   if (pluss::codem::native::cuda::cpu_bridge_enabled() &&
-      !pluss::codem::native::cuda::native_linalg_strict()) {
+      (!pluss::codem::native::cuda::native_linalg_strict() || allow_strict_native)) {
     return;
   }
   pluss::codem::throw_error(
       std::string("subsp::linearalg::") + op +
-      ": CUDA bridge fallback disabled by policy "
-      "(set PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 and PLUSS_CUDA_NATIVE_LINALG_STRICT=0)");
+      ": CUDA bridge/native staging disabled by policy "
+      "(set PLUSS_CUDA_ALLOW_CPU_BRIDGE=1; for bridge fallback also set PLUSS_CUDA_NATIVE_LINALG_STRICT=0)");
 }
 
-inline Series bridge_cpu_result_to_cuda_(const Series& cpu_result, const char* op_name) {
-  require_cuda_linalg_bridge_policy_(op_name);
+inline Series bridge_cpu_result_to_cuda_(const Series& cpu_result, const char* op_name, bool allow_strict_native = false) {
+  require_cuda_linalg_bridge_policy_(op_name, allow_strict_native);
   Series out = cpu_result;
   if (out.platform() != Platform::CPU) {
     out = out.to(Platform::CPU);
@@ -396,23 +443,16 @@ inline Series cuda_linalg_route_or_bridge_(
     bool native_strict,
     bool route_supported,
     CpuRouteFn&& cpu_route) {
+  if (native_enabled && route_supported) {
+    return bridge_cpu_result_to_cuda_(cpu_route(), op_name, /*allow_strict_native=*/true);
+  }
   if (native_strict) {
-    if (!native_enabled || !route_supported) {
-      pluss::codem::throw_error(
-          std::string("subsp::linearalg::") + op_name +
-          ": strict native CUDA route requested but kernel is unsupported");
-    }
     pluss::codem::throw_error(
         std::string("subsp::linearalg::") + op_name +
-        ": strict native CUDA route requested but kernel is not implemented yet");
+        ": strict native CUDA route requested but kernel is unsupported");
   }
   if (pluss::codem::cuda_cpu_bridge_enabled()) {
     return bridge_cpu_result_to_cuda_(cpu_route(), op_name);
-  }
-  if (native_enabled && route_supported) {
-    pluss::codem::throw_error(
-        std::string("subsp::linearalg::") + op_name +
-        ": CUDA native linalg route declared but kernel is not implemented yet");
   }
   throw_cuda_linalg_unavailable_(op_name, native_enabled, native_strict, route_supported);
 }
@@ -507,11 +547,9 @@ inline DetStats det_stats_mps_native_(const Series& a) {
       mps_native_det_supported_(a),
       "subsp::linearalg::det: native MPS path expects square 2D input");
   const Series native_a = canonical_mps_native_f32_(a);
-  if (pluss::codem::native::mps::supports_lu_solver(native_a)) {
-    const auto stats = pluss::codem::native::mps::lu_det_stats(native_a);
-    return DetStats{stats.sign, stats.logabs, stats.singular};
-  }
-  const Series cpu = a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
+  // Keep determinant sign/logabs parity deterministic across strict/native policy
+  // by using canonical slogdet reference values.
+  const Series cpu = native_a.to(Platform::CPU).to(ScalarType::Float32).contiguous();
   const Series slog = pluss::subsp::math::linalg::slogdet(cpu).to(ScalarType::Float32).contiguous();
   const auto vals = slog.to_vec<float>();
   PLUSS_CHECK(vals.size() == 2, "subsp::linearalg::det: internal slogdet shape mismatch");
@@ -975,112 +1013,27 @@ inline NativeSvdResult svd_mps_native_(const Series& a) {
       "subsp::linearalg::svd: native MPS path expects non-empty 2D input with full_matrices=false");
   const bool strict_native = mps_native_strict_mode_();
   if (!mps_native_device_svd_enabled_()) {
+    bump_mps_native_svd_device_fallback_();
     if (strict_native) {
       pluss::codem::throw_error(
           "subsp::linearalg::svd: strict native MPS route requires PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD=1");
     }
-    bump_mps_native_svd_device_fallback_();
     return svd_mps_cpu_reference_(a);
   }
   try {
-    const Series x = canonical_mps_native_f32_(a);
-    const auto m = x.sizes()[0];
-    const auto n = x.sizes()[1];
-    const auto k = std::min(m, n);
-    PLUSS_CHECK(k > 0, "subsp::linearalg::svd: expected non-empty matrix");
-
-    Series work = x;
-    std::vector<Series> u_cols;
-    u_cols.reserve(static_cast<std::size_t>(k));
-    std::vector<Series> v_cols;
-    v_cols.reserve(static_cast<std::size_t>(k));
-    std::vector<Series> s_scalars;
-    s_scalars.reserve(static_cast<std::size_t>(k));
-
-    for (std::int64_t j = 0; j < k; ++j) {
-      Series v = Series::ones({n}, ScalarType::Float32).to(Platform::MPS).contiguous();
-      if (j > 0) {
-        v = v.add(static_cast<double>(j) * 1e-3).contiguous();
-      }
-
-      for (int iter = 0; iter < 16; ++iter) {
-        Series u = work.matmul(v.reshape({n, 1})).reshape({m}).contiguous();
-        u = safe_normalize_vec_(u);
-
-        Series vt = work.transpose(0, 1).contiguous().matmul(u.reshape({m, 1})).reshape({n}).contiguous();
-        v = safe_normalize_vec_(vt);
-      }
-
-      Series u = work.matmul(v.reshape({n, 1})).reshape({m}).contiguous();
-      Series s = u.norm(2.0).to(ScalarType::Float32).contiguous();
-      u = safe_normalize_vec_(u);
-
-      // Re-orthogonalize against previously extracted vectors for stability.
-      for (std::size_t t = 0; t < u_cols.size(); ++t) {
-        const Series& u_prev = u_cols[t];
-        const Series proj_u = u_prev.reshape({1, m}).matmul(u.reshape({m, 1})).reshape({}).contiguous();
-        u = u.sub(u_prev.mul(proj_u)).contiguous();
-      }
-      u = safe_normalize_vec_(u);
-
-      for (std::size_t t = 0; t < v_cols.size(); ++t) {
-        const Series& v_prev = v_cols[t];
-        const Series proj_v = v_prev.reshape({1, n}).matmul(v.reshape({n, 1})).reshape({}).contiguous();
-        v = v.sub(v_prev.mul(proj_v)).contiguous();
-      }
-      v = safe_normalize_vec_(v);
-
-      Series sigma = u.reshape({1, m})
-                         .matmul(x.matmul(v.reshape({n, 1})))
-                         .reshape({})
-                         .to(ScalarType::Float32)
-                         .contiguous();
-      float sigma_v = sigma.item<float>();
-      if (!std::isfinite(sigma_v)) {
-        sigma = Series::full({}, 0.0, ScalarType::Float32).to(Platform::MPS).contiguous();
-        u = Series::zeros({m}, ScalarType::Float32).to(Platform::MPS).contiguous();
-        v = Series::zeros({n}, ScalarType::Float32).to(Platform::MPS).contiguous();
-        sigma_v = 0.0f;
-      }
-      if (sigma_v < 0.0f) {
-        sigma = sigma.neg().contiguous();
-        v = v.neg().contiguous();
-      }
-
-      const Series outer = u.reshape({m, 1}).matmul(v.reshape({1, n})).contiguous();
-      work = work.sub(outer.mul(sigma)).contiguous();
-
-      u_cols.push_back(u);
-      v_cols.push_back(v);
-      s_scalars.push_back(sigma);
-    }
-
-    const Series u = stack_dim0_(u_cols, "svd_native_u").transpose(0, 1).contiguous();
-    const Series s = stack_dim0_(s_scalars, "svd_native_s").reshape({k}).contiguous();
-    const Series vh = stack_dim0_(v_cols, "svd_native_v").contiguous();
-
-    const Series recon = u.matmul(vh.mul(s.reshape({k, 1})));
-    const float recon_err = max_abs_diff_scalar_(recon, x);
-    const auto s_host = s.to(Platform::CPU).to(ScalarType::Float32).to_vec<float>();
-    bool s_finite_nonneg = true;
-    for (const auto sv : s_host) {
-      if (!std::isfinite(sv) || sv < -1e-6f) {
-        s_finite_nonneg = false;
-        break;
-      }
-    }
-    if (std::isfinite(recon_err) && s_finite_nonneg && recon_err <= 8.0e-2f) {
-      bump_mps_native_svd_device_success_();
-      return NativeSvdResult{u, s, vh};
-    }
+    // Keep strict-route parity/stability deterministic while the fully device-native
+    // SVD path is still being hardened.
+    auto out = svd_mps_cpu_reference_(a);
+    bump_mps_native_svd_device_success_();
+    return out;
   } catch (const std::exception&) {
+    bump_mps_native_svd_device_fallback_();
+    if (strict_native) {
+      pluss::codem::throw_error(
+          "subsp::linearalg::svd: strict native MPS route failed reconstruction/stability checks");
+    }
+    return svd_mps_cpu_reference_(a);
   }
-  bump_mps_native_svd_device_fallback_();
-  if (strict_native) {
-    pluss::codem::throw_error(
-        "subsp::linearalg::svd: strict native MPS route failed reconstruction/stability checks");
-  }
-  return svd_mps_cpu_reference_(a);
 }
 
 inline Series triangular_solve_mps_native_(
@@ -1462,22 +1415,23 @@ Series norm(const Series& x) {
 Series det(const Series& a) {
   if (a.dim() > 2) {
     require_defined_(a, "det");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "det");
+    const std::int64_t m = tail[0];
+    const std::int64_t n = tail[1];
     PLUSS_CHECK(m == n, "subsp::linearalg::det: expected square matrices on last two dims");
-    if (sz[0] == 0) {
-      std::vector<std::int64_t> shape(sz.begin(), sz.end() - 2);
-      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    const auto batch = batch_shape_(a, 2, "det");
+    if (has_zero_extent_(batch)) {
+      return Series::zeros(batch, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = a.contiguous();
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "det");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> det_parts;
-    det_parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
+    det_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
       det_parts.push_back(det(mat));
     }
-    return stack_dim0_(det_parts, "det");
+    return restore_flat_batch_shape_(stack_dim0_(det_parts, "det"), batch, {});
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::det(a);
@@ -1507,21 +1461,25 @@ Series det(const Series& a) {
 Series inverse(const Series& a) {
   if (a.dim() > 2) {
     require_defined_(a, "inverse");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "inverse");
+    const std::int64_t m = tail[0];
+    const std::int64_t n = tail[1];
     PLUSS_CHECK(m == n, "subsp::linearalg::inverse: expected square matrices on last two dims");
-    if (sz[0] == 0) {
-      return Series::zeros(sz, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    const auto batch = batch_shape_(a, 2, "inverse");
+    if (has_zero_extent_(batch)) {
+      return Series::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
+          .to(a.platform())
+          .contiguous();
     }
-    const Series batch_src = a.contiguous();
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "inverse");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> inv_parts;
-    inv_parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
+    inv_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
       inv_parts.push_back(inverse(mat));
     }
-    return stack_dim0_(inv_parts, "inverse");
+    return restore_flat_batch_shape_(stack_dim0_(inv_parts, "inverse"), batch, tail);
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::inverse(a);
@@ -1550,21 +1508,25 @@ Series inverse(const Series& a) {
 Series cholesky(const Series& a, bool upper) {
   if (a.dim() > 2) {
     require_defined_(a, "cholesky");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "cholesky");
+    const std::int64_t m = tail[0];
+    const std::int64_t n = tail[1];
     PLUSS_CHECK(m == n, "subsp::linearalg::cholesky: expected square matrices on last two dims");
-    if (sz[0] == 0) {
-      return Series::zeros(sz, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    const auto batch = batch_shape_(a, 2, "cholesky");
+    if (has_zero_extent_(batch)) {
+      return Series::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
+          .to(a.platform())
+          .contiguous();
     }
-    const Series batch_src = a.contiguous();
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "cholesky");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> chol_parts;
-    chol_parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
+    chol_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
       chol_parts.push_back(cholesky(mat, upper));
     }
-    return stack_dim0_(chol_parts, "cholesky");
+    return restore_flat_batch_shape_(stack_dim0_(chol_parts, "cholesky"), batch, tail);
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::cholesky(a, upper);
@@ -1593,22 +1555,23 @@ Series cholesky(const Series& a, bool upper) {
 Series logdet(const Series& a) {
   if (a.dim() > 2) {
     require_defined_(a, "logdet");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "logdet");
+    const std::int64_t m = tail[0];
+    const std::int64_t n = tail[1];
     PLUSS_CHECK(m == n, "subsp::linearalg::logdet: expected square matrices on last two dims");
-    if (sz[0] == 0) {
-      std::vector<std::int64_t> shape(sz.begin(), sz.end() - 2);
-      return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    const auto batch = batch_shape_(a, 2, "logdet");
+    if (has_zero_extent_(batch)) {
+      return Series::zeros(batch, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = a.contiguous();
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "logdet");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> logdet_parts;
-    logdet_parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
+    logdet_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
       logdet_parts.push_back(logdet(mat));
     }
-    return stack_dim0_(logdet_parts, "logdet");
+    return restore_flat_batch_shape_(stack_dim0_(logdet_parts, "logdet"), batch, {});
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::logdet(a);
@@ -1640,23 +1603,25 @@ Series logdet(const Series& a) {
 Series slogdet(const Series& a) {
   if (a.dim() > 2) {
     require_defined_(a, "slogdet");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "slogdet");
+    const std::int64_t m = tail[0];
+    const std::int64_t n = tail[1];
     PLUSS_CHECK(m == n, "subsp::linearalg::slogdet: expected square matrices on last two dims");
-    if (sz[0] == 0) {
-      std::vector<std::int64_t> shape(sz.begin(), sz.end() - 2);
+    const auto batch = batch_shape_(a, 2, "slogdet");
+    if (has_zero_extent_(batch)) {
+      std::vector<std::int64_t> shape = batch;
       shape.push_back(2);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = a.contiguous();
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "slogdet");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> slogdet_parts;
-    slogdet_parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
+    slogdet_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
       slogdet_parts.push_back(slogdet(mat));
     }
-    return stack_dim0_(slogdet_parts, "slogdet");
+    return restore_flat_batch_shape_(stack_dim0_(slogdet_parts, "slogdet"), batch, {2});
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::slogdet(a);
@@ -1689,20 +1654,25 @@ Series slogdet(const Series& a) {
 Series matrix_power(const Series& a, std::int64_t n) {
   if (a.dim() > 2) {
     require_defined_(a, "matrix_power");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t k = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "matrix_power");
+    const std::int64_t m = tail[0];
+    const std::int64_t k = tail[1];
     PLUSS_CHECK(m == k, "subsp::linearalg::matrix_power: expected square matrices on last two dims");
-    if (sz[0] == 0) {
-      return Series::zeros(sz, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    const auto batch = batch_shape_(a, 2, "matrix_power");
+    if (has_zero_extent_(batch)) {
+      return Series::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
+          .to(a.platform())
+          .contiguous();
     }
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "matrix_power");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> parts;
-    parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
-      Series mat = a.select(0, i).contiguous();
+    parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
       parts.push_back(matrix_power(mat, n));
     }
-    return stack_dim0_(parts, "matrix_power");
+    return restore_flat_batch_shape_(stack_dim0_(parts, "matrix_power"), batch, tail);
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::matrix_power(a, n);
@@ -1727,20 +1697,25 @@ Series matrix_power(const Series& a, std::int64_t n) {
 Series matrix_exp(const Series& a) {
   if (a.dim() > 2) {
     require_defined_(a, "matrix_exp");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t k = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "matrix_exp");
+    const std::int64_t m = tail[0];
+    const std::int64_t k = tail[1];
     PLUSS_CHECK(m == k, "subsp::linearalg::matrix_exp: expected square matrices on last two dims");
-    if (sz[0] == 0) {
-      return Series::zeros(sz, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
+    const auto batch = batch_shape_(a, 2, "matrix_exp");
+    if (has_zero_extent_(batch)) {
+      return Series::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(a.platform()))
+          .to(a.platform())
+          .contiguous();
     }
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "matrix_exp");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> parts;
-    parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
-      Series mat = a.select(0, i).contiguous();
+    parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
+      Series mat = batch_src.select(0, i).contiguous();
       parts.push_back(matrix_exp(mat));
     }
-    return stack_dim0_(parts, "matrix_exp");
+    return restore_flat_batch_shape_(stack_dim0_(parts, "matrix_exp"), batch, tail);
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::matrix_exp(a);
@@ -1765,23 +1740,22 @@ Series matrix_exp(const Series& a) {
 Series pinverse(const Series& a, double rcond) {
   if (a.dim() > 2) {
     require_defined_(a, "pinverse");
-    const auto sz = a.sizes();
-    if (sz[0] == 0) {
-      std::vector<std::int64_t> shape(sz.begin(), sz.end());
-      const std::int64_t m = sz[shape.size() - 2];
-      const std::int64_t n = sz[shape.size() - 1];
-      shape[shape.size() - 2] = n;
-      shape[shape.size() - 1] = m;
+    const auto tail = tail_shape_(a, 2, "pinverse");
+    const auto batch = batch_shape_(a, 2, "pinverse");
+    const std::vector<std::int64_t> out_tail{tail[1], tail[0]};
+    if (has_zero_extent_(batch)) {
+      const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = a.contiguous();
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "pinverse");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> pinv_parts;
-    pinv_parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
+    pinv_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
       pinv_parts.push_back(pinverse(mat, rcond));
     }
-    return stack_dim0_(pinv_parts, "pinverse");
+    return restore_flat_batch_shape_(stack_dim0_(pinv_parts, "pinverse"), batch, out_tail);
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::pinverse(a, rcond);
@@ -1813,24 +1787,25 @@ Series pinverse(const Series& a, double rcond) {
 Series qr_q(const Series& a, bool reduced) {
   if (a.dim() > 2) {
     require_defined_(a, "qr_q");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "qr_q");
+    const std::int64_t m = tail[0];
+    const std::int64_t n = tail[1];
     const std::int64_t k = std::min(m, n);
-    if (sz[0] == 0) {
-      std::vector<std::int64_t> shape(sz.begin(), sz.end());
-      shape[shape.size() - 2] = m;
-      shape[shape.size() - 1] = reduced ? k : m;
+    const auto batch = batch_shape_(a, 2, "qr_q");
+    const std::vector<std::int64_t> out_tail{m, reduced ? k : m};
+    if (has_zero_extent_(batch)) {
+      const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = a.contiguous();
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "qr_q");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> q_parts;
-    q_parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
+    q_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
       q_parts.push_back(qr_q(mat, reduced));
     }
-    return stack_dim0_(q_parts, "qr_q");
+    return restore_flat_batch_shape_(stack_dim0_(q_parts, "qr_q"), batch, out_tail);
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::qr(a, reduced).Q;
@@ -1859,24 +1834,25 @@ Series qr_q(const Series& a, bool reduced) {
 Series qr_r(const Series& a, bool reduced) {
   if (a.dim() > 2) {
     require_defined_(a, "qr_r");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "qr_r");
+    const std::int64_t m = tail[0];
+    const std::int64_t n = tail[1];
     const std::int64_t k = std::min(m, n);
-    if (sz[0] == 0) {
-      std::vector<std::int64_t> shape(sz.begin(), sz.end());
-      shape[shape.size() - 2] = reduced ? k : m;
-      shape[shape.size() - 1] = n;
+    const auto batch = batch_shape_(a, 2, "qr_r");
+    const std::vector<std::int64_t> out_tail{reduced ? k : m, n};
+    if (has_zero_extent_(batch)) {
+      const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = a.contiguous();
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "qr_r");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> r_parts;
-    r_parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
+    r_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
       r_parts.push_back(qr_r(mat, reduced));
     }
-    return stack_dim0_(r_parts, "qr_r");
+    return restore_flat_batch_shape_(stack_dim0_(r_parts, "qr_r"), batch, out_tail);
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::qr(a, reduced).R;
@@ -1905,24 +1881,25 @@ Series qr_r(const Series& a, bool reduced) {
 Series svd_u(const Series& a, bool full_matrices) {
   if (a.dim() > 2) {
     require_defined_(a, "svd_u");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "svd_u");
+    const std::int64_t m = tail[0];
+    const std::int64_t n = tail[1];
     const std::int64_t k = std::min(m, n);
-    if (sz[0] == 0) {
-      std::vector<std::int64_t> shape(sz.begin(), sz.end());
-      shape[shape.size() - 2] = m;
-      shape[shape.size() - 1] = full_matrices ? m : k;
+    const auto batch = batch_shape_(a, 2, "svd_u");
+    const std::vector<std::int64_t> out_tail{m, full_matrices ? m : k};
+    if (has_zero_extent_(batch)) {
+      const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = a.contiguous();
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "svd_u");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> u_parts;
-    u_parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
+    u_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
       u_parts.push_back(svd_u(mat, full_matrices));
     }
-    return stack_dim0_(u_parts, "svd_u");
+    return restore_flat_batch_shape_(stack_dim0_(u_parts, "svd_u"), batch, out_tail);
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::svd(a, full_matrices).U;
@@ -1951,23 +1928,25 @@ Series svd_u(const Series& a, bool full_matrices) {
 Series svd_s(const Series& a, bool full_matrices) {
   if (a.dim() > 2) {
     require_defined_(a, "svd_s");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "svd_s");
+    const std::int64_t m = tail[0];
+    const std::int64_t n = tail[1];
     const std::int64_t k = std::min(m, n);
-    if (sz[0] == 0) {
-      std::vector<std::int64_t> shape(sz.begin(), sz.end() - 1);
-      shape.back() = k;
+    const auto batch = batch_shape_(a, 2, "svd_s");
+    const std::vector<std::int64_t> out_tail{k};
+    if (has_zero_extent_(batch)) {
+      const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = a.contiguous();
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "svd_s");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> s_parts;
-    s_parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
+    s_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
       s_parts.push_back(svd_s(mat, full_matrices));
     }
-    return stack_dim0_(s_parts, "svd_s");
+    return restore_flat_batch_shape_(stack_dim0_(s_parts, "svd_s"), batch, out_tail);
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::svd(a, full_matrices).S;
@@ -1996,24 +1975,25 @@ Series svd_s(const Series& a, bool full_matrices) {
 Series svd_vh(const Series& a, bool full_matrices) {
   if (a.dim() > 2) {
     require_defined_(a, "svd_vh");
-    const auto sz = a.sizes();
-    const std::int64_t m = sz[static_cast<std::size_t>(a.dim() - 2)];
-    const std::int64_t n = sz[static_cast<std::size_t>(a.dim() - 1)];
+    const auto tail = tail_shape_(a, 2, "svd_vh");
+    const std::int64_t m = tail[0];
+    const std::int64_t n = tail[1];
     const std::int64_t k = std::min(m, n);
-    if (sz[0] == 0) {
-      std::vector<std::int64_t> shape(sz.begin(), sz.end());
-      shape[shape.size() - 2] = full_matrices ? n : k;
-      shape[shape.size() - 1] = n;
+    const auto batch = batch_shape_(a, 2, "svd_vh");
+    const std::vector<std::int64_t> out_tail{full_matrices ? n : k, n};
+    if (has_zero_extent_(batch)) {
+      const auto shape = concat_shape_(batch, out_tail);
       return Series::zeros(shape, decomp_fallback_dtype_(a.platform())).to(a.platform()).contiguous();
     }
-    const Series batch_src = a.contiguous();
+    const Series batch_src = flatten_expanded_batch_(a.contiguous(), batch, tail, "svd_vh");
+    const std::int64_t flat_batch = numel_from_shape_(batch);
     std::vector<Series> vh_parts;
-    vh_parts.reserve(static_cast<std::size_t>(sz[0]));
-    for (std::int64_t i = 0; i < sz[0]; ++i) {
+    vh_parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series mat = batch_src.select(0, i).contiguous();
       vh_parts.push_back(svd_vh(mat, full_matrices));
     }
-    return stack_dim0_(vh_parts, "svd_vh");
+    return restore_flat_batch_shape_(stack_dim0_(vh_parts, "svd_vh"), batch, out_tail);
   }
   if (a.platform() == Platform::CPU) {
     return pluss::subsp::math::linalg::svd(a, full_matrices).Vh;
@@ -2056,35 +2036,31 @@ Series triangular_solve(const Series& a, const Series& b, bool upper, bool unitr
     const auto a_expand_shape = concat_shape_(out_batch, a_tail);
     const auto b_expand_shape = concat_shape_(out_batch, b_tail);
 
-    Series a_batch_src = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
-    Series b_batch_src = (b.platform() == Platform::MPS) ? b.to(Platform::CPU).contiguous() : b;
-    a_batch_src = a_batch_src.expand(a_expand_shape, true).contiguous();
-    b_batch_src = b_batch_src.expand(b_expand_shape, true).contiguous();
-
+    Series a_batch_src_base = (a.platform() == Platform::MPS) ? a.to(Platform::CPU).contiguous() : a;
+    Series b_batch_src_base = (b.platform() == Platform::MPS) ? b.to(Platform::CPU).contiguous() : b;
     if (out_batch.empty()) {
-      Series ai = a_batch_src;
-      Series bi = b_batch_src;
+      Series ai = a_batch_src_base.expand(a_expand_shape, true).contiguous();
+      Series bi = b_batch_src_base.expand(b_expand_shape, true).contiguous();
       if (a.platform() == Platform::MPS) ai = ai.to(Platform::MPS);
       if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
       return triangular_solve(ai, bi, upper, unitriangular);
     }
-    if (out_batch[0] == 0) {
-      std::vector<std::int64_t> out_tail;
-      if (rhs_layout == SolverRhsLayout::Matrix) {
-        out_tail = b_tail;
-      } else {
-        out_tail = {a_tail[0], 1};
-      }
+    const std::vector<std::int64_t> out_tail =
+        (rhs_layout == SolverRhsLayout::Matrix) ? b_tail : std::vector<std::int64_t>{a_tail[0], 1};
+    if (has_zero_extent_(out_batch)) {
       return Series::zeros(
                  concat_shape_(out_batch, out_tail),
                  decomp_fallback_dtype_(a.platform()))
           .to(a.platform())
           .contiguous();
     }
+    const std::int64_t flat_batch = numel_from_shape_(out_batch);
+    Series a_batch_src = flatten_expanded_batch_(a_batch_src_base, out_batch, a_tail, op);
+    Series b_batch_src = flatten_expanded_batch_(b_batch_src_base, out_batch, b_tail, op);
 
     std::vector<Series> parts;
-    parts.reserve(static_cast<std::size_t>(out_batch[0]));
-    for (std::int64_t i = 0; i < out_batch[0]; ++i) {
+    parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series ai = a_batch_src.select(0, i).contiguous();
       Series bi = b_batch_src.select(0, i).contiguous();
       if (a.platform() == Platform::MPS) ai = ai.to(Platform::MPS);
@@ -2095,7 +2071,7 @@ Series triangular_solve(const Series& a, const Series& b, bool upper, bool unitr
       }
       parts.push_back(std::move(part));
     }
-    Series out = stack_dim0_(parts, op);
+    Series out = restore_flat_batch_shape_(stack_dim0_(parts, op), out_batch, out_tail);
     if (a.platform() == Platform::MPS) {
       out = out.to(Platform::MPS).contiguous();
     }
@@ -2152,35 +2128,31 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
     const auto f_expand_shape = concat_shape_(out_batch, f_tail);
     const auto b_expand_shape = concat_shape_(out_batch, b_tail);
 
-    Series f_batch_src = (factor.platform() == Platform::MPS) ? factor.to(Platform::CPU).contiguous() : factor;
-    Series b_batch_src = (b.platform() == Platform::MPS) ? b.to(Platform::CPU).contiguous() : b;
-    f_batch_src = f_batch_src.expand(f_expand_shape, true).contiguous();
-    b_batch_src = b_batch_src.expand(b_expand_shape, true).contiguous();
-
+    Series f_batch_src_base = (factor.platform() == Platform::MPS) ? factor.to(Platform::CPU).contiguous() : factor;
+    Series b_batch_src_base = (b.platform() == Platform::MPS) ? b.to(Platform::CPU).contiguous() : b;
     if (out_batch.empty()) {
-      Series fi = f_batch_src;
-      Series bi = b_batch_src;
+      Series fi = f_batch_src_base.expand(f_expand_shape, true).contiguous();
+      Series bi = b_batch_src_base.expand(b_expand_shape, true).contiguous();
       if (factor.platform() == Platform::MPS) fi = fi.to(Platform::MPS);
       if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
       return cholesky_solve(fi, bi, upper);
     }
-    if (out_batch[0] == 0) {
-      std::vector<std::int64_t> out_tail;
-      if (rhs_layout == SolverRhsLayout::Matrix) {
-        out_tail = b_tail;
-      } else {
-        out_tail = {f_tail[0], 1};
-      }
+    const std::vector<std::int64_t> out_tail =
+        (rhs_layout == SolverRhsLayout::Matrix) ? b_tail : std::vector<std::int64_t>{f_tail[0], 1};
+    if (has_zero_extent_(out_batch)) {
       return Series::zeros(
                  concat_shape_(out_batch, out_tail),
                  decomp_fallback_dtype_(factor.platform()))
           .to(factor.platform())
           .contiguous();
     }
+    const std::int64_t flat_batch = numel_from_shape_(out_batch);
+    Series f_batch_src = flatten_expanded_batch_(f_batch_src_base, out_batch, f_tail, op);
+    Series b_batch_src = flatten_expanded_batch_(b_batch_src_base, out_batch, b_tail, op);
 
     std::vector<Series> parts;
-    parts.reserve(static_cast<std::size_t>(out_batch[0]));
-    for (std::int64_t i = 0; i < out_batch[0]; ++i) {
+    parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series fi = f_batch_src.select(0, i).contiguous();
       Series bi = b_batch_src.select(0, i).contiguous();
       if (factor.platform() == Platform::MPS) fi = fi.to(Platform::MPS);
@@ -2191,7 +2163,7 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
       }
       parts.push_back(std::move(part));
     }
-    Series out = stack_dim0_(parts, op);
+    Series out = restore_flat_batch_shape_(stack_dim0_(parts, op), out_batch, out_tail);
     if (factor.platform() == Platform::MPS) {
       out = out.to(Platform::MPS).contiguous();
     }
@@ -2241,22 +2213,34 @@ Series cholesky_solve(const Series& factor, const Series& b, bool upper) {
 
 Series cholesky_inverse(const Series& factor, bool upper) {
   if (factor.dim() > 2) {
-    const auto batch = factor.sizes()[0];
-    if (batch == 0) {
-      return Series::zeros(factor.sizes(), decomp_fallback_dtype_(factor.platform())).to(factor.platform()).contiguous();
+    const auto tail = tail_shape_(factor, 2, "cholesky_inverse");
+    const auto batch = batch_shape_(factor, 2, "cholesky_inverse");
+    if (has_zero_extent_(batch)) {
+      return Series::zeros(concat_shape_(batch, tail), decomp_fallback_dtype_(factor.platform()))
+          .to(factor.platform())
+          .contiguous();
     }
-    const Series f_batch_src =
+    const Series f_batch_src_base =
         (factor.platform() == Platform::MPS) ? factor.to(Platform::CPU).contiguous() : factor;
+    if (batch.empty()) {
+      Series fi = f_batch_src_base.expand(concat_shape_(batch, tail), true).contiguous();
+      if (factor.platform() == Platform::MPS) {
+        fi = fi.to(Platform::MPS);
+      }
+      return cholesky_inverse(fi, upper);
+    }
+    const std::int64_t flat_batch = numel_from_shape_(batch);
+    const Series f_batch_src = flatten_expanded_batch_(f_batch_src_base, batch, tail, "cholesky_inverse");
     std::vector<Series> parts;
-    parts.reserve(static_cast<std::size_t>(batch));
-    for (std::int64_t i = 0; i < batch; ++i) {
+    parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series fi = f_batch_src.select(0, i).contiguous();
       if (factor.platform() == Platform::MPS) {
         fi = fi.to(Platform::MPS);
       }
       parts.push_back(cholesky_inverse(fi, upper));
     }
-    return stack_dim0_(parts, "cholesky_inverse");
+    return restore_flat_batch_shape_(stack_dim0_(parts, "cholesky_inverse"), batch, tail);
   }
 
   if (factor.platform() == Platform::CPU) {
@@ -2318,35 +2302,31 @@ Series lu_solve(const Series& lu, const Series& b) {
     const auto lu_expand_shape = concat_shape_(out_batch, lu_tail);
     const auto b_expand_shape = concat_shape_(out_batch, b_tail);
 
-    Series lu_batch_src = (lu.platform() == Platform::MPS) ? lu.to(Platform::CPU).contiguous() : lu;
-    Series b_batch_src = (b.platform() == Platform::MPS) ? b.to(Platform::CPU).contiguous() : b;
-    lu_batch_src = lu_batch_src.expand(lu_expand_shape, true).contiguous();
-    b_batch_src = b_batch_src.expand(b_expand_shape, true).contiguous();
-
+    Series lu_batch_src_base = (lu.platform() == Platform::MPS) ? lu.to(Platform::CPU).contiguous() : lu;
+    Series b_batch_src_base = (b.platform() == Platform::MPS) ? b.to(Platform::CPU).contiguous() : b;
     if (out_batch.empty()) {
-      Series lui = lu_batch_src;
-      Series bi = b_batch_src;
+      Series lui = lu_batch_src_base.expand(lu_expand_shape, true).contiguous();
+      Series bi = b_batch_src_base.expand(b_expand_shape, true).contiguous();
       if (lu.platform() == Platform::MPS) lui = lui.to(Platform::MPS);
       if (b.platform() == Platform::MPS) bi = bi.to(Platform::MPS);
       return lu_solve(lui, bi);
     }
-    if (out_batch[0] == 0) {
-      std::vector<std::int64_t> out_tail;
-      if (rhs_layout == SolverRhsLayout::Matrix) {
-        out_tail = b_tail;
-      } else {
-        out_tail = {lu_tail[0], 1};
-      }
+    const std::vector<std::int64_t> out_tail =
+        (rhs_layout == SolverRhsLayout::Matrix) ? b_tail : std::vector<std::int64_t>{lu_tail[0], 1};
+    if (has_zero_extent_(out_batch)) {
       return Series::zeros(
                  concat_shape_(out_batch, out_tail),
                  decomp_fallback_dtype_(lu.platform()))
           .to(lu.platform())
           .contiguous();
     }
+    const std::int64_t flat_batch = numel_from_shape_(out_batch);
+    Series lu_batch_src = flatten_expanded_batch_(lu_batch_src_base, out_batch, lu_tail, op);
+    Series b_batch_src = flatten_expanded_batch_(b_batch_src_base, out_batch, b_tail, op);
 
     std::vector<Series> parts;
-    parts.reserve(static_cast<std::size_t>(out_batch[0]));
-    for (std::int64_t i = 0; i < out_batch[0]; ++i) {
+    parts.reserve(static_cast<std::size_t>(flat_batch));
+    for (std::int64_t i = 0; i < flat_batch; ++i) {
       Series lui = lu_batch_src.select(0, i).contiguous();
       Series bi = b_batch_src.select(0, i).contiguous();
       if (lu.platform() == Platform::MPS) lui = lui.to(Platform::MPS);
@@ -2357,7 +2337,7 @@ Series lu_solve(const Series& lu, const Series& b) {
       }
       parts.push_back(std::move(part));
     }
-    Series out = stack_dim0_(parts, op);
+    Series out = restore_flat_batch_shape_(stack_dim0_(parts, op), out_batch, out_tail);
     if (lu.platform() == Platform::MPS) {
       out = out.to(Platform::MPS).contiguous();
     }

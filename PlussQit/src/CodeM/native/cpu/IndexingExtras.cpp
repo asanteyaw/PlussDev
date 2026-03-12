@@ -207,16 +207,17 @@ Series nonzero(const Series& mask) {
   return out;
 }
 
-// take(a, index_flat): index_flat int64 1D into flattened a (supports negative indices)
+// take(a, index): index int64 into flattened a (supports negative indices),
+// preserving index shape in the output.
 Series take(const Series& a, const Series& index) {
   if (!a.defined() || !index.defined()) throw_error("take: undefined");
-  if (index.scalar_type() != ScalarType::Int64 || index.dim() != 1) throw_error("take: index must be int64 1D");
+  if (index.scalar_type() != ScalarType::Int64) throw_error("take: index must be int64");
   auto aa = a.contiguous();
   auto idx = index.contiguous();
 
   const auto* ip = reinterpret_cast<const std::int64_t*>(idx.raw_data());
   const auto n = idx.numel();
-  Series out = Series::empty({n}, aa.scalar_type());
+  Series out = Series::empty(idx.sizes(), aa.scalar_type());
 
   const auto dt = aa.dtype();
   const auto* ap = aa.raw_data();
@@ -234,11 +235,12 @@ Series take(const Series& a, const Series& index) {
   return out;
 }
 
-// put(a, index_flat, src): returns a copy with updates. src can be scalar (numel=1) or same numel as index.
+// put(a, index, src): returns a copy with updates. src can be scalar (numel=1)
+// or same numel as index (flattened).
 Series put(const Series& a, const Series& index, const Series& src, bool accumulate) {
 
   if (!a.defined() || !index.defined() || !src.defined()) throw_error("put: undefined");
-  if (index.scalar_type() != ScalarType::Int64 || index.dim() != 1) throw_error("put: index must be int64 1D");
+  if (index.scalar_type() != ScalarType::Int64) throw_error("put: index must be int64");
   auto out = a.contiguous().clone();
   auto idx = index.contiguous();
   auto ss = src.contiguous();

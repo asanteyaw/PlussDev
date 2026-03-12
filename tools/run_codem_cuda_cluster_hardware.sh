@@ -121,9 +121,9 @@ run_required configure_cmake \
 
 run_required build_cuda_tests \
   "${CONDA_BIN}" run -n "${CONDA_ENV}" \
-  cmake --build "${BUILD_DIR}" --target plussqit_codem_mps_selection_tests -j "$(cpu_jobs)"
+  cmake --build "${BUILD_DIR}" --target plussqit_codem_cuda_gate_tests -j "$(cpu_jobs)"
 
-TEST_BIN="${BUILD_DIR}/PlussQit/plussqit_codem_mps_selection_tests"
+TEST_BIN="${BUILD_DIR}/PlussQit/plussqit_codem_cuda_gate_tests"
 if [[ ! -x "${TEST_BIN}" ]]; then
   echo "Expected test binary missing: ${TEST_BIN}" >&2
   exit 2
@@ -161,9 +161,169 @@ done
 
 for rep in $(seq 1 "${STRESS_REPS}"); do
   run_required "stress_policy_rep${rep}" \
-    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_MATMUL=1 PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1 \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_MATMUL=1 PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1 PLUSS_CUDA_NATIVE_REDUCTION=1 PLUSS_CUDA_NATIVE_REDUCTION_STRICT=1 PLUSS_CUDA_NATIVE_ELEMENTWISE=1 PLUSS_CUDA_NATIVE_ELEMENTWISE_STRICT=1 PLUSS_CUDA_NATIVE_SCAN=1 PLUSS_CUDA_NATIVE_SCAN_STRICT=1 PLUSS_CUDA_NATIVE_MASKING=1 PLUSS_CUDA_NATIVE_MASKING_STRICT=1 PLUSS_CUDA_NATIVE_BITWISE=1 PLUSS_CUDA_NATIVE_BITWISE_STRICT=1 PLUSS_CUDA_NATIVE_COMPOSE=1 PLUSS_CUDA_NATIVE_COMPOSE_STRICT=1 \
     "${CONDA_BIN}" run -n "${CONDA_ENV}" \
     "${TEST_BIN}" "[cuda][bridge][policy]" --rng-seed "$((SEED + 100 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_elementwise_bridge_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][elementwise]" --rng-seed "$((SEED + 185 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_elementwise_policy_rep${rep}" \
+    env PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_ELEMENTWISE=1 PLUSS_CUDA_NATIVE_ELEMENTWISE_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][policy][elementwise]" --rng-seed "$((SEED + 195 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_scan_bridge_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][scan]" --rng-seed "$((SEED + 205 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_scan_policy_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_SCAN=1 PLUSS_CUDA_NATIVE_SCAN_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][policy][scan]" --rng-seed "$((SEED + 215 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_activation_bridge_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_ELEMENTWISE=1 PLUSS_CUDA_NATIVE_REDUCTION=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][activation]" --rng-seed "$((SEED + 225 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_activation_policy_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_ELEMENTWISE=1 PLUSS_CUDA_NATIVE_ELEMENTWISE_STRICT=1 PLUSS_CUDA_NATIVE_REDUCTION=1 PLUSS_CUDA_NATIVE_REDUCTION_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][policy][activation]" --rng-seed "$((SEED + 235 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_masking_bridge_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][masking]" --rng-seed "$((SEED + 245 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_masking_policy_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_MASKING=1 PLUSS_CUDA_NATIVE_MASKING_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][policy][masking]" --rng-seed "$((SEED + 255 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_bitwise_bridge_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][bitwise]" --rng-seed "$((SEED + 265 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_bitwise_policy_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_BITWISE=1 PLUSS_CUDA_NATIVE_BITWISE_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][policy][bitwise]" --rng-seed "$((SEED + 275 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_compose_bridge_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][compose]" --rng-seed "$((SEED + 285 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_compose_policy_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_COMPOSE=1 PLUSS_CUDA_NATIVE_COMPOSE_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][policy][compose]" --rng-seed "$((SEED + 295 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_linalg_batched_bridge_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][linalg][batched]" --rng-seed "$((SEED + 305 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_linalg_batched_policy_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_LINALG=1 PLUSS_CUDA_NATIVE_LINALG_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][policy][linalg][batched]" --rng-seed "$((SEED + 315 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_linalg_expanded_bridge_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[bridge][cuda][expanded][linalg]" --rng-seed "$((SEED + 325 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_linalg_expanded_policy_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_LINALG=1 PLUSS_CUDA_NATIVE_LINALG_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[bridge][cuda][expanded][linalg][policy]" --rng-seed "$((SEED + 335 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_matmul_rank_bridge_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][matmul][rank]" --rng-seed "$((SEED + 345 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_matmul_rank_policy_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_MATMUL=1 PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][policy][matmul][rank]" --rng-seed "$((SEED + 355 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_reduction_bridge_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][reduction]" --rng-seed "$((SEED + 180 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_reduction_policy_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_REDUCTION=1 PLUSS_CUDA_NATIVE_REDUCTION_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][bridge][policy][reduction]" --rng-seed "$((SEED + 190 + rep))" --order lex
 
 done
 
@@ -177,9 +337,40 @@ done
 
 for rep in $(seq 1 "${STRESS_REPS}"); do
   run_required "stress_torch_parity_policy_rep${rep}" \
-    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_SELECTION=1 PLUSS_CUDA_NATIVE_SELECTION_STRICT=1 PLUSS_CUDA_NATIVE_LINALG=1 PLUSS_CUDA_NATIVE_LINALG_STRICT=1 PLUSS_CUDA_NATIVE_INDEXING=1 PLUSS_CUDA_NATIVE_INDEXING_STRICT=1 PLUSS_CUDA_NATIVE_MATMUL=1 PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1 \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_SELECTION=1 PLUSS_CUDA_NATIVE_SELECTION_STRICT=1 PLUSS_CUDA_NATIVE_LINALG=1 PLUSS_CUDA_NATIVE_LINALG_STRICT=1 PLUSS_CUDA_NATIVE_INDEXING=1 PLUSS_CUDA_NATIVE_INDEXING_STRICT=1 PLUSS_CUDA_NATIVE_MATMUL=1 PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1 PLUSS_CUDA_NATIVE_REDUCTION=1 PLUSS_CUDA_NATIVE_REDUCTION_STRICT=1 PLUSS_CUDA_NATIVE_ELEMENTWISE=1 PLUSS_CUDA_NATIVE_ELEMENTWISE_STRICT=1 PLUSS_CUDA_NATIVE_SCAN=1 PLUSS_CUDA_NATIVE_SCAN_STRICT=1 PLUSS_CUDA_NATIVE_MASKING=1 PLUSS_CUDA_NATIVE_MASKING_STRICT=1 PLUSS_CUDA_NATIVE_BITWISE=1 PLUSS_CUDA_NATIVE_BITWISE_STRICT=1 PLUSS_CUDA_NATIVE_COMPOSE=1 PLUSS_CUDA_NATIVE_COMPOSE_STRICT=1 \
     "${CONDA_BIN}" run -n "${CONDA_ENV}" \
     "${TEST_BIN}" "[cuda][parity][policy]" --rng-seed "$((SEED + 300 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_native_strict_matrix_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_SELECTION=1 PLUSS_CUDA_NATIVE_SELECTION_STRICT=1 PLUSS_CUDA_NATIVE_LINALG=1 PLUSS_CUDA_NATIVE_LINALG_STRICT=1 PLUSS_CUDA_NATIVE_INDEXING=1 PLUSS_CUDA_NATIVE_INDEXING_STRICT=1 PLUSS_CUDA_NATIVE_MATMUL=1 PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1 PLUSS_CUDA_NATIVE_REDUCTION=1 PLUSS_CUDA_NATIVE_REDUCTION_STRICT=1 PLUSS_CUDA_NATIVE_ELEMENTWISE=1 PLUSS_CUDA_NATIVE_ELEMENTWISE_STRICT=1 PLUSS_CUDA_NATIVE_SCAN=1 PLUSS_CUDA_NATIVE_SCAN_STRICT=1 PLUSS_CUDA_NATIVE_MASKING=1 PLUSS_CUDA_NATIVE_MASKING_STRICT=1 PLUSS_CUDA_NATIVE_BITWISE=1 PLUSS_CUDA_NATIVE_BITWISE_STRICT=1 PLUSS_CUDA_NATIVE_COMPOSE=1 PLUSS_CUDA_NATIVE_COMPOSE_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][parity][native][strict]" --rng-seed "$((SEED + 400 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_native_strict_soak_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_SELECTION=1 PLUSS_CUDA_NATIVE_SELECTION_STRICT=1 PLUSS_CUDA_NATIVE_LINALG=1 PLUSS_CUDA_NATIVE_LINALG_STRICT=1 PLUSS_CUDA_NATIVE_INDEXING=1 PLUSS_CUDA_NATIVE_INDEXING_STRICT=1 PLUSS_CUDA_NATIVE_MATMUL=1 PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1 PLUSS_CUDA_NATIVE_REDUCTION=1 PLUSS_CUDA_NATIVE_REDUCTION_STRICT=1 PLUSS_CUDA_NATIVE_ELEMENTWISE=1 PLUSS_CUDA_NATIVE_ELEMENTWISE_STRICT=1 PLUSS_CUDA_NATIVE_SCAN=1 PLUSS_CUDA_NATIVE_SCAN_STRICT=1 PLUSS_CUDA_NATIVE_MASKING=1 PLUSS_CUDA_NATIVE_MASKING_STRICT=1 PLUSS_CUDA_NATIVE_BITWISE=1 PLUSS_CUDA_NATIVE_BITWISE_STRICT=1 PLUSS_CUDA_NATIVE_COMPOSE=1 PLUSS_CUDA_NATIVE_COMPOSE_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][parity][native][soak]" --rng-seed "$((SEED + 500 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_native_expanded_rep${rep}" \
+    env PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 PLUSS_CUDA_NATIVE_BASELINE=1 PLUSS_CUDA_NATIVE_SELECTION=1 PLUSS_CUDA_NATIVE_SELECTION_STRICT=1 PLUSS_CUDA_NATIVE_INDEXING=1 PLUSS_CUDA_NATIVE_INDEXING_STRICT=1 PLUSS_CUDA_NATIVE_MATMUL=1 PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER=1 PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1 PLUSS_CUDA_NATIVE_REDUCTION=1 PLUSS_CUDA_NATIVE_REDUCTION_STRICT=1 PLUSS_CUDA_NATIVE_ELEMENTWISE=1 PLUSS_CUDA_NATIVE_ELEMENTWISE_STRICT=1 PLUSS_CUDA_NATIVE_SCAN=1 PLUSS_CUDA_NATIVE_SCAN_STRICT=1 PLUSS_CUDA_NATIVE_MASKING=1 PLUSS_CUDA_NATIVE_MASKING_STRICT=1 PLUSS_CUDA_NATIVE_BITWISE=1 PLUSS_CUDA_NATIVE_BITWISE_STRICT=1 PLUSS_CUDA_NATIVE_COMPOSE=1 PLUSS_CUDA_NATIVE_COMPOSE_STRICT=1 \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][parity][native][expanded]" --rng-seed "$((SEED + 550 + rep))" --order lex
+
+done
+
+for rep in $(seq 1 "${STRESS_REPS}"); do
+  run_required "stress_provider_inventory_rep${rep}" \
+    "${CONDA_BIN}" run -n "${CONDA_ENV}" \
+    "${TEST_BIN}" "[cuda][providers][inventory][stress]" --rng-seed "$((SEED + 600 + rep))" --order lex
 
 done
 

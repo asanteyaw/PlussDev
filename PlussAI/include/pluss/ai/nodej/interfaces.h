@@ -15,6 +15,14 @@ public:
   [[nodiscard]] virtual StatusOr<Series> infer(const FeatureBatch& batch, const InferOptions& options = {}) const = 0;
   [[nodiscard]] virtual StatusOr<Series> assess(const LabeledBatch& batch,
                                                 const AssessOptions& options = {}) const = 0;
+
+  [[nodiscard]] virtual StatusOr<std::vector<Series>> dump_state() const {
+    return StatusOr<std::vector<Series>>(Status::not_implemented("dump_state() is not implemented for this estimator."));
+  }
+  virtual Status load_state(const std::vector<Series>& state) {
+    (void)state;
+    return Status::not_implemented("load_state() is not implemented for this estimator.");
+  }
 };
 
 class ClassifierBase : public EstimatorBase {
@@ -39,6 +47,14 @@ public:
   [[nodiscard]] virtual StatusOr<Series> learn_map(const FeatureBatch& batch,
                                                    const TrainOptions& learn_options = {},
                                                    const InferOptions& infer_options = {}) = 0;
+
+  [[nodiscard]] virtual StatusOr<std::vector<Series>> dump_state() const {
+    return StatusOr<std::vector<Series>>(Status::not_implemented("dump_state() is not implemented for this transformer."));
+  }
+  virtual Status load_state(const std::vector<Series>& state) {
+    (void)state;
+    return Status::not_implemented("load_state() is not implemented for this transformer.");
+  }
 };
 
 } // namespace pluss::ai::nodej

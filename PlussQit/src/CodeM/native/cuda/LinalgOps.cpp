@@ -37,6 +37,8 @@ bool parse_bool_env_(const char* name, bool default_value) noexcept {
 
 bool supports_linalg_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
+    case ScalarType::Float16:
+    case ScalarType::BFloat16:
     case ScalarType::Float32:
     case ScalarType::Float64:
       return true;
@@ -49,25 +51,30 @@ bool linalg_baseline_ready_() noexcept {
   return runtime_available() && native_baseline_enabled() && native_linalg_enabled();
 }
 
-bool is_cuda_matrix_(const Series& a) noexcept {
-  return a.platform() == Platform::CUDA && a.is_contiguous() && a.dim() == 2;
+bool is_cuda_matrix_like_(const Series& a) noexcept {
+  return a.platform() == Platform::CUDA && a.dim() >= 2;
 }
 
-bool is_square_cuda_matrix_(const Series& a) noexcept {
-  return is_cuda_matrix_(a) && a.sizes()[0] == a.sizes()[1];
+std::int64_t tail_rows_(const Series& a) noexcept {
+  return a.sizes()[static_cast<std::size_t>(a.dim() - 2)];
+}
+
+std::int64_t tail_cols_(const Series& a) noexcept {
+  return a.sizes()[static_cast<std::size_t>(a.dim() - 1)];
+}
+
+bool is_square_cuda_matrix_like_(const Series& a) noexcept {
+  return is_cuda_matrix_like_(a) && tail_rows_(a) == tail_cols_(a);
 }
 
 bool is_cuda_rhs_for_square_(const Series& b, std::int64_t n) noexcept {
-  if (b.platform() != Platform::CUDA || !b.is_contiguous()) {
+  if (b.platform() != Platform::CUDA || b.dim() < 1) {
     return false;
   }
   if (b.dim() == 1) {
     return b.sizes()[0] == n;
   }
-  if (b.dim() == 2) {
-    return b.sizes()[0] == n;
-  }
-  return false;
+  return b.sizes()[static_cast<std::size_t>(b.dim() - 2)] == n;
 }
 
 } // namespace
@@ -140,74 +147,74 @@ bool supports_matrix_exp_baseline(ScalarType dtype) noexcept {
 }
 
 bool supports_det(const Series& a) noexcept {
-  return supports_det_baseline(a.scalar_type()) && is_square_cuda_matrix_(a);
+  return supports_det_baseline(a.scalar_type()) && is_square_cuda_matrix_like_(a);
 }
 
 bool supports_inverse(const Series& a) noexcept {
-  return supports_inverse_baseline(a.scalar_type()) && is_square_cuda_matrix_(a);
+  return supports_inverse_baseline(a.scalar_type()) && is_square_cuda_matrix_like_(a);
 }
 
 bool supports_cholesky(const Series& a) noexcept {
-  return supports_cholesky_baseline(a.scalar_type()) && is_square_cuda_matrix_(a);
+  return supports_cholesky_baseline(a.scalar_type()) && is_square_cuda_matrix_like_(a);
 }
 
 bool supports_logdet(const Series& a) noexcept {
-  return supports_logdet_baseline(a.scalar_type()) && is_square_cuda_matrix_(a);
+  return supports_logdet_baseline(a.scalar_type()) && is_square_cuda_matrix_like_(a);
 }
 
 bool supports_slogdet(const Series& a) noexcept {
-  return supports_slogdet_baseline(a.scalar_type()) && is_square_cuda_matrix_(a);
+  return supports_slogdet_baseline(a.scalar_type()) && is_square_cuda_matrix_like_(a);
 }
 
 bool supports_pinverse(const Series& a) noexcept {
   return supports_pinverse_baseline(a.scalar_type()) &&
-      is_cuda_matrix_(a) &&
-      a.sizes()[0] > 0 &&
-      a.sizes()[1] > 0;
+      is_cuda_matrix_like_(a) &&
+      tail_rows_(a) > 0 &&
+      tail_cols_(a) > 0;
 }
 
 bool supports_triangular_solve(const Series& a, const Series& b) noexcept {
   return supports_triangular_solve_baseline(a.scalar_type(), b.scalar_type()) &&
-      is_square_cuda_matrix_(a) &&
-      is_cuda_rhs_for_square_(b, a.sizes()[0]);
+      is_square_cuda_matrix_like_(a) &&
+      is_cuda_rhs_for_square_(b, tail_rows_(a));
 }
 
 bool supports_cholesky_solve(const Series& factor, const Series& b) noexcept {
   return supports_cholesky_solve_baseline(factor.scalar_type(), b.scalar_type()) &&
-      is_square_cuda_matrix_(factor) &&
-      is_cuda_rhs_for_square_(b, factor.sizes()[0]);
+      is_square_cuda_matrix_like_(factor) &&
+      is_cuda_rhs_for_square_(b, tail_rows_(factor));
 }
 
 bool supports_cholesky_inverse(const Series& factor) noexcept {
-  return supports_cholesky_inverse_baseline(factor.scalar_type()) && is_square_cuda_matrix_(factor);
+  return supports_cholesky_inverse_baseline(factor.scalar_type()) && is_square_cuda_matrix_like_(factor);
 }
 
 bool supports_lu_solve(const Series& lu, const Series& b) noexcept {
   return supports_lu_solve_baseline(lu.scalar_type(), b.scalar_type()) &&
-      is_square_cuda_matrix_(lu) &&
-      is_cuda_rhs_for_square_(b, lu.sizes()[0]);
+      is_square_cuda_matrix_like_(lu) &&
+      is_cuda_rhs_for_square_(b, tail_rows_(lu));
 }
 
 bool supports_qr(const Series& a, bool reduced) noexcept {
   return supports_qr_baseline(a.scalar_type(), reduced) &&
-      is_cuda_matrix_(a) &&
-      a.sizes()[0] > 0 &&
-      a.sizes()[1] > 0;
+      is_cuda_matrix_like_(a) &&
+      tail_rows_(a) > 0 &&
+      tail_cols_(a) > 0;
 }
 
 bool supports_svd(const Series& a, bool full_matrices) noexcept {
   return supports_svd_baseline(a.scalar_type(), full_matrices) &&
-      is_cuda_matrix_(a) &&
-      a.sizes()[0] > 0 &&
-      a.sizes()[1] > 0;
+      is_cuda_matrix_like_(a) &&
+      tail_rows_(a) > 0 &&
+      tail_cols_(a) > 0;
 }
 
 bool supports_matrix_power(const Series& a) noexcept {
-  return supports_matrix_power_baseline(a.scalar_type()) && is_square_cuda_matrix_(a);
+  return supports_matrix_power_baseline(a.scalar_type()) && is_square_cuda_matrix_like_(a);
 }
 
 bool supports_matrix_exp(const Series& a) noexcept {
-  return supports_matrix_exp_baseline(a.scalar_type()) && is_square_cuda_matrix_(a);
+  return supports_matrix_exp_baseline(a.scalar_type()) && is_square_cuda_matrix_like_(a);
 }
 
 } // namespace pluss::codem::native::cuda

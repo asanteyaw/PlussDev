@@ -63,6 +63,17 @@ enum class SearchKind : std::uint8_t {
   SuccessiveHalving = 4,
 };
 
+enum class ClassWeightMode : std::uint8_t {
+  None = 0,
+  Balanced = 1,
+  Custom = 2,
+};
+
+enum class ScoreCalibration : std::uint8_t {
+  None = 0,
+  Platt = 1,
+};
+
 struct RandomState {
   std::uint64_t seed = 0;
   bool deterministic = true;
@@ -78,6 +89,13 @@ struct TrainOptions {
   bool track_diagnostics = true;
   RandomState random{};
   Series sample_weights = Series::undefined();
+  ClassWeightMode class_weight = ClassWeightMode::None;
+  // For ClassWeightMode::Custom use [negative_class_weight, positive_class_weight]
+  // for binary classifiers. Multiclass OvR applies this pair per one-vs-rest leg.
+  Series class_weights = Series::undefined();
+  ScoreCalibration calibration = ScoreCalibration::None;
+  std::int64_t calibration_iterations = 400;
+  double calibration_tolerance = 1e-6;
   // Optional coefficient bounds used by minimax-constrained updates in
   // gradient-based learners (currently linear classification).
   Series parameter_lower_bounds = Series::undefined();
@@ -88,12 +106,17 @@ struct InferOptions {
   ObservationLayout layout = ObservationLayout::Rows;
   MissingPolicy missing = MissingPolicy::Reject;
   UnknownCategoryPolicy unknown_categorical = UnknownCategoryPolicy::Error;
+  // Binary decision threshold in probability space for classification.
+  double positive_threshold = 0.5;
 };
 
 struct AssessOptions {
   ObservationLayout layout = ObservationLayout::Rows;
   std::vector<MetricKind> metrics{};
   Series sample_weights = Series::undefined();
+  // Binary decision threshold in probability space for classification metrics
+  // that require hard labels (for example Accuracy/F1).
+  double positive_threshold = 0.5;
   // Quantile used when MetricKind::QuantileLoss is requested (0 < q < 1).
   double regression_quantile = 0.5;
 };
@@ -103,6 +126,7 @@ struct SplitOptions {
   double holdout_fraction = 0.2;
   std::int64_t folds = 5;
   bool stratified = false;
+  bool reliability_defaults = true;
   bool shuffle = true;
   RandomState random{};
 };

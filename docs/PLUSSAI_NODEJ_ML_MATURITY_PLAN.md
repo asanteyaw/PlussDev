@@ -157,8 +157,24 @@ Current status (in progress):
   - `MinMaxScaler`
   - `RobustScaler`
   - `SimpleImputer` (mean/median/most-frequent/constant)
+  - `NeighborImputer` (KNN-style numeric imputation; uniform or inverse-distance weighting)
+  - `IterativeImputer` (round-based chained ridge imputation)
+  - `VectorNormalizer` (L1/L2/Linf sample-wise normalization)
+  - `MaxAbsScaler`
+  - `QuantileMap` (uniform or gaussian output map)
+  - `PowerMap` (Yeo-Johnson or Box-Cox, optional standardization)
+  - `ThresholdBinarizer`
+  - `PolynomialLift` (configurable degree/interactions/bias)
   - `OneHotEncoder` (cardinality caps + unknown-category policy handling)
   - `FrequencyEncoder` (category-frequency mapping with overflow/unknown policies)
+- expanded DataFrame integration for local mixed-schema workflows:
+  - NodeJ DataFrame adapter now supports Note-backed categorical routing via `DataNotePolicy`:
+    - `Reject` (strict),
+    - `Drop` (feature omission),
+    - `Hash` (deterministic numeric hash encoding)
+  - temporal columns (`Timeline`/`TimeIndex`) remain routable via `DataThreadPolicy::CastTemporalToSeries`
+  - `Flow` supports DataFrame-native `learn` / `infer` / `infer_scores` / `assess` overloads through the NodeJ adapter
+  - PlussMic DataFrame now exposes `matrix()` for grouped typed matrix extraction (`Series`, `Note`, `Timeline`, `TimeIndex`)
 
 ### Phase 2: Baseline Estimators (MVP Classical Stack)
 - regressors:

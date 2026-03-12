@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /opt/homebrew/bin/cmake
+CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
 
 # The command to remove a file.
-RM = /opt/homebrew/bin/cmake -E rm -f
+RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -611,6 +611,20 @@ plussqit_codem_mps_selection_tests: PlussQit/CMakeFiles/plussqit_codem_mps_selec
 plussqit_codem_mps_selection_tests/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build
 .PHONY : plussqit_codem_mps_selection_tests/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/rule
+
+# Convenience name for target.
+plussqit_codem_cuda_gate_tests: PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/rule
+.PHONY : plussqit_codem_cuda_gate_tests
+
+# fast build rule for target.
+plussqit_codem_cuda_gate_tests/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build
+.PHONY : plussqit_codem_cuda_gate_tests/fast
 
 # Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codem_optim_tests.dir/rule:
@@ -2584,6 +2598,30 @@ src/CodeM/native/cuda/BaselineOps.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/BaselineOps.cpp.s
 .PHONY : src/CodeM/native/cuda/BaselineOps.cpp.s
 
+src/CodeM/native/cuda/BitwiseOps.o: src/CodeM/native/cuda/BitwiseOps.cpp.o
+.PHONY : src/CodeM/native/cuda/BitwiseOps.o
+
+# target to build an object file
+src/CodeM/native/cuda/BitwiseOps.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/BitwiseOps.cpp.o
+.PHONY : src/CodeM/native/cuda/BitwiseOps.cpp.o
+
+src/CodeM/native/cuda/BitwiseOps.i: src/CodeM/native/cuda/BitwiseOps.cpp.i
+.PHONY : src/CodeM/native/cuda/BitwiseOps.i
+
+# target to preprocess a source file
+src/CodeM/native/cuda/BitwiseOps.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/BitwiseOps.cpp.i
+.PHONY : src/CodeM/native/cuda/BitwiseOps.cpp.i
+
+src/CodeM/native/cuda/BitwiseOps.s: src/CodeM/native/cuda/BitwiseOps.cpp.s
+.PHONY : src/CodeM/native/cuda/BitwiseOps.s
+
+# target to generate assembly for a file
+src/CodeM/native/cuda/BitwiseOps.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/BitwiseOps.cpp.s
+.PHONY : src/CodeM/native/cuda/BitwiseOps.cpp.s
+
 src/CodeM/native/cuda/CUDARuntime.o: src/CodeM/native/cuda/CUDARuntime.cpp.o
 .PHONY : src/CodeM/native/cuda/CUDARuntime.o
 
@@ -2607,6 +2645,54 @@ src/CodeM/native/cuda/CUDARuntime.s: src/CodeM/native/cuda/CUDARuntime.cpp.s
 src/CodeM/native/cuda/CUDARuntime.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/CUDARuntime.cpp.s
 .PHONY : src/CodeM/native/cuda/CUDARuntime.cpp.s
+
+src/CodeM/native/cuda/ComposeOps.o: src/CodeM/native/cuda/ComposeOps.cpp.o
+.PHONY : src/CodeM/native/cuda/ComposeOps.o
+
+# target to build an object file
+src/CodeM/native/cuda/ComposeOps.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ComposeOps.cpp.o
+.PHONY : src/CodeM/native/cuda/ComposeOps.cpp.o
+
+src/CodeM/native/cuda/ComposeOps.i: src/CodeM/native/cuda/ComposeOps.cpp.i
+.PHONY : src/CodeM/native/cuda/ComposeOps.i
+
+# target to preprocess a source file
+src/CodeM/native/cuda/ComposeOps.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ComposeOps.cpp.i
+.PHONY : src/CodeM/native/cuda/ComposeOps.cpp.i
+
+src/CodeM/native/cuda/ComposeOps.s: src/CodeM/native/cuda/ComposeOps.cpp.s
+.PHONY : src/CodeM/native/cuda/ComposeOps.s
+
+# target to generate assembly for a file
+src/CodeM/native/cuda/ComposeOps.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ComposeOps.cpp.s
+.PHONY : src/CodeM/native/cuda/ComposeOps.cpp.s
+
+src/CodeM/native/cuda/ElementwiseOps.o: src/CodeM/native/cuda/ElementwiseOps.cpp.o
+.PHONY : src/CodeM/native/cuda/ElementwiseOps.o
+
+# target to build an object file
+src/CodeM/native/cuda/ElementwiseOps.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ElementwiseOps.cpp.o
+.PHONY : src/CodeM/native/cuda/ElementwiseOps.cpp.o
+
+src/CodeM/native/cuda/ElementwiseOps.i: src/CodeM/native/cuda/ElementwiseOps.cpp.i
+.PHONY : src/CodeM/native/cuda/ElementwiseOps.i
+
+# target to preprocess a source file
+src/CodeM/native/cuda/ElementwiseOps.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ElementwiseOps.cpp.i
+.PHONY : src/CodeM/native/cuda/ElementwiseOps.cpp.i
+
+src/CodeM/native/cuda/ElementwiseOps.s: src/CodeM/native/cuda/ElementwiseOps.cpp.s
+.PHONY : src/CodeM/native/cuda/ElementwiseOps.s
+
+# target to generate assembly for a file
+src/CodeM/native/cuda/ElementwiseOps.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ElementwiseOps.cpp.s
+.PHONY : src/CodeM/native/cuda/ElementwiseOps.cpp.s
 
 src/CodeM/native/cuda/IndexingOps.o: src/CodeM/native/cuda/IndexingOps.cpp.o
 .PHONY : src/CodeM/native/cuda/IndexingOps.o
@@ -2656,6 +2742,30 @@ src/CodeM/native/cuda/LinalgOps.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/LinalgOps.cpp.s
 .PHONY : src/CodeM/native/cuda/LinalgOps.cpp.s
 
+src/CodeM/native/cuda/MaskingOps.o: src/CodeM/native/cuda/MaskingOps.cpp.o
+.PHONY : src/CodeM/native/cuda/MaskingOps.o
+
+# target to build an object file
+src/CodeM/native/cuda/MaskingOps.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/MaskingOps.cpp.o
+.PHONY : src/CodeM/native/cuda/MaskingOps.cpp.o
+
+src/CodeM/native/cuda/MaskingOps.i: src/CodeM/native/cuda/MaskingOps.cpp.i
+.PHONY : src/CodeM/native/cuda/MaskingOps.i
+
+# target to preprocess a source file
+src/CodeM/native/cuda/MaskingOps.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/MaskingOps.cpp.i
+.PHONY : src/CodeM/native/cuda/MaskingOps.cpp.i
+
+src/CodeM/native/cuda/MaskingOps.s: src/CodeM/native/cuda/MaskingOps.cpp.s
+.PHONY : src/CodeM/native/cuda/MaskingOps.s
+
+# target to generate assembly for a file
+src/CodeM/native/cuda/MaskingOps.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/MaskingOps.cpp.s
+.PHONY : src/CodeM/native/cuda/MaskingOps.cpp.s
+
 src/CodeM/native/cuda/MatmulOps.o: src/CodeM/native/cuda/MatmulOps.cpp.o
 .PHONY : src/CodeM/native/cuda/MatmulOps.o
 
@@ -2679,6 +2789,54 @@ src/CodeM/native/cuda/MatmulOps.s: src/CodeM/native/cuda/MatmulOps.cpp.s
 src/CodeM/native/cuda/MatmulOps.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/MatmulOps.cpp.s
 .PHONY : src/CodeM/native/cuda/MatmulOps.cpp.s
+
+src/CodeM/native/cuda/ReductionOps.o: src/CodeM/native/cuda/ReductionOps.cpp.o
+.PHONY : src/CodeM/native/cuda/ReductionOps.o
+
+# target to build an object file
+src/CodeM/native/cuda/ReductionOps.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ReductionOps.cpp.o
+.PHONY : src/CodeM/native/cuda/ReductionOps.cpp.o
+
+src/CodeM/native/cuda/ReductionOps.i: src/CodeM/native/cuda/ReductionOps.cpp.i
+.PHONY : src/CodeM/native/cuda/ReductionOps.i
+
+# target to preprocess a source file
+src/CodeM/native/cuda/ReductionOps.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ReductionOps.cpp.i
+.PHONY : src/CodeM/native/cuda/ReductionOps.cpp.i
+
+src/CodeM/native/cuda/ReductionOps.s: src/CodeM/native/cuda/ReductionOps.cpp.s
+.PHONY : src/CodeM/native/cuda/ReductionOps.s
+
+# target to generate assembly for a file
+src/CodeM/native/cuda/ReductionOps.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ReductionOps.cpp.s
+.PHONY : src/CodeM/native/cuda/ReductionOps.cpp.s
+
+src/CodeM/native/cuda/ScanOps.o: src/CodeM/native/cuda/ScanOps.cpp.o
+.PHONY : src/CodeM/native/cuda/ScanOps.o
+
+# target to build an object file
+src/CodeM/native/cuda/ScanOps.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ScanOps.cpp.o
+.PHONY : src/CodeM/native/cuda/ScanOps.cpp.o
+
+src/CodeM/native/cuda/ScanOps.i: src/CodeM/native/cuda/ScanOps.cpp.i
+.PHONY : src/CodeM/native/cuda/ScanOps.i
+
+# target to preprocess a source file
+src/CodeM/native/cuda/ScanOps.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ScanOps.cpp.i
+.PHONY : src/CodeM/native/cuda/ScanOps.cpp.i
+
+src/CodeM/native/cuda/ScanOps.s: src/CodeM/native/cuda/ScanOps.cpp.s
+.PHONY : src/CodeM/native/cuda/ScanOps.s
+
+# target to generate assembly for a file
+src/CodeM/native/cuda/ScanOps.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem.dir/build.make PlussQit/CMakeFiles/plussqit_codem.dir/src/CodeM/native/cuda/ScanOps.cpp.s
+.PHONY : src/CodeM/native/cuda/ScanOps.cpp.s
 
 src/CodeM/native/cuda/ScatterGatherOps.o: src/CodeM/native/cuda/ScatterGatherOps.cpp.o
 .PHONY : src/CodeM/native/cuda/ScatterGatherOps.o
@@ -3903,7 +4061,7 @@ tests/CodeM/test_patch133_cuda_bootstrap_contract.o: tests/CodeM/test_patch133_c
 # target to build an object file
 tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.o
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.o
 .PHONY : tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.o
 
 tests/CodeM/test_patch133_cuda_bootstrap_contract.i: tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.i
@@ -3912,7 +4070,7 @@ tests/CodeM/test_patch133_cuda_bootstrap_contract.i: tests/CodeM/test_patch133_c
 # target to preprocess a source file
 tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.i
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.i
 .PHONY : tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.i
 
 tests/CodeM/test_patch133_cuda_bootstrap_contract.s: tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.s
@@ -3921,7 +4079,7 @@ tests/CodeM/test_patch133_cuda_bootstrap_contract.s: tests/CodeM/test_patch133_c
 # target to generate assembly for a file
 tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.s
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.s
 .PHONY : tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp.s
 
 tests/CodeM/test_patch137_cuda_selection_baseline_contract.o: tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.o
@@ -3930,7 +4088,7 @@ tests/CodeM/test_patch137_cuda_selection_baseline_contract.o: tests/CodeM/test_p
 # target to build an object file
 tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.o
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.o
 .PHONY : tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.o
 
 tests/CodeM/test_patch137_cuda_selection_baseline_contract.i: tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.i
@@ -3939,7 +4097,7 @@ tests/CodeM/test_patch137_cuda_selection_baseline_contract.i: tests/CodeM/test_p
 # target to preprocess a source file
 tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.i
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.i
 .PHONY : tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.i
 
 tests/CodeM/test_patch137_cuda_selection_baseline_contract.s: tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.s
@@ -3948,7 +4106,7 @@ tests/CodeM/test_patch137_cuda_selection_baseline_contract.s: tests/CodeM/test_p
 # target to generate assembly for a file
 tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.s
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.s
 .PHONY : tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp.s
 
 tests/CodeM/test_patch138_cuda_linalg_baseline_contract.o: tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.o
@@ -3957,7 +4115,7 @@ tests/CodeM/test_patch138_cuda_linalg_baseline_contract.o: tests/CodeM/test_patc
 # target to build an object file
 tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.o
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.o
 .PHONY : tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.o
 
 tests/CodeM/test_patch138_cuda_linalg_baseline_contract.i: tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.i
@@ -3966,7 +4124,7 @@ tests/CodeM/test_patch138_cuda_linalg_baseline_contract.i: tests/CodeM/test_patc
 # target to preprocess a source file
 tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.i
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.i
 .PHONY : tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.i
 
 tests/CodeM/test_patch138_cuda_linalg_baseline_contract.s: tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.s
@@ -3975,7 +4133,7 @@ tests/CodeM/test_patch138_cuda_linalg_baseline_contract.s: tests/CodeM/test_patc
 # target to generate assembly for a file
 tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.s
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.s
 .PHONY : tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp.s
 
 tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.o: tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.o
@@ -3984,7 +4142,7 @@ tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.o: tests/CodeM/test_pat
 # target to build an object file
 tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.o
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.o
 .PHONY : tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.o
 
 tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.i: tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.i
@@ -3993,7 +4151,7 @@ tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.i: tests/CodeM/test_pat
 # target to preprocess a source file
 tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.i
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.i
 .PHONY : tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.i
 
 tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.s: tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.s
@@ -4002,7 +4160,7 @@ tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.s: tests/CodeM/test_pat
 # target to generate assembly for a file
 tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.s
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.s
 .PHONY : tests/CodeM/test_patch139_cuda_bridge_bootstrap_contract.cpp.s
 
 tests/CodeM/test_patch13_inplace_alias_views.o: tests/CodeM/test_patch13_inplace_alias_views.cpp.o
@@ -4035,7 +4193,7 @@ tests/CodeM/test_patch140_cuda_indexing_baseline_contract.o: tests/CodeM/test_pa
 # target to build an object file
 tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.o
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.o
 .PHONY : tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.o
 
 tests/CodeM/test_patch140_cuda_indexing_baseline_contract.i: tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.i
@@ -4044,7 +4202,7 @@ tests/CodeM/test_patch140_cuda_indexing_baseline_contract.i: tests/CodeM/test_pa
 # target to preprocess a source file
 tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.i
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.i
 .PHONY : tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.i
 
 tests/CodeM/test_patch140_cuda_indexing_baseline_contract.s: tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.s
@@ -4053,7 +4211,7 @@ tests/CodeM/test_patch140_cuda_indexing_baseline_contract.s: tests/CodeM/test_pa
 # target to generate assembly for a file
 tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.s
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.s
 .PHONY : tests/CodeM/test_patch140_cuda_indexing_baseline_contract.cpp.s
 
 tests/CodeM/test_patch141_cuda_indexing_bridge_contract.o: tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.o
@@ -4062,7 +4220,7 @@ tests/CodeM/test_patch141_cuda_indexing_bridge_contract.o: tests/CodeM/test_patc
 # target to build an object file
 tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.o
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.o
 .PHONY : tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.o
 
 tests/CodeM/test_patch141_cuda_indexing_bridge_contract.i: tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.i
@@ -4071,7 +4229,7 @@ tests/CodeM/test_patch141_cuda_indexing_bridge_contract.i: tests/CodeM/test_patc
 # target to preprocess a source file
 tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.i
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.i
 .PHONY : tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.i
 
 tests/CodeM/test_patch141_cuda_indexing_bridge_contract.s: tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.s
@@ -4080,7 +4238,7 @@ tests/CodeM/test_patch141_cuda_indexing_bridge_contract.s: tests/CodeM/test_patc
 # target to generate assembly for a file
 tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.s
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.s
 .PHONY : tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp.s
 
 tests/CodeM/test_patch142_cuda_matmul_contract.o: tests/CodeM/test_patch142_cuda_matmul_contract.cpp.o
@@ -4089,7 +4247,7 @@ tests/CodeM/test_patch142_cuda_matmul_contract.o: tests/CodeM/test_patch142_cuda
 # target to build an object file
 tests/CodeM/test_patch142_cuda_matmul_contract.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch142_cuda_matmul_contract.cpp.o
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch142_cuda_matmul_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch142_cuda_matmul_contract.cpp.o
 .PHONY : tests/CodeM/test_patch142_cuda_matmul_contract.cpp.o
 
 tests/CodeM/test_patch142_cuda_matmul_contract.i: tests/CodeM/test_patch142_cuda_matmul_contract.cpp.i
@@ -4098,7 +4256,7 @@ tests/CodeM/test_patch142_cuda_matmul_contract.i: tests/CodeM/test_patch142_cuda
 # target to preprocess a source file
 tests/CodeM/test_patch142_cuda_matmul_contract.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch142_cuda_matmul_contract.cpp.i
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch142_cuda_matmul_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch142_cuda_matmul_contract.cpp.i
 .PHONY : tests/CodeM/test_patch142_cuda_matmul_contract.cpp.i
 
 tests/CodeM/test_patch142_cuda_matmul_contract.s: tests/CodeM/test_patch142_cuda_matmul_contract.cpp.s
@@ -4107,7 +4265,7 @@ tests/CodeM/test_patch142_cuda_matmul_contract.s: tests/CodeM/test_patch142_cuda
 # target to generate assembly for a file
 tests/CodeM/test_patch142_cuda_matmul_contract.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch142_cuda_matmul_contract.cpp.s
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch142_cuda_matmul_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch142_cuda_matmul_contract.cpp.s
 .PHONY : tests/CodeM/test_patch142_cuda_matmul_contract.cpp.s
 
 tests/CodeM/test_patch143_cuda_scatter_gather_contract.o: tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.o
@@ -4116,7 +4274,7 @@ tests/CodeM/test_patch143_cuda_scatter_gather_contract.o: tests/CodeM/test_patch
 # target to build an object file
 tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.o
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.o
 .PHONY : tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.o
 
 tests/CodeM/test_patch143_cuda_scatter_gather_contract.i: tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.i
@@ -4125,7 +4283,7 @@ tests/CodeM/test_patch143_cuda_scatter_gather_contract.i: tests/CodeM/test_patch
 # target to preprocess a source file
 tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.i
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.i
 .PHONY : tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.i
 
 tests/CodeM/test_patch143_cuda_scatter_gather_contract.s: tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.s
@@ -4134,7 +4292,7 @@ tests/CodeM/test_patch143_cuda_scatter_gather_contract.s: tests/CodeM/test_patch
 # target to generate assembly for a file
 tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.s
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.s
 .PHONY : tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp.s
 
 tests/CodeM/test_patch144_mps_native_take_put_graduation.o: tests/CodeM/test_patch144_mps_native_take_put_graduation.cpp.o
@@ -4170,7 +4328,7 @@ tests/CodeM/test_patch145_cuda_provider_inventory_contract.o: tests/CodeM/test_p
 # target to build an object file
 tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.o
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.o
 .PHONY : tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.o
 
 tests/CodeM/test_patch145_cuda_provider_inventory_contract.i: tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.i
@@ -4179,7 +4337,7 @@ tests/CodeM/test_patch145_cuda_provider_inventory_contract.i: tests/CodeM/test_p
 # target to preprocess a source file
 tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.i
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.i
 .PHONY : tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.i
 
 tests/CodeM/test_patch145_cuda_provider_inventory_contract.s: tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.s
@@ -4188,7 +4346,7 @@ tests/CodeM/test_patch145_cuda_provider_inventory_contract.s: tests/CodeM/test_p
 # target to generate assembly for a file
 tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.s
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.s
 .PHONY : tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp.s
 
 tests/CodeM/test_patch148_cuda_torch_family_parity.o: tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.o
@@ -4197,7 +4355,7 @@ tests/CodeM/test_patch148_cuda_torch_family_parity.o: tests/CodeM/test_patch148_
 # target to build an object file
 tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.o
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.o
 .PHONY : tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.o
 
 tests/CodeM/test_patch148_cuda_torch_family_parity.i: tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.i
@@ -4206,7 +4364,7 @@ tests/CodeM/test_patch148_cuda_torch_family_parity.i: tests/CodeM/test_patch148_
 # target to preprocess a source file
 tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.i
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.i
 .PHONY : tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.i
 
 tests/CodeM/test_patch148_cuda_torch_family_parity.s: tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.s
@@ -4215,7 +4373,7 @@ tests/CodeM/test_patch148_cuda_torch_family_parity.s: tests/CodeM/test_patch148_
 # target to generate assembly for a file
 tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.s
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.s
 .PHONY : tests/CodeM/test_patch148_cuda_torch_family_parity.cpp.s
 
 tests/CodeM/test_patch149_mps_torch_family_parity.o: tests/CodeM/test_patch149_mps_torch_family_parity.cpp.o
@@ -4268,6 +4426,330 @@ tests/CodeM/test_patch14_torch_interop_compile.s: tests/CodeM/test_patch14_torch
 tests/CodeM/test_patch14_torch_interop_compile.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch14_torch_interop_compile.cpp.s
 .PHONY : tests/CodeM/test_patch14_torch_interop_compile.cpp.s
+
+tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.o: tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.o
+.PHONY : tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.o
+
+# target to build an object file
+tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.o
+.PHONY : tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.o
+
+tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.i: tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.i
+.PHONY : tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.i
+.PHONY : tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.i
+
+tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.s: tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.s
+.PHONY : tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.s
+.PHONY : tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp.s
+
+tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.o: tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.o
+.PHONY : tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.o
+
+# target to build an object file
+tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.o
+.PHONY : tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.o
+
+tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.i: tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.i
+.PHONY : tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.i
+.PHONY : tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.i
+
+tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.s: tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.s
+.PHONY : tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.s
+.PHONY : tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp.s
+
+tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.o: tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.o
+.PHONY : tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.o
+
+# target to build an object file
+tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.o
+.PHONY : tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.o
+
+tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.i: tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.i
+.PHONY : tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.i
+.PHONY : tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.i
+
+tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.s: tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.s
+.PHONY : tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.s
+.PHONY : tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp.s
+
+tests/CodeM/test_patch153_cuda_native_lane_expansion.o: tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.o
+.PHONY : tests/CodeM/test_patch153_cuda_native_lane_expansion.o
+
+# target to build an object file
+tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.o
+.PHONY : tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.o
+
+tests/CodeM/test_patch153_cuda_native_lane_expansion.i: tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.i
+.PHONY : tests/CodeM/test_patch153_cuda_native_lane_expansion.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.i
+.PHONY : tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.i
+
+tests/CodeM/test_patch153_cuda_native_lane_expansion.s: tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.s
+.PHONY : tests/CodeM/test_patch153_cuda_native_lane_expansion.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.s
+.PHONY : tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp.s
+
+tests/CodeM/test_patch154_cuda_reduction_contract.o: tests/CodeM/test_patch154_cuda_reduction_contract.cpp.o
+.PHONY : tests/CodeM/test_patch154_cuda_reduction_contract.o
+
+# target to build an object file
+tests/CodeM/test_patch154_cuda_reduction_contract.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch154_cuda_reduction_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch154_cuda_reduction_contract.cpp.o
+.PHONY : tests/CodeM/test_patch154_cuda_reduction_contract.cpp.o
+
+tests/CodeM/test_patch154_cuda_reduction_contract.i: tests/CodeM/test_patch154_cuda_reduction_contract.cpp.i
+.PHONY : tests/CodeM/test_patch154_cuda_reduction_contract.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch154_cuda_reduction_contract.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch154_cuda_reduction_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch154_cuda_reduction_contract.cpp.i
+.PHONY : tests/CodeM/test_patch154_cuda_reduction_contract.cpp.i
+
+tests/CodeM/test_patch154_cuda_reduction_contract.s: tests/CodeM/test_patch154_cuda_reduction_contract.cpp.s
+.PHONY : tests/CodeM/test_patch154_cuda_reduction_contract.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch154_cuda_reduction_contract.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch154_cuda_reduction_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch154_cuda_reduction_contract.cpp.s
+.PHONY : tests/CodeM/test_patch154_cuda_reduction_contract.cpp.s
+
+tests/CodeM/test_patch155_cuda_elementwise_contract.o: tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.o
+.PHONY : tests/CodeM/test_patch155_cuda_elementwise_contract.o
+
+# target to build an object file
+tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.o
+.PHONY : tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.o
+
+tests/CodeM/test_patch155_cuda_elementwise_contract.i: tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.i
+.PHONY : tests/CodeM/test_patch155_cuda_elementwise_contract.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.i
+.PHONY : tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.i
+
+tests/CodeM/test_patch155_cuda_elementwise_contract.s: tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.s
+.PHONY : tests/CodeM/test_patch155_cuda_elementwise_contract.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.s
+.PHONY : tests/CodeM/test_patch155_cuda_elementwise_contract.cpp.s
+
+tests/CodeM/test_patch156_cuda_scan_activation_contract.o: tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.o
+.PHONY : tests/CodeM/test_patch156_cuda_scan_activation_contract.o
+
+# target to build an object file
+tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.o
+.PHONY : tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.o
+
+tests/CodeM/test_patch156_cuda_scan_activation_contract.i: tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.i
+.PHONY : tests/CodeM/test_patch156_cuda_scan_activation_contract.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.i
+.PHONY : tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.i
+
+tests/CodeM/test_patch156_cuda_scan_activation_contract.s: tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.s
+.PHONY : tests/CodeM/test_patch156_cuda_scan_activation_contract.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.s
+.PHONY : tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp.s
+
+tests/CodeM/test_patch157_cuda_masking_contract.o: tests/CodeM/test_patch157_cuda_masking_contract.cpp.o
+.PHONY : tests/CodeM/test_patch157_cuda_masking_contract.o
+
+# target to build an object file
+tests/CodeM/test_patch157_cuda_masking_contract.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch157_cuda_masking_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch157_cuda_masking_contract.cpp.o
+.PHONY : tests/CodeM/test_patch157_cuda_masking_contract.cpp.o
+
+tests/CodeM/test_patch157_cuda_masking_contract.i: tests/CodeM/test_patch157_cuda_masking_contract.cpp.i
+.PHONY : tests/CodeM/test_patch157_cuda_masking_contract.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch157_cuda_masking_contract.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch157_cuda_masking_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch157_cuda_masking_contract.cpp.i
+.PHONY : tests/CodeM/test_patch157_cuda_masking_contract.cpp.i
+
+tests/CodeM/test_patch157_cuda_masking_contract.s: tests/CodeM/test_patch157_cuda_masking_contract.cpp.s
+.PHONY : tests/CodeM/test_patch157_cuda_masking_contract.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch157_cuda_masking_contract.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch157_cuda_masking_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch157_cuda_masking_contract.cpp.s
+.PHONY : tests/CodeM/test_patch157_cuda_masking_contract.cpp.s
+
+tests/CodeM/test_patch158_cuda_bitwise_compose_contract.o: tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.o
+.PHONY : tests/CodeM/test_patch158_cuda_bitwise_compose_contract.o
+
+# target to build an object file
+tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.o
+.PHONY : tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.o
+
+tests/CodeM/test_patch158_cuda_bitwise_compose_contract.i: tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.i
+.PHONY : tests/CodeM/test_patch158_cuda_bitwise_compose_contract.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.i
+.PHONY : tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.i
+
+tests/CodeM/test_patch158_cuda_bitwise_compose_contract.s: tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.s
+.PHONY : tests/CodeM/test_patch158_cuda_bitwise_compose_contract.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.s
+.PHONY : tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp.s
+
+tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.o: tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.o
+.PHONY : tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.o
+
+# target to build an object file
+tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.o
+.PHONY : tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.o
+
+tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.i: tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.i
+.PHONY : tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.i
+.PHONY : tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.i
+
+tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.s: tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.s
+.PHONY : tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.s
+.PHONY : tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp.s
+
+tests/CodeM/test_patch160_cuda_linalg_expanded_contract.o: tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.o
+.PHONY : tests/CodeM/test_patch160_cuda_linalg_expanded_contract.o
+
+# target to build an object file
+tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.o
+.PHONY : tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.o
+
+tests/CodeM/test_patch160_cuda_linalg_expanded_contract.i: tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.i
+.PHONY : tests/CodeM/test_patch160_cuda_linalg_expanded_contract.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.i
+.PHONY : tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.i
+
+tests/CodeM/test_patch160_cuda_linalg_expanded_contract.s: tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.s
+.PHONY : tests/CodeM/test_patch160_cuda_linalg_expanded_contract.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.s
+.PHONY : tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp.s
+
+tests/CodeM/test_patch161_cuda_matmul_rank_contract.o: tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.o
+.PHONY : tests/CodeM/test_patch161_cuda_matmul_rank_contract.o
+
+# target to build an object file
+tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.o
+.PHONY : tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.o
+
+tests/CodeM/test_patch161_cuda_matmul_rank_contract.i: tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.i
+.PHONY : tests/CodeM/test_patch161_cuda_matmul_rank_contract.i
+
+# target to preprocess a source file
+tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.i
+.PHONY : tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.i
+
+tests/CodeM/test_patch161_cuda_matmul_rank_contract.s: tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.s
+.PHONY : tests/CodeM/test_patch161_cuda_matmul_rank_contract.s
+
+# target to generate assembly for a file
+tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.s
+.PHONY : tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp.s
 
 tests/CodeM/test_patch17_unary_cat_scatter.o: tests/CodeM/test_patch17_unary_cat_scatter.cpp.o
 .PHONY : tests/CodeM/test_patch17_unary_cat_scatter.o
@@ -6310,6 +6792,7 @@ tests/CodeM/test_patch97_linalg_backend_info.o: tests/CodeM/test_patch97_linalg_
 tests/CodeM/test_patch97_linalg_backend_info.cpp.o:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.o
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.o
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.o
 .PHONY : tests/CodeM/test_patch97_linalg_backend_info.cpp.o
 
 tests/CodeM/test_patch97_linalg_backend_info.i: tests/CodeM/test_patch97_linalg_backend_info.cpp.i
@@ -6319,6 +6802,7 @@ tests/CodeM/test_patch97_linalg_backend_info.i: tests/CodeM/test_patch97_linalg_
 tests/CodeM/test_patch97_linalg_backend_info.cpp.i:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.i
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.i
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.i
 .PHONY : tests/CodeM/test_patch97_linalg_backend_info.cpp.i
 
 tests/CodeM/test_patch97_linalg_backend_info.s: tests/CodeM/test_patch97_linalg_backend_info.cpp.s
@@ -6328,6 +6812,7 @@ tests/CodeM/test_patch97_linalg_backend_info.s: tests/CodeM/test_patch97_linalg_
 tests/CodeM/test_patch97_linalg_backend_info.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.s
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_selection_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.s
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/build.make PlussQit/CMakeFiles/plussqit_codem_cuda_gate_tests.dir/tests/CodeM/test_patch97_linalg_backend_info.cpp.s
 .PHONY : tests/CodeM/test_patch97_linalg_backend_info.cpp.s
 
 tests/CodeM/test_patch98_mps_linalg_bridge_stress.o: tests/CodeM/test_patch98_mps_linalg_bridge_stress.cpp.o
@@ -6816,6 +7301,7 @@ help:
 	@echo "... plussqit_codem_autodiff_tests"
 	@echo "... plussqit_codem_autograd_optim_demo"
 	@echo "... plussqit_codem_aux_let_transmit_demo"
+	@echo "... plussqit_codem_cuda_gate_tests"
 	@echo "... plussqit_codem_data_reader_parity_demo"
 	@echo "... plussqit_codem_linear_alg_demo"
 	@echo "... plussqit_codem_mps_bulk_bench_demo"
@@ -7082,18 +7568,36 @@ help:
 	@echo "... src/CodeM/native/cuda/BaselineOps.o"
 	@echo "... src/CodeM/native/cuda/BaselineOps.i"
 	@echo "... src/CodeM/native/cuda/BaselineOps.s"
+	@echo "... src/CodeM/native/cuda/BitwiseOps.o"
+	@echo "... src/CodeM/native/cuda/BitwiseOps.i"
+	@echo "... src/CodeM/native/cuda/BitwiseOps.s"
 	@echo "... src/CodeM/native/cuda/CUDARuntime.o"
 	@echo "... src/CodeM/native/cuda/CUDARuntime.i"
 	@echo "... src/CodeM/native/cuda/CUDARuntime.s"
+	@echo "... src/CodeM/native/cuda/ComposeOps.o"
+	@echo "... src/CodeM/native/cuda/ComposeOps.i"
+	@echo "... src/CodeM/native/cuda/ComposeOps.s"
+	@echo "... src/CodeM/native/cuda/ElementwiseOps.o"
+	@echo "... src/CodeM/native/cuda/ElementwiseOps.i"
+	@echo "... src/CodeM/native/cuda/ElementwiseOps.s"
 	@echo "... src/CodeM/native/cuda/IndexingOps.o"
 	@echo "... src/CodeM/native/cuda/IndexingOps.i"
 	@echo "... src/CodeM/native/cuda/IndexingOps.s"
 	@echo "... src/CodeM/native/cuda/LinalgOps.o"
 	@echo "... src/CodeM/native/cuda/LinalgOps.i"
 	@echo "... src/CodeM/native/cuda/LinalgOps.s"
+	@echo "... src/CodeM/native/cuda/MaskingOps.o"
+	@echo "... src/CodeM/native/cuda/MaskingOps.i"
+	@echo "... src/CodeM/native/cuda/MaskingOps.s"
 	@echo "... src/CodeM/native/cuda/MatmulOps.o"
 	@echo "... src/CodeM/native/cuda/MatmulOps.i"
 	@echo "... src/CodeM/native/cuda/MatmulOps.s"
+	@echo "... src/CodeM/native/cuda/ReductionOps.o"
+	@echo "... src/CodeM/native/cuda/ReductionOps.i"
+	@echo "... src/CodeM/native/cuda/ReductionOps.s"
+	@echo "... src/CodeM/native/cuda/ScanOps.o"
+	@echo "... src/CodeM/native/cuda/ScanOps.i"
+	@echo "... src/CodeM/native/cuda/ScanOps.s"
 	@echo "... src/CodeM/native/cuda/ScatterGatherOps.o"
 	@echo "... src/CodeM/native/cuda/ScatterGatherOps.i"
 	@echo "... src/CodeM/native/cuda/ScatterGatherOps.s"
@@ -7281,6 +7785,42 @@ help:
 	@echo "... tests/CodeM/test_patch14_torch_interop_compile.o"
 	@echo "... tests/CodeM/test_patch14_torch_interop_compile.i"
 	@echo "... tests/CodeM/test_patch14_torch_interop_compile.s"
+	@echo "... tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.o"
+	@echo "... tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.i"
+	@echo "... tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.s"
+	@echo "... tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.o"
+	@echo "... tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.i"
+	@echo "... tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.s"
+	@echo "... tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.o"
+	@echo "... tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.i"
+	@echo "... tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.s"
+	@echo "... tests/CodeM/test_patch153_cuda_native_lane_expansion.o"
+	@echo "... tests/CodeM/test_patch153_cuda_native_lane_expansion.i"
+	@echo "... tests/CodeM/test_patch153_cuda_native_lane_expansion.s"
+	@echo "... tests/CodeM/test_patch154_cuda_reduction_contract.o"
+	@echo "... tests/CodeM/test_patch154_cuda_reduction_contract.i"
+	@echo "... tests/CodeM/test_patch154_cuda_reduction_contract.s"
+	@echo "... tests/CodeM/test_patch155_cuda_elementwise_contract.o"
+	@echo "... tests/CodeM/test_patch155_cuda_elementwise_contract.i"
+	@echo "... tests/CodeM/test_patch155_cuda_elementwise_contract.s"
+	@echo "... tests/CodeM/test_patch156_cuda_scan_activation_contract.o"
+	@echo "... tests/CodeM/test_patch156_cuda_scan_activation_contract.i"
+	@echo "... tests/CodeM/test_patch156_cuda_scan_activation_contract.s"
+	@echo "... tests/CodeM/test_patch157_cuda_masking_contract.o"
+	@echo "... tests/CodeM/test_patch157_cuda_masking_contract.i"
+	@echo "... tests/CodeM/test_patch157_cuda_masking_contract.s"
+	@echo "... tests/CodeM/test_patch158_cuda_bitwise_compose_contract.o"
+	@echo "... tests/CodeM/test_patch158_cuda_bitwise_compose_contract.i"
+	@echo "... tests/CodeM/test_patch158_cuda_bitwise_compose_contract.s"
+	@echo "... tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.o"
+	@echo "... tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.i"
+	@echo "... tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.s"
+	@echo "... tests/CodeM/test_patch160_cuda_linalg_expanded_contract.o"
+	@echo "... tests/CodeM/test_patch160_cuda_linalg_expanded_contract.i"
+	@echo "... tests/CodeM/test_patch160_cuda_linalg_expanded_contract.s"
+	@echo "... tests/CodeM/test_patch161_cuda_matmul_rank_contract.o"
+	@echo "... tests/CodeM/test_patch161_cuda_matmul_rank_contract.i"
+	@echo "... tests/CodeM/test_patch161_cuda_matmul_rank_contract.s"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.o"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.i"
 	@echo "... tests/CodeM/test_patch17_unary_cat_scatter.s"

@@ -151,7 +151,7 @@ bool run_nodej_online_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    auto lymph_or = pluss::ai::lymph::online_linear_classifier(warm, options, warm_train);
+    auto lymph_or = pluss::ai::lymph::quick::online_linear_classifier(warm, options, warm_train);
     if (!lymph_or.ok()) {
       if (err) *err << "lymph online_linear_classifier should succeed\n";
       return false;
@@ -217,7 +217,7 @@ bool run_nodej_online_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    auto lymph_or = pluss::ai::lymph::online_linear_regressor(warm, options, warm_train);
+    auto lymph_or = pluss::ai::lymph::quick::online_linear_regressor(warm, options, warm_train);
     if (!lymph_or.ok()) {
       if (err) *err << "lymph online_linear_regressor should succeed\n";
       return false;

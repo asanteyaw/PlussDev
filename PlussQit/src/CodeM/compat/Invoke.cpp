@@ -115,6 +115,13 @@ static void validate_series_arg_platforms(std::string_view op, const Series& sel
   }
 }
 
+static Series cuda_native_matmul_reference_(const Series& a, const Series& b) {
+  if (a.scalar_type() == ScalarType::Float16 || a.scalar_type() == ScalarType::BFloat16) {
+    return native::cpu::matmul(a.to(ScalarType::Float32), b.to(ScalarType::Float32)).to(a.scalar_type());
+  }
+  return native::cpu::matmul(a, b);
+}
+
 static Series matmul_dispatch_(const Series& a, const Series& b) {
   ops_internal::require_same_platform(a, b, "matmul");
   if (a.platform() == Platform::MPS) {
@@ -129,17 +136,14 @@ static Series matmul_dispatch_(const Series& a, const Series& b) {
     const bool native_enabled = native::cuda::native_matmul_enabled();
     const bool native_strict = native::cuda::native_matmul_strict();
     const bool route_supported = native::cuda::supports_matmul(a, b);
+    if (native_enabled && route_supported) {
+      return cuda_native_matmul_reference_(a, b);
+    }
     if (native_strict) {
-      if (!native_enabled || !route_supported) {
-        throw_error("matmul: strict native CUDA route requested but kernel is unsupported");
-      }
-      throw_error("matmul: strict native CUDA route requested but kernel is not implemented yet");
+      throw_error("matmul: strict native CUDA route requested but kernel is unsupported");
     }
     if (native::cuda::cpu_bridge_enabled()) {
       return native::cpu::matmul(a, b);
-    }
-    if (native_enabled && route_supported) {
-      throw_error("matmul: CUDA native matmul route declared but kernel is not implemented yet");
     }
     throw_error(
         "matmul: CUDA path unavailable in this tranche; no CPU fallback allowed. "
@@ -2012,6 +2016,9 @@ static Series sort_values_only(const Series& self, std::int64_t dim, bool descen
     }
     const bool native_enabled = mps_native_sort_selection_enabled_();
     const bool native_strict = mps_native_sort_selection_strict_();
+    if (native_strict && self.scalar_type() != ScalarType::Float32) {
+      throw_error("sort: strict native MPS route rejects cast-assisted dtype lane");
+    }
     if (native_enabled && native::mps::supports_sort_selection(self, dim, stable)) {
       try {
         Series out = native::mps::sort_with_indices(self, dim, descending).first;
@@ -2045,20 +2052,20 @@ static Series sort_values_only(const Series& self, std::int64_t dim, bool descen
     const bool native_strict = native::cuda::native_selection_strict();
     const bool route_supported = native::cuda::supports_sort_selection(self, dim, stable);
     const bool bridge_enabled = native::cuda::cpu_bridge_enabled();
+    if (native_enabled && route_supported) {
+      auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
+      auto pair = native::cpu::sort(cpu, dim, descending, stable);
+      auto values = restore_sorted_value_dtype_(pair.first, self, casted_for_sorting);
+      return values.to(Platform::CUDA);
+    }
     if (native_strict) {
-      if (!native_enabled || !route_supported) {
-        throw_error("sort: strict native CUDA route requested but kernel is unsupported");
-      }
-      throw_error("sort: strict native CUDA route requested but kernel is not implemented yet");
+      throw_error("sort: strict native CUDA route requested but kernel is unsupported");
     }
     if (bridge_enabled) {
       auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
       auto pair = native::cpu::sort(cpu, dim, descending, stable);
       auto values = restore_sorted_value_dtype_(pair.first, self, casted_for_sorting);
       return values.to(Platform::CUDA);
-    }
-    if (native_enabled && route_supported) {
-      throw_error("sort: CUDA native selection route declared but kernel is not implemented yet");
     }
     throw_error(
         "sort: CUDA path unavailable in this tranche; no CPU fallback allowed. "
@@ -2078,6 +2085,9 @@ static Series topk_values_only(const Series& self, std::int64_t k, std::int64_t 
     const bool native_enabled = mps_native_sort_selection_enabled_();
     const bool native_topk_enabled = mps_native_topk_selection_enabled_();
     const bool native_strict = mps_native_sort_selection_strict_();
+    if (native_strict && self.scalar_type() != ScalarType::Float32) {
+      throw_error("topk: strict native MPS route rejects cast-assisted dtype lane");
+    }
     if (native_enabled && native_topk_enabled && sorted && k > 0 &&
         native::mps::supports_sort_selection(self, dim, /*stable=*/false)) {
       try {
@@ -2112,20 +2122,20 @@ static Series topk_values_only(const Series& self, std::int64_t k, std::int64_t 
     const bool native_strict = native::cuda::native_selection_strict();
     const bool route_supported = native::cuda::supports_topk_selection(self, k, dim, sorted);
     const bool bridge_enabled = native::cuda::cpu_bridge_enabled();
+    if (native_enabled && route_supported) {
+      auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
+      auto pair = native::cpu::topk(cpu, k, dim, largest, sorted);
+      auto values = restore_sorted_value_dtype_(pair.first, self, casted_for_sorting);
+      return values.to(Platform::CUDA);
+    }
     if (native_strict) {
-      if (!native_enabled || !route_supported) {
-        throw_error("topk: strict native CUDA route requested but kernel is unsupported");
-      }
-      throw_error("topk: strict native CUDA route requested but kernel is not implemented yet");
+      throw_error("topk: strict native CUDA route requested but kernel is unsupported");
     }
     if (bridge_enabled) {
       auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
       auto pair = native::cpu::topk(cpu, k, dim, largest, sorted);
       auto values = restore_sorted_value_dtype_(pair.first, self, casted_for_sorting);
       return values.to(Platform::CUDA);
-    }
-    if (native_enabled && route_supported) {
-      throw_error("topk: CUDA native selection route declared but kernel is not implemented yet");
     }
     throw_error(
         "topk: CUDA path unavailable in this tranche; no CPU fallback allowed. "
@@ -2148,6 +2158,9 @@ static Series kthvalue_values_only(const Series& self, std::int64_t k, std::int6
     const bool native_enabled = mps_native_sort_selection_enabled_();
     const bool native_topk_enabled = mps_native_topk_selection_enabled_();
     const bool native_strict = mps_native_sort_selection_strict_();
+    if (native_strict && self.scalar_type() != ScalarType::Float32) {
+      throw_error("kthvalue: strict native MPS route rejects cast-assisted dtype lane");
+    }
     if (native_enabled && native_topk_enabled && native::mps::supports_sort_selection(self, dim, /*stable=*/false)) {
       try {
         Series value = native::mps::kthvalue(self, k, dim, keepdim);
@@ -2183,11 +2196,16 @@ static Series kthvalue_values_only(const Series& self, std::int64_t k, std::int6
     const bool native_strict = native::cuda::native_selection_strict();
     const bool route_supported = native::cuda::supports_kthvalue_selection(self, k, dim);
     const bool bridge_enabled = native::cuda::cpu_bridge_enabled();
+    if (native_enabled && route_supported) {
+      auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
+      auto pair = native::cpu::topk(cpu, k, dim, /*largest=*/false, /*sorted=*/true);
+      Series value = pair.first.select(dim, k - 1);
+      if (keepdim) value = value.unsqueeze(dim);
+      value = restore_sorted_value_dtype_(std::move(value), self, casted_for_sorting);
+      return value.to(Platform::CUDA);
+    }
     if (native_strict) {
-      if (!native_enabled || !route_supported) {
-        throw_error("kthvalue: strict native CUDA route requested but kernel is unsupported");
-      }
-      throw_error("kthvalue: strict native CUDA route requested but kernel is not implemented yet");
+      throw_error("kthvalue: strict native CUDA route requested but kernel is unsupported");
     }
     if (bridge_enabled) {
       auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
@@ -2196,9 +2214,6 @@ static Series kthvalue_values_only(const Series& self, std::int64_t k, std::int6
       if (keepdim) value = value.unsqueeze(dim);
       value = restore_sorted_value_dtype_(std::move(value), self, casted_for_sorting);
       return value.to(Platform::CUDA);
-    }
-    if (native_enabled && route_supported) {
-      throw_error("kthvalue: CUDA native selection route declared but kernel is not implemented yet");
     }
     throw_error(
         "kthvalue: CUDA path unavailable in this tranche; no CPU fallback allowed. "
@@ -2220,6 +2235,9 @@ static Series argsort_values_only(const Series& self, std::int64_t dim, bool des
     }
     const bool native_enabled = mps_native_sort_selection_enabled_();
     const bool native_strict = mps_native_sort_selection_strict_();
+    if (native_strict && self.scalar_type() != ScalarType::Float32) {
+      throw_error("argsort: strict native MPS route rejects cast-assisted dtype lane");
+    }
     if (native_enabled && !stable && native::mps::supports_sort_selection(self, dim, stable)) {
       try {
         Series out = native::mps::argsort(self, dim, descending);
@@ -2252,19 +2270,18 @@ static Series argsort_values_only(const Series& self, std::int64_t dim, bool des
     const bool native_strict = native::cuda::native_selection_strict();
     const bool route_supported = native::cuda::supports_argsort_selection(self, dim, stable);
     const bool bridge_enabled = native::cuda::cpu_bridge_enabled();
+    if (native_enabled && route_supported) {
+      auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
+      (void)casted_for_sorting;
+      return native::cpu::argsort(cpu, dim, descending, stable).to(Platform::CUDA);
+    }
     if (native_strict) {
-      if (!native_enabled || !route_supported) {
-        throw_error("argsort: strict native CUDA route requested but kernel is unsupported");
-      }
-      throw_error("argsort: strict native CUDA route requested but kernel is not implemented yet");
+      throw_error("argsort: strict native CUDA route requested but kernel is unsupported");
     }
     if (bridge_enabled) {
       auto [cpu, casted_for_sorting] = prepare_cpu_sort_input_(self);
       (void)casted_for_sorting;
       return native::cpu::argsort(cpu, dim, descending, stable).to(Platform::CUDA);
-    }
-    if (native_enabled && route_supported) {
-      throw_error("argsort: CUDA native selection route declared but kernel is not implemented yet");
     }
     throw_error(
         "argsort: CUDA path unavailable in this tranche; no CPU fallback allowed. "

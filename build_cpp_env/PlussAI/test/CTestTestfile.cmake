@@ -30,6 +30,8 @@ add_test([=[nodej_phase0_contract_test]=] "/Users/yawasante/software/cxx/PlussDe
 set_tests_properties([=[nodej_phase0_contract_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;28;add_test;/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;0;")
 add_test([=[nodej_prep_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/test/nodej_prep_test")
 set_tests_properties([=[nodej_prep_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;28;add_test;/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;0;")
+add_test([=[nodej_reliability_io_unsupervised_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/test/nodej_reliability_io_unsupervised_test")
+set_tests_properties([=[nodej_reliability_io_unsupervised_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;28;add_test;/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;0;")
 add_test([=[nodej_rigorous_suite_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/test/nodej_rigorous_suite_test")
 set_tests_properties([=[nodej_rigorous_suite_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;28;add_test;/Users/yawasante/software/cxx/PlussDev/PlussAI/test/CMakeLists.txt;0;")
 add_test([=[nodej_split_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussAI/test/nodej_split_test")

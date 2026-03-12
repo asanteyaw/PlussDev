@@ -53,9 +53,20 @@ if [[ -z "${CONDA_BIN}" ]]; then
   fi
 fi
 
-BIN="${BUILD_DIR}/PlussQit/plussqit_codem_mps_selection_tests"
+case "${BACKEND}" in
+  mps)
+    BIN="${BUILD_DIR}/PlussQit/plussqit_codem_mps_selection_tests"
+    ;;
+  cuda)
+    BIN="${BUILD_DIR}/PlussQit/plussqit_codem_cuda_gate_tests"
+    ;;
+  *)
+    echo "Unsupported backend '${BACKEND}'. Use mps or cuda." >&2
+    exit 2
+    ;;
+esac
 if [[ ! -x "${BIN}" ]]; then
-  echo "Test binary not found or not executable: ${BIN}" >&2
+  echo "Test binary not found or not executable for backend '${BACKEND}': ${BIN}" >&2
   exit 2
 fi
 
@@ -144,6 +155,14 @@ case "${BACKEND}" in
       PLUSS_MPS_LINALG_ALLOW_CPU_BRIDGE=0 \
       PLUSS_MPS_LINALG_SOLVER_ROUTE=native \
       PLUSS_MPS_LINALG_NATIVE_DEVICE_SVD=1
+    run_gate gate16_mps_strict_indexing_scatter_lanes "[mps][parity][torch][strict][indexing][scatter]" \
+      PLUSS_MPS_ALLOW_CPU_FALLBACK=0 \
+      PLUSS_MPS_NATIVE_TAKE_PUT=1
+    run_gate gate17_mps_strict_selection_soak_perf "[mps][parity][torch][strict][selection][soak][perf]" \
+      PLUSS_MPS_ALLOW_CPU_FALLBACK=0 \
+      PLUSS_MPS_NATIVE_SORT_SELECTION=1 \
+      PLUSS_MPS_NATIVE_SORT_SELECTION_STRICT=1 \
+      PLUSS_MPS_NATIVE_TOPK_SELECTION=1
     ;;
   cuda)
     run_gate gate01_cuda_bootstrap_backend "[cuda][bootstrap][backend]"
@@ -208,11 +227,137 @@ case "${BACKEND}" in
       PLUSS_CUDA_NATIVE_MATMUL=1 \
       PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 \
       PLUSS_CUDA_NATIVE_SCATTER_GATHER=1 \
-      PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1
-    ;;
-  *)
-    echo "Unsupported backend '${BACKEND}'. Use mps or cuda." >&2
-    exit 2
+      PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1 \
+      PLUSS_CUDA_NATIVE_BITWISE=1 \
+      PLUSS_CUDA_NATIVE_BITWISE_STRICT=1 \
+      PLUSS_CUDA_NATIVE_COMPOSE=1 \
+      PLUSS_CUDA_NATIVE_COMPOSE_STRICT=1
+    run_gate gate26_cuda_native_strict_parity_matrix "[cuda][parity][native][strict]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_SELECTION=1 \
+      PLUSS_CUDA_NATIVE_SELECTION_STRICT=1 \
+      PLUSS_CUDA_NATIVE_LINALG=1 \
+      PLUSS_CUDA_NATIVE_LINALG_STRICT=1 \
+      PLUSS_CUDA_NATIVE_INDEXING=1 \
+      PLUSS_CUDA_NATIVE_INDEXING_STRICT=1 \
+      PLUSS_CUDA_NATIVE_MATMUL=1 \
+      PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 \
+      PLUSS_CUDA_NATIVE_SCATTER_GATHER=1 \
+      PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1 \
+      PLUSS_CUDA_NATIVE_BITWISE=1 \
+      PLUSS_CUDA_NATIVE_BITWISE_STRICT=1 \
+      PLUSS_CUDA_NATIVE_COMPOSE=1 \
+      PLUSS_CUDA_NATIVE_COMPOSE_STRICT=1
+    run_gate gate27_cuda_native_strict_soak "[cuda][parity][native][soak]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_SELECTION=1 \
+      PLUSS_CUDA_NATIVE_SELECTION_STRICT=1 \
+      PLUSS_CUDA_NATIVE_LINALG=1 \
+      PLUSS_CUDA_NATIVE_LINALG_STRICT=1 \
+      PLUSS_CUDA_NATIVE_INDEXING=1 \
+      PLUSS_CUDA_NATIVE_INDEXING_STRICT=1 \
+      PLUSS_CUDA_NATIVE_MATMUL=1 \
+      PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 \
+      PLUSS_CUDA_NATIVE_SCATTER_GATHER=1 \
+      PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1 \
+      PLUSS_CUDA_NATIVE_BITWISE=1 \
+      PLUSS_CUDA_NATIVE_BITWISE_STRICT=1 \
+      PLUSS_CUDA_NATIVE_COMPOSE=1 \
+      PLUSS_CUDA_NATIVE_COMPOSE_STRICT=1
+    run_gate gate28_cuda_provider_inventory_stress "[cuda][providers][inventory][stress]"
+    run_gate gate29_cuda_native_lane_expansion "[cuda][parity][native][expanded]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_SELECTION=1 \
+      PLUSS_CUDA_NATIVE_SELECTION_STRICT=1 \
+      PLUSS_CUDA_NATIVE_INDEXING=1 \
+      PLUSS_CUDA_NATIVE_INDEXING_STRICT=1 \
+      PLUSS_CUDA_NATIVE_MATMUL=1 \
+      PLUSS_CUDA_NATIVE_MATMUL_STRICT=1 \
+      PLUSS_CUDA_NATIVE_SCATTER_GATHER=1 \
+      PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT=1 \
+      PLUSS_CUDA_NATIVE_BITWISE=1 \
+      PLUSS_CUDA_NATIVE_BITWISE_STRICT=1 \
+      PLUSS_CUDA_NATIVE_COMPOSE=1 \
+      PLUSS_CUDA_NATIVE_COMPOSE_STRICT=1
+    run_gate gate30_cuda_reduction_runtime "[cuda][reduction][runtime]"
+    run_gate gate31_cuda_reduction_bridge_and_policy "[cuda][bridge][reduction],[cuda][bridge][policy][reduction]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_REDUCTION=1 \
+      PLUSS_CUDA_NATIVE_REDUCTION_STRICT=1
+    run_gate gate32_cuda_elementwise_runtime "[cuda][elementwise][runtime]"
+    run_gate gate33_cuda_elementwise_bridge "[cuda][bridge][elementwise]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate34_cuda_elementwise_policy "[cuda][bridge][policy][elementwise]" \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_ELEMENTWISE=1 \
+      PLUSS_CUDA_NATIVE_ELEMENTWISE_STRICT=1
+    run_gate gate35_cuda_scan_runtime "[cuda][scan][runtime]"
+    run_gate gate36_cuda_scan_bridge "[cuda][bridge][scan]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate37_cuda_scan_policy "[cuda][bridge][policy][scan]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_SCAN=1 \
+      PLUSS_CUDA_NATIVE_SCAN_STRICT=1
+    run_gate gate38_cuda_activation_bridge_and_policy "[cuda][bridge][activation],[cuda][bridge][policy][activation]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_ELEMENTWISE=1 \
+      PLUSS_CUDA_NATIVE_ELEMENTWISE_STRICT=1 \
+      PLUSS_CUDA_NATIVE_REDUCTION=1 \
+      PLUSS_CUDA_NATIVE_REDUCTION_STRICT=1
+    run_gate gate39_cuda_masking_runtime "[cuda][masking][runtime]"
+    run_gate gate40_cuda_masking_bridge "[cuda][bridge][masking]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate41_cuda_masking_policy "[cuda][bridge][policy][masking]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_MASKING=1 \
+      PLUSS_CUDA_NATIVE_MASKING_STRICT=1
+    run_gate gate42_cuda_bitwise_runtime "[cuda][bitwise][runtime]"
+    run_gate gate43_cuda_bitwise_bridge "[cuda][bridge][bitwise]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate44_cuda_bitwise_policy "[cuda][bridge][policy][bitwise]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_BITWISE=1 \
+      PLUSS_CUDA_NATIVE_BITWISE_STRICT=1
+    run_gate gate45_cuda_compose_runtime "[cuda][compose][runtime]"
+    run_gate gate46_cuda_compose_bridge "[cuda][bridge][compose]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate47_cuda_compose_policy "[cuda][bridge][policy][compose]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_COMPOSE=1 \
+      PLUSS_CUDA_NATIVE_COMPOSE_STRICT=1
+    run_gate gate48_cuda_linalg_batched_runtime "[cuda][linalg][batched][runtime]"
+    run_gate gate49_cuda_linalg_batched_bridge "[cuda][bridge][linalg][batched]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate50_cuda_linalg_batched_policy "[cuda][bridge][policy][linalg][batched]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_LINALG=1 \
+      PLUSS_CUDA_NATIVE_LINALG_STRICT=1
+    run_gate gate51_cuda_linalg_expanded_runtime "[cuda][expanded][linalg][runtime]"
+    run_gate gate52_cuda_linalg_expanded_bridge "[bridge][cuda][expanded][linalg]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate53_cuda_linalg_expanded_policy "[bridge][cuda][expanded][linalg][policy]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_LINALG=1 \
+      PLUSS_CUDA_NATIVE_LINALG_STRICT=1
+    run_gate gate54_cuda_matmul_rank_runtime "[cuda][matmul][rank][runtime]"
+    run_gate gate55_cuda_matmul_rank_bridge "[cuda][bridge][matmul][rank]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate56_cuda_matmul_rank_policy "[cuda][bridge][policy][matmul][rank]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_MATMUL=1 \
+      PLUSS_CUDA_NATIVE_MATMUL_STRICT=1
     ;;
 esac
 

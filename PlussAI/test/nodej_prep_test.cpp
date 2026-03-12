@@ -35,6 +35,216 @@ bool approx(double a, double b, double tol = 1e-9) {
 bool run_nodej_prep_checks(std::ostream* err = nullptr) {
   {
     const Series x = pluss::make_series(std::vector<double>{
+                                            3.0, 4.0,
+                                            0.0, 0.0},
+                                        {2, 2},
+                                        f64());
+    const FeatureBatch batch{.x = x, .layout = ObservationLayout::Rows};
+    prep::VectorNormalizer normalizer(prep::VectorNormalizerOptions{
+        .norm = prep::VectorNorm::L2,
+    });
+    auto out_or = normalizer.learn_map(batch);
+    if (!out_or.ok()) {
+      if (err) *err << "VectorNormalizer learn_map should succeed\n";
+      return false;
+    }
+    const auto out = vec_f64(out_or.value());
+    if (!approx(out[0], 0.6, 1e-9) || !approx(out[1], 0.8, 1e-9) || !approx(out[2], 0.0, 1e-9) || !approx(out[3], 0.0, 1e-9)) {
+      if (err) *err << "VectorNormalizer should normalize each sample by configured norm\n";
+      return false;
+    }
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{
+                                            -2.0, 1.0,
+                                            4.0, -3.0},
+                                        {2, 2},
+                                        f64());
+    const FeatureBatch batch{.x = x, .layout = ObservationLayout::Rows};
+    prep::MaxAbsScaler scaler;
+    auto out_or = scaler.learn_map(batch);
+    if (!out_or.ok()) {
+      if (err) *err << "MaxAbsScaler learn_map should succeed\n";
+      return false;
+    }
+    const auto out = vec_f64(out_or.value());
+    if (!approx(out[0], -0.5, 1e-9) || !approx(out[1], 1.0 / 3.0, 1e-9) || !approx(out[2], 1.0, 1e-9)
+        || !approx(out[3], -1.0, 1e-9)) {
+      if (err) *err << "MaxAbsScaler should divide each feature by max absolute value\n";
+      return false;
+    }
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4, 1}, f64());
+    const FeatureBatch batch{.x = x, .layout = ObservationLayout::Rows};
+    prep::QuantileMap uniform(prep::QuantileMapOptions{
+        .output = prep::QuantileMapOutput::Uniform,
+        .clip = 1e-7,
+    });
+    auto uniform_or = uniform.learn_map(batch);
+    if (!uniform_or.ok()) {
+      if (err) *err << "QuantileMap(uniform) learn_map should succeed\n";
+      return false;
+    }
+    const auto u = vec_f64(uniform_or.value());
+    if (!(u[0] < u[1] && u[1] < u[2] && u[2] < u[3])) {
+      if (err) *err << "QuantileMap(uniform) should preserve rank order\n";
+      return false;
+    }
+
+    prep::QuantileMap gaussian(prep::QuantileMapOptions{
+        .output = prep::QuantileMapOutput::Gaussian,
+        .clip = 1e-4,
+    });
+    auto gauss_or = gaussian.learn_map(batch);
+    if (!gauss_or.ok()) {
+      if (err) *err << "QuantileMap(gaussian) learn_map should succeed\n";
+      return false;
+    }
+    const auto g = vec_f64(gauss_or.value());
+    if (!(std::isfinite(g[0]) && std::isfinite(g[1]) && std::isfinite(g[2]) && std::isfinite(g[3]) && g[0] < g[3])) {
+      if (err) *err << "QuantileMap(gaussian) should emit finite monotonic values\n";
+      return false;
+    }
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{
+                                            -2.0, 0.5,
+                                            -1.0, 1.5,
+                                            0.0, 2.5},
+                                        {3, 2},
+                                        f64());
+    const FeatureBatch batch{.x = x, .layout = ObservationLayout::Rows};
+    prep::PowerMap map(prep::PowerMapOptions{
+        .mode = prep::PowerMapMode::YeoJohnson,
+        .standardize = false,
+        .lambda = 1.0,
+    });
+    auto out_or = map.learn_map(batch);
+    if (!out_or.ok()) {
+      if (err) *err << "PowerMap learn_map should succeed\n";
+      return false;
+    }
+    const auto out = vec_f64(out_or.value());
+    const auto in = vec_f64(x);
+    if (out.size() != in.size()) {
+      if (err) *err << "PowerMap output size should match input\n";
+      return false;
+    }
+    for (std::size_t i = 0; i < out.size(); ++i) {
+      if (!approx(out[i], in[i], 1e-9)) {
+        if (err) *err << "PowerMap with lambda=1 and no standardization should be identity\n";
+        return false;
+      }
+    }
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{0.2, 0.7, 0.5, 1.2}, {4, 1}, f64());
+    const FeatureBatch batch{.x = x, .layout = ObservationLayout::Rows};
+    prep::ThresholdBinarizer bin(prep::ThresholdBinarizerOptions{
+        .threshold = 0.5,
+        .low_value = 0.0,
+        .high_value = 1.0,
+    });
+    auto out_or = bin.learn_map(batch);
+    if (!out_or.ok()) {
+      if (err) *err << "ThresholdBinarizer learn_map should succeed\n";
+      return false;
+    }
+    const auto out = vec_f64(out_or.value());
+    if (!approx(out[0], 0.0) || !approx(out[1], 1.0) || !approx(out[2], 0.0) || !approx(out[3], 1.0)) {
+      if (err) *err << "ThresholdBinarizer should map values by threshold\n";
+      return false;
+    }
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{
+                                            2.0, 3.0,
+                                            1.0, 4.0},
+                                        {2, 2},
+                                        f64());
+    const FeatureBatch batch{.x = x, .layout = ObservationLayout::Rows};
+    prep::PolynomialLift poly(prep::PolynomialLiftOptions{
+        .degree = 2,
+        .interactions_only = false,
+        .include_bias = true,
+    });
+    auto out_or = poly.learn_map(batch);
+    if (!out_or.ok()) {
+      if (err) *err << "PolynomialLift learn_map should succeed\n";
+      return false;
+    }
+    const auto sizes = out_or.value().sizes();
+    if (sizes.size() != 2 || sizes[0] != 2 || sizes[1] != 6) {
+      if (err) *err << "PolynomialLift degree-2 with bias should emit 6 features for 2 inputs\n";
+      return false;
+    }
+    const auto out = vec_f64(out_or.value());
+    if (!approx(out[0], 1.0) || !approx(out[1], 2.0) || !approx(out[2], 3.0) || !approx(out[3], 4.0)
+        || !approx(out[4], 6.0) || !approx(out[5], 9.0)) {
+      if (err) *err << "PolynomialLift first row should match expected polynomial expansion order\n";
+      return false;
+    }
+  }
+
+  {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const Series x = pluss::make_series(std::vector<double>{
+                                            1.0, nan,
+                                            2.0, 2.0,
+                                            3.0, 3.0},
+                                        {3, 2},
+                                        f64());
+    const FeatureBatch batch{.x = x, .layout = ObservationLayout::Rows};
+    prep::NeighborImputer imp(prep::NeighborImputerOptions{
+        .neighbors = 1,
+        .weighting = prep::NeighborImputerWeighting::Uniform,
+    });
+    auto out_or = imp.learn_map(batch);
+    if (!out_or.ok()) {
+      if (err) *err << "NeighborImputer learn_map should succeed\n";
+      return false;
+    }
+    const auto out = vec_f64(out_or.value());
+    if (!approx(out[1], 2.0, 1e-9)) {
+      if (err) *err << "NeighborImputer should impute from nearest observed neighbor\n";
+      return false;
+    }
+  }
+
+  {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const Series x = pluss::make_series(std::vector<double>{
+                                            1.0, 2.0,
+                                            2.0, 4.0,
+                                            3.0, nan,
+                                            4.0, 8.0},
+                                        {4, 2},
+                                        f64());
+    const FeatureBatch batch{.x = x, .layout = ObservationLayout::Rows};
+    prep::IterativeImputer imp(prep::IterativeImputerOptions{
+        .rounds = 6,
+        .ridge = 1e-8,
+    });
+    auto out_or = imp.learn_map(batch);
+    if (!out_or.ok()) {
+      if (err) *err << "IterativeImputer learn_map should succeed\n";
+      return false;
+    }
+    const auto out = vec_f64(out_or.value());
+    if (!std::isfinite(out[5]) || std::abs(out[5] - 6.0) > 0.8) {
+      if (err) *err << "IterativeImputer should recover linear missing-value trend\n";
+      return false;
+    }
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{
                                             1.0, 10.0,
                                             2.0, 20.0,
                                             3.0, 30.0,

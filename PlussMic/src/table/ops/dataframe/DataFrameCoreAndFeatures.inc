@@ -41,6 +41,80 @@ const std::vector<std::string>& DataFrame::column_names() const { return impl_re
 
 std::vector<Thread> DataFrame::columns() const { return impl_ref_().columns_; }
 std::vector<Thread> DataFrame::values() const { return columns(); }
+DataFrame::MatrixValues DataFrame::matrix() const {
+  DataFrame::MatrixValues out{};
+  auto& series_out = std::get<0>(out);
+  auto& note_out = std::get<1>(out);
+  auto& timeline_out = std::get<2>(out);
+  auto& timeindex_out = std::get<3>(out);
+
+  std::vector<pluss::Series> series_cols{};
+  std::vector<pluss::Note> note_cols{};
+  std::vector<pluss::Timeline> timeline_cols{};
+
+  for (const auto& thread : impl_ref_().columns_) {
+    switch (thread.kind()) {
+      case ThreadKind::Series:
+        series_cols.push_back(thread.as_series());
+        break;
+      case ThreadKind::Note:
+        note_cols.push_back(thread.as_note());
+        break;
+      case ThreadKind::Timeline:
+        timeline_cols.push_back(thread.as_timeline());
+        break;
+      case ThreadKind::TimeIndex:
+        timeindex_out.push_back(thread.as_timeindex());
+        break;
+    }
+  }
+
+  const std::int64_t rows = ncases();
+  if (!series_cols.empty()) {
+    pluss::Series packed = series_cols.front().reshape({rows, 1});
+    for (std::size_t i = 1; i < series_cols.size(); ++i) {
+      packed = packed.unite({series_cols[i].reshape({rows, 1})}, 1);
+    }
+    series_out.push_back(std::move(packed));
+  }
+
+  if (!note_cols.empty()) {
+    const std::int64_t cols = static_cast<std::int64_t>(note_cols.size());
+    const std::array<std::int64_t, 1> note_shape_1d{rows};
+    std::vector<std::vector<std::string_view>> note_vectors{};
+    note_vectors.reserve(note_cols.size());
+    for (const auto& col : note_cols) {
+      note_vectors.push_back(col.reshape(std::span<const std::int64_t>(note_shape_1d.data(), note_shape_1d.size())).vector());
+    }
+
+    std::vector<std::string_view> flat(static_cast<std::size_t>(rows * cols));
+    for (std::int64_t r = 0; r < rows; ++r) {
+      const std::size_t r_off = static_cast<std::size_t>(r * cols);
+      for (std::int64_t c = 0; c < cols; ++c) {
+        flat[r_off + static_cast<std::size_t>(c)] = note_vectors[static_cast<std::size_t>(c)][static_cast<std::size_t>(r)];
+      }
+    }
+    const std::array<std::int64_t, 2> shape{rows, cols};
+    note_out.push_back(pluss::coden::ops_internal::note_from_utf8(
+        std::span<const std::string_view>(flat.data(), flat.size()),
+        std::span<const std::int64_t>(shape.data(), shape.size())));
+  }
+
+  if (!timeline_cols.empty()) {
+    std::vector<pluss::Series> epoch_cols{};
+    epoch_cols.reserve(timeline_cols.size());
+    for (const auto& col : timeline_cols) {
+      epoch_cols.push_back(col.epoch_nanos().reshape({rows, 1}));
+    }
+    pluss::Series epoch_matrix = epoch_cols.front();
+    for (std::size_t i = 1; i < epoch_cols.size(); ++i) {
+      epoch_matrix = epoch_matrix.unite({epoch_cols[i]}, 1);
+    }
+    timeline_out.push_back(pluss::Timeline::fromSeries(epoch_matrix));
+  }
+
+  return out;
+}
 const std::vector<std::string>& DataFrame::feature_names() const { return column_names(); }
 std::vector<Thread> DataFrame::features() const { return columns(); }
 

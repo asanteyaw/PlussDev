@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /opt/homebrew/bin/cmake
+CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
 
 # The command to remove a file.
-RM = /opt/homebrew/bin/cmake -E rm -f
+RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -191,6 +191,48 @@ depend:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(CMAKE_COMMAND) -P /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CMakeFiles/VerifyGlobs.cmake
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/rule
+.PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/rule
+
+# Convenience name for target.
+plussai_bike_sharing_end_to_end: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/rule
+.PHONY : plussai_bike_sharing_end_to_end
+
+# fast build rule for target.
+plussai_bike_sharing_end_to_end/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/build
+.PHONY : plussai_bike_sharing_end_to_end/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/rule
+.PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/rule
+
+# Convenience name for target.
+plussai_nodej_end_to_end_hour_workflow_showcase: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/rule
+.PHONY : plussai_nodej_end_to_end_hour_workflow_showcase
+
+# fast build rule for target.
+plussai_nodej_end_to_end_hour_workflow_showcase/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/build
+.PHONY : plussai_nodej_end_to_end_hour_workflow_showcase/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/rule
+
+# Convenience name for target.
+plussai_nodej_workflow_tuning_demo: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/rule
+.PHONY : plussai_nodej_workflow_tuning_demo
+
+# fast build rule for target.
+plussai_nodej_workflow_tuning_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/build
+.PHONY : plussai_nodej_workflow_tuning_demo/fast
 
 # Convenience name for target.
 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_prep_split_demo.dir/rule:
@@ -263,6 +305,20 @@ plussai_nodej_flow_demo/fast:
 .PHONY : plussai_nodej_flow_demo/fast
 
 # Convenience name for target.
+PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/rule
+
+# Convenience name for target.
+plussai_nodej_flow_bundle_demo: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/rule
+.PHONY : plussai_nodej_flow_bundle_demo
+
+# fast build rule for target.
+plussai_nodej_flow_bundle_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/build
+.PHONY : plussai_nodej_flow_bundle_demo/fast
+
+# Convenience name for target.
 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/rule
 .PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_multiclass_demo.dir/rule
@@ -289,6 +345,44 @@ plussai_nodej_online_demo: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_
 plussai_nodej_online_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_online_demo.dir/build
 .PHONY : plussai_nodej_online_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/rule
+
+# Convenience name for target.
+plussai_nodej_unsupervised_demo: PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/rule
+.PHONY : plussai_nodej_unsupervised_demo
+
+# fast build rule for target.
+plussai_nodej_unsupervised_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/build
+.PHONY : plussai_nodej_unsupervised_demo/fast
+
+bike_sharing_end_to_end.o: bike_sharing_end_to_end.cpp.o
+.PHONY : bike_sharing_end_to_end.o
+
+# target to build an object file
+bike_sharing_end_to_end.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/bike_sharing_end_to_end.cpp.o
+.PHONY : bike_sharing_end_to_end.cpp.o
+
+bike_sharing_end_to_end.i: bike_sharing_end_to_end.cpp.i
+.PHONY : bike_sharing_end_to_end.i
+
+# target to preprocess a source file
+bike_sharing_end_to_end.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/bike_sharing_end_to_end.cpp.i
+.PHONY : bike_sharing_end_to_end.cpp.i
+
+bike_sharing_end_to_end.s: bike_sharing_end_to_end.cpp.s
+.PHONY : bike_sharing_end_to_end.s
+
+# target to generate assembly for a file
+bike_sharing_end_to_end.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_bike_sharing_end_to_end.dir/bike_sharing_end_to_end.cpp.s
+.PHONY : bike_sharing_end_to_end.cpp.s
 
 nodej_cv_tune_demo.o: nodej_cv_tune_demo.cpp.o
 .PHONY : nodej_cv_tune_demo.o
@@ -337,6 +431,54 @@ nodej_dataframe_bridge_demo.s: nodej_dataframe_bridge_demo.cpp.s
 nodej_dataframe_bridge_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_dataframe_bridge_demo.dir/nodej_dataframe_bridge_demo.cpp.s
 .PHONY : nodej_dataframe_bridge_demo.cpp.s
+
+nodej_end_to_end_hour_workflow_showcase.o: nodej_end_to_end_hour_workflow_showcase.cpp.o
+.PHONY : nodej_end_to_end_hour_workflow_showcase.o
+
+# target to build an object file
+nodej_end_to_end_hour_workflow_showcase.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/nodej_end_to_end_hour_workflow_showcase.cpp.o
+.PHONY : nodej_end_to_end_hour_workflow_showcase.cpp.o
+
+nodej_end_to_end_hour_workflow_showcase.i: nodej_end_to_end_hour_workflow_showcase.cpp.i
+.PHONY : nodej_end_to_end_hour_workflow_showcase.i
+
+# target to preprocess a source file
+nodej_end_to_end_hour_workflow_showcase.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/nodej_end_to_end_hour_workflow_showcase.cpp.i
+.PHONY : nodej_end_to_end_hour_workflow_showcase.cpp.i
+
+nodej_end_to_end_hour_workflow_showcase.s: nodej_end_to_end_hour_workflow_showcase.cpp.s
+.PHONY : nodej_end_to_end_hour_workflow_showcase.s
+
+# target to generate assembly for a file
+nodej_end_to_end_hour_workflow_showcase.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_end_to_end_hour_workflow_showcase.dir/nodej_end_to_end_hour_workflow_showcase.cpp.s
+.PHONY : nodej_end_to_end_hour_workflow_showcase.cpp.s
+
+nodej_flow_bundle_demo.o: nodej_flow_bundle_demo.cpp.o
+.PHONY : nodej_flow_bundle_demo.o
+
+# target to build an object file
+nodej_flow_bundle_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/nodej_flow_bundle_demo.cpp.o
+.PHONY : nodej_flow_bundle_demo.cpp.o
+
+nodej_flow_bundle_demo.i: nodej_flow_bundle_demo.cpp.i
+.PHONY : nodej_flow_bundle_demo.i
+
+# target to preprocess a source file
+nodej_flow_bundle_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/nodej_flow_bundle_demo.cpp.i
+.PHONY : nodej_flow_bundle_demo.cpp.i
+
+nodej_flow_bundle_demo.s: nodej_flow_bundle_demo.cpp.s
+.PHONY : nodej_flow_bundle_demo.s
+
+# target to generate assembly for a file
+nodej_flow_bundle_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_flow_bundle_demo.dir/nodej_flow_bundle_demo.cpp.s
+.PHONY : nodej_flow_bundle_demo.cpp.s
 
 nodej_flow_demo.o: nodej_flow_demo.cpp.o
 .PHONY : nodej_flow_demo.o
@@ -458,6 +600,54 @@ nodej_prep_split_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_prep_split_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_prep_split_demo.dir/nodej_prep_split_demo.cpp.s
 .PHONY : nodej_prep_split_demo.cpp.s
 
+nodej_unsupervised_demo.o: nodej_unsupervised_demo.cpp.o
+.PHONY : nodej_unsupervised_demo.o
+
+# target to build an object file
+nodej_unsupervised_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/nodej_unsupervised_demo.cpp.o
+.PHONY : nodej_unsupervised_demo.cpp.o
+
+nodej_unsupervised_demo.i: nodej_unsupervised_demo.cpp.i
+.PHONY : nodej_unsupervised_demo.i
+
+# target to preprocess a source file
+nodej_unsupervised_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/nodej_unsupervised_demo.cpp.i
+.PHONY : nodej_unsupervised_demo.cpp.i
+
+nodej_unsupervised_demo.s: nodej_unsupervised_demo.cpp.s
+.PHONY : nodej_unsupervised_demo.s
+
+# target to generate assembly for a file
+nodej_unsupervised_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_unsupervised_demo.dir/nodej_unsupervised_demo.cpp.s
+.PHONY : nodej_unsupervised_demo.cpp.s
+
+nodej_workflow_tuning_demo.o: nodej_workflow_tuning_demo.cpp.o
+.PHONY : nodej_workflow_tuning_demo.o
+
+# target to build an object file
+nodej_workflow_tuning_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/nodej_workflow_tuning_demo.cpp.o
+.PHONY : nodej_workflow_tuning_demo.cpp.o
+
+nodej_workflow_tuning_demo.i: nodej_workflow_tuning_demo.cpp.i
+.PHONY : nodej_workflow_tuning_demo.i
+
+# target to preprocess a source file
+nodej_workflow_tuning_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/nodej_workflow_tuning_demo.cpp.i
+.PHONY : nodej_workflow_tuning_demo.cpp.i
+
+nodej_workflow_tuning_demo.s: nodej_workflow_tuning_demo.cpp.s
+.PHONY : nodej_workflow_tuning_demo.s
+
+# target to generate assembly for a file
+nodej_workflow_tuning_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/build.make PlussAI/examples/NodeJ/core/CMakeFiles/plussai_nodej_workflow_tuning_demo.dir/nodej_workflow_tuning_demo.cpp.s
+.PHONY : nodej_workflow_tuning_demo.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -473,19 +663,33 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... plussai_bike_sharing_end_to_end"
 	@echo "... plussai_nodej_cv_tune_demo"
 	@echo "... plussai_nodej_dataframe_bridge_demo"
+	@echo "... plussai_nodej_end_to_end_hour_workflow_showcase"
+	@echo "... plussai_nodej_flow_bundle_demo"
 	@echo "... plussai_nodej_flow_demo"
 	@echo "... plussai_nodej_model_families_demo"
 	@echo "... plussai_nodej_multiclass_demo"
 	@echo "... plussai_nodej_online_demo"
 	@echo "... plussai_nodej_prep_split_demo"
+	@echo "... plussai_nodej_unsupervised_demo"
+	@echo "... plussai_nodej_workflow_tuning_demo"
+	@echo "... bike_sharing_end_to_end.o"
+	@echo "... bike_sharing_end_to_end.i"
+	@echo "... bike_sharing_end_to_end.s"
 	@echo "... nodej_cv_tune_demo.o"
 	@echo "... nodej_cv_tune_demo.i"
 	@echo "... nodej_cv_tune_demo.s"
 	@echo "... nodej_dataframe_bridge_demo.o"
 	@echo "... nodej_dataframe_bridge_demo.i"
 	@echo "... nodej_dataframe_bridge_demo.s"
+	@echo "... nodej_end_to_end_hour_workflow_showcase.o"
+	@echo "... nodej_end_to_end_hour_workflow_showcase.i"
+	@echo "... nodej_end_to_end_hour_workflow_showcase.s"
+	@echo "... nodej_flow_bundle_demo.o"
+	@echo "... nodej_flow_bundle_demo.i"
+	@echo "... nodej_flow_bundle_demo.s"
 	@echo "... nodej_flow_demo.o"
 	@echo "... nodej_flow_demo.i"
 	@echo "... nodej_flow_demo.s"
@@ -501,6 +705,12 @@ help:
 	@echo "... nodej_prep_split_demo.o"
 	@echo "... nodej_prep_split_demo.i"
 	@echo "... nodej_prep_split_demo.s"
+	@echo "... nodej_unsupervised_demo.o"
+	@echo "... nodej_unsupervised_demo.i"
+	@echo "... nodej_unsupervised_demo.s"
+	@echo "... nodej_workflow_tuning_demo.o"
+	@echo "... nodej_workflow_tuning_demo.i"
+	@echo "... nodej_workflow_tuning_demo.s"
 .PHONY : help
 
 

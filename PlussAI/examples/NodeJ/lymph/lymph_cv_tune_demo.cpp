@@ -17,7 +17,7 @@ Config f64() {
 }
 
 template <class T>
-bool require_ok(const pluss::ai::lymph::StatusOr<T>& out, const std::string& label) {
+bool require_ok(const pluss::ai::lymph::quick::StatusOr<T>& out, const std::string& label) {
   if (out.ok()) return true;
   std::cerr << label << " failed: " << out.status().message << "\n";
   return false;
@@ -144,7 +144,7 @@ int main() {
       MetricKind::RocAuc,
       MetricKind::LogLoss};
 
-  auto cv_or = pluss::ai::lymph::assess_cv(kernel_spec(), batch, split, train, assess);
+  auto cv_or = pluss::ai::lymph::quick::assess_cv(kernel_spec(), batch, split, train, assess);
   if (!require_ok(cv_or, "lymph::assess_cv(kernel)")) return 1;
   const auto mean = cv_or.value().mean_metrics.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
   std::cout << "kernel cv mean [acc, bal_acc, precision, recall, f1, roc_auc, logloss]:";
@@ -154,7 +154,7 @@ int main() {
   AssessOptions tune_assess{};
   tune_assess.metrics = {MetricKind::Accuracy};
   const std::vector<ModelSpec> candidates{linear_spec(), kernel_spec()};
-  auto sweep_or = pluss::ai::lymph::tune_sweep(candidates,
+  auto sweep_or = pluss::ai::lymph::quick::tune_sweep(candidates,
                                                 batch,
                                                 split,
                                                 train,
@@ -170,7 +170,7 @@ int main() {
     return StatusOr<ModelSpec>((trial_index % 2) == 0 ? linear_spec() : kernel_spec());
   };
 
-  auto probe_or = pluss::ai::lymph::tune_probe(sampler,
+  auto probe_or = pluss::ai::lymph::quick::tune_probe(sampler,
                                                 4,
                                                 batch,
                                                 split,
@@ -188,7 +188,7 @@ int main() {
   reg_assess.metrics = {MetricKind::QuantileLoss, MetricKind::Mse};
   reg_assess.regression_quantile = 0.8;
   const std::vector<ModelSpec> reg_candidates{linear_reg_spec(1e-9), linear_reg_spec(200.0)};
-  auto reg_sweep_or = pluss::ai::lymph::tune_sweep(reg_candidates,
+  auto reg_sweep_or = pluss::ai::lymph::quick::tune_sweep(reg_candidates,
                                                     reg_batch,
                                                     split,
                                                     TrainOptions{},

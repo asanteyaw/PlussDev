@@ -35,6 +35,7 @@ bool parse_bool_env_(const char* name, bool default_value) noexcept {
 
 bool supports_baseline_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
+    case ScalarType::Float64:
     case ScalarType::Float32:
     case ScalarType::Float16:
     case ScalarType::BFloat16:

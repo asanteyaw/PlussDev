@@ -251,6 +251,11 @@ If any gate is missing, parity score must not increase.
 - [x] Expand strict torch-family lane checks to include `topk` and `kthvalue`.
 - [x] Add strict native linalg no-bridge assertion in torch-family strict suite (`linearalg_dispatch_counters().mps_bridge_total == 0`).
 
+## Patch 151 Focus (current)
+- [x] Harden strict MPS gather/scatter policy so unsupported non-exact dtype/index lanes fail loudly (no implicit coercion under strict policy).
+- [x] Add strict high-rank indexing/scatter parity tests for safe dtype lanes (`float16`, `int16`, `bfloat16`) and policy rejection tests for unsupported `int64` data lanes.
+- [x] Extend MPS hardware-gate matrix with strict indexing/scatter lane gate (`[mps][parity][torch][strict][indexing][scatter]`).
+
 Next highest-impact aggressive family:
 - [x] Run final mega hardware gate sweep and lock report artifacts (`2026-03-11`, `outputs/mps_mega_gate_20260311_171843/`).
 - [x] Transition to CUDA tranche planning/execution (bootstrap contract tests + tranche blueprint + gate runner script).
@@ -323,6 +328,15 @@ Next highest-impact aggressive family:
 - [x] Add cluster hardware sweep automation script (`tools/run_codem_cuda_cluster_hardware.sh`) with compact upload-ready artifacts.
 - [x] Expand CUDA mega-gate matrix from `20` to `22` gates.
 
+## Patch 152 Focus (current)
+- [x] Harden strict native MPS selection to reject cast-assisted dtype lanes (`sort/topk/argsort/kthvalue`) instead of silently upcasting in strict policy mode.
+- [x] Broaden native MPS selection shape lane from last-dimension-only to any valid dimension for unstable sort-family routes.
+- [x] Add strict native Catch2 coverage for:
+  - non-last-dim selection parity (`[mps][parity][torch][strict][selection][shape]`),
+  - strict cast-assisted lane rejection (`[mps][parity][torch][strict][selection][policy]`),
+  - strict soak/perf lock stress loop (`[mps][parity][torch][strict][selection][soak][perf]`).
+- [x] Expand MPS mega-gate matrix with strict selection soak/perf gate (now `17` MPS gates total).
+
 ## Parity Workstreams
 1. Selection/Sorting family
 - [x] `sort` (values path) on MPS via safe fallback
@@ -330,7 +344,7 @@ Next highest-impact aggressive family:
 - [x] `topk` values-only API on MPS via safe fallback
 - [x] `kthvalue` values-only API on MPS via safe fallback
 - [x] Native MPSGraph route for `sort/argsort` on stable last-dimension lane
-- [x] Native `topk/kthvalue` MPSGraph route exists but remains opt-in (`PLUSS_MPS_NATIVE_TOPK_SELECTION=1`) pending stress hardening
+- [x] Native `topk/kthvalue` MPSGraph route is default-on (`PLUSS_MPS_NATIVE_TOPK_SELECTION=1`) with strict soak/perf lock coverage
 - [ ] Stable tie-order parity guarantees across all dtypes
 
 2. Indexing/Set family
@@ -342,13 +356,14 @@ Next highest-impact aggressive family:
 - [ ] Broader `index` multi-index parity on MPS
 
 3. Shape/Reduction completeness
-- [ ] Broaden native sort/topk coverage beyond current last-dimension stable lane and remove opt-in status for topk/kthvalue
+- [x] Broaden native sort/topk coverage beyond current last-dimension stable lane
 - [ ] Expand dtype support and promotion parity gates
 - [ ] Add out-parameter compatibility checks
 
 4. Performance maturity
 - [ ] Fuse repeated CPU fallback hops into batched bridge paths
 - [ ] Add cache-aware graph path for recurring selection/sorting shapes
+- [x] Add strict soak/perf lock stress gate for native MPS selection lane
 - [ ] Add p95/p99 latency regression gates for MPS in CI
 
 ## Heavy Linear Algebra Backend Plan

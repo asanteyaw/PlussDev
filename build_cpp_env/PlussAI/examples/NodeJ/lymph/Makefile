@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /opt/homebrew/bin/cmake
+CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
 
 # The command to remove a file.
-RM = /opt/homebrew/bin/cmake -E rm -f
+RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/opt/homebrew/bin/cmake -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -290,6 +290,34 @@ plussai_lymph_online_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_online_demo.dir/build
 .PHONY : plussai_lymph_online_demo/fast
 
+# Convenience name for target.
+PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/rule
+.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/rule
+
+# Convenience name for target.
+plussai_lymph_unsupervised_demo: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/rule
+.PHONY : plussai_lymph_unsupervised_demo
+
+# fast build rule for target.
+plussai_lymph_unsupervised_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build
+.PHONY : plussai_lymph_unsupervised_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/rule
+.PHONY : PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/rule
+
+# Convenience name for target.
+plussai_lymph_end_to_end_hour_workflow_showcase: PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/rule
+.PHONY : plussai_lymph_end_to_end_hour_workflow_showcase
+
+# fast build rule for target.
+plussai_lymph_end_to_end_hour_workflow_showcase/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/build
+.PHONY : plussai_lymph_end_to_end_hour_workflow_showcase/fast
+
 lymph_cv_tune_demo.o: lymph_cv_tune_demo.cpp.o
 .PHONY : lymph_cv_tune_demo.o
 
@@ -313,6 +341,30 @@ lymph_cv_tune_demo.s: lymph_cv_tune_demo.cpp.s
 lymph_cv_tune_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_cv_tune_demo.dir/lymph_cv_tune_demo.cpp.s
 .PHONY : lymph_cv_tune_demo.cpp.s
+
+lymph_end_to_end_hour_workflow_showcase.o: lymph_end_to_end_hour_workflow_showcase.cpp.o
+.PHONY : lymph_end_to_end_hour_workflow_showcase.o
+
+# target to build an object file
+lymph_end_to_end_hour_workflow_showcase.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/lymph_end_to_end_hour_workflow_showcase.cpp.o
+.PHONY : lymph_end_to_end_hour_workflow_showcase.cpp.o
+
+lymph_end_to_end_hour_workflow_showcase.i: lymph_end_to_end_hour_workflow_showcase.cpp.i
+.PHONY : lymph_end_to_end_hour_workflow_showcase.i
+
+# target to preprocess a source file
+lymph_end_to_end_hour_workflow_showcase.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/lymph_end_to_end_hour_workflow_showcase.cpp.i
+.PHONY : lymph_end_to_end_hour_workflow_showcase.cpp.i
+
+lymph_end_to_end_hour_workflow_showcase.s: lymph_end_to_end_hour_workflow_showcase.cpp.s
+.PHONY : lymph_end_to_end_hour_workflow_showcase.s
+
+# target to generate assembly for a file
+lymph_end_to_end_hour_workflow_showcase.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_end_to_end_hour_workflow_showcase.dir/lymph_end_to_end_hour_workflow_showcase.cpp.s
+.PHONY : lymph_end_to_end_hour_workflow_showcase.cpp.s
 
 lymph_flow_demo.o: lymph_flow_demo.cpp.o
 .PHONY : lymph_flow_demo.o
@@ -458,6 +510,30 @@ lymph_quick_regression_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_quick_regression_demo.dir/lymph_quick_regression_demo.cpp.s
 .PHONY : lymph_quick_regression_demo.cpp.s
 
+lymph_unsupervised_demo.o: lymph_unsupervised_demo.cpp.o
+.PHONY : lymph_unsupervised_demo.o
+
+# target to build an object file
+lymph_unsupervised_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/lymph_unsupervised_demo.cpp.o
+.PHONY : lymph_unsupervised_demo.cpp.o
+
+lymph_unsupervised_demo.i: lymph_unsupervised_demo.cpp.i
+.PHONY : lymph_unsupervised_demo.i
+
+# target to preprocess a source file
+lymph_unsupervised_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/lymph_unsupervised_demo.cpp.i
+.PHONY : lymph_unsupervised_demo.cpp.i
+
+lymph_unsupervised_demo.s: lymph_unsupervised_demo.cpp.s
+.PHONY : lymph_unsupervised_demo.s
+
+# target to generate assembly for a file
+lymph_unsupervised_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/build.make PlussAI/examples/NodeJ/lymph/CMakeFiles/plussai_lymph_unsupervised_demo.dir/lymph_unsupervised_demo.cpp.s
+.PHONY : lymph_unsupervised_demo.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -474,15 +550,20 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... plussai_lymph_cv_tune_demo"
+	@echo "... plussai_lymph_end_to_end_hour_workflow_showcase"
 	@echo "... plussai_lymph_flow_demo"
 	@echo "... plussai_lymph_multiclass_demo"
 	@echo "... plussai_lymph_online_demo"
 	@echo "... plussai_lymph_presets_demo"
 	@echo "... plussai_lymph_quick_classification_demo"
 	@echo "... plussai_lymph_quick_regression_demo"
+	@echo "... plussai_lymph_unsupervised_demo"
 	@echo "... lymph_cv_tune_demo.o"
 	@echo "... lymph_cv_tune_demo.i"
 	@echo "... lymph_cv_tune_demo.s"
+	@echo "... lymph_end_to_end_hour_workflow_showcase.o"
+	@echo "... lymph_end_to_end_hour_workflow_showcase.i"
+	@echo "... lymph_end_to_end_hour_workflow_showcase.s"
 	@echo "... lymph_flow_demo.o"
 	@echo "... lymph_flow_demo.i"
 	@echo "... lymph_flow_demo.s"
@@ -501,6 +582,9 @@ help:
 	@echo "... lymph_quick_regression_demo.o"
 	@echo "... lymph_quick_regression_demo.i"
 	@echo "... lymph_quick_regression_demo.s"
+	@echo "... lymph_unsupervised_demo.o"
+	@echo "... lymph_unsupervised_demo.i"
+	@echo "... lymph_unsupervised_demo.s"
 .PHONY : help
 
 

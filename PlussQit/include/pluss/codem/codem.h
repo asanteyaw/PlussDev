@@ -52,6 +52,61 @@ CODEM_API bool cuda_native_baseline_enabled() noexcept;
 CODEM_API bool cuda_supports_elementwise_baseline(ScalarType dtype) noexcept;
 CODEM_API bool cuda_supports_reduction_baseline(ScalarType dtype) noexcept;
 CODEM_API bool cuda_supports_matmul_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept;
+CODEM_API bool cuda_native_elementwise_enabled() noexcept;
+CODEM_API bool cuda_native_elementwise_strict() noexcept;
+CODEM_API bool cuda_supports_unary_elementwise_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_binary_elementwise_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept;
+CODEM_API bool cuda_supports_unary_elementwise(const Series& a) noexcept;
+CODEM_API bool cuda_supports_binary_elementwise(const Series& a, const Series& b) noexcept;
+CODEM_API bool cuda_supports_comparison_elementwise(const Series& a, const Series& b) noexcept;
+CODEM_API bool cuda_native_reduction_enabled() noexcept;
+CODEM_API bool cuda_native_reduction_strict() noexcept;
+CODEM_API bool cuda_supports_sum_reduction_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_prod_reduction_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_mean_reduction_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_ordered_extrema_reduction_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_logical_reduction_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_arg_extrema_reduction_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_sum_reduction(const Series& a) noexcept;
+CODEM_API bool cuda_supports_sum_reduction(const Series& a, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_prod_reduction(const Series& a) noexcept;
+CODEM_API bool cuda_supports_prod_reduction(const Series& a, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_mean_reduction(const Series& a) noexcept;
+CODEM_API bool cuda_supports_mean_reduction(const Series& a, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_ordered_extrema_reduction(const Series& a) noexcept;
+CODEM_API bool cuda_supports_ordered_extrema_reduction(const Series& a, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_logical_reduction(const Series& a) noexcept;
+CODEM_API bool cuda_supports_logical_reduction(const Series& a, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_arg_extrema_reduction(const Series& a) noexcept;
+CODEM_API bool cuda_supports_arg_extrema_reduction(const Series& a, std::int64_t dim) noexcept;
+CODEM_API bool cuda_native_scan_enabled() noexcept;
+CODEM_API bool cuda_native_scan_strict() noexcept;
+CODEM_API bool cuda_supports_cumsum_scan_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_cumprod_scan_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_cumsum_scan(const Series& a, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_cumprod_scan(const Series& a, std::int64_t dim) noexcept;
+CODEM_API bool cuda_native_masking_enabled() noexcept;
+CODEM_API bool cuda_native_masking_strict() noexcept;
+CODEM_API bool cuda_supports_masked_select_baseline(ScalarType value_dtype, ScalarType mask_dtype) noexcept;
+CODEM_API bool cuda_supports_masked_fill_baseline(ScalarType value_dtype, ScalarType mask_dtype) noexcept;
+CODEM_API bool cuda_supports_masked_scatter_baseline(
+    ScalarType value_dtype,
+    ScalarType mask_dtype,
+    ScalarType src_dtype) noexcept;
+CODEM_API bool cuda_supports_masked_select(const Series& value, const Series& mask) noexcept;
+CODEM_API bool cuda_supports_masked_fill(const Series& value, const Series& mask, const Series& fill_value) noexcept;
+CODEM_API bool cuda_supports_masked_scatter(const Series& value, const Series& mask, const Series& src) noexcept;
+CODEM_API bool cuda_native_bitwise_enabled() noexcept;
+CODEM_API bool cuda_native_bitwise_strict() noexcept;
+CODEM_API bool cuda_supports_bitwise_unary_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_bitwise_binary_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept;
+CODEM_API bool cuda_supports_bitwise_unary(const Series& a) noexcept;
+CODEM_API bool cuda_supports_bitwise_binary(const Series& a, const Series& b) noexcept;
+CODEM_API bool cuda_native_compose_enabled() noexcept;
+CODEM_API bool cuda_native_compose_strict() noexcept;
+CODEM_API bool cuda_supports_compose_baseline(ScalarType dtype) noexcept;
+CODEM_API bool cuda_supports_unite_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept;
+CODEM_API bool cuda_supports_pile_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept;
 CODEM_API bool cuda_native_selection_enabled() noexcept;
 CODEM_API bool cuda_native_selection_strict() noexcept;
 CODEM_API bool cuda_supports_sort_selection_baseline(ScalarType dtype, bool stable) noexcept;
@@ -400,6 +455,217 @@ inline bool supports_reduction_baseline(ScalarType dtype) noexcept {
 
 inline bool supports_matmul_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept {
   return codem::cuda_supports_matmul_baseline(lhs_dtype, rhs_dtype);
+}
+
+inline bool native_elementwise_enabled() noexcept {
+  return codem::cuda_native_elementwise_enabled();
+}
+
+inline bool native_elementwise_strict() noexcept {
+  return codem::cuda_native_elementwise_strict();
+}
+
+inline bool supports_unary_elementwise_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_unary_elementwise_baseline(dtype);
+}
+
+inline bool supports_binary_elementwise_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept {
+  return codem::cuda_supports_binary_elementwise_baseline(lhs_dtype, rhs_dtype);
+}
+
+inline bool supports_unary_elementwise(const Series& a) noexcept {
+  return codem::cuda_supports_unary_elementwise(a);
+}
+
+inline bool supports_binary_elementwise(const Series& a, const Series& b) noexcept {
+  return codem::cuda_supports_binary_elementwise(a, b);
+}
+
+inline bool supports_comparison_elementwise(const Series& a, const Series& b) noexcept {
+  return codem::cuda_supports_comparison_elementwise(a, b);
+}
+
+inline bool native_reduction_enabled() noexcept {
+  return codem::cuda_native_reduction_enabled();
+}
+
+inline bool native_reduction_strict() noexcept {
+  return codem::cuda_native_reduction_strict();
+}
+
+inline bool supports_sum_reduction_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_sum_reduction_baseline(dtype);
+}
+
+inline bool supports_prod_reduction_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_prod_reduction_baseline(dtype);
+}
+
+inline bool supports_mean_reduction_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_mean_reduction_baseline(dtype);
+}
+
+inline bool supports_ordered_extrema_reduction_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_ordered_extrema_reduction_baseline(dtype);
+}
+
+inline bool supports_logical_reduction_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_logical_reduction_baseline(dtype);
+}
+
+inline bool supports_arg_extrema_reduction_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_arg_extrema_reduction_baseline(dtype);
+}
+
+inline bool supports_sum_reduction(const Series& a) noexcept {
+  return codem::cuda_supports_sum_reduction(a);
+}
+
+inline bool supports_sum_reduction(const Series& a, std::int64_t dim) noexcept {
+  return codem::cuda_supports_sum_reduction(a, dim);
+}
+
+inline bool supports_prod_reduction(const Series& a) noexcept {
+  return codem::cuda_supports_prod_reduction(a);
+}
+
+inline bool supports_prod_reduction(const Series& a, std::int64_t dim) noexcept {
+  return codem::cuda_supports_prod_reduction(a, dim);
+}
+
+inline bool supports_mean_reduction(const Series& a) noexcept {
+  return codem::cuda_supports_mean_reduction(a);
+}
+
+inline bool supports_mean_reduction(const Series& a, std::int64_t dim) noexcept {
+  return codem::cuda_supports_mean_reduction(a, dim);
+}
+
+inline bool supports_ordered_extrema_reduction(const Series& a) noexcept {
+  return codem::cuda_supports_ordered_extrema_reduction(a);
+}
+
+inline bool supports_ordered_extrema_reduction(const Series& a, std::int64_t dim) noexcept {
+  return codem::cuda_supports_ordered_extrema_reduction(a, dim);
+}
+
+inline bool supports_logical_reduction(const Series& a) noexcept {
+  return codem::cuda_supports_logical_reduction(a);
+}
+
+inline bool supports_logical_reduction(const Series& a, std::int64_t dim) noexcept {
+  return codem::cuda_supports_logical_reduction(a, dim);
+}
+
+inline bool supports_arg_extrema_reduction(const Series& a) noexcept {
+  return codem::cuda_supports_arg_extrema_reduction(a);
+}
+
+inline bool supports_arg_extrema_reduction(const Series& a, std::int64_t dim) noexcept {
+  return codem::cuda_supports_arg_extrema_reduction(a, dim);
+}
+
+inline bool native_scan_enabled() noexcept {
+  return codem::cuda_native_scan_enabled();
+}
+
+inline bool native_scan_strict() noexcept {
+  return codem::cuda_native_scan_strict();
+}
+
+inline bool supports_cumsum_scan_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_cumsum_scan_baseline(dtype);
+}
+
+inline bool supports_cumprod_scan_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_cumprod_scan_baseline(dtype);
+}
+
+inline bool supports_cumsum_scan(const Series& a, std::int64_t dim) noexcept {
+  return codem::cuda_supports_cumsum_scan(a, dim);
+}
+
+inline bool supports_cumprod_scan(const Series& a, std::int64_t dim) noexcept {
+  return codem::cuda_supports_cumprod_scan(a, dim);
+}
+
+inline bool native_masking_enabled() noexcept {
+  return codem::cuda_native_masking_enabled();
+}
+
+inline bool native_masking_strict() noexcept {
+  return codem::cuda_native_masking_strict();
+}
+
+inline bool supports_masked_select_baseline(ScalarType value_dtype, ScalarType mask_dtype) noexcept {
+  return codem::cuda_supports_masked_select_baseline(value_dtype, mask_dtype);
+}
+
+inline bool supports_masked_fill_baseline(ScalarType value_dtype, ScalarType mask_dtype) noexcept {
+  return codem::cuda_supports_masked_fill_baseline(value_dtype, mask_dtype);
+}
+
+inline bool supports_masked_scatter_baseline(
+    ScalarType value_dtype,
+    ScalarType mask_dtype,
+    ScalarType src_dtype) noexcept {
+  return codem::cuda_supports_masked_scatter_baseline(value_dtype, mask_dtype, src_dtype);
+}
+
+inline bool supports_masked_select(const Series& value, const Series& mask) noexcept {
+  return codem::cuda_supports_masked_select(value, mask);
+}
+
+inline bool supports_masked_fill(const Series& value, const Series& mask, const Series& fill_value) noexcept {
+  return codem::cuda_supports_masked_fill(value, mask, fill_value);
+}
+
+inline bool supports_masked_scatter(const Series& value, const Series& mask, const Series& src) noexcept {
+  return codem::cuda_supports_masked_scatter(value, mask, src);
+}
+
+inline bool native_bitwise_enabled() noexcept {
+  return codem::cuda_native_bitwise_enabled();
+}
+
+inline bool native_bitwise_strict() noexcept {
+  return codem::cuda_native_bitwise_strict();
+}
+
+inline bool supports_bitwise_unary_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_bitwise_unary_baseline(dtype);
+}
+
+inline bool supports_bitwise_binary_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept {
+  return codem::cuda_supports_bitwise_binary_baseline(lhs_dtype, rhs_dtype);
+}
+
+inline bool supports_bitwise_unary(const Series& a) noexcept {
+  return codem::cuda_supports_bitwise_unary(a);
+}
+
+inline bool supports_bitwise_binary(const Series& a, const Series& b) noexcept {
+  return codem::cuda_supports_bitwise_binary(a, b);
+}
+
+inline bool native_compose_enabled() noexcept {
+  return codem::cuda_native_compose_enabled();
+}
+
+inline bool native_compose_strict() noexcept {
+  return codem::cuda_native_compose_strict();
+}
+
+inline bool supports_compose_baseline(ScalarType dtype) noexcept {
+  return codem::cuda_supports_compose_baseline(dtype);
+}
+
+inline bool supports_unite_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept {
+  return codem::cuda_supports_unite_compose(self, others, dim);
+}
+
+inline bool supports_pile_compose(const Series& self, const std::vector<Series>& others, std::int64_t dim) noexcept {
+  return codem::cuda_supports_pile_compose(self, others, dim);
 }
 
 inline bool native_selection_enabled() noexcept {

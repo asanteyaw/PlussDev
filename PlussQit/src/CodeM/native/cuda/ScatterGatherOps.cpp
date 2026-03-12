@@ -37,6 +37,16 @@ bool parse_bool_env_(const char* name, bool default_value) noexcept {
 
 bool supports_value_dtype_(ScalarType dtype) noexcept {
   switch (dtype) {
+    case ScalarType::Bool:
+    case ScalarType::UInt8:
+    case ScalarType::UInt16:
+    case ScalarType::UInt32:
+    case ScalarType::UInt64:
+    case ScalarType::Int8:
+    case ScalarType::Int16:
+    case ScalarType::Int32:
+    case ScalarType::Int64:
+    case ScalarType::Float64:
     case ScalarType::Float32:
     case ScalarType::Float16:
     case ScalarType::BFloat16:
@@ -64,16 +74,18 @@ std::int64_t normalize_dim_(std::int64_t dim, std::int64_t rank) noexcept {
   return dim < 0 ? dim + rank : dim;
 }
 
-bool contiguous_cuda_(const Series& s) noexcept {
-  return s.platform() == Platform::CUDA && s.is_contiguous();
+bool cuda_series_(const Series& s) noexcept {
+  return s.platform() == Platform::CUDA;
 }
 
-bool same_shape_(const Series& a, const Series& b) noexcept {
-  if (a.dim() != b.dim()) {
+bool src_broadcastable_to_index_(const Series& index, const Series& src) noexcept {
+  if (index.dim() != src.dim()) {
     return false;
   }
-  for (std::size_t i = 0; i < a.sizes().size(); ++i) {
-    if (a.sizes()[i] != b.sizes()[i]) {
+  for (std::size_t i = 0; i < index.sizes().size(); ++i) {
+    const auto idx = index.sizes()[i];
+    const auto ss = src.sizes()[i];
+    if (ss != idx && ss != 1) {
       return false;
     }
   }
@@ -128,13 +140,13 @@ bool supports_scatter(const Series& self, std::int64_t dim, const Series& index,
   if (!supports_scatter_baseline(self.scalar_type(), index.scalar_type(), src.scalar_type())) {
     return false;
   }
-  if (!contiguous_cuda_(self) || !contiguous_cuda_(index) || !contiguous_cuda_(src)) {
+  if (!cuda_series_(self) || !cuda_series_(index) || !cuda_series_(src)) {
     return false;
   }
   if (!axis_bounds_valid_(self, dim)) {
     return false;
   }
-  return same_shape_(index, src);
+  return src_broadcastable_to_index_(index, src);
 }
 
 bool supports_scatter_add(const Series& self, std::int64_t dim, const Series& index, const Series& src) noexcept {
@@ -157,7 +169,7 @@ bool supports_gather(const Series& input, std::int64_t dim, const Series& index)
   if (!supports_gather_baseline(input.scalar_type(), index.scalar_type())) {
     return false;
   }
-  if (!contiguous_cuda_(input) || !contiguous_cuda_(index)) {
+  if (!cuda_series_(input) || !cuda_series_(index)) {
     return false;
   }
   if (!axis_bounds_valid_(input, dim)) {

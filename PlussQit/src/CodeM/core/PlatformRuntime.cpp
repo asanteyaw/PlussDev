@@ -2,6 +2,12 @@
 #include "CodeM/native/mps/MPSRuntime.h"
 #include "CodeM/native/cuda/CUDARuntime.h"
 #include "CodeM/native/cuda/BaselineOps.h"
+#include "CodeM/native/cuda/ElementwiseOps.h"
+#include "CodeM/native/cuda/ReductionOps.h"
+#include "CodeM/native/cuda/ScanOps.h"
+#include "CodeM/native/cuda/MaskingOps.h"
+#include "CodeM/native/cuda/BitwiseOps.h"
+#include "CodeM/native/cuda/ComposeOps.h"
 #include "CodeM/native/cuda/SelectionOps.h"
 #include "CodeM/native/cuda/LinalgOps.h"
 #include "CodeM/native/cuda/IndexingOps.h"
@@ -110,6 +116,223 @@ bool cuda_supports_reduction_baseline(ScalarType dtype) noexcept {
 
 bool cuda_supports_matmul_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept {
   return native::cuda::supports_matmul_lane(lhs_dtype, rhs_dtype);
+}
+
+bool cuda_native_elementwise_enabled() noexcept {
+  return native::cuda::native_elementwise_enabled();
+}
+
+bool cuda_native_elementwise_strict() noexcept {
+  return native::cuda::native_elementwise_strict();
+}
+
+bool cuda_supports_unary_elementwise_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_unary_elementwise_baseline(dtype);
+}
+
+bool cuda_supports_binary_elementwise_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept {
+  return native::cuda::supports_binary_elementwise_baseline(lhs_dtype, rhs_dtype);
+}
+
+bool cuda_supports_unary_elementwise(const Series& a) noexcept {
+  return native::cuda::supports_unary_elementwise(a);
+}
+
+bool cuda_supports_binary_elementwise(const Series& a, const Series& b) noexcept {
+  return native::cuda::supports_binary_elementwise(a, b);
+}
+
+bool cuda_supports_comparison_elementwise(const Series& a, const Series& b) noexcept {
+  return native::cuda::supports_comparison_elementwise(a, b);
+}
+
+bool cuda_native_reduction_enabled() noexcept {
+  return native::cuda::native_reduction_enabled();
+}
+
+bool cuda_native_reduction_strict() noexcept {
+  return native::cuda::native_reduction_strict();
+}
+
+bool cuda_supports_sum_reduction_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_sum_reduction_baseline(dtype);
+}
+
+bool cuda_supports_prod_reduction_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_prod_reduction_baseline(dtype);
+}
+
+bool cuda_supports_mean_reduction_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_mean_reduction_baseline(dtype);
+}
+
+bool cuda_supports_ordered_extrema_reduction_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_ordered_extrema_reduction_baseline(dtype);
+}
+
+bool cuda_supports_logical_reduction_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_logical_reduction_baseline(dtype);
+}
+
+bool cuda_supports_arg_extrema_reduction_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_arg_extrema_reduction_baseline(dtype);
+}
+
+bool cuda_supports_sum_reduction(const Series& a) noexcept {
+  return native::cuda::supports_sum_reduction(a);
+}
+
+bool cuda_supports_sum_reduction(const Series& a, std::int64_t dim) noexcept {
+  return native::cuda::supports_sum_reduction(a, dim);
+}
+
+bool cuda_supports_prod_reduction(const Series& a) noexcept {
+  return native::cuda::supports_prod_reduction(a);
+}
+
+bool cuda_supports_prod_reduction(const Series& a, std::int64_t dim) noexcept {
+  return native::cuda::supports_prod_reduction(a, dim);
+}
+
+bool cuda_supports_mean_reduction(const Series& a) noexcept {
+  return native::cuda::supports_mean_reduction(a);
+}
+
+bool cuda_supports_mean_reduction(const Series& a, std::int64_t dim) noexcept {
+  return native::cuda::supports_mean_reduction(a, dim);
+}
+
+bool cuda_supports_ordered_extrema_reduction(const Series& a) noexcept {
+  return native::cuda::supports_ordered_extrema_reduction(a);
+}
+
+bool cuda_supports_ordered_extrema_reduction(const Series& a, std::int64_t dim) noexcept {
+  return native::cuda::supports_ordered_extrema_reduction(a, dim);
+}
+
+bool cuda_supports_logical_reduction(const Series& a) noexcept {
+  return native::cuda::supports_logical_reduction(a);
+}
+
+bool cuda_supports_logical_reduction(const Series& a, std::int64_t dim) noexcept {
+  return native::cuda::supports_logical_reduction(a, dim);
+}
+
+bool cuda_supports_arg_extrema_reduction(const Series& a) noexcept {
+  return native::cuda::supports_arg_extrema_reduction(a);
+}
+
+bool cuda_supports_arg_extrema_reduction(const Series& a, std::int64_t dim) noexcept {
+  return native::cuda::supports_arg_extrema_reduction(a, dim);
+}
+
+bool cuda_native_scan_enabled() noexcept {
+  return native::cuda::native_scan_enabled();
+}
+
+bool cuda_native_scan_strict() noexcept {
+  return native::cuda::native_scan_strict();
+}
+
+bool cuda_supports_cumsum_scan_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_cumsum_scan_baseline(dtype);
+}
+
+bool cuda_supports_cumprod_scan_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_cumprod_scan_baseline(dtype);
+}
+
+bool cuda_supports_cumsum_scan(const Series& a, std::int64_t dim) noexcept {
+  return native::cuda::supports_cumsum_scan(a, dim);
+}
+
+bool cuda_supports_cumprod_scan(const Series& a, std::int64_t dim) noexcept {
+  return native::cuda::supports_cumprod_scan(a, dim);
+}
+
+bool cuda_native_masking_enabled() noexcept {
+  return native::cuda::native_masking_enabled();
+}
+
+bool cuda_native_masking_strict() noexcept {
+  return native::cuda::native_masking_strict();
+}
+
+bool cuda_supports_masked_select_baseline(ScalarType value_dtype, ScalarType mask_dtype) noexcept {
+  return native::cuda::supports_masked_select_baseline(value_dtype, mask_dtype);
+}
+
+bool cuda_supports_masked_fill_baseline(ScalarType value_dtype, ScalarType mask_dtype) noexcept {
+  return native::cuda::supports_masked_fill_baseline(value_dtype, mask_dtype);
+}
+
+bool cuda_supports_masked_scatter_baseline(
+    ScalarType value_dtype,
+    ScalarType mask_dtype,
+    ScalarType src_dtype) noexcept {
+  return native::cuda::supports_masked_scatter_baseline(value_dtype, mask_dtype, src_dtype);
+}
+
+bool cuda_supports_masked_select(const Series& value, const Series& mask) noexcept {
+  return native::cuda::supports_masked_select(value, mask);
+}
+
+bool cuda_supports_masked_fill(const Series& value, const Series& mask, const Series& fill_value) noexcept {
+  return native::cuda::supports_masked_fill(value, mask, fill_value);
+}
+
+bool cuda_supports_masked_scatter(const Series& value, const Series& mask, const Series& src) noexcept {
+  return native::cuda::supports_masked_scatter(value, mask, src);
+}
+
+bool cuda_native_bitwise_enabled() noexcept {
+  return native::cuda::native_bitwise_enabled();
+}
+
+bool cuda_native_bitwise_strict() noexcept {
+  return native::cuda::native_bitwise_strict();
+}
+
+bool cuda_supports_bitwise_unary_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_bitwise_unary_baseline(dtype);
+}
+
+bool cuda_supports_bitwise_binary_baseline(ScalarType lhs_dtype, ScalarType rhs_dtype) noexcept {
+  return native::cuda::supports_bitwise_binary_baseline(lhs_dtype, rhs_dtype);
+}
+
+bool cuda_supports_bitwise_unary(const Series& a) noexcept {
+  return native::cuda::supports_bitwise_unary(a);
+}
+
+bool cuda_supports_bitwise_binary(const Series& a, const Series& b) noexcept {
+  return native::cuda::supports_bitwise_binary(a, b);
+}
+
+bool cuda_native_compose_enabled() noexcept {
+  return native::cuda::native_compose_enabled();
+}
+
+bool cuda_native_compose_strict() noexcept {
+  return native::cuda::native_compose_strict();
+}
+
+bool cuda_supports_compose_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_compose_baseline(dtype);
+}
+
+bool cuda_supports_unite_compose(
+    const Series& self,
+    const std::vector<Series>& others,
+    std::int64_t dim) noexcept {
+  return native::cuda::supports_unite_compose(self, others, dim);
+}
+
+bool cuda_supports_pile_compose(
+    const Series& self,
+    const std::vector<Series>& others,
+    std::int64_t dim) noexcept {
+  return native::cuda::supports_pile_compose(self, others, dim);
 }
 
 bool cuda_native_selection_enabled() noexcept {

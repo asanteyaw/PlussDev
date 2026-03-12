@@ -17,7 +17,7 @@ Config f64() {
 }
 
 template <class T>
-bool require_ok(const pluss::ai::lymph::StatusOr<T>& out, const std::string& label) {
+bool require_ok(const pluss::ai::lymph::quick::StatusOr<T>& out, const std::string& label) {
   if (out.ok()) return true;
   std::cerr << label << " failed: " << out.status().message << "\n";
   return false;
@@ -44,7 +44,7 @@ int main() {
         .y = y,
     };
 
-    auto flow_or = pluss::ai::lymph::linear_classifier_flow(train, 1e-6, true, false);
+    auto flow_or = pluss::ai::lymph::quick::linear_classifier_flow(train, 1e-6, true, false);
     if (!require_ok(flow_or, "lymph::linear_classifier_flow")) return 1;
 
     auto metric_or = flow_or.value().assess(train, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::LogLoss}});
@@ -72,7 +72,7 @@ int main() {
         .y = y,
     };
 
-    auto flow_or = pluss::ai::lymph::ridge_regressor_flow(train, 1e-8, true, true);
+    auto flow_or = pluss::ai::lymph::quick::ridge_regressor_flow(train, 1e-8, true, true);
     if (!require_ok(flow_or, "lymph::ridge_regressor_flow")) return 1;
 
     auto metric_or = flow_or.value().assess(train, AssessOptions{.metrics = {MetricKind::Mse, MetricKind::R2}});

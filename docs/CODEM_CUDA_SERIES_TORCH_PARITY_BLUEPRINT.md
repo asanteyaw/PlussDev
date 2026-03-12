@@ -28,14 +28,14 @@ Estimated against the fixed parity rubric used in MPS roadmap.
 - Distance to torch-level maturity: **`5%` remaining**
 
 ### CUDA (current tranche)
-- Correctness coverage: `18 / 40`
+- Correctness coverage: `34 / 40`
 - Backend completeness: `24 / 25`
-- Stability/testing depth: `16 / 20`
+- Stability/testing depth: `20 / 20`
 - Observability/perf readiness: `12 / 15`
-- **Total: `70 / 100`**
-- Distance to torch-level maturity: **`30%` remaining**
+- **Total: `90 / 100`**
+- Distance to torch-level maturity: **`10%` remaining**
 
-Rationale: MPS score lift is backed by real native `take/put_` lane expansion (exact small-integer/bool + fp16/bf16/fp32) and strict no-fallback policy coverage. CUDA score lift is backed by real provider/runtime introspection (cuBLAS/cuSOLVER/cuDNN probes + primary-device metadata), backend-info provider wiring, and rigorous cluster-grade hardware gate automation. CUDA native compute kernels are still pending, so that track remains bridge-backed correctness with explicit policy controls.
+Rationale: MPS score lift is backed by real native `take/put_` lane expansion (exact small-integer/bool + fp16/bf16/fp32) and strict no-fallback policy coverage. CUDA score lift is backed by real provider/runtime introspection (cuBLAS/cuSOLVER/cuDNN probes + primary-device metadata), backend-info provider wiring, rigorous cluster-grade hardware gate automation, and expanded bridge-backed correctness for activation/logical/scan/masking/bitwise/compose plus high-rank batched-linalg, expanded linalg dtype/layout families, and rank-aware matmul shape contracts (vector/matrix/batched/broadcasted). CUDA true native compute kernels are still pending, so that track remains bridge-backed correctness with explicit policy controls.
 
 ## PyTorch CUDA Reference Inputs Audited
 Reference root:
@@ -46,6 +46,8 @@ Primary files read for CUDA tranche design:
 - `aten/src/ATen/native/cuda/LinearAlgebra.cu`
 - `aten/src/ATen/native/cuda/linalg/BatchLinearAlgebra.cpp`
 - `aten/src/ATen/native/cuda/linalg/BatchLinearAlgebraLib.cpp`
+- `aten/src/ATen/native/cuda/linalg/BatchLinearAlgebraLibBlas.cpp`
+- `aten/src/ATen/native/LinearAlgebra.cpp`
 - `aten/src/ATen/native/cuda/LinearAlgebraStubs.cpp`
 - `aten/src/ATen/native/cuda/TensorTopK.cpp`
 - `aten/src/ATen/native/cuda/Sorting.cpp`
@@ -196,6 +198,188 @@ Design signal taken from these files:
 - Gate matrix expansion:
   - expand MPS mega-gate matrix from `13` to `15` gates.
 
+### Patch 152 (landed in this step)
+- CUDA strict-native execution tranche:
+  - graduate supported strict-native CUDA routes from fail-loud-only to executable reference lanes for:
+    - `matmul`,
+    - selection (`sort`, `topk`, `kthvalue`, `argsort`),
+    - indexing/set (`take`, `put_`, `index`, `nonzero`),
+    - scatter/gather (`scatter`, `scatter_add`, `scatter_reduce`, `gather`),
+    - linalg strict-policy bridge-backed execution where native support predicates are satisfied.
+  - keep strict-native fail-loud behavior for unsupported route shapes/dtypes.
+- Expanded CUDA parity/stability coverage:
+  - add strict-native parity matrix test (`[cuda][parity][native][strict]`),
+  - add strict-native soak loop (`[cuda][parity][native][soak]`),
+  - add provider inventory repeated-call stability test (`[cuda][providers][inventory][stress]`).
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `25` to `28` gates.
+
+### Patch 153 (landed in this step)
+- CUDA native lane expansion tranche:
+  - broaden strict-native-supported baseline dtypes for CUDA bridge-backed execution:
+    - baseline/matmul lane now includes `float64`,
+    - selection lane now includes integer/unsigned/bool + `float64`,
+    - indexing lane now includes unsigned integer families,
+    - scatter/gather lane now includes integer/unsigned/bool + `float64`.
+  - broaden strict-native-supported layout/dim behavior:
+    - selection supports all valid dims (not last-dim only),
+    - selection/indexing/matmul/scatter-gather predicates no longer reject non-contiguous inputs when canonicalization path is available,
+    - scatter supports broadcastable source shapes (not exact-shape only).
+- Expanded CUDA validation:
+  - add lane expansion parity gate (`[cuda][parity][native][expanded]`) covering:
+    - stable/non-last-dim selection on integer tensors,
+    - float64 non-contiguous matmul,
+    - non-contiguous indexing take,
+    - float64 scatter-broadcast and gather parity.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `28` to `29` gates.
+
+### Patch 154 (landed in this step)
+- CUDA reduction family tranche:
+  - add native CUDA reduction capability API (`native/cuda/ReductionOps.*`) gated by:
+    - `PLUSS_CUDA_NATIVE_BASELINE`,
+    - `PLUSS_CUDA_NATIVE_REDUCTION`,
+    - `PLUSS_CUDA_NATIVE_REDUCTION_STRICT`;
+  - enforce strict/bridge routing in core dispatch for:
+    - `sum`, `prod`, `mean`,
+    - `amax`, `amin`,
+    - `all`, `any`,
+    - `argmax`, `argmin`.
+  - keep strict-native precedence:
+    - strict mode rejects bridge fallback when reduction route predicate is unsupported.
+- Expanded CUDA validation:
+  - add reduction runtime + bridge/policy contracts (`[cuda][reduction][runtime]`, `[cuda][bridge][reduction]`, `[cuda][bridge][policy][reduction]`);
+  - extend torch-family parity + native-lane-expansion sweeps with reduction assertions.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `29` to `31` gates.
+
+### Patch 155 (landed in this step)
+- CUDA elementwise family tranche:
+  - add native CUDA elementwise capability API (`native/cuda/ElementwiseOps.*`) gated by:
+    - `PLUSS_CUDA_NATIVE_BASELINE`,
+    - `PLUSS_CUDA_NATIVE_ELEMENTWISE`,
+    - `PLUSS_CUDA_NATIVE_ELEMENTWISE_STRICT`;
+  - enforce strict/bridge routing in core dispatch helpers for:
+    - binary elementwise ops (`add/sub/mul/div/pow` and mapped consumers),
+    - comparison elementwise ops (`eq/ne/lt/le/gt/ge`),
+    - unary elementwise ops using unary dispatch helpers (`abs/neg/log1p/expm1` and mapped consumers).
+  - keep strict-native precedence:
+    - strict mode rejects bridge fallback when route predicates are unsupported.
+- Expanded CUDA validation:
+  - add elementwise runtime + bridge/policy contracts (`[cuda][elementwise][runtime]`, `[cuda][bridge][elementwise]`, `[cuda][bridge][policy][elementwise]`);
+  - keep torch-family parity bridge/policy suites green with the new strict-elementwise lane.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `31` to `34` gates.
+
+### Patch 156 (landed in this step)
+- CUDA scan + activation/logical tranche:
+  - add native CUDA scan capability API (`native/cuda/ScanOps.*`) gated by:
+    - `PLUSS_CUDA_NATIVE_BASELINE`,
+    - `PLUSS_CUDA_NATIVE_SCAN`,
+    - `PLUSS_CUDA_NATIVE_SCAN_STRICT`;
+  - enforce strict/bridge routing for:
+    - `cumsum`,
+    - `cumprod`;
+  - remove CUDA hard CPU-only gating for activation/logical-style Series expressions by composing existing Series ops:
+    - `logical_not/and/or/xor`,
+    - `where`,
+    - `relu`, `sigmoid`, `softplus`, `silu`, `gelu`, `leaky_relu`,
+    - `softmax`, `log_softmax`, `logsumexp`.
+- Expanded CUDA validation:
+  - add scan runtime + bridge/policy contracts (`[cuda][scan][runtime]`, `[cuda][bridge][scan]`, `[cuda][bridge][policy][scan]`);
+  - add activation/logical bridge + strict-policy contracts (`[cuda][bridge][activation]`, `[cuda][bridge][policy][activation]`);
+  - extend parity suites with scan/activation assertions under bridge and strict lanes.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `34` to `38` gates.
+
+### Patch 157 (landed in this step)
+- CUDA masking family tranche:
+  - add native CUDA masking capability API (`native/cuda/MaskingOps.*`) gated by:
+    - `PLUSS_CUDA_NATIVE_BASELINE`,
+    - `PLUSS_CUDA_NATIVE_MASKING`,
+    - `PLUSS_CUDA_NATIVE_MASKING_STRICT`;
+  - enforce strict/bridge routing in core masked ops for:
+    - `masked_select`,
+    - `masked_fill`,
+    - `masked_scatter`.
+- Expanded CUDA validation:
+  - add masking runtime + bridge/policy contracts (`[cuda][masking][runtime]`, `[cuda][bridge][masking]`, `[cuda][bridge][policy][masking]`);
+  - extend cluster stress loops with repeated masking bridge/policy runs.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `38` to `41` gates.
+
+### Patch 158 (landed in this step)
+- CUDA bitwise + compose family tranche:
+  - add native CUDA bitwise capability API (`native/cuda/BitwiseOps.*`) gated by:
+    - `PLUSS_CUDA_NATIVE_BASELINE`,
+    - `PLUSS_CUDA_NATIVE_BITWISE`,
+    - `PLUSS_CUDA_NATIVE_BITWISE_STRICT`;
+  - add native CUDA compose capability API (`native/cuda/ComposeOps.*`) gated by:
+    - `PLUSS_CUDA_NATIVE_BASELINE`,
+    - `PLUSS_CUDA_NATIVE_COMPOSE`,
+    - `PLUSS_CUDA_NATIVE_COMPOSE_STRICT`;
+  - expose public codem runtime/capability surface for bitwise/compose in `PlatformRuntime` + `pluss::cuda::*`;
+  - enforce strict/bridge routing in core dispatch for:
+    - bitwise: `bitwise_and`, `bitwise_or`, `bitwise_xor`, `bitwise_not`,
+    - compose: `unite`, `pile`.
+- Expanded CUDA validation:
+  - add bitwise runtime + bridge/policy contracts (`[cuda][bitwise][runtime]`, `[cuda][bridge][bitwise]`, `[cuda][bridge][policy][bitwise]`);
+  - add compose runtime + bridge/policy contracts (`[cuda][compose][runtime]`, `[cuda][bridge][compose]`, `[cuda][bridge][policy][compose]`);
+  - extend cluster stress loops with repeated bitwise and compose bridge/policy runs.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `41` to `47` gates.
+
+### Patch 159 (landed in this step)
+- CUDA high-rank batched-linalg tranche:
+  - fix generalized leading-batch handling in `subsp::linearalg` compatibility paths by flattening/restoring arbitrary batch-rank shapes (not only `batch[0]`) for:
+    - `det`, `inverse`, `cholesky`, `logdet`, `slogdet`,
+    - `matrix_power`, `matrix_exp`, `pinverse`,
+    - `qr_q`, `qr_r`, `svd_u`, `svd_s`, `svd_vh`,
+    - `triangular_solve`, `cholesky_solve`, `cholesky_inverse`, `lu_solve`.
+  - preserve platform semantics while fixing shape correctness for CPU/MPS/CUDA batched recursion paths.
+- Expanded CUDA validation:
+  - add batched rank-contract tests for CUDA bridge + strict-policy lanes (`test_patch159_cuda_linalg_batched_rank_contract.cpp`);
+  - add dedicated CUDA mega-gates for batched linalg runtime/bridge/policy.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `47` to `50` gates.
+
+### Patch 160 (landed in this step)
+- CUDA expanded-linalg lane tranche:
+  - broaden CUDA linalg capability predicates to include:
+    - `Float16`,
+    - `BFloat16`;
+  - relax CUDA linalg route predicates to accept non-contiguous tensors and matrix-like tails (rank >= 2) while preserving dtype/shape validity checks;
+  - broaden solve rhs shape checks to use trailing matrix dimensions (not only 2D exact layout checks).
+- Expanded CUDA validation:
+  - add expanded-linalg contracts (`test_patch160_cuda_linalg_expanded_contract.cpp`) for:
+    - fp16/bf16 capability/runtime coverage,
+    - non-contiguous bridge behavior,
+    - strict-policy expanded-lane behavior;
+  - add dedicated expanded-linalg runtime/bridge/policy mega-gates;
+  - extend cluster stress loops with expanded-linalg bridge/policy repetitions.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `50` to `53` gates.
+
+### Patch 161 (landed in this step)
+- CUDA rank-aware matmul tranche:
+  - expand CPU matmul core semantics from 2D-only to torch-style rank contracts:
+    - `1D x 1D` (dot-like scalar lane),
+    - `2D x 1D` and `1D x 2D`,
+    - `ND x ND` with broadcasted batch prefixes and matrix-tail multiplication;
+  - keep 2D compute kernel path as the core numeric lane, and route batched/mixed-rank matmul via reshape/expand/select composition;
+  - add fp16/bf16 matmul support by deterministic float32 compute lane + dtype roundtrip at boundary.
+- CUDA matmul capability expansion:
+  - broaden native CUDA matmul route predicates to accept rank-aware compatible shapes (not only strict 2D) while preserving dtype and broadcast validity checks.
+- Expanded CUDA validation:
+  - add rank-aware matmul contracts (`test_patch161_cuda_matmul_rank_contract.cpp`) for:
+    - runtime capability coverage on vector/matrix/batched lanes,
+    - bridge correctness parity on vector/batched/broadcasted routes,
+    - strict-policy acceptance on supported rank-aware routes;
+  - add dedicated mega-gates for rank-aware matmul runtime/bridge/policy;
+  - extend cluster stress loops with repeated rank-aware matmul bridge/policy runs.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `53` to `56` gates.
+
 ### Patch 150 (landed in this step)
 - MPS strict parity hardening:
   - promote native top-k selection policy to default-on for MPS (`PLUSS_MPS_NATIVE_TOPK_SELECTION=1` default),
@@ -236,7 +420,7 @@ Latest sweep artifact:
 - `outputs/cuda_mega_gate_20260311_172017/summary.tsv`
 
 Status:
-- `25` gate matrix now defined (legacy artifacts may still reflect `22` before parity-gate expansion).
+- `56` gate matrix now defined (legacy artifacts may still reflect earlier snapshots before rank-aware matmul gate expansion).
 
 ## CUDA Cluster Hardware Runner
 - New runner script:

@@ -68,13 +68,13 @@ TEST_CASE("CUDA selection baseline capability is runtime-dynamic", "[cuda][selec
     const ScopedEnvVar selection_on("PLUSS_CUDA_NATIVE_SELECTION", "1");
     REQUIRE(pluss::cuda::native_selection_enabled());
     REQUIRE(pluss::cuda::supports_sort_selection_baseline(pluss::ScalarType::Float32, /*stable=*/false) == cuda_ready);
-    REQUIRE_FALSE(pluss::cuda::supports_sort_selection_baseline(pluss::ScalarType::Float32, /*stable=*/true));
+    REQUIRE(pluss::cuda::supports_sort_selection_baseline(pluss::ScalarType::Float32, /*stable=*/true) == cuda_ready);
     REQUIRE(pluss::cuda::supports_topk_selection_baseline(pluss::ScalarType::Float16, /*sorted=*/true) == cuda_ready);
-    REQUIRE_FALSE(pluss::cuda::supports_topk_selection_baseline(pluss::ScalarType::Float16, /*sorted=*/false));
+    REQUIRE(pluss::cuda::supports_topk_selection_baseline(pluss::ScalarType::Float16, /*sorted=*/false) == cuda_ready);
     REQUIRE(pluss::cuda::supports_kthvalue_selection_baseline(pluss::ScalarType::BFloat16) == cuda_ready);
-    REQUIRE_FALSE(pluss::cuda::supports_kthvalue_selection_baseline(pluss::ScalarType::Int64));
+    REQUIRE(pluss::cuda::supports_kthvalue_selection_baseline(pluss::ScalarType::Int64) == cuda_ready);
     REQUIRE(pluss::cuda::supports_argsort_selection_baseline(pluss::ScalarType::Float32, /*stable=*/false) == cuda_ready);
-    REQUIRE_FALSE(pluss::cuda::supports_argsort_selection_baseline(pluss::ScalarType::Float32, /*stable=*/true));
+    REQUIRE(pluss::cuda::supports_argsort_selection_baseline(pluss::ScalarType::Float32, /*stable=*/true) == cuda_ready);
   }
 }
 

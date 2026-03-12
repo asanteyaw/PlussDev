@@ -10,6 +10,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -69,6 +70,12 @@ private:
 
 class DataFrame {
 public:
+  using MatrixValues = std::tuple<
+      std::vector<pluss::Series>,
+      std::vector<pluss::Note>,
+      std::vector<pluss::Timeline>,
+      std::vector<pluss::TimeIndex>>;
+
   class LetSlot {
   public:
     LetSlot(DataFrame& owner, std::string name);
@@ -358,6 +365,7 @@ public:
   const std::vector<std::string>& column_names() const;
   std::vector<Thread> columns() const;
   std::vector<Thread> values() const;
+  MatrixValues matrix() const;
   const std::vector<std::string>& feature_names() const;
   std::vector<Thread> features() const;
   const Thread& cases() const;

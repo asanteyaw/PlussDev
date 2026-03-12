@@ -85,6 +85,11 @@ TEST_CASE("CUDA scatter/gather baseline capability is runtime-dynamic", "[cuda][
             pluss::ScalarType::Float32,
             pluss::ScalarType::Int64,
             pluss::ScalarType::Float32) == cuda_ready);
+    REQUIRE(
+        pluss::cuda::supports_scatter_baseline(
+            pluss::ScalarType::Float64,
+            pluss::ScalarType::Int64,
+            pluss::ScalarType::Float64) == cuda_ready);
     REQUIRE_FALSE(
         pluss::cuda::supports_scatter_baseline(
             pluss::ScalarType::Float32,
@@ -103,6 +108,7 @@ TEST_CASE("CUDA scatter/gather baseline capability is runtime-dynamic", "[cuda][
             pluss::ScalarType::Float32,
             "prod"));
     REQUIRE(pluss::cuda::supports_gather_baseline(pluss::ScalarType::BFloat16, pluss::ScalarType::Int64) == cuda_ready);
+    REQUIRE(pluss::cuda::supports_gather_baseline(pluss::ScalarType::Int64, pluss::ScalarType::Int64) == cuda_ready);
   }
 }
 
@@ -164,7 +170,7 @@ TEST_CASE("CUDA bridge enables scatter/gather fallback when strict native is off
   require_close_(gather_cuda.to(pluss::pCPU).to_vec<float>(), gather_cpu.to_vec<float>());
 }
 
-TEST_CASE("CUDA strict native scatter/gather overrides bridge fallback", "[cuda][bridge][policy][scatter]") {
+TEST_CASE("CUDA strict native scatter/gather executes supported native route", "[cuda][bridge][policy][scatter]") {
   const ScopedEnvVar bridge_on("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
   const ScopedEnvVar baseline_on("PLUSS_CUDA_NATIVE_BASELINE", "1");
   const ScopedEnvVar sg_on("PLUSS_CUDA_NATIVE_SCATTER_GATHER", "1");
@@ -175,13 +181,13 @@ TEST_CASE("CUDA strict native scatter/gather overrides bridge fallback", "[cuda]
     return;
   }
 
-  const auto self_cuda = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float32).to(pluss::pCUDA);
-  const auto idx_cuda = pluss::make_series(std::vector<std::int64_t>{0, 1, 2, 2, 1, 0}, {2, 3}).to(pluss::pCUDA);
-  const auto src_cuda = pluss::Series::ones({2, 3}, pluss::ScalarType::Float32).to(pluss::pCUDA);
-  try {
-    (void)self_cuda.scatter(1, idx_cuda, src_cuda);
-    FAIL("Strict native scatter/gather should fail until CUDA kernel is implemented");
-  } catch (const std::exception& e) {
-    REQUIRE(std::string(e.what()).find("strict native CUDA route requested") != std::string::npos);
-  }
+  const auto self_cpu = pluss::Series::zeros({2, 3}, pluss::ScalarType::Float32);
+  const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{0, 1, 2, 2, 1, 0}, {2, 3});
+  const auto src_cpu = pluss::Series::ones({2, 3}, pluss::ScalarType::Float32);
+  const auto self_cuda = self_cpu.to(pluss::pCUDA);
+  const auto idx_cuda = idx_cpu.to(pluss::pCUDA);
+  const auto src_cuda = src_cpu.to(pluss::pCUDA);
+  const auto got = self_cuda.scatter(1, idx_cuda, src_cuda);
+  REQUIRE(got.platform() == pluss::pCUDA);
+  require_close_(got.to(pluss::pCPU).to_vec<float>(), self_cpu.scatter(1, idx_cpu, src_cpu).to_vec<float>());
 }

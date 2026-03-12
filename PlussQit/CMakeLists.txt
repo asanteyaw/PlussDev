@@ -618,7 +618,7 @@ if (PLUSSQIT_BUILD_TESTS)
     target_link_libraries(plussqit_codem_autodiff_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_autodiff_tests PRIVATE cxx_std_20)
 
-    add_executable(plussqit_codem_mps_selection_tests
+    set(CODEM_MPS_GATE_TEST_SOURCES
       tests/CodeM/test_patch93_mps_sorting_selection_stress.cpp
       tests/CodeM/test_patch94_mps_take_put_stress.cpp
       tests/CodeM/test_patch95_mps_nonzero_stress.cpp
@@ -644,6 +644,13 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch130_mps_native_device_telemetry.cpp
       tests/CodeM/test_patch131_mps_native_sort_selection_strict.cpp
       tests/CodeM/test_patch132_mps_native_svd_strict_graduation.cpp
+      tests/CodeM/test_patch144_mps_native_take_put_graduation.cpp
+      tests/CodeM/test_patch149_mps_torch_family_parity.cpp
+      tests/CodeM/test_patch150_mps_strict_indexing_scatter_lanes.cpp
+      tests/CodeM/test_patch151_mps_selection_strict_lanes_and_soak.cpp
+    )
+    set(CODEM_CUDA_GATE_TEST_SOURCES
+      tests/CodeM/test_patch97_linalg_backend_info.cpp
       tests/CodeM/test_patch133_cuda_bootstrap_contract.cpp
       tests/CodeM/test_patch137_cuda_selection_baseline_contract.cpp
       tests/CodeM/test_patch138_cuda_linalg_baseline_contract.cpp
@@ -652,13 +659,31 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch141_cuda_indexing_bridge_contract.cpp
       tests/CodeM/test_patch142_cuda_matmul_contract.cpp
       tests/CodeM/test_patch143_cuda_scatter_gather_contract.cpp
-      tests/CodeM/test_patch144_mps_native_take_put_graduation.cpp
       tests/CodeM/test_patch145_cuda_provider_inventory_contract.cpp
       tests/CodeM/test_patch148_cuda_torch_family_parity.cpp
-      tests/CodeM/test_patch149_mps_torch_family_parity.cpp
+      tests/CodeM/test_patch152_cuda_native_strict_parity_and_soak.cpp
+      tests/CodeM/test_patch153_cuda_native_lane_expansion.cpp
+      tests/CodeM/test_patch154_cuda_reduction_contract.cpp
+      tests/CodeM/test_patch155_cuda_elementwise_contract.cpp
+      tests/CodeM/test_patch156_cuda_scan_activation_contract.cpp
+      tests/CodeM/test_patch157_cuda_masking_contract.cpp
+      tests/CodeM/test_patch158_cuda_bitwise_compose_contract.cpp
+      tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp
+      tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp
+      tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp
+    )
+
+    add_executable(plussqit_codem_mps_selection_tests
+      ${CODEM_MPS_GATE_TEST_SOURCES}
     )
     target_link_libraries(plussqit_codem_mps_selection_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_mps_selection_tests PRIVATE cxx_std_20)
+
+    add_executable(plussqit_codem_cuda_gate_tests
+      ${CODEM_CUDA_GATE_TEST_SOURCES}
+    )
+    target_link_libraries(plussqit_codem_cuda_gate_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
+    target_compile_features(plussqit_codem_cuda_gate_tests PRIVATE cxx_std_20)
 
     add_executable(plussqit_codem_optim_tests
       tests/CodeM/test_patch67_autodiff_transforms.cpp
@@ -710,6 +735,7 @@ if (PLUSSQIT_BUILD_TESTS)
     catch_discover_tests(plussqit_tests)
     catch_discover_tests(plussqit_codem_autodiff_tests)
     catch_discover_tests(plussqit_codem_mps_selection_tests)
+    catch_discover_tests(plussqit_codem_cuda_gate_tests)
     catch_discover_tests(plussqit_codem_optim_tests)
     catch_discover_tests(plussqit_coden_tests)
     if (PLUSSQIT_BUILD_CODEH AND TARGET plussqit_codeh_tests)

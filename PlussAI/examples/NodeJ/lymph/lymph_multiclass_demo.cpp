@@ -53,7 +53,7 @@ void print_vec(const Series& v) {
 int main() {
   const LabeledBatch batch = make_batch();
 
-  auto cls_or = pluss::ai::lymph::linear_logistic_classifier(batch, 1e-6);
+  auto cls_or = pluss::ai::lymph::quick::linear_logistic_classifier(batch, 1e-6);
   if (!cls_or.ok()) {
     std::cerr << "lymph::linear_logistic_classifier failed: " << cls_or.status().message << '\n';
     return 1;

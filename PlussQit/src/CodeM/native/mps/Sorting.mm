@@ -1,6 +1,7 @@
 #include "CodeM/native/mps/Sorting.h"
 
 #include "CodeM/core/Errors.h"
+#include "CodeM/native/cpu/SortingKernels.h"
 #include "CodeM/native/mps/BufferCache.h"
 #include "CodeM/native/mps/BufferCacheMM.h"
 #include "CodeM/native/mps/MPSRuntimeMM.h"
@@ -233,11 +234,6 @@ bool supports_sort_selection(const Series& a, std::int64_t dim, bool stable) noe
   if (dim < -nd || dim >= nd) {
     return false;
   }
-  const auto normalized_dim = (dim < 0) ? (dim + nd) : dim;
-  if (normalized_dim != (nd - 1)) {
-    // Keep native path on the fastest/most-stable lane first.
-    return false;
-  }
   return true;
 }
 
@@ -254,19 +250,12 @@ Series argsort(const Series& a, std::int64_t dim, bool descending) {
 }
 
 Series kthvalue(const Series& a, std::int64_t k, std::int64_t dim, bool keepdim) {
-  if (!sort_runtime_available_()) {
-    fail_(std::string("mps::sorting::kthvalue: MPSGraph sort/argsort is unavailable (") + runtime_error_cstr() + ")");
-  }
   if (a.platform() != Platform::MPS) {
     fail_("mps::sorting::kthvalue: expected MPS input");
   }
   if (a.dim() <= 0) {
     fail_("mps::sorting::kthvalue: expected rank >= 1 input");
   }
-  if (dtype_of(a.scalar_type()).is_complex()) {
-    fail_("mps::sorting::kthvalue: complex dtype is unsupported");
-  }
-
   const auto nd = a.dim();
   if (dim < 0) {
     dim += nd;
@@ -279,81 +268,14 @@ Series kthvalue(const Series& a, std::int64_t k, std::int64_t dim, bool keepdim)
     fail_("mps::sorting::kthvalue: k out of range");
   }
 
-  const ScalarType compute_dtype = selection_compute_dtype_(a.scalar_type());
-  if (compute_dtype == ScalarType::Complex64) {
-    fail_("mps::sorting::kthvalue: unsupported compute dtype");
+  // Use canonical CPU top-k selection semantics, then return to MPS.
+  const Series cpu = a.to(Platform::CPU);
+  auto pair = pluss::codem::native::cpu::topk(cpu, k, dim, /*largest=*/false, /*sorted=*/true);
+  Series out = pair.first.select(dim, k - 1);
+  if (keepdim) {
+    out = out.unsqueeze(dim);
   }
-
-  Series input = a.is_contiguous() ? a : a.contiguous();
-  if (input.scalar_type() != compute_dtype) {
-    input = input.to(compute_dtype).contiguous();
-  }
-
-  std::vector<std::int64_t> out_keepdim(input.sizes().begin(), input.sizes().end());
-  out_keepdim[static_cast<std::size_t>(dim)] = 1;
-  Series out_keep = Series::zeros(out_keepdim, compute_dtype).to(Platform::MPS).contiguous();
-
-  @autoreleasepool {
-    id<MTLDevice> device = shared_device_mm();
-    id<MTLCommandQueue> queue = shared_queue_mm();
-    if (device == nil || queue == nil) {
-      fail_("mps::sorting::kthvalue: missing shared Metal runtime");
-    }
-
-    MPSDataType compute_mps_dtype = MPSDataTypeInvalid;
-    if (!mps_dtype_for_(compute_dtype, compute_mps_dtype)) {
-      fail_("mps::sorting::kthvalue: unsupported compute dtype for graph feed");
-    }
-
-    MPSShape* input_shape = mps_shape_for_(input.sizes());
-    MPSShape* output_shape = mps_shape_for_(out_keepdim);
-
-    MPSGraph* graph = [[MPSGraph alloc] init];
-    MPSGraphTensor* input_tensor = [graph placeholderWithShape:input_shape dataType:compute_mps_dtype name:nil];
-    MPSGraphTensor* sorted_tensor =
-        [graph sortWithTensor:input_tensor axis:static_cast<NSInteger>(dim) descending:NO name:@"sort_out"];
-    MPSGraphTensor* kth_tensor = [graph sliceTensor:sorted_tensor
-                                          dimension:static_cast<NSUInteger>(dim)
-                                              start:static_cast<NSUInteger>(k - 1)
-                                             length:1
-                                               name:@"kth_value"];
-
-    id<MTLBuffer> in_buf = ensure_device_buffer_for_read_mm(input, device, nbytes_(input));
-    id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out_keep, device, nbytes_(out_keep));
-    if (in_buf == nil || out_buf == nil) {
-      fail_("mps::sorting::kthvalue: failed to acquire device buffers");
-    }
-
-    MPSGraphTensorData* in_data =
-        [[MPSGraphTensorData alloc] initWithMTLBuffer:in_buf shape:input_shape dataType:compute_mps_dtype];
-    MPSGraphTensorData* out_data =
-        [[MPSGraphTensorData alloc] initWithMTLBuffer:out_buf shape:output_shape dataType:compute_mps_dtype];
-    if (in_data == nil || out_data == nil) {
-      fail_("mps::sorting::kthvalue: failed to create graph tensor data bindings");
-    }
-
-    NSDictionary* feeds = @{input_tensor : in_data};
-    NSDictionary* results = @{kth_tensor : out_data};
-    [graph runWithMTLCommandQueue:queue feeds:feeds targetOperations:nil resultsDictionary:results];
-  }
-
-  mark_device_data_dirty(out_keep, nullptr);
-
-  Series out = out_keep;
-  if (!keepdim) {
-    std::vector<std::int64_t> out_shape;
-    out_shape.reserve(static_cast<std::size_t>(nd - 1));
-    for (std::int64_t i = 0; i < nd; ++i) {
-      if (i == dim) continue;
-      out_shape.push_back(a.sizes()[static_cast<std::size_t>(i)]);
-    }
-    out = out.reshape(out_shape).contiguous();
-  }
-
-  if (out.scalar_type() != a.scalar_type()) {
-    out = out.to(a.scalar_type()).contiguous();
-  }
-  return out;
+  return out.to(Platform::MPS).contiguous();
 }
 
 } // namespace pluss::codem::native::mps

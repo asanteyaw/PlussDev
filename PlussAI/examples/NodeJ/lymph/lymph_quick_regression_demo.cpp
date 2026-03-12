@@ -16,14 +16,14 @@ Config f64() {
 }
 
 template <class T>
-bool require_ok(const pluss::ai::lymph::StatusOr<T>& out, const std::string& label) {
+bool require_ok(const pluss::ai::lymph::quick::StatusOr<T>& out, const std::string& label) {
   if (out.ok()) return true;
   std::cerr << label << " failed: " << out.status().message << "\n";
   return false;
 }
 
 void run_and_report(const std::string& name,
-                    pluss::ai::lymph::StatusOr<std::unique_ptr<RegressorBase>>&& model_or,
+                    pluss::ai::lymph::quick::StatusOr<std::unique_ptr<RegressorBase>>&& model_or,
                     const LabeledBatch& train) {
   if (!require_ok(model_or, name)) return;
   auto model = model_or.move_value();
@@ -56,15 +56,15 @@ int main() {
       .y = y,
   };
 
-  run_and_report("ridge", pluss::ai::lymph::ridge_regressor(train, 1e-8), train);
-  run_and_report("tree", pluss::ai::lymph::tree_regressor(
+  run_and_report("ridge", pluss::ai::lymph::quick::ridge_regressor(train, 1e-8), train);
+  run_and_report("tree", pluss::ai::lymph::quick::tree_regressor(
                              train,
                              TreeFamilyOptions{
                                  .criterion = TreeCriterion::Mse,
                              }),
                  train);
-  run_and_report("forest", pluss::ai::lymph::forest_regressor(train, 31, 0.9), train);
-  run_and_report("neighbor", pluss::ai::lymph::neighbor_regressor(
+  run_and_report("forest", pluss::ai::lymph::quick::forest_regressor(train, 31, 0.9), train);
+  run_and_report("neighbor", pluss::ai::lymph::quick::neighbor_regressor(
                                  train,
                                  NeighborFamilyOptions{
                                      .k = 3,
@@ -72,8 +72,8 @@ int main() {
                                      .standardize = true,
                                  }),
                  train);
-  run_and_report("rbf_kernel", pluss::ai::lymph::rbf_kernel_regressor(train, 50.0, 0.7, 0.0), train);
-  run_and_report("gaussian_bayes", pluss::ai::lymph::gaussian_bayes_regressor(train, 1e-6), train);
+  run_and_report("rbf_kernel", pluss::ai::lymph::quick::rbf_kernel_regressor(train, 50.0, 0.7, 0.0), train);
+  run_and_report("gaussian_bayes", pluss::ai::lymph::quick::gaussian_bayes_regressor(train, 1e-6), train);
 
   std::cout << "lymph quick regression demo completed.\n";
   return 0;

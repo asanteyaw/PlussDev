@@ -12,10 +12,24 @@ tools/run_codem_cuda_cluster_hardware.sh --env cpp_env --build-dir build_cpp_env
 
 Key behaviors:
 - configures/builds CodeM tests with `PLUSSQIT_ENABLE_CUDA=ON`,
+- builds/runs the CUDA-only gate binary `plussqit_codem_cuda_gate_tests` (no MPS test sources),
 - captures hardware/runtime inventory (`nvidia-smi`, `nvcc`, toolchain probes),
-- runs CUDA mega-gate matrix (`25` gates),
+- runs CUDA mega-gate matrix (`56` gates),
 - runs repeated stress loops for bridge + strict-policy families,
+- runs repeated reduction bridge + strict-policy loops (`[cuda][bridge][reduction]`, `[cuda][bridge][policy][reduction]`),
+- runs repeated elementwise bridge + strict-policy loops (`[cuda][bridge][elementwise]`, `[cuda][bridge][policy][elementwise]`),
+- runs repeated scan bridge + strict-policy loops (`[cuda][bridge][scan]`, `[cuda][bridge][policy][scan]`),
+- runs repeated activation/logical bridge + strict-policy loops (`[cuda][bridge][activation]`, `[cuda][bridge][policy][activation]`),
+- runs repeated masking bridge + strict-policy loops (`[cuda][bridge][masking]`, `[cuda][bridge][policy][masking]`),
+- runs repeated bitwise bridge + strict-policy loops (`[cuda][bridge][bitwise]`, `[cuda][bridge][policy][bitwise]`),
+- runs repeated compose bridge + strict-policy loops (`[cuda][bridge][compose]`, `[cuda][bridge][policy][compose]`),
+- runs repeated batched-linalg bridge + strict-policy loops (`[cuda][bridge][linalg][batched]`, `[cuda][bridge][policy][linalg][batched]`),
+- runs repeated expanded-linalg bridge + strict-policy loops (`[bridge][cuda][expanded][linalg]`, `[bridge][cuda][expanded][linalg][policy]`),
+- runs repeated rank-aware matmul bridge + strict-policy loops (`[cuda][bridge][matmul][rank]`, `[cuda][bridge][policy][matmul][rank]`),
 - runs repeated torch-family parity loops (`[cuda][parity][bridge]`, `[cuda][parity][bridge][stress]`, `[cuda][parity][policy]`),
+- runs repeated strict-native parity loops (`[cuda][parity][native][strict]`, `[cuda][parity][native][soak]`),
+- runs repeated strict-native lane-expansion loop (`[cuda][parity][native][expanded]`),
+- runs repeated provider stability loop (`[cuda][providers][inventory][stress]`),
 - writes compact summary artifacts.
 
 ## Artifacts
@@ -26,6 +40,24 @@ Each run writes to:
 - `outputs/cuda_cluster_hardware_<timestamp>/cuda_gate_one_page.md`
 - `outputs/cuda_cluster_hardware_<timestamp>/cuda_gate_summary.tsv`
 - `outputs/cuda_cluster_hardware_<timestamp>/cuda_mega_gate.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_reduction_bridge_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_reduction_policy_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_scan_bridge_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_scan_policy_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_activation_bridge_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_activation_policy_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_masking_bridge_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_masking_policy_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_bitwise_bridge_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_bitwise_policy_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_compose_bridge_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_compose_policy_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_linalg_batched_bridge_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_linalg_batched_policy_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_linalg_expanded_bridge_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_linalg_expanded_policy_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_matmul_rank_bridge_rep*.log`
+- `outputs/cuda_cluster_hardware_<timestamp>/stress_matmul_rank_policy_rep*.log`
 
 Stable pointer:
 - `outputs/latest_cuda_cluster_hardware_path.txt`

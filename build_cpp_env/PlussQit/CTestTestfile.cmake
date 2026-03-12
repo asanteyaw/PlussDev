@@ -7,5 +7,6 @@
 include("/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_tests-b12d07c_include.cmake")
 include("/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_codem_autodiff_tests-b12d07c_include.cmake")
 include("/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_codem_mps_selection_tests-b12d07c_include.cmake")
+include("/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_codem_cuda_gate_tests-b12d07c_include.cmake")
 include("/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_codem_optim_tests-b12d07c_include.cmake")
 include("/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussQit/plussqit_coden_tests-b12d07c_include.cmake")

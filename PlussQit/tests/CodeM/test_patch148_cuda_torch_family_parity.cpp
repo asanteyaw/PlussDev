@@ -60,15 +60,6 @@ void require_equal_(const std::vector<std::int64_t>& got, const std::vector<std:
   }
 }
 
-void require_strict_fail_(const std::function<void()>& fn) {
-  try {
-    fn();
-    FAIL("strict native CUDA route should fail until kernel is implemented");
-  } catch (const std::exception& e) {
-    REQUIRE(std::string(e.what()).find("strict native CUDA route requested") != std::string::npos);
-  }
-}
-
 } // namespace
 
 TEST_CASE("CUDA bridge parity covers torch-like core families", "[cuda][parity][bridge]") {
@@ -78,6 +69,8 @@ TEST_CASE("CUDA bridge parity covers torch-like core families", "[cuda][parity][
   const ScopedEnvVar indexing_off("PLUSS_CUDA_NATIVE_INDEXING", "0");
   const ScopedEnvVar matmul_off("PLUSS_CUDA_NATIVE_MATMUL", "0");
   const ScopedEnvVar scatter_off("PLUSS_CUDA_NATIVE_SCATTER_GATHER", "0");
+  const ScopedEnvVar reduction_off("PLUSS_CUDA_NATIVE_REDUCTION", "0");
+  const ScopedEnvVar scan_off("PLUSS_CUDA_NATIVE_SCAN", "0");
 
   if (!pluss::cuda::is_ready()) {
     SUCCEED("CUDA runtime unavailable on this host");
@@ -103,6 +96,25 @@ TEST_CASE("CUDA bridge parity covers torch-like core families", "[cuda][parity][
   const auto sort_cuda = a_cuda.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false);
   require_close_(sort_cuda.to(pluss::pCPU).to_vec<float>(), sort_cpu.to_vec<float>());
 
+  require_close_(
+      a_cuda.sum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
+      a_cpu.sum(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+  require_close_(
+      a_cuda.mean(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
+      a_cpu.mean(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+  require_close_(
+      a_cuda.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
+      a_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+  require_close_(
+      a_cuda.cumprod(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
+      a_cpu.cumprod(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+  require_close_(
+      a_cuda.amax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
+      a_cpu.amax(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+  require_equal_(
+      a_cuda.argmax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
+      a_cpu.argmax(/*dim=*/1, /*keepdim=*/false).to_vec<std::int64_t>());
+
   const auto argsort_cpu = a_cpu.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false);
   const auto argsort_cuda = a_cuda.argsort(/*dim=*/1, /*descending=*/true, /*stable=*/false);
   require_equal_(argsort_cuda.to(pluss::pCPU).to_vec<std::int64_t>(), argsort_cpu.to_vec<std::int64_t>());
@@ -110,6 +122,8 @@ TEST_CASE("CUDA bridge parity covers torch-like core families", "[cuda][parity][
   const auto topk_cpu = a_cpu.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true);
   const auto topk_cuda = a_cuda.topk(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true);
   require_close_(topk_cuda.to(pluss::pCPU).to_vec<float>(), topk_cpu.to_vec<float>());
+  require_close_(a_cuda.relu().to(pluss::pCPU).to_vec<float>(), a_cpu.relu().to_vec<float>());
+  require_close_(a_cuda.softmax(1).to(pluss::pCPU).to_vec<float>(), a_cpu.softmax(1).to_vec<float>());
 
   const auto flat_cpu = a_cpu.reshape({a_cpu.numel()});
   const auto flat_cuda = a_cuda.reshape({a_cuda.numel()});
@@ -159,6 +173,8 @@ TEST_CASE("CUDA bridge parity stress loop stays stable", "[cuda][parity][bridge]
   const ScopedEnvVar selection_off("PLUSS_CUDA_NATIVE_SELECTION", "0");
   const ScopedEnvVar matmul_off("PLUSS_CUDA_NATIVE_MATMUL", "0");
   const ScopedEnvVar indexing_off("PLUSS_CUDA_NATIVE_INDEXING", "0");
+  const ScopedEnvVar reduction_off("PLUSS_CUDA_NATIVE_REDUCTION", "0");
+  const ScopedEnvVar scan_off("PLUSS_CUDA_NATIVE_SCAN", "0");
 
   if (!pluss::cuda::is_ready()) {
     SUCCEED("CUDA runtime unavailable on this host");
@@ -188,6 +204,15 @@ TEST_CASE("CUDA bridge parity stress loop stays stable", "[cuda][parity][bridge]
         x_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to_vec<float>(),
         2e-4f);
 
+    require_close_(
+        x_cuda.sum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
+        x_cpu.sum(/*dim=*/1, /*keepdim=*/false).to_vec<float>(),
+        2e-4f);
+    require_close_(
+        x_cuda.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
+        x_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).to_vec<float>(),
+        2e-4f);
+
     const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{3, 1, 0, 2}, {4});
     const auto idx_cuda = idx_cpu.to(pluss::pCUDA);
     require_close_(
@@ -197,7 +222,7 @@ TEST_CASE("CUDA bridge parity stress loop stays stable", "[cuda][parity][bridge]
   }
 }
 
-TEST_CASE("CUDA strict parity policy keeps fail-loud semantics", "[cuda][parity][policy]") {
+TEST_CASE("CUDA strict parity policy executes supported native routes", "[cuda][parity][policy]") {
   const ScopedEnvVar bridge_on("PLUSS_CUDA_ALLOW_CPU_BRIDGE", "1");
   const ScopedEnvVar baseline_on("PLUSS_CUDA_NATIVE_BASELINE", "1");
   const ScopedEnvVar selection_on("PLUSS_CUDA_NATIVE_SELECTION", "1");
@@ -210,21 +235,50 @@ TEST_CASE("CUDA strict parity policy keeps fail-loud semantics", "[cuda][parity]
   const ScopedEnvVar matmul_strict("PLUSS_CUDA_NATIVE_MATMUL_STRICT", "1");
   const ScopedEnvVar scatter_on("PLUSS_CUDA_NATIVE_SCATTER_GATHER", "1");
   const ScopedEnvVar scatter_strict("PLUSS_CUDA_NATIVE_SCATTER_GATHER_STRICT", "1");
+  const ScopedEnvVar reduction_on("PLUSS_CUDA_NATIVE_REDUCTION", "1");
+  const ScopedEnvVar reduction_strict("PLUSS_CUDA_NATIVE_REDUCTION_STRICT", "1");
+  const ScopedEnvVar scan_on("PLUSS_CUDA_NATIVE_SCAN", "1");
+  const ScopedEnvVar scan_strict("PLUSS_CUDA_NATIVE_SCAN_STRICT", "1");
 
   if (!pluss::cuda::is_ready()) {
     SUCCEED("CUDA runtime unavailable on this host");
     return;
   }
 
-  const auto x = pluss::make_series(std::vector<float>{2.f, -1.f, 3.f, 0.f}, {2, 2}).to(pluss::pCUDA);
-  const auto y = pluss::make_series(std::vector<float>{1.f, 4.f, -2.f, 5.f}, {2, 2}).to(pluss::pCUDA);
-  const auto idx = pluss::make_series(std::vector<std::int64_t>{1, 0}, {2}).to(pluss::pCUDA);
-  const auto idx2 =
-      pluss::make_series(std::vector<std::int64_t>{1, 0, 0, 1}, {2, 2}).to(pluss::pCUDA);
+  const auto x_cpu = pluss::make_series(std::vector<float>{2.f, -1.f, 3.f, 0.f}, {2, 2});
+  const auto y_cpu = pluss::make_series(std::vector<float>{1.f, 4.f, -2.f, 5.f}, {2, 2});
+  const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{1, 0}, {2});
+  const auto idx2_cpu =
+      pluss::make_series(std::vector<std::int64_t>{1, 0, 0, 1}, {2, 2});
+  const auto x = x_cpu.to(pluss::pCUDA);
+  const auto y = y_cpu.to(pluss::pCUDA);
+  const auto idx = idx_cpu.to(pluss::pCUDA);
+  const auto idx2 = idx2_cpu.to(pluss::pCUDA);
 
-  require_strict_fail_([&] { (void)x.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false); });
-  require_strict_fail_([&] { (void)pluss::subsp::linearalg::det(x); });
-  require_strict_fail_([&] { (void)x.take(idx); });
-  require_strict_fail_([&] { (void)x.matmul(y); });
-  require_strict_fail_([&] { (void)x.scatter(1, idx2, y); });
+  require_close_(
+      x.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to(pluss::pCPU).to_vec<float>(),
+      x_cpu.sort(/*dim=*/1, /*descending=*/false, /*stable=*/false).to_vec<float>());
+  require_close_(
+      pluss::subsp::linearalg::det(x).to(pluss::pCPU).to_vec<float>(),
+      pluss::subsp::linearalg::det(x_cpu).to_vec<float>(),
+      2e-3f);
+  require_close_(x.take(idx).to(pluss::pCPU).to_vec<float>(), x_cpu.take(idx_cpu).to_vec<float>());
+  require_close_(x.matmul(y).to(pluss::pCPU).to_vec<float>(), x_cpu.matmul(y_cpu).to_vec<float>());
+  require_close_(
+      x.scatter(1, idx2, y).to(pluss::pCPU).to_vec<float>(),
+      x_cpu.scatter(1, idx2_cpu, y_cpu).to_vec<float>());
+  require_close_(
+      x.sum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
+      x_cpu.sum(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+  require_close_(
+      x.mean(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
+      x_cpu.mean(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+  require_close_(
+      x.cumsum(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<float>(),
+      x_cpu.cumsum(/*dim=*/1, /*keepdim=*/false).to_vec<float>());
+  require_equal_(
+      x.argmax(/*dim=*/1, /*keepdim=*/false).to(pluss::pCPU).to_vec<std::int64_t>(),
+      x_cpu.argmax(/*dim=*/1, /*keepdim=*/false).to_vec<std::int64_t>());
+  require_close_(x.relu().to(pluss::pCPU).to_vec<float>(), x_cpu.relu().to_vec<float>());
+  require_close_(x.softmax(1).to(pluss::pCPU).to_vec<float>(), x_cpu.softmax(1).to_vec<float>());
 }

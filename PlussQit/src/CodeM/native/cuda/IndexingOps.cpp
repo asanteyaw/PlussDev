@@ -41,8 +41,11 @@ bool supports_index_value_dtype_(ScalarType dtype) noexcept {
     case ScalarType::Int8:
     case ScalarType::UInt8:
     case ScalarType::Int16:
+    case ScalarType::UInt16:
     case ScalarType::Int32:
+    case ScalarType::UInt32:
     case ScalarType::Int64:
+    case ScalarType::UInt64:
     case ScalarType::Float16:
     case ScalarType::BFloat16:
     case ScalarType::Float32:
@@ -61,8 +64,8 @@ bool indexing_baseline_ready_() noexcept {
   return runtime_available() && native_baseline_enabled() && native_indexing_enabled();
 }
 
-bool is_cuda_contiguous_(const Series& s) noexcept {
-  return s.platform() == Platform::CUDA && s.is_contiguous();
+bool is_cuda_series_(const Series& s) noexcept {
+  return s.platform() == Platform::CUDA;
 }
 
 } // namespace
@@ -91,8 +94,8 @@ bool supports_index_baseline(ScalarType value_dtype, ScalarType index_dtype) noe
 
 bool supports_take(const Series& self, const Series& index) noexcept {
   return supports_take_put_baseline(self.scalar_type(), index.scalar_type()) &&
-      is_cuda_contiguous_(self) &&
-      is_cuda_contiguous_(index);
+      is_cuda_series_(self) &&
+      is_cuda_series_(index);
 }
 
 bool supports_put(const Series& self, const Series& index, const Series& source, bool accumulate) noexcept {
@@ -100,7 +103,7 @@ bool supports_put(const Series& self, const Series& index, const Series& source,
   if (!supports_take_put_baseline(self.scalar_type(), index.scalar_type())) {
     return false;
   }
-  if (!is_cuda_contiguous_(self) || !is_cuda_contiguous_(index) || !is_cuda_contiguous_(source)) {
+  if (!is_cuda_series_(self) || !is_cuda_series_(index) || !is_cuda_series_(source)) {
     return false;
   }
   if (source.scalar_type() != self.scalar_type()) {
@@ -110,7 +113,7 @@ bool supports_put(const Series& self, const Series& index, const Series& source,
 }
 
 bool supports_nonzero(const Series& self) noexcept {
-  return supports_nonzero_baseline(self.scalar_type()) && is_cuda_contiguous_(self);
+  return supports_nonzero_baseline(self.scalar_type()) && is_cuda_series_(self);
 }
 
 bool supports_index(const Series& self, const std::vector<Series>& indices) noexcept {

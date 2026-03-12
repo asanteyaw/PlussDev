@@ -15,6 +15,8 @@ enum class ModelFamily : std::uint8_t {
   Neighbor = 3,
   Kernel = 4,
   Bayes = 5,
+  Cluster = 6,
+  Decompose = 7,
 };
 
 enum class RegularizationKind : std::uint8_t {
@@ -48,6 +50,14 @@ enum class KernelKind : std::uint8_t {
   Rbf = 1,
   Polynomial = 2,
   Sigmoid = 3,
+};
+
+enum class ClusterMethod : std::uint8_t {
+  KMeans = 0,
+};
+
+enum class DecomposeMethod : std::uint8_t {
+  Pca = 0,
 };
 
 struct LinearFamilyOptions {
@@ -88,12 +98,30 @@ struct BayesFamilyOptions {
   double smoothing = 1e-9;
 };
 
+struct ClusterFamilyOptions {
+  ClusterMethod method = ClusterMethod::KMeans;
+  std::int64_t clusters = 8;
+  std::int64_t max_iterations = 300;
+  std::int64_t restarts = 4;
+  double tolerance = 1e-4;
+};
+
+struct DecomposeFamilyOptions {
+  DecomposeMethod method = DecomposeMethod::Pca;
+  std::int64_t components = -1;
+  bool whiten = false;
+  std::int64_t max_iterations = 500;
+  double tolerance = 1e-6;
+};
+
 using FamilyOptions = std::variant<LinearFamilyOptions,
                                    TreeFamilyOptions,
                                    EnsembleFamilyOptions,
                                    NeighborFamilyOptions,
                                    KernelFamilyOptions,
-                                   BayesFamilyOptions>;
+                                   BayesFamilyOptions,
+                                   ClusterFamilyOptions,
+                                   DecomposeFamilyOptions>;
 
 struct ModelSpec {
   TaskKind task = TaskKind::Regression;

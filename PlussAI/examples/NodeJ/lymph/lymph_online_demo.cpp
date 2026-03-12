@@ -15,7 +15,7 @@ using pluss::ai::nodej::LinearObjective;
 using pluss::ai::nodej::ObservationLayout;
 using pluss::ai::nodej::RegularizationKind;
 using pluss::ai::nodej::TrainOptions;
-using pluss::ai::nodej::online::OnlineLinearOptions;
+using pluss::ai::lymph::OnlineLinearOptions;
 
 Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -62,43 +62,35 @@ void print_vec(const Series& s) {
 } // namespace
 
 int main() {
-  const LabeledBatch full = make_batch();
-  const LabeledBatch warm = slice_rows(full, 30, 20);
-  const LabeledBatch stream = slice_rows(full, 20, 60);
+  try {
+    const LabeledBatch full = make_batch();
+    const LabeledBatch warm = slice_rows(full, 30, 20);
+    const LabeledBatch stream = slice_rows(full, 20, 60);
 
-  OnlineLinearOptions online_options{};
-  online_options.family = LinearFamilyOptions{
-      .objective = LinearObjective::Logistic,
-      .regularization = RegularizationKind::L2,
-      .regularization_strength = 1e-6,
-      .fit_intercept = true,
-  };
-  online_options.learning_rate = 0.08;
+    OnlineLinearOptions online_options{};
+    online_options.family = LinearFamilyOptions{
+        .objective = LinearObjective::Logistic,
+        .regularization = RegularizationKind::L2,
+        .regularization_strength = 1e-6,
+        .fit_intercept = true,
+    };
+    online_options.learning_rate = 0.08;
 
-  TrainOptions warm_opts{};
-  warm_opts.max_iterations = 80;
+    TrainOptions warm_opts{};
+    warm_opts.max_iterations = 80;
 
-  auto model_or = pluss::ai::lymph::online_linear_classifier(warm, online_options, warm_opts);
-  if (!model_or.ok()) {
-    std::cerr << "lymph online_linear_classifier failed: " << model_or.status().message << '\n';
+    auto model = pluss::ai::lymph::online_factory::linear_classifier(online_options);
+    model.learn_(warm, warm_opts).advance_(stream);
+
+    const auto metrics = model.assess(full);
+    const Series metric_values = metrics.accuracy.defined() ? metrics.accuracy : metrics.values;
+
+    std::cout << "lymph online seen_samples=" << model.seen_samples() << '\n';
+    std::cout << "lymph online metrics [accuracy]: ";
+    print_vec(metric_values);
+    return 0;
+  } catch (const std::exception& ex) {
+    std::cerr << "lymph_online_demo failed: " << ex.what() << '\n';
     return 1;
   }
-
-  auto model = model_or.move_value();
-  const auto advance_status = model.advance(stream);
-  if (!advance_status.ok()) {
-    std::cerr << "advance failed: " << advance_status.message << '\n';
-    return 1;
-  }
-
-  auto metric_or = model.assess(full);
-  if (!metric_or.ok()) {
-    std::cerr << "assess failed: " << metric_or.status().message << '\n';
-    return 1;
-  }
-
-  std::cout << "lymph online seen_samples=" << model.seen_samples() << '\n';
-  std::cout << "lymph online metrics [accuracy]: ";
-  print_vec(metric_or.value());
-  return 0;
 }

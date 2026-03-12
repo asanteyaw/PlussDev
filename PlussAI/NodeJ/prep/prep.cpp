@@ -4,6 +4,7 @@
 #include <bit>
 #include <cmath>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <numeric>
 #include <string>
@@ -182,6 +183,300 @@ struct DenseMatrix {
     return Status::shape_mismatch(std::string(where) + " feature count mismatch with fitted transformer.");
   }
   return Status::success();
+}
+
+[[nodiscard]] Status validate_neighbors(std::int64_t value, const char* where) {
+  if (value <= 0) {
+    return Status::invalid_argument(std::string(where) + " requires neighbors > 0.");
+  }
+  return Status::success();
+}
+
+[[nodiscard]] Status validate_rounds(std::int64_t value, const char* where) {
+  if (value <= 0) {
+    return Status::invalid_argument(std::string(where) + " requires rounds > 0.");
+  }
+  return Status::success();
+}
+
+[[nodiscard]] Status validate_grid(std::int64_t value, const char* where) {
+  if (value < 2) {
+    return Status::invalid_argument(std::string(where) + " requires lambda_grid >= 2.");
+  }
+  return Status::success();
+}
+
+[[nodiscard]] double normal_quantile(double p) {
+  // Acklam inverse-normal approximation.
+  constexpr double a1 = -3.969683028665376e+01;
+  constexpr double a2 = 2.209460984245205e+02;
+  constexpr double a3 = -2.759285104469687e+02;
+  constexpr double a4 = 1.383577518672690e+02;
+  constexpr double a5 = -3.066479806614716e+01;
+  constexpr double a6 = 2.506628277459239e+00;
+
+  constexpr double b1 = -5.447609879822406e+01;
+  constexpr double b2 = 1.615858368580409e+02;
+  constexpr double b3 = -1.556989798598866e+02;
+  constexpr double b4 = 6.680131188771972e+01;
+  constexpr double b5 = -1.328068155288572e+01;
+
+  constexpr double c1 = -7.784894002430293e-03;
+  constexpr double c2 = -3.223964580411365e-01;
+  constexpr double c3 = -2.400758277161838e+00;
+  constexpr double c4 = -2.549732539343734e+00;
+  constexpr double c5 = 4.374664141464968e+00;
+  constexpr double c6 = 2.938163982698783e+00;
+
+  constexpr double d1 = 7.784695709041462e-03;
+  constexpr double d2 = 3.224671290700398e-01;
+  constexpr double d3 = 2.445134137142996e+00;
+  constexpr double d4 = 3.754408661907416e+00;
+
+  constexpr double p_low = 0.02425;
+  constexpr double p_high = 1.0 - p_low;
+
+  if (p <= 0.0) return -std::numeric_limits<double>::infinity();
+  if (p >= 1.0) return std::numeric_limits<double>::infinity();
+
+  if (p < p_low) {
+    const double q = std::sqrt(-2.0 * std::log(p));
+    return (((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6)
+           / ((((d1 * q + d2) * q + d3) * q + d4) * q + 1.0);
+  }
+  if (p > p_high) {
+    const double q = std::sqrt(-2.0 * std::log(1.0 - p));
+    return -(((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6)
+           / ((((d1 * q + d2) * q + d3) * q + d4) * q + 1.0);
+  }
+
+  const double q = p - 0.5;
+  const double r = q * q;
+  return (((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) * q
+         / (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1.0);
+}
+
+[[nodiscard]] double yeo_johnson_value(double x, double lambda) {
+  if (x >= 0.0) {
+    if (std::abs(lambda) <= 1e-12) return std::log1p(x);
+    return (std::pow(x + 1.0, lambda) - 1.0) / lambda;
+  }
+  if (std::abs(lambda - 2.0) <= 1e-12) return -std::log1p(-x);
+  return -(std::pow(1.0 - x, 2.0 - lambda) - 1.0) / (2.0 - lambda);
+}
+
+[[nodiscard]] double box_cox_value(double x, double lambda) {
+  if (std::abs(lambda) <= 1e-12) return std::log(x);
+  return (std::pow(x, lambda) - 1.0) / lambda;
+}
+
+[[nodiscard]] double feature_cdf(const std::vector<double>& sorted, double value) {
+  if (sorted.empty()) return std::numeric_limits<double>::quiet_NaN();
+  if (sorted.size() == 1) return 0.5;
+  const auto lo_it = std::lower_bound(sorted.begin(), sorted.end(), value);
+  const auto hi_it = std::upper_bound(sorted.begin(), sorted.end(), value);
+  const std::int64_t lo = static_cast<std::int64_t>(std::distance(sorted.begin(), lo_it));
+  const std::int64_t hi = static_cast<std::int64_t>(std::distance(sorted.begin(), hi_it));
+  const double rank = 0.5 * static_cast<double>(lo + hi);
+  return std::clamp(rank / static_cast<double>(sorted.size()), 0.0, 1.0);
+}
+
+[[nodiscard]] bool solve_linear_system(std::vector<double>& a, std::vector<double>& b, std::int64_t n) {
+  for (std::int64_t col = 0; col < n; ++col) {
+    std::int64_t pivot = col;
+    double best = std::abs(a[static_cast<std::size_t>(col * n + col)]);
+    for (std::int64_t r = col + 1; r < n; ++r) {
+      const double v = std::abs(a[static_cast<std::size_t>(r * n + col)]);
+      if (v > best) {
+        best = v;
+        pivot = r;
+      }
+    }
+    if (!(best > 0.0) || !std::isfinite(best)) return false;
+    if (pivot != col) {
+      for (std::int64_t c = col; c < n; ++c) {
+        std::swap(a[static_cast<std::size_t>(col * n + c)], a[static_cast<std::size_t>(pivot * n + c)]);
+      }
+      std::swap(b[static_cast<std::size_t>(col)], b[static_cast<std::size_t>(pivot)]);
+    }
+
+    const double diag = a[static_cast<std::size_t>(col * n + col)];
+    for (std::int64_t r = col + 1; r < n; ++r) {
+      const double factor = a[static_cast<std::size_t>(r * n + col)] / diag;
+      if (!std::isfinite(factor)) return false;
+      a[static_cast<std::size_t>(r * n + col)] = 0.0;
+      for (std::int64_t c = col + 1; c < n; ++c) {
+        a[static_cast<std::size_t>(r * n + c)] -= factor * a[static_cast<std::size_t>(col * n + c)];
+      }
+      b[static_cast<std::size_t>(r)] -= factor * b[static_cast<std::size_t>(col)];
+    }
+  }
+
+  for (std::int64_t i = n - 1; i >= 0; --i) {
+    double sum = b[static_cast<std::size_t>(i)];
+    for (std::int64_t c = i + 1; c < n; ++c) {
+      sum -= a[static_cast<std::size_t>(i * n + c)] * b[static_cast<std::size_t>(c)];
+    }
+    const double diag = a[static_cast<std::size_t>(i * n + i)];
+    if (!(std::abs(diag) > 0.0) || !std::isfinite(diag)) return false;
+    b[static_cast<std::size_t>(i)] = sum / diag;
+    if (!std::isfinite(b[static_cast<std::size_t>(i)])) return false;
+  }
+  return true;
+}
+
+[[nodiscard]] std::vector<double> fit_ridge_coefficients(const DenseMatrix& matrix,
+                                                         const std::vector<double>& target,
+                                                         std::int64_t skip_feature,
+                                                         const std::vector<std::int64_t>& rows,
+                                                         double ridge) {
+  const std::int64_t p = matrix.feature_count - 1;
+  if (p <= 0 || rows.empty()) return {};
+  const std::int64_t d = p + 1; // intercept + p features
+  std::vector<double> gram(static_cast<std::size_t>(d * d), 0.0);
+  std::vector<double> rhs(static_cast<std::size_t>(d), 0.0);
+
+  for (std::int64_t ridx = 0; ridx < static_cast<std::int64_t>(rows.size()); ++ridx) {
+    const std::int64_t i = rows[static_cast<std::size_t>(ridx)];
+    std::vector<double> xrow(static_cast<std::size_t>(d), 1.0);
+    std::int64_t pos = 1;
+    for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+      if (f == skip_feature) continue;
+      xrow[static_cast<std::size_t>(pos++)] = matrix.values[offset(matrix, i, f)];
+    }
+    const double y = target[static_cast<std::size_t>(ridx)];
+    for (std::int64_t r = 0; r < d; ++r) {
+      rhs[static_cast<std::size_t>(r)] += xrow[static_cast<std::size_t>(r)] * y;
+      for (std::int64_t c = 0; c < d; ++c) {
+        gram[static_cast<std::size_t>(r * d + c)] += xrow[static_cast<std::size_t>(r)] * xrow[static_cast<std::size_t>(c)];
+      }
+    }
+  }
+  for (std::int64_t j = 1; j < d; ++j) {
+    gram[static_cast<std::size_t>(j * d + j)] += ridge;
+  }
+
+  if (!solve_linear_system(gram, rhs, d)) return {};
+  return rhs;
+}
+
+[[nodiscard]] double predict_ridge_row(const DenseMatrix& matrix,
+                                       std::int64_t row,
+                                       std::int64_t skip_feature,
+                                       const std::vector<double>& coef,
+                                       double intercept) {
+  if (coef.empty()) return intercept;
+  double pred = intercept;
+  std::int64_t pos = 0;
+  for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+    if (f == skip_feature) continue;
+    pred += coef[static_cast<std::size_t>(pos++)] * matrix.values[offset(matrix, row, f)];
+  }
+  return pred;
+}
+
+void collect_combinations_repetition(std::int64_t start,
+                                     std::int64_t depth,
+                                     std::int64_t feature_count,
+                                     std::vector<std::int64_t>& cur,
+                                     std::vector<std::vector<std::int64_t>>& out) {
+  if (depth == 0) {
+    out.push_back(cur);
+    return;
+  }
+  for (std::int64_t i = start; i < feature_count; ++i) {
+    cur.push_back(i);
+    collect_combinations_repetition(i, depth - 1, feature_count, cur, out);
+    cur.pop_back();
+  }
+}
+
+void collect_combinations_no_repetition(std::int64_t start,
+                                        std::int64_t depth,
+                                        std::int64_t feature_count,
+                                        std::vector<std::int64_t>& cur,
+                                        std::vector<std::vector<std::int64_t>>& out) {
+  if (depth == 0) {
+    out.push_back(cur);
+    return;
+  }
+  for (std::int64_t i = start; i < feature_count; ++i) {
+    cur.push_back(i);
+    collect_combinations_no_repetition(i + 1, depth - 1, feature_count, cur, out);
+    cur.pop_back();
+  }
+}
+
+[[nodiscard]] Series state_f64(std::vector<double> values) {
+  const std::int64_t n = static_cast<std::int64_t>(values.size());
+  return pluss::make_series(std::move(values),
+                            {n},
+                            prep_work_config());
+}
+
+[[nodiscard]] Series state_i64(std::vector<std::int64_t> values) {
+  const std::int64_t n = static_cast<std::int64_t>(values.size());
+  return pluss::make_series(std::move(values),
+                            {n},
+                            Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+}
+
+[[nodiscard]] std::vector<double> vec_f64(const Series& state) {
+  if (!state.defined()) return {};
+  return state.to(pluss::pCPU, ScalarType::Float64).reshape({state.numel()}).to_vec<double>();
+}
+
+[[nodiscard]] std::vector<std::int64_t> vec_i64(const Series& state) {
+  if (!state.defined()) return {};
+  return state.to(pluss::pCPU, ScalarType::Int64).reshape({state.numel()}).to_vec<std::int64_t>();
+}
+
+[[nodiscard]] std::vector<double> flatten_nested(const std::vector<std::vector<double>>& nested) {
+  std::vector<double> out{};
+  std::size_t total = 0;
+  for (const auto& row : nested) total += row.size();
+  out.reserve(total);
+  for (const auto& row : nested) {
+    out.insert(out.end(), row.begin(), row.end());
+  }
+  return out;
+}
+
+[[nodiscard]] std::vector<std::int64_t> nested_sizes(const std::vector<std::vector<double>>& nested) {
+  std::vector<std::int64_t> out{};
+  out.reserve(nested.size());
+  for (const auto& row : nested) out.push_back(static_cast<std::int64_t>(row.size()));
+  return out;
+}
+
+[[nodiscard]] std::vector<std::vector<double>> unflatten_nested(const std::vector<double>& flat,
+                                                                const std::vector<std::int64_t>& sizes) {
+  std::vector<std::vector<double>> out{};
+  out.reserve(sizes.size());
+  std::size_t offset_flat = 0;
+  for (std::int64_t n : sizes) {
+    const std::size_t count = static_cast<std::size_t>(std::max<std::int64_t>(0, n));
+    const std::size_t end = std::min(flat.size(), offset_flat + count);
+    out.emplace_back(flat.begin() + static_cast<std::ptrdiff_t>(offset_flat),
+                     flat.begin() + static_cast<std::ptrdiff_t>(end));
+    offset_flat = end;
+  }
+  return out;
+}
+
+[[nodiscard]] std::vector<std::vector<std::int64_t>> unflatten_nested_i64(const std::vector<std::int64_t>& flat,
+                                                                           const std::vector<std::int64_t>& sizes) {
+  std::vector<std::vector<std::int64_t>> out{};
+  out.reserve(sizes.size());
+  std::size_t offset_flat = 0;
+  for (std::int64_t n : sizes) {
+    const std::size_t count = static_cast<std::size_t>(std::max<std::int64_t>(0, n));
+    const std::size_t end = std::min(flat.size(), offset_flat + count);
+    out.emplace_back(flat.begin() + static_cast<std::ptrdiff_t>(offset_flat),
+                     flat.begin() + static_cast<std::ptrdiff_t>(end));
+    offset_flat = end;
+  }
+  return out;
 }
 
 } // namespace
@@ -491,6 +786,694 @@ StatusOr<Series> SimpleImputer::learn_map(const FeatureBatch& batch,
   return map(batch, infer_options);
 }
 
+NeighborImputer::NeighborImputer(NeighborImputerOptions options) : options_(options) {}
+
+bool NeighborImputer::trained() const noexcept { return trained_; }
+
+Status NeighborImputer::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  Status k_status = validate_neighbors(options_.neighbors, "NeighborImputer");
+  if (!k_status.ok()) return k_status;
+  Status floor_status = validate_floor(options_.distance_floor, "NeighborImputer");
+  if (!floor_status.ok()) return floor_status;
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "NeighborImputer::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  DenseMatrix matrix = matrix_or.move_value();
+
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  train_samples_ = matrix.sample_count;
+  train_values_ = matrix.values;
+  fallback_.assign(static_cast<std::size_t>(feature_count_), options_.empty_feature_fallback);
+
+  for (std::int64_t f = 0; f < feature_count_; ++f) {
+    const std::vector<double> values = feature_non_missing(matrix, f);
+    if (values.empty()) {
+      fallback_[static_cast<std::size_t>(f)] = options_.empty_feature_fallback;
+      continue;
+    }
+    const double sum = std::accumulate(values.begin(), values.end(), 0.0);
+    fallback_[static_cast<std::size_t>(f)] = sum / static_cast<double>(values.size());
+  }
+
+  trained_ = true;
+  return Status::success();
+}
+
+StatusOr<Series> NeighborImputer::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "NeighborImputer::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "NeighborImputer::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  DenseMatrix query = matrix_or.move_value();
+
+  DenseMatrix train{};
+  train.values = train_values_;
+  train.sample_count = train_samples_;
+  train.feature_count = feature_count_;
+  train.layout = layout_;
+
+  std::vector<double> out = query.values;
+  for (std::int64_t i = 0; i < query.sample_count; ++i) {
+    for (std::int64_t f = 0; f < query.feature_count; ++f) {
+      const std::size_t qidx = offset(query, i, f);
+      if (!std::isnan(out[qidx])) continue;
+
+      std::vector<std::pair<double, double>> candidates{}; // (distance2, value)
+      candidates.reserve(static_cast<std::size_t>(train.sample_count));
+      for (std::int64_t j = 0; j < train.sample_count; ++j) {
+        const double target = train.values[offset(train, j, f)];
+        if (std::isnan(target)) continue;
+
+        double d2 = 0.0;
+        std::int64_t overlap = 0;
+        for (std::int64_t k = 0; k < query.feature_count; ++k) {
+          if (k == f) continue;
+          const double qv = out[offset(query, i, k)];
+          const double tv = train.values[offset(train, j, k)];
+          if (std::isnan(qv) || std::isnan(tv)) continue;
+          const double d = qv - tv;
+          d2 += d * d;
+          ++overlap;
+        }
+        if (overlap == 0) continue;
+        candidates.emplace_back(d2, target);
+      }
+
+      if (candidates.empty()) {
+        out[qidx] = fallback_[static_cast<std::size_t>(f)];
+        continue;
+      }
+
+      const std::int64_t k = std::min<std::int64_t>(options_.neighbors, static_cast<std::int64_t>(candidates.size()));
+      std::partial_sort(
+          candidates.begin(), candidates.begin() + k, candidates.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
+
+      double num = 0.0;
+      double den = 0.0;
+      if (options_.weighting == NeighborImputerWeighting::Uniform) {
+        for (std::int64_t t = 0; t < k; ++t) num += candidates[static_cast<std::size_t>(t)].second;
+        den = static_cast<double>(k);
+      } else {
+        bool had_exact = false;
+        for (std::int64_t t = 0; t < k; ++t) {
+          const double d2 = candidates[static_cast<std::size_t>(t)].first;
+          const double y = candidates[static_cast<std::size_t>(t)].second;
+          if (d2 <= options_.distance_floor) {
+            num += y;
+            den += 1.0;
+            had_exact = true;
+          } else if (!had_exact) {
+            const double w = 1.0 / std::sqrt(d2 + options_.distance_floor);
+            num += w * y;
+            den += w;
+          }
+        }
+      }
+      out[qidx] = (den > 0.0) ? (num / den) : fallback_[static_cast<std::size_t>(f)];
+    }
+  }
+
+  return StatusOr<Series>(from_dense_like(query, std::move(out)));
+}
+
+StatusOr<Series> NeighborImputer::learn_map(const FeatureBatch& batch,
+                                            const TrainOptions& learn_options,
+                                            const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+IterativeImputer::IterativeImputer(IterativeImputerOptions options) : options_(options) {}
+
+bool IterativeImputer::trained() const noexcept { return trained_; }
+
+Status IterativeImputer::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  Status rounds_status = validate_rounds(options_.rounds, "IterativeImputer");
+  if (!rounds_status.ok()) return rounds_status;
+  if (!std::isfinite(options_.ridge) || options_.ridge < 0.0) {
+    return Status::invalid_argument("IterativeImputer requires finite ridge >= 0.");
+  }
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "IterativeImputer::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  DenseMatrix matrix = matrix_or.move_value();
+
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  fallback_.assign(static_cast<std::size_t>(feature_count_), options_.empty_feature_fallback);
+  std::vector<bool> missing(static_cast<std::size_t>(matrix.values.size()), false);
+
+  for (std::int64_t f = 0; f < feature_count_; ++f) {
+    std::vector<double> values = feature_non_missing(matrix, f);
+    double fill = options_.empty_feature_fallback;
+    if (!values.empty()) {
+      fill = std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size());
+    }
+    fallback_[static_cast<std::size_t>(f)] = fill;
+    for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+      const std::size_t idx = offset(matrix, i, f);
+      if (std::isnan(matrix.values[idx])) {
+        matrix.values[idx] = fill;
+        missing[idx] = true;
+      }
+    }
+  }
+
+  coefs_.assign(static_cast<std::size_t>(feature_count_), std::vector<double>{});
+  intercept_.assign(static_cast<std::size_t>(feature_count_), 0.0);
+  if (feature_count_ <= 1) {
+    trained_ = true;
+    return Status::success();
+  }
+
+  for (std::int64_t round = 0; round < options_.rounds; ++round) {
+    for (std::int64_t f = 0; f < feature_count_; ++f) {
+      std::vector<std::int64_t> rows{};
+      std::vector<double> target{};
+      rows.reserve(static_cast<std::size_t>(matrix.sample_count));
+      target.reserve(static_cast<std::size_t>(matrix.sample_count));
+
+      for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+        const std::size_t idx = offset(matrix, i, f);
+        if (missing[idx]) continue;
+        rows.push_back(i);
+        target.push_back(matrix.values[idx]);
+      }
+      if (rows.empty()) continue;
+      std::vector<double> coef_full = fit_ridge_coefficients(matrix, target, f, rows, options_.ridge);
+      if (coef_full.empty()) continue;
+
+      intercept_[static_cast<std::size_t>(f)] = coef_full.front();
+      coefs_[static_cast<std::size_t>(f)] =
+          std::vector<double>(coef_full.begin() + 1, coef_full.end());
+
+      for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+        const std::size_t idx = offset(matrix, i, f);
+        if (!missing[idx]) continue;
+        matrix.values[idx] = predict_ridge_row(
+            matrix, i, f, coefs_[static_cast<std::size_t>(f)], intercept_[static_cast<std::size_t>(f)]);
+      }
+    }
+  }
+
+  trained_ = true;
+  return Status::success();
+}
+
+StatusOr<Series> IterativeImputer::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "IterativeImputer::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "IterativeImputer::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  DenseMatrix matrix = matrix_or.move_value();
+  std::vector<bool> missing(static_cast<std::size_t>(matrix.values.size()), false);
+
+  for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+    for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+      const std::size_t idx = offset(matrix, i, f);
+      if (std::isnan(matrix.values[idx])) {
+        matrix.values[idx] = fallback_[static_cast<std::size_t>(f)];
+        missing[idx] = true;
+      }
+    }
+  }
+
+  if (feature_count_ > 1) {
+    for (std::int64_t round = 0; round < options_.rounds; ++round) {
+      for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+        const auto& coef = coefs_[static_cast<std::size_t>(f)];
+        if (coef.empty()) continue;
+        for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+          const std::size_t idx = offset(matrix, i, f);
+          if (!missing[idx]) continue;
+          matrix.values[idx] = predict_ridge_row(matrix, i, f, coef, intercept_[static_cast<std::size_t>(f)]);
+        }
+      }
+    }
+  }
+  return StatusOr<Series>(from_dense_like(matrix, std::move(matrix.values)));
+}
+
+StatusOr<Series> IterativeImputer::learn_map(const FeatureBatch& batch,
+                                             const TrainOptions& learn_options,
+                                             const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+VectorNormalizer::VectorNormalizer(VectorNormalizerOptions options) : options_(options) {}
+
+bool VectorNormalizer::trained() const noexcept { return trained_; }
+
+Status VectorNormalizer::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  Status floor_status = validate_floor(options_.floor, "VectorNormalizer");
+  if (!floor_status.ok()) return floor_status;
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "VectorNormalizer::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  DenseMatrix matrix = matrix_or.move_value();
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  trained_ = true;
+  return Status::success();
+}
+
+StatusOr<Series> VectorNormalizer::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "VectorNormalizer::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "VectorNormalizer::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  DenseMatrix matrix = matrix_or.move_value();
+
+  std::vector<double> out = matrix.values;
+  for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+    double norm = 0.0;
+    if (options_.norm == VectorNorm::L1) {
+      for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+        const double v = out[offset(matrix, i, f)];
+        if (std::isnan(v)) continue;
+        norm += std::abs(v);
+      }
+    } else if (options_.norm == VectorNorm::L2) {
+      for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+        const double v = out[offset(matrix, i, f)];
+        if (std::isnan(v)) continue;
+        norm += v * v;
+      }
+      norm = std::sqrt(norm);
+    } else {
+      for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+        const double v = out[offset(matrix, i, f)];
+        if (std::isnan(v)) continue;
+        norm = std::max(norm, std::abs(v));
+      }
+    }
+    if (!(norm >= options_.floor)) norm = 1.0;
+    for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+      const std::size_t idx = offset(matrix, i, f);
+      if (std::isnan(out[idx])) continue;
+      out[idx] /= norm;
+    }
+  }
+  return StatusOr<Series>(from_dense_like(matrix, std::move(out)));
+}
+
+StatusOr<Series> VectorNormalizer::learn_map(const FeatureBatch& batch,
+                                             const TrainOptions& learn_options,
+                                             const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+MaxAbsScaler::MaxAbsScaler(MaxAbsScalerOptions options) : options_(options) {}
+
+bool MaxAbsScaler::trained() const noexcept { return trained_; }
+
+Status MaxAbsScaler::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  Status floor_status = validate_floor(options_.floor, "MaxAbsScaler");
+  if (!floor_status.ok()) return floor_status;
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "MaxAbsScaler::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  DenseMatrix matrix = matrix_or.move_value();
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  scale_.assign(static_cast<std::size_t>(feature_count_), 1.0);
+
+  for (std::int64_t f = 0; f < feature_count_; ++f) {
+    double maxabs = 0.0;
+    for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+      const double v = matrix.values[offset(matrix, i, f)];
+      if (std::isnan(v)) continue;
+      maxabs = std::max(maxabs, std::abs(v));
+    }
+    if (!(maxabs >= options_.floor)) maxabs = 1.0;
+    scale_[static_cast<std::size_t>(f)] = maxabs;
+  }
+
+  trained_ = true;
+  return Status::success();
+}
+
+StatusOr<Series> MaxAbsScaler::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "MaxAbsScaler::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "MaxAbsScaler::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  DenseMatrix matrix = matrix_or.move_value();
+  std::vector<double> out = matrix.values;
+
+  for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+    for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+      const std::size_t idx = offset(matrix, i, f);
+      if (std::isnan(out[idx])) continue;
+      out[idx] /= scale_[static_cast<std::size_t>(f)];
+    }
+  }
+  return StatusOr<Series>(from_dense_like(matrix, std::move(out)));
+}
+
+StatusOr<Series> MaxAbsScaler::learn_map(const FeatureBatch& batch,
+                                         const TrainOptions& learn_options,
+                                         const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+QuantileMap::QuantileMap(QuantileMapOptions options) : options_(options) {}
+
+bool QuantileMap::trained() const noexcept { return trained_; }
+
+Status QuantileMap::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  Status clip_status = validate_unit_interval(options_.clip, "QuantileMap");
+  if (!clip_status.ok()) return clip_status;
+  if (!(options_.clip < 0.5)) {
+    return Status::invalid_argument("QuantileMap requires clip < 0.5.");
+  }
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "QuantileMap::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  DenseMatrix matrix = matrix_or.move_value();
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  sorted_.assign(static_cast<std::size_t>(feature_count_), {});
+
+  for (std::int64_t f = 0; f < feature_count_; ++f) {
+    auto values = feature_non_missing(matrix, f);
+    std::sort(values.begin(), values.end());
+    sorted_[static_cast<std::size_t>(f)] = std::move(values);
+  }
+  trained_ = true;
+  return Status::success();
+}
+
+StatusOr<Series> QuantileMap::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "QuantileMap::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "QuantileMap::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  DenseMatrix matrix = matrix_or.move_value();
+  std::vector<double> out = matrix.values;
+
+  for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+    for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+      const std::size_t idx = offset(matrix, i, f);
+      const double v = out[idx];
+      if (std::isnan(v)) continue;
+      const auto& sorted = sorted_[static_cast<std::size_t>(f)];
+      if (sorted.empty()) {
+        out[idx] = std::numeric_limits<double>::quiet_NaN();
+        continue;
+      }
+      double p = feature_cdf(sorted, v);
+      p = std::clamp(p, options_.clip, 1.0 - options_.clip);
+      out[idx] = (options_.output == QuantileMapOutput::Uniform) ? p : normal_quantile(p);
+    }
+  }
+  return StatusOr<Series>(from_dense_like(matrix, std::move(out)));
+}
+
+StatusOr<Series> QuantileMap::learn_map(const FeatureBatch& batch,
+                                        const TrainOptions& learn_options,
+                                        const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+PowerMap::PowerMap(PowerMapOptions options) : options_(options) {}
+
+bool PowerMap::trained() const noexcept { return trained_; }
+
+Status PowerMap::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  Status floor_status = validate_floor(options_.variance_floor, "PowerMap");
+  if (!floor_status.ok()) return floor_status;
+  Status grid_status = validate_grid(options_.lambda_grid, "PowerMap");
+  if (!grid_status.ok()) return grid_status;
+  if (!(options_.lambda_max > options_.lambda_min) || !std::isfinite(options_.lambda_min) || !std::isfinite(options_.lambda_max)) {
+    return Status::invalid_argument("PowerMap requires finite lambda_min < lambda_max.");
+  }
+  if (options_.lambda.has_value() && !std::isfinite(*options_.lambda)) {
+    return Status::invalid_argument("PowerMap requires finite lambda when explicitly provided.");
+  }
+
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "PowerMap::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  DenseMatrix matrix = matrix_or.move_value();
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  lambda_.assign(static_cast<std::size_t>(feature_count_), 1.0);
+  center_.assign(static_cast<std::size_t>(feature_count_), 0.0);
+  scale_.assign(static_cast<std::size_t>(feature_count_), 1.0);
+
+  for (std::int64_t f = 0; f < feature_count_; ++f) {
+    const std::vector<double> values = feature_non_missing(matrix, f);
+    if (values.empty()) continue;
+    if (options_.mode == PowerMapMode::BoxCox) {
+      for (double v : values) {
+        if (!(v > 0.0)) {
+          return Status::invalid_argument("PowerMap(BoxCox) requires strictly positive observed values.");
+        }
+      }
+    }
+
+    double best_lambda = options_.lambda.has_value() ? *options_.lambda : 1.0;
+    if (!options_.lambda.has_value()) {
+      double best_score = -std::numeric_limits<double>::infinity();
+      const double step = (options_.lambda_max - options_.lambda_min) / static_cast<double>(options_.lambda_grid - 1);
+      const double sum_pos_log = std::accumulate(values.begin(), values.end(), 0.0, [](double acc, double v) {
+        return acc + (v >= 0.0 ? std::log1p(v) : 0.0);
+      });
+      const double sum_neg_log = std::accumulate(values.begin(), values.end(), 0.0, [](double acc, double v) {
+        return acc + (v < 0.0 ? std::log1p(-v) : 0.0);
+      });
+      const double sum_box_log = std::accumulate(values.begin(), values.end(), 0.0, [](double acc, double v) {
+        return acc + std::log(v);
+      });
+
+      for (std::int64_t gi = 0; gi < options_.lambda_grid; ++gi) {
+        const double l = options_.lambda_min + step * static_cast<double>(gi);
+        std::vector<double> transformed{};
+        transformed.reserve(values.size());
+        for (double v : values) {
+          transformed.push_back(options_.mode == PowerMapMode::YeoJohnson ? yeo_johnson_value(v, l) : box_cox_value(v, l));
+        }
+        const double mean = std::accumulate(transformed.begin(), transformed.end(), 0.0) / static_cast<double>(transformed.size());
+        double var = 0.0;
+        for (double v : transformed) {
+          const double d = v - mean;
+          var += d * d;
+        }
+        var /= static_cast<double>(transformed.size());
+        if (!(var > 0.0) || !std::isfinite(var)) continue;
+        double score = -0.5 * static_cast<double>(transformed.size()) * std::log(var);
+        if (options_.mode == PowerMapMode::YeoJohnson) {
+          score += (l - 1.0) * (sum_pos_log - sum_neg_log);
+        } else {
+          score += (l - 1.0) * sum_box_log;
+        }
+        if (score > best_score) {
+          best_score = score;
+          best_lambda = l;
+        }
+      }
+    }
+    lambda_[static_cast<std::size_t>(f)] = best_lambda;
+
+    if (options_.standardize) {
+      double sum = 0.0;
+      std::int64_t count = 0;
+      for (double v : values) {
+        sum += options_.mode == PowerMapMode::YeoJohnson ? yeo_johnson_value(v, best_lambda) : box_cox_value(v, best_lambda);
+        ++count;
+      }
+      double mean = 0.0;
+      double stddev = 1.0;
+      if (count > 0) {
+        mean = sum / static_cast<double>(count);
+        double var = 0.0;
+        for (double v : values) {
+          const double y = options_.mode == PowerMapMode::YeoJohnson ? yeo_johnson_value(v, best_lambda) : box_cox_value(v, best_lambda);
+          const double d = y - mean;
+          var += d * d;
+        }
+        var /= static_cast<double>(count);
+        stddev = std::sqrt(var);
+        if (!(stddev >= options_.variance_floor)) stddev = 1.0;
+      }
+      center_[static_cast<std::size_t>(f)] = mean;
+      scale_[static_cast<std::size_t>(f)] = stddev;
+    }
+  }
+
+  trained_ = true;
+  return Status::success();
+}
+
+StatusOr<Series> PowerMap::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "PowerMap::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "PowerMap::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  DenseMatrix matrix = matrix_or.move_value();
+  std::vector<double> out = matrix.values;
+
+  for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+    for (std::int64_t f = 0; f < matrix.feature_count; ++f) {
+      const std::size_t idx = offset(matrix, i, f);
+      const double v = out[idx];
+      if (std::isnan(v)) continue;
+      if (options_.mode == PowerMapMode::BoxCox && !(v > 0.0)) {
+        return StatusOr<Series>(Status::invalid_argument("PowerMap(BoxCox) map() saw non-positive values."));
+      }
+      const double l = lambda_[static_cast<std::size_t>(f)];
+      double y = options_.mode == PowerMapMode::YeoJohnson ? yeo_johnson_value(v, l) : box_cox_value(v, l);
+      if (options_.standardize) {
+        y = (y - center_[static_cast<std::size_t>(f)]) / scale_[static_cast<std::size_t>(f)];
+      }
+      out[idx] = y;
+    }
+  }
+
+  return StatusOr<Series>(from_dense_like(matrix, std::move(out)));
+}
+
+StatusOr<Series> PowerMap::learn_map(const FeatureBatch& batch,
+                                     const TrainOptions& learn_options,
+                                     const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+ThresholdBinarizer::ThresholdBinarizer(ThresholdBinarizerOptions options) : options_(options) {}
+
+bool ThresholdBinarizer::trained() const noexcept { return trained_; }
+
+Status ThresholdBinarizer::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  if (!std::isfinite(options_.threshold) || !std::isfinite(options_.low_value) || !std::isfinite(options_.high_value)) {
+    return Status::invalid_argument("ThresholdBinarizer requires finite threshold/low/high values.");
+  }
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "ThresholdBinarizer::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  DenseMatrix matrix = matrix_or.move_value();
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  trained_ = true;
+  return Status::success();
+}
+
+StatusOr<Series> ThresholdBinarizer::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "ThresholdBinarizer::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "ThresholdBinarizer::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  DenseMatrix matrix = matrix_or.move_value();
+  std::vector<double> out = matrix.values;
+  for (double& v : out) {
+    if (std::isnan(v)) continue;
+    v = (v > options_.threshold) ? options_.high_value : options_.low_value;
+  }
+  return StatusOr<Series>(from_dense_like(matrix, std::move(out)));
+}
+
+StatusOr<Series> ThresholdBinarizer::learn_map(const FeatureBatch& batch,
+                                               const TrainOptions& learn_options,
+                                               const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
+PolynomialLift::PolynomialLift(PolynomialLiftOptions options) : options_(options) {}
+
+bool PolynomialLift::trained() const noexcept { return trained_; }
+
+Status PolynomialLift::learn(const FeatureBatch& batch, const TrainOptions& options) {
+  (void)options;
+  if (options_.degree < 1) {
+    return Status::invalid_argument("PolynomialLift requires degree >= 1.");
+  }
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "PolynomialLift::learn");
+  if (!matrix_or.ok()) return matrix_or.status();
+  DenseMatrix matrix = matrix_or.move_value();
+  layout_ = matrix.layout;
+  feature_count_ = matrix.feature_count;
+  terms_.clear();
+  out_feature_count_ = options_.include_bias ? 1 : 0;
+
+  std::vector<std::int64_t> cur{};
+  for (std::int64_t d = 1; d <= options_.degree; ++d) {
+    if (options_.interactions_only) {
+      collect_combinations_no_repetition(0, d, feature_count_, cur, terms_);
+    } else {
+      collect_combinations_repetition(0, d, feature_count_, cur, terms_);
+    }
+  }
+  out_feature_count_ += static_cast<std::int64_t>(terms_.size());
+  trained_ = true;
+  return Status::success();
+}
+
+StatusOr<Series> PolynomialLift::map(const FeatureBatch& batch, const InferOptions& options) const {
+  (void)options;
+  Status ready = validate_trained_input(trained_, layout_, feature_count_, batch, "PolynomialLift::map");
+  if (!ready.ok()) return StatusOr<Series>(std::move(ready));
+  StatusOr<DenseMatrix> matrix_or = to_dense(batch, "PolynomialLift::map");
+  if (!matrix_or.ok()) return StatusOr<Series>(matrix_or.status());
+  DenseMatrix matrix = matrix_or.move_value();
+
+  std::vector<double> out(static_cast<std::size_t>(matrix.sample_count * out_feature_count_), 0.0);
+  for (std::int64_t i = 0; i < matrix.sample_count; ++i) {
+    std::int64_t out_col = 0;
+    if (options_.include_bias) {
+      out[out_offset(matrix.layout, matrix.sample_count, out_feature_count_, i, out_col++)] = 1.0;
+    }
+    for (const auto& term : terms_) {
+      double v = 1.0;
+      bool has_nan = false;
+      for (std::int64_t f : term) {
+        const double x = matrix.values[offset(matrix, i, f)];
+        if (std::isnan(x)) {
+          has_nan = true;
+          break;
+        }
+        v *= x;
+      }
+      out[out_offset(matrix.layout, matrix.sample_count, out_feature_count_, i, out_col++)] =
+          has_nan ? std::numeric_limits<double>::quiet_NaN() : v;
+    }
+  }
+
+  return StatusOr<Series>(from_dense(matrix, std::move(out), out_feature_count_));
+}
+
+StatusOr<Series> PolynomialLift::learn_map(const FeatureBatch& batch,
+                                           const TrainOptions& learn_options,
+                                           const InferOptions& infer_options) {
+  Status s = learn(batch, learn_options);
+  if (!s.ok()) return StatusOr<Series>(std::move(s));
+  return map(batch, infer_options);
+}
+
 OneHotEncoder::OneHotEncoder(OneHotEncoderOptions options) : options_(options) {}
 
 bool OneHotEncoder::trained() const noexcept { return trained_; }
@@ -771,6 +1754,381 @@ StatusOr<Series> FrequencyEncoder::learn_map(const FeatureBatch& batch,
   Status s = learn(batch, learn_options);
   if (!s.ok()) return StatusOr<Series>(std::move(s));
   return map(batch, infer_options);
+}
+
+StatusOr<std::vector<Series>> StandardScaler::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(static_cast<std::int64_t>(layout_)), static_cast<double>(feature_count_)}),
+      state_f64(center_),
+      state_f64(scale_),
+  });
+}
+
+Status StandardScaler::load_state(const std::vector<Series>& state) {
+  if (state.size() < 3) return Status::invalid_argument("StandardScaler::load_state expects 3 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("StandardScaler::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  center_ = vec_f64(state[1]);
+  scale_ = vec_f64(state[2]);
+  if (!trained_) {
+    center_.clear();
+    scale_.clear();
+  }
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> MinMaxScaler::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(static_cast<std::int64_t>(layout_)), static_cast<double>(feature_count_)}),
+      state_f64(data_min_),
+      state_f64(data_max_),
+  });
+}
+
+Status MinMaxScaler::load_state(const std::vector<Series>& state) {
+  if (state.size() < 3) return Status::invalid_argument("MinMaxScaler::load_state expects 3 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("MinMaxScaler::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  data_min_ = vec_f64(state[1]);
+  data_max_ = vec_f64(state[2]);
+  if (!trained_) {
+    data_min_.clear();
+    data_max_.clear();
+  }
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> RobustScaler::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(static_cast<std::int64_t>(layout_)), static_cast<double>(feature_count_)}),
+      state_f64(center_),
+      state_f64(scale_),
+  });
+}
+
+Status RobustScaler::load_state(const std::vector<Series>& state) {
+  if (state.size() < 3) return Status::invalid_argument("RobustScaler::load_state expects 3 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("RobustScaler::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  center_ = vec_f64(state[1]);
+  scale_ = vec_f64(state[2]);
+  if (!trained_) {
+    center_.clear();
+    scale_.clear();
+  }
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> SimpleImputer::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(static_cast<std::int64_t>(layout_)), static_cast<double>(feature_count_)}),
+      state_f64(fill_values_),
+  });
+}
+
+Status SimpleImputer::load_state(const std::vector<Series>& state) {
+  if (state.size() < 2) return Status::invalid_argument("SimpleImputer::load_state expects 2 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("SimpleImputer::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  fill_values_ = vec_f64(state[1]);
+  if (!trained_) fill_values_.clear();
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> NeighborImputer::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0,
+                 static_cast<double>(static_cast<std::int64_t>(layout_)),
+                 static_cast<double>(feature_count_),
+                 static_cast<double>(train_samples_)}),
+      state_f64(train_values_),
+      state_f64(fallback_),
+  });
+}
+
+Status NeighborImputer::load_state(const std::vector<Series>& state) {
+  if (state.size() < 3) return Status::invalid_argument("NeighborImputer::load_state expects 3 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 4) return Status::invalid_argument("NeighborImputer::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  train_samples_ = static_cast<std::int64_t>(meta[3]);
+  train_values_ = vec_f64(state[1]);
+  fallback_ = vec_f64(state[2]);
+  if (!trained_) {
+    train_values_.clear();
+    fallback_.clear();
+    train_samples_ = 0;
+  }
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> IterativeImputer::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(static_cast<std::int64_t>(layout_)), static_cast<double>(feature_count_)}),
+      state_f64(fallback_),
+      state_f64(intercept_),
+      state_i64(nested_sizes(coefs_)),
+      state_f64(flatten_nested(coefs_)),
+  });
+}
+
+Status IterativeImputer::load_state(const std::vector<Series>& state) {
+  if (state.size() < 5) return Status::invalid_argument("IterativeImputer::load_state expects 5 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("IterativeImputer::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  fallback_ = vec_f64(state[1]);
+  intercept_ = vec_f64(state[2]);
+  coefs_ = unflatten_nested(vec_f64(state[4]), vec_i64(state[3]));
+  if (!trained_) {
+    fallback_.clear();
+    intercept_.clear();
+    coefs_.clear();
+  }
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> VectorNormalizer::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(static_cast<std::int64_t>(layout_)), static_cast<double>(feature_count_)}),
+  });
+}
+
+Status VectorNormalizer::load_state(const std::vector<Series>& state) {
+  if (state.empty()) return Status::invalid_argument("VectorNormalizer::load_state expects metadata tensor.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("VectorNormalizer::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> MaxAbsScaler::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(static_cast<std::int64_t>(layout_)), static_cast<double>(feature_count_)}),
+      state_f64(scale_),
+  });
+}
+
+Status MaxAbsScaler::load_state(const std::vector<Series>& state) {
+  if (state.size() < 2) return Status::invalid_argument("MaxAbsScaler::load_state expects 2 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("MaxAbsScaler::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  scale_ = vec_f64(state[1]);
+  if (!trained_) scale_.clear();
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> QuantileMap::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(static_cast<std::int64_t>(layout_)), static_cast<double>(feature_count_)}),
+      state_i64(nested_sizes(sorted_)),
+      state_f64(flatten_nested(sorted_)),
+  });
+}
+
+Status QuantileMap::load_state(const std::vector<Series>& state) {
+  if (state.size() < 3) return Status::invalid_argument("QuantileMap::load_state expects 3 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("QuantileMap::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  sorted_ = unflatten_nested(vec_f64(state[2]), vec_i64(state[1]));
+  if (!trained_) sorted_.clear();
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> PowerMap::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(static_cast<std::int64_t>(layout_)), static_cast<double>(feature_count_)}),
+      state_f64(lambda_),
+      state_f64(center_),
+      state_f64(scale_),
+  });
+}
+
+Status PowerMap::load_state(const std::vector<Series>& state) {
+  if (state.size() < 4) return Status::invalid_argument("PowerMap::load_state expects 4 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("PowerMap::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  lambda_ = vec_f64(state[1]);
+  center_ = vec_f64(state[2]);
+  scale_ = vec_f64(state[3]);
+  if (!trained_) {
+    lambda_.clear();
+    center_.clear();
+    scale_.clear();
+  }
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> ThresholdBinarizer::dump_state() const {
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(static_cast<std::int64_t>(layout_)), static_cast<double>(feature_count_)}),
+  });
+}
+
+Status ThresholdBinarizer::load_state(const std::vector<Series>& state) {
+  if (state.empty()) return Status::invalid_argument("ThresholdBinarizer::load_state expects metadata tensor.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("ThresholdBinarizer::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> PolynomialLift::dump_state() const {
+  std::vector<std::int64_t> sizes{};
+  sizes.reserve(terms_.size());
+  std::vector<std::int64_t> flat{};
+  for (const auto& term : terms_) {
+    sizes.push_back(static_cast<std::int64_t>(term.size()));
+    flat.insert(flat.end(), term.begin(), term.end());
+  }
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0,
+                 static_cast<double>(static_cast<std::int64_t>(layout_)),
+                 static_cast<double>(feature_count_),
+                 static_cast<double>(out_feature_count_)}),
+      state_i64(std::move(sizes)),
+      state_i64(std::move(flat)),
+  });
+}
+
+Status PolynomialLift::load_state(const std::vector<Series>& state) {
+  if (state.size() < 3) return Status::invalid_argument("PolynomialLift::load_state expects 3 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 4) return Status::invalid_argument("PolynomialLift::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  out_feature_count_ = static_cast<std::int64_t>(meta[3]);
+  terms_ = unflatten_nested_i64(vec_i64(state[2]), vec_i64(state[1]));
+  if (!trained_) {
+    terms_.clear();
+    out_feature_count_ = 0;
+  }
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> OneHotEncoder::dump_state() const {
+  std::vector<std::int64_t> sizes{};
+  sizes.reserve(category_keys_.size());
+  std::vector<double> flat_values{};
+  for (const auto& keys : category_keys_) {
+    sizes.push_back(static_cast<std::int64_t>(keys.size()));
+    for (std::uint64_t key : keys) {
+      flat_values.push_back(std::bit_cast<double>(key));
+    }
+  }
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0,
+                 static_cast<double>(static_cast<std::int64_t>(layout_)),
+                 static_cast<double>(feature_count_),
+                 static_cast<double>(encoded_feature_count_)}),
+      state_i64(std::move(sizes)),
+      state_f64(std::move(flat_values)),
+      state_i64(feature_offsets_),
+      state_i64(feature_widths_),
+  });
+}
+
+Status OneHotEncoder::load_state(const std::vector<Series>& state) {
+  if (state.size() < 5) return Status::invalid_argument("OneHotEncoder::load_state expects 5 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 4) return Status::invalid_argument("OneHotEncoder::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  encoded_feature_count_ = static_cast<std::int64_t>(meta[3]);
+  const auto sizes = vec_i64(state[1]);
+  const auto flat = vec_f64(state[2]);
+  const auto nested = unflatten_nested(flat, sizes);
+  category_keys_.clear();
+  category_keys_.reserve(nested.size());
+  for (const auto& row : nested) {
+    std::vector<std::uint64_t> keys{};
+    keys.reserve(row.size());
+    for (double v : row) keys.push_back(key_for_value(v));
+    category_keys_.push_back(std::move(keys));
+  }
+  feature_offsets_ = vec_i64(state[3]);
+  feature_widths_ = vec_i64(state[4]);
+  if (!trained_) {
+    category_keys_.clear();
+    feature_offsets_.clear();
+    feature_widths_.clear();
+    encoded_feature_count_ = 0;
+  }
+  return Status::success();
+}
+
+StatusOr<std::vector<Series>> FrequencyEncoder::dump_state() const {
+  std::vector<std::int64_t> key_sizes{};
+  key_sizes.reserve(category_keys_.size());
+  std::vector<double> flat_keys{};
+  for (const auto& keys : category_keys_) {
+    key_sizes.push_back(static_cast<std::int64_t>(keys.size()));
+    for (std::uint64_t key : keys) flat_keys.push_back(std::bit_cast<double>(key));
+  }
+  const auto freq_sizes = nested_sizes(category_freqs_);
+  const auto flat_freqs = flatten_nested(category_freqs_);
+  return StatusOr<std::vector<Series>>(std::vector<Series>{
+      state_f64({trained_ ? 1.0 : 0.0, static_cast<double>(static_cast<std::int64_t>(layout_)), static_cast<double>(feature_count_)}),
+      state_i64(std::move(key_sizes)),
+      state_f64(std::move(flat_keys)),
+      state_i64(freq_sizes),
+      state_f64(flat_freqs),
+  });
+}
+
+Status FrequencyEncoder::load_state(const std::vector<Series>& state) {
+  if (state.size() < 5) return Status::invalid_argument("FrequencyEncoder::load_state expects 5 state tensors.");
+  const auto meta = vec_f64(state[0]);
+  if (meta.size() < 3) return Status::invalid_argument("FrequencyEncoder::load_state invalid metadata.");
+  trained_ = meta[0] > 0.5;
+  layout_ = static_cast<ObservationLayout>(static_cast<std::int64_t>(meta[1]));
+  feature_count_ = static_cast<std::int64_t>(meta[2]);
+  const auto key_nested = unflatten_nested(vec_f64(state[2]), vec_i64(state[1]));
+  category_keys_.clear();
+  category_keys_.reserve(key_nested.size());
+  for (const auto& row : key_nested) {
+    std::vector<std::uint64_t> keys{};
+    keys.reserve(row.size());
+    for (double v : row) keys.push_back(key_for_value(v));
+    category_keys_.push_back(std::move(keys));
+  }
+  category_freqs_ = unflatten_nested(vec_f64(state[4]), vec_i64(state[3]));
+  if (!trained_) {
+    category_keys_.clear();
+    category_freqs_.clear();
+  }
+  return Status::success();
 }
 
 } // namespace pluss::ai::nodej::prep
