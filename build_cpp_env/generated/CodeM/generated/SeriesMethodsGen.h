@@ -1354,9 +1354,6 @@
   Series repeat_interleave(Args&&... args) const { return pluss::codem::_compat::invoke("repeat_interleave", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
-  Series& requires_grad_(Args&&... args) const { return pluss::codem::_compat::invoke_("requires_grad_", *this, std::forward<Args>(args)...); }
-
-  template <class... Args>
   Series reshape_as(Args&&... args) const { return pluss::codem::_compat::invoke("reshape_as", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
@@ -1634,6 +1631,9 @@
 
   template <class... Args>
   Series trace(Args&&... args) const { return pluss::codem::_compat::invoke("trace", *this, std::forward<Args>(args)...); }
+
+  template <class... Args>
+  Series& tracks_slope_(Args&&... args) const { return pluss::codem::_compat::invoke_("tracks_slope_", *this, std::forward<Args>(args)...); }
 
   template <class... Args>
   Series& transpose_(Args&&... args) const { return pluss::codem::_compat::invoke_("transpose_", *this, std::forward<Args>(args)...); }

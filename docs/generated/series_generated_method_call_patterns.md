@@ -465,7 +465,7 @@ For each generated method name, call it as shown below.
 - `x.renorm_(...);`
 - `auto y = x.repeat(...);`
 - `auto y = x.repeat_interleave(...);`
-- `x.requires_grad_(...);`
+- `x.tracks_slope_(...);`
 - `auto y = x.reshape_as(...);`
 - `x.resize_(...);`
 - `x.resize_as_(...);`

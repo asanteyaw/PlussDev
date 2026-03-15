@@ -358,6 +358,52 @@ case "${BACKEND}" in
       PLUSS_CUDA_NATIVE_BASELINE=1 \
       PLUSS_CUDA_NATIVE_MATMUL=1 \
       PLUSS_CUDA_NATIVE_MATMUL_STRICT=1
+    run_gate gate57_cuda_counting_runtime "[cuda][counting][runtime]"
+    run_gate gate58_cuda_counting_bridge "[cuda][bridge][counting]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate59_cuda_counting_policy "[cuda][bridge][policy][counting]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_COUNTING=1 \
+      PLUSS_CUDA_NATIVE_COUNTING_STRICT=1
+    run_gate gate60_cuda_selection_route_bridge "[cuda][bridge][selection][route]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate61_cuda_selection_route_policy "[cuda][bridge][policy][selection][route]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_SELECTION=1 \
+      PLUSS_CUDA_NATIVE_SELECTION_STRICT=1
+    run_gate gate62_cuda_selection_route_reject "[cuda][bridge][policy][selection][reject]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_SELECTION=1 \
+      PLUSS_CUDA_NATIVE_SELECTION_STRICT=1
+    run_gate gate63_cuda_factory_runtime "[cuda][factory][runtime]"
+    run_gate gate64_cuda_factory_bridge "[cuda][bridge][factory]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate65_cuda_factory_policy "[cuda][bridge][policy][factory]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_FACTORY=1 \
+      PLUSS_CUDA_NATIVE_FACTORY_STRICT=1
+    run_gate gate66_cuda_factory_policy_reject "[cuda][bridge][policy][factory][reject]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=0 \
+      PLUSS_CUDA_NATIVE_FACTORY=1 \
+      PLUSS_CUDA_NATIVE_FACTORY_STRICT=1
+    run_gate gate67_cuda_stochastic_runtime "[cuda][stochastic][runtime]"
+    run_gate gate68_cuda_stochastic_bridge "[cuda][bridge][stochastic]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1
+    run_gate gate69_cuda_stochastic_policy "[cuda][bridge][policy][stochastic]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=1 \
+      PLUSS_CUDA_NATIVE_STOCHASTIC=1 \
+      PLUSS_CUDA_NATIVE_STOCHASTIC_STRICT=1
+    run_gate gate70_cuda_stochastic_policy_reject "[cuda][bridge][policy][stochastic][reject]" \
+      PLUSS_CUDA_ALLOW_CPU_BRIDGE=1 \
+      PLUSS_CUDA_NATIVE_BASELINE=0 \
+      PLUSS_CUDA_NATIVE_STOCHASTIC=1 \
+      PLUSS_CUDA_NATIVE_STOCHASTIC_STRICT=1
     ;;
 esac
 

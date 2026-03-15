@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <atomic>
+#include <sstream>
 #include <thread>
 #include <type_traits>
 
@@ -333,7 +334,27 @@ Series gather(const Series& input, std::int64_t dim, const Series& index) {
     lin_to_multi(lin);
     std::int64_t k = ip[lin];
     if (k < 0) k += dim_size;
-    if (k < 0 || k >= dim_size) throw_error("gather: index out of range");
+    if (k < 0 || k >= dim_size) {
+      std::ostringstream oss;
+      oss << "gather: index out of range"
+          << " (raw_index=" << ip[lin]
+          << ", normalized_index=" << k
+          << ", dim_size=" << dim_size
+          << ", dim=" << dim
+          << ", lin=" << lin
+          << ", input_shape=[";
+      for (std::size_t s = 0; s < in_sizes.size(); ++s) {
+        if (s) oss << ',';
+        oss << in_sizes[s];
+      }
+      oss << "], index_shape=[";
+      for (std::size_t s = 0; s < out_sizes.size(); ++s) {
+        if (s) oss << ',';
+        oss << out_sizes[s];
+      }
+      oss << "])";
+      throw_error(oss.str());
+    }
     multi[(std::size_t)dim] = k;
 
     std::int64_t in_off = 0;
@@ -366,7 +387,8 @@ Series scatter(const Series& input, std::int64_t dim, const Series& index, const
     if (index.sizes()[(std::size_t)d] != input.sizes()[(std::size_t)d]) throw_error("scatter: shape mismatch");
   }
 
-  auto out = input.contiguous(); // start copy
+  // Functional scatter must never alias input; clone explicitly even when input is already contiguous.
+  auto out = input.clone().contiguous(); // start copy
   auto idx = index.contiguous();
   auto ss = src.contiguous();
 

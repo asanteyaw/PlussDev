@@ -380,6 +380,105 @@ Design signal taken from these files:
 - Gate matrix expansion:
   - expand CUDA mega-gate matrix from `53` to `56` gates.
 
+### Patch 162 (landed in this step)
+- CUDA counting/set family tranche:
+  - add native CUDA counting capability API (`native/cuda/CountingOps.*`) gated by:
+    - `PLUSS_CUDA_NATIVE_BASELINE`,
+    - `PLUSS_CUDA_NATIVE_COUNTING`,
+    - `PLUSS_CUDA_NATIVE_COUNTING_STRICT`;
+  - enforce strict/bridge routing for:
+    - `unique`,
+    - `bincount`,
+    - `histc`;
+  - keep strict-native precedence:
+    - strict mode rejects bridge fallback when counting route predicates are unsupported.
+- Expanded CUDA validation:
+  - add counting runtime + bridge/policy contracts (`[cuda][counting][runtime]`, `[cuda][bridge][counting]`, `[cuda][bridge][policy][counting]`);
+  - extend mega-gate and cluster stress runner with dedicated counting families.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `56` to `59` gates.
+
+### Patch 163 (landed in this step)
+- CUDA selection route-contract tranche:
+  - add dedicated route-contract tests for CUDA selection execution paths:
+    - `sort`,
+    - `topk`,
+    - `kthvalue`,
+    - `argsort`;
+  - verify bridge-backed execution parity against CPU reference lanes when CUDA bridge is enabled;
+  - verify strict-native selection policy behavior:
+    - execute supported strict lanes,
+    - reject unsupported strict lanes fail-loud.
+- Expanded CUDA validation:
+  - add selection route contracts (`test_patch163_cuda_selection_route_contract.cpp`) with tags:
+    - `[cuda][bridge][selection][route]`,
+    - `[cuda][bridge][policy][selection][route]`,
+    - `[cuda][bridge][policy][selection][reject]`;
+  - expand CUDA mega-gate runner with dedicated selection route bridge/policy/reject gates;
+  - extend CUDA cluster stress runner with repeated selection route bridge/policy/reject sweeps.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `59` to `62` gates.
+
+### Patch 164 (landed in this step)
+- CUDA factory/random policy tranche:
+  - add native CUDA factory capability API (`native/cuda/FactoryOps.*`) gated by:
+    - `PLUSS_CUDA_NATIVE_BASELINE`,
+    - `PLUSS_CUDA_NATIVE_FACTORY`,
+    - `PLUSS_CUDA_NATIVE_FACTORY_STRICT`;
+  - add baseline capability predicates for factory families:
+    - `zeros`, `ones`, `full`,
+    - `arange`, `linspace`, `eye`,
+    - `rand`, `randn`;
+  - wire policy-aware CUDA transfer for public factory config paths (`Config.platform == CUDA`) so strict mode fail-loud behavior is enforced consistently for this family.
+- Expanded CUDA validation:
+  - add factory runtime + bridge/policy/reject contracts (`test_patch164_cuda_factory_contract.cpp`) with tags:
+    - `[cuda][factory][runtime]`,
+    - `[cuda][factory][policy][runtime]`,
+    - `[cuda][bridge][factory]`,
+    - `[cuda][bridge][policy][factory]`,
+    - `[cuda][bridge][policy][factory][reject]`;
+  - expand mega-gate and cluster stress runners with dedicated factory bridge/policy/reject sweeps.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `62` to `66` gates.
+
+### Patch 165 (landed in this step)
+- CUDA stochastic route-contract tranche:
+  - add native CUDA stochastic capability API (`native/cuda/StochasticOps.*`) gated by:
+    - `PLUSS_CUDA_NATIVE_BASELINE`,
+    - `PLUSS_CUDA_NATIVE_STOCHASTIC`,
+    - `PLUSS_CUDA_NATIVE_STOCHASTIC_STRICT`;
+  - enforce strict/bridge routing in stochastic invoke paths for:
+    - `bernoulli`,
+    - `uniform_`, `normal_`, `log_normal_`, `exponential_`, `geometric_`, `cauchy_`,
+    - `random_`,
+    - `multinomial`.
+- Expanded CUDA validation:
+  - add stochastic runtime + bridge/policy/reject contracts (`test_patch165_cuda_stochastic_contract.cpp`) with tags:
+    - `[cuda][stochastic][runtime]`,
+    - `[cuda][stochastic][policy][runtime]`,
+    - `[cuda][bridge][stochastic]`,
+    - `[cuda][bridge][policy][stochastic]`,
+    - `[cuda][bridge][policy][stochastic][reject]`;
+  - expand CUDA mega-gate runner with dedicated stochastic gates.
+- Gate matrix expansion:
+  - expand CUDA mega-gate matrix from `66` to `70` gates.
+
+### Patch 166 (landed in this step)
+- CUDA factory-like + stochastic-factory policy hardening tranche:
+  - apply policy-aware CUDA transfer to stochastic factory constructors:
+    - `randperm`,
+    - `normal`,
+    - `bernoulli`,
+    - `multinomial(..., Config, ...)`;
+  - apply policy-aware routing to like-factory config paths by delegating to policy-enforced base factories:
+    - `zeros_like`, `ones_like`, `full_like`,
+    - `rand_like`, `randn_like`,
+    - `randint_like`,
+    - `eye_like`.
+- Expanded CUDA validation:
+  - extend factory contracts with like-factory bridge + strict-policy rejection assertions;
+  - extend stochastic contracts with stochastic-factory bridge + strict-policy rejection assertions.
+
 ### Patch 150 (landed in this step)
 - MPS strict parity hardening:
   - promote native top-k selection policy to default-on for MPS (`PLUSS_MPS_NATIVE_TOPK_SELECTION=1` default),
@@ -416,11 +515,11 @@ Status:
 
 ## Current Bootstrap Artifact (CUDA)
 Latest sweep artifact:
-- `outputs/cuda_mega_gate_20260311_172017/one_page.md`
-- `outputs/cuda_mega_gate_20260311_172017/summary.tsv`
+- `outputs/cuda_mega_gate_20260313_180935/one_page.md`
+- `outputs/cuda_mega_gate_20260313_180935/summary.tsv`
 
 Status:
-- `56` gate matrix now defined (legacy artifacts may still reflect earlier snapshots before rank-aware matmul gate expansion).
+- `66 / 66` gates passing on latest sweep.
 
 ## CUDA Cluster Hardware Runner
 - New runner script:

@@ -99,6 +99,31 @@ TEST_CASE("MPS strict gather/scatter supports high-rank safe dtype lanes", "[mps
       gather_out_cpu.to(pluss::ScalarType::Float32).to_vec<float>(),
       "gather");
 
+  // Gather lane: int32 index should stay strict-native via MPS cast lane (no CPU fallback).
+  const auto gather_idx_i32_cpu = gather_idx_cpu.to(pluss::ScalarType::Int32);
+  const auto gather_out_i32_cpu = gather_in_cpu.gather(2, gather_idx_i32_cpu);
+  const auto gather_out_i32_mps = gather_in_cpu.to(pluss::pMPS).gather(2, gather_idx_i32_cpu.to(pluss::pMPS));
+  REQUIRE(gather_out_i32_mps.platform() == pluss::pMPS);
+  require_close_(
+      gather_out_i32_mps.to(pluss::pCPU).to(pluss::ScalarType::Float32).to_vec<float>(),
+      gather_out_i32_cpu.to(pluss::ScalarType::Float32).to_vec<float>(),
+      "gather_i32_index");
+
+  // Gather lane: int64 input + int64 index (used by packed-sequence length permutations).
+  const auto gather_i64_in_cpu = pluss::make_series(
+      std::vector<std::int64_t>{7, 11, 13, 17, 19, 23},
+      {2, 3});
+  const auto gather_i64_idx_cpu = pluss::make_series(
+      std::vector<std::int64_t>{2, 0, 1, 1, 2, 0},
+      {2, 3});
+  const auto gather_i64_out_cpu = gather_i64_in_cpu.gather(1, gather_i64_idx_cpu);
+  const auto gather_i64_out_mps =
+      gather_i64_in_cpu.to(pluss::pMPS).gather(1, gather_i64_idx_cpu.to(pluss::pMPS));
+  REQUIRE(gather_i64_out_mps.platform() == pluss::pMPS);
+  require_equal_(
+      gather_i64_out_mps.to(pluss::pCPU).to_vec<std::int64_t>(),
+      gather_i64_out_cpu.to_vec<std::int64_t>());
+
   // Scatter lane: int16 exact-roundtrip lane on rank-3 tensor.
   const auto scatter_base_cpu = pluss::Series::zeros({2, 3, 4}, pluss::ScalarType::Int16);
   const auto scatter_idx_cpu = pluss::make_series(
@@ -133,10 +158,10 @@ TEST_CASE("MPS strict gather/scatter rejects unsupported non-exact lane", "[mps]
 
   const auto idx = pluss::make_series(std::vector<std::int64_t>{0, 1, 2, 3}, {4}).to(pluss::pMPS);
 
-  // int64 data is intentionally outside the exact f32 roundtrip lane.
-  const auto x_i64 = pluss::Series::ones({4}, pluss::ScalarType::Int64).to(pluss::pMPS);
+  // complex data is intentionally outside the currently supported gather native lane.
+  const auto x_c64 = pluss::Series::ones({4}, pluss::ScalarType::Complex64).to(pluss::pMPS);
   try {
-    (void)x_i64.gather(0, idx);
+    (void)x_c64.gather(0, idx);
     FAIL("strict gather should fail for unsupported non-exact dtype lane");
   } catch (const std::exception& e) {
     REQUIRE(std::string(e.what()).find("no native MPS kernel yet") != std::string::npos);

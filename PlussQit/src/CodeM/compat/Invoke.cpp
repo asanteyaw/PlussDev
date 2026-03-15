@@ -19,6 +19,7 @@
 #include "CodeM/native/mps/Sorting.h"
 #include "CodeM/native/cuda/SelectionOps.h"
 #include "CodeM/native/cuda/MatmulOps.h"
+#include "CodeM/native/cuda/StochasticOps.h"
 #include "CodeM/native/cuda/CUDARuntime.h"
 
 #include <sstream>
@@ -152,25 +153,110 @@ static Series matmul_dispatch_(const Series& a, const Series& b) {
   return native::cpu::matmul(a, b);
 }
 
+static Series reduce_broadcasted_like_(const Series& grad, const Series& like, std::string_view op_name) {
+  std::vector<std::int64_t> grad_shape(grad.sizes().begin(), grad.sizes().end());
+  std::vector<std::int64_t> like_shape(like.sizes().begin(), like.sizes().end());
+  if (grad_shape == like_shape) {
+    return grad;
+  }
+
+  PLUSS_CHECK(
+      grad_shape.size() >= like_shape.size(),
+      std::string(op_name) + ": broadcast reduction rank mismatch");
+
+  const std::size_t prefix = grad_shape.size() - like_shape.size();
+  std::vector<std::int64_t> aligned_like(grad_shape.size(), 1);
+  for (std::size_t i = 0; i < like_shape.size(); ++i) {
+    aligned_like[prefix + i] = like_shape[i];
+  }
+
+  Series out = grad;
+  for (std::size_t i = 0; i < grad_shape.size(); ++i) {
+    const auto gd = grad_shape[i];
+    const auto ld = aligned_like[i];
+    if (ld == gd) continue;
+    PLUSS_CHECK(
+        ld == 1,
+        std::string(op_name) + ": unsupported non-broadcast matmul sensitivity reduction");
+    out = out.sum(static_cast<std::int64_t>(i), /*keepdim=*/true);
+  }
+
+  if (std::vector<std::int64_t>(out.sizes().begin(), out.sizes().end()) != like_shape) {
+    out = out.reshape(like_shape);
+  }
+  if (out.scalar_type() != like.scalar_type()) out = out.to(like.scalar_type());
+  if (out.platform() != like.platform()) out = out.to(like.platform());
+  return out;
+}
+
+static std::pair<Series, bool> promote_lhs_matmul_operand_(const Series& a) {
+  if (a.dim() == 1) {
+    return {a.unsqueeze(0), true};
+  }
+  return {a, false};
+}
+
+static std::pair<Series, bool> promote_rhs_matmul_operand_(const Series& b) {
+  if (b.dim() == 1) {
+    return {b.unsqueeze(-1), true};
+  }
+  return {b, false};
+}
+
+static Series promote_out_sensitivity_for_matmul_(
+    const Series& out_sens,
+    bool lhs_was_vec,
+    bool rhs_was_vec) {
+  if (lhs_was_vec && rhs_was_vec) {
+    const std::array<std::int64_t, 2> scalar_mat_shape{{1, 1}};
+    return out_sens.reshape(std::span<const std::int64_t>(scalar_mat_shape.data(), scalar_mat_shape.size()));
+  }
+  if (lhs_was_vec) {
+    return out_sens.unsqueeze(-2);
+  }
+  if (rhs_was_vec) {
+    return out_sens.unsqueeze(-1);
+  }
+  return out_sens;
+}
+
 static Series matmul_with_tape_(const Series& a, const Series& b) {
   Series out = matmul_dispatch_(a, b);
   if (!series_tape::recording_enabled()) return out;
   const bool ta = series_tape::tracks_slope(a);
   const bool tb = series_tape::tracks_slope(b);
   if (!ta && !tb) return out;
-  // Keep first pass simple: register 2D matmul pullbacks.
-  if (a.dim() != 2 || b.dim() != 2 || out.dim() != 2) return out;
+  // Reverse path currently supports vector/matrix/batched-matrix matmul semantics.
+  if (a.dim() < 1 || b.dim() < 1) {
+    throw_error(
+        "matmul: reverse-mode sensitivity currently supports tracked rank>=1 matmul inputs only");
+  }
 
   auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = "matmul";
   link->parents = {a, b};
   link->propagate = [a, b, ta, tb](const Series& out_sens) {
+    const auto [a_promoted, a_was_vec] = promote_lhs_matmul_operand_(a);
+    const auto [b_promoted, b_was_vec] = promote_rhs_matmul_operand_(b);
+    const Series g_promoted = promote_out_sensitivity_for_matmul_(out_sens, a_was_vec, b_was_vec);
+
     if (ta) {
-      const Series bt = b.transpose(0, 1);
-      series_tape::accumulate_sensitivity(a, matmul_dispatch_(out_sens, bt));
+      const Series bt = b_promoted.transpose(-2, -1);
+      Series ga = matmul_dispatch_(g_promoted, bt);
+      ga = reduce_broadcasted_like_(ga, a_promoted, "matmul");
+      if (a_was_vec) {
+        ga = ga.squeeze(0);
+      }
+      series_tape::accumulate_sensitivity(a, ga);
     }
     if (tb) {
-      const Series at = a.transpose(0, 1);
-      series_tape::accumulate_sensitivity(b, matmul_dispatch_(at, out_sens));
+      const Series at = a_promoted.transpose(-2, -1);
+      Series gb = matmul_dispatch_(at, g_promoted);
+      gb = reduce_broadcasted_like_(gb, b_promoted, "matmul");
+      if (b_was_vec) {
+        gb = gb.squeeze(-1);
+      }
+      series_tape::accumulate_sensitivity(b, gb);
     }
   };
   series_tape::bind_source_link(out, std::move(link));
@@ -376,9 +462,6 @@ static Series make_expanded_gather_index_(
 }
 
 static Series index_select_dispatch_(const Series& self, std::int64_t dim, const Series& index) {
-  if (self.platform() != Platform::MPS) {
-    return native::cpu::index_select(self, dim, index);
-  }
   auto idx = index;
   if (idx.platform() != self.platform()) idx = idx.to(self.platform());
   if (idx.scalar_type() != ScalarType::Int64) idx = idx.to(ScalarType::Int64);
@@ -396,11 +479,7 @@ static Series index_select_dispatch_(const Series& self, std::int64_t dim, const
       std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
       dim,
       self.platform());
-
-  if (self.scalar_type() == ScalarType::Float32) {
-    return ops_internal::gather(self, dim, idx_expanded);
-  }
-  return ops_internal::gather(self.to(ScalarType::Float32), dim, idx_expanded).to(self.scalar_type());
+  return ops_internal::gather(self, dim, idx_expanded);
 }
 
 static bool is_floating_dtype(ScalarType st) {
@@ -763,57 +842,204 @@ static Series& fill_diagonal_impl(Series& self, double value, bool /*wrap*/) {
   return self;
 }
 
-static Series bernoulli_sample_from_probs(const Series& probs) {
-  auto p = ops_internal::clamp(probs.to(ScalarType::Float64), 0.0, 1.0);
+[[noreturn]] static void throw_cuda_stochastic_unavailable_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported) {
+  if (native_strict && (!native_enabled || !route_supported)) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native_enabled && route_supported) {
+    throw_error(
+        std::string(op) +
+        ": CUDA native stochastic route declared but kernel is not implemented yet");
+  }
+  throw_error(
+      std::string(op) +
+      ": CUDA stochastic path unavailable in this tranche; no CPU fallback allowed. "
+      "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
+}
+
+template <class CpuRouteFn>
+Series cuda_stochastic_route_or_bridge_(
+    std::string_view op,
+    bool native_enabled,
+    bool native_strict,
+    bool route_supported,
+    CpuRouteFn&& cpu_route) {
+  if (native_enabled && route_supported) {
+    return cpu_route();
+  }
+  if (native_strict) {
+    throw_error(
+        std::string(op) +
+        ": strict native CUDA route requested but kernel is unsupported");
+  }
+  if (native::cuda::cpu_bridge_enabled()) {
+    return cpu_route();
+  }
+  throw_cuda_stochastic_unavailable_(op, native_enabled, native_strict, route_supported);
+}
+
+static Series bernoulli_sample_from_probs_cpu_(const Series& probs) {
+  auto p = ops_internal::clamp(probs.to(Platform::CPU).to(ScalarType::Float64), 0.0, 1.0);
   auto u = Series::rand(p.sizes(), ScalarType::Float64, /*seed=*/0);
   return ops_internal::lt(u, p);
 }
 
-static Series uniform_like(const Series& self, double from, double to) {
+static Series bernoulli_sample_from_probs(const Series& probs) {
+  if (probs.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_stochastic_enabled();
+    const bool native_strict = native::cuda::native_stochastic_strict();
+    const bool route_supported = native::cuda::supports_bernoulli_stochastic(probs);
+    return cuda_stochastic_route_or_bridge_(
+        "bernoulli",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return bernoulli_sample_from_probs_cpu_(probs).to(Platform::CUDA); });
+  }
+  return bernoulli_sample_from_probs_cpu_(probs);
+}
+
+static Series uniform_like_cpu_(const Series& self, double from, double to) {
   PLUSS_CHECK(to > from, "uniform_: expected to > from");
   Series x = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   x = add_scalar(mul_scalar(x, to - from), from);
-  return x.to(self.scalar_type());
+  return x.to(Platform::CPU).to(self.scalar_type());
 }
 
-static Series normal_like(const Series& self, double mean, double std) {
+static Series uniform_like(const Series& self, double from, double to) {
+  if (self.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_stochastic_enabled();
+    const bool native_strict = native::cuda::native_stochastic_strict();
+    const bool route_supported = native::cuda::supports_uniform_stochastic(self);
+    return cuda_stochastic_route_or_bridge_(
+        "uniform_",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return uniform_like_cpu_(self, from, to).to(Platform::CUDA); });
+  }
+  return uniform_like_cpu_(self, from, to);
+}
+
+static Series normal_like_cpu_(const Series& self, double mean, double std) {
   PLUSS_CHECK(std >= 0.0, "normal_: expected std >= 0");
   Series x = Series::randn(self.sizes(), ScalarType::Float64, /*seed=*/0);
   x = add_scalar(mul_scalar(x, std), mean);
-  return x.to(self.scalar_type());
+  return x.to(Platform::CPU).to(self.scalar_type());
 }
 
-static Series exponential_like(const Series& self, double lambda) {
+static Series normal_like(const Series& self, double mean, double std) {
+  if (self.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_stochastic_enabled();
+    const bool native_strict = native::cuda::native_stochastic_strict();
+    const bool route_supported = native::cuda::supports_normal_stochastic(self);
+    return cuda_stochastic_route_or_bridge_(
+        "normal_",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return normal_like_cpu_(self, mean, std).to(Platform::CUDA); });
+  }
+  return normal_like_cpu_(self, mean, std);
+}
+
+static Series exponential_like_cpu_(const Series& self, double lambda) {
   PLUSS_CHECK(lambda > 0.0, "exponential_: expected lambda > 0");
   Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   u = ops_internal::clamp_min(u, 1e-12);
   Series x = mul_scalar(ops_internal::log(u), -1.0 / lambda);
-  return x.to(self.scalar_type());
+  return x.to(Platform::CPU).to(self.scalar_type());
 }
 
-static Series geometric_like(const Series& self, double p) {
+static Series exponential_like(const Series& self, double lambda) {
+  if (self.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_stochastic_enabled();
+    const bool native_strict = native::cuda::native_stochastic_strict();
+    const bool route_supported = native::cuda::supports_exponential_stochastic(self);
+    return cuda_stochastic_route_or_bridge_(
+        "exponential_",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return exponential_like_cpu_(self, lambda).to(Platform::CUDA); });
+  }
+  return exponential_like_cpu_(self, lambda);
+}
+
+static Series geometric_like_cpu_(const Series& self, double p) {
   PLUSS_CHECK(p > 0.0 && p <= 1.0, "geometric_: expected 0 < p <= 1");
   Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   Series one_minus_u = ops_internal::sub(scalar_like(u, 1.0), u);
   const double denom = std::log(1.0 - p);
   Series x = ops_internal::floor(div_scalar(ops_internal::log(one_minus_u), denom));
   x = add_scalar(x, 1.0);
-  return x.to(self.scalar_type());
+  return x.to(Platform::CPU).to(self.scalar_type());
 }
 
-static Series cauchy_like(const Series& self, double median, double sigma) {
+static Series geometric_like(const Series& self, double p) {
+  if (self.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_stochastic_enabled();
+    const bool native_strict = native::cuda::native_stochastic_strict();
+    const bool route_supported = native::cuda::supports_geometric_stochastic(self);
+    return cuda_stochastic_route_or_bridge_(
+        "geometric_",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return geometric_like_cpu_(self, p).to(Platform::CUDA); });
+  }
+  return geometric_like_cpu_(self, p);
+}
+
+static Series cauchy_like_cpu_(const Series& self, double median, double sigma) {
   PLUSS_CHECK(sigma > 0.0, "cauchy_: expected sigma > 0");
   Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   Series centered = sub_scalar(u, 0.5);
   Series t = ops_internal::tan(mul_scalar(centered, kPi));
   Series x = add_scalar(mul_scalar(t, sigma), median);
-  return x.to(self.scalar_type());
+  return x.to(Platform::CPU).to(self.scalar_type());
+}
+
+static Series cauchy_like(const Series& self, double median, double sigma) {
+  if (self.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_stochastic_enabled();
+    const bool native_strict = native::cuda::native_stochastic_strict();
+    const bool route_supported = native::cuda::supports_cauchy_stochastic(self);
+    return cuda_stochastic_route_or_bridge_(
+        "cauchy_",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return cauchy_like_cpu_(self, median, sigma).to(Platform::CUDA); });
+  }
+  return cauchy_like_cpu_(self, median, sigma);
+}
+
+static Series bernoulli_like_cpu_(const Series& self, double p) {
+  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "bernoulli_: expected 0 <= p <= 1");
+  Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
+  return ops_internal::lt(u, scalar_like(u, p)).to(Platform::CPU).to(self.scalar_type());
 }
 
 static Series bernoulli_like(const Series& self, double p) {
-  PLUSS_CHECK(p >= 0.0 && p <= 1.0, "bernoulli_: expected 0 <= p <= 1");
-  Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
-  return ops_internal::lt(u, scalar_like(u, p)).to(self.scalar_type());
+  if (self.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_stochastic_enabled();
+    const bool native_strict = native::cuda::native_stochastic_strict();
+    const bool route_supported = native::cuda::supports_bernoulli_stochastic(self);
+    return cuda_stochastic_route_or_bridge_(
+        "bernoulli_",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return bernoulli_like_cpu_(self, p).to(Platform::CUDA); });
+  }
+  return bernoulli_like_cpu_(self, p);
 }
 
 static Series sort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable);
@@ -1436,14 +1662,29 @@ static Series nextafter_impl(const Series& self, double toward) {
   return nextafter_impl(self, scalar_like(self, toward));
 }
 
-static Series random_like(const Series& self, double lo, double hi) {
+static Series random_like_cpu_(const Series& self, double lo, double hi) {
   PLUSS_CHECK(hi > lo, "random_: expected hi > lo");
   if (is_floating_dtype(self.scalar_type()) || is_complex_dtype(self.scalar_type())) {
-    return uniform_like(self, lo, hi);
+    return uniform_like_cpu_(self, lo, hi);
   }
   Series u = Series::rand(self.sizes(), ScalarType::Float64, /*seed=*/0);
   Series x = ops_internal::floor(add_scalar(mul_scalar(u, hi - lo), lo));
-  return x.to(self.scalar_type());
+  return x.to(Platform::CPU).to(self.scalar_type());
+}
+
+static Series random_like(const Series& self, double lo, double hi) {
+  if (self.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_stochastic_enabled();
+    const bool native_strict = native::cuda::native_stochastic_strict();
+    const bool route_supported = native::cuda::supports_random_stochastic(self);
+    return cuda_stochastic_route_or_bridge_(
+        "random_",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() { return random_like_cpu_(self, lo, hi).to(Platform::CUDA); });
+  }
+  return random_like_cpu_(self, lo, hi);
 }
 
 static Series bitshift_scalar_impl(const Series& self, std::int64_t shift, bool left) {
@@ -2790,9 +3031,9 @@ static Series renorm_impl(const Series& self, double p, std::int64_t dim, double
   return ops_internal::mul(x, scale).to(self.scalar_type());
 }
 
-static Series multinomial_impl(const Series& self, std::int64_t num_samples, bool replacement) {
+static Series multinomial_impl_cpu_(const Series& self, std::int64_t num_samples, bool replacement) {
   PLUSS_CHECK(num_samples >= 0, "multinomial: num_samples must be >= 0");
-  auto p = self.to(ScalarType::Float64).flatten(0, -1).contiguous();
+  auto p = self.to(Platform::CPU).to(ScalarType::Float64).flatten(0, -1).contiguous();
   const auto n = p.numel();
   const auto* pp = reinterpret_cast<const double*>(p.raw_data());
   std::vector<double> probs((std::size_t)n, 0.0);
@@ -2813,6 +3054,24 @@ static Series multinomial_impl(const Series& self, std::int64_t num_samples, boo
     if (!replacement) probs[(std::size_t)idx] = 0.0;
   }
   return out;
+}
+
+static Series multinomial_impl(const Series& self, std::int64_t num_samples, bool replacement) {
+  if (self.platform() == Platform::CUDA) {
+    const bool native_enabled = native::cuda::native_stochastic_enabled();
+    const bool native_strict = native::cuda::native_stochastic_strict();
+    const bool route_supported =
+        native::cuda::supports_multinomial_stochastic(self, num_samples, replacement);
+    return cuda_stochastic_route_or_bridge_(
+        "multinomial",
+        native_enabled,
+        native_strict,
+        route_supported,
+        [&]() {
+          return multinomial_impl_cpu_(self, num_samples, replacement).to(Platform::CUDA);
+        });
+  }
+  return multinomial_impl_cpu_(self, num_samples, replacement);
 }
 
 static double igamma_p_scalar(double a, double x) {
@@ -3119,7 +3378,7 @@ static std::string_view canonical_inplace_op(std::string_view op) {
 
 static bool inplace_op_mutates_value_(std::string_view op) {
   if (op == "_coalesced_" || op == "sparse_resize_" || op == "resize_as_sparse_" ||
-      op == "detach_" || op == "clear_sensitivity" || op == "requires_grad_" ||
+      op == "detach_" || op == "clear_sensitivity" || op == "tracks_slope_" ||
       op == "rename_" || op == "set_" || op == "squeeze_" || op == "t_" ||
       op == "transpose_" || op == "swapaxes_" || op == "swapdims_" ||
       op == "unsqueeze_" || op == "resize_" || op == "resize_as_") {
@@ -4468,7 +4727,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       series_tape::clear_sensitivity(self);
       return self;
     }
-    if (op == "requires_grad_") {
+    if (op == "tracks_slope_") {
       series_tape::set_tracks_slope(self, true);
       return self;
     }
@@ -4635,7 +4894,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
       return not_impl_inplace(op, args, self);
     }
     if (std::holds_alternative<bool>(a0)) {
-      if (op == "requires_grad_") {
+      if (op == "tracks_slope_") {
         series_tape::set_tracks_slope(self, std::get<bool>(a0));
         return self;
       }

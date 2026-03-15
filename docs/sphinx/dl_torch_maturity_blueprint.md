@@ -36,7 +36,7 @@ Primary reference files read from:
 - `torch/csrc/api/include/torch/optim/optimizer.h`
 - `torch/csrc/api/include/torch/optim/adam.h`
 
-## Parity Estimate (As of March 10, 2026)
+## Parity Estimate (As of March 14, 2026)
 
 This is a weighted estimate against "Torch-level maturity" for ML/DL autodiff + optimizer workflows.
 
@@ -50,20 +50,26 @@ Weights:
 
 Current scoring:
 
-- Engine semantics/safety: `38 / 100`
-- Op coverage breadth: `28 / 100`
-- Optimizer stack maturity: `8 / 100`
-- Runtime/backend maturity for DL workloads: `22 / 100`
-- Test rigor/diagnostics: `35 / 100`
+- Engine semantics/safety: `47 / 100`
+- Op coverage breadth: `38 / 100`
+- Optimizer stack maturity: `47 / 100`
+- Runtime/backend maturity for DL workloads: `29 / 100`
+- Test rigor/diagnostics: `57 / 100`
 
 Weighted maturity score:
 
-- **`26 / 100` overall parity with Torch-level maturity**
+- **`42 / 100` overall parity with Torch-level maturity**
 
 Notes:
 
-- Transform APIs (`grad`, `value_and_grad`, `vjp`, `jvp`, `jacrev`, `jacfwd`, `hvp`) are materially ahead of a toy implementation.
-- The low score is driven by missing DL optimizer infrastructure and much narrower op/backend depth than Torch.
+- Transform APIs (`grad`, `value_and_grad`, `vjp`, `jvp`, `jacrev`, `jacfwd`, `hvp`) remain materially ahead of toy AD.
+- DL optimizer core now includes param-grouped `SGD`, `Adam`, `AdamW`, `RMSprop`, `NAdam`, and `Minimax` with restart parity checks.
+- Adam/AdamW now include batched update lanes, capturable bias-correction mode, and strict fail-loud lane policy for unsupported fused requests.
+- SGD/RMSprop/NAdam now include batched update lanes and strict fail-loud lane policy for unsupported fused requests.
+- Diff transform layer now covers additional unary families (`asin`, `acos`, `atan`, `sinh`, `cosh`, `log1p`, `expm1`, `erf`) and explicit HVP mode policy.
+- Added high-use autodiff families for ML objectives: `softmax`, `log_softmax`, and native loss transforms (`squared_error_loss`, `absolute_error_loss`, `huber_error_loss`, `logistic_binary_loss`) with reduction policies and transform tests.
+- Fixed reverse-mode derivative propagation for `abs` at tape level, removing a silent gradient-gap in piecewise objectives.
+- Remaining gap is mostly true backend fused kernels, broader op families for full DL model breadth, and deeper engine internals (hooks/reentrancy/profiling parity).
 
 ## High-Impact Families (Execution Order)
 
@@ -105,18 +111,21 @@ Goal: first serious training optimizer surface for PlussAI.
 
 Tasks:
 
-- introduce base optimizer abstraction (param groups, states, zeroing behavior)
-- implement first production set:
-  - SGD (momentum + nesterov)
-  - Adam
-  - AdamW
-- support closure-based step where needed
-- define optimizer state serialization contract
+- [x] introduce base optimizer abstraction (param groups, states, zeroing behavior)
+- [x] implement production set:
+  - [x] SGD (momentum + nesterov)
+  - [x] Adam
+  - [x] AdamW
+  - [x] RMSprop
+  - [x] NAdam
+  - [x] Minimax (constrained primal-dual family for DL-facing constrained training use-cases)
+- [x] support closure-based step where needed
+- [x] define optimizer state serialization contract
 
 Gate:
 
-- converges on canonical toy problems (linear, MLP regression/classification smoke)
-- deterministic resume from serialized state
+- [x] converges on canonical toy problems (linear/classification and constrained smoke coverage)
+- [x] deterministic resume from serialized state
 
 ## Family D: Numerical Stability and Failure Policy
 
@@ -185,10 +194,11 @@ Deliverable:
 
 ## Phase 2 (Near-Term, 3-5 patches)
 
-- [ ] introduce ML optimizer base interface (param groups + state + step contract)
-- [ ] add SGD and Adam with deterministic state behavior
-- [ ] add gradient clipping and NaN/Inf policy controls
-- [ ] add optimizer convergence and restart tests
+- [x] introduce ML optimizer base interface (param groups + state + step contract)
+- [x] add SGD and Adam with deterministic state behavior
+- [x] add AdamW/RMSprop/NAdam coverage in the same stateful surface
+- [x] add gradient clipping and constrained-step recovery controls
+- [x] add optimizer convergence and restart tests
 
 Deliverable:
 

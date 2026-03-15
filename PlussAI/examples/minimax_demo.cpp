@@ -10,7 +10,7 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
 
-  const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
 
   Series params = pluss::make_series(std::vector<double>{2.0, -1.0}, {2}, cfg);
   Series params_tape = pluss::make_series(std::vector<double>{2.0, -1.0}, {2}, cfg);

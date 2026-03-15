@@ -547,7 +547,7 @@ Examples:
 
 - `reverse()` for reverse propagation
 - `sensitivity()` rather than `grad()` on stored value state
-- `tracks_slope()` rather than `requires_grad()`
+- `tracks_slope()`
 
 However, naming must not become so exotic that mathematically literate users cannot map concepts.
 

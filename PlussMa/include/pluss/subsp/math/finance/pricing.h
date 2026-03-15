@@ -3,6 +3,7 @@
 #include "pluss/codem/codem.h"
 #include "pluss/config.h"
 #include "pluss/export.h"
+#include "pluss/subsp/math/finance/volatility.h"
 
 #include <cstdint>
 
@@ -26,6 +27,39 @@ struct ImpliedVolOptions {
   double tolerance = 1e-8;
   std::int64_t max_iterations = 128;
   double vega_floor = 1e-12;
+};
+
+enum class HestonCfMode : std::uint8_t {
+  Original = 0,
+  LittleTrap = 1,
+};
+
+struct HestonIntegrationOptions {
+  std::int64_t integration_steps = 2048;
+  double integration_u_max = 150.0;
+  HestonCfMode mode = HestonCfMode::LittleTrap;
+};
+
+struct HestonNandiIntegrationOptions {
+  std::int64_t integration_steps = 4096;
+  double integration_u_max = 200.0;
+  std::int64_t periods_per_year = 252;
+};
+
+struct MonteCarloOptions {
+  std::int64_t paths = 40000;
+  std::int64_t steps = 252;
+  volatility::SimScheme scheme = volatility::SimScheme::Euler;
+  volatility::RandMethod rand_method = volatility::RandMethod::Pseudo;
+  bool randomized_quasi = false;
+  int sobol_scrambling = 0;
+  bool antithetic = false;
+  bool control_variate = false;
+  bool importance_sampling = false;
+  double importance_shift = 0.0;
+  double control_vol = 0.0;
+  std::uint64_t offset = 0;
+  std::uint64_t seed = 0;
 };
 
 struct BlackScholesGreeks {
@@ -158,5 +192,82 @@ CODEM_API pluss::codem::Series implied_vol(OptionType type,
                                            double dividend_yield,
                                            const ImpliedVolOptions& options = {},
                                            pluss::codem::Config cfg = {});
+
+CODEM_API double heston_price(OptionType type,
+                              double spot,
+                              double strike,
+                              double rate,
+                              double dividend_yield,
+                              double maturity,
+                              const volatility::HestonParams& params,
+                              const HestonIntegrationOptions& options = {});
+
+CODEM_API double heston_price_mc(OptionType type,
+                                 double spot,
+                                 double strike,
+                                 double rate,
+                                 double dividend_yield,
+                                 double maturity,
+                                 const volatility::HestonParams& params,
+                                 const MonteCarloOptions& options = {},
+                                 pluss::codem::Config cfg = {});
+
+CODEM_API double bates_price_mc(OptionType type,
+                                double spot,
+                                double strike,
+                                double rate,
+                                double dividend_yield,
+                                double maturity,
+                                const volatility::BatesParams& params,
+                                const MonteCarloOptions& options = {},
+                                pluss::codem::Config cfg = {});
+
+CODEM_API double sv_price_mc(OptionType type,
+                             double spot,
+                             double strike,
+                             double rate,
+                             double dividend_yield,
+                             double maturity,
+                             const volatility::SvParams& params,
+                             const MonteCarloOptions& options = {},
+                             pluss::codem::Config cfg = {});
+
+CODEM_API double heston_nandi_price(OptionType type,
+                                    double spot,
+                                    double strike,
+                                    double rate,
+                                    double dividend_yield,
+                                    double maturity,
+                                    const volatility::HestonNandiParams& params,
+                                    const HestonNandiIntegrationOptions& options = {});
+
+CODEM_API double heston_nandi_price_mc(OptionType type,
+                                       double spot,
+                                       double strike,
+                                       double rate,
+                                       double dividend_yield,
+                                       double maturity,
+                                       const volatility::HestonNandiParams& params,
+                                       const MonteCarloOptions& options = {},
+                                       pluss::codem::Config cfg = {});
+
+CODEM_API double sabr_price_mc(OptionType type,
+                               double forward,
+                               double strike,
+                               double rate,
+                               double maturity,
+                               const volatility::SabrParams& params,
+                               const MonteCarloOptions& options = {},
+                               pluss::codem::Config cfg = {});
+
+CODEM_API double slv_price_mc(OptionType type,
+                              double spot,
+                              double strike,
+                              double rate,
+                              double dividend_yield,
+                              double maturity,
+                              const volatility::SlvParams& params,
+                              const MonteCarloOptions& options = {},
+                              pluss::codem::Config cfg = {});
 
 } // namespace pluss::subsp::math::finance::pricing

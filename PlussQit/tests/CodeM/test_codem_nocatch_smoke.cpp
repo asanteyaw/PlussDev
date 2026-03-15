@@ -400,7 +400,7 @@ void test_autodiff_transforms() {
 
   std::cout << "[RUN] autodiff:reverse\n";
   auto scalar = pluss::make_series(1.25).to(pluss::ScalarType::Float64);
-  scalar.requires_grad_(true);
+  scalar.tracks_slope_(true);
   auto scalar_loss = scalar.square().sum();
   scalar_loss.reverse();
   expect_close(scalar.sensitivity().item<double>(), 2.5, 1e-12, "reverse scalar sensitivity");

@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
+	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -193,6 +193,20 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/rule
+.PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/rule
+
+# Convenience name for target.
+bates_pricing_test: PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/rule
+.PHONY : bates_pricing_test
+
+# fast build rule for target.
+bates_pricing_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/build
+.PHONY : bates_pricing_test/fast
+
+# Convenience name for target.
 PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_test.dir/rule
 .PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_test.dir/rule
@@ -205,6 +219,58 @@ black_scholes_test: PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_t
 black_scholes_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_test.dir/build
 .PHONY : black_scholes_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/rule
+.PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/rule
+
+# Convenience name for target.
+heston_sv_pricing_test: PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/rule
+.PHONY : heston_sv_pricing_test
+
+# fast build rule for target.
+heston_sv_pricing_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build
+.PHONY : heston_sv_pricing_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/rule
+.PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/rule
+
+# Convenience name for target.
+sabr_slv_pricing_test: PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/rule
+.PHONY : sabr_slv_pricing_test
+
+# fast build rule for target.
+sabr_slv_pricing_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/build
+.PHONY : sabr_slv_pricing_test/fast
+
+bates_pricing_test.o: bates_pricing_test.cpp.o
+.PHONY : bates_pricing_test.o
+
+# target to build an object file
+bates_pricing_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/bates_pricing_test.cpp.o
+.PHONY : bates_pricing_test.cpp.o
+
+bates_pricing_test.i: bates_pricing_test.cpp.i
+.PHONY : bates_pricing_test.i
+
+# target to preprocess a source file
+bates_pricing_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/bates_pricing_test.cpp.i
+.PHONY : bates_pricing_test.cpp.i
+
+bates_pricing_test.s: bates_pricing_test.cpp.s
+.PHONY : bates_pricing_test.s
+
+# target to generate assembly for a file
+bates_pricing_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/bates_pricing_test.cpp.s
+.PHONY : bates_pricing_test.cpp.s
 
 black_scholes_test.o: black_scholes_test.cpp.o
 .PHONY : black_scholes_test.o
@@ -230,6 +296,54 @@ black_scholes_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_test.dir/black_scholes_test.cpp.s
 .PHONY : black_scholes_test.cpp.s
 
+heston_sv_pricing_test.o: heston_sv_pricing_test.cpp.o
+.PHONY : heston_sv_pricing_test.o
+
+# target to build an object file
+heston_sv_pricing_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/heston_sv_pricing_test.cpp.o
+.PHONY : heston_sv_pricing_test.cpp.o
+
+heston_sv_pricing_test.i: heston_sv_pricing_test.cpp.i
+.PHONY : heston_sv_pricing_test.i
+
+# target to preprocess a source file
+heston_sv_pricing_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/heston_sv_pricing_test.cpp.i
+.PHONY : heston_sv_pricing_test.cpp.i
+
+heston_sv_pricing_test.s: heston_sv_pricing_test.cpp.s
+.PHONY : heston_sv_pricing_test.s
+
+# target to generate assembly for a file
+heston_sv_pricing_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/heston_sv_pricing_test.cpp.s
+.PHONY : heston_sv_pricing_test.cpp.s
+
+sabr_slv_pricing_test.o: sabr_slv_pricing_test.cpp.o
+.PHONY : sabr_slv_pricing_test.o
+
+# target to build an object file
+sabr_slv_pricing_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/sabr_slv_pricing_test.cpp.o
+.PHONY : sabr_slv_pricing_test.cpp.o
+
+sabr_slv_pricing_test.i: sabr_slv_pricing_test.cpp.i
+.PHONY : sabr_slv_pricing_test.i
+
+# target to preprocess a source file
+sabr_slv_pricing_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/sabr_slv_pricing_test.cpp.i
+.PHONY : sabr_slv_pricing_test.cpp.i
+
+sabr_slv_pricing_test.s: sabr_slv_pricing_test.cpp.s
+.PHONY : sabr_slv_pricing_test.s
+
+# target to generate assembly for a file
+sabr_slv_pricing_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/sabr_slv_pricing_test.cpp.s
+.PHONY : sabr_slv_pricing_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -245,10 +359,22 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... bates_pricing_test"
 	@echo "... black_scholes_test"
+	@echo "... heston_sv_pricing_test"
+	@echo "... sabr_slv_pricing_test"
+	@echo "... bates_pricing_test.o"
+	@echo "... bates_pricing_test.i"
+	@echo "... bates_pricing_test.s"
 	@echo "... black_scholes_test.o"
 	@echo "... black_scholes_test.i"
 	@echo "... black_scholes_test.s"
+	@echo "... heston_sv_pricing_test.o"
+	@echo "... heston_sv_pricing_test.i"
+	@echo "... heston_sv_pricing_test.s"
+	@echo "... sabr_slv_pricing_test.o"
+	@echo "... sabr_slv_pricing_test.i"
+	@echo "... sabr_slv_pricing_test.s"
 .PHONY : help
 
 

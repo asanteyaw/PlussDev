@@ -11,6 +11,7 @@
 - `PlussQit/examples/CodeM/suppose_demo.cpp`: focused `suppose` / `let_as(...)` patterns.
 - `PlussQit/examples/translate_demo.cpp`: `transform_axis(...)` for `Series`, `Note`, `Timeline`, and `TimeIndex`.
 - `PlussQit/examples/CodeM/autograd_optim_demo.cpp`: end-to-end autodiff, transforms, and optimizer integration.
+- `PlussQit/examples/CodeM/autodiff_minimal_demo.cpp`: shortest reverse + `value_and_grad` usage.
 - `PlussQit/examples/CodeM/autodiff_derivatives_demo.cpp`: scalar first/second derivative checks.
 - `PlussQit/examples/CodeM/another_auto_diff_demo.cpp`: duplicate scalar derivative smoke for regression coverage.
 
@@ -31,3 +32,11 @@
 
 - `PlussQit/examples/queue_demo.cpp`: `pluss::Queue`, dynamic `invoke(...)`, and `Queue::where(...)`.
 - `PlussQit/examples/dispense_demo.cpp`: method-pointer dispatch with `dispense(...)` and `dispense_as<T>(...)`.
+
+## PlussAI (NN)
+
+- `PlussAI/examples/adam_oop_demo.cpp`: explicit-gradient and autodiff/tape Adam workflows.
+- `PlussAI/examples/adagrad_oop_demo.cpp`: explicit-gradient and autodiff/tape Adagrad workflows.
+- `PlussAI/examples/nn_lstm_train_minimal_demo.cpp`: minimal LSTM training loop with closure-based optimizer step.
+- `PlussAI/examples/nn_ngarch_train_minimal_demo.cpp`: NGARCH parameter training with closure-based optimizer step.
+- `PlussAI/examples/nn_optimizer_closure_minimal_demo.cpp`: shortest closure-based `optimizer.step([&]{ ... })` training path.

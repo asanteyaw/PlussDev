@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <numeric>
 #include <stdexcept>
 #include <unordered_set>
@@ -20,6 +21,7 @@ struct RMSpropOptions {
   bool centered{false};
   bool maximize{false};
   GradientClipOptions clip{};
+  ExecutionOptions execution{};
 };
 
 struct RMSpropGroup {
@@ -37,6 +39,7 @@ public:
     group.indices.resize(size());
     std::iota(group.indices.begin(), group.indices.end(), static_cast<std::size_t>(0));
     groups_.push_back(std::move(group));
+    validate_group_options_();
     initialize_state_();
   }
 
@@ -59,6 +62,7 @@ public:
     for (auto& group : groups_) {
       group.options = default_options_;
     }
+    validate_group_options_();
     initialize_state_();
   }
 
@@ -68,55 +72,347 @@ public:
     }
     validate_options_(options);
     groups_[group_index].options = options;
+    validate_group_options_();
     initialize_state_();
   }
 
   std::size_t group_count() const noexcept { return groups_.size(); }
 
+  struct State {
+    std::vector<RMSpropOptions> group_options{};
+    std::vector<Series> square_avg{};
+    std::vector<Series> momentum_buffer{};
+    std::vector<Series> grad_avg{};
+  };
+
+  State capture_state() const {
+    State state{};
+    state.group_options.reserve(groups_.size());
+    for (const auto& group : groups_) {
+      state.group_options.push_back(group.options);
+    }
+    state.square_avg = square_avg_;
+    state.momentum_buffer = momentum_buffer_;
+    state.grad_avg = grad_avg_;
+    return state;
+  }
+
+  void restore_state(const State& state) {
+    if (state.group_options.size() != groups_.size()) {
+      throw std::runtime_error("pluss::ai::nn::optim::RMSprop::restore_state: group count mismatch");
+    }
+    validate_state_vector_(state.square_avg, "pluss::ai::nn::optim::RMSprop::restore_state[square_avg]");
+    validate_state_vector_(state.momentum_buffer, "pluss::ai::nn::optim::RMSprop::restore_state[momentum_buffer]");
+    validate_state_vector_(state.grad_avg, "pluss::ai::nn::optim::RMSprop::restore_state[grad_avg]");
+    for (std::size_t i = 0; i < groups_.size(); ++i) {
+      validate_options_(state.group_options[i]);
+      groups_[i].options = state.group_options[i];
+    }
+    validate_group_options_();
+    square_avg_ = state.square_avg;
+    momentum_buffer_ = state.momentum_buffer;
+    grad_avg_ = state.grad_avg;
+    initialize_group_capture_state_();
+  }
+
 private:
   struct GroupState {
     std::vector<std::size_t> indices{};
     RMSpropOptions options{};
+    Series one_scalar{};
+    Series alpha_scalar{};
+    Series one_minus_alpha_scalar{};
+    Series epsilon_scalar{};
+    Series momentum_scalar{};
+    Series learning_rate_scalar{};
+    Series weight_decay_scalar{};
+  };
+
+  struct GroupScalars {
+    Series one{};
+    Series alpha{};
+    Series one_minus_alpha{};
+    Series epsilon{};
+    Series momentum{};
+    Series learning_rate{};
+    Series weight_decay{};
   };
 
   void apply_step_(const std::vector<Series>& gradients) override {
     auto& params = mutable_parameters_();
-    for (const auto& group : groups_) {
-      const RMSpropOptions& options = group.options;
-      for (std::size_t i : group.indices) {
-        Series* param_ptr = params[i];
-        if (param_ptr == nullptr) continue;
-
-        const Series& input_sensitivity = gradients[i];
-        if (!input_sensitivity.defined()) continue;
-
-        Series sensitivity = clip_gradient_(input_sensitivity, options.clip);
-        if (options.maximize) {
-          sensitivity = sensitivity.neg();
-        }
-
-        Series parameter_value = param_ptr->detach();
-        if (options.weight_decay != 0.0) {
-          sensitivity = sensitivity.add(parameter_value.mul(options.weight_decay));
-        }
-
-        square_avg_[i] = square_avg_[i].mul(options.alpha).add(sensitivity.square().mul(1.0 - options.alpha));
-
-        Series denominator = square_avg_[i].sqrt().add(options.epsilon);
-        if (options.centered) {
-          grad_avg_[i] = grad_avg_[i].mul(options.alpha).add(sensitivity.mul(1.0 - options.alpha));
-          denominator = square_avg_[i].sub(grad_avg_[i].square()).clamp_min(0.0).sqrt().add(options.epsilon);
-        }
-
-        Series update = sensitivity.div(denominator);
-        if (options.momentum > 0.0) {
-          momentum_buffer_[i] = momentum_buffer_[i].mul(options.momentum).add(update);
-          update = momentum_buffer_[i];
-        }
-
-        const Series next_value = parameter_value.sub(update.mul(options.learning_rate));
-        assign_parameter_(*param_ptr, next_value);
+    reset_step_lane_telemetry_();
+    for (std::size_t group_index = 0; group_index < groups_.size(); ++group_index) {
+      const auto& group = groups_[group_index];
+      const bool batch_shape_compatible = can_batch_group_(group, params, gradients);
+      const bool batched_supported =
+          batch_shape_compatible && supports_batched_lane_(group.indices, params, gradients);
+      const bool fused_supported =
+          batch_shape_compatible && supports_fused_lane_(group.indices, params, gradients);
+      const bool capturable_supported =
+          supports_capturable_lane_(group.indices, params, gradients);
+      const UpdateLane lane = resolve_update_lane_(
+          group.options.execution,
+          batched_supported,
+          fused_supported,
+          "pluss::ai::nn::optim::RMSprop",
+          capturable_supported);
+      append_step_lane_telemetry_(
+          group_index,
+          group.options.execution.lane,
+          lane,
+          group.indices,
+          params,
+          gradients,
+          batch_shape_compatible,
+          batched_supported,
+          fused_supported,
+          capturable_supported);
+      if (lane == UpdateLane::Fused) {
+        apply_group_fused_(group, params, gradients);
+      } else if (lane == UpdateLane::Batched) {
+        apply_group_batched_(group, params, gradients);
+      } else {
+        apply_group_loop_(group, params, gradients);
       }
+    }
+  }
+
+  static bool same_shape_(const Series& a, const Series& b) {
+    if (a.sizes().size() != b.sizes().size()) return false;
+    for (std::size_t i = 0; i < a.sizes().size(); ++i) {
+      if (a.sizes()[i] != b.sizes()[i]) return false;
+    }
+    return true;
+  }
+
+  bool can_batch_group_(const GroupState& group,
+                        const std::vector<Series*>& params,
+                        const std::vector<Series>& gradients) const {
+    const Series* anchor_param = nullptr;
+    for (std::size_t i : group.indices) {
+      const Series* p = params[i];
+      if (p == nullptr || !p->defined()) continue;
+      const Series& g = gradients[i];
+      if (!g.defined()) continue;
+      if (anchor_param == nullptr) {
+        anchor_param = p;
+      } else {
+        if (p->platform() != anchor_param->platform()) return false;
+        if (p->scalar_type() != anchor_param->scalar_type()) return false;
+        if (!same_shape_(*p, *anchor_param)) return false;
+      }
+      if (!same_shape_(g, *p)) return false;
+    }
+    return anchor_param != nullptr;
+  }
+
+  static std::vector<std::int64_t> batched_shape_(const Series& x) {
+    return with_batch_axis_(x);
+  }
+
+  GroupScalars resolve_group_scalars_(const GroupState& group, const Series& like) const {
+    const bool capturable = group.options.execution.capturable;
+    GroupScalars out{};
+    if (capturable && group.one_scalar.defined() && group.alpha_scalar.defined() &&
+        group.one_minus_alpha_scalar.defined() && group.epsilon_scalar.defined() &&
+        group.momentum_scalar.defined() && group.learning_rate_scalar.defined() &&
+        group.weight_decay_scalar.defined()) {
+      out.one = group.one_scalar;
+      out.alpha = group.alpha_scalar;
+      out.one_minus_alpha = group.one_minus_alpha_scalar;
+      out.epsilon = group.epsilon_scalar;
+      out.momentum = group.momentum_scalar;
+      out.learning_rate = group.learning_rate_scalar;
+      out.weight_decay = group.weight_decay_scalar;
+      return out;
+    }
+    out.one = scalar_on_(1.0, like);
+    out.alpha = scalar_on_(group.options.alpha, like);
+    out.one_minus_alpha = out.one.sub(out.alpha);
+    out.epsilon = scalar_on_(group.options.epsilon, like);
+    out.momentum = scalar_on_(group.options.momentum, like);
+    out.learning_rate = scalar_on_(group.options.learning_rate, like);
+    out.weight_decay = scalar_on_(group.options.weight_decay, like);
+    return out;
+  }
+
+  void apply_group_loop_(const GroupState& group,
+                         const std::vector<Series*>& params,
+                         const std::vector<Series>& gradients) {
+    const RMSpropOptions& options = group.options;
+    for (std::size_t i : group.indices) {
+      Series* param_ptr = params[i];
+      if (param_ptr == nullptr) continue;
+
+      const Series& input_sensitivity = gradients[i];
+      if (!input_sensitivity.defined()) continue;
+
+      Series sensitivity = clip_gradient_(input_sensitivity, options.clip);
+      if (options.maximize) {
+        sensitivity = sensitivity.neg();
+      }
+
+      Series parameter_value = *param_ptr;
+      const GroupScalars scalars = resolve_group_scalars_(group, parameter_value);
+      if (options.weight_decay != 0.0) {
+        sensitivity = sensitivity.add(parameter_value.mul(scalars.weight_decay));
+      }
+
+      square_avg_[i] = square_avg_[i].mul(scalars.alpha).add(sensitivity.square().mul(scalars.one_minus_alpha));
+
+      Series denominator = square_avg_[i].sqrt().add(scalars.epsilon);
+      if (options.centered) {
+        grad_avg_[i] = grad_avg_[i].mul(scalars.alpha).add(sensitivity.mul(scalars.one_minus_alpha));
+        denominator = square_avg_[i].sub(grad_avg_[i].square()).clamp_min(0.0).sqrt().add(scalars.epsilon);
+      }
+
+      Series update = sensitivity.div(denominator);
+      if (options.momentum > 0.0) {
+        momentum_buffer_[i] = momentum_buffer_[i].mul(scalars.momentum).add(update);
+        update = momentum_buffer_[i];
+      }
+
+      const Series next_value = parameter_value.sub(update.mul(scalars.learning_rate));
+      assign_parameter_(*param_ptr, next_value);
+    }
+  }
+
+  void apply_group_batched_(const GroupState& group,
+                            const std::vector<Series*>& params,
+                            const std::vector<Series>& gradients) {
+    const RMSpropOptions& options = group.options;
+
+    std::vector<std::size_t> active{};
+    std::vector<Series> p_parts{};
+    std::vector<Series> g_parts{};
+    std::vector<Series> square_parts{};
+    std::vector<Series> momentum_parts{};
+    std::vector<Series> grad_avg_parts{};
+
+    for (std::size_t i : group.indices) {
+      Series* param_ptr = params[i];
+      if (param_ptr == nullptr) continue;
+      const Series& input_sensitivity = gradients[i];
+      if (!input_sensitivity.defined()) continue;
+
+      Series sensitivity = clip_gradient_(input_sensitivity, options.clip);
+      if (options.maximize) sensitivity = sensitivity.neg();
+
+      active.push_back(i);
+      p_parts.push_back(param_ptr->reshape(batched_shape_(*param_ptr)));
+      g_parts.push_back(sensitivity.reshape(batched_shape_(sensitivity)));
+      square_parts.push_back(square_avg_[i].reshape(batched_shape_(square_avg_[i])));
+      momentum_parts.push_back(momentum_buffer_[i].reshape(batched_shape_(momentum_buffer_[i])));
+      grad_avg_parts.push_back(grad_avg_[i].reshape(batched_shape_(grad_avg_[i])));
+    }
+    if (active.empty()) return;
+
+    Series p_batch = pack_batched_(p_parts, "pluss::ai::nn::optim::RMSprop::apply_group_batched_");
+    Series g_batch = pack_batched_(g_parts, "pluss::ai::nn::optim::RMSprop::apply_group_batched_");
+    Series square_batch = pack_batched_(square_parts, "pluss::ai::nn::optim::RMSprop::apply_group_batched_");
+    Series momentum_batch = pack_batched_(momentum_parts, "pluss::ai::nn::optim::RMSprop::apply_group_batched_");
+    Series grad_avg_batch = pack_batched_(grad_avg_parts, "pluss::ai::nn::optim::RMSprop::apply_group_batched_");
+    const GroupScalars scalars = resolve_group_scalars_(group, p_batch);
+
+    if (options.weight_decay != 0.0) {
+      g_batch = g_batch.add(p_batch.mul(scalars.weight_decay));
+    }
+
+    square_batch = square_batch.mul(scalars.alpha).add(g_batch.square().mul(scalars.one_minus_alpha));
+    Series denominator = square_batch.sqrt().add(scalars.epsilon);
+    if (options.centered) {
+      grad_avg_batch = grad_avg_batch.mul(scalars.alpha).add(g_batch.mul(scalars.one_minus_alpha));
+      denominator = square_batch.sub(grad_avg_batch.square()).clamp_min(0.0).sqrt().add(scalars.epsilon);
+    }
+
+    Series update = g_batch.div(denominator);
+    if (options.momentum > 0.0) {
+      momentum_batch = momentum_batch.mul(scalars.momentum).add(update);
+      update = momentum_batch;
+    }
+
+    const Series next_batch = p_batch.sub(update.mul(scalars.learning_rate));
+    for (std::size_t j = 0; j < active.size(); ++j) {
+      const std::size_t i = active[j];
+      Series* param_ptr = params[i];
+      Series next_value = next_batch.select(0, static_cast<std::int64_t>(j)).reshape(param_ptr->sizes());
+      square_avg_[i] = square_batch.select(0, static_cast<std::int64_t>(j)).reshape(square_avg_[i].sizes());
+      momentum_buffer_[i] =
+          momentum_batch.select(0, static_cast<std::int64_t>(j)).reshape(momentum_buffer_[i].sizes());
+      grad_avg_[i] = grad_avg_batch.select(0, static_cast<std::int64_t>(j)).reshape(grad_avg_[i].sizes());
+      assign_parameter_(*param_ptr, next_value);
+    }
+  }
+
+  void apply_group_fused_(const GroupState& group,
+                          const std::vector<Series*>& params,
+                          const std::vector<Series>& gradients) {
+    const RMSpropOptions& options = group.options;
+
+    std::vector<std::size_t> active{};
+    std::vector<Series> p_parts{};
+    std::vector<Series> g_parts{};
+    std::vector<Series> square_parts{};
+    std::vector<Series> momentum_parts{};
+    std::vector<Series> grad_avg_parts{};
+
+    for (std::size_t i : group.indices) {
+      Series* param_ptr = params[i];
+      if (param_ptr == nullptr) continue;
+      const Series& input_sensitivity = gradients[i];
+      if (!input_sensitivity.defined()) continue;
+
+      Series sensitivity = clip_gradient_(input_sensitivity, options.clip);
+      if (options.maximize) sensitivity = sensitivity.neg();
+
+      active.push_back(i);
+      p_parts.push_back(param_ptr->reshape(batched_shape_(*param_ptr)));
+      g_parts.push_back(sensitivity.reshape(batched_shape_(sensitivity)));
+      square_parts.push_back(square_avg_[i].reshape(batched_shape_(square_avg_[i])));
+      momentum_parts.push_back(momentum_buffer_[i].reshape(batched_shape_(momentum_buffer_[i])));
+      grad_avg_parts.push_back(grad_avg_[i].reshape(batched_shape_(grad_avg_[i])));
+    }
+    if (active.empty()) return;
+
+    Series p_batch = pack_batched_(p_parts, "pluss::ai::nn::optim::RMSprop::apply_group_fused_");
+    Series g_batch = pack_batched_(g_parts, "pluss::ai::nn::optim::RMSprop::apply_group_fused_");
+    Series square_batch = pack_batched_(square_parts, "pluss::ai::nn::optim::RMSprop::apply_group_fused_");
+    Series momentum_batch = pack_batched_(momentum_parts, "pluss::ai::nn::optim::RMSprop::apply_group_fused_");
+    Series grad_avg_batch = pack_batched_(grad_avg_parts, "pluss::ai::nn::optim::RMSprop::apply_group_fused_");
+    const GroupScalars scalars = resolve_group_scalars_(group, p_batch);
+
+    if (options.weight_decay != 0.0) {
+      g_batch = g_batch.add(p_batch.mul(scalars.weight_decay));
+    }
+
+    square_batch = square_batch.mul(scalars.alpha);
+    square_batch = square_batch.add(g_batch.square().mul(scalars.one_minus_alpha));
+    Series denominator = square_batch.sqrt();
+    denominator = denominator.add(scalars.epsilon);
+    if (options.centered) {
+      grad_avg_batch = grad_avg_batch.mul(scalars.alpha);
+      grad_avg_batch = grad_avg_batch.add(g_batch.mul(scalars.one_minus_alpha));
+      denominator = square_batch.sub(grad_avg_batch.square()).clamp_min(0.0).sqrt().add(scalars.epsilon);
+    }
+
+    g_batch = g_batch.div(denominator);
+    if (options.momentum > 0.0) {
+      momentum_batch = momentum_batch.mul(scalars.momentum);
+      momentum_batch = momentum_batch.add(g_batch);
+      g_batch = momentum_batch;
+    }
+
+    g_batch = g_batch.mul(scalars.learning_rate);
+    p_batch = p_batch.sub(g_batch);
+    for (std::size_t j = 0; j < active.size(); ++j) {
+      const std::size_t i = active[j];
+      Series* param_ptr = params[i];
+      Series next_value = p_batch.select(0, static_cast<std::int64_t>(j)).reshape(param_ptr->sizes());
+      square_avg_[i] = square_batch.select(0, static_cast<std::int64_t>(j)).reshape(square_avg_[i].sizes());
+      momentum_buffer_[i] =
+          momentum_batch.select(0, static_cast<std::int64_t>(j)).reshape(momentum_buffer_[i].sizes());
+      grad_avg_[i] = grad_avg_batch.select(0, static_cast<std::int64_t>(j)).reshape(grad_avg_[i].sizes());
+      assign_parameter_(*param_ptr, next_value);
     }
   }
 
@@ -178,6 +474,31 @@ private:
     for (const auto& group : groups_) {
       validate_options_(group.options);
     }
+    validate_capturable_groups_();
+  }
+
+  void validate_capturable_groups_() const {
+    const auto& params = parameters();
+    for (const auto& group : groups_) {
+      if (!group.options.execution.capturable) continue;
+      if (group.indices.empty()) continue;
+      const Series* anchor = params[group.indices.front()];
+      if (anchor == nullptr || !anchor->defined()) {
+        throw std::runtime_error("pluss::ai::nn::optim::RMSprop: capturable mode expects defined group parameters");
+      }
+      for (std::size_t i : group.indices) {
+        const Series* p = params[i];
+        if (p == nullptr || !p->defined()) continue;
+        if (p->platform() != anchor->platform()) {
+          throw std::runtime_error(
+              "pluss::ai::nn::optim::RMSprop: capturable mode requires same platform across each group");
+        }
+        if (p->scalar_type() != anchor->scalar_type()) {
+          throw std::runtime_error(
+              "pluss::ai::nn::optim::RMSprop: capturable mode requires same dtype across each group");
+        }
+      }
+    }
   }
 
   void initialize_state_() {
@@ -194,6 +515,34 @@ private:
       square_avg_.push_back(pluss::zeros_like(*p, p->scalar_type()));
       momentum_buffer_.push_back(pluss::zeros_like(*p, p->scalar_type()));
       grad_avg_.push_back(pluss::zeros_like(*p, p->scalar_type()));
+    }
+    initialize_group_capture_state_();
+  }
+
+  void initialize_group_capture_state_() {
+    const auto& params = parameters();
+    for (auto& group : groups_) {
+      group.one_scalar = Series{};
+      group.alpha_scalar = Series{};
+      group.one_minus_alpha_scalar = Series{};
+      group.epsilon_scalar = Series{};
+      group.momentum_scalar = Series{};
+      group.learning_rate_scalar = Series{};
+      group.weight_decay_scalar = Series{};
+      if (!group.options.execution.capturable) continue;
+      if (group.indices.empty()) continue;
+      const Series* anchor = params[group.indices.front()];
+      group.one_scalar = Series::full({}, 1.0, anchor->scalar_type()).to(anchor->platform());
+      group.alpha_scalar = Series::full({}, group.options.alpha, anchor->scalar_type()).to(anchor->platform());
+      group.one_minus_alpha_scalar = Series::full({}, 1.0 - group.options.alpha, anchor->scalar_type())
+                                        .to(anchor->platform());
+      group.epsilon_scalar = Series::full({}, group.options.epsilon, anchor->scalar_type()).to(anchor->platform());
+      group.momentum_scalar =
+          Series::full({}, group.options.momentum, anchor->scalar_type()).to(anchor->platform());
+      group.learning_rate_scalar =
+          Series::full({}, group.options.learning_rate, anchor->scalar_type()).to(anchor->platform());
+      group.weight_decay_scalar =
+          Series::full({}, group.options.weight_decay, anchor->scalar_type()).to(anchor->platform());
     }
   }
 

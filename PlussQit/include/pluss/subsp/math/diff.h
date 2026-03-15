@@ -5,6 +5,7 @@
 #include "CodeM/core/SeriesTape.h"
 
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -68,6 +69,28 @@ inline void set_tracks_slope_(const Series& value, bool enabled) {
   }
 }
 
+inline void reverse_with_context_(const Series& output, const char* op) {
+  try {
+    output.reverse();
+  } catch (const std::exception& e) {
+    throw std::runtime_error(
+        std::string("subsp::math::diff::") + op +
+        ": reverse failed: " + e.what() +
+        " (hint: verify no in-place mutation on traced inputs after graph capture)");
+  }
+}
+
+inline void reverse_with_context_(const Series& output, const Series& sensitivity_output, const char* op) {
+  try {
+    output.reverse(sensitivity_output);
+  } catch (const std::exception& e) {
+    throw std::runtime_error(
+        std::string("subsp::math::diff::") + op +
+        ": reverse with seed failed: " + e.what() +
+        " (hint: verify seed shape/platform and graph mutation invariants)");
+  }
+}
+
 inline Series flat_basis_like_(const Series& like, std::int64_t index) {
   require_defined_(like, "flat_basis_like");
   PLUSS_CHECK(index >= 0 && index < like.numel(), "subsp::math::diff::flat_basis_like: index out of range");
@@ -98,7 +121,58 @@ inline Series stack_cols_(const std::vector<Series>& cols,
 
 struct HvpOptions {
   double epsilon{1e-6};
+  enum class Mode {
+    Auto,
+    ExactOnly,
+    FiniteDifferenceOnly,
+  };
+  Mode mode{Mode::Auto};
 };
+
+enum class LossReduction {
+  None,
+  Sum,
+  Mean,
+};
+
+class ReverseDebugScope final {
+public:
+  explicit ReverseDebugScope(bool check_non_finite = true)
+      : scope_(check_non_finite) {}
+
+private:
+  pluss::codem::series_tape::ReverseDiagnosticsScope scope_;
+};
+
+inline void set_reverse_debug(bool enabled, bool check_non_finite = true) {
+  pluss::codem::series_tape::set_reverse_diagnostics(enabled, check_non_finite);
+}
+
+inline bool reverse_debug_enabled() {
+  return pluss::codem::series_tape::reverse_diagnostics().enabled;
+}
+
+struct SlopeSource {
+  bool linked{false};
+  std::string op{};
+  std::size_t parents{0};
+  std::string capture_file{};
+  std::string capture_function{};
+  std::uint_least32_t capture_line{0};
+};
+
+inline SlopeSource slope_source(const Series& value) {
+  SlopeSource out{};
+  const auto info = pluss::codem::series_tape::source_info(value);
+  if (!info.has_value()) return out;
+  out.linked = true;
+  out.op = info->op_name;
+  out.parents = info->parent_count;
+  out.capture_file = info->capture_file;
+  out.capture_function = info->capture_function;
+  out.capture_line = info->capture_line;
+  return out;
+}
 
 class Trace {
 public:
@@ -156,14 +230,14 @@ public:
     if (!defined()) {
       throw std::runtime_error("subsp::math::diff::Trace::reverse: undefined trace");
     }
-    value_->reverse();
+    detail::reverse_with_context_(*value_, "Trace::reverse");
   }
 
   void reverse(const Series& sensitivity_output) const {
     if (!defined()) {
       throw std::runtime_error("subsp::math::diff::Trace::reverse: undefined trace");
     }
-    value_->reverse(sensitivity_output);
+    detail::reverse_with_context_(*value_, sensitivity_output, "Trace::reverse");
   }
 
   // Compatibility bridge while callers migrate to reverse().
@@ -401,6 +475,56 @@ inline DualTrace tanh(const DualTrace& x) {
   return DualTrace(primal, slope.mul(x.tangent()));
 }
 
+inline Trace asin(const Trace& x) {
+  detail::require_defined_(x.value(), "asin");
+  return Trace(x.value().asin());
+}
+
+inline DualTrace asin(const DualTrace& x) {
+  const Series one = detail::ones_like_(x.value());
+  const Series denom = one.sub(x.value().square()).sqrt();
+  return DualTrace(x.value().asin(), x.tangent().div(denom));
+}
+
+inline Trace acos(const Trace& x) {
+  detail::require_defined_(x.value(), "acos");
+  return Trace(x.value().acos());
+}
+
+inline DualTrace acos(const DualTrace& x) {
+  const Series one = detail::ones_like_(x.value());
+  const Series denom = one.sub(x.value().square()).sqrt();
+  return DualTrace(x.value().acos(), x.tangent().div(denom).neg());
+}
+
+inline Trace atan(const Trace& x) {
+  detail::require_defined_(x.value(), "atan");
+  return Trace(x.value().atan());
+}
+
+inline DualTrace atan(const DualTrace& x) {
+  const Series one = detail::ones_like_(x.value());
+  return DualTrace(x.value().atan(), x.tangent().div(one.add(x.value().square())));
+}
+
+inline Trace sinh(const Trace& x) {
+  detail::require_defined_(x.value(), "sinh");
+  return Trace(x.value().sinh());
+}
+
+inline DualTrace sinh(const DualTrace& x) {
+  return DualTrace(x.value().sinh(), x.value().cosh().mul(x.tangent()));
+}
+
+inline Trace cosh(const Trace& x) {
+  detail::require_defined_(x.value(), "cosh");
+  return Trace(x.value().cosh());
+}
+
+inline DualTrace cosh(const DualTrace& x) {
+  return DualTrace(x.value().cosh(), x.value().sinh().mul(x.tangent()));
+}
+
 inline Trace square(const Trace& x) {
   detail::require_defined_(x.value(), "square");
   return Trace(x.value().square());
@@ -419,6 +543,48 @@ inline DualTrace rsqrt(const DualTrace& x) {
   const Series primal = x.value().rsqrt();
   const Series slope = primal.square().mul(primal).mul(-0.5);
   return DualTrace(primal, slope.mul(x.tangent()));
+}
+
+inline Trace abs(const Trace& x) {
+  detail::require_defined_(x.value(), "abs");
+  return Trace(x.value().abs());
+}
+
+inline DualTrace abs(const DualTrace& x) {
+  const Series pos = x.value().gt(0.0).to(x.value().scalar_type());
+  const Series neg = x.value().lt(0.0).to(x.value().scalar_type());
+  const Series slope = pos.sub(neg);
+  return DualTrace(x.value().abs(), slope.mul(x.tangent()));
+}
+
+inline Trace log1p(const Trace& x) {
+  detail::require_defined_(x.value(), "log1p");
+  return Trace(x.value().log1p());
+}
+
+inline DualTrace log1p(const DualTrace& x) {
+  const Series one = detail::ones_like_(x.value());
+  return DualTrace(x.value().log1p(), x.tangent().div(one.add(x.value())));
+}
+
+inline Trace expm1(const Trace& x) {
+  detail::require_defined_(x.value(), "expm1");
+  return Trace(x.value().expm1());
+}
+
+inline DualTrace expm1(const DualTrace& x) {
+  return DualTrace(x.value().expm1(), x.value().exp().mul(x.tangent()));
+}
+
+inline Trace erf(const Trace& x) {
+  detail::require_defined_(x.value(), "erf");
+  return Trace(x.value().erf());
+}
+
+inline DualTrace erf(const DualTrace& x) {
+  constexpr double kTwoOverSqrtPi = 1.12837916709551257390;
+  const Series slope = x.value().square().neg().exp().mul(kTwoOverSqrtPi);
+  return DualTrace(x.value().erf(), slope.mul(x.tangent()));
 }
 
 inline Trace relu(const Trace& x) {
@@ -440,6 +606,30 @@ inline DualTrace sigmoid(const DualTrace& x) {
   const Series primal = x.value().sigmoid();
   const Series slope = primal.mul(detail::ones_like_(primal).sub(primal));
   return DualTrace(primal, slope.mul(x.tangent()));
+}
+
+inline Trace softmax(const Trace& x, std::int64_t axis = -1) {
+  detail::require_defined_(x.value(), "softmax");
+  return Trace(x.value().softmax(axis));
+}
+
+inline DualTrace softmax(const DualTrace& x, std::int64_t axis = -1) {
+  const Series primal = x.value().softmax(axis);
+  const Series dot = primal.mul(x.tangent()).sum(axis, true);
+  const Series tangent = primal.mul(x.tangent().sub(dot));
+  return DualTrace(primal, tangent);
+}
+
+inline Trace log_softmax(const Trace& x, std::int64_t axis = -1) {
+  detail::require_defined_(x.value(), "log_softmax");
+  return Trace(x.value().log_softmax(axis));
+}
+
+inline DualTrace log_softmax(const DualTrace& x, std::int64_t axis = -1) {
+  const Series primal = x.value().log_softmax(axis);
+  const Series probs = primal.exp();
+  const Series tangent = x.tangent().sub(probs.mul(x.tangent().sum(axis, true)));
+  return DualTrace(primal, tangent);
 }
 
 inline Trace softplus(const Trace& x, double beta = 1.0, double threshold = 20.0) {
@@ -482,6 +672,167 @@ inline Trace mean(const Trace& x) {
 
 inline DualTrace mean(const DualTrace& x) {
   return DualTrace(x.value().mean(), x.tangent().mean());
+}
+
+inline Trace apply_loss_reduction(const Trace& x, LossReduction reduction) {
+  switch (reduction) {
+    case LossReduction::None:
+      return x;
+    case LossReduction::Sum:
+      return sum(x);
+    case LossReduction::Mean:
+    default:
+      return mean(x);
+  }
+}
+
+inline DualTrace apply_loss_reduction(const DualTrace& x, LossReduction reduction) {
+  switch (reduction) {
+    case LossReduction::None:
+      return x;
+    case LossReduction::Sum:
+      return sum(x);
+    case LossReduction::Mean:
+    default:
+      return mean(x);
+  }
+}
+
+inline Trace squared_error_loss(const Trace& prediction,
+                                const Trace& target,
+                                LossReduction reduction = LossReduction::Mean) {
+  detail::require_defined_(prediction.value(), "squared_error_loss");
+  detail::require_defined_(target.value(), "squared_error_loss");
+  detail::require_same_platform_(prediction.value(), target.value(), "squared_error_loss");
+  return apply_loss_reduction(square(sub(prediction, target)), reduction);
+}
+
+inline DualTrace squared_error_loss(const DualTrace& prediction,
+                                    const DualTrace& target,
+                                    LossReduction reduction = LossReduction::Mean) {
+  return apply_loss_reduction(square(sub(prediction, target)), reduction);
+}
+
+inline Trace squared_error_loss(const Trace& prediction,
+                                const Series& target,
+                                LossReduction reduction = LossReduction::Mean) {
+  return squared_error_loss(prediction, fixed(target), reduction);
+}
+
+inline DualTrace squared_error_loss(const DualTrace& prediction,
+                                    const Series& target,
+                                    LossReduction reduction = LossReduction::Mean) {
+  return squared_error_loss(prediction, fixed(target, prediction.tangent()), reduction);
+}
+
+inline Trace absolute_error_loss(const Trace& prediction,
+                                 const Trace& target,
+                                 LossReduction reduction = LossReduction::Mean) {
+  detail::require_defined_(prediction.value(), "absolute_error_loss");
+  detail::require_defined_(target.value(), "absolute_error_loss");
+  detail::require_same_platform_(prediction.value(), target.value(), "absolute_error_loss");
+  return apply_loss_reduction(abs(sub(prediction, target)), reduction);
+}
+
+inline DualTrace absolute_error_loss(const DualTrace& prediction,
+                                     const DualTrace& target,
+                                     LossReduction reduction = LossReduction::Mean) {
+  return apply_loss_reduction(abs(sub(prediction, target)), reduction);
+}
+
+inline Trace absolute_error_loss(const Trace& prediction,
+                                 const Series& target,
+                                 LossReduction reduction = LossReduction::Mean) {
+  return absolute_error_loss(prediction, fixed(target), reduction);
+}
+
+inline DualTrace absolute_error_loss(const DualTrace& prediction,
+                                     const Series& target,
+                                     LossReduction reduction = LossReduction::Mean) {
+  return absolute_error_loss(prediction, fixed(target, prediction.tangent()), reduction);
+}
+
+inline Trace huber_error_loss(const Trace& prediction,
+                              const Trace& target,
+                              double delta = 1.0,
+                              LossReduction reduction = LossReduction::Mean) {
+  if (!(delta > 0.0) || !std::isfinite(delta)) {
+    throw std::runtime_error("subsp::math::diff::huber_error_loss: delta must be positive and finite");
+  }
+  const Trace err = sub(prediction, target);
+  const Trace a = abs(err);
+  const Trace quadratic = clamp(a, 0.0, delta);
+  const Trace linear = sub(a, quadratic);
+  const Trace half = make_scalar_like_(quadratic, 0.5);
+  const Trace delta_s = make_scalar_like_(quadratic, delta);
+  const Trace loss = add(mul(half, square(quadratic)), mul(delta_s, linear));
+  return apply_loss_reduction(loss, reduction);
+}
+
+inline DualTrace huber_error_loss(const DualTrace& prediction,
+                                  const DualTrace& target,
+                                  double delta = 1.0,
+                                  LossReduction reduction = LossReduction::Mean) {
+  if (!(delta > 0.0) || !std::isfinite(delta)) {
+    throw std::runtime_error("subsp::math::diff::huber_error_loss: delta must be positive and finite");
+  }
+  const DualTrace err = sub(prediction, target);
+  const DualTrace a = abs(err);
+  const DualTrace quadratic = clamp(a, 0.0, delta);
+  const DualTrace linear = sub(a, quadratic);
+  const DualTrace half = make_scalar_like_(quadratic, 0.5);
+  const DualTrace delta_s = make_scalar_like_(quadratic, delta);
+  const DualTrace loss = add(mul(half, square(quadratic)), mul(delta_s, linear));
+  return apply_loss_reduction(loss, reduction);
+}
+
+inline Trace huber_error_loss(const Trace& prediction,
+                              const Series& target,
+                              double delta = 1.0,
+                              LossReduction reduction = LossReduction::Mean) {
+  return huber_error_loss(prediction, fixed(target), delta, reduction);
+}
+
+inline DualTrace huber_error_loss(const DualTrace& prediction,
+                                  const Series& target,
+                                  double delta = 1.0,
+                                  LossReduction reduction = LossReduction::Mean) {
+  return huber_error_loss(prediction, fixed(target, prediction.tangent()), delta, reduction);
+}
+
+inline Trace logistic_binary_loss(const Trace& logits,
+                                  const Trace& target,
+                                  LossReduction reduction = LossReduction::Mean) {
+  detail::require_defined_(logits.value(), "logistic_binary_loss");
+  detail::require_defined_(target.value(), "logistic_binary_loss");
+  detail::require_same_platform_(logits.value(), target.value(), "logistic_binary_loss");
+  const Trace one = make_scalar_like_(target, 1.0);
+  const Trace one_minus_t = sub(one, target);
+  const Trace terms = add(mul(one_minus_t, softplus(logits)),
+                          mul(target, softplus(neg(logits))));
+  return apply_loss_reduction(terms, reduction);
+}
+
+inline DualTrace logistic_binary_loss(const DualTrace& logits,
+                                      const DualTrace& target,
+                                      LossReduction reduction = LossReduction::Mean) {
+  const DualTrace one = make_scalar_like_(target, 1.0);
+  const DualTrace one_minus_t = sub(one, target);
+  const DualTrace terms = add(mul(one_minus_t, softplus(logits)),
+                              mul(target, softplus(neg(logits))));
+  return apply_loss_reduction(terms, reduction);
+}
+
+inline Trace logistic_binary_loss(const Trace& logits,
+                                  const Series& target,
+                                  LossReduction reduction = LossReduction::Mean) {
+  return logistic_binary_loss(logits, fixed(target), reduction);
+}
+
+inline DualTrace logistic_binary_loss(const DualTrace& logits,
+                                      const Series& target,
+                                      LossReduction reduction = LossReduction::Mean) {
+  return logistic_binary_loss(logits, fixed(target, logits.tangent()), reduction);
 }
 
 inline Trace matmul(const Trace& a, const Trace& b) {
@@ -555,6 +906,7 @@ std::pair<Series, std::vector<Series>> value_and_grad(Fn&& fn, const std::vector
     throw std::runtime_error("subsp::math::diff::value_and_grad: objective returned undefined Trace");
   }
 
+  clear_sensitivities(vars);
   loss.reverse();
 
   std::vector<Series> grads;
@@ -700,6 +1052,7 @@ std::pair<Series, std::function<std::vector<Series>(const Series&)>> vjp(
       throw std::runtime_error("subsp::math::diff::vjp: cotangent shape must match output shape");
     }
 
+    clear_sensitivities(vars);
     output.reverse(cotangent);
 
     std::vector<Series> grads;
@@ -780,6 +1133,10 @@ std::pair<Series, std::vector<Series>> hvp(Fn&& fn,
 
   using FnType = std::decay_t<Fn>;
   if constexpr (std::is_invocable_v<FnType&, const std::vector<DualTrace>&>) {
+    if (opt.mode == HvpOptions::Mode::FiniteDifferenceOnly) {
+      throw std::runtime_error(
+          "subsp::math::diff::hvp: finite-difference-only mode requires a Trace-callable objective");
+    }
     std::vector<Series> leaf_params;
     leaf_params.reserve(params.size());
     std::vector<Series> tangent_consts;
@@ -803,6 +1160,9 @@ std::pair<Series, std::vector<Series>> hvp(Fn&& fn,
       throw std::runtime_error("subsp::math::diff::hvp: objective must be scalar-valued");
     }
 
+    for (const auto& leaf : leaf_params) {
+      pluss::codem::series_tape::clear_sensitivity(leaf);
+    }
     directional.reverse();
 
     std::vector<Series> hv;
@@ -812,6 +1172,10 @@ std::pair<Series, std::vector<Series>> hvp(Fn&& fn,
     }
     return {value, hv};
   } else {
+    if (opt.mode == HvpOptions::Mode::ExactOnly) {
+      throw std::runtime_error(
+          "subsp::math::diff::hvp: exact-only mode requires a DualTrace-callable objective");
+    }
     const auto [value, _] = value_and_grad(std::forward<Fn>(fn), params);
     if (value.numel() != 1) {
       throw std::runtime_error("subsp::math::diff::hvp: objective must be scalar-valued");
@@ -872,16 +1236,16 @@ std::pair<Series, Series> hvp(Fn&& fn,
         std::vector<Series>{tangent},
         opt);
     return {value, hv.front()};
+  } else {
+    auto [value, hv] = hvp(
+        [&](const std::vector<Trace>& xs) -> Trace {
+          return std::forward<Fn>(fn)(xs.front());
+        },
+        std::vector<Series>{param},
+        std::vector<Series>{tangent},
+        opt);
+    return {value, hv.front()};
   }
-
-  auto [value, hv] = hvp(
-      [&](const std::vector<Trace>& xs) -> Trace {
-        return std::forward<Fn>(fn)(xs.front());
-      },
-      std::vector<Series>{param},
-      std::vector<Series>{tangent},
-      opt);
-  return {value, hv.front()};
 }
 
 // Scalar-univariate convenience helper built on top of the transform layer.

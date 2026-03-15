@@ -146,6 +146,86 @@ public:
     initialize_constraint_state_();
   }
 
+  struct State {
+    std::int64_t step{0};
+    double moving_violation{0.0};
+    std::vector<MinimaxOptions> group_options{};
+    std::vector<Series> first_moment{};
+    std::vector<Series> second_moment{};
+    std::vector<Series> max_second_hat{};
+    std::vector<Series> momentum_buffer{};
+    std::vector<Series> rmsprop_avg{};
+    std::vector<Series> eq_multipliers{};
+    std::vector<Series> ineq_multipliers{};
+    std::vector<Series> lower_multipliers{};
+    std::vector<Series> upper_multipliers{};
+  };
+
+  State capture_state() const {
+    State state{};
+    state.step = step_;
+    state.moving_violation = moving_violation_;
+    state.group_options.reserve(groups_.size());
+    for (const auto& group : groups_) {
+      state.group_options.push_back(group.options);
+    }
+    state.first_moment = first_moment_;
+    state.second_moment = second_moment_;
+    state.max_second_hat = max_second_hat_;
+    state.momentum_buffer = momentum_buffer_;
+    state.rmsprop_avg = rmsprop_avg_;
+    state.eq_multipliers = eq_multipliers_;
+    state.ineq_multipliers = ineq_multipliers_;
+    state.lower_multipliers = lower_multipliers_;
+    state.upper_multipliers = upper_multipliers_;
+    return state;
+  }
+
+  void restore_state(const State& state) {
+    if (state.group_options.size() != groups_.size()) {
+      throw std::runtime_error("pluss::ai::nn::optim::Minimax::restore_state: group count mismatch");
+    }
+    if (state.step < 0) {
+      throw std::runtime_error("pluss::ai::nn::optim::Minimax::restore_state: step must be non-negative");
+    }
+    if (!std::isfinite(state.moving_violation) || state.moving_violation < 0.0) {
+      throw std::runtime_error("pluss::ai::nn::optim::Minimax::restore_state: moving_violation must be finite and >= 0");
+    }
+    for (const auto& options : state.group_options) {
+      validate_options_(options);
+    }
+    for (std::size_t i = 0; i < groups_.size(); ++i) {
+      groups_[i].options = state.group_options[i];
+    }
+    validate_group_options_();
+
+    validate_state_vector_(state.first_moment, "pluss::ai::nn::optim::Minimax::restore_state[first_moment]");
+    validate_state_vector_(state.second_moment, "pluss::ai::nn::optim::Minimax::restore_state[second_moment]");
+    validate_state_vector_(state.max_second_hat, "pluss::ai::nn::optim::Minimax::restore_state[max_second_hat]");
+    validate_state_vector_(state.momentum_buffer, "pluss::ai::nn::optim::Minimax::restore_state[momentum_buffer]");
+    validate_state_vector_(state.rmsprop_avg, "pluss::ai::nn::optim::Minimax::restore_state[rmsprop_avg]");
+    validate_constraint_state_(state.eq_multipliers, eq_multipliers_,
+                               "pluss::ai::nn::optim::Minimax::restore_state[eq_multipliers]");
+    validate_constraint_state_(state.ineq_multipliers, ineq_multipliers_,
+                               "pluss::ai::nn::optim::Minimax::restore_state[ineq_multipliers]");
+    validate_constraint_state_(state.lower_multipliers, lower_multipliers_,
+                               "pluss::ai::nn::optim::Minimax::restore_state[lower_multipliers]");
+    validate_constraint_state_(state.upper_multipliers, upper_multipliers_,
+                               "pluss::ai::nn::optim::Minimax::restore_state[upper_multipliers]");
+
+    first_moment_ = state.first_moment;
+    second_moment_ = state.second_moment;
+    max_second_hat_ = state.max_second_hat;
+    momentum_buffer_ = state.momentum_buffer;
+    rmsprop_avg_ = state.rmsprop_avg;
+    eq_multipliers_ = state.eq_multipliers;
+    ineq_multipliers_ = state.ineq_multipliers;
+    lower_multipliers_ = state.lower_multipliers;
+    upper_multipliers_ = state.upper_multipliers;
+    step_ = state.step;
+    moving_violation_ = state.moving_violation;
+  }
+
 private:
   struct GroupState {
     std::vector<std::size_t> indices{};
@@ -293,6 +373,28 @@ private:
            !c.upper_bounds.empty();
   }
 
+  static void validate_constraint_state_(const std::vector<Series>& state,
+                                         const std::vector<Series>& ref,
+                                         const char* where) {
+    if (state.size() != ref.size()) {
+      throw std::runtime_error(std::string(where) + ": state size mismatch");
+    }
+    for (std::size_t i = 0; i < state.size(); ++i) {
+      const Series& s = state[i];
+      const Series& r = ref[i];
+      if (s.defined() != r.defined()) {
+        throw std::runtime_error(std::string(where) + ": definedness mismatch");
+      }
+      if (!s.defined()) continue;
+      if (s.platform() != r.platform()) {
+        throw std::runtime_error(std::string(where) + ": platform mismatch");
+      }
+      if (!same_shape_(s, r)) {
+        throw std::runtime_error(std::string(where) + ": shape mismatch");
+      }
+    }
+  }
+
   void validate_bounds_vector_(const std::vector<Series>& bounds, const char* name) const {
     if (bounds.empty()) return;
     if (bounds.size() != size()) {
@@ -382,7 +484,7 @@ private:
     if (!constraints_.equalities && !constraints_.inequalities) return;
     std::vector<Series> params_value;
     params_value.reserve(params.size());
-    for (const Series* p : params) params_value.push_back(p->detach());
+    for (const Series* p : params) params_value.push_back(p->clone());
 
     if (constraints_.equalities) {
       const auto residuals = constraints_.equalities(params_value);
@@ -615,53 +717,68 @@ private:
     switch (options.primal_method) {
       case MinimaxPrimalMethod::Adam:
       case MinimaxPrimalMethod::AdamW: {
+        const Series one = scalar_on_(1.0, parameter_value);
+        const Series beta1 = scalar_on_(options.beta1, parameter_value);
+        const Series beta2 = scalar_on_(options.beta2, parameter_value);
+        const Series one_minus_beta1 = one.sub(beta1);
+        const Series one_minus_beta2 = one.sub(beta2);
+        const Series lr = scalar_on_(options.learning_rate, parameter_value);
+        const Series eps = scalar_on_(options.epsilon, parameter_value);
         if (options.primal_method == MinimaxPrimalMethod::Adam && options.weight_decay != 0.0) {
-          g = g.add(parameter_value.mul(options.weight_decay));
+          g = g.add(parameter_value.mul(scalar_on_(options.weight_decay, parameter_value)));
         }
 
-        first_moment_[i] = first_moment_[i].mul(options.beta1).add(g.mul(1.0 - options.beta1));
-        second_moment_[i] = second_moment_[i].mul(options.beta2).add(g.square().mul(1.0 - options.beta2));
+        first_moment_[i] = first_moment_[i].mul(beta1).add(g.mul(one_minus_beta1));
+        second_moment_[i] = second_moment_[i].mul(beta2).add(g.square().mul(one_minus_beta2));
 
-        Series second_hat = second_moment_[i].div(b2_correction);
+        Series second_hat = second_moment_[i].div(scalar_on_(b2_correction, parameter_value));
         if (options.amsgrad) {
           max_second_hat_[i] = max_second_hat_[i].maximum(second_hat);
           second_hat = max_second_hat_[i];
         }
 
-        const Series first_hat = first_moment_[i].div(b1_correction);
-        Series delta = first_hat.div(second_hat.sqrt().add(options.epsilon)).mul(options.learning_rate);
+        const Series first_hat = first_moment_[i].div(scalar_on_(b1_correction, parameter_value));
+        Series delta = first_hat.div(second_hat.sqrt().add(eps)).mul(lr);
         if (options.primal_method == MinimaxPrimalMethod::AdamW && options.weight_decay != 0.0) {
-          delta = delta.add(parameter_value.mul(options.learning_rate * options.weight_decay));
+          delta = delta.add(parameter_value.mul(scalar_on_(options.learning_rate * options.weight_decay, parameter_value)));
         }
         return delta;
       }
 
       case MinimaxPrimalMethod::SGD: {
+        const Series momentum = scalar_on_(options.momentum, parameter_value);
+        const Series lr = scalar_on_(options.learning_rate, parameter_value);
         if (options.weight_decay != 0.0) {
-          g = g.add(parameter_value.mul(options.weight_decay));
+          g = g.add(parameter_value.mul(scalar_on_(options.weight_decay, parameter_value)));
         }
         if (options.momentum > 0.0) {
-          momentum_buffer_[i] = momentum_buffer_[i].mul(options.momentum).add(g);
+          momentum_buffer_[i] = momentum_buffer_[i].mul(momentum).add(g);
           g = momentum_buffer_[i];
         }
-        return g.mul(options.learning_rate);
+        return g.mul(lr);
       }
 
       case MinimaxPrimalMethod::RMSprop: {
+        const Series one = scalar_on_(1.0, parameter_value);
+        const Series alpha = scalar_on_(options.rmsprop_alpha, parameter_value);
+        const Series one_minus_alpha = one.sub(alpha);
+        const Series eps = scalar_on_(options.epsilon, parameter_value);
+        const Series momentum = scalar_on_(options.momentum, parameter_value);
+        const Series lr = scalar_on_(options.learning_rate, parameter_value);
         if (options.weight_decay != 0.0) {
-          g = g.add(parameter_value.mul(options.weight_decay));
+          g = g.add(parameter_value.mul(scalar_on_(options.weight_decay, parameter_value)));
         }
-        rmsprop_avg_[i] = rmsprop_avg_[i].mul(options.rmsprop_alpha).add(g.square().mul(1.0 - options.rmsprop_alpha));
-        Series update = g.div(rmsprop_avg_[i].sqrt().add(options.epsilon));
+        rmsprop_avg_[i] = rmsprop_avg_[i].mul(alpha).add(g.square().mul(one_minus_alpha));
+        Series update = g.div(rmsprop_avg_[i].sqrt().add(eps));
         if (options.momentum > 0.0) {
-          momentum_buffer_[i] = momentum_buffer_[i].mul(options.momentum).add(update);
+          momentum_buffer_[i] = momentum_buffer_[i].mul(momentum).add(update);
           update = momentum_buffer_[i];
         }
-        return update.mul(options.learning_rate);
+        return update.mul(lr);
       }
     }
 
-    return g.mul(options.learning_rate);
+    return g.mul(scalar_on_(options.learning_rate, parameter_value));
   }
 
   void apply_step_(const std::vector<Series>& gradients) override {
@@ -671,7 +788,7 @@ private:
     std::vector<Series> params_value;
     params_value.reserve(params.size());
     for (Series* p : params) {
-      params_value.push_back(p->detach());
+      params_value.push_back(*p);
     }
 
     const MinimaxOptions& copt = constraint_options_();
@@ -718,17 +835,21 @@ private:
         sensitivity = clip_gradient_(sensitivity, options.clip);
         if (options.maximize) sensitivity = sensitivity.neg();
 
-        Series parameter_value = param_ptr->detach();
+        Series parameter_value = *param_ptr;
         const Series delta = primal_delta_(i, sensitivity, parameter_value, options, b1_correction, b2_correction);
         Series next_value = nan_recover_step_(parameter_value, delta, i, options);
 
         assign_parameter_(*param_ptr, next_value);
-        params_value[i] = next_value.detach();
+        params_value[i] = next_value;
       }
     }
 
     const double violation = update_constraint_multipliers_(params_value, dual_lr);
     moving_violation_ = 0.9 * moving_violation_ + 0.1 * violation;
+  }
+
+  bool requires_recording_during_step_() const override {
+    return constraint_options_().enable_constraint_autodiff && has_constraints_(constraints_);
   }
 
   std::vector<GroupState> groups_{};

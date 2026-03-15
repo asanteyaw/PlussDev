@@ -944,6 +944,79 @@ class CODEM_API Var {
                         pluss::codem::Config cfg = {});
 };
 
+enum class JohansenStat : std::uint8_t {
+  Trace = 0,
+  MaxEigen = 1,
+};
+
+struct JohansenOptions {
+  std::int64_t lag_order = 1;
+  bool include_intercept = true;
+  bool include_trend = false;
+  JohansenStat statistic = JohansenStat::Trace;
+  double alpha = 0.05;
+};
+
+struct JohansenResult {
+  pluss::codem::Series eigenvalues = pluss::codem::Series::undefined();
+  pluss::codem::Series stat = pluss::codem::Series::undefined();
+  pluss::codem::Series pvalue = pluss::codem::Series::undefined();
+  pluss::codem::Series critical = pluss::codem::Series::undefined();
+  pluss::codem::Series reject = pluss::codem::Series::undefined();
+  pluss::codem::Series dof = pluss::codem::Series::undefined();
+  pluss::codem::Series alpha = pluss::codem::Series::undefined();
+  pluss::codem::Series beta = pluss::codem::Series::undefined();
+  std::int64_t selected_rank = 0;
+};
+
+CODEM_API JohansenResult johansen_test(const pluss::codem::Series& y,
+                                       const JohansenOptions& options = {},
+                                       pluss::codem::Config cfg = {});
+
+struct VecmOptions {
+  std::int64_t lag_order = 1;
+  std::int64_t rank = -1;
+  bool include_intercept = true;
+  bool include_trend = false;
+  double alpha = 0.05;
+  double ridge = 0.0;
+  double pinv_rcond = 1e-12;
+};
+
+struct VecmFit {
+  std::int64_t lag_order = 1;
+  std::int64_t rank = 0;
+  bool include_intercept = true;
+  bool include_trend = false;
+  pluss::codem::Series alpha = pluss::codem::Series::undefined();
+  pluss::codem::Series beta = pluss::codem::Series::undefined();
+  pluss::codem::Series impact = pluss::codem::Series::undefined();
+  pluss::codem::Series gamma = pluss::codem::Series::undefined();
+  pluss::codem::Series constant = pluss::codem::Series::undefined();
+  pluss::codem::Series trend = pluss::codem::Series::undefined();
+  pluss::codem::Series covariance = pluss::codem::Series::undefined();
+  std::int64_t sample_size = 0;
+
+  [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y,
+                                           pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
+  [[nodiscard]] pluss::codem::Series loglik_per_obs(const pluss::codem::Series& y,
+                                                    pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series forecast(std::int64_t horizon,
+                                              const pluss::codem::Series& y,
+                                              pluss::codem::Config cfg = {}) const;
+  [[nodiscard]] pluss::codem::Series simulate(std::int64_t num_observations,
+                                              pluss::codem::Config cfg = {},
+                                              std::uint64_t seed = 0) const;
+};
+
+class CODEM_API Vecm {
+ public:
+  static VecmFit fit_mle(const pluss::codem::Series& y,
+                         const VecmOptions& options = {},
+                         pluss::codem::Config cfg = {});
+};
+
 CODEM_API std::pair<pluss::codem::Series, pluss::codem::Series> var_to_vecm(const pluss::codem::Series& ar,
                                                                              pluss::codem::Config cfg = {});
 CODEM_API pluss::codem::Series vecm_to_var(const pluss::codem::Series& short_run,

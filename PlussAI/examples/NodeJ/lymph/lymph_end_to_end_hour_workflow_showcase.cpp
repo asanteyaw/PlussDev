@@ -51,15 +51,6 @@ int main(int argc, char** argv) {
         {"yr", "year"},
     });
 
-    // This section makes date explicit as timeline and ensures numeric model columns are Series<Float64>.
-    frame = frame.cast_timeline({"date"});
-    frame = frame.cast_series(
-        {
-            "season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday",
-            "weather_condition", "temp", "atemp", "humidity", "windspeed", "casual", "registered",
-            "total_count",
-        },
-        ScalarType::Float64);
 
     //========== feature engineering ========
     // This section creates interaction and curvature features directly in DataFrame form

@@ -25,3 +25,7 @@ endif()
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/var/CMakeLists.txt")
   add_subdirectory(modules/var)
 endif()
+
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/vecm/CMakeLists.txt")
+  add_subdirectory(modules/vecm)
+endif()

@@ -10,3 +10,13 @@ Keep functional and OOP optimizers explicitly separated by namespace and purpose
 - `pluss::optim::*` is the functional math optimization surface (for example `adam_step_inplace(...)`).
 - `pluss::nn::optim::*` is the OOP DL training optimizer surface (for example `pluss::nn::optim::Adam`).
 - Do not blur naming between these two surfaces in docs or demos.
+
+
+### Doctrine for Demo code
+Demos are the user facing code that shows how to use the API in practice. They are also end user code; they give us an idea of what end users can do and what they cannot do, how they would be required to code to get things done. As such, there should be no helper functions in demos, no boilerplate, and no unecessary verbosity, just demo to show raw capability of the current functionalities. We want to see the most minimal code possible that an end user can use to do an end-to-end get things done. Whatever task the end user is doing, from data loading, EDA, feature extractions, etc (all preprocessing) to modeling to functionality demonstrations, all that end to end with the most minimal code permissible by the current APIs. Please read the APIs you're gonna use extensively to understand so you are not writing an unecessarily verbose code when the API offers a much simpler way to do it. In this way, we can expose the real gaps in the API to give an idea of what to target next. If you write something improvised, you have to be ABSOLUTELY sure the current APIs do not offer a much simpler and cleaner way to do it. We really need to see how easy the APIs are for the end users to give us an idea of what do target(above, we said that one of our purposes is ease of use (write small code, acheive a lot), writing unecessary boilerplates in user demos defeats this purpose completely). The only helper permissible in demos is one that specifies the path for loading or saving data or plots or models, etc. For example
+namespace {
+
+std::filesystem::path data_file(const std::string& name) {
+  return std::filesystem::path(PLUSSMIC_SOURCE_DIR) / "data" / name;
+}
+}

@@ -64,6 +64,38 @@ kernel void gather_f32_i64(
   in_off += static_cast<ulong>(pick) * meta.in_strides[meta.dim];
   out[gid] = in[in_off];
 }
+
+kernel void gather_i64_i64(
+    const device long* in [[buffer(0)]],
+    const device long* index [[buffer(1)]],
+    device long* out [[buffer(2)]],
+    constant GatherMeta& meta [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]) {
+  ulong rem = static_cast<ulong>(gid);
+  ulong in_off = 0;
+  ulong idx_off = 0;
+  for (int d = static_cast<int>(meta.ndim) - 1; d >= 0; --d) {
+    const ulong sz = meta.out_sizes[d];
+    const ulong i = (sz == 0) ? 0 : (rem % sz);
+    rem = (sz == 0) ? 0 : (rem / sz);
+    idx_off += i * meta.idx_strides[d];
+    if (static_cast<uint>(d) != meta.dim) {
+      in_off += i * meta.in_strides[d];
+    }
+  }
+
+  long pick = index[idx_off];
+  const long dim_sz = static_cast<long>(meta.in_sizes[meta.dim]);
+  if (pick < 0) {
+    pick += dim_sz;
+  }
+  if (pick < 0 || pick >= dim_sz) {
+    out[gid] = static_cast<long>(0);
+    return;
+  }
+  in_off += static_cast<ulong>(pick) * meta.in_strides[meta.dim];
+  out[gid] = in[in_off];
+}
 )metal";
 
 struct GatherMetaHost {
@@ -81,6 +113,7 @@ struct Context {
   id<MTLCommandQueue> queue{nil};
   id<MTLLibrary> library{nil};
   id<MTLComputePipelineState> gather_f32_i64{nil};
+  id<MTLComputePipelineState> gather_i64_i64{nil};
   std::string error{};
 };
 
@@ -140,6 +173,21 @@ Context& ctx_() {
         }
         return;
       }
+      NSError* p_err_i64 = nil;
+      id<MTLFunction> fn_i64 = [ctx.library newFunctionWithName:@"gather_i64_i64"];
+      if (fn_i64 == nil) {
+        ctx.error = "MPS gather init failed: missing kernel gather_i64_i64";
+        return;
+      }
+      ctx.gather_i64_i64 = [ctx.device newComputePipelineStateWithFunction:fn_i64 error:&p_err_i64];
+      if (ctx.gather_i64_i64 == nil) {
+        ctx.error = "MPS gather init failed: pipeline creation error";
+        if (p_err_i64 != nil && p_err_i64.localizedDescription != nil) {
+          ctx.error += ": ";
+          ctx.error += std::string([p_err_i64.localizedDescription UTF8String]);
+        }
+        return;
+      }
       ctx.ready = true;
     }
   });
@@ -156,8 +204,11 @@ void validate_inputs_(const Series& input, const Series& index, const Series& ou
   if (!input.is_contiguous() || !index.is_contiguous() || !out.is_contiguous()) {
     fail_("mps::gather: requires contiguous Series");
   }
-  if (input.scalar_type() != ScalarType::Float32 || out.scalar_type() != ScalarType::Float32) {
-    fail_("mps::gather: only float32 input/output supported on current MPS path");
+  if (input.scalar_type() != out.scalar_type()) {
+    fail_("mps::gather: input/output dtype mismatch");
+  }
+  if (input.scalar_type() != ScalarType::Float32 && input.scalar_type() != ScalarType::Int64) {
+    fail_("mps::gather: only float32/int64 input/output supported on current MPS path");
   }
   if (index.scalar_type() != ScalarType::Int64) {
     fail_("mps::gather: index must be int64");
@@ -219,7 +270,7 @@ void validate_inputs_(const Series& input, const Series& index, const Series& ou
 } // namespace
 
 bool supports_gather(ScalarType input_dt, ScalarType index_dt) noexcept {
-  return input_dt == ScalarType::Float32 && index_dt == ScalarType::Int64;
+  return (input_dt == ScalarType::Float32 || input_dt == ScalarType::Int64) && index_dt == ScalarType::Int64;
 }
 
 void gather(const Series& input, std::int64_t dim, const Series& index, Series& out) {
@@ -235,9 +286,11 @@ void gather(const Series& input, std::int64_t dim, const Series& index, Series& 
   }
 
   @autoreleasepool {
-    const std::size_t in_bytes = static_cast<std::size_t>(input.numel()) * sizeof(float);
+    const bool gather_f32 = (input.scalar_type() == ScalarType::Float32);
+    const std::size_t elem_bytes = gather_f32 ? sizeof(float) : sizeof(std::int64_t);
+    const std::size_t in_bytes = static_cast<std::size_t>(input.numel()) * elem_bytes;
     const std::size_t idx_bytes = static_cast<std::size_t>(index.numel()) * sizeof(std::int64_t);
-    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * sizeof(float);
+    const std::size_t out_bytes = static_cast<std::size_t>(out.numel()) * elem_bytes;
     id<MTLBuffer> in_buf = ensure_device_buffer_for_read_mm(input, c.device, in_bytes);
     id<MTLBuffer> idx_buf = ensure_device_buffer_for_read_mm(index, c.device, idx_bytes);
     id<MTLBuffer> out_buf = ensure_device_buffer_for_write_mm(out, c.device, out_bytes);
@@ -253,14 +306,15 @@ void gather(const Series& input, std::int64_t dim, const Series& index, Series& 
     if (enc == nil) {
       fail_("mps::gather: failed to create compute encoder");
     }
-    [enc setComputePipelineState:c.gather_f32_i64];
+    id<MTLComputePipelineState> pipeline = gather_f32 ? c.gather_f32_i64 : c.gather_i64_i64;
+    [enc setComputePipelineState:pipeline];
     [enc setBuffer:in_buf offset:0 atIndex:0];
     [enc setBuffer:idx_buf offset:0 atIndex:1];
     [enc setBuffer:out_buf offset:0 atIndex:2];
     [enc setBytes:&meta length:sizeof(meta) atIndex:3];
 
     const NSUInteger grid_n = static_cast<NSUInteger>(out.numel());
-    NSUInteger tg = c.gather_f32_i64.maxTotalThreadsPerThreadgroup;
+    NSUInteger tg = pipeline.maxTotalThreadsPerThreadgroup;
     if (tg == 0) tg = 64;
     tg = std::min<NSUInteger>(tg, 256);
     [enc dispatchThreads:MTLSizeMake(grid_n, 1, 1) threadsPerThreadgroup:MTLSizeMake(tg, 1, 1)];

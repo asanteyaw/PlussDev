@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <mutex>
+#include <sstream>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -23,6 +25,7 @@ std::recursive_mutex& g_mu = *new std::recursive_mutex();
 std::unordered_map<const SeriesImpl*, TapeState>& g_states =
     *new std::unordered_map<const SeriesImpl*, TapeState>();
 thread_local int g_pause_depth = 0;
+thread_local ReverseDiagnostics g_reverse_diag{};
 
 const SeriesImpl* key_of_(const Series& s) noexcept {
   return s.defined() ? s.unsafe_impl() : nullptr;
@@ -94,10 +97,66 @@ void topo_visit_(const Series& s,
   out.push_back(s);
 }
 
+bool same_shape_(const Series& a, const Series& b) {
+  const auto as = a.sizes();
+  const auto bs = b.sizes();
+  if (as.size() != bs.size()) return false;
+  for (std::size_t i = 0; i < as.size(); ++i) {
+    if (as[i] != bs[i]) return false;
+  }
+  return true;
+}
+
+bool compatible_shape_or_scalar_(const Series& ref, const Series& value) {
+  if (same_shape_(ref, value)) return true;
+  return ref.numel() == 1 && value.numel() == 1;
+}
+
+bool has_non_finite_(const Series& x) {
+  const Series non_finite = x.isfinite().logical_not().to(ScalarType::Float64);
+  return non_finite.sum().item<double>() > 0.0;
+}
+
+std::string op_name_of_(const std::shared_ptr<SourceLink>& link) {
+  if (!link) return "unknown";
+  if (link->op_name.empty()) return "unknown";
+  return link->op_name;
+}
+
+std::string captured_at_of_(const std::shared_ptr<SourceLink>& link) {
+  if (!link) return "unknown";
+  if (link->capture_file.empty()) return "unknown";
+  std::ostringstream oss;
+  oss << link->capture_file;
+  if (link->capture_line != 0) {
+    oss << ":" << link->capture_line;
+  }
+  if (!link->capture_function.empty()) {
+    oss << " (" << link->capture_function << ")";
+  }
+  return oss.str();
+}
+
 } // namespace
 
 PauseRecording::PauseRecording() { ++g_pause_depth; }
 PauseRecording::~PauseRecording() { --g_pause_depth; }
+
+void set_reverse_diagnostics(bool enabled, bool check_non_finite) noexcept {
+  g_reverse_diag.enabled = enabled;
+  g_reverse_diag.check_non_finite = check_non_finite;
+}
+
+ReverseDiagnostics reverse_diagnostics() noexcept { return g_reverse_diag; }
+
+ReverseDiagnosticsScope::ReverseDiagnosticsScope(bool check_non_finite) noexcept
+    : previous_(reverse_diagnostics()) {
+  set_reverse_diagnostics(true, check_non_finite);
+}
+
+ReverseDiagnosticsScope::~ReverseDiagnosticsScope() {
+  set_reverse_diagnostics(previous_.enabled, previous_.check_non_finite);
+}
 
 bool recording_enabled() noexcept { return g_pause_depth == 0; }
 
@@ -139,8 +198,28 @@ bool is_leaf(const Series& s) {
   return !st->source_link;
 }
 
-void bind_source_link(const Series& s, std::shared_ptr<SourceLink> link) {
+std::optional<SourceInfo> source_info(const Series& s) {
+  auto link = source_link_copy_(s);
+  if (!link) return std::nullopt;
+  SourceInfo info{};
+  info.op_name = link->op_name;
+  info.parent_count = link->parents.size();
+  info.capture_file = link->capture_file;
+  info.capture_function = link->capture_function;
+  info.capture_line = link->capture_line;
+  return info;
+}
+
+void bind_source_link(
+    const Series& s,
+    std::shared_ptr<SourceLink> link,
+    const std::source_location& loc) {
   if (!s.defined()) return;
+  if (link && link->capture_file.empty()) {
+    link->capture_file = loc.file_name();
+    link->capture_function = loc.function_name();
+    link->capture_line = loc.line();
+  }
   if (link && link->parent_versions.empty()) {
     link->parent_versions.reserve(link->parents.size());
     for (const auto& p : link->parents) {
@@ -202,25 +281,49 @@ void backpropagate(const Series& loss, const std::optional<Series>& seed) {
     }
   }
 
+  const ReverseDiagnostics diagnostics = reverse_diagnostics();
+
   std::optional<Series> root_sens;
   if (seed.has_value()) {
-    root_sens = *seed;
+    PLUSS_CHECK(seed->defined(), "series_tape::backpropagate: seed must be defined");
+    PLUSS_CHECK(
+        seed->platform() == loss.platform(),
+        "series_tape::backpropagate: seed/platform mismatch with loss");
+    PLUSS_CHECK(
+        compatible_shape_or_scalar_(loss, *seed),
+        "series_tape::backpropagate: seed shape must match loss shape (or both scalar-numel)");
+    root_sens = (seed->scalar_type() == loss.scalar_type()) ? *seed : seed->to(loss.scalar_type());
   } else {
     PLUSS_CHECK(loss.numel() == 1,
                 "series_tape::backpropagate: non-scalar output requires explicit seed");
     root_sens = Series::ones(loss.sizes(), loss.scalar_type()).to(loss.platform());
   }
+  if (diagnostics.enabled && diagnostics.check_non_finite && has_non_finite_(*root_sens)) {
+    throw_error("series_tape::backpropagate: non-finite root sensitivity detected");
+  }
   accumulate_sensitivity(loss, *root_sens);
 
   PauseRecording no_record;
   const auto* root_key = key_of_(loss);
+  std::size_t visited_nodes = 0;
   for (auto it = topo.rbegin(); it != topo.rend(); ++it) {
+    ++visited_nodes;
     const auto& cur = *it;
     auto sens = sensitivity_copy_(cur);
     auto link = source_link_copy_(cur);
     if (!sens.has_value() || !link || !link->propagate) {
       continue;
     }
+    if (diagnostics.enabled && diagnostics.check_non_finite && has_non_finite_(*sens)) {
+      std::ostringstream oss;
+      oss << "series_tape::backpropagate: non-finite sensitivity detected before propagate at traversal step "
+          << visited_nodes << " [op=" << op_name_of_(link)
+          << ", captured_at=" << captured_at_of_(link) << "]";
+      throw_error(oss.str());
+    }
+    PLUSS_CHECK(
+        compatible_shape_or_scalar_(cur, *sens),
+        "series_tape::backpropagate: internal sensitivity shape mismatch for node");
     if (!link->parent_versions.empty()) {
       PLUSS_CHECK(
           link->parent_versions.size() == link->parents.size(),
@@ -230,10 +333,43 @@ void backpropagate(const Series& loss, const std::optional<Series>& seed) {
         if (!p.defined()) continue;
         PLUSS_CHECK(
             p.storage().version() == link->parent_versions[i],
-            "series_tape::backpropagate: saved Series was modified after graph capture");
+            std::string("series_tape::backpropagate: saved Series was modified after graph capture [op=") +
+                op_name_of_(link) + ", captured_at=" + captured_at_of_(link) + "]");
       }
     }
-    link->propagate(*sens);
+    try {
+      link->propagate(*sens);
+    } catch (const std::exception& e) {
+      std::ostringstream oss;
+      oss << "series_tape::backpropagate: propagate failed at traversal step "
+          << visited_nodes
+          << " (op=" << op_name_of_(link)
+          << ", captured_at=" << captured_at_of_(link)
+          << ", parents=" << link->parents.size() << "): " << e.what();
+      throw_error(oss.str());
+    } catch (...) {
+      std::ostringstream oss;
+      oss << "series_tape::backpropagate: propagate failed with unknown exception at traversal step "
+          << visited_nodes
+          << " (op=" << op_name_of_(link)
+          << ", captured_at=" << captured_at_of_(link)
+          << ", parents=" << link->parents.size() << ")";
+      throw_error(oss.str());
+    }
+    if (diagnostics.enabled && diagnostics.check_non_finite) {
+      for (std::size_t i = 0; i < link->parents.size(); ++i) {
+        const auto& parent = link->parents[i];
+        auto parent_sens = sensitivity_copy_(parent);
+        if (parent_sens.has_value() && has_non_finite_(*parent_sens)) {
+          std::ostringstream oss;
+          oss << "series_tape::backpropagate: non-finite sensitivity detected after propagate at traversal step "
+              << visited_nodes << " for parent index " << i
+              << " [op=" << op_name_of_(link)
+              << ", captured_at=" << captured_at_of_(link) << "]";
+          throw_error(oss.str());
+        }
+      }
+    }
 
     if (!keep_sensitivity_copy_(cur) && key_of_(cur) != root_key) {
       clear_sensitivity(cur);

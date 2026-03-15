@@ -8,6 +8,9 @@
 #include "CodeM/native/cuda/MaskingOps.h"
 #include "CodeM/native/cuda/BitwiseOps.h"
 #include "CodeM/native/cuda/ComposeOps.h"
+#include "CodeM/native/cuda/CountingOps.h"
+#include "CodeM/native/cuda/FactoryOps.h"
+#include "CodeM/native/cuda/StochasticOps.h"
 #include "CodeM/native/cuda/SelectionOps.h"
 #include "CodeM/native/cuda/LinalgOps.h"
 #include "CodeM/native/cuda/IndexingOps.h"
@@ -333,6 +336,158 @@ bool cuda_supports_pile_compose(
     const std::vector<Series>& others,
     std::int64_t dim) noexcept {
   return native::cuda::supports_pile_compose(self, others, dim);
+}
+
+bool cuda_native_counting_enabled() noexcept {
+  return native::cuda::native_counting_enabled();
+}
+
+bool cuda_native_counting_strict() noexcept {
+  return native::cuda::native_counting_strict();
+}
+
+bool cuda_supports_unique_counting_baseline(ScalarType dtype, bool sorted) noexcept {
+  return native::cuda::supports_unique_counting_baseline(dtype, sorted);
+}
+
+bool cuda_supports_bincount_counting_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_bincount_counting_baseline(dtype);
+}
+
+bool cuda_supports_histc_counting_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_histc_counting_baseline(dtype);
+}
+
+bool cuda_supports_unique_counting(const Series& a, bool sorted) noexcept {
+  return native::cuda::supports_unique_counting(a, sorted);
+}
+
+bool cuda_supports_bincount_counting(const Series& a, std::int64_t minlength) noexcept {
+  return native::cuda::supports_bincount_counting(a, minlength);
+}
+
+bool cuda_supports_histc_counting(const Series& a, std::int64_t bins) noexcept {
+  return native::cuda::supports_histc_counting(a, bins);
+}
+
+bool cuda_native_factory_enabled() noexcept {
+  return native::cuda::native_factory_enabled();
+}
+
+bool cuda_native_factory_strict() noexcept {
+  return native::cuda::native_factory_strict();
+}
+
+bool cuda_supports_zeros_factory_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_zeros_factory_baseline(dtype);
+}
+
+bool cuda_supports_ones_factory_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_ones_factory_baseline(dtype);
+}
+
+bool cuda_supports_full_factory_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_full_factory_baseline(dtype);
+}
+
+bool cuda_supports_arange_factory_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_arange_factory_baseline(dtype);
+}
+
+bool cuda_supports_linspace_factory_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_linspace_factory_baseline(dtype);
+}
+
+bool cuda_supports_eye_factory_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_eye_factory_baseline(dtype);
+}
+
+bool cuda_supports_rand_factory_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_rand_factory_baseline(dtype);
+}
+
+bool cuda_supports_randn_factory_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_randn_factory_baseline(dtype);
+}
+
+bool cuda_native_stochastic_enabled() noexcept {
+  return native::cuda::native_stochastic_enabled();
+}
+
+bool cuda_native_stochastic_strict() noexcept {
+  return native::cuda::native_stochastic_strict();
+}
+
+bool cuda_supports_bernoulli_stochastic_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_bernoulli_stochastic_baseline(dtype);
+}
+
+bool cuda_supports_normal_stochastic_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_normal_stochastic_baseline(dtype);
+}
+
+bool cuda_supports_log_normal_stochastic_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_log_normal_stochastic_baseline(dtype);
+}
+
+bool cuda_supports_uniform_stochastic_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_uniform_stochastic_baseline(dtype);
+}
+
+bool cuda_supports_exponential_stochastic_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_exponential_stochastic_baseline(dtype);
+}
+
+bool cuda_supports_geometric_stochastic_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_geometric_stochastic_baseline(dtype);
+}
+
+bool cuda_supports_cauchy_stochastic_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_cauchy_stochastic_baseline(dtype);
+}
+
+bool cuda_supports_random_stochastic_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_random_stochastic_baseline(dtype);
+}
+
+bool cuda_supports_multinomial_stochastic_baseline(ScalarType dtype) noexcept {
+  return native::cuda::supports_multinomial_stochastic_baseline(dtype);
+}
+
+bool cuda_supports_bernoulli_stochastic(const Series& a) noexcept {
+  return native::cuda::supports_bernoulli_stochastic(a);
+}
+
+bool cuda_supports_normal_stochastic(const Series& a) noexcept {
+  return native::cuda::supports_normal_stochastic(a);
+}
+
+bool cuda_supports_log_normal_stochastic(const Series& a) noexcept {
+  return native::cuda::supports_log_normal_stochastic(a);
+}
+
+bool cuda_supports_uniform_stochastic(const Series& a) noexcept {
+  return native::cuda::supports_uniform_stochastic(a);
+}
+
+bool cuda_supports_exponential_stochastic(const Series& a) noexcept {
+  return native::cuda::supports_exponential_stochastic(a);
+}
+
+bool cuda_supports_geometric_stochastic(const Series& a) noexcept {
+  return native::cuda::supports_geometric_stochastic(a);
+}
+
+bool cuda_supports_cauchy_stochastic(const Series& a) noexcept {
+  return native::cuda::supports_cauchy_stochastic(a);
+}
+
+bool cuda_supports_random_stochastic(const Series& a) noexcept {
+  return native::cuda::supports_random_stochastic(a);
+}
+
+bool cuda_supports_multinomial_stochastic(const Series& a, std::int64_t num_samples, bool replacement) noexcept {
+  return native::cuda::supports_multinomial_stochastic(a, num_samples, replacement);
 }
 
 bool cuda_native_selection_enabled() noexcept {

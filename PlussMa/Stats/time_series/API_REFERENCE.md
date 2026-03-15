@@ -1451,3 +1451,119 @@ f.sizes() == [12, k]
 fit.infer(y).sizes() == [n - p, k]
 ar_back has shape [p, k, k]
 ```
+
+## `JohansenResult johansen_test(const Series& y, const JohansenOptions& options = {}, Config cfg = {})`
+
+Runs Johansen-style rank testing on a multivariate level series and returns rank diagnostics plus cointegration basis estimates.
+
+`const Series& y`: multivariate level series (`[n,k]` or `[n]` treated as `[n,1]`).
+
+`const JohansenOptions& options`: typed settings (`lag_order`, deterministic terms, statistic, `alpha`).
+
+`Config cfg`: output config (`Float64` path internally).
+
+Return -> `JohansenResult`: eigenvalues, test statistics, p-values, critical values, reject mask, dof, estimated `alpha`/`beta`, and `selected_rank`.
+
+Notes:
+
+- `lag_order > 0` and `alpha in (0,1)` are required.
+- Supports `JohansenStat::Trace` and `JohansenStat::MaxEigen`.
+- `selected_rank` is clamped to `[0, k-1]`.
+
+Example usage:
+
+```cpp
+ts::JohansenOptions jopt;
+jopt.lag_order = 2;
+jopt.include_intercept = true;
+jopt.statistic = ts::JohansenStat::Trace;
+auto jr = ts::johansen_test(y, jopt);
+```
+
+Expected output:
+
+```text
+jr.eigenvalues has shape [k]
+jr.stat/pvalue/critical/reject have shape [k]
+0 <= jr.selected_rank <= k-1
+```
+
+## `VecmFit Vecm::fit_mle(const Series& y, const VecmOptions& options = {}, Config cfg = {})`
+
+Fits a VECM by least-squares/Johansen lane with optional reduced-rank impact constraint.
+
+`const Series& y`: multivariate level series (`[n,k]` or `[n]` treated as `[n,1]`).
+
+`const VecmOptions& options`: typed fit settings (`lag_order`, `rank`, deterministic terms, `ridge`, `pinv_rcond`, `alpha`).
+
+`Config cfg`: output config (`Float64` path internally).
+
+Return -> `VecmFit`: fitted rank, `alpha`, `beta`, impact matrix, short-run gamma tensors, deterministic terms, covariance, and sample size.
+
+Notes:
+
+- `rank = -1` auto-selects rank via trace-stat Johansen test.
+- `impact` is reduced-rank projected when `rank < k`.
+- `gamma` has shape `[lag_order-1, k, k]` for `lag_order > 1`, else empty first dimension.
+
+Example usage:
+
+```cpp
+ts::VecmOptions opt;
+opt.lag_order = 2;
+opt.rank = -1;
+opt.ridge = 1e-8;
+auto fit = ts::Vecm::fit_mle(y, opt);
+```
+
+Expected output:
+
+```text
+fit.impact has shape [k,k]
+fit.alpha/beta have shape [k,r] when r>0
+fit.covariance has shape [k,k]
+```
+
+## `Series VecmFit::infer(const Series& y, Config cfg = {}) const`
+
+Returns in-sample VECM residuals on aligned rows.
+
+`const Series& y`: original level series used for fit/evaluation.
+
+`Config cfg`: output config.
+
+Return -> `Series`: residual matrix `[n - lag_order, k]`.
+
+## `double VecmFit::loglik(const Series& y) const` and `Series VecmFit::loglik_per_obs(const Series& y, Config cfg = {}) const`
+
+Computes Gaussian log-likelihood from fitted covariance and residuals.
+
+`const Series& y`: level series.
+
+`Config cfg` (`loglik_per_obs` only): output config.
+
+Return -> `double` total log-likelihood, and per-observation log-likelihood vector `[n - lag_order]`.
+
+## `Series VecmFit::forecast(std::int64_t horizon, const Series& y, Config cfg = {}) const`
+
+Generates deterministic forward forecasts from the fitted VECM recursion.
+
+`std::int64_t horizon`: forecast horizon (`> 0`).
+
+`const Series& y`: seed history (`rows >= lag_order`).
+
+`Config cfg`: output config.
+
+Return -> `Series`: forecast matrix `[horizon, k]`.
+
+## `Series VecmFit::simulate(std::int64_t num_observations, Config cfg = {}, std::uint64_t seed = 0) const`
+
+Simulates VECM paths using fitted covariance Gaussian innovations.
+
+`std::int64_t num_observations`: output path length (`> lag_order + 1`).
+
+`Config cfg`: output config.
+
+`std::uint64_t seed`: RNG seed.
+
+Return -> `Series`: simulated level series `[num_observations, k]`.

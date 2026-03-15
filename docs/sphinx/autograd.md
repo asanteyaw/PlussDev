@@ -22,6 +22,25 @@ PlussQit exposes autodiff in two layers:
 The direct layer is useful when you already have a scalar loss `Series` and want to call `reverse()`.
 The transform layer is what you should prefer for reusable optimization code.
 
+## Smallest working patterns
+
+```cpp
+auto x = pluss::make_series(1.25).to(pluss::ScalarType::Float64);
+
+auto tx = trace(x, true);
+auto y = tx * tx * tx - 2.0 * (tx * tx) + tx;
+y.reverse();
+auto g = tx.sensitivity();
+```
+
+```cpp
+auto [value, grad] = value_and_grad(
+    [](const Trace& z) -> Trace { return z * z * z - 2.0 * (z * z) + z; },
+    x);
+```
+
+Reference demo: `PlussQit/examples/CodeM/autodiff_minimal_demo.cpp`.
+
 ## Reverse-mode on plain `Series`
 
 ### Signature

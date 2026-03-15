@@ -461,7 +461,7 @@ renorm
 renorm_
 repeat
 repeat_interleave
-requires_grad_
+tracks_slope_
 reshape_as
 resize_
 resize_as_

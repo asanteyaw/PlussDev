@@ -27,6 +27,20 @@ inline Config floating_cfg_(Config cfg) {
   return cfg;
 }
 
+inline bool is_training_float_dtype_(ScalarType dtype) noexcept {
+  return dtype == ScalarType::Float32 ||
+         dtype == ScalarType::Float16 ||
+         dtype == ScalarType::BFloat16;
+}
+
+inline void require_training_float_dtype_(ScalarType dtype, const char* what, const char* role) {
+  PLUSS_CHECK(
+      is_training_float_dtype_(dtype),
+      std::string("pluss::") + what + ": expected " + role +
+          " dtype in {Float32, Float16, BFloat16}; got enum=" +
+          std::to_string(static_cast<int>(dtype)));
+}
+
 inline void require_defined_(const Series& x, const char* what) {
   PLUSS_CHECK(x.defined(), std::string("pluss::") + what + ": expected defined Series");
 }
@@ -37,16 +51,28 @@ inline void require_rank_at_least_(const Series& x, std::int64_t rank, const cha
 }
 
 inline Series select_dim_(const Series& x, std::int64_t dim, std::int64_t index) {
+  require_defined_(x, "select_dim");
+  dim = (dim < 0) ? dim + x.dim() : dim;
+  PLUSS_CHECK(dim >= 0 && dim < x.dim(), "pluss::select_dim: dim out of range");
+  const std::int64_t dim_size = x.sizes()[static_cast<std::size_t>(dim)];
+  if (index < 0) index += dim_size;
+  PLUSS_CHECK(index >= 0 && index < dim_size, "pluss::select_dim: index out of range");
   const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(x.platform());
-  const Series idx = pluss::make_series(std::vector<std::int64_t>{index}, {1}, icfg);
+  const Series idx = pluss::arange(index, index + 1, 1, icfg);
   return x.index_select(dim, idx).squeeze(dim);
 }
 
 inline Series narrow_dim_(const Series& x, std::int64_t dim, std::int64_t start, std::int64_t len) {
-  std::vector<std::int64_t> indices(static_cast<std::size_t>(len));
-  std::iota(indices.begin(), indices.end(), start);
+  require_defined_(x, "narrow_dim");
+  dim = (dim < 0) ? dim + x.dim() : dim;
+  PLUSS_CHECK(dim >= 0 && dim < x.dim(), "pluss::narrow_dim: dim out of range");
+  PLUSS_CHECK(len >= 0, "pluss::narrow_dim: len must be >= 0");
+  const std::int64_t dim_size = x.sizes()[static_cast<std::size_t>(dim)];
+  if (start < 0) start += dim_size;
+  PLUSS_CHECK(start >= 0 && start <= dim_size, "pluss::narrow_dim: start out of range");
+  PLUSS_CHECK(start + len <= dim_size, "pluss::narrow_dim: start + len out of range");
   const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(x.platform());
-  return x.index_select(dim, pluss::make_series(indices, {len}, icfg));
+  return x.index_select(dim, pluss::arange(start, start + len, 1, icfg));
 }
 
 inline Series cast_like_(const Series& x, const Series& like) {

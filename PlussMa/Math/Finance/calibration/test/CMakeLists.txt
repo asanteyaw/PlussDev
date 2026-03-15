@@ -9,3 +9,13 @@ foreach(test_src ${FIN_CALIB_TESTS})
     target_compile_features(${test_name} PRIVATE cxx_std_20)
     add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
+
+find_package(Catch2 3 QUIET)
+if(TARGET Catch2::Catch2WithMain)
+    add_executable(heston_nandi_calibration_catch2
+        ${CMAKE_CURRENT_SOURCE_DIR}/heston_nandi_calibration_catch2.cpp
+    )
+    target_link_libraries(heston_nandi_calibration_catch2 PRIVATE pluss plussqit_codem Catch2::Catch2WithMain)
+    target_compile_features(heston_nandi_calibration_catch2 PRIVATE cxx_std_20)
+    add_test(NAME heston_nandi_calibration_catch2 COMMAND heston_nandi_calibration_catch2)
+endif()

@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
+	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -193,6 +193,48 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/rule
+.PHONY : PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/rule
+
+# Convenience name for target.
+bates_calibration_test: PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/rule
+.PHONY : bates_calibration_test
+
+# fast build rule for target.
+bates_calibration_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/build
+.PHONY : bates_calibration_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/rule
+.PHONY : PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/rule
+
+# Convenience name for target.
+heston_nandi_calibration_test: PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/rule
+.PHONY : heston_nandi_calibration_test
+
+# fast build rule for target.
+heston_nandi_calibration_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/build
+.PHONY : heston_nandi_calibration_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/rule
+.PHONY : PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/rule
+
+# Convenience name for target.
+heston_sv_calibration_test: PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/rule
+.PHONY : heston_sv_calibration_test
+
+# fast build rule for target.
+heston_sv_calibration_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/build
+.PHONY : heston_sv_calibration_test/fast
+
+# Convenience name for target.
 PlussMa/Math/Finance/calibration/test/CMakeFiles/vol_bridge_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/calibration/test/CMakeFiles/vol_bridge_test.dir/rule
 .PHONY : PlussMa/Math/Finance/calibration/test/CMakeFiles/vol_bridge_test.dir/rule
@@ -205,6 +247,116 @@ vol_bridge_test: PlussMa/Math/Finance/calibration/test/CMakeFiles/vol_bridge_tes
 vol_bridge_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/vol_bridge_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/vol_bridge_test.dir/build
 .PHONY : vol_bridge_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/rule
+.PHONY : PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/rule
+
+# Convenience name for target.
+heston_nandi_calibration_catch2: PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/rule
+.PHONY : heston_nandi_calibration_catch2
+
+# fast build rule for target.
+heston_nandi_calibration_catch2/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/build
+.PHONY : heston_nandi_calibration_catch2/fast
+
+bates_calibration_test.o: bates_calibration_test.cpp.o
+.PHONY : bates_calibration_test.o
+
+# target to build an object file
+bates_calibration_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/bates_calibration_test.cpp.o
+.PHONY : bates_calibration_test.cpp.o
+
+bates_calibration_test.i: bates_calibration_test.cpp.i
+.PHONY : bates_calibration_test.i
+
+# target to preprocess a source file
+bates_calibration_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/bates_calibration_test.cpp.i
+.PHONY : bates_calibration_test.cpp.i
+
+bates_calibration_test.s: bates_calibration_test.cpp.s
+.PHONY : bates_calibration_test.s
+
+# target to generate assembly for a file
+bates_calibration_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/bates_calibration_test.cpp.s
+.PHONY : bates_calibration_test.cpp.s
+
+heston_nandi_calibration_catch2.o: heston_nandi_calibration_catch2.cpp.o
+.PHONY : heston_nandi_calibration_catch2.o
+
+# target to build an object file
+heston_nandi_calibration_catch2.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/heston_nandi_calibration_catch2.cpp.o
+.PHONY : heston_nandi_calibration_catch2.cpp.o
+
+heston_nandi_calibration_catch2.i: heston_nandi_calibration_catch2.cpp.i
+.PHONY : heston_nandi_calibration_catch2.i
+
+# target to preprocess a source file
+heston_nandi_calibration_catch2.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/heston_nandi_calibration_catch2.cpp.i
+.PHONY : heston_nandi_calibration_catch2.cpp.i
+
+heston_nandi_calibration_catch2.s: heston_nandi_calibration_catch2.cpp.s
+.PHONY : heston_nandi_calibration_catch2.s
+
+# target to generate assembly for a file
+heston_nandi_calibration_catch2.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/heston_nandi_calibration_catch2.cpp.s
+.PHONY : heston_nandi_calibration_catch2.cpp.s
+
+heston_nandi_calibration_test.o: heston_nandi_calibration_test.cpp.o
+.PHONY : heston_nandi_calibration_test.o
+
+# target to build an object file
+heston_nandi_calibration_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/heston_nandi_calibration_test.cpp.o
+.PHONY : heston_nandi_calibration_test.cpp.o
+
+heston_nandi_calibration_test.i: heston_nandi_calibration_test.cpp.i
+.PHONY : heston_nandi_calibration_test.i
+
+# target to preprocess a source file
+heston_nandi_calibration_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/heston_nandi_calibration_test.cpp.i
+.PHONY : heston_nandi_calibration_test.cpp.i
+
+heston_nandi_calibration_test.s: heston_nandi_calibration_test.cpp.s
+.PHONY : heston_nandi_calibration_test.s
+
+# target to generate assembly for a file
+heston_nandi_calibration_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/heston_nandi_calibration_test.cpp.s
+.PHONY : heston_nandi_calibration_test.cpp.s
+
+heston_sv_calibration_test.o: heston_sv_calibration_test.cpp.o
+.PHONY : heston_sv_calibration_test.o
+
+# target to build an object file
+heston_sv_calibration_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/heston_sv_calibration_test.cpp.o
+.PHONY : heston_sv_calibration_test.cpp.o
+
+heston_sv_calibration_test.i: heston_sv_calibration_test.cpp.i
+.PHONY : heston_sv_calibration_test.i
+
+# target to preprocess a source file
+heston_sv_calibration_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/heston_sv_calibration_test.cpp.i
+.PHONY : heston_sv_calibration_test.cpp.i
+
+heston_sv_calibration_test.s: heston_sv_calibration_test.cpp.s
+.PHONY : heston_sv_calibration_test.s
+
+# target to generate assembly for a file
+heston_sv_calibration_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/heston_sv_calibration_test.cpp.s
+.PHONY : heston_sv_calibration_test.cpp.s
 
 vol_bridge_test.o: vol_bridge_test.cpp.o
 .PHONY : vol_bridge_test.o
@@ -245,7 +397,23 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... bates_calibration_test"
+	@echo "... heston_nandi_calibration_catch2"
+	@echo "... heston_nandi_calibration_test"
+	@echo "... heston_sv_calibration_test"
 	@echo "... vol_bridge_test"
+	@echo "... bates_calibration_test.o"
+	@echo "... bates_calibration_test.i"
+	@echo "... bates_calibration_test.s"
+	@echo "... heston_nandi_calibration_catch2.o"
+	@echo "... heston_nandi_calibration_catch2.i"
+	@echo "... heston_nandi_calibration_catch2.s"
+	@echo "... heston_nandi_calibration_test.o"
+	@echo "... heston_nandi_calibration_test.i"
+	@echo "... heston_nandi_calibration_test.s"
+	@echo "... heston_sv_calibration_test.o"
+	@echo "... heston_sv_calibration_test.i"
+	@echo "... heston_sv_calibration_test.s"
 	@echo "... vol_bridge_test.o"
 	@echo "... vol_bridge_test.i"
 	@echo "... vol_bridge_test.s"

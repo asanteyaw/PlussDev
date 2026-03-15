@@ -30,7 +30,9 @@ public:
   Module& to(Platform platform) {
     for (auto& param : params_) {
       if (param.series->defined()) {
+        const bool tracks = param.series->tracks_slope();
         *param.series = param.series->to(platform);
+        param.series->tracks_slope_(tracks);
       }
     }
     for (auto& buffer : buffers_) {
@@ -48,7 +50,9 @@ public:
   Module& to(ScalarType dtype) {
     for (auto& param : params_) {
       if (param.series->defined()) {
+        const bool tracks = param.series->tracks_slope();
         *param.series = param.series->to(dtype);
+        param.series->tracks_slope_(tracks);
       }
     }
     for (auto& buffer : buffers_) {
@@ -66,7 +70,9 @@ public:
   Module& to(Platform platform, ScalarType dtype) {
     for (auto& param : params_) {
       if (param.series->defined()) {
+        const bool tracks = param.series->tracks_slope();
         *param.series = param.series->to(platform, dtype);
+        param.series->tracks_slope_(tracks);
       }
     }
     for (auto& buffer : buffers_) {
@@ -193,15 +199,18 @@ public:
   template <class ChildModule>
   ChildModule& module_record(std::string name, ChildModule& child) {
     Module* child_ptr = module_ptr_(child);
-    static_assert(!std::is_same_v<ChildModule, ChildModule> || true, "module_record expects an nn::Module or nn::ModuleHolder child");
     PLUSS_CHECK(child_ptr != nullptr, "pluss::nn::Module::module_record: attempted to register an empty child module");
     children_.push_back(ModuleRef{std::move(name), child_ptr});
     child_ptr->train(training_);
+    for (Series* p : child_ptr->parameters()) {
+      if (p && p->defined()) p->tracks_slope_(true);
+    }
     return child;
   }
 
 protected:
   Series& parameter_record(std::string name, Series& series) {
+    if (series.defined()) series.tracks_slope_(true);
     params_.push_back(ParameterRef{std::move(name), &series});
     return series;
   }
@@ -350,9 +359,10 @@ public:
   using ImplType = Impl;
 
   ModuleHolder() noexcept(std::is_nothrow_default_constructible_v<Impl>) {
-    if constexpr (std::is_default_constructible_v<Impl>) {
-      impl_ = std::make_shared<Impl>();
-    }
+    static_assert(std::is_default_constructible_v<Impl>,
+                  "Attempted to default-construct a module with no default constructor. "
+                  "Use `{nullptr}` for empty state.");
+    impl_ = std::make_shared<Impl>();
   }
   ModuleHolder(std::nullptr_t) noexcept {}
   explicit ModuleHolder(std::shared_ptr<Impl> impl) : impl_(std::move(impl)) {}
@@ -438,10 +448,11 @@ private:
 
 } // namespace pluss::ai::nn
 
-#define PLUSS_MODULE_IMPL(Name, Impl)                           \
-  class Name : public ::pluss::ai::nn::ModuleHolder<Impl> {     \
-  public:                                                       \
-    using ::pluss::ai::nn::ModuleHolder<Impl>::ModuleHolder;    \
+#define PLUSS_MODULE_IMPL(Name, ImplType)                               \
+  class Name : public ::pluss::ai::nn::ModuleHolder<ImplType> {         \
+  public:                                                                \
+    using ::pluss::ai::nn::ModuleHolder<ImplType>::ModuleHolder;         \
+    using Impl [[maybe_unused]] = ImplType;                              \
   }
 
 #define PLUSS_MODULE(Name) PLUSS_MODULE_IMPL(Name, Name##Impl)

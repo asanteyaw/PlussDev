@@ -107,6 +107,7 @@ static Series broadcast_src_contig(const Series& src, const Series& index_like) 
 template <class T>
 static inline T init_for_reduce(const std::string& reduce) {
   if (reduce == "sum") return (T)0;
+  if (reduce == "mean") return (T)0;
   if (reduce == "amax") return std::numeric_limits<T>::lowest();
   if (reduce == "amin") return std::numeric_limits<T>::max();
   throw_error("scatter_reduce: bad reduce");
@@ -115,6 +116,7 @@ static inline T init_for_reduce(const std::string& reduce) {
 template <class T>
 static inline T apply_reduce(T cur, T val, const std::string& reduce) {
   if (reduce == "sum") return cur + val;
+  if (reduce == "mean") return cur + val;
   if (reduce == "amax") return std::max(cur, val);
   if (reduce == "amin") return std::min(cur, val);
   throw_error("scatter_reduce: bad reduce");
@@ -124,6 +126,23 @@ template <class T>
 static void scatter_reduce_impl_contig(Series& a, std::int64_t dim, const Series& index, const Series& src, const std::string& reduce, bool include_self, bool has_initial, double initial) {
   PLUSS_CHECK(a.is_contiguous() && index.is_contiguous() && src.is_contiguous(), "scatter_reduce: requires contiguous");
   auto sh = compute_shape(a, dim, index, "scatter_reduce");
+  const bool reduce_mean = (reduce == "mean");
+
+  if (reduce_mean && has_initial) {
+    throw_error("scatter_reduce_: mean with explicit initial is unsupported");
+  }
+
+  std::vector<std::uint8_t> touched;
+  if (!has_initial && !include_self) {
+    touched.assign(static_cast<std::size_t>(a.numel()), static_cast<std::uint8_t>(0));
+  }
+  std::vector<std::int64_t> counts;
+  if (reduce_mean) {
+    counts.assign(static_cast<std::size_t>(a.numel()), 0);
+    if (include_self) {
+      std::fill(counts.begin(), counts.end(), 1);
+    }
+  }
 
   // Initialization policy (Torch-ish):
 // - if has_initial: base is filled with `initial`
@@ -143,9 +162,9 @@ static void scatter_reduce_impl_contig(Series& a, std::int64_t dim, const Series
     }
   } else {
     if (!include_self) {
-      T* ap0 = reinterpret_cast<T*>(const_cast<std::byte*>(a.raw_data()));
-      const T init = init_for_reduce<T>(reduce);
-      for (std::int64_t i=0;i<a.numel();++i) ap0[i] = init;
+      if (!reduce_mean) {
+        // Torch-like include_self=false: keep untouched lanes from self; reset only scattered lanes lazily.
+      }
     }
   }
 
@@ -161,8 +180,22 @@ static void scatter_reduce_impl_contig(Series& a, std::int64_t dim, const Series
         if (dst < 0) dst += sh.in_dim;
         PLUSS_CHECK(dst >= 0 && dst < sh.in_dim, "scatter_reduce: index out of range");
         const std::int64_t out_idx = (o*sh.in_dim*sh.inner + dst*sh.inner + in);
+        if (!has_initial && !include_self && !touched[static_cast<std::size_t>(out_idx)]) {
+          ap[out_idx] = init_for_reduce<T>(reduce);
+          touched[static_cast<std::size_t>(out_idx)] = static_cast<std::uint8_t>(1);
+        }
         ap[out_idx] = apply_reduce<T>(ap[out_idx], sp[idx], reduce);
+        if (reduce_mean) {
+          counts[static_cast<std::size_t>(out_idx)] += 1;
+        }
       }
+    }
+  }
+
+  if (reduce_mean) {
+    for (std::int64_t i = 0; i < a.numel(); ++i) {
+      const std::int64_t c = std::max<std::int64_t>(1, counts[static_cast<std::size_t>(i)]);
+      ap[i] = ap[i] / static_cast<T>(c);
     }
   }
 }
@@ -173,15 +206,16 @@ static void scatter_reduce_half_contig(Series& a, std::int64_t dim, const Series
                                        const std::string& reduce, bool include_self, bool /*has_initial*/, double /*initial*/, LoadF&& load, StoreF&& store) {
   PLUSS_CHECK(a.is_contiguous() && index.is_contiguous() && src.is_contiguous(), "scatter_reduce: requires contiguous");
   auto sh = compute_shape(a, dim, index, "scatter_reduce");
+  const bool reduce_mean = (reduce == "mean");
 
+  std::vector<std::uint8_t> touched;
   if (!include_self) {
-    auto* ap0 = reinterpret_cast<HalfT*>(const_cast<std::byte*>(a.raw_data()));
-    float init;
-    if (reduce == "sum") init = 0.0f;
-    else if (reduce == "amax") init = -std::numeric_limits<float>::infinity();
-    else if (reduce == "amin") init = +std::numeric_limits<float>::infinity();
-    else throw_error("scatter_reduce: bad reduce");
-    for (std::int64_t i=0;i<a.numel();++i) ap0[i] = store(init);
+    touched.assign(static_cast<std::size_t>(a.numel()), static_cast<std::uint8_t>(0));
+  }
+  std::vector<std::int64_t> counts;
+  if (reduce_mean) {
+    counts.assign(static_cast<std::size_t>(a.numel()), 0);
+    if (include_self) std::fill(counts.begin(), counts.end(), 1);
   }
 
   auto* ap = reinterpret_cast<HalfT*>(const_cast<std::byte*>(a.raw_data()));
@@ -190,8 +224,15 @@ static void scatter_reduce_half_contig(Series& a, std::int64_t dim, const Series
 
   auto apply = [&](float cur, float val)->float{
     if (reduce == "sum") return cur + val;
+    if (reduce == "mean") return cur + val;
     if (reduce == "amax") return std::max(cur, val);
     if (reduce == "amin") return std::min(cur, val);
+    throw_error("scatter_reduce: bad reduce");
+  };
+  auto identity = [&]()->float{
+    if (reduce == "sum" || reduce == "mean") return 0.0f;
+    if (reduce == "amax") return -std::numeric_limits<float>::infinity();
+    if (reduce == "amin") return +std::numeric_limits<float>::infinity();
     throw_error("scatter_reduce: bad reduce");
   };
 
@@ -203,10 +244,25 @@ static void scatter_reduce_half_contig(Series& a, std::int64_t dim, const Series
         if (dst < 0) dst += sh.in_dim;
         PLUSS_CHECK(dst >= 0 && dst < sh.in_dim, "scatter_reduce: index out of range");
         const std::int64_t out_idx = (o*sh.in_dim*sh.inner + dst*sh.inner + in);
+        if (!include_self && !touched[static_cast<std::size_t>(out_idx)]) {
+          ap[out_idx] = store(identity());
+          touched[static_cast<std::size_t>(out_idx)] = static_cast<std::uint8_t>(1);
+        }
         float cur = load(ap[out_idx]);
         float val = load(sp[idx]);
         ap[out_idx] = store(apply(cur, val));
+        if (reduce_mean) {
+          counts[static_cast<std::size_t>(out_idx)] += 1;
+        }
       }
+    }
+  }
+
+  if (reduce_mean) {
+    for (std::int64_t i = 0; i < a.numel(); ++i) {
+      const std::int64_t c = std::max<std::int64_t>(1, counts[static_cast<std::size_t>(i)]);
+      const float v = load(ap[i]) / static_cast<float>(c);
+      ap[i] = store(v);
     }
   }
 }
@@ -235,15 +291,16 @@ static void scatter_reduce_complex_sum_contig(
       const auto* bp = reinterpret_cast<const ComplexT*>(self_backup.raw_data());
       for (std::int64_t i = 0; i < a.numel(); ++i) ap0[i] += bp[i];
     }
-  } else if (!include_self) {
-    auto* ap0 = reinterpret_cast<ComplexT*>(const_cast<std::byte*>(a.raw_data()));
-    const ComplexT zero(static_cast<typename ComplexT::value_type>(0), static_cast<typename ComplexT::value_type>(0));
-    for (std::int64_t i = 0; i < a.numel(); ++i) ap0[i] = zero;
   }
 
   auto* ap = reinterpret_cast<ComplexT*>(const_cast<std::byte*>(a.raw_data()));
   const auto* sp = reinterpret_cast<const ComplexT*>(src.raw_data());
   const std::int64_t* ip = reinterpret_cast<const std::int64_t*>(index.raw_data());
+  std::vector<std::uint8_t> touched;
+  if (!has_initial && !include_self) {
+    touched.assign(static_cast<std::size_t>(a.numel()), static_cast<std::uint8_t>(0));
+  }
+  const ComplexT zero(static_cast<typename ComplexT::value_type>(0), static_cast<typename ComplexT::value_type>(0));
 
   for (std::int64_t o = 0; o < sh.outer; ++o) {
     for (std::int64_t d = 0; d < sh.scat_dim; ++d) {
@@ -253,6 +310,10 @@ static void scatter_reduce_complex_sum_contig(
         if (dst < 0) dst += sh.in_dim;
         PLUSS_CHECK(dst >= 0 && dst < sh.in_dim, "scatter_reduce: index out of range");
         const std::int64_t out_idx = (o * sh.in_dim * sh.inner + dst * sh.inner + in);
+        if (!has_initial && !include_self && !touched[static_cast<std::size_t>(out_idx)]) {
+          ap[out_idx] = zero;
+          touched[static_cast<std::size_t>(out_idx)] = static_cast<std::uint8_t>(1);
+        }
         ap[out_idx] += sp[idx];
       }
     }
@@ -266,7 +327,8 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), src.scalar_type());
 
   // out must have input shape
-  auto out = a.to(out_dt).contiguous();
+  // Functional scatter_reduce must not alias input storage.
+  auto out = a.to(out_dt).clone().contiguous();
   auto idx = index.contiguous();
 
   // broadcast src to index shape first, then dtype cast
@@ -284,7 +346,8 @@ Series scatter_reduce(const Series& a, std::int64_t dim, const Series& index, co
   check_scatter_args(a, d, index, src, "scatter_reduce");
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), src.scalar_type());
 
-  auto out = a.to(out_dt).contiguous();
+  // Functional scatter_reduce must not alias input storage.
+  auto out = a.to(out_dt).clone().contiguous();
   auto idx = index.contiguous();
   auto src_bc = broadcast_src_contig(src, idx);
   auto ss = src_bc.to(out_dt).contiguous();
@@ -306,6 +369,9 @@ void scatter_reduce_inplace(Series& a, std::int64_t dim, const Series& index, co
   std::int64_t d = dim;
   check_scatter_args(a, d, index, src, "scatter_reduce_");
   PLUSS_CHECK(a.scalar_type() == src.scalar_type(), "scatter_reduce_: dtype mismatch");
+  if (reduce == "mean" && has_initial) {
+    throw_error("scatter_reduce_: mean with explicit initial is unsupported");
+  }
   // safety policy: contiguous-only until full alias/overlap rules are generalized
   PLUSS_CHECK(a.is_contiguous() && index.is_contiguous() && src.is_contiguous(), "scatter_reduce_: requires contiguous");
 

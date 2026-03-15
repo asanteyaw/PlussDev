@@ -10,11 +10,11 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
 
-  const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
 
-  Series params = pluss::make_series(std::vector<double>{1.0, -2.0}, {2}, cfg);
-  Series params_tape = pluss::make_series(std::vector<double>{1.0, -2.0}, {2}, cfg);
-  const Series target = pluss::make_series(std::vector<double>{3.0, 3.0}, {2}, cfg);
+  Series params = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+  Series params_tape = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+  const Series target = pluss::make_series(std::vector<float>{3.0f, 3.0f}, {2}, cfg);
 
   pluss::nn::optim::AdamOptions options{};
   options.learning_rate = 0.1;
@@ -25,7 +25,7 @@ int main() {
   std::cout << "[oop] explicit gradients\n";
   for (int iter = 1; iter <= 60; ++iter) {
     // f(x) = 0.5 * ||x - target||^2 -> grad f = x - target
-    const Series grad = params.sub(target);
+    const Series grad = params - target;
     optimizer.step(std::vector<Series>{grad});
 
     if (iter % 15 == 0) {
@@ -40,11 +40,10 @@ int main() {
 
   std::cout << "[oop] autodiff/tape gradients via optimizer.step()\n";
   for (int iter = 1; iter <= 60; ++iter) {
-    auto tracked = pluss::subsp::math::diff::trace(params_tape, true);
-    const Series loss = tracked.value().sub(target).square().sum().mul(0.5);
-    tracked.clear_sensitivity();
-    loss.reverse();
-    optimizer_tape.step();
+    const Series loss = optimizer_tape.step([&]() -> Series {
+      auto tracked = pluss::subsp::math::diff::trace(params_tape, true);
+      return tracked.value().sub(target).square().sum().mul(0.5);
+    });
 
     if (iter % 15 == 0) {
       std::cout << "iter=" << iter << " loss=" << loss.item<double>() << '\n';

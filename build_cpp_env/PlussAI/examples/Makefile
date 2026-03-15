@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && /opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
+	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -193,90 +193,6 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/rule
-.PHONY : PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/rule
-
-# Convenience name for target.
-plussai_nn_rnn_demo: PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/rule
-.PHONY : plussai_nn_rnn_demo
-
-# fast build rule for target.
-plussai_nn_rnn_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/build
-.PHONY : plussai_nn_rnn_demo/fast
-
-# Convenience name for target.
-PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/rule
-.PHONY : PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/rule
-
-# Convenience name for target.
-plussai_func_rnn_demo: PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/rule
-.PHONY : plussai_func_rnn_demo
-
-# fast build rule for target.
-plussai_func_rnn_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/build
-.PHONY : plussai_func_rnn_demo/fast
-
-# Convenience name for target.
-PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/rule
-.PHONY : PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/rule
-
-# Convenience name for target.
-plussai_func_conv_demo: PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/rule
-.PHONY : plussai_func_conv_demo
-
-# fast build rule for target.
-plussai_func_conv_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/build
-.PHONY : plussai_func_conv_demo/fast
-
-# Convenience name for target.
-PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/rule
-.PHONY : PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/rule
-
-# Convenience name for target.
-plussai_nn_conv_demo: PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/rule
-.PHONY : plussai_nn_conv_demo
-
-# fast build rule for target.
-plussai_nn_conv_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/build
-.PHONY : plussai_nn_conv_demo/fast
-
-# Convenience name for target.
-PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/rule
-.PHONY : PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/rule
-
-# Convenience name for target.
-plussai_tcn_demo: PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/rule
-.PHONY : plussai_tcn_demo
-
-# fast build rule for target.
-plussai_tcn_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/build
-.PHONY : plussai_tcn_demo/fast
-
-# Convenience name for target.
-PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/rule:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/rule
-.PHONY : PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/rule
-
-# Convenience name for target.
-plussai_adam_oop_demo: PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/rule
-.PHONY : plussai_adam_oop_demo
-
-# fast build rule for target.
-plussai_adam_oop_demo/fast:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build
-.PHONY : plussai_adam_oop_demo/fast
-
-# Convenience name for target.
 PlussAI/examples/CMakeFiles/plussai_minimax_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/CMakeFiles/plussai_minimax_demo.dir/rule
 .PHONY : PlussAI/examples/CMakeFiles/plussai_minimax_demo.dir/rule
@@ -303,78 +219,6 @@ plussai_minimax_multiblock_constraints_demo: PlussAI/examples/CMakeFiles/plussai
 plussai_minimax_multiblock_constraints_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_minimax_multiblock_constraints_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_minimax_multiblock_constraints_demo.dir/build
 .PHONY : plussai_minimax_multiblock_constraints_demo/fast
-
-adam_oop_demo.o: adam_oop_demo.cpp.o
-.PHONY : adam_oop_demo.o
-
-# target to build an object file
-adam_oop_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/adam_oop_demo.cpp.o
-.PHONY : adam_oop_demo.cpp.o
-
-adam_oop_demo.i: adam_oop_demo.cpp.i
-.PHONY : adam_oop_demo.i
-
-# target to preprocess a source file
-adam_oop_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/adam_oop_demo.cpp.i
-.PHONY : adam_oop_demo.cpp.i
-
-adam_oop_demo.s: adam_oop_demo.cpp.s
-.PHONY : adam_oop_demo.s
-
-# target to generate assembly for a file
-adam_oop_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/adam_oop_demo.cpp.s
-.PHONY : adam_oop_demo.cpp.s
-
-func_conv_demo.o: func_conv_demo.cpp.o
-.PHONY : func_conv_demo.o
-
-# target to build an object file
-func_conv_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/func_conv_demo.cpp.o
-.PHONY : func_conv_demo.cpp.o
-
-func_conv_demo.i: func_conv_demo.cpp.i
-.PHONY : func_conv_demo.i
-
-# target to preprocess a source file
-func_conv_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/func_conv_demo.cpp.i
-.PHONY : func_conv_demo.cpp.i
-
-func_conv_demo.s: func_conv_demo.cpp.s
-.PHONY : func_conv_demo.s
-
-# target to generate assembly for a file
-func_conv_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/func_conv_demo.cpp.s
-.PHONY : func_conv_demo.cpp.s
-
-func_rnn_demo.o: func_rnn_demo.cpp.o
-.PHONY : func_rnn_demo.o
-
-# target to build an object file
-func_rnn_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/func_rnn_demo.cpp.o
-.PHONY : func_rnn_demo.cpp.o
-
-func_rnn_demo.i: func_rnn_demo.cpp.i
-.PHONY : func_rnn_demo.i
-
-# target to preprocess a source file
-func_rnn_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/func_rnn_demo.cpp.i
-.PHONY : func_rnn_demo.cpp.i
-
-func_rnn_demo.s: func_rnn_demo.cpp.s
-.PHONY : func_rnn_demo.s
-
-# target to generate assembly for a file
-func_rnn_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/func_rnn_demo.cpp.s
-.PHONY : func_rnn_demo.cpp.s
 
 minimax_demo.o: minimax_demo.cpp.o
 .PHONY : minimax_demo.o
@@ -424,78 +268,6 @@ minimax_multiblock_constraints_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_minimax_multiblock_constraints_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_minimax_multiblock_constraints_demo.dir/minimax_multiblock_constraints_demo.cpp.s
 .PHONY : minimax_multiblock_constraints_demo.cpp.s
 
-nn_conv_demo.o: nn_conv_demo.cpp.o
-.PHONY : nn_conv_demo.o
-
-# target to build an object file
-nn_conv_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/nn_conv_demo.cpp.o
-.PHONY : nn_conv_demo.cpp.o
-
-nn_conv_demo.i: nn_conv_demo.cpp.i
-.PHONY : nn_conv_demo.i
-
-# target to preprocess a source file
-nn_conv_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/nn_conv_demo.cpp.i
-.PHONY : nn_conv_demo.cpp.i
-
-nn_conv_demo.s: nn_conv_demo.cpp.s
-.PHONY : nn_conv_demo.s
-
-# target to generate assembly for a file
-nn_conv_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/nn_conv_demo.cpp.s
-.PHONY : nn_conv_demo.cpp.s
-
-nn_rnn_demo.o: nn_rnn_demo.cpp.o
-.PHONY : nn_rnn_demo.o
-
-# target to build an object file
-nn_rnn_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/nn_rnn_demo.cpp.o
-.PHONY : nn_rnn_demo.cpp.o
-
-nn_rnn_demo.i: nn_rnn_demo.cpp.i
-.PHONY : nn_rnn_demo.i
-
-# target to preprocess a source file
-nn_rnn_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/nn_rnn_demo.cpp.i
-.PHONY : nn_rnn_demo.cpp.i
-
-nn_rnn_demo.s: nn_rnn_demo.cpp.s
-.PHONY : nn_rnn_demo.s
-
-# target to generate assembly for a file
-nn_rnn_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/nn_rnn_demo.cpp.s
-.PHONY : nn_rnn_demo.cpp.s
-
-tcn_demo.o: tcn_demo.cpp.o
-.PHONY : tcn_demo.o
-
-# target to build an object file
-tcn_demo.cpp.o:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/tcn_demo.cpp.o
-.PHONY : tcn_demo.cpp.o
-
-tcn_demo.i: tcn_demo.cpp.i
-.PHONY : tcn_demo.i
-
-# target to preprocess a source file
-tcn_demo.cpp.i:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/tcn_demo.cpp.i
-.PHONY : tcn_demo.cpp.i
-
-tcn_demo.s: tcn_demo.cpp.s
-.PHONY : tcn_demo.s
-
-# target to generate assembly for a file
-tcn_demo.cpp.s:
-	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/tcn_demo.cpp.s
-.PHONY : tcn_demo.cpp.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -511,38 +283,14 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
-	@echo "... plussai_adam_oop_demo"
-	@echo "... plussai_func_conv_demo"
-	@echo "... plussai_func_rnn_demo"
 	@echo "... plussai_minimax_demo"
 	@echo "... plussai_minimax_multiblock_constraints_demo"
-	@echo "... plussai_nn_conv_demo"
-	@echo "... plussai_nn_rnn_demo"
-	@echo "... plussai_tcn_demo"
-	@echo "... adam_oop_demo.o"
-	@echo "... adam_oop_demo.i"
-	@echo "... adam_oop_demo.s"
-	@echo "... func_conv_demo.o"
-	@echo "... func_conv_demo.i"
-	@echo "... func_conv_demo.s"
-	@echo "... func_rnn_demo.o"
-	@echo "... func_rnn_demo.i"
-	@echo "... func_rnn_demo.s"
 	@echo "... minimax_demo.o"
 	@echo "... minimax_demo.i"
 	@echo "... minimax_demo.s"
 	@echo "... minimax_multiblock_constraints_demo.o"
 	@echo "... minimax_multiblock_constraints_demo.i"
 	@echo "... minimax_multiblock_constraints_demo.s"
-	@echo "... nn_conv_demo.o"
-	@echo "... nn_conv_demo.i"
-	@echo "... nn_conv_demo.s"
-	@echo "... nn_rnn_demo.o"
-	@echo "... nn_rnn_demo.i"
-	@echo "... nn_rnn_demo.s"
-	@echo "... tcn_demo.o"
-	@echo "... tcn_demo.i"
-	@echo "... tcn_demo.s"
 .PHONY : help
 
 

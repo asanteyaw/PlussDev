@@ -60,7 +60,11 @@ namespace pluss {
     return zeros(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt);
   }
   inline Series zeros(std::span<const std::int64_t> sizes, Config cfg) {
-    return FactoryCore::move_to_config_platform(Series::zeros(sizes, cfg.dtype), cfg);
+    return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
+        Series::zeros(sizes, cfg.dtype),
+        cfg,
+        "zeros",
+        pluss::cuda::supports_zeros_factory_baseline(cfg.dtype));
   }
   inline Series zeros(std::initializer_list<std::int64_t> sizes, Config cfg) {
     return zeros(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
@@ -83,7 +87,11 @@ namespace pluss {
     return ones(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt);
   }
   inline Series ones(std::span<const std::int64_t> sizes, Config cfg) {
-    return FactoryCore::move_to_config_platform(Series::ones(sizes, cfg.dtype), cfg);
+    return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
+        Series::ones(sizes, cfg.dtype),
+        cfg,
+        "ones",
+        pluss::cuda::supports_ones_factory_baseline(cfg.dtype));
   }
   inline Series ones(std::initializer_list<std::int64_t> sizes, Config cfg) {
     return ones(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg);
@@ -106,7 +114,11 @@ namespace pluss {
     return full(std::span<const std::int64_t>(sizes.begin(), sizes.size()), fill_value, dt);
   }
   inline Series full(std::span<const std::int64_t> sizes, double fill_value, Config cfg) {
-    return FactoryCore::move_to_config_platform(Series::full(sizes, fill_value, cfg.dtype), cfg);
+    return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
+        Series::full(sizes, fill_value, cfg.dtype),
+        cfg,
+        "full",
+        pluss::cuda::supports_full_factory_baseline(cfg.dtype));
   }
   inline Series full(std::initializer_list<std::int64_t> sizes, double fill_value, Config cfg) {
     return full(std::span<const std::int64_t>(sizes.begin(), sizes.size()), fill_value, cfg);
@@ -135,29 +147,53 @@ namespace pluss {
   inline Series arange(std::int64_t start, std::int64_t end, Config cfg) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;
-    return FactoryCore::move_to_config_platform(Series::arange(start, end, 1, dt), cfg);
+    return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
+        Series::arange(start, end, 1, dt),
+        cfg,
+        "arange",
+        pluss::cuda::supports_arange_factory_baseline(dt));
   }
   inline Series arange(std::int64_t start, std::int64_t end, std::int64_t step, Config cfg) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;
-    return FactoryCore::move_to_config_platform(Series::arange(start, end, step, dt), cfg);
+    return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
+        Series::arange(start, end, step, dt),
+        cfg,
+        "arange",
+        pluss::cuda::supports_arange_factory_baseline(dt));
   }
   inline Series linspace(double start, double end, std::int64_t steps, ScalarType dt = ScalarType::Float32) { return Series::linspace(start, end, steps, dt); }
   inline Series linspace(double start, double end, std::int64_t steps, Config cfg) {
-    return FactoryCore::move_to_config_platform(Series::linspace(start, end, steps, cfg.dtype), cfg);
+    return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
+        Series::linspace(start, end, steps, cfg.dtype),
+        cfg,
+        "linspace",
+        pluss::cuda::supports_linspace_factory_baseline(cfg.dtype));
   }
   inline Series eye(std::int64_t n, std::int64_t m = -1, ScalarType dt = ScalarType::Float32) { return Series::eye(n, m, dt); }
   inline Series eye(std::int64_t n, Config cfg) {
-    return FactoryCore::move_to_config_platform(Series::eye(n, -1, cfg.dtype), cfg);
+    return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
+        Series::eye(n, -1, cfg.dtype),
+        cfg,
+        "eye",
+        pluss::cuda::supports_eye_factory_baseline(cfg.dtype));
   }
   inline Series eye(std::int64_t n, std::int64_t m, Config cfg) {
-    return FactoryCore::move_to_config_platform(Series::eye(n, m, cfg.dtype), cfg);
+    return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
+        Series::eye(n, m, cfg.dtype),
+        cfg,
+        "eye",
+        pluss::cuda::supports_eye_factory_baseline(cfg.dtype));
   }
 
   inline Series rand(std::span<const std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) { return Series::rand(sizes, dt, seed); }
   inline Series rand(std::initializer_list<std::int64_t> sizes, ScalarType dt = ScalarType::Float32, std::uint64_t seed = 0) {return Series::rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt, seed);}
   inline Series rand(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
-    return FactoryCore::move_to_config_platform(Series::rand(sizes, cfg.dtype, seed), cfg);
+    return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
+        Series::rand(sizes, cfg.dtype, seed),
+        cfg,
+        "rand",
+        pluss::cuda::supports_rand_factory_baseline(cfg.dtype));
   }
   inline Series rand(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
     return rand(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
@@ -178,7 +214,11 @@ namespace pluss {
     return Series::randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), dt, seed);
   }
   inline Series randn(std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
-    return FactoryCore::move_to_config_platform(Series::randn(sizes, cfg.dtype, seed), cfg);
+    return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
+        Series::randn(sizes, cfg.dtype, seed),
+        cfg,
+        "randn",
+        pluss::cuda::supports_randn_factory_baseline(cfg.dtype));
   }
   inline Series randn(std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
     return randn(std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
@@ -206,7 +246,11 @@ namespace pluss {
   inline Series randint(std::int64_t lo, std::int64_t hi, std::span<const std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;
-    return FactoryCore::move_to_config_platform(randint(lo, hi, sizes, dt, seed), cfg);
+    return FactoryCore::move_factory_to_config_platform_with_cuda_policy(
+        randint(lo, hi, sizes, dt, seed),
+        cfg,
+        "randint",
+        pluss::cuda::supports_rand_factory_baseline(ScalarType::Float64));
   }
   inline Series randint(std::int64_t lo, std::int64_t hi, std::initializer_list<std::int64_t> sizes, Config cfg, std::uint64_t seed = 0) {
     return randint(lo, hi, std::span<const std::int64_t>(sizes.begin(), sizes.size()), cfg, seed);
@@ -250,7 +294,11 @@ namespace pluss {
   inline Series randperm(std::int64_t n, Config cfg, std::uint64_t seed = 0) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Int64;
-    return FactoryCore::move_to_config_platform(randperm(n, dt, seed), cfg);
+    return FactoryCore::move_stochastic_factory_to_config_platform_with_cuda_policy(
+        randperm(n, dt, seed),
+        cfg,
+        "randperm",
+        pluss::cuda::supports_random_stochastic_baseline(dt));
   }
 
   inline Series normal(double mean,
@@ -267,7 +315,11 @@ namespace pluss {
                        Config cfg,
                        std::uint64_t seed = 0) {
     PLUSS_CHECK(std >= 0.0, "normal: expected std >= 0");
-    return FactoryCore::move_to_config_platform(Series::randn(sizes, cfg.dtype, seed).mul(std).add(mean), cfg);
+    return FactoryCore::move_stochastic_factory_to_config_platform_with_cuda_policy(
+        Series::randn(sizes, cfg.dtype, seed).mul(std).add(mean),
+        cfg,
+        "normal",
+        pluss::cuda::supports_normal_stochastic_baseline(cfg.dtype));
   }
   inline Series normal(double mean,
                        double std,
@@ -309,7 +361,11 @@ namespace pluss {
                           std::uint64_t seed = 0) {
     ScalarType dt = cfg.dtype;
     if (dt == ScalarType::Float32) dt = ScalarType::Bool;
-    return FactoryCore::move_to_config_platform(bernoulli(sizes, p, dt, seed), cfg);
+    return FactoryCore::move_stochastic_factory_to_config_platform_with_cuda_policy(
+        bernoulli(sizes, p, dt, seed),
+        cfg,
+        "bernoulli",
+        pluss::cuda::supports_bernoulli_stochastic_baseline(dt));
   }
   inline Series bernoulli(std::initializer_list<std::int64_t> sizes,
                           double p = 0.5,
@@ -376,8 +432,27 @@ namespace pluss {
     );
   }
 
+  inline Series multinomial(std::span<const double> probs,
+                            std::int64_t num_samples,
+                            bool replacement,
+                            Config cfg,
+                            std::uint64_t seed = 0) {
+    const bool route_supported =
+        pluss::cuda::supports_multinomial_stochastic_baseline(ScalarType::Float64) &&
+        !probs.empty() &&
+        num_samples >= 0 &&
+        (replacement || num_samples <= static_cast<std::int64_t>(probs.size()));
+    return FactoryCore::move_stochastic_factory_to_config_platform_with_cuda_policy(
+        multinomial(probs, num_samples, replacement, seed),
+        cfg,
+        "multinomial",
+        route_supported);
+  }
+
   // Like-factories
-  inline Series empty_like(const Series& like, ScalarType dt) { return empty(like.sizes(), dt); }
+  inline Series empty_like(const Series& like, ScalarType dt) {
+    return empty(like.sizes(), Config{}.with_dtype(dt).with_platform(like.platform()));
+  }
   inline Series empty_like(const Series& like, Config cfg = {}) {
     return FactoryCore::move_to_config_platform(empty_like(like, FactoryCore::resolve_like_dtype(like, cfg)), cfg);
   }
@@ -386,9 +461,11 @@ namespace pluss {
     return empty_like(like, FactoryCore::make_config(opts...));
   }
 
-  inline Series zeros_like(const Series& like, ScalarType dt) { return zeros(like.sizes(), dt); }
+  inline Series zeros_like(const Series& like, ScalarType dt) {
+    return zeros(like.sizes(), Config{}.with_dtype(dt).with_platform(like.platform()));
+  }
   inline Series zeros_like(const Series& like, Config cfg = {}) {
-    return FactoryCore::move_to_config_platform(zeros_like(like, FactoryCore::resolve_like_dtype(like, cfg)), cfg);
+    return zeros(like.sizes(), cfg.with_dtype(FactoryCore::resolve_like_dtype(like, cfg)));
   }
   template <class... Opts>
   inline Series zeros_like(const Series& like, Opts... opts) {
@@ -396,9 +473,11 @@ namespace pluss {
   }
   inline Series zeroes_like(const Series& like, Config cfg = {}) { return zeros_like(like, cfg); }
 
-  inline Series ones_like(const Series& like, ScalarType dt) { return ones(like.sizes(), dt); }
+  inline Series ones_like(const Series& like, ScalarType dt) {
+    return ones(like.sizes(), Config{}.with_dtype(dt).with_platform(like.platform()));
+  }
   inline Series ones_like(const Series& like, Config cfg = {}) {
-    return FactoryCore::move_to_config_platform(ones_like(like, FactoryCore::resolve_like_dtype(like, cfg)), cfg);
+    return ones(like.sizes(), cfg.with_dtype(FactoryCore::resolve_like_dtype(like, cfg)));
   }
   template <class... Opts>
   inline Series ones_like(const Series& like, Opts... opts) {
@@ -406,10 +485,13 @@ namespace pluss {
   }
 
   inline Series full_like(const Series& like, double fill_value, ScalarType dt) {
-    return full(like.sizes(), fill_value, dt);
+    return full(like.sizes(), fill_value, Config{}.with_dtype(dt).with_platform(like.platform()));
   }
   inline Series full_like(const Series& like, double fill_value, Config cfg = {}) {
-    return FactoryCore::move_to_config_platform(full_like(like, fill_value, FactoryCore::resolve_like_dtype(like, cfg)), cfg);
+    return full(
+        like.sizes(),
+        fill_value,
+        cfg.with_dtype(FactoryCore::resolve_like_dtype(like, cfg)));
   }
   template <class... Opts>
   inline Series full_like(const Series& like, double fill_value, Opts... opts) {
@@ -417,54 +499,77 @@ namespace pluss {
   }
 
   inline Series rand_like(const Series& like, ScalarType dt, std::uint64_t seed = 0) {
-    return pluss::rand(like.sizes(), dt, seed);
+    return pluss::rand(like.sizes(), Config{}.with_dtype(dt).with_platform(like.platform()), seed);
   }
   inline Series rand_like(const Series& like, Config cfg = {}, std::uint64_t seed = 0) {
-    return FactoryCore::move_to_config_platform(rand_like(like, FactoryCore::resolve_like_dtype(like, cfg), seed), cfg);
+    return rand(like.sizes(), cfg.with_dtype(FactoryCore::resolve_like_dtype(like, cfg)), seed);
   }
 
   inline Series randn_like(const Series& like, ScalarType dt, std::uint64_t seed = 0) {
-    return pluss::randn(like.sizes(), dt, seed);
+    return pluss::randn(like.sizes(), Config{}.with_dtype(dt).with_platform(like.platform()), seed);
   }
   inline Series randn_like(const Series& like, Config cfg = {}, std::uint64_t seed = 0) {
-    return FactoryCore::move_to_config_platform(randn_like(like, FactoryCore::resolve_like_dtype(like, cfg), seed), cfg);
+    return randn(like.sizes(), cfg.with_dtype(FactoryCore::resolve_like_dtype(like, cfg)), seed);
   }
 
   inline Series randint_like(const Series& like,
                              std::int64_t hi,
                              ScalarType dt = ScalarType::Int64,
                              std::uint64_t seed = 0) {
-    return randint(/*lo=*/0, hi, like.sizes(), dt, seed);
+    return randint(
+        /*lo=*/0,
+        hi,
+        like.sizes(),
+        Config{}.with_dtype(dt).with_platform(like.platform()),
+        seed);
   }
   inline Series randint_like(const Series& like,
                              std::int64_t lo,
                              std::int64_t hi,
                              ScalarType dt = ScalarType::Int64,
                              std::uint64_t seed = 0) {
-    return randint(lo, hi, like.sizes(), dt, seed);
+    return randint(
+        lo,
+        hi,
+        like.sizes(),
+        Config{}.with_dtype(dt).with_platform(like.platform()),
+        seed);
   }
   inline Series randint_like(const Series& like,
                              std::int64_t hi,
                              Config cfg,
                              std::uint64_t seed = 0) {
-    return FactoryCore::move_to_config_platform(randint_like(like, hi, FactoryCore::resolve_like_dtype(like, cfg), seed), cfg);
+    return randint(
+        /*lo=*/0,
+        hi,
+        like.sizes(),
+        cfg.with_dtype(FactoryCore::resolve_like_dtype(like, cfg)),
+        seed);
   }
   inline Series randint_like(const Series& like,
                              std::int64_t lo,
                              std::int64_t hi,
                              Config cfg,
                              std::uint64_t seed = 0) {
-    return FactoryCore::move_to_config_platform(randint_like(like, lo, hi, FactoryCore::resolve_like_dtype(like, cfg), seed), cfg);
+    return randint(
+        lo,
+        hi,
+        like.sizes(),
+        cfg.with_dtype(FactoryCore::resolve_like_dtype(like, cfg)),
+        seed);
   }
 
   inline Series eye_like(const Series& like, ScalarType dt = ScalarType::Float32) {
     PLUSS_CHECK(like.dim() >= 2, "eye_like: expected input with rank >= 2");
     const auto n = like.sizes()[static_cast<std::size_t>(like.dim() - 2)];
     const auto m = like.sizes()[static_cast<std::size_t>(like.dim() - 1)];
-    return pluss::eye(n, m, dt);
+    return pluss::eye(n, m, Config{}.with_dtype(dt).with_platform(like.platform()));
   }
   inline Series eye_like(const Series& like, Config cfg) {
-    return FactoryCore::move_to_config_platform(eye_like(like, FactoryCore::resolve_like_dtype(like, cfg)), cfg);
+    PLUSS_CHECK(like.dim() >= 2, "eye_like: expected input with rank >= 2");
+    const auto n = like.sizes()[static_cast<std::size_t>(like.dim() - 2)];
+    const auto m = like.sizes()[static_cast<std::size_t>(like.dim() - 1)];
+    return eye(n, m, cfg.with_dtype(FactoryCore::resolve_like_dtype(like, cfg)));
   }
   template <class... Opts>
   inline Series eye_like(const Series& like, Opts... opts) {

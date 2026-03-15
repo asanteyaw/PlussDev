@@ -48,10 +48,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /Users/yawasante/software/cxx/PlussDev/build_cpp_env
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackConfig.cmake
+	/opt/homebrew/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
+	/opt/homebrew/bin/cpack --config ./CPackSourceConfig.cmake /Users/yawasante/software/cxx/PlussDev/build_cpp_env/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -88,7 +88,7 @@ package_source/fast: package_source
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/ctest --force-new-ctest-process $(ARGS)
+	/opt/homebrew/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
 
 # Special rule for the target test
@@ -108,7 +108,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -127,37 +127,37 @@ list_install_components/fast: list_install_components
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install
 
 # Special rule for the target install
 install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local
 
 # Special rule for the target install/local
 install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip
 
 # Special rule for the target install/strip
 install/strip/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
-	/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/cmake/data/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+	/opt/homebrew/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
 # The main all target
@@ -622,84 +622,6 @@ alias_lint/fast:
 .PHONY : alias_lint/fast
 
 #=============================================================================
-# Target rules for targets named plussai_nn_rnn_demo
-
-# Build rule for target.
-plussai_nn_rnn_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nn_rnn_demo
-.PHONY : plussai_nn_rnn_demo
-
-# fast build rule for target.
-plussai_nn_rnn_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_nn_rnn_demo.dir/build
-.PHONY : plussai_nn_rnn_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_func_rnn_demo
-
-# Build rule for target.
-plussai_func_rnn_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_func_rnn_demo
-.PHONY : plussai_func_rnn_demo
-
-# fast build rule for target.
-plussai_func_rnn_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_func_rnn_demo.dir/build
-.PHONY : plussai_func_rnn_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_func_conv_demo
-
-# Build rule for target.
-plussai_func_conv_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_func_conv_demo
-.PHONY : plussai_func_conv_demo
-
-# fast build rule for target.
-plussai_func_conv_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_func_conv_demo.dir/build
-.PHONY : plussai_func_conv_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_nn_conv_demo
-
-# Build rule for target.
-plussai_nn_conv_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nn_conv_demo
-.PHONY : plussai_nn_conv_demo
-
-# fast build rule for target.
-plussai_nn_conv_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_nn_conv_demo.dir/build
-.PHONY : plussai_nn_conv_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_tcn_demo
-
-# Build rule for target.
-plussai_tcn_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_tcn_demo
-.PHONY : plussai_tcn_demo
-
-# fast build rule for target.
-plussai_tcn_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_tcn_demo.dir/build
-.PHONY : plussai_tcn_demo/fast
-
-#=============================================================================
-# Target rules for targets named plussai_adam_oop_demo
-
-# Build rule for target.
-plussai_adam_oop_demo: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_adam_oop_demo
-.PHONY : plussai_adam_oop_demo
-
-# fast build rule for target.
-plussai_adam_oop_demo/fast:
-	$(MAKE) $(MAKESILENT) -f PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build.make PlussAI/examples/CMakeFiles/plussai_adam_oop_demo.dir/build
-.PHONY : plussai_adam_oop_demo/fast
-
-#=============================================================================
 # Target rules for targets named plussai_minimax_demo
 
 # Build rule for target.
@@ -999,6 +921,162 @@ plussai_lymph_end_to_end_hour_workflow_showcase/fast:
 .PHONY : plussai_lymph_end_to_end_hour_workflow_showcase/fast
 
 #=============================================================================
+# Target rules for targets named plussai_nn_rnn_demo
+
+# Build rule for target.
+plussai_nn_rnn_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nn_rnn_demo
+.PHONY : plussai_nn_rnn_demo
+
+# fast build rule for target.
+plussai_nn_rnn_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_rnn_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_rnn_demo.dir/build
+.PHONY : plussai_nn_rnn_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nn_lstm_train_minimal_demo
+
+# Build rule for target.
+plussai_nn_lstm_train_minimal_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nn_lstm_train_minimal_demo
+.PHONY : plussai_nn_lstm_train_minimal_demo
+
+# fast build rule for target.
+plussai_nn_lstm_train_minimal_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_lstm_train_minimal_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_lstm_train_minimal_demo.dir/build
+.PHONY : plussai_nn_lstm_train_minimal_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nn_sp500_lstm_end_to_end_minimal_demo
+
+# Build rule for target.
+plussai_nn_sp500_lstm_end_to_end_minimal_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nn_sp500_lstm_end_to_end_minimal_demo
+.PHONY : plussai_nn_sp500_lstm_end_to_end_minimal_demo
+
+# fast build rule for target.
+plussai_nn_sp500_lstm_end_to_end_minimal_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_sp500_lstm_end_to_end_minimal_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_sp500_lstm_end_to_end_minimal_demo.dir/build
+.PHONY : plussai_nn_sp500_lstm_end_to_end_minimal_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nn_ngarch_train_minimal_demo
+
+# Build rule for target.
+plussai_nn_ngarch_train_minimal_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nn_ngarch_train_minimal_demo
+.PHONY : plussai_nn_ngarch_train_minimal_demo
+
+# fast build rule for target.
+plussai_nn_ngarch_train_minimal_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_ngarch_train_minimal_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_ngarch_train_minimal_demo.dir/build
+.PHONY : plussai_nn_ngarch_train_minimal_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nn_binary_classifier_minimal_demo
+
+# Build rule for target.
+plussai_nn_binary_classifier_minimal_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nn_binary_classifier_minimal_demo
+.PHONY : plussai_nn_binary_classifier_minimal_demo
+
+# fast build rule for target.
+plussai_nn_binary_classifier_minimal_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_binary_classifier_minimal_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_binary_classifier_minimal_demo.dir/build
+.PHONY : plussai_nn_binary_classifier_minimal_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nn_optimizer_closure_minimal_demo
+
+# Build rule for target.
+plussai_nn_optimizer_closure_minimal_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nn_optimizer_closure_minimal_demo
+.PHONY : plussai_nn_optimizer_closure_minimal_demo
+
+# fast build rule for target.
+plussai_nn_optimizer_closure_minimal_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_optimizer_closure_minimal_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_optimizer_closure_minimal_demo.dir/build
+.PHONY : plussai_nn_optimizer_closure_minimal_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_func_rnn_demo
+
+# Build rule for target.
+plussai_func_rnn_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_func_rnn_demo
+.PHONY : plussai_func_rnn_demo
+
+# fast build rule for target.
+plussai_func_rnn_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_func_rnn_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_func_rnn_demo.dir/build
+.PHONY : plussai_func_rnn_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_func_conv_demo
+
+# Build rule for target.
+plussai_func_conv_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_func_conv_demo
+.PHONY : plussai_func_conv_demo
+
+# fast build rule for target.
+plussai_func_conv_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_func_conv_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_func_conv_demo.dir/build
+.PHONY : plussai_func_conv_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_nn_conv_demo
+
+# Build rule for target.
+plussai_nn_conv_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_nn_conv_demo
+.PHONY : plussai_nn_conv_demo
+
+# fast build rule for target.
+plussai_nn_conv_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_conv_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_conv_demo.dir/build
+.PHONY : plussai_nn_conv_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_tcn_demo
+
+# Build rule for target.
+plussai_tcn_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_tcn_demo
+.PHONY : plussai_tcn_demo
+
+# fast build rule for target.
+plussai_tcn_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_tcn_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_tcn_demo.dir/build
+.PHONY : plussai_tcn_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_adam_oop_demo
+
+# Build rule for target.
+plussai_adam_oop_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_adam_oop_demo
+.PHONY : plussai_adam_oop_demo
+
+# fast build rule for target.
+plussai_adam_oop_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_adam_oop_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_adam_oop_demo.dir/build
+.PHONY : plussai_adam_oop_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussai_adagrad_oop_demo
+
+# Build rule for target.
+plussai_adagrad_oop_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_adagrad_oop_demo
+.PHONY : plussai_adagrad_oop_demo
+
+# fast build rule for target.
+plussai_adagrad_oop_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_adagrad_oop_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_adagrad_oop_demo.dir/build
+.PHONY : plussai_adagrad_oop_demo/fast
+
+#=============================================================================
 # Target rules for targets named conv_test
 
 # Build rule for target.
@@ -1023,6 +1101,19 @@ lymph_quick_test: cmake_check_build_system
 lymph_quick_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_quick_test.dir/build.make PlussAI/test/CMakeFiles/lymph_quick_test.dir/build
 .PHONY : lymph_quick_test/fast
+
+#=============================================================================
+# Target rules for targets named nn_loss_test
+
+# Build rule for target.
+nn_loss_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nn_loss_test
+.PHONY : nn_loss_test
+
+# fast build rule for target.
+nn_loss_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_loss_test.dir/build.make PlussAI/test/CMakeFiles/nn_loss_test.dir/build
+.PHONY : nn_loss_test/fast
 
 #=============================================================================
 # Target rules for targets named nn_optim_test
@@ -1387,6 +1478,19 @@ plussqit_codem_autodiff_derivatives_demo: cmake_check_build_system
 plussqit_codem_autodiff_derivatives_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_autodiff_derivatives_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_autodiff_derivatives_demo.dir/build
 .PHONY : plussqit_codem_autodiff_derivatives_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_codem_autodiff_minimal_demo
+
+# Build rule for target.
+plussqit_codem_autodiff_minimal_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_codem_autodiff_minimal_demo
+.PHONY : plussqit_codem_autodiff_minimal_demo
+
+# fast build rule for target.
+plussqit_codem_autodiff_minimal_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_autodiff_minimal_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_autodiff_minimal_demo.dir/build
+.PHONY : plussqit_codem_autodiff_minimal_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussqit_codem_mps_vs_cpu_demo
@@ -2169,6 +2273,45 @@ plusspl_gallery_outputs/fast:
 .PHONY : plusspl_gallery_outputs/fast
 
 #=============================================================================
+# Target rules for targets named bates_calibration_test
+
+# Build rule for target.
+bates_calibration_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bates_calibration_test
+.PHONY : bates_calibration_test
+
+# fast build rule for target.
+bates_calibration_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/bates_calibration_test.dir/build
+.PHONY : bates_calibration_test/fast
+
+#=============================================================================
+# Target rules for targets named heston_nandi_calibration_test
+
+# Build rule for target.
+heston_nandi_calibration_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 heston_nandi_calibration_test
+.PHONY : heston_nandi_calibration_test
+
+# fast build rule for target.
+heston_nandi_calibration_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_test.dir/build
+.PHONY : heston_nandi_calibration_test/fast
+
+#=============================================================================
+# Target rules for targets named heston_sv_calibration_test
+
+# Build rule for target.
+heston_sv_calibration_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 heston_sv_calibration_test
+.PHONY : heston_sv_calibration_test
+
+# fast build rule for target.
+heston_sv_calibration_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_sv_calibration_test.dir/build
+.PHONY : heston_sv_calibration_test/fast
+
+#=============================================================================
 # Target rules for targets named vol_bridge_test
 
 # Build rule for target.
@@ -2180,6 +2323,32 @@ vol_bridge_test: cmake_check_build_system
 vol_bridge_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/vol_bridge_test.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/vol_bridge_test.dir/build
 .PHONY : vol_bridge_test/fast
+
+#=============================================================================
+# Target rules for targets named heston_nandi_calibration_catch2
+
+# Build rule for target.
+heston_nandi_calibration_catch2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 heston_nandi_calibration_catch2
+.PHONY : heston_nandi_calibration_catch2
+
+# fast build rule for target.
+heston_nandi_calibration_catch2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/build.make PlussMa/Math/Finance/calibration/test/CMakeFiles/heston_nandi_calibration_catch2.dir/build
+.PHONY : heston_nandi_calibration_catch2/fast
+
+#=============================================================================
+# Target rules for targets named bates_pricing_test
+
+# Build rule for target.
+bates_pricing_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bates_pricing_test
+.PHONY : bates_pricing_test
+
+# fast build rule for target.
+bates_pricing_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/bates_pricing_test.dir/build
+.PHONY : bates_pricing_test/fast
 
 #=============================================================================
 # Target rules for targets named black_scholes_test
@@ -2195,6 +2364,32 @@ black_scholes_test/fast:
 .PHONY : black_scholes_test/fast
 
 #=============================================================================
+# Target rules for targets named heston_sv_pricing_test
+
+# Build rule for target.
+heston_sv_pricing_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 heston_sv_pricing_test
+.PHONY : heston_sv_pricing_test
+
+# fast build rule for target.
+heston_sv_pricing_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build
+.PHONY : heston_sv_pricing_test/fast
+
+#=============================================================================
+# Target rules for targets named sabr_slv_pricing_test
+
+# Build rule for target.
+sabr_slv_pricing_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 sabr_slv_pricing_test
+.PHONY : sabr_slv_pricing_test
+
+# fast build rule for target.
+sabr_slv_pricing_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/build
+.PHONY : sabr_slv_pricing_test/fast
+
+#=============================================================================
 # Target rules for targets named delta_hedge_test
 
 # Build rule for target.
@@ -2206,6 +2401,71 @@ delta_hedge_test: cmake_check_build_system
 delta_hedge_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/hedging/test/CMakeFiles/delta_hedge_test.dir/build.make PlussMa/Math/Finance/hedging/test/CMakeFiles/delta_hedge_test.dir/build
 .PHONY : delta_hedge_test/fast
+
+#=============================================================================
+# Target rules for targets named filtering_test
+
+# Build rule for target.
+filtering_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 filtering_test
+.PHONY : filtering_test
+
+# fast build rule for target.
+filtering_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/filtering/test/CMakeFiles/filtering_test.dir/build.make PlussMa/Math/Finance/filtering/test/CMakeFiles/filtering_test.dir/build
+.PHONY : filtering_test/fast
+
+#=============================================================================
+# Target rules for targets named rate_models_test
+
+# Build rule for target.
+rate_models_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 rate_models_test
+.PHONY : rate_models_test
+
+# fast build rule for target.
+rate_models_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/rate_models_test.dir/build.make PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/rate_models_test.dir/build
+.PHONY : rate_models_test/fast
+
+#=============================================================================
+# Target rules for targets named rates_paths_test
+
+# Build rule for target.
+rates_paths_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 rates_paths_test
+.PHONY : rates_paths_test
+
+# fast build rule for target.
+rates_paths_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/rates_paths_test.dir/build.make PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/rates_paths_test.dir/build
+.PHONY : rates_paths_test/fast
+
+#=============================================================================
+# Target rules for targets named stochastic_vol_paths_test
+
+# Build rule for target.
+stochastic_vol_paths_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 stochastic_vol_paths_test
+.PHONY : stochastic_vol_paths_test
+
+# fast build rule for target.
+stochastic_vol_paths_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/stochastic_vol_paths_test.dir/build.make PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/stochastic_vol_paths_test.dir/build
+.PHONY : stochastic_vol_paths_test/fast
+
+#=============================================================================
+# Target rules for targets named stochvol_models_test
+
+# Build rule for target.
+stochvol_models_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 stochvol_models_test
+.PHONY : stochvol_models_test
+
+# fast build rule for target.
+stochvol_models_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/stochvol_models_test.dir/build.make PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/stochvol_models_test.dir/build
+.PHONY : stochvol_models_test/fast
 
 #=============================================================================
 # Target rules for targets named dfo_minimizers_test
@@ -2689,6 +2949,32 @@ ts_var_catch2/fast:
 .PHONY : ts_var_catch2/fast
 
 #=============================================================================
+# Target rules for targets named ts_vecm_test
+
+# Build rule for target.
+ts_vecm_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ts_vecm_test
+.PHONY : ts_vecm_test
+
+# fast build rule for target.
+ts_vecm_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/ts/modules/vecm/test/CMakeFiles/ts_vecm_test.dir/build.make PlussMa/Stats/time_series/ts/modules/vecm/test/CMakeFiles/ts_vecm_test.dir/build
+.PHONY : ts_vecm_test/fast
+
+#=============================================================================
+# Target rules for targets named ts_vecm_catch2
+
+# Build rule for target.
+ts_vecm_catch2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ts_vecm_catch2
+.PHONY : ts_vecm_catch2
+
+# fast build rule for target.
+ts_vecm_catch2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/ts/modules/vecm/test/CMakeFiles/ts_vecm_catch2.dir/build.make PlussMa/Stats/time_series/ts/modules/vecm/test/CMakeFiles/ts_vecm_catch2.dir/build
+.PHONY : ts_vecm_catch2/fast
+
+#=============================================================================
 # Target rules for targets named egarch_gjr_test
 
 # Build rule for target.
@@ -2910,6 +3196,19 @@ plussma_ts_var_raw_demo/fast:
 .PHONY : plussma_ts_var_raw_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussma_ts_vecm_raw_demo
+
+# Build rule for target.
+plussma_ts_vecm_raw_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_ts_vecm_raw_demo
+.PHONY : plussma_ts_vecm_raw_demo
+
+# fast build rule for target.
+plussma_ts_vecm_raw_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_vecm_raw_demo.dir/build.make PlussMa/Stats/time_series/examples/CMakeFiles/plussma_ts_vecm_raw_demo.dir/build
+.PHONY : plussma_ts_vecm_raw_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussma_distributions_demo
 
 # Build rule for target.
@@ -2921,6 +3220,97 @@ plussma_distributions_demo: cmake_check_build_system
 plussma_distributions_demo/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/CMakeFiles/plussma_distributions_demo.dir/build.make PlussMa/examples/Numerical/CMakeFiles/plussma_distributions_demo.dir/build
 .PHONY : plussma_distributions_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_finance_heston_sv_demo
+
+# Build rule for target.
+plussma_finance_heston_sv_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_finance_heston_sv_demo
+.PHONY : plussma_finance_heston_sv_demo
+
+# fast build rule for target.
+plussma_finance_heston_sv_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/CMakeFiles/plussma_finance_heston_sv_demo.dir/build.make PlussMa/examples/Numerical/CMakeFiles/plussma_finance_heston_sv_demo.dir/build
+.PHONY : plussma_finance_heston_sv_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_finance_stochvol_schemes_demo
+
+# Build rule for target.
+plussma_finance_stochvol_schemes_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_finance_stochvol_schemes_demo
+.PHONY : plussma_finance_stochvol_schemes_demo
+
+# fast build rule for target.
+plussma_finance_stochvol_schemes_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/CMakeFiles/plussma_finance_stochvol_schemes_demo.dir/build.make PlussMa/examples/Numerical/CMakeFiles/plussma_finance_stochvol_schemes_demo.dir/build
+.PHONY : plussma_finance_stochvol_schemes_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_finance_stochvol_objects_demo
+
+# Build rule for target.
+plussma_finance_stochvol_objects_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_finance_stochvol_objects_demo
+.PHONY : plussma_finance_stochvol_objects_demo
+
+# fast build rule for target.
+plussma_finance_stochvol_objects_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/CMakeFiles/plussma_finance_stochvol_objects_demo.dir/build.make PlussMa/examples/Numerical/CMakeFiles/plussma_finance_stochvol_objects_demo.dir/build
+.PHONY : plussma_finance_stochvol_objects_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_finance_bates_demo
+
+# Build rule for target.
+plussma_finance_bates_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_finance_bates_demo
+.PHONY : plussma_finance_bates_demo
+
+# fast build rule for target.
+plussma_finance_bates_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/CMakeFiles/plussma_finance_bates_demo.dir/build.make PlussMa/examples/Numerical/CMakeFiles/plussma_finance_bates_demo.dir/build
+.PHONY : plussma_finance_bates_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_finance_rates_objects_demo
+
+# Build rule for target.
+plussma_finance_rates_objects_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_finance_rates_objects_demo
+.PHONY : plussma_finance_rates_objects_demo
+
+# fast build rule for target.
+plussma_finance_rates_objects_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/CMakeFiles/plussma_finance_rates_objects_demo.dir/build.make PlussMa/examples/Numerical/CMakeFiles/plussma_finance_rates_objects_demo.dir/build
+.PHONY : plussma_finance_rates_objects_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_finance_filtering_demo
+
+# Build rule for target.
+plussma_finance_filtering_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_finance_filtering_demo
+.PHONY : plussma_finance_filtering_demo
+
+# fast build rule for target.
+plussma_finance_filtering_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/CMakeFiles/plussma_finance_filtering_demo.dir/build.make PlussMa/examples/Numerical/CMakeFiles/plussma_finance_filtering_demo.dir/build
+.PHONY : plussma_finance_filtering_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussma_finance_heston_filter_sp500_demo
+
+# Build rule for target.
+plussma_finance_heston_filter_sp500_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussma_finance_heston_filter_sp500_demo
+.PHONY : plussma_finance_heston_filter_sp500_demo
+
+# fast build rule for target.
+plussma_finance_heston_filter_sp500_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/examples/Numerical/CMakeFiles/plussma_finance_heston_filter_sp500_demo.dir/build.make PlussMa/examples/Numerical/CMakeFiles/plussma_finance_heston_filter_sp500_demo.dir/build
+.PHONY : plussma_finance_heston_filter_sp500_demo/fast
 
 #=============================================================================
 # Target rules for targets named plussma_optima_penalty_demo
@@ -3919,6 +4309,30 @@ PlussAI/NodeK/NN/optim/SGD.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/SGD.cpp.s
 .PHONY : PlussAI/NodeK/NN/optim/SGD.cpp.s
 
+PlussAI/NodeK/NN/optim/adagrad.o: PlussAI/NodeK/NN/optim/adagrad.cpp.o
+.PHONY : PlussAI/NodeK/NN/optim/adagrad.o
+
+# target to build an object file
+PlussAI/NodeK/NN/optim/adagrad.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/adagrad.cpp.o
+.PHONY : PlussAI/NodeK/NN/optim/adagrad.cpp.o
+
+PlussAI/NodeK/NN/optim/adagrad.i: PlussAI/NodeK/NN/optim/adagrad.cpp.i
+.PHONY : PlussAI/NodeK/NN/optim/adagrad.i
+
+# target to preprocess a source file
+PlussAI/NodeK/NN/optim/adagrad.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/adagrad.cpp.i
+.PHONY : PlussAI/NodeK/NN/optim/adagrad.cpp.i
+
+PlussAI/NodeK/NN/optim/adagrad.s: PlussAI/NodeK/NN/optim/adagrad.cpp.s
+.PHONY : PlussAI/NodeK/NN/optim/adagrad.s
+
+# target to generate assembly for a file
+PlussAI/NodeK/NN/optim/adagrad.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussAI/NodeK/NN/optim/adagrad.cpp.s
+.PHONY : PlussAI/NodeK/NN/optim/adagrad.cpp.s
+
 PlussAI/NodeK/NN/optim/adam.o: PlussAI/NodeK/NN/optim/adam.cpp.o
 .PHONY : PlussAI/NodeK/NN/optim/adam.o
 
@@ -4255,6 +4669,102 @@ PlussMa/Math/Economics/growth_models/econ.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Economics/growth_models/econ.cpp.s
 .PHONY : PlussMa/Math/Economics/growth_models/econ.cpp.s
 
+PlussMa/Math/Finance/calibration/bates_calibration.o: PlussMa/Math/Finance/calibration/bates_calibration.cpp.o
+.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.o
+
+# target to build an object file
+PlussMa/Math/Finance/calibration/bates_calibration.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/bates_calibration.cpp.o
+.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.cpp.o
+
+PlussMa/Math/Finance/calibration/bates_calibration.i: PlussMa/Math/Finance/calibration/bates_calibration.cpp.i
+.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.i
+
+# target to preprocess a source file
+PlussMa/Math/Finance/calibration/bates_calibration.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/bates_calibration.cpp.i
+.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.cpp.i
+
+PlussMa/Math/Finance/calibration/bates_calibration.s: PlussMa/Math/Finance/calibration/bates_calibration.cpp.s
+.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.s
+
+# target to generate assembly for a file
+PlussMa/Math/Finance/calibration/bates_calibration.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/bates_calibration.cpp.s
+.PHONY : PlussMa/Math/Finance/calibration/bates_calibration.cpp.s
+
+PlussMa/Math/Finance/calibration/heston_nandi_calibration.o: PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.o
+.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.o
+
+# target to build an object file
+PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.o
+.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.o
+
+PlussMa/Math/Finance/calibration/heston_nandi_calibration.i: PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.i
+.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.i
+
+# target to preprocess a source file
+PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.i
+.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.i
+
+PlussMa/Math/Finance/calibration/heston_nandi_calibration.s: PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.s
+.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.s
+
+# target to generate assembly for a file
+PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.s
+.PHONY : PlussMa/Math/Finance/calibration/heston_nandi_calibration.cpp.s
+
+PlussMa/Math/Finance/calibration/heston_sv_calibration.o: PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.o
+.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.o
+
+# target to build an object file
+PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.o
+.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.o
+
+PlussMa/Math/Finance/calibration/heston_sv_calibration.i: PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.i
+.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.i
+
+# target to preprocess a source file
+PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.i
+.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.i
+
+PlussMa/Math/Finance/calibration/heston_sv_calibration.s: PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.s
+.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.s
+
+# target to generate assembly for a file
+PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.s
+.PHONY : PlussMa/Math/Finance/calibration/heston_sv_calibration.cpp.s
+
+PlussMa/Math/Finance/calibration/rate_calibration.o: PlussMa/Math/Finance/calibration/rate_calibration.cpp.o
+.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.o
+
+# target to build an object file
+PlussMa/Math/Finance/calibration/rate_calibration.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/rate_calibration.cpp.o
+.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.cpp.o
+
+PlussMa/Math/Finance/calibration/rate_calibration.i: PlussMa/Math/Finance/calibration/rate_calibration.cpp.i
+.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.i
+
+# target to preprocess a source file
+PlussMa/Math/Finance/calibration/rate_calibration.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/rate_calibration.cpp.i
+.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.cpp.i
+
+PlussMa/Math/Finance/calibration/rate_calibration.s: PlussMa/Math/Finance/calibration/rate_calibration.cpp.s
+.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.s
+
+# target to generate assembly for a file
+PlussMa/Math/Finance/calibration/rate_calibration.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/rate_calibration.cpp.s
+.PHONY : PlussMa/Math/Finance/calibration/rate_calibration.cpp.s
+
 PlussMa/Math/Finance/calibration/vol_bridge.o: PlussMa/Math/Finance/calibration/vol_bridge.cpp.o
 .PHONY : PlussMa/Math/Finance/calibration/vol_bridge.o
 
@@ -4278,6 +4788,30 @@ PlussMa/Math/Finance/calibration/vol_bridge.s: PlussMa/Math/Finance/calibration/
 PlussMa/Math/Finance/calibration/vol_bridge.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/calibration/vol_bridge.cpp.s
 .PHONY : PlussMa/Math/Finance/calibration/vol_bridge.cpp.s
+
+PlussMa/Math/Finance/filtering/filtering.o: PlussMa/Math/Finance/filtering/filtering.cpp.o
+.PHONY : PlussMa/Math/Finance/filtering/filtering.o
+
+# target to build an object file
+PlussMa/Math/Finance/filtering/filtering.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/filtering/filtering.cpp.o
+.PHONY : PlussMa/Math/Finance/filtering/filtering.cpp.o
+
+PlussMa/Math/Finance/filtering/filtering.i: PlussMa/Math/Finance/filtering/filtering.cpp.i
+.PHONY : PlussMa/Math/Finance/filtering/filtering.i
+
+# target to preprocess a source file
+PlussMa/Math/Finance/filtering/filtering.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/filtering/filtering.cpp.i
+.PHONY : PlussMa/Math/Finance/filtering/filtering.cpp.i
+
+PlussMa/Math/Finance/filtering/filtering.s: PlussMa/Math/Finance/filtering/filtering.cpp.s
+.PHONY : PlussMa/Math/Finance/filtering/filtering.s
+
+# target to generate assembly for a file
+PlussMa/Math/Finance/filtering/filtering.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/filtering/filtering.cpp.s
+.PHONY : PlussMa/Math/Finance/filtering/filtering.cpp.s
 
 PlussMa/Math/Finance/hedging/delta_hedge.o: PlussMa/Math/Finance/hedging/delta_hedge.cpp.o
 .PHONY : PlussMa/Math/Finance/hedging/delta_hedge.o
@@ -4327,6 +4861,30 @@ PlussMa/Math/Finance/pricing/black_scholes.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/pricing/black_scholes.cpp.s
 .PHONY : PlussMa/Math/Finance/pricing/black_scholes.cpp.s
 
+PlussMa/Math/Finance/pricing/heston_sv.o: PlussMa/Math/Finance/pricing/heston_sv.cpp.o
+.PHONY : PlussMa/Math/Finance/pricing/heston_sv.o
+
+# target to build an object file
+PlussMa/Math/Finance/pricing/heston_sv.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/pricing/heston_sv.cpp.o
+.PHONY : PlussMa/Math/Finance/pricing/heston_sv.cpp.o
+
+PlussMa/Math/Finance/pricing/heston_sv.i: PlussMa/Math/Finance/pricing/heston_sv.cpp.i
+.PHONY : PlussMa/Math/Finance/pricing/heston_sv.i
+
+# target to preprocess a source file
+PlussMa/Math/Finance/pricing/heston_sv.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/pricing/heston_sv.cpp.i
+.PHONY : PlussMa/Math/Finance/pricing/heston_sv.cpp.i
+
+PlussMa/Math/Finance/pricing/heston_sv.s: PlussMa/Math/Finance/pricing/heston_sv.cpp.s
+.PHONY : PlussMa/Math/Finance/pricing/heston_sv.s
+
+# target to generate assembly for a file
+PlussMa/Math/Finance/pricing/heston_sv.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/pricing/heston_sv.cpp.s
+.PHONY : PlussMa/Math/Finance/pricing/heston_sv.cpp.s
+
 PlussMa/Math/Finance/pricing/implied_vol.o: PlussMa/Math/Finance/pricing/implied_vol.cpp.o
 .PHONY : PlussMa/Math/Finance/pricing/implied_vol.o
 
@@ -4374,6 +4932,78 @@ PlussMa/Math/Finance/stochastic_processes/econ.s: PlussMa/Math/Finance/stochasti
 PlussMa/Math/Finance/stochastic_processes/econ.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/stochastic_processes/econ.cpp.s
 .PHONY : PlussMa/Math/Finance/stochastic_processes/econ.cpp.s
+
+PlussMa/Math/Finance/stochastic_processes/rates.o: PlussMa/Math/Finance/stochastic_processes/rates.cpp.o
+.PHONY : PlussMa/Math/Finance/stochastic_processes/rates.o
+
+# target to build an object file
+PlussMa/Math/Finance/stochastic_processes/rates.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/stochastic_processes/rates.cpp.o
+.PHONY : PlussMa/Math/Finance/stochastic_processes/rates.cpp.o
+
+PlussMa/Math/Finance/stochastic_processes/rates.i: PlussMa/Math/Finance/stochastic_processes/rates.cpp.i
+.PHONY : PlussMa/Math/Finance/stochastic_processes/rates.i
+
+# target to preprocess a source file
+PlussMa/Math/Finance/stochastic_processes/rates.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/stochastic_processes/rates.cpp.i
+.PHONY : PlussMa/Math/Finance/stochastic_processes/rates.cpp.i
+
+PlussMa/Math/Finance/stochastic_processes/rates.s: PlussMa/Math/Finance/stochastic_processes/rates.cpp.s
+.PHONY : PlussMa/Math/Finance/stochastic_processes/rates.s
+
+# target to generate assembly for a file
+PlussMa/Math/Finance/stochastic_processes/rates.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/stochastic_processes/rates.cpp.s
+.PHONY : PlussMa/Math/Finance/stochastic_processes/rates.cpp.s
+
+PlussMa/Math/Finance/stochastic_processes/stochastic_vol.o: PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.o
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochastic_vol.o
+
+# target to build an object file
+PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.o
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.o
+
+PlussMa/Math/Finance/stochastic_processes/stochastic_vol.i: PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.i
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochastic_vol.i
+
+# target to preprocess a source file
+PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.i
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.i
+
+PlussMa/Math/Finance/stochastic_processes/stochastic_vol.s: PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.s
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochastic_vol.s
+
+# target to generate assembly for a file
+PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.s
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochastic_vol.cpp.s
+
+PlussMa/Math/Finance/stochastic_processes/stochvol_models.o: PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.o
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochvol_models.o
+
+# target to build an object file
+PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.o
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.o
+
+PlussMa/Math/Finance/stochastic_processes/stochvol_models.i: PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.i
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochvol_models.i
+
+# target to preprocess a source file
+PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.i
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.i
+
+PlussMa/Math/Finance/stochastic_processes/stochvol_models.s: PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.s
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochvol_models.s
+
+# target to generate assembly for a file
+PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.s
+.PHONY : PlussMa/Math/Finance/stochastic_processes/stochvol_models.cpp.s
 
 PlussMa/Math/Numerical/optimization/dfo_minimizers.o: PlussMa/Math/Numerical/optimization/dfo_minimizers.cpp.o
 .PHONY : PlussMa/Math/Numerical/optimization/dfo_minimizers.o
@@ -5191,6 +5821,30 @@ PlussMa/Stats/time_series/ts/modules/var/var_structural.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/time_series/ts/modules/var/var_structural.cpp.s
 .PHONY : PlussMa/Stats/time_series/ts/modules/var/var_structural.cpp.s
 
+PlussMa/Stats/time_series/ts/modules/vecm/vecm.o: PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.o
+.PHONY : PlussMa/Stats/time_series/ts/modules/vecm/vecm.o
+
+# target to build an object file
+PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.o
+.PHONY : PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.o
+
+PlussMa/Stats/time_series/ts/modules/vecm/vecm.i: PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.i
+.PHONY : PlussMa/Stats/time_series/ts/modules/vecm/vecm.i
+
+# target to preprocess a source file
+PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.i
+.PHONY : PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.i
+
+PlussMa/Stats/time_series/ts/modules/vecm/vecm.s: PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.s
+.PHONY : PlussMa/Stats/time_series/ts/modules/vecm/vecm.s
+
+# target to generate assembly for a file
+PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pluss.dir/build.make CMakeFiles/pluss.dir/PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.s
+.PHONY : PlussMa/Stats/time_series/ts/modules/vecm/vecm.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -5248,6 +5902,8 @@ help:
 	@echo "... PlussView"
 	@echo "... arima_test"
 	@echo "... astro_test"
+	@echo "... bates_calibration_test"
+	@echo "... bates_pricing_test"
 	@echo "... biophysics_test"
 	@echo "... black_scholes_test"
 	@echo "... chem_quantum_qc_test"
@@ -5263,7 +5919,12 @@ help:
 	@echo "... distr_test"
 	@echo "... egarch_gjr_test"
 	@echo "... external_reference_parity_test"
+	@echo "... filtering_test"
 	@echo "... garch11_test"
+	@echo "... heston_nandi_calibration_catch2"
+	@echo "... heston_nandi_calibration_test"
+	@echo "... heston_sv_calibration_test"
+	@echo "... heston_sv_pricing_test"
 	@echo "... hypothesis_test"
 	@echo "... kinetics_test"
 	@echo "... lag_features_test"
@@ -5273,6 +5934,7 @@ help:
 	@echo "... mads_nomad_parity_test"
 	@echo "... mechanics_test"
 	@echo "... mv_vol_test"
+	@echo "... nn_loss_test"
 	@echo "... nn_optim_test"
 	@echo "... nodej_bayes_kernel_test"
 	@echo "... nodej_cv_tune_test"
@@ -5291,6 +5953,7 @@ help:
 	@echo "... optima_robustness_catch2"
 	@echo "... phys_quantum_quantum_test"
 	@echo "... pluss"
+	@echo "... plussai_adagrad_oop_demo"
 	@echo "... plussai_adam_oop_demo"
 	@echo "... plussai_bike_sharing_end_to_end"
 	@echo "... plussai_func_conv_demo"
@@ -5306,8 +5969,13 @@ help:
 	@echo "... plussai_lymph_unsupervised_demo"
 	@echo "... plussai_minimax_demo"
 	@echo "... plussai_minimax_multiblock_constraints_demo"
+	@echo "... plussai_nn_binary_classifier_minimal_demo"
 	@echo "... plussai_nn_conv_demo"
+	@echo "... plussai_nn_lstm_train_minimal_demo"
+	@echo "... plussai_nn_ngarch_train_minimal_demo"
+	@echo "... plussai_nn_optimizer_closure_minimal_demo"
 	@echo "... plussai_nn_rnn_demo"
+	@echo "... plussai_nn_sp500_lstm_end_to_end_minimal_demo"
 	@echo "... plussai_nodej_cv_tune_demo"
 	@echo "... plussai_nodej_dataframe_bridge_demo"
 	@echo "... plussai_nodej_end_to_end_hour_workflow_showcase"
@@ -5328,6 +5996,13 @@ help:
 	@echo "... plussma_distributions_objects_demo"
 	@echo "... plussma_distributions_objects_mle_raw_demo"
 	@echo "... plussma_distributions_quasirandom_demo"
+	@echo "... plussma_finance_bates_demo"
+	@echo "... plussma_finance_filtering_demo"
+	@echo "... plussma_finance_heston_filter_sp500_demo"
+	@echo "... plussma_finance_heston_sv_demo"
+	@echo "... plussma_finance_rates_objects_demo"
+	@echo "... plussma_finance_stochvol_objects_demo"
+	@echo "... plussma_finance_stochvol_schemes_demo"
 	@echo "... plussma_garch11_dfo_demo"
 	@echo "... plussma_garch11_internal_protocol_demo"
 	@echo "... plussma_garch11_nelder_mead_demo"
@@ -5365,6 +6040,7 @@ help:
 	@echo "... plussma_ts_partition_raw_demo"
 	@echo "... plussma_ts_plotting_raw_demo"
 	@echo "... plussma_ts_var_raw_demo"
+	@echo "... plussma_ts_vecm_raw_demo"
 	@echo "... plussmic_atlas_plot_demo"
 	@echo "... plussmic_bike_sharing_eda_dfplot_demo"
 	@echo "... plussmic_bundle_model_demo"
@@ -5415,6 +6091,7 @@ help:
 	@echo "... plussqit_codeh_timeline_printing_2d_3d_demo"
 	@echo "... plussqit_codem"
 	@echo "... plussqit_codem_autodiff_derivatives_demo"
+	@echo "... plussqit_codem_autodiff_minimal_demo"
 	@echo "... plussqit_codem_autodiff_tests"
 	@echo "... plussqit_codem_autograd_optim_demo"
 	@echo "... plussqit_codem_aux_let_transmit_demo"
@@ -5452,7 +6129,12 @@ help:
 	@echo "... plussview_window_shell_backend_demo"
 	@echo "... plussview_window_table_demo"
 	@echo "... population_test"
+	@echo "... rate_models_test"
+	@echo "... rates_paths_test"
 	@echo "... rnn_fusion_test"
+	@echo "... sabr_slv_pricing_test"
+	@echo "... stochastic_vol_paths_test"
+	@echo "... stochvol_models_test"
 	@echo "... systems_test"
 	@echo "... ts_arima_catch2"
 	@echo "... ts_core_catch2"
@@ -5463,6 +6145,8 @@ help:
 	@echo "... ts_plotting_catch2"
 	@echo "... ts_plotting_test"
 	@echo "... ts_var_catch2"
+	@echo "... ts_vecm_catch2"
+	@echo "... ts_vecm_test"
 	@echo "... ts_vol_catch2"
 	@echo "... vol_bridge_test"
 	@echo "... PlussAI/Lymph/quick.o"
@@ -5510,6 +6194,9 @@ help:
 	@echo "... PlussAI/NodeK/NN/optim/SGD.o"
 	@echo "... PlussAI/NodeK/NN/optim/SGD.i"
 	@echo "... PlussAI/NodeK/NN/optim/SGD.s"
+	@echo "... PlussAI/NodeK/NN/optim/adagrad.o"
+	@echo "... PlussAI/NodeK/NN/optim/adagrad.i"
+	@echo "... PlussAI/NodeK/NN/optim/adagrad.s"
 	@echo "... PlussAI/NodeK/NN/optim/adam.o"
 	@echo "... PlussAI/NodeK/NN/optim/adam.i"
 	@echo "... PlussAI/NodeK/NN/optim/adam.s"
@@ -5552,21 +6239,48 @@ help:
 	@echo "... PlussMa/Math/Economics/growth_models/econ.o"
 	@echo "... PlussMa/Math/Economics/growth_models/econ.i"
 	@echo "... PlussMa/Math/Economics/growth_models/econ.s"
+	@echo "... PlussMa/Math/Finance/calibration/bates_calibration.o"
+	@echo "... PlussMa/Math/Finance/calibration/bates_calibration.i"
+	@echo "... PlussMa/Math/Finance/calibration/bates_calibration.s"
+	@echo "... PlussMa/Math/Finance/calibration/heston_nandi_calibration.o"
+	@echo "... PlussMa/Math/Finance/calibration/heston_nandi_calibration.i"
+	@echo "... PlussMa/Math/Finance/calibration/heston_nandi_calibration.s"
+	@echo "... PlussMa/Math/Finance/calibration/heston_sv_calibration.o"
+	@echo "... PlussMa/Math/Finance/calibration/heston_sv_calibration.i"
+	@echo "... PlussMa/Math/Finance/calibration/heston_sv_calibration.s"
+	@echo "... PlussMa/Math/Finance/calibration/rate_calibration.o"
+	@echo "... PlussMa/Math/Finance/calibration/rate_calibration.i"
+	@echo "... PlussMa/Math/Finance/calibration/rate_calibration.s"
 	@echo "... PlussMa/Math/Finance/calibration/vol_bridge.o"
 	@echo "... PlussMa/Math/Finance/calibration/vol_bridge.i"
 	@echo "... PlussMa/Math/Finance/calibration/vol_bridge.s"
+	@echo "... PlussMa/Math/Finance/filtering/filtering.o"
+	@echo "... PlussMa/Math/Finance/filtering/filtering.i"
+	@echo "... PlussMa/Math/Finance/filtering/filtering.s"
 	@echo "... PlussMa/Math/Finance/hedging/delta_hedge.o"
 	@echo "... PlussMa/Math/Finance/hedging/delta_hedge.i"
 	@echo "... PlussMa/Math/Finance/hedging/delta_hedge.s"
 	@echo "... PlussMa/Math/Finance/pricing/black_scholes.o"
 	@echo "... PlussMa/Math/Finance/pricing/black_scholes.i"
 	@echo "... PlussMa/Math/Finance/pricing/black_scholes.s"
+	@echo "... PlussMa/Math/Finance/pricing/heston_sv.o"
+	@echo "... PlussMa/Math/Finance/pricing/heston_sv.i"
+	@echo "... PlussMa/Math/Finance/pricing/heston_sv.s"
 	@echo "... PlussMa/Math/Finance/pricing/implied_vol.o"
 	@echo "... PlussMa/Math/Finance/pricing/implied_vol.i"
 	@echo "... PlussMa/Math/Finance/pricing/implied_vol.s"
 	@echo "... PlussMa/Math/Finance/stochastic_processes/econ.o"
 	@echo "... PlussMa/Math/Finance/stochastic_processes/econ.i"
 	@echo "... PlussMa/Math/Finance/stochastic_processes/econ.s"
+	@echo "... PlussMa/Math/Finance/stochastic_processes/rates.o"
+	@echo "... PlussMa/Math/Finance/stochastic_processes/rates.i"
+	@echo "... PlussMa/Math/Finance/stochastic_processes/rates.s"
+	@echo "... PlussMa/Math/Finance/stochastic_processes/stochastic_vol.o"
+	@echo "... PlussMa/Math/Finance/stochastic_processes/stochastic_vol.i"
+	@echo "... PlussMa/Math/Finance/stochastic_processes/stochastic_vol.s"
+	@echo "... PlussMa/Math/Finance/stochastic_processes/stochvol_models.o"
+	@echo "... PlussMa/Math/Finance/stochastic_processes/stochvol_models.i"
+	@echo "... PlussMa/Math/Finance/stochastic_processes/stochvol_models.s"
 	@echo "... PlussMa/Math/Numerical/optimization/dfo_minimizers.o"
 	@echo "... PlussMa/Math/Numerical/optimization/dfo_minimizers.i"
 	@echo "... PlussMa/Math/Numerical/optimization/dfo_minimizers.s"
@@ -5669,6 +6383,9 @@ help:
 	@echo "... PlussMa/Stats/time_series/ts/modules/var/var_structural.o"
 	@echo "... PlussMa/Stats/time_series/ts/modules/var/var_structural.i"
 	@echo "... PlussMa/Stats/time_series/ts/modules/var/var_structural.s"
+	@echo "... PlussMa/Stats/time_series/ts/modules/vecm/vecm.o"
+	@echo "... PlussMa/Stats/time_series/ts/modules/vecm/vecm.i"
+	@echo "... PlussMa/Stats/time_series/ts/modules/vecm/vecm.s"
 .PHONY : help
 
 

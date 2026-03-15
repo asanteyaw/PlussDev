@@ -11,7 +11,7 @@ int main() {
   using pluss::Series;
   using pluss::subsp::math::diff::Trace;
 
-  const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
 
   Series w = pluss::make_series(std::vector<double>{0.25, 0.25}, {2}, cfg);
   Series b = pluss::make_series(std::vector<double>{-1.0}, {1}, cfg);

@@ -327,6 +327,9 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_autodiff_derivatives_demo examples/CodeM/autodiff_derivatives_demo.cpp)
   target_link_libraries(plussqit_codem_autodiff_derivatives_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_autodiff_minimal_demo examples/CodeM/autodiff_minimal_demo.cpp)
+  target_link_libraries(plussqit_codem_autodiff_minimal_demo PRIVATE PlussQit::CodeM)
+
   add_executable(plussqit_codem_mps_vs_cpu_demo examples/CodeM/mps_vs_cpu_demo.cpp)
   target_link_libraries(plussqit_codem_mps_vs_cpu_demo PRIVATE PlussQit::CodeM)
 
@@ -671,6 +674,10 @@ if (PLUSSQIT_BUILD_TESTS)
       tests/CodeM/test_patch159_cuda_linalg_batched_rank_contract.cpp
       tests/CodeM/test_patch160_cuda_linalg_expanded_contract.cpp
       tests/CodeM/test_patch161_cuda_matmul_rank_contract.cpp
+      tests/CodeM/test_patch162_cuda_counting_contract.cpp
+      tests/CodeM/test_patch163_cuda_selection_route_contract.cpp
+      tests/CodeM/test_patch164_cuda_factory_contract.cpp
+      tests/CodeM/test_patch165_cuda_stochastic_contract.cpp
     )
 
     add_executable(plussqit_codem_mps_selection_tests
@@ -914,14 +921,19 @@ if(PLUSSQIT_BUILD_CODEM)
     find_library(PLUSS_MPS_GRAPH_FRAMEWORK MetalPerformanceShadersGraph)
     find_library(PLUSS_FOUNDATION_FRAMEWORK Foundation)
     if(PLUSS_ACCELERATE_FRAMEWORK)
-      target_link_libraries(plussqit_codem PUBLIC ${PLUSS_ACCELERATE_FRAMEWORK})
+      # Export portable framework linkage instead of SDK-versioned absolute paths.
+      target_link_options(plussqit_codem PUBLIC "SHELL:-framework Accelerate")
       set(_pluss_has_accelerate 1)
       set(_pluss_has_accelerate_new_lapack 1)
     endif()
     if(PLUSS_METAL_FRAMEWORK AND PLUSS_MPS_FRAMEWORK AND PLUSS_FOUNDATION_FRAMEWORK)
-      target_link_libraries(plussqit_codem PUBLIC ${PLUSS_METAL_FRAMEWORK} ${PLUSS_MPS_FRAMEWORK} ${PLUSS_FOUNDATION_FRAMEWORK})
+      target_link_options(plussqit_codem PUBLIC
+        "SHELL:-framework Metal"
+        "SHELL:-framework MetalPerformanceShaders"
+        "SHELL:-framework Foundation"
+      )
       if(PLUSS_MPS_GRAPH_FRAMEWORK)
-        target_link_libraries(plussqit_codem PUBLIC ${PLUSS_MPS_GRAPH_FRAMEWORK})
+        target_link_options(plussqit_codem PUBLIC "SHELL:-framework MetalPerformanceShadersGraph")
       endif()
       set(_pluss_has_mps 1)
     endif()
