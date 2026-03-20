@@ -1,0 +1,26 @@
+# `FlowBundle`
+
+## Signature
+
+```cpp
+struct FlowBundle;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+Key public fields:
+- `bool trained = false`
+- `bool has_snapshot = false`
+
+## Example
+
+```cpp
+FlowBundle cfg{};
+// cfg.trained = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/io.h`:19

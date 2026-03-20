@@ -1,0 +1,82 @@
+# `labeled_batch_from_dataframe`
+
+## Signature
+
+```cpp
+StatusOr<LabeledBatch> labeled_batch_from_dataframe(const pluss::table::DataFrame& frame, const DataFrameBatchOptions& options);
+```
+
+## Parameters
+
+- `frame` : `const pluss::table::DataFrame&`
+  Input feature data used by this call.
+- `options` : `const DataFrameBatchOptions&`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `StatusOr<LabeledBatch>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Namespace-level API function.
+
+## See also
+
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_learn_map(const FeatureBatch& batch, const TrainOptions& learn_options, const InferOptions& infer_options);`
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_map(const FeatureBatch& batch, const InferOptions& options) const;`
+- `[[nodiscard]] Status check_ready_for_infer(const char* where) const;`
+- `StatusOr<FlowBundle> load(const std::string& path);`
+- `StatusOr<Flow> load_and_restore(const std::string& path);`
+
+## Parameter Reference
+
+- [frame](../params/param-global-labeled-batch-from-dataframe-ov1-frame-1.md)
+- [options](../params/param-global-labeled-batch-from-dataframe-ov1-options-2.md)
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_dataframe_bridge_demo.cpp`
+
+```cpp
+  DataFrameBatchOptions options{};
+  options.feature_names = {"x0", "x1", "category", "ts", "target", "weight"};
+  options.label_feature = "target";
+  options.sample_weight_feature = "weight";
+  options.note_policy = DataNotePolicy::Hash;
+  options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+
+  auto batch_or = labeled_batch_from_dataframe(frame, options);
+  if (!require_ok(batch_or, "labeled_batch_from_dataframe")) return 1;
+
+  const LabeledBatch& batch = batch_or.value();
+  std::cout << "adapted batch: samples=" << batch.features.sample_count()
+            << " features=" << batch.features.feature_count()
+            << " weighted=" << (batch.sample_weights.defined() ? "yes" : "no") << "\n";
+
+  ModelSpec spec{
+      .task = TaskKind::Regression,
+      .family = ModelFamily::Linear,
+      .options = LinearFamilyOptions{
+          .objective = LinearObjective::LeastSquares,
+          .regularization = RegularizationKind::L2,
+          .regularization_strength = 1e-8,
+          .fit_intercept = true,
+      },
+```
+
+**Output**
+
+```text
+NodeJ DataFrame bridge demo
+adapted batch: samples=6 features=4 weighted=yes
+linear metrics [mse, r2]: 9.43684e-08 1
+NodeJ DataFrame bridge demo completed.
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/data.h`:40

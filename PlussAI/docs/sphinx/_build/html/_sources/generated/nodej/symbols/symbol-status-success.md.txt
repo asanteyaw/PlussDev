@@ -1,0 +1,13 @@
+# `Status::success`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/status-success-ov1.md): `static Status Status::success(self);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/status.h`:24

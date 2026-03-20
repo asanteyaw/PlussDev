@@ -1,0 +1,13 @@
+# `neighbor_regressor`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-neighbor-regressor-ov1.md): `StatusOr<std::unique_ptr<nodej::RegressorBase>> neighbor_regressor( const nodej::LabeledBatch& train, const nodej::NeighborFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:232

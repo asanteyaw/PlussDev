@@ -1,0 +1,40 @@
+# `StandardScaler::StandardScaler`
+
+## Signature
+
+```cpp
+explicit StandardScaler(StandardScalerOptions options = {});
+```
+
+## Parameters
+
+- `options` : `StandardScalerOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns ``.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `StandardScaler& StandardScaler::features(self, std::initializer_list<std::string_view> names);`
+- `StandardScaler& StandardScaler::learn(self, const pluss::table::DataFrame& frame, const TrainOptions& options = {});`
+- `[[nodiscard]] pluss::table::DataFrame StandardScaler::learn_map(self, const pluss::table::DataFrame& frame, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {});`
+- `[[nodiscard]] bool StandardScaler::learned(self) const noexcept { return learned_; };`
+- `[[nodiscard]] pluss::table::DataFrame StandardScaler::map(self, const pluss::table::DataFrame& frame, const InferOptions& options = {}) const;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+StandardScaler standardScaler{};
+auto out = standardScaler.StandardScaler(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:126

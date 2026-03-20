@@ -56,9 +56,38 @@ const std::optional<pluss::Series>& Thread::validity_mask() const {
   return impl_ref_().validity_mask_;
 }
 
+bool Thread::has_display_labels() const {
+  return impl_ref_().display_labels_.has_value();
+}
+
+Thread Thread::display_labels() const {
+  const auto& src = impl_ref_();
+  PLUSS_CHECK(src.display_labels_.has_value(), "Thread::display_labels: labels are not set");
+  return Thread(*src.display_labels_);
+}
+
+Thread Thread::with_display_labels(const Thread& labels) const {
+  PLUSS_CHECK(labels.defined(), "Thread::with_display_labels: labels are undefined");
+  PLUSS_CHECK(labels.size() == size(), "Thread::with_display_labels: labels length mismatch");
+
+  std::vector<std::string> values;
+  values.reserve(static_cast<std::size_t>(size()));
+  for (std::int64_t i = 0; i < size(); ++i) {
+    values.push_back(thread_scalar_string_at(labels, i));
+  }
+
+  const auto& src = impl_ref_();
+  return Thread(build_impl(src.payload_, src.validity_mask_, make_utf8_note(values)));
+}
+
+Thread Thread::clear_display_labels() const {
+  const auto& src = impl_ref_();
+  return Thread(build_impl(src.payload_, src.validity_mask_, std::nullopt));
+}
+
 Thread Thread::with_validity_mask(const pluss::Series& validity_mask) const {
   const auto& src = impl_ref_();
-  return Thread(build_impl(src.payload_, validity_mask));
+  return Thread(build_impl(src.payload_, validity_mask, src.display_labels_));
 }
 
 Thread& Thread::with_validity_mask_(const pluss::Series& validity_mask) {
@@ -70,7 +99,7 @@ Thread& Thread::with_validity_mask_(const pluss::Series& validity_mask) {
 
 Thread Thread::clear_validity_mask() const {
   const auto& src = impl_ref_();
-  return Thread(build_impl(src.payload_, std::nullopt));
+  return Thread(build_impl(src.payload_, std::nullopt, src.display_labels_));
 }
 
 Thread& Thread::clear_validity_mask_() {
@@ -79,38 +108,38 @@ Thread& Thread::clear_validity_mask_() {
   return *this;
 }
 
-pluss::Series Thread::isnull() const {
+Thread Thread::isnull() const {
   const auto& src = impl_ref_();
   if (!src.validity_mask_.has_value()) {
-    return bool_series_zeros(src.size_);
+    return Thread(bool_series_zeros(src.size_));
   }
-  return src.validity_mask_->logical_not();
+  return Thread(src.validity_mask_->logical_not());
 }
 
-pluss::Series Thread::notnull() const {
+Thread Thread::notnull() const {
   if (!has_validity_mask()) {
     auto out = pluss::Series::zeros({size()}, pluss::codem::ScalarType::Bool);
     auto* p = reinterpret_cast<bool*>(out.raw_data());
     for (std::int64_t i = 0; i < size(); ++i) {
       p[i] = true;
     }
-    return out;
+    return Thread(out);
   }
-  return *validity_mask();
+  return Thread(*validity_mask());
 }
 
-pluss::Series Thread::isnan() const {
+Thread Thread::isnan() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::isnan is only valid for Series payload");
-  return as_series().isnan();
+  return Thread(as_series().isnan());
 }
 
-pluss::Series Thread::isfinite() const {
+Thread Thread::isfinite() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::isfinite is only valid for Series payload");
   auto finite = as_series().isfinite();
   if (has_validity_mask()) {
-    finite = finite.logical_and(*validity_mask());
+    finite = finite.logical_and(notnull().as_series());
   }
-  return finite;
+  return Thread(finite);
 }
 
 Thread Thread::fillna(double value) const {
@@ -336,7 +365,12 @@ Thread Thread::take(std::span<const std::int64_t> indices) const {
     out_mask = src.validity_mask_->take(idx_series);
   }
 
-  return Thread(build_impl(std::move(out_payload), std::move(out_mask)));
+  std::optional<pluss::Note> out_display_labels = std::nullopt;
+  if (src.display_labels_.has_value()) {
+    out_display_labels = make_utf8_note(note_take_strings(*src.display_labels_, indices, src.size_));
+  }
+
+  return Thread(build_impl(std::move(out_payload), std::move(out_mask), std::move(out_display_labels)));
 }
 
 Thread Thread::filter(const pluss::Series& bool_mask) const {
@@ -363,6 +397,154 @@ Thread Thread::dropna() const {
   return out;
 }
 
+Thread Thread::sort_values(bool ascending, bool nulls_last) const {
+  if (size() <= 1) {
+    return *this;
+  }
+
+  if (kind() == ThreadKind::Series && is_numeric_series_type(as_series())) {
+    const auto values = as_series();
+
+    if (!has_validity_mask()) {
+      const auto order = values.argsort(/*dim=*/0, /*descending=*/!ascending, /*stable=*/true)
+                             .to_vec<std::int64_t>();
+      return take(order);
+    }
+
+    const auto valid = validity_mask()->to_vec<bool>();
+    std::vector<std::int64_t> valid_idx;
+    std::vector<std::int64_t> null_idx;
+    valid_idx.reserve(static_cast<std::size_t>(size()));
+    null_idx.reserve(static_cast<std::size_t>(size()));
+    for (std::int64_t i = 0; i < size(); ++i) {
+      if (valid[static_cast<std::size_t>(i)]) {
+        valid_idx.push_back(i);
+      } else {
+        null_idx.push_back(i);
+      }
+    }
+
+    std::vector<std::int64_t> sorted_valid_global_idx;
+    sorted_valid_global_idx.reserve(valid_idx.size());
+    if (!valid_idx.empty()) {
+      const auto valid_order_local = values.take(int64_index_series(valid_idx))
+                                         .argsort(/*dim=*/0, /*descending=*/!ascending, /*stable=*/true)
+                                         .to_vec<std::int64_t>();
+      for (const auto local_idx : valid_order_local) {
+        sorted_valid_global_idx.push_back(valid_idx[static_cast<std::size_t>(local_idx)]);
+      }
+    }
+
+    std::vector<std::int64_t> order;
+    order.reserve(static_cast<std::size_t>(size()));
+    if (nulls_last) {
+      order.insert(order.end(), sorted_valid_global_idx.begin(), sorted_valid_global_idx.end());
+      order.insert(order.end(), null_idx.begin(), null_idx.end());
+    } else {
+      order.insert(order.end(), null_idx.begin(), null_idx.end());
+      order.insert(order.end(), sorted_valid_global_idx.begin(), sorted_valid_global_idx.end());
+    }
+
+    return take(order);
+  }
+
+  if (kind() == ThreadKind::Timeline || kind() == ThreadKind::TimeIndex) {
+    const auto ticks = (kind() == ThreadKind::Timeline)
+        ? as_timeline().to_epoch_nanos_vector()
+        : as_timeindex().timeline().to_epoch_nanos_vector();
+    std::optional<std::vector<bool>> valid = std::nullopt;
+    if (has_validity_mask()) {
+      valid = validity_mask()->to_vec<bool>();
+    }
+
+    std::vector<std::int64_t> indices(static_cast<std::size_t>(size()));
+    std::iota(indices.begin(), indices.end(), static_cast<std::int64_t>(0));
+
+    std::stable_sort(indices.begin(), indices.end(), [&](std::int64_t lhs, std::int64_t rhs) {
+      if (valid.has_value()) {
+        const bool lv = (*valid)[static_cast<std::size_t>(lhs)];
+        const bool rv = (*valid)[static_cast<std::size_t>(rhs)];
+        if (lv != rv) {
+          return nulls_last ? lv : !lv;
+        }
+      }
+
+      const auto lt = ticks[static_cast<std::size_t>(lhs)];
+      const auto rt = ticks[static_cast<std::size_t>(rhs)];
+      if (lt == rt) {
+        return false;
+      }
+      return ascending ? (lt < rt) : (lt > rt);
+    });
+
+    return take(indices);
+  }
+
+  if (kind() == ThreadKind::Note || (kind() == ThreadKind::Series && !is_numeric_series_type(as_series()))) {
+    std::vector<std::string> keys;
+    keys.reserve(static_cast<std::size_t>(size()));
+    if (kind() == ThreadKind::Note) {
+      const auto& note = as_note();
+      for (std::int64_t i = 0; i < size(); ++i) {
+        keys.emplace_back(note.at(i));
+      }
+    } else {
+      for (std::int64_t i = 0; i < size(); ++i) {
+        keys.emplace_back(thread_scalar_string_at(*this, i));
+      }
+    }
+
+    std::optional<std::vector<bool>> valid = std::nullopt;
+    if (has_validity_mask()) {
+      valid = validity_mask()->to_vec<bool>();
+    }
+
+    std::vector<std::int64_t> indices(static_cast<std::size_t>(size()));
+    std::iota(indices.begin(), indices.end(), static_cast<std::int64_t>(0));
+
+    std::stable_sort(indices.begin(), indices.end(), [&](std::int64_t lhs, std::int64_t rhs) {
+      if (valid.has_value()) {
+        const bool lv = (*valid)[static_cast<std::size_t>(lhs)];
+        const bool rv = (*valid)[static_cast<std::size_t>(rhs)];
+        if (lv != rv) {
+          return nulls_last ? lv : !lv;
+        }
+      }
+
+      const auto& lk = keys[static_cast<std::size_t>(lhs)];
+      const auto& rk = keys[static_cast<std::size_t>(rhs)];
+      if (lk == rk) {
+        return false;
+      }
+      return ascending ? (lk < rk) : (lk > rk);
+    });
+
+    return take(indices);
+  }
+
+  std::vector<std::int64_t> indices(static_cast<std::size_t>(size()));
+  std::iota(indices.begin(), indices.end(), static_cast<std::int64_t>(0));
+
+  std::stable_sort(indices.begin(), indices.end(), [&](std::int64_t lhs, std::int64_t rhs) {
+    const auto lhs_valid = is_valid(lhs);
+    const auto rhs_valid = is_valid(rhs);
+    if (lhs_valid != rhs_valid) {
+      if (nulls_last) {
+        return lhs_valid;
+      }
+      return !lhs_valid;
+    }
+
+    const auto cmp = compare_rows(lhs, rhs, nulls_last);
+    if (cmp == 0) {
+      return false;
+    }
+    return ascending ? (cmp < 0) : (cmp > 0);
+  });
+
+  return take(indices);
+}
+
 Thread Thread::ffill() const {
   return forward_fill_thread(*this);
 }
@@ -371,21 +553,252 @@ Thread Thread::bfill() const {
   return backward_fill_thread(*this);
 }
 
+Thread Thread::bucketize(std::initializer_list<double> bins,
+                         std::initializer_list<std::int64_t> labels,
+                         bool right,
+                         bool include_lowest) const {
+  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::bucketize is only valid for Series payload");
+  PLUSS_CHECK(is_numeric_series_type(as_series()),
+              "Thread::bucketize is only valid for numeric Series payload");
+
+  std::vector<double> edges(bins.begin(), bins.end());
+  PLUSS_CHECK(edges.size() >= 2, "Thread::bucketize: bins must contain at least two edges");
+  for (std::size_t i = 0; i < edges.size(); ++i) {
+    PLUSS_CHECK(!std::isnan(edges[i]),
+                "Thread::bucketize: bin edges must not be NaN");
+    if (i > 0) {
+      PLUSS_CHECK(edges[i] > edges[i - 1],
+                  "Thread::bucketize: bin edges must be strictly increasing");
+    }
+  }
+
+  const auto bucket_count = static_cast<std::int64_t>(edges.size() - 1);
+  std::vector<std::int64_t> label_values;
+  if (labels.size() == 0) {
+    label_values.resize(static_cast<std::size_t>(bucket_count));
+    std::iota(label_values.begin(), label_values.end(), static_cast<std::int64_t>(0));
+  } else {
+    PLUSS_CHECK(static_cast<std::int64_t>(labels.size()) == bucket_count,
+                "Thread::bucketize: labels size must equal bins.size() - 1");
+    label_values.assign(labels.begin(), labels.end());
+  }
+
+  auto x = as_series().to(pluss::codem::ScalarType::Float64);
+  const auto platform = x.platform();
+  auto out = pluss::Series::full({x.numel()},
+                                 static_cast<double>(label_values.front()),
+                                 pluss::codem::ScalarType::Int64).to(platform);
+  auto assigned = pluss::Series::zeros({x.numel()}, pluss::codem::ScalarType::Bool).to(platform);
+
+  pluss::Series base_valid;
+  if (has_validity_mask()) {
+    base_valid = notnull().as_series();
+    if (base_valid.platform() != platform) {
+      base_valid = base_valid.to(platform);
+    }
+  } else {
+    base_valid = pluss::Series::ones({x.numel()}, pluss::codem::ScalarType::Bool).to(platform);
+  }
+
+  for (std::int64_t i = 0; i < bucket_count; ++i) {
+    const double left = edges[static_cast<std::size_t>(i)];
+    const double right_edge = edges[static_cast<std::size_t>(i + 1)];
+
+    pluss::Series lower;
+    if (right) {
+      lower = (i == 0 && include_lowest) ? x.ge(left) : x.gt(left);
+    } else {
+      lower = x.ge(left);
+    }
+    const auto upper = right ? x.le(right_edge) : x.lt(right_edge);
+    auto mask = lower.logical_and(upper).logical_and(base_valid);
+
+    out = out.where(mask, static_cast<double>(label_values[static_cast<std::size_t>(i)]));
+    assigned = assigned.logical_or(mask);
+  }
+
+  const auto assigned_count = assigned.count().to(pluss::codem::Platform::CPU).item<std::int64_t>();
+  if (assigned_count == x.numel()) {
+    return Thread(out);
+  }
+  return Thread(out, assigned);
+}
+
+Thread Thread::distinct(bool dropna) const {
+  std::vector<std::int64_t> keep_indices;
+  keep_indices.reserve(static_cast<std::size_t>(size()));
+
+  std::unordered_set<std::string> seen;
+  seen.reserve(static_cast<std::size_t>(size()));
+  bool null_emitted = false;
+
+  std::optional<std::vector<bool>> valid;
+  if (has_validity_mask()) {
+    valid = validity_mask()->to_vec<bool>();
+  }
+
+  for (std::int64_t i = 0; i < size(); ++i) {
+    const bool is_valid = !valid.has_value() || (*valid)[static_cast<std::size_t>(i)];
+    if (!is_valid) {
+      if (!dropna && !null_emitted) {
+        keep_indices.push_back(i);
+        null_emitted = true;
+      }
+      continue;
+    }
+
+    const auto key = thread_scalar_string_at(*this, i);
+    if (seen.insert(key).second) {
+      keep_indices.push_back(i);
+    }
+  }
+
+  return take(keep_indices);
+}
+
+DataFrameView Thread::tally(std::int64_t top_n, bool dropna, bool render) const {
+  PLUSS_CHECK(top_n >= 0, "Thread::tally: top_n must be >= 0");
+
+  struct TallyRow {
+    std::string key;
+    std::int64_t count{0};
+  };
+
+  std::vector<TallyRow> rows;
+  rows.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, size() / 8)));
+  std::unordered_map<std::string, std::size_t> index_by_key;
+  index_by_key.reserve(rows.capacity());
+
+  std::optional<std::vector<bool>> valid;
+  if (has_validity_mask()) {
+    valid = validity_mask()->to_vec<bool>();
+  }
+
+  for (std::int64_t i = 0; i < size(); ++i) {
+    const bool is_valid = !valid.has_value() || (*valid)[static_cast<std::size_t>(i)];
+    if (!is_valid && dropna) {
+      continue;
+    }
+    const std::string key = is_valid ? thread_scalar_string_at(*this, i) : "NA";
+    const auto [it, inserted] = index_by_key.emplace(key, rows.size());
+    if (inserted) {
+      rows.push_back(TallyRow{key, 1});
+    } else {
+      rows[it->second].count += 1;
+    }
+  }
+
+  std::sort(rows.begin(), rows.end(), [](const TallyRow& lhs, const TallyRow& rhs) {
+    if (lhs.count != rhs.count) {
+      return lhs.count > rhs.count;
+    }
+    return lhs.key < rhs.key;
+  });
+  if (top_n > 0 && static_cast<std::size_t>(top_n) < rows.size()) {
+    rows.resize(static_cast<std::size_t>(top_n));
+  }
+
+  std::vector<std::string> labels;
+  labels.reserve(rows.size());
+  std::vector<std::int64_t> counts;
+  counts.reserve(rows.size());
+  for (const auto& row : rows) {
+    labels.push_back(row.key);
+    counts.push_back(row.count);
+  }
+
+  std::vector<std::string_view> label_views;
+  label_views.reserve(labels.size());
+  for (const auto& value : labels) {
+    label_views.push_back(value);
+  }
+  const std::array<std::int64_t, 1> label_shape{static_cast<std::int64_t>(label_views.size())};
+  auto keys_note = pluss::coden::ops_internal::note_from_utf8(
+      std::span<const std::string_view>(label_views.data(), label_views.size()),
+      std::span<const std::int64_t>(label_shape.data(), label_shape.size()));
+
+  auto count_series = pluss::Series::empty({static_cast<std::int64_t>(counts.size())},
+                                           pluss::codem::ScalarType::Int64);
+  if (!counts.empty()) {
+    std::memcpy(count_series.raw_data(), counts.data(), counts.size() * sizeof(std::int64_t));
+  }
+
+  auto out = DataFrame({
+      {"value", Thread(keys_note)},
+      {"count", Thread(count_series)},
+  });
+  return DataFrameView(std::move(out), render, "tally", "");
+}
+
 pluss::Series Thread::sum() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::sum is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
-    s = s.masked_select(*validity_mask());
+    s = s.masked_select(notnull().as_series());
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::sum on an empty (all-null) selection");
   return s.sum();
+}
+
+pluss::Series Thread::count(bool count_true) const {
+  if (kind() == ThreadKind::Series) {
+    auto s = as_series();
+    if (has_validity_mask()) {
+      s = s.masked_select(notnull().as_series());
+    }
+    return s.count(count_true);
+  }
+
+  PLUSS_CHECK(count_true, "Thread::count(false) is only valid for Bool Series payload");
+  std::int64_t total = size();
+  if (has_validity_mask()) {
+    const auto valid = notnull().as_series().to_vec<bool>();
+    total = static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
+  }
+  auto out = pluss::Series::empty({1}, pluss::codem::ScalarType::Int64);
+  reinterpret_cast<std::int64_t*>(out.raw_data())[0] = total;
+  return out;
+}
+
+pluss::Series Thread::any(bool skipna) const {
+  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::any is only valid for Series payload");
+  auto s = as_series();
+  PLUSS_CHECK(s.scalar_type() == pluss::codem::ScalarType::Bool,
+              "Thread::any is only valid for Bool Series payload");
+
+  if (has_validity_mask()) {
+    PLUSS_CHECK(skipna,
+                "Thread::any(skipna=false) is not supported for nullable Bool Series payload");
+    const auto valid = notnull().as_series();
+    s = s.logical_and(valid);
+  }
+
+  const auto true_count = s.count(true).item<std::int64_t>();
+  return bool_series_from_bools({true_count > 0});
+}
+
+pluss::Series Thread::all(bool skipna) const {
+  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::all is only valid for Series payload");
+  auto s = as_series();
+  PLUSS_CHECK(s.scalar_type() == pluss::codem::ScalarType::Bool,
+              "Thread::all is only valid for Bool Series payload");
+
+  if (has_validity_mask()) {
+    PLUSS_CHECK(skipna,
+                "Thread::all(skipna=false) is not supported for nullable Bool Series payload");
+    const auto valid = notnull().as_series();
+    s = s.logical_or(valid.logical_not());
+  }
+
+  const auto true_count = s.count(true).item<std::int64_t>();
+  return bool_series_from_bools({true_count == s.numel()});
 }
 
 pluss::Series Thread::mean() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::mean is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
-    s = s.masked_select(*validity_mask());
+    s = s.masked_select(notnull().as_series());
   }
   if (is_numeric_series_type(s)) {
     s = s.to(pluss::codem::ScalarType::Float64);
@@ -394,11 +807,24 @@ pluss::Series Thread::mean() const {
   return s.mean();
 }
 
+pluss::Series Thread::median() const {
+  PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::median is only valid for Series payload");
+  auto s = as_series();
+  if (has_validity_mask()) {
+    s = s.masked_select(notnull().as_series());
+  }
+  if (is_numeric_series_type(s)) {
+    s = s.to(pluss::codem::ScalarType::Float64);
+  }
+  PLUSS_CHECK(s.numel() > 0, "Thread::median on an empty (all-null) selection");
+  return s.median();
+}
+
 pluss::Series Thread::min() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::min is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
-    s = s.masked_select(*validity_mask());
+    s = s.masked_select(notnull().as_series());
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::min on an empty (all-null) selection");
   return s.min();
@@ -408,7 +834,7 @@ pluss::Series Thread::max() const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::max is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
-    s = s.masked_select(*validity_mask());
+    s = s.masked_select(notnull().as_series());
   }
   PLUSS_CHECK(s.numel() > 0, "Thread::max on an empty (all-null) selection");
   return s.max();
@@ -418,7 +844,7 @@ pluss::Series Thread::var(bool unbiased) const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::var is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
-    s = s.masked_select(*validity_mask());
+    s = s.masked_select(notnull().as_series());
   }
   if (is_numeric_series_type(s)) {
     s = s.to(pluss::codem::ScalarType::Float64);
@@ -431,7 +857,7 @@ pluss::Series Thread::std(bool unbiased) const {
   PLUSS_CHECK(kind() == ThreadKind::Series, "Thread::std is only valid for Series payload");
   auto s = as_series();
   if (has_validity_mask()) {
-    s = s.masked_select(*validity_mask());
+    s = s.masked_select(notnull().as_series());
   }
   if (is_numeric_series_type(s)) {
     s = s.to(pluss::codem::ScalarType::Float64);
@@ -452,27 +878,67 @@ double Thread::corr(const Thread& other, ThreadCorrMethod method) const {
 
   auto valid = lhs.isfinite().logical_and(rhs.isfinite());
   if (has_validity_mask()) {
-    valid = valid.logical_and(*validity_mask());
+    valid = valid.logical_and(notnull().as_series());
   }
   if (other.has_validity_mask()) {
-    valid = valid.logical_and(*other.validity_mask());
+    valid = valid.logical_and(other.notnull().as_series());
   }
 
-  const auto x = lhs.masked_select(valid).to_vec<double>();
-  const auto y = rhs.masked_select(valid).to_vec<double>();
+  const auto lhs_valid = lhs.masked_select(valid);
+  const auto rhs_valid = rhs.masked_select(valid);
+  if (lhs_valid.numel() < 2 || rhs_valid.numel() < 2 || lhs_valid.numel() != rhs_valid.numel()) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
 
   switch (method) {
-    case ThreadCorrMethod::Pearson:
-      return pearson_corr_from_vectors_(x, y);
+    case ThreadCorrMethod::Pearson: {
+      // Vectorized Pearson path: keep heavy math in Series kernels.
+      const auto mean_l = lhs_valid.mean().item<double>();
+      const auto mean_r = rhs_valid.mean().item<double>();
+      const auto dl = lhs_valid - mean_l;
+      const auto dr = rhs_valid - mean_r;
+      const auto sxy = (dl * dr).sum().item<double>();
+      const auto sxx = (dl * dl).sum().item<double>();
+      const auto syy = (dr * dr).sum().item<double>();
+
+      if (!(sxx > 0.0) || !(syy > 0.0)) {
+        return std::numeric_limits<double>::quiet_NaN();
+      }
+      const double corr = sxy / std::sqrt(sxx * syy);
+      if (!std::isfinite(corr)) {
+        return std::numeric_limits<double>::quiet_NaN();
+      }
+      return std::clamp(corr, -1.0, 1.0);
+    }
     case ThreadCorrMethod::Spearman: {
+      const auto x = lhs_valid.to_vec<double>();
+      const auto y = rhs_valid.to_vec<double>();
       const auto rx = rank_average_ties_(x);
       const auto ry = rank_average_ties_(y);
       return pearson_corr_from_vectors_(rx, ry);
     }
-    case ThreadCorrMethod::KendallTau:
+    case ThreadCorrMethod::KendallTau: {
+      const auto x = lhs_valid.to_vec<double>();
+      const auto y = rhs_valid.to_vec<double>();
       return kendall_tau_b_from_vectors_(x, y);
-    default:
-      return pearson_corr_from_vectors_(x, y);
+    }
+    default: {
+      const auto mean_l = lhs_valid.mean().item<double>();
+      const auto mean_r = rhs_valid.mean().item<double>();
+      const auto dl = lhs_valid - mean_l;
+      const auto dr = rhs_valid - mean_r;
+      const auto sxy = (dl * dr).sum().item<double>();
+      const auto sxx = (dl * dl).sum().item<double>();
+      const auto syy = (dr * dr).sum().item<double>();
+      if (!(sxx > 0.0) || !(syy > 0.0)) {
+        return std::numeric_limits<double>::quiet_NaN();
+      }
+      const double corr = sxy / std::sqrt(sxx * syy);
+      if (!std::isfinite(corr)) {
+        return std::numeric_limits<double>::quiet_NaN();
+      }
+      return std::clamp(corr, -1.0, 1.0);
+    }
   }
 }
 

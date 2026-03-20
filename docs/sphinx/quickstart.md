@@ -23,6 +23,7 @@ cmake --build --preset core-dev
 ./build/PlussQit/plussqit_dispense_demo
 ./build/PlussQit/plussqit_codem_transmit_demo
 ./build/PlussQit/plussqit_codem_aux_let_transmit_demo
+./build/PlussQit/plussqit_codem_output_engine_demo
 ./build/PlussQit/plussqit_codem_suppose_demo
 ./build/PlussQit/plussqit_translate_demo
 ./build/PlussQit/plussqit_codem_autograd_optim_demo

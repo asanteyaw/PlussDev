@@ -1,0 +1,13 @@
+# `save`
+
+## Notes
+
+Persists the current fitted artifact so it can be loaded for inference later.
+
+## Overloads
+
+- [overload 1](../api/global-save-ov1.md): `Status save(const std::string& path, const Flow& flow, const LabeledBatch& train_batch, const TrainOptions& train_options = {}, FlowBundleMetadata metadata = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/io.h`:31

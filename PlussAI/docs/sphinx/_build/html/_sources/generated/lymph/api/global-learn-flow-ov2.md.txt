@@ -1,0 +1,45 @@
+# `learn_flow (overload 2)`
+
+## Signature
+
+```cpp
+StatusOr<nodej::Flow> learn_flow( nodej::Flow flow, const pluss::table::DataFrame& frame, const nodej::DataFrameBatchOptions& data_options, const nodej::TrainOptions& options = {});
+```
+
+## Parameters
+
+- `flow` : `nodej::Flow`
+  Method argument; see signature type for accepted form.
+- `frame` : `const pluss::table::DataFrame&`
+  Input feature data used by this call.
+- `data_options` : `const nodej::DataFrameBatchOptions&`
+  Input feature data used by this call.
+- `options` : `const nodej::TrainOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `StatusOr<nodej::Flow>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## See also
+
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `StatusOr<nodej::CrossAssessReport> assess_cv( const nodej::ModelSpec& spec, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {});`
+- `StatusOr<std::unique_ptr<nodej::ClassifierBase>> bayes_classifier( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+- `StatusOr<std::unique_ptr<nodej::RegressorBase>> bayes_regressor( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = learn_flow(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/quick.h`:69

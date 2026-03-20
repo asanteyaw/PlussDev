@@ -1,0 +1,13 @@
+# `Workflow::dump_model_state`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/workflow-dump-model-state-ov1.md): `[[nodiscard]] std::vector<Series> Workflow::dump_model_state(self) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:1579

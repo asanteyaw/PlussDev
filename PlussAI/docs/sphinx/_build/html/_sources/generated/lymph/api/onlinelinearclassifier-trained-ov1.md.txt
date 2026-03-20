@@ -1,0 +1,40 @@
+# `OnlineLinearClassifier::trained`
+
+## Signature
+
+```cpp
+[[nodiscard]] bool OnlineLinearClassifier::trained(self) const noexcept;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+
+## Returns
+
+Returns `bool`.
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## See also
+
+- `[[nodiscard]] ::pluss::ai::nodej::online::OnlineLinearClassifier& OnlineLinearClassifier::core(self) noexcept;`
+- `[[nodiscard]] const ::pluss::ai::nodej::online::OnlineLinearClassifier& OnlineLinearClassifier::core(self) const noexcept;`
+- `explicit OnlineLinearClassifier(::pluss::ai::nodej::online::OnlineLinearClassifier core) : core_(std::move(core));`
+- `[[nodiscard]] std::int64_t OnlineLinearClassifier::seen_samples(self) const noexcept;`
+- `[[nodiscard]] bool OnlineLinearRegressor::trained(self) const noexcept;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+OnlineLinearClassifier onlineLinearClassifier{};
+auto out = onlineLinearClassifier.trained(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2282

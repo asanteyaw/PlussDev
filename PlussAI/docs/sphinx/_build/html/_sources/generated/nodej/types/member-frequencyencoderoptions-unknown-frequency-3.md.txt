@@ -1,0 +1,22 @@
+# `FrequencyEncoderOptions::unknown_frequency`
+
+## Signature
+
+```cpp
+FrequencyEncoderOptions::double unknown_frequency = 0.0;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+FrequencyEncoderOptions cfg{};
+// cfg.unknown_frequency = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:57

@@ -1,0 +1,21 @@
+# `WorkflowModel::WorkflowModel::arg1`
+
+## Parent Signature
+
+```cpp
+explicit WorkflowModel(Workflow workflow) : workflow_(std::move(workflow));
+```
+
+## Parameter
+
+- `arg1` : `Workflow workflow) : workflow_(std::move(workflow)`
+  Method argument; see signature type for accepted form.
+
+## Notes
+
+Instance method on `self`.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:548

@@ -1,0 +1,22 @@
+# `TuneReport::objective_policy`
+
+## Signature
+
+```cpp
+TuneReport::TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+TuneReport cfg{};
+// cfg.objective_policy = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2599

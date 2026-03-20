@@ -1,0 +1,22 @@
+# `IterativeImputerOptions::rounds`
+
+## Signature
+
+```cpp
+IterativeImputerOptions::std::int64_t rounds = 8;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+IterativeImputerOptions cfg{};
+// cfg.rounds = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:75

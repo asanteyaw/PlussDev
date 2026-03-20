@@ -1,0 +1,21 @@
+# `StandardScalerOptions`
+
+## Signature
+
+```cpp
+using StandardScalerOptions = ::pluss::ai::nodej::prep::StandardScalerOptions;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+StandardScalerOptions value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:40

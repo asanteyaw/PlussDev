@@ -1,0 +1,27 @@
+# `FrequencyEncoderOptions`
+
+## Signature
+
+```cpp
+struct FrequencyEncoderOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `std::int64_t max_categories = 50`
+- `CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent`
+- `double unknown_frequency = 0.0`
+
+## Example
+
+```cpp
+FrequencyEncoderOptions cfg{};
+// cfg.max_categories = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:57

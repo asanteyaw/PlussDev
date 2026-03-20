@@ -1,0 +1,22 @@
+# `PolynomialLiftOptions::include_bias`
+
+## Signature
+
+```cpp
+PolynomialLiftOptions::bool include_bias = false;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+PolynomialLiftOptions cfg{};
+// cfg.include_bias = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:127

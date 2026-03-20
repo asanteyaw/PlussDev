@@ -1,0 +1,31 @@
+# `PowerMapOptions`
+
+## Signature
+
+```cpp
+struct PowerMapOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `PowerMapMode mode = PowerMapMode::YeoJohnson`
+- `bool standardize = true`
+- `std::optional<double> lambda = std::nullopt`
+- `double lambda_min = -5.0`
+- `double lambda_max = 5.0`
+- `std::int64_t lambda_grid = 201`
+- `double variance_floor = 1e-12`
+
+## Example
+
+```cpp
+PowerMapOptions cfg{};
+// cfg.mode = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:111

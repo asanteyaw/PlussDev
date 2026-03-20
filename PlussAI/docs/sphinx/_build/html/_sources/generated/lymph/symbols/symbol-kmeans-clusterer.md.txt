@@ -1,0 +1,13 @@
+# `kmeans_clusterer`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-kmeans-clusterer-ov1.md): `StatusOr<std::unique_ptr<nodej::TransformerBase>> kmeans_clusterer( const nodej::FeatureBatch& train, std::int64_t clusters = 8, std::int64_t restarts = 4, std::int64_t max_iterations = 300, double tolerance = 1e-4, const nodej::TrainOptions& options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:259

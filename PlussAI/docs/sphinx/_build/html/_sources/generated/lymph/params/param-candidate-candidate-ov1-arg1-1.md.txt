@@ -1,0 +1,21 @@
+# `Candidate::Candidate::arg1`
+
+## Parent Signature
+
+```cpp
+Candidate(std::string in_name, Workflow in_workflow) : name(std::move(in_name)), workflow(std::move(in_workflow));
+```
+
+## Parameter
+
+- `arg1` : `std::move(in_name))`
+  Method argument; see signature type for accepted form.
+
+## Notes
+
+Instance method on `self`.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2585

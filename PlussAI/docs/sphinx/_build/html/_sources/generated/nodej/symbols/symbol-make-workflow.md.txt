@@ -1,0 +1,13 @@
+# `make_workflow`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-make-workflow-ov1.md): `[[nodiscard]] inline StatusOr<Workflow> make_workflow(const ModelSpec& spec);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/compose.h`:140

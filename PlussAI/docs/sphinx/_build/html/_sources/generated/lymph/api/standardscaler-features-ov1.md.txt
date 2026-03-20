@@ -1,0 +1,133 @@
+# `StandardScaler::features`
+
+## Signature
+
+```cpp
+StandardScaler& StandardScaler::features(self, std::initializer_list<std::string_view> names);
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `names` : `std::initializer_list<std::string_view>`
+  List-like argument; pass values in the order expected by the signature.
+
+## Returns
+
+Returns `StandardScaler&`.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `SimpleImputer& SimpleImputer::features(self, std::initializer_list<std::string_view> names);`
+- `[[nodiscard]] bool StandardScaler::learned(self) const noexcept;`
+- `[[nodiscard]] StandardScalerSummary StandardScaler::summary(self) const;`
+
+## Parameter Reference
+
+- [names](../params/param-standardscaler-features-ov1-names-2.md)
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/core/bike_sharing_end_to_end.cpp`
+
+```cpp
+        .save_pdf((out_dir / "bike_demand_vs_temp.pdf").string());
+
+    const auto split = lymph::holdout_split(frame, lymph::HoldoutSplitOptions{
+                                                     .test_size = 0.2,
+                                                     .random_state = 42,
+                                                     .deterministic = true,
+                                                     .shuffle = true,
+                                                 });
+    const DataFrame train_x = split.train_set.features(
+        {"season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday", "weather_condition", "temp", "atemp", "humidity", "windspeed"});
+    const DataFrame test_x = split.test_set.features(
+        {"season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday", "weather_condition", "temp", "atemp", "humidity", "windspeed"});
+    const Series train_y = split.train_set.features("total_count").as_series();
+    const Series test_y = split.test_set.features("total_count").as_series();
+
+    TrainOptions train_options{};
+    train_options.max_iterations = 2500;
+    train_options.tolerance = 1e-8;
+    train_options.random.seed = 7;
+    train_options.random.deterministic = true;
+
+    AssessOptions assess_options{};
+    assess_options.metrics = {MetricKind::Rmse, MetricKind::R2, MetricKind::Mae};
+
+    auto linear_workflow = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
+```
+
+### Example 2
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+          "season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday",
+          "weather_condition", "temp", "atemp", "humidity", "windspeed", "casual", "registered",
+          "total_count",
+      },
+      ScalarType::Float64);
+
+  //========== feature engineering ========
+  // This section creates interaction and nonlinear terms directly on DataFrame columns.
+  const Series s_temp = frame.features("temp").as_series();
+  const Series s_atemp = frame.features("atemp").as_series();
+  const Series s_humidity = frame.features("humidity").as_series();
+  const Series s_windspeed = frame.features("windspeed").as_series();
+  const Series s_hour = frame.features("hour").as_series();
+  const Series s_month = frame.features("month").as_series();
+  const Series s_weather = frame.features("weather_condition").as_series();
+
+  frame = frame.set_features("temp_sq", Thread(s_temp.square()));
+  frame = frame.set_features("atemp_sq", Thread(s_atemp.square()));
+  frame = frame.set_features("humidity_sq", Thread(s_humidity.square()));
+  frame = frame.set_features("windspeed_sq", Thread(s_windspeed.square()));
+  frame = frame.set_features("temp_humidity_interaction", Thread(s_temp.mul(s_humidity)));
+  frame = frame.set_features("temp_windspeed_interaction", Thread(s_temp.mul(s_windspeed)));
+  frame = frame.set_features("atemp_humidity_interaction", Thread(s_atemp.mul(s_humidity)));
+  frame = frame.set_features("atemp_windspeed_interaction", Thread(s_atemp.mul(s_windspeed)));
+  frame = frame.set_features("temp_minus_atemp", Thread(s_temp.sub(s_atemp)));
+```
+
+### Example 3
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_workflow_tuning_demo.cpp`
+
+```cpp
+    const auto split = nja::holdout_split(frame, nja::HoldoutSplitOptions{
+                                                     .test_size = 0.2,
+                                                     .random_state = 42,
+                                                     .deterministic = true,
+                                                     .shuffle = true,
+                                                 });
+    const DataFrame train_x = split.train_set.features(
+        {"season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday", "weather_condition", "temp", "atemp", "humidity", "windspeed"});
+    const DataFrame test_x = split.test_set.features(
+        {"season", "year", "month", "hour", "is_holiday", "weekday", "is_workingday", "weather_condition", "temp", "atemp", "humidity", "windspeed"});
+    const Series train_y = split.train_set.features("total_count").as_series();
+    const Series test_y = split.test_set.features("total_count").as_series();
+
+    TrainOptions train_options{};
+    train_options.max_iterations = 2500;
+    train_options.tolerance = 1e-8;
+    train_options.random.seed = 7;
+    train_options.random.deterministic = true;
+
+    AssessOptions assess_options{};
+    assess_options.metrics = {MetricKind::Rmse, MetricKind::R2, MetricKind::Mae};
+
+    nja::CrossValidationOptions cv_options{};
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:129

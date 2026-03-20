@@ -292,208 +292,268 @@ int main(int argc, char** argv) {
     std::vector<lymph::selection::Candidate> broad_candidates{};
 
     {
-      auto wf = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
-          .objective = LinearObjective::LeastSquares,
+      auto wf = lymph::Workflow{
+          .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::None,
           .regularization_strength = 0.0,
           .fit_intercept = true,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
-          .standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       broad_candidates.emplace_back("linear_ols_standard", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
-          .objective = LinearObjective::LeastSquares,
+      auto wf = lymph::Workflow{
+          .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-8,
           .fit_intercept = true,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
-          .standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       broad_candidates.emplace_back("linear_ridge_1e8", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
-          .objective = LinearObjective::LeastSquares,
+      auto wf = lymph::Workflow{
+          .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-6,
           .fit_intercept = true,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
-          .robust_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::robust_scaler(),
+          },
+      };
       broad_candidates.emplace_back("linear_ridge_1e6_robust", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
-          .objective = LinearObjective::LeastSquares,
+      auto wf = lymph::Workflow{
+          .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 5e-6,
           .fit_intercept = true,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
-          .standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       broad_candidates.emplace_back("linear_l2_5e6", std::move(wf));
     }
 
     {
-      auto wf = lymph::Workflow(lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{
-          .criterion = TreeCriterion::Mse,
+      auto wf = lymph::Workflow{
+          .model = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 12,
           .min_samples_leaf = 12,
           .min_samples_split = 30,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       broad_candidates.emplace_back("tree_depth12_leaf12", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{
-          .criterion = TreeCriterion::Mse,
+      auto wf = lymph::Workflow{
+          .model = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 18,
           .min_samples_leaf = 8,
           .min_samples_split = 24,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       broad_candidates.emplace_back("tree_depth18_leaf8", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{
-          .criterion = TreeCriterion::Mse,
+      auto wf = lymph::Workflow{
+          .model = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 24,
           .min_samples_leaf = 5,
           .min_samples_split = 16,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       broad_candidates.emplace_back("tree_depth24_leaf5", std::move(wf));
     }
 
     {
-      auto wf = lymph::Workflow(lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{
-          .method = EnsembleMethod::RandomForest,
+      auto wf = lymph::Workflow{
+          .model = lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
           .learners = 120,
           .subsample = 0.9,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       broad_candidates.emplace_back("forest_120_09", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{
-          .method = EnsembleMethod::RandomForest,
+      auto wf = lymph::Workflow{
+          .model = lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
           .learners = 200,
           .subsample = 0.85,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       broad_candidates.emplace_back("forest_200_085", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::ensemble_factory::gradient_boost_regressor(EnsembleFamilyOptions{
-          .method = EnsembleMethod::GradientBoost,
+      auto wf = lymph::Workflow{
+          .model = lymph::ensemble_factory::gradient_boost_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::GradientBoost,
           .learners = 240,
           .subsample = 0.7,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       broad_candidates.emplace_back("gboost_240_07", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::ensemble_factory::bagging_regressor(EnsembleFamilyOptions{
-          .method = EnsembleMethod::Bagging,
+      auto wf = lymph::Workflow{
+          .model = lymph::ensemble_factory::bagging_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::Bagging,
           .learners = 180,
           .subsample = 0.95,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       broad_candidates.emplace_back("bagging_180_095", std::move(wf));
     }
 
     {
-      auto wf = lymph::Workflow(lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{
-          .k = 7,
+      auto wf = lymph::Workflow{
+          .model = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 7,
           .distance_weighted = false,
           .standardize = true,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
-          .standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       broad_candidates.emplace_back("knn_k7_uniform", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{
-          .k = 9,
+      auto wf = lymph::Workflow{
+          .model = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 9,
           .distance_weighted = true,
           .standardize = true,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
-          .standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       broad_candidates.emplace_back("knn_k9_distance", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{
-          .k = 15,
+      auto wf = lymph::Workflow{
+          .model = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 15,
           .distance_weighted = true,
           .standardize = true,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
-          .robust_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::robust_scaler(),
+          },
+      };
       broad_candidates.emplace_back("knn_k15_distance_robust", std::move(wf));
     }
 
     {
-      auto wf = lymph::Workflow(lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{
-          .kernel = KernelKind::Rbf,
+      auto wf = lymph::Workflow{
+          .model = lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
           .c = 25.0,
           .gamma = 0.5,
           .epsilon = 0.0,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
-          .standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       broad_candidates.emplace_back("svr_rbf_c25_g05", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{
-          .kernel = KernelKind::Rbf,
+      auto wf = lymph::Workflow{
+          .model = lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
           .c = 50.0,
           .gamma = 1.0,
           .epsilon = 0.0,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
-          .standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       broad_candidates.emplace_back("svr_rbf_c50_g10", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::kernel_factory::polynomial_kernel_regressor(KernelFamilyOptions{
-          .kernel = KernelKind::Polynomial,
+      auto wf = lymph::Workflow{
+          .model = lymph::kernel_factory::polynomial_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Polynomial,
           .c = 10.0,
           .gamma = 0.2,
           .epsilon = 0.0,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
-          .standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       broad_candidates.emplace_back("svr_poly_c10_g02", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::kernel_factory::linear_kernel_regressor(KernelFamilyOptions{
-          .kernel = KernelKind::Linear,
+      auto wf = lymph::Workflow{
+          .model = lymph::kernel_factory::linear_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Linear,
           .c = 3.0,
           .gamma = 0.0,
           .epsilon = 0.0,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
-          .standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       broad_candidates.emplace_back("svr_linear_c3", std::move(wf));
     }
 
     {
-      auto wf = lymph::Workflow(lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{
-          .use_gaussian = true,
+      auto wf = lymph::Workflow{
+          .model = lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
           .smoothing = 1e-9,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       broad_candidates.emplace_back("bayes_gaussian_1e9", std::move(wf));
     }
     {
-      auto wf = lymph::Workflow(lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{
-          .use_gaussian = true,
+      auto wf = lymph::Workflow{
+          .model = lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
           .smoothing = 1e-6,
-      }));
-      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       broad_candidates.emplace_back("bayes_gaussian_1e6", std::move(wf));
     }
 
@@ -568,210 +628,292 @@ int main(int argc, char** argv) {
     std::vector<lymph::selection::Candidate> tuned_candidates{};
 
     if (use_linear) {
-      auto wf1 = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
-          .objective = LinearObjective::LeastSquares,
+      auto wf1 = lymph::Workflow{
+          .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-9,
           .fit_intercept = true,
-      }));
-      wf1.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("tuned_linear_l2_1e9", std::move(wf1));
 
-      auto wf2 = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
-          .objective = LinearObjective::LeastSquares,
+      auto wf2 = lymph::Workflow{
+          .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-7,
           .fit_intercept = true,
-      }));
-      wf2.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("tuned_linear_l2_1e7", std::move(wf2));
 
-      auto wf3 = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
-          .objective = LinearObjective::LeastSquares,
+      auto wf3 = lymph::Workflow{
+          .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-6,
           .fit_intercept = true,
-      }));
-      wf3.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("tuned_linear_l2_1e6", std::move(wf3));
 
-      auto wf4 = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
-          .objective = LinearObjective::LeastSquares,
+      auto wf4 = lymph::Workflow{
+          .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 5e-7,
           .fit_intercept = true,
-      }));
-      wf4.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("tuned_linear_l2_5e7", std::move(wf4));
     }
 
     if (use_tree) {
-      auto wf1 = lymph::Workflow(lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{
-          .criterion = TreeCriterion::Mse,
+      auto wf1 = lymph::Workflow{
+          .model = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 16,
           .min_samples_leaf = 6,
           .min_samples_split = 20,
-      }));
-      wf1.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       tuned_candidates.emplace_back("tuned_tree_depth16_leaf6", std::move(wf1));
 
-      auto wf2 = lymph::Workflow(lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{
-          .criterion = TreeCriterion::Mse,
+      auto wf2 = lymph::Workflow{
+          .model = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 22,
           .min_samples_leaf = 4,
           .min_samples_split = 14,
-      }));
-      wf2.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       tuned_candidates.emplace_back("tuned_tree_depth22_leaf4", std::move(wf2));
 
-      auto wf3 = lymph::Workflow(lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{
-          .criterion = TreeCriterion::Mse,
+      auto wf3 = lymph::Workflow{
+          .model = lymph::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 18,
           .min_samples_leaf = 5,
           .min_samples_split = 12,
-      }));
-      wf3.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       tuned_candidates.emplace_back("tuned_tree_depth18_leaf5", std::move(wf3));
     }
 
     if (use_ensemble) {
-      auto wf1 = lymph::Workflow(lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{
-          .method = EnsembleMethod::RandomForest,
+      auto wf1 = lymph::Workflow{
+          .model = lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
           .learners = 180,
           .subsample = 0.9,
-      }));
-      wf1.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       tuned_candidates.emplace_back("tuned_forest_180_09", std::move(wf1));
 
-      auto wf2 = lymph::Workflow(lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{
-          .method = EnsembleMethod::RandomForest,
+      auto wf2 = lymph::Workflow{
+          .model = lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
           .learners = 260,
           .subsample = 0.85,
-      }));
-      wf2.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       tuned_candidates.emplace_back("tuned_forest_260_085", std::move(wf2));
 
-      auto wf3 = lymph::Workflow(lymph::ensemble_factory::gradient_boost_regressor(EnsembleFamilyOptions{
-          .method = EnsembleMethod::GradientBoost,
+      auto wf3 = lymph::Workflow{
+          .model = lymph::ensemble_factory::gradient_boost_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::GradientBoost,
           .learners = 320,
           .subsample = 0.7,
-      }));
-      wf3.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       tuned_candidates.emplace_back("tuned_gboost_320_07", std::move(wf3));
 
-      auto wf4 = lymph::Workflow(lymph::ensemble_factory::bagging_regressor(EnsembleFamilyOptions{
-          .method = EnsembleMethod::Bagging,
+      auto wf4 = lymph::Workflow{
+          .model = lymph::ensemble_factory::bagging_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::Bagging,
           .learners = 280,
           .subsample = 0.92,
-      }));
-      wf4.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       tuned_candidates.emplace_back("tuned_bagging_280_092", std::move(wf4));
     }
 
     if (use_neighbor) {
-      auto wf1 = lymph::Workflow(lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{
-          .k = 8,
+      auto wf1 = lymph::Workflow{
+          .model = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 8,
           .distance_weighted = true,
           .standardize = true,
-      }));
-      wf1.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("tuned_knn_k8_distance", std::move(wf1));
 
-      auto wf2 = lymph::Workflow(lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{
-          .k = 12,
+      auto wf2 = lymph::Workflow{
+          .model = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 12,
           .distance_weighted = true,
           .standardize = true,
-      }));
-      wf2.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("tuned_knn_k12_distance", std::move(wf2));
 
-      auto wf3 = lymph::Workflow(lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{
-          .k = 16,
+      auto wf3 = lymph::Workflow{
+          .model = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 16,
           .distance_weighted = true,
           .standardize = true,
-      }));
-      wf3.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).robust_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::robust_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("tuned_knn_k16_distance_robust", std::move(wf3));
     }
 
     if (use_kernel) {
-      auto wf1 = lymph::Workflow(lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{
-          .kernel = KernelKind::Rbf,
+      auto wf1 = lymph::Workflow{
+          .model = lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
           .c = 40.0,
           .gamma = 0.6,
           .epsilon = 0.0,
-      }));
-      wf1.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("tuned_svr_rbf_c40_g06", std::move(wf1));
 
-      auto wf2 = lymph::Workflow(lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{
-          .kernel = KernelKind::Rbf,
+      auto wf2 = lymph::Workflow{
+          .model = lymph::kernel_factory::rbf_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Rbf,
           .c = 80.0,
           .gamma = 1.2,
           .epsilon = 0.0,
-      }));
-      wf2.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("tuned_svr_rbf_c80_g12", std::move(wf2));
 
-      auto wf3 = lymph::Workflow(lymph::kernel_factory::polynomial_kernel_regressor(KernelFamilyOptions{
-          .kernel = KernelKind::Polynomial,
+      auto wf3 = lymph::Workflow{
+          .model = lymph::kernel_factory::polynomial_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Polynomial,
           .c = 20.0,
           .gamma = 0.3,
           .epsilon = 0.0,
-      }));
-      wf3.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("tuned_svr_poly_c20_g03", std::move(wf3));
 
-      auto wf4 = lymph::Workflow(lymph::kernel_factory::linear_kernel_regressor(KernelFamilyOptions{
-          .kernel = KernelKind::Linear,
+      auto wf4 = lymph::Workflow{
+          .model = lymph::kernel_factory::linear_kernel_regressor(KernelFamilyOptions{          .kernel = KernelKind::Linear,
           .c = 5.0,
           .gamma = 0.0,
           .epsilon = 0.0,
-      }));
-      wf4.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("tuned_svr_linear_c5", std::move(wf4));
     }
 
     if (use_bayes) {
-      auto wf1 = lymph::Workflow(lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{
-          .use_gaussian = true,
+      auto wf1 = lymph::Workflow{
+          .model = lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
           .smoothing = 1e-10,
-      }));
-      wf1.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       tuned_candidates.emplace_back("tuned_bayes_1e10", std::move(wf1));
 
-      auto wf2 = lymph::Workflow(lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{
-          .use_gaussian = true,
+      auto wf2 = lymph::Workflow{
+          .model = lymph::bayes_factory::gaussian_nb_regressor(BayesFamilyOptions{          .use_gaussian = true,
           .smoothing = 1e-8,
-      }));
-      wf2.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       tuned_candidates.emplace_back("tuned_bayes_1e8", std::move(wf2));
     }
 
     if (tuned_candidates.size() < 3) {
-      auto wf1 = lymph::Workflow(lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{
-          .method = EnsembleMethod::RandomForest,
+      auto wf1 = lymph::Workflow{
+          .model = lymph::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
           .learners = 220,
           .subsample = 0.9,
-      }));
-      wf1.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       tuned_candidates.emplace_back("fallback_forest_220_09", std::move(wf1));
 
-      auto wf2 = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
-          .objective = LinearObjective::LeastSquares,
+      auto wf2 = lymph::Workflow{
+          .model = lymph::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-7,
           .fit_intercept = true,
-      }));
-      wf2.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("fallback_linear_l2", std::move(wf2));
 
-      auto wf3 = lymph::Workflow(lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{
-          .k = 10,
+      auto wf3 = lymph::Workflow{
+          .model = lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 10,
           .distance_weighted = true,
           .standardize = true,
-      }));
-      wf3.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}).standard_scaler();
+      }),
+          .stages = {
+              lymph::workflow::stage::simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+              lymph::workflow::stage::standard_scaler(),
+          },
+      };
       tuned_candidates.emplace_back("fallback_knn_k10", std::move(wf3));
     }
 

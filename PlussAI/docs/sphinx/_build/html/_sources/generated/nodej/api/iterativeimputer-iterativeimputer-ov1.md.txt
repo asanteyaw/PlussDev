@@ -1,0 +1,40 @@
+# `IterativeImputer::IterativeImputer`
+
+## Signature
+
+```cpp
+explicit IterativeImputer(IterativeImputerOptions options = {});
+```
+
+## Parameters
+
+- `options` : `IterativeImputerOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns ``.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] StatusOr<std::vector<Series>> IterativeImputer::dump_state(self) const override;`
+- `Status IterativeImputer::learn(self, const FeatureBatch& batch, const TrainOptions& options = {}) override;`
+- `[[nodiscard]] StatusOr<Series> IterativeImputer::learn_map(self, const FeatureBatch& batch, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {}) override;`
+- `Status IterativeImputer::load_state(self, const std::vector<Series>& state) override;`
+- `[[nodiscard]] StatusOr<Series> IterativeImputer::map(self, const FeatureBatch& batch, const InferOptions& options = {}) const override;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+IterativeImputer iterativeImputer{};
+auto out = iterativeImputer.IterativeImputer(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:245

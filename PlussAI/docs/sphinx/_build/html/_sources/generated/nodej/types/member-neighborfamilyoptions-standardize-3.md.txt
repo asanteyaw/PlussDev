@@ -1,0 +1,22 @@
+# `NeighborFamilyOptions::standardize`
+
+## Signature
+
+```cpp
+NeighborFamilyOptions::bool standardize = true;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+NeighborFamilyOptions cfg{};
+// cfg.standardize = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:83

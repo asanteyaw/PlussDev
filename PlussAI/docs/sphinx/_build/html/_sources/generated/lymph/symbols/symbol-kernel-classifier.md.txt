@@ -1,0 +1,13 @@
+# `kernel_classifier`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-kernel-classifier-ov1.md): `StatusOr<std::unique_ptr<nodej::ClassifierBase>> kernel_classifier( const nodej::LabeledBatch& train, const nodej::KernelFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:194

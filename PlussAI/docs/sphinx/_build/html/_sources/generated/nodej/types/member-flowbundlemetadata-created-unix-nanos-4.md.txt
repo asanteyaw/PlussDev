@@ -1,0 +1,22 @@
+# `FlowBundleMetadata::created_unix_nanos`
+
+## Signature
+
+```cpp
+FlowBundleMetadata::std::uint64_t created_unix_nanos = 0;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+FlowBundleMetadata cfg{};
+// cfg.created_unix_nanos = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/io.h`:12

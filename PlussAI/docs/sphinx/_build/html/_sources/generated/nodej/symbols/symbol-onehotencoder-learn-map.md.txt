@@ -1,0 +1,13 @@
+# `OneHotEncoder::learn_map`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/onehotencoder-learn-map-ov1.md): `[[nodiscard]] StatusOr<Series> OneHotEncoder::learn_map(self, const FeatureBatch& batch, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {}) override;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:400

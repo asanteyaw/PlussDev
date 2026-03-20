@@ -1,0 +1,13 @@
+# `StandardScaler::dump_state`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/standardscaler-dump-state-ov1.md): `[[nodiscard]] StatusOr<std::vector<Series>> StandardScaler::dump_state(self) const override;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:143

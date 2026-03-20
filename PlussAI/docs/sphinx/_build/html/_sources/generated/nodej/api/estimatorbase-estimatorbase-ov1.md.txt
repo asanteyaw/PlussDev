@@ -1,0 +1,39 @@
+# `EstimatorBase::~EstimatorBase`
+
+## Signature
+
+```cpp
+virtual ~EstimatorBase() = default;
+```
+
+## Parameters
+
+None.
+
+## Returns
+
+Returns `auto`.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `[[nodiscard]] virtual StatusOr<Series> EstimatorBase::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const = 0;`
+- `[[nodiscard]] virtual StatusOr<std::vector<Series>> EstimatorBase::dump_state(self) const;`
+- `[[nodiscard]] virtual StatusOr<Series> EstimatorBase::infer(self, const FeatureBatch& batch, const InferOptions& options = {}) const = 0;`
+- `virtual Status EstimatorBase::learn(self, const LabeledBatch& batch, const TrainOptions& options = {}) = 0;`
+- `virtual Status EstimatorBase::load_state(self, const std::vector<Series>& state);`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+EstimatorBase estimatorBase{};
+auto out = estimatorBase.~EstimatorBase(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/interfaces.h`:9

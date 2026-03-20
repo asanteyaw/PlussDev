@@ -1,0 +1,22 @@
+# `FeatureBatch::layout`
+
+## Signature
+
+```cpp
+FeatureBatch::ObservationLayout layout = ObservationLayout::Rows;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+FeatureBatch cfg{};
+// cfg.layout = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/dataset.h`:8

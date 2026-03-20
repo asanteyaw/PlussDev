@@ -48,7 +48,7 @@ public:
   const std::vector<DataFrame>& frames() const;
 
   DataFrame frame(std::int64_t index) const;
-  DataFrame iloc(std::int64_t index) const;
+  DataFrame dloc(std::int64_t index) const;
   AtlasPlotAccessor plot() const;
   AtlasPlotAccessor plot(const AtlasPlotOptions& options) const;
   DataFrame squeeze() const;
@@ -84,6 +84,7 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& os, const Atlas& atlas);
+void output_render(std::ostream& os, const Atlas& atlas);
 
 } // namespace pluss::table
 

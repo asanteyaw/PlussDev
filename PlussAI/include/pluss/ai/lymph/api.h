@@ -5,7 +5,9 @@
 #include "table/DataFrame.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <limits>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -59,6 +61,11 @@ using ThresholdBinarizerOptions = ::pluss::ai::nodej::prep::ThresholdBinarizerOp
 using PolynomialLiftOptions = ::pluss::ai::nodej::prep::PolynomialLiftOptions;
 
 struct SimpleImputerSummary {
+  SimpleImputerStrategy strategy = SimpleImputerStrategy::Mean;
+  bool learned = false;
+  std::int64_t feature_count = 0;
+  double constant_value = 0.0;
+  double empty_feature_fallback = 0.0;
   std::vector<std::string> feature_names{};
   Series statistics = Series::undefined();
 };
@@ -73,6 +80,73 @@ struct TransformerSummary {
   std::vector<std::string> feature_names{};
   std::vector<Series> state{};
 };
+
+inline const char* simple_imputer_strategy_name(SimpleImputerStrategy strategy) {
+  switch (strategy) {
+    case SimpleImputerStrategy::Mean:
+      return "mean";
+    case SimpleImputerStrategy::Median:
+      return "median";
+    case SimpleImputerStrategy::MostFrequent:
+      return "most_frequent";
+    case SimpleImputerStrategy::Constant:
+      return "constant";
+    default:
+      return "unknown";
+  }
+}
+
+inline void output_render(std::ostream& os, const SimpleImputerSummary& summary) {
+  os << "SimpleImputerSummary{strategy=" << simple_imputer_strategy_name(summary.strategy)
+     << ", learned=" << (summary.learned ? "true" : "false")
+     << ", feature_count=" << summary.feature_count
+     << ", constant_value=" << summary.constant_value
+     << ", empty_feature_fallback=" << summary.empty_feature_fallback
+     << ", feature_names=[";
+  for (std::size_t i = 0; i < summary.feature_names.size(); ++i) {
+    if (i != 0) os << ", ";
+    os << summary.feature_names[i];
+  }
+  os << "], statistics=" << summary.statistics << "}";
+}
+
+inline void output_render(std::ostream& os, const StandardScalerSummary& summary) {
+  os << "StandardScalerSummary{feature_names=[";
+  for (std::size_t i = 0; i < summary.feature_names.size(); ++i) {
+    if (i != 0) os << ", ";
+    os << summary.feature_names[i];
+  }
+  os << "], mean=" << summary.mean << ", scale=" << summary.scale << "}";
+}
+
+inline void output_render(std::ostream& os, const TransformerSummary& summary) {
+  os << "TransformerSummary{feature_names=[";
+  for (std::size_t i = 0; i < summary.feature_names.size(); ++i) {
+    if (i != 0) os << ", ";
+    os << summary.feature_names[i];
+  }
+  os << "], state=[";
+  for (std::size_t i = 0; i < summary.state.size(); ++i) {
+    if (i != 0) os << ", ";
+    os << summary.state[i];
+  }
+  os << "]}";
+}
+
+inline std::ostream& operator<<(std::ostream& os, const SimpleImputerSummary& summary) {
+  output_render(os, summary);
+  return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const StandardScalerSummary& summary) {
+  output_render(os, summary);
+  return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const TransformerSummary& summary) {
+  output_render(os, summary);
+  return os;
+}
 
 class SimpleImputer final {
 public:
@@ -98,6 +172,11 @@ public:
 
   [[nodiscard]] SimpleImputerSummary summary() const {
     return SimpleImputerSummary{
+        .strategy = options_.strategy,
+        .learned = learned_,
+        .feature_count = static_cast<std::int64_t>(feature_names_.size()),
+        .constant_value = options_.constant_value,
+        .empty_feature_fallback = options_.empty_feature_fallback,
         .feature_names = feature_names_,
         .statistics = statistics_,
     };
@@ -1223,176 +1302,83 @@ private:
   return cross_validate(model, x, as_stratify_series(y), cv, train_options, assess_options);
 }
 
+namespace workflow {
+namespace stage {
+
+#define PLUSS_LYMPH_STAGE_BUILDER(FuncName, KindName, OptionsType)                                 \
+  [[nodiscard]] inline TransformSpec FuncName(                                                      \
+      OptionsType options = {},                                                                     \
+      std::vector<std::int64_t> feature_route = {}) {                                              \
+    return TransformSpec{                                                                           \
+        .kind = TransformKind::KindName,                                                            \
+        .options = options,                                                                         \
+        .feature_route = std::move(feature_route),                                                  \
+    };                                                                                              \
+  }
+
+PLUSS_LYMPH_STAGE_BUILDER(standard_scaler, StandardScaler, prep::StandardScalerOptions)
+PLUSS_LYMPH_STAGE_BUILDER(minmax_scaler, MinMaxScaler, prep::MinMaxScalerOptions)
+PLUSS_LYMPH_STAGE_BUILDER(robust_scaler, RobustScaler, prep::RobustScalerOptions)
+PLUSS_LYMPH_STAGE_BUILDER(simple_imputer, SimpleImputer, prep::SimpleImputerOptions)
+PLUSS_LYMPH_STAGE_BUILDER(neighbor_imputer, NeighborImputer, prep::NeighborImputerOptions)
+PLUSS_LYMPH_STAGE_BUILDER(iterative_imputer, IterativeImputer, prep::IterativeImputerOptions)
+PLUSS_LYMPH_STAGE_BUILDER(one_hot_encoder, OneHotEncoder, prep::OneHotEncoderOptions)
+PLUSS_LYMPH_STAGE_BUILDER(frequency_encoder, FrequencyEncoder, prep::FrequencyEncoderOptions)
+PLUSS_LYMPH_STAGE_BUILDER(vector_normalizer, VectorNormalizer, prep::VectorNormalizerOptions)
+PLUSS_LYMPH_STAGE_BUILDER(maxabs_scaler, MaxAbsScaler, prep::MaxAbsScalerOptions)
+PLUSS_LYMPH_STAGE_BUILDER(quantile_map, QuantileMap, prep::QuantileMapOptions)
+PLUSS_LYMPH_STAGE_BUILDER(power_map, PowerMap, prep::PowerMapOptions)
+PLUSS_LYMPH_STAGE_BUILDER(threshold_binarizer, ThresholdBinarizer, prep::ThresholdBinarizerOptions)
+PLUSS_LYMPH_STAGE_BUILDER(polynomial_lift, PolynomialLift, prep::PolynomialLiftOptions)
+
+#undef PLUSS_LYMPH_STAGE_BUILDER
+
+} // namespace stage
+} // namespace workflow
+
 class Workflow final {
 public:
-  Workflow() = default;
-  explicit Workflow(const ModelSpec& spec)
-      : model_(WorkflowModel(spec)) {}
-  explicit Workflow(WorkflowModel model)
-      : model_(std::move(model)) {}
+  std::optional<WorkflowModel> model{};
+  std::vector<TransformSpec> stages{};
 
-  [[nodiscard]] bool has_model() const noexcept { return model_.has_value(); }
-  [[nodiscard]] bool trained() const { ensure_model_("trained"); return model_->trained(); }
-  [[nodiscard]] std::int64_t stage_count() const { ensure_model_("stage_count"); return model_->stage_count(); }
-  [[nodiscard]] TaskKind task_kind() const { ensure_model_("task_kind"); return model_->task_kind(); }
-  [[nodiscard]] bool has_model_spec() const { ensure_model_("has_model_spec"); return model_->has_model_spec(); }
-  [[nodiscard]] bool has_opaque_transforms() const { ensure_model_("has_opaque_transforms"); return model_->has_opaque_transforms(); }
+  [[nodiscard]] bool has_model() const noexcept { return model.has_value(); }
+  [[nodiscard]] bool trained() const { ensure_model_("trained"); return model->trained(); }
+  [[nodiscard]] std::int64_t stage_count() const { ensure_model_("stage_count"); return model->stage_count(); }
+  [[nodiscard]] TaskKind task_kind() const { ensure_model_("task_kind"); return model->task_kind(); }
+  [[nodiscard]] bool has_model_spec() const { ensure_model_("has_model_spec"); return model->has_model_spec(); }
+  [[nodiscard]] bool has_opaque_transforms() const { ensure_model_("has_opaque_transforms"); return model->has_opaque_transforms(); }
   [[nodiscard]] const std::optional<ModelSpec>& model_spec() const {
     ensure_model_("model_spec");
-    return model_->model_spec();
+    return model->model_spec();
   }
   [[nodiscard]] const std::vector<TransformSpec>& transform_specs() const {
     ensure_model_("transform_specs");
-    return model_->transform_specs();
+    return model->transform_specs();
   }
 
-  Workflow& set_model(const ModelSpec& spec) {
-    model_.emplace(spec);
-    replay_transforms_();
-    return *this;
+  [[nodiscard]] const WorkflowModel& workflow_model() const {
+    ensure_model_("workflow_model");
+    return *model;
   }
 
-  Workflow& set_model(WorkflowModel model) {
-    model_.emplace(std::move(model));
-    replay_transforms_();
-    return *this;
-  }
-
-  [[nodiscard]] const WorkflowModel& model() const {
-    ensure_model_("model");
-    return *model_;
-  }
-
-  [[nodiscard]] WorkflowModel& model() {
-    ensure_model_("model");
-    return *model_;
+  [[nodiscard]] WorkflowModel& workflow_model() {
+    ensure_model_("workflow_model");
+    return *model;
   }
 
   [[nodiscard]] Series coeff() const {
     ensure_model_("coeff");
-    return model_->coeff;
+    return model->coeff;
   }
 
   [[nodiscard]] Series intercept() const {
     ensure_model_("intercept");
-    return model_->intercept;
-  }
-
-  Workflow& standard_scaler(prep::StandardScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::StandardScaler,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& minmax_scaler(prep::MinMaxScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::MinMaxScaler,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& robust_scaler(prep::RobustScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::RobustScaler,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& simple_imputer(prep::SimpleImputerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::SimpleImputer,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& neighbor_imputer(prep::NeighborImputerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::NeighborImputer,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& iterative_imputer(prep::IterativeImputerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::IterativeImputer,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& one_hot_encoder(prep::OneHotEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::OneHotEncoder,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& frequency_encoder(prep::FrequencyEncoderOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::FrequencyEncoder,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& vector_normalizer(prep::VectorNormalizerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::VectorNormalizer,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& maxabs_scaler(prep::MaxAbsScalerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::MaxAbsScaler,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& quantile_map(prep::QuantileMapOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::QuantileMap,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& power_map(prep::PowerMapOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::PowerMap,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& threshold_binarizer(prep::ThresholdBinarizerOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::ThresholdBinarizer,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
-  }
-
-  Workflow& polynomial_lift(prep::PolynomialLiftOptions options = {}, std::vector<std::int64_t> feature_route = {}) {
-    return add_transform_(TransformSpec{
-        .kind = TransformKind::PolynomialLift,
-        .options = options,
-        .feature_route = std::move(feature_route),
-    });
+    return model->intercept;
   }
 
   Workflow& learn_(const LabeledBatch& batch, const TrainOptions& options = {}) {
     ensure_model_("learn_");
-    model_->learn_(batch, options);
+    model->learn_(batch, options);
     return *this;
   }
 
@@ -1400,7 +1386,7 @@ public:
                    const DataFrameBatchOptions& data_options,
                    const TrainOptions& options = {}) {
     ensure_model_("learn_");
-    model_->learn_(frame, data_options, options);
+    model->learn_(frame, data_options, options);
     return *this;
   }
 
@@ -1408,7 +1394,7 @@ public:
                    const Series& y,
                    const TrainOptions& options = {}) {
     ensure_model_("learn_");
-    model_->learn_(x, y, options);
+    model->learn_(x, y, options);
     return *this;
   }
 
@@ -1416,99 +1402,99 @@ public:
                    const pluss::table::Thread& y,
                    const TrainOptions& options = {}) {
     ensure_model_("learn_");
-    model_->learn_(x, y, options);
+    model->learn_(x, y, options);
     return *this;
   }
 
   [[nodiscard]] Workflow learn(const LabeledBatch& batch, const TrainOptions& options = {}) const {
     ensure_model_("learn");
-    return Workflow(model_->learn(batch, options));
+    return from_model_(model->learn(batch, options));
   }
 
   [[nodiscard]] Workflow learn(const pluss::table::DataFrame& frame,
                                const DataFrameBatchOptions& data_options,
                                const TrainOptions& options = {}) const {
     ensure_model_("learn");
-    return Workflow(model_->learn(frame, data_options, options));
+    return from_model_(model->learn(frame, data_options, options));
   }
 
   [[nodiscard]] Workflow learn(const pluss::table::DataFrame& x,
                               const Series& y,
                               const TrainOptions& options = {}) const {
     ensure_model_("learn");
-    return Workflow(model_->learn(x, y, options));
+    return from_model_(model->learn(x, y, options));
   }
 
   [[nodiscard]] Workflow learn(const pluss::table::DataFrame& x,
                               const pluss::table::Thread& y,
                               const TrainOptions& options = {}) const {
     ensure_model_("learn");
-    return Workflow(model_->learn(x, y, options));
+    return from_model_(model->learn(x, y, options));
   }
 
   [[nodiscard]] Series infer(const FeatureBatch& batch, const InferOptions& options = {}) const {
     ensure_model_("infer");
-    return model_->infer(batch, options);
+    return model->infer(batch, options);
   }
 
   [[nodiscard]] Series infer(const pluss::table::DataFrame& x, const InferOptions& options = {}) const {
     ensure_model_("infer");
-    return model_->infer(x, options);
+    return model->infer(x, options);
   }
 
   [[nodiscard]] Series infer(const pluss::table::DataFrame& frame,
                              const DataFrameBatchOptions& data_options,
                              const InferOptions& options = {}) const {
     ensure_model_("infer");
-    return model_->infer(frame, data_options, options);
+    return model->infer(frame, data_options, options);
   }
 
   [[nodiscard]] Series infer_scores(const FeatureBatch& batch, const InferOptions& options = {}) const {
     ensure_model_("infer_scores");
-    return model_->infer_scores(batch, options);
+    return model->infer_scores(batch, options);
   }
 
   [[nodiscard]] Series infer_scores(const pluss::table::DataFrame& x, const InferOptions& options = {}) const {
     ensure_model_("infer_scores");
-    return model_->infer_scores(x, options);
+    return model->infer_scores(x, options);
   }
 
   [[nodiscard]] Series infer_scores(const pluss::table::DataFrame& frame,
                                     const DataFrameBatchOptions& data_options,
                                     const InferOptions& options = {}) const {
     ensure_model_("infer_scores");
-    return model_->infer_scores(frame, data_options, options);
+    return model->infer_scores(frame, data_options, options);
   }
 
   [[nodiscard]] Series map(const FeatureBatch& batch, const InferOptions& options = {}) const {
     ensure_model_("map");
-    return model_->map(batch, options);
+    return model->map(batch, options);
   }
 
   [[nodiscard]] Series map(const pluss::table::DataFrame& x, const InferOptions& options = {}) const {
     ensure_model_("map");
-    return model_->map(x, options);
+    return model->map(x, options);
   }
 
   [[nodiscard]] Series map(const pluss::table::DataFrame& frame,
                            const DataFrameBatchOptions& data_options,
                            const InferOptions& options = {}) const {
     ensure_model_("map");
-    return model_->map(frame, data_options, options);
+    return model->map(frame, data_options, options);
   }
 
   [[nodiscard]] Series learn_map(const FeatureBatch& batch,
                                  const TrainOptions& learn_options = {},
                                  const InferOptions& infer_options = {}) {
     ensure_model_("learn_map");
-    return model_->learn_map(batch, learn_options, infer_options);
+    return model->learn_map(batch, learn_options, infer_options);
   }
 
   [[nodiscard]] Series learn_map(const pluss::table::DataFrame& x,
                                  const TrainOptions& learn_options = {},
                                  const InferOptions& infer_options = {}) {
     ensure_model_("learn_map");
-    return model_->learn_map(x, learn_options, infer_options);
+    return model->learn_map(x, learn_options, infer_options);
   }
 
   [[nodiscard]] Series learn_map(const pluss::table::DataFrame& frame,
@@ -1516,86 +1502,86 @@ public:
                                  const TrainOptions& learn_options = {},
                                  const InferOptions& infer_options = {}) {
     ensure_model_("learn_map");
-    return model_->learn_map(frame, data_options, learn_options, infer_options);
+    return model->learn_map(frame, data_options, learn_options, infer_options);
   }
 
   [[nodiscard]] Series assess_series(const LabeledBatch& batch, const AssessOptions& options = {}) const {
     ensure_model_("assess_series");
-    return model_->assess_series(batch, options);
+    return model->assess_series(batch, options);
   }
 
   [[nodiscard]] Series assess_series(const pluss::table::DataFrame& x,
                                      const Series& y,
                                      const AssessOptions& options = {}) const {
     ensure_model_("assess_series");
-    return model_->assess_series(x, y, options);
+    return model->assess_series(x, y, options);
   }
 
   [[nodiscard]] Series assess_series(const pluss::table::DataFrame& x,
                                      const pluss::table::Thread& y,
                                      const AssessOptions& options = {}) const {
     ensure_model_("assess_series");
-    return model_->assess_series(x, y, options);
+    return model->assess_series(x, y, options);
   }
 
   [[nodiscard]] Series assess_series(const pluss::table::DataFrame& frame,
                                      const DataFrameBatchOptions& data_options,
                                      const AssessOptions& options = {}) const {
     ensure_model_("assess_series");
-    return model_->assess_series(frame, data_options, options);
+    return model->assess_series(frame, data_options, options);
   }
 
   [[nodiscard]] MetricReport assess(const LabeledBatch& batch, const AssessOptions& options = {}) const {
     ensure_model_("assess");
-    return model_->assess(batch, options);
+    return model->assess(batch, options);
   }
 
   [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& x,
                                     const Series& y,
                                     const AssessOptions& options = {}) const {
     ensure_model_("assess");
-    return model_->assess(x, y, options);
+    return model->assess(x, y, options);
   }
 
   [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& x,
                                     const pluss::table::Thread& y,
                                     const AssessOptions& options = {}) const {
     ensure_model_("assess");
-    return model_->assess(x, y, options);
+    return model->assess(x, y, options);
   }
 
   [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& frame,
                                     const DataFrameBatchOptions& data_options,
                                     const AssessOptions& options = {}) const {
     ensure_model_("assess");
-    return model_->assess(frame, data_options, options);
+    return model->assess(frame, data_options, options);
   }
 
   [[nodiscard]] std::vector<std::vector<Series>> dump_transform_states() const {
     ensure_model_("dump_transform_states");
-    return model_->dump_transform_states();
+    return model->dump_transform_states();
   }
 
   [[nodiscard]] std::vector<Series> dump_model_state() const {
     ensure_model_("dump_model_state");
-    return model_->dump_model_state();
+    return model->dump_model_state();
   }
 
   Workflow& load_transform_states_(const std::vector<std::vector<Series>>& states) {
     ensure_model_("load_transform_states_");
-    model_->load_transform_states_(states);
+    model->load_transform_states_(states);
     return *this;
   }
 
   Workflow& load_model_state_(const std::vector<Series>& state) {
     ensure_model_("load_model_state_");
-    model_->load_model_state_(state);
+    model->load_model_state_(state);
     return *this;
   }
 
   Workflow& mark_trained_(bool trained = true) {
     ensure_model_("mark_trained_");
-    model_->mark_trained_(trained);
+    model->mark_trained_(trained);
     return *this;
   }
 
@@ -1604,7 +1590,7 @@ public:
             const TrainOptions& train_options = {},
             io::FlowBundleMetadata metadata = {}) const {
     ensure_model_("save");
-    model_->save(path, train_batch, train_options, std::move(metadata));
+    model->save(path, train_batch, train_options, std::move(metadata));
   }
 
   void save(const std::string& path,
@@ -1613,7 +1599,7 @@ public:
             const TrainOptions& train_options = {},
             io::FlowBundleMetadata metadata = {}) const {
     ensure_model_("save");
-    model_->save(path, x_train, y_train, train_options, std::move(metadata));
+    model->save(path, x_train, y_train, train_options, std::move(metadata));
   }
 
   void save(const std::string& path,
@@ -1622,36 +1608,44 @@ public:
             const TrainOptions& train_options = {},
             io::FlowBundleMetadata metadata = {}) const {
     ensure_model_("save");
-    model_->save(path, x_train, y_train, train_options, std::move(metadata));
+    model->save(path, x_train, y_train, train_options, std::move(metadata));
   }
 
   [[nodiscard]] static Workflow load(const std::string& path) {
-    return Workflow(WorkflowModel::load(path));
+    return from_model_(WorkflowModel::load(path));
   }
 
   [[nodiscard]] static Workflow restore(const io::FlowBundle& bundle) {
-    return Workflow(WorkflowModel::restore(bundle));
+    return from_model_(WorkflowModel::restore(bundle));
   }
 
 private:
   void ensure_model_(const char* where) const {
-    if (model_.has_value()) return;
-    throw std::runtime_error(std::string("Workflow::") + where + ": set_model(...) before use.");
+    if (!model.has_value()) {
+      throw std::runtime_error(std::string("Workflow::") + where + ": construct as Workflow{ .model = ..., .stages = {...} }.");
+    }
+    const_cast<Workflow*>(this)->replay_transforms_();
+  }
+
+  [[nodiscard]] static Workflow from_model_(WorkflowModel model_value) {
+    Workflow out;
+    out.model.emplace(std::move(model_value));
+    if (out.model.has_value()) {
+      out.stages = out.model->transform_specs();
+    }
+    return out;
   }
 
   void replay_transforms_() {
-    if (!model_.has_value()) return;
-    for (const auto& spec : transforms_) {
-      apply_transform_(*model_, spec);
+    if (!model.has_value() || stages.empty()) return;
+    const std::int64_t bound_count = model->stage_count();
+    std::size_t begin = 0;
+    if (bound_count > 0) {
+      begin = static_cast<std::size_t>(std::min<std::int64_t>(bound_count, static_cast<std::int64_t>(stages.size())));
     }
-  }
-
-  Workflow& add_transform_(TransformSpec spec) {
-    if (model_.has_value()) {
-      apply_transform_(*model_, spec);
+    for (std::size_t i = begin; i < stages.size(); ++i) {
+      apply_transform_(*model, stages[i]);
     }
-    transforms_.push_back(std::move(spec));
-    return *this;
   }
 
   static void apply_transform_(WorkflowModel& model, const TransformSpec& spec) {
@@ -1701,8 +1695,6 @@ private:
     }
   }
 
-  std::optional<WorkflowModel> model_{};
-  std::vector<TransformSpec> transforms_{};
 };
 
 [[nodiscard]] inline CrossValidationReport cross_validate(const Workflow& pipeline,
@@ -1710,7 +1702,7 @@ private:
                                                           CrossValidationOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
-  return cross_validate(pipeline.model(), batch, cv, train_options, assess_options);
+  return cross_validate(pipeline.workflow_model(), batch, cv, train_options, assess_options);
 }
 
 [[nodiscard]] inline CrossValidationReport cross_validate(const Workflow& pipeline,
@@ -1719,7 +1711,7 @@ private:
                                                           CrossValidationOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
-  return cross_validate(pipeline.model(), x, y, cv, train_options, assess_options);
+  return cross_validate(pipeline.workflow_model(), x, y, cv, train_options, assess_options);
 }
 
 [[nodiscard]] inline CrossValidationReport cross_validate(const Workflow& pipeline,
@@ -1728,7 +1720,7 @@ private:
                                                           CrossValidationOptions cv = {},
                                                           TrainOptions train_options = {},
                                                           AssessOptions assess_options = {}) {
-  return cross_validate(pipeline.model(), x, y, cv, train_options, assess_options);
+  return cross_validate(pipeline.workflow_model(), x, y, cv, train_options, assess_options);
 }
 
 [[nodiscard]] inline std::vector<std::string> prep_resolve_series_feature_names_(

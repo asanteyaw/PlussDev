@@ -1,0 +1,21 @@
+# `online_factory`
+
+## Signature
+
+```cpp
+struct online_factory;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+## Example
+
+```cpp
+online_factory cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2569

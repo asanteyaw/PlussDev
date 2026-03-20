@@ -260,7 +260,7 @@ TEST_CASE("CUDA provider inventory probes stay stable under repeated queries", "
 
   const bool cublas_ready = pluss::cuda::cublas_available();
   const bool cusolver_ready = pluss::cuda::cusolver_available();
-  const bool cudnn_ready = pluss::cuda::cudnn_available();
+  const bool cudnn_ready = pluss::cuda::cudnn_ready();
   const auto cublas_err = std::string(pluss::cuda::cublas_error());
   const auto cusolver_err = std::string(pluss::cuda::cusolver_error());
   const auto cudnn_err = std::string(pluss::cuda::cudnn_error());
@@ -277,7 +277,7 @@ TEST_CASE("CUDA provider inventory probes stay stable under repeated queries", "
 
     REQUIRE(pluss::cuda::cublas_available() == cublas_ready);
     REQUIRE(pluss::cuda::cusolver_available() == cusolver_ready);
-    REQUIRE(pluss::cuda::cudnn_available() == cudnn_ready);
+    REQUIRE(pluss::cuda::cudnn_ready() == cudnn_ready);
     REQUIRE(std::string(pluss::cuda::cublas_error()) == cublas_err);
     REQUIRE(std::string(pluss::cuda::cusolver_error()) == cusolver_err);
     REQUIRE(std::string(pluss::cuda::cudnn_error()) == cudnn_err);

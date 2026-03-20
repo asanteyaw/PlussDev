@@ -1,0 +1,22 @@
+# `PowerMapOptions::lambda`
+
+## Signature
+
+```cpp
+PowerMapOptions::std::optional<double> lambda = std::nullopt;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+PowerMapOptions cfg{};
+// cfg.lambda = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:111

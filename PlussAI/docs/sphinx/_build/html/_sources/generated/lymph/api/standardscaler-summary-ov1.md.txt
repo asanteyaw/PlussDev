@@ -1,0 +1,65 @@
+# `StandardScaler::summary`
+
+## Signature
+
+```cpp
+[[nodiscard]] StandardScalerSummary StandardScaler::summary(self) const;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+
+## Returns
+
+Returns `StandardScalerSummary`.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `[[nodiscard]] SimpleImputerSummary SimpleImputer::summary(self) const;`
+- `StandardScaler& StandardScaler::features(self, std::initializer_list<std::string_view> names);`
+- `[[nodiscard]] bool StandardScaler::learned(self) const noexcept;`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+    //========== standalone lymph preprocessing API ========
+    // This section demonstrates direct prep estimators (learn/map/learn_map)
+    // without going through Workflow composition.
+    auto simple_imp = lymph::prep::simple_imputer(lymph::prep::SimpleImputerOptions{
+        .strategy = lymph::prep::SimpleImputerStrategy::Median,
+    });
+    const DataFrame train_simple_imputed = simple_imp.learn_map(train_x);
+    const DataFrame test_simple_imputed = simple_imp.map(test_x);
+    const auto simple_imp_summary = simple_imp.summary();
+
+    auto knn_imp = lymph::prep::neighbor_imputer(lymph::prep::NeighborImputerOptions{
+        .neighbors = 7,
+        .weighting = lymph::prep::NeighborImputerWeighting::Distance,
+        .distance_floor = 1e-12,
+        .empty_feature_fallback = 0.0,
+    });
+    const DataFrame train_knn_imputed = knn_imp.learn_map(train_x);
+    const DataFrame test_knn_imputed = knn_imp.map(test_x);
+    const auto knn_imp_summary = knn_imp.summary();
+
+    auto iter_imp = lymph::prep::iterative_imputer(lymph::prep::IterativeImputerOptions{
+        .rounds = 6,
+        .ridge = 1e-5,
+        .empty_feature_fallback = 0.0,
+    });
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:146

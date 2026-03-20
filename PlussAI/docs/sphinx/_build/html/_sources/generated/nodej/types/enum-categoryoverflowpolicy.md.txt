@@ -1,0 +1,26 @@
+# `CategoryOverflowPolicy`
+
+## Signature
+
+```cpp
+enum CategoryOverflowPolicy;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `Error = 0`
+- `KeepMostFrequent = 1`
+- `SkipFeature = 2`
+
+## Example
+
+```cpp
+auto mode = CategoryOverflowPolicy::Error;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:45

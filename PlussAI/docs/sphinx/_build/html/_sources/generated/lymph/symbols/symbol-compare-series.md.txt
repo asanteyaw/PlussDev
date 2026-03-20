@@ -1,0 +1,13 @@
+# `compare_series`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-compare-series-ov1.md): `[[nodiscard]] inline SeriesCompareReport compare_series(const Series& lhs, const Series& rhs);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:282

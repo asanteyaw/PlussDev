@@ -1,0 +1,17 @@
+# `online_factory::probe_specs`
+
+## Notes
+
+Executes hyperparameter search and reports trial-by-trial objective values.
+
+## Overloads
+
+- [overload 1](../api/online-factory-probe-specs-ov1.md): `[[nodiscard]] inline SpecTuneResult online_factory::probe_specs(self, const ProbeSpecSampler& sampler, std::int64_t trials, const LabeledBatch& batch, const SplitOptions& split = {}, const TrainOptions& train_options = {}, const AssessOptions& assess_options = {}, MetricKind objective_metric = MetricKind::Accuracy, TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto, RandomState random = {});`
+- [overload 2](../api/online-factory-probe-specs-ov2.md): `[[nodiscard]] inline SpecTuneResult online_factory::probe_specs(self, const ProbeSpecSampler& sampler, std::int64_t trials, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const SplitOptions& split = {}, const TrainOptions& train_options = {}, const AssessOptions& assess_options = {}, MetricKind objective_metric = MetricKind::Accuracy, TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto, RandomState random = {});`
+- [overload 3](../api/online-factory-probe-specs-ov3.md): `[[nodiscard]] inline SpecTuneResult online_factory::probe_specs(self, const ProbeSpecSampler& sampler, std::int64_t trials, const pluss::table::DataFrame& x, const Series& y, const SplitOptions& split = {}, const TrainOptions& train_options = {}, const AssessOptions& assess_options = {}, MetricKind objective_metric = MetricKind::Accuracy, TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto, RandomState random = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2767
+- `PlussAI/include/pluss/ai/lymph/api.h`:2818
+- `PlussAI/include/pluss/ai/lymph/api.h`:2795

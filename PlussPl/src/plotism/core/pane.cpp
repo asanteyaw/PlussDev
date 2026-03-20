@@ -766,6 +766,7 @@ Pane& Pane::y_label_rotation(double degrees) {
 
 Pane& Pane::y_label_centered(bool enable) noexcept {
   y_axis_.label_centered_on_axis = enable;
+  y_axis_.label_centered_explicit = true;
   return *this;
 }
 

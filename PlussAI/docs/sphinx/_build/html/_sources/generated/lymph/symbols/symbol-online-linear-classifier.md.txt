@@ -1,0 +1,13 @@
+# `online_linear_classifier`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-online-linear-classifier-ov1.md): `StatusOr<nodej::online::OnlineLinearClassifier> online_linear_classifier( const nodej::LabeledBatch& warm_start, const nodej::online::OnlineLinearOptions& online_options = {}, const nodej::TrainOptions& train_options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:111

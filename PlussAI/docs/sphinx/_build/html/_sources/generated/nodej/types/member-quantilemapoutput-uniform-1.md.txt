@@ -1,0 +1,21 @@
+# `QuantileMapOutput::Uniform`
+
+## Signature
+
+```cpp
+QuantileMapOutput::Uniform;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = QuantileMapOutput::Uniform;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:96

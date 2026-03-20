@@ -1,0 +1,22 @@
+# `DecomposeFamilyOptions::whiten`
+
+## Signature
+
+```cpp
+DecomposeFamilyOptions::bool whiten = false;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+DecomposeFamilyOptions cfg{};
+// cfg.whiten = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:109

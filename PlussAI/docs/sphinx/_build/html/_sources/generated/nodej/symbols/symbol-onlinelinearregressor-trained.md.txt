@@ -1,0 +1,13 @@
+# `OnlineLinearRegressor::trained`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/onlinelinearregressor-trained-ov1.md): `[[nodiscard]] bool OnlineLinearRegressor::trained(self) const noexcept;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/online.h`:49

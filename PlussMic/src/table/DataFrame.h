@@ -113,10 +113,11 @@ public:
     Nunique = 1,
     Sum = 2,
     Mean = 3,
-    Min = 4,
-    Max = 5,
-    Std = 6,
-    Var = 7,
+    Median = 4,
+    Min = 5,
+    Max = 6,
+    Std = 7,
+    Var = 8,
   };
 
   enum class GroupOp : std::uint8_t {
@@ -359,11 +360,10 @@ public:
 
   bool defined() const noexcept;
   bool unique() const noexcept;
+  std::int64_t height() const;
   std::int64_t ncases() const;
   std::int64_t nfeats() const;
   std::int64_t nfeatures() const;
-  const std::vector<std::string>& column_names() const;
-  std::vector<Thread> columns() const;
   std::vector<Thread> values() const;
   MatrixValues matrix() const;
   const std::vector<std::string>& feature_names() const;
@@ -374,8 +374,8 @@ public:
   std::string cases(std::int64_t row, std::size_t feature_idx) const;
   std::string cases(std::int64_t row, std::string_view feature_name) const;
   pluss::Series cases_series() const;
-  DataFrame iloc(std::int64_t row) const;
-  DataFrame iloc(std::int64_t start, std::int64_t stop) const;
+  DataFrame cloc(std::int64_t row) const;
+  DataFrame cloc(std::int64_t start, std::int64_t stop) const;
   std::string iat(std::int64_t row, std::size_t feature_idx) const;
   std::string at(std::int64_t row, std::string_view feature_name) const;
   std::optional<Thread> get(std::string_view feature_name) const;
@@ -386,13 +386,13 @@ public:
   DataFrame title(std::string title) const;
   DataFrame& title_(std::string title);
 
-  bool has_column(std::string_view name) const;
-  Thread column(std::string_view name) const;
-  ColumnRef column_ref(std::string_view name) const;
   bool has_feature(std::string_view name) const;
   Thread features(std::string_view name);
   Thread features(std::string_view name) const;
   ColumnRef feature_ref(std::string_view name) const;
+  DataFrame select(std::initializer_list<std::string_view> names) const;
+  DataFrame select_like(std::string_view needle, bool case_sensitive = true) const;
+  DataFrame select_regex(std::string_view pattern) const;
   DataFrame features(std::initializer_list<std::string_view> names);
   DataFrame features(std::initializer_list<std::string_view> names) const;
   DataFrame series_features() const;
@@ -425,8 +425,6 @@ public:
   DataFrame join(const DataFrame& other, std::string collision_suffix = "_right") const;
   DataFrame update(const DataFrame& other, bool overwrite = true) const;
 
-  DataFrame with_column(std::string name, const Thread& column) const;
-  DataFrame& with_column_(std::string name, const Thread& column);
   DataFramePlotAccessor plot() const;
   DataFramePlotAccessor plot(const DataFramePlotOptions& options) const;
   DataFramePlot3DAccessor plot3d() const;
@@ -471,7 +469,9 @@ public:
   DataFrame slice(std::int64_t start, std::int64_t stop) const;
   DataFrame take(std::span<const std::int64_t> indices) const;
   DataFrame where(const pluss::Series& bool_mask) const;
+  DataFrame where(const Thread& bool_mask) const;
   DataFrame filter(const pluss::Series& bool_mask) const;
+  DataFrame filter(const Thread& bool_mask) const;
   DataFrame query(std::string_view expression) const;
   DataFrame assign(std::initializer_list<std::pair<std::string, Thread>> assignments) const;
   DataFrame assign(std::initializer_list<DeriveSpec> specs) const;
@@ -575,16 +575,27 @@ public:
   DataFrame compare(const DataFrame& other) const;
   DataFrameView sum(bool render = true) const;
   DataFrameView mean(bool render = true) const;
+  DataFrameView median(bool render = true) const;
   DataFrameView min(bool render = true) const;
   DataFrameView max(bool render = true) const;
   DataFrameView std(bool render = true) const;
   DataFrameView var(bool render = true) const;
   DataFrameView count(bool render = true) const;
-  DataFrameView nunique(bool render = true) const;
-  DataFrameView corr(CorrMethod method, bool render = true) const;
-  DataFrameView corr(bool render = true) const;
-  DataFrameView corr(std::initializer_list<std::string_view> features, CorrMethod method, bool render = true) const;
-  DataFrameView corr(std::initializer_list<std::string_view> features, bool render = true) const;
+  Thread any(std::initializer_list<std::string_view> features = {}, bool skipna = true) const;
+  Thread any(std::int64_t axis,
+             std::initializer_list<std::string_view> features = {},
+             bool skipna = true) const;
+  Thread all(std::initializer_list<std::string_view> features = {}, bool skipna = true) const;
+  Thread all(std::int64_t axis,
+             std::initializer_list<std::string_view> features = {},
+             bool skipna = true) const;
+  DataFrameView count_distinct(std::initializer_list<std::string_view> features = {},
+                               bool dropna = true,
+                               bool render = true) const;
+  DataFrameView corr(CorrMethod method, bool render = false) const;
+  DataFrameView corr(bool render = false) const;
+  DataFrameView corr(std::initializer_list<std::string_view> features, CorrMethod method, bool render = false) const;
+  DataFrameView corr(std::initializer_list<std::string_view> features, bool render = false) const;
   DataFrame isna(std::initializer_list<std::string_view> features = {}) const;
   DataFrame isnull(std::initializer_list<std::string_view> features = {}) const;
   DataFrame notna(std::initializer_list<std::string_view> features = {}) const;
@@ -625,6 +636,11 @@ public:
   std::int64_t count_null_rows() const;
   DataFrameView describe(bool render = true) const;
   DataFrameView transpose(bool render = false) const;
+  DataFrameView tally(std::int64_t top_n = 0, bool dropna = true, bool render = true) const;
+  DataFrameView tally(std::initializer_list<std::string_view> features,
+                      std::int64_t top_n = 0,
+                      bool dropna = true,
+                      bool render = true) const;
   DataFrameView tally(std::string_view feature,
                       std::int64_t top_n = 0,
                       bool dropna = true,
@@ -692,7 +708,6 @@ private:
   const detail::DataFrameImpl& impl_ref_() const;
   void suppress_next_stream_() const;
   bool consume_stream_suppression_() const;
-  DataFrame select(std::initializer_list<std::string_view> names) const;
   DataFrame arrange(std::initializer_list<std::string_view> features,
                     bool ascending = true,
                     bool nulls_last = true) const;
@@ -702,6 +717,10 @@ private:
   DataFrame derive(std::initializer_list<std::pair<std::string, Thread>> assignments) const;
   DataFrame derive(std::initializer_list<DeriveSpec> specs) const;
   DataFrame summarize_specs(const std::vector<SummarySpec>& specs, bool render = true) const;
+  DataFrameView tally_impl(const std::vector<std::string>& feature_names,
+                           std::int64_t top_n,
+                           bool dropna,
+                           bool render) const;
   DataFrame summarize(std::initializer_list<SummarySpec> specs, bool render = true) const;
   DataFrame group(std::initializer_list<std::string_view> keys,
                   std::initializer_list<GroupSpec> specs,
@@ -713,10 +732,12 @@ private:
                     std::optional<double> value = std::nullopt) const;
 
   pluss::msharp::intrusive_ptr<detail::DataFrameImpl> impl_{nullptr};
+  friend void output_render(std::ostream& os, const DataFrame& frame);
   friend std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
 };
 
 std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
+void output_render(std::ostream& os, const DataFrame& frame);
 
 class DataFrameView final : public DataFrame {
 public:
@@ -742,10 +763,12 @@ private:
   void maybe_autorender_() const;
   std::string resolved_window_title_() const;
 
+  friend void output_render(std::ostream& os, const DataFrameView& frame);
   friend std::ostream& operator<<(std::ostream& os, const DataFrameView& frame);
 };
 
 std::ostream& operator<<(std::ostream& os, const DataFrameView& frame);
+void output_render(std::ostream& os, const DataFrameView& frame);
 
 } // namespace pluss::table
 

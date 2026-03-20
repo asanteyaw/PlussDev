@@ -1,0 +1,22 @@
+# `TrainOptions::track_diagnostics`
+
+## Signature
+
+```cpp
+TrainOptions::bool track_diagnostics = true;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+TrainOptions cfg{};
+// cfg.track_diagnostics = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:82

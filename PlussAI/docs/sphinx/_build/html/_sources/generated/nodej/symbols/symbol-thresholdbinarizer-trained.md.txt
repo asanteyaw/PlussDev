@@ -1,0 +1,13 @@
+# `ThresholdBinarizer::trained`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/thresholdbinarizer-trained-ov1.md): `[[nodiscard]] bool ThresholdBinarizer::trained(self) const noexcept override;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:355

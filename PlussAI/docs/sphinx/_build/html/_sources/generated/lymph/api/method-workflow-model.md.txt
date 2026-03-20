@@ -1,0 +1,65 @@
+# `Workflow::model`
+
+## API Signature
+
+- `Workflow::model() -> const WorkflowModel&`
+- `Workflow::model() -> WorkflowModel&`
+
+## Notes
+
+Instance method on `self`.
+
+## Inputs
+
+None.
+
+## Output
+
+- Returns `WorkflowModel&`.
+- Returns `const WorkflowModel&`.
+
+## Options
+
+No explicit option struct/enum parameters were detected for this method.
+
+## Examples
+
+### Example 1 (Minimal Usage)
+
+```cpp
+pluss::OutputEngine out;
+auto value = Workflow::model();
+out.info("model", value);
+```
+
+**Expected output**
+
+```text
+model returned const WorkflowModel&
+```
+
+### Example 2 (Demo Pattern)
+
+```cpp
+    DataFrame linear_frame({
+        {"y_true", Thread(y_true)},
+        {"y_pred", Thread(linear_pred)},
+        {"residual", Thread(y_true.sub(linear_pred))},
+    });
+    linear_frame.save_csv((out_dir / "bike_sharing_test_predictions_linear.csv").string());
+    linear_frame.plot()
+        .scatter("y_true", "y_pred")
+        .headline("Observed vs predicted bike demand (linear)")
+        .save_pdf((out_dir / "bike_pred_vs_true_linear.pdf").string());
+    linear_frame.plot()
+        .hist("residual", 80)
+        .headline("Residual distribution (linear)")
+        .save_pdf((out_dir / "bike_residual_hist_linear.pdf").string());
+    std::cout << "saved model (linear): " << linear_model_path << "\n";
+```
+
+**Expected output**
+
+```text
+model returned const WorkflowModel&
+```

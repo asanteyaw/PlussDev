@@ -1,0 +1,13 @@
+# `OnlineLinearClassifier::infer_scores`
+
+## Notes
+
+Computes predictions from prepared inputs using the currently learned state.
+
+## Overloads
+
+- [overload 1](../api/onlinelinearclassifier-infer-scores-ov1.md): `[[nodiscard]] StatusOr<Series> OnlineLinearClassifier::infer_scores(self, const FeatureBatch& batch, const InferOptions& options = {}) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/online.h`:29

@@ -1,0 +1,15 @@
+# `learn_flow`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/global-learn-flow-ov1.md): `StatusOr<nodej::Flow> learn_flow( nodej::Flow flow, const nodej::LabeledBatch& train, const nodej::TrainOptions& options = {});`
+- [overload 2](../api/global-learn-flow-ov2.md): `StatusOr<nodej::Flow> learn_flow( nodej::Flow flow, const pluss::table::DataFrame& frame, const nodej::DataFrameBatchOptions& data_options, const nodej::TrainOptions& options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:64
+- `PlussAI/include/pluss/ai/lymph/quick.h`:69

@@ -1,0 +1,44 @@
+# `Workflow::minmax_scaler`
+
+## Signature
+
+```cpp
+Workflow& Workflow::minmax_scaler(self, prep::MinMaxScalerOptions options = {}, std::vector<std::int64_t> feature_route = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `prep::MinMaxScalerOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `feature_route` : `std::vector<std::int64_t>`, default: `{}`
+  Input feature data used by this call.
+
+## Returns
+
+Returns `Workflow&`.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] inline MinMaxScaler minmax_scaler(MinMaxScalerOptions options = {}) { return MinMaxScaler(options); };`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+Workflow workflow{};
+auto out = workflow.minmax_scaler(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:1289

@@ -193,6 +193,20 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/rule
+
+# Convenience name for target.
+autodiff_audit_bridge_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/rule
+.PHONY : autodiff_audit_bridge_test
+
+# fast build rule for target.
+autodiff_audit_bridge_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/build
+.PHONY : autodiff_audit_bridge_test/fast
+
+# Convenience name for target.
 PlussMa/Math/Numerical/optimization/test/CMakeFiles/dfo_minimizers_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/dfo_minimizers_test.dir/rule
 .PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/dfo_minimizers_test.dir/rule
@@ -277,6 +291,20 @@ mads_nomad_parity_test/fast:
 .PHONY : mads_nomad_parity_test/fast
 
 # Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/rule
+
+# Convenience name for target.
+pattern_search_minimizer_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/rule
+.PHONY : pattern_search_minimizer_test
+
+# fast build rule for target.
+pattern_search_minimizer_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build
+.PHONY : pattern_search_minimizer_test/fast
+
+# Convenience name for target.
 PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/rule
 .PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/rule
@@ -289,6 +317,44 @@ optima_robustness_catch2: PlussMa/Math/Numerical/optimization/test/CMakeFiles/op
 optima_robustness_catch2/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/build
 .PHONY : optima_robustness_catch2/fast
+
+# Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/rule
+
+# Convenience name for target.
+pattern_search_closure_catch2: PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/rule
+.PHONY : pattern_search_closure_catch2
+
+# fast build rule for target.
+pattern_search_closure_catch2/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/build
+.PHONY : pattern_search_closure_catch2/fast
+
+autodiff_audit_bridge_test.o: autodiff_audit_bridge_test.cpp.o
+.PHONY : autodiff_audit_bridge_test.o
+
+# target to build an object file
+autodiff_audit_bridge_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/autodiff_audit_bridge_test.cpp.o
+.PHONY : autodiff_audit_bridge_test.cpp.o
+
+autodiff_audit_bridge_test.i: autodiff_audit_bridge_test.cpp.i
+.PHONY : autodiff_audit_bridge_test.i
+
+# target to preprocess a source file
+autodiff_audit_bridge_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/autodiff_audit_bridge_test.cpp.i
+.PHONY : autodiff_audit_bridge_test.cpp.i
+
+autodiff_audit_bridge_test.s: autodiff_audit_bridge_test.cpp.s
+.PHONY : autodiff_audit_bridge_test.s
+
+# target to generate assembly for a file
+autodiff_audit_bridge_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/autodiff_audit_bridge_test.dir/autodiff_audit_bridge_test.cpp.s
+.PHONY : autodiff_audit_bridge_test.cpp.s
 
 dfo_minimizers_test.o: dfo_minimizers_test.cpp.o
 .PHONY : dfo_minimizers_test.o
@@ -458,6 +524,54 @@ optima_robustness_catch2.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/optima_robustness_catch2.dir/optima_robustness_catch2.cpp.s
 .PHONY : optima_robustness_catch2.cpp.s
 
+pattern_search_closure_catch2.o: pattern_search_closure_catch2.cpp.o
+.PHONY : pattern_search_closure_catch2.o
+
+# target to build an object file
+pattern_search_closure_catch2.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/pattern_search_closure_catch2.cpp.o
+.PHONY : pattern_search_closure_catch2.cpp.o
+
+pattern_search_closure_catch2.i: pattern_search_closure_catch2.cpp.i
+.PHONY : pattern_search_closure_catch2.i
+
+# target to preprocess a source file
+pattern_search_closure_catch2.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/pattern_search_closure_catch2.cpp.i
+.PHONY : pattern_search_closure_catch2.cpp.i
+
+pattern_search_closure_catch2.s: pattern_search_closure_catch2.cpp.s
+.PHONY : pattern_search_closure_catch2.s
+
+# target to generate assembly for a file
+pattern_search_closure_catch2.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/pattern_search_closure_catch2.cpp.s
+.PHONY : pattern_search_closure_catch2.cpp.s
+
+pattern_search_minimizer_test.o: pattern_search_minimizer_test.cpp.o
+.PHONY : pattern_search_minimizer_test.o
+
+# target to build an object file
+pattern_search_minimizer_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/pattern_search_minimizer_test.cpp.o
+.PHONY : pattern_search_minimizer_test.cpp.o
+
+pattern_search_minimizer_test.i: pattern_search_minimizer_test.cpp.i
+.PHONY : pattern_search_minimizer_test.i
+
+# target to preprocess a source file
+pattern_search_minimizer_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/pattern_search_minimizer_test.cpp.i
+.PHONY : pattern_search_minimizer_test.cpp.i
+
+pattern_search_minimizer_test.s: pattern_search_minimizer_test.cpp.s
+.PHONY : pattern_search_minimizer_test.s
+
+# target to generate assembly for a file
+pattern_search_minimizer_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/pattern_search_minimizer_test.cpp.s
+.PHONY : pattern_search_minimizer_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -473,6 +587,7 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... autodiff_audit_bridge_test"
 	@echo "... dfo_minimizers_test"
 	@echo "... dfo_solver_test"
 	@echo "... external_reference_parity_test"
@@ -480,6 +595,11 @@ help:
 	@echo "... mads_blackbox_minimizers_test"
 	@echo "... mads_nomad_parity_test"
 	@echo "... optima_robustness_catch2"
+	@echo "... pattern_search_closure_catch2"
+	@echo "... pattern_search_minimizer_test"
+	@echo "... autodiff_audit_bridge_test.o"
+	@echo "... autodiff_audit_bridge_test.i"
+	@echo "... autodiff_audit_bridge_test.s"
 	@echo "... dfo_minimizers_test.o"
 	@echo "... dfo_minimizers_test.i"
 	@echo "... dfo_minimizers_test.s"
@@ -501,6 +621,12 @@ help:
 	@echo "... optima_robustness_catch2.o"
 	@echo "... optima_robustness_catch2.i"
 	@echo "... optima_robustness_catch2.s"
+	@echo "... pattern_search_closure_catch2.o"
+	@echo "... pattern_search_closure_catch2.i"
+	@echo "... pattern_search_closure_catch2.s"
+	@echo "... pattern_search_minimizer_test.o"
+	@echo "... pattern_search_minimizer_test.i"
+	@echo "... pattern_search_minimizer_test.s"
 .PHONY : help
 
 

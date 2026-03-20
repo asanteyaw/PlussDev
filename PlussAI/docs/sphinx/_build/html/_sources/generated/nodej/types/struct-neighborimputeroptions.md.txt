@@ -1,0 +1,28 @@
+# `NeighborImputerOptions`
+
+## Signature
+
+```cpp
+struct NeighborImputerOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `std::int64_t neighbors = 5`
+- `NeighborImputerWeighting weighting = NeighborImputerWeighting::Distance`
+- `double distance_floor = 1e-12`
+- `double empty_feature_fallback = 0.0`
+
+## Example
+
+```cpp
+NeighborImputerOptions cfg{};
+// cfg.neighbors = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:68

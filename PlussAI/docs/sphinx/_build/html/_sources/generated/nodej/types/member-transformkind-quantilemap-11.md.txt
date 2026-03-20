@@ -1,0 +1,21 @@
+# `TransformKind::QuantileMap`
+
+## Signature
+
+```cpp
+TransformKind::QuantileMap;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = TransformKind::QuantileMap;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:15

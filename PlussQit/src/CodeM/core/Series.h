@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
@@ -520,8 +521,21 @@ public:
   // generated `_backward(...)` method so public docs can standardize on
   // `reverse()` without forking the engine path.
   void reverse() const { (void)pluss::codem::_compat::invoke("_backward", *this); }
+  void reverse(bool keep_graph,
+               bool accumulate_sensitivity = false,
+               bool track_higher_order = false) const {
+    (void)pluss::codem::_compat::invoke(
+        "_backward", *this, keep_graph, accumulate_sensitivity, track_higher_order);
+  }
   void reverse(const Series& sensitivity_output) const {
     (void)pluss::codem::_compat::invoke("_backward", *this, sensitivity_output);
+  }
+  void reverse(const Series& sensitivity_output,
+               bool keep_graph,
+               bool accumulate_sensitivity = false,
+               bool track_higher_order = false) const {
+    (void)pluss::codem::_compat::invoke(
+        "_backward", *this, sensitivity_output, keep_graph, accumulate_sensitivity, track_higher_order);
   }
   bool tracks_slope() const { return pluss::codem::_compat::invoke("tracks_slope", *this).item<bool>(); }
   bool has_sensitivity() const {
@@ -531,6 +545,25 @@ public:
   void clear_sensitivity() const { (void)pluss::codem::_compat::invoke_("clear_sensitivity", *this); }
   std::int64_t storage_version() const {
     return pluss::codem::_compat::invoke("_version", *this).item<std::int64_t>();
+  }
+
+  Series count(bool count_true = true) const {
+    PLUSS_CHECK(defined(), "Series::count: undefined Series");
+    const auto target_platform = platform();
+    const auto cpu = is_cpu() ? *this : to(Platform::CPU);
+
+    std::int64_t total = 0;
+    if (cpu.scalar_type() == ScalarType::Bool) {
+      const auto values = cpu.to_vec<bool>();
+      total = static_cast<std::int64_t>(std::count(values.begin(), values.end(), count_true));
+    } else {
+      PLUSS_CHECK(count_true, "Series::count(false) is only valid for Bool Series");
+      total = cpu.numel();
+    }
+
+    auto out_cpu = Series::empty({1}, ScalarType::Int64, Platform::CPU);
+    reinterpret_cast<std::int64_t*>(out_cpu.raw_data())[0] = total;
+    return target_platform == Platform::CPU ? out_cpu : out_cpu.to(target_platform);
   }
 
   // PlussQit naming deviations (method-first aliases).

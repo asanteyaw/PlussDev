@@ -1,0 +1,13 @@
+# `linear_factory::hinge_classifier`
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## Overloads
+
+- [overload 1](../api/linear-factory-hinge-classifier-ov1.md): `[[nodiscard]] static WorkflowModel linear_factory::hinge_classifier(self, LinearFamilyOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2040

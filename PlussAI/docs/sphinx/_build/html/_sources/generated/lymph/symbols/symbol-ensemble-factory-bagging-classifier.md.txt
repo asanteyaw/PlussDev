@@ -1,0 +1,13 @@
+# `ensemble_factory::bagging_classifier`
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## Overloads
+
+- [overload 1](../api/ensemble-factory-bagging-classifier-ov1.md): `[[nodiscard]] static WorkflowModel ensemble_factory::bagging_classifier(self, EnsembleFamilyOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2085

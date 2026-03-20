@@ -1,6 +1,8 @@
 #include <pluss/pluss.h>
 #include <pluss/nn.h>
 #include <pluss/mic.h>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <algorithm>
 #include <cmath>
@@ -53,6 +55,7 @@ PLUSS_MODULE(StockLSTM);
 
 } // namespace
 
+
 int main() {
   namespace fs = std::filesystem;
 
@@ -77,29 +80,33 @@ int main() {
       }
     }
   }
-  PLUSS_CHECK(!csv_path.empty(), "nn_sp500_lstm_end_to_end_minimal_demo: could not find PlussMic/data/sp500_data.csv");
+  if (csv_path.empty()) {
+    std::cerr << "could not find PlussMic/data/sp500_data.csv\n";
+    return 1;
+  }
 
   pluss::loader::ReadCsvOptions read_opts;
   read_opts.skipcases = {1, 2};
   read_opts.parse_dates = {"Price"};
 
-  auto df = pluss::table::DataFrame::load_csv(csv_path.string(), read_opts).rename("Price", "Date");
+  auto df = pluss::table::DataFrame::load_csv(csv_path.string(), read_opts);
+  df = df.rename("Price", "Date");
   std::cout << "source=" << csv_path << "\n";
   std::cout << "raw rows=" << df.ncases() << " features=" << df.nfeats() << "\n";
+  std::cout << fmt::format("feature names=[{}]\n", fmt::join(df.feature_names(), ", "));
 
-  auto work = df.features({"Date", "Close", "High", "Low", "Volume"});
-  const auto close_prev = work.shift({"Close"}, 1).features({"Close"}).rename("Close", "ClosePrev1");
-  work = work.combine(close_prev).dropna();
-  work.set({"Ret1D", "RangePct", "LogVolume"}) = {
-      (work.features("Close") / work.features("ClosePrev1")) - 1.0,
-      (work.features("High") - work.features("Low")) / work.features("Close"),
+  auto work = df.features({"Date", "Adj Close", "High", "Low", "Volume"});
+  work.set("Ret1D") = work.features("Adj Close") / work.features("Adj Close").shift( 1) - 1.0;
+
+  work.set({"RangePct", "LogVolume"}) = {
+      (work.features("High") - work.features("Low")) / work.features("Adj Close"),
       (work.features("Volume") + 1.0).log(),
   };
-  work = work.drop({"ClosePrev1"}).set_cases("Date", true);
+  work = work.dropna().set_cases("Date", true);
   // Full-history mode: keep all available rows for stress coverage.
-
+  work.head(10);
   std::cout << "prepared rows=" << work.ncases() << " features=" << work.nfeats() << "\n";
-
+  
   const pluss::Platform platform = pluss::mps::is_ready() ? pluss::pMPS : pluss::pCPU;
   const ScalarType dtype = ScalarType::Float32;
   const Config cfg = Config{}.with_dtype(dtype).with_platform(platform);
@@ -107,7 +114,7 @@ int main() {
   const Config cpu_i64 = Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU);
 
   // Build training windows on CPU in f32; move only final batches to target platform.
-  const Series close = work.features("Close").as_series().to(ScalarType::Float32);
+  const Series close = work.features("Adj Close").as_series().to(ScalarType::Float32);
   const Series ret1d = work.features("Ret1D").as_series().to(ScalarType::Float32);
   const Series range_pct = work.features("RangePct").as_series().to(ScalarType::Float32);
   const Series vol = work.features("LogVolume").as_series().to(ScalarType::Float32);
@@ -129,20 +136,15 @@ int main() {
 
   const std::int64_t lookback = 40;
   const std::int64_t n = close_scaled.numel() - lookback - 1;
-  PLUSS_CHECK(n > 256, "nn_sp500_lstm_end_to_end_minimal_demo: not enough rows after preprocessing");
+  if (n <= 256) {
+    std::cerr << "not enough rows after preprocessing\n";
+    return 1;
+  }
 
   const auto close_vec = close_scaled.to_vec<float>();
   const auto ret_vec = ret_scaled.to_vec<float>();
   const auto range_vec = range_scaled.to_vec<float>();
   const auto vol_vec = vol_scaled.to_vec<float>();
-  PLUSS_CHECK(static_cast<std::int64_t>(close_vec.size()) == close_scaled.numel(),
-              "nn_sp500_lstm_end_to_end_minimal_demo: close series/vector size mismatch");
-  PLUSS_CHECK(static_cast<std::int64_t>(ret_vec.size()) == ret_scaled.numel(),
-              "nn_sp500_lstm_end_to_end_minimal_demo: ret series/vector size mismatch");
-  PLUSS_CHECK(static_cast<std::int64_t>(range_vec.size()) == range_scaled.numel(),
-              "nn_sp500_lstm_end_to_end_minimal_demo: range series/vector size mismatch");
-  PLUSS_CHECK(static_cast<std::int64_t>(vol_vec.size()) == vol_scaled.numel(),
-              "nn_sp500_lstm_end_to_end_minimal_demo: volume series/vector size mismatch");
 
   const std::size_t samples = static_cast<std::size_t>(n);
   const std::size_t lb = static_cast<std::size_t>(lookback);
@@ -179,11 +181,6 @@ int main() {
   pluss::nn::optim::AdamOptions opt{};
   opt.learning_rate = 2e-3;
   pluss::nn::optim::Adam optimizer(model->parameters(), opt);
-  pluss::nn::optim::StepDiagnosticsOptions diag{};
-  diag.fail_if_non_finite_loss = true;
-  diag.fail_if_non_finite_sensitivity = true;
-  diag.fail_if_non_finite_parameter = true;
-  optimizer.set_step_diagnostics(diag);
 
   const std::int64_t batch_size = 256;
   for (int epoch = 1; epoch <= 160; ++epoch) {

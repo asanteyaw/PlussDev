@@ -1,0 +1,13 @@
+# `ClassifierBase::task_kind`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/classifierbase-task-kind-ov1.md): `[[nodiscard]] TaskKind ClassifierBase::task_kind(self) const noexcept override;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/interfaces.h`:30

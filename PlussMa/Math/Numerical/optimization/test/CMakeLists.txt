@@ -19,4 +19,11 @@ if(TARGET Catch2::Catch2WithMain)
     target_link_libraries(optima_robustness_catch2 PRIVATE pluss plussqit_codem Catch2::Catch2WithMain)
     target_compile_features(optima_robustness_catch2 PRIVATE cxx_std_20)
     add_test(NAME optima_robustness_catch2 COMMAND optima_robustness_catch2)
+
+    add_executable(pattern_search_closure_catch2
+        pattern_search_closure_catch2.cpp
+    )
+    target_link_libraries(pattern_search_closure_catch2 PRIVATE pluss plussqit_codem Catch2::Catch2WithMain)
+    target_compile_features(pattern_search_closure_catch2 PRIVATE cxx_std_20)
+    add_test(NAME pattern_search_closure_catch2 COMMAND pattern_search_closure_catch2)
 endif()

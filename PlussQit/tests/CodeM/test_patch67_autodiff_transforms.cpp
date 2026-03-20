@@ -14,20 +14,40 @@ using pluss::ScalarType;
 using pluss::Series;
 using pluss::make_series;
 using pluss::subsp::math::diff::DualTrace;
+using pluss::subsp::math::diff::DisconnectedSensitivity;
+using pluss::subsp::math::diff::DerivativePolicy;
+using pluss::subsp::math::diff::DerivativeAuditOptions;
 using pluss::subsp::math::diff::HvpOptions;
+using pluss::subsp::math::diff::HessianOptions;
+using pluss::subsp::math::diff::JacobianMode;
+using pluss::subsp::math::diff::JacobianOptions;
 using pluss::subsp::math::diff::ReverseDebugScope;
+using pluss::subsp::math::diff::ReversePolicy;
 using pluss::subsp::math::diff::Trace;
+using pluss::subsp::math::diff::TraceRecordingScope;
 using pluss::subsp::math::diff::grad;
+using pluss::subsp::math::diff::gradient_audit;
+using pluss::subsp::math::diff::hessian;
 using pluss::subsp::math::diff::hvp;
+using pluss::subsp::math::diff::hvp_lanes;
+using pluss::subsp::math::diff::jacobian;
 using pluss::subsp::math::diff::jacfwd;
 using pluss::subsp::math::diff::jacrev;
 using pluss::subsp::math::diff::jvp;
+using pluss::subsp::math::diff::jvp_lanes;
 using pluss::subsp::math::diff::linearize;
 using pluss::subsp::math::diff::nth_derivative;
 using pluss::subsp::math::diff::slope_source;
 using pluss::subsp::math::diff::trace;
+using pluss::subsp::math::diff::trace_recording_enabled;
+using pluss::subsp::math::diff::curvature_audit;
+using pluss::subsp::math::diff::curvature_audit_report;
 using pluss::subsp::math::diff::value_and_grad;
 using pluss::subsp::math::diff::vjp;
+using pluss::subsp::math::diff::vjp_lanes;
+using pluss::subsp::math::diff::vhp;
+using pluss::subsp::math::diff::vhp_lanes;
+using pluss::subsp::math::diff::gradient_audit_report;
 using Catch::Approx;
 
 Series make_f64(std::vector<double> data) {
@@ -174,6 +194,343 @@ TEST_CASE("autodiff slope_source reports captured op metadata", "[autodiff][diag
   REQUIRE(src.op == "mul");
   REQUIRE(src.parents == 2);
   REQUIRE_FALSE(src.capture_file.empty());
+}
+
+TEST_CASE("autodiff trace recording scope suppresses capture when disabled", "[autodiff][diagnostics]") {
+  Series x = make_series(1.5).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+
+  REQUIRE(trace_recording_enabled());
+  {
+    TraceRecordingScope pause(false);
+    REQUIRE_FALSE(trace_recording_enabled());
+    const Series y = x.mul(x);
+    const auto y_src = slope_source(y);
+    REQUIRE_FALSE(y_src.linked);
+  }
+  REQUIRE(trace_recording_enabled());
+
+  const Series z = x.mul(x);
+  const auto z_src = slope_source(z);
+  REQUIRE(z_src.linked);
+  REQUIRE(z_src.op == "mul");
+}
+
+TEST_CASE("autodiff trace recording scope nests deterministically", "[autodiff][diagnostics]") {
+  REQUIRE(trace_recording_enabled());
+  {
+    TraceRecordingScope outer(false);
+    REQUIRE_FALSE(trace_recording_enabled());
+    {
+      TraceRecordingScope inner(true);
+      REQUIRE_FALSE(trace_recording_enabled());
+    }
+    REQUIRE_FALSE(trace_recording_enabled());
+  }
+  REQUIRE(trace_recording_enabled());
+}
+
+TEST_CASE("autodiff reverse policy accumulates leaf sensitivity when requested", "[autodiff][reverse]") {
+  Series x = make_series(1.5).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  const Trace tracked_y(x.square().sum());
+
+  tracked_y.reverse();
+  const double g1 = x.sensitivity().item<double>();
+  REQUIRE(g1 == Approx(3.0));
+
+  ReversePolicy policy{};
+  policy.keep_graph = true;
+  policy.accumulate_sensitivity = true;
+  tracked_y.reverse(policy);
+
+  const double g2 = x.sensitivity().item<double>();
+  REQUIRE(g2 == Approx(6.0));
+}
+
+TEST_CASE("autodiff reverse policy tracks higher-order sensitivity graph when enabled", "[autodiff][reverse]") {
+  Series x = make_series(2.0).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  const Trace y(x * x * x);
+
+  ReversePolicy policy{};
+  policy.keep_graph = true;
+  policy.track_higher_order = true;
+  y.reverse(policy);
+  REQUIRE(x.sensitivity().item<double>() == Approx(12.0).margin(1e-12));
+
+  const Series first = x.sensitivity();
+  x.clear_sensitivity();
+  first.reverse();
+  REQUIRE(x.sensitivity().item<double>() == Approx(12.0).margin(1e-8));
+}
+
+TEST_CASE("autodiff reverse does not build higher-order graph by default", "[autodiff][reverse]") {
+  Series x = make_series(2.0).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  const Trace y(x * x * x);
+  y.reverse();
+  const Series first = x.sensitivity();
+  x.clear_sensitivity();
+  first.reverse();
+  REQUIRE_FALSE(x.has_sensitivity());
+}
+
+TEST_CASE("autodiff reverse policy can drop source links after pass", "[autodiff][diagnostics]") {
+  Series x = make_series(1.5).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  const Series y = x.square().sum();
+  REQUIRE(slope_source(y).linked);
+
+  ReversePolicy once{};
+  once.keep_graph = false;
+  Trace(y).reverse(once);
+
+  REQUIRE_FALSE(slope_source(y).linked);
+}
+
+TEST_CASE("autodiff grad policy tracks higher-order graph when requested", "[autodiff][transforms]") {
+  Series x = make_series(2.0).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+  DerivativePolicy policy{};
+  policy.track_higher_order = true;
+  const Series first = grad(
+      [](const Trace& z) -> Trace { return z * z * z; },
+      x,
+      policy);
+  REQUIRE(first.item<double>() == Approx(12.0).margin(1e-12));
+
+  x.clear_sensitivity();
+  first.reverse();
+  REQUIRE(x.has_sensitivity());
+  REQUIRE(x.sensitivity().item<double>() == Approx(12.0).margin(1e-8));
+}
+
+TEST_CASE("autodiff default grad materializes zero for disconnected objective", "[autodiff][transforms]") {
+  const Series x = make_series(2.0).to(ScalarType::Float64);
+  const Series g = grad(
+      [](const Trace&) -> Trace {
+        return trace(make_series(1.0).to(ScalarType::Float64), false);
+      },
+      x);
+  REQUIRE(g.item<double>() == Approx(0.0));
+}
+
+TEST_CASE("autodiff grad can return undefined for disconnected objective", "[autodiff][transforms]") {
+  const Series x = make_series(2.0).to(ScalarType::Float64);
+  DerivativePolicy policy{};
+  policy.disconnected_sensitivity = DisconnectedSensitivity::Undefined;
+  const Series g = grad(
+      [](const Trace&) -> Trace {
+        return trace(make_series(1.0).to(ScalarType::Float64), false);
+      },
+      x,
+      policy);
+  REQUIRE_FALSE(g.defined());
+}
+
+TEST_CASE("autodiff strict grad fails for disconnected objective", "[autodiff][transforms]") {
+  const Series x = make_series(2.0).to(ScalarType::Float64);
+  DerivativePolicy strict{};
+  strict.strict_dependency = true;
+  REQUIRE_THROWS_WITH(
+      grad(
+          [](const Trace&) -> Trace {
+            return trace(make_series(1.0).to(ScalarType::Float64), false);
+          },
+          x,
+          strict),
+      Catch::Matchers::ContainsSubstring("disconnected from input"));
+}
+
+TEST_CASE("autodiff strict vjp fails for disconnected objective", "[autodiff][transforms]") {
+  const Series x = make_series(2.0).to(ScalarType::Float64);
+  DerivativePolicy strict{};
+  strict.strict_dependency = true;
+  auto [value, pullback] = vjp(
+      [](const Trace&) -> Trace {
+        return trace(make_series(3.0).to(ScalarType::Float64), false);
+      },
+      x,
+      strict);
+  REQUIRE(value.item<double>() == Approx(3.0));
+  REQUIRE_THROWS_WITH(
+      pullback(make_series(1.0).to(ScalarType::Float64)),
+      Catch::Matchers::ContainsSubstring("disconnected from input"));
+}
+
+TEST_CASE("autodiff vjp can return undefined for disconnected objective", "[autodiff][transforms]") {
+  const Series x = make_series(2.0).to(ScalarType::Float64);
+  DerivativePolicy policy{};
+  policy.disconnected_sensitivity = DisconnectedSensitivity::Undefined;
+  auto [value, pullback] = vjp(
+      [](const Trace&) -> Trace {
+        return trace(make_series(3.0).to(ScalarType::Float64), false);
+      },
+      x,
+      policy);
+  REQUIRE(value.item<double>() == Approx(3.0));
+  const Series g = pullback(make_series(1.0).to(ScalarType::Float64));
+  REQUIRE_FALSE(g.defined());
+}
+
+TEST_CASE("autodiff vjp pullback is reusable by default", "[autodiff][transforms]") {
+  const Series x = make_series(2.0).to(ScalarType::Float64);
+  auto [value, pullback] = vjp(
+      [](const Trace& z) -> Trace { return z * z * z; },
+      x);
+  REQUIRE(value.item<double>() == Approx(8.0).margin(1e-12));
+
+  const Series seed = make_series(1.0).to(ScalarType::Float64);
+  const Series g1 = pullback(seed);
+  const Series g2 = pullback(seed);
+  REQUIRE(g1.item<double>() == Approx(12.0).margin(1e-12));
+  REQUIRE(g2.item<double>() == Approx(12.0).margin(1e-12));
+}
+
+TEST_CASE("autodiff vjp keep_graph=false computes pullback", "[autodiff][transforms]") {
+  const Series x = make_series(2.0).to(ScalarType::Float64);
+  DerivativePolicy policy{};
+  policy.keep_graph = false;
+  auto [value, pullback] = vjp(
+      [](const Trace& z) -> Trace { return z * z * z; },
+      x,
+      policy);
+  REQUIRE(value.item<double>() == Approx(8.0).margin(1e-12));
+
+  const Series seed = make_series(1.0).to(ScalarType::Float64);
+  const Series g1 = pullback(seed);
+  REQUIRE(g1.item<double>() == Approx(12.0).margin(1e-12));
+}
+
+TEST_CASE("autodiff grad policy can accumulate input sensitivities", "[autodiff][transforms]") {
+  Series x = make_series(2.0).to(ScalarType::Float64);
+  x.tracks_slope_(true);
+
+  DerivativePolicy policy{};
+  policy.accumulate_input_sensitivity = true;
+  const Series g1 = grad(
+      [](const Trace& z) -> Trace { return z * z; },
+      x,
+      policy);
+  const Series g2 = grad(
+      [](const Trace& z) -> Trace { return z * z; },
+      x,
+      policy);
+
+  REQUIRE(g1.item<double>() == Approx(4.0).margin(1e-12));
+  REQUIRE(g2.item<double>() == Approx(8.0).margin(1e-12));
+  REQUIRE(x.has_sensitivity());
+  REQUIRE(x.sensitivity().item<double>() == Approx(8.0).margin(1e-12));
+}
+
+TEST_CASE("autodiff seeded grad supports non-scalar objectives", "[autodiff][transforms]") {
+  const Series x = make_series(std::vector<double>{0.2, -0.3, 0.4}, {3}).to(ScalarType::Float64);
+  const Series cot = make_series(std::vector<double>{1.0, -2.0, 0.5}, {3}).to(ScalarType::Float64);
+
+  const Series g = grad(
+      [](const Trace& z) -> Trace { return vector_objective(z); },
+      x,
+      cot);
+
+  const auto xv = x.to_vec<double>();
+  const auto gv = g.to_vec<double>();
+  const auto cotv = cot.to_vec<double>();
+  REQUIRE(gv.size() == xv.size());
+  for (std::size_t i = 0; i < xv.size(); ++i) {
+    const double expected = cotv[i] * (std::cos(xv[i]) + 2.0 * xv[i]);
+    REQUIRE(gv[i] == Approx(expected).margin(1e-10));
+  }
+}
+
+TEST_CASE("autodiff seeded value_and_grad returns value and pullback", "[autodiff][transforms]") {
+  const Series x = make_series(std::vector<double>{0.2, -0.3, 0.4}, {3}).to(ScalarType::Float64);
+  const Series cot = make_series(std::vector<double>{1.0, -2.0, 0.5}, {3}).to(ScalarType::Float64);
+
+  const auto [value, g] = value_and_grad(
+      [](const Trace& z) -> Trace { return vector_objective(z); },
+      x,
+      cot);
+
+  const auto vv = value.to_vec<double>();
+  const auto xv = x.to_vec<double>();
+  REQUIRE(vv.size() == xv.size());
+  for (std::size_t i = 0; i < xv.size(); ++i) {
+    REQUIRE(vv[i] == Approx(std::sin(xv[i]) + xv[i] * xv[i]).margin(1e-10));
+  }
+
+  const auto gv = g.to_vec<double>();
+  REQUIRE(gv.size() == xv.size());
+  const auto cotv = cot.to_vec<double>();
+  for (std::size_t i = 0; i < xv.size(); ++i) {
+    const double expected = cotv[i] * (std::cos(xv[i]) + 2.0 * xv[i]);
+    REQUIRE(gv[i] == Approx(expected).margin(1e-10));
+  }
+}
+
+TEST_CASE("autodiff seeded vjp matches closure pullback semantics", "[autodiff][transforms]") {
+  const Series x = make_series(std::vector<double>{0.2, -0.3, 0.4}, {3}).to(ScalarType::Float64);
+  const Series cot = make_series(std::vector<double>{1.0, -2.0, 0.5}, {3}).to(ScalarType::Float64);
+
+  const auto [value_direct, grad_direct] = vjp(
+      [](const Trace& z) -> Trace { return vector_objective(z); },
+      x,
+      cot);
+
+  const auto [value_closure, pullback] = vjp(
+      [](const Trace& z) -> Trace { return vector_objective(z); },
+      x);
+  const Series grad_closure = pullback(cot);
+
+  const auto vd = value_direct.to_vec<double>();
+  const auto vc = value_closure.to_vec<double>();
+  REQUIRE(vd.size() == vc.size());
+  for (std::size_t i = 0; i < vd.size(); ++i) {
+    REQUIRE(vd[i] == Approx(vc[i]).margin(1e-12));
+  }
+
+  const auto gd = grad_direct.to_vec<double>();
+  const auto gc = grad_closure.to_vec<double>();
+  REQUIRE(gd.size() == gc.size());
+  for (std::size_t i = 0; i < gd.size(); ++i) {
+    REQUIRE(gd[i] == Approx(gc[i]).margin(1e-12));
+  }
+}
+
+TEST_CASE("autodiff strict seeded grad fails for disconnected objective", "[autodiff][transforms]") {
+  const Series x = make_series(std::vector<double>{0.2, -0.3, 0.4}, {3}).to(ScalarType::Float64);
+  const Series cot = make_series(std::vector<double>{1.0, -2.0, 0.5}, {3}).to(ScalarType::Float64);
+  DerivativePolicy strict{};
+  strict.strict_dependency = true;
+
+  REQUIRE_THROWS_WITH(
+      grad(
+          [](const Trace&) -> Trace {
+            return trace(
+                make_series(std::vector<double>{3.0, 3.0, 3.0}, {3}).to(ScalarType::Float64),
+                false);
+          },
+          x,
+          cot,
+          strict),
+      Catch::Matchers::ContainsSubstring("disconnected from input"));
+}
+
+TEST_CASE("autodiff strict hvp fails for disconnected objective", "[autodiff][transforms]") {
+  const Series x = make_series(2.0).to(ScalarType::Float64);
+  const Series v = make_series(1.0).to(ScalarType::Float64);
+  DerivativePolicy strict{};
+  strict.strict_dependency = true;
+  REQUIRE_THROWS_WITH(
+      hvp(
+          [](const Trace&) -> Trace {
+            return trace(make_series(1.0).to(ScalarType::Float64), false);
+          },
+          x,
+          v,
+          HvpOptions{},
+          strict),
+      Catch::Matchers::ContainsSubstring("disconnected from input"));
 }
 
 TEST_CASE("autodiff tracked batched matmul reverse matches finite difference", "[autodiff][reverse]") {
@@ -584,6 +941,31 @@ TEST_CASE("vjp matches cotangent pullback analytically", "[autodiff][vjp]") {
   }
 }
 
+TEST_CASE("vjp_lanes computes multiple pullbacks with consistent value", "[autodiff][vjp]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const std::vector<Series> cotangent_lanes{
+      make_f64({1.0, -0.5, 0.25}),
+      make_f64({-0.2, 0.4, 0.1}),
+  };
+
+  const auto [value, lanes] = vjp_lanes(
+      [](const Trace& z) -> Trace { return vector_objective(z); },
+      x,
+      cotangent_lanes);
+  REQUIRE(value.sizes()[0] == 3);
+  REQUIRE(lanes.size() == cotangent_lanes.size());
+
+  const auto slope = analytic_slope(x.to_vec<double>());
+  for (std::size_t lane = 0; lane < lanes.size(); ++lane) {
+    const auto c = cotangent_lanes[lane].to_vec<double>();
+    const auto g = lanes[lane].to_vec<double>();
+    REQUIRE(g.size() == c.size());
+    for (std::size_t i = 0; i < g.size(); ++i) {
+      REQUIRE(g[i] == Approx(slope[i] * c[i]).margin(1e-12));
+    }
+  }
+}
+
 TEST_CASE("jvp matches exact vector-output directional derivative", "[autodiff][jvp]") {
   const Series x = make_f64({0.3, -0.2, 0.5});
   const Series tangent = make_f64({0.1, 0.05, -0.2});
@@ -599,6 +981,31 @@ TEST_CASE("jvp matches exact vector-output directional derivative", "[autodiff][
   const auto got = directional.to_vec<double>();
   for (std::size_t i = 0; i < got.size(); ++i) {
     REQUIRE(got[i] == Approx(slope[i] * t[i]).margin(1e-12));
+  }
+}
+
+TEST_CASE("jvp_lanes computes multiple directional lanes with consistent value", "[autodiff][jvp]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const std::vector<Series> tangent_lanes{
+      make_f64({0.1, 0.05, -0.2}),
+      make_f64({-0.3, 0.2, 0.4}),
+  };
+
+  const auto [value, lanes] = jvp_lanes(
+      [](const DualTrace& z) -> DualTrace { return vector_objective(z); },
+      x,
+      tangent_lanes);
+  REQUIRE(value.sizes()[0] == 3);
+  REQUIRE(lanes.size() == tangent_lanes.size());
+
+  const auto slope = analytic_slope(x.to_vec<double>());
+  for (std::size_t lane = 0; lane < lanes.size(); ++lane) {
+    const auto t = tangent_lanes[lane].to_vec<double>();
+    const auto g = lanes[lane].to_vec<double>();
+    REQUIRE(g.size() == t.size());
+    for (std::size_t i = 0; i < g.size(); ++i) {
+      REQUIRE(g[i] == Approx(slope[i] * t[i]).margin(1e-12));
+    }
   }
 }
 
@@ -638,6 +1045,62 @@ TEST_CASE("expanded unary derivative coverage remains analytic-accurate", "[auto
         0.1 * std::exp(0.1 * s) +
         0.3 * kTwoOverSqrtPi * std::exp(-(0.3 * s) * (0.3 * s));
     REQUIRE(dv[i] == Approx(slope * tv[i]).margin(1e-10));
+  }
+}
+
+TEST_CASE("extended unary and activation derivative coverage remains analytic-accurate", "[autodiff][coverage]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const Series tangent = make_f64({0.1, 0.05, -0.2});
+  const auto [value, directional] = jvp(
+      [](const DualTrace& z) -> DualTrace {
+        using pluss::subsp::math::diff::acosh;
+        using pluss::subsp::math::diff::asinh;
+        using pluss::subsp::math::diff::atanh;
+        using pluss::subsp::math::diff::gelu;
+        using pluss::subsp::math::diff::leaky_relu;
+        using pluss::subsp::math::diff::silu;
+        using pluss::subsp::math::diff::tan;
+        return tan(z) +
+               asinh(z) +
+               acosh(z + 1.5) +
+               atanh(z * 0.4) +
+               leaky_relu(z, 0.2) +
+               silu(z) +
+               gelu(z, false) +
+               gelu(z, true);
+      },
+      x,
+      tangent);
+
+  REQUIRE(value.sizes()[0] == 3);
+  const auto xv = x.to_vec<double>();
+  const auto tv = tangent.to_vec<double>();
+  const auto dv = directional.to_vec<double>();
+  constexpr double kInvSqrt2 = 0.70710678118654752440;
+  constexpr double kInvSqrt2Pi = 0.39894228040143267794;
+  constexpr double kC = 0.79788456080286535588; // sqrt(2/pi)
+  constexpr double kK = 0.044715;
+  for (std::size_t i = 0; i < dv.size(); ++i) {
+    const double s = xv[i];
+    const double tan_slope = 1.0 / (std::cos(s) * std::cos(s));
+    const double asinh_slope = 1.0 / std::sqrt(1.0 + s * s);
+    const double a = s + 1.5;
+    const double acosh_slope = 1.0 / (std::sqrt(a - 1.0) * std::sqrt(a + 1.0));
+    const double atanh_slope = 0.4 / (1.0 - (0.4 * s) * (0.4 * s));
+    const double leaky_slope = s > 0.0 ? 1.0 : 0.2;
+    const double sig = 1.0 / (1.0 + std::exp(-s));
+    const double silu_slope = sig * (1.0 + s * (1.0 - sig));
+    const double gelu_exact_slope =
+        0.5 * (1.0 + std::erf(s * kInvSqrt2)) + s * kInvSqrt2Pi * std::exp(-0.5 * s * s);
+
+    const double u = kC * (s + kK * s * s * s);
+    const double t = std::tanh(u);
+    const double du = kC * (1.0 + 3.0 * kK * s * s);
+    const double gelu_approx_slope = 0.5 * (1.0 + t) + 0.5 * s * (1.0 - t * t) * du;
+
+    const double slope = tan_slope + asinh_slope + acosh_slope + atanh_slope +
+                         leaky_slope + silu_slope + gelu_exact_slope + gelu_approx_slope;
+    REQUIRE(dv[i] == Approx(slope * tv[i]).margin(2e-9));
   }
 }
 
@@ -806,6 +1269,81 @@ TEST_CASE("jacrev and jacfwd agree with analytic Jacobian", "[autodiff][jacobian
   }
 }
 
+TEST_CASE("jacobian wrapper dispatches reverse and forward modes", "[autodiff][jacobian]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const auto objective = [](const auto& z) { return vector_objective(z); };
+
+  JacobianOptions rev_opt{};
+  rev_opt.mode = JacobianMode::Reverse;
+  const auto [_, j_rev] = jacobian(objective, x, rev_opt);
+
+  JacobianOptions fwd_opt{};
+  fwd_opt.mode = JacobianMode::Forward;
+  const auto [__, j_fwd] = jacobian(objective, x, fwd_opt);
+
+  const auto rev = j_rev.to_vec<double>();
+  const auto fwd = j_fwd.to_vec<double>();
+  REQUIRE(rev.size() == fwd.size());
+  for (std::size_t i = 0; i < rev.size(); ++i) {
+    REQUIRE(rev[i] == Approx(fwd[i]).margin(1e-12));
+  }
+}
+
+TEST_CASE("jacobian vectorized hint preserves Jacobian semantics", "[autodiff][jacobian]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const auto objective = [](const auto& z) { return vector_objective(z); };
+
+  JacobianOptions base_rev{};
+  base_rev.mode = JacobianMode::Reverse;
+  const auto [_, j_base_rev] = jacobian(objective, x, base_rev);
+
+  JacobianOptions vec_rev{};
+  vec_rev.mode = JacobianMode::Reverse;
+  vec_rev.vectorized = true;
+  const auto [__, j_vec_rev] = jacobian(objective, x, vec_rev);
+
+  const auto base_rev_vals = j_base_rev.to_vec<double>();
+  const auto vec_rev_vals = j_vec_rev.to_vec<double>();
+  REQUIRE(base_rev_vals.size() == vec_rev_vals.size());
+  for (std::size_t i = 0; i < base_rev_vals.size(); ++i) {
+    REQUIRE(vec_rev_vals[i] == Approx(base_rev_vals[i]).margin(1e-12));
+  }
+
+  JacobianOptions base_fwd{};
+  base_fwd.mode = JacobianMode::Forward;
+  const auto [___, j_base_fwd] = jacobian(objective, x, base_fwd);
+
+  JacobianOptions vec_fwd{};
+  vec_fwd.mode = JacobianMode::Forward;
+  vec_fwd.vectorized = true;
+  const auto [____, j_vec_fwd] = jacobian(objective, x, vec_fwd);
+
+  const auto base_fwd_vals = j_base_fwd.to_vec<double>();
+  const auto vec_fwd_vals = j_vec_fwd.to_vec<double>();
+  REQUIRE(base_fwd_vals.size() == vec_fwd_vals.size());
+  for (std::size_t i = 0; i < base_fwd_vals.size(); ++i) {
+    REQUIRE(vec_fwd_vals[i] == Approx(base_fwd_vals[i]).margin(1e-12));
+  }
+}
+
+TEST_CASE("jacobian forward strict dependency is enforced", "[autodiff][jacobian]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  JacobianOptions opt{};
+  opt.mode = JacobianMode::Forward;
+  opt.policy.strict_dependency = true;
+
+  REQUIRE_THROWS_WITH(
+      jacobian(
+          [](const auto& z) {
+            return pluss::subsp::math::diff::constant_like(
+                z,
+                make_series(std::vector<double>{1.0, 1.0, 1.0}, {3}).to(ScalarType::Float64));
+          },
+          x,
+          opt),
+      Catch::Matchers::ContainsSubstring("disconnected from input"));
+}
+
 TEST_CASE("hvp matches analytic Hessian-vector product for scalar objective", "[autodiff][hvp]") {
   const Series x = make_f64({0.3, -0.2, 0.5});
   const Series tangent = make_f64({0.1, 0.05, -0.2});
@@ -831,6 +1369,264 @@ TEST_CASE("hvp matches analytic Hessian-vector product for scalar objective", "[
   }
 }
 
+TEST_CASE("hvp_lanes computes multiple Hessian-vector lanes with consistent value", "[autodiff][hvp]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const std::vector<Series> tangent_lanes{
+      make_f64({0.1, 0.05, -0.2}),
+      make_f64({-0.25, 0.0, 0.4}),
+  };
+
+  const auto [value, lanes] = hvp_lanes(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        return sum(sin(z) + square(z));
+      },
+      x,
+      tangent_lanes,
+      HvpOptions{1e-6});
+
+  REQUIRE(value.numel() == 1);
+  REQUIRE(lanes.size() == tangent_lanes.size());
+
+  const auto xv = x.to_vec<double>();
+  for (std::size_t lane = 0; lane < lanes.size(); ++lane) {
+    const auto tv = tangent_lanes[lane].to_vec<double>();
+    const auto hvv = lanes[lane].to_vec<double>();
+    REQUIRE(hvv.size() == tv.size());
+    for (std::size_t i = 0; i < hvv.size(); ++i) {
+      const double expected = (2.0 - std::sin(xv[i])) * tv[i];
+      REQUIRE(hvv[i] == Approx(expected).margin(1e-5));
+    }
+  }
+}
+
+TEST_CASE("vhp matches hvp for scalar objectives", "[autodiff][vhp]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const Series direction = make_f64({0.1, 0.05, -0.2});
+
+  const auto [value_h, hv] = hvp(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        return sum(sin(z) + square(z));
+      },
+      x,
+      direction,
+      HvpOptions{1e-6});
+
+  const auto [value_v, vh] = vhp(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        return sum(sin(z) + square(z));
+      },
+      x,
+      direction,
+      HvpOptions{1e-6});
+
+  REQUIRE(value_v.item<double>() == Approx(value_h.item<double>()).margin(1e-12));
+  const auto hvv = hv.to_vec<double>();
+  const auto vvv = vh.to_vec<double>();
+  REQUIRE(hvv.size() == vvv.size());
+  for (std::size_t i = 0; i < hvv.size(); ++i) {
+    REQUIRE(vvv[i] == Approx(hvv[i]).margin(1e-8));
+  }
+}
+
+TEST_CASE("vhp_lanes computes multiple lanes consistent with hvp_lanes", "[autodiff][vhp]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const std::vector<Series> direction_lanes{
+      make_f64({0.1, 0.05, -0.2}),
+      make_f64({-0.25, 0.0, 0.4}),
+  };
+
+  const auto [value_h, hv_lanes_out] = hvp_lanes(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        return sum(sin(z) + square(z));
+      },
+      x,
+      direction_lanes,
+      HvpOptions{1e-6});
+
+  const auto [value_v, vhp_lanes_out] = vhp_lanes(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        return sum(sin(z) + square(z));
+      },
+      x,
+      direction_lanes,
+      HvpOptions{1e-6});
+
+  REQUIRE(value_v.item<double>() == Approx(value_h.item<double>()).margin(1e-12));
+  REQUIRE(vhp_lanes_out.size() == hv_lanes_out.size());
+  for (std::size_t lane = 0; lane < hv_lanes_out.size(); ++lane) {
+    const auto h = hv_lanes_out[lane].to_vec<double>();
+    const auto v = vhp_lanes_out[lane].to_vec<double>();
+    REQUIRE(h.size() == v.size());
+    for (std::size_t i = 0; i < h.size(); ++i) {
+      REQUIRE(v[i] == Approx(h[i]).margin(1e-8));
+    }
+  }
+}
+
+TEST_CASE("gradient_audit validates directional first-order derivatives", "[autodiff][audit]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  DerivativeAuditOptions opt{};
+  opt.epsilon = 1e-6;
+  opt.atol = 1e-6;
+  opt.rtol = 1e-4;
+  REQUIRE(gradient_audit(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        return sum(sin(z) + square(z));
+      },
+      x,
+      opt));
+}
+
+TEST_CASE("curvature_audit validates directional second-order derivatives", "[autodiff][audit]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  DerivativeAuditOptions opt{};
+  opt.epsilon = 1e-5;
+  opt.atol = 5e-5;
+  opt.rtol = 5e-3;
+  opt.hvp.mode = HvpOptions::Mode::ExactOnly;
+  REQUIRE(curvature_audit(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        return sum(sin(z) + square(z));
+      },
+      x,
+      opt));
+}
+
+TEST_CASE("gradient_audit rejects non-scalar objective outputs", "[autodiff][audit]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  REQUIRE_THROWS_WITH(
+      gradient_audit(
+          [](const auto& z) { return vector_objective(z); },
+          x),
+      Catch::Matchers::ContainsSubstring("scalar-valued"));
+}
+
+TEST_CASE("gradient_audit_report returns mismatch diagnostics", "[autodiff][audit]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  DerivativeAuditOptions opt{};
+  opt.epsilon = 1e-1;
+  opt.atol = 0.0;
+  opt.rtol = 0.0;
+  const auto report = gradient_audit_report(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::exp;
+        using pluss::subsp::math::diff::sum;
+        return sum(exp(z));
+      },
+      x,
+      opt);
+  REQUIRE_FALSE(report.passed);
+  REQUIRE(report.phase == "gradient");
+  REQUIRE(report.lane_index >= 0);
+  REQUIRE(std::isfinite(report.analytic));
+  REQUIRE(std::isfinite(report.numeric));
+  REQUIRE(report.abs_error > report.tolerance);
+}
+
+TEST_CASE("curvature_audit_report returns mismatch diagnostics", "[autodiff][audit]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  DerivativeAuditOptions opt{};
+  opt.epsilon = 1e-1;
+  opt.atol = 0.0;
+  opt.rtol = 0.0;
+  opt.hvp.mode = HvpOptions::Mode::ExactOnly;
+  const auto report = curvature_audit_report(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::exp;
+        using pluss::subsp::math::diff::sum;
+        return sum(exp(z));
+      },
+      x,
+      opt);
+  REQUIRE_FALSE(report.passed);
+  REQUIRE(report.phase == "curvature");
+  REQUIRE(report.lane_index >= 0);
+  REQUIRE(std::isfinite(report.analytic));
+  REQUIRE(std::isfinite(report.numeric));
+  REQUIRE(report.abs_error > report.tolerance);
+}
+
+TEST_CASE("hessian wrapper matches analytic scalar second derivative", "[autodiff][hessian]") {
+  const Series x = make_series(1.25).to(ScalarType::Float64);
+  const auto poly = [](const auto& z) { return z * z * z - 2.0 * (z * z) + z; };
+  const auto [value, h] = hessian(poly, x);
+  REQUIRE(value.item<double>() == Approx(0.078125).margin(1e-12));
+  REQUIRE(h.item<double>() == Approx(3.5).margin(1e-6));
+}
+
+TEST_CASE("hessian block form returns expected cross-curvature for scalar params", "[autodiff][hessian]") {
+  const Series p = make_series(0.7).to(ScalarType::Float64);
+  const Series q = make_series(-0.2).to(ScalarType::Float64);
+  const std::vector<Series> params{p, q};
+
+  const auto [value, blocks] = hessian(
+      [](const std::vector<Trace>& x) -> Trace {
+        const Trace a = x[0];
+        const Trace b = x[1];
+        return a * a + a * b + (2.0 * b * b);
+      },
+      params);
+
+  REQUIRE(value.numel() == 1);
+  REQUIRE(blocks.size() == 2);
+  REQUIRE(blocks[0].size() == 2);
+  REQUIRE(blocks[1].size() == 2);
+  REQUIRE(blocks[0][0].item<double>() == Approx(2.0).margin(1e-6));
+  REQUIRE(blocks[0][1].item<double>() == Approx(1.0).margin(1e-6));
+  REQUIRE(blocks[1][0].item<double>() == Approx(1.0).margin(1e-6));
+  REQUIRE(blocks[1][1].item<double>() == Approx(4.0).margin(1e-6));
+}
+
+TEST_CASE("hessian vectorized option preserves block semantics", "[autodiff][hessian]") {
+  const Series p = make_series(0.7).to(ScalarType::Float64);
+  const Series q = make_series(-0.2).to(ScalarType::Float64);
+  const std::vector<Series> params{p, q};
+
+  const auto objective = [](const std::vector<Trace>& x) -> Trace {
+    const Trace a = x[0];
+    const Trace b = x[1];
+    return a * a + a * b + (2.0 * b * b);
+  };
+
+  HessianOptions base{};
+  const auto [value_base, blocks_base] = hessian(objective, params, base);
+
+  HessianOptions vec{};
+  vec.vectorized = true;
+  const auto [value_vec, blocks_vec] = hessian(objective, params, vec);
+
+  REQUIRE(value_vec.item<double>() == Approx(value_base.item<double>()).margin(1e-12));
+  REQUIRE(blocks_base.size() == blocks_vec.size());
+  for (std::size_t i = 0; i < blocks_base.size(); ++i) {
+    REQUIRE(blocks_base[i].size() == blocks_vec[i].size());
+    for (std::size_t j = 0; j < blocks_base[i].size(); ++j) {
+      REQUIRE(blocks_vec[i][j].item<double>() ==
+              Approx(blocks_base[i][j].item<double>()).margin(1e-8));
+    }
+  }
+}
+
 TEST_CASE("nth_derivative delegates to first and second-order transforms", "[autodiff][nth]") {
   const Series x = make_series(1.25).to(ScalarType::Float64);
   const auto poly = [](const auto& z) { return z * z * z - 2.0 * (z * z) + z; };
@@ -842,7 +1638,20 @@ TEST_CASE("nth_derivative delegates to first and second-order transforms", "[aut
   REQUIRE(value.item<double>() == Approx(0.078125));
   REQUIRE(first.item<double>() == Approx(0.6875));
   REQUIRE(second.item<double>() == Approx(3.5));
-  REQUIRE_THROWS(nth_derivative(poly, x, 3));
+}
+
+TEST_CASE("nth_derivative supports exact higher orders for scalar Trace objective", "[autodiff][nth]") {
+  const Series x = make_series(1.5).to(ScalarType::Float64);
+  const auto quartic = [](const auto& z) { return z * z * z * z; };
+
+  const Series third = nth_derivative(quartic, x, 3);
+  REQUIRE(third.item<double>() == Approx(36.0).margin(1e-6));
+
+  const Series fourth = nth_derivative(quartic, x, 4);
+  REQUIRE(fourth.item<double>() == Approx(24.0).margin(1e-6));
+
+  const Series fifth = nth_derivative(quartic, x, 5);
+  REQUIRE(fifth.item<double>() == Approx(0.0).margin(1e-8));
 }
 
 TEST_CASE("vector parameter gradients preserve order and shape", "[autodiff][params]") {
@@ -928,6 +1737,50 @@ TEST_CASE("hvp exact/fd mode policy is explicit and fail-loud", "[autodiff][hvp]
       },
       x,
       tangent,
+      exact_opt));
+}
+
+TEST_CASE("vhp mode policy mirrors hvp fail-loud behavior", "[autodiff][vhp][policy]") {
+  const Series x = make_f64({0.3, -0.2, 0.5});
+  const Series direction = make_f64({0.1, 0.05, -0.2});
+
+  HvpOptions exact_opt{};
+  exact_opt.mode = HvpOptions::Mode::ExactOnly;
+  const auto [value_exact, vh_exact] = vhp(
+      [](const auto& z) {
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        return sum(sin(z) + square(z));
+      },
+      x,
+      direction,
+      exact_opt);
+  REQUIRE(value_exact.numel() == 1);
+  REQUIRE(vh_exact.numel() == 3);
+
+  HvpOptions fd_only_opt{};
+  fd_only_opt.mode = HvpOptions::Mode::FiniteDifferenceOnly;
+  REQUIRE_THROWS(vhp(
+      [](const DualTrace& z) -> DualTrace {
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        return sum(sin(z) + square(z));
+      },
+      x,
+      direction,
+      fd_only_opt));
+
+  REQUIRE_THROWS(vhp(
+      [](const Trace& z) -> Trace {
+        using pluss::subsp::math::diff::sin;
+        using pluss::subsp::math::diff::square;
+        using pluss::subsp::math::diff::sum;
+        return sum(sin(z) + square(z));
+      },
+      x,
+      direction,
       exact_opt));
 }
 

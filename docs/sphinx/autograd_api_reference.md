@@ -286,6 +286,8 @@ Builds full Jacobians by repeated reverse-mode pullbacks.
 ```cpp
 std::pair<Series, std::function<Series(const Series&)>> vjp(Fn&& fn, const Series& param)
 std::pair<Series, std::function<std::vector<Series>(const Series&)>> vjp(Fn&& fn, const std::vector<Series>& params)
+std::pair<Series, Series> vjp(Fn&& fn, const Series& param, const Series& cotangent)
+std::pair<Series, std::vector<Series>> vjp(Fn&& fn, const std::vector<Series>& params, const Series& cotangent)
 ```
 
 #### Explanation
@@ -356,12 +358,15 @@ Controls the finite-difference step used by the fallback `hvp` path.
 ```cpp
 std::pair<Series, Series> hvp(Fn&& fn, const Series& param, const Series& tangent, const HvpOptions& opt = {})
 std::pair<Series, std::vector<Series>> hvp(Fn&& fn, const std::vector<Series>& params, const std::vector<Series>& tangents, const HvpOptions& opt = {})
+std::pair<Series, Series> vhp(Fn&& fn, const Series& param, const Series& vector, const HvpOptions& opt = {})
+std::pair<Series, std::vector<Series>> vhp(Fn&& fn, const std::vector<Series>& params, const std::vector<Series>& vectors, const HvpOptions& opt = {})
 ```
 
 #### Explanation
 
 Computes Hessian-vector products for scalar-valued objectives.
 When the callable is generic over `DualTrace`, the transform takes the exact forward-over-reverse path. Otherwise it falls back to finite-difference-over-grad.
+`vhp` is also available and uses the same scalar-objective Hessian product path.
 
 #### Example
 
@@ -378,6 +383,44 @@ auto [value, hv] = hvp(
     x,
     v);
 ```
+
+## Derivative audits
+
+### `DerivativeAuditOptions`
+
+#### Signature
+
+```cpp
+struct DerivativeAuditOptions {
+  double epsilon{1e-6};
+  double atol{1e-6};
+  double rtol{1e-4};
+  bool include_axis_lanes{true};
+  HvpOptions hvp{};
+  DerivativePolicy policy{};
+};
+```
+
+### `gradient_audit` and `curvature_audit`
+
+#### Signature
+
+```cpp
+bool gradient_audit(Fn&& fn, const Series& param, const DerivativeAuditOptions& opt = {})
+bool gradient_audit(Fn&& fn, const std::vector<Series>& params, const DerivativeAuditOptions& opt = {})
+bool curvature_audit(Fn&& fn, const Series& param, const DerivativeAuditOptions& opt = {})
+bool curvature_audit(Fn&& fn, const std::vector<Series>& params, const DerivativeAuditOptions& opt = {})
+DerivativeAuditReport gradient_audit_report(Fn&& fn, const Series& param, const DerivativeAuditOptions& opt = {})
+DerivativeAuditReport gradient_audit_report(Fn&& fn, const std::vector<Series>& params, const DerivativeAuditOptions& opt = {})
+DerivativeAuditReport curvature_audit_report(Fn&& fn, const Series& param, const DerivativeAuditOptions& opt = {})
+DerivativeAuditReport curvature_audit_report(Fn&& fn, const std::vector<Series>& params, const DerivativeAuditOptions& opt = {})
+```
+
+#### Explanation
+
+Directional finite-difference audits for first-order and second-order transforms.
+These are the Pluss-native equivalents of gradient correctness utilities and are intended for model/solver validation pipelines.
+`*_report` variants return lane-level mismatch diagnostics (`phase`, `lane_index`, `analytic`, `numeric`, `abs_error`, `tolerance`).
 
 ## Higher-order helper
 

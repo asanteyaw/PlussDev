@@ -1,0 +1,25 @@
+# `FeatureBatch`
+
+## Signature
+
+```cpp
+struct FeatureBatch;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+Key public fields:
+- `ObservationLayout layout = ObservationLayout::Rows`
+
+## Example
+
+```cpp
+FeatureBatch cfg{};
+// cfg.layout = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/dataset.h`:8

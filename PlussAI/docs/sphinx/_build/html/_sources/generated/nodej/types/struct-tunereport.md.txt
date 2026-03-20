@@ -1,0 +1,27 @@
+# `TuneReport`
+
+## Signature
+
+```cpp
+struct TuneReport;
+```
+
+## Notes
+
+Structured report object carrying metrics/diagnostics from training/evaluation routines.
+
+Key public fields:
+- `std::int64_t best_index = -1`
+- `MetricKind objective_metric = MetricKind::Accuracy`
+- `TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto`
+
+## Example
+
+```cpp
+TuneReport cfg{};
+// cfg.best_index = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/tune.h`:25

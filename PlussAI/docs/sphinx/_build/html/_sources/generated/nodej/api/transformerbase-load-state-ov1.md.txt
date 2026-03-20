@@ -1,0 +1,46 @@
+# `TransformerBase::load_state`
+
+## Signature
+
+```cpp
+virtual Status TransformerBase::load_state(self, const std::vector<Series>& state);
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `state` : `const std::vector<Series>&`
+  Randomization control for reproducible behavior.
+
+## Returns
+
+Returns a status object indicating success/failure and an error message on failure.
+
+## Notes
+
+Loads a previously persisted artifact and restores its inference-ready state.
+
+## See also
+
+- `virtual Status EstimatorBase::load_state(self, const std::vector<Series>& state);`
+- `Status FrequencyEncoder::load_state(self, const std::vector<Series>& state) override;`
+- `Status IterativeImputer::load_state(self, const std::vector<Series>& state) override;`
+- `Status MaxAbsScaler::load_state(self, const std::vector<Series>& state) override;`
+- `Status MinMaxScaler::load_state(self, const std::vector<Series>& state) override;`
+
+## Parameter Reference
+
+- [state](../params/param-transformerbase-load-state-ov1-state-2.md)
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+TransformerBase transformerBase{};
+auto out = transformerBase.load_state(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/interfaces.h`:54

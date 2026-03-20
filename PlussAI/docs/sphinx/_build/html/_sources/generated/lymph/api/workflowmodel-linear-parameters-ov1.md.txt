@@ -1,0 +1,40 @@
+# `WorkflowModel::linear_parameters`
+
+## Signature
+
+```cpp
+[[nodiscard]] LinearParameters WorkflowModel::linear_parameters(self) const;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+
+## Returns
+
+Returns `LinearParameters`.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `[[nodiscard]] std::vector<double> WorkflowModel::coefficients(self) const;`
+- `[[nodiscard]] std::vector<Series> WorkflowModel::dump_model_state(self) const;`
+- `[[nodiscard]] std::vector<std::vector<Series>> WorkflowModel::dump_transform_states(self) const;`
+- `[[nodiscard]] bool WorkflowModel::has_model(self) const noexcept;`
+- `[[nodiscard]] bool WorkflowModel::has_model_spec(self) const noexcept;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+WorkflowModel workflowModel{};
+auto out = workflowModel.linear_parameters(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:816

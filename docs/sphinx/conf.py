@@ -24,6 +24,8 @@ myst_enable_extensions = [
     'fieldlist',
 ]
 
+myst_url_schemes = ("http", "https", "mailto", "ftp", "file")
+
 latex_engine = 'pdflatex'
 latex_documents = [
     ('index', 'plussqit_user_docs.tex', 'PlussQit User Documentation', 'PlussMa Contributors', 'manual'),

@@ -1,0 +1,44 @@
+# `WorkflowModel::vector_normalizer`
+
+## Signature
+
+```cpp
+WorkflowModel& WorkflowModel::vector_normalizer(self, prep::VectorNormalizerOptions options = {}, std::vector<std::int64_t> feature_route = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `prep::VectorNormalizerOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `feature_route` : `std::vector<std::int64_t>`, default: `{}`
+  Input feature data used by this call.
+
+## Returns
+
+Returns `WorkflowModel&`.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] inline VectorNormalizer vector_normalizer(VectorNormalizerOptions options = {}) { return VectorNormalizer(options); };`
+- `Workflow& Workflow::vector_normalizer(self, prep::VectorNormalizerOptions options = {}, std::vector<std::int64_t> feature_route = {});`
+- `[[nodiscard]] MetricReport WorkflowModel::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport WorkflowModel::assess(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport WorkflowModel::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+WorkflowModel workflowModel{};
+auto out = workflowModel.vector_normalizer(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:606

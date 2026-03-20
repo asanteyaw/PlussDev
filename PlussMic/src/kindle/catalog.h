@@ -158,8 +158,8 @@ public:
   Catalog head(std::int64_t n) const;
   Catalog tail(std::int64_t n) const;
   Catalog slice(std::int64_t start, std::int64_t stop) const;
-  Catalog iloc(std::int64_t row) const;
-  Catalog iloc(std::int64_t start, std::int64_t stop) const;
+  Catalog cloc(std::int64_t row) const;
+  Catalog cloc(std::int64_t start, std::int64_t stop) const;
   Catalog take(std::span<const std::int64_t> indices) const;
   Catalog sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;
   Catalog filter(const pluss::Series& condition) const;

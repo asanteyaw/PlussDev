@@ -1,0 +1,13 @@
+# `QuantileMap::QuantileMap`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/quantilemap-quantilemap-ov1.md): `explicit QuantileMap(QuantileMapOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:309

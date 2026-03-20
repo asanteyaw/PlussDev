@@ -555,8 +555,8 @@ TableMatrix build_dataframe_matrix(
   const auto row_plan = build_row_plan(frame.ncases(), options);
   const auto col_plan = build_col_plan(frame.nfeats(), options, compact_columns);
 
-  const auto names = frame.column_names();
-  const auto cols = frame.columns();
+  const auto names = frame.feature_names();
+  const auto cols = frame.features();
   const auto display_cases = display_thread(frame.cases());
   std::vector<Thread> display_cols;
   display_cols.reserve(cols.size());
@@ -1210,14 +1210,14 @@ std::string render_html_pre_(std::string_view title,
 std::string render_html_table_body_(const DataFrame& frame,
                                     const DisplayOptions& options,
                                     std::string_view table_id) {
-  const auto cols = frame.columns();
+  const auto cols = frame.features();
   const auto display_cases = display_thread(frame.cases());
   std::vector<Thread> display_cols;
   display_cols.reserve(cols.size());
   for (const auto& col : cols) {
     display_cols.push_back(display_thread(col));
   }
-  const auto names = frame.column_names();
+  const auto names = frame.feature_names();
 
   std::string body;
   body += "<div class=\"summary-grid\">";
@@ -1352,9 +1352,9 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
 }
 
 std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& options) {
-  const auto cols = frame.columns();
+  const auto cols = frame.features();
   const auto display_cases = display_thread(frame.cases());
-  const auto names = frame.column_names();
+  const auto names = frame.feature_names();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
   std::uint64_t memory_bytes = estimate_bytes(frame.cases());
@@ -1532,7 +1532,11 @@ std::string render(const DataFrame& frame, const DisplayOptions& options) {
 }
 
 std::string render(const Thread& thread, const DisplayOptions& options) {
-  DataFrame tmp({{"value", thread}});
+  std::optional<Thread> cases = std::nullopt;
+  if (thread.has_display_labels()) {
+    cases = thread.display_labels();
+  }
+  DataFrame tmp({{"value", thread}}, std::move(cases));
   return render(tmp, options);
 }
 
@@ -1545,7 +1549,11 @@ std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
 }
 
 std::string render_html(const Thread& thread, const DisplayOptions& options) {
-  DataFrame tmp({{"value", thread}});
+  std::optional<Thread> cases = std::nullopt;
+  if (thread.has_display_labels()) {
+    cases = thread.display_labels();
+  }
+  DataFrame tmp({{"value", thread}}, std::move(cases));
   return render_html(tmp, options);
 }
 
@@ -1558,9 +1566,9 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   const auto effective = resolve_effective_options(options, term, true);
   const auto terminal_width = effective.terminal_width > 0 ? effective.terminal_width : term.columns;
 
-  const auto cols = frame.columns();
+  const auto cols = frame.features();
   const auto display_cases = display_thread(frame.cases());
-  const auto names = frame.column_names();
+  const auto names = frame.feature_names();
 
   std::unordered_map<std::string, std::int64_t> dtype_counts;
   std::uint64_t memory_bytes = estimate_bytes(frame.cases());

@@ -1,0 +1,21 @@
+# `CVPlanKind::KFold`
+
+## Signature
+
+```cpp
+CVPlanKind::KFold;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = CVPlanKind::KFold;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:50

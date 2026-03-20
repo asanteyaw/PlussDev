@@ -356,6 +356,31 @@ void test_generated_timeindex_dataframe_family() {
 
   const auto sorted = idx.sort_values();
   expect_true(sorted.size() == idx.size(), "generated sort_values alias");
+
+  const auto ticks_with_nat = pluss::make_series(
+      std::vector<std::int64_t>{
+          30'000'000'000LL,
+          Timeline::kNaT,
+          10'000'000'000LL,
+          Timeline::kNaT,
+          20'000'000'000LL,
+      },
+      {5});
+  const auto t_nat = Timeline::fromSeries(ticks_with_nat);
+  expect_eq_vec(
+      t_nat.argsort().to_vec<std::int64_t>(),
+      std::vector<std::int64_t>{2, 4, 0, 1, 3},
+      "Timeline argsort keeps NaT last and preserves NaT stability");
+  expect_eq_vec(
+      t_nat.sort().to_epoch_nanos_flat(),
+      std::vector<std::int64_t>{
+          10'000'000'000LL,
+          20'000'000'000LL,
+          30'000'000'000LL,
+          Timeline::kNaT,
+          Timeline::kNaT,
+      },
+      "Timeline sort keeps NaT last");
 }
 
 void test_3d_non_generated_timeline_support() {

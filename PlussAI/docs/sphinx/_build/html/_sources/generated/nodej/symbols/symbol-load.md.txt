@@ -1,0 +1,13 @@
+# `load`
+
+## Notes
+
+Loads a previously persisted artifact and restores its inference-ready state.
+
+## Overloads
+
+- [overload 1](../api/global-load-ov1.md): `StatusOr<FlowBundle> load(const std::string& path);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/io.h`:37

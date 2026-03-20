@@ -1,0 +1,22 @@
+# `LinearFamilyOptions::fit_intercept`
+
+## Signature
+
+```cpp
+LinearFamilyOptions::bool fit_intercept = true;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+LinearFamilyOptions cfg{};
+// cfg.fit_intercept = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:63

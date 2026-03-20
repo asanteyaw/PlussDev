@@ -1,0 +1,22 @@
+# `PowerMapOptions::lambda_min`
+
+## Signature
+
+```cpp
+PowerMapOptions::double lambda_min = -5.0;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+PowerMapOptions cfg{};
+// cfg.lambda_min = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:111

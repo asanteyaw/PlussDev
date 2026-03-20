@@ -1,0 +1,98 @@
+# `iterative_imputer`
+
+## Signature
+
+```cpp
+[[nodiscard]] inline IterativeImputer iterative_imputer(IterativeImputerOptions options = {}) { return IterativeImputer(options); };
+```
+
+## Parameters
+
+- `options` : `IterativeImputerOptions`, default: `{}) { return IterativeImputer(options`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `IterativeImputer`.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `StatusOr<nodej::CrossAssessReport> assess_cv( const nodej::ModelSpec& spec, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {});`
+- `StatusOr<std::unique_ptr<nodej::ClassifierBase>> bayes_classifier( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+- `StatusOr<std::unique_ptr<nodej::RegressorBase>> bayes_regressor( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+  StatusOr<Series> test_knn_imputed_or = knn_imputer.map(test_x_batch);
+  if (!test_knn_imputed_or.ok()) {
+    std::cerr << "NeighborImputer.map(test) failed: " << test_knn_imputed_or.status().message << "\n";
+    return 1;
+  }
+  Series test_knn_imputed = test_knn_imputed_or.move_value();
+
+  prep::IterativeImputer iterative_imputer(prep::IterativeImputerOptions{
+      .rounds = 6,
+      .ridge = 1e-5,
+      .empty_feature_fallback = 0.0,
+  });
+  StatusOr<Series> train_iter_imputed_or = iterative_imputer.learn_map(train_x_batch);
+  if (!train_iter_imputed_or.ok()) {
+    std::cerr << "IterativeImputer.learn_map(train) failed: " << train_iter_imputed_or.status().message << "\n";
+    return 1;
+  }
+  Series train_iter_imputed = train_iter_imputed_or.move_value();
+
+  StatusOr<Series> test_iter_imputed_or = iterative_imputer.map(test_x_batch);
+  if (!test_iter_imputed_or.ok()) {
+    std::cerr << "IterativeImputer.map(test) failed: " << test_iter_imputed_or.status().message << "\n";
+    return 1;
+  }
+```
+
+### Example 2
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+        .weighting = lymph::prep::NeighborImputerWeighting::Distance,
+        .distance_floor = 1e-12,
+        .empty_feature_fallback = 0.0,
+    });
+    const DataFrame train_knn_imputed = knn_imp.learn_map(train_x);
+    const DataFrame test_knn_imputed = knn_imp.map(test_x);
+    const auto knn_imp_summary = knn_imp.summary();
+
+    auto iter_imp = lymph::prep::iterative_imputer(lymph::prep::IterativeImputerOptions{
+        .rounds = 6,
+        .ridge = 1e-5,
+        .empty_feature_fallback = 0.0,
+    });
+    const DataFrame train_iter_imputed = iter_imp.learn_map(train_x);
+    const DataFrame test_iter_imputed = iter_imp.map(test_x);
+    const auto iter_imp_summary = iter_imp.summary();
+
+    auto z_scaler = lymph::prep::standard_scaler(lymph::prep::StandardScalerOptions{
+        .with_centering = true,
+        .with_scaling = true,
+        .variance_floor = 1e-12,
+    });
+    const DataFrame train_scaled = z_scaler.learn_map(train_simple_imputed);
+    const DataFrame test_scaled = z_scaler.map(test_simple_imputed);
+    const auto z_summary = z_scaler.summary();
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:245

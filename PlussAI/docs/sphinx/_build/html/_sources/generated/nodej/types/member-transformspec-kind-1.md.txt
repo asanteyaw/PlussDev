@@ -1,0 +1,22 @@
+# `TransformSpec::kind`
+
+## Signature
+
+```cpp
+TransformSpec::TransformKind kind = TransformKind::StandardScaler;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+TransformSpec cfg{};
+// cfg.kind = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:47

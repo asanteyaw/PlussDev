@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 #include <string_view>
 #include <vector>
@@ -167,11 +168,24 @@ void test_plot_options_defaults() {
   options.width = 920.0;
   options.height = 640.0;
   options.use_tight_layout = true;
+  options.x_tick_rotation_deg = 35.0;
+  options.y_tick_rotation_deg = 90.0;
+  options.x_label_rotation_deg = 0.0;
+  options.y_label_rotation_deg = -90.0;
+  options.x_tick_format = pluss::pl::TickFormat::Plain;
+  options.y_tick_format = pluss::pl::TickFormat::Plain;
+  options.y_label_gap_points = 24.0;
 
   const auto fig_scatter = df.plot(options).scatter("x", "y");
   expect(fig_scatter.panes().front().trace_count() == 2, "plot(options).scatter should use default hue feature");
   expect(fig_scatter.extent().width == 920.0 && fig_scatter.extent().height == 640.0,
          "plot(options) should apply figure size defaults");
+  expect(fig_scatter.panes().front().x_axis().label_rotation_deg.has_value(),
+         "plot(options).scatter should propagate x label rotation");
+  expect(fig_scatter.panes().front().y_axis().label_rotation_deg.has_value(),
+         "plot(options).scatter should propagate y label rotation");
+  expect(std::abs(*fig_scatter.panes().front().y_axis().label_rotation_deg + 90.0) < 1e-12,
+         "plot(options).scatter should use requested y label rotation");
 
   const auto fig_hist = df.plot(options).hist("y");
   expect(fig_hist.panes().front().trace_count() == 1, "plot(options).hist should still emit one trace");
@@ -214,6 +228,30 @@ void test_plot_options_defaults() {
          "plot(options).scatter_matrix should propagate auto tick decimals");
   expect(*fig_corner.panes().front().x_axis().auto_tick_decimals == 1,
          "plot(options).scatter_matrix should use requested auto tick decimals");
+  expect(fig_corner.panes().front().x_axis().tick_rotation_deg.has_value(),
+         "plot(options).scatter_matrix should propagate x tick rotation");
+  expect(fig_corner.panes().front().y_axis().tick_rotation_deg.has_value(),
+         "plot(options).scatter_matrix should propagate y tick rotation");
+  expect(std::abs(*fig_corner.panes().front().x_axis().tick_rotation_deg - 35.0) < 1e-12,
+         "plot(options).scatter_matrix should use requested x tick rotation");
+  expect(std::abs(*fig_corner.panes().front().y_axis().tick_rotation_deg - 90.0) < 1e-12,
+         "plot(options).scatter_matrix should use requested y tick rotation");
+  expect(fig_corner.panes().front().x_axis().label_rotation_deg.has_value(),
+         "plot(options).scatter_matrix should propagate x label rotation");
+  expect(fig_corner.panes().front().y_axis().label_rotation_deg.has_value(),
+         "plot(options).scatter_matrix should propagate y label rotation");
+  expect(std::abs(*fig_corner.panes().front().y_axis().label_rotation_deg + 90.0) < 1e-12,
+         "plot(options).scatter_matrix should use requested y label rotation");
+  expect(fig_corner.panes().front().y_axis().label_centered_on_axis,
+         "plot(options).scatter_matrix should center left-edge y labels to avoid tick overlap");
+  expect(fig_corner.panes().front().x_axis().tick_format == pluss::pl::TickFormat::Plain,
+         "plot(options).scatter_matrix should propagate x tick format");
+  expect(fig_corner.panes().front().y_axis().tick_format == pluss::pl::TickFormat::Plain,
+         "plot(options).scatter_matrix should propagate y tick format");
+  expect(fig_corner.panes().front().y_axis().label_gap.has_value(),
+         "plot(options).scatter_matrix should propagate y label gap override");
+  expect(std::abs(*fig_corner.panes().front().y_axis().label_gap - 24.0) < 1e-12,
+         "plot(options).scatter_matrix should use requested y label gap override");
 
   pluss::table::HeatmapPlotOptions heatmap_options;
   heatmap_options.annotate_levels = true;

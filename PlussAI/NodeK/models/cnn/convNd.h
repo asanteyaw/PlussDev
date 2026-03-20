@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pluss/nn_detail.h>
+#include <NodeK/kernels/cudnn_conv.h>
 
 #include <array>
 #include <cmath>
@@ -99,6 +100,24 @@ inline Series conv2d_impl_(const Series& input,
   PLUSS_CHECK(channels_per_group * groups == in_channels, "pluss::ai::conv: weight input channels mismatch");
   if (b.defined()) {
     PLUSS_CHECK(b.dim() == 1 && b.sizes()[0] == out_channels, "pluss::ai::conv: bias size mismatch");
+  }
+
+  const bool require_backward = x.tracks_slope() || w.tracks_slope();
+  if (x.platform() == pluss::pCUDA) {
+    const auto y = ::pluss::ai::kernels::cudnn::try_conv2d(
+        x,
+        w,
+        b,
+        ::pluss::ai::kernels::cudnn::Conv2dGeometry{
+            .stride = stride,
+            .padding = padding,
+            .dilation = dilation,
+            .groups = groups,
+        },
+        require_backward);
+    if (y.has_value()) {
+      return batched ? *y : y->squeeze(0);
+    }
   }
 
   const Series padded = pad_2d_(x, padding);

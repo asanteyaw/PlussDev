@@ -1,0 +1,21 @@
+# `VectorNorm::L1`
+
+## Signature
+
+```cpp
+VectorNorm::L1;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = VectorNorm::L1;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:81

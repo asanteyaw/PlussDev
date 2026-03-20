@@ -1,0 +1,21 @@
+# `IterativeImputerOptions`
+
+## Signature
+
+```cpp
+using IterativeImputerOptions = ::pluss::ai::nodej::prep::IterativeImputerOptions;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+IterativeImputerOptions value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:50

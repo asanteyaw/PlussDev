@@ -110,7 +110,7 @@ Catalog Archive::catalog(std::int64_t i) const {
   return impl_ref_().catalogs_[static_cast<std::size_t>(idx)];
 }
 
-Catalog Archive::iloc(std::int64_t i) const {
+Catalog Archive::dloc(std::int64_t i) const {
   return catalog(i);
 }
 

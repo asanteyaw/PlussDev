@@ -1,0 +1,21 @@
+# `Flow::load_transform_states::states`
+
+## Parent Signature
+
+```cpp
+Status Flow::load_transform_states(self, const std::vector<std::vector<Series>>& states);
+```
+
+## Parameter
+
+- `states` : `const std::vector<std::vector<Series>>&`
+  Randomization control for reproducible behavior.
+
+## Notes
+
+Loads a previously persisted artifact and restores its inference-ready state.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:118

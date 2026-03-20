@@ -3,12 +3,40 @@
 #include "gru_impl.h"
 #include "lstm_impl.h"
 #include "rnn_impl.h"
+#include <NodeK/kernels/cudnn_rnn.h>
 
 #include <tuple>
 #include <utility>
 #include <vector>
 
 namespace pluss::ai::rnn::detail {
+
+inline bool weight_tracks_slope_(const NetWeight& w) {
+  return (w.weight_ih.defined() && w.weight_ih.tracks_slope()) ||
+      (w.weight_hh.defined() && w.weight_hh.tracks_slope()) ||
+      (w.bias_ih.defined() && w.bias_ih.tracks_slope()) ||
+      (w.bias_hh.defined() && w.bias_hh.tracks_slope()) ||
+      (w.weight_hr.defined() && w.weight_hr.tracks_slope());
+}
+
+inline bool any_weight_tracks_slope_(const std::vector<NetWeight>& params) {
+  for (const auto& p : params) {
+    if (weight_tracks_slope_(p)) return true;
+  }
+  return false;
+}
+
+inline Series stack_dim0_(const std::vector<Series>& xs) {
+  PLUSS_CHECK(!xs.empty(), "pluss::rnn: stack_dim0 requires non-empty inputs");
+  Series head = xs.front().unsqueeze(0);
+  if (xs.size() == 1) return head;
+  std::vector<Series> tail{};
+  tail.reserve(xs.size() - 1);
+  for (std::size_t i = 1; i < xs.size(); ++i) {
+    tail.push_back(xs[i].unsqueeze(0));
+  }
+  return head.unite(tail, 0);
+}
 
 inline std::pair<Series, Series> rnn_layer(const Series& input,
                                            const Series& initial_hidden,
@@ -32,7 +60,7 @@ inline std::pair<Series, Series> rnn_layer(const Series& input,
                                    : rnn_impl(step, hidden, params, cfg.split_bias, cfg.nonlinearity);
     outputs.push_back(hidden);
   }
-  return {pluss::pile(outputs, 0), hidden};
+  return {stack_dim0_(outputs), hidden};
 }
 
 inline std::pair<Series, Series> gru_layer(const Series& input,
@@ -62,7 +90,7 @@ inline std::pair<Series, Series> gru_layer(const Series& input,
     }
     outputs.push_back(hidden);
   }
-  return {pluss::pile(outputs, 0), hidden};
+  return {stack_dim0_(outputs), hidden};
 }
 
 inline std::tuple<Series, Series, Series> lstm_layer(const Series& input,
@@ -100,7 +128,7 @@ inline std::tuple<Series, Series, Series> lstm_layer(const Series& input,
     }
     outputs.push_back(hidden);
   }
-  return {pluss::pile(outputs, 0), hidden, cell};
+  return {stack_dim0_(outputs), hidden, cell};
 }
 
 } // namespace pluss::ai::rnn::detail
@@ -122,6 +150,14 @@ inline std::tuple<Series, Series> rnn(const Series& input,
   if (!state.defined()) {
     state = detail::zeros_state_({cfg.num_layers * dirs, batch, hidden_size}, x0);
   }
+
+  const bool require_backward = x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params);
+  if (x0.platform() == pluss::pCUDA) {
+    if (const auto routed = ::pluss::ai::kernels::cudnn::try_rnn(x0, state, params, cfg, require_backward); routed.has_value()) {
+      return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
+    }
+  }
+
   std::vector<Series> final_hidden;
   final_hidden.reserve(static_cast<std::size_t>(cfg.num_layers * dirs));
   Series layer_input = x0;
@@ -143,7 +179,7 @@ inline std::tuple<Series, Series> rnn(const Series& input,
       layer_input = pluss::ai::dropout(layer_input, cfg.dropout, cfg.training, cfg.seed + static_cast<std::uint64_t>(layer));
     }
   }
-  return {detail::maybe_time_major_to_batch_first(layer_input, cfg), pluss::pile(final_hidden, 0)};
+  return {detail::maybe_time_major_to_batch_first(layer_input, cfg), detail::stack_dim0_(final_hidden)};
 }
 
 inline std::tuple<Series, Series> rnn(const Series& input,
@@ -167,6 +203,14 @@ inline std::tuple<Series, Series> gru(const Series& input,
   if (!state.defined()) {
     state = detail::zeros_state_({cfg.num_layers * dirs, batch, hidden_size}, x0);
   }
+
+  const bool require_backward = x0.tracks_slope() || state.tracks_slope() || detail::any_weight_tracks_slope_(params);
+  if (x0.platform() == pluss::pCUDA) {
+    if (const auto routed = ::pluss::ai::kernels::cudnn::try_gru(x0, state, params, cfg, require_backward); routed.has_value()) {
+      return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
+    }
+  }
+
   std::vector<Series> final_hidden;
   final_hidden.reserve(static_cast<std::size_t>(cfg.num_layers * dirs));
   Series layer_input = x0;
@@ -188,7 +232,7 @@ inline std::tuple<Series, Series> gru(const Series& input,
       layer_input = pluss::ai::dropout(layer_input, cfg.dropout, cfg.training, cfg.seed + 101ULL + static_cast<std::uint64_t>(layer));
     }
   }
-  return {detail::maybe_time_major_to_batch_first(layer_input, cfg), pluss::pile(final_hidden, 0)};
+  return {detail::maybe_time_major_to_batch_first(layer_input, cfg), detail::stack_dim0_(final_hidden)};
 }
 
 inline std::tuple<Series, Series> gru(const Series& input,
@@ -218,6 +262,16 @@ inline std::tuple<Series, std::tuple<Series, Series>> lstm(const Series& input,
   if (!cell.defined()) {
     cell = detail::zeros_state_({cfg.num_layers * dirs, batch, cell_hidden}, x0);
   }
+
+  const bool require_backward =
+      x0.tracks_slope() || hidden.tracks_slope() || cell.tracks_slope() || detail::any_weight_tracks_slope_(params);
+  if (x0.platform() == pluss::pCUDA) {
+    if (const auto routed = ::pluss::ai::kernels::cudnn::try_lstm(x0, hidden, cell, params, cfg, require_backward);
+        routed.has_value()) {
+      return {detail::maybe_time_major_to_batch_first(std::get<0>(*routed), cfg), std::get<1>(*routed)};
+    }
+  }
+
   std::vector<Series> final_hidden;
   std::vector<Series> final_cell;
   final_hidden.reserve(static_cast<std::size_t>(cfg.num_layers * dirs));
@@ -252,7 +306,7 @@ inline std::tuple<Series, std::tuple<Series, Series>> lstm(const Series& input,
   }
   return {
       detail::maybe_time_major_to_batch_first(layer_input, cfg),
-      std::make_tuple(pluss::pile(final_hidden, 0), pluss::pile(final_cell, 0))};
+      std::make_tuple(detail::stack_dim0_(final_hidden), detail::stack_dim0_(final_cell))};
 }
 
 inline std::tuple<Series, std::tuple<Series, Series>> lstm(const Series& input,

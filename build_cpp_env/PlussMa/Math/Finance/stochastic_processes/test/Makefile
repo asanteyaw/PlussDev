@@ -221,6 +221,20 @@ rates_paths_test/fast:
 .PHONY : rates_paths_test/fast
 
 # Convenience name for target.
+PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/rule
+.PHONY : PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/rule
+
+# Convenience name for target.
+simulator_matlab_parity_test: PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/rule
+.PHONY : simulator_matlab_parity_test
+
+# fast build rule for target.
+simulator_matlab_parity_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/build.make PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/build
+.PHONY : simulator_matlab_parity_test/fast
+
+# Convenience name for target.
 PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/stochastic_vol_paths_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/stochastic_vol_paths_test.dir/rule
 .PHONY : PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/stochastic_vol_paths_test.dir/rule
@@ -296,6 +310,30 @@ rates_paths_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/rates_paths_test.dir/build.make PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/rates_paths_test.dir/rates_paths_test.cpp.s
 .PHONY : rates_paths_test.cpp.s
 
+simulator_matlab_parity_test.o: simulator_matlab_parity_test.cpp.o
+.PHONY : simulator_matlab_parity_test.o
+
+# target to build an object file
+simulator_matlab_parity_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/build.make PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/simulator_matlab_parity_test.cpp.o
+.PHONY : simulator_matlab_parity_test.cpp.o
+
+simulator_matlab_parity_test.i: simulator_matlab_parity_test.cpp.i
+.PHONY : simulator_matlab_parity_test.i
+
+# target to preprocess a source file
+simulator_matlab_parity_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/build.make PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/simulator_matlab_parity_test.cpp.i
+.PHONY : simulator_matlab_parity_test.cpp.i
+
+simulator_matlab_parity_test.s: simulator_matlab_parity_test.cpp.s
+.PHONY : simulator_matlab_parity_test.s
+
+# target to generate assembly for a file
+simulator_matlab_parity_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/build.make PlussMa/Math/Finance/stochastic_processes/test/CMakeFiles/simulator_matlab_parity_test.dir/simulator_matlab_parity_test.cpp.s
+.PHONY : simulator_matlab_parity_test.cpp.s
+
 stochastic_vol_paths_test.o: stochastic_vol_paths_test.cpp.o
 .PHONY : stochastic_vol_paths_test.o
 
@@ -361,6 +399,7 @@ help:
 	@echo "... test"
 	@echo "... rate_models_test"
 	@echo "... rates_paths_test"
+	@echo "... simulator_matlab_parity_test"
 	@echo "... stochastic_vol_paths_test"
 	@echo "... stochvol_models_test"
 	@echo "... rate_models_test.o"
@@ -369,6 +408,9 @@ help:
 	@echo "... rates_paths_test.o"
 	@echo "... rates_paths_test.i"
 	@echo "... rates_paths_test.s"
+	@echo "... simulator_matlab_parity_test.o"
+	@echo "... simulator_matlab_parity_test.i"
+	@echo "... simulator_matlab_parity_test.s"
 	@echo "... stochastic_vol_paths_test.o"
 	@echo "... stochastic_vol_paths_test.i"
 	@echo "... stochastic_vol_paths_test.s"

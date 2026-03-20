@@ -1,0 +1,22 @@
+# `TrainOptions::class_weight`
+
+## Signature
+
+```cpp
+TrainOptions::ClassWeightMode class_weight = ClassWeightMode::None;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+TrainOptions cfg{};
+// cfg.class_weight = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:82

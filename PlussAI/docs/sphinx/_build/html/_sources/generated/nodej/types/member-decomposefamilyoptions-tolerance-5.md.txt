@@ -1,0 +1,22 @@
+# `DecomposeFamilyOptions::tolerance`
+
+## Signature
+
+```cpp
+DecomposeFamilyOptions::double tolerance = 1e-6;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+DecomposeFamilyOptions cfg{};
+// cfg.tolerance = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:109

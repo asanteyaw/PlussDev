@@ -1,0 +1,21 @@
+# `MetricKind::Accuracy`
+
+## Signature
+
+```cpp
+MetricKind::Accuracy;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = MetricKind::Accuracy;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:35

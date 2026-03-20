@@ -1,0 +1,21 @@
+# `FrameFlowArtifact`
+
+## Signature
+
+```cpp
+struct FrameFlowArtifact;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+## Example
+
+```cpp
+FrameFlowArtifact cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/quick.h`:43

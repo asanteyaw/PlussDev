@@ -1,0 +1,25 @@
+# `MaxAbsScalerOptions`
+
+## Signature
+
+```cpp
+struct MaxAbsScalerOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `double floor = 1e-12`
+
+## Example
+
+```cpp
+MaxAbsScalerOptions cfg{};
+// cfg.floor = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:92

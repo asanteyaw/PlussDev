@@ -1,0 +1,74 @@
+# `make_online_linear_classifier`
+
+## Signature
+
+```cpp
+StatusOr<OnlineLinearClassifier> make_online_linear_classifier(const OnlineLinearOptions& options = {});
+```
+
+## Parameters
+
+- `options` : `const OnlineLinearOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `StatusOr<OnlineLinearClassifier>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Namespace-level API function.
+
+## See also
+
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_learn_map(const FeatureBatch& batch, const TrainOptions& learn_options, const InferOptions& infer_options);`
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_map(const FeatureBatch& batch, const InferOptions& options) const;`
+- `[[nodiscard]] Status check_ready_for_infer(const char* where) const;`
+- `StatusOr<CrossAssessReport> cross_assess(const ModelSpec& spec, const LabeledBatch& batch, const SplitOptions& split = {}, const TrainOptions& train_options = {}, const AssessOptions& assess_options = {});`
+- `StatusOr<FeatureBatch> feature_batch_from_dataframe(const pluss::table::DataFrame& frame, const DataFrameBatchOptions& options = {});`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_online_demo.cpp`
+
+```cpp
+      .objective = LinearObjective::Logistic,
+      .regularization = RegularizationKind::L2,
+      .regularization_strength = 1e-6,
+      .fit_intercept = true,
+  };
+  online_options.learning_rate = 0.08;
+  online_options.decaying_rate = true;
+
+  auto model_or = pluss::ai::nodej::online::make_online_linear_classifier(online_options);
+  if (!model_or.ok()) {
+    std::cerr << "make_online_linear_classifier failed: " << model_or.status().message << '\n';
+    return 1;
+  }
+  auto model = model_or.move_value();
+
+  TrainOptions warm_opts{};
+  warm_opts.max_iterations = 100;
+  const auto warm_status = model.learn(warm, warm_opts);
+  if (!warm_status.ok()) {
+    std::cerr << "learn failed: " << warm_status.message << '\n';
+    return 1;
+  }
+
+  if (!model.advance(stream_a).ok() || !model.advance(stream_b).ok()) {
+    std::cerr << "advance failed\n";
+```
+
+**Output**
+
+```text
+online seen_samples=1872
+online metrics [accuracy, logloss]: 1 0.27341
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/online.h`:67

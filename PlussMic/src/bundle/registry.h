@@ -82,8 +82,8 @@ public:
   Registry head(std::int64_t n) const;
   Registry tail(std::int64_t n) const;
   Registry slice(std::int64_t start, std::int64_t stop) const;
-  Registry iloc(std::int64_t row) const;
-  Registry iloc(std::int64_t start, std::int64_t stop) const;
+  Registry cloc(std::int64_t row) const;
+  Registry cloc(std::int64_t start, std::int64_t stop) const;
   Registry take(std::span<const std::int64_t> indices) const;
   Registry take(const std::vector<std::int64_t>& indices) const;
   Registry sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const;

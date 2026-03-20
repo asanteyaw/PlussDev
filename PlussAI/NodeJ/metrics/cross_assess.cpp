@@ -40,8 +40,11 @@ namespace {
     }
     return strat_fold_plan(batch.y, split);
   }
-  if (split.plan == CVPlanKind::GroupKFold || split.plan == CVPlanKind::TimeSeries) {
-    return StatusOr<SplitPlan>(Status::not_implemented("cross_assess currently supports Holdout, KFold, StratifiedKFold."));
+  if (split.plan == CVPlanKind::TimeSeries) {
+    return time_series_fold_plan(batch.features.sample_count(), split);
+  }
+  if (split.plan == CVPlanKind::GroupKFold) {
+    return StatusOr<SplitPlan>(Status::not_implemented("cross_assess currently supports Holdout, KFold, StratifiedKFold, TimeSeries."));
   }
   return StatusOr<SplitPlan>(Status::invalid_argument("cross_assess received unknown SplitOptions.plan."));
 }

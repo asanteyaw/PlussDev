@@ -1,0 +1,22 @@
+# `OnlineLinearOptions::learning_rate`
+
+## Signature
+
+```cpp
+OnlineLinearOptions::double learning_rate = 5e-2;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+OnlineLinearOptions cfg{};
+// cfg.learning_rate = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/online.h`:13

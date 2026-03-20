@@ -1,0 +1,21 @@
+# `EnsembleMethod::GradientBoost`
+
+## Signature
+
+```cpp
+EnsembleMethod::GradientBoost;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = EnsembleMethod::GradientBoost;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:42

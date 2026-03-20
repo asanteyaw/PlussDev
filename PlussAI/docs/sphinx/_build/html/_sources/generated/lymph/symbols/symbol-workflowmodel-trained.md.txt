@@ -1,0 +1,13 @@
+# `WorkflowModel::trained`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/workflowmodel-trained-ov1.md): `[[nodiscard]] bool WorkflowModel::trained(self) const noexcept;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:557

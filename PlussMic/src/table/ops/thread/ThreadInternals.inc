@@ -4,13 +4,16 @@ using Payload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss:
 
 class ThreadImpl final : public pluss::msharp::RefCounted {
 public:
-  ThreadImpl(Payload payload, std::optional<pluss::Series> validity_mask);
+  ThreadImpl(Payload payload,
+             std::optional<pluss::Series> validity_mask,
+             std::optional<pluss::Note> display_labels);
 
   Payload payload_;
   ThreadKind kind_{ThreadKind::Series};
   std::int64_t size_{0};
   std::string dtype_name_;
   std::optional<pluss::Series> validity_mask_;
+  std::optional<pluss::Note> display_labels_;
 };
 
 } // namespace detail
@@ -81,6 +84,16 @@ void validate_validity_mask(const std::optional<pluss::Series>& mask, std::int64
   PLUSS_CHECK(m.numel() == size, "Thread: validity mask length mismatch");
 }
 
+void validate_display_labels(const std::optional<pluss::Note>& labels, std::int64_t size) {
+  if (!labels.has_value()) {
+    return;
+  }
+  const auto& note = *labels;
+  PLUSS_CHECK(note.defined(), "Thread: display labels are undefined");
+  PLUSS_CHECK(note.dim() == 1, "Thread: display labels must be 1D");
+  PLUSS_CHECK(note.numel() == size, "Thread: display labels length mismatch");
+}
+
 std::int64_t infer_size(const pluss::Series& s) {
   PLUSS_CHECK(s.defined(), "Thread: Series payload is undefined");
   PLUSS_CHECK(s.dim() == 1, "Thread: Series payload must be strictly 1D");
@@ -126,28 +139,39 @@ double pearson_corr_from_vectors_(const std::vector<double>& x, const std::vecto
   if (n < 2 || y.size() != n) {
     return std::numeric_limits<double>::quiet_NaN();
   }
-  double sum_x = 0.0;
-  double sum_y = 0.0;
-  double sum_xx = 0.0;
-  double sum_yy = 0.0;
-  double sum_xy = 0.0;
+
+  long double sum_x = 0.0L;
+  long double sum_y = 0.0L;
   for (std::size_t i = 0; i < n; ++i) {
-    const double xv = x[i];
-    const double yv = y[i];
-    sum_x += xv;
-    sum_y += yv;
-    sum_xx += xv * xv;
-    sum_yy += yv * yv;
-    sum_xy += xv * yv;
+    sum_x += static_cast<long double>(x[i]);
+    sum_y += static_cast<long double>(y[i]);
   }
-  const auto nd = static_cast<double>(n);
-  const double num = nd * sum_xy - sum_x * sum_y;
-  const double den_x = nd * sum_xx - sum_x * sum_x;
-  const double den_y = nd * sum_yy - sum_y * sum_y;
-  if (den_x <= 0.0 || den_y <= 0.0) {
+
+  const long double n_ld = static_cast<long double>(n);
+  const long double mean_x = sum_x / n_ld;
+  const long double mean_y = sum_y / n_ld;
+
+  long double centered_xy = 0.0L;
+  long double centered_xx = 0.0L;
+  long double centered_yy = 0.0L;
+  for (std::size_t i = 0; i < n; ++i) {
+    const long double dx = static_cast<long double>(x[i]) - mean_x;
+    const long double dy = static_cast<long double>(y[i]) - mean_y;
+    centered_xy += dx * dy;
+    centered_xx += dx * dx;
+    centered_yy += dy * dy;
+  }
+
+  if (centered_xx <= 0.0L || centered_yy <= 0.0L) {
     return std::numeric_limits<double>::quiet_NaN();
   }
-  const double corr = num / std::sqrt(den_x * den_y);
+
+  const long double denom = std::sqrt(centered_xx * centered_yy);
+  if (!(denom > 0.0L)) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+
+  const double corr = static_cast<double>(centered_xy / denom);
   if (!std::isfinite(corr)) {
     return std::numeric_limits<double>::quiet_NaN();
   }
@@ -249,7 +273,8 @@ std::string infer_dtype_name(const Payload& payload) {
 
 pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_impl(
     Payload payload,
-    std::optional<pluss::Series> validity_mask);
+    std::optional<pluss::Series> validity_mask,
+    std::optional<pluss::Note> display_labels = std::nullopt);
 
 std::vector<std::int64_t> true_indices_from_mask(const pluss::Series& mask, std::int64_t expected_size) {
   const auto keep = bool_vec_from_series(mask, expected_size, "Thread::filter");
@@ -291,25 +316,31 @@ pluss::Timeline timeline_take(const pluss::Timeline& t, std::span<const std::int
 
 } // namespace
 
-detail::ThreadImpl::ThreadImpl(Payload payload, std::optional<pluss::Series> validity_mask)
+detail::ThreadImpl::ThreadImpl(Payload payload,
+                               std::optional<pluss::Series> validity_mask,
+                               std::optional<pluss::Note> display_labels)
     : payload_(std::move(payload)),
       kind_(infer_kind(payload_)),
       size_(infer_size(payload_)),
       dtype_name_(infer_dtype_name(payload_)),
-      validity_mask_(std::move(validity_mask)) {
+      validity_mask_(std::move(validity_mask)),
+      display_labels_(std::move(display_labels)) {
   validate_validity_mask(validity_mask_, size_);
+  validate_display_labels(display_labels_, size_);
 }
 
 namespace {
 
 pluss::msharp::intrusive_ptr<detail::ThreadImpl> build_impl(
     Payload payload,
-    std::optional<pluss::Series> validity_mask) {
-  return pluss::msharp::make_intrusive<detail::ThreadImpl>(std::move(payload), std::move(validity_mask));
+    std::optional<pluss::Series> validity_mask,
+    std::optional<pluss::Note> display_labels) {
+  return pluss::msharp::make_intrusive<detail::ThreadImpl>(
+      std::move(payload), std::move(validity_mask), std::move(display_labels));
 }
 
 pluss::msharp::intrusive_ptr<detail::ThreadImpl> clone_impl(const detail::ThreadImpl& src) {
-  return build_impl(src.payload_, src.validity_mask_);
+  return build_impl(src.payload_, src.validity_mask_, src.display_labels_);
 }
 
 pluss::Series scalar_like_column(const pluss::Series& reference, double value) {

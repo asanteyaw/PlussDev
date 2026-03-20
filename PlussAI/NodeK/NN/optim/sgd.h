@@ -156,7 +156,7 @@ private:
           capturable_supported);
       if (lane == UpdateLane::Fused) {
         apply_group_fused_(group, params, gradients);
-      } else if (lane == UpdateLane::Batched) {
+      } else if (lane == UpdateLane::Batched || lane == UpdateLane::Foreach) {
         apply_group_batched_(group, params, gradients);
       } else {
         apply_group_loop_(group, params, gradients);

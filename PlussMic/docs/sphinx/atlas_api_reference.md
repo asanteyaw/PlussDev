@@ -778,47 +778,6 @@ sales
 40.0
 ```
 
-### `nfeats`
-
-#### Signature
-
-```cpp
-std::int64_t nfeats(self) const
-```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::int64_t`
-    Integer count, size, or positional result.
-
-#### Notes
-
-Returns a size/count summary for the current object without changing it.
-
-#### Examples
-
-```cpp
-auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
-});
-auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
-});
-auto atlas = pluss::table::Atlas({f0, f1});
-
-auto out = atlas.nfeats();
-```
-
-#### Output
-
-```text
-2
-```
-
 ### `ncases`
 
 #### Signature
@@ -838,7 +797,7 @@ std::int64_t ncases(self) const
 
 #### Notes
 
-Returns a size/count summary for the current object without changing it.
+Applies `ncases` to the current `Atlas` object. Use the example and output together to see which part of the object changes and which structure is preserved.
 
 #### Examples
 
@@ -854,35 +813,26 @@ auto atlas = pluss::table::Atlas({f0, f1});
 auto out = atlas.ncases();
 ```
 
-#### Output
-
-```text
-2
-```
-
-### `plot`
+### `nfeats`
 
 #### Signature
 
 ```cpp
-AtlasPlotAccessor plot(self) const
+std::int64_t nfeats(self) const
 ```
 
 #### Parameters
 
-This accessor now exposes both:
-
-1. Atlas-native depth plots (`surface`, `wireframe`, `cloud3`), and
-2. Frame-scoped DataFrame plots through `frames(i)`.
+`None`
 
 #### Returns
 
-`AtlasPlotAccessor`
-    Value produced by this call.
+`std::int64_t`
+    Integer count, size, or positional result.
 
 #### Notes
 
-This opens the plotting accessor for the current data object.
+Applies `nfeats` to the current `Atlas` object. Use the example and output together to see which part of the object changes and which structure is preserved.
 
 #### Examples
 
@@ -895,7 +845,92 @@ auto f1 = pluss::table::DataFrame({
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
-auto fig = atlas.plot().frames(0).line("sales");
+auto out = atlas.nfeats();
+```
+
+### `plot`
+
+#### Signature
+
+```cpp
+AtlasPlotAccessor plot(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`AtlasPlotAccessor`
+    Value produced by this call.
+
+#### Notes
+
+This opens the plotting accessor for the current data object.
+
+#### See also
+
+- `AtlasPlotAccessor plot(self, const AtlasPlotOptions& options) const`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto fig = atlas.plot(0).line("sales");
+```
+
+#### Output
+
+```text
+Figure(line)
+```
+
+### `plot`
+
+#### Signature
+
+```cpp
+AtlasPlotAccessor plot(self, const AtlasPlotOptions& options) const
+```
+
+#### Parameters
+
+`options` : `const AtlasPlotOptions&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`AtlasPlotAccessor`
+    Value produced by this call.
+
+#### Notes
+
+This opens the plotting accessor for the current data object.
+
+#### See also
+
+- `AtlasPlotAccessor plot(self) const`
+
+#### Examples
+
+```cpp
+auto f0 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+});
+auto f1 = pluss::table::DataFrame({
+    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+});
+auto atlas = pluss::table::Atlas({f0, f1});
+
+auto fig = atlas.plot(0).line("sales");
 ```
 
 #### Output

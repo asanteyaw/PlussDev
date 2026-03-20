@@ -1,0 +1,15 @@
+# `StatusOr::value`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/statusor-value-ov1.md): `[[nodiscard]] const T& StatusOr::value(self) const noexcept;`
+- [overload 2](../api/statusor-value-ov2.md): `[[nodiscard]] T& StatusOr::value(self) noexcept;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/status.h`:56
+- `PlussAI/include/pluss/ai/nodej/status.h`:57

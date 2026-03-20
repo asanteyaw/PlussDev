@@ -1,0 +1,13 @@
+# `make_holdout_indices`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-make-holdout-indices-ov1.md): `[[nodiscard]] inline IndexSplit make_holdout_indices(const pluss::table::DataFrame& frame, const HoldoutSplitOptions& options);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:492

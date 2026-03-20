@@ -1021,8 +1021,8 @@ void save_excel(const pluss::table::DataFrame& frame,
   auto guard = std::unique_ptr<zip_t, decltype(&zip_discard)>(archive, &zip_discard);
 
   const auto sheet_name = options.sheet_name.empty() ? std::string("Sheet1") : options.sheet_name;
-  const auto names = frame.column_names();
-  const auto cols = frame.columns();
+  const auto names = frame.feature_names();
+  const auto cols = frame.features();
   const bool include_cases = options.add_cases || options.cases;
 
   std::string sheet_xml;

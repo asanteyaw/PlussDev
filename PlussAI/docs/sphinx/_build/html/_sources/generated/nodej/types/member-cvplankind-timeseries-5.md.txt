@@ -1,0 +1,21 @@
+# `CVPlanKind::TimeSeries`
+
+## Signature
+
+```cpp
+CVPlanKind::TimeSeries;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = CVPlanKind::TimeSeries;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:50

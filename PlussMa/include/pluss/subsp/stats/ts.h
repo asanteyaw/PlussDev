@@ -832,6 +832,82 @@ class CODEM_API Sarima {
                            pluss::codem::Config cfg = {});
 };
 
+struct SsmModel {
+  pluss::codem::Series transition = pluss::codem::Series::undefined();        // A: [m,m]
+  pluss::codem::Series state_loading = pluss::codem::Series::undefined();     // B: [m,k]
+  pluss::codem::Series observation = pluss::codem::Series::undefined();       // C: [n,m]
+  pluss::codem::Series innovation_loading = pluss::codem::Series::undefined(); // D: [n,h]
+  pluss::codem::Series mean0 = pluss::codem::Series::undefined();             // [m] or [m,1]
+  pluss::codem::Series cov0 = pluss::codem::Series::undefined();              // [m,m]
+};
+
+struct SsmOptions {
+  double tolerance = 0.0;
+};
+
+struct SsmFilterResult {
+  pluss::codem::Series filtered_states = pluss::codem::Series::undefined();      // [T,m]
+  pluss::codem::Series filtered_states_cov = pluss::codem::Series::undefined();  // [T,m,m]
+  pluss::codem::Series forecasted_states = pluss::codem::Series::undefined();    // [T,m]
+  pluss::codem::Series forecasted_states_cov = pluss::codem::Series::undefined(); // [T,m,m]
+  pluss::codem::Series forecasted_obs = pluss::codem::Series::undefined();       // [T,n]
+  pluss::codem::Series forecasted_obs_cov = pluss::codem::Series::undefined();   // [T,n,n]
+  pluss::codem::Series forecast_obs_error = pluss::codem::Series::undefined();   // [T,n]
+  pluss::codem::Series kalman_gain = pluss::codem::Series::undefined();          // [T,m,n]
+  pluss::codem::Series data_used = pluss::codem::Series::undefined();            // [T,n], 1 if used else 0
+  pluss::codem::Series loglik_per_obs = pluss::codem::Series::undefined();       // [T]
+  double loglik = 0.0;
+};
+
+struct SsmSmoothResult {
+  SsmFilterResult filter{};
+  pluss::codem::Series smoothed_states = pluss::codem::Series::undefined();      // [T,m]
+  pluss::codem::Series smoothed_states_cov = pluss::codem::Series::undefined();  // [T,m,m]
+};
+
+struct SsmForecastResult {
+  pluss::codem::Series observations = pluss::codem::Series::undefined();        // [H,n]
+  pluss::codem::Series observations_cov = pluss::codem::Series::undefined();    // [H,n,n]
+  pluss::codem::Series states = pluss::codem::Series::undefined();              // [H,m]
+  pluss::codem::Series states_cov = pluss::codem::Series::undefined();          // [H,m,m]
+};
+
+struct SsmSimResult {
+  pluss::codem::Series observations = pluss::codem::Series::undefined();       // [T,n] or [P,T,n]
+  pluss::codem::Series states = pluss::codem::Series::undefined();             // [T,m] or [P,T,m]
+  pluss::codem::Series state_disturbance = pluss::codem::Series::undefined();  // [T,k] or [P,T,k]
+  pluss::codem::Series obs_innovation = pluss::codem::Series::undefined();     // [T,h] or [P,T,h]
+};
+
+class CODEM_API Ssm {
+ public:
+  static SsmFilterResult filter(const pluss::codem::Series& y,
+                                const SsmModel& model,
+                                const SsmOptions& options = {},
+                                pluss::codem::Config cfg = {});
+
+  static SsmSmoothResult smooth(const pluss::codem::Series& y,
+                                const SsmModel& model,
+                                const SsmOptions& options = {},
+                                pluss::codem::Config cfg = {});
+
+  static SsmForecastResult forecast(std::int64_t horizon,
+                                    const SsmModel& model,
+                                    pluss::codem::Config cfg = {});
+
+  static SsmForecastResult forecast(std::int64_t horizon,
+                                    const pluss::codem::Series& y_history,
+                                    const SsmModel& model,
+                                    const SsmOptions& options = {},
+                                    pluss::codem::Config cfg = {});
+
+  static SsmSimResult simulate(std::int64_t num_observations,
+                               const SsmModel& model,
+                               std::int64_t num_paths = 1,
+                               pluss::codem::Config cfg = {},
+                               std::uint64_t seed = 0);
+};
+
 struct VarOptions {
   std::int64_t lag_order = 1;
   bool include_intercept = true;

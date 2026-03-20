@@ -1,0 +1,21 @@
+# `EnsembleMethod::RandomForest`
+
+## Signature
+
+```cpp
+EnsembleMethod::RandomForest;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = EnsembleMethod::RandomForest;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:42

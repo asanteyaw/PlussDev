@@ -1,0 +1,165 @@
+# `OnlineLinearClassifier::assess`
+
+## Signature
+
+```cpp
+[[nodiscard]] StatusOr<Series> OnlineLinearClassifier::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `batch` : `const LabeledBatch&`
+  Input feature data used by this call.
+- `options` : `const AssessOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `StatusOr<Series>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Evaluates model output against targets and returns metric aggregates.
+
+## See also
+
+- `[[nodiscard]] virtual StatusOr<Series> EstimatorBase::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const = 0;`
+- `[[nodiscard]] StatusOr<Series> Flow::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] StatusOr<Series> Flow::assess(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const AssessOptions& options = {}) const;`
+- `Status OnlineLinearClassifier::advance(self, const LabeledBatch& batch, const TrainOptions& options = {});`
+- `[[nodiscard]] StatusOr<Series> OnlineLinearClassifier::infer(self, const FeatureBatch& batch, const InferOptions& options = {}) const;`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_dataframe_bridge_demo.cpp`
+
+```cpp
+  if (!require_ok(reg_or, "make_regressor")) return 1;
+  auto reg = reg_or.move_value();
+  Status st = reg->learn(batch);
+  if (!st.ok()) {
+    std::cerr << "learn failed: " << st.message << "\n";
+    return 1;
+  }
+
+  auto metrics_or = reg->assess(batch, AssessOptions{.metrics = {MetricKind::Mse, MetricKind::R2}});
+  if (!require_ok(metrics_or, "assess")) return 1;
+  print_metrics("linear metrics [mse, r2]", metrics_or.value());
+
+  std::cout << "NodeJ DataFrame bridge demo completed.\n";
+  return 0;
+}
+```
+
+**Output**
+
+```text
+NodeJ DataFrame bridge demo
+adapted batch: samples=6 features=4 weighted=yes
+linear metrics [mse, r2]: 9.43684e-08 1
+NodeJ DataFrame bridge demo completed.
+```
+
+### Example 2
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_flow_demo.cpp`
+
+```cpp
+    TrainOptions opts{};
+    opts.max_iterations = 3000;
+    opts.tolerance = 1e-8;
+    if (!cls.learn(train, opts).ok()) {
+      std::cerr << "classification flow learn failed\n";
+      return 1;
+    }
+
+    auto metric_or = cls.assess(train, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::LogLoss}});
+    if (!require_ok(metric_or, "classification flow assess")) return 1;
+    print_series("classification flow metrics [accuracy, logloss]", metric_or.value());
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{
+                                            -2.0, 0.0,
+                                            -1.0, std::numeric_limits<double>::quiet_NaN(),
+                                            0.0, 0.0,
+                                            1.0, 1.0,
+                                            2.0, 0.0,
+                                            3.0, 1.0},
+                                        {6, 2},
+                                        f64());
+    const Series y = pluss::make_series(std::vector<double>{-3.0, -1.0, 1.0, 3.0, 5.0, 7.0}, {6}, f64());
+    const LabeledBatch train{
+```
+
+**Output**
+
+```text
+NodeJ Flow demo
+classification flow metrics [accuracy, logloss]: 1 0.000228657
+regression flow metrics [mse, r2]: 4.46648e-17 1
+NodeJ Flow demo completed.
+```
+
+### Example 3
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_model_families_demo.cpp`
+
+```cpp
+void run_classifier_family(const std::string& name, const ModelSpec& spec, const LabeledBatch& train) {
+  auto model_or = make_classifier(spec);
+  if (!require_ok(model_or, name + " make_classifier")) return;
+  std::unique_ptr<ClassifierBase> model = model_or.move_value();
+  if (!require_status(model->learn(train), name + " learn")) return;
+
+  auto pred_or = model->infer(train.features);
+  if (!require_ok(pred_or, name + " infer")) return;
+  auto metric_or = model->assess(train, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::LogLoss}});
+  if (!require_ok(metric_or, name + " assess")) return;
+  print_metric("  " + name + " (acc, logloss)", metric_or.value());
+}
+
+void run_regressor_family(const std::string& name, const ModelSpec& spec, const LabeledBatch& train) {
+  auto model_or = make_regressor(spec);
+  if (!require_ok(model_or, name + " make_regressor")) return;
+  std::unique_ptr<RegressorBase> model = model_or.move_value();
+  if (!require_status(model->learn(train), name + " learn")) return;
+
+  auto pred_or = model->infer(train.features);
+  if (!require_ok(pred_or, name + " infer")) return;
+  auto metric_or = model->assess(train, AssessOptions{.metrics = {MetricKind::Mse, MetricKind::R2}});
+  if (!require_ok(metric_or, name + " assess")) return;
+  print_metric("  " + name + " (mse, r2)", metric_or.value());
+}
+```
+
+**Output**
+
+```text
+NodeJ model families demo
+Classification families:
+  linear (acc, logloss): 1 0.000580684
+  linear_hinge (acc, logloss): 1 0.0886185
+  tree (acc, logloss): 1 9.99978e-13
+  ensemble (acc, logloss): 1 1.00003e-12
+  neighbor (acc, logloss): 1 9.99978e-13
+  kernel (acc, logloss): 1 0.318438
+  bayes (acc, logloss): 1 9.99978e-13
+Regression families:
+  linear (mse, r2): 3.96212e-15 1
+  tree (mse, r2): 0 1
+  ensemble (mse, r2): 0.0546306 0.925078
+  neighbor (mse, r2): 0 1
+  kernel (mse, r2): 0.00019696 0.99973
+  bayes (mse, r2): 1.54185e-15 1
+...
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/online.h`:31

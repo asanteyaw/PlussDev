@@ -40,6 +40,10 @@ public:
   std::int64_t itemsize() const { return static_cast<std::int64_t>(dtype().itemsize); }
   bool is_contiguous() const;
   Platform platform() const noexcept { return defined() ? impl_->platform() : Platform::CPU; }
+  bool is_cpu() const noexcept { return platform() == Platform::CPU; }
+  bool is_gpu() const noexcept { return !is_cpu(); }
+  bool is_cuda() const noexcept { return platform() == Platform::CUDA; }
+  bool is_mps() const noexcept { return platform() == Platform::MPS; }
 
   // Raw storage access (byte-addressable).
   std::byte* raw_data();

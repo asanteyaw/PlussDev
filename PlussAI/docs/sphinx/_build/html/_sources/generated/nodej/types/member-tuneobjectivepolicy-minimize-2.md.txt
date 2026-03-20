@@ -1,0 +1,21 @@
+# `TuneObjectivePolicy::Minimize`
+
+## Signature
+
+```cpp
+TuneObjectivePolicy::Minimize;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = TuneObjectivePolicy::Minimize;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/tune.h`:12

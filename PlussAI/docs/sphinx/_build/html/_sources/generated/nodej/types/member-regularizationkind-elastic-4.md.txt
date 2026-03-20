@@ -1,0 +1,21 @@
+# `RegularizationKind::Elastic`
+
+## Signature
+
+```cpp
+RegularizationKind::Elastic;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = RegularizationKind::Elastic;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:22

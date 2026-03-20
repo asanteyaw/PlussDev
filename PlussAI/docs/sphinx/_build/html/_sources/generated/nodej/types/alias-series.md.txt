@@ -1,0 +1,21 @@
+# `Series`
+
+## Signature
+
+```cpp
+using Series = ::pluss::Series;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+Series value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/types.h`:15

@@ -31,9 +31,67 @@ namespace flash = pluss::pl::flash;
 
 constexpr std::string_view kDefaultPlotName = "dataframe";
 
-void setup_pane(Pane& pane, bool show_legend) {
+void setup_pane(Pane& pane, bool show_legend, const DataFramePlotOptions* options = nullptr) {
   pane.grid(pluss::pl::GridStyle::Major);
   pane.legend(show_legend ? pluss::pl::KeyPlace::Auto : pluss::pl::KeyPlace::None);
+  if (options != nullptr) {
+    if (options->x_label_rotation_deg.has_value()) {
+      pane.x_label_rotation(*options->x_label_rotation_deg);
+    }
+    if (options->y_label_rotation_deg.has_value()) {
+      pane.y_label_rotation(*options->y_label_rotation_deg);
+    }
+    if (options->x_tick_format.has_value()) {
+      pane.x_tick_format(*options->x_tick_format);
+    }
+    if (options->y_tick_format.has_value()) {
+      pane.y_tick_format(*options->y_tick_format);
+    }
+    if (options->x_tick_label_gap_points.has_value()) {
+      pane.x_tick_label_gap(*options->x_tick_label_gap_points);
+    }
+    if (options->y_tick_label_gap_points.has_value()) {
+      pane.y_tick_label_gap(*options->y_tick_label_gap_points);
+    }
+    if (options->x_label_gap_points.has_value()) {
+      pane.x_label_gap(*options->x_label_gap_points);
+    }
+    if (options->y_label_gap_points.has_value()) {
+      pane.y_label_gap(*options->y_label_gap_points);
+    }
+  }
+}
+
+std::optional<double> resolved_x_tick_rotation(const DataFramePlotOptions& options) {
+  if (options.x_tick_rotation_deg.has_value()) {
+    return options.x_tick_rotation_deg;
+  }
+  if (options.labeled_tick_rotation_deg.has_value()) {
+    return options.labeled_tick_rotation_deg;
+  }
+  return std::nullopt;
+}
+
+void apply_x_tick_rotation(Pane& pane,
+                           const DataFramePlotOptions& options,
+                           bool default_if_crowded = false) {
+  if (const auto rot = resolved_x_tick_rotation(options); rot.has_value()) {
+    pane.x_tick_rotation(*rot);
+  } else if (default_if_crowded) {
+    pane.x_tick_rotation(45.0);
+  }
+}
+
+void apply_y_tick_rotation(Pane& pane,
+                           const DataFramePlotOptions& options,
+                           std::optional<double> default_rotation = std::nullopt) {
+  if (options.y_tick_rotation_deg.has_value()) {
+    pane.y_tick_rotation(*options.y_tick_rotation_deg);
+    return;
+  }
+  if (default_rotation.has_value()) {
+    pane.y_tick_rotation(*default_rotation);
+  }
 }
 
 Studio make_studio() {
@@ -330,11 +388,7 @@ void apply_axis(Pane& pane, const ResolvedPlotAxis& axis, const DataFramePlotOpt
     std::transform(tick_labels.begin(), tick_labels.end(), std::back_inserter(normalized_labels),
                    [](const std::string& label) { return simplify_midnight_datetime_label(label); });
     pane.x_ticks(tick_values, std::move(normalized_labels));
-    if (options.labeled_tick_rotation_deg.has_value()) {
-      pane.x_tick_rotation(*options.labeled_tick_rotation_deg);
-    } else if (axis.labels.size() > tick_labels.size()) {
-      pane.x_tick_rotation(45.0);
-    }
+    apply_x_tick_rotation(pane, options, axis.labels.size() > tick_labels.size());
   }
 }
 
@@ -564,7 +618,8 @@ flash::HeatmapOptions to_flash_options(const CorrHeatmapPlotOptions& options) {
 
 Studio corr_heatmap_from_names(const DataFrame& frame,
                                const std::vector<std::string>& names,
-                               const CorrHeatmapPlotOptions& options) {
+                               const CorrHeatmapPlotOptions& options,
+                               const DataFramePlotOptions& plot_options) {
   const auto corr = frame.corr(false);
   const auto corr_names = corr.feature_names();
   std::unordered_map<std::string, std::size_t> corr_index;
@@ -603,23 +658,23 @@ Studio corr_heatmap_from_names(const DataFrame& frame,
 
   auto fig = make_studio();
   auto& pane = fig.pane2();
-  setup_pane(pane, false);
+  setup_pane(pane, false, &plot_options);
   const auto axis_positions = positional_plot_x(static_cast<std::int64_t>(names.size()));
   auto z = columns_to_matrix_series(columns, static_cast<std::int64_t>(names.size()), false);
   auto& trace = flash::heatmap(pane, axis_positions, axis_positions, z, to_flash_options(options));
   trace.label("corr").shade(pluss::pl::ShadeMode::Smooth);
-  if (!options.borderless) {
-    pane.y_tick_rotation(30.0);
-  }
 
   pane.x_ticks(axis_positions, names).y_ticks(axis_positions, names);
+  apply_x_tick_rotation(pane, plot_options, false);
+  apply_y_tick_rotation(pane, plot_options, options.borderless ? std::nullopt : std::optional<double>{30.0});
   pane.x_label("feature").y_label("feature");
   return fig;
 }
 
 Studio scatter_matrix_from_names(const DataFrame& frame,
                                  const std::vector<std::string>& names,
-                                 const flash::PairPlotOptions& options) {
+                                 const flash::PairPlotOptions& options,
+                                 const DataFramePlotOptions& plot_options) {
   PLUSS_CHECK(names.size() >= 2, "DataFrame::plot().scatter_matrix: need at least two numeric features");
 
   std::vector<pluss::Series> columns;
@@ -631,6 +686,36 @@ Studio scatter_matrix_from_names(const DataFrame& frame,
   auto pair_options = options;
   if (pair_options.labels.empty()) {
     pair_options.labels = names;
+  }
+  if (!pair_options.x_tick_rotation_deg.has_value()) {
+    pair_options.x_tick_rotation_deg = resolved_x_tick_rotation(plot_options);
+  }
+  if (!pair_options.y_tick_rotation_deg.has_value()) {
+    pair_options.y_tick_rotation_deg = plot_options.y_tick_rotation_deg;
+  }
+  if (!pair_options.x_label_rotation_deg.has_value()) {
+    pair_options.x_label_rotation_deg = plot_options.x_label_rotation_deg;
+  }
+  if (!pair_options.y_label_rotation_deg.has_value()) {
+    pair_options.y_label_rotation_deg = plot_options.y_label_rotation_deg;
+  }
+  if (!pair_options.x_tick_format.has_value()) {
+    pair_options.x_tick_format = plot_options.x_tick_format;
+  }
+  if (!pair_options.y_tick_format.has_value()) {
+    pair_options.y_tick_format = plot_options.y_tick_format;
+  }
+  if (!pair_options.x_tick_label_gap_points.has_value()) {
+    pair_options.x_tick_label_gap_points = plot_options.x_tick_label_gap_points;
+  }
+  if (!pair_options.y_tick_label_gap_points.has_value()) {
+    pair_options.y_tick_label_gap_points = plot_options.y_tick_label_gap_points;
+  }
+  if (!pair_options.x_label_gap_points.has_value()) {
+    pair_options.x_label_gap_points = plot_options.x_label_gap_points;
+  }
+  if (!pair_options.y_label_gap_points.has_value()) {
+    pair_options.y_label_gap_points = plot_options.y_label_gap_points;
   }
 
   auto fig = make_studio();
@@ -739,7 +824,10 @@ flash::SummaryOptions to_flash_options(const BriefPlotOptions& options) {
   return out;
 }
 
-Studio box_from_names(const DataFrame& frame, const std::vector<std::string>& names, const BoxPlotOptions& options) {
+Studio box_from_names(const DataFrame& frame,
+                      const std::vector<std::string>& names,
+                      const BoxPlotOptions& options,
+                      const DataFramePlotOptions& plot_options) {
   PLUSS_CHECK(!names.empty(), "DataFrame::plot().box: at least one numeric feature is required");
 
   std::vector<double> group_id;
@@ -762,20 +850,22 @@ Studio box_from_names(const DataFrame& frame, const std::vector<std::string>& na
 
   auto fig = make_studio();
   auto& pane = fig.pane2();
-  setup_pane(pane, false);
+  setup_pane(pane, false, &plot_options);
   auto& trace = flash::boxplot(pane, group_id, merged_values);
   trace.label("distribution");
   style_trace(trace, 0, options.alpha, options.line_width);
 
   const auto centers = positional_plot_x(static_cast<std::int64_t>(names.size()));
   pane.x_ticks(centers, names);
+  apply_x_tick_rotation(pane, plot_options, false);
   pane.x_label("feature").y_label("value");
   return fig;
 }
 
 Studio violin_from_names(const DataFrame& frame,
                          const std::vector<std::string>& names,
-                         const ViolinPlotOptions& options) {
+                         const ViolinPlotOptions& options,
+                         const DataFramePlotOptions& plot_options) {
   PLUSS_CHECK(!names.empty(), "DataFrame::plot().violin: at least one numeric feature is required");
 
   std::vector<double> group_id;
@@ -796,7 +886,7 @@ Studio violin_from_names(const DataFrame& frame,
 
   auto fig = make_studio();
   auto& pane = fig.pane2();
-  setup_pane(pane, false);
+  setup_pane(pane, false, &plot_options);
   auto& trace = flash::violinplot(
       pane,
       group_id,
@@ -807,6 +897,7 @@ Studio violin_from_names(const DataFrame& frame,
 
   const auto centers = positional_plot_x(static_cast<std::int64_t>(names.size()));
   pane.x_ticks(centers, names);
+  apply_x_tick_rotation(pane, plot_options, false);
   pane.x_label("feature").y_label("value");
   return fig;
 }
@@ -824,7 +915,7 @@ Studio make_xy_figure(const DataFrame& frame,
   const auto axis = resolve_plot_axis(frame, x_feature, where, options);
   auto fig = make_studio();
   auto& pane = fig.pane2();
-  setup_pane(pane, y_features.size() > 1);
+  setup_pane(pane, y_features.size() > 1, &options);
   apply_axis(pane, axis, options);
 
   std::size_t feature_index = 0;
@@ -1204,7 +1295,7 @@ pluss::pl::Studio DataFramePlotAccessor::area_stacked(
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, y_features.size() > 1);
+  setup_pane(pane, y_features.size() > 1, &options_);
   apply_axis(pane, axis, options_);
   pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
 
@@ -1248,7 +1339,7 @@ pluss::pl::Studio DataFramePlotAccessor::scatter(
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, resolved_hue.has_value());
+  setup_pane(pane, resolved_hue.has_value(), &options_);
   apply_axis(pane, axis, options_);
   pane.y_label(std::string(y_feature));
 
@@ -1321,11 +1412,12 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, y_features.size() > 1);
+  setup_pane(pane, y_features.size() > 1, &options_);
   if (options.horizontal) {
     pane.y_label(axis.label);
     if (!axis.labels.empty()) {
       pane.y_ticks(axis.values, axis.labels);
+      apply_y_tick_rotation(pane, options_, std::nullopt);
     }
   } else {
     apply_axis(pane, axis, options_);
@@ -1402,7 +1494,7 @@ pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, y_features.size() > 1);
+  setup_pane(pane, y_features.size() > 1, &options_);
   apply_axis(pane, axis, options_);
   pane.y_label(y_features.size() == 1 ? std::string(*y_features.begin()) : std::string("value"));
 
@@ -1434,7 +1526,7 @@ pluss::pl::Studio DataFramePlotAccessor::box(std::initializer_list<std::string_v
 pluss::pl::Studio DataFramePlotAccessor::box(std::initializer_list<std::string_view> features,
                                              const BoxPlotOptions& options) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().box");
-  auto fig = box_from_names(frame_, names, options);
+  auto fig = box_from_names(frame_, names, options, options_);
   apply_figure_options(fig);
   return fig;
 }
@@ -1450,7 +1542,7 @@ pluss::pl::Studio DataFramePlotAccessor::violin(std::initializer_list<std::strin
 pluss::pl::Studio DataFramePlotAccessor::violin(std::initializer_list<std::string_view> features,
                                                 const ViolinPlotOptions& options) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().violin");
-  auto fig = violin_from_names(frame_, names, options);
+  auto fig = violin_from_names(frame_, names, options, options_);
   apply_figure_options(fig);
   return fig;
 }
@@ -1470,7 +1562,7 @@ pluss::pl::Studio DataFramePlotAccessor::violin(std::string_view value_feature,
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, false);
+  setup_pane(pane, false, &options_);
 
   const auto group_thread = frame_.features(group_feature);
   if (thread_supports_hue(group_thread)) {
@@ -1533,7 +1625,7 @@ pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, const Hi
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, false);
+  setup_pane(pane, false, &options_);
   auto& trace = flash::histplot(pane,
                                 thread_to_plot_numeric_values(frame_.features(feature)),
                                 static_cast<int>(std::max<std::int64_t>(1, resolve_bins(options.bins))));
@@ -1562,7 +1654,7 @@ pluss::pl::Studio DataFramePlotAccessor::hist(std::initializer_list<std::string_
   for (std::int64_t i = 0; i < n; ++i) {
     auto& pane = fig.pane2();
     pane.place(i / cols, i % cols);
-    setup_pane(pane, false);
+    setup_pane(pane, false, &options_);
     const auto& name = names[static_cast<std::size_t>(i)];
     auto& trace = flash::histplot(pane,
                                   frame_.features(name).as_series().to(pluss::codem::ScalarType::Float64),
@@ -1611,7 +1703,7 @@ pluss::pl::Studio DataFramePlotAccessor::density(std::initializer_list<std::stri
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, names.size() > 1);
+  setup_pane(pane, names.size() > 1, &options_);
   pane.x_label("value").y_label("density");
 
   const auto resolved_points = std::max<std::int64_t>(16, options.points);
@@ -1706,7 +1798,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_pie(std::string_view value_feature
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, true);
+  setup_pane(pane, true, &options_);
   pane.grid(pluss::pl::GridStyle::None).x_label("").y_label("");
   auto& trace = render_label ? flash::pieplot(pane, filtered_values, rendered_labels)
                              : flash::pieplot(pane, filtered_values);
@@ -1747,17 +1839,16 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::initializer_list<std:
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, false);
+  setup_pane(pane, false, &options_);
   const auto x_positions = positional_plot_x(frame_.ncases());
   const auto y_positions = positional_plot_x(static_cast<std::int64_t>(y_labels.size()));
   auto z = columns_to_matrix_series(columns, frame_.ncases(), false).transpose(0, 1).contiguous();
   auto& trace = flash::heatmap(pane, x_positions, y_positions, z, to_flash_options(options));
   trace.label("value").shade(pluss::pl::ShadeMode::Smooth);
-  if (!options.borderless) {
-    pane.y_tick_rotation(30.0);
-  }
   pane.x_ticks(positional_plot_x(frame_.ncases()), labels_for_cases(frame_, "DataFrame::plot().heatmap", options_));
   pane.y_ticks(positional_plot_x(static_cast<std::int64_t>(y_labels.size())), y_labels);
+  apply_x_tick_rotation(pane, options_, false);
+  apply_y_tick_rotation(pane, options_, options.borderless ? std::nullopt : std::optional<double>{30.0});
   pane.x_label("case").y_label("feature");
   return fig;
 }
@@ -1810,19 +1901,18 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::string_view case_feat
   auto fig = make_studio();
   apply_figure_options(fig);
   auto& pane = fig.pane2();
-  setup_pane(pane, false);
+  setup_pane(pane, false, &options_);
   const auto x_positions = positional_plot_x(static_cast<std::int64_t>(pivot_features.size()));
   const auto y_positions = positional_plot_x(pivoted.ncases());
   auto z = columns_to_matrix_series(columns, pivoted.ncases(), true);
   auto& trace = flash::heatmap(pane, x_positions, y_positions, z, to_flash_options(options));
   trace.label(std::string(value_feature)).shade(pluss::pl::ShadeMode::Smooth);
-  if (!options.borderless) {
-    pane.y_tick_rotation(30.0);
-  }
   pane.x_ticks(positional_plot_x(static_cast<std::int64_t>(pivot_features.size())),
                std::vector<std::string>(pivot_features.begin(), pivot_features.end()));
   pane.y_ticks(positional_plot_x(pivoted.ncases()),
                labels_for_cases(pivoted, "DataFrame::plot().heatmap", options_));
+  apply_x_tick_rotation(pane, options_, false);
+  apply_y_tick_rotation(pane, options_, options.borderless ? std::nullopt : std::optional<double>{30.0});
   pane.x_label(std::string(feature_feature)).y_label(std::string(case_feature));
   return fig;
 }
@@ -1900,7 +1990,7 @@ pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(
 pluss::pl::Studio DataFramePlotAccessor::impl_corr_heatmap(std::initializer_list<std::string_view> features,
                                                            const CorrHeatmapPlotOptions& options) const {
   const auto names = correlation_feature_names(frame_, features);
-  auto fig = corr_heatmap_from_names(frame_, names, options);
+  auto fig = corr_heatmap_from_names(frame_, names, options, options_);
   apply_figure_options(fig);
   return fig;
 }
@@ -1932,7 +2022,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_scatter_matrix(std::initializer_li
   const auto scoped = features.size() > 0 ? frame_.features(features) : frame_;
   const auto series_only = scoped.series_features();
   const auto names = series_only.feature_names();
-  auto fig = scatter_matrix_from_names(series_only, names, resolve_scatter_matrix_pair_options(options));
+  auto fig = scatter_matrix_from_names(series_only, names, resolve_scatter_matrix_pair_options(options), options_);
   apply_figure_options(fig);
   return fig;
 }
@@ -2158,12 +2248,13 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(std::initializer_list<st
     }
   }
   if (names.size() <= 5 && frame_.ncases() <= 256) {
-    auto fig = scatter_matrix_from_names(frame_, names, resolve_scatter_matrix_pair_options(ScatterMatrixPlotOptions{}));
+    auto fig = scatter_matrix_from_names(
+        frame_, names, resolve_scatter_matrix_pair_options(ScatterMatrixPlotOptions{}), options_);
     apply_figure_options(fig);
     return fig;
   }
   const CorrHeatmapPlotOptions corr_options{};
-  auto fig = corr_heatmap_from_names(frame_, names, corr_options);
+  auto fig = corr_heatmap_from_names(frame_, names, corr_options, options_);
   apply_figure_options(fig);
   return fig;
 }

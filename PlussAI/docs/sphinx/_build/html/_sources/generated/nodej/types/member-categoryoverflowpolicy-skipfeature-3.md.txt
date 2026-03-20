@@ -1,0 +1,21 @@
+# `CategoryOverflowPolicy::SkipFeature`
+
+## Signature
+
+```cpp
+CategoryOverflowPolicy::SkipFeature;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = CategoryOverflowPolicy::SkipFeature;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:45

@@ -63,8 +63,34 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
       if (err) *err << "holdout sizes should match rounded fraction\n";
       return false;
     }
+    if (std::is_sorted(train_a.begin(), train_a.end()) || std::is_sorted(test_a.begin(), test_a.end())) {
+      if (err) *err << "shuffled holdout_split should preserve shuffled index order (not force-sort output)\n";
+      return false;
+    }
     if (has_duplicates(train_a) || has_duplicates(test_a)) {
       if (err) *err << "holdout indices should be unique\n";
+      return false;
+    }
+  }
+
+  {
+    SplitOptions options{};
+    options.holdout_fraction = 0.3;
+    options.shuffle = false;
+    options.random.seed = 17;
+    options.random.deterministic = true;
+
+    auto split_or = pluss::ai::nodej::holdout_split(10, options);
+    if (!split_or.ok()) {
+      if (err) *err << "holdout_split should succeed for deterministic unshuffled options\n";
+      return false;
+    }
+    const auto train = as_i64_vec(split_or.value().train_indices);
+    const auto test = as_i64_vec(split_or.value().test_indices);
+    const std::vector<std::int64_t> expected_train{0, 1, 2, 3, 4, 5, 6};
+    const std::vector<std::int64_t> expected_test{7, 8, 9};
+    if (train != expected_train || test != expected_test) {
+      if (err) *err << "unshuffled holdout_split should return train prefix and test suffix\n";
       return false;
     }
   }
@@ -168,6 +194,47 @@ bool run_nodej_split_checks(std::ostream* err = nullptr) {
     if (!(test.size() == 3 && zeros == 2 && ones == 1)) {
       if (err) *err << "strat_holdout_split should preserve class proportion closely\n";
       return false;
+    }
+  }
+
+  {
+    SplitOptions options{};
+    options.folds = 3;
+    options.shuffle = false;
+    options.time_test_size = 2;
+    options.time_gap = 1;
+    options.time_max_train_size = 4;
+
+    auto plan_or = pluss::ai::nodej::time_series_fold_plan(12, options);
+    if (!plan_or.ok()) {
+      if (err) *err << "time_series_fold_plan should succeed for valid options\n";
+      return false;
+    }
+
+    const auto& folds = plan_or.value().folds;
+    if (folds.size() != 3) {
+      if (err) *err << "time_series_fold_plan should emit requested fold count\n";
+      return false;
+    }
+
+    const std::array<std::size_t, 3> expected_train_sizes{4, 4, 4};
+    const std::array<std::size_t, 3> expected_test_sizes{2, 2, 2};
+    const std::array<std::int64_t, 3> expected_test_start{6, 8, 10};
+    for (std::size_t i = 0; i < folds.size(); ++i) {
+      const auto train = as_i64_vec(folds[i].train_indices);
+      const auto test = as_i64_vec(folds[i].test_indices);
+      if (train.size() != expected_train_sizes[i] || test.size() != expected_test_sizes[i]) {
+        if (err) *err << "time_series_fold_plan should respect train/test window sizes\n";
+        return false;
+      }
+      if (test.front() != expected_test_start[i]) {
+        if (err) *err << "time_series_fold_plan should place contiguous test windows at expected starts\n";
+        return false;
+      }
+      if (!(train.back() + 1 < test.front())) {
+        if (err) *err << "time_series_fold_plan should enforce configured gap\n";
+        return false;
+      }
     }
   }
 

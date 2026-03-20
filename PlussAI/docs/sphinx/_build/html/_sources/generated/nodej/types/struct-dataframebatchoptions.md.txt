@@ -1,0 +1,21 @@
+# `DataFrameBatchOptions`
+
+## Signature
+
+```cpp
+struct DataFrameBatchOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+## Example
+
+```cpp
+DataFrameBatchOptions cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/data.h`:27

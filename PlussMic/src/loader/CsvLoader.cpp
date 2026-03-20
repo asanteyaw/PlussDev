@@ -450,6 +450,9 @@ char detect_separator(const ReadCsvOptions& options) {
   if (options.delimiter.has_value()) {
     return *options.delimiter;
   }
+  if (options.sep.explicit_set) {
+    return options.sep;
+  }
   if (!options.auto_detect_sep) {
     return options.sep;
   }
@@ -1577,8 +1580,8 @@ void save_csv(const pluss::table::DataFrame& frame,
   PLUSS_CHECK(out.is_open(), "save_csv: failed to open output file '" + std::string(filepath) + "'");
 
   const auto sep = options.sep;
-  const auto names = frame.column_names();
-  const auto cols = frame.columns();
+  const auto names = frame.feature_names();
+  const auto cols = frame.features();
   const bool include_cases = options.add_cases || options.cases;
 
   if (options.header) {

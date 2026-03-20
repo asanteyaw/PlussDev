@@ -1,0 +1,22 @@
+# `VectorNormalizerOptions::floor`
+
+## Signature
+
+```cpp
+VectorNormalizerOptions::double floor = 1e-12;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+VectorNormalizerOptions cfg{};
+// cfg.floor = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:87

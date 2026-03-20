@@ -1,0 +1,22 @@
+# `TuneOptions::search`
+
+## Signature
+
+```cpp
+TuneOptions::SearchKind search = SearchKind::None;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+TuneOptions cfg{};
+// cfg.search = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:140

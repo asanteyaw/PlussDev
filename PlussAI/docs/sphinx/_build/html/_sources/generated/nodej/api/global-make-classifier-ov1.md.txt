@@ -1,0 +1,182 @@
+# `make_classifier`
+
+## Signature
+
+```cpp
+StatusOr<std::unique_ptr<ClassifierBase>> make_classifier(const ModelSpec& spec);
+```
+
+## Parameters
+
+- `spec` : `const ModelSpec&`
+  Method argument; see signature type for accepted form.
+
+## Returns
+
+Returns `StatusOr<std::unique_ptr<ClassifierBase>>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Namespace-level API function.
+
+## See also
+
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_learn_map(const FeatureBatch& batch, const TrainOptions& learn_options, const InferOptions& infer_options);`
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_map(const FeatureBatch& batch, const InferOptions& options) const;`
+- `[[nodiscard]] Status check_ready_for_infer(const char* where) const;`
+- `StatusOr<LabeledBatch> labeled_batch_from_dataframe(const pluss::table::DataFrame& frame, const DataFrameBatchOptions& options);`
+- `StatusOr<FlowBundle> load(const std::string& path);`
+
+## Parameter Reference
+
+- [spec](../params/param-global-make-classifier-ov1-spec-1.md)
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_cv_tune_demo.cpp`
+
+```cpp
+                            MetricKind::QuantileLoss,
+                            TuneObjectivePolicy::Auto);
+  if (!require_ok(reg_sweep_or, "sweep(regression quantile)")) return 1;
+  std::cout << "regression quantile sweep objectives:";
+  for (const auto& trial : reg_sweep_or.value().trials) std::cout << " " << trial.objective;
+  std::cout << "\n";
+  std::cout << "regression quantile sweep best index: " << reg_sweep_or.value().best_index << "\n";
+
+  auto bounded_or = make_classifier(linear_logistic_spec());
+  if (!require_ok(bounded_or, "make_classifier(linear bounded)")) return 1;
+  auto bounded = bounded_or.move_value();
+
+  TrainOptions bounded_train = train;
+  bounded_train.parameter_lower_bounds = pluss::make_series(std::vector<double>{0.0}, {1}, f64());
+  bounded_train.parameter_upper_bounds = pluss::make_series(std::vector<double>{0.0}, {1}, f64());
+  if (!bounded->learn(batch, bounded_train).ok()) {
+    std::cerr << "bounded linear learn failed\n";
+    return 1;
+  }
+
+  auto bounded_scores_or = bounded->infer_scores(batch.features);
+  if (!require_ok(bounded_scores_or, "infer_scores(bounded)")) return 1;
+  std::cout << "max |bounded score|: " << bounded_scores_or.value().abs().max().item<double>() << "\n";
+
+  std::cout << "NodeJ CV + tune demo completed.\n";
+```
+
+**Output**
+
+```text
+NodeJ CV + tune demo
+linear mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0.25 0.25 0.208333 0.25 nan 0.0625 0.960532
+linear std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0.176777 0.176777 0.216506 0.25 nan 0.108253 0.192821
+kernel mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 1 1 1 1 1 1 0.358895
+kernel std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0 0 0 0 0 0 0.0358183
+sweep trial objectives: 0.25 1
+sweep best index: 1
+probe best index: 1
+regression quantile sweep objectives: 0.0356052 0.736518
+regression quantile sweep best index: 0
+max |bounded score|: 0
+NodeJ CV + tune demo completed.
+```
+
+### Example 2
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_model_families_demo.cpp`
+
+```cpp
+void print_metric(const std::string& label, const Series& m) {
+  const auto v = m.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  std::cout << label << ":";
+  for (double x : v) std::cout << " " << x;
+  std::cout << "\n";
+}
+
+void run_classifier_family(const std::string& name, const ModelSpec& spec, const LabeledBatch& train) {
+  auto model_or = make_classifier(spec);
+  if (!require_ok(model_or, name + " make_classifier")) return;
+  std::unique_ptr<ClassifierBase> model = model_or.move_value();
+  if (!require_status(model->learn(train), name + " learn")) return;
+
+  auto pred_or = model->infer(train.features);
+  if (!require_ok(pred_or, name + " infer")) return;
+  auto metric_or = model->assess(train, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::LogLoss}});
+  if (!require_ok(metric_or, name + " assess")) return;
+  print_metric("  " + name + " (acc, logloss)", metric_or.value());
+}
+
+void run_regressor_family(const std::string& name, const ModelSpec& spec, const LabeledBatch& train) {
+  auto model_or = make_regressor(spec);
+  if (!require_ok(model_or, name + " make_regressor")) return;
+  std::unique_ptr<RegressorBase> model = model_or.move_value();
+  if (!require_status(model->learn(train), name + " learn")) return;
+```
+
+**Output**
+
+```text
+NodeJ model families demo
+Classification families:
+  linear (acc, logloss): 1 0.000580684
+  linear_hinge (acc, logloss): 1 0.0886185
+  tree (acc, logloss): 1 9.99978e-13
+  ensemble (acc, logloss): 1 1.00003e-12
+  neighbor (acc, logloss): 1 9.99978e-13
+  kernel (acc, logloss): 1 0.318438
+  bayes (acc, logloss): 1 9.99978e-13
+Regression families:
+  linear (mse, r2): 3.96212e-15 1
+  tree (mse, r2): 0 1
+  ensemble (mse, r2): 0.0546306 0.925078
+  neighbor (mse, r2): 0 1
+  kernel (mse, r2): 0.00019696 0.99973
+  bayes (mse, r2): 1.54185e-15 1
+...
+```
+
+### Example 3
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_multiclass_demo.cpp`
+
+```cpp
+      .options = LinearFamilyOptions{
+          .objective = LinearObjective::Logistic,
+          .regularization = RegularizationKind::L2,
+          .regularization_strength = 1e-6,
+          .fit_intercept = true,
+      },
+  };
+
+  auto cls_or = pluss::ai::nodej::make_classifier(spec);
+  if (!cls_or.ok()) {
+    std::cerr << "make_classifier failed: " << cls_or.status().message << '\n';
+    return 1;
+  }
+  auto cls = cls_or.move_value();
+  const auto learn_status = cls->learn(batch);
+  if (!learn_status.ok()) {
+    std::cerr << "learn failed: " << learn_status.message << '\n';
+    return 1;
+  }
+
+  auto score_or = cls->infer_scores(batch.features);
+  if (!score_or.ok()) {
+    std::cerr << "infer_scores failed: " << score_or.status().message << '\n';
+    return 1;
+  }
+```
+
+**Output**
+
+```text
+scores shape: [12, 3]
+metrics [accuracy, f1, logloss]: 1 1 2.26237e-06
+flow metrics [accuracy, f1, logloss]: 1 1 1.37143e-05
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/builders.h`:10

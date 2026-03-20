@@ -42,7 +42,7 @@ Stream Stream::dropna() const {
   const auto source = to_thread();
   const auto out = source.dropna();
   if (!has_cases()) return Stream::from_thread(out);
-  const auto cases_out = cases()->filter(source.notnull());
+  const auto cases_out = cases()->filter(source.notnull().as_series());
   return Stream::from_thread(out, cases_out);
 }
 
@@ -156,4 +156,3 @@ std::ostream& operator<<(std::ostream& os, const Stream& stream) {
   stream.show(os);
   return os;
 }
-

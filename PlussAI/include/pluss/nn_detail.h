@@ -59,7 +59,11 @@ inline Series select_dim_(const Series& x, std::int64_t dim, std::int64_t index)
   PLUSS_CHECK(index >= 0 && index < dim_size, "pluss::select_dim: index out of range");
   const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(x.platform());
   const Series idx = pluss::arange(index, index + 1, 1, icfg);
-  return x.index_select(dim, idx).squeeze(dim);
+  Series picked = x.index_select(dim, idx);
+  std::vector<std::int64_t> out_shape(x.sizes().begin(), x.sizes().end());
+  out_shape.erase(out_shape.begin() + static_cast<std::size_t>(dim));
+  if (out_shape.empty()) out_shape.push_back(1);
+  return picked.reshape(out_shape).contiguous();
 }
 
 inline Series narrow_dim_(const Series& x, std::int64_t dim, std::int64_t start, std::int64_t len) {
@@ -124,8 +128,10 @@ inline Series affine_(const Series& input, const Series& weight, const Series& b
       input.dim() == 1 ? 1 : input.numel() / in_features,
       in_features,
   };
-  const Series flat_input = input.dim() == 2 ? input : input.reshape(flat_shape);
-  Series flat_out = flat_input.matmul(w.t());
+  const Series input_ready = input.is_contiguous() ? input : input.contiguous();
+  const Series flat_input = input_ready.dim() == 2 ? input_ready : input_ready.reshape(flat_shape);
+  const Series wt = w.t();
+  Series flat_out = flat_input.matmul(wt);
   if (bias.defined()) {
     const Series b = cast_like_(bias, input);
     PLUSS_CHECK(b.dim() == 1, std::string("pluss::") + what + ": expected 1D bias");

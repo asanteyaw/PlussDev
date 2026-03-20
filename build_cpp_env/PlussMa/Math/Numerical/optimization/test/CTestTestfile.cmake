@@ -4,6 +4,8 @@
 # 
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
+add_test([=[autodiff_audit_bridge_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/Math/Numerical/optimization/test/autodiff_audit_bridge_test")
+set_tests_properties([=[autodiff_audit_bridge_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;11;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;0;")
 add_test([=[dfo_minimizers_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/Math/Numerical/optimization/test/dfo_minimizers_test")
 set_tests_properties([=[dfo_minimizers_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;11;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;0;")
 add_test([=[dfo_solver_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/Math/Numerical/optimization/test/dfo_solver_test")
@@ -16,5 +18,9 @@ add_test([=[mads_blackbox_minimizers_test]=] "/Users/yawasante/software/cxx/Plus
 set_tests_properties([=[mads_blackbox_minimizers_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;11;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;0;")
 add_test([=[mads_nomad_parity_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/Math/Numerical/optimization/test/mads_nomad_parity_test")
 set_tests_properties([=[mads_nomad_parity_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;11;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;0;")
+add_test([=[pattern_search_minimizer_test]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/Math/Numerical/optimization/test/pattern_search_minimizer_test")
+set_tests_properties([=[pattern_search_minimizer_test]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;11;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;0;")
 add_test([=[optima_robustness_catch2]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/Math/Numerical/optimization/test/optima_robustness_catch2")
 set_tests_properties([=[optima_robustness_catch2]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;21;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;0;")
+add_test([=[pattern_search_closure_catch2]=] "/Users/yawasante/software/cxx/PlussDev/build_cpp_env/PlussMa/Math/Numerical/optimization/test/pattern_search_closure_catch2")
+set_tests_properties([=[pattern_search_closure_catch2]=] PROPERTIES  _BACKTRACE_TRIPLES "/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;28;add_test;/Users/yawasante/software/cxx/PlussDev/PlussMa/Math/Numerical/optimization/test/CMakeLists.txt;0;")

@@ -1,0 +1,39 @@
+# `bayes_factory::gaussian_nb_classifier`
+
+## Signature
+
+```cpp
+[[nodiscard]] static WorkflowModel bayes_factory::gaussian_nb_classifier(self, BayesFamilyOptions options = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `BayesFamilyOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `WorkflowModel`.
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## See also
+
+- `[[nodiscard]] static WorkflowModel bayes_factory::classifier(self, BayesFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel bayes_factory::gaussian_nb_regressor(self, BayesFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel bayes_factory::regressor(self, BayesFamilyOptions options = {});`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = bayes_factory::gaussian_nb_classifier(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2215

@@ -1,0 +1,17 @@
+# `WorkflowModel::infer_scores`
+
+## Notes
+
+Computes predictions from prepared inputs using the currently learned state.
+
+## Overloads
+
+- [overload 1](../api/workflowmodel-infer-scores-ov1.md): `[[nodiscard]] Series WorkflowModel::infer_scores(self, const FeatureBatch& batch, const InferOptions& options = {}) const;`
+- [overload 2](../api/workflowmodel-infer-scores-ov2.md): `[[nodiscard]] Series WorkflowModel::infer_scores(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const InferOptions& options = {}) const;`
+- [overload 3](../api/workflowmodel-infer-scores-ov3.md): `[[nodiscard]] Series WorkflowModel::infer_scores(self, const pluss::table::DataFrame& x, const InferOptions& options = {}) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:754
+- `PlussAI/include/pluss/ai/lymph/api.h`:758
+- `PlussAI/include/pluss/ai/lymph/api.h`:764

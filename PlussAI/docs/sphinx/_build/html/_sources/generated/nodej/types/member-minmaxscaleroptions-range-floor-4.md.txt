@@ -1,0 +1,22 @@
+# `MinMaxScalerOptions::range_floor`
+
+## Signature
+
+```cpp
+MinMaxScalerOptions::double range_floor = 1e-12;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+MinMaxScalerOptions cfg{};
+// cfg.range_floor = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:17

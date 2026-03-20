@@ -37,7 +37,6 @@ Current examples include:
 - `std()`
 - `var()`
 - `count()`
-- `nunique()`
 
 Examples:
 

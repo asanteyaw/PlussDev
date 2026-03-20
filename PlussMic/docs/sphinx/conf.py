@@ -11,7 +11,7 @@ source_suffix = {
 
 master_doc = 'index'
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'snippets/**']
 
 html_theme = 'alabaster'
 html_static_path = ['_static']

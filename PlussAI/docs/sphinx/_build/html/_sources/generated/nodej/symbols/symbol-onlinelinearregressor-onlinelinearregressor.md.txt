@@ -1,0 +1,13 @@
+# `OnlineLinearRegressor::OnlineLinearRegressor`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/onlinelinearregressor-onlinelinearregressor-ov1.md): `explicit OnlineLinearRegressor(const OnlineLinearOptions& options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/online.h`:47

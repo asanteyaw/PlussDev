@@ -31,6 +31,23 @@ enum class CsvEngine : std::uint8_t {
   Parallel = 2,
 };
 
+struct CsvSeparator {
+  char value{','};
+  bool explicit_set{false};
+
+  constexpr CsvSeparator() = default;
+  explicit constexpr CsvSeparator(char v, bool is_explicit = true)
+      : value(v), explicit_set(is_explicit) {}
+
+  constexpr CsvSeparator& operator=(char v) {
+    value = v;
+    explicit_set = true;
+    return *this;
+  }
+
+  constexpr operator char() const { return value; }
+};
+
 // Broad pandas-inspired option surface. Some options are hints/placeholders for
 // planned extensions (Excel/chunked readers) and may currently be no-ops.
 struct ReadCsvOptions {
@@ -42,7 +59,7 @@ struct ReadCsvOptions {
   bool profile{false};
 
   // Parsing structure
-  char sep{','};
+  CsvSeparator sep{};
   std::optional<char> delimiter{};
   std::optional<char> quotechar{'"'};
   bool doublequote{true};

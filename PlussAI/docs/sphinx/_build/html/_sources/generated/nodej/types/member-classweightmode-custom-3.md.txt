@@ -1,0 +1,21 @@
+# `ClassWeightMode::Custom`
+
+## Signature
+
+```cpp
+ClassWeightMode::Custom;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = ClassWeightMode::Custom;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:66

@@ -1,0 +1,21 @@
+# `apply_learn_map::learn_options`
+
+## Parent Signature
+
+```cpp
+[[nodiscard]] StatusOr<FeatureBatch> apply_learn_map(const FeatureBatch& batch, const TrainOptions& learn_options, const InferOptions& infer_options);
+```
+
+## Parameter
+
+- `learn_options` : `const TrainOptions&`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:124

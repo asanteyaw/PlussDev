@@ -1,0 +1,40 @@
+# `Workflow::model_spec`
+
+## Signature
+
+```cpp
+[[nodiscard]] const std::optional<ModelSpec>& Workflow::model_spec(self) const;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+
+## Returns
+
+Returns `const std::optional<ModelSpec>&`.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `[[nodiscard]] Series Workflow::coeff(self) const;`
+- `[[nodiscard]] std::vector<Series> Workflow::dump_model_state(self) const;`
+- `[[nodiscard]] std::vector<std::vector<Series>> Workflow::dump_transform_states(self) const;`
+- `[[nodiscard]] bool Workflow::has_model(self) const noexcept;`
+- `[[nodiscard]] bool Workflow::has_model_spec(self) const;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+Workflow workflow{};
+auto out = workflow.model_spec(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:1240

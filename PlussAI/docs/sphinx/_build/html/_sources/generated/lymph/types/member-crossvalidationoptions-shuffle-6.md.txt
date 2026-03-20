@@ -1,0 +1,22 @@
+# `CrossValidationOptions::shuffle`
+
+## Signature
+
+```cpp
+CrossValidationOptions::bool shuffle = true;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+CrossValidationOptions cfg{};
+// cfg.shuffle = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:329

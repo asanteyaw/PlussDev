@@ -1,0 +1,13 @@
+# `pca_mapper`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/global-pca-mapper-ov1.md): `StatusOr<std::unique_ptr<nodej::TransformerBase>> pca_mapper( const nodej::FeatureBatch& train, std::int64_t components = -1, bool whiten = false, std::int64_t max_iterations = 500, double tolerance = 1e-6, const nodej::TrainOptions& options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:267

@@ -1,0 +1,21 @@
+# `slice_labeled_batch::indices`
+
+## Parent Signature
+
+```cpp
+StatusOr<LabeledBatch> slice_labeled_batch(const LabeledBatch& in, const Series& indices);
+```
+
+## Parameter
+
+- `indices` : `const Series&`
+  Pluss numeric vector/tensor input.
+
+## Notes
+
+Namespace-level API function.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/split.h`:28

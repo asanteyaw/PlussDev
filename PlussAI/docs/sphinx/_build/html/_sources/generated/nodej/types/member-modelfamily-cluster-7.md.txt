@@ -1,0 +1,21 @@
+# `ModelFamily::Cluster`
+
+## Signature
+
+```cpp
+ModelFamily::Cluster;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = ModelFamily::Cluster;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:11

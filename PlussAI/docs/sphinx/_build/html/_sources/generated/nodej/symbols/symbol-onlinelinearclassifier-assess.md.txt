@@ -1,0 +1,13 @@
+# `OnlineLinearClassifier::assess`
+
+## Notes
+
+Evaluates model output against targets and returns metric aggregates.
+
+## Overloads
+
+- [overload 1](../api/onlinelinearclassifier-assess-ov1.md): `[[nodiscard]] StatusOr<Series> OnlineLinearClassifier::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/online.h`:31

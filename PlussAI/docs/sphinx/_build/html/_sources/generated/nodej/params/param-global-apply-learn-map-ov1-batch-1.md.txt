@@ -1,0 +1,21 @@
+# `apply_learn_map::batch`
+
+## Parent Signature
+
+```cpp
+[[nodiscard]] StatusOr<FeatureBatch> apply_learn_map(const FeatureBatch& batch, const TrainOptions& learn_options, const InferOptions& infer_options);
+```
+
+## Parameter
+
+- `batch` : `const FeatureBatch&`
+  Input feature data used by this call.
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:124

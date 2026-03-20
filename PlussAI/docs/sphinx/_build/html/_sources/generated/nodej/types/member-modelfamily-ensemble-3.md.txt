@@ -1,0 +1,21 @@
+# `ModelFamily::Ensemble`
+
+## Signature
+
+```cpp
+ModelFamily::Ensemble;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = ModelFamily::Ensemble;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:11

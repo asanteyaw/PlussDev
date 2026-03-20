@@ -1,4 +1,6 @@
 #include "pluss/subsp/math/finance/calibration.h"
+#include "pluss/subsp/math/finance/calibration/detail/search_core.h"
+#include "pluss/subsp/math/finance/calibration/detail/validation_core.h"
 
 #include "CodeM/core/Errors.h"
 
@@ -19,32 +21,17 @@ using pricing::MonteCarloOptions;
 using pricing::OptionType;
 using volatility::HestonParams;
 using volatility::SvParams;
+namespace caldetail = pluss::subsp::math::finance::calibration::detail;
 
 constexpr std::size_t kHestonDim = 5;
 constexpr std::size_t kSvDim = 5;
 
 void validate_quotes_(const std::vector<OptionQuote>& quotes, const char* op) {
-  PLUSS_CHECK(!quotes.empty(), std::string("subsp::math::finance::calibration::") + op + ": quotes must be non-empty");
-  for (const auto& q : quotes) {
-    PLUSS_CHECK(q.type == OptionType::Call || q.type == OptionType::Put,
-                std::string("subsp::math::finance::calibration::") + op + ": quote option type unsupported");
-    PLUSS_CHECK(std::isfinite(q.strike) && q.strike > 0.0,
-                std::string("subsp::math::finance::calibration::") + op + ": quote strike must be finite and > 0");
-    PLUSS_CHECK(std::isfinite(q.maturity) && q.maturity > 0.0,
-                std::string("subsp::math::finance::calibration::") + op + ": quote maturity must be finite and > 0");
-    PLUSS_CHECK(std::isfinite(q.market_price) && q.market_price >= 0.0,
-                std::string("subsp::math::finance::calibration::") + op + ": quote market_price must be finite and >= 0");
-    PLUSS_CHECK(std::isfinite(q.weight) && q.weight >= 0.0,
-                std::string("subsp::math::finance::calibration::") + op + ": quote weight must be finite and >= 0");
-  }
+  caldetail::validate_option_quotes(quotes, op);
 }
 
 void validate_market_inputs_(double spot, double rate, double dividend_yield, const char* op) {
-  PLUSS_CHECK(std::isfinite(spot) && spot > 0.0,
-              std::string("subsp::math::finance::calibration::") + op + ": spot must be finite and > 0");
-  PLUSS_CHECK(std::isfinite(rate), std::string("subsp::math::finance::calibration::") + op + ": rate must be finite");
-  PLUSS_CHECK(std::isfinite(dividend_yield),
-              std::string("subsp::math::finance::calibration::") + op + ": dividend_yield must be finite");
+  caldetail::validate_market_inputs(spot, rate, dividend_yield, op);
 }
 
 void validate_heston_bounds_(const HestonBounds& b, const char* op) {
@@ -85,30 +72,14 @@ void validate_sv_bounds_(const SvBounds& b, const char* op) {
 
 void validate_heston_options_(const HestonCalibOptions& opt, const char* op) {
   validate_heston_bounds_(opt.bounds, op);
-  PLUSS_CHECK(opt.random_starts >= 1,
-              std::string("subsp::math::finance::calibration::") + op + ": random_starts must be >= 1");
-  PLUSS_CHECK(opt.max_iterations > 0,
-              std::string("subsp::math::finance::calibration::") + op + ": max_iterations must be > 0");
-  PLUSS_CHECK(std::isfinite(opt.step_fraction) && opt.step_fraction > 0.0,
-              std::string("subsp::math::finance::calibration::") + op + ": step_fraction must be finite and > 0");
-  PLUSS_CHECK(std::isfinite(opt.step_decay) && opt.step_decay > 0.0 && opt.step_decay < 1.0,
-              std::string("subsp::math::finance::calibration::") + op + ": step_decay must be in (0,1)");
-  PLUSS_CHECK(std::isfinite(opt.tolerance) && opt.tolerance > 0.0,
-              std::string("subsp::math::finance::calibration::") + op + ": tolerance must be finite and > 0");
+  caldetail::validate_search_controls(
+      opt.random_starts, opt.max_iterations, opt.step_fraction, opt.step_decay, opt.tolerance, op);
 }
 
 void validate_sv_options_(const SvCalibOptions& opt, const char* op) {
   validate_sv_bounds_(opt.bounds, op);
-  PLUSS_CHECK(opt.random_starts >= 1,
-              std::string("subsp::math::finance::calibration::") + op + ": random_starts must be >= 1");
-  PLUSS_CHECK(opt.max_iterations > 0,
-              std::string("subsp::math::finance::calibration::") + op + ": max_iterations must be > 0");
-  PLUSS_CHECK(std::isfinite(opt.step_fraction) && opt.step_fraction > 0.0,
-              std::string("subsp::math::finance::calibration::") + op + ": step_fraction must be finite and > 0");
-  PLUSS_CHECK(std::isfinite(opt.step_decay) && opt.step_decay > 0.0 && opt.step_decay < 1.0,
-              std::string("subsp::math::finance::calibration::") + op + ": step_decay must be in (0,1)");
-  PLUSS_CHECK(std::isfinite(opt.tolerance) && opt.tolerance > 0.0,
-              std::string("subsp::math::finance::calibration::") + op + ": tolerance must be finite and > 0");
+  caldetail::validate_search_controls(
+      opt.random_starts, opt.max_iterations, opt.step_fraction, opt.step_decay, opt.tolerance, op);
 }
 
 std::array<double, kHestonDim> heston_lower_(const HestonBounds& b) {
@@ -153,43 +124,6 @@ SvParams sv_from_vec_(const std::array<double, kSvDim>& x, const SvParams& fixed
   p.rho = x[3];
   p.logvar0 = x[4];
   return p;
-}
-
-template <std::size_t D>
-std::array<double, D> project_(std::array<double, D> x,
-                               const std::array<double, D>& lo,
-                               const std::array<double, D>& hi) {
-  for (std::size_t i = 0; i < D; ++i) {
-    x[i] = std::clamp(x[i], lo[i], hi[i]);
-  }
-  return x;
-}
-
-template <std::size_t D>
-bool same_vec_(const std::array<double, D>& a, const std::array<double, D>& b, double tol = 0.0) {
-  for (std::size_t i = 0; i < D; ++i) {
-    if (std::abs(a[i] - b[i]) > tol) {
-      return false;
-    }
-  }
-  return true;
-}
-
-template <std::size_t D>
-double max_step_(const std::array<double, D>& step) {
-  double m = 0.0;
-  for (double v : step) {
-    m = std::max(m, std::abs(v));
-  }
-  return m;
-}
-
-double weighted_rmse_(double sse, double wsum, std::size_t n) {
-  if (n == 0) {
-    return std::numeric_limits<double>::infinity();
-  }
-  const double denom = (wsum > 0.0) ? wsum : static_cast<double>(n);
-  return std::sqrt(std::max(0.0, sse / denom));
 }
 
 double heston_model_price_(const OptionQuote& q,
@@ -248,74 +182,6 @@ double sv_sse_impl_(const std::vector<OptionQuote>& quotes,
   return sse;
 }
 
-template <std::size_t D>
-std::array<double, D> random_point_(std::mt19937_64& rng,
-                                    const std::array<double, D>& lo,
-                                    const std::array<double, D>& hi) {
-  std::array<double, D> x{};
-  for (std::size_t i = 0; i < D; ++i) {
-    std::uniform_real_distribution<double> dist(lo[i], hi[i]);
-    x[i] = dist(rng);
-  }
-  return x;
-}
-
-template <std::size_t D, typename ObjectiveFn>
-std::pair<std::array<double, D>, double> pattern_search_(const std::array<double, D>& start,
-                                                          const std::array<double, D>& lo,
-                                                          const std::array<double, D>& hi,
-                                                          std::int64_t max_iterations,
-                                                          double step_fraction,
-                                                          double step_decay,
-                                                          double tolerance,
-                                                          ObjectiveFn&& objective,
-                                                          std::int64_t& evaluations,
-                                                          bool& converged) {
-  std::array<double, D> x = project_(start, lo, hi);
-  std::array<double, D> step{};
-  for (std::size_t i = 0; i < D; ++i) {
-    step[i] = std::max(tolerance * 10.0, (hi[i] - lo[i]) * step_fraction);
-  }
-
-  double best = objective(x);
-  ++evaluations;
-
-  converged = false;
-  for (std::int64_t iter = 0; iter < max_iterations; ++iter) {
-    bool improved = false;
-
-    for (std::size_t j = 0; j < D; ++j) {
-      for (double dir : {1.0, -1.0}) {
-        std::array<double, D> cand = x;
-        cand[j] = std::clamp(cand[j] + dir * step[j], lo[j], hi[j]);
-        if (same_vec_(cand, x, 0.0)) {
-          continue;
-        }
-        const double f = objective(cand);
-        ++evaluations;
-        if (f < best) {
-          best = f;
-          x = cand;
-          improved = true;
-        }
-      }
-    }
-
-    if (!improved) {
-      for (double& s : step) {
-        s *= step_decay;
-      }
-    }
-
-    if (max_step_(step) < tolerance) {
-      converged = true;
-      break;
-    }
-  }
-
-  return {x, best};
-}
-
 double quote_weight_sum_(const std::vector<OptionQuote>& quotes) {
   double wsum = 0.0;
   for (const auto& q : quotes) {
@@ -352,7 +218,7 @@ HestonCalibResult calibrate_heston(const std::vector<OptionQuote>& quotes,
 
   const auto lo = heston_lower_(options.bounds);
   const auto hi = heston_upper_(options.bounds);
-  const auto x0 = project_(heston_to_vec_(initial), lo, hi);
+  const auto x0 = caldetail::project(heston_to_vec_(initial), lo, hi);
 
   std::int64_t evals = 0;
   bool conv_local = false;
@@ -367,7 +233,7 @@ HestonCalibResult calibrate_heston(const std::vector<OptionQuote>& quotes,
                             cfg);
   };
 
-  auto [x_best, f_best] = pattern_search_(x0,
+  auto [x_best, f_best] = caldetail::pattern_search(x0,
                                           lo,
                                           hi,
                                           options.max_iterations,
@@ -383,8 +249,8 @@ HestonCalibResult calibrate_heston(const std::vector<OptionQuote>& quotes,
 
   for (std::int64_t s = 1; s < options.random_starts; ++s) {
     bool this_conv = false;
-    const auto start = random_point_(rng, lo, hi);
-    auto [x_cand, f_cand] = pattern_search_(start,
+    const auto start = caldetail::random_point(rng, lo, hi);
+    auto [x_cand, f_cand] = caldetail::pattern_search(start,
                                             lo,
                                             hi,
                                             options.max_iterations,
@@ -405,7 +271,7 @@ HestonCalibResult calibrate_heston(const std::vector<OptionQuote>& quotes,
   return HestonCalibResult{
       .params = p_best,
       .objective = f_best,
-      .rmse = weighted_rmse_(f_best, quote_weight_sum_(quotes), quotes.size()),
+      .rmse = caldetail::weighted_rmse(f_best, quote_weight_sum_(quotes), quotes.size()),
       .evaluations = evals,
       .converged = any_converged,
   };
@@ -437,7 +303,7 @@ SvCalibResult calibrate_sv(const std::vector<OptionQuote>& quotes,
 
   const auto lo = sv_lower_(options.bounds);
   const auto hi = sv_upper_(options.bounds);
-  const auto x0 = project_(sv_to_vec_(initial), lo, hi);
+  const auto x0 = caldetail::project(sv_to_vec_(initial), lo, hi);
 
   std::int64_t evals = 0;
   bool conv_local = false;
@@ -452,7 +318,7 @@ SvCalibResult calibrate_sv(const std::vector<OptionQuote>& quotes,
                         cfg);
   };
 
-  auto [x_best, f_best] = pattern_search_(x0,
+  auto [x_best, f_best] = caldetail::pattern_search(x0,
                                           lo,
                                           hi,
                                           options.max_iterations,
@@ -468,8 +334,8 @@ SvCalibResult calibrate_sv(const std::vector<OptionQuote>& quotes,
 
   for (std::int64_t s = 1; s < options.random_starts; ++s) {
     bool this_conv = false;
-    const auto start = random_point_(rng, lo, hi);
-    auto [x_cand, f_cand] = pattern_search_(start,
+    const auto start = caldetail::random_point(rng, lo, hi);
+    auto [x_cand, f_cand] = caldetail::pattern_search(start,
                                             lo,
                                             hi,
                                             options.max_iterations,
@@ -490,7 +356,7 @@ SvCalibResult calibrate_sv(const std::vector<OptionQuote>& quotes,
   return SvCalibResult{
       .params = p_best,
       .objective = f_best,
-      .rmse = weighted_rmse_(f_best, quote_weight_sum_(quotes), quotes.size()),
+      .rmse = caldetail::weighted_rmse(f_best, quote_weight_sum_(quotes), quotes.size()),
       .evaluations = evals,
       .converged = any_converged,
   };

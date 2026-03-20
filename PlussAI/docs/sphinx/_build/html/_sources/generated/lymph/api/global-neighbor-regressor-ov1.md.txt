@@ -1,0 +1,81 @@
+# `neighbor_regressor`
+
+## Signature
+
+```cpp
+StatusOr<std::unique_ptr<nodej::RegressorBase>> neighbor_regressor( const nodej::LabeledBatch& train, const nodej::NeighborFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});
+```
+
+## Parameters
+
+- `train` : `const nodej::LabeledBatch&`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `family_options` : `const nodej::NeighborFamilyOptions&`, default: `{}`
+  Target values aligned to input observations.
+- `options` : `const nodej::TrainOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `StatusOr<std::unique_ptr<nodej::RegressorBase>>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Namespace-level API function.
+
+## See also
+
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `StatusOr<nodej::CrossAssessReport> assess_cv( const nodej::ModelSpec& spec, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {});`
+- `StatusOr<std::unique_ptr<nodej::ClassifierBase>> bayes_classifier( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+- `StatusOr<std::unique_ptr<nodej::RegressorBase>> bayes_regressor( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_quick_regression_demo.cpp`
+
+```cpp
+  run_and_report("ridge", pluss::ai::lymph::quick::ridge_regressor(train, 1e-8), train);
+  run_and_report("tree", pluss::ai::lymph::quick::tree_regressor(
+                             train,
+                             TreeFamilyOptions{
+                                 .criterion = TreeCriterion::Mse,
+                             }),
+                 train);
+  run_and_report("forest", pluss::ai::lymph::quick::forest_regressor(train, 31, 0.9), train);
+  run_and_report("neighbor", pluss::ai::lymph::quick::neighbor_regressor(
+                                 train,
+                                 NeighborFamilyOptions{
+                                     .k = 3,
+                                     .distance_weighted = true,
+                                     .standardize = true,
+                                 }),
+                 train);
+  run_and_report("rbf_kernel", pluss::ai::lymph::quick::rbf_kernel_regressor(train, 50.0, 0.7, 0.0), train);
+  run_and_report("gaussian_bayes", pluss::ai::lymph::quick::gaussian_bayes_regressor(train, 1e-6), train);
+
+  std::cout << "lymph quick regression demo completed.\n";
+  return 0;
+}
+```
+
+**Output**
+
+```text
+lymph quick regression demo
+  ridge (mse, r2): 3.96212e-15 1
+  tree (mse, r2): 0 1
+  forest (mse, r2): 0.0546306 0.925078
+  neighbor (mse, r2): 0 1
+  rbf_kernel (mse, r2): 0.00019696 0.99973
+  gaussian_bayes (mse, r2): 1.54185e-15 1
+lymph quick regression demo completed.
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/quick.h`:232

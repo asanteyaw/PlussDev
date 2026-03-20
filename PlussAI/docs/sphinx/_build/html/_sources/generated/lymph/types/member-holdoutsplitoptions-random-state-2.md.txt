@@ -1,0 +1,22 @@
+# `HoldoutSplitOptions::random_state`
+
+## Signature
+
+```cpp
+HoldoutSplitOptions::std::uint64_t random_state = 0;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+HoldoutSplitOptions cfg{};
+// cfg.random_state = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:306

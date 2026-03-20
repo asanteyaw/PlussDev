@@ -1,0 +1,13 @@
+# `kernel_factory::regressor`
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## Overloads
+
+- [overload 1](../api/kernel-factory-regressor-ov1.md): `[[nodiscard]] static WorkflowModel kernel_factory::regressor(self, KernelFamilyOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2197

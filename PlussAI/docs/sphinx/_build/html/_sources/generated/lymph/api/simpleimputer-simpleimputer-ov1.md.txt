@@ -1,0 +1,40 @@
+# `SimpleImputer::SimpleImputer`
+
+## Signature
+
+```cpp
+explicit SimpleImputer(SimpleImputerOptions options = {});
+```
+
+## Parameters
+
+- `options` : `SimpleImputerOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns ``.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `SimpleImputer& SimpleImputer::features(self, std::initializer_list<std::string_view> names);`
+- `SimpleImputer& SimpleImputer::learn(self, const pluss::table::DataFrame& frame, const TrainOptions& options = {});`
+- `[[nodiscard]] pluss::table::DataFrame SimpleImputer::learn_map(self, const pluss::table::DataFrame& frame, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {});`
+- `[[nodiscard]] bool SimpleImputer::learned(self) const noexcept { return learned_; };`
+- `[[nodiscard]] pluss::table::DataFrame SimpleImputer::map(self, const pluss::table::DataFrame& frame, const InferOptions& options = {}) const;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+SimpleImputer simpleImputer{};
+auto out = simpleImputer.SimpleImputer(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:79

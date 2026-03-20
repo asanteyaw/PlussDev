@@ -1,0 +1,40 @@
+# `QuantileMap::QuantileMap`
+
+## Signature
+
+```cpp
+explicit QuantileMap(QuantileMapOptions options = {});
+```
+
+## Parameters
+
+- `options` : `QuantileMapOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns ``.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] StatusOr<std::vector<Series>> QuantileMap::dump_state(self) const override;`
+- `Status QuantileMap::learn(self, const FeatureBatch& batch, const TrainOptions& options = {}) override;`
+- `[[nodiscard]] StatusOr<Series> QuantileMap::learn_map(self, const FeatureBatch& batch, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {}) override;`
+- `Status QuantileMap::load_state(self, const std::vector<Series>& state) override;`
+- `[[nodiscard]] StatusOr<Series> QuantileMap::map(self, const FeatureBatch& batch, const InferOptions& options = {}) const override;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+QuantileMap quantileMap{};
+auto out = quantileMap.QuantileMap(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:309

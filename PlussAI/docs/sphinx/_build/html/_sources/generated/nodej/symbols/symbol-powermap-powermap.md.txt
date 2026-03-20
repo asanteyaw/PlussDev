@@ -1,0 +1,13 @@
+# `PowerMap::PowerMap`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/powermap-powermap-ov1.md): `explicit PowerMap(PowerMapOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:330

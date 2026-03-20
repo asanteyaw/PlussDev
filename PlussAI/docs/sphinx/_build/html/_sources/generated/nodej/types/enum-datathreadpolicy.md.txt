@@ -1,0 +1,25 @@
+# `DataThreadPolicy`
+
+## Signature
+
+```cpp
+enum DataThreadPolicy;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `SeriesOnly = 0`
+- `CastTemporalToSeries = 1`
+
+## Example
+
+```cpp
+auto mode = DataThreadPolicy::SeriesOnly;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/data.h`:16

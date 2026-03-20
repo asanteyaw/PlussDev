@@ -1,0 +1,71 @@
+# `Workflow::neighbor_imputer`
+
+## Signature
+
+```cpp
+Workflow& Workflow::neighbor_imputer(self, prep::NeighborImputerOptions options = {}, std::vector<std::int64_t> feature_route = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `prep::NeighborImputerOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `feature_route` : `std::vector<std::int64_t>`, default: `{}`
+  Input feature data used by this call.
+
+## Returns
+
+Returns `Workflow&`.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] inline NeighborImputer neighbor_imputer(NeighborImputerOptions options = {}) { return NeighborImputer(options); };`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+    // without going through Workflow composition.
+    auto simple_imp = lymph::prep::simple_imputer(lymph::prep::SimpleImputerOptions{
+        .strategy = lymph::prep::SimpleImputerStrategy::Median,
+    });
+    const DataFrame train_simple_imputed = simple_imp.learn_map(train_x);
+    const DataFrame test_simple_imputed = simple_imp.map(test_x);
+    const auto simple_imp_summary = simple_imp.summary();
+
+    auto knn_imp = lymph::prep::neighbor_imputer(lymph::prep::NeighborImputerOptions{
+        .neighbors = 7,
+        .weighting = lymph::prep::NeighborImputerWeighting::Distance,
+        .distance_floor = 1e-12,
+        .empty_feature_fallback = 0.0,
+    });
+    const DataFrame train_knn_imputed = knn_imp.learn_map(train_x);
+    const DataFrame test_knn_imputed = knn_imp.map(test_x);
+    const auto knn_imp_summary = knn_imp.summary();
+
+    auto iter_imp = lymph::prep::iterative_imputer(lymph::prep::IterativeImputerOptions{
+        .rounds = 6,
+        .ridge = 1e-5,
+        .empty_feature_fallback = 0.0,
+    });
+    const DataFrame train_iter_imputed = iter_imp.learn_map(train_x);
+    const DataFrame test_iter_imputed = iter_imp.map(test_x);
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:1313

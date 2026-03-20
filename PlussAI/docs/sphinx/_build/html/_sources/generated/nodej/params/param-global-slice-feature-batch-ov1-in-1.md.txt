@@ -1,0 +1,21 @@
+# `slice_feature_batch::in`
+
+## Parent Signature
+
+```cpp
+StatusOr<FeatureBatch> slice_feature_batch(const FeatureBatch& in, const Series& indices);
+```
+
+## Parameter
+
+- `in` : `const FeatureBatch&`
+  Method argument; see signature type for accepted form.
+
+## Notes
+
+Namespace-level API function.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/split.h`:27

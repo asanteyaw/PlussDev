@@ -215,20 +215,29 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
 
   {
     stage = "sgd strict fused";
-    Series strict_fused = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+    Series loop_param = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+    Series strict_fused = loop_param.clone();
     const Series g = pluss::make_series(std::vector<float>{0.1f, -0.2f}, {2}, cfg);
+    pluss::nn::optim::SGDOptions loop_opt{};
+    loop_opt.learning_rate = 0.1;
     pluss::nn::optim::SGDOptions strict_fused_opt{};
+    strict_fused_opt.learning_rate = 0.1;
     strict_fused_opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
     strict_fused_opt.execution.strict = true;
+    pluss::nn::optim::SGD loop_sgd(std::vector<Series*>{&loop_param}, loop_opt);
     pluss::nn::optim::SGD strict_sgd(std::vector<Series*>{&strict_fused}, strict_fused_opt);
-    bool threw = false;
-    try {
+    for (int i = 0; i < 8; ++i) {
+      loop_sgd.step(std::vector<Series>{g});
       strict_sgd.step(std::vector<Series>{g});
-    } catch (const std::exception&) {
-      threw = true;
     }
-    if (!threw) {
-      if (err) *err << "SGD strict fused should fail loud on unsupported backend\n";
+    if (!approx_vec(vec_f64(loop_param), vec_f64(strict_fused), 1e-6)) {
+      if (err) *err << "SGD strict fused parity mismatch\n";
+      return false;
+    }
+    const auto& lane = strict_sgd.last_step_lane_telemetry();
+    if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+        !lane.front().fused_supported) {
+      if (err) *err << "SGD strict fused telemetry mismatch\n";
       return false;
     }
   }
@@ -341,21 +350,29 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
 
   {
     stage = "adagrad strict fused";
-    Series strict_fused = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+    Series loop_param = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+    Series strict_fused = loop_param.clone();
     const Series g = pluss::make_series(std::vector<float>{0.1f, -0.2f}, {2}, cfg);
+    pluss::nn::optim::AdagradOptions loop_opt{};
+    loop_opt.learning_rate = 0.1;
     pluss::nn::optim::AdagradOptions strict_fused_opt{};
     strict_fused_opt.learning_rate = 0.1;
     strict_fused_opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
     strict_fused_opt.execution.strict = true;
+    pluss::nn::optim::Adagrad loop_adagrad(std::vector<Series*>{&loop_param}, loop_opt);
     pluss::nn::optim::Adagrad strict_adagrad(std::vector<Series*>{&strict_fused}, strict_fused_opt);
-    bool threw = false;
-    try {
+    for (int i = 0; i < 8; ++i) {
+      loop_adagrad.step(std::vector<Series>{g});
       strict_adagrad.step(std::vector<Series>{g});
-    } catch (const std::exception&) {
-      threw = true;
     }
-    if (!threw) {
-      if (err) *err << "Adagrad strict fused should fail loud on unsupported backend\n";
+    if (!approx_vec(vec_f64(loop_param), vec_f64(strict_fused), 1e-6)) {
+      if (err) *err << "Adagrad strict fused parity mismatch\n";
+      return false;
+    }
+    const auto& lane = strict_adagrad.last_step_lane_telemetry();
+    if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+        !lane.front().fused_supported) {
+      if (err) *err << "Adagrad strict fused telemetry mismatch\n";
       return false;
     }
   }
@@ -604,21 +621,29 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
 
   {
     stage = "adam strict fused";
-    Series strict_fused = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+    Series loop_param = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+    Series strict_fused = loop_param.clone();
     const Series g = pluss::make_series(std::vector<float>{0.1f, -0.2f}, {2}, cfg);
+    pluss::nn::optim::AdamOptions loop_opt{};
+    loop_opt.learning_rate = 1e-3;
     pluss::nn::optim::AdamOptions strict_fused_opt{};
     strict_fused_opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
     strict_fused_opt.execution.strict = true;
     strict_fused_opt.learning_rate = 1e-3;
+    pluss::nn::optim::Adam loop_adam(std::vector<Series*>{&loop_param}, loop_opt);
     pluss::nn::optim::Adam strict_adam(std::vector<Series*>{&strict_fused}, strict_fused_opt);
-    bool threw = false;
-    try {
+    for (int i = 0; i < 12; ++i) {
+      loop_adam.step(std::vector<Series>{g});
       strict_adam.step(std::vector<Series>{g});
-    } catch (const std::exception&) {
-      threw = true;
     }
-    if (!threw) {
-      if (err) *err << "Adam strict fused should fail loud on unsupported backend\n";
+    if (!approx_vec(vec_f64(loop_param), vec_f64(strict_fused), 1e-6)) {
+      if (err) *err << "Adam strict fused parity mismatch\n";
+      return false;
+    }
+    const auto& lane = strict_adam.last_step_lane_telemetry();
+    if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+        !lane.front().fused_supported) {
+      if (err) *err << "Adam strict fused telemetry mismatch\n";
       return false;
     }
   }
@@ -709,21 +734,29 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
 
   {
     stage = "nadam strict fused";
-    Series strict_fused = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+    Series loop_param = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+    Series strict_fused = loop_param.clone();
     const Series g = pluss::make_series(std::vector<float>{0.1f, -0.2f}, {2}, cfg);
+    pluss::nn::optim::NAdamOptions loop_opt{};
+    loop_opt.learning_rate = 1e-3;
     pluss::nn::optim::NAdamOptions strict_fused_opt{};
     strict_fused_opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
     strict_fused_opt.execution.strict = true;
     strict_fused_opt.learning_rate = 1e-3;
+    pluss::nn::optim::NAdam loop_nadam(std::vector<Series*>{&loop_param}, loop_opt);
     pluss::nn::optim::NAdam strict_nadam(std::vector<Series*>{&strict_fused}, strict_fused_opt);
-    bool threw = false;
-    try {
+    for (int i = 0; i < 10; ++i) {
+      loop_nadam.step(std::vector<Series>{g});
       strict_nadam.step(std::vector<Series>{g});
-    } catch (const std::exception&) {
-      threw = true;
     }
-    if (!threw) {
-      if (err) *err << "NAdam strict fused should fail loud on unsupported backend\n";
+    if (!approx_vec(vec_f64(loop_param), vec_f64(strict_fused), 1e-6)) {
+      if (err) *err << "NAdam strict fused parity mismatch\n";
+      return false;
+    }
+    const auto& lane = strict_nadam.last_step_lane_telemetry();
+    if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+        !lane.front().fused_supported) {
+      if (err) *err << "NAdam strict fused telemetry mismatch\n";
       return false;
     }
   }
@@ -835,22 +868,59 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
   }
 
   {
-    stage = "rmsprop strict fused";
-    Series strict_fused = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+    stage = "adamw strict fused";
+    Series loop_param = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+    Series strict_fused = loop_param.clone();
     const Series g = pluss::make_series(std::vector<float>{0.1f, -0.2f}, {2}, cfg);
+    pluss::nn::optim::AdamWOptions loop_opt{};
+    loop_opt.learning_rate = 1e-3;
+    loop_opt.weight_decay = 1e-2;
+    pluss::nn::optim::AdamWOptions strict_fused_opt = loop_opt;
+    strict_fused_opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
+    strict_fused_opt.execution.strict = true;
+    pluss::nn::optim::AdamW loop_adamw(std::vector<Series*>{&loop_param}, loop_opt);
+    pluss::nn::optim::AdamW strict_adamw(std::vector<Series*>{&strict_fused}, strict_fused_opt);
+    for (int i = 0; i < 12; ++i) {
+      loop_adamw.step(std::vector<Series>{g});
+      strict_adamw.step(std::vector<Series>{g});
+    }
+    if (!approx_vec(vec_f64(loop_param), vec_f64(strict_fused), 1e-6)) {
+      if (err) *err << "AdamW strict fused parity mismatch\n";
+      return false;
+    }
+    const auto& lane = strict_adamw.last_step_lane_telemetry();
+    if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+        !lane.front().fused_supported) {
+      if (err) *err << "AdamW strict fused telemetry mismatch\n";
+      return false;
+    }
+  }
+
+  {
+    stage = "rmsprop strict fused";
+    Series loop_param = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, cfg);
+    Series strict_fused = loop_param.clone();
+    const Series g = pluss::make_series(std::vector<float>{0.1f, -0.2f}, {2}, cfg);
+    pluss::nn::optim::RMSpropOptions loop_opt{};
+    loop_opt.learning_rate = 1e-2;
     pluss::nn::optim::RMSpropOptions strict_fused_opt{};
     strict_fused_opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
     strict_fused_opt.execution.strict = true;
     strict_fused_opt.learning_rate = 1e-2;
+    pluss::nn::optim::RMSprop loop_rms(std::vector<Series*>{&loop_param}, loop_opt);
     pluss::nn::optim::RMSprop strict_rms(std::vector<Series*>{&strict_fused}, strict_fused_opt);
-    bool threw = false;
-    try {
+    for (int i = 0; i < 9; ++i) {
+      loop_rms.step(std::vector<Series>{g});
       strict_rms.step(std::vector<Series>{g});
-    } catch (const std::exception&) {
-      threw = true;
     }
-    if (!threw) {
-      if (err) *err << "RMSprop strict fused should fail loud on unsupported backend\n";
+    if (!approx_vec(vec_f64(loop_param), vec_f64(strict_fused), 1e-6)) {
+      if (err) *err << "RMSprop strict fused parity mismatch\n";
+      return false;
+    }
+    const auto& lane = strict_rms.last_step_lane_telemetry();
+    if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+        !lane.front().fused_supported) {
+      if (err) *err << "RMSprop strict fused telemetry mismatch\n";
       return false;
     }
   }
@@ -1227,116 +1297,164 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
     const Series mps_grad = pluss::make_series(std::vector<float>{0.2f, -0.4f}, {2}, mps_cfg);
 
     {
-      stage = "mps strict fused unsupported";
+      stage = "mps adam strict fused";
       Series p = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, mps_cfg);
+      Series ref = p.clone();
       pluss::nn::optim::AdamOptions opt{};
       opt.learning_rate = 0.01;
       opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
       opt.execution.strict = true;
+      pluss::nn::optim::AdamOptions ref_opt = opt;
+      ref_opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+      pluss::nn::optim::Adam ref_tx(std::vector<Series*>{&ref}, ref_opt);
       pluss::nn::optim::Adam tx(std::vector<Series*>{&p}, opt);
-      bool threw = false;
-      try {
+      for (int i = 0; i < 6; ++i) {
+        ref_tx.step(std::vector<Series>{mps_grad});
         tx.step(std::vector<Series>{mps_grad});
-      } catch (const std::exception&) {
-        threw = true;
       }
-      if (!threw) {
-        if (err) *err << "MPS strict fused should fail loud when fused lane is unsupported\n";
+      if (!approx_vec(vec_f64(p), vec_f64(ref), 1e-5)) {
+        if (err) *err << "MPS Adam strict fused parity mismatch\n";
+        return false;
+      }
+      const auto& lane = tx.last_step_lane_telemetry();
+      if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+          !lane.front().fused_supported) {
+        if (err) *err << "MPS Adam strict fused telemetry mismatch\n";
         return false;
       }
     }
     {
-      stage = "mps strict fused unsupported sgd";
+      stage = "mps sgd strict fused";
       Series p = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, mps_cfg);
+      Series ref = p.clone();
       pluss::nn::optim::SGDOptions opt{};
       opt.learning_rate = 0.01;
       opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
       opt.execution.strict = true;
+      pluss::nn::optim::SGDOptions ref_opt = opt;
+      ref_opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+      pluss::nn::optim::SGD ref_tx(std::vector<Series*>{&ref}, ref_opt);
       pluss::nn::optim::SGD tx(std::vector<Series*>{&p}, opt);
-      bool threw = false;
-      try {
+      for (int i = 0; i < 6; ++i) {
+        ref_tx.step(std::vector<Series>{mps_grad});
         tx.step(std::vector<Series>{mps_grad});
-      } catch (const std::exception&) {
-        threw = true;
       }
-      if (!threw) {
-        if (err) *err << "MPS SGD strict fused should fail loud when fused lane is unsupported\n";
+      if (!approx_vec(vec_f64(p), vec_f64(ref), 1e-5)) {
+        if (err) *err << "MPS SGD strict fused parity mismatch\n";
+        return false;
+      }
+      const auto& lane = tx.last_step_lane_telemetry();
+      if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+          !lane.front().fused_supported) {
+        if (err) *err << "MPS SGD strict fused telemetry mismatch\n";
         return false;
       }
     }
     {
-      stage = "mps strict fused unsupported adagrad";
+      stage = "mps adagrad strict fused";
       Series p = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, mps_cfg);
+      Series ref = p.clone();
       pluss::nn::optim::AdagradOptions opt{};
       opt.learning_rate = 0.01;
       opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
       opt.execution.strict = true;
+      pluss::nn::optim::AdagradOptions ref_opt = opt;
+      ref_opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+      pluss::nn::optim::Adagrad ref_tx(std::vector<Series*>{&ref}, ref_opt);
       pluss::nn::optim::Adagrad tx(std::vector<Series*>{&p}, opt);
-      bool threw = false;
-      try {
+      for (int i = 0; i < 6; ++i) {
+        ref_tx.step(std::vector<Series>{mps_grad});
         tx.step(std::vector<Series>{mps_grad});
-      } catch (const std::exception&) {
-        threw = true;
       }
-      if (!threw) {
-        if (err) *err << "MPS Adagrad strict fused should fail loud when fused lane is unsupported\n";
+      if (!approx_vec(vec_f64(p), vec_f64(ref), 1e-5)) {
+        if (err) *err << "MPS Adagrad strict fused parity mismatch\n";
+        return false;
+      }
+      const auto& lane = tx.last_step_lane_telemetry();
+      if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+          !lane.front().fused_supported) {
+        if (err) *err << "MPS Adagrad strict fused telemetry mismatch\n";
         return false;
       }
     }
     {
-      stage = "mps strict fused unsupported adamw";
+      stage = "mps adamw strict fused";
       Series p = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, mps_cfg);
+      Series ref = p.clone();
       pluss::nn::optim::AdamWOptions opt{};
       opt.learning_rate = 0.01;
       opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
       opt.execution.strict = true;
+      pluss::nn::optim::AdamWOptions ref_opt = opt;
+      ref_opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+      pluss::nn::optim::AdamW ref_tx(std::vector<Series*>{&ref}, ref_opt);
       pluss::nn::optim::AdamW tx(std::vector<Series*>{&p}, opt);
-      bool threw = false;
-      try {
+      for (int i = 0; i < 6; ++i) {
+        ref_tx.step(std::vector<Series>{mps_grad});
         tx.step(std::vector<Series>{mps_grad});
-      } catch (const std::exception&) {
-        threw = true;
       }
-      if (!threw) {
-        if (err) *err << "MPS AdamW strict fused should fail loud when fused lane is unsupported\n";
+      if (!approx_vec(vec_f64(p), vec_f64(ref), 1e-5)) {
+        if (err) *err << "MPS AdamW strict fused parity mismatch\n";
+        return false;
+      }
+      const auto& lane = tx.last_step_lane_telemetry();
+      if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+          !lane.front().fused_supported) {
+        if (err) *err << "MPS AdamW strict fused telemetry mismatch\n";
         return false;
       }
     }
     {
-      stage = "mps strict fused unsupported rmsprop";
+      stage = "mps rmsprop strict fused";
       Series p = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, mps_cfg);
+      Series ref = p.clone();
       pluss::nn::optim::RMSpropOptions opt{};
       opt.learning_rate = 0.01;
       opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
       opt.execution.strict = true;
+      pluss::nn::optim::RMSpropOptions ref_opt = opt;
+      ref_opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+      pluss::nn::optim::RMSprop ref_tx(std::vector<Series*>{&ref}, ref_opt);
       pluss::nn::optim::RMSprop tx(std::vector<Series*>{&p}, opt);
-      bool threw = false;
-      try {
+      for (int i = 0; i < 6; ++i) {
+        ref_tx.step(std::vector<Series>{mps_grad});
         tx.step(std::vector<Series>{mps_grad});
-      } catch (const std::exception&) {
-        threw = true;
       }
-      if (!threw) {
-        if (err) *err << "MPS RMSprop strict fused should fail loud when fused lane is unsupported\n";
+      if (!approx_vec(vec_f64(p), vec_f64(ref), 1e-5)) {
+        if (err) *err << "MPS RMSprop strict fused parity mismatch\n";
+        return false;
+      }
+      const auto& lane = tx.last_step_lane_telemetry();
+      if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+          !lane.front().fused_supported) {
+        if (err) *err << "MPS RMSprop strict fused telemetry mismatch\n";
         return false;
       }
     }
     {
-      stage = "mps strict fused unsupported nadam";
+      stage = "mps nadam strict fused";
       Series p = pluss::make_series(std::vector<float>{1.0f, -2.0f}, {2}, mps_cfg);
+      Series ref = p.clone();
       pluss::nn::optim::NAdamOptions opt{};
       opt.learning_rate = 0.01;
       opt.execution.lane = pluss::nn::optim::UpdateLane::Fused;
       opt.execution.strict = true;
+      pluss::nn::optim::NAdamOptions ref_opt = opt;
+      ref_opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
+      pluss::nn::optim::NAdam ref_tx(std::vector<Series*>{&ref}, ref_opt);
       pluss::nn::optim::NAdam tx(std::vector<Series*>{&p}, opt);
-      bool threw = false;
-      try {
+      for (int i = 0; i < 6; ++i) {
+        ref_tx.step(std::vector<Series>{mps_grad});
         tx.step(std::vector<Series>{mps_grad});
-      } catch (const std::exception&) {
-        threw = true;
       }
-      if (!threw) {
-        if (err) *err << "MPS NAdam strict fused should fail loud when fused lane is unsupported\n";
+      if (!approx_vec(vec_f64(p), vec_f64(ref), 1e-5)) {
+        if (err) *err << "MPS NAdam strict fused parity mismatch\n";
+        return false;
+      }
+      const auto& lane = tx.last_step_lane_telemetry();
+      if (lane.size() != 1 || lane.front().resolved != pluss::nn::optim::UpdateLane::Fused ||
+          !lane.front().fused_supported) {
+        if (err) *err << "MPS NAdam strict fused telemetry mismatch\n";
         return false;
       }
     }

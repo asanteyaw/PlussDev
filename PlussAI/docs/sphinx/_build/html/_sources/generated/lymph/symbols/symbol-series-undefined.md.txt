@@ -1,0 +1,65 @@
+# `Series::undefined`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/series-undefined-ov1.md): `Series abs_error = Series::undefined(self);`
+- [overload 2](../api/series-undefined-ov2.md): `Series accuracy = Series::undefined(self);`
+- [overload 3](../api/series-undefined-ov3.md): `Series balanced_accuracy = Series::undefined(self);`
+- [overload 4](../api/series-undefined-ov4.md): `Series coeff = Series::undefined(self);`
+- [overload 5](../api/series-undefined-ov5.md): `Series coeff = Series::undefined(self);`
+- [overload 6](../api/series-undefined-ov6.md): `Series f1 = Series::undefined(self);`
+- [overload 7](../api/series-undefined-ov7.md): `Series intercept = Series::undefined(self);`
+- [overload 8](../api/series-undefined-ov8.md): `Series intercept = Series::undefined(self);`
+- [overload 9](../api/series-undefined-ov9.md): `Series logloss = Series::undefined(self);`
+- [overload 10](../api/series-undefined-ov10.md): `Series mae = Series::undefined(self);`
+- [overload 11](../api/series-undefined-ov11.md): `Series mae = Series::undefined(self);`
+- [overload 12](../api/series-undefined-ov12.md): `Series max_abs_diff = Series::undefined(self);`
+- [overload 13](../api/series-undefined-ov13.md): `Series mean = Series::undefined(self);`
+- [overload 14](../api/series-undefined-ov14.md): `Series mean_ = Series::undefined(self);`
+- [overload 15](../api/series-undefined-ov15.md): `Series mse = Series::undefined(self);`
+- [overload 16](../api/series-undefined-ov16.md): `Series precision = Series::undefined(self);`
+- [overload 17](../api/series-undefined-ov17.md): `Series quantile_loss = Series::undefined(self);`
+- [overload 18](../api/series-undefined-ov18.md): `Series r2 = Series::undefined(self);`
+- [overload 19](../api/series-undefined-ov19.md): `Series recall = Series::undefined(self);`
+- [overload 20](../api/series-undefined-ov20.md): `Series rmse = Series::undefined(self);`
+- [overload 21](../api/series-undefined-ov21.md): `Series roc_auc = Series::undefined(self);`
+- [overload 22](../api/series-undefined-ov22.md): `Series scale = Series::undefined(self);`
+- [overload 23](../api/series-undefined-ov23.md): `Series scale_ = Series::undefined(self);`
+- [overload 24](../api/series-undefined-ov24.md): `Series statistics = Series::undefined(self);`
+- [overload 25](../api/series-undefined-ov25.md): `Series statistics_ = Series::undefined(self);`
+- [overload 26](../api/series-undefined-ov26.md): `Series stratify = Series::undefined(self);`
+- [overload 27](../api/series-undefined-ov27.md): `Series values = Series::undefined(self);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:277
+- `PlussAI/include/pluss/ai/lymph/api.h`:262
+- `PlussAI/include/pluss/ai/lymph/api.h`:263
+- `PlussAI/include/pluss/ai/lymph/api.h`:301
+- `PlussAI/include/pluss/ai/lymph/api.h`:554
+- `PlussAI/include/pluss/ai/lymph/api.h`:266
+- `PlussAI/include/pluss/ai/lymph/api.h`:302
+- `PlussAI/include/pluss/ai/lymph/api.h`:555
+- `PlussAI/include/pluss/ai/lymph/api.h`:268
+- `PlussAI/include/pluss/ai/lymph/api.h`:271
+- `PlussAI/include/pluss/ai/lymph/api.h`:279
+- `PlussAI/include/pluss/ai/lymph/api.h`:278
+- `PlussAI/include/pluss/ai/lymph/api.h`:68
+- `PlussAI/include/pluss/ai/lymph/api.h`:157
+- `PlussAI/include/pluss/ai/lymph/api.h`:269
+- `PlussAI/include/pluss/ai/lymph/api.h`:264
+- `PlussAI/include/pluss/ai/lymph/api.h`:273
+- `PlussAI/include/pluss/ai/lymph/api.h`:272
+- `PlussAI/include/pluss/ai/lymph/api.h`:265
+- `PlussAI/include/pluss/ai/lymph/api.h`:270
+- `PlussAI/include/pluss/ai/lymph/api.h`:267
+- `PlussAI/include/pluss/ai/lymph/api.h`:69
+- `PlussAI/include/pluss/ai/lymph/api.h`:158
+- `PlussAI/include/pluss/ai/lymph/api.h`:63
+- `PlussAI/include/pluss/ai/lymph/api.h`:109
+- `PlussAI/include/pluss/ai/lymph/api.h`:308
+- `PlussAI/include/pluss/ai/lymph/api.h`:261

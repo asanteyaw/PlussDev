@@ -1,0 +1,21 @@
+# `kernel_factory`
+
+## Signature
+
+```cpp
+struct kernel_factory;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+## Example
+
+```cpp
+kernel_factory cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2148

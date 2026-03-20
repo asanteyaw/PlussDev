@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -11,11 +12,13 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::subsp::math::finance::volatility::HestonParams;
 using pluss::subsp::math::finance::volatility::BatesParams;
+using pluss::subsp::math::finance::volatility::GbmParams;
 using pluss::subsp::math::finance::volatility::RandMethod;
 using pluss::subsp::math::finance::volatility::SimOptions;
 using pluss::subsp::math::finance::volatility::SimScheme;
 using pluss::subsp::math::finance::volatility::SvParams;
 using pluss::subsp::math::finance::volatility::bates_paths;
+using pluss::subsp::math::finance::volatility::gbm_paths;
 using pluss::subsp::math::finance::volatility::heston_paths;
 using pluss::subsp::math::finance::volatility::sv_paths;
 
@@ -148,6 +151,59 @@ void test_bates_paths() {
   expect(out.variance.min().item<double>() > 0.0, "bates variance must stay positive");
 }
 
+void test_gbm_paths() {
+  const auto cfg = f64_cpu();
+  GbmParams p;
+  p.mu = 0.05;
+  p.sigma = 0.2;
+
+  SimOptions opt;
+  opt.method = RandMethod::Pseudo;
+  opt.antithetic = true;
+  opt.seed = 20260731ULL;
+  const std::int64_t steps = 252;
+  const std::int64_t paths = 50000;
+  const double dt = 1.0 / 252.0;
+  const double spot0 = 100.0;
+  const auto out = gbm_paths(steps, paths, spot0, dt, p, opt, cfg, opt.seed);
+
+  expect(out.spot.sizes().size() == 2, "gbm spot rank mismatch");
+  expect(out.spot.sizes()[0] == 253 && out.spot.sizes()[1] == paths, "gbm spot shape mismatch");
+  expect(out.variance.sizes()[0] == 253 && out.variance.sizes()[1] == paths, "gbm variance shape mismatch");
+  expect(out.innovation_spot.sizes()[0] == steps && out.innovation_spot.sizes()[1] == paths,
+         "gbm innovation_spot shape mismatch");
+  expect(out.innovation_var.sizes()[0] == steps && out.innovation_var.sizes()[1] == paths,
+         "gbm innovation_var shape mismatch");
+  expect(out.spot.min().item<double>() > 0.0, "gbm spot must stay positive");
+  expect(out.spot.isfinite().all().item<double>() == 1.0, "gbm spot has non-finite values");
+  expect(std::abs(out.innovation_var.abs().max().item<double>()) < 1e-15, "gbm innovation_var must be zero");
+  expect(std::abs(out.variance.sub(p.sigma * p.sigma).abs().max().item<double>()) < 1e-15,
+         "gbm variance must be constant sigma^2");
+
+  const auto idx_last = pluss::make_series(std::vector<std::int64_t>{steps}, {1},
+                                           Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+  const auto terminal = out.spot.index_select(0, idx_last).reshape({paths});
+  const double m_hat = terminal.mean().item<double>();
+  const double v_hat = terminal.sub(m_hat).square().mean().item<double>();
+  const double t = static_cast<double>(steps) * dt;
+  const double m_ref = spot0 * std::exp(p.mu * t);
+  const double v_ref = spot0 * spot0 * std::exp(2.0 * p.mu * t) * (std::exp(p.sigma * p.sigma * t) - 1.0);
+  const double m_tol = std::max(0.04, 6.0 * std::sqrt(v_ref / static_cast<double>(paths)));
+  const double v_tol = std::max(0.8, 8.0 * v_ref * std::sqrt(2.0 / static_cast<double>(paths)));
+  expect(std::abs(m_hat - m_ref) < m_tol, "gbm terminal mean mismatch");
+  expect(std::abs(v_hat - v_ref) < v_tol, "gbm terminal variance mismatch");
+
+  opt.method = RandMethod::Sobol;
+  opt.randomized_quasi = true;
+  opt.sobol_scrambling = 3;
+  opt.paths_first = true;
+  opt.seed = 20260732ULL;
+  const auto qout = gbm_paths(64, 256, spot0, dt, p, opt, cfg, opt.seed);
+  expect(qout.spot.sizes()[0] == 256 && qout.spot.sizes()[1] == 65, "gbm paths_first spot shape mismatch");
+  expect(qout.innovation_spot.sizes()[0] == 256 && qout.innovation_spot.sizes()[1] == 64,
+         "gbm paths_first innovation shape mismatch");
+}
+
 } // namespace
 
 int main() {
@@ -155,6 +211,7 @@ int main() {
     test_heston_paths();
     test_sv_paths();
     test_bates_paths();
+    test_gbm_paths();
     std::cout << "stochastic_vol_paths_test passed\n";
     return 0;
   } catch (const std::exception& e) {

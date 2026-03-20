@@ -1,0 +1,21 @@
+# `Flow::set_regressor::model`
+
+## Parent Signature
+
+```cpp
+Status Flow::set_regressor(self, std::unique_ptr<RegressorBase> model);
+```
+
+## Parameter
+
+- `model` : `std::unique_ptr<RegressorBase>`
+  Method argument; see signature type for accepted form.
+
+## Notes
+
+Instance method on `self`.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:90

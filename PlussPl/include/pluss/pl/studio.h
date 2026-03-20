@@ -78,7 +78,7 @@ inline constexpr KeyShape Vertical = KeyShape::Vertical;
 enum class ScaleKind : std::uint8_t { Linear, Log10, SymLog };
 enum class LimitMode : std::uint8_t { AutoFit, Manual };
 enum class LimitMethod : std::uint8_t { TickAligned, Tight, Padded };
-enum class TickFormat : std::uint8_t { Auto, Fixed3, Fixed6, Scientific, Engineering, Integer, Percent };
+enum class TickFormat : std::uint8_t { Auto, Plain, Fixed3, Fixed6, Scientific, Engineering, Integer, Percent };
 enum class ProjectionKind : std::uint8_t { Perspective, Orthographic };
 enum class LightSpace : std::uint8_t { Camera, Data };
 enum class LightStyle : std::uint8_t { Local, Infinite };
@@ -222,6 +222,7 @@ struct AxisState {
   std::optional<double> tick_label_gap{};
   std::optional<double> label_gap{};
   bool label_centered_on_axis{false};
+  bool label_centered_explicit{false};
   bool tick_labels_visible{true};
   bool major_grid{false};
   bool minor_grid{false};

@@ -106,20 +106,11 @@ div.sphinxsidebar h4 {
 }
 
 body.has-method-sidebar div.sphinxsidebar {
-  display: none;
+  display: block;
 }
 
 body.has-method-sidebar #pluss-method-sidebar {
-  background: var(--pluss-panel);
-  border-right: 1px solid var(--pluss-border);
-  bottom: 0;
-  display: block;
-  left: 0;
-  overflow-y: auto;
-  padding: 0.85rem 0.5rem;
-  position: absolute;
-  top: 0;
-  width: var(--pluss-method-sidebar-width);
+  display: none;
 }
 
 #pluss-method-sidebar .sidebar-title {
@@ -171,8 +162,8 @@ div.documentwrapper {
 }
 
 body.has-method-sidebar div.documentwrapper {
-  margin-left: var(--pluss-method-sidebar-width);
-  width: calc(100% - var(--pluss-method-sidebar-width));
+  margin-left: var(--pluss-sidebar-width);
+  width: calc(100% - var(--pluss-sidebar-width));
 }
 
 div.bodywrapper {
@@ -315,7 +306,7 @@ section.pluss-api-root-hidden {
   margin-top: 0.3rem;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 420px) {
   body {
     overflow: auto;
   }

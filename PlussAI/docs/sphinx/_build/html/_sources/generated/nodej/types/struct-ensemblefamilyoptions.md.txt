@@ -1,0 +1,27 @@
+# `EnsembleFamilyOptions`
+
+## Signature
+
+```cpp
+struct EnsembleFamilyOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `EnsembleMethod method = EnsembleMethod::RandomForest`
+- `std::int64_t learners = 100`
+- `double subsample = 1.0`
+
+## Example
+
+```cpp
+EnsembleFamilyOptions cfg{};
+// cfg.method = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:77

@@ -26,6 +26,14 @@ void ensure_defined_thread_for_compare(const Thread& t, std::string_view where) 
   PLUSS_CHECK(t.defined(), std::string(where) + ": Thread is undefined");
 }
 
+void ensure_bool_series_thread_for_logic(const Thread& t, std::string_view where) {
+  PLUSS_CHECK(t.defined(), std::string(where) + ": Thread is undefined");
+  PLUSS_CHECK(t.kind() == ThreadKind::Series,
+              std::string(where) + ": operation requires a Series-backed Thread");
+  PLUSS_CHECK(t.as_series().scalar_type() == pluss::codem::ScalarType::Bool,
+              std::string(where) + ": operation requires a Bool Series payload");
+}
+
 std::optional<std::int64_t> nonnegative_integral_scalar(double v) {
   if (!std::isfinite(v) || v < 0.0) {
     return std::nullopt;
@@ -231,6 +239,28 @@ Thread operator%(double lhs, const Thread& rhs) {
 
 Thread operator%(const Thread& lhs, const Thread& rhs) {
   return binary_math_pair(lhs, rhs, ThreadBinaryMathOp::Mod, "Thread::operator%(Thread,Thread)");
+}
+
+Thread operator&(const Thread& lhs, const Thread& rhs) {
+  const std::string_view where = "Thread::operator&(Thread,Thread)";
+  ensure_bool_series_thread_for_logic(lhs, where);
+  ensure_bool_series_thread_for_logic(rhs, where);
+  PLUSS_CHECK(lhs.size() == rhs.size(), std::string(where) + ": Thread size mismatch");
+  return invoke_underlying(
+      [&] { return Thread(lhs.as_series().logical_and(rhs.as_series()), combine_validity_masks(lhs, rhs)); },
+      where,
+      "Series logical_and");
+}
+
+Thread operator|(const Thread& lhs, const Thread& rhs) {
+  const std::string_view where = "Thread::operator|(Thread,Thread)";
+  ensure_bool_series_thread_for_logic(lhs, where);
+  ensure_bool_series_thread_for_logic(rhs, where);
+  PLUSS_CHECK(lhs.size() == rhs.size(), std::string(where) + ": Thread size mismatch");
+  return invoke_underlying(
+      [&] { return Thread(lhs.as_series().logical_or(rhs.as_series()), combine_validity_masks(lhs, rhs)); },
+      where,
+      "Series logical_or");
 }
 
 Thread operator==(const Thread& lhs, double rhs) {

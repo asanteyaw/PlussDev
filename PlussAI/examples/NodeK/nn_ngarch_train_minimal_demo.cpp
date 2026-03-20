@@ -55,12 +55,10 @@ struct NGARCHModuleImpl final : pluss::nn::Module {
   }
 
   std::pair<Series, Series> forward(const Series& y) const {
-    PLUSS_CHECK(y.defined(), "NGARCHModule::forward expects defined returns series");
     const Series yy = (y.dim() == 1) ? y : y.flatten(0, -1);
 
     const auto [omega, alpha, phi, lambda, gamma] = transformed();
     const std::int64_t n = yy.sizes()[0];
-    PLUSS_CHECK(n > 1, "NGARCHModule::forward expects at least 2 observations");
 
     std::vector<Series> z_hist;
     std::vector<Series> h_hist;
@@ -89,8 +87,6 @@ struct NGARCHModuleImpl final : pluss::nn::Module {
 PLUSS_MODULE(NGARCHModule);
 
 Series ngarch_generate_returns(std::int64_t n, const Config& cfg) {
-  PLUSS_CHECK(n > 1, "ngarch_generate_returns: n must be > 1");
-
   const Series omega = pluss::make_series(0.06, cfg);
   const Series alpha = pluss::make_series(0.18, cfg);
   const Series phi = pluss::make_series(0.76, cfg);
@@ -136,12 +132,6 @@ int main() {
   pluss::nn::optim::AdamOptions opt{};
   opt.learning_rate = 0.03;
   pluss::nn::optim::Adam optimizer(params, opt);
-  pluss::nn::optim::StepDiagnosticsOptions diag{};
-  diag.fail_if_no_sensitivity = true;
-  diag.fail_if_non_finite_sensitivity = true;
-  diag.fail_if_non_finite_parameter = true;
-  diag.fail_if_non_finite_loss = true;
-  optimizer.set_step_diagnostics(diag);
 
   for (int epoch = 1; epoch <= 350; ++epoch) {
     const Series loss = optimizer.step([&]() -> Series {

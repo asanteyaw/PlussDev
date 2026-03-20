@@ -1,0 +1,22 @@
+# `EnsembleFamilyOptions::method`
+
+## Signature
+
+```cpp
+EnsembleFamilyOptions::EnsembleMethod method = EnsembleMethod::RandomForest;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+EnsembleFamilyOptions cfg{};
+// cfg.method = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:77

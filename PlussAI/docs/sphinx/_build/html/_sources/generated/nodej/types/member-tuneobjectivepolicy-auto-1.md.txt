@@ -1,0 +1,21 @@
+# `TuneObjectivePolicy::Auto`
+
+## Signature
+
+```cpp
+TuneObjectivePolicy::Auto;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = TuneObjectivePolicy::Auto;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/tune.h`:12

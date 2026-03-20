@@ -86,7 +86,7 @@ int main() {
   const double max_x = as_f64_scalar(xb.amax(0, false));
   expect(min_x >= -1.000001 && max_x <= 1.000001, "Boxed auto run violated bounds", &failures);
 
-  // Auto: constraints provided -> OrthoMads.
+  // Auto: constraints provided -> PatternSearch.
   DfoProblem constrained = unconstrained;
   constrained.constraints = sum_le_one_constraint;
   constrained.lower_bounds = pluss::full({4}, -2.0, cfg);
@@ -103,10 +103,64 @@ int main() {
   std::cerr << "auto-constrained solver=" << to_string(r3.selected_solver)
             << " f=" << r3.minimum
             << " reason=" << r3.selection_reason << '\n';
-  expect(r3.selected_solver == DfoSolverKind::OrthoMads,
-         "Auto selection did not choose OrthoMads for constrained problem",
+  expect(r3.selected_solver == DfoSolverKind::PatternSearch,
+         "Auto selection did not choose PatternSearch for constrained problem",
          &failures);
   expect(std::isfinite(r3.minimum), "Constrained auto run returned non-finite objective", &failures);
+
+  // Explicit pattern-search route should be honored and handle constraints callback.
+  DfoOptions forced_ps = auto_constrained;
+  forced_ps.solver = DfoSolverKind::PatternSearch;
+  forced_ps.max_iterations = 500;
+  forced_ps.max_evaluations = 8000;
+  forced_ps.pattern_search.constraint_policy = PSConstraintPolicy::MeritPenalty;
+  forced_ps.pattern_search.polling_order = PSPollingOrder::SuccessFirst;
+  forced_ps.pattern_search.direction_family = PSDirectionFamily::GSSAugmented;
+  forced_ps.pattern_search.basis_family = PSBasisFamily::RandomOrtho;
+  forced_ps.pattern_search.basis_refresh_interval = 2;
+  const DfoResult rps = DFO::solve(constrained, forced_ps);
+  std::cerr << "forced solver=" << to_string(rps.selected_solver)
+            << " f=" << rps.minimum
+            << " reason=" << rps.selection_reason << '\n';
+  expect(rps.selected_solver == DfoSolverKind::PatternSearch,
+         "Explicit PatternSearch override was not honored",
+         &failures);
+  expect(std::isfinite(rps.minimum), "PatternSearch forced solver returned non-finite objective", &failures);
+  expect(rps.minimum < 1e-4, "PatternSearch forced solver failed sphere target", &failures);
+
+  // Equality-aware adapter via constraints_values with AL policy.
+  DfoProblem constrained_values = unconstrained;
+  constrained_values.initial = pluss::full({4}, 1.5, cfg);
+  constrained_values.lower_bounds = pluss::full({4}, -2.0, cfg);
+  constrained_values.upper_bounds = pluss::full({4}, 2.0, cfg);
+  constrained_values.constraints_values = [](const Series& x) {
+    DfoConstraintValues c;
+    c.inequality = x.square().sum().sub(1.0).reshape({1});
+    c.equality = x.sum().sub(1.0).reshape({1});
+    return c;
+  };
+
+  DfoOptions forced_ps_eq = auto_constrained;
+  forced_ps_eq.solver = DfoSolverKind::PatternSearch;
+  forced_ps_eq.max_iterations = 600;
+  forced_ps_eq.max_evaluations = 12000;
+  forced_ps_eq.pattern_search.constraint_policy = PSConstraintPolicy::AugmentedLagrangian;
+  forced_ps_eq.pattern_search.al_max_outer_iterations = 6;
+  forced_ps_eq.pattern_search.al_penalty_growth = 4.0;
+  forced_ps_eq.pattern_search.al_violation_reduction_ratio = 0.6;
+  const DfoResult rps_eq = DFO::solve(constrained_values, forced_ps_eq);
+  expect(rps_eq.selected_solver == DfoSolverKind::PatternSearch,
+         "constraints_values did not route through PatternSearch",
+         &failures);
+  const Series xeq = rps_eq.minimizer.to(pCPU, ScalarType::Float64);
+  const double sum_x = as_f64_scalar(xeq.sum());
+  const double norm2 = as_f64_scalar(xeq.square().sum());
+  expect(std::abs(sum_x - 1.0) <= 5e-3,
+         "constraints_values equality not satisfied by PatternSearch",
+         &failures);
+  expect(norm2 <= 1.0005,
+         "constraints_values inequality not satisfied by PatternSearch",
+         &failures);
 
   // Explicit override should be honored.
   DfoOptions forced_pso = auto_small;
@@ -141,6 +195,58 @@ int main() {
          &failures);
   expect(std::abs(rb.minimum - r2.minimum) < 1e-10,
          "Builder result deviates from equivalent direct solve",
+         &failures);
+
+  // PatternSearch status passthrough: infeasible stationary under extreme barrier.
+  DfoProblem impossible = unconstrained;
+  impossible.initial = pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg);
+  impossible.constraints = [](const Series&) {
+    return pluss::make_series(std::vector<double>{1.0}, {1});
+  };
+
+  DfoOptions ps_infeasible;
+  ps_infeasible.solver = DfoSolverKind::PatternSearch;
+  ps_infeasible.max_iterations = 120;
+  ps_infeasible.max_evaluations = 500;
+  ps_infeasible.pattern_search.initial_mesh_size = 0.5;
+  ps_infeasible.pattern_search.mesh_tolerance = 1e-9;
+  ps_infeasible.pattern_search.constraint_policy = PSConstraintPolicy::ExtremeBarrier;
+  const DfoResult rinf = DFO::solve(impossible, ps_infeasible);
+  expect(rinf.status == DfoStatus::InfeasibleStationary,
+         "PatternSearch infeasible-stationary status was not propagated through DFO",
+         &failures);
+  expect(rinf.diagnostics.max_constraint_violation > 0.5,
+         "PatternSearch infeasible diagnostics did not preserve max constraint violation",
+         &failures);
+
+  // PatternSearch status passthrough: time budget reached.
+  DfoOptions ps_time;
+  ps_time.solver = DfoSolverKind::PatternSearch;
+  ps_time.max_iterations = 500;
+  ps_time.max_evaluations = 10000;
+  ps_time.pattern_search.time_limit_seconds = 1e-12;
+  const DfoResult rtime = DFO::solve(unconstrained, ps_time);
+  expect(rtime.status == DfoStatus::ReachedTimeBudget ||
+             rtime.status == DfoStatus::ReachedEvaluationBudget,
+         "PatternSearch time-budget status was not propagated through DFO",
+         &failures);
+
+  // PatternSearch diagnostics passthrough: random-search counters should surface in DFO diagnostics.
+  DfoOptions ps_diag;
+  ps_diag.solver = DfoSolverKind::PatternSearch;
+  ps_diag.max_iterations = 350;
+  ps_diag.max_evaluations = 9000;
+  ps_diag.pattern_search.search_strategy = PSSearchStrategy::ExpandAndRandomDirections;
+  ps_diag.pattern_search.search_trials = 12;
+  ps_diag.pattern_search.search_complete = false;
+  ps_diag.pattern_search.basis_family = PSBasisFamily::RandomOrtho;
+  ps_diag.pattern_search.basis_refresh_interval = 2;
+  const DfoResult rdiag = DFO::solve(unconstrained, ps_diag);
+  expect(rdiag.diagnostics.search_trials > 0,
+         "PatternSearch search trial diagnostics were not propagated through DFO",
+         &failures);
+  expect(rdiag.diagnostics.search_successes > 0,
+         "PatternSearch search success diagnostics were not propagated through DFO",
          &failures);
 
   if (failures != 0) {

@@ -439,10 +439,10 @@ int main(int argc, char** argv) {
 
   std::cout << "\n=== Missing values summary (per column) ===\n";
   for (const auto& feature : df.feature_names()) {
-    const auto missing = df.features(feature).isnull().to(pluss::codem::ScalarType::Float64).sum().to_vec<double>();
-    const auto null_count = missing.empty() ? 0.0 : missing.front();
-    if (null_count > 0.0) {
-      std::cout << feature << ": " << static_cast<std::int64_t>(null_count) << "\n";
+    const auto missing = df.features(feature).isnull().count().to_vec<std::int64_t>();
+    const auto null_count = missing.empty() ? static_cast<std::int64_t>(0) : missing.front();
+    if (null_count > 0) {
+      std::cout << feature << ": " << null_count << "\n";
     }
   }
   if (df.count_null_rows() == 0) {

@@ -1,0 +1,13 @@
+# `Workflow::simple_imputer`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/workflow-simple-imputer-ov1.md): `Workflow& Workflow::simple_imputer(self, prep::SimpleImputerOptions options = {}, std::vector<std::int64_t> feature_route = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:1305

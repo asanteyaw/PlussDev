@@ -1,0 +1,25 @@
+# `QuantileMapOutput`
+
+## Signature
+
+```cpp
+enum QuantileMapOutput;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `Uniform = 0`
+- `Gaussian = 1`
+
+## Example
+
+```cpp
+auto mode = QuantileMapOutput::Uniform;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:96

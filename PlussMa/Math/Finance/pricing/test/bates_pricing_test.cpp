@@ -44,6 +44,13 @@ int main() {
     const double px = prc::bates_price_mc(prc::OptionType::Call, 100.0, 100.0, 0.02, 0.0, 1.0, p, mc, cfg);
     expect(std::isfinite(px) && px > 0.0, "bates_price_mc should be finite and positive");
 
+    prc::HestonFftOptions fft;
+    fft.num_fft = 4096;
+    fft.characteristic_fcn_step = 0.01;
+    fft.damping_factor = 1.5;
+    const double px_fft = prc::bates_price_fft(prc::OptionType::Call, 100.0, 100.0, 0.02, 0.0, 1.0, p, fft, cfg);
+    expect(std::isfinite(px_fft) && px_fft > 0.0, "bates_price_fft should be finite and positive");
+
     std::cout << "bates_pricing_test passed\n";
     return 0;
   } catch (const std::exception& e) {

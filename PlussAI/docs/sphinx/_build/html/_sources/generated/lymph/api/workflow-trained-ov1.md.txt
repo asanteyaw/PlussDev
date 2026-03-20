@@ -1,0 +1,40 @@
+# `Workflow::trained`
+
+## Signature
+
+```cpp
+[[nodiscard]] bool Workflow::trained(self) const;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+
+## Returns
+
+Returns `bool`.
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## See also
+
+- `[[nodiscard]] bool OnlineLinearClassifier::trained(self) const noexcept;`
+- `[[nodiscard]] bool OnlineLinearRegressor::trained(self) const noexcept;`
+- `[[nodiscard]] Series Workflow::coeff(self) const;`
+- `[[nodiscard]] std::vector<Series> Workflow::dump_model_state(self) const;`
+- `[[nodiscard]] std::vector<std::vector<Series>> Workflow::dump_transform_states(self) const;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+Workflow workflow{};
+auto out = workflow.trained(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:1235

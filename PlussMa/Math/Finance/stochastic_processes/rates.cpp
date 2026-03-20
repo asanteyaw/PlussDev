@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -22,7 +23,6 @@ using pluss::subsp::stats::rng::SobolOptions;
 using pluss::subsp::stats::rng::TorusOptions;
 using volatility::RandMethod;
 
-constexpr double kPsiCut = 1.5;
 constexpr double kEps = 1e-12;
 
 Config f64_cfg_(Config cfg) {
@@ -122,60 +122,6 @@ Series draw_normals_(std::int64_t rows,
       {rows, cols}, to_rng_method_(options.method), out_cfg, off);
 }
 
-Series draw_uniforms_(std::int64_t rows,
-                      std::int64_t cols,
-                      const SimOptions& options,
-                      Config cfg,
-                      std::uint64_t compat_seed,
-                      std::uint64_t bump) {
-  const auto out_cfg = f64_cfg_(cfg);
-
-  if (options.method == RandMethod::Pseudo) {
-    return pluss::rand({rows, cols}, out_cfg, effective_seed_(options, compat_seed, bump));
-  }
-
-  const std::uint64_t off = effective_offset_(options, bump);
-  const std::uint64_t seed = effective_seed_(options, compat_seed, bump);
-
-  switch (options.method) {
-    case RandMethod::Sobol: {
-      SobolOptions o;
-      o.init = true;
-      o.scrambling = std::clamp(options.sobol_scrambling, 0, 3);
-      o.mixed = options.randomized_quasi;
-      o.normal = false;
-      o.start = off + 1U;
-      o.seed = seed;
-      o.seed_set = true;
-      return pluss::subsp::stats::rng::sobol({rows, cols}, o, out_cfg);
-    }
-    case RandMethod::Halton: {
-      HaltonOptions o;
-      o.init = true;
-      o.normal = false;
-      o.mixed = options.randomized_quasi;
-      o.start = off + 1U;
-      o.seed = seed;
-      o.seed_set = true;
-      return pluss::subsp::stats::rng::halton({rows, cols}, o, out_cfg);
-    }
-    case RandMethod::Torus: {
-      TorusOptions o;
-      o.init = true;
-      o.normal = false;
-      o.mixed = options.randomized_quasi;
-      o.start = off + 1U;
-      o.seed = seed;
-      o.seed_set = true;
-      return pluss::subsp::stats::rng::torus({rows, cols}, o, out_cfg);
-    }
-    case RandMethod::Pseudo:
-      break;
-  }
-
-  return pluss::subsp::stats::rng::uniform({rows, cols}, to_rng_method_(options.method), out_cfg, off);
-}
-
 void validate_common_(std::int64_t steps, std::int64_t paths, double dt, const char* op) {
   PLUSS_CHECK(steps > 0, std::string("subsp::math::finance::rates::") + op + ": steps must be > 0");
   PLUSS_CHECK(paths > 0, std::string("subsp::math::finance::rates::") + op + ": paths must be > 0");
@@ -245,37 +191,53 @@ void validate_hjm_(const HjmParams& p, const char* op) {
   }
 }
 
-Series cir_transition_step_(const Series& rt, const Series& z, const Series& u, double dt, const CirParams& p) {
+Series cir_transition_step_(const Series& rt,
+                            const Series& z,
+                            double dt,
+                            const CirParams& p,
+                            std::uint64_t seed,
+                            std::int64_t t_step) {
   const Series r_safe = rt.clamp_min(p.rate_floor);
   const Config cfg = Config{}.with_dtype(r_safe.scalar_type()).with_platform(r_safe.platform());
-  const Series exp_kdt = pluss::full(r_safe.sizes(), std::exp(-p.kappa * dt), cfg);
-  const Series one_minus_exp = exp_kdt.mul(-1.0).add(1.0);
+  const Config cpu_cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
+  const auto shape = r_safe.sizes();
+  const std::int64_t paths = (shape.size() == 2) ? shape[1] : r_safe.numel();
+  PLUSS_CHECK(paths > 0, "subsp::math::finance::rates::cir_transition_step_: invalid path count");
 
-  const Series m = pluss::full(r_safe.sizes(), p.theta, cfg).add(r_safe.sub(p.theta).mul(exp_kdt));
-  const Series s2 = r_safe.mul(p.sigma * p.sigma)
-                        .mul(exp_kdt)
-                        .mul(one_minus_exp)
-                        .div(std::max(p.kappa, kEps))
-                        .add(pluss::full(r_safe.sizes(), p.theta, cfg)
-                                 .mul(p.sigma * p.sigma)
-                                 .mul(one_minus_exp.square())
-                                 .div(std::max(2.0 * p.kappa, kEps)));
+  const double exp_kdt = std::exp(-p.kappa * dt);
+  const double c = (p.sigma * p.sigma) * (1.0 - exp_kdt) / std::max(4.0 * p.kappa, kEps);
+  const double degree = 4.0 * p.theta * p.kappa / std::max(p.sigma * p.sigma, kEps);
+  PLUSS_CHECK(std::isfinite(c) && c > 0.0,
+              "subsp::math::finance::rates::cir_transition_step_: invalid scale constant");
+  PLUSS_CHECK(std::isfinite(degree) && degree > 0.0,
+              "subsp::math::finance::rates::cir_transition_step_: invalid degree");
 
-  const Series psi = s2.div(m.square().clamp_min(kEps));
-  const Series use_q1 = psi.le(kPsiCut);
+  const std::vector<double> r_vec = r_safe.reshape({paths}).to(cpu_cfg.platform, cpu_cfg.dtype).to_vec<double>();
+  const std::vector<double> z_vec = z.reshape({paths}).to(cpu_cfg.platform, cpu_cfg.dtype).to_vec<double>();
 
-  const Series two_over_psi = psi.clamp_min(kEps).reciprocal().mul(2.0);
-  const Series b2 = two_over_psi.sub(1.0).add(two_over_psi.sqrt().mul(two_over_psi.sub(1.0).clamp_min(0.0).sqrt()));
-  const Series a = m.div(b2.add(1.0).clamp_min(kEps));
-  const Series r1 = a.mul(b2.clamp_min(0.0).sqrt().add(z).square());
+  std::vector<double> out(static_cast<std::size_t>(paths), p.rate_floor);
+  std::mt19937_64 rng(seed ^ (0xD1B54A32D192ED03ULL + static_cast<std::uint64_t>(t_step + 1) * 0x9E3779B97F4A7C15ULL));
 
-  const Series p_zero = psi.sub(1.0).div(psi.add(1.0).clamp_min(kEps)).clamp_min(0.0).clamp_max(1.0 - kEps);
-  const Series beta = p_zero.mul(-1.0).add(1.0).div(m.clamp_min(kEps));
-  const Series u_safe = u.clamp_min(kEps).clamp_max(1.0 - kEps);
-  const Series r2_nonzero = u_safe.sub(1.0).div(p_zero.sub(1.0).clamp_max(-kEps)).log().mul(-1.0).div(beta.clamp_min(kEps));
-  const Series r2 = u_safe.le(p_zero).where(pluss::zeros(r_safe.sizes(), cfg), r2_nonzero);
+  if (degree > 1.0) {
+    std::gamma_distribution<double> chisq((degree - 1.0) * 0.5, 2.0);
+    for (std::int64_t i = 0; i < paths; ++i) {
+      const double lambda_v = std::max(0.0, (r_vec[static_cast<std::size_t>(i)] * exp_kdt) / c);
+      const double chi = chisq(rng);
+      const double draw = c * (std::pow(z_vec[static_cast<std::size_t>(i)] + std::sqrt(lambda_v), 2.0) + chi);
+      out[static_cast<std::size_t>(i)] = std::max(draw, p.rate_floor);
+    }
+  } else {
+    for (std::int64_t i = 0; i < paths; ++i) {
+      const double lambda_v = std::max(0.0, (r_vec[static_cast<std::size_t>(i)] * exp_kdt) / c);
+      std::poisson_distribution<std::int64_t> pois(0.5 * lambda_v);
+      const std::int64_t n = pois(rng);
+      std::gamma_distribution<double> chisq(0.5 * degree + static_cast<double>(n), 2.0);
+      const double draw = c * chisq(rng);
+      out[static_cast<std::size_t>(i)] = std::max(draw, p.rate_floor);
+    }
+  }
 
-  return use_q1.where(r1, r2).clamp_min(p.rate_floor);
+  return pluss::make_series(out, {1, paths}, cpu_cfg).to(cfg.platform, cfg.dtype);
 }
 
 std::vector<double> hjm_alpha_(const std::vector<double>& tenors, const std::vector<double>& vol) {
@@ -407,9 +369,7 @@ RatePaths cir_paths(std::int64_t steps,
 
   Series rate = pluss::full({n, paths}, std::max(params.r0, params.rate_floor), out_cfg);
   const Series z = draw_normals_(steps, paths, options, out_cfg, seed, 0x2713ULL);
-  const Series u = (options.scheme == Scheme::Transition)
-                       ? draw_uniforms_(steps, paths, options, out_cfg, seed, 0x3521ULL)
-                       : pluss::zeros({steps, paths}, out_cfg);
+  const std::uint64_t transition_seed = effective_seed_(options, seed, 0x3521ULL);
 
   for (std::int64_t t = 0; t < steps; ++t) {
     const Series idx_cur = row_index_(t, out_cfg);
@@ -419,8 +379,7 @@ RatePaths cir_paths(std::int64_t steps,
 
     Series r_next;
     if (options.scheme == Scheme::Transition) {
-      const Series uq = u.index_select(0, idx_cur).reshape({1, paths});
-      r_next = cir_transition_step_(rt, eps, uq, dt, params);
+      r_next = cir_transition_step_(rt, eps, dt, params, transition_seed, t);
     } else if (options.scheme == Scheme::Milstein) {
       const Series dW = eps.mul(std::sqrt(dt));
       const Series r_safe = rt.clamp_min(params.rate_floor);

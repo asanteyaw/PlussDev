@@ -1,0 +1,13 @@
+# `PowerMap::dump_state`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/powermap-dump-state-ov1.md): `[[nodiscard]] StatusOr<std::vector<Series>> PowerMap::dump_state(self) const override;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:338

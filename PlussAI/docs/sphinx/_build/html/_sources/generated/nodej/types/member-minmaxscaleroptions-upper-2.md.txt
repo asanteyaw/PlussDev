@@ -1,0 +1,22 @@
+# `MinMaxScalerOptions::upper`
+
+## Signature
+
+```cpp
+MinMaxScalerOptions::double upper = 1.0;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+MinMaxScalerOptions cfg{};
+// cfg.upper = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:17

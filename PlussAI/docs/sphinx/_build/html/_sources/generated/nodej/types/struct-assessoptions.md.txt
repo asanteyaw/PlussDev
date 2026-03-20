@@ -1,0 +1,27 @@
+# `AssessOptions`
+
+## Signature
+
+```cpp
+struct AssessOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `ObservationLayout layout = ObservationLayout::Rows`
+- `double positive_threshold = 0.5`
+- `double regression_quantile = 0.5`
+
+## Example
+
+```cpp
+AssessOptions cfg{};
+// cfg.layout = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:113

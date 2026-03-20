@@ -1,0 +1,13 @@
+# `tree_factory::decision_tree_classifier`
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## Overloads
+
+- [overload 1](../api/tree-factory-decision-tree-classifier-ov1.md): `[[nodiscard]] static WorkflowModel tree_factory::decision_tree_classifier(self, TreeFamilyOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2062

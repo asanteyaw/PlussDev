@@ -1,0 +1,13 @@
+# `LabeledBatch::has_weights`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/labeledbatch-has-weights-ov1.md): `[[nodiscard]] bool LabeledBatch::has_weights(self) const noexcept;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/dataset.h`:29

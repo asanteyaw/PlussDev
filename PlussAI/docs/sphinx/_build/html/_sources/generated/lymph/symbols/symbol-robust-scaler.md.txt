@@ -1,0 +1,13 @@
+# `robust_scaler`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/global-robust-scaler-ov1.md): `[[nodiscard]] inline RobustScaler robust_scaler(RobustScalerOptions options = {}) { return RobustScaler(options); };`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:243

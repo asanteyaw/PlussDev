@@ -1,0 +1,37 @@
+# `tree_factory::decision_tree_classifier`
+
+## Signature
+
+```cpp
+[[nodiscard]] static WorkflowModel tree_factory::decision_tree_classifier(self, TreeFamilyOptions options = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `TreeFamilyOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `WorkflowModel`.
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## See also
+
+- `[[nodiscard]] static WorkflowModel tree_factory::decision_tree_regressor(self, TreeFamilyOptions options = {});`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = tree_factory::decision_tree_classifier(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2062

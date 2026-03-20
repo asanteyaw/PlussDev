@@ -1,0 +1,13 @@
+# `make_flow`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-make-flow-ov1.md): `[[nodiscard]] StatusOr<Flow> make_flow(const ModelSpec& spec);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/compose.h`:138

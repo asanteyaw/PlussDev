@@ -1,0 +1,21 @@
+# `SimpleImputerOptions`
+
+## Signature
+
+```cpp
+using SimpleImputerOptions = ::pluss::ai::nodej::prep::SimpleImputerOptions;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+SimpleImputerOptions value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:44

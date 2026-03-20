@@ -1,0 +1,21 @@
+# `StatusCode::NotImplemented`
+
+## Signature
+
+```cpp
+StatusCode::NotImplemented;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = StatusCode::NotImplemented;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/status.h`:8

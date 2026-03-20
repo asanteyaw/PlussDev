@@ -1,0 +1,22 @@
+# `TrainOptions::calibration_iterations`
+
+## Signature
+
+```cpp
+TrainOptions::std::int64_t calibration_iterations = 400;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+TrainOptions cfg{};
+// cfg.calibration_iterations = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:82

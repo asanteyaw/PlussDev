@@ -156,6 +156,16 @@ static double sum_real_fast_(const T* ap, std::int64_t n) {
 void sum_dim(const Series& a, std::int64_t dim, Series& out) {
   PLUSS_CHECK(a.is_contiguous(), "sum_dim: requires contiguous");
   switch (a.scalar_type()) {
+    case ScalarType::Bool:
+      PLUSS_CHECK(out.scalar_type() == ScalarType::Int64, "sum_dim: bool input expects Int64 output");
+      reduce_dim_impl<std::int64_t,std::uint8_t,std::int64_t>(
+        a, dim, out,
+        [](std::uint8_t x){ return static_cast<std::int64_t>(x != 0); },
+        [](std::int64_t acc, std::int64_t){ return acc; },
+        [](){ return static_cast<std::int64_t>(0); },
+        [](std::int64_t acc, std::int64_t x){ return acc + x; }
+      );
+      return;
     case ScalarType::Float64:
       reduce_dim_impl<double,double,double>(a,dim,out,[](double x){return x;},[](double acc, std::int64_t){return acc;},[](){return 0.0;},[](double acc,double x){return acc+x;});
       return;
@@ -365,6 +375,21 @@ void sum_all(const Series& a, Series& out) {
   PLUSS_CHECK(a.is_contiguous(), "sum_all: requires contiguous");
   PLUSS_CHECK(out.numel()==1, "sum_all: out must be scalar");
   switch (a.scalar_type()) {
+    case ScalarType::Bool: {
+      const auto* ap = reinterpret_cast<const std::uint8_t*>(a.raw_data());
+      std::int64_t acc = 0;
+      for (std::int64_t i = 0; i < a.numel(); ++i) acc += (ap[i] != 0) ? 1 : 0;
+      if (out.scalar_type() == ScalarType::Int64) {
+        *reinterpret_cast<std::int64_t*>(out.raw_data()) = acc;
+        return;
+      }
+      if (out.scalar_type() == ScalarType::UInt64) {
+        *reinterpret_cast<std::uint64_t*>(out.raw_data()) = static_cast<std::uint64_t>(acc);
+        return;
+      }
+      throw_error("sum_all: bool input expects Int64/UInt64 output");
+      return;
+    }
     case ScalarType::Float64: {
       const auto* ap = reinterpret_cast<const double*>(a.raw_data());
       const double acc = sum_real_fast_(ap, a.numel());

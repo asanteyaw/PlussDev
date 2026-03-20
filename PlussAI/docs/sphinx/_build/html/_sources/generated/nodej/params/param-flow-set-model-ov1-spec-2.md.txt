@@ -1,0 +1,21 @@
+# `Flow::set_model::spec`
+
+## Parent Signature
+
+```cpp
+Status Flow::set_model(self, const ModelSpec& spec);
+```
+
+## Parameter
+
+- `spec` : `const ModelSpec&`
+  Method argument; see signature type for accepted form.
+
+## Notes
+
+Instance method on `self`.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:88

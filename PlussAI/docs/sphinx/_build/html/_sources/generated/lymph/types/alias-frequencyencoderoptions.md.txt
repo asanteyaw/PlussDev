@@ -1,0 +1,21 @@
+# `FrequencyEncoderOptions`
+
+## Signature
+
+```cpp
+using FrequencyEncoderOptions = ::pluss::ai::nodej::prep::FrequencyEncoderOptions;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+FrequencyEncoderOptions value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:47

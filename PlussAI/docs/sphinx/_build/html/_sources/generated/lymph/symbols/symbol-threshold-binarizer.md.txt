@@ -1,0 +1,13 @@
+# `threshold_binarizer`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/global-threshold-binarizer-ov1.md): `[[nodiscard]] inline ThresholdBinarizer threshold_binarizer(ThresholdBinarizerOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:252

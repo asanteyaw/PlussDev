@@ -1,0 +1,44 @@
+# `Workflow::threshold_binarizer`
+
+## Signature
+
+```cpp
+Workflow& Workflow::threshold_binarizer(self, prep::ThresholdBinarizerOptions options = {}, std::vector<std::int64_t> feature_route = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `prep::ThresholdBinarizerOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `feature_route` : `std::vector<std::int64_t>`, default: `{}`
+  Input feature data used by this call.
+
+## Returns
+
+Returns `Workflow&`.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] inline ThresholdBinarizer threshold_binarizer(ThresholdBinarizerOptions options = {});`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+Workflow workflow{};
+auto out = workflow.threshold_binarizer(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:1377

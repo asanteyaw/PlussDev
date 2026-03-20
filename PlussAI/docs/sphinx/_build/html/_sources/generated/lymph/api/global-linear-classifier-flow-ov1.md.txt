@@ -1,0 +1,84 @@
+# `linear_classifier_flow`
+
+## Signature
+
+```cpp
+StatusOr<nodej::Flow> linear_classifier_flow( const nodej::LabeledBatch& train, double regularization_strength = 1e-6, bool with_standard_scaler = true, bool with_mean_imputer = false, const nodej::TrainOptions& options = {});
+```
+
+## Parameters
+
+- `train` : `const nodej::LabeledBatch&`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `regularization_strength` : `double`, default: `1e-6`
+  Method argument; see signature type for accepted form.
+- `with_standard_scaler` : `bool`, default: `true`
+  Method argument; see signature type for accepted form.
+- `with_mean_imputer` : `bool`, default: `false`
+  Method argument; see signature type for accepted form.
+- `options` : `const nodej::TrainOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `StatusOr<nodej::Flow>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Namespace-level API function.
+
+## See also
+
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `StatusOr<nodej::CrossAssessReport> assess_cv( const nodej::ModelSpec& spec, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {});`
+- `StatusOr<std::unique_ptr<nodej::ClassifierBase>> bayes_classifier( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+- `StatusOr<std::unique_ptr<nodej::RegressorBase>> bayes_regressor( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_flow_demo.cpp`
+
+```cpp
+                                        {6, 2},
+                                        f64());
+    const Series y = pluss::make_series(std::vector<double>{0.0, 0.0, 0.0, 1.0, 1.0, 1.0}, {6}, f64());
+    const LabeledBatch train{
+        .features = FeatureBatch{.x = x, .layout = ObservationLayout::Rows},
+        .y = y,
+    };
+
+    auto flow_or = pluss::ai::lymph::quick::linear_classifier_flow(train, 1e-6, true, false);
+    if (!require_ok(flow_or, "lymph::linear_classifier_flow")) return 1;
+
+    auto metric_or = flow_or.value().assess(train, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::LogLoss}});
+    if (!metric_or.ok()) {
+      std::cerr << "lymph classification flow assess failed: " << metric_or.status().message << "\n";
+      return 1;
+    }
+    const auto v = metric_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    std::cout << "classification flow metrics [accuracy, logloss]: " << v[0] << " " << v[1] << "\n";
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{
+                                            -2.0, 0.0,
+                                            -1.0, std::numeric_limits<double>::quiet_NaN(),
+                                             0.0, 0.0,
+```
+
+**Output**
+
+```text
+lymph Flow demo
+classification flow metrics [accuracy, logloss]: 1 0.00195736
+regression flow metrics [mse, r2]: 4.46648e-17 1
+lymph Flow demo completed.
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/quick.h`:84

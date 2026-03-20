@@ -1,0 +1,13 @@
+# `SimpleImputer::SimpleImputer`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/simpleimputer-simpleimputer-ov1.md): `explicit SimpleImputer(SimpleImputerOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:79

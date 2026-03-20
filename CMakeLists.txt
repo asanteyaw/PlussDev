@@ -23,6 +23,7 @@ set(PLUSSQIT_BUILD_CODEH ON CACHE BOOL "Build CodeH (required by PlussMa libs)" 
 add_library(pluss STATIC)
 if(EXISTS "${CMAKE_SOURCE_DIR}/include")
     target_include_directories(pluss PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
@@ -96,6 +97,32 @@ add_subdirectory(PlussPl)
 add_subdirectory(PlussMa)
 add_subdirectory(PlussMic)
 
+if(TARGET pluss AND TARGET PlussMic AND TARGET plussqit_codem)
+    add_executable(plussma_math_finance_calibrate_heston_demo
+        ${CMAKE_SOURCE_DIR}/PlussMa/Math/examples/Finance/calibrate_heston_demo.cpp
+    )
+    target_compile_features(plussma_math_finance_calibrate_heston_demo PRIVATE cxx_std_20)
+    target_link_libraries(plussma_math_finance_calibrate_heston_demo PRIVATE pluss plussqit_codem PlussMic)
+    target_compile_definitions(plussma_math_finance_calibrate_heston_demo PRIVATE
+        PLUSSMIC_SOURCE_DIR="${CMAKE_SOURCE_DIR}/PlussMic"
+    )
+    set_target_properties(plussma_math_finance_calibrate_heston_demo PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/PlussMa/Math/examples/Finance"
+    )
+
+    add_executable(plussma_math_finance_calibrate_bates_demo
+        ${CMAKE_SOURCE_DIR}/PlussMa/Math/examples/Finance/calibrate_bates_demo.cpp
+    )
+    target_compile_features(plussma_math_finance_calibrate_bates_demo PRIVATE cxx_std_20)
+    target_link_libraries(plussma_math_finance_calibrate_bates_demo PRIVATE pluss plussqit_codem PlussMic)
+    target_compile_definitions(plussma_math_finance_calibrate_bates_demo PRIVATE
+        PLUSSMIC_SOURCE_DIR="${CMAKE_SOURCE_DIR}/PlussMic"
+    )
+    set_target_properties(plussma_math_finance_calibrate_bates_demo PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/PlussMa/Math/examples/Finance"
+    )
+endif()
+
 if(TARGET plussview_window_registry_demo AND TARGET PlussMic)
     target_link_libraries(plussview_window_registry_demo PRIVATE PlussMic)
     target_compile_definitions(plussview_window_registry_demo PRIVATE
@@ -132,7 +159,7 @@ install(TARGETS pluss
 )
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussAI/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/PlussAI/include
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hpp"
@@ -141,7 +168,7 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussAI/include/
 )
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussAI/NodeK/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/PlussAI/NodeK
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/NodeK
     FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hpp"
@@ -150,7 +177,55 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussAI/NodeK/
 )
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMa/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/PlussMa/include
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.hh"
+    PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMic/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.hh"
+    PATTERN ".DS_Store" EXCLUDE
+)
+
+# PlussMic public umbrellas include legacy top-level paths like
+# "bundle/Bundle.h", "loader/Loader.h", and "table/Table.h".
+# Stage those header trees so <pluss/pluss.h> remains self-contained for SDK users.
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMic/src/bundle/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/bundle
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.hh"
+    PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMic/src/loader/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/loader
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.hh"
+    PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMic/src/table/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/table
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.hh"
+    PATTERN ".DS_Store" EXCLUDE
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMic/src/kindle/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/kindle
     FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hpp"
@@ -224,6 +299,7 @@ add_custom_target(pluss_sdk_stage
     DEPENDS
         pluss
         PlussPl
+        PlussMic
     USES_TERMINAL
     COMMENT "Staging pluss SDK at ${PLUSS_SDK_STAGING_DIR}"
 )

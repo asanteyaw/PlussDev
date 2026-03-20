@@ -48,12 +48,12 @@ struct TinyLSTMRegressorImpl final : pluss::nn::Module {
 PLUSS_MODULE(TinyLSTMRegressor);
 
 Series make_dataset(const Config& cfg, std::int64_t batch, std::int64_t steps) {
-  std::vector<double> values;
+  std::vector<float> values;
   values.reserve(static_cast<std::size_t>(batch * steps));
   for (std::int64_t b = 0; b < batch; ++b) {
     for (std::int64_t t = 0; t < steps; ++t) {
-      const double x = 0.15 * static_cast<double>(t) + 0.07 * static_cast<double>(b);
-      values.push_back(std::sin(x) + 0.1 * std::cos(2.0 * x));
+      const float x = 0.15f * static_cast<float>(t) + 0.07f * static_cast<float>(b);
+      values.push_back(std::sin(x) + 0.1f * std::cos(2.0f * x));
     }
   }
   return pluss::make_series(values, {batch, steps, 1}, cfg);
@@ -91,11 +91,8 @@ TrainStats train_once(pluss::Platform platform) {
 
   pluss::nn::optim::AdamOptions opt{};
   opt.learning_rate = 0.03;
+  opt.execution.lane = pluss::nn::optim::UpdateLane::Loop;
   pluss::nn::optim::Adam optimizer(params, opt);
-  pluss::nn::optim::StepDiagnosticsOptions diag{};
-  diag.fail_if_non_finite_sensitivity = true;
-  diag.fail_if_non_finite_parameter = true;
-  optimizer.set_step_diagnostics(diag);
 
   const double initial_loss = as_f64(pluss::nn::losses::MSE(model->forward(features), target));
   const auto t0 = std::chrono::steady_clock::now();
@@ -103,7 +100,6 @@ TrainStats train_once(pluss::Platform platform) {
   for (int epoch = 1; epoch <= 200; ++epoch) {
     const Series pred = model->forward(features);
     const Series loss = pluss::nn::losses::MSE(pred, target);
-    PLUSS_CHECK(loss.isfinite().all().item<bool>(), "nn_lstm_train_minimal_demo: non-finite loss encountered");
     optimizer.clear();
     loss.reverse();
     optimizer.step();

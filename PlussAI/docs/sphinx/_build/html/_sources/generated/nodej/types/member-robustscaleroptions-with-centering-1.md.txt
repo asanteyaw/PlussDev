@@ -1,0 +1,22 @@
+# `RobustScalerOptions::with_centering`
+
+## Signature
+
+```cpp
+RobustScalerOptions::bool with_centering = true;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+RobustScalerOptions cfg{};
+// cfg.with_centering = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:24

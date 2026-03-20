@@ -59,9 +59,14 @@ ProblemTraits inspect_problem(const DfoProblem& problem) {
   ProblemTraits out;
   out.dimension = problem.initial.numel();
   out.has_objective = static_cast<bool>(problem.objective);
-  out.has_constraints = static_cast<bool>(problem.constraints);
+  out.has_constraints = static_cast<bool>(problem.constraints) ||
+                        static_cast<bool>(problem.constraints_values);
   out.has_blackbox = static_cast<bool>(problem.blackbox);
   out.has_bounds = lower_defined && upper_defined;
+
+  if (problem.constraints && problem.constraints_values) {
+    throw std::runtime_error("DFO::solve: provide either constraints or constraints_values, not both");
+  }
 
   if (!out.has_objective && !out.has_blackbox) {
     throw std::runtime_error("DFO::solve: provide either objective or blackbox callback");
@@ -81,7 +86,7 @@ Selection choose_solver(const ProblemTraits& traits, const DfoOptions& options) 
     return Selection{DfoSolverKind::MadsAdvanced, "blackbox callback provided"};
   }
   if (traits.has_constraints) {
-    return Selection{DfoSolverKind::OrthoMads, "explicit nonlinear constraints detected"};
+    return Selection{DfoSolverKind::PatternSearch, "explicit nonlinear constraints detected"};
   }
 
   const auto& policy = options.auto_policy;
@@ -154,11 +159,21 @@ std::function<BlackboxEvaluation(const Series&)> make_blackbox_objective(const D
 
   auto objective = problem.objective;
   auto constraints = problem.constraints;
-  return [objective = std::move(objective), constraints = std::move(constraints)](
+  auto constraints_values = problem.constraints_values;
+  return [objective = std::move(objective),
+          constraints = std::move(constraints),
+          constraints_values = std::move(constraints_values)](
              const Series& x) -> BlackboxEvaluation {
     BlackboxEvaluation out;
     out.objectives = objective(x);
-    if (constraints) {
+    if (constraints_values) {
+      const DfoConstraintValues c = constraints_values(x);
+      if (c.equality.defined() && c.equality.numel() > 0) {
+        throw std::runtime_error(
+            "DFO::solve: constraints_values.equality is only supported by PatternSearch route");
+      }
+      out.constraints = c.inequality;
+    } else if (constraints) {
       out.constraints = constraints(x);
     }
     return out;
@@ -331,6 +346,22 @@ DfoStatus from_status(SolverStatus s) {
   return DfoStatus::ReachedIterationBudget;
 }
 
+DfoStatus from_status(PSStatus s) {
+  switch (s) {
+    case PSStatus::Converged:
+      return DfoStatus::Converged;
+    case PSStatus::ReachedEvaluationBudget:
+      return DfoStatus::ReachedEvaluationBudget;
+    case PSStatus::ReachedIterationBudget:
+      return DfoStatus::ReachedIterationBudget;
+    case PSStatus::ReachedTimeBudget:
+      return DfoStatus::ReachedTimeBudget;
+    case PSStatus::InfeasibleStationary:
+      return DfoStatus::InfeasibleStationary;
+  }
+  return DfoStatus::ReachedIterationBudget;
+}
+
 DfoStatus from_status(PopulationSolverStatus s) {
   switch (s) {
     case PopulationSolverStatus::Converged:
@@ -355,6 +386,51 @@ DfoStatus from_status(BlackboxSolverStatus s) {
   return DfoStatus::ReachedIterationBudget;
 }
 
+PSConfig make_ps_config(
+    const DfoProblem& problem,
+    const DfoOptions& options) {
+  PSConfig cfg = options.pattern_search;
+  if (options.max_iterations > 0) {
+    cfg.max_iterations = options.max_iterations;
+  }
+  if (options.max_evaluations > 0) {
+    cfg.max_evaluations = options.max_evaluations;
+  }
+  if (options.check_every > 0) {
+    cfg.check_every = options.check_every;
+  }
+  if (options.relative_improvement_tolerance > 0.0) {
+    cfg.relative_improvement_tolerance = options.relative_improvement_tolerance;
+  }
+  cfg.rng_seed = options.rng_seed;
+  cfg.promote_cpu_to_float64 = options.promote_cpu_to_float64;
+  if (options.display_iter) {
+    cfg.display = PSDisplay::Iter;
+  }
+  apply_bounds_if_defined(problem, &cfg.lower_bounds, &cfg.upper_bounds);
+
+  if (problem.constraints_values) {
+    auto constraints_values = problem.constraints_values;
+    cfg.nonlinear_constraints = [constraints_values = std::move(constraints_values)](
+                                    const Series& x) -> PSConstraintValues {
+      const DfoConstraintValues c = constraints_values(x);
+      PSConstraintValues out;
+      out.inequality = c.inequality;
+      out.equality = c.equality;
+      return out;
+    };
+  } else if (problem.constraints) {
+    auto constraints = problem.constraints;
+    cfg.nonlinear_constraints = [constraints = std::move(constraints)](
+                                    const Series& x) -> PSConstraintValues {
+      PSConstraintValues out;
+      out.inequality = constraints(x);
+      return out;
+    };
+  }
+  return cfg;
+}
+
 DfoResult run_nelder_mead(
     const DfoProblem& problem,
     const DfoOptions& options) {
@@ -370,6 +446,33 @@ DfoResult run_nelder_mead(
   result.diagnostics.iterations = out.diagnostics.iterations;
   result.diagnostics.evaluations = out.diagnostics.evaluations;
   result.diagnostics.total_evaluations = out.diagnostics.evaluations;
+  result.diagnostics.last_phase = out.diagnostics.last_step;
+  return result;
+}
+
+DfoResult run_pattern_search(
+    const DfoProblem& problem,
+    const DfoOptions& options) {
+  const auto objective = make_scalar_objective(problem, DfoSolverKind::PatternSearch);
+  const PSConfig cfg = make_ps_config(problem, options);
+  const PSOutcome out = pattern_search_minimizer(objective, problem.initial, cfg);
+
+  DfoResult result;
+  result.minimizer = out.minimizer;
+  result.objective_vector = pluss::make_series(out.minimum);
+  result.minimum = out.minimum;
+  result.status = from_status(out.status);
+  result.diagnostics.iterations = out.diagnostics.iterations;
+  result.diagnostics.evaluations = out.diagnostics.evaluations;
+  result.diagnostics.total_evaluations = out.diagnostics.evaluations;
+  result.diagnostics.cache_hits = out.diagnostics.cache_hits;
+  result.diagnostics.outer_iterations = out.diagnostics.outer_iterations;
+  result.diagnostics.nups_updates = out.diagnostics.nups_updates;
+  result.diagnostics.search_trials = out.diagnostics.search_trials;
+  result.diagnostics.search_successes = out.diagnostics.search_successes;
+  result.diagnostics.mesh_size = out.diagnostics.mesh_size;
+  result.diagnostics.penalty = out.diagnostics.penalty;
+  result.diagnostics.max_constraint_violation = out.diagnostics.max_constraint_violation;
   result.diagnostics.last_phase = out.diagnostics.last_step;
   return result;
 }
@@ -490,6 +593,8 @@ std::string to_string(DfoSolverKind solver) {
       return "Auto";
     case DfoSolverKind::NelderMead:
       return "NelderMead";
+    case DfoSolverKind::PatternSearch:
+      return "PatternSearch";
     case DfoSolverKind::DifferentialEvolution:
       return "DifferentialEvolution";
     case DfoSolverKind::DifferentialEvolutionPrmm:
@@ -516,6 +621,10 @@ std::string to_string(DfoStatus status) {
       return "ReachedIterationBudget";
     case DfoStatus::ReachedEvaluationBudget:
       return "ReachedEvaluationBudget";
+    case DfoStatus::ReachedTimeBudget:
+      return "ReachedTimeBudget";
+    case DfoStatus::InfeasibleStationary:
+      return "InfeasibleStationary";
   }
   return "ReachedIterationBudget";
 }
@@ -528,6 +637,9 @@ DfoResult DFO::run(const DfoProblem& problem) const {
   switch (choice.solver) {
     case DfoSolverKind::NelderMead:
       result = run_nelder_mead(problem, options_);
+      break;
+    case DfoSolverKind::PatternSearch:
+      result = run_pattern_search(problem, options_);
       break;
     case DfoSolverKind::DifferentialEvolution:
       result = run_de(problem, options_);
@@ -695,6 +807,15 @@ DfoBuilder DfoBuilder::with_objective(std::function<Series(const Series&)> objec
 DfoBuilder DfoBuilder::with_constraints(std::function<Series(const Series&)> constraints) const {
   DfoBuilder next = *this;
   next.problem_.constraints = std::move(constraints);
+  next.problem_.constraints_values = {};
+  return next;
+}
+
+DfoBuilder DfoBuilder::with_constraints_values(
+    std::function<DfoConstraintValues(const Series&)> constraints_values) const {
+  DfoBuilder next = *this;
+  next.problem_.constraints_values = std::move(constraints_values);
+  next.problem_.constraints = {};
   return next;
 }
 

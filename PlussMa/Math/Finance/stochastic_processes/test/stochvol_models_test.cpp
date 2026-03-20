@@ -15,10 +15,14 @@ using pluss::subsp::math::finance::calibration::OptionQuote;
 using pluss::subsp::math::finance::models::Bates;
 using pluss::subsp::math::finance::models::Heston;
 using pluss::subsp::math::finance::models::HestonNandi;
+using pluss::subsp::math::finance::models::RoughBergomi;
+using pluss::subsp::math::finance::models::RoughHeston;
 using pluss::subsp::math::finance::models::StochVolBase;
 using pluss::subsp::math::finance::models::Sv;
 using pluss::subsp::math::finance::volatility::BatesParams;
 using pluss::subsp::math::finance::volatility::HestonNandiParams;
+using pluss::subsp::math::finance::volatility::RoughBergomiParams;
+using pluss::subsp::math::finance::volatility::RoughHestonParams;
 using pluss::subsp::math::finance::pricing::HestonIntegrationOptions;
 using pluss::subsp::math::finance::pricing::MonteCarloOptions;
 using pluss::subsp::math::finance::pricing::OptionType;
@@ -205,6 +209,39 @@ void test_heston_nandi_object_lane() {
   expect(paths.variance.min().item<double>() > 0.0, "heston_nandi object paths variance must be positive");
 }
 
+void test_rough_models_lane() {
+  const auto cfg = f64_cpu();
+
+  RoughHestonParams rhp;
+  rhp.kappa = 1.5;
+  rhp.theta = 0.04;
+  rhp.sigma = 0.3;
+  rhp.alpha = -0.2;
+  rhp.rho = -0.7;
+  rhp.v0 = 0.04;
+  RoughHeston rh{rhp};
+
+  RoughBergomiParams rbp;
+  rbp.xi = 0.04;
+  rbp.eta = 1.6;
+  rbp.alpha = -0.4;
+  rbp.rho = -0.7;
+  RoughBergomi rb{rbp};
+
+  MonteCarloOptions mc;
+  mc.paths = 4000;
+  mc.steps = 128;
+  mc.rand_method = RandMethod::Sobol;
+  mc.randomized_quasi = true;
+  mc.sobol_scrambling = 3;
+  mc.seed = 20260731ULL;
+
+  const double rh_px = rh.price_mc(OptionType::Call, 100.0, 100.0, 0.02, 0.0, 1.0, mc, cfg);
+  const double rb_px = rb.price_mc(OptionType::Call, 100.0, 100.0, 0.02, 0.0, 1.0, mc, cfg);
+  expect(std::isfinite(rh_px) && rh_px > 0.0, "rough_heston object price_mc should be finite and positive");
+  expect(std::isfinite(rb_px) && rb_px > 0.0, "rough_bergomi object price_mc should be finite and positive");
+}
+
 } // namespace
 
 int main() {
@@ -213,6 +250,7 @@ int main() {
     test_sv_object_lane();
     test_bates_object_lane();
     test_heston_nandi_object_lane();
+    test_rough_models_lane();
     std::cout << "stochvol_models_test passed\n";
     return 0;
   } catch (const std::exception& e) {

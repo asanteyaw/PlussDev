@@ -23,6 +23,7 @@ struct KalmanModel {
   pluss::codem::Series initial_cov = pluss::codem::Series::undefined();     // [n,n]
   pluss::codem::Series control = pluss::codem::Series::undefined();         // [T,k] optional
   pluss::codem::Series control_matrix = pluss::codem::Series::undefined();  // [n,k] optional
+  double info_tol = 0.0;                                                     // ignore obs channels with forecast var <= info_tol
 };
 
 struct KalmanResult {
@@ -32,6 +33,7 @@ struct KalmanResult {
   pluss::codem::Series predicted_cov = pluss::codem::Series::undefined();   // [T,n,n]
   pluss::codem::Series innovation = pluss::codem::Series::undefined();      // [T,m]
   pluss::codem::Series innovation_cov = pluss::codem::Series::undefined();  // [T,m,m]
+  pluss::codem::Series data_used = pluss::codem::Series::undefined();       // [T,m], 1.0 if channel used in update else 0.0
   double loglik = 0.0;
 };
 
@@ -48,6 +50,7 @@ struct EkfModel {
   pluss::codem::Series observation_cov = pluss::codem::Series::undefined();
   pluss::codem::Series initial_mean = pluss::codem::Series::undefined();
   pluss::codem::Series initial_cov = pluss::codem::Series::undefined();
+  double info_tol = 0.0; // ignore obs channels with forecast var <= info_tol
 };
 
 CODEM_API KalmanResult ekf_filter(const pluss::codem::Series& observations,
@@ -68,6 +71,7 @@ struct UkfModel {
   pluss::codem::Series observation_cov = pluss::codem::Series::undefined();
   pluss::codem::Series initial_mean = pluss::codem::Series::undefined();
   pluss::codem::Series initial_cov = pluss::codem::Series::undefined();
+  double info_tol = 0.0; // ignore obs channels with forecast var <= info_tol
   UkfOptions options{};
 };
 
@@ -78,10 +82,26 @@ CODEM_API KalmanResult ukf_filter(const pluss::codem::Series& observations,
 using ParticleTransitionFn = std::function<pluss::codem::Series(const pluss::codem::Series&, std::int64_t)>;
 using ParticleLogLikFn = std::function<pluss::codem::Series(const pluss::codem::Series&, const pluss::codem::Series&, std::int64_t)>;
 
+enum class ParticleResampleMethod : std::uint8_t {
+  Systematic = 0,
+  Multinomial = 1,
+  Stratified = 2,
+  Residual = 3,
+};
+
+enum class ParticleResampleTrigger : std::uint8_t {
+  Ratio = 0,
+  Interval = 1,
+};
+
 struct ParticleFilterOptions {
   double ess_threshold = 0.5; // as fraction of num_particles
   bool resample = true;
   bool store_particles = true;
+  ParticleResampleMethod resample_method = ParticleResampleMethod::Systematic;
+  ParticleResampleTrigger resample_trigger = ParticleResampleTrigger::Ratio;
+  std::int64_t resample_interval = 1;
+  std::uint64_t resample_seed = 0;
 };
 
 struct ParticleFilterModel {

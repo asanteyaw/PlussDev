@@ -20,8 +20,12 @@ void Thread::show(std::ostream& os, const display::DisplayOptions& options) cons
 }
 
 std::ostream& operator<<(std::ostream& os, const Thread& thread) {
-  thread.show(os);
+  output_render(os, thread);
   return os;
+}
+
+void output_render(std::ostream& os, const Thread& thread) {
+  thread.show(os);
 }
 
 } // namespace pluss::table

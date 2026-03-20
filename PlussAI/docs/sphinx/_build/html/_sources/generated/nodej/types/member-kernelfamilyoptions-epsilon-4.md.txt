@@ -1,0 +1,22 @@
+# `KernelFamilyOptions::epsilon`
+
+## Signature
+
+```cpp
+KernelFamilyOptions::double epsilon = 0.1;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+KernelFamilyOptions cfg{};
+// cfg.epsilon = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:89

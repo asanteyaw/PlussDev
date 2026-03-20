@@ -1,0 +1,21 @@
+# `IndexSplit`
+
+## Signature
+
+```cpp
+struct IndexSplit;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+## Example
+
+```cpp
+IndexSplit cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/split.h`:11

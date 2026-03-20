@@ -1,0 +1,13 @@
+# `MinMaxScaler::MinMaxScaler`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/minmaxscaler-minmaxscaler-ov1.md): `explicit MinMaxScaler(MinMaxScalerOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:157

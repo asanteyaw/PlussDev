@@ -1,0 +1,22 @@
+# `SplitOptions::plan`
+
+## Signature
+
+```cpp
+SplitOptions::CVPlanKind plan = CVPlanKind::Holdout;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+SplitOptions cfg{};
+// cfg.plan = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:124

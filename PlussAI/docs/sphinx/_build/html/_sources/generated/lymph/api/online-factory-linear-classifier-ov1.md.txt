@@ -1,0 +1,74 @@
+# `online_factory::linear_classifier`
+
+## Signature
+
+```cpp
+[[nodiscard]] static OnlineLinearClassifier online_factory::linear_classifier(self, OnlineLinearOptions options = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `OnlineLinearOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `OnlineLinearClassifier`.
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## See also
+
+- `StatusOr<std::unique_ptr<nodej::ClassifierBase>> linear_classifier( const nodej::LabeledBatch& train, const nodej::LinearFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+- `[[nodiscard]] static OnlineLinearRegressor online_factory::linear_regressor(self, OnlineLinearOptions options = {});`
+- `[[nodiscard]] inline SpecTuneResult online_factory::probe_specs(self, const ProbeSpecSampler& sampler, std::int64_t trials, const LabeledBatch& batch, const SplitOptions& split = {}, const TrainOptions& train_options = {}, const AssessOptions& assess_options = {}, MetricKind objective_metric = MetricKind::Accuracy, TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto, RandomState random = {});`
+- `[[nodiscard]] inline SpecTuneResult online_factory::probe_specs(self, const ProbeSpecSampler& sampler, std::int64_t trials, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const SplitOptions& split = {}, const TrainOptions& train_options = {}, const AssessOptions& assess_options = {}, MetricKind objective_metric = MetricKind::Accuracy, TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto, RandomState random = {});`
+- `[[nodiscard]] inline SpecTuneResult online_factory::probe_specs(self, const ProbeSpecSampler& sampler, std::int64_t trials, const pluss::table::DataFrame& x, const Series& y, const SplitOptions& split = {}, const TrainOptions& train_options = {}, const AssessOptions& assess_options = {}, MetricKind objective_metric = MetricKind::Accuracy, TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto, RandomState random = {});`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_online_demo.cpp`
+
+```cpp
+        .regularization_strength = 1e-6,
+        .fit_intercept = true,
+    };
+    online_options.learning_rate = 0.08;
+
+    TrainOptions warm_opts{};
+    warm_opts.max_iterations = 80;
+
+    auto model = pluss::ai::lymph::online_factory::linear_classifier(online_options);
+    model.learn_(warm, warm_opts).advance_(stream);
+
+    const auto metrics = model.assess(full);
+    const Series metric_values = metrics.accuracy.defined() ? metrics.accuracy : metrics.values;
+
+    std::cout << "lymph online seen_samples=" << model.seen_samples() << '\n';
+    std::cout << "lymph online metrics [accuracy]: ";
+    print_vec(metric_values);
+    return 0;
+  } catch (const std::exception& ex) {
+    std::cerr << "lymph_online_demo failed: " << ex.what() << '\n';
+    return 1;
+  }
+}
+```
+
+**Output**
+
+```text
+lymph online seen_samples=1660
+lymph online metrics [accuracy]: 0.9875
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2570

@@ -1,0 +1,13 @@
+# `StatusOr::move_value`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/statusor-move-value-ov1.md): `[[nodiscard]] T&& StatusOr::move_value(self) noexcept;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/status.h`:58

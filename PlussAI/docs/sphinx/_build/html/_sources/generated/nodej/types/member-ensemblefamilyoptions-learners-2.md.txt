@@ -1,0 +1,22 @@
+# `EnsembleFamilyOptions::learners`
+
+## Signature
+
+```cpp
+EnsembleFamilyOptions::std::int64_t learners = 100;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+EnsembleFamilyOptions cfg{};
+// cfg.learners = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:77

@@ -249,6 +249,34 @@ plussqit_codem_aux_let_transmit_demo/fast:
 .PHONY : plussqit_codem_aux_let_transmit_demo/fast
 
 # Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_output_engine_demo: PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/rule
+.PHONY : plussqit_codem_output_engine_demo
+
+# fast build rule for target.
+plussqit_codem_output_engine_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/build
+.PHONY : plussqit_codem_output_engine_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/rule
+
+# Convenience name for target.
+plussqit_codem_data_loader_demo: PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/rule
+.PHONY : plussqit_codem_data_loader_demo
+
+# fast build rule for target.
+plussqit_codem_data_loader_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/build
+.PHONY : plussqit_codem_data_loader_demo/fast
+
+# Convenience name for target.
 PlussQit/CMakeFiles/plussqit_codem_transmit_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_codem_transmit_demo.dir/rule
 .PHONY : PlussQit/CMakeFiles/plussqit_codem_transmit_demo.dir/rule
@@ -860,6 +888,30 @@ examples/CodeM/aux_let_transmit_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_aux_let_transmit_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_aux_let_transmit_demo.dir/examples/CodeM/aux_let_transmit_demo.cpp.s
 .PHONY : examples/CodeM/aux_let_transmit_demo.cpp.s
 
+examples/CodeM/data_loader_demo.o: examples/CodeM/data_loader_demo.cpp.o
+.PHONY : examples/CodeM/data_loader_demo.o
+
+# target to build an object file
+examples/CodeM/data_loader_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/examples/CodeM/data_loader_demo.cpp.o
+.PHONY : examples/CodeM/data_loader_demo.cpp.o
+
+examples/CodeM/data_loader_demo.i: examples/CodeM/data_loader_demo.cpp.i
+.PHONY : examples/CodeM/data_loader_demo.i
+
+# target to preprocess a source file
+examples/CodeM/data_loader_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/examples/CodeM/data_loader_demo.cpp.i
+.PHONY : examples/CodeM/data_loader_demo.cpp.i
+
+examples/CodeM/data_loader_demo.s: examples/CodeM/data_loader_demo.cpp.s
+.PHONY : examples/CodeM/data_loader_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/data_loader_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_data_loader_demo.dir/examples/CodeM/data_loader_demo.cpp.s
+.PHONY : examples/CodeM/data_loader_demo.cpp.s
+
 examples/CodeM/data_reader_parity_demo.o: examples/CodeM/data_reader_parity_demo.cpp.o
 .PHONY : examples/CodeM/data_reader_parity_demo.o
 
@@ -955,6 +1007,30 @@ examples/CodeM/mps_vs_cpu_demo.s: examples/CodeM/mps_vs_cpu_demo.cpp.s
 examples/CodeM/mps_vs_cpu_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_mps_vs_cpu_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_mps_vs_cpu_demo.dir/examples/CodeM/mps_vs_cpu_demo.cpp.s
 .PHONY : examples/CodeM/mps_vs_cpu_demo.cpp.s
+
+examples/CodeM/output_engine_demo.o: examples/CodeM/output_engine_demo.cpp.o
+.PHONY : examples/CodeM/output_engine_demo.o
+
+# target to build an object file
+examples/CodeM/output_engine_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/examples/CodeM/output_engine_demo.cpp.o
+.PHONY : examples/CodeM/output_engine_demo.cpp.o
+
+examples/CodeM/output_engine_demo.i: examples/CodeM/output_engine_demo.cpp.i
+.PHONY : examples/CodeM/output_engine_demo.i
+
+# target to preprocess a source file
+examples/CodeM/output_engine_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/examples/CodeM/output_engine_demo.cpp.i
+.PHONY : examples/CodeM/output_engine_demo.cpp.i
+
+examples/CodeM/output_engine_demo.s: examples/CodeM/output_engine_demo.cpp.s
+.PHONY : examples/CodeM/output_engine_demo.s
+
+# target to generate assembly for a file
+examples/CodeM/output_engine_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/build.make PlussQit/CMakeFiles/plussqit_codem_output_engine_demo.dir/examples/CodeM/output_engine_demo.cpp.s
+.PHONY : examples/CodeM/output_engine_demo.cpp.s
 
 examples/CodeM/series_methods_demo.o: examples/CodeM/series_methods_demo.cpp.o
 .PHONY : examples/CodeM/series_methods_demo.o
@@ -3339,6 +3415,30 @@ tests/CodeM/test_advanced_indexing.s: tests/CodeM/test_advanced_indexing.cpp.s
 tests/CodeM/test_advanced_indexing.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_advanced_indexing.cpp.s
 .PHONY : tests/CodeM/test_advanced_indexing.cpp.s
+
+tests/CodeM/test_aux_dataloader.o: tests/CodeM/test_aux_dataloader.cpp.o
+.PHONY : tests/CodeM/test_aux_dataloader.o
+
+# target to build an object file
+tests/CodeM/test_aux_dataloader.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_aux_dataloader.cpp.o
+.PHONY : tests/CodeM/test_aux_dataloader.cpp.o
+
+tests/CodeM/test_aux_dataloader.i: tests/CodeM/test_aux_dataloader.cpp.i
+.PHONY : tests/CodeM/test_aux_dataloader.i
+
+# target to preprocess a source file
+tests/CodeM/test_aux_dataloader.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_aux_dataloader.cpp.i
+.PHONY : tests/CodeM/test_aux_dataloader.cpp.i
+
+tests/CodeM/test_aux_dataloader.s: tests/CodeM/test_aux_dataloader.cpp.s
+.PHONY : tests/CodeM/test_aux_dataloader.s
+
+# target to generate assembly for a file
+tests/CodeM/test_aux_dataloader.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_aux_dataloader.cpp.s
+.PHONY : tests/CodeM/test_aux_dataloader.cpp.s
 
 tests/CodeM/test_codem_broadcast.o: tests/CodeM/test_codem_broadcast.cpp.o
 .PHONY : tests/CodeM/test_codem_broadcast.o
@@ -7545,12 +7645,14 @@ help:
 	@echo "... plussqit_codem_autograd_optim_demo"
 	@echo "... plussqit_codem_aux_let_transmit_demo"
 	@echo "... plussqit_codem_cuda_gate_tests"
+	@echo "... plussqit_codem_data_loader_demo"
 	@echo "... plussqit_codem_data_reader_parity_demo"
 	@echo "... plussqit_codem_linear_alg_demo"
 	@echo "... plussqit_codem_mps_bulk_bench_demo"
 	@echo "... plussqit_codem_mps_selection_tests"
 	@echo "... plussqit_codem_mps_vs_cpu_demo"
 	@echo "... plussqit_codem_optim_tests"
+	@echo "... plussqit_codem_output_engine_demo"
 	@echo "... plussqit_codem_series_methods_demo"
 	@echo "... plussqit_codem_series_usage_demo"
 	@echo "... plussqit_codem_signal_demo"
@@ -7592,6 +7694,9 @@ help:
 	@echo "... examples/CodeM/aux_let_transmit_demo.o"
 	@echo "... examples/CodeM/aux_let_transmit_demo.i"
 	@echo "... examples/CodeM/aux_let_transmit_demo.s"
+	@echo "... examples/CodeM/data_loader_demo.o"
+	@echo "... examples/CodeM/data_loader_demo.i"
+	@echo "... examples/CodeM/data_loader_demo.s"
 	@echo "... examples/CodeM/data_reader_parity_demo.o"
 	@echo "... examples/CodeM/data_reader_parity_demo.i"
 	@echo "... examples/CodeM/data_reader_parity_demo.s"
@@ -7604,6 +7709,9 @@ help:
 	@echo "... examples/CodeM/mps_vs_cpu_demo.o"
 	@echo "... examples/CodeM/mps_vs_cpu_demo.i"
 	@echo "... examples/CodeM/mps_vs_cpu_demo.s"
+	@echo "... examples/CodeM/output_engine_demo.o"
+	@echo "... examples/CodeM/output_engine_demo.i"
+	@echo "... examples/CodeM/output_engine_demo.s"
 	@echo "... examples/CodeM/series_methods_demo.o"
 	@echo "... examples/CodeM/series_methods_demo.i"
 	@echo "... examples/CodeM/series_methods_demo.s"
@@ -7902,6 +8010,9 @@ help:
 	@echo "... tests/CodeM/test_advanced_indexing.o"
 	@echo "... tests/CodeM/test_advanced_indexing.i"
 	@echo "... tests/CodeM/test_advanced_indexing.s"
+	@echo "... tests/CodeM/test_aux_dataloader.o"
+	@echo "... tests/CodeM/test_aux_dataloader.i"
+	@echo "... tests/CodeM/test_aux_dataloader.s"
 	@echo "... tests/CodeM/test_codem_broadcast.o"
 	@echo "... tests/CodeM/test_codem_broadcast.i"
 	@echo "... tests/CodeM/test_codem_broadcast.s"

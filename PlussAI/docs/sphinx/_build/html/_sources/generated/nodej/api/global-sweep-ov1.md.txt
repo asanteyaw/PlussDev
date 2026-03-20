@@ -1,0 +1,128 @@
+# `sweep`
+
+## Signature
+
+```cpp
+StatusOr<TuneReport> sweep(const std::vector<ModelSpec>& candidates, const LabeledBatch& batch, const SplitOptions& split = {}, const TrainOptions& train_options = {}, const AssessOptions& assess_options = {}, MetricKind objective_metric = MetricKind::Accuracy, TuneObjectivePolicy objective_policy = TuneObjectivePolicy::Auto);
+```
+
+## Parameters
+
+- `candidates` : `const std::vector<ModelSpec>&`
+  List-like argument; pass values in the order expected by the signature.
+- `batch` : `const LabeledBatch&`
+  Input feature data used by this call.
+- `split` : `const SplitOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `train_options` : `const TrainOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `assess_options` : `const AssessOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `objective_metric` : `MetricKind`, default: `MetricKind::Accuracy`
+  Metric selection or score-control argument for evaluation/tuning.
+- `objective_policy` : `TuneObjectivePolicy`, default: `TuneObjectivePolicy::Auto`
+  Target values aligned to input observations.
+
+## Returns
+
+Returns `StatusOr<TuneReport>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Executes hyperparameter search and reports trial-by-trial objective values.
+
+## See also
+
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_learn_map(const FeatureBatch& batch, const TrainOptions& learn_options, const InferOptions& infer_options);`
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_map(const FeatureBatch& batch, const InferOptions& options) const;`
+- `[[nodiscard]] Status check_ready_for_infer(const char* where) const;`
+- `StatusOr<CrossAssessReport> cross_assess(const ModelSpec& spec, const LabeledBatch& batch, const SplitOptions& split = {}, const TrainOptions& train_options = {}, const AssessOptions& assess_options = {});`
+- `StatusOr<FeatureBatch> feature_batch_from_dataframe(const pluss::table::DataFrame& frame, const DataFrameBatchOptions& options = {});`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_cv_tune_demo.cpp`
+
+```cpp
+  if (!require_ok(kernel_cv_or, "cross_assess(kernel)")) return 1;
+  print_series("kernel mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]", kernel_cv_or.value().mean_metrics);
+  print_series("kernel std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]", kernel_cv_or.value().std_metrics);
+
+  const std::vector<ModelSpec> candidates{linear_logistic_spec(), rbf_kernel_spec()};
+  AssessOptions tune_assess{};
+  tune_assess.metrics = {MetricKind::Accuracy};
+
+  auto sweep_or = sweep(candidates,
+                        batch,
+                        split,
+                        train,
+                        tune_assess,
+                        MetricKind::Accuracy,
+                        TuneObjectivePolicy::Auto);
+  if (!require_ok(sweep_or, "sweep")) return 1;
+
+  std::cout << "sweep trial objectives:";
+  for (const auto& trial : sweep_or.value().trials) {
+    std::cout << " " << trial.objective;
+  }
+  std::cout << "\n";
+  std::cout << "sweep best index: " << sweep_or.value().best_index << "\n";
+
+  auto sampler = [](std::int64_t trial_index, std::uint64_t seed) -> StatusOr<ModelSpec> {
+```
+
+**Output**
+
+```text
+NodeJ CV + tune demo
+linear mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0.25 0.25 0.208333 0.25 nan 0.0625 0.960532
+linear std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0.176777 0.176777 0.216506 0.25 nan 0.108253 0.192821
+kernel mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 1 1 1 1 1 1 0.358895
+kernel std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0 0 0 0 0 0 0.0358183
+sweep trial objectives: 0.25 1
+sweep best index: 1
+probe best index: 1
+regression quantile sweep objectives: 0.0356052 0.736518
+regression quantile sweep best index: 0
+max |bounded score|: 0
+NodeJ CV + tune demo completed.
+```
+
+### Example 2
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+      .task = TaskKind::Regression,
+      .family = ModelFamily::Bayes,
+      .options = BayesFamilyOptions{
+          .use_gaussian = true,
+          .smoothing = 1e-6,
+      },
+  });
+
+  StatusOr<TuneReport> broad_sweep_or = sweep(
+      broad_specs,
+      train_batch,
+      cv_split,
+      train_options,
+      assess_options,
+      MetricKind::Rmse,
+      TuneObjectivePolicy::Minimize);
+  if (!broad_sweep_or.ok()) {
+    std::cerr << "sweep(broad) failed: " << broad_sweep_or.status().message << "\n";
+    return 1;
+  }
+  TuneReport broad_sweep = broad_sweep_or.move_value();
+
+  std::vector<std::size_t> broad_success_indices{};
+  for (std::size_t i = 0; i < broad_sweep.trials.size(); ++i) {
+    if (!broad_sweep.trials[i].status.ok()) continue;
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/tune.h`:34

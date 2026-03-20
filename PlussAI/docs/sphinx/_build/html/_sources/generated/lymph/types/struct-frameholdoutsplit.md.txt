@@ -1,0 +1,21 @@
+# `FrameHoldoutSplit`
+
+## Signature
+
+```cpp
+struct FrameHoldoutSplit;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+## Example
+
+```cpp
+FrameHoldoutSplit cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:315

@@ -12,12 +12,15 @@
 #include <limits>
 #include <numeric>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/ScalarType.h"
+#include "table/DataFrame.h"
 #include "table/display/Display.h"
 
 namespace pluss::table {

@@ -1,0 +1,46 @@
+# `compare_series`
+
+## Signature
+
+```cpp
+[[nodiscard]] inline SeriesCompareReport compare_series(const Series& lhs, const Series& rhs);
+```
+
+## Parameters
+
+- `lhs` : `const Series&`
+  Pluss numeric vector/tensor input.
+- `rhs` : `const Series&`
+  Pluss numeric vector/tensor input.
+
+## Returns
+
+Returns `SeriesCompareReport`.
+
+## Notes
+
+Namespace-level API function.
+
+## See also
+
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline SplitOptions make_cross_validation_split_options(const CrossValidationOptions& options);`
+- `[[nodiscard]] inline IndexSplit make_holdout_indices(const pluss::table::DataFrame& frame, const HoldoutSplitOptions& options);`
+- `[[nodiscard]] inline SplitOptions make_holdout_split_options(const HoldoutSplitOptions& options);`
+
+## Parameter Reference
+
+- [lhs](../params/param-global-compare-series-ov1-lhs-1.md)
+- [rhs](../params/param-global-compare-series-ov1-rhs-2.md)
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = compare_series(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:282

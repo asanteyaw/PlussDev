@@ -1,0 +1,21 @@
+# `ensemble_factory`
+
+## Signature
+
+```cpp
+struct ensemble_factory;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+## Example
+
+```cpp
+ensemble_factory cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2074

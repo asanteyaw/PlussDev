@@ -1,0 +1,22 @@
+# `VectorNormalizerOptions::norm`
+
+## Signature
+
+```cpp
+VectorNormalizerOptions::VectorNorm norm = VectorNorm::L2;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+VectorNormalizerOptions cfg{};
+// cfg.norm = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:87

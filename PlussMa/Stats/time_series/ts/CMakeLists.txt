@@ -22,6 +22,10 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/plotting/CMakeLists.txt")
   add_subdirectory(modules/plotting)
 endif()
 
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/ssm/CMakeLists.txt")
+  add_subdirectory(modules/ssm)
+endif()
+
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/modules/var/CMakeLists.txt")
   add_subdirectory(modules/var)
 endif()

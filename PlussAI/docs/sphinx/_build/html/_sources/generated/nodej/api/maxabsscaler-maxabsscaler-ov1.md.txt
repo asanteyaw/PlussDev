@@ -1,0 +1,40 @@
+# `MaxAbsScaler::MaxAbsScaler`
+
+## Signature
+
+```cpp
+explicit MaxAbsScaler(MaxAbsScalerOptions options = {});
+```
+
+## Parameters
+
+- `options` : `MaxAbsScalerOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns ``.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] StatusOr<std::vector<Series>> MaxAbsScaler::dump_state(self) const override;`
+- `Status MaxAbsScaler::learn(self, const FeatureBatch& batch, const TrainOptions& options = {}) override;`
+- `[[nodiscard]] StatusOr<Series> MaxAbsScaler::learn_map(self, const FeatureBatch& batch, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {}) override;`
+- `Status MaxAbsScaler::load_state(self, const std::vector<Series>& state) override;`
+- `[[nodiscard]] StatusOr<Series> MaxAbsScaler::map(self, const FeatureBatch& batch, const InferOptions& options = {}) const override;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+MaxAbsScaler maxAbsScaler{};
+auto out = maxAbsScaler.MaxAbsScaler(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:288

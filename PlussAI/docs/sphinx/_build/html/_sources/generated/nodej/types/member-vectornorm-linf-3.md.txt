@@ -1,0 +1,21 @@
+# `VectorNorm::Linf`
+
+## Signature
+
+```cpp
+VectorNorm::Linf;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = VectorNorm::Linf;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:81

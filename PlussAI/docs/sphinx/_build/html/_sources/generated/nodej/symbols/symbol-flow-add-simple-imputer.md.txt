@@ -1,0 +1,13 @@
+# `Flow::add_simple_imputer`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/flow-add-simple-imputer-ov1.md): `Status Flow::add_simple_imputer(self, prep::SimpleImputerOptions options = {}, std::vector<std::int64_t> feature_route = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/compose.h`:76

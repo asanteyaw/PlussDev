@@ -2,14 +2,18 @@
 
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace {
 
 using pluss::Config;
 using pluss::ScalarType;
 using pluss::subsp::math::finance::pricing::HestonCfMode;
+using pluss::subsp::math::finance::pricing::HestonFftOptions;
+using pluss::subsp::math::finance::pricing::HestonFftQuadrature;
 using pluss::subsp::math::finance::pricing::HestonIntegrationOptions;
 using pluss::subsp::math::finance::pricing::HestonNandiIntegrationOptions;
 using pluss::subsp::math::finance::pricing::MonteCarloOptions;
@@ -18,6 +22,8 @@ using pluss::subsp::math::finance::pricing::black_scholes_price;
 using pluss::subsp::math::finance::pricing::heston_nandi_price;
 using pluss::subsp::math::finance::pricing::heston_nandi_price_mc;
 using pluss::subsp::math::finance::pricing::heston_price;
+using pluss::subsp::math::finance::pricing::heston_price_fft;
+using pluss::subsp::math::finance::pricing::heston_price_fft_grid;
 using pluss::subsp::math::finance::pricing::heston_price_mc;
 using pluss::subsp::math::finance::pricing::sv_price_mc;
 using pluss::subsp::math::finance::volatility::HestonParams;
@@ -89,6 +95,68 @@ void test_heston_cf_near_bs_in_low_volofvol_limit() {
 
   expect(std::isfinite(heston_call), "heston cf low-volofvol price should be finite");
   expect(std::abs(heston_call - bs_call) < 0.5, "heston low-volofvol should be close to Black-Scholes");
+}
+
+void test_heston_fft_matches_ni_and_frft() {
+  const auto cfg = f64_cpu();
+  HestonParams p;
+  p.kappa = 1.85;
+  p.theta = 0.042;
+  p.sigma = 0.31;
+  p.rho = -0.68;
+  p.v0 = 0.045;
+
+  HestonIntegrationOptions ni_opt;
+  ni_opt.integration_steps = 3200;
+  ni_opt.integration_u_max = 170.0;
+  ni_opt.mode = HestonCfMode::LittleTrap;
+
+  HestonFftOptions fft_opt;
+  fft_opt.num_fft = 4096;
+  fft_opt.characteristic_fcn_step = 0.01;
+  fft_opt.log_strike_step = std::numeric_limits<double>::quiet_NaN();
+  fft_opt.damping_factor = 1.5;
+  fft_opt.mode = HestonCfMode::LittleTrap;
+  fft_opt.quadrature = HestonFftQuadrature::Simpson;
+  fft_opt.vol_risk_premium = 0.0;
+
+  const double s = 100.0;
+  const double r = 0.02;
+  const double q = 0.005;
+  const double t = 1.25;
+  const std::vector<double> strikes{70.0, 85.0, 100.0, 115.0, 130.0};
+
+  for (double k : strikes) {
+    const double px_ni = heston_price(OptionType::Call, s, k, r, q, t, p, ni_opt);
+    const double px_fft = heston_price_fft(OptionType::Call, s, k, r, q, t, p, fft_opt, cfg);
+    const double diff = std::abs(px_fft - px_ni);
+    expect(std::isfinite(px_fft) && px_fft > 0.0, "heston_price_fft call should be finite and positive");
+    expect(diff < 0.35,
+           "heston_price_fft should track NI call prices; strike=" + std::to_string(k) +
+               " ni=" + std::to_string(px_ni) + " fft=" + std::to_string(px_fft) +
+               " diff=" + std::to_string(diff));
+  }
+
+  const auto grid = heston_price_fft_grid(OptionType::Call, s, r, q, t, p, fft_opt, cfg);
+  expect(grid.price.dim() == 1 && grid.strike.dim() == 1, "heston_price_fft_grid outputs should be 1D Series");
+  expect(grid.price.numel() == fft_opt.num_fft, "heston_price_fft_grid price length must match num_fft");
+  expect(grid.strike.numel() == fft_opt.num_fft, "heston_price_fft_grid strike length must match num_fft");
+  const double k0 = grid.strike.select(0, 0).item<double>();
+  const double k1 = grid.strike.select(0, fft_opt.num_fft - 1).item<double>();
+  expect(k0 > 0.0 && k1 > k0, "heston_price_fft_grid strike grid should be positive and increasing");
+
+  HestonFftOptions frft_opt = fft_opt;
+  frft_opt.log_strike_step = 0.0073;
+  const double frft_px = heston_price_fft(OptionType::Call, s, 100.0, r, q, t, p, frft_opt, cfg);
+  const double ni_px = heston_price(OptionType::Call, s, 100.0, r, q, t, p, ni_opt);
+  expect(std::isfinite(frft_px) && frft_px > 0.0, "heston_price_fft FRFT call should be finite and positive");
+  expect(std::abs(frft_px - ni_px) < 0.2, "heston_price_fft FRFT should remain close to NI call");
+
+  const double k = 105.0;
+  const double call_fft = heston_price_fft(OptionType::Call, s, k, r, q, t, p, fft_opt, cfg);
+  const double put_fft = heston_price_fft(OptionType::Put, s, k, r, q, t, p, fft_opt, cfg);
+  const double parity = s * std::exp(-q * t) - k * std::exp(-r * t);
+  expect(std::abs((call_fft - put_fft) - parity) < 0.15, "heston_price_fft put-call parity mismatch");
 }
 
 void test_heston_and_sv_mc_prices() {
@@ -201,6 +269,7 @@ int main() {
   try {
     test_heston_cf_put_call_parity();
     test_heston_cf_near_bs_in_low_volofvol_limit();
+    test_heston_fft_matches_ni_and_frft();
     test_heston_and_sv_mc_prices();
     test_heston_nandi_mc_price();
     std::cout << "heston_sv_pricing_test passed\n";

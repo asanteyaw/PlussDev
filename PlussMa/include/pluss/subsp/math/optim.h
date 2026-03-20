@@ -62,6 +62,11 @@ inline void require_float_dtype_(const Series& x, const char* op) {
 // pluss::subsp::math::diff directly.
 using pluss::subsp::math::diff::Trace;
 using pluss::subsp::math::diff::DualTrace;
+using pluss::subsp::math::diff::HvpOptions;
+using GradientAuditOptions = pluss::subsp::math::diff::DerivativeAuditOptions;
+using CurvatureAuditOptions = pluss::subsp::math::diff::DerivativeAuditOptions;
+using GradientAuditReport = pluss::subsp::math::diff::DerivativeAuditReport;
+using CurvatureAuditReport = pluss::subsp::math::diff::DerivativeAuditReport;
 using pluss::subsp::math::diff::trace;
 using pluss::subsp::math::diff::fixed;
 using pluss::subsp::math::diff::add;
@@ -89,6 +94,10 @@ using pluss::subsp::math::diff::clear_sensitivities;
 using pluss::subsp::math::diff::grad;
 using pluss::subsp::math::diff::hvp;
 using pluss::subsp::math::diff::jvp;
+using pluss::subsp::math::diff::gradient_audit;
+using pluss::subsp::math::diff::curvature_audit;
+using pluss::subsp::math::diff::gradient_audit_report;
+using pluss::subsp::math::diff::curvature_audit_report;
 using pluss::subsp::math::diff::linearize;
 using pluss::subsp::math::diff::nth_derivative;
 using pluss::subsp::math::diff::vjp;

@@ -1,0 +1,22 @@
+# `NeighborImputerOptions::neighbors`
+
+## Signature
+
+```cpp
+NeighborImputerOptions::std::int64_t neighbors = 5;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+NeighborImputerOptions cfg{};
+// cfg.neighbors = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:68

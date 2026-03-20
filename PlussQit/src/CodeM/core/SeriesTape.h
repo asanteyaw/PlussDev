@@ -48,6 +48,18 @@ struct ReverseDiagnostics {
   bool check_non_finite{true};
 };
 
+struct BackpropOptions {
+  // When true, clear existing sensitivities before this reverse pass.
+  // When false, leaf sensitivities accumulate across passes.
+  bool reset_sensitivity_before_run{true};
+  // When false, drop source links for visited nodes after reverse.
+  // This mirrors one-shot graph usage semantics.
+  bool keep_source_links{true};
+  // When true, allow reverse propagation math to be tape-recorded so
+  // sensitivities can participate in higher-order reverse passes.
+  bool record_propagation{false};
+};
+
 void set_reverse_diagnostics(bool enabled, bool check_non_finite = true) noexcept;
 ReverseDiagnostics reverse_diagnostics() noexcept;
 
@@ -85,7 +97,9 @@ void accumulate_sensitivity(const Series& s, const Series& sens);
 std::optional<Series> sensitivity(const Series& s);
 Series sensitivity_or_zeros(const Series& s);
 
-void backpropagate(const Series& loss, const std::optional<Series>& seed = std::nullopt);
+void backpropagate(const Series& loss,
+                   const std::optional<Series>& seed = std::nullopt,
+                   const BackpropOptions& options = {});
 
 // Detach semantics: return a view sharing storage metadata but with no tape link.
 Series separate(const Series& s);

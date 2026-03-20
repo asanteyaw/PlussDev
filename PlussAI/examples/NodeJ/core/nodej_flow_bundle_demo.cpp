@@ -10,7 +10,7 @@ int main() {
   namespace nio = pluss::ai::nodej::io;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
-  const Series x = pluss::make_series(std::vector<double>{
+  const Series x = pluss::make_series({
                                           -2.0, -1.0,
                                           -1.0, -0.5,
                                            1.0,  0.5,
@@ -19,7 +19,7 @@ int main() {
                                            1.5,  0.7},
                                       {6, 2},
                                       cfg);
-  const Series y = pluss::make_series(std::vector<double>{0.0, 0.0, 1.0, 1.0, 0.0, 1.0}, {6}, cfg);
+  const Series y = pluss::make_series({0.0, 0.0, 1.0, 1.0, 0.0, 1.0}, {6}, cfg);
   const LabeledBatch batch{
       .features = FeatureBatch{.x = x, .layout = ObservationLayout::Rows},
       .y = y,

@@ -1,0 +1,21 @@
+# `ThresholdBinarizerOptions`
+
+## Signature
+
+```cpp
+using ThresholdBinarizerOptions = ::pluss::ai::nodej::prep::ThresholdBinarizerOptions;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+ThresholdBinarizerOptions value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:58

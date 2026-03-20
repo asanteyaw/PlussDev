@@ -1,0 +1,21 @@
+# `bayes_factory`
+
+## Signature
+
+```cpp
+struct bayes_factory;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+## Example
+
+```cpp
+bayes_factory cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2214

@@ -1,0 +1,22 @@
+# `OneHotEncoderOptions::include_unknown_bucket`
+
+## Signature
+
+```cpp
+OneHotEncoderOptions::bool include_unknown_bucket = true;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+OneHotEncoderOptions cfg{};
+// cfg.include_unknown_bucket = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:51

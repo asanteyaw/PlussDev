@@ -38,10 +38,6 @@ Series take_range(const Series& x, std::int64_t dim, std::int64_t start, std::in
   return x.index_select(dim, pluss::make_series(indices, {length}, icfg));
 }
 
-double mse(const Series& prediction, const Series& target) {
-  return prediction.sub(target).pow(2.0).mean().to(pluss::pCPU, ScalarType::Float64).item<double>();
-}
-
 Series causal_tcn_block(const Series& input,
                         const pluss::nn::Conv1d& conv_a,
                         const pluss::nn::Conv1d& conv_b,
@@ -103,7 +99,7 @@ int main() {
   std::cout << "input shape: " << features.sizes()[0] << " x " << features.sizes()[1] << " x " << features.sizes()[2] << "\n";
   std::cout << "latent shape after block 3: " << block3.sizes()[0] << " x " << block3.sizes()[1] << " x " << block3.sizes()[2] << "\n";
   std::cout << "prediction shape: " << prediction.sizes()[0] << " x " << prediction.sizes()[1] << " x " << prediction.sizes()[2] << "\n";
-  std::cout << "initial mse: " << mse(prediction, target) << "\n";
+  std::cout << "initial mse: " << pluss::mse(prediction, target) << "\n";
   std::cout << "sample prediction: " << take_range(prediction, 0, 0, 1) << "\n";
   std::cout << "sample target: " << take_range(target, 0, 0, 1) << "\n";
 

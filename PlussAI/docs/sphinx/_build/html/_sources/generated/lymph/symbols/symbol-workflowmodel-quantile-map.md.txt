@@ -1,0 +1,13 @@
+# `WorkflowModel::quantile_map`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/workflowmodel-quantile-map-ov1.md): `WorkflowModel& WorkflowModel::quantile_map(self, prep::QuantileMapOptions options = {}, std::vector<std::int64_t> feature_route = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:616

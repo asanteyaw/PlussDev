@@ -1,0 +1,13 @@
+# `bayes_factory::classifier`
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## Overloads
+
+- [overload 1](../api/bayes-factory-classifier-ov1.md): `[[nodiscard]] static WorkflowModel bayes_factory::classifier(self, BayesFamilyOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2233

@@ -594,6 +594,7 @@ struct DataReader final {
 
   void apply_option_(ScalarType dt) { with_dtype(dt); }
   void apply_option_(Platform p) { with_platform(p); }
+  void apply_option_(Config& cfg) { with_config(cfg); }
   void apply_option_(const Config& cfg) { with_config(cfg); }
   void apply_option_(Config&& cfg) { with_config(cfg); }
   void apply_option_(cfg::DType o) { with_dtype(o.v); }

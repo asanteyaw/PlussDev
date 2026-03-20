@@ -1,0 +1,21 @@
+# `PolynomialLiftOptions`
+
+## Signature
+
+```cpp
+using PolynomialLiftOptions = ::pluss::ai::nodej::prep::PolynomialLiftOptions;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+PolynomialLiftOptions value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:59

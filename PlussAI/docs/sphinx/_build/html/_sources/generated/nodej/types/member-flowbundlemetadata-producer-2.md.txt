@@ -1,0 +1,22 @@
+# `FlowBundleMetadata::producer`
+
+## Signature
+
+```cpp
+FlowBundleMetadata::std::string producer = "pluss.ai.nodej";
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+FlowBundleMetadata cfg{};
+// cfg.producer = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/io.h`:12

@@ -1,0 +1,1118 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>ensemble_classifier &#8212; PlussAI NodeJ + Lymph API Docs  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=defd3ea9" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/lymph/symbols/symbol-ensemble-classifier';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ensemble_factory::bagging_classifier" href="symbol-ensemble-factory-bagging-classifier.html" />
+    <link rel="prev" title="decompose_factory::transformer" href="symbol-decompose-factory-transformer.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">PlussAI NodeJ + Lymph API Docs  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api_reference.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../nodej_overview.html">
+    NodeJ Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../lymph_overview.html">
+    Lymph Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../nodej_full_api.html">
+    NodeJ Full API Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../../lymph_full_api.html">
+    Lymph Full API Reference
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../build_outputs.html">
+    Build Outputs
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api_reference.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../nodej_overview.html">
+    NodeJ Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../lymph_overview.html">
+    Lymph Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../nodej_full_api.html">
+    NodeJ Full API Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../../lymph_full_api.html">
+    Lymph Full API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../build_outputs.html">
+    Build Outputs
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../type_index.html">Lymph Full API Reference: Type Index</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-batchholdoutsplit.html"><code class="docutils literal notranslate"><span class="pre">BatchHoldoutSplit</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-bayes-factory.html"><code class="docutils literal notranslate"><span class="pre">bayes_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-candidate.html"><code class="docutils literal notranslate"><span class="pre">Candidate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-categoryoverflowpolicy.html"><code class="docutils literal notranslate"><span class="pre">CategoryOverflowPolicy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-cluster-factory.html"><code class="docutils literal notranslate"><span class="pre">cluster_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-crossvalidationoptions.html"><code class="docutils literal notranslate"><span class="pre">CrossValidationOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-crossvalidationreport.html"><code class="docutils literal notranslate"><span class="pre">CrossValidationReport</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-decompose-factory.html"><code class="docutils literal notranslate"><span class="pre">decompose_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-ensemble-factory.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-frameflowartifact.html"><code class="docutils literal notranslate"><span class="pre">FrameFlowArtifact</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-frameholdoutsplit.html"><code class="docutils literal notranslate"><span class="pre">FrameHoldoutSplit</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-frequencyencoderoptions.html"><code class="docutils literal notranslate"><span class="pre">FrequencyEncoderOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-holdoutsplitoptions.html"><code class="docutils literal notranslate"><span class="pre">HoldoutSplitOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-iterativeimputeroptions.html"><code class="docutils literal notranslate"><span class="pre">IterativeImputerOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-kernel-factory.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-linear-factory.html"><code class="docutils literal notranslate"><span class="pre">linear_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-linearparameters.html"><code class="docutils literal notranslate"><span class="pre">LinearParameters</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-maxabsscaleroptions.html"><code class="docutils literal notranslate"><span class="pre">MaxAbsScalerOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-metricreport.html"><code class="docutils literal notranslate"><span class="pre">MetricReport</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-minmaxscaleroptions.html"><code class="docutils literal notranslate"><span class="pre">MinMaxScalerOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-neighbor-factory.html"><code class="docutils literal notranslate"><span class="pre">neighbor_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-neighborimputeroptions.html"><code class="docutils literal notranslate"><span class="pre">NeighborImputerOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-neighborimputerweighting.html"><code class="docutils literal notranslate"><span class="pre">NeighborImputerWeighting</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-onehotencoderoptions.html"><code class="docutils literal notranslate"><span class="pre">OneHotEncoderOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-online-factory.html"><code class="docutils literal notranslate"><span class="pre">online_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-polynomialliftoptions.html"><code class="docutils literal notranslate"><span class="pre">PolynomialLiftOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-powermapmode.html"><code class="docutils literal notranslate"><span class="pre">PowerMapMode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-powermapoptions.html"><code class="docutils literal notranslate"><span class="pre">PowerMapOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-quantilemapoptions.html"><code class="docutils literal notranslate"><span class="pre">QuantileMapOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-quantilemapoutput.html"><code class="docutils literal notranslate"><span class="pre">QuantileMapOutput</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-robustscaleroptions.html"><code class="docutils literal notranslate"><span class="pre">RobustScalerOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-seriescomparereport.html"><code class="docutils literal notranslate"><span class="pre">SeriesCompareReport</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-simpleimputeroptions.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputerOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-simpleimputerstrategy.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputerStrategy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-simpleimputersummary.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputerSummary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-spectuneresult.html"><code class="docutils literal notranslate"><span class="pre">SpecTuneResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-standardscaleroptions.html"><code class="docutils literal notranslate"><span class="pre">StandardScalerOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-standardscalersummary.html"><code class="docutils literal notranslate"><span class="pre">StandardScalerSummary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-statusor.html"><code class="docutils literal notranslate"><span class="pre">StatusOr</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-thresholdbinarizeroptions.html"><code class="docutils literal notranslate"><span class="pre">ThresholdBinarizerOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-transformersummary.html"><code class="docutils literal notranslate"><span class="pre">TransformerSummary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-tree-factory.html"><code class="docutils literal notranslate"><span class="pre">tree_factory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-trial.html"><code class="docutils literal notranslate"><span class="pre">Trial</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-tunereport.html"><code class="docutils literal notranslate"><span class="pre">TuneReport</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/struct-tuneresult.html"><code class="docutils literal notranslate"><span class="pre">TuneResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-vectornorm.html"><code class="docutils literal notranslate"><span class="pre">VectorNorm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/alias-vectornormalizeroptions.html"><code class="docutils literal notranslate"><span class="pre">VectorNormalizerOptions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-crossvalidationoptions-plan-1.html"><code class="docutils literal notranslate"><span class="pre">CrossValidationOptions::plan</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-crossvalidationoptions-holdout-fraction-2.html"><code class="docutils literal notranslate"><span class="pre">CrossValidationOptions::holdout_fraction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-crossvalidationoptions-folds-3.html"><code class="docutils literal notranslate"><span class="pre">CrossValidationOptions::folds</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-crossvalidationoptions-stratified-4.html"><code class="docutils literal notranslate"><span class="pre">CrossValidationOptions::stratified</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-crossvalidationoptions-reliability-defaults-5.html"><code class="docutils literal notranslate"><span class="pre">CrossValidationOptions::reliability_defaults</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-crossvalidationoptions-shuffle-6.html"><code class="docutils literal notranslate"><span class="pre">CrossValidationOptions::shuffle</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-crossvalidationoptions-random-state-7.html"><code class="docutils literal notranslate"><span class="pre">CrossValidationOptions::random_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-crossvalidationoptions-deterministic-8.html"><code class="docutils literal notranslate"><span class="pre">CrossValidationOptions::deterministic</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-holdoutsplitoptions-test-size-1.html"><code class="docutils literal notranslate"><span class="pre">HoldoutSplitOptions::test_size</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-holdoutsplitoptions-random-state-2.html"><code class="docutils literal notranslate"><span class="pre">HoldoutSplitOptions::random_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-holdoutsplitoptions-deterministic-3.html"><code class="docutils literal notranslate"><span class="pre">HoldoutSplitOptions::deterministic</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-holdoutsplitoptions-shuffle-4.html"><code class="docutils literal notranslate"><span class="pre">HoldoutSplitOptions::shuffle</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-linearparameters-fit-intercept-1.html"><code class="docutils literal notranslate"><span class="pre">LinearParameters::fit_intercept</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-tunereport-best-index-1.html"><code class="docutils literal notranslate"><span class="pre">TuneReport::best_index</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-tunereport-objective-metric-2.html"><code class="docutils literal notranslate"><span class="pre">TuneReport::objective_metric</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../types/member-tunereport-objective-policy-3.html"><code class="docutils literal notranslate"><span class="pre">TuneReport::objective_policy</span></code></a></li>
+</ul>
+</details></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../api_index.html">Lymph Full API Reference: Function/Method Index</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api/global-as-stratify-series-ov1.html"><code class="docutils literal notranslate"><span class="pre">as_stratify_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-as-stratify-series-ov2.html"><code class="docutils literal notranslate"><span class="pre">as_stratify_series</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-assess-cv-ov1.html"><code class="docutils literal notranslate"><span class="pre">assess_cv</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-bayes-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">bayes_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/bayes-factory-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">bayes_factory::classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/bayes-factory-gaussian-nb-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">bayes_factory::gaussian_nb_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/bayes-factory-gaussian-nb-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">bayes_factory::gaussian_nb_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/bayes-factory-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">bayes_factory::regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-bayes-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">bayes_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/candidate-candidate-ov1.html"><code class="docutils literal notranslate"><span class="pre">Candidate::Candidate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/candidate-candidate-ov2.html"><code class="docutils literal notranslate"><span class="pre">Candidate::Candidate</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/candidate-candidate-ov3.html"><code class="docutils literal notranslate"><span class="pre">Candidate::Candidate</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/cluster-factory-kmeans-ov1.html"><code class="docutils literal notranslate"><span class="pre">cluster_factory::kmeans</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/cluster-factory-transformer-ov1.html"><code class="docutils literal notranslate"><span class="pre">cluster_factory::transformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-compare-series-ov1.html"><code class="docutils literal notranslate"><span class="pre">compare_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-cross-validate-ov1.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-cross-validate-ov2.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-cross-validate-ov3.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-cross-validate-ov4.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span> <span class="pre">(overload</span> <span class="pre">4)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-cross-validate-ov5.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span> <span class="pre">(overload</span> <span class="pre">5)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-cross-validate-ov6.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span> <span class="pre">(overload</span> <span class="pre">6)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-cross-validate-ov7.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span> <span class="pre">(overload</span> <span class="pre">7)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-cross-validate-ov8.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span> <span class="pre">(overload</span> <span class="pre">8)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-cross-validate-ov9.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span> <span class="pre">(overload</span> <span class="pre">9)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-cross-validate-ov10.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span> <span class="pre">(overload</span> <span class="pre">10)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-cross-validate-ov11.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span> <span class="pre">(overload</span> <span class="pre">11)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/decompose-factory-pca-ov1.html"><code class="docutils literal notranslate"><span class="pre">decompose_factory::pca</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/decompose-factory-transformer-ov1.html"><code class="docutils literal notranslate"><span class="pre">decompose_factory::transformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-ensemble-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">ensemble_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ensemble-factory-bagging-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::bagging_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ensemble-factory-bagging-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::bagging_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ensemble-factory-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ensemble-factory-gradient-boost-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::gradient_boost_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ensemble-factory-gradient-boost-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::gradient_boost_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ensemble-factory-random-forest-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::random_forest_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ensemble-factory-random-forest-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::random_forest_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ensemble-factory-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-ensemble-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">ensemble_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-fit-evaluate-save-ov1.html"><code class="docutils literal notranslate"><span class="pre">fit_evaluate_save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-forest-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">forest_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-forest-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">forest_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-frequency-encoder-ov1.html"><code class="docutils literal notranslate"><span class="pre">frequency_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-gaussian-bayes-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">gaussian_bayes_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-gaussian-bayes-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">gaussian_bayes_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-hold-out-split-ov1.html"><code class="docutils literal notranslate"><span class="pre">hold_out_split</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-holdout-split-ov1.html"><code class="docutils literal notranslate"><span class="pre">holdout_split</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-holdout-split-ov2.html"><code class="docutils literal notranslate"><span class="pre">holdout_split</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-iterative-imputer-ov1.html"><code class="docutils literal notranslate"><span class="pre">iterative_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-kernel-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-linear-kernel-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::linear_kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-linear-kernel-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::linear_kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-polynomial-kernel-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::polynomial_kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-polynomial-kernel-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::polynomial_kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-rbf-kernel-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::rbf_kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-rbf-kernel-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::rbf_kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-sigmoid-kernel-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::sigmoid_kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-sigmoid-kernel-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::sigmoid_kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-svm-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::svm_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/kernel-factory-svm-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::svm_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-kernel-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-kmeans-clusterer-ov1.html"><code class="docutils literal notranslate"><span class="pre">kmeans_clusterer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-learn-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">learn_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-learn-flow-ov1.html"><code class="docutils literal notranslate"><span class="pre">learn_flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-learn-flow-ov2.html"><code class="docutils literal notranslate"><span class="pre">learn_flow</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-learn-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">learn_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-learn-transformer-ov1.html"><code class="docutils literal notranslate"><span class="pre">learn_transformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-linear-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">linear_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-linear-classifier-flow-ov1.html"><code class="docutils literal notranslate"><span class="pre">linear_classifier_flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/linear-factory-hinge-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">linear_factory::hinge_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/linear-factory-linear-regression-ov1.html"><code class="docutils literal notranslate"><span class="pre">linear_factory::linear_regression</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/linear-factory-logistic-regression-ov1.html"><code class="docutils literal notranslate"><span class="pre">linear_factory::logistic_regression</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-linear-hinge-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">linear_hinge_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-linear-logistic-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">linear_logistic_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-linear-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">linear_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-linear-regressor-flow-ov1.html"><code class="docutils literal notranslate"><span class="pre">linear_regressor_flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-make-cross-validation-split-options-ov1.html"><code class="docutils literal notranslate"><span class="pre">make_cross_validation_split_options</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-make-holdout-indices-ov1.html"><code class="docutils literal notranslate"><span class="pre">make_holdout_indices</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-make-holdout-split-options-ov1.html"><code class="docutils literal notranslate"><span class="pre">make_holdout_split_options</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-max-abs-diff-ov1.html"><code class="docutils literal notranslate"><span class="pre">max_abs_diff</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-maxabs-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">maxabs_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-minmax-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">minmax_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-neighbor-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">neighbor_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/neighbor-factory-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">neighbor_factory::classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/neighbor-factory-knn-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">neighbor_factory::knn_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/neighbor-factory-knn-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">neighbor_factory::knn_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/neighbor-factory-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">neighbor_factory::regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-neighbor-imputer-ov1.html"><code class="docutils literal notranslate"><span class="pre">neighbor_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-neighbor-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">neighbor_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/nodej-series-undefined-ov1.html"><code class="docutils literal notranslate"><span class="pre">nodej::Series::undefined</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-one-hot-encoder-ov1.html"><code class="docutils literal notranslate"><span class="pre">one_hot_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/online-factory-linear-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">online_factory::linear_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/online-factory-linear-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">online_factory::linear_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/online-factory-probe-specs-ov1.html"><code class="docutils literal notranslate"><span class="pre">online_factory::probe_specs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/online-factory-probe-specs-ov2.html"><code class="docutils literal notranslate"><span class="pre">online_factory::probe_specs</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/online-factory-probe-specs-ov3.html"><code class="docutils literal notranslate"><span class="pre">online_factory::probe_specs</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/online-factory-tune-ov1.html"><code class="docutils literal notranslate"><span class="pre">online_factory::tune</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/online-factory-tune-ov2.html"><code class="docutils literal notranslate"><span class="pre">online_factory::tune</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/online-factory-tune-specs-ov1.html"><code class="docutils literal notranslate"><span class="pre">online_factory::tune_specs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/online-factory-tune-specs-ov2.html"><code class="docutils literal notranslate"><span class="pre">online_factory::tune_specs</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/online-factory-tune-specs-ov3.html"><code class="docutils literal notranslate"><span class="pre">online_factory::tune_specs</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-online-linear-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">online_linear_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-online-linear-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">online_linear_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-assess-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::assess</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-assess-ov2.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::assess</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-assess-ov3.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::assess</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-assess-series-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::assess_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-assess-series-ov2.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::assess_series</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-assess-series-ov3.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::assess_series</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-core-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::core</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-core-ov2.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::core</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-infer-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::infer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-infer-ov2.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::infer</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-infer-scores-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::infer_scores</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-infer-scores-ov2.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::infer_scores</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-onlinelinearclassifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::OnlineLinearClassifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-onlinelinearclassifier-ov2.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::OnlineLinearClassifier</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-seen-samples-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::seen_samples</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearclassifier-trained-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-assess-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::assess</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-assess-ov2.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::assess</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-assess-ov3.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::assess</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-assess-series-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::assess_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-assess-series-ov2.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::assess_series</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-assess-series-ov3.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::assess_series</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-core-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::core</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-core-ov2.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::core</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-infer-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::infer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-infer-ov2.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::infer</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-onlinelinearregressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::OnlineLinearRegressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-onlinelinearregressor-ov2.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::OnlineLinearRegressor</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-seen-samples-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::seen_samples</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/onlinelinearregressor-trained-ov1.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-pca-mapper-ov1.html"><code class="docutils literal notranslate"><span class="pre">pca_mapper</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-polynomial-lift-ov1.html"><code class="docutils literal notranslate"><span class="pre">polynomial_lift</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-power-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">power_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/prep-simpleimputer-learn-ov1.html"><code class="docutils literal notranslate"><span class="pre">prep::SimpleImputer::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/prep-simpleimputer-learn-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">prep::SimpleImputer::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/prep-simpleimputer-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">prep::SimpleImputer::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/prep-standardscaler-learn-ov1.html"><code class="docutils literal notranslate"><span class="pre">prep::StandardScaler::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/prep-standardscaler-learn-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">prep::StandardScaler::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/prep-standardscaler-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">prep::StandardScaler::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-quantile-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">quantile_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-rbf-kernel-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">rbf_kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-rbf-kernel-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">rbf_kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-ridge-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">ridge_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-ridge-regressor-flow-ov1.html"><code class="docutils literal notranslate"><span class="pre">ridge_regressor_flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-robust-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">robust_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov1.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov2.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov3.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov4.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">4)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov5.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">5)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov6.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">6)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov7.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">7)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov8.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">8)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov9.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">9)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov10.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">10)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov11.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">11)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov12.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">12)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov13.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">13)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov14.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">14)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov15.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">15)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov16.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">16)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov17.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">17)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov18.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">18)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov19.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">19)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov20.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">20)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov21.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">21)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov22.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">22)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov23.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">23)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov24.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">24)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov25.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">25)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov26.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">26)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/series-undefined-ov27.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span> <span class="pre">(overload</span> <span class="pre">27)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-simple-imputer-ov1.html"><code class="docutils literal notranslate"><span class="pre">simple_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/simpleimputer-features-ov1.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::features</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/simpleimputer-learn-ov1.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/simpleimputer-learn-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/simpleimputer-learned-ov1.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::learned</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/simpleimputer-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/simpleimputer-simpleimputer-ov1.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::SimpleImputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/simpleimputer-summary-ov1.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::summary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-standard-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">standard_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/standardscaler-features-ov1.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::features</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/standardscaler-learn-ov1.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/standardscaler-learn-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/standardscaler-learned-ov1.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::learned</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/standardscaler-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/standardscaler-standardscaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::StandardScaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/standardscaler-summary-ov1.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::summary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-threshold-binarizer-ov1.html"><code class="docutils literal notranslate"><span class="pre">threshold_binarizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-tree-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">tree_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/tree-factory-decision-tree-classifier-ov1.html"><code class="docutils literal notranslate"><span class="pre">tree_factory::decision_tree_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/tree-factory-decision-tree-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">tree_factory::decision_tree_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-tree-regressor-ov1.html"><code class="docutils literal notranslate"><span class="pre">tree_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-tree-regressor-flow-ov1.html"><code class="docutils literal notranslate"><span class="pre">tree_regressor_flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/trial-quiet-nan-ov1.html"><code class="docutils literal notranslate"><span class="pre">Trial::quiet_NaN</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-tune-probe-ov1.html"><code class="docutils literal notranslate"><span class="pre">tune_probe</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-tune-sweep-ov1.html"><code class="docutils literal notranslate"><span class="pre">tune_sweep</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/global-vector-normalizer-ov1.html"><code class="docutils literal notranslate"><span class="pre">vector_normalizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-assess-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::assess</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-assess-ov2.html"><code class="docutils literal notranslate"><span class="pre">Workflow::assess</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-assess-ov3.html"><code class="docutils literal notranslate"><span class="pre">Workflow::assess</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-assess-ov4.html"><code class="docutils literal notranslate"><span class="pre">Workflow::assess</span> <span class="pre">(overload</span> <span class="pre">4)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-assess-series-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::assess_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-assess-series-ov2.html"><code class="docutils literal notranslate"><span class="pre">Workflow::assess_series</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-assess-series-ov3.html"><code class="docutils literal notranslate"><span class="pre">Workflow::assess_series</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-assess-series-ov4.html"><code class="docutils literal notranslate"><span class="pre">Workflow::assess_series</span> <span class="pre">(overload</span> <span class="pre">4)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-coeff-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::coeff</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-dump-model-state-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::dump_model_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-dump-transform-states-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::dump_transform_states</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-frequency-encoder-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::frequency_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-has-model-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::has_model</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-has-model-spec-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::has_model_spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-has-opaque-transforms-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::has_opaque_transforms</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-infer-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::infer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-infer-ov2.html"><code class="docutils literal notranslate"><span class="pre">Workflow::infer</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-infer-ov3.html"><code class="docutils literal notranslate"><span class="pre">Workflow::infer</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-infer-scores-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::infer_scores</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-infer-scores-ov2.html"><code class="docutils literal notranslate"><span class="pre">Workflow::infer_scores</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-infer-scores-ov3.html"><code class="docutils literal notranslate"><span class="pre">Workflow::infer_scores</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-intercept-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::intercept</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-iterative-imputer-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::iterative_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-learn-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-learn-ov2.html"><code class="docutils literal notranslate"><span class="pre">Workflow::learn</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-learn-ov3.html"><code class="docutils literal notranslate"><span class="pre">Workflow::learn</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-learn-ov4.html"><code class="docutils literal notranslate"><span class="pre">Workflow::learn</span> <span class="pre">(overload</span> <span class="pre">4)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-learn-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-learn-map-ov2.html"><code class="docutils literal notranslate"><span class="pre">Workflow::learn_map</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-learn-map-ov3.html"><code class="docutils literal notranslate"><span class="pre">Workflow::learn_map</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-load-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::load</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-map-ov2.html"><code class="docutils literal notranslate"><span class="pre">Workflow::map</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-map-ov3.html"><code class="docutils literal notranslate"><span class="pre">Workflow::map</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-maxabs-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::maxabs_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-minmax-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::minmax_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-model-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::model</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-model-ov2.html"><code class="docutils literal notranslate"><span class="pre">Workflow::model</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-model-spec-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::model_spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-neighbor-imputer-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::neighbor_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-one-hot-encoder-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::one_hot_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-polynomial-lift-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::polynomial_lift</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-power-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::power_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-quantile-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::quantile_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-restore-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::restore</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-robust-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::robust_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-save-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-save-ov2.html"><code class="docutils literal notranslate"><span class="pre">Workflow::save</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-save-ov3.html"><code class="docutils literal notranslate"><span class="pre">Workflow::save</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-set-model-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::set_model</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-set-model-ov2.html"><code class="docutils literal notranslate"><span class="pre">Workflow::set_model</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-simple-imputer-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::simple_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-stage-count-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::stage_count</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-standard-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::standard_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-task-kind-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::task_kind</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-threshold-binarizer-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::threshold_binarizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-trained-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-transform-specs-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::transform_specs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-vector-normalizer-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::vector_normalizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-workflow-ov1.html"><code class="docutils literal notranslate"><span class="pre">Workflow::Workflow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-workflow-ov2.html"><code class="docutils literal notranslate"><span class="pre">Workflow::Workflow</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflow-workflow-ov3.html"><code class="docutils literal notranslate"><span class="pre">Workflow::Workflow</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-assess-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::assess</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-assess-ov2.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::assess</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-assess-ov3.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::assess</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-assess-ov4.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::assess</span> <span class="pre">(overload</span> <span class="pre">4)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-assess-series-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::assess_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-assess-series-ov2.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::assess_series</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-assess-series-ov3.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::assess_series</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-assess-series-ov4.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::assess_series</span> <span class="pre">(overload</span> <span class="pre">4)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-coefficients-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::coefficients</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-dump-model-state-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::dump_model_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-dump-transform-states-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::dump_transform_states</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-frequency-encoder-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::frequency_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-has-model-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::has_model</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-has-model-spec-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::has_model_spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-has-opaque-transforms-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::has_opaque_transforms</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-infer-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::infer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-infer-ov2.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::infer</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-infer-ov3.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::infer</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-infer-scores-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::infer_scores</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-infer-scores-ov2.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::infer_scores</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-infer-scores-ov3.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::infer_scores</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-intercept-term-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::intercept_term</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-iterative-imputer-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::iterative_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-learn-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-learn-ov2.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::learn</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-learn-ov3.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::learn</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-learn-ov4.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::learn</span> <span class="pre">(overload</span> <span class="pre">4)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-learn-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-learn-map-ov2.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::learn_map</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-learn-map-ov3.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::learn_map</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-linear-parameters-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::linear_parameters</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-load-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::load</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-map-ov2.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::map</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-map-ov3.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::map</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-maxabs-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::maxabs_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-minmax-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::minmax_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-model-spec-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::model_spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-neighbor-imputer-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::neighbor_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-one-hot-encoder-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::one_hot_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-polynomial-lift-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::polynomial_lift</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-power-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::power_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-quantile-map-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::quantile_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-restore-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::restore</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-robust-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::robust_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-save-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-save-ov2.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::save</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-save-ov3.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::save</span> <span class="pre">(overload</span> <span class="pre">3)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-simple-imputer-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::simple_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-stage-count-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::stage_count</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-standard-scaler-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::standard_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-task-kind-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::task_kind</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-threshold-binarizer-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::threshold_binarizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-trained-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-transform-specs-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::transform_specs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-vector-normalizer-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::vector_normalizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-workflow-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::workflow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-workflow-ov2.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::workflow</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-workflowmodel-ov1.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::WorkflowModel</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/workflowmodel-workflowmodel-ov2.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::WorkflowModel</span> <span class="pre">(overload</span> <span class="pre">2)</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-as-stratify-series.html"><code class="docutils literal notranslate"><span class="pre">as_stratify_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-assess-cv.html"><code class="docutils literal notranslate"><span class="pre">assess_cv</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-bayes-classifier.html"><code class="docutils literal notranslate"><span class="pre">bayes_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-bayes-factory-classifier.html"><code class="docutils literal notranslate"><span class="pre">bayes_factory::classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-bayes-factory-gaussian-nb-classifier.html"><code class="docutils literal notranslate"><span class="pre">bayes_factory::gaussian_nb_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-bayes-factory-gaussian-nb-regressor.html"><code class="docutils literal notranslate"><span class="pre">bayes_factory::gaussian_nb_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-bayes-factory-regressor.html"><code class="docutils literal notranslate"><span class="pre">bayes_factory::regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-bayes-regressor.html"><code class="docutils literal notranslate"><span class="pre">bayes_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-candidate-candidate.html"><code class="docutils literal notranslate"><span class="pre">Candidate::Candidate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-cluster-factory-kmeans.html"><code class="docutils literal notranslate"><span class="pre">cluster_factory::kmeans</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-cluster-factory-transformer.html"><code class="docutils literal notranslate"><span class="pre">cluster_factory::transformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-compare-series.html"><code class="docutils literal notranslate"><span class="pre">compare_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-cross-validate.html"><code class="docutils literal notranslate"><span class="pre">cross_validate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-decompose-factory-pca.html"><code class="docutils literal notranslate"><span class="pre">decompose_factory::pca</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-decompose-factory-transformer.html"><code class="docutils literal notranslate"><span class="pre">decompose_factory::transformer</span></code></a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">ensemble_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-ensemble-factory-bagging-classifier.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::bagging_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-ensemble-factory-bagging-regressor.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::bagging_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-ensemble-factory-classifier.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-ensemble-factory-gradient-boost-classifier.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::gradient_boost_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-ensemble-factory-gradient-boost-regressor.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::gradient_boost_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-ensemble-factory-random-forest-classifier.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::random_forest_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-ensemble-factory-random-forest-regressor.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::random_forest_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-ensemble-factory-regressor.html"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-ensemble-regressor.html"><code class="docutils literal notranslate"><span class="pre">ensemble_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-fit-evaluate-save.html"><code class="docutils literal notranslate"><span class="pre">fit_evaluate_save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-forest-classifier.html"><code class="docutils literal notranslate"><span class="pre">forest_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-forest-regressor.html"><code class="docutils literal notranslate"><span class="pre">forest_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-frequency-encoder.html"><code class="docutils literal notranslate"><span class="pre">frequency_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-gaussian-bayes-classifier.html"><code class="docutils literal notranslate"><span class="pre">gaussian_bayes_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-gaussian-bayes-regressor.html"><code class="docutils literal notranslate"><span class="pre">gaussian_bayes_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-hold-out-split.html"><code class="docutils literal notranslate"><span class="pre">hold_out_split</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-holdout-split.html"><code class="docutils literal notranslate"><span class="pre">holdout_split</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-iterative-imputer.html"><code class="docutils literal notranslate"><span class="pre">iterative_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-classifier.html"><code class="docutils literal notranslate"><span class="pre">kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-classifier.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-linear-kernel-classifier.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::linear_kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-linear-kernel-regressor.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::linear_kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-polynomial-kernel-classifier.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::polynomial_kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-polynomial-kernel-regressor.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::polynomial_kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-rbf-kernel-classifier.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::rbf_kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-rbf-kernel-regressor.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::rbf_kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-regressor.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-sigmoid-kernel-classifier.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::sigmoid_kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-sigmoid-kernel-regressor.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::sigmoid_kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-svm-classifier.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::svm_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-factory-svm-regressor.html"><code class="docutils literal notranslate"><span class="pre">kernel_factory::svm_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kernel-regressor.html"><code class="docutils literal notranslate"><span class="pre">kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-kmeans-clusterer.html"><code class="docutils literal notranslate"><span class="pre">kmeans_clusterer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-learn-classifier.html"><code class="docutils literal notranslate"><span class="pre">learn_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-learn-flow.html"><code class="docutils literal notranslate"><span class="pre">learn_flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-learn-regressor.html"><code class="docutils literal notranslate"><span class="pre">learn_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-learn-transformer.html"><code class="docutils literal notranslate"><span class="pre">learn_transformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-linear-classifier.html"><code class="docutils literal notranslate"><span class="pre">linear_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-linear-classifier-flow.html"><code class="docutils literal notranslate"><span class="pre">linear_classifier_flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-linear-factory-hinge-classifier.html"><code class="docutils literal notranslate"><span class="pre">linear_factory::hinge_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-linear-factory-linear-regression.html"><code class="docutils literal notranslate"><span class="pre">linear_factory::linear_regression</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-linear-factory-logistic-regression.html"><code class="docutils literal notranslate"><span class="pre">linear_factory::logistic_regression</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-linear-hinge-classifier.html"><code class="docutils literal notranslate"><span class="pre">linear_hinge_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-linear-logistic-classifier.html"><code class="docutils literal notranslate"><span class="pre">linear_logistic_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-linear-regressor.html"><code class="docutils literal notranslate"><span class="pre">linear_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-linear-regressor-flow.html"><code class="docutils literal notranslate"><span class="pre">linear_regressor_flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-make-cross-validation-split-options.html"><code class="docutils literal notranslate"><span class="pre">make_cross_validation_split_options</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-make-holdout-indices.html"><code class="docutils literal notranslate"><span class="pre">make_holdout_indices</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-make-holdout-split-options.html"><code class="docutils literal notranslate"><span class="pre">make_holdout_split_options</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-max-abs-diff.html"><code class="docutils literal notranslate"><span class="pre">max_abs_diff</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-maxabs-scaler.html"><code class="docutils literal notranslate"><span class="pre">maxabs_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-minmax-scaler.html"><code class="docutils literal notranslate"><span class="pre">minmax_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-neighbor-classifier.html"><code class="docutils literal notranslate"><span class="pre">neighbor_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-neighbor-factory-classifier.html"><code class="docutils literal notranslate"><span class="pre">neighbor_factory::classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-neighbor-factory-knn-classifier.html"><code class="docutils literal notranslate"><span class="pre">neighbor_factory::knn_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-neighbor-factory-knn-regressor.html"><code class="docutils literal notranslate"><span class="pre">neighbor_factory::knn_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-neighbor-factory-regressor.html"><code class="docutils literal notranslate"><span class="pre">neighbor_factory::regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-neighbor-imputer.html"><code class="docutils literal notranslate"><span class="pre">neighbor_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-neighbor-regressor.html"><code class="docutils literal notranslate"><span class="pre">neighbor_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-nodej-series-undefined.html"><code class="docutils literal notranslate"><span class="pre">nodej::Series::undefined</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-one-hot-encoder.html"><code class="docutils literal notranslate"><span class="pre">one_hot_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-online-factory-linear-classifier.html"><code class="docutils literal notranslate"><span class="pre">online_factory::linear_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-online-factory-linear-regressor.html"><code class="docutils literal notranslate"><span class="pre">online_factory::linear_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-online-factory-probe-specs.html"><code class="docutils literal notranslate"><span class="pre">online_factory::probe_specs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-online-factory-tune.html"><code class="docutils literal notranslate"><span class="pre">online_factory::tune</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-online-factory-tune-specs.html"><code class="docutils literal notranslate"><span class="pre">online_factory::tune_specs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-online-linear-classifier.html"><code class="docutils literal notranslate"><span class="pre">online_linear_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-online-linear-regressor.html"><code class="docutils literal notranslate"><span class="pre">online_linear_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearclassifier-assess.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::assess</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearclassifier-assess-series.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::assess_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearclassifier-core.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::core</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearclassifier-infer.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::infer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearclassifier-infer-scores.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::infer_scores</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearclassifier-onlinelinearclassifier.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::OnlineLinearClassifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearclassifier-seen-samples.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::seen_samples</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearclassifier-trained.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearClassifier::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearregressor-assess.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::assess</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearregressor-assess-series.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::assess_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearregressor-core.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::core</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearregressor-infer.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::infer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearregressor-onlinelinearregressor.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::OnlineLinearRegressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearregressor-seen-samples.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::seen_samples</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-onlinelinearregressor-trained.html"><code class="docutils literal notranslate"><span class="pre">OnlineLinearRegressor::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-pca-mapper.html"><code class="docutils literal notranslate"><span class="pre">pca_mapper</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-polynomial-lift.html"><code class="docutils literal notranslate"><span class="pre">polynomial_lift</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-power-map.html"><code class="docutils literal notranslate"><span class="pre">power_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-prep-simpleimputer-learn.html"><code class="docutils literal notranslate"><span class="pre">prep::SimpleImputer::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-prep-simpleimputer-learn-map.html"><code class="docutils literal notranslate"><span class="pre">prep::SimpleImputer::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-prep-simpleimputer-map.html"><code class="docutils literal notranslate"><span class="pre">prep::SimpleImputer::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-prep-standardscaler-learn.html"><code class="docutils literal notranslate"><span class="pre">prep::StandardScaler::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-prep-standardscaler-learn-map.html"><code class="docutils literal notranslate"><span class="pre">prep::StandardScaler::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-prep-standardscaler-map.html"><code class="docutils literal notranslate"><span class="pre">prep::StandardScaler::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-quantile-map.html"><code class="docutils literal notranslate"><span class="pre">quantile_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-rbf-kernel-classifier.html"><code class="docutils literal notranslate"><span class="pre">rbf_kernel_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-rbf-kernel-regressor.html"><code class="docutils literal notranslate"><span class="pre">rbf_kernel_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-ridge-regressor.html"><code class="docutils literal notranslate"><span class="pre">ridge_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-ridge-regressor-flow.html"><code class="docutils literal notranslate"><span class="pre">ridge_regressor_flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-robust-scaler.html"><code class="docutils literal notranslate"><span class="pre">robust_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-series-undefined.html"><code class="docutils literal notranslate"><span class="pre">Series::undefined</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-simple-imputer.html"><code class="docutils literal notranslate"><span class="pre">simple_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-simpleimputer-features.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::features</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-simpleimputer-learn.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-simpleimputer-learn-map.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-simpleimputer-learned.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::learned</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-simpleimputer-map.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-simpleimputer-simpleimputer.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::SimpleImputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-simpleimputer-summary.html"><code class="docutils literal notranslate"><span class="pre">SimpleImputer::summary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-standard-scaler.html"><code class="docutils literal notranslate"><span class="pre">standard_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-standardscaler-features.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::features</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-standardscaler-learn.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-standardscaler-learn-map.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-standardscaler-learned.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::learned</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-standardscaler-map.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-standardscaler-standardscaler.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::StandardScaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-standardscaler-summary.html"><code class="docutils literal notranslate"><span class="pre">StandardScaler::summary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-threshold-binarizer.html"><code class="docutils literal notranslate"><span class="pre">threshold_binarizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-tree-classifier.html"><code class="docutils literal notranslate"><span class="pre">tree_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-tree-factory-decision-tree-classifier.html"><code class="docutils literal notranslate"><span class="pre">tree_factory::decision_tree_classifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-tree-factory-decision-tree-regressor.html"><code class="docutils literal notranslate"><span class="pre">tree_factory::decision_tree_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-tree-regressor.html"><code class="docutils literal notranslate"><span class="pre">tree_regressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-tree-regressor-flow.html"><code class="docutils literal notranslate"><span class="pre">tree_regressor_flow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-trial-quiet-nan.html"><code class="docutils literal notranslate"><span class="pre">Trial::quiet_NaN</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-tune-probe.html"><code class="docutils literal notranslate"><span class="pre">tune_probe</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-tune-sweep.html"><code class="docutils literal notranslate"><span class="pre">tune_sweep</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-vector-normalizer.html"><code class="docutils literal notranslate"><span class="pre">vector_normalizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-assess.html"><code class="docutils literal notranslate"><span class="pre">Workflow::assess</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-assess-series.html"><code class="docutils literal notranslate"><span class="pre">Workflow::assess_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-coeff.html"><code class="docutils literal notranslate"><span class="pre">Workflow::coeff</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-dump-model-state.html"><code class="docutils literal notranslate"><span class="pre">Workflow::dump_model_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-dump-transform-states.html"><code class="docutils literal notranslate"><span class="pre">Workflow::dump_transform_states</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-frequency-encoder.html"><code class="docutils literal notranslate"><span class="pre">Workflow::frequency_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-has-model.html"><code class="docutils literal notranslate"><span class="pre">Workflow::has_model</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-has-model-spec.html"><code class="docutils literal notranslate"><span class="pre">Workflow::has_model_spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-has-opaque-transforms.html"><code class="docutils literal notranslate"><span class="pre">Workflow::has_opaque_transforms</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-infer.html"><code class="docutils literal notranslate"><span class="pre">Workflow::infer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-infer-scores.html"><code class="docutils literal notranslate"><span class="pre">Workflow::infer_scores</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-intercept.html"><code class="docutils literal notranslate"><span class="pre">Workflow::intercept</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-iterative-imputer.html"><code class="docutils literal notranslate"><span class="pre">Workflow::iterative_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-learn.html"><code class="docutils literal notranslate"><span class="pre">Workflow::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-learn-map.html"><code class="docutils literal notranslate"><span class="pre">Workflow::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-load.html"><code class="docutils literal notranslate"><span class="pre">Workflow::load</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-map.html"><code class="docutils literal notranslate"><span class="pre">Workflow::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-maxabs-scaler.html"><code class="docutils literal notranslate"><span class="pre">Workflow::maxabs_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-minmax-scaler.html"><code class="docutils literal notranslate"><span class="pre">Workflow::minmax_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-model.html"><code class="docutils literal notranslate"><span class="pre">Workflow::model</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-model-spec.html"><code class="docutils literal notranslate"><span class="pre">Workflow::model_spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-neighbor-imputer.html"><code class="docutils literal notranslate"><span class="pre">Workflow::neighbor_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-one-hot-encoder.html"><code class="docutils literal notranslate"><span class="pre">Workflow::one_hot_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-polynomial-lift.html"><code class="docutils literal notranslate"><span class="pre">Workflow::polynomial_lift</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-power-map.html"><code class="docutils literal notranslate"><span class="pre">Workflow::power_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-quantile-map.html"><code class="docutils literal notranslate"><span class="pre">Workflow::quantile_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-restore.html"><code class="docutils literal notranslate"><span class="pre">Workflow::restore</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-robust-scaler.html"><code class="docutils literal notranslate"><span class="pre">Workflow::robust_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-save.html"><code class="docutils literal notranslate"><span class="pre">Workflow::save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-set-model.html"><code class="docutils literal notranslate"><span class="pre">Workflow::set_model</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-simple-imputer.html"><code class="docutils literal notranslate"><span class="pre">Workflow::simple_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-stage-count.html"><code class="docutils literal notranslate"><span class="pre">Workflow::stage_count</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-standard-scaler.html"><code class="docutils literal notranslate"><span class="pre">Workflow::standard_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-task-kind.html"><code class="docutils literal notranslate"><span class="pre">Workflow::task_kind</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-threshold-binarizer.html"><code class="docutils literal notranslate"><span class="pre">Workflow::threshold_binarizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-trained.html"><code class="docutils literal notranslate"><span class="pre">Workflow::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-transform-specs.html"><code class="docutils literal notranslate"><span class="pre">Workflow::transform_specs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-vector-normalizer.html"><code class="docutils literal notranslate"><span class="pre">Workflow::vector_normalizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflow-workflow.html"><code class="docutils literal notranslate"><span class="pre">Workflow::Workflow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-assess.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::assess</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-assess-series.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::assess_series</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-coefficients.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::coefficients</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-dump-model-state.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::dump_model_state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-dump-transform-states.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::dump_transform_states</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-frequency-encoder.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::frequency_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-has-model.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::has_model</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-has-model-spec.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::has_model_spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-has-opaque-transforms.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::has_opaque_transforms</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-infer.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::infer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-infer-scores.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::infer_scores</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-intercept-term.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::intercept_term</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-iterative-imputer.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::iterative_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-learn.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::learn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-learn-map.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::learn_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-linear-parameters.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::linear_parameters</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-load.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::load</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-map.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-maxabs-scaler.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::maxabs_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-minmax-scaler.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::minmax_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-model-spec.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::model_spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-neighbor-imputer.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::neighbor_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-one-hot-encoder.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::one_hot_encoder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-polynomial-lift.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::polynomial_lift</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-power-map.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::power_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-quantile-map.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::quantile_map</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-restore.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::restore</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-robust-scaler.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::robust_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-save.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-simple-imputer.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::simple_imputer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-stage-count.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::stage_count</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-standard-scaler.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::standard_scaler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-task-kind.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::task_kind</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-threshold-binarizer.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::threshold_binarizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-trained.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::trained</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-transform-specs.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::transform_specs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-vector-normalizer.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::vector_normalizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-workflow.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::workflow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="symbol-workflowmodel-workflowmodel.html"><code class="docutils literal notranslate"><span class="pre">WorkflowModel::WorkflowModel</span></code></a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../lymph_full_api.html" class="nav-link">Lymph Full API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../api_index.html" class="nav-link">Lymph Full API Reference: Function/Method Index</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><code class="docutils literal notranslate"><span class="pre">ensemble_classifier</span></code></span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="ensemble-classifier">
+<h1><code class="docutils literal notranslate"><span class="pre">ensemble_classifier</span></code><a class="headerlink" href="#ensemble-classifier" title="Link to this heading">#</a></h1>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
+<p>Namespace-level API function.</p>
+</section>
+<section id="overloads">
+<h2>Overloads<a class="headerlink" href="#overloads" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/global-ensemble-classifier-ov1.html"><span class="std std-doc">overload 1</span></a>: <code class="docutils literal notranslate"><span class="pre">StatusOr&lt;std::unique_ptr&lt;nodej::ClassifierBase&gt;&gt;</span> <span class="pre">ensemble_classifier(</span> <span class="pre">const</span> <span class="pre">nodej::LabeledBatch&amp;</span> <span class="pre">train,</span> <span class="pre">const</span> <span class="pre">nodej::EnsembleFamilyOptions&amp;</span> <span class="pre">family_options</span> <span class="pre">=</span> <span class="pre">{},</span> <span class="pre">const</span> <span class="pre">nodej::TrainOptions&amp;</span> <span class="pre">options</span> <span class="pre">=</span> <span class="pre">{});</span></code></p></li>
+</ul>
+</section>
+<section id="source">
+<h2>Source<a class="headerlink" href="#source" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PlussAI/include/pluss/ai/lymph/quick.h</span></code>:174</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="symbol-decompose-factory-transformer.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">decompose_factory::transformer</span></code></p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="symbol-ensemble-factory-bagging-classifier.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">ensemble_factory::bagging_classifier</span></code></p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overloads">Overloads</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source">Source</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

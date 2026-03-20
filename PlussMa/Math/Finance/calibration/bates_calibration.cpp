@@ -1,4 +1,6 @@
 #include "pluss/subsp/math/finance/calibration.h"
+#include "pluss/subsp/math/finance/calibration/detail/search_core.h"
+#include "pluss/subsp/math/finance/calibration/detail/validation_core.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
@@ -17,31 +19,16 @@ namespace {
 
 using pricing::OptionType;
 using volatility::BatesParams;
+namespace caldetail = pluss::subsp::math::finance::calibration::detail;
 
 constexpr std::size_t kBatesDim = 8;
 
 void validate_quotes_(const std::vector<OptionQuote>& quotes, const char* op) {
-  PLUSS_CHECK(!quotes.empty(), std::string("subsp::math::finance::calibration::") + op + ": quotes must be non-empty");
-  for (const auto& q : quotes) {
-    PLUSS_CHECK(q.type == OptionType::Call || q.type == OptionType::Put,
-                std::string("subsp::math::finance::calibration::") + op + ": quote option type unsupported");
-    PLUSS_CHECK(std::isfinite(q.strike) && q.strike > 0.0,
-                std::string("subsp::math::finance::calibration::") + op + ": quote strike must be finite and > 0");
-    PLUSS_CHECK(std::isfinite(q.maturity) && q.maturity > 0.0,
-                std::string("subsp::math::finance::calibration::") + op + ": quote maturity must be finite and > 0");
-    PLUSS_CHECK(std::isfinite(q.market_price) && q.market_price >= 0.0,
-                std::string("subsp::math::finance::calibration::") + op + ": quote market_price must be finite and >= 0");
-    PLUSS_CHECK(std::isfinite(q.weight) && q.weight >= 0.0,
-                std::string("subsp::math::finance::calibration::") + op + ": quote weight must be finite and >= 0");
-  }
+  caldetail::validate_option_quotes(quotes, op);
 }
 
 void validate_market_inputs_(double spot, double rate, double dividend_yield, const char* op) {
-  PLUSS_CHECK(std::isfinite(spot) && spot > 0.0,
-              std::string("subsp::math::finance::calibration::") + op + ": spot must be finite and > 0");
-  PLUSS_CHECK(std::isfinite(rate), std::string("subsp::math::finance::calibration::") + op + ": rate must be finite");
-  PLUSS_CHECK(std::isfinite(dividend_yield),
-              std::string("subsp::math::finance::calibration::") + op + ": dividend_yield must be finite");
+  caldetail::validate_market_inputs(spot, rate, dividend_yield, op);
 }
 
 void validate_bounds_(const BatesBounds& b, const char* op) {
@@ -71,16 +58,8 @@ void validate_bounds_(const BatesBounds& b, const char* op) {
 
 void validate_options_(const BatesCalibOptions& opt, const char* op) {
   validate_bounds_(opt.bounds, op);
-  PLUSS_CHECK(opt.random_starts >= 1,
-              std::string("subsp::math::finance::calibration::") + op + ": random_starts must be >= 1");
-  PLUSS_CHECK(opt.max_iterations > 0,
-              std::string("subsp::math::finance::calibration::") + op + ": max_iterations must be > 0");
-  PLUSS_CHECK(std::isfinite(opt.step_fraction) && opt.step_fraction > 0.0,
-              std::string("subsp::math::finance::calibration::") + op + ": step_fraction must be finite and > 0");
-  PLUSS_CHECK(std::isfinite(opt.step_decay) && opt.step_decay > 0.0 && opt.step_decay < 1.0,
-              std::string("subsp::math::finance::calibration::") + op + ": step_decay must be in (0,1)");
-  PLUSS_CHECK(std::isfinite(opt.tolerance) && opt.tolerance > 0.0,
-              std::string("subsp::math::finance::calibration::") + op + ": tolerance must be finite and > 0");
+  caldetail::validate_search_controls(
+      opt.random_starts, opt.max_iterations, opt.step_fraction, opt.step_decay, opt.tolerance, op);
 }
 
 std::array<double, kBatesDim> lower_(const BatesBounds& b) {
@@ -106,43 +85,6 @@ BatesParams from_vec_(const std::array<double, kBatesDim>& x, const BatesParams&
   p.jump_mean = x[6];
   p.jump_vol = x[7];
   return p;
-}
-
-template <std::size_t D>
-std::array<double, D> project_(std::array<double, D> x,
-                               const std::array<double, D>& lo,
-                               const std::array<double, D>& hi) {
-  for (std::size_t i = 0; i < D; ++i) {
-    x[i] = std::clamp(x[i], lo[i], hi[i]);
-  }
-  return x;
-}
-
-template <std::size_t D>
-bool same_vec_(const std::array<double, D>& a, const std::array<double, D>& b, double tol = 0.0) {
-  for (std::size_t i = 0; i < D; ++i) {
-    if (std::abs(a[i] - b[i]) > tol) {
-      return false;
-    }
-  }
-  return true;
-}
-
-template <std::size_t D>
-double max_step_(const std::array<double, D>& step) {
-  double m = 0.0;
-  for (double v : step) {
-    m = std::max(m, std::abs(v));
-  }
-  return m;
-}
-
-double weighted_rmse_(double sse, double wsum, std::size_t n) {
-  if (n == 0) {
-    return std::numeric_limits<double>::infinity();
-  }
-  const double denom = (wsum > 0.0) ? wsum : static_cast<double>(n);
-  return std::sqrt(std::max(0.0, sse / denom));
 }
 
 double sse_impl_(const std::vector<OptionQuote>& quotes,
@@ -226,84 +168,6 @@ double sse_impl_(const std::vector<OptionQuote>& quotes,
   return sse;
 }
 
-template <std::size_t D>
-std::array<double, D> random_point_(std::mt19937_64& rng,
-                                    const std::array<double, D>& lo,
-                                    const std::array<double, D>& hi) {
-  std::array<double, D> x{};
-  for (std::size_t i = 0; i < D; ++i) {
-    std::uniform_real_distribution<double> dist(lo[i], hi[i]);
-    x[i] = dist(rng);
-  }
-  return x;
-}
-
-template <std::size_t D, typename ObjectiveFn>
-std::pair<std::array<double, D>, double> pattern_search_(const std::array<double, D>& start,
-                                                          const std::array<double, D>& lo,
-                                                          const std::array<double, D>& hi,
-                                                          std::int64_t max_iterations,
-                                                          double step_fraction,
-                                                          double step_decay,
-                                                          double tolerance,
-                                                          ObjectiveFn&& objective,
-                                                          std::int64_t& evaluations,
-                                                          bool& converged) {
-  std::array<double, D> x = project_(start, lo, hi);
-  std::array<double, D> step{};
-  for (std::size_t i = 0; i < D; ++i) {
-    step[i] = std::max(tolerance * 10.0, (hi[i] - lo[i]) * step_fraction);
-  }
-
-  double best = objective(x);
-  ++evaluations;
-
-  for (std::int64_t it = 0; it < max_iterations; ++it) {
-    bool improved = false;
-    for (std::size_t d = 0; d < D; ++d) {
-      std::array<double, D> plus = x;
-      plus[d] = std::min(hi[d], x[d] + step[d]);
-      if (!same_vec_(plus, x)) {
-        const double val = objective(plus);
-        ++evaluations;
-        if (val < best) {
-          best = val;
-          x = plus;
-          improved = true;
-          continue;
-        }
-      }
-
-      std::array<double, D> minus = x;
-      minus[d] = std::max(lo[d], x[d] - step[d]);
-      if (!same_vec_(minus, x)) {
-        const double val = objective(minus);
-        ++evaluations;
-        if (val < best) {
-          best = val;
-          x = minus;
-          improved = true;
-        }
-      }
-    }
-
-    if (!improved) {
-      for (double& s : step) {
-        s *= step_decay;
-      }
-      if (max_step_(step) <= tolerance) {
-        converged = true;
-        break;
-      }
-    }
-  }
-
-  if (max_step_(step) <= tolerance) {
-    converged = true;
-  }
-  return {x, best};
-}
-
 } // namespace
 
 double bates_sse(const std::vector<OptionQuote>& quotes,
@@ -332,7 +196,7 @@ BatesCalibResult calibrate_bates(const std::vector<OptionQuote>& quotes,
 
   const auto lo = lower_(options.bounds);
   const auto hi = upper_(options.bounds);
-  const auto x0 = project_(to_vec_(initial), lo, hi);
+  const auto x0 = caldetail::project(to_vec_(initial), lo, hi);
 
   std::mt19937_64 rng(options.seed == 0 ? 0xB157E5ULL : options.seed);
 
@@ -345,11 +209,11 @@ BatesCalibResult calibrate_bates(const std::vector<OptionQuote>& quotes,
   };
 
   for (std::int64_t start_idx = 0; start_idx < options.random_starts; ++start_idx) {
-    std::array<double, kBatesDim> start = (start_idx == 0) ? x0 : random_point_(rng, lo, hi);
+    std::array<double, kBatesDim> start = (start_idx == 0) ? x0 : caldetail::random_point(rng, lo, hi);
     bool converged_local = false;
     std::int64_t eval_local = 0;
 
-    const auto [x_best, f_best] = pattern_search_(
+    const auto [x_best, f_best] = caldetail::pattern_search(
         start,
         lo,
         hi,
@@ -375,7 +239,7 @@ BatesCalibResult calibrate_bates(const std::vector<OptionQuote>& quotes,
   for (const auto& q : quotes) {
     wsum += std::max(0.0, q.weight);
   }
-  out.rmse = weighted_rmse_(out.objective, wsum, quotes.size());
+  out.rmse = caldetail::weighted_rmse(out.objective, wsum, quotes.size());
   return out;
 }
 

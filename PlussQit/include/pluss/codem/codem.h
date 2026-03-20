@@ -363,6 +363,17 @@ inline bool platform_available(Platform p) noexcept {
 } // namespace pluss::codem
 
 namespace pluss {
+  using f32_t = float;
+  using f64_t = double;
+  using i8_t = std::int8_t;
+  using i16_t = std::int16_t;
+  using i32_t = std::int32_t;
+  using i64_t = std::int64_t;
+  using u8_t = std::uint8_t;
+  using u16_t = std::uint16_t;
+  using u32_t = std::uint32_t;
+  using u64_t = std::uint64_t;
+
   using Series = codem::Series;
   using Config = codem::Config;
   using ScalarType = codem::ScalarType;
@@ -471,7 +482,7 @@ inline const char* cusolver_error() noexcept {
   return codem::cuda_cusolver_provider_error_cstr();
 }
 
-inline bool cudnn_available() noexcept {
+inline bool cudnn_ready() noexcept {
   return codem::cuda_cudnn_provider_available();
 }
 

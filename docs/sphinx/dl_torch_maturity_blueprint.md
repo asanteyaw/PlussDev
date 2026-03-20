@@ -11,7 +11,7 @@ This is explicitly different from the `pluss::subsp::math::optim` solver path (J
 
 ## Doctrine Constraints
 
-This plan follows [doctrine](../doctrine.md):
+This plan follows the project doctrine:
 
 - no unnecessary API sugar / alias bloat
 - C++20 style, correctness first
@@ -20,8 +20,7 @@ This plan follows [doctrine](../doctrine.md):
 
 ## Reference Files Audited
 
-Primary reference files read from:
-`/Users/yawasante/Documents/Doctrate/Thesis/Python/second_project/Codes/pytorch`
+Primary reference files read from the upstream PyTorch source tree:
 
 - `torch/csrc/autograd/engine.h`
 - `torch/csrc/autograd/engine.cpp`

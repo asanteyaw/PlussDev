@@ -1,0 +1,13 @@
+# `Workflow::coeff`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/workflow-coeff-ov1.md): `[[nodiscard]] Series Workflow::coeff(self) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:1271

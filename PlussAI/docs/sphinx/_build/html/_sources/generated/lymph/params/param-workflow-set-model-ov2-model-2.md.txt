@@ -1,0 +1,21 @@
+# `Workflow::set_model::model`
+
+## Parent Signature
+
+```cpp
+Workflow& Workflow::set_model(self, WorkflowModel model);
+```
+
+## Parameter
+
+- `model` : `WorkflowModel`
+  Method argument; see signature type for accepted form.
+
+## Notes
+
+Instance method on `self`.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:1255

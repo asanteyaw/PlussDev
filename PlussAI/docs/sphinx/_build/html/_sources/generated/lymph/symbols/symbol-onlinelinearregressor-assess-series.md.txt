@@ -1,0 +1,17 @@
+# `OnlineLinearRegressor::assess_series`
+
+## Notes
+
+Evaluates model output against targets and returns metric aggregates.
+
+## Overloads
+
+- [overload 1](../api/onlinelinearregressor-assess-series-ov1.md): `[[nodiscard]] Series OnlineLinearRegressor::assess_series(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- [overload 2](../api/onlinelinearregressor-assess-series-ov2.md): `[[nodiscard]] Series OnlineLinearRegressor::assess_series(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+- [overload 3](../api/onlinelinearregressor-assess-series-ov3.md): `[[nodiscard]] Series OnlineLinearRegressor::assess_series(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2489
+- `PlussAI/include/pluss/ai/lymph/api.h`:2501
+- `PlussAI/include/pluss/ai/lymph/api.h`:2493

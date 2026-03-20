@@ -259,17 +259,25 @@ void DataFrame::save_as(std::string_view target_type,
 }
 
 std::ostream& operator<<(std::ostream& os, const DataFrame& frame) {
-  if (frame.consume_stream_suppression_()) {
-    return os;
-  }
-  os << frame.to_string();
+  output_render(os, frame);
   return os;
 }
 
+void output_render(std::ostream& os, const DataFrame& frame) {
+  if (frame.consume_stream_suppression_()) {
+    return;
+  }
+  os << frame.to_string();
+}
+
 std::ostream& operator<<(std::ostream& os, const DataFrameView& frame) {
-  frame.consume_pending_display_();
-  os << static_cast<const DataFrame&>(frame);
+  output_render(os, frame);
   return os;
+}
+
+void output_render(std::ostream& os, const DataFrameView& frame) {
+  frame.consume_pending_display_();
+  output_render(os, static_cast<const DataFrame&>(frame));
 }
 
 } // namespace pluss::table

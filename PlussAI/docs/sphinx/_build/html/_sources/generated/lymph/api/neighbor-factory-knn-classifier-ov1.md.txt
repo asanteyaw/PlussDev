@@ -1,0 +1,39 @@
+# `neighbor_factory::knn_classifier`
+
+## Signature
+
+```cpp
+[[nodiscard]] static WorkflowModel neighbor_factory::knn_classifier(self, NeighborFamilyOptions options = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `NeighborFamilyOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `WorkflowModel`.
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## See also
+
+- `[[nodiscard]] static WorkflowModel neighbor_factory::classifier(self, NeighborFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel neighbor_factory::knn_regressor(self, NeighborFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel neighbor_factory::regressor(self, NeighborFamilyOptions options = {});`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = neighbor_factory::knn_classifier(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2127

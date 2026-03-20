@@ -1,0 +1,21 @@
+# `SimpleImputerStrategy`
+
+## Signature
+
+```cpp
+using SimpleImputerStrategy = ::pluss::ai::nodej::prep::SimpleImputerStrategy;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+SimpleImputerStrategy value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:43

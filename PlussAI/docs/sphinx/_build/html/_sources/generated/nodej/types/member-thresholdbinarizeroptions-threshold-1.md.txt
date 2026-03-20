@@ -1,0 +1,22 @@
+# `ThresholdBinarizerOptions::threshold`
+
+## Signature
+
+```cpp
+ThresholdBinarizerOptions::double threshold = 0.0;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+ThresholdBinarizerOptions cfg{};
+// cfg.threshold = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:121

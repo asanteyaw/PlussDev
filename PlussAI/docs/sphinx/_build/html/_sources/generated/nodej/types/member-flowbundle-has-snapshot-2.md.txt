@@ -1,0 +1,22 @@
+# `FlowBundle::has_snapshot`
+
+## Signature
+
+```cpp
+FlowBundle::bool has_snapshot = false;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+FlowBundle cfg{};
+// cfg.has_snapshot = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/io.h`:19

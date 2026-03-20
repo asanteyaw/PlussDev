@@ -1,0 +1,27 @@
+# `RegularizationKind`
+
+## Signature
+
+```cpp
+enum RegularizationKind;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `None = 0`
+- `L1 = 1`
+- `L2 = 2`
+- `Elastic = 3`
+
+## Example
+
+```cpp
+auto mode = RegularizationKind::None;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:22

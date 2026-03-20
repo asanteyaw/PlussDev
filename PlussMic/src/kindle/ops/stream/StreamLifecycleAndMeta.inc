@@ -63,12 +63,12 @@ std::string Stream::dtype_name() const {
 
 Stream Stream::isnull() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_thread(pluss::table::Thread(to_thread().isnull()), copy_cases(*this));
+  return Stream::from_thread(to_thread().isnull(), copy_cases(*this));
 }
 
 Stream Stream::notnull() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_thread(pluss::table::Thread(to_thread().notnull()), copy_cases(*this));
+  return Stream::from_thread(to_thread().notnull(), copy_cases(*this));
 }
 
 Stream Stream::fillna(double value) const {

@@ -1,0 +1,44 @@
+# `WorkflowModel::quantile_map`
+
+## Signature
+
+```cpp
+WorkflowModel& WorkflowModel::quantile_map(self, prep::QuantileMapOptions options = {}, std::vector<std::int64_t> feature_route = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `prep::QuantileMapOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `feature_route` : `std::vector<std::int64_t>`, default: `{}`
+  Input feature data used by this call.
+
+## Returns
+
+Returns `WorkflowModel&`.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] inline QuantileMap quantile_map(QuantileMapOptions options = {}) { return QuantileMap(options); };`
+- `Workflow& Workflow::quantile_map(self, prep::QuantileMapOptions options = {}, std::vector<std::int64_t> feature_route = {});`
+- `[[nodiscard]] MetricReport WorkflowModel::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport WorkflowModel::assess(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport WorkflowModel::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+WorkflowModel workflowModel{};
+auto out = workflowModel.quantile_map(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:616

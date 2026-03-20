@@ -35,6 +35,7 @@
 #include <optional>
 #include <complex>
 #include <random>
+#include <iostream>
 
 namespace pluss::codem::native::cpu {
 Series matmul(const Series& a, const Series& b);
@@ -134,6 +135,9 @@ static Series matmul_dispatch_(const Series& a, const Series& b) {
     return native::mps::matmul(aa, bb);
   }
   if (a.platform() == Platform::CUDA) {
+    if (auto cublas_out = native::cuda::try_cublas_matmul(a, b); cublas_out.has_value()) {
+      return std::move(*cublas_out);
+    }
     const bool native_enabled = native::cuda::native_matmul_enabled();
     const bool native_strict = native::cuda::native_matmul_strict();
     const bool route_supported = native::cuda::supports_matmul(a, b);
@@ -151,6 +155,26 @@ static Series matmul_dispatch_(const Series& a, const Series& b) {
         "Move Series to CPU explicitly or enable PLUSS_CUDA_ALLOW_CPU_BRIDGE=1.");
   }
   return native::cpu::matmul(a, b);
+}
+
+static Series matmul_backprop_dispatch_(
+    const Series& lhs,
+    const Series& rhs,
+    Platform out_platform,
+    ScalarType out_dtype) {
+  ops_internal::require_same_platform(lhs, rhs, "matmul(backprop)");
+  if (lhs.platform() == Platform::MPS) {
+    // MPS backward correctness guard:
+    // route gradient matmul through CPU reference then return to MPS.
+    const Series lhs_cpu = lhs.to(Platform::CPU, ScalarType::Float32).contiguous();
+    const Series rhs_cpu = rhs.to(Platform::CPU, ScalarType::Float32).contiguous();
+    Series out_cpu = native::cpu::matmul(lhs_cpu, rhs_cpu);
+    if (out_dtype != ScalarType::Float32) {
+      out_cpu = out_cpu.to(out_dtype);
+    }
+    return out_cpu.to(out_platform);
+  }
+  return matmul_dispatch_(lhs, rhs);
 }
 
 static Series reduce_broadcasted_like_(const Series& grad, const Series& like, std::string_view op_name) {
@@ -225,6 +249,31 @@ static Series matmul_with_tape_(const Series& a, const Series& b) {
   if (!series_tape::recording_enabled()) return out;
   const bool ta = series_tape::tracks_slope(a);
   const bool tb = series_tape::tracks_slope(b);
+  static const bool debug_matmul_tape = []() {
+    const char* raw = std::getenv("PLUSS_DEBUG_MATMUL_TAPE");
+    if (!raw) return false;
+    return std::strcmp(raw, "1") == 0 || std::strcmp(raw, "true") == 0 || std::strcmp(raw, "TRUE") == 0;
+  }();
+  static int debug_matmul_count = 0;
+  if (debug_matmul_tape && a.platform() == Platform::MPS && debug_matmul_count < 200) {
+    ++debug_matmul_count;
+    std::cerr << "[matmul-tape] #" << debug_matmul_count
+              << " a_dim=" << a.dim()
+              << " b_dim=" << b.dim()
+              << " a_tracks=" << (ta ? 1 : 0)
+              << " b_tracks=" << (tb ? 1 : 0)
+              << " a_shape=";
+    for (std::size_t i = 0; i < a.sizes().size(); ++i) {
+      if (i) std::cerr << "x";
+      std::cerr << a.sizes()[i];
+    }
+    std::cerr << " b_shape=";
+    for (std::size_t i = 0; i < b.sizes().size(); ++i) {
+      if (i) std::cerr << "x";
+      std::cerr << b.sizes()[i];
+    }
+    std::cerr << "\n";
+  }
   if (!ta && !tb) return out;
   // Reverse path currently supports vector/matrix/batched-matrix matmul semantics.
   if (a.dim() < 1 || b.dim() < 1) {
@@ -242,7 +291,11 @@ static Series matmul_with_tape_(const Series& a, const Series& b) {
 
     if (ta) {
       const Series bt = b_promoted.transpose(-2, -1);
-      Series ga = matmul_dispatch_(g_promoted, bt);
+      Series ga = matmul_backprop_dispatch_(
+          g_promoted,
+          bt,
+          a_promoted.platform(),
+          a_promoted.scalar_type());
       ga = reduce_broadcasted_like_(ga, a_promoted, "matmul");
       if (a_was_vec) {
         ga = ga.squeeze(0);
@@ -251,7 +304,11 @@ static Series matmul_with_tape_(const Series& a, const Series& b) {
     }
     if (tb) {
       const Series at = a_promoted.transpose(-2, -1);
-      Series gb = matmul_dispatch_(at, g_promoted);
+      Series gb = matmul_backprop_dispatch_(
+          at,
+          g_promoted,
+          b_promoted.platform(),
+          b_promoted.scalar_type());
       gb = reduce_broadcasted_like_(gb, b_promoted, "matmul");
       if (b_was_vec) {
         gb = gb.squeeze(-1);
@@ -449,16 +506,37 @@ static Series make_expanded_gather_index_(
   Series idx = idx_flat_i64;
   if (idx.platform() != target_platform) idx = idx.to(target_platform);
   idx = idx.contiguous();
+  // from_storage() currently materializes CPU views; build the broadcasted view
+  // on CPU first, then move to the target backend.
+  Series idx_cpu = (idx.platform() == Platform::CPU ? idx : idx.to(Platform::CPU)).contiguous();
 
   std::vector<std::int64_t> idx_shape(static_cast<std::size_t>(nd), 1);
   idx_shape[static_cast<std::size_t>(dim)] = idx.numel();
   PLUSS_CHECK(
       idx_shape[static_cast<std::size_t>(dim)] == out_shape[static_cast<std::size_t>(dim)],
       "index_select: internal index shape mismatch");
-
-  return idx.reshape(std::span<const std::int64_t>(idx_shape.data(), idx_shape.size()))
-      .expand(out_shape, true)
-      .contiguous();
+  // Build a broadcasted view directly from storage/strides to avoid routing
+  // through compat expand() (which can recurse back into index_select paths).
+  std::vector<std::int64_t> view_strides(static_cast<std::size_t>(nd), 0);
+  std::int64_t running = 1;
+  for (std::int64_t d = nd - 1; d >= 0; --d) {
+    const auto du = static_cast<std::size_t>(d);
+    view_strides[du] = running;
+    running *= std::max<std::int64_t>(idx_shape[du], 1);
+  }
+  for (std::size_t d = 0; d < static_cast<std::size_t>(nd); ++d) {
+    if (idx_shape[d] == 1 && out_shape[d] != 1) {
+      view_strides[d] = 0;
+    }
+  }
+  const auto base_off = idx_cpu.storage_offset() / std::max<std::int64_t>(1, idx_cpu.itemsize());
+  Series view_cpu = Series::from_storage(
+      idx_cpu.storage(),
+      base_off,
+      std::vector<std::int64_t>(out_shape.begin(), out_shape.end()),
+      view_strides,
+      idx_cpu.scalar_type()).contiguous();
+  return target_platform == Platform::CPU ? view_cpu : view_cpu.to(target_platform).contiguous();
 }
 
 static Series index_select_dispatch_(const Series& self, std::int64_t dim, const Series& index) {
@@ -479,7 +557,41 @@ static Series index_select_dispatch_(const Series& self, std::int64_t dim, const
       std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
       dim,
       self.platform());
-  return ops_internal::gather(self, dim, idx_expanded);
+  Series out = ops_internal::gather(self, dim, idx_expanded);
+
+  // MPS autograd: index_select built via gather can drop sensitivities on some
+  // gather/squeeze paths. Rebind a direct backward rule that scatters on CPU.
+  if (self.platform() == Platform::MPS &&
+      series_tape::recording_enabled() &&
+      series_tape::tracks_slope(self)) {
+    Series idx_cpu = idx;
+    if (idx_cpu.platform() != Platform::CPU) idx_cpu = idx_cpu.to(Platform::CPU);
+    if (idx_cpu.scalar_type() != ScalarType::Int64) idx_cpu = idx_cpu.to(ScalarType::Int64);
+    idx_cpu = idx_cpu.contiguous();
+    const Series idx_expanded_cpu = make_expanded_gather_index_(
+        idx_cpu,
+        std::span<const std::int64_t>(out_shape.data(), out_shape.size()),
+        dim,
+        Platform::CPU)
+                                        .contiguous();
+
+    auto link = std::make_shared<series_tape::SourceLink>();
+    link->op_name = "index_select";
+    link->parents = {self};
+    link->propagate = [self, dim, idx_expanded_cpu](const Series& out_sens) {
+      Series sens = out_sens;
+      if (sens.scalar_type() != self.scalar_type()) sens = sens.to(self.scalar_type());
+      if (sens.platform() != Platform::CPU) sens = sens.to(Platform::CPU, self.scalar_type());
+      sens = sens.contiguous();
+      Series base = Series::zeros(self.sizes(), self.scalar_type()).to(Platform::CPU);
+      Series grad = ops_internal::scatter_add(base, dim, idx_expanded_cpu, sens);
+      if (self.platform() != Platform::CPU) grad = grad.to(self.platform(), self.scalar_type()).contiguous();
+      series_tape::accumulate_sensitivity(self, grad);
+    };
+    series_tape::clear_source_link(out);
+    series_tape::bind_source_link(out, std::move(link));
+  }
+  return out;
 }
 
 static bool is_floating_dtype(ScalarType st) {
@@ -3439,10 +3551,32 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
 
   if (op == "_backward" || op == "reverse") {
     std::optional<Series> seed;
-    if (!args.empty() && std::holds_alternative<const Series*>(args[0].v)) {
-      seed = as_series(args[0]);
+    std::size_t index = 0;
+    if (!args.empty() && std::holds_alternative<const Series*>(args[index].v)) {
+      seed = as_series(args[index]);
+      ++index;
     }
-    series_tape::backpropagate(self, seed);
+
+    series_tape::BackpropOptions backprop_opt{};
+    if (index < args.size()) {
+      backprop_opt.keep_source_links = as_bool(args[index]);
+      ++index;
+    }
+    if (index < args.size()) {
+      const bool accumulate_sensitivity = as_bool(args[index]);
+      backprop_opt.reset_sensitivity_before_run = !accumulate_sensitivity;
+      ++index;
+    }
+    if (index < args.size()) {
+      backprop_opt.record_propagation = as_bool(args[index]);
+      ++index;
+    }
+    if (index != args.size()) {
+      throw_error(
+          "_backward/reverse: expected signature reverse([seed], [keep_graph], "
+          "[accumulate_sensitivity], [track_higher_order])");
+    }
+    series_tape::backpropagate(self, seed, backprop_opt);
     return self;
   }
 
@@ -3811,6 +3945,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "nextafter") return nextafter_impl(self, s);
       if (op == "logit") return logit_impl(self, s);
       if (op == "hardshrink") return hardshrink_impl(self, s);
+      if (op == "leaky_relu") return ops_internal::leaky_relu(self, s);
       if (op == "heaviside") return heaviside_impl(self, scalar_like(self, s));
       if (op == "gcd") return gcd_impl(self, scalar_like(self, s));
       if (op == "lcm") return lcm_impl(self, scalar_like(self, s));
@@ -3923,6 +4058,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     // bool
     if (std::holds_alternative<bool>(a0)) {
       const bool b = as_bool(args[0]);
+      if (op == "gelu") return ops_internal::gelu(self, b);
       if (op == "retain_grad") {
         series_tape::set_keep_sensitivity(self, b);
         return self;
@@ -4407,8 +4543,9 @@ if (is_numeric_scalar_arg(args[0]) &&
       if (op == "narrow_copy") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st)).clone();
       if (op == "slice") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st));
       if (op == "select") {
-        // select keeps one index along dim and drops that axis.
-        return select_range(self, wd, st, 1).squeeze(wd);
+        // Route through the core Series::select implementation so reverse-mode
+        // follows the dedicated select backward path.
+        return self.select(wd, st);
       }
       if (op == "slice_inverse") return select_range(self, wd, st, std::min<std::int64_t>(len, dsz - st));
     }

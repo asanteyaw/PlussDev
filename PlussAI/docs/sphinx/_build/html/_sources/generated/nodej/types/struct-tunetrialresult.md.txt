@@ -1,0 +1,21 @@
+# `TuneTrialResult`
+
+## Signature
+
+```cpp
+struct TuneTrialResult;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+## Example
+
+```cpp
+TuneTrialResult cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/tune.h`:18

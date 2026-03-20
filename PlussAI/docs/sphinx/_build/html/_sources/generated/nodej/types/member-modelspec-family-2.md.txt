@@ -1,0 +1,22 @@
+# `ModelSpec::family`
+
+## Signature
+
+```cpp
+ModelSpec::ModelFamily family = ModelFamily::Linear;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+ModelSpec cfg{};
+// cfg.family = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:126

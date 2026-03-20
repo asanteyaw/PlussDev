@@ -1,0 +1,40 @@
+# `Flow::clear_transforms`
+
+## Signature
+
+```cpp
+void Flow::clear_transforms(self) noexcept;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+
+## Returns
+
+No direct return value; operation applies side effects to object state.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `Status Flow::append_transform(self, std::unique_ptr<TransformerBase> transformer);`
+- `void Flow::clear_model(self) noexcept;`
+- `[[nodiscard]] StatusOr<std::vector<Series>> Flow::dump_model_state(self) const;`
+- `[[nodiscard]] StatusOr<std::vector<std::vector<Series>>> Flow::dump_transform_states(self) const;`
+- `[[nodiscard]] bool Flow::has_model(self) const noexcept;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+Flow flow{};
+auto out = flow.clear_transforms(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:71

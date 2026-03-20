@@ -1,0 +1,13 @@
+# `MinMaxScaler::load_state`
+
+## Notes
+
+Loads a previously persisted artifact and restores its inference-ready state.
+
+## Overloads
+
+- [overload 1](../api/minmaxscaler-load-state-ov1.md): `Status MinMaxScaler::load_state(self, const std::vector<Series>& state) override;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:166

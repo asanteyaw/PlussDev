@@ -1,0 +1,39 @@
+# `Candidate::Candidate`
+
+## Signature
+
+```cpp
+Candidate(std::string in_name, Workflow in_workflow) : name(std::move(in_name)), workflow(std::move(in_workflow));
+```
+
+## Parameters
+
+- `arg1` : `std::move(in_name))`
+  Method argument; see signature type for accepted form.
+- `arg2` : `workflow(std::move(in_workflow)`
+  Method argument; see signature type for accepted form.
+
+## Returns
+
+Returns `Candidate(std::string in_name, Workflow in_workflow) :`.
+
+## Notes
+
+Instance method on `self`.
+
+## Parameter Reference
+
+- [arg1](../params/param-candidate-candidate-ov1-arg1-1.md)
+- [arg2](../params/param-candidate-candidate-ov1-arg2-2.md)
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+Candidate candidate{};
+auto out = candidate.Candidate(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2585

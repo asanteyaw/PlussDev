@@ -1,0 +1,21 @@
+# `Workflow`
+
+## Signature
+
+```cpp
+using Workflow = Flow;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+Workflow value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:139

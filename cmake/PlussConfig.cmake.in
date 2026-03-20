@@ -5,8 +5,16 @@ include("${CMAKE_CURRENT_LIST_DIR}/PlussTargets.cmake")
 
 if(NOT TARGET Pluss::SDK AND TARGET Pluss::pluss)
   add_library(Pluss::SDK INTERFACE IMPORTED)
+  # Default SDK surface for <pluss/pluss.h>: Qit + Mic + Pl.
+  set(_pluss_sdk_link_libs "Pluss::pluss")
+  if(TARGET Pluss::PlussMic)
+    list(APPEND _pluss_sdk_link_libs "Pluss::PlussMic")
+  endif()
+  if(TARGET Pluss::PlussPl)
+    list(APPEND _pluss_sdk_link_libs "Pluss::PlussPl")
+  endif()
   set_target_properties(Pluss::SDK PROPERTIES
-    INTERFACE_LINK_LIBRARIES "Pluss::pluss"
+    INTERFACE_LINK_LIBRARIES "${_pluss_sdk_link_libs}"
   )
 endif()
 

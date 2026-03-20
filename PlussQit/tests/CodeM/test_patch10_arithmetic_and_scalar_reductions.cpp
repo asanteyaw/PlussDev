@@ -47,8 +47,32 @@ TEST_CASE("scalar reductions sum/all/any", "[reduce]") {
   auto m = Series::zeros({3}, ScalarType::Bool);
   auto* mp = reinterpret_cast<std::uint8_t*>(m.raw_data());
   mp[0]=1; mp[1]=1; mp[2]=0;
+  auto ms = m.sum();
+  REQUIRE(ms.scalar_type() == ScalarType::Int64);
+  REQUIRE(*reinterpret_cast<const std::int64_t*>(ms.raw_data()) == 2);
   REQUIRE(*reinterpret_cast<const std::uint8_t*>(m.all().raw_data()) == 0);
   REQUIRE(*reinterpret_cast<const std::uint8_t*>(m.any().raw_data()) == 1);
+}
+
+TEST_CASE("bool sum over dimension returns count tensor", "[reduce]") {
+  auto m = Series::zeros({2,3}, ScalarType::Bool);
+  auto* mp = reinterpret_cast<std::uint8_t*>(m.raw_data());
+  // row 0: [1,0,1], row 1: [0,1,0]
+  mp[0]=1; mp[1]=0; mp[2]=1;
+  mp[3]=0; mp[4]=1; mp[5]=0;
+
+  auto col = m.sum(0, false);
+  REQUIRE(col.scalar_type() == ScalarType::Int64);
+  auto* cp = reinterpret_cast<const std::int64_t*>(col.raw_data());
+  REQUIRE(cp[0] == 1);
+  REQUIRE(cp[1] == 1);
+  REQUIRE(cp[2] == 1);
+
+  auto row = m.sum(1, false);
+  REQUIRE(row.scalar_type() == ScalarType::Int64);
+  auto* rp = reinterpret_cast<const std::int64_t*>(row.raw_data());
+  REQUIRE(rp[0] == 2);
+  REQUIRE(rp[1] == 1);
 }
 
 TEST_CASE("fp16/bf16 arithmetic works (via compute in f32)", "[arith]") {

@@ -1,0 +1,21 @@
+# `ModelFamily::Linear`
+
+## Signature
+
+```cpp
+ModelFamily::Linear;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = ModelFamily::Linear;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:11

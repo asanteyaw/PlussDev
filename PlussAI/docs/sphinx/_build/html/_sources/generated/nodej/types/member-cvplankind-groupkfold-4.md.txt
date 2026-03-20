@@ -1,0 +1,21 @@
+# `CVPlanKind::GroupKFold`
+
+## Signature
+
+```cpp
+CVPlanKind::GroupKFold;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = CVPlanKind::GroupKFold;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:50

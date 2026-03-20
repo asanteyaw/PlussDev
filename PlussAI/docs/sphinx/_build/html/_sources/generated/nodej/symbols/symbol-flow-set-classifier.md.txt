@@ -1,0 +1,13 @@
+# `Flow::set_classifier`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/flow-set-classifier-ov1.md): `Status Flow::set_classifier(self, std::unique_ptr<ClassifierBase> model);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/compose.h`:89

@@ -1,0 +1,19 @@
+# `WorkflowModel::assess`
+
+## Notes
+
+Evaluates model output against targets and returns metric aggregates.
+
+## Overloads
+
+- [overload 1](../api/workflowmodel-assess-ov1.md): `[[nodiscard]] MetricReport WorkflowModel::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- [overload 2](../api/workflowmodel-assess-ov2.md): `[[nodiscard]] MetricReport WorkflowModel::assess(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const AssessOptions& options = {}) const;`
+- [overload 3](../api/workflowmodel-assess-ov3.md): `[[nodiscard]] MetricReport WorkflowModel::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+- [overload 4](../api/workflowmodel-assess-ov4.md): `[[nodiscard]] MetricReport WorkflowModel::assess(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:794
+- `PlussAI/include/pluss/ai/lymph/api.h`:798
+- `PlussAI/include/pluss/ai/lymph/api.h`:810
+- `PlussAI/include/pluss/ai/lymph/api.h`:804

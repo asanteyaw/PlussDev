@@ -208,7 +208,7 @@ id_2024  sales_2024  city_2024
 #### Signature
 
 ```cpp
-DataFrame aggregate(self, std::initializer_list<SummarySpec> specs, bool render = true) const
+DataFrameView aggregate(self, std::initializer_list<SummarySpec> specs, bool render = true) const
 ```
 
 #### Parameters
@@ -221,7 +221,7 @@ DataFrame aggregate(self, std::initializer_list<SummarySpec> specs, bool render 
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -1197,158 +1197,6 @@ ts
 2024-01-01T10:00:00Z
 ```
 
-### `column`
-
-#### Signature
-
-```cpp
-Thread column(self, std::string_view name) const
-```
-
-#### Parameters
-
-`name` : `std::string_view`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`Thread`
-    Value produced by this call.
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.column("sales");
-```
-
-#### Output
-
-```text
-Thread([100.0, 120.0, 90.0])
-```
-
-### `column_names`
-
-#### Signature
-
-```cpp
-const std::vector<std::string>& column_names(self) const
-```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const std::vector<std::string>&`
-    Borrowed list of names.
-
-#### Notes
-
-Returns the current labels used to address fields, slots, rows, or depth items.
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.column_names();
-```
-
-#### Output
-
-```text
-["id", "sales", "city"]
-```
-
-### `column_ref`
-
-#### Signature
-
-```cpp
-ColumnRef column_ref(self, std::string_view name) const
-```
-
-#### Parameters
-
-`name` : `std::string_view`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`ColumnRef`
-    Value produced by this call.
-
-#### Notes
-
-Fetches one value, member, or slice from the current object without changing the source object.
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.column_ref("sales");
-```
-
-### `columns`
-
-#### Signature
-
-```cpp
-std::vector<Thread> columns(self) const
-```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::vector<Thread>`
-    Materialized collection of thread objects.
-
-#### Notes
-
-Materializes the current members as a collection you can inspect or reuse elsewhere.
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.columns();
-```
-
-#### Output
-
-```text
-[Thread(id), Thread(sales), Thread(city)]
-```
-
 ### `combine`
 
 #### Signature
@@ -1639,12 +1487,12 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-### `count`
+### `corr`
 
 #### Signature
 
 ```cpp
-DataFrame count(self, bool render = true) const
+DataFrameView corr(self, bool render = true) const
 ```
 
 #### Parameters
@@ -1654,7 +1502,215 @@ DataFrame count(self, bool render = true) const
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
+    Value produced by this call.
+
+#### Notes
+
+Applies `corr` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrameView corr(self, CorrMethod method, bool render = true) const`
+- `DataFrameView corr(self, std::initializer_list<std::string_view> features, CorrMethod method, bool render = true) const`
+- `DataFrameView corr(self, std::initializer_list<std::string_view> features, bool render = true) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.corr();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `corr`
+
+#### Signature
+
+```cpp
+DataFrameView corr(self, CorrMethod method, bool render = true) const
+```
+
+#### Parameters
+
+`method` : `CorrMethod`
+    See the signature for the supported argument form.
+
+`render` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrameView`
+    Value produced by this call.
+
+#### Notes
+
+Applies `corr` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrameView corr(self, bool render = true) const`
+- `DataFrameView corr(self, std::initializer_list<std::string_view> features, CorrMethod method, bool render = true) const`
+- `DataFrameView corr(self, std::initializer_list<std::string_view> features, bool render = true) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.corr();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `corr`
+
+#### Signature
+
+```cpp
+DataFrameView corr(self, std::initializer_list<std::string_view> features, bool render = true) const
+```
+
+#### Parameters
+
+`features` : `std::initializer_list<std::string_view>`
+    See the signature for the supported argument form.
+
+`render` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrameView`
+    Value produced by this call.
+
+#### Notes
+
+Applies `corr` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrameView corr(self, CorrMethod method, bool render = true) const`
+- `DataFrameView corr(self, bool render = true) const`
+- `DataFrameView corr(self, std::initializer_list<std::string_view> features, CorrMethod method, bool render = true) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.corr();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `corr`
+
+#### Signature
+
+```cpp
+DataFrameView corr(self, std::initializer_list<std::string_view> features, CorrMethod method, bool render = true) const
+```
+
+#### Parameters
+
+`features` : `std::initializer_list<std::string_view>`
+    See the signature for the supported argument form.
+
+`method` : `CorrMethod`
+    See the signature for the supported argument form.
+
+`render` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrameView`
+    Value produced by this call.
+
+#### Notes
+
+Applies `corr` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrameView corr(self, CorrMethod method, bool render = true) const`
+- `DataFrameView corr(self, bool render = true) const`
+- `DataFrameView corr(self, std::initializer_list<std::string_view> features, bool render = true) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.corr();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `count`
+
+#### Signature
+
+```cpp
+DataFrameView count(self, bool render = true) const
+```
+
+#### Parameters
+
+`render` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -1685,7 +1741,7 @@ sales    310.0
 #### Signature
 
 ```cpp
-DataFrame count_by(self, std::string_view feature, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
+DataFrameView count_by(self, std::string_view feature, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
 ```
 
 #### Parameters
@@ -1704,7 +1760,7 @@ DataFrame count_by(self, std::string_view feature, std::int64_t top_n = 0, bool 
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -1814,7 +1870,7 @@ true
 #### Signature
 
 ```cpp
-DataFrame describe(self, bool render = true) const
+DataFrameView describe(self, bool render = true) const
 ```
 
 #### Parameters
@@ -1824,7 +1880,7 @@ DataFrame describe(self, bool render = true) const
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -3446,6 +3502,57 @@ DataFrame filter(self, const pluss::Series& bool_mask) const
 
 Keeps only the rows where the supplied boolean mask is true.
 
+#### See also
+
+- `DataFrame filter(self, const Thread& bool_mask) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto out = df.filter(mask);
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi
+```
+
+### `filter`
+
+#### Signature
+
+```cpp
+DataFrame filter(self, const Thread& bool_mask) const
+```
+
+#### Parameters
+
+`bool_mask` : `const Thread&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Keeps only the rows where the supplied boolean mask is true.
+
+#### See also
+
+- `DataFrame filter(self, const pluss::Series& bool_mask) const`
+
 #### Examples
 
 ```cpp
@@ -3754,7 +3861,7 @@ Thread([100.0, 120.0, 90.0])
 #### Signature
 
 ```cpp
-DataFrame group_by(self, std::initializer_list<std::string_view> keys, std::initializer_list<GroupSpec> specs, bool dropna_keys = true, bool render = true) const
+DataFrameView group_by(self, std::initializer_list<std::string_view> keys, std::initializer_list<GroupSpec> specs, bool dropna_keys = true, bool render = true) const
 ```
 
 #### Parameters
@@ -3773,7 +3880,7 @@ DataFrame group_by(self, std::initializer_list<std::string_view> keys, std::init
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -3897,46 +4004,6 @@ id  sales
 3   false
 ```
 
-### `has_column`
-
-#### Signature
-
-```cpp
-bool has_column(self, std::string_view name) const
-```
-
-#### Parameters
-
-`name` : `std::string_view`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`bool`
-    Boolean status or membership result.
-
-#### Notes
-
-Checks whether a feature name exists in the frame.
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.has_column("sales");
-```
-
-#### Output
-
-```text
-true
-```
-
 ### `has_feature`
 
 #### Signature
@@ -3982,7 +4049,7 @@ true
 #### Signature
 
 ```cpp
-DataFrame head(self, std::int64_t n = 5, bool render = true) const
+DataFrameView head(self, std::int64_t n = 5, bool render = true) const
 ```
 
 #### Parameters
@@ -3995,7 +4062,7 @@ DataFrame head(self, std::int64_t n = 5, bool render = true) const
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -4659,6 +4726,39 @@ id  sales
 3   false
 ```
 
+### `length`
+
+#### Signature
+
+```cpp
+std::int64_t height(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Notes
+
+Applies `height` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.height();
+```
+
 ### `load`
 
 #### Signature
@@ -4689,8 +4789,8 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options)`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -4712,7 +4812,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =
+static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =
 ```
 
 #### Parameters
@@ -4726,10 +4826,10 @@ static DataFrame load(std::string_view source_type, std::string_view filepath, c
 `sep` : `char`
     Column separator used for delimited text files such as CSV.
 
-`nrows` : `std::optional<std::size_t>`
+`ncases` : `std::optional<std::size_t>`
     See the signature for the supported argument form.
 
-`usecols` : `std::vector<std::string>`
+`usefeats` : `std::vector<std::string>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -4747,12 +4847,12 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options)`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
+auto out = pluss::table::DataFrame::load("csv", "path/to/data.csv");
 ```
 
 #### Output
@@ -4769,7 +4869,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
+static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
 ```
 
 #### Parameters
@@ -4783,10 +4883,10 @@ static DataFrame load(std::string_view source_type, std::string_view filepath, c
 `sep` : `char`
     Column separator used for delimited text files such as CSV.
 
-`nrows` : `std::optional<std::size_t>`
+`ncases` : `std::optional<std::size_t>`
     See the signature for the supported argument form.
 
-`usecols` : `std::initializer_list<std::string_view>`
+`usefeats` : `std::initializer_list<std::string_view>`
     See the signature for the supported argument form.
 
 `case_col` : `std::optional<std::string>`
@@ -4810,12 +4910,12 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options)`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
 
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
+auto out = pluss::table::DataFrame::load("csv", "path/to/data.csv");
 ```
 
 #### Output
@@ -4860,8 +4960,8 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load(std::string_view source_type, std::string_view filepath)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options)`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -4911,8 +5011,8 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load(std::string_view source_type, std::string_view filepath)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -4963,8 +5063,8 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load(std::string_view source_type, std::string_view filepath)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config)`
 - `static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options)`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
-- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
+- `static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5010,8 +5110,8 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5033,7 +5133,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =
+static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =
 ```
 
 #### Parameters
@@ -5044,10 +5144,10 @@ static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std
 `sep` : `char`
     Column separator used for delimited text files such as CSV.
 
-`nrows` : `std::optional<std::size_t>`
+`ncases` : `std::optional<std::size_t>`
     See the signature for the supported argument form.
 
-`usecols` : `std::vector<std::string>`
+`usefeats` : `std::vector<std::string>`
     See the signature for the supported argument form.
 
 #### Returns
@@ -5067,12 +5167,12 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv");
 ```
 
 #### Output
@@ -5089,7 +5189,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
+static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
 ```
 
 #### Parameters
@@ -5100,10 +5200,10 @@ static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std
 `sep` : `char`
     Column separator used for delimited text files such as CSV.
 
-`nrows` : `std::optional<std::size_t>`
+`ncases` : `std::optional<std::size_t>`
     See the signature for the supported argument form.
 
-`usecols` : `std::initializer_list<std::string_view>`
+`usefeats` : `std::initializer_list<std::string_view>`
     See the signature for the supported argument form.
 
 `case_col` : `std::optional<std::string>`
@@ -5129,12 +5229,12 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
 
 #### Examples
 
 ```cpp
-auto out = pluss::table::DataFrame::load_csv("path/to/data.csv", ',', 16, std::vector<std::string>{"Agency Name"}, std::nullopt);
+auto out = pluss::table::DataFrame::load_csv("path/to/data.csv");
 ```
 
 #### Output
@@ -5178,8 +5278,8 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5228,8 +5328,8 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5279,8 +5379,8 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, const pluss::loader::Config& config)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5332,8 +5432,8 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, const pluss::loader::Config& config)`
 - `static DataFrame load_csv(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::string_view case_feature = "none", std::string_view engine = "auto", std::optional<std::size_t> ncases = std::nullopt)`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -5391,8 +5491,8 @@ Loads the object from disk using the corresponding PlussMic loader route.
 - `static DataFrame load_csv(std::string_view filepath, const pluss::loader::Config& config)`
 - `static DataFrame load_csv(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)`
 - `static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows = std::nullopt, std::vector<std::string> usecols =`
-- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> nrows, std::initializer_list<std::string_view> usecols, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats =`
+- `static DataFrame load_csv(std::string_view filepath, char sep, std::optional<std::size_t> ncases, std::initializer_list<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)`
 
 #### Examples
 
@@ -6459,12 +6559,45 @@ id  sales
 3   false
 ```
 
+### `matrix`
+
+#### Signature
+
+```cpp
+MatrixValues matrix(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`MatrixValues`
+    Value produced by this call.
+
+#### Notes
+
+Applies `matrix` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.matrix();
+```
+
 ### `max`
 
 #### Signature
 
 ```cpp
-DataFrame max(self, bool render = true) const
+DataFrameView max(self, bool render = true) const
 ```
 
 #### Parameters
@@ -6474,7 +6607,7 @@ DataFrame max(self, bool render = true) const
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -6505,7 +6638,7 @@ sales    310.0
 #### Signature
 
 ```cpp
-DataFrame mean(self, bool render = true) const
+DataFrameView mean(self, bool render = true) const
 ```
 
 #### Parameters
@@ -6515,7 +6648,7 @@ DataFrame mean(self, bool render = true) const
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -6546,7 +6679,7 @@ sales    310.0
 #### Signature
 
 ```cpp
-DataFrame mean_by(self, std::string_view group_feature, std::string_view value_feature, std::int64_t top_n = 0, std::int64_t min_count = 1, bool dropna_group = true, bool render = true) const
+DataFrameView mean_by(self, std::string_view group_feature, std::string_view value_feature, std::int64_t top_n = 0, std::int64_t min_count = 1, bool dropna_group = true, bool render = true) const
 ```
 
 #### Parameters
@@ -6571,7 +6704,7 @@ DataFrame mean_by(self, std::string_view group_feature, std::string_view value_f
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -6603,7 +6736,7 @@ Tema    120.0
 #### Signature
 
 ```cpp
-DataFrame min(self, bool render = true) const
+DataFrameView min(self, bool render = true) const
 ```
 
 #### Parameters
@@ -6613,7 +6746,7 @@ DataFrame min(self, bool render = true) const
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -6930,12 +7063,12 @@ id  sales  city
 13  100.0  Kumasi
 ```
 
-### `ncols`
+### `ncases`
 
 #### Signature
 
 ```cpp
-std::int64_t ncols(self) const
+std::int64_t ncases(self) const
 ```
 
 #### Parameters
@@ -6949,7 +7082,7 @@ std::int64_t ncols(self) const
 
 #### Notes
 
-Returns a size/count summary for the current object without changing it.
+Applies `ncases` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
 
 #### Examples
 
@@ -6960,13 +7093,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.ncols();
-```
-
-#### Output
-
-```text
-3
+auto out = df.ncases();
 ```
 
 ### `ne`
@@ -7064,6 +7191,39 @@ id  sales
 1   true
 2   true
 3   false
+```
+
+### `nfeats`
+
+#### Signature
+
+```cpp
+std::int64_t nfeats(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::int64_t`
+    Integer count, size, or positional result.
+
+#### Notes
+
+Applies `nfeats` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.nfeats();
 ```
 
 ### `nfeatures`
@@ -7233,92 +7393,12 @@ id  sales  city
 3    90.0  Kumasi
 ```
 
-### `nrows`
-
-#### Signature
-
-```cpp
-std::int64_t nrows(self) const
-```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`std::int64_t`
-    Integer count, size, or positional result.
-
-#### Notes
-
-Returns a size/count summary for the current object without changing it.
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.nrows();
-```
-
-#### Output
-
-```text
-3
-```
-
-### `nunique`
-
-#### Signature
-
-```cpp
-DataFrame nunique(self, bool render = true) const
-```
-
-#### Parameters
-
-`render` : `bool`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`DataFrame`
-    Value produced by this call.
-
-#### Notes
-
-Counts distinct values for each selected feature.
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.nunique(false);
-```
-
-#### Output
-
-```text
-feature  value
-sales    310.0
-```
-
 ### `pivot`
 
 #### Signature
 
 ```cpp
-DataFrame pivot(self, std::string_view case_feature, std::string_view feature_feature, std::string_view value_feature, bool dropna_keys = true, bool render = true) const
+DataFrameView pivot(self, std::string_view case_feature, std::string_view feature_feature, std::string_view value_feature, bool dropna_keys = true, bool render = true) const
 ```
 
 #### Parameters
@@ -7340,7 +7420,7 @@ DataFrame pivot(self, std::string_view case_feature, std::string_view feature_fe
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -7372,7 +7452,7 @@ Tema    90.0  150.0
 #### Signature
 
 ```cpp
-DataFrame pivot_table(self, std::string_view case_feature, std::string_view feature_feature, std::string_view value_feature, GroupOp op = GroupOp::Mean, bool dropna_keys = true, bool render = true) const
+DataFrameView pivot_table(self, std::string_view case_feature, std::string_view feature_feature, std::string_view value_feature, GroupOp op = GroupOp::Mean, bool dropna_keys = true, bool render = true) const
 ```
 
 #### Parameters
@@ -7397,7 +7477,7 @@ DataFrame pivot_table(self, std::string_view case_feature, std::string_view feat
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -7445,6 +7525,10 @@ DataFramePlotAccessor plot(self) const
 
 This opens the plotting accessor for the current data object.
 
+#### See also
+
+- `DataFramePlotAccessor plot(self, const DataFramePlotOptions& options) const`
+
 #### Examples
 
 ```cpp
@@ -7461,6 +7545,143 @@ auto fig = df.plot().line("sales");
 
 ```text
 Figure(line/scatter/bar/hist)
+```
+
+### `plot`
+
+#### Signature
+
+```cpp
+DataFramePlotAccessor plot(self, const DataFramePlotOptions& options) const
+```
+
+#### Parameters
+
+`options` : `const DataFramePlotOptions&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFramePlotAccessor`
+    Value produced by this call.
+
+#### Notes
+
+This opens the plotting accessor for the current data object.
+
+#### See also
+
+- `DataFramePlotAccessor plot(self) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto fig = df.plot().line("sales");
+```
+
+#### Output
+
+```text
+Figure(line/scatter/bar/hist)
+```
+
+### `plot3d`
+
+#### Signature
+
+```cpp
+DataFramePlot3DAccessor plot3d(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`DataFramePlot3DAccessor`
+    Value produced by this call.
+
+#### Notes
+
+Applies `plot3d` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFramePlot3DAccessor plot3d(self, const DataFramePlotOptions& options) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.plot3d();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `plot3d`
+
+#### Signature
+
+```cpp
+DataFramePlot3DAccessor plot3d(self, const DataFramePlotOptions& options) const
+```
+
+#### Parameters
+
+`options` : `const DataFramePlotOptions&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFramePlot3DAccessor`
+    Value produced by this call.
+
+#### Notes
+
+Applies `plot3d` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFramePlot3DAccessor plot3d(self) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.plot3d();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
 ```
 
 ### `pow`
@@ -8129,7 +8350,7 @@ auto out = df.repeated_cases();
 #### Signature
 
 ```cpp
-DataFrame resample(self, std::string_view time_feature, std::initializer_list<std::string_view> value_features, std::string_view freq, std::string_view op = "mean", std::int64_t step = 1, bool render = true) const
+DataFrameView resample(self, std::string_view time_feature, std::initializer_list<std::string_view> value_features, std::string_view freq, std::string_view op = "mean", std::int64_t step = 1, bool render = true) const
 ```
 
 #### Parameters
@@ -8154,7 +8375,7 @@ DataFrame resample(self, std::string_view time_feature, std::initializer_list<st
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -9978,7 +10199,7 @@ DataFrame set_features(self, std::initializer_list<std::string_view> names, std:
 
 #### Notes
 
-Adds or replaces one or more features and returns the updated frame.
+Returns a new frame with one added or replaced feature.
 
 #### See also
 
@@ -9993,12 +10214,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto out = df.set_features(
-    {"profit", "cost"},
-    {
-        pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})),
-        pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0})),
-    });
+auto out = df.set_features("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));
 ```
 
 #### Output
@@ -10033,7 +10249,7 @@ DataFrame set_features(self, std::string_view name, const Thread& value) const
 
 #### Notes
 
-Adds or replaces one or more features and returns the updated frame.
+Returns a new frame with one added or replaced feature.
 
 #### See also
 
@@ -10083,7 +10299,7 @@ DataFrame& set_features_(self, std::initializer_list<std::string_view> names, st
 
 #### Notes
 
-Adds or replaces one or more features in place.
+Adds or replaces one feature in place.
 
 #### See also
 
@@ -10098,12 +10314,7 @@ auto df = pluss::table::DataFrame({
     {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-df.set_features_(
-    {"profit", "cost"},
-    {
-        pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})),
-        pluss::table::Thread(pluss::make_series({60.0, 85.0, 60.0})),
-    });
+df.set_features_("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));
 ```
 
 #### Output
@@ -10138,7 +10349,7 @@ DataFrame& set_features_(self, std::string_view name, const Thread& value)
 
 #### Notes
 
-Adds or replaces one or more features in place.
+Adds or replaces one feature in place.
 
 #### See also
 
@@ -10163,6 +10374,103 @@ id  sales  city    profit
 1   100.0  Accra   40.0
 2   120.0  Tema    35.0
 3    90.0  Kumasi  30.0
+```
+
+### `shift`
+
+#### Signature
+
+```cpp
+DataFrame shift(self, std::initializer_list<std::string_view> features, std::int64_t periods = 1) const
+```
+
+#### Parameters
+
+`features` : `std::initializer_list<std::string_view>`
+    See the signature for the supported argument form.
+
+`periods` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Applies `shift` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrame shift(self, std::int64_t periods = 1) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.shift();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `shift`
+
+#### Signature
+
+```cpp
+DataFrame shift(self, std::int64_t periods = 1) const
+```
+
+#### Parameters
+
+`periods` : `std::int64_t`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Applies `shift` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrame shift(self, std::initializer_list<std::string_view> features, std::int64_t periods = 1) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.shift();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
 ```
 
 ### `shift_time`
@@ -10214,6 +10522,85 @@ auto out = df.shift_time({"ts"}, 1, "hour");
 ts
 2024-01-01T09:00:00Z
 2024-01-01T10:00:00Z
+```
+
+### `show`
+
+#### Signature
+
+```cpp
+void show(self, const display::DisplayOptions& options =
+```
+
+#### Parameters
+
+`options` : `const display::DisplayOptions&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`void`
+    Performs the side effect and returns no value.
+
+#### Notes
+
+This renders a human-readable view for inspection instead of creating a new analytic object.
+
+#### See also
+
+- `void show(self, std::ostream& os, const display::DisplayOptions& options =`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.show();
+```
+
+### `show`
+
+#### Signature
+
+```cpp
+void show(self, std::ostream& os, const display::DisplayOptions& options =
+```
+
+#### Parameters
+
+`os` : `std::ostream&`
+    See the signature for the supported argument form.
+
+`options` : `const display::DisplayOptions&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`void`
+    Performs the side effect and returns no value.
+
+#### Notes
+
+This renders a human-readable view for inspection instead of creating a new analytic object.
+
+#### See also
+
+- `void show(self, const display::DisplayOptions& options =`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.show();
 ```
 
 ### `slice`
@@ -10501,7 +10888,7 @@ SQL accessor / prepared statement created
 #### Signature
 
 ```cpp
-DataFrame std(self, bool render = true) const
+DataFrameView std(self, bool render = true) const
 ```
 
 #### Parameters
@@ -10511,7 +10898,7 @@ DataFrame std(self, bool render = true) const
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -10851,7 +11238,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame sum(self, bool render = true) const
+DataFrameView sum(self, bool render = true) const
 ```
 
 #### Parameters
@@ -10861,7 +11248,7 @@ DataFrame sum(self, bool render = true) const
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -10981,7 +11368,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame tail(self, std::int64_t n = 5, bool render = true) const
+DataFrameView tail(self, std::int64_t n = 5, bool render = true) const
 ```
 
 #### Parameters
@@ -10994,7 +11381,7 @@ DataFrame tail(self, std::int64_t n = 5, bool render = true) const
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -11070,7 +11457,116 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame tally(self, std::string_view feature, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
+DataFrameView tally(self, std::initializer_list<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
+```
+
+#### Parameters
+
+`features` : `std::initializer_list<std::string_view>`
+    See the signature for the supported argument form.
+
+`top_n` : `std::int64_t`
+    See the signature for the supported argument form.
+
+`dropna` : `bool`
+    See the signature for the supported argument form.
+
+`render` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrameView`
+    Value produced by this call.
+
+#### Notes
+
+Counts how many rows fall into each distinct value of the grouping feature.
+
+#### See also
+
+- `DataFrameView tally(self, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
+- `DataFrameView tally(self, std::string_view feature, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"product", pluss::table::Thread(pluss::make_note({"A", "B", "A", "B"}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+});
+
+auto out = df.tally("city", 3, true, false);
+```
+
+#### Output
+
+```text
+city    count
+Accra   2
+Tema    2
+```
+
+### `tally`
+
+#### Signature
+
+```cpp
+DataFrameView tally(self, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
+```
+
+#### Parameters
+
+`top_n` : `std::int64_t`
+    See the signature for the supported argument form.
+
+`dropna` : `bool`
+    See the signature for the supported argument form.
+
+`render` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrameView`
+    Value produced by this call.
+
+#### Notes
+
+Counts how many rows fall into each distinct value of the grouping feature.
+
+#### See also
+
+- `DataFrameView tally(self, std::initializer_list<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
+- `DataFrameView tally(self, std::string_view feature, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"product", pluss::table::Thread(pluss::make_note({"A", "B", "A", "B"}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+});
+
+auto out = df.tally("city", 3, true, false);
+```
+
+#### Output
+
+```text
+city    count
+Accra   2
+Tema    2
+```
+
+### `tally`
+
+#### Signature
+
+```cpp
+DataFrameView tally(self, std::string_view feature, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
 ```
 
 #### Parameters
@@ -11089,12 +11585,17 @@ DataFrame tally(self, std::string_view feature, std::int64_t top_n = 0, bool dro
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
 
 Counts how many rows fall into each distinct value of the grouping feature.
+
+#### See also
+
+- `DataFrameView tally(self, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
+- `DataFrameView tally(self, std::initializer_list<std::string_view> features, std::int64_t top_n = 0, bool dropna = true, bool render = true) const`
 
 #### Examples
 
@@ -11147,6 +11648,133 @@ auto df = pluss::table::DataFrame({
 });
 
 auto out = df.timeline_features();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `title`
+
+#### Signature
+
+```cpp
+DataFrame title(self, std::string title) const
+```
+
+#### Parameters
+
+`title` : `std::string`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Applies `title` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `std::string title(self) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.title();
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+2   120.0  Tema
+3    90.0  Kumasi
+```
+
+### `title`
+
+#### Signature
+
+```cpp
+std::string title(self) const
+```
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`std::string`
+    Rendered string result.
+
+#### Notes
+
+Applies `title` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### See also
+
+- `DataFrame title(self, std::string title) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.title();
+```
+
+### `title_`
+
+#### Signature
+
+```cpp
+DataFrame& title_(self, std::string title)
+```
+
+#### Parameters
+
+`title` : `std::string`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame&`
+    Value produced by this call.
+
+#### Notes
+
+Applies `title_` to the current `DataFrame` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto out = df.title_();
 ```
 
 #### Output
@@ -11444,7 +12072,7 @@ id  sales  city
 #### Signature
 
 ```cpp
-DataFrame transpose(self, bool render = false) const
+DataFrameView transpose(self, bool render = false) const
 ```
 
 #### Parameters
@@ -11454,7 +12082,7 @@ DataFrame transpose(self, bool render = false) const
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -11959,7 +12587,7 @@ auto out = df.values();
 #### Signature
 
 ```cpp
-DataFrame var(self, bool render = true) const
+DataFrameView var(self, bool render = true) const
 ```
 
 #### Parameters
@@ -11969,7 +12597,7 @@ DataFrame var(self, bool render = true) const
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -12000,7 +12628,7 @@ sales    310.0
 #### Signature
 
 ```cpp
-DataFrame view(self, std::int64_t start, std::int64_t stop, bool render = true) const
+DataFrameView view(self, std::int64_t start, std::int64_t stop, bool render = true) const
 ```
 
 #### Parameters
@@ -12016,7 +12644,7 @@ DataFrame view(self, std::int64_t start, std::int64_t stop, bool render = true) 
 
 #### Returns
 
-`DataFrame`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
@@ -12065,6 +12693,57 @@ DataFrame where(self, const pluss::Series& bool_mask) const
 #### Notes
 
 Keeps only the rows where the supplied boolean mask is true.
+
+#### See also
+
+- `DataFrame where(self, const Thread& bool_mask) const`
+
+#### Examples
+
+```cpp
+auto df = pluss::table::DataFrame({
+    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+});
+
+auto mask = pluss::make_series({true, false, true}, pluss::codem::ScalarType::Bool);
+auto out = df.where(mask);
+```
+
+#### Output
+
+```text
+id  sales  city
+1   100.0  Accra
+3    90.0  Kumasi
+```
+
+### `where`
+
+#### Signature
+
+```cpp
+DataFrame where(self, const Thread& bool_mask) const
+```
+
+#### Parameters
+
+`bool_mask` : `const Thread&`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`DataFrame`
+    Value produced by this call.
+
+#### Notes
+
+Keeps only the rows where the supplied boolean mask is true.
+
+#### See also
+
+- `DataFrame where(self, const pluss::Series& bool_mask) const`
 
 #### Examples
 
@@ -12230,96 +12909,4 @@ id  sales  city
 1   100.0  Accra
 2   120.0  Tema
 3    90.0  Kumasi
-```
-
-### `with_column`
-
-#### Signature
-
-```cpp
-DataFrame with_column(self, std::string name, const Thread& column) const
-```
-
-#### Parameters
-
-`name` : `std::string`
-    See the signature for the supported argument form.
-
-`column` : `const Thread&`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`DataFrame`
-    Value produced by this call.
-
-#### Notes
-
-Returns a new frame with one added or replaced feature.
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-auto out = df.with_column("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));
-```
-
-#### Output
-
-```text
-id  sales  city    profit
-1   100.0  Accra   40.0
-2   120.0  Tema    35.0
-3    90.0  Kumasi  30.0
-```
-
-### `with_column_`
-
-#### Signature
-
-```cpp
-DataFrame& with_column_(self, std::string name, const Thread& column)
-```
-
-#### Parameters
-
-`name` : `std::string`
-    See the signature for the supported argument form.
-
-`column` : `const Thread&`
-    See the signature for the supported argument form.
-
-#### Returns
-
-`DataFrame&`
-    Value produced by this call.
-
-#### Notes
-
-Adds or replaces one feature in place.
-
-#### Examples
-
-```cpp
-auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-});
-
-df.with_column_("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));
-```
-
-#### Output
-
-```text
-id  sales  city    profit
-1   100.0  Accra   40.0
-2   120.0  Tema    35.0
-3    90.0  Kumasi  30.0
 ```

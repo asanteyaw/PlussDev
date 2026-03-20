@@ -1,0 +1,24 @@
+# `ClusterMethod`
+
+## Signature
+
+```cpp
+enum ClusterMethod;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `KMeans = 0`
+
+## Example
+
+```cpp
+auto mode = ClusterMethod::KMeans;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:55

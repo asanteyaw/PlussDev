@@ -202,6 +202,20 @@ DataFrameView DataFrame::mean(bool render) const {
   return DataFrameView(summarize_specs(specs, false), render, "mean", title());
 }
 
+DataFrameView DataFrame::median(bool render) const {
+  const auto& src = impl_ref_();
+  std::vector<SummarySpec> specs;
+  specs.reserve(src.names_.size());
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto& col = src.columns_[i];
+    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      specs.push_back(SummarySpec{src.names_[i], src.names_[i], SummaryOp::Median});
+    }
+  }
+  PLUSS_CHECK(!specs.empty(), "DataFrame::median: no numeric features");
+  return DataFrameView(summarize_specs(specs, false), render, "median", title());
+}
+
 DataFrameView DataFrame::min(bool render) const {
   const auto& src = impl_ref_();
   std::vector<SummarySpec> specs;
@@ -269,15 +283,175 @@ DataFrameView DataFrame::count(bool render) const {
   return DataFrameView(summarize_specs(specs, false), render, "count", title());
 }
 
-DataFrameView DataFrame::nunique(bool render) const {
-  const auto& src = impl_ref_();
-  std::vector<SummarySpec> specs;
-  specs.reserve(src.names_.size());
-  for (const auto& name : src.names_) {
-    specs.push_back(SummarySpec{name, name, SummaryOp::Nunique});
+namespace {
+
+std::int64_t normalize_bool_reduce_axis_(std::int64_t axis, std::string_view where) {
+  auto out = axis;
+  if (out < 0) {
+    out += 2;
   }
-  PLUSS_CHECK(!specs.empty(), "DataFrame::nunique: no features");
-  return DataFrameView(summarize_specs(specs, false), render, "nunique", title());
+  PLUSS_CHECK(out == 0 || out == 1, std::string(where) + ": axis must be 0 (features) or 1 (cases)");
+  return out;
+}
+
+std::vector<std::size_t> resolve_bool_reduce_indices_(
+    const detail::DataFrameImpl& src,
+    std::initializer_list<std::string_view> features,
+    std::string_view where) {
+  std::vector<std::size_t> indices;
+  if (features.size() == 0) {
+    indices.reserve(src.columns_.size());
+    for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+      indices.push_back(i);
+    }
+  } else {
+    std::unordered_set<std::string> seen;
+    seen.reserve(features.size());
+    indices.reserve(features.size());
+    for (const auto key_sv : features) {
+      const auto key = owned_name(key_sv);
+      PLUSS_CHECK(!key.empty(), std::string(where) + ": feature name cannot be empty");
+      PLUSS_CHECK(seen.insert(key).second, std::string(where) + ": duplicate feature '" + key + "'");
+      const auto it = src.name_to_idx_.find(key);
+      PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + key + "'");
+      indices.push_back(it->second);
+    }
+  }
+
+  PLUSS_CHECK(!indices.empty(), std::string(where) + ": no features selected");
+  for (const auto idx : indices) {
+    const auto& col = src.columns_[idx];
+    PLUSS_CHECK(col.kind() == ThreadKind::Series,
+                std::string(where) + ": feature '" + src.names_[idx] + "' must be a Bool Series");
+    PLUSS_CHECK(col.as_series().scalar_type() == pluss::codem::ScalarType::Bool,
+                std::string(where) + ": feature '" + src.names_[idx] + "' must be a Bool Series");
+  }
+  return indices;
+}
+
+Thread prepare_bool_feature_for_reduce_(
+    const Thread& col,
+    bool use_all,
+    bool skipna,
+    std::string_view where) {
+  PLUSS_CHECK(col.kind() == ThreadKind::Series, std::string(where) + ": feature must be a Bool Series");
+  PLUSS_CHECK(col.as_series().scalar_type() == pluss::codem::ScalarType::Bool,
+              std::string(where) + ": feature must be a Bool Series");
+  if (!col.has_validity_mask()) {
+    return col;
+  }
+  PLUSS_CHECK(skipna,
+              std::string(where)
+                  + ": skipna=false is not supported for nullable bool features (use skipna=true)");
+  const auto valid = col.notnull().as_series();
+  const auto prepared =
+      use_all ? col.as_series().logical_or(valid.logical_not()) : col.as_series().logical_and(valid);
+  return Thread(prepared);
+}
+
+Thread reduce_bool_rows_(
+    const detail::DataFrameImpl& src,
+    std::initializer_list<std::string_view> features,
+    bool use_all,
+    bool skipna,
+    std::string_view where) {
+  const auto indices = resolve_bool_reduce_indices_(src, features, where);
+  auto mask = prepare_bool_feature_for_reduce_(src.columns_[indices.front()], use_all, skipna, where);
+  for (std::size_t i = 1; i < indices.size(); ++i) {
+    const auto col = prepare_bool_feature_for_reduce_(src.columns_[indices[i]], use_all, skipna, where);
+    mask = use_all ? (mask & col) : (mask | col);
+  }
+  return mask;
+}
+
+Thread reduce_bool_features_(
+    const detail::DataFrameImpl& src,
+    std::initializer_list<std::string_view> features,
+    bool use_all,
+    bool skipna,
+    std::string_view where) {
+  const auto indices = resolve_bool_reduce_indices_(src, features, where);
+
+  std::vector<bool> reduced;
+  reduced.reserve(indices.size());
+  std::vector<std::string> labels;
+  labels.reserve(indices.size());
+
+  for (const auto idx : indices) {
+    const auto prepared = prepare_bool_feature_for_reduce_(src.columns_[idx], use_all, skipna, where);
+    const bool value = use_all ? prepared.all(skipna).item<bool>() : prepared.any(skipna).item<bool>();
+    reduced.push_back(value);
+    labels.push_back(src.names_[idx]);
+  }
+
+  auto out = Thread(bool_series_from_keep(reduced));
+  if (!labels.empty()) {
+    out = out.with_display_labels(make_note_thread(labels));
+  }
+  return out;
+}
+
+} // namespace
+
+Thread DataFrame::any(std::initializer_list<std::string_view> features, bool skipna) const {
+  return any(1, features, skipna);
+}
+
+Thread DataFrame::any(std::int64_t axis, std::initializer_list<std::string_view> features, bool skipna) const {
+  const auto normalized_axis = normalize_bool_reduce_axis_(axis, "DataFrame::any");
+  if (normalized_axis == 0) {
+    return reduce_bool_features_(impl_ref_(), features, false, skipna, "DataFrame::any");
+  }
+  return reduce_bool_rows_(impl_ref_(), features, false, skipna, "DataFrame::any");
+}
+
+Thread DataFrame::all(std::initializer_list<std::string_view> features, bool skipna) const {
+  return all(1, features, skipna);
+}
+
+Thread DataFrame::all(std::int64_t axis, std::initializer_list<std::string_view> features, bool skipna) const {
+  const auto normalized_axis = normalize_bool_reduce_axis_(axis, "DataFrame::all");
+  if (normalized_axis == 0) {
+    return reduce_bool_features_(impl_ref_(), features, true, skipna, "DataFrame::all");
+  }
+  return reduce_bool_rows_(impl_ref_(), features, true, skipna, "DataFrame::all");
+}
+
+DataFrameView DataFrame::count_distinct(std::initializer_list<std::string_view> features, bool dropna, bool render) const {
+  const auto& src = impl_ref_();
+
+  std::vector<std::string> names;
+  if (features.size() == 0) {
+    names = src.names_;
+  } else {
+    std::unordered_set<std::string> seen;
+    seen.reserve(features.size());
+    names.reserve(features.size());
+    for (const auto feature : features) {
+      const auto key = owned_name(feature);
+      PLUSS_CHECK(!key.empty(), "DataFrame::count_distinct: feature name cannot be empty");
+      if (!seen.insert(key).second) {
+        continue;
+      }
+      const auto it = src.name_to_idx_.find(key);
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::count_distinct: unknown feature '" + key + "'");
+      names.push_back(key);
+    }
+  }
+
+  PLUSS_CHECK(!names.empty(), "DataFrame::count_distinct: no features");
+
+  std::vector<std::pair<std::string, Thread>> out_cols;
+  out_cols.reserve(names.size());
+  for (const auto& name : names) {
+    const auto it = src.name_to_idx_.find(name);
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::count_distinct: unknown feature '" + name + "'");
+    const auto distinct_count = src.columns_[it->second].distinct(dropna).size();
+    out_cols.emplace_back(name, make_i64_thread({distinct_count}));
+  }
+
+  auto out = DataFrame(std::move(out_cols), make_note_thread({"summary"}));
+  return DataFrameView(std::move(out), render, "count_distinct", title());
 }
 
 DataFrameView DataFrame::corr(CorrMethod method, bool render) const {
@@ -403,7 +577,7 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
     out_cols.reserve(target_indices.size());
     for (const auto idx : target_indices) {
       const auto mask = (spec.op == MissingOp::IsNull) ? src.columns_[idx].isnull() : src.columns_[idx].notnull();
-      out_cols.emplace_back(src.names_[idx], Thread(mask));
+      out_cols.emplace_back(src.names_[idx], mask);
     }
     return DataFrame(std::move(out_cols), src.cases_);
   }
@@ -927,12 +1101,134 @@ DataFrameView DataFrame::describe(bool render) const {
   return DataFrameView(std::move(out), render, "describe", title());
 }
 
+DataFrameView DataFrame::tally(std::int64_t top_n, bool dropna, bool render) const {
+  return tally_impl(impl_ref_().names_, top_n, dropna, render);
+}
+
+DataFrameView DataFrame::tally(std::initializer_list<std::string_view> feature_names,
+                               std::int64_t top_n,
+                               bool dropna,
+                               bool render) const {
+  return tally_impl(normalize_name_list(feature_names), top_n, dropna, render);
+}
+
 DataFrameView DataFrame::tally(std::string_view feature_name,
                                std::int64_t top_n,
                                bool dropna,
                                bool render) const {
-  auto out = count_by(feature_name, top_n, dropna, false);
-  return DataFrameView(static_cast<DataFrame>(out), render, "tally", title());
+  return tally_impl({owned_name(feature_name)}, top_n, dropna, render);
+}
+
+DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_names,
+                                    std::int64_t top_n,
+                                    bool dropna,
+                                    bool render) const {
+  PLUSS_CHECK(!feature_names.empty(), "DataFrame::tally: at least one feature is required");
+  PLUSS_CHECK(top_n >= 0, "DataFrame::tally: top_n must be >= 0");
+
+  const auto& src = impl_ref_();
+  std::vector<std::string> keys;
+  keys.reserve(feature_names.size());
+  std::unordered_set<std::string> seen_keys;
+  seen_keys.reserve(feature_names.size());
+
+  struct KeyInfo {
+    std::string name;
+    Thread value_col;
+    std::optional<std::vector<bool>> valid;
+  };
+
+  std::vector<KeyInfo> key_infos;
+  key_infos.reserve(feature_names.size());
+  for (const auto& raw : feature_names) {
+    const auto name = owned_name(raw);
+    PLUSS_CHECK(!name.empty(), "DataFrame::tally: feature name cannot be empty");
+    PLUSS_CHECK(seen_keys.insert(name).second, "DataFrame::tally: duplicate feature '" + name + "'");
+    const auto it = src.name_to_idx_.find(name);
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::tally: unknown feature '" + name + "'");
+    const auto& col = src.columns_[it->second];
+    key_infos.push_back({
+        name,
+        col.has_validity_mask() ? col.clear_validity_mask() : col,
+        col.has_validity_mask() ? std::optional<std::vector<bool>>(col.validity_mask()->to_vec<bool>()) : std::nullopt,
+    });
+    keys.push_back(name);
+  }
+
+  struct Row {
+    std::vector<std::string> key_values;
+    std::int64_t count{0};
+  };
+
+  std::vector<Row> rows;
+  rows.reserve(static_cast<std::size_t>(std::max<std::int64_t>(16, ncases() / 32)));
+  std::unordered_map<std::string, std::size_t> index_by_key;
+  index_by_key.reserve(rows.capacity());
+
+  for (std::int64_t r = 0; r < ncases(); ++r) {
+    std::vector<std::string> key_values;
+    key_values.reserve(key_infos.size());
+
+    bool skip = false;
+    for (const auto& key_info : key_infos) {
+      const bool valid =
+          !key_info.valid.has_value() || (*key_info.valid)[static_cast<std::size_t>(r)];
+      if (!valid && dropna) {
+        skip = true;
+        break;
+      }
+      key_values.push_back(valid ? thread_scalar_string_at(key_info.value_col, r) : "NA");
+    }
+    if (skip) {
+      continue;
+    }
+
+    std::string composite;
+    for (std::size_t i = 0; i < key_values.size(); ++i) {
+      if (i != 0) {
+        composite.push_back('\x1f');
+      }
+      composite += key_values[i];
+    }
+
+    const auto [it, inserted] = index_by_key.emplace(composite, rows.size());
+    if (inserted) {
+      rows.push_back(Row{std::move(key_values), 1});
+    } else {
+      rows[it->second].count += 1;
+    }
+  }
+
+  std::sort(rows.begin(), rows.end(), [](const Row& lhs, const Row& rhs) {
+    if (lhs.count != rhs.count) {
+      return lhs.count > rhs.count;
+    }
+    return lhs.key_values < rhs.key_values;
+  });
+  if (top_n > 0 && static_cast<std::size_t>(top_n) < rows.size()) {
+    rows.resize(static_cast<std::size_t>(top_n));
+  }
+
+  std::vector<std::pair<std::string, Thread>> out_cols;
+  out_cols.reserve(keys.size() + 1);
+  for (std::size_t k = 0; k < keys.size(); ++k) {
+    std::vector<std::string> values;
+    values.reserve(rows.size());
+    for (const auto& row : rows) {
+      values.push_back(row.key_values[k]);
+    }
+    out_cols.emplace_back(keys[k], make_note_thread(values));
+  }
+
+  std::vector<std::int64_t> counts;
+  counts.reserve(rows.size());
+  for (const auto& row : rows) {
+    counts.push_back(row.count);
+  }
+  out_cols.emplace_back("count", make_i64_thread(counts));
+
+  auto out = DataFrame(std::move(out_cols));
+  return DataFrameView(std::move(out), render, "tally", title());
 }
 
 DataFrameView DataFrame::view(std::int64_t start, std::int64_t stop, bool render) const {

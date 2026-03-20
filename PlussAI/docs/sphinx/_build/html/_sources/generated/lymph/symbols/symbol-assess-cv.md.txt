@@ -1,0 +1,13 @@
+# `assess_cv`
+
+## Notes
+
+Evaluates model output against targets and returns metric aggregates.
+
+## Overloads
+
+- [overload 1](../api/global-assess-cv-ov1.md): `StatusOr<nodej::CrossAssessReport> assess_cv( const nodej::ModelSpec& spec, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:121

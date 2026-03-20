@@ -73,42 +73,54 @@ int main(int argc, char** argv) {
 
     std::vector<nja::selection::Candidate> candidates{};
     {
-      auto wf = nja::Workflow(nja::linear_factory::linear_regression(LinearFamilyOptions{
-          .objective = LinearObjective::LeastSquares,
+      auto wf = nja::Workflow{
+          .model = nja::linear_factory::linear_regression(LinearFamilyOptions{          .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-6,
           .fit_intercept = true,
-      }));
-      wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median})
-          .standard_scaler();
+      }),
+          .stages = {
+              nja::workflow::stage::simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median}),
+              nja::workflow::stage::standard_scaler(),
+          },
+      };
       candidates.emplace_back("linear_ridge", std::move(wf));
     }
     {
-      auto wf = nja::Workflow(nja::tree_factory::decision_tree_regressor(TreeFamilyOptions{
-          .criterion = TreeCriterion::Mse,
+      auto wf = nja::Workflow{
+          .model = nja::tree_factory::decision_tree_regressor(TreeFamilyOptions{          .criterion = TreeCriterion::Mse,
           .max_depth = 18,
           .min_samples_leaf = 8,
           .min_samples_split = 24,
-      }));
-      wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              nja::workflow::stage::simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       candidates.emplace_back("decision_tree", std::move(wf));
     }
     {
-      auto wf = nja::Workflow(nja::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{
-          .method = EnsembleMethod::RandomForest,
+      auto wf = nja::Workflow{
+          .model = nja::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{          .method = EnsembleMethod::RandomForest,
           .learners = 140,
           .subsample = 0.9,
-      }));
-      wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              nja::workflow::stage::simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       candidates.emplace_back("random_forest", std::move(wf));
     }
     {
-      auto wf = nja::Workflow(nja::neighbor_factory::knn_regressor(NeighborFamilyOptions{
-          .k = 9,
+      auto wf = nja::Workflow{
+          .model = nja::neighbor_factory::knn_regressor(NeighborFamilyOptions{          .k = 9,
           .distance_weighted = true,
           .standardize = true,
-      }));
-      wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median});
+      }),
+          .stages = {
+              nja::workflow::stage::simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median}),
+          },
+      };
       candidates.emplace_back("knn_distance", std::move(wf));
     }
 

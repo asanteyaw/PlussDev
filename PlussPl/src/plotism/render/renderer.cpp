@@ -544,12 +544,31 @@ struct WedgeSlice {
 
 [[nodiscard]] std::string format_tick_value(double value) {
   const double snapped = std::abs(value) <= 1.0e-12 ? 0.0 : value;
+  const auto format_plain = [](double v) {
+    std::ostringstream out;
+    out << std::fixed << std::setprecision(6) << v;
+    std::string text = out.str();
+    const auto dot = text.find('.');
+    if (dot != std::string::npos) {
+      while (!text.empty() && text.back() == '0') {
+        text.pop_back();
+      }
+      if (!text.empty() && text.back() == '.') {
+        text.pop_back();
+      }
+    }
+    if (text == "-0") {
+      text = "0";
+    }
+    return text;
+  };
+
   std::ostringstream label;
   const double magnitude = std::abs(snapped);
-  if (magnitude >= 1.0e4 || (magnitude > 0.0 && magnitude < 1.0e-3)) {
+  if (magnitude >= 1.0e6 || (magnitude > 0.0 && magnitude < 1.0e-3)) {
     label << std::scientific << std::setprecision(2) << snapped;
   } else {
-    label << std::setprecision(4) << snapped;
+    return format_plain(snapped);
   }
   return label.str();
 }
@@ -565,6 +584,24 @@ struct WedgeSlice {
 
   std::ostringstream out;
   switch (format) {
+    case TickFormat::Plain: {
+      std::ostringstream plain;
+      plain << std::fixed << std::setprecision(6) << snapped;
+      std::string text = plain.str();
+      const auto dot = text.find('.');
+      if (dot != std::string::npos) {
+        while (!text.empty() && text.back() == '0') {
+          text.pop_back();
+        }
+        if (!text.empty() && text.back() == '.') {
+          text.pop_back();
+        }
+      }
+      if (text == "-0") {
+        text = "0";
+      }
+      return text;
+    }
     case TickFormat::Fixed3:
       out << std::fixed << std::setprecision(3) << snapped;
       return out.str();
@@ -4571,6 +4608,8 @@ void render_planar_axes(
   const double x_label_rotation = pane.x_axis().label_rotation_deg.value_or(0.0);
   const double y_label_rotation = pane.y_axis().label_rotation_deg.value_or(0.0);
   const bool axes_visible = pane.axes_visible();
+  std::vector<std::pair<double, std::string>> x_ticks_cache{};
+  std::vector<std::pair<double, std::string>> y_ticks_cache{};
 
   if (wedge_only) {
     add_caption_block(list, pane, layout);
@@ -4612,14 +4651,16 @@ void render_planar_axes(
       }
     }
   } else {
-    const auto x_ticks = clamp_ticks(
+    x_ticks_cache = clamp_ticks(
         ticks_for(pane.x_axis(), {bounds.min_x, bounds.max_x}),
         {bounds.min_x, bounds.max_x},
         pane.x_axis());
-    const auto y_ticks = clamp_ticks(
+    y_ticks_cache = clamp_ticks(
         ticks_for(pane.y_axis(), {bounds.min_y, bounds.max_y}),
         {bounds.min_y, bounds.max_y},
         pane.y_axis());
+    const auto& x_ticks = x_ticks_cache;
+    const auto& y_ticks = y_ticks_cache;
     const auto x_minor = pane.x_axis().minor_grid
                              ? minor_tick_values(pane.x_axis(), {bounds.min_x, bounds.max_x}, x_ticks)
                              : std::vector<double>{};
@@ -4834,18 +4875,42 @@ void render_planar_axes(
     const double y_label_top_clearance = std::max(
         kUncenteredYLabelBaseClearance,
         tick_font * kUncenteredYLabelFontFactor);
-    const double label_x = center_on_axis
-                               ? (layout.plot.x - (axis_label_font + y_label_gap))
+    const double explicit_label_rotation =
+        pane.y_axis().label_rotation_deg.value_or(y_label_rotation);
+    const double explicit_rotation_mod = std::fmod(std::abs(explicit_label_rotation), 180.0);
+    const bool explicit_near_vertical = std::abs(explicit_rotation_mod - 90.0) <= 20.0;
+    // Core 2D rule: if caller explicitly rotates y-label near vertical, place it
+    // as an axis-centered label (same semantic family as x-axis labels).
+    const bool effective_center_on_axis =
+        center_on_axis || (!pane.y_axis().label_centered_explicit
+                           && pane.y_axis().label_rotation_deg.has_value()
+                           && explicit_near_vertical);
+
+    const auto rotated_text_width = [](std::string_view text, double font_size, double rotation_deg) {
+      const double w = estimated_text_extent(text, font_size);
+      const double h = std::max(1.0, font_size);
+      const double theta = rotation_deg * (kPi / 180.0);
+      return std::abs(w * std::cos(theta)) + std::abs(h * std::sin(theta));
+    };
+    double y_tick_extent_rot = 0.0;
+    if (pane.y_axis().tick_labels_visible) {
+      for (const auto& [_, label] : y_ticks_cache) {
+        y_tick_extent_rot = std::max(y_tick_extent_rot, rotated_text_width(label, tick_font, y_tick_rotation));
+      }
+    }
+    const double centered_clearance = y_tick_gap + y_tick_extent_rot + y_label_gap + axis_label_font * 0.75;
+    const double label_x = effective_center_on_axis
+                               ? (layout.plot.x - centered_clearance)
                                : (layout.plot.x - y_tick_gap);
-    const double label_y = center_on_axis
+    const double label_y = effective_center_on_axis
                                ? (layout.plot.y + layout.plot.height * 0.5)
                                : (layout.plot.y - y_label_top_clearance);
-    const auto label_align = center_on_axis ? TextCommand::Align::Middle : TextCommand::Align::End;
+    const auto label_align = effective_center_on_axis ? TextCommand::Align::Middle : TextCommand::Align::End;
     const double label_rotation =
-        pane.y_axis().label_rotation_deg.value_or(center_on_axis ? -90.0 : y_label_rotation);
+        pane.y_axis().label_rotation_deg.value_or(effective_center_on_axis ? -90.0 : y_label_rotation);
     double label_font = axis_label_font;
     std::string label_text = pane.y_axis().label;
-    if (center_on_axis) {
+    if (effective_center_on_axis) {
       const double rotation_mod = std::fmod(std::abs(label_rotation), 180.0);
       const bool near_vertical = std::abs(rotation_mod - 90.0) <= 20.0;
       if (near_vertical) {

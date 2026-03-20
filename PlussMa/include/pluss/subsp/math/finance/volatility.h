@@ -36,6 +36,11 @@ struct SimOptions {
   std::uint64_t offset = 0;
 };
 
+struct GbmParams {
+  double mu = 0.0;
+  double sigma = 0.2;
+};
+
 struct HestonParams {
   double kappa = 1.5;
   double theta = 0.04;
@@ -110,12 +115,49 @@ struct SlvParams {
   double local_vol_curvature = 0.0;
 };
 
+struct RoughHestonParams {
+  double mu = 0.0;
+  double v0 = 0.04;
+  double theta = 0.04;
+  double kappa = 1.5;
+  double sigma = 0.3;
+  double alpha = -0.2;
+  double rho = 0.0;
+  double variance_floor = 1e-12;
+};
+
+struct RoughBergomiParams {
+  double mu = 0.0;
+  double xi = 0.04;
+  double eta = 1.5;
+  double alpha = -0.4;
+  double rho = 0.0;
+  double variance_floor = 1e-12;
+};
+
 struct StochVolPaths {
   pluss::codem::Series spot = pluss::codem::Series::undefined();
   pluss::codem::Series variance = pluss::codem::Series::undefined();
   pluss::codem::Series innovation_spot = pluss::codem::Series::undefined();
   pluss::codem::Series innovation_var = pluss::codem::Series::undefined();
 };
+
+CODEM_API StochVolPaths gbm_paths(std::int64_t steps,
+                                  std::int64_t paths,
+                                  double spot0,
+                                  double dt,
+                                  const GbmParams& params,
+                                  const SimOptions& options,
+                                  pluss::codem::Config cfg = {},
+                                  std::uint64_t seed = 0);
+
+CODEM_API StochVolPaths gbm_paths(std::int64_t steps,
+                                  std::int64_t paths,
+                                  double spot0,
+                                  double dt,
+                                  const GbmParams& params,
+                                  pluss::codem::Config cfg = {},
+                                  std::uint64_t seed = 0);
 
 CODEM_API StochVolPaths heston_paths(std::int64_t steps,
                                      std::int64_t paths,
@@ -218,5 +260,39 @@ CODEM_API StochVolPaths slv_paths(std::int64_t steps,
                                   const SlvParams& params,
                                   pluss::codem::Config cfg = {},
                                   std::uint64_t seed = 0);
+
+CODEM_API StochVolPaths rough_heston_paths(std::int64_t steps,
+                                           std::int64_t paths,
+                                           double spot0,
+                                           double dt,
+                                           const RoughHestonParams& params,
+                                           const SimOptions& options,
+                                           pluss::codem::Config cfg = {},
+                                           std::uint64_t seed = 0);
+
+CODEM_API StochVolPaths rough_heston_paths(std::int64_t steps,
+                                           std::int64_t paths,
+                                           double spot0,
+                                           double dt,
+                                           const RoughHestonParams& params,
+                                           pluss::codem::Config cfg = {},
+                                           std::uint64_t seed = 0);
+
+CODEM_API StochVolPaths rough_bergomi_paths(std::int64_t steps,
+                                            std::int64_t paths,
+                                            double spot0,
+                                            double dt,
+                                            const RoughBergomiParams& params,
+                                            const SimOptions& options,
+                                            pluss::codem::Config cfg = {},
+                                            std::uint64_t seed = 0);
+
+CODEM_API StochVolPaths rough_bergomi_paths(std::int64_t steps,
+                                            std::int64_t paths,
+                                            double spot0,
+                                            double dt,
+                                            const RoughBergomiParams& params,
+                                            pluss::codem::Config cfg = {},
+                                            std::uint64_t seed = 0);
 
 } // namespace pluss::subsp::math::finance::volatility

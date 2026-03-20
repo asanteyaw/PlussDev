@@ -20,8 +20,12 @@ void Atlas::show(std::ostream& os, const display::DisplayOptions& options) const
 }
 
 std::ostream& operator<<(std::ostream& os, const Atlas& atlas) {
-  atlas.show(os);
+  output_render(os, atlas);
   return os;
+}
+
+void output_render(std::ostream& os, const Atlas& atlas) {
+  atlas.show(os);
 }
 
 } // namespace pluss::table

@@ -1,0 +1,21 @@
+# `MissingPolicy::KeepNaN`
+
+## Signature
+
+```cpp
+MissingPolicy::KeepNaN;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = MissingPolicy::KeepNaN;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:21

@@ -42,7 +42,7 @@ public:
 
   const std::optional<Stream>& depth_labels() const;
   Catalog catalog(std::int64_t i) const;
-  Catalog iloc(std::int64_t i) const;
+  Catalog dloc(std::int64_t i) const;
   Catalog loc(std::string_view label) const;
   Catalog loc(std::int64_t label) const;
   Catalog loc(const pluss::Timeline& label) const;

@@ -1,0 +1,21 @@
+# `VectorNorm`
+
+## Signature
+
+```cpp
+using VectorNorm = ::pluss::ai::nodej::prep::VectorNorm;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+VectorNorm value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:51

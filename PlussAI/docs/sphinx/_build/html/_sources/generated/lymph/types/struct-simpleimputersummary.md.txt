@@ -1,0 +1,21 @@
+# `SimpleImputerSummary`
+
+## Signature
+
+```cpp
+struct SimpleImputerSummary;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+## Example
+
+```cpp
+SimpleImputerSummary cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:61

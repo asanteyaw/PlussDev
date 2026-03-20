@@ -1,0 +1,89 @@
+/* Keep layout controlled by theme; only style API content blocks. */
+
+.bd-article h2,
+.bd-article h3,
+.bd-content h2,
+.bd-content h3 {
+  scroll-margin-top: 84px;
+}
+
+code.literal,
+.highlight pre {
+  border-radius: 8px;
+}
+
+.highlight pre {
+  border: 1px solid #d8dee7;
+  font-size: 0.9rem;
+}
+
+p > code.literal {
+  background: #edf2f7;
+  border-radius: 4px;
+  padding: 0.08rem 0.28rem;
+}
+
+/* Signature emphasis box */
+h2 + .highlight {
+  margin-top: 0.35rem;
+}
+
+/* Definition-list style used in parameter sections */
+dl.simple dt,
+dl.field-list > dt {
+  font-weight: 700;
+}
+
+dl.simple dd,
+dl.field-list > dd {
+  margin-bottom: 0.65rem;
+}
+
+/* Better contrast for output text blocks */
+div.highlight-text pre {
+  background: #f4f7fb;
+  color: #1c2733;
+}
+
+/* Dark-theme contrast fixes:
+   - inline code pills were too light with low-contrast pink text
+   - some token colors were unreadable on dark backgrounds */
+html[data-theme="dark"] .bd-content p > code.literal,
+html[data-theme="dark"] .bd-content li > code.literal,
+html[data-theme="dark"] .bd-content code.docutils.literal,
+html[data-theme="dark"] .bd-content code.xref,
+html[data-theme="dark"] code.literal {
+  background: #233243 !important;
+  border: 1px solid #3a526c !important;
+  color: #d8f1ff !important;
+}
+
+html[data-theme="dark"] .bd-content code {
+  color: #d8f1ff;
+}
+
+html[data-theme="dark"] .highlight pre {
+  background: #0f1b2b;
+  border-color: #2f445a;
+  color: #dbe7f5;
+}
+
+html[data-theme="dark"] .highlight .n,
+html[data-theme="dark"] .highlight .p,
+html[data-theme="dark"] .highlight .o {
+  color: #dbe7f5 !important;
+}
+
+html[data-theme="dark"] .highlight .mi,
+html[data-theme="dark"] .highlight .mf,
+html[data-theme="dark"] .highlight .m {
+  color: #9fd2ff !important;
+}
+
+html[data-theme="dark"] .highlight .s,
+html[data-theme="dark"] .highlight .sa,
+html[data-theme="dark"] .highlight .sb,
+html[data-theme="dark"] .highlight .s1,
+html[data-theme="dark"] .highlight .s2 {
+  color: #b7f7c5 !important;
+}

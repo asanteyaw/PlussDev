@@ -1,0 +1,22 @@
+# `ClusterFamilyOptions::restarts`
+
+## Signature
+
+```cpp
+ClusterFamilyOptions::std::int64_t restarts = 4;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+ClusterFamilyOptions cfg{};
+// cfg.restarts = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:101

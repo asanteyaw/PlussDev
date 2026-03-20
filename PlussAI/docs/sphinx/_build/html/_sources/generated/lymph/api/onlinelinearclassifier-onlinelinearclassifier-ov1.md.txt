@@ -1,0 +1,43 @@
+# `OnlineLinearClassifier::OnlineLinearClassifier`
+
+## Signature
+
+```cpp
+explicit OnlineLinearClassifier(::pluss::ai::nodej::online::OnlineLinearClassifier core) : core_(std::move(core));
+```
+
+## Parameters
+
+- `arg1` : `::pluss::ai::nodej::online::OnlineLinearClassifier core) : core_(std::move(core)`
+  Method argument; see signature type for accepted form.
+
+## Returns
+
+Returns ``.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `[[nodiscard]] ::pluss::ai::nodej::online::OnlineLinearClassifier& OnlineLinearClassifier::core(self) noexcept;`
+- `[[nodiscard]] const ::pluss::ai::nodej::online::OnlineLinearClassifier& OnlineLinearClassifier::core(self) const noexcept;`
+- `[[nodiscard]] std::int64_t OnlineLinearClassifier::seen_samples(self) const noexcept;`
+- `[[nodiscard]] bool OnlineLinearClassifier::trained(self) const noexcept;`
+
+## Parameter Reference
+
+- [arg1](../params/param-onlinelinearclassifier-onlinelinearclassifier-ov1-arg1-1.md)
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+OnlineLinearClassifier onlineLinearClassifier{};
+auto out = onlineLinearClassifier.OnlineLinearClassifier(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2279

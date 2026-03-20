@@ -1,0 +1,21 @@
+# `make_holdout_indices::frame`
+
+## Parent Signature
+
+```cpp
+[[nodiscard]] inline IndexSplit make_holdout_indices(const pluss::table::DataFrame& frame, const HoldoutSplitOptions& options);
+```
+
+## Parameter
+
+- `frame` : `const pluss::table::DataFrame&`
+  Input feature data used by this call.
+
+## Notes
+
+Namespace-level API function.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:492

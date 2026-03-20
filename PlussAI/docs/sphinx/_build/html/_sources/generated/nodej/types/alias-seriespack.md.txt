@@ -1,0 +1,21 @@
+# `SeriesPack`
+
+## Signature
+
+```cpp
+using SeriesPack = std::vector<Series>;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+SeriesPack value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/types.h`:16

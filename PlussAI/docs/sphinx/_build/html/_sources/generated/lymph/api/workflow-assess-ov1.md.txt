@@ -1,0 +1,146 @@
+# `Workflow::assess`
+
+## Signature
+
+```cpp
+[[nodiscard]] MetricReport Workflow::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `batch` : `const LabeledBatch&`
+  Input feature data used by this call.
+- `options` : `const AssessOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `MetricReport`.
+
+## Notes
+
+Evaluates model output against targets and returns metric aggregates.
+
+## See also
+
+- `[[nodiscard]] MetricReport OnlineLinearClassifier::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport OnlineLinearClassifier::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport OnlineLinearClassifier::assess(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport OnlineLinearRegressor::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport OnlineLinearRegressor::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_flow_demo.cpp`
+
+```cpp
+    const LabeledBatch train{
+        .features = FeatureBatch{.x = x, .layout = ObservationLayout::Rows},
+        .y = y,
+    };
+
+    auto flow_or = pluss::ai::lymph::quick::linear_classifier_flow(train, 1e-6, true, false);
+    if (!require_ok(flow_or, "lymph::linear_classifier_flow")) return 1;
+
+    auto metric_or = flow_or.value().assess(train, AssessOptions{.metrics = {MetricKind::Accuracy, MetricKind::LogLoss}});
+    if (!metric_or.ok()) {
+      std::cerr << "lymph classification flow assess failed: " << metric_or.status().message << "\n";
+      return 1;
+    }
+    const auto v = metric_or.value().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    std::cout << "classification flow metrics [accuracy, logloss]: " << v[0] << " " << v[1] << "\n";
+  }
+
+  {
+    const Series x = pluss::make_series(std::vector<double>{
+                                            -2.0, 0.0,
+                                            -1.0, std::numeric_limits<double>::quiet_NaN(),
+                                             0.0, 0.0,
+                                             1.0, 1.0,
+                                             2.0, 0.0,
+                                             3.0, 1.0},
+```
+
+**Output**
+
+```text
+lymph Flow demo
+classification flow metrics [accuracy, logloss]: 1 0.00195736
+regression flow metrics [mse, r2]: 4.46648e-17 1
+lymph Flow demo completed.
+```
+
+### Example 2
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_multiclass_demo.cpp`
+
+```cpp
+  if (!score_or.ok()) {
+    std::cerr << "infer_scores failed: " << score_or.status().message << '\n';
+    return 1;
+  }
+  std::cout << "scores shape: [" << score_or.value().sizes()[0] << ", " << score_or.value().sizes()[1] << "]\n";
+
+  pluss::ai::nodej::AssessOptions assess{};
+  assess.metrics = {MetricKind::Accuracy, MetricKind::BalancedAccuracy, MetricKind::LogLoss};
+  auto metrics_or = cls_or.value()->assess(batch, assess);
+  if (!metrics_or.ok()) {
+    std::cerr << "assess failed: " << metrics_or.status().message << '\n';
+    return 1;
+  }
+
+  std::cout << "metrics [accuracy, balanced_accuracy, logloss]: ";
+  print_vec(metrics_or.value());
+  return 0;
+}
+```
+
+**Output**
+
+```text
+scores shape: [12, 3]
+metrics [accuracy, balanced_accuracy, logloss]: 1 1 2.26237e-06
+```
+
+### Example 3
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_online_demo.cpp`
+
+```cpp
+    online_options.learning_rate = 0.08;
+
+    TrainOptions warm_opts{};
+    warm_opts.max_iterations = 80;
+
+    auto model = pluss::ai::lymph::online_factory::linear_classifier(online_options);
+    model.learn_(warm, warm_opts).advance_(stream);
+
+    const auto metrics = model.assess(full);
+    const Series metric_values = metrics.accuracy.defined() ? metrics.accuracy : metrics.values;
+
+    std::cout << "lymph online seen_samples=" << model.seen_samples() << '\n';
+    std::cout << "lymph online metrics [accuracy]: ";
+    print_vec(metric_values);
+    return 0;
+  } catch (const std::exception& ex) {
+    std::cerr << "lymph_online_demo failed: " << ex.what() << '\n';
+    return 1;
+  }
+}
+```
+
+**Output**
+
+```text
+lymph online seen_samples=1660
+lymph online metrics [accuracy]: 0.9875
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:1548

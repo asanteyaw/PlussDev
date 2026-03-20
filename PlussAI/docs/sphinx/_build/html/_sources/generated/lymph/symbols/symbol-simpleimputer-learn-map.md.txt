@@ -1,0 +1,13 @@
+# `SimpleImputer::learn_map`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/simpleimputer-learn-map-ov1.md): `[[nodiscard]] pluss::table::DataFrame SimpleImputer::learn_map(self, const pluss::table::DataFrame& frame, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:95

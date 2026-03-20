@@ -1,0 +1,122 @@
+# `kernel_factory::rbf_kernel_classifier`
+
+## Signature
+
+```cpp
+[[nodiscard]] static WorkflowModel kernel_factory::rbf_kernel_classifier(self, KernelFamilyOptions options = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `KernelFamilyOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `WorkflowModel`.
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## See also
+
+- `[[nodiscard]] static WorkflowModel kernel_factory::classifier(self, KernelFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel kernel_factory::linear_kernel_classifier(self, KernelFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel kernel_factory::linear_kernel_regressor(self, KernelFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel kernel_factory::polynomial_kernel_classifier(self, KernelFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel kernel_factory::polynomial_kernel_regressor(self, KernelFamilyOptions options = {});`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_presets_demo.cpp`
+
+```cpp
+      .features = FeatureBatch{.x = x_cls, .layout = ObservationLayout::Rows},
+      .y = y_cls,
+  };
+
+  std::cout << "Classification presets:\n";
+  report_classifier("linear_logistic", pluss::ai::lymph::quick::linear_logistic_classifier(cls_train), cls_train);
+  report_classifier("linear_hinge", pluss::ai::lymph::quick::linear_hinge_classifier(cls_train), cls_train);
+  report_classifier("forest", pluss::ai::lymph::quick::forest_classifier(cls_train, 21, 0.9), cls_train);
+  report_classifier("rbf_kernel", pluss::ai::lymph::quick::rbf_kernel_classifier(cls_train, 30.0, 1.0, 0.0), cls_train);
+  report_classifier("gaussian_bayes", pluss::ai::lymph::quick::gaussian_bayes_classifier(cls_train, 1e-9), cls_train);
+
+  const Series x_reg = pluss::make_series(std::vector<double>{
+                                              -2.0, -1.0,
+                                              -1.0, -0.5,
+                                               0.0,  0.0,
+                                               1.0,  0.5,
+                                               2.0,  1.0,
+                                               3.0,  1.5},
+                                          {6, 2},
+                                          f64());
+  const Series y_reg = pluss::make_series(std::vector<double>{-1.0, -0.5, 0.0, 0.5, 1.0, 1.5}, {6}, f64());
+  const LabeledBatch reg_train{
+      .features = FeatureBatch{.x = x_reg, .layout = ObservationLayout::Rows},
+      .y = y_reg,
+  };
+```
+
+**Output**
+
+```text
+lymph presets demo
+Classification presets:
+  linear_logistic (acc, logloss): 1 0.000580684
+  linear_hinge (acc, logloss): 1 0.0886185
+  forest (acc, logloss): 1 1.00003e-12
+  rbf_kernel (acc, logloss): 1 0.318438
+  gaussian_bayes (acc, logloss): 1 9.99978e-13
+Regression presets:
+  ridge (mse, r2): 3.96212e-15 1
+  forest (mse, r2): 0.0546306 0.925078
+  rbf_kernel (mse, r2): 0.00019696 0.99973
+  gaussian_bayes (mse, r2): 1.54185e-15 1
+lymph presets demo completed.
+```
+
+### Example 2
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_quick_classification_demo.cpp`
+
+```cpp
+  run_and_report("neighbor", pluss::ai::lymph::quick::neighbor_classifier(
+                                 train,
+                                 NeighborFamilyOptions{
+                                     .k = 3,
+                                     .distance_weighted = true,
+                                     .standardize = true,
+                                 }),
+                 train);
+  run_and_report("rbf_kernel", pluss::ai::lymph::quick::rbf_kernel_classifier(train, 30.0, 1.0, 0.0), train);
+  run_and_report("gaussian_bayes", pluss::ai::lymph::quick::gaussian_bayes_classifier(train, 1e-9), train);
+
+  std::cout << "lymph quick classification demo completed.\n";
+  return 0;
+}
+```
+
+**Output**
+
+```text
+lymph quick classification demo
+  linear_logistic (acc, logloss): 1 0.000580684
+  linear_hinge (acc, logloss): 1 0.0886185
+  tree (acc, logloss): 1 9.99978e-13
+  forest (acc, logloss): 1 1.00003e-12
+  neighbor (acc, logloss): 1 9.99978e-13
+  rbf_kernel (acc, logloss): 1 0.318438
+  gaussian_bayes (acc, logloss): 1 9.99978e-13
+lymph quick classification demo completed.
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2182

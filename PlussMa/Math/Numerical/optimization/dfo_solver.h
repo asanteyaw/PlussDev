@@ -3,6 +3,7 @@
 #include "dfo_minimizers.h"
 #include "mads_blackbox_minimizers.h"
 #include "nelder_mead_minimizer.h"
+#include "pattern_search_minimizer.h"
 
 #include <cstdint>
 #include <functional>
@@ -16,6 +17,7 @@ namespace pluss::subsp::math::optimization {
 enum class DfoSolverKind {
   Auto,
   NelderMead,
+  PatternSearch,
   DifferentialEvolution,
   DifferentialEvolutionPrmm,
   ParticleSwarm,
@@ -29,12 +31,20 @@ enum class DfoStatus {
   Converged,
   ReachedIterationBudget,
   ReachedEvaluationBudget,
+  ReachedTimeBudget,
+  InfeasibleStationary,
+};
+
+struct DfoConstraintValues {
+  Series inequality{Series::undefined()};
+  Series equality{Series::undefined()};
 };
 
 struct DfoProblem {
   Series initial{Series::undefined()};
   std::function<Series(const Series&)> objective{};
   std::function<Series(const Series&)> constraints{};
+  std::function<DfoConstraintValues(const Series&)> constraints_values{};
   std::function<BlackboxEvaluation(const Series&)> blackbox{};
   Series lower_bounds{Series::undefined()};
   Series upper_bounds{Series::undefined()};
@@ -65,6 +75,7 @@ struct DfoOptions {
   DifferentialEvolutionPrmmConfig differential_evolution_prmm{};
   ParticleSwarmConfig particle_swarm{};
   ParticleSwarmDvConfig particle_swarm_dv{};
+  PSConfig pattern_search{};
   MadsBlackboxAdvancedConfig mads{};
 };
 
@@ -72,6 +83,14 @@ struct DfoDiagnostics {
   std::int64_t iterations{0};
   std::int64_t evaluations{0};
   std::int64_t total_evaluations{0};
+  std::int64_t cache_hits{0};
+  std::int64_t outer_iterations{0};
+  std::int64_t nups_updates{0};
+  std::int64_t search_trials{0};
+  std::int64_t search_successes{0};
+  double mesh_size{0.0};
+  double penalty{0.0};
+  double max_constraint_violation{0.0};
   std::string last_phase{};
 };
 
@@ -136,6 +155,8 @@ public:
 
   [[nodiscard]] DfoBuilder with_objective(std::function<Series(const Series&)> objective) const;
   [[nodiscard]] DfoBuilder with_constraints(std::function<Series(const Series&)> constraints) const;
+  [[nodiscard]] DfoBuilder with_constraints_values(
+      std::function<DfoConstraintValues(const Series&)> constraints_values) const;
   [[nodiscard]] DfoBuilder with_blackbox(std::function<BlackboxEvaluation(const Series&)> blackbox) const;
 
   template <class Fn, std::enable_if_t<!std::is_same_v<std::decay_t<Fn>, std::function<Series(const Series&)>>, int> = 0>
@@ -168,6 +189,30 @@ public:
       }
     };
     return with_constraints(std::function<Series(const Series&)>(std::move(wrapped)));
+  }
+
+  template <class Fn, std::enable_if_t<!std::is_same_v<std::decay_t<Fn>, std::function<DfoConstraintValues(const Series&)>>, int> = 0>
+  [[nodiscard]] DfoBuilder with_constraints_values(Fn&& constraints_values) const {
+    auto wrapped = [fn = std::forward<Fn>(constraints_values)](const Series& x) -> DfoConstraintValues {
+      using Ret = std::remove_cvref_t<decltype(fn(x))>;
+      if constexpr (std::is_same_v<Ret, DfoConstraintValues>) {
+        return fn(x);
+      } else if constexpr (std::is_same_v<Ret, Series>) {
+        DfoConstraintValues out;
+        out.inequality = fn(x);
+        return out;
+      } else if constexpr (std::is_arithmetic_v<Ret>) {
+        DfoConstraintValues out;
+        out.inequality = pluss::make_series(static_cast<double>(fn(x)));
+        return out;
+      } else {
+        static_assert(std::is_arithmetic_v<Ret> || std::is_same_v<Ret, Series> ||
+                          std::is_same_v<Ret, DfoConstraintValues>,
+                      "DfoBuilder::with_constraints_values expects DfoConstraintValues, Series, or arithmetic scalar return");
+      }
+    };
+    return with_constraints_values(
+        std::function<DfoConstraintValues(const Series&)>(std::move(wrapped)));
   }
 
   template <class Fn, std::enable_if_t<!std::is_same_v<std::decay_t<Fn>, std::function<BlackboxEvaluation(const Series&)>>, int> = 0>

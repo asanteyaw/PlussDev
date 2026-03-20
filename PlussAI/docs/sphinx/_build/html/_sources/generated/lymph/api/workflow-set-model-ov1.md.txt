@@ -1,0 +1,46 @@
+# `Workflow::set_model`
+
+## Signature
+
+```cpp
+Workflow& Workflow::set_model(self, const ModelSpec& spec);
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `spec` : `const ModelSpec&`
+  Method argument; see signature type for accepted form.
+
+## Returns
+
+Returns `Workflow&`.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `[[nodiscard]] Series Workflow::coeff(self) const;`
+- `[[nodiscard]] std::vector<Series> Workflow::dump_model_state(self) const;`
+- `[[nodiscard]] std::vector<std::vector<Series>> Workflow::dump_transform_states(self) const;`
+- `[[nodiscard]] bool Workflow::has_model(self) const noexcept;`
+- `[[nodiscard]] bool Workflow::has_model_spec(self) const;`
+
+## Parameter Reference
+
+- [spec](../params/param-workflow-set-model-ov1-spec-2.md)
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+Workflow workflow{};
+auto out = workflow.set_model(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:1249

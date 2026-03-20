@@ -1,0 +1,28 @@
+# `InferOptions`
+
+## Signature
+
+```cpp
+struct InferOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `ObservationLayout layout = ObservationLayout::Rows`
+- `MissingPolicy missing = MissingPolicy::Reject`
+- `UnknownCategoryPolicy unknown_categorical = UnknownCategoryPolicy::Error`
+- `double positive_threshold = 0.5`
+
+## Example
+
+```cpp
+InferOptions cfg{};
+// cfg.layout = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:105

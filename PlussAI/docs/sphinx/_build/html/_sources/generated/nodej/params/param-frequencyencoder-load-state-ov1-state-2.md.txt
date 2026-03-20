@@ -1,0 +1,21 @@
+# `FrequencyEncoder::load_state::state`
+
+## Parent Signature
+
+```cpp
+Status FrequencyEncoder::load_state(self, const std::vector<Series>& state) override;
+```
+
+## Parameter
+
+- `state` : `const std::vector<Series>&`
+  Randomization control for reproducible behavior.
+
+## Notes
+
+Loads a previously persisted artifact and restores its inference-ready state.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:428

@@ -1,0 +1,13 @@
+# `MaxAbsScaler::MaxAbsScaler`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/maxabsscaler-maxabsscaler-ov1.md): `explicit MaxAbsScaler(MaxAbsScalerOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:288

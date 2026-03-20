@@ -1,0 +1,5 @@
+if(PLUSSMA_STATS_ENABLE_DISTRIBUTIONS)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/distributions")
+    add_subdirectory(distributions)
+  endif()
+endif()

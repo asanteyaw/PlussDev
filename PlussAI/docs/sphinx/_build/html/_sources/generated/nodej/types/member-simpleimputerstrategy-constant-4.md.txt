@@ -1,0 +1,21 @@
+# `SimpleImputerStrategy::Constant`
+
+## Signature
+
+```cpp
+SimpleImputerStrategy::Constant;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = SimpleImputerStrategy::Constant;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:32

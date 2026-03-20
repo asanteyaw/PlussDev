@@ -1,0 +1,13 @@
+# `cross_assess`
+
+## Notes
+
+Evaluates model output against targets and returns metric aggregates.
+
+## Overloads
+
+- [overload 1](../api/global-cross-assess-ov1.md): `StatusOr<CrossAssessReport> cross_assess(const ModelSpec& spec, const LabeledBatch& batch, const SplitOptions& split = {}, const TrainOptions& train_options = {}, const AssessOptions& assess_options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/metrics.h`:23

@@ -1,0 +1,17 @@
+# `Flow::Flow`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/flow-flow-ov1.md): `Flow() = default;`
+- [overload 2](../api/flow-flow-ov2.md): `Flow(const Flow&) = delete;`
+- [overload 3](../api/flow-flow-ov3.md): `Flow(Flow&&) noexcept = default;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/compose.h`:55
+- `PlussAI/include/pluss/ai/nodej/compose.h`:58
+- `PlussAI/include/pluss/ai/nodej/compose.h`:56

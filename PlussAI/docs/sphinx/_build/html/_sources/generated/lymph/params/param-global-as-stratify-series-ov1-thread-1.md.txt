@@ -1,0 +1,21 @@
+# `as_stratify_series::thread`
+
+## Parent Signature
+
+```cpp
+[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);
+```
+
+## Parameter
+
+- `thread` : `const pluss::table::Thread&`
+  Pluss numeric vector/tensor input.
+
+## Notes
+
+Namespace-level API function.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:327

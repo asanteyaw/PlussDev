@@ -221,6 +221,20 @@ black_scholes_test/fast:
 .PHONY : black_scholes_test/fast
 
 # Convenience name for target.
+PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/rule
+.PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/rule
+
+# Convenience name for target.
+cos_fft_greeks_catch2: PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/rule
+.PHONY : cos_fft_greeks_catch2
+
+# fast build rule for target.
+cos_fft_greeks_catch2/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/build
+.PHONY : cos_fft_greeks_catch2/fast
+
+# Convenience name for target.
 PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/rule
 .PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/rule
@@ -233,6 +247,34 @@ heston_sv_pricing_test: PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_p
 heston_sv_pricing_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build
 .PHONY : heston_sv_pricing_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/rule
+.PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/rule
+
+# Convenience name for target.
+object_pricing_test: PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/rule
+.PHONY : object_pricing_test
+
+# fast build rule for target.
+object_pricing_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/build
+.PHONY : object_pricing_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/rule
+.PHONY : PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/rule
+
+# Convenience name for target.
+pipeline_module_test: PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/rule
+.PHONY : pipeline_module_test
+
+# fast build rule for target.
+pipeline_module_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/build
+.PHONY : pipeline_module_test/fast
 
 # Convenience name for target.
 PlussMa/Math/Finance/pricing/test/CMakeFiles/sabr_slv_pricing_test.dir/rule:
@@ -296,6 +338,30 @@ black_scholes_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/black_scholes_test.dir/black_scholes_test.cpp.s
 .PHONY : black_scholes_test.cpp.s
 
+cos_fft_greeks_catch2.o: cos_fft_greeks_catch2.cpp.o
+.PHONY : cos_fft_greeks_catch2.o
+
+# target to build an object file
+cos_fft_greeks_catch2.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/cos_fft_greeks_catch2.cpp.o
+.PHONY : cos_fft_greeks_catch2.cpp.o
+
+cos_fft_greeks_catch2.i: cos_fft_greeks_catch2.cpp.i
+.PHONY : cos_fft_greeks_catch2.i
+
+# target to preprocess a source file
+cos_fft_greeks_catch2.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/cos_fft_greeks_catch2.cpp.i
+.PHONY : cos_fft_greeks_catch2.cpp.i
+
+cos_fft_greeks_catch2.s: cos_fft_greeks_catch2.cpp.s
+.PHONY : cos_fft_greeks_catch2.s
+
+# target to generate assembly for a file
+cos_fft_greeks_catch2.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/cos_fft_greeks_catch2.dir/cos_fft_greeks_catch2.cpp.s
+.PHONY : cos_fft_greeks_catch2.cpp.s
+
 heston_sv_pricing_test.o: heston_sv_pricing_test.cpp.o
 .PHONY : heston_sv_pricing_test.o
 
@@ -319,6 +385,54 @@ heston_sv_pricing_test.s: heston_sv_pricing_test.cpp.s
 heston_sv_pricing_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/heston_sv_pricing_test.dir/heston_sv_pricing_test.cpp.s
 .PHONY : heston_sv_pricing_test.cpp.s
+
+object_pricing_test.o: object_pricing_test.cpp.o
+.PHONY : object_pricing_test.o
+
+# target to build an object file
+object_pricing_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/object_pricing_test.cpp.o
+.PHONY : object_pricing_test.cpp.o
+
+object_pricing_test.i: object_pricing_test.cpp.i
+.PHONY : object_pricing_test.i
+
+# target to preprocess a source file
+object_pricing_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/object_pricing_test.cpp.i
+.PHONY : object_pricing_test.cpp.i
+
+object_pricing_test.s: object_pricing_test.cpp.s
+.PHONY : object_pricing_test.s
+
+# target to generate assembly for a file
+object_pricing_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/object_pricing_test.dir/object_pricing_test.cpp.s
+.PHONY : object_pricing_test.cpp.s
+
+pipeline_module_test.o: pipeline_module_test.cpp.o
+.PHONY : pipeline_module_test.o
+
+# target to build an object file
+pipeline_module_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/pipeline_module_test.cpp.o
+.PHONY : pipeline_module_test.cpp.o
+
+pipeline_module_test.i: pipeline_module_test.cpp.i
+.PHONY : pipeline_module_test.i
+
+# target to preprocess a source file
+pipeline_module_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/pipeline_module_test.cpp.i
+.PHONY : pipeline_module_test.cpp.i
+
+pipeline_module_test.s: pipeline_module_test.cpp.s
+.PHONY : pipeline_module_test.s
+
+# target to generate assembly for a file
+pipeline_module_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/build.make PlussMa/Math/Finance/pricing/test/CMakeFiles/pipeline_module_test.dir/pipeline_module_test.cpp.s
+.PHONY : pipeline_module_test.cpp.s
 
 sabr_slv_pricing_test.o: sabr_slv_pricing_test.cpp.o
 .PHONY : sabr_slv_pricing_test.o
@@ -361,7 +475,10 @@ help:
 	@echo "... test"
 	@echo "... bates_pricing_test"
 	@echo "... black_scholes_test"
+	@echo "... cos_fft_greeks_catch2"
 	@echo "... heston_sv_pricing_test"
+	@echo "... object_pricing_test"
+	@echo "... pipeline_module_test"
 	@echo "... sabr_slv_pricing_test"
 	@echo "... bates_pricing_test.o"
 	@echo "... bates_pricing_test.i"
@@ -369,9 +486,18 @@ help:
 	@echo "... black_scholes_test.o"
 	@echo "... black_scholes_test.i"
 	@echo "... black_scholes_test.s"
+	@echo "... cos_fft_greeks_catch2.o"
+	@echo "... cos_fft_greeks_catch2.i"
+	@echo "... cos_fft_greeks_catch2.s"
 	@echo "... heston_sv_pricing_test.o"
 	@echo "... heston_sv_pricing_test.i"
 	@echo "... heston_sv_pricing_test.s"
+	@echo "... object_pricing_test.o"
+	@echo "... object_pricing_test.i"
+	@echo "... object_pricing_test.s"
+	@echo "... pipeline_module_test.o"
+	@echo "... pipeline_module_test.i"
+	@echo "... pipeline_module_test.s"
 	@echo "... sabr_slv_pricing_test.o"
 	@echo "... sabr_slv_pricing_test.i"
 	@echo "... sabr_slv_pricing_test.s"

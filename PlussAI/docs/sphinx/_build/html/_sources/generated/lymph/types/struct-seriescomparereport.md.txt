@@ -1,0 +1,21 @@
+# `SeriesCompareReport`
+
+## Signature
+
+```cpp
+struct SeriesCompareReport;
+```
+
+## Notes
+
+Structured report object carrying metrics/diagnostics from training/evaluation routines.
+
+## Example
+
+```cpp
+SeriesCompareReport cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:276

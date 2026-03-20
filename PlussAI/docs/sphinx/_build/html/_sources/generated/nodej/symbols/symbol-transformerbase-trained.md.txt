@@ -1,0 +1,13 @@
+# `TransformerBase::trained`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/transformerbase-trained-ov1.md): `[[nodiscard]] virtual bool TransformerBase::trained(self) const noexcept = 0;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/interfaces.h`:44

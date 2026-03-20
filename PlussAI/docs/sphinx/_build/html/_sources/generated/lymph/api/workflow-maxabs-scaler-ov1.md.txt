@@ -1,0 +1,102 @@
+# `Workflow::maxabs_scaler`
+
+## Signature
+
+```cpp
+Workflow& Workflow::maxabs_scaler(self, prep::MaxAbsScalerOptions options = {}, std::vector<std::int64_t> feature_route = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `prep::MaxAbsScalerOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `feature_route` : `std::vector<std::int64_t>`, default: `{}`
+  Input feature data used by this call.
+
+## Returns
+
+Returns `Workflow&`.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] inline MaxAbsScaler maxabs_scaler(MaxAbsScalerOptions options = {}) { return MaxAbsScaler(options); };`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport Workflow::assess(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+  StatusOr<Series> test_robust_scaled_or = robust_scaler.map(test_simple_batch);
+  if (!test_robust_scaled_or.ok()) {
+    std::cerr << "RobustScaler.map(test) failed: " << test_robust_scaled_or.status().message << "\n";
+    return 1;
+  }
+  Series test_robust_scaled = test_robust_scaled_or.move_value();
+
+  prep::MaxAbsScaler maxabs_scaler(prep::MaxAbsScalerOptions{.floor = 1e-12});
+  StatusOr<Series> train_maxabs_scaled_or = maxabs_scaler.learn_map(train_simple_batch);
+  if (!train_maxabs_scaled_or.ok()) {
+    std::cerr << "MaxAbsScaler.learn_map(train) failed: " << train_maxabs_scaled_or.status().message << "\n";
+    return 1;
+  }
+  Series train_maxabs_scaled = train_maxabs_scaled_or.move_value();
+
+  StatusOr<Series> test_maxabs_scaled_or = maxabs_scaler.map(test_simple_batch);
+  if (!test_maxabs_scaled_or.ok()) {
+    std::cerr << "MaxAbsScaler.map(test) failed: " << test_maxabs_scaled_or.status().message << "\n";
+    return 1;
+  }
+  Series test_maxabs_scaled = test_maxabs_scaled_or.move_value();
+
+  // This section saves compact prep-state diagnostics.
+  StatusOr<std::vector<Series>> simple_state_or = simple_imputer.dump_state();
+```
+
+### Example 2
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+        .lower_quantile = 0.15,
+        .upper_quantile = 0.85,
+        .range_floor = 1e-9,
+    });
+    const DataFrame train_robust_scaled = robust_scaler.learn_map(train_simple_imputed);
+    const DataFrame test_robust_scaled = robust_scaler.map(test_simple_imputed);
+    const auto robust_summary = robust_scaler.summary();
+
+    auto maxabs_scaler = lymph::prep::maxabs_scaler(lymph::prep::MaxAbsScalerOptions{.floor = 1e-12});
+    const DataFrame train_maxabs_scaled = maxabs_scaler.learn_map(train_simple_imputed);
+    const DataFrame test_maxabs_scaled = maxabs_scaler.map(test_simple_imputed);
+    const auto maxabs_summary = maxabs_scaler.summary();
+
+    // This section persists preprocessing outputs for inspection.
+    train_simple_imputed.save_csv((out_dir / "prep_train_simple_imputed.csv").string());
+    train_knn_imputed.save_csv((out_dir / "prep_train_knn_imputed.csv").string());
+    train_iter_imputed.save_csv((out_dir / "prep_train_iter_imputed.csv").string());
+    train_scaled.save_csv((out_dir / "prep_train_standard_scaled.csv").string());
+    train_robust_scaled.save_csv((out_dir / "prep_train_robust_scaled.csv").string());
+    train_maxabs_scaled.save_csv((out_dir / "prep_train_maxabs_scaled.csv").string());
+
+    // This section stores compact preprocessing state snapshots as CSV.
+    DataFrame prep_state_frame({
+        {"simple_imputer_state_cols", Thread(pluss::make_series(std::vector<double>{static_cast<double>(simple_imp_summary.feature_names.size())}, {1}))},
+        {"knn_imputer_state_cols", Thread(pluss::make_series(std::vector<double>{static_cast<double>(knn_imp_summary.feature_names.size())}, {1}))},
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:1353

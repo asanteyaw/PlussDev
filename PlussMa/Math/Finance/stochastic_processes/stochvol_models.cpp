@@ -1,8 +1,52 @@
 #include "pluss/subsp/math/finance/models.h"
+#include "pluss/subsp/math/finance/objects.h"
+#include "pluss/codem/series_factory.h"
 
 #include <utility>
 
 namespace pluss::subsp::math::finance::models {
+namespace {
+
+using pluss::codem::Config;
+using pluss::codem::ScalarType;
+using pluss::codem::Series;
+
+Config f64_cfg_(Config cfg, Platform p) {
+  return Config{}.with_dtype(ScalarType::Float64).with_platform(p).with_pinned(cfg.pinned);
+}
+
+Series scalar_series_(double v, Config cfg) {
+  return pluss::full({1}, v, cfg);
+}
+
+object::model::Heston to_series_model_(const volatility::HestonParams& p, Config cfg) {
+  return object::model::Heston{
+      .kappa = scalar_series_(p.kappa, cfg),
+      .theta = scalar_series_(p.theta, cfg),
+      .sigma = scalar_series_(p.sigma, cfg),
+      .rho = scalar_series_(p.rho, cfg),
+      .v0 = scalar_series_(p.v0, cfg),
+      .mu = scalar_series_(p.mu, cfg),
+      .variance_floor = scalar_series_(p.variance_floor, cfg),
+  };
+}
+
+object::model::Bates to_series_model_(const volatility::BatesParams& p, Config cfg) {
+  return object::model::Bates{
+      .kappa = scalar_series_(p.kappa, cfg),
+      .theta = scalar_series_(p.theta, cfg),
+      .sigma = scalar_series_(p.sigma, cfg),
+      .rho = scalar_series_(p.rho, cfg),
+      .v0 = scalar_series_(p.v0, cfg),
+      .mu = scalar_series_(p.mu, cfg),
+      .variance_floor = scalar_series_(p.variance_floor, cfg),
+      .jump_intensity = scalar_series_(p.jump_intensity, cfg),
+      .jump_mean = scalar_series_(p.jump_mean, cfg),
+      .jump_vol = scalar_series_(p.jump_vol, cfg),
+  };
+}
+
+} // namespace
 
 Heston::Heston(volatility::HestonParams params) : params_(params) {}
 
@@ -34,6 +78,39 @@ double Heston::price(pricing::OptionType type,
   return pricing::heston_price(type, spot, strike, rate, dividend_yield, maturity, params_, options);
 }
 
+Series Heston::price(pricing::OptionType type,
+                     const Series& spot,
+                     const Series& strike,
+                     const Series& rate,
+                     const Series& dividend_yield,
+                     const Series& maturity,
+                     const pricing::HestonFftOptions& options,
+                     pluss::codem::Config cfg) const {
+  const auto out_cfg = f64_cfg_(cfg, spot.platform());
+  const instrument::Vanilla inst{
+      .type = type,
+      .strike = strike,
+      .maturity = maturity,
+  };
+  const market::State mkt{
+      .spot = spot,
+      .rate = rate,
+      .dividend_yield = dividend_yield,
+  };
+  const auto mdl = to_series_model_(params_, out_cfg);
+  const pricer::Fft fft{
+      .vol_risk_premium = options.vol_risk_premium,
+      .mode = options.mode,
+      .num_fft = options.num_fft,
+      .du = options.characteristic_fcn_step,
+      .dk = options.log_strike_step,
+      .alpha = options.damping_factor,
+      .quadrature = options.quadrature,
+      .return_grid = false,
+  };
+  return fft.price(inst, mdl, mkt, pricer::RiskSpec::PriceOnly, out_cfg).price;
+}
+
 double Heston::price_mc(pricing::OptionType type,
                         double spot,
                         double strike,
@@ -43,6 +120,44 @@ double Heston::price_mc(pricing::OptionType type,
                         const pricing::MonteCarloOptions& options,
                         pluss::codem::Config cfg) const {
   return pricing::heston_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+}
+
+Series Heston::price_mc(pricing::OptionType type,
+                        const Series& spot,
+                        const Series& strike,
+                        const Series& rate,
+                        const Series& dividend_yield,
+                        const Series& maturity,
+                        const pricing::MonteCarloOptions& options,
+                        pluss::codem::Config cfg) const {
+  const auto out_cfg = f64_cfg_(cfg, spot.platform());
+  const instrument::Vanilla inst{
+      .type = type,
+      .strike = strike,
+      .maturity = maturity,
+  };
+  const market::State mkt{
+      .spot = spot,
+      .rate = rate,
+      .dividend_yield = dividend_yield,
+  };
+  const auto mdl = to_series_model_(params_, out_cfg);
+  const pricer::MonteCarlo mc{
+      .paths = options.paths,
+      .steps = options.steps,
+      .scheme = options.scheme,
+      .rand_method = options.rand_method,
+      .randomized_quasi = options.randomized_quasi,
+      .sobol_scrambling = options.sobol_scrambling,
+      .antithetic = options.antithetic,
+      .control_variate = options.control_variate,
+      .importance_sampling = options.importance_sampling,
+      .importance_shift = options.importance_shift,
+      .control_vol = options.control_vol,
+      .offset = options.offset,
+      .seed = options.seed,
+  };
+  return mc.price(inst, mdl, mkt, pricer::RiskSpec::PriceOnly, out_cfg).price;
 }
 
 double Heston::sse(const std::vector<calibration::OptionQuote>& quotes,
@@ -103,6 +218,88 @@ double Bates::price_mc(pricing::OptionType type,
                        const pricing::MonteCarloOptions& options,
                        pluss::codem::Config cfg) const {
   return pricing::bates_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+}
+
+double Bates::price_fft(pricing::OptionType type,
+                        double spot,
+                        double strike,
+                        double rate,
+                        double dividend_yield,
+                        double maturity,
+                        const pricing::HestonFftOptions& options,
+                        pluss::codem::Config cfg) const {
+  return pricing::bates_price_fft(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+}
+
+Series Bates::price_mc(pricing::OptionType type,
+                       const Series& spot,
+                       const Series& strike,
+                       const Series& rate,
+                       const Series& dividend_yield,
+                       const Series& maturity,
+                       const pricing::MonteCarloOptions& options,
+                       pluss::codem::Config cfg) const {
+  const auto out_cfg = f64_cfg_(cfg, spot.platform());
+  const instrument::Vanilla inst{
+      .type = type,
+      .strike = strike,
+      .maturity = maturity,
+  };
+  const market::State mkt{
+      .spot = spot,
+      .rate = rate,
+      .dividend_yield = dividend_yield,
+  };
+  const auto mdl = to_series_model_(params_, out_cfg);
+  const pricer::MonteCarlo mc{
+      .paths = options.paths,
+      .steps = options.steps,
+      .scheme = options.scheme,
+      .rand_method = options.rand_method,
+      .randomized_quasi = options.randomized_quasi,
+      .sobol_scrambling = options.sobol_scrambling,
+      .antithetic = options.antithetic,
+      .control_variate = options.control_variate,
+      .importance_sampling = options.importance_sampling,
+      .importance_shift = options.importance_shift,
+      .control_vol = options.control_vol,
+      .offset = options.offset,
+      .seed = options.seed,
+  };
+  return mc.price(inst, mdl, mkt, pricer::RiskSpec::PriceOnly, out_cfg).price;
+}
+
+Series Bates::price_fft(pricing::OptionType type,
+                        const Series& spot,
+                        const Series& strike,
+                        const Series& rate,
+                        const Series& dividend_yield,
+                        const Series& maturity,
+                        const pricing::HestonFftOptions& options,
+                        pluss::codem::Config cfg) const {
+  const auto out_cfg = f64_cfg_(cfg, spot.platform());
+  const instrument::Vanilla inst{
+      .type = type,
+      .strike = strike,
+      .maturity = maturity,
+  };
+  const market::State mkt{
+      .spot = spot,
+      .rate = rate,
+      .dividend_yield = dividend_yield,
+  };
+  const auto mdl = to_series_model_(params_, out_cfg);
+  const pricer::Fft fft{
+      .vol_risk_premium = options.vol_risk_premium,
+      .mode = options.mode,
+      .num_fft = options.num_fft,
+      .du = options.characteristic_fcn_step,
+      .dk = options.log_strike_step,
+      .alpha = options.damping_factor,
+      .quadrature = options.quadrature,
+      .return_grid = false,
+  };
+  return fft.price(inst, mdl, mkt, pricer::RiskSpec::PriceOnly, out_cfg).price;
 }
 
 double Bates::sse(const std::vector<calibration::OptionQuote>& quotes,
@@ -342,6 +539,68 @@ double Slv::price_mc(pricing::OptionType type,
                      const pricing::MonteCarloOptions& options,
                      pluss::codem::Config cfg) const {
   return pricing::slv_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+}
+
+RoughHeston::RoughHeston(volatility::RoughHestonParams params) : params_(params) {}
+
+const volatility::RoughHestonParams& RoughHeston::params() const noexcept {
+  return params_;
+}
+
+void RoughHeston::set_params(const volatility::RoughHestonParams& params) {
+  params_ = params;
+}
+
+volatility::StochVolPaths RoughHeston::paths(std::int64_t steps,
+                                             std::int64_t num_paths,
+                                             double spot0,
+                                             double dt,
+                                             const volatility::SimOptions& options,
+                                             pluss::codem::Config cfg,
+                                             std::uint64_t seed) const {
+  return volatility::rough_heston_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
+}
+
+double RoughHeston::price_mc(pricing::OptionType type,
+                             double spot,
+                             double strike,
+                             double rate,
+                             double dividend_yield,
+                             double maturity,
+                             const pricing::MonteCarloOptions& options,
+                             pluss::codem::Config cfg) const {
+  return pricing::rough_heston_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+}
+
+RoughBergomi::RoughBergomi(volatility::RoughBergomiParams params) : params_(params) {}
+
+const volatility::RoughBergomiParams& RoughBergomi::params() const noexcept {
+  return params_;
+}
+
+void RoughBergomi::set_params(const volatility::RoughBergomiParams& params) {
+  params_ = params;
+}
+
+volatility::StochVolPaths RoughBergomi::paths(std::int64_t steps,
+                                              std::int64_t num_paths,
+                                              double spot0,
+                                              double dt,
+                                              const volatility::SimOptions& options,
+                                              pluss::codem::Config cfg,
+                                              std::uint64_t seed) const {
+  return volatility::rough_bergomi_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
+}
+
+double RoughBergomi::price_mc(pricing::OptionType type,
+                              double spot,
+                              double strike,
+                              double rate,
+                              double dividend_yield,
+                              double maturity,
+                              const pricing::MonteCarloOptions& options,
+                              pluss::codem::Config cfg) const {
+  return pricing::rough_bergomi_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
 }
 
 VasicekRate::VasicekRate(rates::VasicekParams params) : params_(params) {}

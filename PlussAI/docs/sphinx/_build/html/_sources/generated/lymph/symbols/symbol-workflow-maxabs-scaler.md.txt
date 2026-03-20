@@ -1,0 +1,13 @@
+# `Workflow::maxabs_scaler`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/workflow-maxabs-scaler-ov1.md): `Workflow& Workflow::maxabs_scaler(self, prep::MaxAbsScalerOptions options = {}, std::vector<std::int64_t> feature_route = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:1353

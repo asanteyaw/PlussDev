@@ -1,0 +1,27 @@
+# `NeighborFamilyOptions`
+
+## Signature
+
+```cpp
+struct NeighborFamilyOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `std::int64_t k = 5`
+- `bool distance_weighted = false`
+- `bool standardize = true`
+
+## Example
+
+```cpp
+NeighborFamilyOptions cfg{};
+// cfg.k = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:83

@@ -1,0 +1,22 @@
+# `KernelFamilyOptions::gamma`
+
+## Signature
+
+```cpp
+KernelFamilyOptions::double gamma = 0.0;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+KernelFamilyOptions cfg{};
+// cfg.gamma = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:89

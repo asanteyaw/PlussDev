@@ -1002,7 +1002,7 @@ DataFrame project_frame(const DataFrame& frame,
     if (is_case_projection(proj.source, options) && !frame.has_feature(resolved_source)) {
       col = frame.cases();
     } else {
-      col = frame.column(resolved_source);
+      col = frame.features(resolved_source);
     }
     auto out_name = proj.output;
     const auto it = name_to_idx.find(out_name);

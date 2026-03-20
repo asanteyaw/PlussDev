@@ -1,0 +1,21 @@
+# `QuantileMapOutput`
+
+## Signature
+
+```cpp
+using QuantileMapOutput = ::pluss::ai::nodej::prep::QuantileMapOutput;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+QuantileMapOutput value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:54

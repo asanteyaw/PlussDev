@@ -1,0 +1,40 @@
+# `MinMaxScaler::trained`
+
+## Signature
+
+```cpp
+[[nodiscard]] bool MinMaxScaler::trained(self) const noexcept override;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+
+## Returns
+
+Returns `bool`.
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## See also
+
+- `[[nodiscard]] virtual bool EstimatorBase::trained(self) const noexcept = 0;`
+- `[[nodiscard]] bool Flow::trained(self) const noexcept;`
+- `[[nodiscard]] bool FrequencyEncoder::trained(self) const noexcept override;`
+- `[[nodiscard]] bool IterativeImputer::trained(self) const noexcept override;`
+- `[[nodiscard]] bool MaxAbsScaler::trained(self) const noexcept override;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+MinMaxScaler minMaxScaler{};
+auto out = minMaxScaler.trained(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:159

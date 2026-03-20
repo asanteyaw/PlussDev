@@ -3155,6 +3155,16 @@ struct PairPlotOptions {
   bool show_grid{false};
   bool hide_inner_ticks{true};
   std::int64_t diag_density_points{128};
+  std::optional<double> x_tick_rotation_deg{std::nullopt};
+  std::optional<double> y_tick_rotation_deg{std::nullopt};
+  std::optional<double> x_label_rotation_deg{std::nullopt};
+  std::optional<double> y_label_rotation_deg{std::nullopt};
+  std::optional<TickFormat> x_tick_format{std::nullopt};
+  std::optional<TickFormat> y_tick_format{std::nullopt};
+  std::optional<double> x_tick_label_gap_points{std::nullopt};
+  std::optional<double> y_tick_label_gap_points{std::nullopt};
+  std::optional<double> x_label_gap_points{std::nullopt};
+  std::optional<double> y_label_gap_points{std::nullopt};
 };
 
 [[nodiscard]] inline std::pair<std::vector<Series>, std::vector<std::string>> dataset_numeric_columns(
@@ -3236,6 +3246,41 @@ inline Studio& pairplot(Studio& studio, const std::vector<Series>& columns, cons
           .grid(pair_options.show_grid ? GridStyle::Major : GridStyle::None)
           .tick_font_scale(tick_scale)
           .axis_label_font_scale(safe_axis_label_font_scale);
+      if (pair_options.x_tick_format.has_value()) {
+        pane.x_tick_format(*pair_options.x_tick_format);
+      }
+      if (pair_options.y_tick_format.has_value()) {
+        pane.y_tick_format(*pair_options.y_tick_format);
+      }
+      if (pair_options.x_tick_label_gap_points.has_value()) {
+        pane.x_tick_label_gap(*pair_options.x_tick_label_gap_points);
+      }
+      if (pair_options.y_tick_label_gap_points.has_value()) {
+        pane.y_tick_label_gap(*pair_options.y_tick_label_gap_points);
+      }
+      if (pair_options.x_label_gap_points.has_value()) {
+        pane.x_label_gap(*pair_options.x_label_gap_points);
+      }
+      if (pair_options.y_label_gap_points.has_value()) {
+        pane.y_label_gap(*pair_options.y_label_gap_points);
+      }
+      if (edge_y) {
+        // Pairplot y-labels are feature names; center them on-axis to avoid
+        // collisions with dense y tick labels when rotated.
+        pane.y_label_centered(true);
+      }
+      if (pair_options.x_tick_rotation_deg.has_value()) {
+        pane.x_tick_rotation(*pair_options.x_tick_rotation_deg);
+      }
+      if (pair_options.y_tick_rotation_deg.has_value()) {
+        pane.y_tick_rotation(*pair_options.y_tick_rotation_deg);
+      }
+      if (pair_options.x_label_rotation_deg.has_value()) {
+        pane.x_label_rotation(*pair_options.x_label_rotation_deg);
+      }
+      if (pair_options.y_label_rotation_deg.has_value()) {
+        pane.y_label_rotation(*pair_options.y_label_rotation_deg);
+      }
       if (pair_options.auto_tick_decimals.has_value()) {
         pane.x_auto_tick_decimals(*pair_options.auto_tick_decimals);
         pane.y_auto_tick_decimals(*pair_options.auto_tick_decimals);

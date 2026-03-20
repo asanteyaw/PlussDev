@@ -1,0 +1,22 @@
+# `LinearParameters::fit_intercept`
+
+## Signature
+
+```cpp
+LinearParameters::bool fit_intercept = false;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+LinearParameters cfg{};
+// cfg.fit_intercept = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:300

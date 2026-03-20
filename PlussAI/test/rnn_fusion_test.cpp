@@ -197,6 +197,54 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  pluss::nn::Fusion sched_fc1(2, 2, true, cfg, 51ULL);
+  pluss::nn::Fusion sched_fc2(2, 1, true, cfg, 53ULL);
+  sched_fc1->weight() = pluss::make_series(std::vector<double>{1.0, 0.0, 0.0, 1.0}, {2, 2}, cfg);
+  sched_fc1->bias() = pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg);
+  sched_fc2->weight() = pluss::make_series(std::vector<double>{2.0, -1.0}, {1, 2}, cfg);
+  sched_fc2->bias() = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
+  pluss::nn::Schedule schedule(sched_fc1, pluss::nn::ReLU(), sched_fc2);
+  const Series schedule_in = pluss::make_series(std::vector<double>{1.0, -1.0, 0.5, 2.0}, {2, 2}, cfg);
+  const Series schedule_out = schedule->forward(schedule_in);
+  pluss::nn::ReLU sched_relu;
+  const Series schedule_ref = sched_fc2->forward(sched_relu->forward(sched_fc1->forward(schedule_in)));
+  if (!approx_vec(vec_f64(schedule_out), vec_f64(schedule_ref))) {
+    if (err) *err << "Schedule forward chaining mismatch\nout=" << schedule_out << "\nref=" << schedule_ref << "\n";
+    return false;
+  }
+  const auto schedule_named_params = schedule->named_parameters();
+  if (schedule_named_params.size() != 4 ||
+      schedule_named_params[0].name != "0.weight" ||
+      schedule_named_params[1].name != "0.bias" ||
+      schedule_named_params[2].name != "2.weight" ||
+      schedule_named_params[3].name != "2.bias") {
+    if (err) *err << "Schedule named_parameters recursion/naming mismatch\n";
+    return false;
+  }
+  schedule->eval();
+  if (schedule->is_training() || sched_fc1.is_training() || sched_fc2.is_training()) {
+    if (err) *err << "Schedule eval recursion mismatch\n";
+    return false;
+  }
+  schedule->train();
+  if (!schedule->is_training() || !sched_fc1.is_training() || !sched_fc2.is_training()) {
+    if (err) *err << "Schedule train recursion mismatch\n";
+    return false;
+  }
+  pluss::nn::Schedule named_schedule;
+  named_schedule->then("encoder", pluss::nn::Fusion(2, 2, true, cfg, 57ULL));
+  named_schedule->then("act", pluss::nn::ReLU());
+  named_schedule->then("head", pluss::nn::Fusion(2, 1, true, cfg, 59ULL));
+  const auto named_schedule_modules = named_schedule->named_modules();
+  if (named_schedule_modules.size() != 4 ||
+      named_schedule_modules[0].name != "" ||
+      named_schedule_modules[1].name != "encoder" ||
+      named_schedule_modules[2].name != "act" ||
+      named_schedule_modules[3].name != "head") {
+    if (err) *err << "Schedule then(name, layer) naming mismatch\n";
+    return false;
+  }
+
   const pluss::StackArray<Series> stack_items{
       pluss::make_series(std::vector<double>{1.0, 2.0}, {2}, cfg),
       pluss::make_series(std::vector<double>{3.0, 4.0}, {2}, cfg),
@@ -382,7 +430,7 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
 
 #ifdef PLUSS_AI_HAS_CATCH2
 TEST_CASE("rnn fusion surface stays aligned") {
-  REQUIRE(run_rnn_fusion_checks());
+  REQUIRE(run_rnn_fusion_checks(&std::cerr));
 }
 #else
 int main() {

@@ -173,7 +173,7 @@ void test_catalog_construction_and_selection() {
   const auto h = base.head(2);
   const auto t = base.tail(2);
   const auto s = base.slice(1, 4);
-  const auto i = base.iloc(0, 3);
+  const auto i = base.cloc(0, 3);
   expect(h.count() == 2, "head count mismatch");
   expect(t.count() == 2, "tail count mismatch");
   expect(s.count() == 3, "slice count mismatch");
@@ -479,7 +479,7 @@ void test_archive_to_table_bridge() {
   const pluss::table::Atlas atlas({f0, f1}, labels);
 
   const auto archive = pluss::kindle::Archive::kindelize(atlas);
-  expect(archive.iloc(0).nstreams() == 6, "Archive::iloc stream count mismatch");
+  expect(archive.dloc(0).nstreams() == 6, "Archive::dloc stream count mismatch");
   expect(archive.loc("batch_b").nstreams() == 6, "Archive::loc(string) stream count mismatch");
   expect(archive.head(1).depth() == 1, "Archive::head depth mismatch");
   expect(archive.tail(1).depth() == 1, "Archive::tail depth mismatch");

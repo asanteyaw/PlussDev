@@ -1,0 +1,13 @@
+# `Flow::add_power_map`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/flow-add-power-map-ov1.md): `Status Flow::add_power_map(self, prep::PowerMapOptions options = {}, std::vector<std::int64_t> feature_route = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/compose.h`:84

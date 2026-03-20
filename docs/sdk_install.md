@@ -16,6 +16,32 @@ cmake -S . -B build
 cmake --build build --target pluss -j
 ```
 
+## Build A Torch-Enabled SDK
+
+If you want `pluss` <-> LibTorch interop (`PLUSS_ENABLE_TORCH=ON`), configure a separate build tree for Torch:
+
+```bash
+cmake -S . -B build-torch-sdk \
+  -DPLUSS_ENABLE_TORCH=ON \
+  -DOPENSSL_ROOT_DIR=/Users/yawasante/software/miniconda3/envs/cpp_env \
+  -DCMAKE_PREFIX_PATH=/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/torch \
+  -DTorch_DIR=/Users/yawasante/software/miniconda3/envs/cpp_env/lib/python3.12/site-packages/torch/share/cmake/Torch \
+  -DPKG_CONFIG_EXECUTABLE=/Users/yawasante/software/miniconda3/envs/cpp_env/bin/pkg-config
+
+cmake --build build-torch-sdk --target pluss_sdk_stage -j1
+```
+
+Torch-enabled staged SDK path:
+
+```text
+build-torch-sdk/sdk/pluss-sdk-<version>-<os>-<arch>/
+```
+
+Notes:
+
+- Build Torch and non-Torch SDKs in separate build directories (for example `build/` and `build-torch-sdk/`).
+- If your app also uses `torch::Tensor` directly, keep `find_package(Torch REQUIRED)` in your consumer CMake for clarity.
+
 ## Produce A Downloadable SDK Folder
 
 To create a self-contained SDK folder:

@@ -1,0 +1,13 @@
+# `StandardScaler::features`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/standardscaler-features-ov1.md): `StandardScaler& StandardScaler::features(self, std::initializer_list<std::string_view> names);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:129

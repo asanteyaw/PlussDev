@@ -1,0 +1,13 @@
+# `OnlineLinearRegressor::advance`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/onlinelinearregressor-advance-ov1.md): `Status OnlineLinearRegressor::advance(self, const LabeledBatch& batch, const TrainOptions& options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/online.h`:53

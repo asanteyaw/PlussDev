@@ -1,0 +1,21 @@
+# `TreeCriterion::Entropy`
+
+## Signature
+
+```cpp
+TreeCriterion::Entropy;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = TreeCriterion::Entropy;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:35

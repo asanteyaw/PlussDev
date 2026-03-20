@@ -1,0 +1,41 @@
+# `hold_out_split`
+
+## Signature
+
+```cpp
+[[nodiscard]] inline std::pair<pluss::table::DataFrame, pluss::table::DataFrame> hold_out_split( const pluss::table::DataFrame& frame, HoldoutSplitOptions options = {});
+```
+
+## Parameters
+
+- `frame` : `const pluss::table::DataFrame&`
+  Input feature data used by this call.
+- `options` : `HoldoutSplitOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `std::pair<pluss::table::DataFrame, pluss::table::DataFrame>`.
+
+## Notes
+
+Builds train/test index partitions according to split-plan options.
+
+## See also
+
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `StatusOr<nodej::CrossAssessReport> assess_cv( const nodej::ModelSpec& spec, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {});`
+- `StatusOr<std::unique_ptr<nodej::ClassifierBase>> bayes_classifier( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+- `StatusOr<std::unique_ptr<nodej::RegressorBase>> bayes_regressor( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = hold_out_split(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:534

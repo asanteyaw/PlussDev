@@ -19,7 +19,7 @@ DataFrame DataFrame::summarize_specs(const std::vector<SummarySpec>& specs, bool
       continue;
     }
     if (spec.op == SummaryOp::Nunique) {
-      out_cols.emplace_back(out_name, make_i64_thread({nunique_non_null(feature_value)}));
+      out_cols.emplace_back(out_name, make_i64_thread({distinct_non_null_count(feature_value)}));
       continue;
     }
     out_cols.emplace_back(out_name, make_f64_thread({numeric_reduce_value(feature_value, spec.op)}));

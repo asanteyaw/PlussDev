@@ -1,0 +1,15 @@
+# `Workflow::model`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/workflow-model-ov1.md): `[[nodiscard]] const WorkflowModel& Workflow::model(self) const;`
+- [overload 2](../api/workflow-model-ov2.md): `[[nodiscard]] WorkflowModel& Workflow::model(self);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:1261
+- `PlussAI/include/pluss/ai/lymph/api.h`:1266

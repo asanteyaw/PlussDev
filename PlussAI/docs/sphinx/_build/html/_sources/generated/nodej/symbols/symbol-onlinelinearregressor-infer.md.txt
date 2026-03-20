@@ -1,0 +1,13 @@
+# `OnlineLinearRegressor::infer`
+
+## Notes
+
+Computes predictions from prepared inputs using the currently learned state.
+
+## Overloads
+
+- [overload 1](../api/onlinelinearregressor-infer-ov1.md): `[[nodiscard]] StatusOr<Series> OnlineLinearRegressor::infer(self, const FeatureBatch& batch, const InferOptions& options = {}) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/online.h`:55

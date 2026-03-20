@@ -1,0 +1,13 @@
+# `StandardScaler::learned`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/standardscaler-learned-ov1.md): `[[nodiscard]] bool StandardScaler::learned(self) const noexcept;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:154

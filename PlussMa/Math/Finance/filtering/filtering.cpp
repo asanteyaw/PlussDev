@@ -67,15 +67,67 @@ Series row_index_(std::int64_t i, Platform platform) {
   return pluss::full({1}, i, Config{}.with_dtype(ScalarType::Int64).with_platform(platform));
 }
 
-double innovation_loglik_(const Series& innovation, const Series& innovation_cov) {
+Series index_from_vector_(const std::vector<std::int64_t>& idx, Platform platform) {
+  return pluss::make_series(idx, {static_cast<std::int64_t>(idx.size())},
+                            Config{}.with_dtype(ScalarType::Int64).with_platform(platform));
+}
+
+double innovation_loglik_(const Series& innovation, const Series& innovation_cov, double info_tol) {
   const auto m = innovation.numel();
+  if (m <= 0) {
+    return 0.0;
+  }
   const Series s_inv = pluss::subsp::math::linalg::pinverse(innovation_cov, 1e-12);
   const double quad = innovation.transpose(0, 1).matmul(s_inv).matmul(innovation).reshape({1}).item<double>();
   const Series slog = pluss::subsp::math::linalg::slogdet(innovation_cov).reshape({2});
   const double sign = slog.select(0, 0).item<double>();
   const double logdet = slog.select(0, 1).item<double>();
-  const double log_norm = static_cast<double>(m) * kLog2Pi + ((sign > 0.0 && std::isfinite(logdet)) ? logdet : 0.0);
+  if (sign > 0.0 && std::isfinite(logdet)) {
+    return -0.5 * (static_cast<double>(m) * kLog2Pi + logdet + quad);
+  }
+
+  const Series singular_values = pluss::subsp::math::linalg::svd(innovation_cov, false).S;
+  const std::vector<double> sv = singular_values.to(pluss::pCPU, ScalarType::Float64).reshape({singular_values.numel()}).to_vec<double>();
+  const double tol = std::max(info_tol, kTiny);
+  std::int64_t rank = 0;
+  double pseudo_logdet = 0.0;
+  for (double v : sv) {
+    if (v > tol && std::isfinite(v)) {
+      pseudo_logdet += std::log(v);
+      ++rank;
+    }
+  }
+  if (rank == 0) {
+    return 0.0;
+  }
+  const double log_norm = static_cast<double>(rank) * kLog2Pi + pseudo_logdet;
   return -0.5 * (log_norm + quad);
+}
+
+std::vector<std::int64_t> informative_obs_idx_(const Series& yt, const Series& innovation_cov, double info_tol) {
+  const auto m = yt.numel();
+  const std::vector<double> yv = yt.to(pluss::pCPU, ScalarType::Float64).reshape({m}).to_vec<double>();
+  const std::vector<double> s_flat =
+      innovation_cov.to(pluss::pCPU, ScalarType::Float64).reshape({m * m}).to_vec<double>();
+  std::vector<std::int64_t> idx;
+  idx.reserve(static_cast<std::size_t>(m));
+  for (std::int64_t i = 0; i < m; ++i) {
+    const double sii = s_flat[static_cast<std::size_t>(i * m + i)];
+    if (std::isfinite(yv[static_cast<std::size_t>(i)]) && std::isfinite(sii) && sii > info_tol) {
+      idx.push_back(i);
+    }
+  }
+  return idx;
+}
+
+Series data_used_row_(std::int64_t m, const std::vector<std::int64_t>& obs_idx, Config cfg) {
+  std::vector<double> used(static_cast<std::size_t>(m), 0.0);
+  for (const auto i : obs_idx) {
+    if (i >= 0 && i < m) {
+      used[static_cast<std::size_t>(i)] = 1.0;
+    }
+  }
+  return pluss::make_series(used, {1, m}, pluss::cfg::dtype(cfg.dtype), pluss::cfg::platform(cfg.platform));
 }
 
 void validate_observations_(const Series& y, const char* op) {
@@ -135,7 +187,7 @@ Series weighted_cov_(const Series& rows, const Series& mean_col, const Series& w
   return centered.transpose(0, 1).matmul(centered.mul(w)).add(add_cov);
 }
 
-Series systematic_resample_idx_(const Series& weights, std::int64_t n, Platform platform, std::uint64_t seed) {
+std::vector<double> normalized_cdf_(const Series& weights, std::int64_t n) {
   const std::vector<double> w = weights.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
   std::vector<double> cdf(static_cast<std::size_t>(n), 0.0);
   double run = 0.0;
@@ -147,7 +199,11 @@ Series systematic_resample_idx_(const Series& weights, std::int64_t n, Platform 
   for (double& v : cdf) {
     v /= norm;
   }
+  return cdf;
+}
 
+Series systematic_resample_idx_(const Series& weights, std::int64_t n, Platform platform, std::uint64_t seed) {
+  const std::vector<double> cdf = normalized_cdf_(weights, n);
   std::mt19937_64 gen(seed);
   std::uniform_real_distribution<double> unif(0.0, 1.0 / static_cast<double>(n));
   const double u0 = unif(gen);
@@ -162,6 +218,88 @@ Series systematic_resample_idx_(const Series& weights, std::int64_t n, Platform 
     idx[static_cast<std::size_t>(i)] = j;
   }
   return pluss::make_series(idx, {n}, pluss::cfg::dtype(ScalarType::Int64), pluss::cfg::platform(platform));
+}
+
+Series multinomial_resample_idx_(const Series& weights, std::int64_t n, Platform platform, std::uint64_t seed) {
+  const std::vector<double> cdf = normalized_cdf_(weights, n);
+  std::mt19937_64 gen(seed);
+  std::uniform_real_distribution<double> unif(0.0, 1.0);
+
+  std::vector<std::int64_t> idx(static_cast<std::size_t>(n), 0);
+  for (std::int64_t i = 0; i < n; ++i) {
+    const double u = unif(gen);
+    const auto it = std::lower_bound(cdf.begin(), cdf.end(), u);
+    idx[static_cast<std::size_t>(i)] = static_cast<std::int64_t>(std::distance(cdf.begin(), it));
+  }
+  return pluss::make_series(idx, {n}, pluss::cfg::dtype(ScalarType::Int64), pluss::cfg::platform(platform));
+}
+
+Series stratified_resample_idx_(const Series& weights, std::int64_t n, Platform platform, std::uint64_t seed) {
+  const std::vector<double> cdf = normalized_cdf_(weights, n);
+  std::mt19937_64 gen(seed);
+  std::uniform_real_distribution<double> unif(0.0, 1.0);
+
+  std::vector<std::int64_t> idx(static_cast<std::size_t>(n), 0);
+  for (std::int64_t i = 0; i < n; ++i) {
+    const double u = (static_cast<double>(i) + unif(gen)) / static_cast<double>(n);
+    const auto it = std::lower_bound(cdf.begin(), cdf.end(), u);
+    idx[static_cast<std::size_t>(i)] = static_cast<std::int64_t>(std::distance(cdf.begin(), it));
+  }
+  return pluss::make_series(idx, {n}, pluss::cfg::dtype(ScalarType::Int64), pluss::cfg::platform(platform));
+}
+
+Series residual_resample_idx_(const Series& weights, std::int64_t n, Platform platform, std::uint64_t seed) {
+  const std::vector<double> w = weights.to(pluss::pCPU, ScalarType::Float64).reshape({n}).to_vec<double>();
+  std::vector<std::int64_t> idx(static_cast<std::size_t>(n), 0);
+  std::vector<double> residual(static_cast<std::size_t>(n), 0.0);
+
+  std::int64_t filled = 0;
+  for (std::int64_t i = 0; i < n; ++i) {
+    const double expected = static_cast<double>(n) * std::max(0.0, w[static_cast<std::size_t>(i)]);
+    const std::int64_t copies = static_cast<std::int64_t>(std::floor(expected));
+    residual[static_cast<std::size_t>(i)] = expected - static_cast<double>(copies);
+    for (std::int64_t c = 0; c < copies && filled < n; ++c) {
+      idx[static_cast<std::size_t>(filled++)] = i;
+    }
+  }
+
+  const std::int64_t remaining = n - filled;
+  if (remaining > 0) {
+    const Series residual_series = pluss::make_series(residual, {n}, pluss::cfg::dtype(ScalarType::Float64), pluss::cfg::platform(pluss::pCPU));
+    const std::vector<double> cdf = normalized_cdf_(residual_series, n);
+    std::mt19937_64 gen(seed);
+    std::uniform_real_distribution<double> unif(0.0, 1.0);
+    for (std::int64_t k = 0; k < remaining; ++k) {
+      const double u = unif(gen);
+      const auto it = std::lower_bound(cdf.begin(), cdf.end(), u);
+      idx[static_cast<std::size_t>(filled + k)] = static_cast<std::int64_t>(std::distance(cdf.begin(), it));
+    }
+  }
+
+  return pluss::make_series(idx, {n}, pluss::cfg::dtype(ScalarType::Int64), pluss::cfg::platform(platform));
+}
+
+Series resample_idx_(const Series& weights,
+                     std::int64_t n,
+                     Platform platform,
+                     ParticleResampleMethod method,
+                     std::uint64_t seed) {
+  switch (method) {
+    case ParticleResampleMethod::Systematic:
+      return systematic_resample_idx_(weights, n, platform, seed);
+    case ParticleResampleMethod::Multinomial:
+      return multinomial_resample_idx_(weights, n, platform, seed);
+    case ParticleResampleMethod::Stratified:
+      return stratified_resample_idx_(weights, n, platform, seed);
+    case ParticleResampleMethod::Residual:
+      return residual_resample_idx_(weights, n, platform, seed);
+  }
+  return systematic_resample_idx_(weights, n, platform, seed);
+}
+
+bool has_any_finite_(const Series& x) {
+  const auto vals = x.to(pluss::pCPU, ScalarType::Float64).reshape({x.numel()}).to_vec<double>();
+  return std::any_of(vals.begin(), vals.end(), [](double v) { return std::isfinite(v); });
 }
 
 } // namespace
@@ -201,6 +339,7 @@ KalmanResult kalman_filter(const Series& observations, const KalmanModel& model,
   const Series I = pluss::eye(n, out_cfg);
 
   const bool use_control = model.control.defined() || model.control_matrix.defined();
+  const double info_tol = std::max(model.info_tol, 0.0);
   Series U = Series::undefined();
   Series B = Series::undefined();
   if (use_control) {
@@ -218,12 +357,14 @@ KalmanResult kalman_filter(const Series& observations, const KalmanModel& model,
   std::vector<Series> filt_covs;
   std::vector<Series> innovs;
   std::vector<Series> innov_covs;
+  std::vector<Series> data_used_rows;
   pred_means.reserve(static_cast<std::size_t>(t_obs));
   pred_covs.reserve(static_cast<std::size_t>(t_obs));
   filt_means.reserve(static_cast<std::size_t>(t_obs));
   filt_covs.reserve(static_cast<std::size_t>(t_obs));
   innovs.reserve(static_cast<std::size_t>(t_obs));
   innov_covs.reserve(static_cast<std::size_t>(t_obs));
+  data_used_rows.reserve(static_cast<std::size_t>(t_obs));
 
   double ll = 0.0;
   for (std::int64_t t = 0; t < t_obs; ++t) {
@@ -238,24 +379,42 @@ KalmanResult kalman_filter(const Series& observations, const KalmanModel& model,
     const Series yt = yv.index_select(0, idx_t).reshape({m, 1});
     const Series y_hat = H.matmul(x_pred);
     const Series innovation = yt.sub(y_hat);
-    const Series S = stabilize_cov_(H.matmul(P_pred).matmul(H.transpose(0, 1)).add(R), kTiny, out_cfg);
-    const Series S_inv = pluss::subsp::math::linalg::pinverse(S, 1e-12);
-    const Series K = P_pred.matmul(H.transpose(0, 1)).matmul(S_inv);
+    const Series S_full = stabilize_cov_(H.matmul(P_pred).matmul(H.transpose(0, 1)).add(R), kTiny, out_cfg);
 
-    x = x_pred.add(K.matmul(innovation));
-    const Series KH = K.matmul(H);
-    P = stabilize_cov_((I.sub(KH)).matmul(P_pred).matmul(I.sub(KH).transpose(0, 1)).add(K.matmul(R).matmul(K.transpose(0, 1))),
-                       kTiny,
-                       out_cfg);
+    const std::vector<std::int64_t> obs_idx = informative_obs_idx_(yt, S_full, info_tol);
+    if (!obs_idx.empty()) {
+      const Series idx_obs = index_from_vector_(obs_idx, out_cfg.platform);
+      const std::int64_t m_used = static_cast<std::int64_t>(obs_idx.size());
 
-    ll += innovation_loglik_(innovation, S);
+      const Series H_used = H.index_select(0, idx_obs).reshape({m_used, n});
+      const Series R_used = R.index_select(0, idx_obs).index_select(1, idx_obs).reshape({m_used, m_used});
+      const Series y_used = yt.index_select(0, idx_obs).reshape({m_used, 1});
+      const Series y_hat_used = y_hat.index_select(0, idx_obs).reshape({m_used, 1});
+      const Series innovation_used = y_used.sub(y_hat_used);
+      const Series S_used = stabilize_cov_(H_used.matmul(P_pred).matmul(H_used.transpose(0, 1)).add(R_used), kTiny, out_cfg);
+      const Series S_inv = pluss::subsp::math::linalg::pinverse(S_used, 1e-12);
+      const Series K = P_pred.matmul(H_used.transpose(0, 1)).matmul(S_inv);
+
+      x = x_pred.add(K.matmul(innovation_used));
+      const Series KH = K.matmul(H_used);
+      P = stabilize_cov_((I.sub(KH)).matmul(P_pred).matmul(I.sub(KH).transpose(0, 1))
+                             .add(K.matmul(R_used).matmul(K.transpose(0, 1))),
+                         kTiny,
+                         out_cfg);
+
+      ll += innovation_loglik_(innovation_used, S_used, info_tol);
+    } else {
+      x = x_pred;
+      P = P_pred;
+    }
 
     pred_means.push_back(x_pred.reshape({1, n}));
     pred_covs.push_back(P_pred.reshape({1, n, n}));
     filt_means.push_back(x.reshape({1, n}));
     filt_covs.push_back(P.reshape({1, n, n}));
     innovs.push_back(innovation.reshape({1, m}));
-    innov_covs.push_back(S.reshape({1, m, m}));
+    innov_covs.push_back(S_full.reshape({1, m, m}));
+    data_used_rows.push_back(data_used_row_(m, obs_idx, out_cfg));
   }
 
   return KalmanResult{
@@ -265,6 +424,7 @@ KalmanResult kalman_filter(const Series& observations, const KalmanModel& model,
       .predicted_cov = stack_rows_(pred_covs),
       .innovation = stack_rows_(innovs),
       .innovation_cov = stack_rows_(innov_covs),
+      .data_used = stack_rows_(data_used_rows),
       .loglik = ll,
   };
 }
@@ -292,6 +452,7 @@ KalmanResult ekf_filter(const Series& observations, const EkfModel& model, Confi
   Series P = as_matrix_(model.initial_cov, op, "initial_cov").to(out_cfg.platform, out_cfg.dtype);
 
   const std::int64_t n = x.numel();
+  const double info_tol = std::max(model.info_tol, 0.0);
   PLUSS_CHECK(Q.sizes()[0] == n && Q.sizes()[1] == n,
               "subsp::math::finance::filtering::ekf_filter: process_cov shape mismatch");
   PLUSS_CHECK(R.sizes()[0] == m && R.sizes()[1] == m,
@@ -307,12 +468,14 @@ KalmanResult ekf_filter(const Series& observations, const EkfModel& model, Confi
   std::vector<Series> filt_covs;
   std::vector<Series> innovs;
   std::vector<Series> innov_covs;
+  std::vector<Series> data_used_rows;
   pred_means.reserve(static_cast<std::size_t>(t_obs));
   pred_covs.reserve(static_cast<std::size_t>(t_obs));
   filt_means.reserve(static_cast<std::size_t>(t_obs));
   filt_covs.reserve(static_cast<std::size_t>(t_obs));
   innovs.reserve(static_cast<std::size_t>(t_obs));
   innov_covs.reserve(static_cast<std::size_t>(t_obs));
+  data_used_rows.reserve(static_cast<std::size_t>(t_obs));
 
   double ll = 0.0;
   for (std::int64_t t = 0; t < t_obs; ++t) {
@@ -333,24 +496,41 @@ KalmanResult ekf_filter(const Series& observations, const EkfModel& model, Confi
     const Series idx_t = row_index_(t, out_cfg.platform);
     const Series yt = yv.index_select(0, idx_t).reshape({m, 1});
     const Series innovation = yt.sub(y_hat);
-    const Series S = stabilize_cov_(H.matmul(P_pred).matmul(H.transpose(0, 1)).add(R), kTiny, out_cfg);
-    const Series S_inv = pluss::subsp::math::linalg::pinverse(S, 1e-12);
-    const Series K = P_pred.matmul(H.transpose(0, 1)).matmul(S_inv);
+    const Series S_full = stabilize_cov_(H.matmul(P_pred).matmul(H.transpose(0, 1)).add(R), kTiny, out_cfg);
+    const std::vector<std::int64_t> obs_idx = informative_obs_idx_(yt, S_full, info_tol);
 
-    x = x_pred.add(K.matmul(innovation));
-    const Series KH = K.matmul(H);
-    P = stabilize_cov_((I.sub(KH)).matmul(P_pred).matmul(I.sub(KH).transpose(0, 1)).add(K.matmul(R).matmul(K.transpose(0, 1))),
-                       kTiny,
-                       out_cfg);
+    if (!obs_idx.empty()) {
+      const Series idx_obs = index_from_vector_(obs_idx, out_cfg.platform);
+      const std::int64_t m_used = static_cast<std::int64_t>(obs_idx.size());
 
-    ll += innovation_loglik_(innovation, S);
+      const Series H_used = H.index_select(0, idx_obs).reshape({m_used, n});
+      const Series R_used = R.index_select(0, idx_obs).index_select(1, idx_obs).reshape({m_used, m_used});
+      const Series y_used = yt.index_select(0, idx_obs).reshape({m_used, 1});
+      const Series y_hat_used = y_hat.index_select(0, idx_obs).reshape({m_used, 1});
+      const Series innovation_used = y_used.sub(y_hat_used);
+      const Series S_used = stabilize_cov_(H_used.matmul(P_pred).matmul(H_used.transpose(0, 1)).add(R_used), kTiny, out_cfg);
+      const Series S_inv = pluss::subsp::math::linalg::pinverse(S_used, 1e-12);
+      const Series K = P_pred.matmul(H_used.transpose(0, 1)).matmul(S_inv);
+
+      x = x_pred.add(K.matmul(innovation_used));
+      const Series KH = K.matmul(H_used);
+      P = stabilize_cov_((I.sub(KH)).matmul(P_pred).matmul(I.sub(KH).transpose(0, 1))
+                             .add(K.matmul(R_used).matmul(K.transpose(0, 1))),
+                         kTiny,
+                         out_cfg);
+      ll += innovation_loglik_(innovation_used, S_used, info_tol);
+    } else {
+      x = x_pred;
+      P = P_pred;
+    }
 
     pred_means.push_back(x_pred.reshape({1, n}));
     pred_covs.push_back(P_pred.reshape({1, n, n}));
     filt_means.push_back(x.reshape({1, n}));
     filt_covs.push_back(P.reshape({1, n, n}));
     innovs.push_back(innovation.reshape({1, m}));
-    innov_covs.push_back(S.reshape({1, m, m}));
+    innov_covs.push_back(S_full.reshape({1, m, m}));
+    data_used_rows.push_back(data_used_row_(m, obs_idx, out_cfg));
   }
 
   return KalmanResult{
@@ -360,6 +540,7 @@ KalmanResult ekf_filter(const Series& observations, const EkfModel& model, Confi
       .predicted_cov = stack_rows_(pred_covs),
       .innovation = stack_rows_(innovs),
       .innovation_cov = stack_rows_(innov_covs),
+      .data_used = stack_rows_(data_used_rows),
       .loglik = ll,
   };
 }
@@ -383,6 +564,7 @@ KalmanResult ukf_filter(const Series& observations, const UkfModel& model, Confi
   Series P = as_matrix_(model.initial_cov, op, "initial_cov").to(out_cfg.platform, out_cfg.dtype);
 
   const std::int64_t n = x.numel();
+  const double info_tol = std::max(model.info_tol, 0.0);
   PLUSS_CHECK(Q.sizes()[0] == n && Q.sizes()[1] == n,
               "subsp::math::finance::filtering::ukf_filter: process_cov shape mismatch");
   PLUSS_CHECK(R.sizes()[0] == m && R.sizes()[1] == m,
@@ -391,6 +573,14 @@ KalmanResult ukf_filter(const Series& observations, const UkfModel& model, Confi
               "subsp::math::finance::filtering::ukf_filter: initial_cov shape mismatch");
 
   const std::int64_t k_sigma = 2 * n + 1;
+  PLUSS_CHECK(std::isfinite(model.options.alpha) && model.options.alpha > 0.0 && model.options.alpha <= 1.0,
+              "subsp::math::finance::filtering::ukf_filter: alpha must be in (0,1]");
+  PLUSS_CHECK(std::isfinite(model.options.beta) && model.options.beta >= 0.0,
+              "subsp::math::finance::filtering::ukf_filter: beta must be >= 0");
+  PLUSS_CHECK(std::isfinite(model.options.kappa) && model.options.kappa >= 0.0 && model.options.kappa <= 3.0,
+              "subsp::math::finance::filtering::ukf_filter: kappa must be in [0,3]");
+  PLUSS_CHECK(std::isfinite(model.options.jitter) && model.options.jitter >= 0.0,
+              "subsp::math::finance::filtering::ukf_filter: jitter must be >= 0");
   const double lambda = model.options.alpha * model.options.alpha * (static_cast<double>(n) + model.options.kappa) -
                         static_cast<double>(n);
   const double scale = static_cast<double>(n) + lambda;
@@ -408,12 +598,14 @@ KalmanResult ukf_filter(const Series& observations, const UkfModel& model, Confi
   std::vector<Series> filt_covs;
   std::vector<Series> innovs;
   std::vector<Series> innov_covs;
+  std::vector<Series> data_used_rows;
   pred_means.reserve(static_cast<std::size_t>(t_obs));
   pred_covs.reserve(static_cast<std::size_t>(t_obs));
   filt_means.reserve(static_cast<std::size_t>(t_obs));
   filt_covs.reserve(static_cast<std::size_t>(t_obs));
   innovs.reserve(static_cast<std::size_t>(t_obs));
   innov_covs.reserve(static_cast<std::size_t>(t_obs));
+  data_used_rows.reserve(static_cast<std::size_t>(t_obs));
 
   double ll = 0.0;
   for (std::int64_t t = 0; t < t_obs; ++t) {
@@ -437,7 +629,7 @@ KalmanResult ukf_filter(const Series& observations, const UkfModel& model, Confi
     }
     const Series z_sigma = stack_rows_(z_rows).to(out_cfg.platform, out_cfg.dtype); // [k,m]
     const Series z_pred = weighted_mean_(z_sigma, w_m); // [m,1]
-    const Series S = stabilize_cov_(weighted_cov_(z_sigma, z_pred, w_c, R), kTiny, out_cfg);
+    const Series S_full = stabilize_cov_(weighted_cov_(z_sigma, z_pred, w_c, R), kTiny, out_cfg);
 
     const Series x_centered = x_sigma_pred.sub(x_pred.reshape({1, n}));
     const Series z_centered = z_sigma.sub(z_pred.reshape({1, m}));
@@ -446,19 +638,35 @@ KalmanResult ukf_filter(const Series& observations, const UkfModel& model, Confi
     const Series idx_t = row_index_(t, out_cfg.platform);
     const Series yt = yv.index_select(0, idx_t).reshape({m, 1});
     const Series innovation = yt.sub(z_pred);
+    const std::vector<std::int64_t> obs_idx = informative_obs_idx_(yt, S_full, info_tol);
 
-    const Series K = Pxz.matmul(pluss::subsp::math::linalg::pinverse(S, 1e-12));
-    x = x_pred.add(K.matmul(innovation));
-    P = stabilize_cov_(P_pred.sub(K.matmul(S).matmul(K.transpose(0, 1))), kTiny, out_cfg);
+    if (!obs_idx.empty()) {
+      const Series idx_obs = index_from_vector_(obs_idx, out_cfg.platform);
+      const std::int64_t m_used = static_cast<std::int64_t>(obs_idx.size());
+      const Series z_sigma_used = z_sigma.index_select(1, idx_obs).reshape({k_sigma, m_used});
+      const Series z_pred_used = z_pred.index_select(0, idx_obs).reshape({m_used, 1});
+      const Series R_used = R.index_select(0, idx_obs).index_select(1, idx_obs).reshape({m_used, m_used});
+      const Series yt_used = yt.index_select(0, idx_obs).reshape({m_used, 1});
+      const Series innovation_used = yt_used.sub(z_pred_used);
+      const Series S_used = stabilize_cov_(weighted_cov_(z_sigma_used, z_pred_used, w_c, R_used), kTiny, out_cfg);
+      const Series Pxz_used = Pxz.index_select(1, idx_obs).reshape({n, m_used});
+      const Series K = Pxz_used.matmul(pluss::subsp::math::linalg::pinverse(S_used, 1e-12));
 
-    ll += innovation_loglik_(innovation, S);
+      x = x_pred.add(K.matmul(innovation_used));
+      P = stabilize_cov_(P_pred.sub(K.matmul(S_used).matmul(K.transpose(0, 1))), kTiny, out_cfg);
+      ll += innovation_loglik_(innovation_used, S_used, info_tol);
+    } else {
+      x = x_pred;
+      P = P_pred;
+    }
 
     pred_means.push_back(x_pred.reshape({1, n}));
     pred_covs.push_back(P_pred.reshape({1, n, n}));
     filt_means.push_back(x.reshape({1, n}));
     filt_covs.push_back(P.reshape({1, n, n}));
     innovs.push_back(innovation.reshape({1, m}));
-    innov_covs.push_back(S.reshape({1, m, m}));
+    innov_covs.push_back(S_full.reshape({1, m, m}));
+    data_used_rows.push_back(data_used_row_(m, obs_idx, out_cfg));
   }
 
   return KalmanResult{
@@ -468,6 +676,7 @@ KalmanResult ukf_filter(const Series& observations, const UkfModel& model, Confi
       .predicted_cov = stack_rows_(pred_covs),
       .innovation = stack_rows_(innovs),
       .innovation_cov = stack_rows_(innov_covs),
+      .data_used = stack_rows_(data_used_rows),
       .loglik = ll,
   };
 }
@@ -519,6 +728,9 @@ ParticleFilterResult particle_filter(const Series& observations, const ParticleF
   ess_rows.reserve(static_cast<std::size_t>(t_obs));
 
   const double ess_cut = std::clamp(model.options.ess_threshold, 0.0, 1.0) * static_cast<double>(n_particles);
+  const std::int64_t interval = std::max<std::int64_t>(1, model.options.resample_interval);
+  const std::uint64_t seed_base =
+      (model.options.resample_seed == 0U) ? 0xD00D1234ULL : model.options.resample_seed;
   double ll = 0.0;
 
   for (std::int64_t t = 0; t < t_obs; ++t) {
@@ -528,19 +740,21 @@ ParticleFilterResult particle_filter(const Series& observations, const ParticleF
 
     const Series idx_t = row_index_(t, out_cfg.platform);
     const Series yt = yv.index_select(0, idx_t).reshape({m, 1});
-    const Series logw_inc = as_vector_col_(model.loglik(particles, yt, t), op, "loglik output")
-                                .reshape({n_particles})
-                                .to(out_cfg.platform, out_cfg.dtype);
-    PLUSS_CHECK(logw_inc.numel() == n_particles,
-                "subsp::math::finance::filtering::particle_filter: loglik output length mismatch");
+    if (has_any_finite_(yt)) {
+      const Series logw_inc = as_vector_col_(model.loglik(particles, yt, t), op, "loglik output")
+                                  .reshape({n_particles})
+                                  .to(out_cfg.platform, out_cfg.dtype);
+      PLUSS_CHECK(logw_inc.numel() == n_particles,
+                  "subsp::math::finance::filtering::particle_filter: loglik output length mismatch");
 
-    const Series logw = weights.clamp_min(kTiny).log().add(logw_inc);
-    const Series max_logw = logw.max();
-    const Series w_unnorm = logw.sub(max_logw).exp();
-    const Series sum_w = w_unnorm.sum().clamp_min(kTiny);
-    weights = w_unnorm.div(sum_w);
+      const Series logw = weights.clamp_min(kTiny).log().add(logw_inc);
+      const Series max_logw = logw.max();
+      const Series w_unnorm = logw.sub(max_logw).exp();
+      const Series sum_w = w_unnorm.sum().clamp_min(kTiny);
+      weights = w_unnorm.div(sum_w);
 
-    ll += std::log(sum_w.item<double>()) + max_logw.item<double>();
+      ll += std::log(sum_w.item<double>()) + max_logw.item<double>();
+    }
 
     const Series mean = particles.transpose(0, 1).matmul(weights.reshape({n_particles, 1})).reshape({1, n_state});
     const Series ess = weights.square().sum().clamp_min(kTiny).reciprocal().reshape({1});
@@ -552,9 +766,21 @@ ParticleFilterResult particle_filter(const Series& observations, const ParticleF
       particle_rows.push_back(particles.reshape({1, n_particles, n_state}));
     }
 
-    if (model.options.resample && ess.item<double>() < ess_cut) {
-      const Series idx = systematic_resample_idx_(
-          weights, n_particles, out_cfg.platform, 0xD00D1234ULL + static_cast<std::uint64_t>(t + 1));
+    bool do_resample = false;
+    if (model.options.resample) {
+      if (model.options.resample_trigger == ParticleResampleTrigger::Interval) {
+        do_resample = ((t + 1) % interval) == 0;
+      } else {
+        do_resample = ess.item<double>() < ess_cut;
+      }
+    }
+
+    if (do_resample) {
+      const Series idx = resample_idx_(weights,
+                                       n_particles,
+                                       out_cfg.platform,
+                                       model.options.resample_method,
+                                       seed_base + static_cast<std::uint64_t>(t + 1));
       particles = particles.index_select(0, idx);
       weights = pluss::full({n_particles}, 1.0 / static_cast<double>(n_particles), out_cfg);
     }

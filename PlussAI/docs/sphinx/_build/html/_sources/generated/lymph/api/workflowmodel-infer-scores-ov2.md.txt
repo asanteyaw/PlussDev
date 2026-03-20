@@ -1,0 +1,158 @@
+# `WorkflowModel::infer_scores (overload 2)`
+
+## Signature
+
+```cpp
+[[nodiscard]] Series WorkflowModel::infer_scores(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const InferOptions& options = {}) const;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `frame` : `const pluss::table::DataFrame&`
+  Input feature data used by this call.
+- `data_options` : `const DataFrameBatchOptions&`
+  Input feature data used by this call.
+- `options` : `const InferOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `Series`.
+
+## Notes
+
+Computes predictions from prepared inputs using the currently learned state.
+
+## See also
+
+- `[[nodiscard]] Series OnlineLinearClassifier::infer_scores(self, const FeatureBatch& batch, const InferOptions& options = {}) const;`
+- `[[nodiscard]] Series OnlineLinearClassifier::infer_scores(self, const pluss::table::DataFrame& x, const InferOptions& options = {}) const;`
+- `[[nodiscard]] Series Workflow::infer_scores(self, const FeatureBatch& batch, const InferOptions& options = {}) const;`
+- `[[nodiscard]] Series Workflow::infer_scores(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const InferOptions& options = {}) const;`
+- `[[nodiscard]] Series Workflow::infer_scores(self, const pluss::table::DataFrame& x, const InferOptions& options = {}) const;`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_cv_tune_demo.cpp`
+
+```cpp
+  TrainOptions bounded_train = train;
+  bounded_train.parameter_lower_bounds = pluss::make_series(std::vector<double>{0.0}, {1}, f64());
+  bounded_train.parameter_upper_bounds = pluss::make_series(std::vector<double>{0.0}, {1}, f64());
+  if (!bounded->learn(batch, bounded_train).ok()) {
+    std::cerr << "bounded linear learn failed\n";
+    return 1;
+  }
+
+  auto bounded_scores_or = bounded->infer_scores(batch.features);
+  if (!require_ok(bounded_scores_or, "infer_scores(bounded)")) return 1;
+  std::cout << "max |bounded score|: " << bounded_scores_or.value().abs().max().item<double>() << "\n";
+
+  std::cout << "NodeJ CV + tune demo completed.\n";
+  return 0;
+}
+```
+
+**Output**
+
+```text
+NodeJ CV + tune demo
+linear mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0.25 0.25 0.208333 0.25 nan 0.0625 0.960532
+linear std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0.176777 0.176777 0.216506 0.25 nan 0.108253 0.192821
+kernel mean metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 1 1 1 1 1 1 0.358895
+kernel std metrics [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 0 0 0 0 0 0 0.0358183
+sweep trial objectives: 0.25 1
+sweep best index: 1
+probe best index: 1
+regression quantile sweep objectives: 0.0356052 0.736518
+regression quantile sweep best index: 0
+max |bounded score|: 0
+NodeJ CV + tune demo completed.
+```
+
+### Example 2
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_multiclass_demo.cpp`
+
+```cpp
+  }
+  auto cls = cls_or.move_value();
+  const auto learn_status = cls->learn(batch);
+  if (!learn_status.ok()) {
+    std::cerr << "learn failed: " << learn_status.message << '\n';
+    return 1;
+  }
+
+  auto score_or = cls->infer_scores(batch.features);
+  if (!score_or.ok()) {
+    std::cerr << "infer_scores failed: " << score_or.status().message << '\n';
+    return 1;
+  }
+  std::cout << "scores shape: [" << score_or.value().sizes()[0] << ", " << score_or.value().sizes()[1] << "]\n";
+
+  pluss::ai::nodej::AssessOptions assess{};
+  assess.metrics = {MetricKind::Accuracy, MetricKind::F1, MetricKind::LogLoss};
+  auto metric_or = cls->assess(batch, assess);
+  if (!metric_or.ok()) {
+    std::cerr << "assess failed: " << metric_or.status().message << '\n';
+    return 1;
+  }
+  std::cout << "metrics [accuracy, f1, logloss]: ";
+  print_vec(metric_or.value());
+```
+
+**Output**
+
+```text
+scores shape: [12, 3]
+metrics [accuracy, f1, logloss]: 1 1 2.26237e-06
+flow metrics [accuracy, f1, logloss]: 1 1 1.37143e-05
+```
+
+### Example 3
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_multiclass_demo.cpp`
+
+```cpp
+  const LabeledBatch batch = make_batch();
+
+  auto cls_or = pluss::ai::lymph::quick::linear_logistic_classifier(batch, 1e-6);
+  if (!cls_or.ok()) {
+    std::cerr << "lymph::linear_logistic_classifier failed: " << cls_or.status().message << '\n';
+    return 1;
+  }
+
+  auto score_or = cls_or.value()->infer_scores(batch.features);
+  if (!score_or.ok()) {
+    std::cerr << "infer_scores failed: " << score_or.status().message << '\n';
+    return 1;
+  }
+  std::cout << "scores shape: [" << score_or.value().sizes()[0] << ", " << score_or.value().sizes()[1] << "]\n";
+
+  pluss::ai::nodej::AssessOptions assess{};
+  assess.metrics = {MetricKind::Accuracy, MetricKind::BalancedAccuracy, MetricKind::LogLoss};
+  auto metrics_or = cls_or.value()->assess(batch, assess);
+  if (!metrics_or.ok()) {
+    std::cerr << "assess failed: " << metrics_or.status().message << '\n';
+    return 1;
+  }
+
+  std::cout << "metrics [accuracy, balanced_accuracy, logloss]: ";
+  print_vec(metrics_or.value());
+```
+
+**Output**
+
+```text
+scores shape: [12, 3]
+metrics [accuracy, balanced_accuracy, logloss]: 1 1 2.26237e-06
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:758

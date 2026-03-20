@@ -1,0 +1,21 @@
+# `MissingPolicy::Reject`
+
+## Signature
+
+```cpp
+MissingPolicy::Reject;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = MissingPolicy::Reject;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:21

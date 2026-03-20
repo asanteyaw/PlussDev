@@ -1,0 +1,21 @@
+# `ObservationLayout::Rows`
+
+## Signature
+
+```cpp
+ObservationLayout::Rows;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = ObservationLayout::Rows;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:16

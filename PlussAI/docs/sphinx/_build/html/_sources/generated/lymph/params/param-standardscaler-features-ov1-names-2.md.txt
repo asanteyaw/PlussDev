@@ -1,0 +1,52 @@
+# `StandardScaler::features::names`
+
+## Parent Signature
+
+```cpp
+StandardScaler& StandardScaler::features(self, std::initializer_list<std::string_view> names);
+```
+
+## Parameter
+
+- `names` : `std::initializer_list<std::string_view>`
+  List-like argument; pass values in the order expected by the signature.
+
+## Notes
+
+Instance method on `self`.
+
+## Example
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+        {"hr", "hour"},
+        {"yr", "year"},
+    });
+
+
+    //========== feature engineering ========
+    // This section creates interaction and curvature features directly in DataFrame form
+    // to expose raw lymph + DataFrame capability without helper functions.
+    const Series s_temp = frame.features("temp").as_series();
+    const Series s_atemp = frame.features("atemp").as_series();
+    const Series s_humidity = frame.features("humidity").as_series();
+    const Series s_windspeed = frame.features("windspeed").as_series();
+    const Series s_hour = frame.features("hour").as_series();
+    const Series s_month = frame.features("month").as_series();
+    const Series s_weather = frame.features("weather_condition").as_series();
+
+    const Series temp_sq = s_temp.square();
+    const Series atemp_sq = s_atemp.square();
+    const Series humidity_sq = s_humidity.square();
+    const Series windspeed_sq = s_windspeed.square();
+    const Series temp_humidity_interaction = s_temp.mul(s_humidity);
+    const Series temp_windspeed_interaction = s_temp.mul(s_windspeed);
+    const Series atemp_humidity_interaction = s_atemp.mul(s_humidity);
+    const Series atemp_windspeed_interaction = s_atemp.mul(s_windspeed);
+    const Series temp_minus_atemp = s_temp.sub(s_atemp);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:129

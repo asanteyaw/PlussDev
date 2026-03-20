@@ -1,0 +1,13 @@
+# `rbf_kernel_regressor`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-rbf-kernel-regressor-ov1.md): `StatusOr<std::unique_ptr<nodej::RegressorBase>> rbf_kernel_regressor( const nodej::LabeledBatch& train, double c = 1.0, double gamma = 0.0, double epsilon = 0.0, const nodej::TrainOptions& options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:252

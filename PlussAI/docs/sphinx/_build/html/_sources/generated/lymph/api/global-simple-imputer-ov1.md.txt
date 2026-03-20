@@ -1,0 +1,129 @@
+# `simple_imputer`
+
+## Signature
+
+```cpp
+[[nodiscard]] inline SimpleImputer simple_imputer(SimpleImputerOptions options = {}) { return SimpleImputer(options); };
+```
+
+## Parameters
+
+- `options` : `SimpleImputerOptions`, default: `{}) { return SimpleImputer(options`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `SimpleImputer`.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `StatusOr<nodej::CrossAssessReport> assess_cv( const nodej::ModelSpec& spec, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {});`
+- `StatusOr<std::unique_ptr<nodej::ClassifierBase>> bayes_classifier( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+- `StatusOr<std::unique_ptr<nodej::RegressorBase>> bayes_regressor( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/core/bike_sharing_end_to_end.cpp`
+
+```cpp
+    auto linear_workflow = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
+        .objective = LinearObjective::LeastSquares,
+        .regularization = RegularizationKind::None,
+        .regularization_strength = 0.0,
+        .fit_intercept = true,
+    }));
+    linear_workflow
+        .simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
+        .standard_scaler();
+    linear_workflow.learn_(train_x, train_y, train_options);
+    const auto linear_metrics = linear_workflow.assess(test_x, test_y, assess_options);
+    std::cout << "linear test metrics [rmse, r2, mae]: " << linear_metrics.rmse << " " << linear_metrics.r2 << " "
+              << linear_metrics.mae << "\n";
+    std::cout << "linear params: intercept=" << linear_workflow.intercept() << " coeff=" << linear_workflow.coeff() << "\n";
+
+    const Series linear_pred_series = linear_workflow.infer(test_x);
+    const fs::path linear_model_path = model_dir / "bike_sharing_linear.bin";
+    linear_workflow.save(linear_model_path.string(), train_x, train_y, train_options);
+    const auto linear_restored = lymph::Workflow::load(linear_model_path.string());
+    const Series linear_pred_restored_series = linear_restored.infer(test_x);
+    const Series y_true = test_y.to(pluss::pCPU, ScalarType::Float64).reshape({test_y.numel()});
+
+    const Series linear_pred = linear_pred_series.to(pluss::pCPU, ScalarType::Float64).reshape({linear_pred_series.numel()});
+    const double linear_max_abs_diff = lymph::max_abs_diff(linear_pred_series, linear_pred_restored_series);
+```
+
+### Example 2
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+  StatusOr<FeatureBatch> test_x_batch_or = feature_batch_from_dataframe(test_x, x_batch_options);
+  if (!test_x_batch_or.ok()) {
+    std::cerr << "feature_batch_from_dataframe(test_x) failed: " << test_x_batch_or.status().message << "\n";
+    return 1;
+  }
+  FeatureBatch test_x_batch = test_x_batch_or.move_value();
+
+  prep::SimpleImputer simple_imputer(prep::SimpleImputerOptions{.strategy = prep::SimpleImputerStrategy::Median});
+  StatusOr<Series> train_simple_imputed_or = simple_imputer.learn_map(train_x_batch);
+  if (!train_simple_imputed_or.ok()) {
+    std::cerr << "SimpleImputer.learn_map(train) failed: " << train_simple_imputed_or.status().message << "\n";
+    return 1;
+  }
+  Series train_simple_imputed = train_simple_imputed_or.move_value();
+
+  StatusOr<Series> test_simple_imputed_or = simple_imputer.map(test_x_batch);
+  if (!test_simple_imputed_or.ok()) {
+    std::cerr << "SimpleImputer.map(test) failed: " << test_simple_imputed_or.status().message << "\n";
+    return 1;
+  }
+  Series test_simple_imputed = test_simple_imputed_or.move_value();
+
+  prep::NeighborImputer knn_imputer(prep::NeighborImputerOptions{
+      .neighbors = 7,
+```
+
+### Example 3
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_workflow_tuning_demo.cpp`
+
+```cpp
+    std::vector<nja::selection::Candidate> candidates{};
+    {
+      auto wf = nja::Workflow(nja::linear_factory::linear_regression(LinearFamilyOptions{
+          .objective = LinearObjective::LeastSquares,
+          .regularization = RegularizationKind::L2,
+          .regularization_strength = 1e-6,
+          .fit_intercept = true,
+      }));
+      wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median})
+          .standard_scaler();
+      candidates.emplace_back("linear_ridge", std::move(wf));
+    }
+    {
+      auto wf = nja::Workflow(nja::tree_factory::decision_tree_regressor(TreeFamilyOptions{
+          .criterion = TreeCriterion::Mse,
+          .max_depth = 18,
+          .min_samples_leaf = 8,
+          .min_samples_split = 24,
+      }));
+      wf.simple_imputer(nja::prep::SimpleImputerOptions{.strategy = nja::prep::SimpleImputerStrategy::Median});
+      candidates.emplace_back("decision_tree", std::move(wf));
+    }
+    {
+      auto wf = nja::Workflow(nja::ensemble_factory::random_forest_regressor(EnsembleFamilyOptions{
+          .method = EnsembleMethod::RandomForest,
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:240

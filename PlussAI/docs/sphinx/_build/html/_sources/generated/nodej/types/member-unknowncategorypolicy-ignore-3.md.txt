@@ -1,0 +1,21 @@
+# `UnknownCategoryPolicy::Ignore`
+
+## Signature
+
+```cpp
+UnknownCategoryPolicy::Ignore;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = UnknownCategoryPolicy::Ignore;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:29

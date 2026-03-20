@@ -1,0 +1,13 @@
+# `linear_hinge_classifier`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-linear-hinge-classifier-ov1.md): `StatusOr<std::unique_ptr<nodej::ClassifierBase>> linear_hinge_classifier( const nodej::LabeledBatch& train, double regularization_strength = 1e-6, const nodej::TrainOptions& options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:158

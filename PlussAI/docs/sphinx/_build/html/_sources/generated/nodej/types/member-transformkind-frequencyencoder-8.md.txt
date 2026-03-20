@@ -1,0 +1,21 @@
+# `TransformKind::FrequencyEncoder`
+
+## Signature
+
+```cpp
+TransformKind::FrequencyEncoder;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = TransformKind::FrequencyEncoder;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:15

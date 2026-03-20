@@ -1,0 +1,22 @@
+# `QuantileMapOptions::output`
+
+## Signature
+
+```cpp
+QuantileMapOptions::QuantileMapOutput output = QuantileMapOutput::Uniform;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+QuantileMapOptions cfg{};
+// cfg.output = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:101

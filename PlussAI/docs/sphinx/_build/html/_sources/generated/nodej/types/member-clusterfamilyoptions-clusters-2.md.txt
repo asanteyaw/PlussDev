@@ -1,0 +1,22 @@
+# `ClusterFamilyOptions::clusters`
+
+## Signature
+
+```cpp
+ClusterFamilyOptions::std::int64_t clusters = 8;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+ClusterFamilyOptions cfg{};
+// cfg.clusters = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:101

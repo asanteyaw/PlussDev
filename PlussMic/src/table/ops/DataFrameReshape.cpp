@@ -105,7 +105,7 @@ DataFrameView DataFrame::transpose(bool render) const {
   const auto rows = ncases();
   const auto cols = nfeats();
 
-  const auto src_columns = columns();
+  const auto src_columns = features();
   std::vector<pluss::Note> src_notes;
   src_notes.reserve(src_columns.size());
   for (const auto& col : src_columns) {

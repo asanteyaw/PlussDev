@@ -1,0 +1,21 @@
+# `KernelKind::Linear`
+
+## Signature
+
+```cpp
+KernelKind::Linear;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = KernelKind::Linear;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:48

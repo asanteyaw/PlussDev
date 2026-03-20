@@ -1,0 +1,68 @@
+# `Workflow::intercept`
+
+## API Signature
+
+- `Workflow::intercept() -> Series`
+
+## Notes
+
+Instance method on `self`.
+
+## Inputs
+
+None.
+
+## Output
+
+- Returns `Series`.
+
+## Options
+
+No explicit option struct/enum parameters were detected for this method.
+
+## Examples
+
+### Example 1 (Minimal Usage)
+
+```cpp
+pluss::OutputEngine out;
+auto value = Workflow::intercept();
+out.info("intercept", value);
+```
+
+**Expected output**
+
+```text
+intercept returned Series
+```
+
+### Example 2 (Demo Pattern)
+
+```cpp
+            .fit_intercept = true,
+        }),
+        .stages = {
+            lymph::workflow::stage::simple_imputer(
+                lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median}),
+            lymph::workflow::stage::standard_scaler(),
+        },
+    };
+    linear_workflow.learn_(train_x, train_y, train_options);
+    const auto linear_metrics = linear_workflow.assess(test_x, test_y, assess_options);
+    std::cout << "linear test metrics [rmse, r2, mae]: " << linear_metrics.rmse << " " << linear_metrics.r2 << " "
+              << linear_metrics.mae << "\n";
+    std::cout << "linear params: intercept=" << linear_workflow.intercept() << " coeff=" << linear_workflow.coeff() << "\n";
+
+    const Series linear_pred_series = linear_workflow.infer(test_x);
+    const fs::path linear_model_path = model_dir / "bike_sharing_linear.bin";
+    linear_workflow.save(linear_model_path.string(), train_x, train_y, train_options);
+    const auto linear_restored = lymph::Workflow::load(linear_model_path.string());
+    const Series linear_pred_restored_series = linear_restored.infer(test_x);
+    const Series y_true = test_y.to(pluss::pCPU, ScalarType::Float64).reshape({test_y.numel()});
+```
+
+**Expected output**
+
+```text
+intercept returned Series
+```

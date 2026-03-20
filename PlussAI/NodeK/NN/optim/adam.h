@@ -163,7 +163,7 @@ private:
           capturable_supported);
       if (lane == UpdateLane::Fused) {
         apply_group_fused_(group, params, gradients);
-      } else if (lane == UpdateLane::Batched) {
+      } else if (lane == UpdateLane::Batched || lane == UpdateLane::Foreach) {
         apply_group_batched_(group, params, gradients);
       } else {
         apply_group_loop_(group, params, gradients);
@@ -324,7 +324,13 @@ private:
         sensitivity = sensitivity.neg();
       }
 
+      const bool use_capturable = options.execution.capturable;
+
       Series parameter_value = *param_ptr;
+      Series m1_value = first_moment_[i];
+      Series m2_value = second_moment_[i];
+      Series mmax_value = max_second_hat_[i];
+
       const Series one = scalar_on_(1.0, parameter_value);
       const Series beta1 = scalar_on_(options.beta1, parameter_value);
       const Series beta2 = scalar_on_(options.beta2, parameter_value);
@@ -334,24 +340,28 @@ private:
         sensitivity = sensitivity.add(parameter_value.mul(scalar_on_(options.weight_decay, parameter_value)));
       }
 
-      first_moment_[i] = first_moment_[i].mul(beta1).add(sensitivity.mul(one_minus_beta1));
-      second_moment_[i] = second_moment_[i].mul(beta2).add(sensitivity.square().mul(one_minus_beta2));
+      m1_value = m1_value.mul(beta1).add(sensitivity.mul(one_minus_beta1));
+      m2_value = m2_value.mul(beta2).add(sensitivity.square().mul(one_minus_beta2));
 
-      Series second_hat = options.execution.capturable
-                              ? second_moment_[i].div(b2_corr_series)
-                              : second_moment_[i].div(scalar_on_(b2_correction, parameter_value));
+      Series second_hat = use_capturable
+                              ? m2_value.div(b2_corr_series)
+                              : m2_value.div(scalar_on_(b2_correction, parameter_value));
       if (options.amsgrad) {
-        max_second_hat_[i] = max_second_hat_[i].maximum(second_hat);
-        second_hat = max_second_hat_[i];
+        mmax_value = mmax_value.maximum(second_hat);
+        second_hat = mmax_value;
       }
 
-      const Series first_hat = options.execution.capturable
-                                   ? first_moment_[i].div(b1_corr_series)
-                                   : first_moment_[i].div(scalar_on_(b1_correction, parameter_value));
+      const Series first_hat = use_capturable
+                                   ? m1_value.div(b1_corr_series)
+                                   : m1_value.div(scalar_on_(b1_correction, parameter_value));
       const Series denominator = second_hat.sqrt().add(scalar_on_(options.epsilon, parameter_value));
       const Series delta = first_hat.div(denominator).mul(scalar_on_(options.learning_rate, parameter_value));
+      Series next_value = parameter_value.sub(delta);
 
-      assign_parameter_(*param_ptr, parameter_value.sub(delta));
+      first_moment_[i] = m1_value;
+      second_moment_[i] = m2_value;
+      max_second_hat_[i] = mmax_value;
+      assign_parameter_(*param_ptr, next_value);
     }
   }
 

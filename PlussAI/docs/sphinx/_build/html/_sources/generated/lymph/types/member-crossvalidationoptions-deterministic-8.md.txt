@@ -1,0 +1,22 @@
+# `CrossValidationOptions::deterministic`
+
+## Signature
+
+```cpp
+CrossValidationOptions::bool deterministic = true;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+CrossValidationOptions cfg{};
+// cfg.deterministic = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:329

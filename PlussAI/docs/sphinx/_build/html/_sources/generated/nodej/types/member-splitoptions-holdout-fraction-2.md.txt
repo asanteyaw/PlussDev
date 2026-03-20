@@ -1,0 +1,22 @@
+# `SplitOptions::holdout_fraction`
+
+## Signature
+
+```cpp
+SplitOptions::double holdout_fraction = 0.2;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+SplitOptions cfg{};
+// cfg.holdout_fraction = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:124

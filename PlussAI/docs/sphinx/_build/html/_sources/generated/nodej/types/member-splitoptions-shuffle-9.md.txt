@@ -1,0 +1,22 @@
+# `SplitOptions::shuffle`
+
+## Signature
+
+```cpp
+SplitOptions::bool shuffle = true;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+SplitOptions cfg{};
+// cfg.shuffle = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:124

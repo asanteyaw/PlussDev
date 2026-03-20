@@ -1,0 +1,25 @@
+# `Status`
+
+## Signature
+
+```cpp
+struct Status;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+Key public fields:
+- `StatusCode code = StatusCode::Ok`
+
+## Example
+
+```cpp
+Status cfg{};
+// cfg.code = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/status.h`:18

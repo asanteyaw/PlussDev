@@ -1,0 +1,43 @@
+# `make_workflow`
+
+## Signature
+
+```cpp
+[[nodiscard]] inline StatusOr<Workflow> make_workflow(const ModelSpec& spec);
+```
+
+## Parameters
+
+- `spec` : `const ModelSpec&`
+  Method argument; see signature type for accepted form.
+
+## Returns
+
+Returns `StatusOr<Workflow>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Namespace-level API function.
+
+## See also
+
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_learn_map(const FeatureBatch& batch, const TrainOptions& learn_options, const InferOptions& infer_options);`
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_map(const FeatureBatch& batch, const InferOptions& options) const;`
+- `[[nodiscard]] Status check_ready_for_infer(const char* where) const;`
+- `StatusOr<LabeledBatch> labeled_batch_from_dataframe(const pluss::table::DataFrame& frame, const DataFrameBatchOptions& options);`
+- `StatusOr<FlowBundle> load(const std::string& path);`
+
+## Parameter Reference
+
+- [spec](../params/param-global-make-workflow-ov1-spec-1.md)
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = make_workflow(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:140

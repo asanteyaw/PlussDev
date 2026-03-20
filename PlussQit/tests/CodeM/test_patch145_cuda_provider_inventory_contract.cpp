@@ -35,7 +35,7 @@ TEST_CASE("CUDA provider probes stay coherent with runtime availability", "[cuda
 
   const bool cublas_ready = pluss::cuda::cublas_available();
   const bool cusolver_ready = pluss::cuda::cusolver_available();
-  const bool cudnn_ready = pluss::cuda::cudnn_available();
+  const bool cudnn_ready = pluss::cuda::cudnn_ready();
 
   if (!cuda_ready) {
     REQUIRE_FALSE(cublas_ready);

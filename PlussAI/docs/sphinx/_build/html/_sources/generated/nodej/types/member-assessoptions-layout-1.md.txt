@@ -1,0 +1,22 @@
+# `AssessOptions::layout`
+
+## Signature
+
+```cpp
+AssessOptions::ObservationLayout layout = ObservationLayout::Rows;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+AssessOptions cfg{};
+// cfg.layout = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:113

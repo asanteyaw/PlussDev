@@ -1,0 +1,40 @@
+# `OnlineLinearRegressor::OnlineLinearRegressor (overload 2)`
+
+## Signature
+
+```cpp
+explicit OnlineLinearRegressor(OnlineLinearOptions options = {});
+```
+
+## Parameters
+
+- `options` : `OnlineLinearOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns ``.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `[[nodiscard]] MetricReport OnlineLinearRegressor::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport OnlineLinearRegressor::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport OnlineLinearRegressor::assess(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] Series OnlineLinearRegressor::assess_series(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] Series OnlineLinearRegressor::assess_series(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+OnlineLinearRegressor onlineLinearRegressor{};
+auto out = onlineLinearRegressor.OnlineLinearRegressor(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2429

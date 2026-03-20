@@ -1,0 +1,21 @@
+# `KernelKind::Rbf`
+
+## Signature
+
+```cpp
+KernelKind::Rbf;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = KernelKind::Rbf;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:48

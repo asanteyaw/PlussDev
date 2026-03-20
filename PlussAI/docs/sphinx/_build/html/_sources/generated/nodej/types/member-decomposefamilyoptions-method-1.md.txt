@@ -1,0 +1,22 @@
+# `DecomposeFamilyOptions::method`
+
+## Signature
+
+```cpp
+DecomposeFamilyOptions::DecomposeMethod method = DecomposeMethod::Pca;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+DecomposeFamilyOptions cfg{};
+// cfg.method = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:109

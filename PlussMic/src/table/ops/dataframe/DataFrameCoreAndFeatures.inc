@@ -1,5 +1,6 @@
 bool DataFrame::defined() const noexcept { return static_cast<bool>(impl_); }
 bool DataFrame::unique() const noexcept { return impl_.unique(); }
+std::int64_t DataFrame::height() const { return ncases(); }
 
 const detail::DataFrameImpl& DataFrame::impl_ref_() const {
   PLUSS_CHECK(defined(), "DataFrame: undefined handle");
@@ -37,10 +38,8 @@ std::int64_t DataFrame::ncases() const { return impl_ref_().nrows_; }
 std::int64_t DataFrame::nfeats() const { return static_cast<std::int64_t>(impl_ref_().columns_.size()); }
 std::int64_t DataFrame::nfeatures() const { return nfeats(); }
 
-const std::vector<std::string>& DataFrame::column_names() const { return impl_ref_().names_; }
-
-std::vector<Thread> DataFrame::columns() const { return impl_ref_().columns_; }
-std::vector<Thread> DataFrame::values() const { return columns(); }
+std::vector<Thread> DataFrame::features() const { return impl_ref_().columns_; }
+std::vector<Thread> DataFrame::values() const { return features(); }
 DataFrame::MatrixValues DataFrame::matrix() const {
   DataFrame::MatrixValues out{};
   auto& series_out = std::get<0>(out);
@@ -115,8 +114,7 @@ DataFrame::MatrixValues DataFrame::matrix() const {
 
   return out;
 }
-const std::vector<std::string>& DataFrame::feature_names() const { return column_names(); }
-std::vector<Thread> DataFrame::features() const { return columns(); }
+const std::vector<std::string>& DataFrame::feature_names() const { return impl_ref_().names_; }
 
 const Thread& DataFrame::cases() const { return impl_ref_().cases_; }
 
@@ -138,7 +136,7 @@ std::string DataFrame::cases(std::int64_t row, std::size_t feature_idx) const {
 
 std::string DataFrame::cases(std::int64_t row, std::string_view feature_name) const {
   const auto r = normalize_row_index(row, ncases());
-  return thread_scalar_string_at(column(feature_name), r);
+  return thread_scalar_string_at(features(feature_name), r);
 }
 
 pluss::Series DataFrame::cases_series() const {
@@ -146,11 +144,11 @@ pluss::Series DataFrame::cases_series() const {
   return cases().as_series();
 }
 
-DataFrame DataFrame::iloc(std::int64_t row) const {
+DataFrame DataFrame::cloc(std::int64_t row) const {
   return cases(row);
 }
 
-DataFrame DataFrame::iloc(std::int64_t start, std::int64_t stop) const {
+DataFrame DataFrame::cloc(std::int64_t start, std::int64_t stop) const {
   return slice(start, stop);
 }
 
@@ -203,28 +201,28 @@ DataFrame& DataFrame::title_(std::string title) {
   return *this;
 }
 
-bool DataFrame::has_column(std::string_view name) const {
+bool DataFrame::has_feature(std::string_view name) const {
   const auto& src = impl_ref_();
   return src.name_to_idx_.find(owned_name(name)) != src.name_to_idx_.end();
 }
 
-bool DataFrame::has_feature(std::string_view name) const { return has_column(name); }
-
-Thread DataFrame::column(std::string_view name) const {
+Thread DataFrame::features(std::string_view name) {
   const auto& src = impl_ref_();
   const auto it = src.name_to_idx_.find(owned_name(name));
   PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + owned_name(name) + "'");
-  return src.columns_[it->second];
+  return src.columns_[it->second].with_display_labels(src.cases_);
 }
 
-Thread DataFrame::features(std::string_view name) { return column(name); }
-Thread DataFrame::features(std::string_view name) const { return column(name); }
-
-ColumnRef DataFrame::column_ref(std::string_view name) const {
-  return ColumnRef(owned_name(name), column(name));
+Thread DataFrame::features(std::string_view name) const {
+  const auto& src = impl_ref_();
+  const auto it = src.name_to_idx_.find(owned_name(name));
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + owned_name(name) + "'");
+  return src.columns_[it->second].with_display_labels(src.cases_);
 }
 
-ColumnRef DataFrame::feature_ref(std::string_view name) const { return column_ref(name); }
+ColumnRef DataFrame::feature_ref(std::string_view name) const {
+  return ColumnRef(owned_name(name), features(name));
+}
 
 DataFrame DataFrame::features(std::initializer_list<std::string_view> names) {
   return select(names);
@@ -250,6 +248,57 @@ DataFrame DataFrame::select(std::initializer_list<std::string_view> names) const
     out_cols.push_back(src.columns_[it->second]);
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
+}
+
+DataFrame DataFrame::select_like(std::string_view needle, bool case_sensitive) const {
+  const auto& src = impl_ref_();
+  std::vector<std::string> out_names;
+  std::vector<Thread> out_cols;
+  out_names.reserve(src.names_.size());
+  out_cols.reserve(src.columns_.size());
+
+  const auto token = owned_name(needle);
+  const auto token_cmp = case_sensitive ? token : lower_copy(token);
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto& name = src.names_[i];
+    const auto name_cmp = case_sensitive ? name : lower_copy(name);
+    if (name_cmp.find(token_cmp) == std::string::npos) {
+      continue;
+    }
+    out_names.push_back(name);
+    out_cols.push_back(src.columns_[i]);
+  }
+
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      std::move(out_names), std::move(out_cols), src.cases_));
+}
+
+DataFrame DataFrame::select_regex(std::string_view pattern) const {
+  const auto pat = owned_name(pattern);
+  std::regex re;
+  try {
+    re = std::regex(pat, std::regex::ECMAScript);
+  } catch (const std::regex_error& e) {
+    PLUSS_FAIL("DataFrame::select_regex: invalid regex '" + pat + "': " + std::string(e.what()));
+  }
+
+  const auto& src = impl_ref_();
+  std::vector<std::string> out_names;
+  std::vector<Thread> out_cols;
+  out_names.reserve(src.names_.size());
+  out_cols.reserve(src.columns_.size());
+
+  for (std::size_t i = 0; i < src.names_.size(); ++i) {
+    const auto& name = src.names_[i];
+    if (!std::regex_search(name, re)) {
+      continue;
+    }
+    out_names.push_back(name);
+    out_cols.push_back(src.columns_[i]);
+  }
+
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      std::move(out_names), std::move(out_cols), src.cases_));
 }
 
 DataFrame DataFrame::series_features() const {
@@ -584,7 +633,7 @@ DataFrame DataFrame::set_cases(std::string_view feature_name, bool drop_feature)
 }
 
 DataFrame DataFrame::reset_cases(std::string case_feature) const {
-  auto out = with_column(case_feature, cases());
+  auto out = set_features(case_feature, cases());
   return out.with_cases(default_cases(out.ncases()));
 }
 
@@ -622,43 +671,6 @@ DataFrame DataFrame::update(const DataFrame& other, bool overwrite) const {
   return combine(other, spec);
 }
 
-DataFrame DataFrame::with_column(std::string name, const Thread& column_value) const {
-  const auto& src = impl_ref_();
-  PLUSS_CHECK(column_value.defined(), "DataFrame::with_column: input column is undefined");
-  if (!src.columns_.empty()) {
-    PLUSS_CHECK(column_value.size() == src.nrows_, "DataFrame::with_column: row count mismatch");
-  }
-
-  auto out_names = src.names_;
-  auto out_cols = src.columns_;
-  const auto it = src.name_to_idx_.find(name);
-  if (it == src.name_to_idx_.end()) {
-    out_names.push_back(std::move(name));
-    out_cols.push_back(column_value);
-  } else {
-    out_cols[it->second] = column_value;
-  }
-  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(std::move(out_names), std::move(out_cols), src.cases_));
-}
-
-DataFrame& DataFrame::with_column_(std::string name, const Thread& column_value) {
-  auto& w = mut_impl_();
-  PLUSS_CHECK(column_value.defined(), "DataFrame::with_column_: input column is undefined");
-  if (!w.columns_.empty()) {
-    PLUSS_CHECK(column_value.size() == w.nrows_, "DataFrame::with_column_: row count mismatch");
-  }
-
-  const auto it = w.name_to_idx_.find(name);
-  if (it == w.name_to_idx_.end()) {
-    w.names_.push_back(std::move(name));
-    w.columns_.push_back(column_value);
-  } else {
-    w.columns_[it->second] = column_value;
-  }
-  w.validate_and_reindex_();
-  return *this;
-}
-
 DataFrame::LetSlot DataFrame::set(std::string_view name) {
   return LetSlot(*this, owned_name(name));
 }
@@ -668,11 +680,43 @@ DataFrame::LetSlots DataFrame::set(std::initializer_list<std::string_view> names
 }
 
 DataFrame DataFrame::set_features(std::string_view name, const Thread& value) const {
-  return with_column(owned_name(name), value);
+  const auto& src = impl_ref_();
+  PLUSS_CHECK(value.defined(), "DataFrame::set_features: input feature is undefined");
+  if (!src.columns_.empty()) {
+    PLUSS_CHECK(value.size() == src.nrows_, "DataFrame::set_features: row count mismatch");
+  }
+
+  auto out_names = src.names_;
+  auto out_cols = src.columns_;
+  const auto key = owned_name(name);
+  const auto it = src.name_to_idx_.find(key);
+  if (it == src.name_to_idx_.end()) {
+    out_names.push_back(key);
+    out_cols.push_back(value);
+  } else {
+    out_cols[it->second] = value;
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      std::move(out_names), std::move(out_cols), src.cases_));
 }
 
 DataFrame& DataFrame::set_features_(std::string_view name, const Thread& value) {
-  return with_column_(owned_name(name), value);
+  auto& w = mut_impl_();
+  PLUSS_CHECK(value.defined(), "DataFrame::set_features_: input feature is undefined");
+  if (!w.columns_.empty()) {
+    PLUSS_CHECK(value.size() == w.nrows_, "DataFrame::set_features_: row count mismatch");
+  }
+
+  const auto key = owned_name(name);
+  const auto it = w.name_to_idx_.find(key);
+  if (it == w.name_to_idx_.end()) {
+    w.names_.push_back(key);
+    w.columns_.push_back(value);
+  } else {
+    w.columns_[it->second] = value;
+  }
+  w.validate_and_reindex_();
+  return *this;
 }
 
 DataFrame DataFrame::set_features(std::initializer_list<std::string_view> names,
@@ -682,7 +726,7 @@ DataFrame DataFrame::set_features(std::initializer_list<std::string_view> names,
   DataFrame out = *this;
   auto value_it = values.begin();
   for (const auto name : names) {
-    out = out.with_column(owned_name(name), *value_it);
+    out = out.set_features(name, *value_it);
     ++value_it;
   }
   return out;
@@ -694,7 +738,7 @@ DataFrame& DataFrame::set_features_(std::initializer_list<std::string_view> name
               "DataFrame::set_features_: names/value size mismatch");
   auto value_it = values.begin();
   for (const auto name : names) {
-    with_column_(owned_name(name), *value_it);
+    set_features_(name, *value_it);
     ++value_it;
   }
   return *this;

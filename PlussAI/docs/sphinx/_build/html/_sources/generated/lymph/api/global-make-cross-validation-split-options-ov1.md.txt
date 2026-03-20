@@ -1,0 +1,43 @@
+# `make_cross_validation_split_options`
+
+## Signature
+
+```cpp
+[[nodiscard]] inline SplitOptions make_cross_validation_split_options(const CrossValidationOptions& options);
+```
+
+## Parameters
+
+- `options` : `const CrossValidationOptions&`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `SplitOptions`.
+
+## Notes
+
+Builds train/test index partitions according to split-plan options.
+
+## See also
+
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline SeriesCompareReport compare_series(const Series& lhs, const Series& rhs);`
+- `[[nodiscard]] inline IndexSplit make_holdout_indices(const pluss::table::DataFrame& frame, const HoldoutSplitOptions& options);`
+- `[[nodiscard]] inline SplitOptions make_holdout_split_options(const HoldoutSplitOptions& options);`
+
+## Parameter Reference
+
+- [options](../params/param-global-make-cross-validation-split-options-ov1-options-1.md)
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = make_cross_validation_split_options(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:355

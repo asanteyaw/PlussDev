@@ -1,0 +1,40 @@
+# `OneHotEncoder::OneHotEncoder`
+
+## Signature
+
+```cpp
+explicit OneHotEncoder(OneHotEncoderOptions options = {});
+```
+
+## Parameters
+
+- `options` : `OneHotEncoderOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns ``.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] StatusOr<std::vector<Series>> OneHotEncoder::dump_state(self) const override;`
+- `Status OneHotEncoder::learn(self, const FeatureBatch& batch, const TrainOptions& options = {}) override;`
+- `[[nodiscard]] StatusOr<Series> OneHotEncoder::learn_map(self, const FeatureBatch& batch, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {}) override;`
+- `Status OneHotEncoder::load_state(self, const std::vector<Series>& state) override;`
+- `[[nodiscard]] StatusOr<Series> OneHotEncoder::map(self, const FeatureBatch& batch, const InferOptions& options = {}) const override;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+OneHotEncoder oneHotEncoder{};
+auto out = oneHotEncoder.OneHotEncoder(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:395

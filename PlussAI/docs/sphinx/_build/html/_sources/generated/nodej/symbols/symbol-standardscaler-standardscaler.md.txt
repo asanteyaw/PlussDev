@@ -1,0 +1,13 @@
+# `StandardScaler::StandardScaler`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/standardscaler-standardscaler-ov1.md): `explicit StandardScaler(StandardScalerOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:135

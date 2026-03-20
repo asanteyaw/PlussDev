@@ -1,0 +1,41 @@
+# `ensemble_factory::bagging_classifier`
+
+## Signature
+
+```cpp
+[[nodiscard]] static WorkflowModel ensemble_factory::bagging_classifier(self, EnsembleFamilyOptions options = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `EnsembleFamilyOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `WorkflowModel`.
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## See also
+
+- `[[nodiscard]] static WorkflowModel ensemble_factory::bagging_regressor(self, EnsembleFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel ensemble_factory::classifier(self, EnsembleFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel ensemble_factory::gradient_boost_classifier(self, EnsembleFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel ensemble_factory::gradient_boost_regressor(self, EnsembleFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel ensemble_factory::random_forest_classifier(self, EnsembleFamilyOptions options = {});`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = ensemble_factory::bagging_classifier(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2085

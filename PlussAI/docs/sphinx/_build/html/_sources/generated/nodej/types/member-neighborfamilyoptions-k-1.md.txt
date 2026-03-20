@@ -1,0 +1,22 @@
+# `NeighborFamilyOptions::k`
+
+## Signature
+
+```cpp
+NeighborFamilyOptions::std::int64_t k = 5;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+NeighborFamilyOptions cfg{};
+// cfg.k = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:83

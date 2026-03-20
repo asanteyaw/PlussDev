@@ -1,0 +1,13 @@
+# `frequency_encoder`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/global-frequency-encoder-ov1.md): `[[nodiscard]] inline FrequencyEncoder frequency_encoder(FrequencyEncoderOptions options = {}) { return FrequencyEncoder(options); };`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:247

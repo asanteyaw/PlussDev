@@ -1,0 +1,27 @@
+# `PolynomialLiftOptions`
+
+## Signature
+
+```cpp
+struct PolynomialLiftOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `std::int64_t degree = 2`
+- `bool interactions_only = false`
+- `bool include_bias = false`
+
+## Example
+
+```cpp
+PolynomialLiftOptions cfg{};
+// cfg.degree = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:127

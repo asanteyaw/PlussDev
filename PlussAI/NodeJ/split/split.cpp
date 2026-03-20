@@ -1,13 +1,14 @@
 #include "pluss/ai/nodej/split.h"
 
 #include <algorithm>
-#include <bit>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <exception>
+#include <limits>
+#include <map>
 #include <numeric>
 #include <random>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -76,22 +77,21 @@ namespace {
 }
 
 [[nodiscard]] std::int64_t holdout_test_count(std::int64_t sample_count, double holdout_fraction) {
-  std::int64_t test_count = static_cast<std::int64_t>(std::llround(static_cast<double>(sample_count) * holdout_fraction));
+  // sklearn-like default: for float test_size, use ceil(n_samples * test_size)
+  // when train_size is omitted.
+  std::int64_t test_count = static_cast<std::int64_t>(std::ceil(static_cast<double>(sample_count) * holdout_fraction));
   test_count = std::max<std::int64_t>(1, test_count);
   test_count = std::min<std::int64_t>(sample_count - 1, test_count);
   return test_count;
 }
 
-[[nodiscard]] IndexSplit build_holdout_from_indices(const std::vector<std::int64_t>& indices,
-                                                    std::int64_t test_count) {
-  std::vector<std::int64_t> test_indices(indices.begin(), indices.begin() + test_count);
-  std::vector<std::int64_t> train_indices(indices.begin() + test_count, indices.end());
-  std::sort(test_indices.begin(), test_indices.end());
-  std::sort(train_indices.begin(), train_indices.end());
-  return IndexSplit{
-      .train_indices = make_index_series(train_indices),
-      .test_indices = make_index_series(test_indices),
-  };
+[[nodiscard]] pluss::loader::TimeSeriesSplitOptions to_time_series_options(const SplitOptions& options) {
+  pluss::loader::TimeSeriesSplitOptions out{};
+  out.n_splits = options.folds;
+  out.gap = options.time_gap;
+  if (options.time_test_size > 0) out.test_size = options.time_test_size;
+  if (options.time_max_train_size > 0) out.max_train_size = options.time_max_train_size;
+  return out;
 }
 
 [[nodiscard]] StatusOr<std::vector<double>> flatten_label_values(const Series& labels) {
@@ -106,81 +106,119 @@ namespace {
   return StatusOr<std::vector<double>>(std::move(values));
 }
 
-[[nodiscard]] std::vector<std::vector<std::int64_t>> class_partitions(const std::vector<double>& labels,
-                                                                      const SplitOptions& options) {
-  std::unordered_map<std::uint64_t, std::size_t> class_to_bucket{};
-  std::vector<std::vector<std::int64_t>> buckets{};
-  buckets.reserve(labels.size());
+[[nodiscard]] std::vector<std::vector<std::int64_t>> class_partitions(const std::vector<double>& labels) {
+  // sklearn np.unique returns sorted classes; keep that ordering for parity.
+  std::vector<double> unique_labels = labels;
+  for (double& value : unique_labels) {
+    if (value == 0.0) value = 0.0; // normalize -0.0/+0.0
+  }
+  std::sort(unique_labels.begin(), unique_labels.end());
+  unique_labels.erase(std::unique(unique_labels.begin(), unique_labels.end()), unique_labels.end());
+
+  std::map<double, std::size_t> class_to_bucket{};
+  std::vector<std::vector<std::int64_t>> buckets(unique_labels.size());
+  for (std::size_t i = 0; i < unique_labels.size(); ++i) {
+    class_to_bucket.emplace(unique_labels[i], i);
+  }
 
   for (std::size_t i = 0; i < labels.size(); ++i) {
     double value = labels[i];
-    if (value == 0.0) value = 0.0; // normalize -0.0/+0.0
-    const std::uint64_t key = std::bit_cast<std::uint64_t>(value);
-    auto it = class_to_bucket.find(key);
-    if (it == class_to_bucket.end()) {
-      const std::size_t bucket_id = buckets.size();
-      class_to_bucket.emplace(key, bucket_id);
-      buckets.push_back({});
-      buckets.back().reserve(8);
-      it = class_to_bucket.find(key);
-    }
+    if (value == 0.0) value = 0.0;
+    const auto it = class_to_bucket.find(value);
+    PLUSS_CHECK(it != class_to_bucket.end(), "class_partitions: internal class lookup mismatch");
     buckets[it->second].push_back(static_cast<std::int64_t>(i));
   }
-
-  if (options.shuffle) {
-    std::mt19937_64 rng(compose_seed(options.random));
-    for (auto& bucket : buckets) {
-      std::shuffle(bucket.begin(), bucket.end(), rng);
-    }
-  }
-
   return buckets;
 }
 
-[[nodiscard]] std::vector<std::int64_t> stratified_test_counts(const std::vector<std::vector<std::int64_t>>& buckets,
-                                                               std::int64_t target_total,
-                                                               double holdout_fraction) {
-  std::vector<std::int64_t> per_class_test(buckets.size(), 0);
-  std::vector<double> residual(buckets.size(), 0.0);
+template <class URBG>
+void shuffle_indices(std::vector<std::int64_t>& indices, URBG& rng) {
+  if (indices.size() < 2) return;
+  for (std::size_t i = indices.size(); i > 1; --i) {
+    std::uniform_int_distribution<std::size_t> dist(0, i - 1);
+    const std::size_t j = dist(rng);
+    std::swap(indices[i - 1], indices[j]);
+  }
+}
+
+template <class URBG>
+[[nodiscard]] std::vector<std::int64_t> approximate_mode(const std::vector<std::int64_t>& class_counts,
+                                                         std::int64_t draws,
+                                                         URBG& rng) {
+  const std::size_t k = class_counts.size();
+  std::vector<std::int64_t> out(k, 0);
+  if (k == 0 || draws <= 0) return out;
+
+  const std::int64_t total = std::accumulate(class_counts.begin(), class_counts.end(), std::int64_t{0});
+  if (total <= 0) return out;
+
+  std::vector<double> continuous(k, 0.0);
+  std::vector<double> remainder(k, 0.0);
   std::int64_t assigned = 0;
-
-  for (std::size_t i = 0; i < buckets.size(); ++i) {
-    const double exact = static_cast<double>(buckets[i].size()) * holdout_fraction;
-    const std::int64_t base = static_cast<std::int64_t>(std::floor(exact));
-    per_class_test[i] = std::min<std::int64_t>(base, static_cast<std::int64_t>(buckets[i].size()));
-    residual[i] = exact - static_cast<double>(base);
-    assigned += per_class_test[i];
+  for (std::size_t i = 0; i < k; ++i) {
+    continuous[i] = static_cast<double>(class_counts[i]) * static_cast<double>(draws) / static_cast<double>(total);
+    const auto floored = static_cast<std::int64_t>(std::floor(continuous[i]));
+    out[i] = std::clamp<std::int64_t>(floored, 0, class_counts[i]);
+    remainder[i] = continuous[i] - static_cast<double>(out[i]);
+    assigned += out[i];
   }
 
-  while (assigned < target_total) {
-    std::size_t best = buckets.size();
-    double best_residual = -1.0;
-    for (std::size_t i = 0; i < buckets.size(); ++i) {
-      if (per_class_test[i] < static_cast<std::int64_t>(buckets[i].size()) && residual[i] > best_residual) {
-        best = i;
-        best_residual = residual[i];
+  std::int64_t need = draws - assigned;
+  while (need > 0) {
+    double best = -1.0;
+    for (std::size_t i = 0; i < k; ++i) {
+      if (out[i] < class_counts[i]) {
+        best = std::max(best, remainder[i]);
       }
     }
-    if (best == buckets.size()) break;
-    ++per_class_test[best];
-    ++assigned;
-  }
+    if (best < 0.0) break;
 
-  while (assigned > target_total) {
-    std::size_t best = buckets.size();
-    double best_residual = 2.0;
-    for (std::size_t i = 0; i < buckets.size(); ++i) {
-      if (per_class_test[i] > 0 && residual[i] < best_residual) {
-        best = i;
-        best_residual = residual[i];
+    std::vector<std::size_t> ties{};
+    ties.reserve(k);
+    constexpr double kTol = 1e-15;
+    for (std::size_t i = 0; i < k; ++i) {
+      if (out[i] < class_counts[i] && std::abs(remainder[i] - best) <= kTol) {
+        ties.push_back(i);
       }
     }
-    if (best == buckets.size()) break;
-    --per_class_test[best];
-    --assigned;
+    if (ties.empty()) break;
+
+    std::int64_t take = std::min<std::int64_t>(need, static_cast<std::int64_t>(ties.size()));
+    while (take > 0 && !ties.empty()) {
+      std::uniform_int_distribution<std::size_t> pick(0, ties.size() - 1);
+      const std::size_t pos = pick(rng);
+      const std::size_t cls = ties[pos];
+      ++out[cls];
+      ties[pos] = ties.back();
+      ties.pop_back();
+      --take;
+      --need;
+    }
   }
 
-  return per_class_test;
+  return out;
+}
+
+[[nodiscard]] Status validate_stratify_counts(const std::vector<std::vector<std::int64_t>>& buckets,
+                                              std::int64_t n_train,
+                                              std::int64_t n_test) {
+  if (buckets.empty()) {
+    return Status::invalid_argument("strat_holdout_split requires at least one class.");
+  }
+  std::int64_t min_class = std::numeric_limits<std::int64_t>::max();
+  for (const auto& bucket : buckets) {
+    min_class = std::min<std::int64_t>(min_class, static_cast<std::int64_t>(bucket.size()));
+  }
+  if (min_class < 2) {
+    return Status::invalid_argument("strat_holdout_split requires every class to have at least 2 observations.");
+  }
+  if (n_train < static_cast<std::int64_t>(buckets.size())) {
+    return Status::invalid_argument("strat_holdout_split requires train size to be >= number of classes.");
+  }
+  if (n_test < static_cast<std::int64_t>(buckets.size())) {
+    return Status::invalid_argument("strat_holdout_split requires test size to be >= number of classes.");
+  }
+  return Status::success();
 }
 
 } // namespace
@@ -189,8 +227,31 @@ StatusOr<IndexSplit> holdout_split(std::int64_t sample_count, const SplitOptions
   Status args_status = validate_holdout_args(sample_count, options);
   if (!args_status.ok()) return StatusOr<IndexSplit>(std::move(args_status));
 
-  std::vector<std::int64_t> indices = make_indices(sample_count, options);
-  return StatusOr<IndexSplit>(build_holdout_from_indices(indices, holdout_test_count(sample_count, options.holdout_fraction)));
+  const std::int64_t test_count = holdout_test_count(sample_count, options.holdout_fraction);
+  const std::int64_t train_count = sample_count - test_count;
+  std::vector<std::int64_t> indices(static_cast<std::size_t>(sample_count));
+  std::iota(indices.begin(), indices.end(), std::int64_t{0});
+  if (options.shuffle) {
+    std::mt19937 rng(static_cast<std::uint32_t>(compose_seed(options.random)));
+    shuffle_indices(indices, rng);
+  }
+
+  std::vector<std::int64_t> train_indices{};
+  std::vector<std::int64_t> test_indices{};
+  train_indices.reserve(static_cast<std::size_t>(train_count));
+  test_indices.reserve(static_cast<std::size_t>(test_count));
+  if (options.shuffle) {
+    test_indices.insert(test_indices.end(), indices.begin(), indices.begin() + test_count);
+    train_indices.insert(train_indices.end(), indices.begin() + test_count, indices.begin() + test_count + train_count);
+  } else {
+    train_indices.insert(train_indices.end(), indices.begin(), indices.begin() + train_count);
+    test_indices.insert(test_indices.end(), indices.begin() + train_count, indices.begin() + train_count + test_count);
+  }
+
+  return StatusOr<IndexSplit>(IndexSplit{
+      .train_indices = make_index_series(train_indices),
+      .test_indices = make_index_series(test_indices),
+  });
 }
 
 StatusOr<IndexSplit> strat_holdout_split(const Series& labels, const SplitOptions& options) {
@@ -203,28 +264,51 @@ StatusOr<IndexSplit> strat_holdout_split(const Series& labels, const SplitOption
   Status args_status = validate_holdout_args(sample_count, options);
   if (!args_status.ok()) return StatusOr<IndexSplit>(std::move(args_status));
 
-  std::vector<std::vector<std::int64_t>> buckets = class_partitions(label_values, options);
+  std::vector<std::vector<std::int64_t>> buckets = class_partitions(label_values);
   const std::int64_t test_total = holdout_test_count(sample_count, options.holdout_fraction);
-  const std::vector<std::int64_t> per_class_test = stratified_test_counts(buckets, test_total, options.holdout_fraction);
+  const std::int64_t train_total = sample_count - test_total;
+  Status strat_ok = validate_stratify_counts(buckets, train_total, test_total);
+  if (!strat_ok.ok()) return StatusOr<IndexSplit>(std::move(strat_ok));
+
+  std::vector<std::int64_t> class_counts{};
+  class_counts.reserve(buckets.size());
+  for (const auto& bucket : buckets) {
+    class_counts.push_back(static_cast<std::int64_t>(bucket.size()));
+  }
+
+  std::mt19937 rng(static_cast<std::uint32_t>(compose_seed(options.random)));
+  const std::vector<std::int64_t> per_class_train = approximate_mode(class_counts, train_total, rng);
+
+  std::vector<std::int64_t> remaining_counts(class_counts.size(), 0);
+  for (std::size_t i = 0; i < class_counts.size(); ++i) {
+    remaining_counts[i] = class_counts[i] - per_class_train[i];
+  }
+  const std::vector<std::int64_t> per_class_test = approximate_mode(remaining_counts, test_total, rng);
 
   std::vector<std::int64_t> test_indices{};
   test_indices.reserve(static_cast<std::size_t>(test_total));
   std::vector<std::int64_t> train_indices{};
-  train_indices.reserve(static_cast<std::size_t>(sample_count - test_total));
+  train_indices.reserve(static_cast<std::size_t>(train_total));
 
   for (std::size_t i = 0; i < buckets.size(); ++i) {
-    const auto& bucket = buckets[i];
-    const std::int64_t cutoff = per_class_test[i];
-    test_indices.insert(test_indices.end(), bucket.begin(), bucket.begin() + cutoff);
-    train_indices.insert(train_indices.end(), bucket.begin() + cutoff, bucket.end());
+    auto bucket = buckets[i];
+    if (options.shuffle) {
+      shuffle_indices(bucket, rng);
+    }
+    const std::int64_t train_take = std::clamp<std::int64_t>(per_class_train[i], 0, static_cast<std::int64_t>(bucket.size()));
+    const std::int64_t test_take = std::clamp<std::int64_t>(per_class_test[i], 0, static_cast<std::int64_t>(bucket.size()) - train_take);
+    train_indices.insert(train_indices.end(), bucket.begin(), bucket.begin() + train_take);
+    test_indices.insert(test_indices.end(), bucket.begin() + train_take, bucket.begin() + train_take + test_take);
   }
 
   if (test_indices.empty() || train_indices.empty()) {
     return StatusOr<IndexSplit>(Status::internal("strat_holdout_split produced an empty train or test partition."));
   }
 
-  std::sort(test_indices.begin(), test_indices.end());
-  std::sort(train_indices.begin(), train_indices.end());
+  if (options.shuffle) {
+    shuffle_indices(train_indices, rng);
+    shuffle_indices(test_indices, rng);
+  }
   return StatusOr<IndexSplit>(IndexSplit{
       .train_indices = make_index_series(train_indices),
       .test_indices = make_index_series(test_indices),
@@ -267,6 +351,36 @@ StatusOr<SplitPlan> fold_plan(std::int64_t sample_count, const SplitOptions& opt
   return StatusOr<SplitPlan>(std::move(plan));
 }
 
+StatusOr<SplitPlan> time_series_fold_plan(std::int64_t sample_count, const SplitOptions& options) {
+  if (sample_count < 2) {
+    return StatusOr<SplitPlan>(Status::invalid_argument("time_series_fold_plan requires sample_count >= 2."));
+  }
+  if (options.shuffle) {
+    return StatusOr<SplitPlan>(
+        Status::invalid_argument("time_series_fold_plan requires SplitOptions.shuffle=false."));
+  }
+
+  const auto ts_opts = to_time_series_options(options);
+  pluss::loader::TimeSeriesIndexSplit plan_indices{};
+  try {
+    plan_indices = pluss::loader::time_series_split_indices(sample_count, ts_opts);
+  } catch (const pluss::codem::Error& e) {
+    return StatusOr<SplitPlan>(Status::invalid_argument(e.what()));
+  } catch (const std::exception& e) {
+    return StatusOr<SplitPlan>(Status::invalid_argument(e.what()));
+  }
+
+  SplitPlan plan{};
+  plan.folds.reserve(plan_indices.folds.size());
+  for (const auto& fold : plan_indices.folds) {
+    plan.folds.push_back(IndexSplit{
+        .train_indices = make_index_series(fold.train_indices),
+        .test_indices = make_index_series(fold.test_indices),
+    });
+  }
+  return StatusOr<SplitPlan>(std::move(plan));
+}
+
 StatusOr<SplitPlan> strat_fold_plan(const Series& labels, const SplitOptions& options) {
   StatusOr<std::vector<double>> labels_or = flatten_label_values(labels);
   if (!labels_or.ok()) return StatusOr<SplitPlan>(labels_or.status());
@@ -278,7 +392,7 @@ StatusOr<SplitPlan> strat_fold_plan(const Series& labels, const SplitOptions& op
   if (!args_status.ok()) return StatusOr<SplitPlan>(std::move(args_status));
 
   const std::int64_t fold_count = options.folds;
-  std::vector<std::vector<std::int64_t>> buckets = class_partitions(label_values, options);
+  std::vector<std::vector<std::int64_t>> buckets = class_partitions(label_values);
   std::vector<std::vector<std::int64_t>> test_by_fold(static_cast<std::size_t>(fold_count));
 
   for (const auto& bucket : buckets) {

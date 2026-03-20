@@ -1,0 +1,26 @@
+# `TuneObjectivePolicy`
+
+## Signature
+
+```cpp
+enum TuneObjectivePolicy;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `Auto = 0`
+- `Minimize = 1`
+- `Maximize = 2`
+
+## Example
+
+```cpp
+auto mode = TuneObjectivePolicy::Auto;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/tune.h`:12

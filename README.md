@@ -63,6 +63,7 @@ for (const auto& name : wb.sheet_names()) {
 
 ## Documentation
 
+- `docs/PLUSS_FOUNDATIONS.md`
 - `docs/DATAFRAME_ATLAS_USER_GUIDE.md`
 - `docs/THREAD_API_GUIDE.md`
 - `PlussMic/examples/table/`

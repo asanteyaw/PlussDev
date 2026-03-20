@@ -382,7 +382,7 @@ def generic_note(class_name: str, method: Method) -> str:
             'drop': 'Removes one or more features and returns the remaining frame.',
             'equals': 'Checks whether two frames have the same structure, labels, and values.',
             'group_by': 'Groups rows by one or more key features and computes the requested aggregations for each group.',
-            'has_column': 'Checks whether a feature name exists in the frame.',
+            'has_feature': 'Checks whether a feature name exists in the frame.',
             'has_feature': 'Checks whether a feature name exists in the frame.',
             'head': 'Returns the first `n` rows of the frame.',
             'with_cases': 'Replaces the current case axis with the supplied thread. The row values stay in the same order, but later case-aware operations now use the new labels.',
@@ -400,7 +400,6 @@ def generic_note(class_name: str, method: Method) -> str:
             'mean_by': 'Groups by one feature and returns the mean of another feature within each group.',
             'min': 'Computes per-feature minima for the selected numeric features.',
             'note_features': 'Returns only the note-backed features.',
-            'nunique': 'Counts distinct values for each selected feature.',
             'pivot': 'Reshapes long-form rows into a wider table indexed by one feature and expanded by another.',
             'pivot_table': 'Builds a pivoted summary table using an aggregation function when multiple rows map to the same cell.',
             'relabel_features': 'Replaces the full feature label set with the supplied names in positional order.',
@@ -448,8 +447,8 @@ def generic_note(class_name: str, method: Method) -> str:
             'var': 'Computes per-feature variances for the selected numeric features.',
             'view': 'Returns a lightweight row view of the requested slice.',
             'window': 'Computes one or more window-based features such as rolling means over selected columns.',
-            'with_column': 'Returns a new frame with one added or replaced feature.',
-            'with_column_': 'Adds or replaces one feature in place.',
+            'set_features': 'Returns a new frame with one added or replaced feature.',
+            'set_features_': 'Adds or replaces one feature in place.',
         },
         'Catalog': {
             'apply': 'Applies a function to one named stream and returns the updated catalog.',
@@ -721,7 +720,7 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'Returns the current labels used to address fields, slots, rows, or depth items.'
     if name in {'columns', 'values', 'features', 'streams', 'slots', 'frames', 'catalogs', 'registries'}:
         return 'Materializes the current members as a collection you can inspect or reuse elsewhere.'
-    if name in {'get', 'column', 'column_ref', 'feature_ref', 'stream', 'slot', 'frame', 'catalog', 'registry', 'at', 'iat', 'iloc', 'loc', 'value', 'cases'}:
+    if name in {'get', 'feature_ref', 'stream', 'slot', 'frame', 'catalog', 'registry', 'at', 'iat', 'iloc', 'loc', 'value', 'cases'}:
         return 'Fetches one value, member, or slice from the current object without changing the source object.'
     if name in {'head', 'tail', 'slice', 'slice_depth', 'slice_frames', 'take', 'sample', 'iloc', 'loc', 'view'}:
         return 'Returns a smaller preview cut from the current object so you can inspect rows or depth items without carrying the full payload forward.'
@@ -731,7 +730,7 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'This applies arithmetic across the compatible numeric payloads in the current object.'
     if name in {'eq', 'ne', 'lt', 'le', 'gt', 'ge', 'compare'}:
         return 'This produces a comparison-style result you can inspect directly or reuse as a mask.'
-    if name in {'sum', 'mean', 'min', 'max', 'std', 'var', 'count', 'nunique', 'count_by', 'mean_by', 'aggregate', 'group_by', 'describe', 'tally', 'aggregate_over_frames', 'aggregate_over_catalogs', 'type_counts', 'slot_sizes', 'type_profiles'}:
+    if name in {'sum', 'mean', 'min', 'max', 'std', 'var', 'count', 'count_by', 'mean_by', 'aggregate', 'group_by', 'describe', 'tally', 'aggregate_over_frames', 'aggregate_over_catalogs', 'type_counts', 'slot_sizes', 'type_profiles'}:
         return 'Use this when you want a summary view instead of carrying the full input forward unchanged.'
     if name in {'cast', 'astype', 'cast_series', 'cast_note', 'cast_timeline', 'cast_timeindex'}:
         return 'This changes the semantic or numeric type so later operations route through the correct implementation path.'
@@ -743,7 +742,7 @@ def generic_note(class_name: str, method: Method) -> str:
         return 'Changes names or labels only. The underlying payload values, row order, and aligned structure stay the same.'
     if name in {'join', 'update', 'combine', 'merge', 'stitch_on', 'combine_values', 'concat', 'concat_values', 'concat_depth'}:
         return 'Use this when you need to merge compatible objects or extend the current one with another input.'
-    if name in {'assign', 'transform', 'apply', 'apply_', 'apply_all', 'apply_all_', 'map', 'map_', 'map_frames', 'map_catalogs', 'apply_slot', 'set', 'set_', 'set_stream', 'set_stream_', 'set_streams', 'set_streams_', 'set_slot', 'set_slot_', 'set_slots', 'set_slots_', 'set_features', 'set_features_', 'with_column', 'with_column_', 'with_cases', 'with_cases_', 'with_validity_mask', 'with_validity_mask_', 'with_meta', 'with_meta_', 'push', 'push_', 'push_all', 'push_all_', 'clear', 'clear_', 'drop_empty_slots', 'drop_empty_slots_', 'filter_values', 'filter_values_', 'transform_values', 'transform_values_', 'take_values', 'take_values_', 'concat_values', 'concat_values_'}:
+    if name in {'assign', 'transform', 'apply', 'apply_', 'apply_all', 'apply_all_', 'map', 'map_', 'map_frames', 'map_catalogs', 'apply_slot', 'set', 'set_', 'set_stream', 'set_stream_', 'set_streams', 'set_streams_', 'set_slot', 'set_slot_', 'set_slots', 'set_slots_', 'set_features', 'set_features_', 'with_cases', 'with_cases_', 'with_validity_mask', 'with_validity_mask_', 'with_meta', 'with_meta_', 'push', 'push_', 'push_all', 'push_all_', 'clear', 'clear_', 'drop_empty_slots', 'drop_empty_slots_', 'filter_values', 'filter_values_', 'transform_values', 'transform_values_', 'take_values', 'take_values_', 'concat_values', 'concat_values_'}:
         return 'Adds, replaces, filters, or rewrites part of the current object while preserving the surrounding alignment model. Methods ending with `_` perform the change in place.'
     if name in {'sql', 'prepare_sql'}:
         return 'Use this when the transformation is easier to express as SQL than as a chained sequence of table verbs.'
@@ -1068,7 +1067,7 @@ def output_for(class_name: str, method: Method) -> str:
             return 'Accra' if 'city' in method.signature else '1'
         if n in {'get', 'column', 'features'} and 'string_view' in method.signature:
             return 'Thread([100.0, 120.0, 90.0])'
-        if n in {'has_column', 'has_feature', 'equals'}:
+        if n in {'has_feature', 'equals'}:
             return 'true'
         if n in {'with_cases'}:
             return DF_WITH_CASES_OUT
@@ -1091,7 +1090,7 @@ id  sales  city
             return DF_REORDER_OUT
         if n in {'drop'}:
             return DF_DROP_OUT
-        if n in {'insert', 'with_column', 'with_column_', 'set_features', 'set_features_', 'assign'}:
+        if n in {'insert', 'set_features', 'set_features_', 'assign'}:
             return """id  sales  city    profit
 1   100.0  Accra   40.0
 2   120.0  Tema    35.0
@@ -1125,7 +1124,7 @@ id  sales  city
             return DF_DESCRIBE_OUT
         if n in {'transpose'}:
             return DF_TRANSPOSE_OUT
-        if n in {'sum', 'mean', 'min', 'max', 'std', 'var', 'count', 'nunique'}:
+        if n in {'sum', 'mean', 'min', 'max', 'std', 'var', 'count'}:
             return """feature  value
 sales    310.0"""
         if n in {'fillna', 'fillna_', 'dropna', 'dropna_all', 'ffill', 'bfill', 'isna', 'isnull', 'notna', 'notnull'}:
@@ -1548,8 +1547,8 @@ auto r1 = pluss::bundle::Registry({
 auto aisle = pluss::bundle::Aisle({r0, r1});"""
 
 
-def column_ref_base() -> str:
-    return df_base() + '\n' + 'auto ref = df.column_ref("sales");'
+def feature_ref_base() -> str:
+    return df_base() + '\n' + 'auto ref = df.feature_ref("sales");'
 
 
 def sql_accessor_base() -> str:
@@ -1622,7 +1621,7 @@ def example_for(class_name: str, method: Method) -> str:
             return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"sales"_k = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))});\nauto out = pluss::table::DataFrame::tabelize(catalog);'
         if n == 'kindelize':
             return df_base() + '\n\nauto out = df.kindelize();'
-        if n in {'nrows','ncols','nfeatures','column_names','columns','values','feature_names','cases_series'}:
+        if n in {'nrows','ncols','nfeatures','values','feature_names','cases_series'}:
             return df_base() + f'\n\nauto out = df.{n}();'
         if n == 'cases':
             if 'pair<' in sig:
@@ -1632,11 +1631,11 @@ def example_for(class_name: str, method: Method) -> str:
             if 'feature_name' in sig:
                 return df_base() + '\n\nauto out = df.cases(0, "city");'
             return df_base() + '\n\nauto out = df.cases(0);'
-        if n in {'iloc','iat','at','get','has_column','column','column_ref','has_feature','feature_ref'}:
+        if n in {'iloc','iat','at','get','has_feature','feature_ref'}:
             args = {
                 'iloc': '1' if 'start' not in sig else '0, 2',
-                'iat': '0, 0', 'at': '0, "city"', 'get': '"sales"', 'has_column': '"sales"',
-                'column': '"sales"', 'column_ref': '"sales"', 'has_feature': '"sales"', 'feature_ref': '"sales"'
+                'iat': '0, 0', 'at': '0, "city"', 'get': '"sales"', 'has_feature': '"sales"',
+                'feature_ref': '"sales"'
             }[n]
             return df_base() + f'\n\nauto out = df.{n}({args});'
         if n == 'features':
@@ -1712,11 +1711,11 @@ def example_for(class_name: str, method: Method) -> str:
             if n == 'combine' and 'CombineSpec' in sig:
                 return df_two() + '\n\npluss::table::DataFrame::CombineSpec spec;\nspec.op = pluss::table::DataFrame::CombineOp::Update;\nauto out = left.combine(right, spec);'
             return df_two() + f'\n\nauto out = left.{n}(right);'
-        if n in {'with_column','with_column_','set_features','set_features_','set'}:
-            if n == 'with_column':
-                return df_base() + '\n\nauto out = df.with_column("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));'
-            if n == 'with_column_':
-                return df_base() + '\n\ndf.with_column_("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));'
+        if n in {'set_features','set_features_','set'}:
+            if n == 'set_features':
+                return df_base() + '\n\nauto out = df.set_features("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));'
+            if n == 'set_features_':
+                return df_base() + '\n\ndf.set_features_("profit", pluss::table::Thread(pluss::make_series({40.0, 35.0, 30.0})));'
             if n == 'set_features' or n == 'set_features_':
                 if 'initializer_list<std::string_view> names' in sig:
                     return df_base() + (
@@ -1806,7 +1805,7 @@ def example_for(class_name: str, method: Method) -> str:
             return df_base() + f'\n\nauto out = df.{n}(10);'
         if n in {'radd','rsub','rmul','rdiv','rtruediv','rfloordiv','rmod','rpow'}:
             return df_base() + f'\n\nauto out = df.{n}(10);'
-        if n in {'sum','mean','min','max','std','var','count','nunique','describe','transpose','tally','window','rolling'}:
+        if n in {'sum','mean','min','max','std','var','count','describe','transpose','tally','window','rolling'}:
             if n == 'window' or n == 'rolling':
                 return df_base() + '\n\nauto out = df.' + n + '({{.output = "sales_roll", .feature = "sales", .op = pluss::table::ThreadWindowOp::RollingMean, .window = 2, .min_periods = 1}}, true);'
             if n == 'transpose':
@@ -1859,7 +1858,7 @@ def example_for(class_name: str, method: Method) -> str:
         return df_base() + f'\n\nauto out = df.{n}();'
 
     if class_name == 'ColumnRef':
-        base = column_ref_base()
+        base = feature_ref_base()
         if n in {'name', 'thread', 'mean', 'value', 'values'}:
             return base + f'\n\nauto out = ref.{n}();'
         if n == 'head':
@@ -2328,6 +2327,15 @@ def example_for(class_name: str, method: Method) -> str:
 
 
 def build_page(class_name: str, methods: list[Method]) -> str:
+    def class_specific_intro_sections() -> list[str]:
+        if class_name != 'DataFramePlotAccessor':
+            return []
+        return [
+            '```{include} snippets/dataframe_plot_options_reference.md',
+            '```',
+            '',
+        ]
+
     cfg = CLASS_CONFIG[class_name]
     grouped: dict[str, list[Method]] = {}
     for m in methods:
@@ -2342,6 +2350,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
         cfg['intro'],
         '',
     ]
+    lines.extend(class_specific_intro_sections())
     for method in sorted(methods, key=lambda m: (m.name.lower(), user_signature(m, class_name).lower())):
         lines.append(f'### `{method.name}`')
         lines.append('')

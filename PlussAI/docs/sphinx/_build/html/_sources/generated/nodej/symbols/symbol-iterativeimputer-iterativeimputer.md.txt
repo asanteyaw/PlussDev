@@ -1,0 +1,13 @@
+# `IterativeImputer::IterativeImputer`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/iterativeimputer-iterativeimputer-ov1.md): `explicit IterativeImputer(IterativeImputerOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:245

@@ -1,6 +1,10 @@
 #pragma once
 
 #include "aux/let.h"
+#include "aux/data_loader.h"
+#include "aux/output.h"
+#include "aux/pathing.h"
+#include "aux/scalar_cast.h"
 #include "aux/rng_seed.h"
 #include "aux/transmit.h"
 #include "aux/translate.h"
@@ -14,6 +18,26 @@ using aux::transform_axis;
 using aux::transform_axis_options;
 using aux::suppose;
 using aux::rng_seed;
+using aux::OutputEngine;
+using aux::OutputOptions;
+using aux::OutputLevel;
+using aux::to_scalar;
+using aux::as_bool;
+using aux::as_f32;
+using aux::as_f64;
+using aux::as_i16;
+using aux::as_i32;
+using aux::as_i64;
+using aux::as_u16;
+using aux::as_u32;
+using aux::as_u64;
+using aux::as_I16;
+using aux::as_I32;
+using aux::as_I64;
+using aux::as_U16;
+using aux::as_U32;
+using aux::as_U64;
+using DataLoader = loader::DataLoader;
 } // namespace pluss
 
 // Convenience unqualified aliases for end users.

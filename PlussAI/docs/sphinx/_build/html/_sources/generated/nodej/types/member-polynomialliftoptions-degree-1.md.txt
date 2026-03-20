@@ -1,0 +1,22 @@
+# `PolynomialLiftOptions::degree`
+
+## Signature
+
+```cpp
+PolynomialLiftOptions::std::int64_t degree = 2;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+PolynomialLiftOptions cfg{};
+// cfg.degree = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:127

@@ -39,7 +39,7 @@ DataFrame Atlas::frame(std::int64_t index) const {
   return src.frames_[static_cast<std::size_t>(idx)];
 }
 
-DataFrame Atlas::iloc(std::int64_t index) const {
+DataFrame Atlas::dloc(std::int64_t index) const {
   return frame(index);
 }
 

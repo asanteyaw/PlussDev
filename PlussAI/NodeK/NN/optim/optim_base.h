@@ -34,6 +34,7 @@ struct GradientClipOptions {
 enum class UpdateLane {
   Auto,
   Loop,
+  Foreach,
   Batched,
   Fused,
 };
@@ -65,6 +66,7 @@ struct StepLaneTelemetry {
   ScalarType dtype{ScalarType::Float32};
   std::size_t active_parameters{0};
   bool batch_shape_compatible{false};
+  bool foreach_supported{false};
   bool batched_supported{false};
   bool fused_supported{false};
   bool capturable_supported{false};
@@ -100,6 +102,9 @@ public:
   void clear() const {
     for (Series* p : parameters_) {
       if (p && p->defined()) {
+        if (!p->tracks_slope()) {
+          p->tracks_slope_(true);
+        }
         p->clear_sensitivity();
       }
     }
@@ -249,6 +254,9 @@ protected:
     switch (exec.lane) {
       case UpdateLane::Loop:
         return UpdateLane::Loop;
+      case UpdateLane::Foreach:
+        return batched_supported ? UpdateLane::Foreach
+                                 : fail_or_loop("foreach lane requested but unsupported for this group");
       case UpdateLane::Batched:
         return batched_supported ? UpdateLane::Batched
                                  : fail_or_loop("batched lane requested but unsupported for this group");
@@ -280,6 +288,17 @@ protected:
 
   static bool supports_fused_lane_platform_(const Platform platform,
                                             const ScalarType dtype) noexcept {
+    if (!::pluss::detail::nn::is_training_float_dtype_(dtype)) {
+      return false;
+    }
+    if (platform == pluss::pCPU) {
+      // CPU fused lane is implemented through batched tensor update graphs.
+      return true;
+    }
+    if (platform == pluss::pMPS) {
+      // MPS fused lane shares the same graph-level fused update path.
+      return pluss::mps::is_ready();
+    }
     if (platform == pluss::pCUDA) {
       return pluss::cuda::is_ready() &&
              pluss::cuda::native_baseline_enabled() &&
@@ -295,12 +314,14 @@ protected:
 
   static bool supports_batched_lane_platform_(const Platform platform,
                                               const ScalarType dtype) noexcept {
+    if (!::pluss::detail::nn::is_training_float_dtype_(dtype)) {
+      return false;
+    }
     if (platform == pluss::pCPU) {
       return true;
     }
     if (platform == pluss::pMPS) {
-      return pluss::mps::is_ready() &&
-             ::pluss::detail::nn::is_training_float_dtype_(dtype);
+      return pluss::mps::is_ready();
     }
     if (platform == pluss::pCUDA) {
       return pluss::cuda::is_ready() &&
@@ -403,6 +424,7 @@ protected:
     item.dtype = anchor ? anchor->scalar_type() : ScalarType::Float32;
     item.active_parameters = active_lane_parameter_count_(indices, params, gradients);
     item.batch_shape_compatible = batch_shape_compatible;
+    item.foreach_supported = batched_supported;
     item.batched_supported = batched_supported;
     item.fused_supported = fused_supported;
     item.capturable_supported = capturable_supported;
@@ -473,11 +495,11 @@ private:
   }
 
   static bool has_non_finite_(const Series& x) {
-    const Series non_finite = x.isfinite().logical_not().to(ScalarType::Float64);
-    return non_finite.sum().item<double>() > 0.0;
+    const Series finite_all = x.isfinite().all();
+    return !finite_all.to(pluss::pCPU).item<bool>();
   }
 
-  void validate_parameters_() const {
+  void validate_parameters_() {
     if (parameters_.empty()) {
       throw std::runtime_error("pluss::ai::nn::optim::Optimizer: expected non-empty parameter list");
     }
@@ -496,6 +518,9 @@ private:
         throw std::runtime_error(
             "pluss::ai::nn::optim::Optimizer: training expects Float32/Float16/BFloat16 parameters; got unsupported dtype for " +
             label);
+      }
+      if (!p->tracks_slope()) {
+        p->tracks_slope_(true);
       }
     }
   }

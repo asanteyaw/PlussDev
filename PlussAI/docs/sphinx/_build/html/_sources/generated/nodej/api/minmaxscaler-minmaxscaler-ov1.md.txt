@@ -1,0 +1,40 @@
+# `MinMaxScaler::MinMaxScaler`
+
+## Signature
+
+```cpp
+explicit MinMaxScaler(MinMaxScalerOptions options = {});
+```
+
+## Parameters
+
+- `options` : `MinMaxScalerOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns ``.
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## See also
+
+- `[[nodiscard]] StatusOr<std::vector<Series>> MinMaxScaler::dump_state(self) const override;`
+- `Status MinMaxScaler::learn(self, const FeatureBatch& batch, const TrainOptions& options = {}) override;`
+- `[[nodiscard]] StatusOr<Series> MinMaxScaler::learn_map(self, const FeatureBatch& batch, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {}) override;`
+- `Status MinMaxScaler::load_state(self, const std::vector<Series>& state) override;`
+- `[[nodiscard]] StatusOr<Series> MinMaxScaler::map(self, const FeatureBatch& batch, const InferOptions& options = {}) const override;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+MinMaxScaler minMaxScaler{};
+auto out = minMaxScaler.MinMaxScaler(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:157

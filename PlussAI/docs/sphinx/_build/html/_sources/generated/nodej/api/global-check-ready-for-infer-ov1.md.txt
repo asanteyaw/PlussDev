@@ -1,0 +1,43 @@
+# `check_ready_for_infer`
+
+## Signature
+
+```cpp
+[[nodiscard]] Status check_ready_for_infer(const char* where) const;
+```
+
+## Parameters
+
+- `where` : `const char*`
+  Method argument; see signature type for accepted form.
+
+## Returns
+
+Returns a status object indicating success/failure and an error message on failure.
+
+## Notes
+
+Computes predictions from prepared inputs using the currently learned state.
+
+## See also
+
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_learn_map(const FeatureBatch& batch, const TrainOptions& learn_options, const InferOptions& infer_options);`
+- `[[nodiscard]] StatusOr<FeatureBatch> apply_map(const FeatureBatch& batch, const InferOptions& options) const;`
+- `StatusOr<LabeledBatch> labeled_batch_from_dataframe(const pluss::table::DataFrame& frame, const DataFrameBatchOptions& options);`
+- `StatusOr<FlowBundle> load(const std::string& path);`
+- `StatusOr<Flow> load_and_restore(const std::string& path);`
+
+## Parameter Reference
+
+- [where](../params/param-global-check-ready-for-infer-ov1-where-1.md)
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = check_ready_for_infer(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:127

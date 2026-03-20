@@ -1,0 +1,21 @@
+# `ModelFamily::Decompose`
+
+## Signature
+
+```cpp
+ModelFamily::Decompose;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = ModelFamily::Decompose;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:11

@@ -1,0 +1,13 @@
+# `polynomial_lift`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-polynomial-lift-ov1.md): `[[nodiscard]] inline PolynomialLift polynomial_lift(PolynomialLiftOptions options = {}) { return PolynomialLift(options); };`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:255

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <initializer_list>
 #include <iosfwd>
 #include <optional>
 #include <span>
@@ -19,6 +20,7 @@ namespace detail {
 class ThreadImpl;
 }
 class ThreadValue;
+class DataFrameView;
 
 enum class ThreadKind : std::uint8_t {
   Series = 0,
@@ -96,10 +98,10 @@ public:
   Thread clear_validity_mask() const;
   Thread& clear_validity_mask_();
 
-  pluss::Series isnull() const;
-  pluss::Series notnull() const;
-  pluss::Series isnan() const;
-  pluss::Series isfinite() const;
+  Thread isnull() const;
+  Thread notnull() const;
+  Thread isnan() const;
+  Thread isfinite() const;
 
   // Functional-by-default transforms.
   Thread fillna(double value) const;
@@ -131,12 +133,23 @@ public:
   Thread take(std::span<const std::int64_t> indices) const;
   Thread filter(const pluss::Series& bool_mask) const;
   Thread dropna() const;
+  Thread sort_values(bool ascending = true, bool nulls_last = true) const;
   Thread ffill() const;
   Thread bfill() const;
+  Thread distinct(bool dropna = true) const;
+  DataFrameView tally(std::int64_t top_n = 0, bool dropna = true, bool render = true) const;
+  Thread bucketize(std::initializer_list<double> bins,
+                   std::initializer_list<std::int64_t> labels = {},
+                   bool right = true,
+                   bool include_lowest = true) const;
 
   // Reductions (Series payload only) return scalar Series (numel == 1).
   pluss::Series sum() const;
+  pluss::Series count(bool count_true = true) const;
+  pluss::Series any(bool skipna = true) const;
+  pluss::Series all(bool skipna = true) const;
   pluss::Series mean() const;
+  pluss::Series median() const;
   pluss::Series min() const;
   pluss::Series max() const;
   pluss::Series var(bool unbiased = true) const;
@@ -169,6 +182,10 @@ public:
   std::string to_string(const display::DisplayOptions& options = {}) const;
   void show(const display::DisplayOptions& options = {}) const;
   void show(std::ostream& os, const display::DisplayOptions& options = {}) const;
+  bool has_display_labels() const;
+  Thread display_labels() const;
+  Thread with_display_labels(const Thread& labels) const;
+  Thread clear_display_labels() const;
 
   const pluss::Series& as_series() const;
   const pluss::Note& as_note() const;
@@ -199,6 +216,8 @@ Thread operator/(const Thread& lhs, const Thread& rhs);
 Thread operator%(const Thread& lhs, double rhs);
 Thread operator%(double lhs, const Thread& rhs);
 Thread operator%(const Thread& lhs, const Thread& rhs);
+Thread operator&(const Thread& lhs, const Thread& rhs);
+Thread operator|(const Thread& lhs, const Thread& rhs);
 Thread operator==(const Thread& lhs, double rhs);
 Thread operator==(double lhs, const Thread& rhs);
 Thread operator==(const Thread& lhs, const Thread& rhs);
@@ -242,5 +261,6 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& os, const Thread& thread);
+void output_render(std::ostream& os, const Thread& thread);
 
 } // namespace pluss::table

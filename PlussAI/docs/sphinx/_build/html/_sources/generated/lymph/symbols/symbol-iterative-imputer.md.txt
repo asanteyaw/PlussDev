@@ -1,0 +1,13 @@
+# `iterative_imputer`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/global-iterative-imputer-ov1.md): `[[nodiscard]] inline IterativeImputer iterative_imputer(IterativeImputerOptions options = {}) { return IterativeImputer(options); };`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:245

@@ -1,0 +1,69 @@
+# `ensemble_factory::bagging_regressor`
+
+## Signature
+
+```cpp
+[[nodiscard]] static WorkflowModel ensemble_factory::bagging_regressor(self, EnsembleFamilyOptions options = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `EnsembleFamilyOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `WorkflowModel`.
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## See also
+
+- `[[nodiscard]] static WorkflowModel ensemble_factory::bagging_classifier(self, EnsembleFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel ensemble_factory::classifier(self, EnsembleFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel ensemble_factory::gradient_boost_classifier(self, EnsembleFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel ensemble_factory::gradient_boost_regressor(self, EnsembleFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel ensemble_factory::random_forest_classifier(self, EnsembleFamilyOptions options = {});`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+          .method = EnsembleMethod::GradientBoost,
+          .learners = 240,
+          .subsample = 0.7,
+      }));
+      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      broad_candidates.emplace_back("gboost_240_07", std::move(wf));
+    }
+    {
+      auto wf = lymph::Workflow(lymph::ensemble_factory::bagging_regressor(EnsembleFamilyOptions{
+          .method = EnsembleMethod::Bagging,
+          .learners = 180,
+          .subsample = 0.95,
+      }));
+      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median});
+      broad_candidates.emplace_back("bagging_180_095", std::move(wf));
+    }
+
+    {
+      auto wf = lymph::Workflow(lymph::neighbor_factory::knn_regressor(NeighborFamilyOptions{
+          .k = 7,
+          .distance_weighted = false,
+          .standardize = true,
+      }));
+      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
+          .standard_scaler();
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2075

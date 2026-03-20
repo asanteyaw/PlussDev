@@ -1,0 +1,21 @@
+# `MetricKind::Mse`
+
+## Signature
+
+```cpp
+MetricKind::Mse;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = MetricKind::Mse;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:35

@@ -1,0 +1,52 @@
+# `Workflow::Workflow::arg1`
+
+## Parent Signature
+
+```cpp
+explicit Workflow(const ModelSpec& spec) : model_(WorkflowModel(spec));
+```
+
+## Parameter
+
+- `arg1` : `const ModelSpec& spec) : model_(WorkflowModel(spec)`
+  Method argument; see signature type for accepted form.
+
+## Notes
+
+Instance method on `self`.
+
+## Example
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+    cv_options.deterministic = true;
+
+    //========== modelling: broad candidate sweep ========
+    // This section builds a broad set of workflows spanning linear, tree,
+    // ensemble, neighbor, kernel, and bayes regressors.
+    std::vector<lymph::selection::Candidate> broad_candidates{};
+
+    {
+      auto wf = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
+          .objective = LinearObjective::LeastSquares,
+          .regularization = RegularizationKind::None,
+          .regularization_strength = 0.0,
+          .fit_intercept = true,
+      }));
+      wf.simple_imputer(lymph::prep::SimpleImputerOptions{.strategy = lymph::prep::SimpleImputerStrategy::Median})
+          .standard_scaler();
+      broad_candidates.emplace_back("linear_ols_standard", std::move(wf));
+    }
+    {
+      auto wf = lymph::Workflow(lymph::linear_factory::linear_regression(LinearFamilyOptions{
+          .objective = LinearObjective::LeastSquares,
+          .regularization = RegularizationKind::L2,
+          .regularization_strength = 1e-8,
+          .fit_intercept = true,
+      }));
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:1229

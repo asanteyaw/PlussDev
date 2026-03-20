@@ -113,8 +113,10 @@ bool compatible_shape_or_scalar_(const Series& ref, const Series& value) {
 }
 
 bool has_non_finite_(const Series& x) {
-  const Series non_finite = x.isfinite().logical_not().to(ScalarType::Float64);
-  return non_finite.sum().item<double>() > 0.0;
+  const ScalarType tally_dtype =
+      (x.platform() == Platform::MPS) ? ScalarType::Float32 : ScalarType::Float64;
+  const Series non_finite = x.isfinite().logical_not().to(tally_dtype);
+  return non_finite.sum().to(Platform::CPU, ScalarType::Float64).item<double>() > 0.0;
 }
 
 std::string op_name_of_(const std::shared_ptr<SourceLink>& link) {
@@ -171,6 +173,7 @@ void set_tracks_slope(const Series& s, bool enabled) {
   std::scoped_lock lk(g_mu);
   auto& st = ensure_locked_(s);
   st.tracks_slope = enabled;
+  st.sensitivity.reset();
   if (!enabled) {
     st.source_link.reset();
   }
@@ -229,6 +232,7 @@ void bind_source_link(
   std::scoped_lock lk(g_mu);
   auto& st = ensure_locked_(s);
   st.tracks_slope = true;
+  st.sensitivity.reset();
   st.source_link = std::move(link);
 }
 
@@ -267,17 +271,25 @@ Series sensitivity_or_zeros(const Series& s) {
   return Series::zeros(s.sizes(), s.scalar_type()).to(s.platform());
 }
 
-void backpropagate(const Series& loss, const std::optional<Series>& seed) {
+void backpropagate(const Series& loss,
+                   const std::optional<Series>& seed,
+                   const BackpropOptions& options) {
   PLUSS_CHECK(loss.defined(), "series_tape::backpropagate: expected defined loss");
 
   std::vector<Series> topo;
   std::unordered_set<const SeriesImpl*> seen;
   topo_visit_(loss, seen, topo);
 
-  {
+  if (options.reset_sensitivity_before_run) {
     std::scoped_lock lk(g_mu);
     for (const auto& n : topo) {
       clear_sensitivity_locked_(n);
+    }
+  } else {
+    // Root sensitivity should not implicitly accumulate across passes unless
+    // explicitly retained; clear stale root seed before re-seeding this run.
+    if (!keeps_sensitivity(loss)) {
+      clear_sensitivity(loss);
     }
   }
 
@@ -303,7 +315,10 @@ void backpropagate(const Series& loss, const std::optional<Series>& seed) {
   }
   accumulate_sensitivity(loss, *root_sens);
 
-  PauseRecording no_record;
+  std::optional<PauseRecording> no_record;
+  if (!options.record_propagation) {
+    no_record.emplace();
+  }
   const auto* root_key = key_of_(loss);
   std::size_t visited_nodes = 0;
   for (auto it = topo.rbegin(); it != topo.rend(); ++it) {
@@ -373,6 +388,12 @@ void backpropagate(const Series& loss, const std::optional<Series>& seed) {
 
     if (!keep_sensitivity_copy_(cur) && key_of_(cur) != root_key) {
       clear_sensitivity(cur);
+    }
+  }
+
+  if (!options.keep_source_links) {
+    for (const auto& n : topo) {
+      clear_source_link(n);
     }
   }
 }

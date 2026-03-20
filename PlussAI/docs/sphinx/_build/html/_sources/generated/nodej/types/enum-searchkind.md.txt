@@ -1,0 +1,28 @@
+# `SearchKind`
+
+## Signature
+
+```cpp
+enum SearchKind;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `None = 0`
+- `Grid = 1`
+- `Random = 2`
+- `Bayesian = 3`
+- `SuccessiveHalving = 4`
+
+## Example
+
+```cpp
+auto mode = SearchKind::None;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:58

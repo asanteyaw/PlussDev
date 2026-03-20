@@ -1,0 +1,13 @@
+# `Flow::add_polynomial_lift`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/flow-add-polynomial-lift-ov1.md): `Status Flow::add_polynomial_lift(self, prep::PolynomialLiftOptions options = {}, std::vector<std::int64_t> feature_route = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/compose.h`:86

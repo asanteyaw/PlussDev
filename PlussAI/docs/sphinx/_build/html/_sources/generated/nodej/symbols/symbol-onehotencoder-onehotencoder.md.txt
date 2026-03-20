@@ -1,0 +1,13 @@
+# `OneHotEncoder::OneHotEncoder`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/onehotencoder-onehotencoder-ov1.md): `explicit OneHotEncoder(OneHotEncoderOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:395

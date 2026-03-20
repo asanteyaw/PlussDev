@@ -1,0 +1,13 @@
+# `TransformerBase::learn_map`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/transformerbase-learn-map-ov1.md): `[[nodiscard]] virtual StatusOr<Series> TransformerBase::learn_map(self, const FeatureBatch& batch, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {}) = 0;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/interfaces.h`:47

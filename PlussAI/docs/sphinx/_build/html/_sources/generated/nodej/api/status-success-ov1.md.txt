@@ -1,0 +1,35 @@
+# `Status::success`
+
+## Signature
+
+```cpp
+static Status Status::success(self);
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+
+## Returns
+
+Returns a status object indicating success/failure and an error message on failure.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `[[nodiscard]] bool Status::ok(self) const noexcept;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = Status::success(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/status.h`:24

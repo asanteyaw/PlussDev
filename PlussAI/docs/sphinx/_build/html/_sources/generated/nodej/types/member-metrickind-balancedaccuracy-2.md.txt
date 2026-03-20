@@ -1,0 +1,21 @@
+# `MetricKind::BalancedAccuracy`
+
+## Signature
+
+```cpp
+MetricKind::BalancedAccuracy;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = MetricKind::BalancedAccuracy;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:35

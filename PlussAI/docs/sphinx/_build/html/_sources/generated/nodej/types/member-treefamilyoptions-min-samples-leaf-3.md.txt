@@ -1,0 +1,22 @@
+# `TreeFamilyOptions::min_samples_leaf`
+
+## Signature
+
+```cpp
+TreeFamilyOptions::std::int64_t min_samples_leaf = 1;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+TreeFamilyOptions cfg{};
+// cfg.min_samples_leaf = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:70

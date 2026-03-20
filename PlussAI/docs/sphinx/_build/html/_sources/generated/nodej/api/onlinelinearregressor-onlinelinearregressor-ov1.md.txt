@@ -1,0 +1,40 @@
+# `OnlineLinearRegressor::OnlineLinearRegressor`
+
+## Signature
+
+```cpp
+explicit OnlineLinearRegressor(const OnlineLinearOptions& options = {});
+```
+
+## Parameters
+
+- `options` : `const OnlineLinearOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns ``.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `Status OnlineLinearRegressor::advance(self, const LabeledBatch& batch, const TrainOptions& options = {});`
+- `[[nodiscard]] StatusOr<Series> OnlineLinearRegressor::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] StatusOr<Series> OnlineLinearRegressor::infer(self, const FeatureBatch& batch, const InferOptions& options = {}) const;`
+- `Status OnlineLinearRegressor::learn(self, const LabeledBatch& batch, const TrainOptions& options = {});`
+- `[[nodiscard]] std::int64_t OnlineLinearRegressor::seen_samples(self) const noexcept;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+OnlineLinearRegressor onlineLinearRegressor{};
+auto out = onlineLinearRegressor.OnlineLinearRegressor(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/online.h`:47

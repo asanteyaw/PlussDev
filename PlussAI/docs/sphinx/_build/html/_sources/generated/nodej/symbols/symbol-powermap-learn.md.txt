@@ -1,0 +1,13 @@
+# `PowerMap::learn`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/powermap-learn-ov1.md): `Status PowerMap::learn(self, const FeatureBatch& batch, const TrainOptions& options = {}) override;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:333

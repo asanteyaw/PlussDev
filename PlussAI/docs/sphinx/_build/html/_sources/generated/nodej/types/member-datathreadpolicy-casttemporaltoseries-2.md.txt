@@ -1,0 +1,21 @@
+# `DataThreadPolicy::CastTemporalToSeries`
+
+## Signature
+
+```cpp
+DataThreadPolicy::CastTemporalToSeries;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = DataThreadPolicy::CastTemporalToSeries;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/data.h`:16

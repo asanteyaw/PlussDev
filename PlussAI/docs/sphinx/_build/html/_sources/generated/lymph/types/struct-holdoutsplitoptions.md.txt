@@ -1,0 +1,28 @@
+# `HoldoutSplitOptions`
+
+## Signature
+
+```cpp
+struct HoldoutSplitOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `double test_size = 0.2`
+- `std::uint64_t random_state = 0`
+- `bool deterministic = true`
+- `bool shuffle = true`
+
+## Example
+
+```cpp
+HoldoutSplitOptions cfg{};
+// cfg.test_size = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:306

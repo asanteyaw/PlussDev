@@ -1,0 +1,51 @@
+# `FeatureBatch::validate_labeled::batch`
+
+## Parent Signature
+
+```cpp
+inline Status FeatureBatch::validate_labeled(self, const LabeledBatch& batch);
+```
+
+## Parameter
+
+- `batch` : `const LabeledBatch&`
+  Input feature data used by this call.
+
+## Notes
+
+Instance method on `self`.
+
+## Example
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+  train_batch.y = train_y.to(train_standard_scaled.platform(), ScalarType::Float64).reshape({train_standard_scaled.sizes()[0]});
+  train_batch.sample_weights = Series::undefined();
+
+  LabeledBatch test_batch{};
+  test_batch.features = FeatureBatch{.x = test_standard_scaled, .layout = ObservationLayout::Rows};
+  test_batch.y = test_y.to(test_standard_scaled.platform(), ScalarType::Float64).reshape({test_standard_scaled.sizes()[0]});
+  test_batch.sample_weights = Series::undefined();
+
+  Status train_batch_check = validate_labeled(train_batch);
+  if (!train_batch_check.ok()) {
+    std::cerr << "validate_labeled(train_batch) failed: " << train_batch_check.message << "\n";
+    return 1;
+  }
+  Status test_batch_check = validate_labeled(test_batch);
+  if (!test_batch_check.ok()) {
+    std::cerr << "validate_labeled(test_batch) failed: " << test_batch_check.message << "\n";
+    return 1;
+  }
+
+  TrainOptions train_options{};
+  train_options.max_iterations = 3000;
+  train_options.tolerance = 1e-8;
+  train_options.random.seed = 7;
+  train_options.random.deterministic = true;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/dataset.h`:40

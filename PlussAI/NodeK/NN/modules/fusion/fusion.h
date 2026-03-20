@@ -48,7 +48,9 @@ private:
   void register_parameters_() {
     this->clear_parameter_records_();
     this->parameter_record("weight", weight_);
-    this->parameter_record("bias", bias_);
+    if (options_.bias) {
+      this->parameter_record("bias", bias_);
+    }
   }
 
   void on_platform_changed_(Platform platform) override { options_.cfg = options_.cfg.with_platform(platform); }

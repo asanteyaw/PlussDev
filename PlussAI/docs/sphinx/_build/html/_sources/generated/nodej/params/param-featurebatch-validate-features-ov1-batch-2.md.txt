@@ -1,0 +1,21 @@
+# `FeatureBatch::validate_features::batch`
+
+## Parent Signature
+
+```cpp
+inline Status FeatureBatch::validate_features(self, const FeatureBatch& batch);
+```
+
+## Parameter
+
+- `batch` : `const FeatureBatch&`
+  Input feature data used by this call.
+
+## Notes
+
+Instance method on `self`.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/dataset.h`:32

@@ -1,0 +1,32 @@
+# `CrossValidationOptions`
+
+## Signature
+
+```cpp
+struct CrossValidationOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `CVPlanKind plan = CVPlanKind::KFold`
+- `double holdout_fraction = 0.2`
+- `std::int64_t folds = 5`
+- `bool stratified = false`
+- `bool reliability_defaults = true`
+- `bool shuffle = true`
+- `std::uint64_t random_state = 0`
+- `bool deterministic = true`
+
+## Example
+
+```cpp
+CrossValidationOptions cfg{};
+// cfg.plan = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:329

@@ -1,0 +1,13 @@
+# `EstimatorBase::dump_state`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/estimatorbase-dump-state-ov1.md): `[[nodiscard]] virtual StatusOr<std::vector<Series>> EstimatorBase::dump_state(self) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/interfaces.h`:19

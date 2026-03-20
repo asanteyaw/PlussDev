@@ -1,0 +1,13 @@
+# `OnlineLinearClassifier::OnlineLinearClassifier`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/onlinelinearclassifier-onlinelinearclassifier-ov1.md): `explicit OnlineLinearClassifier(::pluss::ai::nodej::online::OnlineLinearClassifier core) : core_(std::move(core));`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2279

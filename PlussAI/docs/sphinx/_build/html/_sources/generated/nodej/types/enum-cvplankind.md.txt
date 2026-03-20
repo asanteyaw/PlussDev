@@ -1,0 +1,28 @@
+# `CVPlanKind`
+
+## Signature
+
+```cpp
+enum CVPlanKind;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `Holdout = 0`
+- `KFold = 1`
+- `StratifiedKFold = 2`
+- `GroupKFold = 3`
+- `TimeSeries = 4`
+
+## Example
+
+```cpp
+auto mode = CVPlanKind::Holdout;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:50

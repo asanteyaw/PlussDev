@@ -305,6 +305,20 @@ plussai_func_conv_demo/fast:
 .PHONY : plussai_func_conv_demo/fast
 
 # Convenience name for target.
+PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/rule
+.PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/rule
+
+# Convenience name for target.
+plussai_func_attention_demo: PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/rule
+.PHONY : plussai_func_attention_demo
+
+# fast build rule for target.
+plussai_func_attention_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/build
+.PHONY : plussai_func_attention_demo/fast
+
+# Convenience name for target.
 PlussAI/examples/NodeK/CMakeFiles/plussai_nn_conv_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_nn_conv_demo.dir/rule
 .PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_nn_conv_demo.dir/rule
@@ -319,6 +333,90 @@ plussai_nn_conv_demo/fast:
 .PHONY : plussai_nn_conv_demo/fast
 
 # Convenience name for target.
+PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/rule
+.PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/rule
+
+# Convenience name for target.
+plussai_nn_cudnn_conv_demo: PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/rule
+.PHONY : plussai_nn_cudnn_conv_demo
+
+# fast build rule for target.
+plussai_nn_cudnn_conv_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/build
+.PHONY : plussai_nn_cudnn_conv_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/rule
+.PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/rule
+
+# Convenience name for target.
+plussai_nn_cudnn_rnn_demo: PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/rule
+.PHONY : plussai_nn_cudnn_rnn_demo
+
+# fast build rule for target.
+plussai_nn_cudnn_rnn_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/build
+.PHONY : plussai_nn_cudnn_rnn_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/rule
+.PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/rule
+
+# Convenience name for target.
+plussai_nn_cudnn_transformer_demo: PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/rule
+.PHONY : plussai_nn_cudnn_transformer_demo
+
+# fast build rule for target.
+plussai_nn_cudnn_transformer_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/build
+.PHONY : plussai_nn_cudnn_transformer_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/rule
+.PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/rule
+
+# Convenience name for target.
+plussai_nn_cublas_fusion_demo: PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/rule
+.PHONY : plussai_nn_cublas_fusion_demo
+
+# fast build rule for target.
+plussai_nn_cublas_fusion_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/build
+.PHONY : plussai_nn_cublas_fusion_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/rule
+.PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/rule
+
+# Convenience name for target.
+plussai_nn_schedule_demo: PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/rule
+.PHONY : plussai_nn_schedule_demo
+
+# fast build rule for target.
+plussai_nn_schedule_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/build
+.PHONY : plussai_nn_schedule_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/rule
+.PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/rule
+
+# Convenience name for target.
+plussai_nn_schedule_bank_default_minimal_demo: PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/rule
+.PHONY : plussai_nn_schedule_bank_default_minimal_demo
+
+# fast build rule for target.
+plussai_nn_schedule_bank_default_minimal_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/build
+.PHONY : plussai_nn_schedule_bank_default_minimal_demo/fast
+
+# Convenience name for target.
 PlussAI/examples/NodeK/CMakeFiles/plussai_tcn_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_tcn_demo.dir/rule
 .PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_tcn_demo.dir/rule
@@ -331,6 +429,34 @@ plussai_tcn_demo: PlussAI/examples/NodeK/CMakeFiles/plussai_tcn_demo.dir/rule
 plussai_tcn_demo/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_tcn_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_tcn_demo.dir/build
 .PHONY : plussai_tcn_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/rule
+.PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/rule
+
+# Convenience name for target.
+plussai_nn_transformer_demo: PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/rule
+.PHONY : plussai_nn_transformer_demo
+
+# fast build rule for target.
+plussai_nn_transformer_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/build
+.PHONY : plussai_nn_transformer_demo/fast
+
+# Convenience name for target.
+PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/rule
+.PHONY : PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/rule
+
+# Convenience name for target.
+plussai_nn_module_snapshot_demo: PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/rule
+.PHONY : plussai_nn_module_snapshot_demo
+
+# fast build rule for target.
+plussai_nn_module_snapshot_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/build
+.PHONY : plussai_nn_module_snapshot_demo/fast
 
 # Convenience name for target.
 PlussAI/examples/NodeK/CMakeFiles/plussai_adam_oop_demo.dir/rule:
@@ -407,6 +533,30 @@ adam_oop_demo.s: adam_oop_demo.cpp.s
 adam_oop_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_adam_oop_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_adam_oop_demo.dir/adam_oop_demo.cpp.s
 .PHONY : adam_oop_demo.cpp.s
+
+func_attention_demo.o: func_attention_demo.cpp.o
+.PHONY : func_attention_demo.o
+
+# target to build an object file
+func_attention_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/func_attention_demo.cpp.o
+.PHONY : func_attention_demo.cpp.o
+
+func_attention_demo.i: func_attention_demo.cpp.i
+.PHONY : func_attention_demo.i
+
+# target to preprocess a source file
+func_attention_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/func_attention_demo.cpp.i
+.PHONY : func_attention_demo.cpp.i
+
+func_attention_demo.s: func_attention_demo.cpp.s
+.PHONY : func_attention_demo.s
+
+# target to generate assembly for a file
+func_attention_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_func_attention_demo.dir/func_attention_demo.cpp.s
+.PHONY : func_attention_demo.cpp.s
 
 func_conv_demo.o: func_conv_demo.cpp.o
 .PHONY : func_conv_demo.o
@@ -504,6 +654,102 @@ nn_conv_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_conv_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_conv_demo.dir/nn_conv_demo.cpp.s
 .PHONY : nn_conv_demo.cpp.s
 
+nn_cublas_fusion_demo.o: nn_cublas_fusion_demo.cpp.o
+.PHONY : nn_cublas_fusion_demo.o
+
+# target to build an object file
+nn_cublas_fusion_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/nn_cublas_fusion_demo.cpp.o
+.PHONY : nn_cublas_fusion_demo.cpp.o
+
+nn_cublas_fusion_demo.i: nn_cublas_fusion_demo.cpp.i
+.PHONY : nn_cublas_fusion_demo.i
+
+# target to preprocess a source file
+nn_cublas_fusion_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/nn_cublas_fusion_demo.cpp.i
+.PHONY : nn_cublas_fusion_demo.cpp.i
+
+nn_cublas_fusion_demo.s: nn_cublas_fusion_demo.cpp.s
+.PHONY : nn_cublas_fusion_demo.s
+
+# target to generate assembly for a file
+nn_cublas_fusion_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cublas_fusion_demo.dir/nn_cublas_fusion_demo.cpp.s
+.PHONY : nn_cublas_fusion_demo.cpp.s
+
+nn_cudnn_conv_demo.o: nn_cudnn_conv_demo.cpp.o
+.PHONY : nn_cudnn_conv_demo.o
+
+# target to build an object file
+nn_cudnn_conv_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/nn_cudnn_conv_demo.cpp.o
+.PHONY : nn_cudnn_conv_demo.cpp.o
+
+nn_cudnn_conv_demo.i: nn_cudnn_conv_demo.cpp.i
+.PHONY : nn_cudnn_conv_demo.i
+
+# target to preprocess a source file
+nn_cudnn_conv_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/nn_cudnn_conv_demo.cpp.i
+.PHONY : nn_cudnn_conv_demo.cpp.i
+
+nn_cudnn_conv_demo.s: nn_cudnn_conv_demo.cpp.s
+.PHONY : nn_cudnn_conv_demo.s
+
+# target to generate assembly for a file
+nn_cudnn_conv_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_conv_demo.dir/nn_cudnn_conv_demo.cpp.s
+.PHONY : nn_cudnn_conv_demo.cpp.s
+
+nn_cudnn_rnn_demo.o: nn_cudnn_rnn_demo.cpp.o
+.PHONY : nn_cudnn_rnn_demo.o
+
+# target to build an object file
+nn_cudnn_rnn_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/nn_cudnn_rnn_demo.cpp.o
+.PHONY : nn_cudnn_rnn_demo.cpp.o
+
+nn_cudnn_rnn_demo.i: nn_cudnn_rnn_demo.cpp.i
+.PHONY : nn_cudnn_rnn_demo.i
+
+# target to preprocess a source file
+nn_cudnn_rnn_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/nn_cudnn_rnn_demo.cpp.i
+.PHONY : nn_cudnn_rnn_demo.cpp.i
+
+nn_cudnn_rnn_demo.s: nn_cudnn_rnn_demo.cpp.s
+.PHONY : nn_cudnn_rnn_demo.s
+
+# target to generate assembly for a file
+nn_cudnn_rnn_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_rnn_demo.dir/nn_cudnn_rnn_demo.cpp.s
+.PHONY : nn_cudnn_rnn_demo.cpp.s
+
+nn_cudnn_transformer_demo.o: nn_cudnn_transformer_demo.cpp.o
+.PHONY : nn_cudnn_transformer_demo.o
+
+# target to build an object file
+nn_cudnn_transformer_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/nn_cudnn_transformer_demo.cpp.o
+.PHONY : nn_cudnn_transformer_demo.cpp.o
+
+nn_cudnn_transformer_demo.i: nn_cudnn_transformer_demo.cpp.i
+.PHONY : nn_cudnn_transformer_demo.i
+
+# target to preprocess a source file
+nn_cudnn_transformer_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/nn_cudnn_transformer_demo.cpp.i
+.PHONY : nn_cudnn_transformer_demo.cpp.i
+
+nn_cudnn_transformer_demo.s: nn_cudnn_transformer_demo.cpp.s
+.PHONY : nn_cudnn_transformer_demo.s
+
+# target to generate assembly for a file
+nn_cudnn_transformer_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_cudnn_transformer_demo.dir/nn_cudnn_transformer_demo.cpp.s
+.PHONY : nn_cudnn_transformer_demo.cpp.s
+
 nn_lstm_train_minimal_demo.o: nn_lstm_train_minimal_demo.cpp.o
 .PHONY : nn_lstm_train_minimal_demo.o
 
@@ -527,6 +773,30 @@ nn_lstm_train_minimal_demo.s: nn_lstm_train_minimal_demo.cpp.s
 nn_lstm_train_minimal_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_lstm_train_minimal_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_lstm_train_minimal_demo.dir/nn_lstm_train_minimal_demo.cpp.s
 .PHONY : nn_lstm_train_minimal_demo.cpp.s
+
+nn_module_snapshot_demo.o: nn_module_snapshot_demo.cpp.o
+.PHONY : nn_module_snapshot_demo.o
+
+# target to build an object file
+nn_module_snapshot_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/nn_module_snapshot_demo.cpp.o
+.PHONY : nn_module_snapshot_demo.cpp.o
+
+nn_module_snapshot_demo.i: nn_module_snapshot_demo.cpp.i
+.PHONY : nn_module_snapshot_demo.i
+
+# target to preprocess a source file
+nn_module_snapshot_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/nn_module_snapshot_demo.cpp.i
+.PHONY : nn_module_snapshot_demo.cpp.i
+
+nn_module_snapshot_demo.s: nn_module_snapshot_demo.cpp.s
+.PHONY : nn_module_snapshot_demo.s
+
+# target to generate assembly for a file
+nn_module_snapshot_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_module_snapshot_demo.dir/nn_module_snapshot_demo.cpp.s
+.PHONY : nn_module_snapshot_demo.cpp.s
 
 nn_ngarch_train_minimal_demo.o: nn_ngarch_train_minimal_demo.cpp.o
 .PHONY : nn_ngarch_train_minimal_demo.o
@@ -600,6 +870,54 @@ nn_rnn_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_rnn_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_rnn_demo.dir/nn_rnn_demo.cpp.s
 .PHONY : nn_rnn_demo.cpp.s
 
+nn_schedule_bank_default_minimal_demo.o: nn_schedule_bank_default_minimal_demo.cpp.o
+.PHONY : nn_schedule_bank_default_minimal_demo.o
+
+# target to build an object file
+nn_schedule_bank_default_minimal_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/nn_schedule_bank_default_minimal_demo.cpp.o
+.PHONY : nn_schedule_bank_default_minimal_demo.cpp.o
+
+nn_schedule_bank_default_minimal_demo.i: nn_schedule_bank_default_minimal_demo.cpp.i
+.PHONY : nn_schedule_bank_default_minimal_demo.i
+
+# target to preprocess a source file
+nn_schedule_bank_default_minimal_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/nn_schedule_bank_default_minimal_demo.cpp.i
+.PHONY : nn_schedule_bank_default_minimal_demo.cpp.i
+
+nn_schedule_bank_default_minimal_demo.s: nn_schedule_bank_default_minimal_demo.cpp.s
+.PHONY : nn_schedule_bank_default_minimal_demo.s
+
+# target to generate assembly for a file
+nn_schedule_bank_default_minimal_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_bank_default_minimal_demo.dir/nn_schedule_bank_default_minimal_demo.cpp.s
+.PHONY : nn_schedule_bank_default_minimal_demo.cpp.s
+
+nn_schedule_demo.o: nn_schedule_demo.cpp.o
+.PHONY : nn_schedule_demo.o
+
+# target to build an object file
+nn_schedule_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/nn_schedule_demo.cpp.o
+.PHONY : nn_schedule_demo.cpp.o
+
+nn_schedule_demo.i: nn_schedule_demo.cpp.i
+.PHONY : nn_schedule_demo.i
+
+# target to preprocess a source file
+nn_schedule_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/nn_schedule_demo.cpp.i
+.PHONY : nn_schedule_demo.cpp.i
+
+nn_schedule_demo.s: nn_schedule_demo.cpp.s
+.PHONY : nn_schedule_demo.s
+
+# target to generate assembly for a file
+nn_schedule_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_schedule_demo.dir/nn_schedule_demo.cpp.s
+.PHONY : nn_schedule_demo.cpp.s
+
 nn_sp500_lstm_end_to_end_minimal_demo.o: nn_sp500_lstm_end_to_end_minimal_demo.cpp.o
 .PHONY : nn_sp500_lstm_end_to_end_minimal_demo.o
 
@@ -623,6 +941,30 @@ nn_sp500_lstm_end_to_end_minimal_demo.s: nn_sp500_lstm_end_to_end_minimal_demo.c
 nn_sp500_lstm_end_to_end_minimal_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_sp500_lstm_end_to_end_minimal_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_sp500_lstm_end_to_end_minimal_demo.dir/nn_sp500_lstm_end_to_end_minimal_demo.cpp.s
 .PHONY : nn_sp500_lstm_end_to_end_minimal_demo.cpp.s
+
+nn_transformer_demo.o: nn_transformer_demo.cpp.o
+.PHONY : nn_transformer_demo.o
+
+# target to build an object file
+nn_transformer_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/nn_transformer_demo.cpp.o
+.PHONY : nn_transformer_demo.cpp.o
+
+nn_transformer_demo.i: nn_transformer_demo.cpp.i
+.PHONY : nn_transformer_demo.i
+
+# target to preprocess a source file
+nn_transformer_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/nn_transformer_demo.cpp.i
+.PHONY : nn_transformer_demo.cpp.i
+
+nn_transformer_demo.s: nn_transformer_demo.cpp.s
+.PHONY : nn_transformer_demo.s
+
+# target to generate assembly for a file
+nn_transformer_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/build.make PlussAI/examples/NodeK/CMakeFiles/plussai_nn_transformer_demo.dir/nn_transformer_demo.cpp.s
+.PHONY : nn_transformer_demo.cpp.s
 
 tcn_demo.o: tcn_demo.cpp.o
 .PHONY : tcn_demo.o
@@ -665,15 +1007,24 @@ help:
 	@echo "... test"
 	@echo "... plussai_adagrad_oop_demo"
 	@echo "... plussai_adam_oop_demo"
+	@echo "... plussai_func_attention_demo"
 	@echo "... plussai_func_conv_demo"
 	@echo "... plussai_func_rnn_demo"
 	@echo "... plussai_nn_binary_classifier_minimal_demo"
 	@echo "... plussai_nn_conv_demo"
+	@echo "... plussai_nn_cublas_fusion_demo"
+	@echo "... plussai_nn_cudnn_conv_demo"
+	@echo "... plussai_nn_cudnn_rnn_demo"
+	@echo "... plussai_nn_cudnn_transformer_demo"
 	@echo "... plussai_nn_lstm_train_minimal_demo"
+	@echo "... plussai_nn_module_snapshot_demo"
 	@echo "... plussai_nn_ngarch_train_minimal_demo"
 	@echo "... plussai_nn_optimizer_closure_minimal_demo"
 	@echo "... plussai_nn_rnn_demo"
+	@echo "... plussai_nn_schedule_bank_default_minimal_demo"
+	@echo "... plussai_nn_schedule_demo"
 	@echo "... plussai_nn_sp500_lstm_end_to_end_minimal_demo"
+	@echo "... plussai_nn_transformer_demo"
 	@echo "... plussai_tcn_demo"
 	@echo "... adagrad_oop_demo.o"
 	@echo "... adagrad_oop_demo.i"
@@ -681,6 +1032,9 @@ help:
 	@echo "... adam_oop_demo.o"
 	@echo "... adam_oop_demo.i"
 	@echo "... adam_oop_demo.s"
+	@echo "... func_attention_demo.o"
+	@echo "... func_attention_demo.i"
+	@echo "... func_attention_demo.s"
 	@echo "... func_conv_demo.o"
 	@echo "... func_conv_demo.i"
 	@echo "... func_conv_demo.s"
@@ -693,9 +1047,24 @@ help:
 	@echo "... nn_conv_demo.o"
 	@echo "... nn_conv_demo.i"
 	@echo "... nn_conv_demo.s"
+	@echo "... nn_cublas_fusion_demo.o"
+	@echo "... nn_cublas_fusion_demo.i"
+	@echo "... nn_cublas_fusion_demo.s"
+	@echo "... nn_cudnn_conv_demo.o"
+	@echo "... nn_cudnn_conv_demo.i"
+	@echo "... nn_cudnn_conv_demo.s"
+	@echo "... nn_cudnn_rnn_demo.o"
+	@echo "... nn_cudnn_rnn_demo.i"
+	@echo "... nn_cudnn_rnn_demo.s"
+	@echo "... nn_cudnn_transformer_demo.o"
+	@echo "... nn_cudnn_transformer_demo.i"
+	@echo "... nn_cudnn_transformer_demo.s"
 	@echo "... nn_lstm_train_minimal_demo.o"
 	@echo "... nn_lstm_train_minimal_demo.i"
 	@echo "... nn_lstm_train_minimal_demo.s"
+	@echo "... nn_module_snapshot_demo.o"
+	@echo "... nn_module_snapshot_demo.i"
+	@echo "... nn_module_snapshot_demo.s"
 	@echo "... nn_ngarch_train_minimal_demo.o"
 	@echo "... nn_ngarch_train_minimal_demo.i"
 	@echo "... nn_ngarch_train_minimal_demo.s"
@@ -705,9 +1074,18 @@ help:
 	@echo "... nn_rnn_demo.o"
 	@echo "... nn_rnn_demo.i"
 	@echo "... nn_rnn_demo.s"
+	@echo "... nn_schedule_bank_default_minimal_demo.o"
+	@echo "... nn_schedule_bank_default_minimal_demo.i"
+	@echo "... nn_schedule_bank_default_minimal_demo.s"
+	@echo "... nn_schedule_demo.o"
+	@echo "... nn_schedule_demo.i"
+	@echo "... nn_schedule_demo.s"
 	@echo "... nn_sp500_lstm_end_to_end_minimal_demo.o"
 	@echo "... nn_sp500_lstm_end_to_end_minimal_demo.i"
 	@echo "... nn_sp500_lstm_end_to_end_minimal_demo.s"
+	@echo "... nn_transformer_demo.o"
+	@echo "... nn_transformer_demo.i"
+	@echo "... nn_transformer_demo.s"
 	@echo "... tcn_demo.o"
 	@echo "... tcn_demo.i"
 	@echo "... tcn_demo.s"

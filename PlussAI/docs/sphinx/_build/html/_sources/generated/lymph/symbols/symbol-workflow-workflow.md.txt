@@ -1,0 +1,15 @@
+# `Workflow::Workflow`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/workflow-workflow-ov1.md): `explicit Workflow(const ModelSpec& spec) : model_(WorkflowModel(spec));`
+- [overload 2](../api/workflow-workflow-ov2.md): `explicit Workflow(WorkflowModel model) : model_(std::move(model));`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:1229
+- `PlussAI/include/pluss/ai/lymph/api.h`:1231

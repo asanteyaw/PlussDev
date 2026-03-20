@@ -1,0 +1,21 @@
+# `TransformKind::PolynomialLift`
+
+## Signature
+
+```cpp
+TransformKind::PolynomialLift;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = TransformKind::PolynomialLift;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:15

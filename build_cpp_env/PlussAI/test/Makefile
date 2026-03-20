@@ -193,6 +193,20 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/attention_transformer_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/attention_transformer_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/attention_transformer_test.dir/rule
+
+# Convenience name for target.
+attention_transformer_test: PlussAI/test/CMakeFiles/attention_transformer_test.dir/rule
+.PHONY : attention_transformer_test
+
+# fast build rule for target.
+attention_transformer_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/attention_transformer_test.dir/build.make PlussAI/test/CMakeFiles/attention_transformer_test.dir/build
+.PHONY : attention_transformer_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/conv_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/conv_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/conv_test.dir/rule
@@ -205,6 +219,104 @@ conv_test: PlussAI/test/CMakeFiles/conv_test.dir/rule
 conv_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/conv_test.dir/build.make PlussAI/test/CMakeFiles/conv_test.dir/build
 .PHONY : conv_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/rule
+
+# Convenience name for target.
+cudnn_attention_route_test: PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/rule
+.PHONY : cudnn_attention_route_test
+
+# fast build rule for target.
+cudnn_attention_route_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/build
+.PHONY : cudnn_attention_route_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/rule
+
+# Convenience name for target.
+cudnn_conv_rigorous_test: PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/rule
+.PHONY : cudnn_conv_rigorous_test
+
+# fast build rule for target.
+cudnn_conv_rigorous_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/build
+.PHONY : cudnn_conv_rigorous_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/rule
+
+# Convenience name for target.
+cudnn_conv_route_test: PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/rule
+.PHONY : cudnn_conv_route_test
+
+# fast build rule for target.
+cudnn_conv_route_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/build
+.PHONY : cudnn_conv_route_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/rule
+
+# Convenience name for target.
+cudnn_rnn_rigorous_test: PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/rule
+.PHONY : cudnn_rnn_rigorous_test
+
+# fast build rule for target.
+cudnn_rnn_rigorous_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/build
+.PHONY : cudnn_rnn_rigorous_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/rule
+
+# Convenience name for target.
+cudnn_rnn_route_test: PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/rule
+.PHONY : cudnn_rnn_route_test
+
+# fast build rule for target.
+cudnn_rnn_route_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/build
+.PHONY : cudnn_rnn_route_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/rule
+
+# Convenience name for target.
+cudnn_transformer_rigorous_test: PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/rule
+.PHONY : cudnn_transformer_rigorous_test
+
+# fast build rule for target.
+cudnn_transformer_rigorous_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/build
+.PHONY : cudnn_transformer_rigorous_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/fusion_route_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/fusion_route_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/fusion_route_test.dir/rule
+
+# Convenience name for target.
+fusion_route_test: PlussAI/test/CMakeFiles/fusion_route_test.dir/rule
+.PHONY : fusion_route_test
+
+# fast build rule for target.
+fusion_route_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/fusion_route_test.dir/build.make PlussAI/test/CMakeFiles/fusion_route_test.dir/build
+.PHONY : fusion_route_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/lymph_quick_test.dir/rule:
@@ -221,6 +333,20 @@ lymph_quick_test/fast:
 .PHONY : lymph_quick_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule
+
+# Convenience name for target.
+module_snapshot_test: PlussAI/test/CMakeFiles/module_snapshot_test.dir/rule
+.PHONY : module_snapshot_test
+
+# fast build rule for target.
+module_snapshot_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/module_snapshot_test.dir/build.make PlussAI/test/CMakeFiles/module_snapshot_test.dir/build
+.PHONY : module_snapshot_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nn_loss_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_loss_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nn_loss_test.dir/rule
@@ -235,6 +361,34 @@ nn_loss_test/fast:
 .PHONY : nn_loss_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/rule
+
+# Convenience name for target.
+nn_mps_matmul_sum_sensitivity_test: PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/rule
+.PHONY : nn_mps_matmul_sum_sensitivity_test
+
+# fast build rule for target.
+nn_mps_matmul_sum_sensitivity_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build
+.PHONY : nn_mps_matmul_sum_sensitivity_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/rule
+
+# Convenience name for target.
+nn_optim_foreach_lane_test: PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/rule
+.PHONY : nn_optim_foreach_lane_test
+
+# fast build rule for target.
+nn_optim_foreach_lane_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/build
+.PHONY : nn_optim_foreach_lane_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nn_optim_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_optim_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nn_optim_test.dir/rule
@@ -247,6 +401,20 @@ nn_optim_test: PlussAI/test/CMakeFiles/nn_optim_test.dir/rule
 nn_optim_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_test.dir/build
 .PHONY : nn_optim_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nn_training_parity_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_training_parity_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_training_parity_test.dir/rule
+
+# Convenience name for target.
+nn_training_parity_test: PlussAI/test/CMakeFiles/nn_training_parity_test.dir/rule
+.PHONY : nn_training_parity_test
+
+# fast build rule for target.
+nn_training_parity_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_training_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_training_parity_test.dir/build
+.PHONY : nn_training_parity_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nodej_bayes_kernel_test.dir/rule:
@@ -458,6 +626,44 @@ rnn_fusion_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/rnn_fusion_test.dir/build.make PlussAI/test/CMakeFiles/rnn_fusion_test.dir/build
 .PHONY : rnn_fusion_test/fast
 
+# Convenience name for target.
+PlussAI/test/CMakeFiles/schedule_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/schedule_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/schedule_test.dir/rule
+
+# Convenience name for target.
+schedule_test: PlussAI/test/CMakeFiles/schedule_test.dir/rule
+.PHONY : schedule_test
+
+# fast build rule for target.
+schedule_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/schedule_test.dir/build.make PlussAI/test/CMakeFiles/schedule_test.dir/build
+.PHONY : schedule_test/fast
+
+attention_transformer_test.o: attention_transformer_test.cpp.o
+.PHONY : attention_transformer_test.o
+
+# target to build an object file
+attention_transformer_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/attention_transformer_test.dir/build.make PlussAI/test/CMakeFiles/attention_transformer_test.dir/attention_transformer_test.cpp.o
+.PHONY : attention_transformer_test.cpp.o
+
+attention_transformer_test.i: attention_transformer_test.cpp.i
+.PHONY : attention_transformer_test.i
+
+# target to preprocess a source file
+attention_transformer_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/attention_transformer_test.dir/build.make PlussAI/test/CMakeFiles/attention_transformer_test.dir/attention_transformer_test.cpp.i
+.PHONY : attention_transformer_test.cpp.i
+
+attention_transformer_test.s: attention_transformer_test.cpp.s
+.PHONY : attention_transformer_test.s
+
+# target to generate assembly for a file
+attention_transformer_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/attention_transformer_test.dir/build.make PlussAI/test/CMakeFiles/attention_transformer_test.dir/attention_transformer_test.cpp.s
+.PHONY : attention_transformer_test.cpp.s
+
 conv_test.o: conv_test.cpp.o
 .PHONY : conv_test.o
 
@@ -481,6 +687,174 @@ conv_test.s: conv_test.cpp.s
 conv_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/conv_test.dir/build.make PlussAI/test/CMakeFiles/conv_test.dir/conv_test.cpp.s
 .PHONY : conv_test.cpp.s
+
+cudnn_attention_route_test.o: cudnn_attention_route_test.cpp.o
+.PHONY : cudnn_attention_route_test.o
+
+# target to build an object file
+cudnn_attention_route_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/cudnn_attention_route_test.cpp.o
+.PHONY : cudnn_attention_route_test.cpp.o
+
+cudnn_attention_route_test.i: cudnn_attention_route_test.cpp.i
+.PHONY : cudnn_attention_route_test.i
+
+# target to preprocess a source file
+cudnn_attention_route_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/cudnn_attention_route_test.cpp.i
+.PHONY : cudnn_attention_route_test.cpp.i
+
+cudnn_attention_route_test.s: cudnn_attention_route_test.cpp.s
+.PHONY : cudnn_attention_route_test.s
+
+# target to generate assembly for a file
+cudnn_attention_route_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_attention_route_test.dir/cudnn_attention_route_test.cpp.s
+.PHONY : cudnn_attention_route_test.cpp.s
+
+cudnn_conv_rigorous_test.o: cudnn_conv_rigorous_test.cpp.o
+.PHONY : cudnn_conv_rigorous_test.o
+
+# target to build an object file
+cudnn_conv_rigorous_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/cudnn_conv_rigorous_test.cpp.o
+.PHONY : cudnn_conv_rigorous_test.cpp.o
+
+cudnn_conv_rigorous_test.i: cudnn_conv_rigorous_test.cpp.i
+.PHONY : cudnn_conv_rigorous_test.i
+
+# target to preprocess a source file
+cudnn_conv_rigorous_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/cudnn_conv_rigorous_test.cpp.i
+.PHONY : cudnn_conv_rigorous_test.cpp.i
+
+cudnn_conv_rigorous_test.s: cudnn_conv_rigorous_test.cpp.s
+.PHONY : cudnn_conv_rigorous_test.s
+
+# target to generate assembly for a file
+cudnn_conv_rigorous_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_conv_rigorous_test.dir/cudnn_conv_rigorous_test.cpp.s
+.PHONY : cudnn_conv_rigorous_test.cpp.s
+
+cudnn_conv_route_test.o: cudnn_conv_route_test.cpp.o
+.PHONY : cudnn_conv_route_test.o
+
+# target to build an object file
+cudnn_conv_route_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/cudnn_conv_route_test.cpp.o
+.PHONY : cudnn_conv_route_test.cpp.o
+
+cudnn_conv_route_test.i: cudnn_conv_route_test.cpp.i
+.PHONY : cudnn_conv_route_test.i
+
+# target to preprocess a source file
+cudnn_conv_route_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/cudnn_conv_route_test.cpp.i
+.PHONY : cudnn_conv_route_test.cpp.i
+
+cudnn_conv_route_test.s: cudnn_conv_route_test.cpp.s
+.PHONY : cudnn_conv_route_test.s
+
+# target to generate assembly for a file
+cudnn_conv_route_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_conv_route_test.dir/cudnn_conv_route_test.cpp.s
+.PHONY : cudnn_conv_route_test.cpp.s
+
+cudnn_rnn_rigorous_test.o: cudnn_rnn_rigorous_test.cpp.o
+.PHONY : cudnn_rnn_rigorous_test.o
+
+# target to build an object file
+cudnn_rnn_rigorous_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/cudnn_rnn_rigorous_test.cpp.o
+.PHONY : cudnn_rnn_rigorous_test.cpp.o
+
+cudnn_rnn_rigorous_test.i: cudnn_rnn_rigorous_test.cpp.i
+.PHONY : cudnn_rnn_rigorous_test.i
+
+# target to preprocess a source file
+cudnn_rnn_rigorous_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/cudnn_rnn_rigorous_test.cpp.i
+.PHONY : cudnn_rnn_rigorous_test.cpp.i
+
+cudnn_rnn_rigorous_test.s: cudnn_rnn_rigorous_test.cpp.s
+.PHONY : cudnn_rnn_rigorous_test.s
+
+# target to generate assembly for a file
+cudnn_rnn_rigorous_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_rigorous_test.dir/cudnn_rnn_rigorous_test.cpp.s
+.PHONY : cudnn_rnn_rigorous_test.cpp.s
+
+cudnn_rnn_route_test.o: cudnn_rnn_route_test.cpp.o
+.PHONY : cudnn_rnn_route_test.o
+
+# target to build an object file
+cudnn_rnn_route_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/cudnn_rnn_route_test.cpp.o
+.PHONY : cudnn_rnn_route_test.cpp.o
+
+cudnn_rnn_route_test.i: cudnn_rnn_route_test.cpp.i
+.PHONY : cudnn_rnn_route_test.i
+
+# target to preprocess a source file
+cudnn_rnn_route_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/cudnn_rnn_route_test.cpp.i
+.PHONY : cudnn_rnn_route_test.cpp.i
+
+cudnn_rnn_route_test.s: cudnn_rnn_route_test.cpp.s
+.PHONY : cudnn_rnn_route_test.s
+
+# target to generate assembly for a file
+cudnn_rnn_route_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_rnn_route_test.dir/cudnn_rnn_route_test.cpp.s
+.PHONY : cudnn_rnn_route_test.cpp.s
+
+cudnn_transformer_rigorous_test.o: cudnn_transformer_rigorous_test.cpp.o
+.PHONY : cudnn_transformer_rigorous_test.o
+
+# target to build an object file
+cudnn_transformer_rigorous_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/cudnn_transformer_rigorous_test.cpp.o
+.PHONY : cudnn_transformer_rigorous_test.cpp.o
+
+cudnn_transformer_rigorous_test.i: cudnn_transformer_rigorous_test.cpp.i
+.PHONY : cudnn_transformer_rigorous_test.i
+
+# target to preprocess a source file
+cudnn_transformer_rigorous_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/cudnn_transformer_rigorous_test.cpp.i
+.PHONY : cudnn_transformer_rigorous_test.cpp.i
+
+cudnn_transformer_rigorous_test.s: cudnn_transformer_rigorous_test.cpp.s
+.PHONY : cudnn_transformer_rigorous_test.s
+
+# target to generate assembly for a file
+cudnn_transformer_rigorous_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/build.make PlussAI/test/CMakeFiles/cudnn_transformer_rigorous_test.dir/cudnn_transformer_rigorous_test.cpp.s
+.PHONY : cudnn_transformer_rigorous_test.cpp.s
+
+fusion_route_test.o: fusion_route_test.cpp.o
+.PHONY : fusion_route_test.o
+
+# target to build an object file
+fusion_route_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/fusion_route_test.dir/build.make PlussAI/test/CMakeFiles/fusion_route_test.dir/fusion_route_test.cpp.o
+.PHONY : fusion_route_test.cpp.o
+
+fusion_route_test.i: fusion_route_test.cpp.i
+.PHONY : fusion_route_test.i
+
+# target to preprocess a source file
+fusion_route_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/fusion_route_test.dir/build.make PlussAI/test/CMakeFiles/fusion_route_test.dir/fusion_route_test.cpp.i
+.PHONY : fusion_route_test.cpp.i
+
+fusion_route_test.s: fusion_route_test.cpp.s
+.PHONY : fusion_route_test.s
+
+# target to generate assembly for a file
+fusion_route_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/fusion_route_test.dir/build.make PlussAI/test/CMakeFiles/fusion_route_test.dir/fusion_route_test.cpp.s
+.PHONY : fusion_route_test.cpp.s
 
 lymph_quick_test.o: lymph_quick_test.cpp.o
 .PHONY : lymph_quick_test.o
@@ -506,6 +880,30 @@ lymph_quick_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/lymph_quick_test.dir/build.make PlussAI/test/CMakeFiles/lymph_quick_test.dir/lymph_quick_test.cpp.s
 .PHONY : lymph_quick_test.cpp.s
 
+module_snapshot_test.o: module_snapshot_test.cpp.o
+.PHONY : module_snapshot_test.o
+
+# target to build an object file
+module_snapshot_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/module_snapshot_test.dir/build.make PlussAI/test/CMakeFiles/module_snapshot_test.dir/module_snapshot_test.cpp.o
+.PHONY : module_snapshot_test.cpp.o
+
+module_snapshot_test.i: module_snapshot_test.cpp.i
+.PHONY : module_snapshot_test.i
+
+# target to preprocess a source file
+module_snapshot_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/module_snapshot_test.dir/build.make PlussAI/test/CMakeFiles/module_snapshot_test.dir/module_snapshot_test.cpp.i
+.PHONY : module_snapshot_test.cpp.i
+
+module_snapshot_test.s: module_snapshot_test.cpp.s
+.PHONY : module_snapshot_test.s
+
+# target to generate assembly for a file
+module_snapshot_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/module_snapshot_test.dir/build.make PlussAI/test/CMakeFiles/module_snapshot_test.dir/module_snapshot_test.cpp.s
+.PHONY : module_snapshot_test.cpp.s
+
 nn_loss_test.o: nn_loss_test.cpp.o
 .PHONY : nn_loss_test.o
 
@@ -530,6 +928,54 @@ nn_loss_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_loss_test.dir/build.make PlussAI/test/CMakeFiles/nn_loss_test.dir/nn_loss_test.cpp.s
 .PHONY : nn_loss_test.cpp.s
 
+nn_mps_matmul_sum_sensitivity_test.o: nn_mps_matmul_sum_sensitivity_test.cpp.o
+.PHONY : nn_mps_matmul_sum_sensitivity_test.o
+
+# target to build an object file
+nn_mps_matmul_sum_sensitivity_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/nn_mps_matmul_sum_sensitivity_test.cpp.o
+.PHONY : nn_mps_matmul_sum_sensitivity_test.cpp.o
+
+nn_mps_matmul_sum_sensitivity_test.i: nn_mps_matmul_sum_sensitivity_test.cpp.i
+.PHONY : nn_mps_matmul_sum_sensitivity_test.i
+
+# target to preprocess a source file
+nn_mps_matmul_sum_sensitivity_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/nn_mps_matmul_sum_sensitivity_test.cpp.i
+.PHONY : nn_mps_matmul_sum_sensitivity_test.cpp.i
+
+nn_mps_matmul_sum_sensitivity_test.s: nn_mps_matmul_sum_sensitivity_test.cpp.s
+.PHONY : nn_mps_matmul_sum_sensitivity_test.s
+
+# target to generate assembly for a file
+nn_mps_matmul_sum_sensitivity_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/nn_mps_matmul_sum_sensitivity_test.cpp.s
+.PHONY : nn_mps_matmul_sum_sensitivity_test.cpp.s
+
+nn_optim_foreach_lane_test.o: nn_optim_foreach_lane_test.cpp.o
+.PHONY : nn_optim_foreach_lane_test.o
+
+# target to build an object file
+nn_optim_foreach_lane_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/nn_optim_foreach_lane_test.cpp.o
+.PHONY : nn_optim_foreach_lane_test.cpp.o
+
+nn_optim_foreach_lane_test.i: nn_optim_foreach_lane_test.cpp.i
+.PHONY : nn_optim_foreach_lane_test.i
+
+# target to preprocess a source file
+nn_optim_foreach_lane_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/nn_optim_foreach_lane_test.cpp.i
+.PHONY : nn_optim_foreach_lane_test.cpp.i
+
+nn_optim_foreach_lane_test.s: nn_optim_foreach_lane_test.cpp.s
+.PHONY : nn_optim_foreach_lane_test.s
+
+# target to generate assembly for a file
+nn_optim_foreach_lane_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/nn_optim_foreach_lane_test.cpp.s
+.PHONY : nn_optim_foreach_lane_test.cpp.s
+
 nn_optim_test.o: nn_optim_test.cpp.o
 .PHONY : nn_optim_test.o
 
@@ -553,6 +999,30 @@ nn_optim_test.s: nn_optim_test.cpp.s
 nn_optim_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_test.dir/nn_optim_test.cpp.s
 .PHONY : nn_optim_test.cpp.s
+
+nn_training_parity_test.o: nn_training_parity_test.cpp.o
+.PHONY : nn_training_parity_test.o
+
+# target to build an object file
+nn_training_parity_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_training_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_training_parity_test.dir/nn_training_parity_test.cpp.o
+.PHONY : nn_training_parity_test.cpp.o
+
+nn_training_parity_test.i: nn_training_parity_test.cpp.i
+.PHONY : nn_training_parity_test.i
+
+# target to preprocess a source file
+nn_training_parity_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_training_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_training_parity_test.dir/nn_training_parity_test.cpp.i
+.PHONY : nn_training_parity_test.cpp.i
+
+nn_training_parity_test.s: nn_training_parity_test.cpp.s
+.PHONY : nn_training_parity_test.s
+
+# target to generate assembly for a file
+nn_training_parity_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_training_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_training_parity_test.dir/nn_training_parity_test.cpp.s
+.PHONY : nn_training_parity_test.cpp.s
 
 nodej_bayes_kernel_test.o: nodej_bayes_kernel_test.cpp.o
 .PHONY : nodej_bayes_kernel_test.o
@@ -914,6 +1384,30 @@ rnn_fusion_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/rnn_fusion_test.dir/build.make PlussAI/test/CMakeFiles/rnn_fusion_test.dir/rnn_fusion_test.cpp.s
 .PHONY : rnn_fusion_test.cpp.s
 
+schedule_test.o: schedule_test.cpp.o
+.PHONY : schedule_test.o
+
+# target to build an object file
+schedule_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/schedule_test.dir/build.make PlussAI/test/CMakeFiles/schedule_test.dir/schedule_test.cpp.o
+.PHONY : schedule_test.cpp.o
+
+schedule_test.i: schedule_test.cpp.i
+.PHONY : schedule_test.i
+
+# target to preprocess a source file
+schedule_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/schedule_test.dir/build.make PlussAI/test/CMakeFiles/schedule_test.dir/schedule_test.cpp.i
+.PHONY : schedule_test.cpp.i
+
+schedule_test.s: schedule_test.cpp.s
+.PHONY : schedule_test.s
+
+# target to generate assembly for a file
+schedule_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/schedule_test.dir/build.make PlussAI/test/CMakeFiles/schedule_test.dir/schedule_test.cpp.s
+.PHONY : schedule_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -929,10 +1423,22 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... attention_transformer_test"
 	@echo "... conv_test"
+	@echo "... cudnn_attention_route_test"
+	@echo "... cudnn_conv_rigorous_test"
+	@echo "... cudnn_conv_route_test"
+	@echo "... cudnn_rnn_rigorous_test"
+	@echo "... cudnn_rnn_route_test"
+	@echo "... cudnn_transformer_rigorous_test"
+	@echo "... fusion_route_test"
 	@echo "... lymph_quick_test"
+	@echo "... module_snapshot_test"
 	@echo "... nn_loss_test"
+	@echo "... nn_mps_matmul_sum_sensitivity_test"
+	@echo "... nn_optim_foreach_lane_test"
 	@echo "... nn_optim_test"
+	@echo "... nn_training_parity_test"
 	@echo "... nodej_bayes_kernel_test"
 	@echo "... nodej_cv_tune_test"
 	@echo "... nodej_dataframe_bridge_test"
@@ -948,18 +1454,55 @@ help:
 	@echo "... nodej_split_test"
 	@echo "... nodej_tree_test"
 	@echo "... rnn_fusion_test"
+	@echo "... schedule_test"
+	@echo "... attention_transformer_test.o"
+	@echo "... attention_transformer_test.i"
+	@echo "... attention_transformer_test.s"
 	@echo "... conv_test.o"
 	@echo "... conv_test.i"
 	@echo "... conv_test.s"
+	@echo "... cudnn_attention_route_test.o"
+	@echo "... cudnn_attention_route_test.i"
+	@echo "... cudnn_attention_route_test.s"
+	@echo "... cudnn_conv_rigorous_test.o"
+	@echo "... cudnn_conv_rigorous_test.i"
+	@echo "... cudnn_conv_rigorous_test.s"
+	@echo "... cudnn_conv_route_test.o"
+	@echo "... cudnn_conv_route_test.i"
+	@echo "... cudnn_conv_route_test.s"
+	@echo "... cudnn_rnn_rigorous_test.o"
+	@echo "... cudnn_rnn_rigorous_test.i"
+	@echo "... cudnn_rnn_rigorous_test.s"
+	@echo "... cudnn_rnn_route_test.o"
+	@echo "... cudnn_rnn_route_test.i"
+	@echo "... cudnn_rnn_route_test.s"
+	@echo "... cudnn_transformer_rigorous_test.o"
+	@echo "... cudnn_transformer_rigorous_test.i"
+	@echo "... cudnn_transformer_rigorous_test.s"
+	@echo "... fusion_route_test.o"
+	@echo "... fusion_route_test.i"
+	@echo "... fusion_route_test.s"
 	@echo "... lymph_quick_test.o"
 	@echo "... lymph_quick_test.i"
 	@echo "... lymph_quick_test.s"
+	@echo "... module_snapshot_test.o"
+	@echo "... module_snapshot_test.i"
+	@echo "... module_snapshot_test.s"
 	@echo "... nn_loss_test.o"
 	@echo "... nn_loss_test.i"
 	@echo "... nn_loss_test.s"
+	@echo "... nn_mps_matmul_sum_sensitivity_test.o"
+	@echo "... nn_mps_matmul_sum_sensitivity_test.i"
+	@echo "... nn_mps_matmul_sum_sensitivity_test.s"
+	@echo "... nn_optim_foreach_lane_test.o"
+	@echo "... nn_optim_foreach_lane_test.i"
+	@echo "... nn_optim_foreach_lane_test.s"
 	@echo "... nn_optim_test.o"
 	@echo "... nn_optim_test.i"
 	@echo "... nn_optim_test.s"
+	@echo "... nn_training_parity_test.o"
+	@echo "... nn_training_parity_test.i"
+	@echo "... nn_training_parity_test.s"
 	@echo "... nodej_bayes_kernel_test.o"
 	@echo "... nodej_bayes_kernel_test.i"
 	@echo "... nodej_bayes_kernel_test.s"
@@ -1005,6 +1548,9 @@ help:
 	@echo "... rnn_fusion_test.o"
 	@echo "... rnn_fusion_test.i"
 	@echo "... rnn_fusion_test.s"
+	@echo "... schedule_test.o"
+	@echo "... schedule_test.i"
+	@echo "... schedule_test.s"
 .PHONY : help
 
 

@@ -1,0 +1,13 @@
+# `EstimatorBase::task_kind`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/estimatorbase-task-kind-ov1.md): `[[nodiscard]] virtual TaskKind EstimatorBase::task_kind(self) const noexcept = 0;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/interfaces.h`:11

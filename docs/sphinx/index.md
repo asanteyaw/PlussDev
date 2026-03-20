@@ -11,9 +11,22 @@ This Sphinx set is structured as:
 :maxdepth: 2
 
 quickstart
+lymph_user_guide
+lymph_cookbook
+lymph_combination_atlas
+lymph_troubleshooting
+nodej_user_guide
+nodej_cookbook
+plussma_optimization_user_guide
+plussma_optimization_cookbook
+plussma_distributions_user_guide
+plussma_distributions_cookbook
 demo_catalog
+plussmic_docs_hub
 series
 aux
+aux_tutorial
+loader
 autograd
 autograd_api_reference
 autodiff_architecture
@@ -31,4 +44,5 @@ timeline_all_methods_usage
 timeindex_all_methods_usage
 api_indexes
 build_outputs
+README
 ```

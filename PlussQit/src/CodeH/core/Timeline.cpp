@@ -36,6 +36,16 @@ static void check_timeline_core(const pluss::codem::Series& s) {
   TimelineBase::validate_ticks_series(s);
 }
 
+static pluss::codem::Series make_i64_series(const std::vector<std::int64_t>& values) {
+  auto out = pluss::codem::Series::empty(
+      {static_cast<std::int64_t>(values.size())},
+      pluss::codem::ScalarType::Int64);
+  if (!values.empty()) {
+    std::memcpy(out.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
+  }
+  return out;
+}
+
 struct ParsedDT {
   bool ok{false};
   int y{1970}, mo{1}, d{1};
@@ -683,23 +693,48 @@ pluss::codem::Series impl_argsort(const Timeline& a) {
   check_timeline_core(a.ticks_);
   CODEM_CHECK(a.dim() == 1, "argsort currently supports 1D only");
   const auto n = a.numel();
-  std::vector<std::int64_t> idx((size_t)n);
-  for (std::int64_t i = 0; i < n; ++i) idx[(size_t)i] = i;
-  const auto* x = reinterpret_cast<const std::int64_t*>(a.ticks_.raw_data());
-  std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t i, std::int64_t j) {
-    const auto ai = x[i], aj = x[j];
-    if (ai == Timeline::kNaT && aj == Timeline::kNaT) return i < j;
-    if (ai == Timeline::kNaT) return false;
-    if (aj == Timeline::kNaT) return true;
-    return ai < aj;
-  });
-  // Build Series<int64>
-  std::vector<double> tmp; tmp.reserve(idx.size());
-  for (auto v : idx) tmp.push_back((double)v);
-  const std::array<std::int64_t, 1> shape{n};
-  auto out = pluss::codem::Series::make_from_doubles(tmp, shape,
-                                                     pluss::codem::ScalarType::Int64);
-  return out;
+  if (n <= 1) {
+    if (n == 0) {
+      return make_i64_series({});
+    }
+    return make_i64_series({0});
+  }
+
+  const auto valid_mask = impl_isvalid(a)
+                              .to(pluss::codem::Platform::CPU)
+                              .to_vec<bool>();
+
+  std::vector<std::int64_t> valid_idx;
+  std::vector<std::int64_t> nat_idx;
+  valid_idx.reserve(static_cast<std::size_t>(n));
+  nat_idx.reserve(static_cast<std::size_t>(n));
+  for (std::int64_t i = 0; i < n; ++i) {
+    if (valid_mask[static_cast<std::size_t>(i)]) {
+      valid_idx.push_back(i);
+    } else {
+      nat_idx.push_back(i);
+    }
+  }
+
+  std::vector<std::int64_t> out_idx;
+  out_idx.reserve(static_cast<std::size_t>(n));
+  if (!valid_idx.empty()) {
+    auto valid_idx_series = make_i64_series(valid_idx);
+    if (valid_idx_series.platform() != a.ticks_.platform()) {
+      valid_idx_series = valid_idx_series.to(a.ticks_.platform());
+    }
+    const auto valid_ticks = a.ticks_.take(valid_idx_series);
+    const auto local_order = valid_ticks
+        .argsort(/*dim=*/0, /*descending=*/false, /*stable=*/true)
+        .to(pluss::codem::Platform::CPU)
+        .to_vec<std::int64_t>();
+
+    for (const auto li : local_order) {
+      out_idx.push_back(valid_idx[static_cast<std::size_t>(li)]);
+    }
+  }
+  out_idx.insert(out_idx.end(), nat_idx.begin(), nat_idx.end());
+  return make_i64_series(out_idx);
 }
 
 Timeline impl_min(const Timeline& a) {
@@ -737,17 +772,11 @@ Timeline impl_max(const Timeline& a) {
 Timeline impl_sort(const Timeline& a) {
   check_timeline_core(a.ticks_);
   CODEM_CHECK(a.dim() == 1, "sort currently supports 1D only");
-  std::vector<std::int64_t> x((size_t)a.numel());
-  std::memcpy(x.data(), a.ticks_.raw_data(), (size_t)a.numel()*sizeof(std::int64_t));
-  std::stable_sort(x.begin(), x.end(), [](std::int64_t u, std::int64_t v) {
-    if (u == Timeline::kNaT && v == Timeline::kNaT) return false;
-    if (u == Timeline::kNaT) return false;
-    if (v == Timeline::kNaT) return true;
-    return u < v;
-  });
-  const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(x.size())};
-  return impl_tz_convert(ops_internal::timeline_from_epoch_nanos(x, shape),
-                         a.tz());
+  auto order = impl_argsort(a);
+  if (order.platform() != a.ticks_.platform()) {
+    order = order.to(a.ticks_.platform());
+  }
+  return Timeline(a.ticks_.take(order), std::string(a.tz()));
 }
 
 Timeline impl_unique(const Timeline& a) {

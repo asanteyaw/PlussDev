@@ -1,0 +1,25 @@
+# `LinearParameters`
+
+## Signature
+
+```cpp
+struct LinearParameters;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+Key public fields:
+- `bool fit_intercept = false`
+
+## Example
+
+```cpp
+LinearParameters cfg{};
+// cfg.fit_intercept = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:300

@@ -1,0 +1,22 @@
+# `TrainOptions::warm_start`
+
+## Signature
+
+```cpp
+TrainOptions::bool warm_start = false;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+TrainOptions cfg{};
+// cfg.warm_start = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:82

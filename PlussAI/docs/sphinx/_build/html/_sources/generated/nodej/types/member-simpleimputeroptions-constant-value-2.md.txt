@@ -1,0 +1,22 @@
+# `SimpleImputerOptions::constant_value`
+
+## Signature
+
+```cpp
+SimpleImputerOptions::double constant_value = 0.0;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+SimpleImputerOptions cfg{};
+// cfg.constant_value = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:39

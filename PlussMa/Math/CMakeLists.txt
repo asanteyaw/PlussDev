@@ -16,3 +16,7 @@ endif()
 if(PLUSSMA_MATH_ENABLE_PROBABILITY)
     add_subdirectory(Probability)
 endif()
+
+if(PLUSSMA_ENABLE_EXAMPLES AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples")
+    add_subdirectory(examples)
+endif()

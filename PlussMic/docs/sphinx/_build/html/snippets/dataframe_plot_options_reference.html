@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>df.plot(...) Defaults And Options &#8212; PlussMic User Docs  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=6dcfc103" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/layout.js?v=15cb0ccd"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="df-plot-defaults-and-options">
+<h1><code class="docutils literal notranslate"><span class="pre">df.plot(...)</span></code> Defaults And Options<a class="headerlink" href="#df-plot-defaults-and-options" title="Link to this heading">¶</a></h1>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor</span> <span class="pre">plot(self)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor</span> <span class="pre">plot(self,</span> <span class="pre">DataFramePlotOptions</span> <span class="pre">options)</span></code></p>
+</section>
+<section id="what-dataframeplotoptions-controls">
+<h2>What <code class="docutils literal notranslate"><span class="pre">DataFramePlotOptions</span></code> Controls<a class="headerlink" href="#what-dataframeplotoptions-controls" title="Link to this heading">¶</a></h2>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::string&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">nullopt</span></code>)</dt><dd><p>Default x-axis feature used when a plot call does not provide an explicit <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">default_hue_feature</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::string&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">nullopt</span></code>)</dt><dd><p>Default grouping/color feature used by plot types that support hue/group splits.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">default_bins</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">20</span></code>)</dt><dd><p>Default bin count for histogram-style plots when bins are not explicitly passed.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">datetime_label_view</span></code> (<code class="docutils literal notranslate"><span class="pre">DateTimeLabelView</span></code>, default <code class="docutils literal notranslate"><span class="pre">DateTimeLabelView::Full</span></code>)</dt><dd><p>Datetime tick label rendering mode (<code class="docutils literal notranslate"><span class="pre">Full</span></code>, <code class="docutils literal notranslate"><span class="pre">Date</span></code>, or <code class="docutils literal notranslate"><span class="pre">Time</span></code>) for datetime axes.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">max_labeled_ticks</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">14</span></code>)</dt><dd><p>Upper bound on how many tick labels are rendered to avoid dense, unreadable axes.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">labeled_tick_rotation_deg</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;double&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">nullopt</span></code>)</dt><dd><p>Optional tick-label rotation (degrees) for crowded categorical or datetime labels.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">width</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;double&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">nullopt</span></code>)</dt><dd><p>Optional figure width override.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">height</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;double&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">nullopt</span></code>)</dt><dd><p>Optional figure height override.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">use_tight_layout</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)</dt><dd><p>When enabled, applies tight layout spacing rules to reduce label clipping.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">tight_layout_padding</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>, default <code class="docutils literal notranslate"><span class="pre">6.0</span></code>)</dt><dd><p>Padding used by tight layout when <code class="docutils literal notranslate"><span class="pre">use_tight_layout=true</span></code>.</p>
+</dd>
+</dl>
+</section>
+<section id="usage-pattern">
+<h2>Usage Pattern<a class="headerlink" href="#usage-pattern" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="n">DataFramePlotOptions</span><span class="w"> </span><span class="n">opts</span><span class="p">{};</span>
+<span class="n">opts</span><span class="p">.</span><span class="n">default_x_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;timestamp&quot;</span><span class="p">;</span>
+<span class="n">opts</span><span class="p">.</span><span class="n">default_hue_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;sector&quot;</span><span class="p">;</span>
+<span class="n">opts</span><span class="p">.</span><span class="n">default_bins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">30</span><span class="p">;</span>
+<span class="n">opts</span><span class="p">.</span><span class="n">datetime_label_view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DateTimeLabelView</span><span class="o">::</span><span class="n">Date</span><span class="p">;</span>
+<span class="n">opts</span><span class="p">.</span><span class="n">max_labeled_ticks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
+<span class="n">opts</span><span class="p">.</span><span class="n">labeled_tick_rotation_deg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">35.0</span><span class="p">;</span>
+<span class="n">opts</span><span class="p">.</span><span class="n">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">13.0</span><span class="p">;</span>
+<span class="n">opts</span><span class="p">.</span><span class="n">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">7.0</span><span class="p">;</span>
+<span class="n">opts</span><span class="p">.</span><span class="n">use_tight_layout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="n">opts</span><span class="p">.</span><span class="n">tight_layout_padding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4.0</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">plot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">(</span><span class="n">opts</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">line_fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plot</span><span class="p">.</span><span class="n">line</span><span class="p">({</span><span class="s">&quot;open&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;close&quot;</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">hist_fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">plot</span><span class="p">.</span><span class="n">hist</span><span class="p">(</span><span class="s">&quot;returns&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Figure(...)
+Figure(...)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="method-level-options-reference">
+<h1>Method-Level Options Reference<a class="headerlink" href="#method-level-options-reference" title="Link to this heading">¶</a></h1>
+<p>All method options are regular C++ structs. Create, edit fields, then pass into the corresponding <code class="docutils literal notranslate"><span class="pre">plot.*(...)</span></code> call.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ActPlotOptions</span><span class="w"> </span><span class="n">o</span><span class="p">{};</span>
+<span class="n">o</span><span class="p">.</span><span class="n">max_lag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span><span class="p">;</span>
+<span class="n">o</span><span class="p">.</span><span class="n">confidence_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.99</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">act</span><span class="p">(</span><span class="s">&quot;returns&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">o</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="lineplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code><a class="headerlink" href="#lineplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">LinePlotOptions(alpha=1.0,</span> <span class="pre">line_width=1.6,</span> <span class="pre">y_limit_method=pluss::pl::LimitMethod::Padded)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): line opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): line thickness.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y_limit_method</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::pl::LimitMethod&gt;</span></code>): y-axis limit strategy.</p></li>
+</ul>
+</section>
+<section id="stepplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">StepPlotOptions</span></code><a class="headerlink" href="#stepplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">StepPlotOptions(alpha=1.0,</span> <span class="pre">line_width=1.5)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): step trace opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): step trace thickness.</p></li>
+</ul>
+</section>
+<section id="areaplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">AreaPlotOptions</span></code><a class="headerlink" href="#areaplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">AreaPlotOptions(alpha=0.88,</span> <span class="pre">line_width=1.3)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): fill opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): boundary line thickness.</p></li>
+</ul>
+</section>
+<section id="areastackedplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">AreaStackedPlotOptions</span></code><a class="headerlink" href="#areastackedplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">AreaStackedPlotOptions(alpha=0.7,</span> <span class="pre">line_width=1.2)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): stacked area opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): boundary line thickness.</p></li>
+</ul>
+</section>
+<section id="scatterplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">ScatterPlotOptions</span></code><a class="headerlink" href="#scatterplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ScatterPlotOptions(alpha=0.92,</span> <span class="pre">line_width=1.1)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): marker opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): marker edge width.</p></li>
+</ul>
+</section>
+<section id="barplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">BarPlotOptions</span></code><a class="headerlink" href="#barplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BarPlotOptions(ci_enabled=false,</span> <span class="pre">ci_level=0.95,</span> <span class="pre">horizontal=false)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ci_enabled</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): enable confidence interval bars.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ci_level</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): confidence level when CI is enabled.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">horizontal</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): draw horizontal bars.</p></li>
+</ul>
+</section>
+<section id="barstackedplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">BarStackedPlotOptions</span></code><a class="headerlink" href="#barstackedplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BarStackedPlotOptions(alpha=0.65,</span> <span class="pre">line_width=1.0)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): stacked bar opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): bar edge thickness.</p></li>
+</ul>
+</section>
+<section id="boxplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">BoxPlotOptions</span></code><a class="headerlink" href="#boxplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BoxPlotOptions(alpha=0.95,</span> <span class="pre">line_width=1.1)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): box body opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): outline thickness.</p></li>
+</ul>
+</section>
+<section id="violinplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">ViolinPlotOptions</span></code><a class="headerlink" href="#violinplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ViolinPlotOptions(alpha=0.92,</span> <span class="pre">line_width=1.1,</span> <span class="pre">width=0.8,</span> <span class="pre">bw_adjust=1.0,</span> <span class="pre">cut=2.0,</span> <span class="pre">scale=pluss::pl::ViolinScale::Area,</span> <span class="pre">inner=pluss::pl::ViolinInner::Box,</span> <span class="pre">side=pluss::pl::ViolinSide::Full)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): violin fill opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): outline thickness.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">width</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): violin width scale.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bw_adjust</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): KDE bandwidth adjustment.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cut</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): tail extension in bandwidth units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale</span></code> (<code class="docutils literal notranslate"><span class="pre">pluss::pl::ViolinScale</span></code>): area/count/width scaling behavior.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inner</span></code> (<code class="docutils literal notranslate"><span class="pre">pluss::pl::ViolinInner</span></code>): inner annotation style.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">side</span></code> (<code class="docutils literal notranslate"><span class="pre">pluss::pl::ViolinSide</span></code>): full/left/right rendering.</p></li>
+</ul>
+</section>
+<section id="histplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">HistPlotOptions</span></code><a class="headerlink" href="#histplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">HistPlotOptions(bins=20,</span> <span class="pre">alpha=0.95,</span> <span class="pre">line_width=1.0)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bins</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): histogram bin count.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): bar opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): bar edge thickness.</p></li>
+</ul>
+</section>
+<section id="densityplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">DensityPlotOptions</span></code><a class="headerlink" href="#densityplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DensityPlotOptions(points=128,</span> <span class="pre">alpha=1.0,</span> <span class="pre">line_width=1.5)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">points</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): sampled KDE points.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): curve opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): curve thickness.</p></li>
+</ul>
+</section>
+<section id="heatmapplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">HeatmapPlotOptions</span></code><a class="headerlink" href="#heatmapplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">HeatmapPlotOptions(annotate_levels=false,</span> <span class="pre">scale_guide=true,</span> <span class="pre">borderless=false)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">annotate_levels</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): print values in cells.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_guide</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show color scale legend.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">borderless</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): remove cell border strokes.</p></li>
+</ul>
+</section>
+<section id="corrheatmapplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">CorrHeatmapPlotOptions</span></code><a class="headerlink" href="#corrheatmapplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CorrHeatmapPlotOptions(annotate_levels=true,</span> <span class="pre">scale_guide=true,</span> <span class="pre">borderless=false)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">annotate_levels</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): print correlation values in cells.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_guide</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show color scale legend.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">borderless</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): remove cell borders.</p></li>
+</ul>
+</section>
+<section id="scattermatrixplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">ScatterMatrixPlotOptions</span></code><a class="headerlink" href="#scattermatrixplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ScatterMatrixPlotOptions(corner=false,</span> <span class="pre">pair={})</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">corner</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): render only one matrix triangle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pair</span></code> (<code class="docutils literal notranslate"><span class="pre">pluss::pl::flash::PairPlotOptions</span></code>): low-level pair-plot styling options.</p></li>
+</ul>
+</section>
+<section id="parallelplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">ParallelPlotOptions</span></code><a class="headerlink" href="#parallelplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ParallelPlotOptions(labels={},</span> <span class="pre">normalize=true,</span> <span class="pre">max_points=1200,</span> <span class="pre">alpha=0.24,</span> <span class="pre">trace_width=0.9f,</span> <span class="pre">show_grid=true,</span> <span class="pre">show_legend=true)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code> (<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code>): display labels for classes/groups.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">normalize</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): scale features before plotting.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_points</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): cap row count rendered.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): polyline opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace_width</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): polyline thickness.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_grid</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show axis grid lines.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_legend</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show legend.</p></li>
+</ul>
+</section>
+<section id="andrewscurvesplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">AndrewsCurvesPlotOptions</span></code><a class="headerlink" href="#andrewscurvesplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">AndrewsCurvesPlotOptions(labels={},</span> <span class="pre">normalize=true,</span> <span class="pre">points=220,</span> <span class="pre">max_curves=600,</span> <span class="pre">alpha=0.28,</span> <span class="pre">trace_width=0.9f,</span> <span class="pre">show_grid=true,</span> <span class="pre">show_legend=true)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code> (<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code>): class labels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">normalize</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): normalize feature scales.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">points</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): points per curve.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_curves</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): max curves rendered.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): curve opacity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace_width</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): curve thickness.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_grid</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show grid.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_legend</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show legend.</p></li>
+</ul>
+</section>
+<section id="radvizplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">RadvizPlotOptions</span></code><a class="headerlink" href="#radvizplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">RadvizPlotOptions(labels={},</span> <span class="pre">normalize=true,</span> <span class="pre">max_points=3000,</span> <span class="pre">marker_area=18.0,</span> <span class="pre">trace_width=0.55f,</span> <span class="pre">show_grid=true,</span> <span class="pre">show_anchors=true,</span> <span class="pre">show_legend=true)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code> (<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code>): class labels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">normalize</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): normalize features before projection.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_points</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): max points rendered.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">marker_area</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): marker size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace_width</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): marker edge width.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_grid</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show grid.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_anchors</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show anchor positions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_legend</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show legend.</p></li>
+</ul>
+</section>
+<section id="lagplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">LagPlotOptions</span></code><a class="headerlink" href="#lagplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">LagPlotOptions(lag=1,</span> <span class="pre">max_points=2500,</span> <span class="pre">marker_area=16.0,</span> <span class="pre">trace_width=0.55f)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lag</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): lag step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_points</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): max points rendered.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">marker_area</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): marker size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace_width</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): marker edge width.</p></li>
+</ul>
+</section>
+<section id="actplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">ActPlotOptions</span></code><a class="headerlink" href="#actplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ActPlotOptions(max_lag=40,</span> <span class="pre">show_confidence_band=true,</span> <span class="pre">confidence_level=0.95,</span> <span class="pre">trace_width=1.2f)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max_lag</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): max lag for ACF/PACF style plot.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_confidence_band</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): draw confidence band.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): confidence level for band.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace_width</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): trace line width.</p></li>
+</ul>
+</section>
+<section id="bootstrapplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">BootstrapPlotOptions</span></code><a class="headerlink" href="#bootstrapplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BootstrapPlotOptions(samples=300,</span> <span class="pre">sample_size=0,</span> <span class="pre">seed=7,</span> <span class="pre">bins=24,</span> <span class="pre">statistic=BootstrapStatistic::Mean,</span> <span class="pre">trace_width=0.85f)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">samples</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): bootstrap draw count.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sample_size</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): sample size per draw; <code class="docutils literal notranslate"><span class="pre">0</span></code> means default dataset size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code> (<code class="docutils literal notranslate"><span class="pre">std::uint64_t</span></code>): RNG seed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bins</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): histogram bins for bootstrap distribution.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">statistic</span></code> (<code class="docutils literal notranslate"><span class="pre">BootstrapStatistic</span></code>): one of <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Median</span></code>, <code class="docutils literal notranslate"><span class="pre">Std</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace_width</span></code> (<code class="docutils literal notranslate"><span class="pre">float</span></code>): trace width.</p></li>
+</ul>
+</section>
+<section id="pieplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">PiePlotOptions</span></code><a class="headerlink" href="#pieplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">PiePlotOptions(show_label=true,</span> <span class="pre">show_percent=true,</span> <span class="pre">show_value=false,</span> <span class="pre">precision=1,</span> <span class="pre">separator=&quot;</span> <span class="pre">|</span> <span class="pre">&quot;)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">show_label</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show labels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_percent</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show percent text.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_value</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show raw values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">precision</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): decimal precision for labels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">separator</span></code> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>): label text separator.</p></li>
+</ul>
+</section>
+<section id="autoplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">AutoPlotOptions</span></code><a class="headerlink" href="#autoplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">AutoPlotOptions()</span></code></p>
+<ul class="simple">
+<li><p>No fields currently. Use default automatic chart selection.</p></li>
+</ul>
+</section>
+<section id="d-shared-option-structs">
+<h2>3D Shared Option Structs<a class="headerlink" href="#d-shared-option-structs" title="Link to this heading">¶</a></h2>
+<section id="plot3dsceneoptions">
+<h3><code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions</span></code><a class="headerlink" href="#plot3dsceneoptions" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions(preset=nullopt,</span> <span class="pre">theme=nullopt,</span> <span class="pre">camera_preset=nullopt,</span> <span class="pre">camera=nullopt,</span> <span class="pre">lighting=nullopt,</span> <span class="pre">grid_style=nullopt)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">preset</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::pl::flash::ScenePreset3D&gt;</span></code>): scene preset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">theme</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::pl::flash::ThemePreset3D&gt;</span></code>): 3D theme preset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">camera_preset</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::pl::flash::CameraPreset3D&gt;</span></code>): camera preset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">camera</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::pl::flash::Camera3DOptions&gt;</span></code>): explicit camera config.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lighting</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::pl::flash::Lighting3DOptions&gt;</span></code>): lighting config.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">grid_style</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::pl::GridStyle&gt;</span></code>): grid style.</p></li>
+</ul>
+</section>
+<section id="plot3dtraceoptions">
+<h3><code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions</span></code><a class="headerlink" href="#plot3dtraceoptions" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions(preset=nullopt,</span> <span class="pre">shade=nullopt,</span> <span class="pre">lighting=nullopt,</span> <span class="pre">material=nullopt,</span> <span class="pre">line_width=nullopt,</span> <span class="pre">transparent=nullopt)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">preset</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::pl::flash::TracePreset3D&gt;</span></code>): trace style preset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shade</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::pl::ShadeMode&gt;</span></code>): shading mode.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lighting</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::pl::LightingMode&gt;</span></code>): lighting mode.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">material</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::pl::MaterialProfile&gt;</span></code>): material profile.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_width</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;float&gt;</span></code>): line width override.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transparent</span></code> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;bool&gt;</span></code>): transparency override.</p></li>
+</ul>
+</section>
+</section>
+<section id="scatter3dplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">Scatter3DPlotOptions</span></code><a class="headerlink" href="#scatter3dplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Scatter3DPlotOptions(scene={},</span> <span class="pre">trace={},</span> <span class="pre">default_marker_size=12.0)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scene</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions</span></code>): scene options.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions</span></code>): trace options.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default_marker_size</span></code> (<code class="docutils literal notranslate"><span class="pre">double</span></code>): marker size fallback.</p></li>
+</ul>
+</section>
+<section id="line3dplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">Line3DPlotOptions</span></code><a class="headerlink" href="#line3dplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Line3DPlotOptions(scene={},</span> <span class="pre">trace={})</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scene</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions</span></code>): scene options.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions</span></code>): trace options.</p></li>
+</ul>
+</section>
+<section id="hist3dplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">Hist3DPlotOptions</span></code><a class="headerlink" href="#hist3dplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Hist3DPlotOptions(bins_x=26,</span> <span class="pre">bins_y=20,</span> <span class="pre">normalize=false,</span> <span class="pre">smooth=false,</span> <span class="pre">smooth_passes=1,</span> <span class="pre">as_surface=false,</span> <span class="pre">as_wireframe=false,</span> <span class="pre">scene={},</span> <span class="pre">trace={})</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bins_x</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): x-axis bin count.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bins_y</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): y-axis bin count.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">normalize</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): normalize counts to density-like scale.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">smooth</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): enable smoothing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">smooth_passes</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): smoothing passes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">as_surface</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): render as surface.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">as_wireframe</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): render as wireframe.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scene</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions</span></code>): scene options.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions</span></code>): trace options.</p></li>
+</ul>
+</section>
+<section id="surface3dplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">Surface3DPlotOptions</span></code><a class="headerlink" href="#surface3dplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Surface3DPlotOptions(scene={},</span> <span class="pre">trace={})</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scene</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions</span></code>): scene options.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions</span></code>): trace options.</p></li>
+</ul>
+</section>
+<section id="wireframe3dplotoptions">
+<h2><code class="docutils literal notranslate"><span class="pre">Wireframe3DPlotOptions</span></code><a class="headerlink" href="#wireframe3dplotoptions" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Wireframe3DPlotOptions(scene={},</span> <span class="pre">trace={})</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scene</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DSceneOptions</span></code>): scene options.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace</span></code> (<code class="docutils literal notranslate"><span class="pre">Plot3DTraceOptions</span></code>): trace options.</p></li>
+</ul>
+</section>
+<section id="bonus-briefplotoptions-used-by-plot-brief">
+<h2>Bonus: <code class="docutils literal notranslate"><span class="pre">BriefPlotOptions</span></code> (used by <code class="docutils literal notranslate"><span class="pre">plot.brief</span></code>)<a class="headerlink" href="#bonus-briefplotoptions-used-by-plot-brief" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BriefPlotOptions(title=&quot;table&quot;,</span> <span class="pre">precision=4,</span> <span class="pre">include_header=true,</span> <span class="pre">max_cases=10,</span> <span class="pre">transpose=false,</span> <span class="pre">include_case_index=true,</span> <span class="pre">features_per_table=0,</span> <span class="pre">tables_per_row=1,</span> <span class="pre">table_gap_spaces=4)</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">title</span></code> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>): figure title.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">precision</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): numeric precision.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include_header</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): include feature header row.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_cases</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): max rows shown.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transpose</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): transpose preview table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include_case_index</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>): show case index.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">features_per_table</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): chunk width per table block.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tables_per_row</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): number of blocks per row.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">table_gap_spaces</span></code> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>): spacing between blocks.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">PlussMic User Docs</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_display.html">DataFrame Display And Popup Viewer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_api_reference.html">DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_api_reference.html#practical-dataframe-api-reference">Practical DataFrame API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../column_ref_api_reference.html">ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../column_ref_api_reference.html#practical-columnref-api-reference">Practical ColumnRef API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_plot_api_reference.html#practical-dataframeplotaccessor-api-reference">Practical DataFramePlotAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_sql_accessor_api_reference.html">DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_sql_accessor_api_reference.html#practical-dataframesqlaccessor-api-reference">Practical DataFrameSqlAccessor API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_sql_prepared_api_reference.html">DataFrameSqlPrepared API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_sql_prepared_api_reference.html#practical-dataframesqlprepared-api-reference">Practical DataFrameSqlPrepared API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thread_atlas.html">Thread And Atlas Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thread_api_reference.html">Thread API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thread_api_reference.html#practical-thread-api-reference">Practical Thread API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thread_value_api_reference.html">ThreadValue API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thread_value_api_reference.html#practical-threadvalue-api-reference">Practical ThreadValue API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../atlas_api_reference.html">Atlas API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../atlas_api_reference.html#practical-atlas-api-reference">Practical Atlas API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stream_api_reference.html">Stream API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stream_api_reference.html#practical-stream-api-reference">Practical Stream API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../catalog_api_reference.html">Catalog API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../catalog_api_reference.html#practical-catalog-api-reference">Practical Catalog API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../archive_api_reference.html">Archive API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../archive_api_reference.html#practical-archive-api-reference">Practical Archive API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../slot_api_reference.html">Slot API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../slot_api_reference.html#practical-slot-api-reference">Practical Slot API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../registry_api_reference.html">Registry API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../registry_api_reference.html#practical-registry-api-reference">Practical Registry API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aisle_api_reference.html">Aisle API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aisle_api_reference.html#practical-aisle-api-reference">Practical Aisle API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../build_outputs.html">Build Outputs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/snippets/dataframe_plot_options_reference.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

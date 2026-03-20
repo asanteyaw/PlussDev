@@ -1,0 +1,46 @@
+# `OnlineLinearClassifier::assess_series (overload 3)`
+
+## Signature
+
+```cpp
+[[nodiscard]] Series OnlineLinearClassifier::assess_series(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `x` : `const pluss::table::DataFrame&`
+  Input feature data used by this call.
+- `y` : `const Series&`
+  Target values aligned to input observations.
+- `options` : `const AssessOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `Series`.
+
+## Notes
+
+Evaluates model output against targets and returns metric aggregates.
+
+## See also
+
+- `[[nodiscard]] MetricReport OnlineLinearClassifier::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport OnlineLinearClassifier::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] MetricReport OnlineLinearClassifier::assess(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] ::pluss::ai::nodej::online::OnlineLinearClassifier& OnlineLinearClassifier::core(self) noexcept { return core_; };`
+- `[[nodiscard]] const ::pluss::ai::nodej::online::OnlineLinearClassifier& OnlineLinearClassifier::core(self) const noexcept { return core_; };`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+OnlineLinearClassifier onlineLinearClassifier{};
+auto out = onlineLinearClassifier.assess_series(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2351

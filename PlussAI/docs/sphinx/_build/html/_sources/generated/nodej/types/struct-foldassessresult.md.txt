@@ -1,0 +1,21 @@
+# `FoldAssessResult`
+
+## Signature
+
+```cpp
+struct FoldAssessResult;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+## Example
+
+```cpp
+FoldAssessResult cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/metrics.h`:10

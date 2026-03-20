@@ -1,0 +1,21 @@
+# `TransformKind::VectorNormalizer`
+
+## Signature
+
+```cpp
+TransformKind::VectorNormalizer;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = TransformKind::VectorNormalizer;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:15

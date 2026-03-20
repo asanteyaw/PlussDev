@@ -1,0 +1,22 @@
+# `TuneOptions::trials`
+
+## Signature
+
+```cpp
+TuneOptions::std::int64_t trials = 0;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+TuneOptions cfg{};
+// cfg.trials = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:140

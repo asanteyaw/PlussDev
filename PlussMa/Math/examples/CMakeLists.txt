@@ -1,0 +1,11 @@
+if(PLUSSMA_ENABLE_MATH OR PLUSSMA_ENABLE_STATS)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Numerical/CMakeLists.txt")
+    add_subdirectory(Numerical)
+  endif()
+endif()
+
+if(PLUSSMA_ENABLE_MATH)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Finance/CMakeLists.txt")
+    add_subdirectory(Finance)
+  endif()
+endif()

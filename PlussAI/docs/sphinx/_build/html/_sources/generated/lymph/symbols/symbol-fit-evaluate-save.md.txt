@@ -1,0 +1,13 @@
+# `fit_evaluate_save`
+
+## Notes
+
+Persists the current fitted artifact so it can be loaded for inference later.
+
+## Overloads
+
+- [overload 1](../api/global-fit-evaluate-save-ov1.md): `StatusOr<FrameFlowArtifact> fit_evaluate_save( const nodej::ModelSpec& spec, const pluss::table::DataFrame& frame, const nodej::DataFrameBatchOptions& data_options, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {}, const std::string& save_path = "", nodej::io::FlowBundleMetadata metadata = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:75

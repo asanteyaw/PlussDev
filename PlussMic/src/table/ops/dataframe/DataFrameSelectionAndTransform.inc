@@ -110,6 +110,16 @@ std::vector<std::size_t> resolve_resample_value_indices_(
   return indices;
 }
 
+pluss::Series bool_series_from_thread_mask_(
+    const Thread& bool_mask,
+    std::int64_t expected_size,
+    std::string_view where) {
+  PLUSS_CHECK(bool_mask.kind() == ThreadKind::Series, std::string(where) + ": mask must be a Series thread");
+  const auto& mask = bool_mask.as_series();
+  validate_bool_mask(mask, expected_size, where);
+  return mask;
+}
+
 } // namespace
 
 DataFrameView DataFrame::head(std::int64_t n, bool render) const {
@@ -187,6 +197,10 @@ DataFrame DataFrame::where(const pluss::Series& bool_mask) const {
   return filter(bool_mask);
 }
 
+DataFrame DataFrame::where(const Thread& bool_mask) const {
+  return filter(bool_mask);
+}
+
 DataFrame DataFrame::filter(const pluss::Series& bool_mask) const {
   validate_bool_mask(bool_mask, ncases(), "DataFrame::filter");
   const auto& src = impl_ref_();
@@ -197,6 +211,10 @@ DataFrame DataFrame::filter(const pluss::Series& bool_mask) const {
   }
   auto out_case = src.cases_.filter(bool_mask);
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(src.names_, std::move(out_cols), std::move(out_case)));
+}
+
+DataFrame DataFrame::filter(const Thread& bool_mask) const {
+  return filter(bool_series_from_thread_mask_(bool_mask, ncases(), "DataFrame::filter"));
 }
 
 DataFrame DataFrame::query(const pluss::Series& bool_mask) const {
@@ -226,7 +244,7 @@ DataFrame DataFrame::derive(std::initializer_list<std::pair<std::string, Thread>
   DataFrame out = *this;
   for (const auto& assignment : assignments) {
     PLUSS_CHECK(!assignment.first.empty(), "DataFrame::derive: feature name cannot be empty");
-    out = out.with_column(assignment.first, assignment.second);
+    out = out.set_features(assignment.first, assignment.second);
   }
   return out;
 }
@@ -236,7 +254,7 @@ DataFrame DataFrame::derive(std::initializer_list<DeriveSpec> specs) const {
   for (const auto& spec : specs) {
     PLUSS_CHECK(!spec.feature.empty(), "DataFrame::derive: feature name cannot be empty");
     PLUSS_CHECK(static_cast<bool>(spec.expr), "DataFrame::derive: derive expression is empty");
-    out = out.with_column(spec.feature, spec.expr(out));
+    out = out.set_features(spec.feature, spec.expr(out));
   }
   return out;
 }

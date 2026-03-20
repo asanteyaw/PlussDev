@@ -778,13 +778,6 @@ static bool same_shape_(const Series& a, const Series& b) {
          std::equal(a.sizes().begin(), a.sizes().end(), b.sizes().begin());
 }
 
-static Series reduce_sensitivity_to_like_(const Series& sens, const Series& like, const char* op) {
-  if (same_shape_(sens, like)) return sens;
-  if (like.numel() == 1) return sens.sum();
-  throw_error(std::string(op) + ": unsupported sensitivity reduction for broadcasted shape");
-  return sens;
-}
-
 static Series reduce_broadcasted_sensitivity_to_like_(const Series& sens, const Series& like, const char* op) {
   if (same_shape_(sens, like)) return sens;
   if (like.numel() == 1) return sens.sum();
@@ -835,11 +828,11 @@ static void maybe_link_binary_op_(
   link->parents = {a, b};
   link->propagate = [a, b, ta, tb, op, lhs_rule = std::move(lhs_rule), rhs_rule = std::move(rhs_rule)](const Series& out_sens) {
     if (ta) {
-      const Series ga = reduce_sensitivity_to_like_(lhs_rule(out_sens), a, op);
+      const Series ga = reduce_broadcasted_sensitivity_to_like_(lhs_rule(out_sens), a, op);
       series_tape::accumulate_sensitivity(a, ga);
     }
     if (tb) {
-      const Series gb = reduce_sensitivity_to_like_(rhs_rule(out_sens), b, op);
+      const Series gb = reduce_broadcasted_sensitivity_to_like_(rhs_rule(out_sens), b, op);
       series_tape::accumulate_sensitivity(b, gb);
     }
   };
@@ -868,6 +861,20 @@ static void maybe_link_unary_op_(
     const Series& a,
     std::function<Series(const Series&)> rule) {
   maybe_link_unary_op_(out, a, "unary", std::move(rule));
+}
+
+static void maybe_link_transport_op_(const Series& out, const Series& input, std::string op_name) {
+  if (!series_tape::recording_enabled() || !series_tape::tracks_slope(input)) return;
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = std::move(op_name);
+  link->parents = {input};
+  link->propagate = [input](const Series& out_sens) {
+    Series grad = reduce_broadcasted_sensitivity_to_like_(out_sens, input, "transport");
+    if (grad.scalar_type() != input.scalar_type()) grad = grad.to(input.scalar_type());
+    if (grad.platform() != input.platform()) grad = grad.to(input.platform());
+    series_tape::accumulate_sensitivity(input, grad);
+  };
+  series_tape::bind_source_link(out, std::move(link));
 }
 
 static Series i64_index_vector_on_(std::span<const std::int64_t> values, Platform platform) {
@@ -903,6 +910,21 @@ Series sub(const Series& a, const Series& b) {
       [](const Series& g) { return g.neg(); });
   return out;
 }
+
+static Series mul_backward_product_(const Series& lhs, const Series& rhs) {
+  require_same_platform(lhs, rhs, "mul(backprop)");
+  // On MPS, recurrent backprop can hit non-finite products in native multiply;
+  // use a stable CPU product while tape recording is paused during reverse.
+  if (lhs.platform() == Platform::MPS && !series_tape::recording_enabled()) {
+    Series lhs_cpu = lhs.to(Platform::CPU, ScalarType::Float32);
+    Series rhs_cpu = rhs.to(Platform::CPU, ScalarType::Float32);
+    Series out_cpu = lhs_cpu.mul(rhs_cpu);
+    if (lhs.scalar_type() != ScalarType::Float32) out_cpu = out_cpu.to(lhs.scalar_type());
+    return out_cpu.to(lhs.platform(), lhs.scalar_type());
+  }
+  return lhs.mul(rhs);
+}
+
 Series mul(const Series& a, const Series& b) {
   const auto out_dt = pluss::codem::promote_types(a.scalar_type(), b.scalar_type());
   auto aa = (a.scalar_type() == out_dt) ? a : a.to(out_dt);
@@ -910,8 +932,8 @@ Series mul(const Series& a, const Series& b) {
   auto out = binary_op_(native::cpu::BinaryOpId::Mul, aa, bb);
   maybe_link_binary_op_(
       out, a, b, "mul",
-      [b](const Series& g) { return g.mul(b); },
-      [a](const Series& g) { return g.mul(a); });
+      [b](const Series& g) { return mul_backward_product_(g, b); },
+      [a](const Series& g) { return mul_backward_product_(g, a); });
   return out;
 }
 Series div(const Series& a, const Series& b) {
@@ -1376,6 +1398,15 @@ Series tanh(const Series& a) {
     out = unary_cpu_with_platform_dispatch_policy_(a, "tanh", native::cpu::tanh);
   }
   maybe_link_unary_op_(out, a, [a](const Series& g) {
+    if (a.platform() == Platform::MPS && !series_tape::recording_enabled()) {
+      Series a_cpu = a.to(Platform::CPU, ScalarType::Float32);
+      Series g_cpu = g.to(Platform::CPU, ScalarType::Float32);
+      const Series y_cpu = tanh(a_cpu);
+      const Series one_cpu = scalar_like_(a_cpu, 1.0);
+      Series grad_cpu = mul(g_cpu, sub(one_cpu, mul(y_cpu, y_cpu)));
+      if (a.scalar_type() != ScalarType::Float32) grad_cpu = grad_cpu.to(a.scalar_type());
+      return grad_cpu.to(a.platform(), a.scalar_type());
+    }
     const Series y = tanh(a);
     const Series one = scalar_like_(a, 1.0);
     return g.mul(sub(one, mul(y, y)));
@@ -1800,11 +1831,25 @@ Series sum(const Series& a) {
     return out;
   }
   auto aa = a.contiguous();
+  if (aa.scalar_type() == ScalarType::Bool) {
+    // Bool sum is a count reduction.
+    aa = aa.to(ScalarType::Int64);
+  }
   if (aa.platform() != Platform::CPU) {
     if (aa.platform() == Platform::MPS && native::mps::supports_sum_dim(aa.scalar_type())) {
       Series cur = aa;
       for (std::int64_t d = static_cast<std::int64_t>(cur.dim()) - 1; d >= 0; --d) {
         cur = sum(cur, d, false);
+      }
+      if (series_tape::recording_enabled() && series_tape::tracks_slope(a)) {
+        auto link = std::make_shared<series_tape::SourceLink>();
+        link->op_name = "sum";
+        link->parents = {a};
+        link->propagate = [a](const Series& out_sens) {
+          const Series ga = Series::ones(a.sizes(), a.scalar_type()).to(a.platform()).mul(out_sens);
+          series_tape::accumulate_sensitivity(a, ga);
+        };
+        series_tape::bind_source_link(cur, std::move(link));
       }
       return cur;
     }
@@ -1845,6 +1890,10 @@ Series sum(const Series& a, std::int64_t dim, bool keepdim) {
     return out;
   }
   auto aa = a.contiguous();
+  if (aa.scalar_type() == ScalarType::Bool) {
+    // Bool sum is a count reduction.
+    aa = aa.to(ScalarType::Int64);
+  }
   const auto nd = aa.dim();
   if (dim < 0) dim += nd;
   auto out_sizes = out_sizes_for_reduce_(aa.sizes(), dim, /*keepdim=*/false);
@@ -2460,6 +2509,15 @@ Series sigmoid(const Series& a) {
   const Series one = scalar_like_(a, 1.0);
   Series out = div(one, add(one, exp(neg(a))));
   maybe_link_unary_op_(out, a, [a](const Series& g) {
+    if (a.platform() == Platform::MPS && !series_tape::recording_enabled()) {
+      Series a_cpu = a.to(Platform::CPU, ScalarType::Float32);
+      Series g_cpu = g.to(Platform::CPU, ScalarType::Float32);
+      const Series y_cpu = sigmoid(a_cpu);
+      const Series one_cpu = scalar_like_(a_cpu, 1.0);
+      Series grad_cpu = mul(g_cpu, mul(y_cpu, sub(one_cpu, y_cpu)));
+      if (a.scalar_type() != ScalarType::Float32) grad_cpu = grad_cpu.to(a.scalar_type());
+      return grad_cpu.to(a.platform(), a.scalar_type());
+    }
     const Series y = sigmoid(a);
     const Series one = scalar_like_(a, 1.0);
     return mul(g, mul(y, sub(one, y)));
@@ -3208,6 +3266,18 @@ Series gather(const Series& input, std::int64_t dim, const Series& index) {
       [input, idx, dim](const Series& out_sens) {
         Series sens = out_sens;
         if (sens.scalar_type() != input.scalar_type()) sens = sens.to(input.scalar_type());
+        if (input.platform() == Platform::MPS) {
+          // MPS scatter_add backward accumulation can produce non-finite sensitivities
+          // for recurrent gather-heavy graphs; accumulate on CPU for stable gradients.
+          Series base_cpu = Series::zeros(input.sizes(), input.scalar_type()).to(Platform::CPU);
+          Series idx_cpu = idx;
+          if (idx_cpu.platform() != Platform::CPU) idx_cpu = idx_cpu.to(Platform::CPU);
+          if (idx_cpu.scalar_type() != ScalarType::Int64) idx_cpu = idx_cpu.to(ScalarType::Int64);
+          Series sens_cpu = sens;
+          if (sens_cpu.platform() != Platform::CPU) sens_cpu = sens_cpu.to(Platform::CPU, input.scalar_type());
+          Series acc_cpu = scatter_add(base_cpu, dim, idx_cpu, sens_cpu);
+          return acc_cpu.to(input.platform(), input.scalar_type());
+        }
         Series base = Series::zeros(input.sizes(), input.scalar_type()).to(input.platform());
         return scatter_add(base, dim, idx, sens);
       });
@@ -4449,7 +4519,11 @@ Series Series::view(std::span<const std::int64_t> new_sizes) const {
 Series Series::reshape(std::span<const std::int64_t> new_sizes) const {
   if (!defined()) throw_error("reshape: undefined");
   if (can_view_as(*this, new_sizes)) return view(new_sizes);
-  return contiguous().view(new_sizes);
+  Series c = contiguous();
+  // Preserve reverse-mode connectivity through the contiguous staging copy
+  // used by reshape fallback for non-contiguous inputs.
+  maybe_link_unary_op_(c, *this, "reshape_contiguous", [](const Series& g) { return g; });
+  return c.view(new_sizes);
 }
 
 Series Series::transpose(std::int64_t d0, std::int64_t d1) const {
@@ -4733,6 +4807,8 @@ Series Series::contiguous() const {
   Series out = Series::empty(sizes(), scalar_type(), platform());
   SeriesIterator it = SeriesIterator::unary(*this, out);
   it.copy_out_from_in(*this, out);
+  // Preserve reverse-mode connectivity through contiguous staging copies.
+  maybe_link_unary_op_(out, *this, "contiguous", [](const Series& g) { return g; });
   return out;
 }
 
@@ -4779,6 +4855,10 @@ Series Series::platform(Platform target) const {
   if (nbytes > 0) {
     std::memcpy(out.raw_mutable_data(), src.raw_data(), nbytes);
   }
+  maybe_link_transport_op_(
+      out,
+      *this,
+      std::string("platform(") + std::string(platform_name_(target)) + ")");
   return out;
 }
 
@@ -4816,12 +4896,21 @@ Series Series::to(ScalarType dst) const {
     const bool supported = native::mps::supports_cast(src.scalar_type(), dst);
     if (supported) {
       native::mps::cast(src, out);
+      maybe_link_transport_op_(
+          out,
+          *this,
+          std::string("to(") + std::to_string(static_cast<int>(dst)) + ")");
       return out;
     }
     // Explicit dtype conversion should remain functional on MPS even when a
     // native cast kernel is missing; bridge through CPU deterministically.
     Series cpu_cast = to(Platform::CPU).to(dst);
-    return cpu_cast.to(Platform::MPS);
+    Series bridged = cpu_cast.to(Platform::MPS);
+    maybe_link_transport_op_(
+        bridged,
+        *this,
+        std::string("to(") + std::to_string(static_cast<int>(dst)) + ")");
+    return bridged;
   }
 
   auto store_bool = [&](std::int64_t i, bool v) {
@@ -4884,6 +4973,10 @@ Series Series::to(ScalarType dst) const {
     const double v = load_as_f64(src.scalar_type(), i);
     store_from_f64(dst, i, v);
   }
+  maybe_link_transport_op_(
+      out,
+      *this,
+      std::string("to(") + std::to_string(static_cast<int>(dst)) + ")");
   return out;
 }
 
@@ -4897,6 +4990,13 @@ Series Series::select(std::int64_t dim, std::int64_t index) const {
   const auto size_dim = sizes_v[static_cast<std::size_t>(dim)];
   if (index < 0) index += size_dim;
   if (index < 0 || index >= size_dim) throw_error("select: index out of range");
+  if (platform() == Platform::MPS) {
+    // MPS view-select backward is currently unstable for autograd-sensitive paths.
+    // Bridge this op through CPU while preserving tape links via to()/transport ops.
+    const Series cpu_self = this->to(Platform::CPU, scalar_type());
+    const Series cpu_sel = cpu_self.select(dim, index);
+    return cpu_sel.to(Platform::MPS, scalar_type());
+  }
   // Remove dimension, adjust offset
   const auto offset_add = index * strides_v[static_cast<std::size_t>(dim)];
   sizes_v.erase(sizes_v.begin() + dim);
@@ -4920,6 +5020,19 @@ Series Series::select(std::int64_t dim, std::int64_t index) const {
         if (sens.scalar_type() != input.scalar_type()) sens = sens.to(input.scalar_type());
         if (sens.platform() != input.platform()) sens = sens.to(input.platform());
         const Series expanded = sens.unsqueeze(dim);
+        if (input.platform() == Platform::MPS) {
+          Series base_cpu = Series::zeros(input.sizes(), input.scalar_type()).to(Platform::CPU);
+          Series idx_cpu = Series::full(expanded.sizes(), static_cast<double>(index), ScalarType::Int64)
+                               .to(Platform::CPU)
+                               .contiguous();
+          Series expanded_cpu = expanded;
+          if (expanded_cpu.platform() != Platform::CPU) {
+            expanded_cpu = expanded_cpu.to(Platform::CPU, input.scalar_type());
+          }
+          expanded_cpu = expanded_cpu.contiguous();
+          const Series grad_cpu = ops_internal::scatter_add(base_cpu, dim, idx_cpu, expanded_cpu);
+          return grad_cpu.to(input.platform(), input.scalar_type()).contiguous();
+        }
         const Series idx = Series::full(expanded.sizes(), static_cast<double>(index), ScalarType::Int64).to(input.platform());
         const Series base = Series::zeros(input.sizes(), input.scalar_type()).to(input.platform());
         return ops_internal::scatter_add(base, dim, idx, expanded);
@@ -5434,11 +5547,22 @@ Series Series::unite(const std::vector<Series>& others, std::int64_t dim) const 
   }
   Series out;
   if (platform() == Platform::MPS) {
-    std::vector<Series> xs;
-    xs.reserve(others.size() + 1);
-    xs.push_back(*this);
-    for (const auto& t : others) xs.push_back(t);
-    out = ops_internal::mps_cat_along_dim_(xs, dim, "unite");
+    const auto nd = this->dim();
+    if (dim < 0) dim += nd;
+    PLUSS_CHECK(dim >= 0 && dim < nd, "unite: dim out of range");
+    if (series_tape::recording_enabled()) {
+      std::vector<Series> xs_cpu;
+      xs_cpu.reserve(others.size() + 1);
+      xs_cpu.push_back(this->to(Platform::CPU));
+      for (const auto& t : others) xs_cpu.push_back(t.to(Platform::CPU));
+      out = native::cpu::cat(xs_cpu, dim).to(Platform::MPS);
+    } else {
+      std::vector<Series> xs;
+      xs.reserve(others.size() + 1);
+      xs.push_back(*this);
+      for (const auto& t : others) xs.push_back(t);
+      out = ops_internal::mps_cat_along_dim_(xs, dim, "unite");
+    }
   } else if (platform() == Platform::CUDA) {
     auto cpu_route = [&]() -> Series {
       std::vector<Series> xs;
@@ -5516,11 +5640,19 @@ Series Series::pile(const std::vector<Series>& others, std::int64_t dim) const {
     const auto nd = this->dim() + 1;
     if (dim < 0) dim += nd;
     PLUSS_CHECK(dim >= 0 && dim < nd, "pile: dim out of range");
-    std::vector<Series> xs;
-    xs.reserve(others.size() + 1);
-    xs.push_back(this->unsqueeze(dim).contiguous());
-    for (const auto& t : others) xs.push_back(t.unsqueeze(dim).contiguous());
-    out = ops_internal::mps_cat_along_dim_(xs, dim, "pile");
+    if (series_tape::recording_enabled()) {
+      std::vector<Series> xs_cpu;
+      xs_cpu.reserve(others.size() + 1);
+      xs_cpu.push_back(this->to(Platform::CPU));
+      for (const auto& t : others) xs_cpu.push_back(t.to(Platform::CPU));
+      out = native::cpu::stack(xs_cpu, dim).to(Platform::MPS);
+    } else {
+      std::vector<Series> xs;
+      xs.reserve(others.size() + 1);
+      xs.push_back(this->unsqueeze(dim).contiguous());
+      for (const auto& t : others) xs.push_back(t.unsqueeze(dim).contiguous());
+      out = ops_internal::mps_cat_along_dim_(xs, dim, "pile");
+    }
   } else if (platform() == Platform::CUDA) {
     auto cpu_route = [&]() -> Series {
       std::vector<Series> xs;
@@ -5570,11 +5702,7 @@ Series Series::pile(const std::vector<Series>& others, std::int64_t dim) const {
         for (std::int64_t i = 0; i < static_cast<std::int64_t>(parents.size()); ++i) {
           const Series& p = parents[static_cast<std::size_t>(i)];
           if (!series_tape::tracks_slope(p)) continue;
-          const std::array<std::int64_t, 1> idx_val{{i}};
-          const Series idx = i64_index_vector_on_(
-              std::span<const std::int64_t>(idx_val.data(), idx_val.size()),
-              out_sens.platform());
-          Series g = out_sens.index_select(dim_norm, idx).squeeze(dim_norm);
+          Series g = out_sens.select(dim_norm, i);
           if (g.scalar_type() != p.scalar_type()) g = g.to(p.scalar_type());
           series_tape::accumulate_sensitivity(p, g);
         }

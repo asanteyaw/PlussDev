@@ -153,7 +153,7 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   const auto grouped = catalog.group_by("city");
   const auto filtered = catalog.filter(row_mask);
   const auto sliced = catalog.slice(1, 4);
-  const auto iloced = catalog.iloc(0, 3);
+  const auto iloced = catalog.cloc(0, 3);
 
   std::cout << "selected keys: " << selected.nstreams()
             << ", dropped keys: " << dropped.nstreams()

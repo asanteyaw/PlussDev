@@ -1,0 +1,15 @@
+# `Flow::infer_scores`
+
+## Notes
+
+Computes predictions from prepared inputs using the currently learned state.
+
+## Overloads
+
+- [overload 1](../api/flow-infer-scores-ov1.md): `[[nodiscard]] StatusOr<Series> Flow::infer_scores(self, const FeatureBatch& batch, const InferOptions& options = {}) const;`
+- [overload 2](../api/flow-infer-scores-ov2.md): `[[nodiscard]] StatusOr<Series> Flow::infer_scores(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const InferOptions& options = {}) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/compose.h`:107
+- `PlussAI/include/pluss/ai/nodej/compose.h`:108

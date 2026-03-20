@@ -1,0 +1,21 @@
+# `NeighborImputerOptions`
+
+## Signature
+
+```cpp
+using NeighborImputerOptions = ::pluss::ai::nodej::prep::NeighborImputerOptions;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+NeighborImputerOptions value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:49

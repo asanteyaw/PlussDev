@@ -1,0 +1,22 @@
+# `SplitOptions::stratified`
+
+## Signature
+
+```cpp
+SplitOptions::bool stratified = false;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+SplitOptions cfg{};
+// cfg.stratified = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:124

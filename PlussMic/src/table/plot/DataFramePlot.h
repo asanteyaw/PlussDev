@@ -26,6 +26,17 @@ struct DataFramePlotOptions {
   std::int64_t default_bins{20};
   DateTimeLabelView datetime_label_view{DateTimeLabelView::Full};
   std::int64_t max_labeled_ticks{14};
+  std::optional<double> x_tick_rotation_deg{std::nullopt};
+  std::optional<double> y_tick_rotation_deg{std::nullopt};
+  std::optional<double> x_label_rotation_deg{std::nullopt};
+  std::optional<double> y_label_rotation_deg{std::nullopt};
+  std::optional<pluss::pl::TickFormat> x_tick_format{std::nullopt};
+  std::optional<pluss::pl::TickFormat> y_tick_format{std::nullopt};
+  std::optional<double> x_tick_label_gap_points{std::nullopt};
+  std::optional<double> y_tick_label_gap_points{std::nullopt};
+  std::optional<double> x_label_gap_points{std::nullopt};
+  std::optional<double> y_label_gap_points{std::nullopt};
+  // Legacy single-axis rotation control (x-axis). Prefer x_tick_rotation_deg.
   std::optional<double> labeled_tick_rotation_deg{std::nullopt};
   std::optional<double> width{std::nullopt};
   std::optional<double> height{std::nullopt};

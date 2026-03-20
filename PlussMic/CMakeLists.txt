@@ -2,16 +2,18 @@ cmake_minimum_required(VERSION 3.28)
 project(PlussMic LANGUAGES CXX)
 
 add_library(PlussMic STATIC)
+add_library(Pluss::PlussMic ALIAS PlussMic)
 
 target_include_directories(PlussMic PUBLIC
-    ${PROJECT_SOURCE_DIR}
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/../PlussPl/include
-    ${PROJECT_SOURCE_DIR}/../include
-    ${PROJECT_SOURCE_DIR}/../PlussQit/include
-    ${PROJECT_SOURCE_DIR}/../PlussQit/src
-    ${PROJECT_SOURCE_DIR}/../ExLibs/fmt/include
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../PlussPl/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../PlussQit/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../PlussQit/src>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../ExLibs/fmt/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_compile_definitions(PlussMic PRIVATE FMT_HEADER_ONLY=1)
@@ -35,6 +37,13 @@ target_link_libraries(PlussMic PUBLIC
 )
 
 set_target_properties(PlussMic PROPERTIES CXX_STANDARD 20)
+
+install(TARGETS PlussMic
+    EXPORT PlussTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
 
 add_subdirectory(examples)
 add_subdirectory(test)

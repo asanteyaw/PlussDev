@@ -1,0 +1,90 @@
+# `tune_sweep`
+
+## Signature
+
+```cpp
+StatusOr<nodej::TuneReport> tune_sweep( const std::vector<nodej::ModelSpec>& candidates, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {}, nodej::MetricKind objective_metric = nodej::MetricKind::Accuracy, nodej::TuneObjectivePolicy objective_policy = nodej::TuneObjectivePolicy::Auto);
+```
+
+## Parameters
+
+- `candidates` : `const std::vector<nodej::ModelSpec>&`
+  List-like argument; pass values in the order expected by the signature.
+- `batch` : `const nodej::LabeledBatch&`
+  Input feature data used by this call.
+- `split` : `const nodej::SplitOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `train_options` : `const nodej::TrainOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `assess_options` : `const nodej::AssessOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `objective_metric` : `nodej::MetricKind`, default: `nodej::MetricKind::Accuracy`
+  Metric selection or score-control argument for evaluation/tuning.
+- `objective_policy` : `nodej::TuneObjectivePolicy`, default: `nodej::TuneObjectivePolicy::Auto`
+  Target values aligned to input observations.
+
+## Returns
+
+Returns `StatusOr<nodej::TuneReport>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Executes hyperparameter search and reports trial-by-trial objective values.
+
+## See also
+
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `StatusOr<nodej::CrossAssessReport> assess_cv( const nodej::ModelSpec& spec, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {});`
+- `StatusOr<std::unique_ptr<nodej::ClassifierBase>> bayes_classifier( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+- `StatusOr<std::unique_ptr<nodej::RegressorBase>> bayes_regressor( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_cv_tune_demo.cpp`
+
+```cpp
+  const auto mean = cv_or.value().mean_metrics.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  std::cout << "kernel cv mean [acc, bal_acc, precision, recall, f1, roc_auc, logloss]:";
+  for (double v : mean) std::cout << " " << v;
+  std::cout << "\n";
+
+  AssessOptions tune_assess{};
+  tune_assess.metrics = {MetricKind::Accuracy};
+  const std::vector<ModelSpec> candidates{linear_spec(), kernel_spec()};
+  auto sweep_or = pluss::ai::lymph::quick::tune_sweep(candidates,
+                                                batch,
+                                                split,
+                                                train,
+                                                tune_assess,
+                                                MetricKind::Accuracy,
+                                                TuneObjectivePolicy::Auto);
+  if (!require_ok(sweep_or, "lymph::tune_sweep")) return 1;
+
+  std::cout << "lymph sweep best index: " << sweep_or.value().best_index << "\n";
+
+  auto sampler = [](std::int64_t trial_index, std::uint64_t seed) -> StatusOr<ModelSpec> {
+    (void)seed;
+    return StatusOr<ModelSpec>((trial_index % 2) == 0 ? linear_spec() : kernel_spec());
+  };
+
+  auto probe_or = pluss::ai::lymph::quick::tune_probe(sampler,
+```
+
+**Output**
+
+```text
+lymph CV + tune demo
+kernel cv mean [acc, bal_acc, precision, recall, f1, roc_auc, logloss]: 1 1 1 1 1 1 0.358895
+lymph sweep best index: 1
+lymph probe best index: 1
+lymph regression quantile sweep best index: 0
+lymph CV + tune demo completed.
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/quick.h`:128

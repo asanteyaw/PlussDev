@@ -1,0 +1,13 @@
+# `labeled_batch_from_dataframe`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-labeled-batch-from-dataframe-ov1.md): `StatusOr<LabeledBatch> labeled_batch_from_dataframe(const pluss::table::DataFrame& frame, const DataFrameBatchOptions& options);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/data.h`:40

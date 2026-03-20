@@ -1,0 +1,28 @@
+# `FlowBundleMetadata`
+
+## Signature
+
+```cpp
+struct FlowBundleMetadata;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+Key public fields:
+- `std::uint32_t schema_version = k_flow_bundle_schema`
+- `std::string producer = "pluss.ai.nodej"`
+- `std::string producer_version = "0.1.0"`
+- `std::uint64_t created_unix_nanos = 0`
+
+## Example
+
+```cpp
+FlowBundleMetadata cfg{};
+// cfg.schema_version = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/io.h`:12

@@ -1,0 +1,17 @@
+# `StatusOr::StatusOr`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/statusor-statusor-ov1.md): `explicit StatusOr(Status status) : status_(std::move(status)), value_;`
+- [overload 2](../api/statusor-statusor-ov2.md): `explicit StatusOr(T value) : status_(Status::success()), value_(std::move(value)), has_value_(true);`
+- [overload 3](../api/statusor-statusor-ov3.md): `StatusOr(Status status, T value) : status_(std::move(status)), value_(std::move(value)), has_value_(status_.ok());`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/status.h`:52
+- `PlussAI/include/pluss/ai/nodej/status.h`:51
+- `PlussAI/include/pluss/ai/nodej/status.h`:48

@@ -1,0 +1,13 @@
+# `PolynomialLift::PolynomialLift`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/polynomiallift-polynomiallift-ov1.md): `explicit PolynomialLift(PolynomialLiftOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:373

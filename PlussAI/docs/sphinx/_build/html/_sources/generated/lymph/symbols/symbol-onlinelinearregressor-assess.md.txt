@@ -1,0 +1,17 @@
+# `OnlineLinearRegressor::assess`
+
+## Notes
+
+Evaluates model output against targets and returns metric aggregates.
+
+## Overloads
+
+- [overload 1](../api/onlinelinearregressor-assess-ov1.md): `[[nodiscard]] MetricReport OnlineLinearRegressor::assess(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- [overload 2](../api/onlinelinearregressor-assess-ov2.md): `[[nodiscard]] MetricReport OnlineLinearRegressor::assess(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+- [overload 3](../api/onlinelinearregressor-assess-ov3.md): `[[nodiscard]] MetricReport OnlineLinearRegressor::assess(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2507
+- `PlussAI/include/pluss/ai/lymph/api.h`:2517
+- `PlussAI/include/pluss/ai/lymph/api.h`:2511

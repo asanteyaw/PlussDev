@@ -1,0 +1,25 @@
+# `ObservationLayout`
+
+## Signature
+
+```cpp
+enum ObservationLayout;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `Rows = 0`
+- `Columns = 1`
+
+## Example
+
+```cpp
+auto mode = ObservationLayout::Rows;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:16

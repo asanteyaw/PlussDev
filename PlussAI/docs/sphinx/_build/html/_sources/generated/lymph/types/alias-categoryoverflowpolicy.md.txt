@@ -1,0 +1,21 @@
+# `CategoryOverflowPolicy`
+
+## Signature
+
+```cpp
+using CategoryOverflowPolicy = ::pluss::ai::nodej::prep::CategoryOverflowPolicy;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+CategoryOverflowPolicy value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:45

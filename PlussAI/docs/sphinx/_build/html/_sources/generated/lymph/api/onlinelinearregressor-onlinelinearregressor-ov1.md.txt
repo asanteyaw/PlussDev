@@ -1,0 +1,43 @@
+# `OnlineLinearRegressor::OnlineLinearRegressor`
+
+## Signature
+
+```cpp
+explicit OnlineLinearRegressor(::pluss::ai::nodej::online::OnlineLinearRegressor core) : core_(std::move(core));
+```
+
+## Parameters
+
+- `arg1` : `::pluss::ai::nodej::online::OnlineLinearRegressor core) : core_(std::move(core)`
+  Method argument; see signature type for accepted form.
+
+## Returns
+
+Returns ``.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `[[nodiscard]] ::pluss::ai::nodej::online::OnlineLinearRegressor& OnlineLinearRegressor::core(self) noexcept;`
+- `[[nodiscard]] const ::pluss::ai::nodej::online::OnlineLinearRegressor& OnlineLinearRegressor::core(self) const noexcept;`
+- `[[nodiscard]] std::int64_t OnlineLinearRegressor::seen_samples(self) const noexcept;`
+- `[[nodiscard]] bool OnlineLinearRegressor::trained(self) const noexcept;`
+
+## Parameter Reference
+
+- [arg1](../params/param-onlinelinearregressor-onlinelinearregressor-ov1-arg1-1.md)
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+OnlineLinearRegressor onlineLinearRegressor{};
+auto out = onlineLinearRegressor.OnlineLinearRegressor(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2432

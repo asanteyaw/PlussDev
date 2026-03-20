@@ -1,0 +1,46 @@
+# `WorkflowModel::assess_series (overload 2)`
+
+## Signature
+
+```cpp
+[[nodiscard]] Series WorkflowModel::assess_series(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const AssessOptions& options = {}) const;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `frame` : `const pluss::table::DataFrame&`
+  Input feature data used by this call.
+- `data_options` : `const DataFrameBatchOptions&`
+  Input feature data used by this call.
+- `options` : `const AssessOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `Series`.
+
+## Notes
+
+Evaluates model output against targets and returns metric aggregates.
+
+## See also
+
+- `[[nodiscard]] Series OnlineLinearClassifier::assess_series(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] Series OnlineLinearClassifier::assess_series(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] Series OnlineLinearClassifier::assess_series(self, const pluss::table::DataFrame& x, const Series& y, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] Series OnlineLinearRegressor::assess_series(self, const LabeledBatch& batch, const AssessOptions& options = {}) const;`
+- `[[nodiscard]] Series OnlineLinearRegressor::assess_series(self, const pluss::table::DataFrame& x, const pluss::table::Thread& y, const AssessOptions& options = {}) const;`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+WorkflowModel workflowModel{};
+auto out = workflowModel.assess_series(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:774

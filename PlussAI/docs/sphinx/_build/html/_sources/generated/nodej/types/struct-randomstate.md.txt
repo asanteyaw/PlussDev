@@ -1,0 +1,26 @@
+# `RandomState`
+
+## Signature
+
+```cpp
+struct RandomState;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+Key public fields:
+- `std::uint64_t seed = 0`
+- `bool deterministic = true`
+
+## Example
+
+```cpp
+RandomState cfg{};
+// cfg.seed = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:77

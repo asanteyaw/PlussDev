@@ -555,6 +555,69 @@ auto out = thread.contains("Accra");
 [true, false, true]
 ```
 
+### `corr`
+
+#### Signature
+
+```cpp
+scalar corr(const Thread& other, ThreadCorrMethod method = ThreadCorrMethod::Pearson) const
+```
+
+#### Parameters
+
+`other` : `const Thread&`
+    See the signature for the supported argument form.
+
+`method` : `ThreadCorrMethod`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`double`
+    Value produced by this call.
+
+#### Notes
+
+Applies `corr` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.corr();
+```
+
+### `count`
+
+#### Signature
+
+```cpp
+pluss::Series count(self, bool count_true = true) const
+```
+
+#### Parameters
+
+`count_true` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`pluss::Series`
+    Value produced by this call.
+
+#### Notes
+
+Returns a size/count summary for the current object without changing it.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.count();
+```
+
 ### `day`
 
 #### Signature
@@ -623,6 +686,36 @@ auto out = thread.defined();
 
 ```text
 true
+```
+
+### `distinct`
+
+#### Signature
+
+```cpp
+Thread distinct(self, bool dropna = true) const
+```
+
+#### Parameters
+
+`dropna` : `bool`
+    See the signature for the supported argument form.
+
+#### Returns
+
+`Thread`
+    Value produced by this call.
+
+#### Notes
+
+Applies `distinct` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
+
+#### Examples
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = thread.distinct();
 ```
 
 ### `dropna`
@@ -1373,7 +1466,7 @@ true
 #### Signature
 
 ```cpp
-pluss::Series isfinite(self) const
+Thread isfinite(self) const
 ```
 
 #### Parameters
@@ -1382,7 +1475,7 @@ pluss::Series isfinite(self) const
 
 #### Returns
 
-`pluss::Series`
+`Thread`
     Value produced by this call.
 
 #### Notes
@@ -1408,7 +1501,7 @@ auto out = thread.isfinite();
 #### Signature
 
 ```cpp
-pluss::Series isnan(self) const
+Thread isnan(self) const
 ```
 
 #### Parameters
@@ -1417,7 +1510,7 @@ pluss::Series isnan(self) const
 
 #### Returns
 
-`pluss::Series`
+`Thread`
     Value produced by this call.
 
 #### Notes
@@ -1443,7 +1536,7 @@ auto out = thread.isnan();
 #### Signature
 
 ```cpp
-pluss::Series isnull(self) const
+Thread isnull(self) const
 ```
 
 #### Parameters
@@ -1452,7 +1545,7 @@ pluss::Series isnull(self) const
 
 #### Returns
 
-`pluss::Series`
+`Thread`
     Value produced by this call.
 
 #### Notes
@@ -1718,47 +1811,12 @@ auto out = thread.month();
 [1, 2, 3]
 ```
 
-### `note`
-
-#### Signature
-
-```cpp
-const pluss::Note& note(self) const
-```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const pluss::Note&`
-    Value produced by this call.
-
-#### Notes
-
-Returns the current payload as a note/text object.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}));
-
-auto out = thread.note();
-```
-
-#### Output
-
-```text
-["Accra", "Tema", "Kumasi"]
-```
-
 ### `notnull`
 
 #### Signature
 
 ```cpp
-pluss::Series notnull(self) const
+Thread notnull(self) const
 ```
 
 #### Parameters
@@ -1767,7 +1825,7 @@ pluss::Series notnull(self) const
 
 #### Returns
 
-`pluss::Series`
+`Thread`
     Value produced by this call.
 
 #### Notes
@@ -1916,39 +1974,34 @@ auto out = thread.replace("Tema", "Tamale");
 ["Accra", "Tema", "Kumasi"]
 ```
 
-### `series`
+### `shift`
 
 #### Signature
 
 ```cpp
-const pluss::Series& series(self) const
+Thread shift(self, std::int64_t periods = 1) const
 ```
 
 #### Parameters
 
-`None`
+`periods` : `std::int64_t`
+    See the signature for the supported argument form.
 
 #### Returns
 
-`const pluss::Series&`
+`Thread`
     Value produced by this call.
 
 #### Notes
 
-Returns the current payload as a numeric series object.
+Applies `shift` to the current `Thread` object. Use the example and output together to see which part of the object changes and which structure is preserved.
 
 #### Examples
 
 ```cpp
 auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.series();
-```
-
-#### Output
-
-```text
-[10.0, 20.0, 30.0]
+auto out = thread.shift();
 ```
 
 ### `show`
@@ -2252,74 +2305,40 @@ auto out = thread.take(picks);
 [10.0, 20.0, 30.0]
 ```
 
-### `timeindex`
+### `tally`
 
 #### Signature
 
 ```cpp
-const pluss::TimeIndex& timeindex(self) const
+DataFrameView tally(self, std::int64_t top_n = 0, bool dropna = true, bool render = true) const
 ```
 
 #### Parameters
 
-`None`
+`top_n` : `std::int64_t`
+    See the signature for the supported argument form.
+
+`dropna` : `bool`
+    See the signature for the supported argument form.
+
+`render` : `bool`
+    See the signature for the supported argument form.
 
 #### Returns
 
-`const pluss::TimeIndex&`
+`DataFrameView`
     Value produced by this call.
 
 #### Notes
 
-Returns the current payload as a time-index object.
+Use this when you want a summary view instead of carrying the full input forward unchanged.
 
 #### Examples
 
 ```cpp
-auto thread = pluss::table::Thread(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"}));
+auto thread = pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}));
 
-auto out = thread.timeindex();
-```
-
-#### Output
-
-```text
-["2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"]
-```
-
-### `timeline`
-
-#### Signature
-
-```cpp
-const pluss::Timeline& timeline(self) const
-```
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`const pluss::Timeline&`
-    Value produced by this call.
-
-#### Notes
-
-Returns the current payload as a timeline object.
-
-#### Examples
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"}));
-
-auto out = thread.timeline();
-```
-
-#### Output
-
-```text
-["2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z", "2024-03-05T15:30:00Z"]
+auto out = thread.tally();
 ```
 
 ### `to_note_weekday`

@@ -1,0 +1,21 @@
+# `LinearObjective::Logistic`
+
+## Signature
+
+```cpp
+LinearObjective::Logistic;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = LinearObjective::Logistic;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:29

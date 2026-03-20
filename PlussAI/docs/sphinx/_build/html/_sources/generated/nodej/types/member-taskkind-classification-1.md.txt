@@ -1,0 +1,21 @@
+# `TaskKind::Classification`
+
+## Signature
+
+```cpp
+TaskKind::Classification;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = TaskKind::Classification;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:10

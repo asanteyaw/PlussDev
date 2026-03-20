@@ -1,0 +1,27 @@
+# `IterativeImputerOptions`
+
+## Signature
+
+```cpp
+struct IterativeImputerOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `std::int64_t rounds = 8`
+- `double ridge = 1e-6`
+- `double empty_feature_fallback = 0.0`
+
+## Example
+
+```cpp
+IterativeImputerOptions cfg{};
+// cfg.rounds = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:75

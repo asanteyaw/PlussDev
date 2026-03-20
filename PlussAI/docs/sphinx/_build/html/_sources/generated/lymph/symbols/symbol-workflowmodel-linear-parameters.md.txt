@@ -1,0 +1,13 @@
+# `WorkflowModel::linear_parameters`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/workflowmodel-linear-parameters-ov1.md): `[[nodiscard]] LinearParameters WorkflowModel::linear_parameters(self) const;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:816

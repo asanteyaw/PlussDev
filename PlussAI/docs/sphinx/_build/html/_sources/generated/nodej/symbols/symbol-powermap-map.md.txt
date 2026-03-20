@@ -1,0 +1,13 @@
+# `PowerMap::map`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/powermap-map-ov1.md): `[[nodiscard]] StatusOr<Series> PowerMap::map(self, const FeatureBatch& batch, const InferOptions& options = {}) const override;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:334

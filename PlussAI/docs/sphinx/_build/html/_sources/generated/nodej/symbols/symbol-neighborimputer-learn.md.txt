@@ -1,0 +1,13 @@
+# `NeighborImputer::learn`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/neighborimputer-learn-ov1.md): `Status NeighborImputer::learn(self, const FeatureBatch& batch, const TrainOptions& options = {}) override;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:225

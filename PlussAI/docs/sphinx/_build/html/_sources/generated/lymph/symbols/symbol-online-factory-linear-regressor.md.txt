@@ -1,0 +1,13 @@
+# `online_factory::linear_regressor`
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## Overloads
+
+- [overload 1](../api/online-factory-linear-regressor-ov1.md): `[[nodiscard]] static OnlineLinearRegressor online_factory::linear_regressor(self, OnlineLinearOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2574

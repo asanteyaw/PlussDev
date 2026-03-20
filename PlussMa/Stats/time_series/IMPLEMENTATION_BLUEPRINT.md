@@ -363,6 +363,43 @@ MATLAB references consulted for this phase:
 9. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@varm/gctest.m`
 10. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@ssm/kalman.m`
 
+## Phase 10: State-Space / Kalman Lane
+
+Implement:
+
+1. Typed `SsmModel` and recursive Kalman filter API.
+2. Smoother and forecast API that preserve filter bookkeeping outputs.
+3. Simulation API for single and multi-path Monte Carlo.
+
+Status (current production slice):
+
+1. Implemented `Ssm` in `ts/modules/ssm/ssm.cpp`:
+   - `Ssm::filter(...)`
+   - `Ssm::smooth(...)`
+   - `Ssm::forecast(...)` (prior-seeded and history-seeded overloads)
+   - `Ssm::simulate(...)`
+2. Added modular test slice:
+   - manual: `ts/modules/ssm/test/ssm_test.cpp`
+   - Catch2: `ts/modules/ssm/test/ts_ssm_catch2.cpp`
+3. Added raw demo:
+   - `time_series/examples/ts_ssm_raw_demo.cpp`
+4. Added API reference coverage for SSM contracts in `API_REFERENCE.md`.
+
+MATLAB references consulted for this phase:
+
+1. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@ssm/kalman.m`
+   - core Kalman recursion contracts, `DataUsed` semantics, tolerance behavior.
+2. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@statespace/filter.m`
+   - public output structure contracts and filtering options semantics.
+3. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@statespace/smooth.m`
+   - smoothing workflow and output semantics.
+4. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@statespace/forecast.m`
+   - forecast-from-filter pattern and NaN-appended future handling.
+5. `/Applications/MATLAB_R2025b.app/toolbox/econ/econ/@ssm/simulate.m`
+   - initial-state sampling and path-shape conventions.
+6. `.p` dependency check in `/Applications/MATLAB_R2025b.app/toolbox/econ/econ`:
+   - no `.p` files found for the SSM/`statespace` lane in this install; core `fKalman*` routines are subfunctions in `@ssm/kalman.m`.
+
 ## Phase 8: Testing + Demos
 
 Tests:

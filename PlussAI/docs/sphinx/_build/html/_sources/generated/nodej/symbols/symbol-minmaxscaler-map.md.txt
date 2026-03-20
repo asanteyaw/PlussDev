@@ -1,0 +1,13 @@
+# `MinMaxScaler::map`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/minmaxscaler-map-ov1.md): `[[nodiscard]] StatusOr<Series> MinMaxScaler::map(self, const FeatureBatch& batch, const InferOptions& options = {}) const override;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:161

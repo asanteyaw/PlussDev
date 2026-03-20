@@ -77,11 +77,11 @@ Catalog Catalog::slice(std::int64_t start, std::int64_t stop) const {
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::iloc(std::int64_t row) const {
+Catalog Catalog::cloc(std::int64_t row) const {
   return slice(row, row + 1);
 }
 
-Catalog Catalog::iloc(std::int64_t start, std::int64_t stop) const {
+Catalog Catalog::cloc(std::int64_t start, std::int64_t stop) const {
   return slice(start, stop);
 }
 

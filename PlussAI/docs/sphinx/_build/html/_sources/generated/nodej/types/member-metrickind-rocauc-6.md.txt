@@ -1,0 +1,21 @@
+# `MetricKind::RocAuc`
+
+## Signature
+
+```cpp
+MetricKind::RocAuc;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = MetricKind::RocAuc;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:35

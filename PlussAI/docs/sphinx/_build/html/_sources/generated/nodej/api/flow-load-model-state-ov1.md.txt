@@ -1,0 +1,46 @@
+# `Flow::load_model_state`
+
+## Signature
+
+```cpp
+Status Flow::load_model_state(self, const std::vector<Series>& state);
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `state` : `const std::vector<Series>&`
+  Randomization control for reproducible behavior.
+
+## Returns
+
+Returns a status object indicating success/failure and an error message on failure.
+
+## Notes
+
+Loads a previously persisted artifact and restores its inference-ready state.
+
+## See also
+
+- `Status Flow::append_transform(self, std::unique_ptr<TransformerBase> transformer);`
+- `void Flow::clear_model(self) noexcept;`
+- `void Flow::clear_transforms(self) noexcept;`
+- `[[nodiscard]] StatusOr<std::vector<Series>> Flow::dump_model_state(self) const;`
+- `[[nodiscard]] StatusOr<std::vector<std::vector<Series>>> Flow::dump_transform_states(self) const;`
+
+## Parameter Reference
+
+- [state](../params/param-flow-load-model-state-ov1-state-2.md)
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+Flow flow{};
+auto out = flow.load_model_state(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:119

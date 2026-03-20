@@ -22,6 +22,7 @@ StatusOr<IndexSplit> strat_holdout_split(const Series& labels, const SplitOption
 
 StatusOr<SplitPlan> fold_plan(std::int64_t sample_count, const SplitOptions& options = {});
 StatusOr<SplitPlan> strat_fold_plan(const Series& labels, const SplitOptions& options = {});
+StatusOr<SplitPlan> time_series_fold_plan(std::int64_t sample_count, const SplitOptions& options = {});
 
 StatusOr<FeatureBatch> slice_feature_batch(const FeatureBatch& in, const Series& indices);
 StatusOr<LabeledBatch> slice_labeled_batch(const LabeledBatch& in, const Series& indices);

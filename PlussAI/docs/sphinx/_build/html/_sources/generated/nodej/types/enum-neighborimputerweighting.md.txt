@@ -1,0 +1,25 @@
+# `NeighborImputerWeighting`
+
+## Signature
+
+```cpp
+enum NeighborImputerWeighting;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `Uniform = 0`
+- `Distance = 1`
+
+## Example
+
+```cpp
+auto mode = NeighborImputerWeighting::Uniform;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:63

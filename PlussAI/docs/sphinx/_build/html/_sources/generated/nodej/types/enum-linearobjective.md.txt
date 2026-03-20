@@ -1,0 +1,26 @@
+# `LinearObjective`
+
+## Signature
+
+```cpp
+enum LinearObjective;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `LeastSquares = 0`
+- `Logistic = 1`
+- `Hinge = 2`
+
+## Example
+
+```cpp
+auto mode = LinearObjective::LeastSquares;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:29

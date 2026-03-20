@@ -1,0 +1,13 @@
+# `Candidate::Candidate`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/candidate-candidate-ov1.md): `Candidate(std::string in_name, Workflow in_workflow) : name(std::move(in_name)), workflow(std::move(in_workflow));`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2585

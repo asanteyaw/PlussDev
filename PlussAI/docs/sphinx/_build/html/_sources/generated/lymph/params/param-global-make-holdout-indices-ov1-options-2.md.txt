@@ -1,0 +1,21 @@
+# `make_holdout_indices::options`
+
+## Parent Signature
+
+```cpp
+[[nodiscard]] inline IndexSplit make_holdout_indices(const pluss::table::DataFrame& frame, const HoldoutSplitOptions& options);
+```
+
+## Parameter
+
+- `options` : `const HoldoutSplitOptions&`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Notes
+
+Namespace-level API function.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:492

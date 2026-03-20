@@ -1,0 +1,22 @@
+# `BayesFamilyOptions::use_gaussian`
+
+## Signature
+
+```cpp
+BayesFamilyOptions::bool use_gaussian = true;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+BayesFamilyOptions cfg{};
+// cfg.use_gaussian = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:96

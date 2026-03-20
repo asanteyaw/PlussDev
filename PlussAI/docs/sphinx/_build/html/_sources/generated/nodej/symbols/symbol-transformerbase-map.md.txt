@@ -1,0 +1,13 @@
+# `TransformerBase::map`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/transformerbase-map-ov1.md): `[[nodiscard]] virtual StatusOr<Series> TransformerBase::map(self, const FeatureBatch& batch, const InferOptions& options = {}) const = 0;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/interfaces.h`:46

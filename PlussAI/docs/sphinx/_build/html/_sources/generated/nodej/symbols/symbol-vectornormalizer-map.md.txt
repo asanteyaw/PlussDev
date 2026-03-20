@@ -1,0 +1,13 @@
+# `VectorNormalizer::map`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/vectornormalizer-map-ov1.md): `[[nodiscard]] StatusOr<Series> VectorNormalizer::map(self, const FeatureBatch& batch, const InferOptions& options = {}) const override;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:272

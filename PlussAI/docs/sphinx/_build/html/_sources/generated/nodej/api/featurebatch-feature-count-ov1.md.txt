@@ -1,0 +1,153 @@
+# `FeatureBatch::feature_count`
+
+## Signature
+
+```cpp
+[[nodiscard]] std::int64_t FeatureBatch::feature_count(self) const noexcept;
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+
+## Returns
+
+Returns `std::int64_t`.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `[[nodiscard]] bool FeatureBatch::defined(self) const noexcept;`
+- `[[nodiscard]] std::int64_t FeatureBatch::sample_count(self) const noexcept;`
+- `inline Status FeatureBatch::validate_features(self, const FeatureBatch& batch);`
+- `inline Status FeatureBatch::validate_labeled(self, const LabeledBatch& batch);`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_dataframe_bridge_demo.cpp`
+
+```cpp
+  options.note_policy = DataNotePolicy::Hash;
+  options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+
+  auto batch_or = labeled_batch_from_dataframe(frame, options);
+  if (!require_ok(batch_or, "labeled_batch_from_dataframe")) return 1;
+
+  const LabeledBatch& batch = batch_or.value();
+  std::cout << "adapted batch: samples=" << batch.features.sample_count()
+            << " features=" << batch.features.feature_count()
+            << " weighted=" << (batch.sample_weights.defined() ? "yes" : "no") << "\n";
+
+  ModelSpec spec{
+      .task = TaskKind::Regression,
+      .family = ModelFamily::Linear,
+      .options = LinearFamilyOptions{
+          .objective = LinearObjective::LeastSquares,
+          .regularization = RegularizationKind::L2,
+          .regularization_strength = 1e-8,
+          .fit_intercept = true,
+      },
+  };
+
+  auto reg_or = make_regressor(spec);
+  if (!require_ok(reg_or, "make_regressor")) return 1;
+  auto reg = reg_or.move_value();
+```
+
+**Output**
+
+```text
+NodeJ DataFrame bridge demo
+adapted batch: samples=6 features=4 weighted=yes
+linear metrics [mse, r2]: 9.43684e-08 1
+NodeJ DataFrame bridge demo completed.
+```
+
+### Example 2
+
+*Source:* `PlussAI/examples/NodeJ/core/nodej_online_demo.cpp`
+
+```cpp
+}
+
+Config i64() {
+  return Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU);
+}
+
+LabeledBatch slice_rows(const LabeledBatch& batch, std::int64_t start, std::int64_t count) {
+  const Series idx = pluss::arange(start, start + count, i64());
+  const Series x = batch.features.x.index_select(0, idx).reshape({count, batch.features.feature_count()});
+  const Series y = batch.y.index_select(0, idx).reshape({count});
+  return LabeledBatch{
+      .features = FeatureBatch{.x = x, .layout = ObservationLayout::Rows},
+      .y = y,
+  };
+}
+
+LabeledBatch make_class_batch() {
+  std::vector<double> xv{};
+  std::vector<double> yv{};
+  xv.reserve(2 * 90);
+  yv.reserve(90);
+  for (int i = 0; i < 45; ++i) {
+    xv.push_back(-2.4 + 0.06 * i);
+    xv.push_back(-1.5 + 0.03 * i);
+    yv.push_back(0.0);
+```
+
+**Output**
+
+```text
+online seen_samples=1872
+online metrics [accuracy, logloss]: 1 0.27341
+```
+
+### Example 3
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_online_demo.cpp`
+
+```cpp
+}
+
+Config i64() {
+  return Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU);
+}
+
+LabeledBatch slice_rows(const LabeledBatch& batch, std::int64_t start, std::int64_t count) {
+  const Series idx = pluss::arange(start, start + count, i64());
+  const Series x = batch.features.x.index_select(0, idx).reshape({count, batch.features.feature_count()});
+  const Series y = batch.y.index_select(0, idx).reshape({count});
+  return LabeledBatch{
+      .features = FeatureBatch{.x = x, .layout = ObservationLayout::Rows},
+      .y = y,
+  };
+}
+
+LabeledBatch make_batch() {
+  std::vector<double> xv{};
+  std::vector<double> yv{};
+  for (int i = 0; i < 40; ++i) {
+    xv.push_back(-2.0 + 0.05 * i);
+    xv.push_back(-1.6 + 0.05 * i);
+    yv.push_back(0.0);
+  }
+  for (int i = 0; i < 40; ++i) {
+```
+
+**Output**
+
+```text
+lymph online seen_samples=1660
+lymph online metrics [accuracy]: 0.9875
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/dataset.h`:13

@@ -1,0 +1,22 @@
+# `RandomState::seed`
+
+## Signature
+
+```cpp
+RandomState::std::uint64_t seed = 0;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+RandomState cfg{};
+// cfg.seed = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:77

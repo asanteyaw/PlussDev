@@ -1,0 +1,41 @@
+# `kernel_factory::svm_classifier`
+
+## Signature
+
+```cpp
+[[nodiscard]] static WorkflowModel kernel_factory::svm_classifier(self, KernelFamilyOptions options = {});
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `options` : `KernelFamilyOptions`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `WorkflowModel`.
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## See also
+
+- `[[nodiscard]] static WorkflowModel kernel_factory::classifier(self, KernelFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel kernel_factory::linear_kernel_classifier(self, KernelFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel kernel_factory::linear_kernel_regressor(self, KernelFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel kernel_factory::polynomial_kernel_classifier(self, KernelFamilyOptions options = {});`
+- `[[nodiscard]] static WorkflowModel kernel_factory::polynomial_kernel_regressor(self, KernelFamilyOptions options = {});`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = kernel_factory::svm_classifier(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2153

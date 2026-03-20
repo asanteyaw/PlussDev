@@ -55,6 +55,15 @@ class CODEM_API Heston final : public StochVolBase {
                              double maturity,
                              const pricing::HestonIntegrationOptions& options = {}) const;
 
+  [[nodiscard]] pluss::codem::Series price(pricing::OptionType type,
+                                           const pluss::codem::Series& spot,
+                                           const pluss::codem::Series& strike,
+                                           const pluss::codem::Series& rate,
+                                           const pluss::codem::Series& dividend_yield,
+                                           const pluss::codem::Series& maturity,
+                                           const pricing::HestonFftOptions& options = {},
+                                           pluss::codem::Config cfg = {}) const;
+
   [[nodiscard]] double price_mc(pricing::OptionType type,
                                 double spot,
                                 double strike,
@@ -63,6 +72,15 @@ class CODEM_API Heston final : public StochVolBase {
                                 double maturity,
                                 const pricing::MonteCarloOptions& options = {},
                                 pluss::codem::Config cfg = {}) const override;
+
+  [[nodiscard]] pluss::codem::Series price_mc(pricing::OptionType type,
+                                              const pluss::codem::Series& spot,
+                                              const pluss::codem::Series& strike,
+                                              const pluss::codem::Series& rate,
+                                              const pluss::codem::Series& dividend_yield,
+                                              const pluss::codem::Series& maturity,
+                                              const pricing::MonteCarloOptions& options = {},
+                                              pluss::codem::Config cfg = {}) const;
 
   [[nodiscard]] double sse(const std::vector<calibration::OptionQuote>& quotes,
                            double spot,
@@ -112,6 +130,33 @@ class CODEM_API Bates final : public StochVolBase {
                                 double maturity,
                                 const pricing::MonteCarloOptions& options = {},
                                 pluss::codem::Config cfg = {}) const override;
+
+  [[nodiscard]] double price_fft(pricing::OptionType type,
+                                 double spot,
+                                 double strike,
+                                 double rate,
+                                 double dividend_yield,
+                                 double maturity,
+                                 const pricing::HestonFftOptions& options = {},
+                                 pluss::codem::Config cfg = {}) const;
+
+  [[nodiscard]] pluss::codem::Series price_mc(pricing::OptionType type,
+                                              const pluss::codem::Series& spot,
+                                              const pluss::codem::Series& strike,
+                                              const pluss::codem::Series& rate,
+                                              const pluss::codem::Series& dividend_yield,
+                                              const pluss::codem::Series& maturity,
+                                              const pricing::MonteCarloOptions& options = {},
+                                              pluss::codem::Config cfg = {}) const;
+
+  [[nodiscard]] pluss::codem::Series price_fft(pricing::OptionType type,
+                                               const pluss::codem::Series& spot,
+                                               const pluss::codem::Series& strike,
+                                               const pluss::codem::Series& rate,
+                                               const pluss::codem::Series& dividend_yield,
+                                               const pluss::codem::Series& maturity,
+                                               const pricing::HestonFftOptions& options = {},
+                                               pluss::codem::Config cfg = {}) const;
 
   [[nodiscard]] double sse(const std::vector<calibration::OptionQuote>& quotes,
                            double spot,
@@ -312,6 +357,62 @@ class CODEM_API Slv final : public StochVolBase {
 
  private:
   volatility::SlvParams params_{};
+};
+
+class CODEM_API RoughHeston final : public StochVolBase {
+ public:
+  explicit RoughHeston(volatility::RoughHestonParams params = {});
+
+  [[nodiscard]] const volatility::RoughHestonParams& params() const noexcept;
+  void set_params(const volatility::RoughHestonParams& params);
+
+  [[nodiscard]] volatility::StochVolPaths paths(std::int64_t steps,
+                                                std::int64_t num_paths,
+                                                double spot0,
+                                                double dt,
+                                                const volatility::SimOptions& options = {},
+                                                pluss::codem::Config cfg = {},
+                                                std::uint64_t seed = 0) const override;
+
+  [[nodiscard]] double price_mc(pricing::OptionType type,
+                                double spot,
+                                double strike,
+                                double rate,
+                                double dividend_yield,
+                                double maturity,
+                                const pricing::MonteCarloOptions& options = {},
+                                pluss::codem::Config cfg = {}) const override;
+
+ private:
+  volatility::RoughHestonParams params_{};
+};
+
+class CODEM_API RoughBergomi final : public StochVolBase {
+ public:
+  explicit RoughBergomi(volatility::RoughBergomiParams params = {});
+
+  [[nodiscard]] const volatility::RoughBergomiParams& params() const noexcept;
+  void set_params(const volatility::RoughBergomiParams& params);
+
+  [[nodiscard]] volatility::StochVolPaths paths(std::int64_t steps,
+                                                std::int64_t num_paths,
+                                                double spot0,
+                                                double dt,
+                                                const volatility::SimOptions& options = {},
+                                                pluss::codem::Config cfg = {},
+                                                std::uint64_t seed = 0) const override;
+
+  [[nodiscard]] double price_mc(pricing::OptionType type,
+                                double spot,
+                                double strike,
+                                double rate,
+                                double dividend_yield,
+                                double maturity,
+                                const pricing::MonteCarloOptions& options = {},
+                                pluss::codem::Config cfg = {}) const override;
+
+ private:
+  volatility::RoughBergomiParams params_{};
 };
 
 class CODEM_API ShortRateBase {

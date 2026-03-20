@@ -1,0 +1,13 @@
+# `RobustScaler::RobustScaler`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/robustscaler-robustscaler-ov1.md): `explicit RobustScaler(RobustScalerOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/prep.h`:179

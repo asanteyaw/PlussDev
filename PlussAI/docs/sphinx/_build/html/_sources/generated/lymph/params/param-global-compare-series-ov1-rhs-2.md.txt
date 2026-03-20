@@ -1,0 +1,21 @@
+# `compare_series::rhs`
+
+## Parent Signature
+
+```cpp
+[[nodiscard]] inline SeriesCompareReport compare_series(const Series& lhs, const Series& rhs);
+```
+
+## Parameter
+
+- `rhs` : `const Series&`
+  Pluss numeric vector/tensor input.
+
+## Notes
+
+Namespace-level API function.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:282

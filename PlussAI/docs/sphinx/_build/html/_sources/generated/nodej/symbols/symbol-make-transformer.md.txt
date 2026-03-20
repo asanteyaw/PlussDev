@@ -1,0 +1,13 @@
+# `make_transformer`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-make-transformer-ov1.md): `StatusOr<std::unique_ptr<TransformerBase>> make_transformer(const ModelSpec& spec);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/builders.h`:12

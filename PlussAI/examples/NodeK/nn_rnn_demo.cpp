@@ -138,7 +138,6 @@ int main() {
 
   std::cout << "nn_rnn_demo\n";
   std::cout << "task: next-step forecasting on a small sine-wave batch\n";
-  std::cout << "status: modules are initialized and train-ready; optimization will plug in later\n";
   std::cout << "composition: custom nn::Module with module_record(rnn, activation, head)\n";
   report_model("RNNModel", features, target, rnn_features, rnn_pred);
   report_model("GRU", features, target, gru_features, gru_pred);

@@ -1,0 +1,13 @@
+# `prep::SimpleImputer::learn`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/prep-simpleimputer-learn-ov1.md): `inline prep::SimpleImputer& prep::SimpleImputer::learn(self, const pluss::table::DataFrame& frame, const TrainOptions& options);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:1864

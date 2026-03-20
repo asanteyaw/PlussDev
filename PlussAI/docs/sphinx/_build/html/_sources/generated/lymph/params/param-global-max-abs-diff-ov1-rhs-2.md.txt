@@ -1,0 +1,52 @@
+# `max_abs_diff::rhs`
+
+## Parent Signature
+
+```cpp
+[[nodiscard]] inline double max_abs_diff(const Series& lhs, const Series& rhs);
+```
+
+## Parameter
+
+- `rhs` : `const Series&`
+  Pluss numeric vector/tensor input.
+
+## Notes
+
+Namespace-level API function.
+
+## Example
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_end_to_end_hour_workflow_showcase.cpp`
+
+```cpp
+    const Series test_pred = final_workflow.infer(test_x);
+    const Series test_pred_scores = final_workflow.infer_scores(test_x);
+
+    const fs::path final_model_path = model_dir / "lymph_hour_end_to_end_final.bin";
+    final_workflow.save(final_model_path.string(), train_x, train_y, train_options);
+
+    const auto restored_workflow = lymph::Workflow::load(final_model_path.string());
+    const Series restored_pred = restored_workflow.infer(test_x);
+    const double restored_max_abs_diff = lymph::max_abs_diff(test_pred, restored_pred);
+
+    std::cout << "\n========== persistence check ========\n";
+    std::cout << "model_path=" << final_model_path << "\n";
+    std::cout << "restored_max_abs_diff=" << restored_max_abs_diff << "\n";
+
+    //========== final diagnostics artifacts ========
+    // This section exports prediction diagnostics for direct inspection.
+    const Series y_true_cpu = test_y.to(pluss::pCPU, ScalarType::Float64).reshape({test_y.numel()});
+    const Series y_pred_cpu = test_pred.to(pluss::pCPU, ScalarType::Float64).reshape({test_pred.numel()});
+    const Series y_score_cpu = test_pred_scores.to(pluss::pCPU, ScalarType::Float64).reshape({test_pred_scores.numel()});
+    const Series residual_cpu = y_true_cpu.sub(y_pred_cpu);
+    const Series abs_error_cpu = residual_cpu.abs();
+    const Series sq_error_cpu = residual_cpu.square();
+
+    DataFrame pred_frame({
+        {"y_true", Thread(y_true_cpu)},
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:296

@@ -1,0 +1,22 @@
+# `OnlineLinearOptions::decaying_rate`
+
+## Signature
+
+```cpp
+OnlineLinearOptions::bool decaying_rate = true;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+OnlineLinearOptions cfg{};
+// cfg.decaying_rate = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/online.h`:13

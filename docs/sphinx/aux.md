@@ -1,358 +1,437 @@
-# Aux Utilities Guide
+# Aux User Guide
 
-## Includes
+This guide covers the user-facing utilities in `PlussQit/src/aux`:
+
+- functional mini-pipeline helpers (`suppose`, `let_as`)
+- mapping and axis transforms (`transmit`, `transform_axis`)
+- output/printing (`OutputEngine`)
+- RNG seed control (`rng_seed`, `next_rng_seed`)
+- scalar extraction (`to_scalar`, `as_f64`, ...)
+- tensor data iteration and splitting (`DataLoader`, `split_fields`, ...)
+
+For full onboarding with end-to-end workflows and extended examples, read [Aux Tutorial](aux_tutorial.md).
+
+## Include
 
 ```cpp
 #include <pluss/pluss.h>
 ```
 
-The aux layer gives you three user-facing workflows that sit on top of the core `Series` / `Note` / `Timeline` / `TimeIndex` APIs:
+## 1. Output Engine
 
-- `pluss::Queue` for dynamic, runtime-selected calls across native Pluss types
-- `pluss::dispense(...)` / `pluss::dispense_as<T>(...)` for typed method-pointer and string-name dispatch
-- `pluss::suppose`, `pluss::transmit`, and `pluss::transform_axis` for lightweight pipelines and higher-level data transforms
+### API Signature
 
-## `pluss::Queue`
+`pluss::OutputEngine OutputEngine(os_or_options)`  
+Inputs:
+- `os_or_options`: optional output stream and/or `OutputOptions`.
+Output:
+- initialized output engine.
 
-`Queue` is the dynamic union holder for `Series`, `Note`, `Timeline`, and `TimeIndex`.
-Use it when the payload kind is only known at runtime, but you still want to keep values inside the Pluss type system.
+`OutputEngine::write(args...) -> OutputEngine&`  
+`OutputEngine::writeln(args...) -> OutputEngine&`  
+`OutputEngine::writef(pattern, args...) -> OutputEngine&`  
+`OutputEngine::writefln(pattern, args...) -> OutputEngine&`  
+Inputs:
+- values and optional format pattern.
+Output:
+- same engine for chaining.
 
-### Signature
+`OutputEngine::endln() -> OutputEngine&`  
+`OutputEngine::flush() -> OutputEngine&`  
+`OutputEngine::{trace|debug|info|warn|error}(args...) -> OutputEngine&`  
+Inputs:
+- none or log message payload.
+Output:
+- same engine for chaining.
+
+### Arguments
+
+- `separator`: token inserted between `write/writeln` args.
+- `level_prefixes`: string labels used by `trace/debug/info/warn/error`.
+- `min_level`: suppresses lower-severity logs.
+- `auto_flush`: flush after line-oriented calls.
+- `to(std::ostream&)`: redirect output target at runtime.
+
+### Rendering Rules and Extensibility
+
+`write*()` is not limited to stream-insertable types.
+
+Current rendering order:
+- string-like values
+- `std::optional`
+- `std::variant`
+- `std::pair`
+- tuple-like values
+- map-like ranges
+- generic ranges (for example `std::vector`, `std::array`)
+- ADL extension hook: `output_render(std::ostream&, const T&)`
+- stream insertion: `operator<<(std::ostream&, const T&)`
+
+If your type is not covered by the built-in categories, prefer one of these:
+
+1. define `operator<<` for your public type
+2. define an ADL renderer in the same namespace:
 
 ```cpp
-pluss::Queue q(value);
+namespace mylib {
+struct Metrics {
+  double loss{};
+  int epoch{};
+};
+
+inline void output_render(std::ostream& os, const Metrics& m) {
+  os << "Metrics{loss=" << m.loss << ", epoch=" << m.epoch << "}";
+}
+} // namespace mylib
+
+pluss::OutputEngine out;
+out.writeln(mylib::Metrics{.loss = 0.023, .epoch = 12});
 ```
 
-### Explanation
+The ADL path avoids patching `OutputEngine` for each custom type and keeps the API scalable.
 
-`Queue` stores one native Pluss payload and lets you:
+### Example A: Basic printing
 
-- inspect the current kind with `kind()` / `kind_name()`
-- pull the concrete payload back out with `as_series()`, `as_note()`, `as_timeline()`, or `as_timeindex()`
-- route method names dynamically with `invoke(...)`
-- apply a few cross-kind helpers such as `Queue::where(...)`
+```cpp
+pluss::OutputEngine out;
+out.writeln("rows", 150, "features", 4);
+out.write("sum", 42).endln();
+```
+
+Expected output:
+
+```text
+rows 150 features 4
+sum 42
+```
+
+### Example B: Format-style printing
+
+```cpp
+pluss::OutputEngine out;
+std::string name = "Ada";
+int age = 31;
+
+auto pi = 3.1415926535;
+out.writefln("name={} age={}", name, age);
+out.writefln("pi={:.3f}", pi);
+```
+
+Expected output:
+
+```text
+name=Ada age=31
+pi=3.142
+```
+
+### Example C: STL and Pluss types
+
+```cpp
+pluss::OutputEngine out;
+std::vector<std::string> feats{"Open", "High", "Low", "Close"};
+std::map<std::string, int> counts{{"ok", 7}, {"bad", 1}};
+auto s = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3});
+
+out.writeln("features", feats);
+out.writeln("counts", counts);
+out.info("series", s);
+```
+
+Expected output (shape/details may vary slightly by build):
+
+```text
+features [Open, High, Low, Close]
+counts {ok: 7, bad: 1}
+[INFO] series pluss::Series(shape=[3], ...)
+```
+
+### Example D: Options and levels
+
+```cpp
+pluss::OutputOptions opts;
+opts.separator = " | ";
+opts.level_prefixes = {"[T]", "[D]", "[I]", "[W]", "[E]"};
+opts.min_level = pluss::OutputLevel::Info;
+
+pluss::OutputEngine out{std::cout, opts};
+out.debug("hidden");
+out.info("train", 100, "val", 20);
+out.warnf("epoch {} has high loss", 3);
+```
+
+Expected output:
+
+```text
+[I] train | 100 | val | 20
+[W] epoch 3 has high loss
+```
+
+### Example E: Lymph summary objects print directly
+
+```cpp
+pluss::OutputEngine out;
+auto X = imputer.learn_map(housing_num);
+out.writeln(imputer.summary());
+```
+
+Expected output shape:
+
+```text
+SimpleImputerSummary{feature_names=[...], statistics=pluss::Series(...)}
+```
+
+## 2. suppose / let_as
+
+### API Signature
+
+`pluss::suppose(value) -> let_box<T>`  
+`pluss::suppose.as<To>(value) -> let_box<To>`  
+`let_box<T>::then(fn) -> let_box<U>`  
+`let_box<T>::tap(fn) -> let_box<T>`  
+`let_box<T>::into<U>() -> let_box<U>`  
+`let_box<T>::value() -> T`  
+`let_as(T1, T2, ...) x = value`
+
+### Arguments
+
+- `then/transform`: value transformation.
+- `tap`: side effect while preserving the flowing value.
+- `into<U>`: explicit conversion step.
+- `let_as(...)`: compile-time restricted variant domain.
 
 ### Example
 
 ```cpp
-auto q = pluss::Queue(pluss::make_series({-1.0, 2.0, -3.0}));
+auto out = suppose(std::vector<int>{1, 2, 3})
+  .then([](std::vector<int> v) {
+    for (auto& x : v) x *= 10;
+    return v;
+  })
+  .then([](const std::vector<int>& v) {
+    return v[0] + v[1] + v[2];
+  })
+  .value();
 
-std::cout << q.kind_name() << "\n";          // Series
-std::cout << q.numel() << "\n";              // 3
-std::cout << q.as_series().abs() << "\n";    // concrete Series access
-
-auto out = q.invoke({"abs", "log", "mean"});
-std::cout << out.kind_name() << "\n";        // Series
-std::cout << out.as_series().item<double>() << "\n";
+let_as(int, std::string) token = 42;
+token = std::string("ok");
 ```
 
-## `Queue::invoke`
+Expected output idea (if printed):
 
-### Signature
+```text
+sum=60
+token=ok
+```
+
+## 3. transmit
+
+### API Signature
+
+`pluss::transmit(fn, value) -> mapped_value`  
+`pluss::transmit(fn, range, opts = {}) -> std::vector<out_t>`  
+`pluss::transmit(fn, first, last, opts = {}) -> std::vector<out_t>`  
+`pluss::transmit(fn, range_a, range_b) -> std::vector<out_t>`  
+`pluss::transmit_into(fn, range, out_it) -> OutIt`
+
+### Arguments
+
+- `fn` can accept `(elem)` or `(elem, index)`.
+- binary overload accepts `(a, b)` or `(a, b, index)`.
+- `exec=par` only applies to unary range overload with random-access sized ranges.
+
+### Example A: unary map
 
 ```cpp
-Queue invoke(self, std::string_view method, std::span<const Queue::Arg> args = {}) const;
-Queue invoke(self, std::string_view method, std::initializer_list<Queue::Arg> args) const;
-Queue invoke(self, std::initializer_list<std::string_view> methods) const;
+std::vector<int> xs{1,2,3,4};
+auto sq = pluss::transmit([](int x){ return x*x; }, xs);
 ```
 
-### Explanation
+Expected output:
 
-`invoke` sends a method name to the correct backend dispatcher for the payload currently stored in the queue.
-It is the runtime-dispatch escape hatch when you cannot write `x.abs()` directly because `x` might be a `Series` today and a `Timeline` tomorrow.
+```text
+[1, 4, 9, 16]
+```
 
-The chained overload `invoke({"abs", "log", "mean"})` is especially useful when you want to assemble a pipeline of method names dynamically.
+### Example B: zipped map with index
+
+```cpp
+std::vector<int> a{1,2,3};
+std::vector<int> b{10,20,30};
+auto z = pluss::transmit([](int x, int y, std::size_t i){
+  return x + y + static_cast<int>(i);
+}, a, b);
+```
+
+Expected output:
+
+```text
+[11, 23, 35]
+```
+
+## 4. transform_axis
+
+### API Signature
+
+`pluss::transform_axis(fn, Series, axis, opts = {}) -> std::vector<out_t>`  
+`pluss::transform_axis(fn, Note, axis, opts = {}) -> std::vector<out_t>`  
+`pluss::transform_axis(fn, Timeline, axis, opts = {}) -> std::vector<out_t>`  
+`pluss::transform_axis(fn, TimeIndex, axis = 0, opts = {}) -> std::vector<out_t>`
+
+### Arguments
+
+- `axis`: supports negative indexing (`-1` = last axis).
+- `fn`: receives each 1D slice (and optional slice index).
+- `opts`: sequential/parallel behavior for slice traversal.
 
 ### Example
 
 ```cpp
-auto s = pluss::Queue(pluss::make_series({-4.0, 5.0, -6.0}));
-auto t = pluss::Queue(pluss::make_timeline({
-    "2024-01-15T10:11:12Z",
-    "2024-01-16T10:11:12Z",
-}));
-
-auto reduced = s.invoke({"abs", "mean"});
-auto years = t.invoke("year");
-auto idx = t.invoke("to_timeindex", {true});
-
-std::cout << reduced.as_series().item<double>() << "\n";
-std::cout << years.as_series().to_vec<std::int32_t>() << "\n";
-std::cout << idx.as_timeindex().size() << "\n";
+auto x = pluss::make_series(std::vector<double>{1,2,3,4,5,6}, {2,3});
+auto means = pluss::transform_axis(
+  [](const pluss::Series& row){ return row.mean().item<double>(); },
+  x,
+  1
+);
 ```
 
-## `Queue::where`
+Expected output:
 
-### Signature
-
-```cpp
-static Queue where(Queue condition, Queue x, Queue y);
+```text
+[2.0, 5.0]
 ```
 
-### Explanation
+## 5. rng_seed utilities
 
-`Queue::where` performs ternary selection with a `Series` boolean mask.
-It is the dynamic equivalent of `Series::where(...)` when the branch payloads are still wrapped in `Queue`.
+### API Signature
 
-Current supported branches are:
+`pluss::rng_seed(seed) -> void`  
+`pluss::rng_seed() -> std::uint64_t`  
+`pluss::next_rng_seed() -> std::uint64_t`  
+`pluss::seed_or_next(seed) -> std::uint64_t`
 
-- `Series` vs `Series`
-- `Timeline` vs `Timeline`
+### Arguments
 
-The condition must always be a `Series` mask.
+- `rng_seed(seed)`: set global deterministic seed state.
+- `next_rng_seed()`: deterministic stream-derived next seed.
+- `seed_or_next(0)`: convenience for “use next random stream seed”.
 
 ### Example
 
 ```cpp
-auto mask = pluss::Queue(pluss::make_series({true, false, true}));
-auto lhs  = pluss::Queue(pluss::make_series({10.0, 20.0, 30.0}));
-auto rhs  = pluss::Queue(pluss::make_series({1.0,  2.0,  3.0}));
-
-auto out = pluss::Queue::where(mask, lhs, rhs);
-std::cout << out.as_series() << "\n";
+pluss::rng_seed(123);
+auto s1 = pluss::next_rng_seed();
+auto s2 = pluss::next_rng_seed();
 ```
 
-## `dispense` and `dispense_as`
+Expected output behavior:
 
-### Signature
-
-```cpp
-std::any dispense(self, pmf, args);
-decltype(auto) dispense(self, pmf, std::tuple<...> args);
-std::any dispense(self, std::string_view method, args);
-template <class R>
-R dispense_as(self, ...);
+```text
+s1 and s2 are deterministic for the same initial seed
+s1 != s2
 ```
 
-### Explanation
+## 6. Scalar extraction helpers
 
-`dispense` is the typed dispatch helper. It supports two user-facing styles:
+### API Signature
 
-- **member pointer dispatch**: call a known method with a runtime-provided argument pack
-- **string-based dispatch**: call a registered method name using the generic lookup registry
+`pluss::to_scalar<T>(x) -> T`  
+`pluss::as_f64(x) -> double`  
+`pluss::as_f32(x) -> float`  
+`pluss::as_bool(x) -> bool`  
+`pluss::as_i16(x) -> int16_t`  
+`pluss::as_i32(x) -> int32_t`  
+`pluss::as_i64(x) -> int64_t`  
+`pluss::as_u16(x) -> uint16_t`  
+`pluss::as_u32(x) -> uint32_t`  
+`pluss::as_u64(x) -> uint64_t`
 
-Use member-pointer dispatch when you want full C++ type checking and you already know the concrete method.
-Use string-based dispatch when the method name is dynamic.
-Use `dispense_as<T>(...)` when you want the final result already `std::any_cast` to `T`.
+### Arguments
+
+- input must be a defined scalar `Series` (`numel()==1`), else throws.
 
 ### Example
 
 ```cpp
-auto s = pluss::make_series({-4.0, 5.0, -6.0});
-auto n = pluss::make_note({"apple", "banana", "apricot"});
-auto t = pluss::make_timeline("2024-01-15T10:11:12Z");
-
-auto count = pluss::dispense_as<std::int64_t>(
-    s,
-    &pluss::Series::numel,
-    pluss::args{});
-
-pluss::args starts_with_args;
-starts_with_args.emplace_back(std::string_view("a"));
-auto starts_with_a = pluss::dispense_as<std::vector<std::uint8_t>>(
-    n,
-    &pluss::Note::starts_with,
-    starts_with_args);
-
-auto floored = pluss::dispense_as<pluss::Timeline>(
-    t,
-    &pluss::Timeline::floor,
-    pluss::args{"D"});
-
-std::cout << count << "\n";
-std::cout << static_cast<int>(starts_with_a[0]) << ","
-          << static_cast<int>(starts_with_a[1]) << ","
-          << static_cast<int>(starts_with_a[2]) << "\n";
-std::cout << floored.hour().to_vec<std::int32_t>(0) << "\n";
+auto s = pluss::make_series(std::vector<double>{42.5}, {1});
+double v = pluss::as_f64(s);
 ```
 
-## `suppose(...).then(...)`
+Expected output:
 
-### Signature
+```text
+42.5
+```
+
+## 7. Tensor DataLoader and splitting utilities
+
+This is the `pluss::loader` data-loader family re-exported from aux (`DataLoader`, `SeriesDataset`, split helpers).
+
+### API Signature
+
+`pluss::loader::SeriesDataset(fields, batch_dim = 0) -> SeriesDataset`  
+`pluss::loader::DataLoader(dataset_or_fields, options = {}) -> DataLoader`  
+`DataLoader::next() -> optional<DataBatch>`  
+`DataLoader::batch_at(batch_index) -> DataBatch`  
+`DataLoader::batch_count() -> size_t`  
+`DataLoader::reset(reshuffle = true) -> DataLoader&`  
+`pluss::loader::split_fields(fields, split_opts) -> DataSplit`  
+`pluss::loader::split_loaders(...) -> DataLoaderSplit`  
+`pluss::loader::time_series_split_indices(...) -> TimeSeriesIndexSplit`  
+`pluss::loader::time_series_split_fields(...) -> TimeSeriesFieldSplit`  
+`pluss::loader::time_series_split_loaders(...) -> TimeSeriesLoaderSplit`
+
+### Arguments
+
+- `batch_dim`: sample axis for each field.
+- `target_platform/target_dtype`: optional batch conversion.
+- `collate_fn`: post-batch transformation hook.
+- split helpers: ratio-based (`split_fields`) and time-aware folds (`time_series_split_*`).
+
+### Example A: mini-batch iteration
 
 ```cpp
-auto box = suppose(value);
-auto box = suppose.as<T>(value);
-box.then(fn);
-box.transform(fn);
-box.tap(fn);
-box.into<U>();
-box.value();
+auto x = pluss::make_series(std::vector<double>{1,2,3,4,5,6}, {6});
+auto y = pluss::make_series(std::vector<std::int64_t>{0,0,1,1,0,1}, {6});
+
+pluss::loader::DataLoaderOptions opts;
+opts.batch_size = 2;
+opts.shuffle = false;
+
+pluss::loader::DataLoader loader({x, y}, opts);
+for (auto batch : loader) {
+  // batch.x() and batch.y() each contain 2 samples
+}
 ```
 
-### Explanation
+Expected output behavior:
 
-`suppose` gives you a tiny, value-oriented pipeline object (`let_box<T>`) for ad-hoc transformations.
+```text
+batch_count = 3
+batch 0 -> samples [0,1]
+batch 1 -> samples [2,3]
+batch 2 -> samples [4,5]
+```
 
-Use it when you want:
-
-- a readable pipeline for one temporary value
-- side effects during a chain with `tap(...)`
-- explicit type conversion with `into<U>()`
-- a lightweight alternative to writing a named variable for each intermediate
-
-`transform(...)` is an alias for `then(...)`.
-`tap(...)` runs a side effect and keeps the same boxed value flowing through the pipeline.
-
-### Example
+### Example B: train/val/test split loaders
 
 ```cpp
-auto tagged = suppose(std::vector<int>{1, 2, 3, 4})
-                  .tap([](const auto& xs) {
-                    if (xs.empty()) throw std::runtime_error("unexpected empty input");
-                  })
-                  .then([](std::vector<int> xs) {
-                    for (auto& x : xs) x *= 2;
-                    return xs;
-                  })
-                  .then([](const std::vector<int>& xs) {
-                    int total = 0;
-                    for (int x : xs) total += x;
-                    return total;
-                  })
-                  .then([](int total) {
-                    return std::string("total=") + std::to_string(total);
-                  })
-                  .value();
+pluss::loader::DataSplitOptions sopts;
+sopts.train_ratio = 0.7;
+sopts.val_ratio = 0.2;
+sopts.shuffle = true;
+sopts.seed = 7;
 
-std::cout << tagged << "\n";
+auto split = pluss::loader::split_loaders({x, y}, sopts,
+  {.batch_size=2}, {.batch_size=2}, {.batch_size=2});
 ```
 
-## `let_as(...)`
+Expected output behavior:
 
-### Signature
-
-```cpp
-let_as(T1, T2, ...) name = value;
+```text
+train/val/test loaders created with disjoint index sets
+train + val + test sample counts == original sample count
 ```
 
-### Explanation
+## Related Guide
 
-`let_as(...)` builds a restricted tagged union (`let_one_of<...>`) when a value is allowed to be one of a small set of explicit types.
-
-It is useful when you want dynamic behavior, but you still want the compiler to enforce the allowed set.
-
-### Example
-
-```cpp
-let_as(int, double, std::string) content = std::string("hello");
-content = 42;
-content = 3.14;
-
-content.visit([](const auto& v) {
-  std::cout << v << "\n";
-});
-```
-
-## `transmit`
-
-### Signature
-
-```cpp
-auto out = pluss::transmit(fn, value);
-auto out = pluss::transmit(fn, range, opts = {});
-auto out = pluss::transmit(fn, first, last, opts = {});
-OutIt out = pluss::transmit_into(fn, range, out_it);
-auto out = pluss::transmit(fn, range_a, range_b);
-```
-
-### Explanation
-
-`transmit` is the aux mapping/zip primitive.
-
-It supports five common patterns:
-
-- transform one scalar value
-- map over a range
-- map over an iterator pair
-- write mapped output into an existing iterator with `transmit_into`
-- zip two ranges together
-
-Your callable may accept either:
-
-- `(elem)` or `(elem, index)` for unary work
-- `(a, b)` or `(a, b, index)` for zipped work
-
-Set `transmit_options{.exec = pluss::transmit_exec::par, ...}` when you want the unary range overload to split large random-access ranges across workers.
-
-### Example
-
-```cpp
-const std::vector<int> xs{1, 2, 3, 4, 5};
-const std::vector<int> ys{10, 20, 30, 40};
-
-auto squared = pluss::transmit([](int x) {
-  return x * x;
-}, xs);
-
-auto plus_index = pluss::transmit([](int x, std::size_t i) {
-  return x + static_cast<int>(i);
-}, xs);
-
-auto zipped = pluss::transmit([](int a, int b, std::size_t i) {
-  return a + b + static_cast<int>(i);
-}, xs, ys);
-
-pluss::transmit_options par;
-par.exec = pluss::transmit_exec::par;
-par.grain_size = 2;
-par.workers = 4;
-auto parallel = pluss::transmit([](int x, std::size_t i) {
-  return x + static_cast<int>(i);
-}, xs, par);
-```
-
-## `transform_axis`
-
-### Signature
-
-```cpp
-auto out = pluss::transform_axis(fn, series, axis, opts = {});
-auto out = pluss::transform_axis(fn, note, axis, opts = {});
-auto out = pluss::transform_axis(fn, timeline, axis, opts = {});
-auto out = pluss::transform_axis(fn, timeindex, axis = 0, opts = {});
-```
-
-### Explanation
-
-`transform_axis` is the Pluss equivalent of NumPy-style `apply_along_axis`.
-It walks a higher-rank object slice-by-slice along one axis, passes each 1D slice to your callable, and collects the returned results into a `std::vector`.
-
-Use it when you want to write a slice-wise transform without hand-writing nested loops and repeated `select(...)` calls.
-
-### Example
-
-```cpp
-auto s2d = pluss::make_series({
-    {1.0, 2.0, 3.0},
-    {10.0, 20.0, 30.0},
-});
-
-auto row_means = pluss::transform_axis(
-    [](const pluss::Series& row) {
-      return row.mean().item<double>();
-    },
-    s2d,
-    1);
-
-auto note2d = pluss::make_note({{"alpha", "beta"}, {"gamma", "delta"}});
-auto row_char_counts = pluss::transform_axis(
-    [](const pluss::Note& row) {
-      std::int64_t total = 0;
-      for (std::int64_t i = 0; i < row.numel(); ++i) total += static_cast<std::int64_t>(row.at(i).size());
-      return total;
-    },
-    note2d,
-    1);
-
-std::cout << row_means[0] << ", " << row_means[1] << "\n";
-std::cout << row_char_counts[0] << ", " << row_char_counts[1] << "\n";
-```
-
-## When to reach for which tool
-
-- Use `Queue` when the payload kind is runtime-selected.
-- Use `dispense` when the method or argument pack is runtime-selected but the concrete object is known.
-- Use `suppose(...).then(...)` when you want a readable one-value pipeline.
-- Use `transmit` for value/range mapping and zipping.
-- Use `transform_axis` for slice-wise work over higher-rank Pluss objects.
+For file/table loading (`load_csv`, `load_excel`, `load_json`, `save_*`), path roots, and `Config`-driven loader APIs, see [Loader Guide](loader.md).

@@ -1,0 +1,21 @@
+# `DataNotePolicy::Reject`
+
+## Signature
+
+```cpp
+DataNotePolicy::Reject;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = DataNotePolicy::Reject;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/data.h`:21

@@ -1,0 +1,21 @@
+# `decompose_factory`
+
+## Signature
+
+```cpp
+struct decompose_factory;
+```
+
+## Notes
+
+Public user-facing type used directly in NodeJ/Lymph workflows.
+
+## Example
+
+```cpp
+decompose_factory cfg{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:2257

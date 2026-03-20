@@ -125,6 +125,12 @@ struct SplitOptions {
   CVPlanKind plan = CVPlanKind::Holdout;
   double holdout_fraction = 0.2;
   std::int64_t folds = 5;
+  // Time-series CV controls (used when plan == CVPlanKind::TimeSeries).
+  // If time_test_size <= 0, test window is inferred like sklearn.
+  // If time_max_train_size <= 0, train window is unbounded (expanding).
+  std::int64_t time_gap = 0;
+  std::int64_t time_test_size = 0;
+  std::int64_t time_max_train_size = 0;
   bool stratified = false;
   bool reliability_defaults = true;
   bool shuffle = true;

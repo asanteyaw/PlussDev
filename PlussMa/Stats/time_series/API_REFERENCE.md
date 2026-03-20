@@ -1567,3 +1567,74 @@ Simulates VECM paths using fitted covariance Gaussian innovations.
 `std::uint64_t seed`: RNG seed.
 
 Return -> `Series`: simulated level series `[num_observations, k]`.
+
+## `SsmFilterResult Ssm::filter(const Series& y, const SsmModel& model, const SsmOptions& options = {}, Config cfg = {})`
+
+Runs Kalman filtering for linear-Gaussian state-space models:
+
+- `x_t = A x_{t-1} + B u_t`
+- `y_t = C x_t + D e_t`
+
+`const Series& y`: observations (`[T,n]` or `[T]` treated as `[T,1]`); `NaN` entries are treated as missing.
+
+`const SsmModel& model`: model coefficients (`A,B,C,D,mean0,cov0`).
+
+`const SsmOptions& options`: currently `tolerance` (forecast-variance information tolerance).
+
+`Config cfg`: output config (`Float64` internal lane).
+
+Return -> `SsmFilterResult`: filtered/predicted state paths, observation forecasts and covariances, innovation errors, Kalman gain, `data_used`, per-observation loglik, and total loglik.
+
+Notes:
+
+- `data_used[t,i] == 0` when observation `y[t,i]` is missing or non-informative under tolerance.
+- `loglik_per_obs` sums to `loglik`.
+
+## `SsmSmoothResult Ssm::smooth(const Series& y, const SsmModel& model, const SsmOptions& options = {}, Config cfg = {})`
+
+Runs RTS-style backward smoothing on top of `Ssm::filter`.
+
+`const Series& y`: observations.
+
+`const SsmModel& model`: model coefficients.
+
+`const SsmOptions& options`: filter options.
+
+`Config cfg`: output config.
+
+Return -> `SsmSmoothResult`: contains full filter result plus smoothed state means/covariances.
+
+## `SsmForecastResult Ssm::forecast(std::int64_t horizon, const SsmModel& model, Config cfg = {})`
+## `SsmForecastResult Ssm::forecast(std::int64_t horizon, const Series& y_history, const SsmModel& model, const SsmOptions& options = {}, Config cfg = {})`
+
+Generates forward forecasts of states and observations.
+
+`std::int64_t horizon`: number of forecast steps (`> 0`).
+
+Overload 1 seeds from prior (`mean0`, `cov0`); overload 2 first filters `y_history` and seeds from terminal filtered state.
+
+Return -> `SsmForecastResult`:
+
+- `observations`: `[horizon,n]`
+- `observations_cov`: `[horizon,n,n]`
+- `states`: `[horizon,m]`
+- `states_cov`: `[horizon,m,m]`
+
+## `SsmSimResult Ssm::simulate(std::int64_t num_observations, const SsmModel& model, std::int64_t num_paths = 1, Config cfg = {}, std::uint64_t seed = 0)`
+
+Simulates linear-Gaussian state-space paths.
+
+`std::int64_t num_observations`: simulation length (`> 0`).
+
+`const SsmModel& model`: model coefficients.
+
+`std::int64_t num_paths`: number of Monte Carlo paths (`> 0`).
+
+`Config cfg`: output config.
+
+`std::uint64_t seed`: RNG seed (`0` uses deterministic internal default seed).
+
+Return -> `SsmSimResult`:
+
+- single path: `[T,*]` arrays
+- multi-path: `[P,T,*]` arrays

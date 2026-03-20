@@ -1,0 +1,13 @@
+# `Workflow::threshold_binarizer`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/workflow-threshold-binarizer-ov1.md): `Workflow& Workflow::threshold_binarizer(self, prep::ThresholdBinarizerOptions options = {}, std::vector<std::int64_t> feature_route = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:1377

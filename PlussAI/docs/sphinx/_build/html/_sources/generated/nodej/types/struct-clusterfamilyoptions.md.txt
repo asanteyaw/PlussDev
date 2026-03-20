@@ -1,0 +1,29 @@
+# `ClusterFamilyOptions`
+
+## Signature
+
+```cpp
+struct ClusterFamilyOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `ClusterMethod method = ClusterMethod::KMeans`
+- `std::int64_t clusters = 8`
+- `std::int64_t max_iterations = 300`
+- `std::int64_t restarts = 4`
+- `double tolerance = 1e-4`
+
+## Example
+
+```cpp
+ClusterFamilyOptions cfg{};
+// cfg.method = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:101

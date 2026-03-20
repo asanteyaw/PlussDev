@@ -1,0 +1,27 @@
+# `SimpleImputerStrategy`
+
+## Signature
+
+```cpp
+enum SimpleImputerStrategy;
+```
+
+## Notes
+
+Enumerated configuration choices used by NodeJ/Lymph APIs.
+
+Known enumerators:
+- `Mean = 0`
+- `Median = 1`
+- `MostFrequent = 2`
+- `Constant = 3`
+
+## Example
+
+```cpp
+auto mode = SimpleImputerStrategy::Mean;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:32

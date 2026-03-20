@@ -1,0 +1,13 @@
+# `tune_probe`
+
+## Notes
+
+Executes hyperparameter search and reports trial-by-trial objective values.
+
+## Overloads
+
+- [overload 1](../api/global-tune-probe-ov1.md): `StatusOr<nodej::TuneReport> tune_probe( const nodej::ProbeSpecSampler& sampler, std::int64_t trials, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {}, nodej::MetricKind objective_metric = nodej::MetricKind::Accuracy, nodej::TuneObjectivePolicy objective_policy = nodej::TuneObjectivePolicy::Auto, nodej::RandomState random = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:137

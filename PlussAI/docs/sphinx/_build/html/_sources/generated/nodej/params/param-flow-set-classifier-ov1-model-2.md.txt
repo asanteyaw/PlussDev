@@ -1,0 +1,21 @@
+# `Flow::set_classifier::model`
+
+## Parent Signature
+
+```cpp
+Status Flow::set_classifier(self, std::unique_ptr<ClassifierBase> model);
+```
+
+## Parameter
+
+- `model` : `std::unique_ptr<ClassifierBase>`
+  Method argument; see signature type for accepted form.
+
+## Notes
+
+Instance method on `self`.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:89

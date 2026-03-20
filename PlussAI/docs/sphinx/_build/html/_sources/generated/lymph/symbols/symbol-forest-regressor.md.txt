@@ -1,0 +1,13 @@
+# `forest_regressor`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-forest-regressor-ov1.md): `StatusOr<std::unique_ptr<nodej::RegressorBase>> forest_regressor( const nodej::LabeledBatch& train, std::int64_t learners = 100, double subsample = 1.0, const nodej::TrainOptions& options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/quick.h`:221

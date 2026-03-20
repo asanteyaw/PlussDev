@@ -1,0 +1,85 @@
+# `kmeans_clusterer`
+
+## Signature
+
+```cpp
+StatusOr<std::unique_ptr<nodej::TransformerBase>> kmeans_clusterer( const nodej::FeatureBatch& train, std::int64_t clusters = 8, std::int64_t restarts = 4, std::int64_t max_iterations = 300, double tolerance = 1e-4, const nodej::TrainOptions& options = {});
+```
+
+## Parameters
+
+- `train` : `const nodej::FeatureBatch&`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `clusters` : `std::int64_t`, default: `8`
+  Algorithm-size/count argument used to shape fit or split behavior.
+- `restarts` : `std::int64_t`, default: `4`
+  Method argument; see signature type for accepted form.
+- `max_iterations` : `std::int64_t`, default: `300`
+  Input feature data used by this call.
+- `tolerance` : `double`, default: `1e-4`
+  Method argument; see signature type for accepted form.
+- `options` : `const nodej::TrainOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `StatusOr<std::unique_ptr<nodej::TransformerBase>>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Namespace-level API function.
+
+## See also
+
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `StatusOr<nodej::CrossAssessReport> assess_cv( const nodej::ModelSpec& spec, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {});`
+- `StatusOr<std::unique_ptr<nodej::ClassifierBase>> bayes_classifier( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+- `StatusOr<std::unique_ptr<nodej::RegressorBase>> bayes_regressor( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+
+## Examples
+
+### Example 1
+
+*Source:* `PlussAI/examples/NodeJ/lymph/lymph_unsupervised_demo.cpp`
+
+```cpp
+                                           1.6,  1.3},
+                                      {6, 2},
+                                      cfg);
+  const FeatureBatch batch{
+      .x = x,
+      .layout = ObservationLayout::Rows,
+  };
+
+  auto kmeans_or = pluss::ai::lymph::quick::kmeans_clusterer(batch, 2);
+  if (!kmeans_or.ok()) {
+    std::cerr << "lymph::kmeans_clusterer failed: " << kmeans_or.status().message << "\n";
+    return 1;
+  }
+  auto labels_or = kmeans_or.value()->map(batch);
+  if (!labels_or.ok()) {
+    std::cerr << "kmeans map failed: " << labels_or.status().message << "\n";
+    return 1;
+  }
+  std::cout << "lymph kmeans labels: ";
+  for (double v : labels_or.value().reshape({6}).to(pluss::pCPU, pluss::ScalarType::Float64).to_vec<double>()) {
+    std::cout << v << " ";
+  }
+  std::cout << "\n";
+
+  std::vector<double> pca_vals{};
+```
+
+**Output**
+
+```text
+lymph kmeans labels: 1 1 1 0 0 0
+lymph pca output shape: [40, 2]
+lymph_unsupervised_demo complete
+```
+
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/quick.h`:259

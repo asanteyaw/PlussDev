@@ -1,0 +1,22 @@
+# `ClusterFamilyOptions::method`
+
+## Signature
+
+```cpp
+ClusterFamilyOptions::ClusterMethod method = ClusterMethod::KMeans;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+ClusterFamilyOptions cfg{};
+// cfg.method = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:101

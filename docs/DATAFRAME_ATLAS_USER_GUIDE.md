@@ -325,7 +325,7 @@ Complete method index (current public surface, grouped):
 - Access: `nrows`, `ncols`, `nfeatures`, `feature_names`, `features`, `cases`, `cases_series`, `iloc`, `at`, `iat`, `get`, `series_value`, `note_value`, `timeline_value`, `timeindex_value`
 - Feature/case mutation: `set_features`, `set_features_`, `set`, `with_column`, `with_column_`, `with_cases`, `with_cases_`, `insert`, `drop`, `reorder`, `rename`, `rename_`, `rename_features`, `relabel_features`, `set_axis`, `set_feature_axis`, `set_cases`, `reset_cases`, `align_cases`, `reindex_cases`, `conform_to`, `reindex_like`
 - Selection/filtering: `head`, `tail`, `view`, `sample`, `slice`, `take`, `where`, `filter`, `query`
-- Derivation/aggregation/grouping: `assign`, `transform`, `aggregate`, `group_by`, `pivot`, `pivot_table`, `count_by`, `mean_by`, `sum`, `mean`, `min`, `max`, `std`, `var`, `count`, `nunique`, `tally`, `describe`, `transpose`
+- Derivation/aggregation/grouping: `assign`, `transform`, `aggregate`, `group_by`, `pivot`, `pivot_table`, `count_by`, `mean_by`, `sum`, `mean`, `min`, `max`, `std`, `var`, `count`, `tally`, `describe`, `transpose`
 - Dimensional bridge: `unsqueeze` (DataFrame -> depth-1 Atlas), `squeeze` (Atlas -> DataFrame when depth==1)
 - Sorting/ranking: `sort_values`, `sort_cases`, `top`, `bottom`
 - Missing data: `isna`, `isnull`, `notna`, `notnull`, `fillna`, `fillna_`, `dropna`, `dropna_all`, `ffill`, `bfill`, `count_null_rows`
@@ -415,7 +415,7 @@ auto s4 = df.max();
 auto s5 = df.std();
 auto s6 = df.var();
 auto s7 = df.count();
-auto s8 = df.nunique();
+auto s8 = df.features("city").distinct().count();
 auto s9 = df.tally("city");
 auto s10 = df.describe();
 ```

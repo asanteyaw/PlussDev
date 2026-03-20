@@ -1,0 +1,22 @@
+# `OneHotEncoderOptions::max_categories`
+
+## Signature
+
+```cpp
+OneHotEncoderOptions::std::int64_t max_categories = 20;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+OneHotEncoderOptions cfg{};
+// cfg.max_categories = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:51

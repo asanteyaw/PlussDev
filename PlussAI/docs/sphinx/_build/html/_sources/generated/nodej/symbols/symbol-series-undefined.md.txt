@@ -1,0 +1,45 @@
+# `Series::undefined`
+
+## Notes
+
+Instance method on `self`.
+
+## Overloads
+
+- [overload 1](../api/series-undefined-ov1.md): `Series class_weights = Series::undefined(self);`
+- [overload 2](../api/series-undefined-ov2.md): `Series mean_metrics = Series::undefined(self);`
+- [overload 3](../api/series-undefined-ov3.md): `Series metrics = Series::undefined(self);`
+- [overload 4](../api/series-undefined-ov4.md): `Series parameter_lower_bounds = Series::undefined(self);`
+- [overload 5](../api/series-undefined-ov5.md): `Series parameter_upper_bounds = Series::undefined(self);`
+- [overload 6](../api/series-undefined-ov6.md): `Series sample_weights = Series::undefined(self);`
+- [overload 7](../api/series-undefined-ov7.md): `Series sample_weights = Series::undefined(self);`
+- [overload 8](../api/series-undefined-ov8.md): `Series sample_weights = Series::undefined(self);`
+- [overload 9](../api/series-undefined-ov9.md): `Series std_metrics = Series::undefined(self);`
+- [overload 10](../api/series-undefined-ov10.md): `Series test_indices = Series::undefined(self);`
+- [overload 11](../api/series-undefined-ov11.md): `Series test_indices = Series::undefined(self);`
+- [overload 12](../api/series-undefined-ov12.md): `Series train_indices = Series::undefined(self);`
+- [overload 13](../api/series-undefined-ov13.md): `Series train_indices = Series::undefined(self);`
+- [overload 14](../api/series-undefined-ov14.md): `Series weights_ = Series::undefined(self);`
+- [overload 15](../api/series-undefined-ov15.md): `Series weights_ = Series::undefined(self);`
+- [overload 16](../api/series-undefined-ov16.md): `Series x = Series::undefined(self);`
+- [overload 17](../api/series-undefined-ov17.md): `Series y = Series::undefined(self);`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/options.h`:95
+- `PlussAI/include/pluss/ai/nodej/metrics.h`:19
+- `PlussAI/include/pluss/ai/nodej/metrics.h`:11
+- `PlussAI/include/pluss/ai/nodej/options.h`:101
+- `PlussAI/include/pluss/ai/nodej/options.h`:102
+- `PlussAI/include/pluss/ai/nodej/dataset.h`:26
+- `PlussAI/include/pluss/ai/nodej/options.h`:91
+- `PlussAI/include/pluss/ai/nodej/options.h`:116
+- `PlussAI/include/pluss/ai/nodej/metrics.h`:20
+- `PlussAI/include/pluss/ai/nodej/metrics.h`:13
+- `PlussAI/include/pluss/ai/nodej/split.h`:13
+- `PlussAI/include/pluss/ai/nodej/metrics.h`:12
+- `PlussAI/include/pluss/ai/nodej/split.h`:12
+- `PlussAI/include/pluss/ai/nodej/online.h`:39
+- `PlussAI/include/pluss/ai/nodej/online.h`:64
+- `PlussAI/include/pluss/ai/nodej/dataset.h`:9
+- `PlussAI/include/pluss/ai/nodej/dataset.h`:25

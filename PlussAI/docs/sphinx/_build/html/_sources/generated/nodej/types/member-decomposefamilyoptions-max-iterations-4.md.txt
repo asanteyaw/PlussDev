@@ -1,0 +1,22 @@
+# `DecomposeFamilyOptions::max_iterations`
+
+## Signature
+
+```cpp
+DecomposeFamilyOptions::std::int64_t max_iterations = 500;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+DecomposeFamilyOptions cfg{};
+// cfg.max_iterations = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/families.h`:109

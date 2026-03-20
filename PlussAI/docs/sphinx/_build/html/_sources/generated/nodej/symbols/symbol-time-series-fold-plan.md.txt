@@ -1,0 +1,13 @@
+# `time_series_fold_plan`
+
+## Notes
+
+Namespace-level API function.
+
+## Overloads
+
+- [overload 1](../api/global-time-series-fold-plan-ov1.md): `StatusOr<SplitPlan> time_series_fold_plan(std::int64_t sample_count, const SplitOptions& options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/split.h`:25

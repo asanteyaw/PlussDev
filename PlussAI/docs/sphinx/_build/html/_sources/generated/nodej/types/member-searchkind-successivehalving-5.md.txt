@@ -1,0 +1,21 @@
+# `SearchKind::SuccessiveHalving`
+
+## Signature
+
+```cpp
+SearchKind::SuccessiveHalving;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = SearchKind::SuccessiveHalving;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:58

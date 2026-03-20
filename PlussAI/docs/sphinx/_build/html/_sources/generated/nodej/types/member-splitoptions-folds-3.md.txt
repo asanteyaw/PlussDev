@@ -1,0 +1,22 @@
+# `SplitOptions::folds`
+
+## Signature
+
+```cpp
+SplitOptions::std::int64_t folds = 5;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+SplitOptions cfg{};
+// cfg.folds = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:124

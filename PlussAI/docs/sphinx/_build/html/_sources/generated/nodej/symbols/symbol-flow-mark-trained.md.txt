@@ -1,0 +1,13 @@
+# `Flow::mark_trained`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/flow-mark-trained-ov1.md): `void Flow::mark_trained(self, bool trained) noexcept;`
+
+## Source
+
+- `PlussAI/include/pluss/ai/nodej/compose.h`:120

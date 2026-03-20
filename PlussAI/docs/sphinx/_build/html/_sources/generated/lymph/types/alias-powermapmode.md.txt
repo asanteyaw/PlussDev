@@ -1,0 +1,21 @@
+# `PowerMapMode`
+
+## Signature
+
+```cpp
+using PowerMapMode = ::pluss::ai::nodej::prep::PowerMapMode;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+PowerMapMode value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:56

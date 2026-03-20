@@ -1,0 +1,13 @@
+# `kernel_factory::sigmoid_kernel_classifier`
+
+## Notes
+
+Factory helper that constructs a configured model/workflow object.
+
+## Overloads
+
+- [overload 1](../api/kernel-factory-sigmoid-kernel-classifier-ov1.md): `[[nodiscard]] static WorkflowModel kernel_factory::sigmoid_kernel_classifier(self, KernelFamilyOptions options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:2192

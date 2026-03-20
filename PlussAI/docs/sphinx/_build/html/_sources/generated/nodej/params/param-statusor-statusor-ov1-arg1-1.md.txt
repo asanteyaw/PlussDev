@@ -1,0 +1,21 @@
+# `StatusOr::StatusOr::arg1`
+
+## Parent Signature
+
+```cpp
+explicit StatusOr(Status status) : status_(std::move(status)), value_;
+```
+
+## Parameter
+
+- `arg1` : `Status status) : status_(std::move(status)`
+  Method argument; see signature type for accepted form.
+
+## Notes
+
+Instance method on `self`.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/status.h`:52

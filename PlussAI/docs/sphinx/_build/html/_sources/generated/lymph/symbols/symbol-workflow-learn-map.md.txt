@@ -1,0 +1,17 @@
+# `Workflow::learn_map`
+
+## Notes
+
+Fits model/transform state from the provided training data. Call this before inference-oriented methods.
+
+## Overloads
+
+- [overload 1](../api/workflow-learn-map-ov1.md): `[[nodiscard]] Series Workflow::learn_map(self, const FeatureBatch& batch, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {});`
+- [overload 2](../api/workflow-learn-map-ov2.md): `[[nodiscard]] Series Workflow::learn_map(self, const pluss::table::DataFrame& frame, const DataFrameBatchOptions& data_options, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {});`
+- [overload 3](../api/workflow-learn-map-ov3.md): `[[nodiscard]] Series Workflow::learn_map(self, const pluss::table::DataFrame& x, const TrainOptions& learn_options = {}, const InferOptions& infer_options = {});`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:1500
+- `PlussAI/include/pluss/ai/lymph/api.h`:1514
+- `PlussAI/include/pluss/ai/lymph/api.h`:1507

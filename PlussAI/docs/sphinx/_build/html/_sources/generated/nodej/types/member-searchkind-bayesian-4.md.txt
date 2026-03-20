@@ -1,0 +1,21 @@
+# `SearchKind::Bayesian`
+
+## Signature
+
+```cpp
+SearchKind::Bayesian;
+```
+
+## Notes
+
+Enumerator value used to select behavior in API options.
+
+## Example
+
+```cpp
+auto value = SearchKind::Bayesian;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:58

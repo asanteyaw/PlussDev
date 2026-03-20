@@ -230,11 +230,11 @@ Registry Registry::slice(std::int64_t start, std::int64_t stop) const {
   return Registry(std::move(out));
 }
 
-Registry Registry::iloc(std::int64_t row) const {
+Registry Registry::cloc(std::int64_t row) const {
   return slice(row, row + 1);
 }
 
-Registry Registry::iloc(std::int64_t start, std::int64_t stop) const {
+Registry Registry::cloc(std::int64_t start, std::int64_t stop) const {
   return slice(start, stop);
 }
 

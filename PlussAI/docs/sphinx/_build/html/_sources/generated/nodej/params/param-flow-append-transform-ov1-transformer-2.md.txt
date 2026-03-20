@@ -1,0 +1,21 @@
+# `Flow::append_transform::transformer`
+
+## Parent Signature
+
+```cpp
+Status Flow::append_transform(self, std::unique_ptr<TransformerBase> transformer);
+```
+
+## Parameter
+
+- `transformer` : `std::unique_ptr<TransformerBase>`
+  Method argument; see signature type for accepted form.
+
+## Notes
+
+Instance method on `self`.
+
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/compose.h`:70

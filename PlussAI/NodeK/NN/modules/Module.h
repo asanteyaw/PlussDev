@@ -27,6 +27,14 @@ public:
 
   void eval() noexcept { train(false); }
 
+  void zero_grad() {
+    for (Series* p : parameters()) {
+      if (p && p->defined()) {
+        p->clear_sensitivity();
+      }
+    }
+  }
+
   Module& to(Platform platform) {
     for (auto& param : params_) {
       if (param.series->defined()) {
@@ -117,6 +125,22 @@ public:
     const Module* module = nullptr;
   };
 
+  struct SnapshotEntry {
+    std::string name;
+    Series value{};
+  };
+
+  struct Snapshot {
+    bool training{true};
+    std::vector<SnapshotEntry> parameters{};
+    std::vector<SnapshotEntry> buffers{};
+  };
+
+  struct RestoreReport {
+    std::vector<std::string> missing{};
+    std::vector<std::string> unexpected{};
+  };
+
   const std::vector<ParameterRef>& parameter_refs() noexcept { return params_; }
   const std::vector<ParameterRef>& parameter_refs() const noexcept { return params_; }
   const std::vector<BufferRef>& buffer_refs() noexcept { return buffers_; }
@@ -194,6 +218,119 @@ public:
     std::vector<ConstModuleRef> out;
     collect_named_modules_(out, "");
     return out;
+  }
+
+  Snapshot snapshot() const {
+    Snapshot out{};
+    out.training = training_;
+    for (const auto& named : named_parameters()) {
+      SnapshotEntry entry{};
+      entry.name = named.name;
+      entry.value = (named.series != nullptr && named.series->defined()) ? named.series->clone() : Series();
+      out.parameters.push_back(std::move(entry));
+    }
+    for (const auto& named : named_buffers()) {
+      SnapshotEntry entry{};
+      entry.name = named.name;
+      entry.value = (named.series != nullptr && named.series->defined()) ? named.series->clone() : Series();
+      out.buffers.push_back(std::move(entry));
+    }
+    return out;
+  }
+
+  RestoreReport restore(const Snapshot& snap, bool strict = true) {
+    RestoreReport report{};
+    auto params_named = named_parameters();
+    auto buffers_named = named_buffers();
+
+    auto find_entry = [](const std::vector<SnapshotEntry>& entries, const std::string& name) -> const SnapshotEntry* {
+      for (const auto& entry : entries) {
+        if (entry.name == name) return &entry;
+      }
+      return nullptr;
+    };
+
+    auto find_named_param = [&](const std::string& name) -> ParameterRef* {
+      for (auto& named : params_named) {
+        if (named.name == name) return &named;
+      }
+      return nullptr;
+    };
+
+    auto find_named_buffer = [&](const std::string& name) -> BufferRef* {
+      for (auto& named : buffers_named) {
+        if (named.name == name) return &named;
+      }
+      return nullptr;
+    };
+
+    auto assign_like = [](Series* target, const Series& source) {
+      if (target == nullptr) return;
+      if (!target->defined()) {
+        *target = source.defined() ? source.clone() : Series();
+      } else if (!source.defined()) {
+        *target = Series();
+      } else {
+        *target = source.to(target->platform(), target->scalar_type());
+      }
+    };
+
+    for (auto& named : params_named) {
+      const SnapshotEntry* entry = find_entry(snap.parameters, named.name);
+      if (entry == nullptr) {
+        report.missing.push_back("param:" + named.name);
+        continue;
+      }
+      const bool tracks = (named.series != nullptr && named.series->defined()) ? named.series->tracks_slope() : true;
+      assign_like(named.series, entry->value);
+      if (named.series != nullptr && named.series->defined()) {
+        named.series->tracks_slope_(tracks);
+      }
+    }
+
+    for (auto& named : buffers_named) {
+      const SnapshotEntry* entry = find_entry(snap.buffers, named.name);
+      if (entry == nullptr) {
+        report.missing.push_back("buffer:" + named.name);
+        continue;
+      }
+      assign_like(named.series, entry->value);
+    }
+
+    for (const auto& entry : snap.parameters) {
+      if (find_named_param(entry.name) == nullptr) {
+        report.unexpected.push_back("param:" + entry.name);
+      }
+    }
+    for (const auto& entry : snap.buffers) {
+      if (find_named_buffer(entry.name) == nullptr) {
+        report.unexpected.push_back("buffer:" + entry.name);
+      }
+    }
+
+    if (strict && (!report.missing.empty() || !report.unexpected.empty())) {
+      std::string message = "pluss::nn::Module::restore: checkpoint mismatch";
+      if (!report.missing.empty()) {
+        message += " missing=[";
+        for (std::size_t i = 0; i < report.missing.size(); ++i) {
+          if (i) message += ", ";
+          message += report.missing[i];
+        }
+        message += "]";
+      }
+      if (!report.unexpected.empty()) {
+        message += " unexpected=[";
+        for (std::size_t i = 0; i < report.unexpected.size(); ++i) {
+          if (i) message += ", ";
+          message += report.unexpected[i];
+        }
+        message += "]";
+      }
+      PLUSS_FAIL(message);
+    }
+
+    train(snap.training);
+    return report;
   }
 
   template <class ChildModule>
@@ -416,6 +553,7 @@ public:
   void reset(std::nullptr_t = nullptr) noexcept { impl_.reset(); }
   void train(bool enabled = true) { this->operator->()->train(enabled); }
   void eval() { this->operator->()->eval(); }
+  void zero_grad() { this->operator->()->zero_grad(); }
   Module& to(Platform platform) { return this->operator->()->to(platform); }
   Module& to(ScalarType dtype) { return this->operator->()->to(dtype); }
   Module& to(Platform platform, ScalarType dtype) { return this->operator->()->to(platform, dtype); }
@@ -439,6 +577,8 @@ public:
   auto modules() const { return this->operator->()->modules(); }
   auto named_modules() { return this->operator->()->named_modules(); }
   auto named_modules() const { return this->operator->()->named_modules(); }
+  auto snapshot() const { return this->operator->()->snapshot(); }
+  auto restore(const Module::Snapshot& snap, bool strict = true) { return this->operator->()->restore(snap, strict); }
 
   std::shared_ptr<Impl> ptr() const noexcept { return impl_; }
 

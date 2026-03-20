@@ -54,17 +54,75 @@ add_executable(plussai_func_conv_demo
 target_link_libraries(plussai_func_conv_demo PRIVATE pluss)
 target_compile_features(plussai_func_conv_demo PRIVATE cxx_std_20)
 
+add_executable(plussai_func_attention_demo
+  func_attention_demo.cpp
+)
+target_link_libraries(plussai_func_attention_demo PRIVATE pluss)
+target_compile_features(plussai_func_attention_demo PRIVATE cxx_std_20)
+
 add_executable(plussai_nn_conv_demo
   nn_conv_demo.cpp
 )
 target_link_libraries(plussai_nn_conv_demo PRIVATE pluss)
 target_compile_features(plussai_nn_conv_demo PRIVATE cxx_std_20)
 
+add_executable(plussai_nn_cudnn_conv_demo
+  nn_cudnn_conv_demo.cpp
+)
+target_link_libraries(plussai_nn_cudnn_conv_demo PRIVATE pluss)
+target_compile_features(plussai_nn_cudnn_conv_demo PRIVATE cxx_std_20)
+
+add_executable(plussai_nn_cudnn_rnn_demo
+  nn_cudnn_rnn_demo.cpp
+)
+target_link_libraries(plussai_nn_cudnn_rnn_demo PRIVATE pluss)
+target_compile_features(plussai_nn_cudnn_rnn_demo PRIVATE cxx_std_20)
+
+add_executable(plussai_nn_cudnn_transformer_demo
+  nn_cudnn_transformer_demo.cpp
+)
+target_link_libraries(plussai_nn_cudnn_transformer_demo PRIVATE pluss)
+target_compile_features(plussai_nn_cudnn_transformer_demo PRIVATE cxx_std_20)
+
+add_executable(plussai_nn_cublas_fusion_demo
+  nn_cublas_fusion_demo.cpp
+)
+target_link_libraries(plussai_nn_cublas_fusion_demo PRIVATE pluss)
+target_compile_features(plussai_nn_cublas_fusion_demo PRIVATE cxx_std_20)
+
+add_executable(plussai_nn_schedule_demo
+  nn_schedule_demo.cpp
+)
+target_link_libraries(plussai_nn_schedule_demo PRIVATE pluss)
+target_compile_features(plussai_nn_schedule_demo PRIVATE cxx_std_20)
+
+add_executable(plussai_nn_schedule_bank_default_minimal_demo
+  nn_schedule_bank_default_minimal_demo.cpp
+)
+target_link_libraries(plussai_nn_schedule_bank_default_minimal_demo PRIVATE pluss PlussMic)
+target_include_directories(plussai_nn_schedule_bank_default_minimal_demo
+  PRIVATE ${CMAKE_SOURCE_DIR}/PlussMic/include)
+target_compile_features(plussai_nn_schedule_bank_default_minimal_demo PRIVATE cxx_std_20)
+target_compile_definitions(plussai_nn_schedule_bank_default_minimal_demo
+  PRIVATE PLUSSDEV_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
 add_executable(plussai_tcn_demo
   tcn_demo.cpp
 )
 target_link_libraries(plussai_tcn_demo PRIVATE pluss)
 target_compile_features(plussai_tcn_demo PRIVATE cxx_std_20)
+
+add_executable(plussai_nn_transformer_demo
+  nn_transformer_demo.cpp
+)
+target_link_libraries(plussai_nn_transformer_demo PRIVATE pluss)
+target_compile_features(plussai_nn_transformer_demo PRIVATE cxx_std_20)
+
+add_executable(plussai_nn_module_snapshot_demo
+  nn_module_snapshot_demo.cpp
+)
+target_link_libraries(plussai_nn_module_snapshot_demo PRIVATE pluss)
+target_compile_features(plussai_nn_module_snapshot_demo PRIVATE cxx_std_20)
 
 add_executable(plussai_adam_oop_demo
   adam_oop_demo.cpp

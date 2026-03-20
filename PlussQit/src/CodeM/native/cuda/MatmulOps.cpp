@@ -5,6 +5,23 @@
 
 #include <cctype>
 #include <cstdlib>
+#include <limits>
+#include <mutex>
+#include <type_traits>
+
+#if defined(__unix__) || defined(__APPLE__)
+#include <dlfcn.h>
+#define PLUSS_CODEM_HAS_DLOPEN 1
+#else
+#define PLUSS_CODEM_HAS_DLOPEN 0
+#endif
+
+#if defined(PLUSS_HAS_CUDA) && PLUSS_HAS_CUDA && __has_include(<cublas_v2.h>)
+#include <cublas_v2.h>
+#define PLUSS_CODEM_HAS_CUBLAS_MATMUL 1
+#else
+#define PLUSS_CODEM_HAS_CUBLAS_MATMUL 0
+#endif
 
 namespace pluss::codem::native::cuda {
 namespace {
@@ -67,6 +84,196 @@ bool matmul_core_shapes_compatible_(const Series& a, const Series& b) noexcept {
   return matmul_batch_broadcastable_(a, b);
 }
 
+bool map_cublas_dtype_(ScalarType t) noexcept {
+  return t == ScalarType::Float32 || t == ScalarType::Float64;
+}
+
+#if PLUSS_CODEM_HAS_CUBLAS_MATMUL && PLUSS_CODEM_HAS_DLOPEN
+
+struct CublasApi {
+  decltype(&cublasCreate_v2) create{nullptr};
+  decltype(&cublasDestroy_v2) destroy{nullptr};
+  decltype(&cublasSgemm_v2) sgemm{nullptr};
+  decltype(&cublasDgemm_v2) dgemm{nullptr};
+
+  bool load(void* handle, std::string* why) {
+    auto load_sym = [&](auto& fn, const char* name) -> bool {
+      fn = reinterpret_cast<std::remove_reference_t<decltype(fn)>>(dlsym(handle, name));
+      if (fn == nullptr) {
+        if (why != nullptr) {
+          *why = std::string("cuBLAS symbol missing: ") + name;
+        }
+        return false;
+      }
+      return true;
+    };
+
+    return load_sym(create, "cublasCreate_v2") &&
+        load_sym(destroy, "cublasDestroy_v2") &&
+        load_sym(sgemm, "cublasSgemm_v2") &&
+        load_sym(dgemm, "cublasDgemm_v2");
+  }
+};
+
+struct CublasContext {
+  bool ready{false};
+  std::string error{};
+  void* handle{nullptr};
+  CublasApi api{};
+};
+
+CublasContext& cublas_ctx_() {
+  static CublasContext ctx;
+  static std::once_flag once;
+  std::call_once(once, [&]() {
+    constexpr const char* libs[] = {
+#if defined(__APPLE__)
+        "libcublas.dylib",
+#else
+        "libcublas.so.12",
+        "libcublas.so.11",
+        "libcublas.so",
+#endif
+        nullptr,
+    };
+
+    if (!runtime_available()) {
+      ctx.error = "CUDA runtime unavailable";
+      return;
+    }
+    if (!cublas_provider_available()) {
+      ctx.error = std::string("cuBLAS provider unavailable: ") + cublas_provider_error_cstr();
+      return;
+    }
+
+    for (const char* lib : libs) {
+      if (lib == nullptr || *lib == '\0') continue;
+      void* handle = dlopen(lib, RTLD_LAZY | RTLD_LOCAL);
+      if (handle == nullptr) continue;
+      std::string why{};
+      if (!ctx.api.load(handle, &why)) {
+        ctx.error = why;
+        dlclose(handle);
+        continue;
+      }
+      ctx.handle = handle;
+      ctx.ready = true;
+      ctx.error.clear();
+      return;
+    }
+
+    if (ctx.error.empty()) {
+      ctx.error = "cuBLAS library not found on loader path";
+    }
+  });
+  return ctx;
+}
+
+bool in_int_range_(std::int64_t v) noexcept {
+  return v >= static_cast<std::int64_t>(std::numeric_limits<int>::min()) &&
+      v <= static_cast<std::int64_t>(std::numeric_limits<int>::max());
+}
+
+std::string cublas_status_string_(const CublasApi& api, cublasStatus_t st) {
+  (void)api;
+  return std::string("status=") + std::to_string(static_cast<int>(st));
+}
+
+bool run_cublas_2d_gemm_(
+    const Series& a,
+    const Series& b,
+    Series* out,
+    std::string* reason) {
+  if (out == nullptr) {
+    if (reason != nullptr) *reason = "internal: null output";
+    return false;
+  }
+  const CublasContext& ctx = cublas_ctx_();
+  if (!ctx.ready) {
+    if (reason != nullptr) *reason = ctx.error;
+    return false;
+  }
+
+  const std::int64_t m64 = a.sizes()[0];
+  const std::int64_t k64 = a.sizes()[1];
+  const std::int64_t n64 = b.sizes()[1];
+  if (m64 <= 0 || n64 <= 0 || k64 <= 0 || !in_int_range_(m64) || !in_int_range_(n64) || !in_int_range_(k64)) {
+    if (reason != nullptr) *reason = "cuBLAS matmul: invalid matrix geometry";
+    return false;
+  }
+
+  const int m = static_cast<int>(m64);
+  const int n = static_cast<int>(n64);
+  const int k = static_cast<int>(k64);
+  Series y = Series::empty({m64, n64}, a.scalar_type()).to(Platform::CUDA);
+
+  cublasHandle_t handle = nullptr;
+  cublasStatus_t st = ctx.api.create(&handle);
+  if (st != CUBLAS_STATUS_SUCCESS || handle == nullptr) {
+    if (reason != nullptr) *reason = std::string("cublasCreate_v2 failed: ") + cublas_status_string_(ctx.api, st);
+    return false;
+  }
+
+  auto destroy_handle = [&]() {
+    if (handle != nullptr) {
+      (void)ctx.api.destroy(handle);
+      handle = nullptr;
+    }
+  };
+
+  // Our Series storage is row-major. cuBLAS assumes column-major.
+  // Compute C^T = B^T * A^T with opN/opN in cuBLAS:
+  // C_col(N,M) = B_col(N,K) * A_col(K,M), then interpret C_col as row-major C(M,N).
+  if (a.scalar_type() == ScalarType::Float32) {
+    const float alpha = 1.0f;
+    const float beta = 0.0f;
+    st = ctx.api.sgemm(
+        handle,
+        CUBLAS_OP_N,
+        CUBLAS_OP_N,
+        n,
+        m,
+        k,
+        &alpha,
+        static_cast<const float*>(b.data_ptr()),
+        n,
+        static_cast<const float*>(a.data_ptr()),
+        k,
+        &beta,
+        static_cast<float*>(y.data_ptr()),
+        n);
+  } else {
+    const double alpha = 1.0;
+    const double beta = 0.0;
+    st = ctx.api.dgemm(
+        handle,
+        CUBLAS_OP_N,
+        CUBLAS_OP_N,
+        n,
+        m,
+        k,
+        &alpha,
+        static_cast<const double*>(b.data_ptr()),
+        n,
+        static_cast<const double*>(a.data_ptr()),
+        k,
+        &beta,
+        static_cast<double*>(y.data_ptr()),
+        n);
+  }
+
+  destroy_handle();
+  if (st != CUBLAS_STATUS_SUCCESS) {
+    if (reason != nullptr) *reason = std::string("cublasGemm failed: ") + cublas_status_string_(ctx.api, st);
+    return false;
+  }
+
+  *out = std::move(y);
+  return true;
+}
+
+#endif // PLUSS_CODEM_HAS_CUBLAS_MATMUL && PLUSS_CODEM_HAS_DLOPEN
+
 } // namespace
 
 bool native_matmul_enabled() noexcept {
@@ -92,6 +299,99 @@ bool supports_matmul(const Series& a, const Series& b) noexcept {
     return false;
   }
   return matmul_core_shapes_compatible_(a, b);
+}
+
+bool cublas_matmul_enabled() noexcept {
+  return parse_bool_env_("PLUSS_CUBLAS_MATMUL", true);
+}
+
+bool cublas_matmul_strict() noexcept {
+  return parse_bool_env_("PLUSS_CUBLAS_MATMUL_STRICT", false);
+}
+
+bool cublas_matmul_ready() noexcept {
+#if PLUSS_CODEM_HAS_CUBLAS_MATMUL && PLUSS_CODEM_HAS_DLOPEN
+  if (!cublas_matmul_enabled()) return false;
+  return cublas_ctx_().ready;
+#else
+  return false;
+#endif
+}
+
+bool supports_cublas_matmul(
+    const Series& a,
+    const Series& b,
+    std::string* reason) noexcept {
+  if (!cublas_matmul_enabled()) {
+    if (reason != nullptr) *reason = "cuBLAS matmul route disabled by environment";
+    return false;
+  }
+  if (a.platform() != Platform::CUDA || b.platform() != Platform::CUDA) {
+    if (reason != nullptr) *reason = "input is not CUDA";
+    return false;
+  }
+  if (a.dim() != 2 || b.dim() != 2) {
+    if (reason != nullptr) *reason = "only rank-2 matmul is supported by cuBLAS route";
+    return false;
+  }
+  if (a.sizes()[1] != b.sizes()[0]) {
+    if (reason != nullptr) *reason = "matmul inner dimensions must match";
+    return false;
+  }
+  if (a.scalar_type() != b.scalar_type()) {
+    if (reason != nullptr) *reason = "lhs/rhs dtypes must match";
+    return false;
+  }
+  if (!map_cublas_dtype_(a.scalar_type())) {
+    if (reason != nullptr) *reason = "cuBLAS matmul currently supports Float32/Float64 only";
+    return false;
+  }
+  if (!a.is_contiguous() || !b.is_contiguous()) {
+    if (reason != nullptr) *reason = "inputs must be contiguous";
+    return false;
+  }
+#if PLUSS_CODEM_HAS_CUBLAS_MATMUL && PLUSS_CODEM_HAS_DLOPEN
+  if (!cublas_ctx_().ready) {
+    if (reason != nullptr) *reason = cublas_ctx_().error;
+    return false;
+  }
+  return true;
+#else
+  if (reason != nullptr) *reason = "build/runtime does not expose cuBLAS headers+dlopen support";
+  return false;
+#endif
+}
+
+std::optional<Series> try_cublas_matmul(const Series& a, const Series& b) {
+  if (a.platform() != Platform::CUDA || b.platform() != Platform::CUDA) {
+    return std::nullopt;
+  }
+  const Series a_in = a.is_contiguous() ? a : a.contiguous();
+  const Series b_in = b.is_contiguous() ? b : b.contiguous();
+
+  std::string reason{};
+  if (!supports_cublas_matmul(a_in, b_in, &reason)) {
+    if (cublas_matmul_strict()) {
+      PLUSS_FAIL(std::string("matmul: strict cuBLAS route unavailable: ") + reason);
+    }
+    return std::nullopt;
+  }
+
+#if PLUSS_CODEM_HAS_CUBLAS_MATMUL && PLUSS_CODEM_HAS_DLOPEN
+  Series out;
+  if (!run_cublas_2d_gemm_(a_in, b_in, &out, &reason)) {
+    if (cublas_matmul_strict()) {
+      PLUSS_FAIL(std::string("matmul: strict cuBLAS forward failed: ") + reason);
+    }
+    return std::nullopt;
+  }
+  return out;
+#else
+  if (cublas_matmul_strict()) {
+    PLUSS_FAIL("matmul: strict cuBLAS route requested but cuBLAS kernels are not compiled in this build");
+  }
+  return std::nullopt;
+#endif
 }
 
 } // namespace pluss::codem::native::cuda

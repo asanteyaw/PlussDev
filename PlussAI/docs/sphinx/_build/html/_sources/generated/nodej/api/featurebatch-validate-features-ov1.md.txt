@@ -1,0 +1,45 @@
+# `FeatureBatch::validate_features`
+
+## Signature
+
+```cpp
+inline Status FeatureBatch::validate_features(self, const FeatureBatch& batch);
+```
+
+## Parameters
+
+- `self` : `receiver`
+  Receiver object on which this method is invoked.
+- `batch` : `const FeatureBatch&`
+  Input feature data used by this call.
+
+## Returns
+
+Returns a status object indicating success/failure and an error message on failure.
+
+## Notes
+
+Instance method on `self`.
+
+## See also
+
+- `[[nodiscard]] bool FeatureBatch::defined(self) const noexcept;`
+- `[[nodiscard]] std::int64_t FeatureBatch::feature_count(self) const noexcept;`
+- `[[nodiscard]] std::int64_t FeatureBatch::sample_count(self) const noexcept;`
+- `inline Status FeatureBatch::validate_labeled(self, const LabeledBatch& batch);`
+
+## Parameter Reference
+
+- [batch](../params/param-featurebatch-validate-features-ov1-batch-2.md)
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+FeatureBatch featureBatch{};
+auto out = featureBatch.validate_features(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/dataset.h`:32

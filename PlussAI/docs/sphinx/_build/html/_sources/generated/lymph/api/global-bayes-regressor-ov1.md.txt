@@ -1,0 +1,43 @@
+# `bayes_regressor`
+
+## Signature
+
+```cpp
+StatusOr<std::unique_ptr<nodej::RegressorBase>> bayes_regressor( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});
+```
+
+## Parameters
+
+- `train` : `const nodej::LabeledBatch&`
+  Configuration object controlling algorithm behavior and safety defaults.
+- `family_options` : `const nodej::BayesFamilyOptions&`, default: `{}`
+  Target values aligned to input observations.
+- `options` : `const nodej::TrainOptions&`, default: `{}`
+  Configuration object controlling algorithm behavior and safety defaults.
+
+## Returns
+
+Returns `StatusOr<std::unique_ptr<nodej::RegressorBase>>`. Check `.ok()` first; on success read `.value()` for the computed result.
+
+## Notes
+
+Namespace-level API function.
+
+## See also
+
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `[[nodiscard]] inline Series as_stratify_series(const pluss::table::Thread& thread);`
+- `StatusOr<nodej::CrossAssessReport> assess_cv( const nodej::ModelSpec& spec, const nodej::LabeledBatch& batch, const nodej::SplitOptions& split = {}, const nodej::TrainOptions& train_options = {}, const nodej::AssessOptions& assess_options = {});`
+- `StatusOr<std::unique_ptr<nodej::ClassifierBase>> bayes_classifier( const nodej::LabeledBatch& train, const nodej::BayesFamilyOptions& family_options = {}, const nodej::TrainOptions& options = {});`
+- `[[nodiscard]] inline SeriesCompareReport compare_series(const Series& lhs, const Series& rhs);`
+
+## Examples
+
+```cpp
+// Minimal call skeleton. Replace placeholders with concrete data/model objects.
+auto out = bayes_regressor(/* args */);
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/quick.h`:237

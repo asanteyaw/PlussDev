@@ -1,0 +1,26 @@
+# `QuantileMapOptions`
+
+## Signature
+
+```cpp
+struct QuantileMapOptions;
+```
+
+## Notes
+
+Configuration object; set fields before passing into API calls.
+
+Key public fields:
+- `QuantileMapOutput output = QuantileMapOutput::Uniform`
+- `double clip = 1e-7`
+
+## Example
+
+```cpp
+QuantileMapOptions cfg{};
+// cfg.output = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/prep.h`:101

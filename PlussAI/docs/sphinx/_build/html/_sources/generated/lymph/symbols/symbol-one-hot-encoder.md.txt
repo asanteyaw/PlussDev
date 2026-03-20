@@ -1,0 +1,13 @@
+# `one_hot_encoder`
+
+## Notes
+
+Applies preprocessing/transformation behavior configured by the current options.
+
+## Overloads
+
+- [overload 1](../api/global-one-hot-encoder-ov1.md): `[[nodiscard]] inline OneHotEncoder one_hot_encoder(OneHotEncoderOptions options = {}) { return OneHotEncoder(options); };`
+
+## Source
+
+- `PlussAI/include/pluss/ai/lymph/api.h`:246

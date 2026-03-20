@@ -1,0 +1,22 @@
+# `TrainOptions::max_iterations`
+
+## Signature
+
+```cpp
+TrainOptions::std::int64_t max_iterations = 1000;
+```
+
+## Notes
+
+Public configuration field. Set this before calling train/infer/workflow APIs.
+
+## Example
+
+```cpp
+TrainOptions cfg{};
+// cfg.max_iterations = ...;
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/nodej/options.h`:82

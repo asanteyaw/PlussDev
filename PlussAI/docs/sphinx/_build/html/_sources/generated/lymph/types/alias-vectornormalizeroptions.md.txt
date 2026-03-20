@@ -1,0 +1,21 @@
+# `VectorNormalizerOptions`
+
+## Signature
+
+```cpp
+using VectorNormalizerOptions = ::pluss::ai::nodej::prep::VectorNormalizerOptions;
+```
+
+## Notes
+
+Type alias exported for user-facing API ergonomics.
+
+## Example
+
+```cpp
+VectorNormalizerOptions value{};
+```
+
+## Source
+
+`PlussAI/include/pluss/ai/lymph/api.h`:52

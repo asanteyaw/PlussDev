@@ -12,6 +12,7 @@
 #include <numeric>
 #include <optional>
 #include <random>
+#include <regex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -342,11 +343,13 @@ std::string summary_op_name(DataFrame::SummaryOp op) {
     case DataFrame::SummaryOp::Count:
       return "count";
     case DataFrame::SummaryOp::Nunique:
-      return "nunique";
+      return "distinct_count";
     case DataFrame::SummaryOp::Sum:
       return "sum";
     case DataFrame::SummaryOp::Mean:
       return "mean";
+    case DataFrame::SummaryOp::Median:
+      return "median";
     case DataFrame::SummaryOp::Min:
       return "min";
     case DataFrame::SummaryOp::Max:
@@ -365,7 +368,7 @@ std::string group_op_name(DataFrame::GroupOp op) {
     case DataFrame::GroupOp::Count:
       return "count";
     case DataFrame::GroupOp::Nunique:
-      return "nunique";
+      return "distinct_count";
     case DataFrame::GroupOp::Sum:
       return "sum";
     case DataFrame::GroupOp::Mean:
@@ -402,7 +405,7 @@ std::int64_t non_null_count(const Thread& t) {
   return static_cast<std::int64_t>(std::count(valid.begin(), valid.end(), true));
 }
 
-std::int64_t nunique_non_null(const Thread& t) {
+std::int64_t distinct_non_null_count(const Thread& t) {
   std::unordered_set<std::string> seen;
   seen.reserve(static_cast<std::size_t>(t.size()));
   std::optional<std::vector<bool>> valid;
@@ -442,6 +445,8 @@ double numeric_reduce_value(const Thread& t, DataFrame::SummaryOp op) {
       return scalar_series_to_double(clean.sum(), "DataFrame::summarize(sum)");
     case DataFrame::SummaryOp::Mean:
       return scalar_series_to_double(clean.mean(), "DataFrame::summarize(mean)");
+    case DataFrame::SummaryOp::Median:
+      return scalar_series_to_double(clean.median(), "DataFrame::summarize(median)");
     case DataFrame::SummaryOp::Min:
       return scalar_series_to_double(clean.min(), "DataFrame::summarize(min)");
     case DataFrame::SummaryOp::Max:
@@ -1064,13 +1069,13 @@ Thread apply_cmp_thread_pair(const Thread& lhs, const Thread& rhs, BinaryCmpOp o
 
 void validate_binary_frame_compat(const DataFrame& lhs, const DataFrame& rhs, std::string_view where) {
   PLUSS_CHECK(lhs.ncases() == rhs.ncases(), fmt::format("{}: case count mismatch", where));
-  PLUSS_CHECK(lhs.column_names() == rhs.column_names(),
+  PLUSS_CHECK(lhs.feature_names() == rhs.feature_names(),
               fmt::format("{}: features must match by name and order", where));
 }
 
 DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMathOp op, bool reverse) {
-  const auto cols = frame.columns();
-  const auto& names = frame.column_names();
+  const auto cols = frame.features();
+  const auto& names = frame.feature_names();
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(cols.size());
   for (std::size_t i = 0; i < cols.size(); ++i) {
@@ -1081,9 +1086,9 @@ DataFrame dataframe_math_scalar(const DataFrame& frame, double other, BinaryMath
 
 DataFrame dataframe_math_frame(const DataFrame& lhs, const DataFrame& rhs, BinaryMathOp op) {
   validate_binary_frame_compat(lhs, rhs, fmt::format("DataFrame::{}", math_op_name(op)));
-  const auto lhs_cols = lhs.columns();
-  const auto rhs_cols = rhs.columns();
-  const auto& names = lhs.column_names();
+  const auto lhs_cols = lhs.features();
+  const auto rhs_cols = rhs.features();
+  const auto& names = lhs.feature_names();
 
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(lhs_cols.size());
@@ -1094,8 +1099,8 @@ DataFrame dataframe_math_frame(const DataFrame& lhs, const DataFrame& rhs, Binar
 }
 
 DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp op) {
-  const auto cols = frame.columns();
-  const auto& names = frame.column_names();
+  const auto cols = frame.features();
+  const auto& names = frame.feature_names();
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(cols.size());
   for (std::size_t i = 0; i < cols.size(); ++i) {
@@ -1106,9 +1111,9 @@ DataFrame dataframe_cmp_scalar(const DataFrame& frame, double other, BinaryCmpOp
 
 DataFrame dataframe_cmp_frame(const DataFrame& lhs, const DataFrame& rhs, BinaryCmpOp op) {
   validate_binary_frame_compat(lhs, rhs, fmt::format("DataFrame::{}", cmp_op_name(op)));
-  const auto lhs_cols = lhs.columns();
-  const auto rhs_cols = rhs.columns();
-  const auto& names = lhs.column_names();
+  const auto lhs_cols = lhs.features();
+  const auto rhs_cols = rhs.features();
+  const auto& names = lhs.feature_names();
 
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(lhs_cols.size());
